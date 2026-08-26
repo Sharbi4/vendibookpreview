@@ -113,6 +113,8 @@ const VendiListingBuilder: React.FC = () => {
         if (parsed?.draft) {
           setDraft(parsed.draft);
           setAnswered(parsed.answered ?? []);
+          setUploadedUrls(parsed.uploadedUrls ?? []);
+          setUploadedVideoUrls(parsed.uploadedVideoUrls ?? []);
           const restored = parsed.messages ?? [];
           setMessages(restored.length
             ? [...restored, {
