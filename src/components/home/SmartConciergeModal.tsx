@@ -1,38 +1,27 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Home, Store, Truck, Check } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { supabase } from '@/integrations/supabase/client';
-import confetti from 'canvas-confetti';
+import { X, Wand2, Wrench, Check } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import conciergeImage from '@/assets/concierge-kitchen.jpg';
-
-type Intent = 'rent' | 'host' | 'sell';
-type Step = 'segment' | 'form' | 'success';
 
 const STORAGE_KEY = 'smart_concierge_dismissed';
 const SCROLL_THRESHOLD = 0.3; // 30% of page
 const FALLBACK_DELAY_MS = 30000; // 30s fallback if page isn't scrollable
 
-const budgetOptions = [
-  { label: 'Under $500', min: 0, max: 500 },
-  { label: '$500 – $1,000', min: 500, max: 1000 },
-  { label: '$1,000 – $2,500', min: 1000, max: 2500 },
-  { label: '$2,500+', min: 2500, max: null },
+const BENEFITS = [
+  'Answer a few plain-English questions',
+  'Watch your listing build itself live',
+  'Publish free — no listing fees, ever',
 ];
 
+/**
+ * Homepage invitation to "List with Vendi" — the free, self-serve guided
+ * listing builder. This is intentionally NOT a lead form and NOT a human
+ * concierge handoff; paid Concierge lives separately at /list/concierge.
+ */
 const SmartConciergeModal = () => {
+  const navigate = useNavigate();
   const [isOpen, setIsOpen] = useState(false);
-  const [step, setStep] = useState<Step>('segment');
-  const [intent, setIntent] = useState<Intent | null>(null);
-  const [submitting, setSubmitting] = useState(false);
-
-  const [zipCode, setZipCode] = useState('');
-  const [budget, setBudget] = useState('');
-  const [fullName, setFullName] = useState('');
-  const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
-  const [address, setAddress] = useState('');
-  const [sellItem, setSellItem] = useState('');
 
   useEffect(() => {
     if (localStorage.getItem(STORAGE_KEY)) return;
@@ -49,13 +38,10 @@ const SmartConciergeModal = () => {
     const handleScroll = () => {
       const scrollable = document.documentElement.scrollHeight - window.innerHeight;
       if (scrollable <= 0) return;
-      const scrollPercent = window.scrollY / scrollable;
-      if (scrollPercent >= SCROLL_THRESHOLD) trigger();
+      if (window.scrollY / scrollable >= SCROLL_THRESHOLD) trigger();
     };
 
-    // Fallback timer in case page isn't scrollable enough
     const fallbackTimer = setTimeout(trigger, FALLBACK_DELAY_MS);
-
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => {
       window.removeEventListener('scroll', handleScroll);
@@ -68,346 +54,82 @@ const SmartConciergeModal = () => {
     localStorage.setItem(STORAGE_KEY, 'true');
   }, []);
 
-  const selectIntent = (i: Intent) => {
-    setIntent(i);
-    setStep('form');
+  const go = (path: string) => {
+    localStorage.setItem(STORAGE_KEY, 'true');
+    setIsOpen(false);
+    navigate(path);
   };
-
-  const fireConfetti = () => {
-    confetti({ particleCount: 80, spread: 60, origin: { y: 0.55 } });
-  };
-
-  const handleSubmit = async () => {
-    if (!intent || !fullName.trim() || !email.trim() || !phone.trim()) return;
-    setSubmitting(true);
-
-    try {
-      const budgetEntry = budgetOptions.find((b) => b.label === budget);
-
-      const payload: Record<string, unknown> = {
-        asset_type: intent === 'rent' ? 'rental' : intent === 'host' ? 'hosting' : 'sale',
-        email: email.trim(),
-        phone: phone.trim(),
-        city: intent === 'rent' ? zipCode.trim() : '',
-        budget_min: budgetEntry?.min ?? null,
-        budget_max: budgetEntry?.max ?? null,
-        notes:
-          intent === 'host'
-            ? `Address: ${address.trim()}\nName: ${fullName.trim()}`
-            : intent === 'sell'
-            ? `Selling: ${sellItem.trim()}\nName: ${fullName.trim()}`
-            : `Name: ${fullName.trim()}`,
-        status: 'new',
-      };
-
-      await supabase.from('asset_requests').insert(payload as any);
-
-      supabase.functions.invoke('send-admin-notification', {
-        body: {
-          type: 'new_booking',
-          data: {
-            listing_title: `Concierge Lead (${intent})`,
-            start_date: new Date().toLocaleDateString(),
-            end_date: '',
-            total_price: budget || 'N/A',
-            shopper_id: email.trim(),
-            host_id: 'concierge-modal',
-            message: payload.notes,
-          },
-        },
-      });
-
-      setStep('success');
-      fireConfetti();
-      setTimeout(dismiss, 5000);
-    } catch {
-      // Silently fail
-    } finally {
-      setSubmitting(false);
-    }
-  };
-
-  const isFormValid = () => {
-    if (!fullName.trim() || !email.trim() || !phone.trim()) return false;
-    if (intent === 'rent' && !zipCode.trim()) return false;
-    if (intent === 'host' && !address.trim()) return false;
-    if (intent === 'sell' && !sellItem.trim()) return false;
-    return true;
-  };
-
-  const glassInputClass =
-    'h-10 bg-white/[0.06] border-white/[0.12] text-white placeholder:text-white/40 focus-visible:ring-[#FF5124]/40 focus-visible:border-white/20 rounded-lg';
 
   return (
     <AnimatePresence>
       {isOpen && (
         <motion.div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-md px-4"
+          className="fixed inset-0 z-[100] flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-4"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           onClick={dismiss}
+          role="dialog"
+          aria-modal="true"
+          aria-label="List with Vendi"
         >
           <motion.div
-            className="relative w-full max-w-sm overflow-hidden rounded-2xl shadow-2xl"
-            initial={{ opacity: 0, scale: 0.92, y: 20 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.92, y: 20 }}
-            transition={{ duration: 0.3, ease: 'easeOut' }}
+            className="relative w-full max-w-lg overflow-hidden rounded-t-3xl bg-card shadow-2xl sm:rounded-3xl"
+            initial={{ y: 40, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 40, opacity: 0 }}
+            transition={{ type: 'spring', damping: 26, stiffness: 260 }}
             onClick={(e) => e.stopPropagation()}
-            style={{
-              background: 'linear-gradient(145deg, rgba(20,20,25,0.88) 0%, rgba(15,15,18,0.92) 100%)',
-              backdropFilter: 'blur(40px)',
-              WebkitBackdropFilter: 'blur(40px)',
-              border: '1px solid rgba(255,255,255,0.1)',
-              boxShadow: '0 25px 60px -12px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.08)',
-            }}
           >
-            {/* Hero image */}
-            <div className="relative h-32 w-full overflow-hidden">
-              <img
-                src={conciergeImage}
-                alt="Commercial kitchen space"
-                className="w-full h-full object-cover"
-              />
-              <div
-                className="absolute inset-0"
-                style={{
-                  background: 'linear-gradient(to bottom, transparent 30%, rgba(15,15,18,0.95) 100%)',
-                }}
-              />
-              {/* Gradient accent line at top */}
-              <div
-                className="absolute top-0 left-0 h-[2px] w-full"
-                style={{
-                  background: 'linear-gradient(90deg, #FF5124, #E64A19, #FFB800)',
-                }}
-              />
-            </div>
-
-            {/* Close button */}
             <button
+              type="button"
               onClick={dismiss}
-              className="absolute top-3 right-3 p-1.5 rounded-full bg-black/40 backdrop-blur-sm hover:bg-black/60 transition-colors z-10"
               aria-label="Close"
+              className="absolute right-3 top-3 z-10 rounded-full bg-background/80 p-2 text-foreground backdrop-blur transition hover:bg-background"
             >
-              <X className="w-4 h-4 text-white/70" />
+              <X className="h-4 w-4" />
             </button>
 
-            <div className="p-6">
-              {/* STEP 1: Segmentation */}
-              {step === 'segment' && (
-                <div className="space-y-4">
-                  <div className="text-center space-y-1">
-                    <h3 className="text-lg font-semibold text-white">How can we help you today?</h3>
-                    <p className="text-sm text-white/50">Select an option to get started.</p>
-                  </div>
+            <div className="relative h-36 w-full overflow-hidden sm:h-44">
+              <img src={conciergeImage} alt="" className="h-full w-full object-cover" loading="lazy" />
+              <div className="absolute inset-0 bg-gradient-to-t from-card via-card/40 to-transparent" />
+            </div>
 
-                  <div className="space-y-2.5 pt-2">
-                    {[
-                      { id: 'rent' as Intent, icon: Home, label: 'I want to Rent', desc: 'Finding a Kitchen or Parking' },
-                      { id: 'host' as Intent, icon: Store, label: 'I want to Host', desc: 'Listing my Space' },
-                      { id: 'sell' as Intent, icon: Truck, label: 'I want to Sell', desc: 'Selling a Truck or Equipment' },
-                    ].map(({ id, icon: Icon, label, desc }) => (
-                      <button
-                        key={id}
-                        onClick={() => selectIntent(id)}
-                        className="w-full flex items-center gap-3 p-3.5 rounded-xl transition-all text-left group hover:scale-[1.01]"
-                        style={{
-                          background: 'rgba(255,255,255,0.04)',
-                          border: '1px solid rgba(255,255,255,0.08)',
-                        }}
-                        onMouseEnter={(e) => {
-                          e.currentTarget.style.background = 'rgba(255,255,255,0.08)';
-                          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)';
-                        }}
-                        onMouseLeave={(e) => {
-                          e.currentTarget.style.background = 'rgba(255,255,255,0.04)';
-                          e.currentTarget.style.borderColor = 'rgba(255,255,255,0.08)';
-                        }}
-                      >
-                        <div
-                          className="w-10 h-10 rounded-lg flex items-center justify-center shrink-0"
-                          style={{
-                            background: 'linear-gradient(135deg, rgba(255,81,36,0.15), rgba(255,184,0,0.1))',
-                            border: '1px solid rgba(255,81,36,0.2)',
-                          }}
-                        >
-                          <Icon className="w-5 h-5 text-[#FF5124]" />
-                        </div>
-                        <div>
-                          <span className="font-medium text-white text-sm">{label}</span>
-                          <p className="text-xs text-white/40">{desc}</p>
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+            <div className="px-6 pb-6 pt-2">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-xs font-semibold text-primary">
+                <Wand2 className="h-3.5 w-3.5" /> Free · New
+              </span>
+              <h2 className="mt-3 text-2xl font-semibold leading-tight">List with Vendi</h2>
+              <p className="mt-2 text-sm text-muted-foreground">
+                Have a truck, trailer, kitchen, or vendor space? Vendi walks you through it in a
+                short conversation and builds the listing as you talk.
+              </p>
 
-              {/* STEP 2: Data Capture */}
-              {step === 'form' && intent && (
-                <div className="space-y-4">
-                  <div className="text-center space-y-1">
-                    <h3 className="text-lg font-semibold text-white">
-                      {intent === 'rent' && 'Find your perfect spot.'}
-                      {intent === 'host' && 'List your space.'}
-                      {intent === 'sell' && 'Sell your equipment.'}
-                    </h3>
-                  </div>
+              <ul className="mt-4 space-y-2">
+                {BENEFITS.map((b) => (
+                  <li key={b} className="flex items-start gap-2 text-sm">
+                    <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+                    <span>{b}</span>
+                  </li>
+                ))}
+              </ul>
 
-                  <div className="space-y-3 pt-1">
-                    {intent === 'rent' && (
-                      <>
-                        <Input
-                          placeholder="Zip Code"
-                          value={zipCode}
-                          onChange={(e) => setZipCode(e.target.value)}
-                          className={glassInputClass}
-                          maxLength={10}
-                        />
-                        <select
-                          value={budget}
-                          onChange={(e) => setBudget(e.target.value)}
-                          className="flex h-10 w-full rounded-lg bg-white/[0.06] border border-white/[0.12] px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#FF5124]/40 focus-visible:ring-offset-0"
-                          style={{ colorScheme: 'dark' }}
-                        >
-                          <option value="" className="bg-[#1a1a1e] text-white/50">Monthly Budget</option>
-                          {budgetOptions.map((b) => (
-                            <option key={b.label} value={b.label} className="bg-[#1a1a1e] text-white">
-                              {b.label}
-                            </option>
-                          ))}
-                        </select>
-                      </>
-                    )}
-
-                    {intent === 'host' && (
-                      <Input
-                        placeholder="Address of your space"
-                        value={address}
-                        onChange={(e) => setAddress(e.target.value)}
-                        className={glassInputClass}
-                      />
-                    )}
-
-                    {intent === 'sell' && (
-                      <Input
-                        placeholder="What are you selling?"
-                        value={sellItem}
-                        onChange={(e) => setSellItem(e.target.value)}
-                        className={glassInputClass}
-                      />
-                    )}
-
-                    <Input
-                      placeholder="Full Name"
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      className={glassInputClass}
-                    />
-                    <Input
-                      type="email"
-                      placeholder="Email Address"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className={glassInputClass}
-                    />
-                    <Input
-                      type="tel"
-                      placeholder="Phone Number *"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value)}
-                      className={glassInputClass}
-                      maxLength={15}
-                    />
-                  </div>
-
-                  <button
-                    onClick={handleSubmit}
-                    disabled={!isFormValid() || submitting}
-                    className="w-full h-11 rounded-lg font-medium text-sm transition-all disabled:opacity-30 disabled:cursor-not-allowed mt-1 text-white"
-                    style={{
-                      background: !isFormValid() || submitting
-                        ? 'rgba(255,255,255,0.08)'
-                        : 'linear-gradient(135deg, #FF5124, #E64A19, #FFB800)',
-                      boxShadow: isFormValid() && !submitting
-                        ? '0 4px 20px -4px rgba(255,81,36,0.4)'
-                        : 'none',
-                    }}
-                  >
-                    {submitting
-                      ? 'Submitting…'
-                      : intent === 'rent'
-                      ? 'Find Matches'
-                      : intent === 'host'
-                      ? 'Start Listing'
-                      : 'Get an Offer'}
-                  </button>
-
-                  <button
-                    onClick={() => { setStep('segment'); setIntent(null); }}
-                    className="w-full text-center text-xs text-white/30 hover:text-white/60 transition-colors"
-                  >
-                    ← Back
-                  </button>
-                </div>
-              )}
-
-              {/* STEP 3: Success */}
-              {step === 'success' && (
-                <div className="space-y-4 text-center py-2">
-                  <motion.div
-                    className="mx-auto w-14 h-14 rounded-full flex items-center justify-center"
-                    style={{
-                      background: 'linear-gradient(135deg, rgba(255,81,36,0.2), rgba(255,184,0,0.15))',
-                      border: '1px solid rgba(255,81,36,0.3)',
-                    }}
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-                  >
-                    <Check className="w-7 h-7 text-[#FF5124]" />
-                  </motion.div>
-
-                  <div className="space-y-2">
-                    <h3 className="text-lg font-semibold text-white">We're on it.</h3>
-                    <p className="text-sm text-white/60 leading-relaxed">
-                      {intent === 'rent'
-                        ? `Thanks! Our team is now manually scouting ${zipCode || 'your area'} for spaces${budget ? ` within your ${budget} budget` : ''}. Expect a text or email within 24 hours.`
-                        : 'Thanks! An expert will review your details and reach out shortly to verify your spot.'}
-                    </p>
-                  </div>
-
-                  <p className="text-xs text-white/30 italic">
-                    You've been assigned to a dedicated agent. No bots here.
-                  </p>
-
-                  <div className="space-y-2 pt-1">
-                    <button
-                      onClick={dismiss}
-                      className="w-full h-10 rounded-lg font-medium text-sm transition-all text-white"
-                      style={{
-                        background: 'rgba(255,255,255,0.08)',
-                        border: '1px solid rgba(255,255,255,0.1)',
-                      }}
-                    >
-                      Back to Browsing
-                    </button>
-                    <button
-                      onClick={() => {
-                        dismiss();
-                        if (window.zE) {
-                          try { window.zE('messenger', 'open'); } catch {}
-                        }
-                      }}
-                      className="block text-xs text-[#FF5124] hover:text-[#FFB800] transition-colors mx-auto"
-                    >
-                      Chat with us now →
-                    </button>
-                  </div>
-                </div>
-              )}
+              <div className="mt-6 flex flex-col gap-2 sm:flex-row">
+                <button
+                  type="button"
+                  onClick={() => go('/list-with-vendi')}
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-sm font-semibold text-primary-foreground transition hover:opacity-90"
+                >
+                  <Wand2 className="h-4 w-4" /> Start with Vendi
+                </button>
+                <button
+                  type="button"
+                  onClick={() => go('/list')}
+                  className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-border px-5 py-3 text-sm font-semibold transition hover:bg-muted"
+                >
+                  <Wrench className="h-4 w-4" /> Build it myself
+                </button>
+              </div>
             </div>
           </motion.div>
         </motion.div>
