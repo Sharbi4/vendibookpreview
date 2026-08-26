@@ -204,9 +204,13 @@ const Payments = () => {
   return (
     <div className="sale-light flex min-h-screen flex-col overflow-x-hidden bg-background">
       <SEO
-        title="PayPal Checkout & Pay Later | Vendibook"
-        description="Learn how Vendibook checkout works with PayPal, including Pay in 4 and Pay Monthly when eligible. Compare payment options for food trucks, food trailers, and Vendibook Freight."
+        title="PayPal Checkout for Food Trucks & Trailers | Vendibook"
+        description="Vendibook checkout uses PayPal. Pay with balance, bank, debit, or card through PayPal — Pay Later may appear when you're eligible."
         canonical="/payments"
+        ogTitle="PayPal Checkout on Vendibook"
+        ogDescription="Buy or rent food trucks and trailers on Vendibook with PayPal checkout — Pay Later shown when eligible."
+        twitterTitle="PayPal Checkout on Vendibook"
+        twitterDescription="Buy or rent food trucks and trailers on Vendibook with PayPal checkout — Pay Later shown when eligible."
       />
       <JsonLd
         schema={{
@@ -241,10 +245,10 @@ const Payments = () => {
               >
                 <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-foreground shadow-sm">
                   <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden="true" />
-                  Vendibook + PayPal
+                  PayPal checkout
                 </div>
                 <h1 className="mb-5 text-4xl font-bold leading-[1.12] tracking-tight text-foreground sm:text-5xl md:text-[3.2rem]">
-                  A better way to pay for the equipment that moves your business.
+                  PayPal checkout for food trucks, trailers &amp; mobile kitchens.
                 </h1>
                 <p className="mb-8 max-w-xl text-lg leading-relaxed text-muted-foreground">
                   Vendibook checkout uses PayPal to give buyers familiar payment options — while the
@@ -280,7 +284,7 @@ const Payments = () => {
           <div className="container mx-auto max-w-6xl px-4">
             <motion.div {...fadeUp} className="mb-10 max-w-2xl">
               <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-                Pay the way that fits the purchase.
+                PayPal checkout options for buyers.
               </h2>
               <p className="mt-4 text-base leading-relaxed text-muted-foreground">
                 Every Vendibook purchase runs through PayPal checkout. What you see there depends on
