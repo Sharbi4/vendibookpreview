@@ -196,6 +196,69 @@ function buildResearchQueries(tool: string, data: Record<string, string>): strin
   return [];
 }
 
+/** Map free-form PricePilot category text onto the comparables taxonomy. */
+function normalizeCategory(raw?: string): string | null {
+  const c = (raw || "").toLowerCase().replace(/[\s-]+/g, "_");
+  if (!c) return null;
+  if (c.includes("trailer")) return "food_trailer";
+  if (c.includes("cart")) return "food_cart";
+  if (c.includes("bar")) return "mobile_bar";
+  if (c.includes("truck") || c.includes("mobile_kitchen")) return "food_truck";
+  return c;
+}
+
+function isSaleMode(mode?: string): boolean {
+  const m = (mode || "").toLowerCase();
+  return m.includes("sale") || m.includes("sell") || m.includes("buy");
+}
+
+/** SALE-only: pull internal comparables with the service role client. */
+async function loadMarketEvidence(data: Record<string, string>): Promise<MarketEvidence | null> {
+  if (!isSaleMode(data.mode)) return null;
+  const url = Deno.env.get("SUPABASE_URL");
+  const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!url || !key) return null;
+
+  const category = normalizeCategory(data.category);
+  const { city, state } = parseLocation(data.location);
+  const year = Number(data.year) || null;
+  const lengthFt = Number(data.lengthFt || data.length) || null;
+
+  try {
+    const service = createClient(url, key, { auth: { persistSession: false } });
+    let query = service
+      .from("pricepilot_market_comparables")
+      .select(
+        "source, source_title, observed_status, asset_category, valuation_mode, city, state, year, make, model, length_ft, displayed_price, verified_transaction_price, transaction_price_verified, extraction_confidence, evidence_confidence, usable_for_valuation, normalized_features",
+      )
+      .eq("usable_for_valuation", true)
+      .eq("valuation_mode", "sale")
+      .limit(400);
+    if (category) {
+      const siblings = category === "food_trailer"
+        ? ["food_trailer", "food_cart"]
+        : category === "food_truck"
+          ? ["food_truck", "mobile_kitchen"]
+          : [category];
+      query = query.in("asset_category", siblings);
+    }
+    const { data: rows, error } = await query;
+    if (error || !rows?.length) return null;
+    return buildMarketEvidence(rows as ComparableRow[], {
+      mode: "sale",
+      category,
+      city,
+      state,
+      year,
+      lengthFt,
+    }, 6);
+  } catch (e) {
+    console.error("market comparables lookup failed", e);
+    return null;
+  }
+}
+
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
