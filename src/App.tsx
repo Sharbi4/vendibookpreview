@@ -49,6 +49,7 @@ const SmsEnrollment = lazy(() => import("./pages/SmsEnrollment"));
 const SmsOptIn = lazy(() => import("./pages/SmsOptIn"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const EditListing = lazy(() => import("./pages/EditListing"));
+const RentItOut = lazy(() => import("./pages/RentItOut"));
 const ListingPaymentsFinancing = lazy(() => import("./pages/ListingPaymentsFinancing"));
 const ListingStart = lazy(() => import("./pages/ListingStart"));
 const ListStart = lazy(() => import("./pages/ListStart"));
@@ -283,6 +284,7 @@ const AnimatedRoutes = () => {
 
           <Route path="/host" element={<Navigate to="/list" replace />} />
           <Route path="/listing/:id" element={<PageTransition><ListingDetail /></PageTransition>} />
+          <Route path="/listings/:listingId/rent-it-out" element={<PageTransition><RentItOut /></PageTransition>} />
           {/* Common typo/plural alias — redirect to canonical singular route */}
           <Route path="/listings/:id" element={<ListingPluralRedirect />} />
           {/* Share route: pretty URL for social sharing, redirects to /listing/:id */}
