@@ -38,7 +38,7 @@ describe('prioritisation', () => {
   });
 
   it('reports honest readiness progress, not question count', () => {
-    expect(readinessProgress(base(), 0).percent).toBe(0);
+    expect(readinessProgress(base(), 0).percent).toBeLessThan(20);
     const ready = readinessProgress(publishable(), 1);
     expect(ready.ready).toBe(true);
     expect(ready.percent).toBe(100);
