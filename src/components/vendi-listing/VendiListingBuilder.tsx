@@ -1514,6 +1514,32 @@ const VendiListingBuilder: React.FC = () => {
             <div ref={endRef} />
           </div>
 
+          {/* Captured-facts strip: proof that Vendi heard every answer, and a
+              one-tap way to correct any of them without typing. */}
+          {!reviewing && facts.length > 0 && (
+            <div className="border-t border-white/[0.06] bg-[#0c0c0f]/60 px-4 py-2.5 backdrop-blur-xl sm:px-7">
+              <div className="flex items-center gap-2 overflow-x-auto pb-0.5">
+                <span className="flex-none text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+                  Saved
+                </span>
+                {facts.map((f) => (
+                  <button
+                    key={`${f.questionId}-${f.label}`}
+                    type="button"
+                    onClick={() => reopenFact(f.questionId)}
+                    title={`Change ${f.label.toLowerCase()}`}
+                    aria-label={`${f.label}: ${f.value}. Tap to change.`}
+                    className="flex-none rounded-full border border-white/[0.09] bg-white/[0.04] px-3 py-1 text-xs text-foreground/85 transition hover:border-[rgba(255,81,36,0.4)] hover:bg-white/[0.07]"
+                  >
+                    <span className="text-muted-foreground">{f.label}:</span> {f.value}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+
+
           {/* One composer for every step: the seller can always type a
               correction ("actually it's $42,000") or attach media, no matter
               which question is on screen. */}
