@@ -17,6 +17,7 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { CITY_DATA, getCityStateSlug } from '@/data/cityData';
+import { PRICE_TBD, formatListingPriceLabel } from '@/lib/listings/rentalPricing';
 import { SPECIALTY_DEFS, specialtyOrFilter, specialtyBrowseLinks, specialtyVehicleHref, SPECIALTY_VEHICLE_LABELS, type SpecialtyKey } from '@/lib/listings/specialty';
 import BrowseByBusinessType from '@/components/marketplace/BrowseByBusinessType';
 import { useNationwideInventory } from '@/hooks/useNationwideInventory';
@@ -79,6 +80,8 @@ interface ListingRow {
   cover_image_url: string | null;
   price_daily: number | null;
   price_weekly: number | null;
+  price_hourly: number | null;
+  price_monthly: number | null;
   price_sale: number | null;
   mode: string;
   category: string;
@@ -125,7 +128,7 @@ const categoryLabel = (c: CategoryKey): string =>
     : c === 'ghost_kitchen' ? 'Shared Kitchen'
     : 'Vendor Space';
 
-const baseSelect = 'id, title, description, cover_image_url, price_daily, price_weekly, price_sale, mode, category, city, state, address';
+const baseSelect = 'id, title, description, cover_image_url, price_hourly, price_daily, price_weekly, price_monthly, price_sale, mode, category, city, state, address';
 
 const baseQuery = (
   categories: CategoryKey[],
@@ -253,8 +256,8 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
   const statePageExists = !!(config.city && config.city.stateCode && cityStateSlug && (
     config.mode === 'sale'
       ? STATE_SALE_PAGE_CODES[config.category]?.has(config.city.stateCode)
-      : config.mode === 'rent' && config.category === 'food_truck'
-        ? STATE_RENT_PAGE_CODES.has(config.city.stateCode)
+      : config.mode === 'rent'
+        ? !!STATE_RENT_PAGE_CODES[config.category]?.has(config.city.stateCode)
         : false
   ));
 
