@@ -65,6 +65,16 @@ const faqs = [
       'Vendibook online checkout is optional. A completed equipment sale through online checkout carries a standard 12.9% seller fee, or 10.9% for active Vendibook Pro sellers, with Pro savings capped at $500 per completed transaction. Payment-processing costs charged by the payment provider are separate where applicable.',
   },
   {
+    question: 'How does secure PayPal checkout work for a sale?',
+    answer:
+      'If you turn on optional Vendibook online checkout, the buyer pays through PayPal’s secure hosted checkout rather than handing you cash or a wire. Card details are handled by PayPal, not by Vendibook, and eligible buyers may see PayPal Pay Later options at checkout. Payouts on completed online sales are reviewed and issued by Vendibook. You can read the full breakdown on the Vendibook payments page.',
+  },
+  {
+    question: 'Can Vendibook Freight deliver the truck to my buyer?',
+    answer:
+      'Where coordination is available, buyers can review Vendibook Freight delivery options from the listing before they commit, so you do not have to drive it across the country yourself. Availability and cost depend on the listing, the route, and the equipment, and many sales are still simple local pickup.',
+  },
+  {
     question: 'Can a buyer finance my food truck or trailer?',
     answer:
       'Eligible buyers can apply with third-party financing partners from a for-sale listing. Approval depends on the applicant and the equipment, and provider approval applies. Vendibook is not a lender: it does not approve applicants, set rates or terms, or guarantee funding, and you do not manage the buyer’s application.',
