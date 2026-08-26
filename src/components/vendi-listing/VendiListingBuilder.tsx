@@ -101,6 +101,14 @@ const VendiListingBuilder: React.FC = () => {
   const [attestInput, setAttestInput] = useState('');
   const [attestError, setAttestError] = useState<string | null>(null);
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  /**
+   * Repeated save / upload / publish failures are a support problem, not a
+   * seller problem. After the second one we offer a human instead of letting
+   * them keep retrying alone. Success resets it.
+   */
+  const [troubles, setTroubles] = useState(0);
+  const noteTrouble = () => setTroubles((n) => n + 1);
+
   const [savingManually, setSavingManually] = useState(false);
   /** Server lookup for an unfinished Vendi draft has completed. */
   const [resumeChecked, setResumeChecked] = useState(false);
