@@ -88,7 +88,7 @@ const toActive = (row: DraftRow): ActiveVendiDraft => ({
   state: (row.state as string) || null,
   postal_code: (row.postal_code as string) || null,
   address: (row.address as string) || null,
-  images: (row.image_urls as string[]) ?? null,
+  image_urls: (row.image_urls as string[]) ?? null,
   created_at: String(row.created_at),
 });
 
