@@ -2,8 +2,10 @@ import { describe, it, expect } from 'vitest';
 import { parseDimensions, parseList, parseLocation, parseMoney, parseYesNo, isSkip } from '../extract';
 import {
   QUESTIONS, REVIEW_GATE_ID, VendiDraft, buildListingPayload, getPublishBlockers, nextQuestion,
-  parseExtraRates, visibleQuestions,
+  parseExtraRates, visibleQuestions, extractExtraFacts, captureSummary, resumeMessage,
+  promptText, VENDI_WELCOME,
 } from '../script';
+
 
 const q = (id: string) => {
   const found = QUESTIONS.find((x) => x.id === id);
