@@ -66,6 +66,12 @@ const VendiListingBuilder: React.FC = () => {
 
   const [draft, setDraft] = useState<VendiDraft>(emptyDraft);
   const [answered, setAnswered] = useState<string[]>([]);
+  // Question ids Vendi has already spoken. Survives hydration so a restored
+  // conversation never replays a prompt the seller is already looking at.
+  const [asked, setAsked] = useState<string[]>([]);
+  // Bumped by "Start over" so the opening runs again from a clean slate.
+  const [sessionSeq, setSessionSeq] = useState(0);
+
   const [messages, setMessages] = useState<Msg[]>([]);
   const [input, setInput] = useState('');
   const [photos, setPhotos] = useState<LocalPhoto[]>([]);
