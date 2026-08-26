@@ -5,16 +5,17 @@
  * Protected by the shared `x-admin-secret` header — there is no browser
  * session for a server-initiated concierge action.
  *
- * POST {
- *   email, full_name?, temp_password?,
- *   listing: { ...allowed listing columns }
- * }
+ * POST { email, full_name?, listing: { explicitly customer-provided fields } }
+ *
+ * This endpoint never accepts or returns a plaintext password. New customers
+ * receive a one-time recovery link so they can choose their own password.
  */
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
 import { sendTransactionalEmailInternal } from "../_shared/invokeTransactionalEmail.ts";
+import { buildConciergeListing, randomUnsharedPassword } from "./provisioning.ts";
 
 const SITE_URL = Deno.env.get("SITE_URL") || "https://vendibook.com";
 
@@ -35,6 +36,13 @@ serve(async (req) => {
     if (!email || !email.includes("@")) return jsonError(400, "missing_fields", "A valid email is required.");
     if (!listingInput) return jsonError(400, "missing_fields", "listing payload is required.");
 
+    let listingPayload: ReturnType<typeof buildConciergeListing>;
+    try {
+      listingPayload = buildConciergeListing(listingInput);
+    } catch (error) {
+      return jsonError(400, "invalid_listing", error instanceof Error ? error.message : "Invalid listing data.");
+    }
+
     const admin = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
@@ -44,7 +52,7 @@ serve(async (req) => {
     // --- Resolve or create the account -------------------------------------
     let userId: string | null = null;
     let createdAccount = false;
-    let tempPassword: string | null = null;
+    let passwordSetupUrl: string | null = null;
 
     const { data: existingProfile } = await admin
       .from("profiles")
@@ -55,10 +63,13 @@ serve(async (req) => {
     if (existingProfile?.id) {
       userId = existingProfile.id;
     } else {
-      tempPassword = String(body?.temp_password ?? "").trim() || crypto.randomUUID().slice(0, 12);
+      // The random credential is never shared, returned, persisted by this
+      // function, or logged. The customer chooses their password through the
+      // single-use recovery link generated below.
+      const unsharedPassword = randomUnsharedPassword();
       const { data: created, error: createErr } = await admin.auth.admin.createUser({
         email,
-        password: tempPassword,
+        password: unsharedPassword,
         email_confirm: true,
         user_metadata: fullName ? { full_name: fullName } : {},
       });
@@ -68,18 +79,34 @@ serve(async (req) => {
       }
       userId = created.user.id;
       createdAccount = true;
+
+      const { data: recovery, error: recoveryErr } = await admin.auth.admin.generateLink({
+        type: "recovery",
+        email,
+        options: { redirectTo: `${SITE_URL}/reset-password` },
+      });
+      if (recoveryErr || !recovery?.properties?.action_link) {
+        await admin.auth.admin.deleteUser(userId);
+        return jsonError(500, "access_setup_failed", "Could not create a secure first-login link.");
+      }
+      passwordSetupUrl = recovery.properties.action_link;
     }
 
-    await admin.from("profiles").upsert(
+    const { error: profileErr } = await admin.from("profiles").upsert(
       { id: userId, email, ...(fullName ? { full_name: fullName } : {}) },
       { onConflict: "id" },
     );
-    await admin.from("user_roles").upsert({ user_id: userId, role: "host" }, { onConflict: "user_id,role" });
+    if (profileErr) return jsonError(500, "profile_failed", "Could not prepare the customer profile.");
+
+    const { error: roleErr } = await admin
+      .from("user_roles")
+      .upsert({ user_id: userId, role: "host" }, { onConflict: "user_id,role" });
+    if (roleErr) return jsonError(500, "role_failed", "Could not prepare dashboard access.");
 
     // --- Seed the listing ---------------------------------------------------
     const { data: listing, error: listingErr } = await admin
       .from("listings")
-      .insert({ ...listingInput, host_id: userId })
+      .insert({ ...listingPayload, host_id: userId })
       .select("id, status, title")
       .single();
 
@@ -91,17 +118,18 @@ serve(async (req) => {
     const paragraphs = [
       `Hi${fullName ? ` ${fullName.split(/\s+/)[0]}` : ""} — we built your Vendibook listing for you from the photos and details you shared.`,
       createdAccount
-        ? "We created your Vendibook account so it's ready when you sign in. Use the temporary password below and change it from your profile once you're in."
-        : "It's been added to your existing Vendibook account.",
-      "Open your dashboard to review the listing, add anything we missed, and publish it when it looks right.",
+        ? "We created your Vendibook account. Use the secure button below to choose your password and sign in."
+        : "It's been added to your existing Vendibook account. Sign in with your existing password.",
+      "Review the listing we prepared, add anything that was not explicitly provided, and publish it when it looks right.",
     ];
 
     const details = [
       { label: "Listing", value: String(listing.title || "Your listing") },
       { label: "Status", value: listing.status === "published" ? "Live" : "Ready to review" },
       { label: "Sign in email", value: email },
-      ...(tempPassword ? [{ label: "Temporary password", value: tempPassword, mono: true }] : []),
     ];
+
+    const listingUrl = `${SITE_URL}/edit-listing/${listing.id}`;
 
     const emailResult = await sendTransactionalEmailInternal({
       templateName: "generic-notice",
@@ -113,11 +141,13 @@ serve(async (req) => {
         heading: "Your listing is ready",
         paragraphs,
         details,
-        ctaLabel: "Open my dashboard",
-        ctaUrl: `${SITE_URL}/dashboard`,
-        footnote: tempPassword
-          ? "For your security, please change this temporary password after your first sign-in."
-          : undefined,
+        ctaLabel: createdAccount ? "Choose my password" : "Review my listing",
+        ctaUrl: passwordSetupUrl || listingUrl,
+        secondaryCtaLabel: createdAccount ? "Review my listing" : "Open my dashboard",
+        secondaryCtaUrl: createdAccount ? listingUrl : `${SITE_URL}/dashboard`,
+        footnote: createdAccount
+          ? "Your password link is private and intended only for you. If it expires, use Forgot password on the sign-in page."
+          : "You can also find this listing from the Listings section of your dashboard.",
       },
       metadata: { source: "admin-provision-customer-listing", listing_id: listing.id },
     });
@@ -125,7 +155,7 @@ serve(async (req) => {
     return jsonResponse(200, {
       user_id: userId,
       created_account: createdAccount,
-      temp_password_issued: Boolean(tempPassword),
+      secure_password_setup_issued: Boolean(passwordSetupUrl),
       listing_id: listing.id,
       listing_status: listing.status,
       email_ok: emailResult.ok,

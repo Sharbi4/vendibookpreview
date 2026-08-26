@@ -9,6 +9,7 @@ export interface ConciergeListingInput {
   price_weekly?: unknown;
   price_monthly?: unknown;
   price_hourly?: unknown;
+  price_sale?: unknown;
   city?: unknown;
   state?: unknown;
   postal_code?: unknown;
@@ -104,6 +105,7 @@ export function buildConciergeListing(input: ConciergeListingInput) {
     price_weekly: optionalPrice(input.price_weekly, "price_weekly"),
     price_monthly: optionalPrice(input.price_monthly, "price_monthly"),
     price_hourly: optionalPrice(input.price_hourly, "price_hourly"),
+    price_sale: optionalPrice(input.price_sale, "price_sale"),
     image_urls: images,
     cover_image_url: cover ?? images[0] ?? null,
     fulfillment_type: fulfillmentType,
@@ -122,6 +124,10 @@ export function buildConciergeListing(input: ConciergeListingInput) {
     hourly: listing.price_hourly,
   }).some((value) => value !== null)) {
     throw new Error("Rental rates cannot be supplied for a sale listing.");
+  }
+
+  if (mode === "rent" && listing.price_sale !== null) {
+    throw new Error("A sale price cannot be supplied for a rental listing.");
   }
 
   return listing;
