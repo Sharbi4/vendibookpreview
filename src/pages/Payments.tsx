@@ -204,9 +204,13 @@ const Payments = () => {
   return (
     <div className="sale-light flex min-h-screen flex-col overflow-x-hidden bg-background">
       <SEO
-        title="PayPal Checkout & Pay Later | Vendibook"
-        description="Learn how Vendibook checkout works with PayPal, including Pay in 4 and Pay Monthly when eligible. Compare payment options for food trucks, food trailers, and Vendibook Freight."
+        title="PayPal Checkout for Food Trucks & Trailers | Vendibook"
+        description="Vendibook checkout uses PayPal. Pay with balance, bank, debit, or card through PayPal — Pay Later may appear when you're eligible."
         canonical="/payments"
+        ogTitle="PayPal Checkout on Vendibook"
+        ogDescription="Buy or rent food trucks and trailers on Vendibook with PayPal checkout — Pay Later shown when eligible."
+        twitterTitle="PayPal Checkout on Vendibook"
+        twitterDescription="Buy or rent food trucks and trailers on Vendibook with PayPal checkout — Pay Later shown when eligible."
       />
       <JsonLd
         schema={{
