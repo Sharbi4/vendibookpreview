@@ -104,10 +104,9 @@ const VendiListingBuilder: React.FC = () => {
   /** Unfinished Vendi drafts on this account that belong to another session. */
   const [resumeOffers, setResumeOffers] = useState<ActiveVendiDraft[]>([]);
 
-  /** Per-item media state so a retry only re-sends what actually failed. */
-  const [mediaStatus, setMediaStatus] = useState<Record<string, 'pending' | 'uploading' | 'done' | 'error'>>({});
   /** Field-level history for "undo that" — the last few confirmed drafts. */
   const [history, setHistory] = useState<VendiDraft[]>([]);
+
 
   const creatingDraftRef = useRef(false);
   const resolvingRef = useRef(false);
