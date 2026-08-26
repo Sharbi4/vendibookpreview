@@ -711,6 +711,7 @@ const VendiListingBuilder: React.FC = () => {
       });
       if (error) {
         failed += 1;
+        noteTrouble();
         trackVendi('vendi_media_upload_failed', { userId, listingId, metadata: { kind: item.kind } });
         continue; // keep the successful uploads; this item is retried later
       }
