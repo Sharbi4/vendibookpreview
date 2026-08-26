@@ -64,6 +64,8 @@ const VendiListingBuilder: React.FC = () => {
   const [consentId, setConsentId] = useState<string | null>(null);
   const [attesting, setAttesting] = useState(false);
   const [attestInput, setAttestInput] = useState('');
+  const [attestError, setAttestError] = useState<string | null>(null);
+
   const creatingDraftRef = useRef(false);
   const disclosureShownRef = useRef(false);
   const endRef = useRef<HTMLDivElement>(null);
