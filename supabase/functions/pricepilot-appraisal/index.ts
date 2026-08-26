@@ -317,6 +317,38 @@ Deno.serve(async (req) => {
         valuation.warnings.push('This is a modeled directional estimate from your equipment profile and broad industry bands, not a read of live local comps.');
       }
 
+      // ── Equipment / buildout value layer ────────────────────────────────
+      // Parses supplied equipment only, prices replacement cost context (with
+      // live web research when available), depreciates it, and nudges the
+      // recommendation within a hard cap. Never added on top of comp medians.
+      const preAssessment = assessEquipmentValue(subject);
+      let equipmentSources: { title: string; url: string }[] = [];
+      if (preAssessment.researchQueries.length) {
+        try {
+          const found = await gatherSources(preAssessment.researchQueries, 2, 4);
+          equipmentSources = found.map((s) => ({ title: s.title || s.url, url: s.url }));
+        } catch (e) {
+          console.warn('equipment cost research failed:', e);
+        }
+      }
+      const equipment = assessEquipmentValue(subject, equipmentSources);
+
+      if (equipment.priceBias !== 0) {
+        const clamp = (n: number) =>
+          Math.round(Math.min(valuation.estimatedMarketHigh, Math.max(valuation.estimatedMarketLow, n)));
+        const f = 1 + equipment.priceBias;
+        valuation.recommendedListPrice = clamp(valuation.recommendedListPrice * f);
+        valuation.quickSalePrice = clamp(valuation.quickSalePrice * f);
+        valuation.premiumPositionPrice = clamp(valuation.premiumPositionPrice * f);
+        valuation.adjustmentSummary.push({
+          label: 'Installed equipment & buildout',
+          direction: equipment.priceBias > 0 ? 'up' : 'down',
+          detail: equipment.biasExplanation ?? 'Adjusted for the documented buildout relative to a typical comparable.',
+        });
+      }
+
+
+
       const { narrative, model } = await generatePricePilotNarrative({
         photos,
         systemPrompt:
