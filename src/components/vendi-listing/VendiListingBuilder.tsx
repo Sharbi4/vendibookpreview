@@ -682,26 +682,56 @@ const VendiListingBuilder: React.FC = () => {
 
   const handlePhotos = (files: FileList | null) => {
     if (!files?.length) return;
-    const accepted = Array.from(files).filter((f) => {
-      if (f.type.startsWith('image/')) return f.size <= 15 * 1024 * 1024;
-      if (f.type.startsWith('video/')) return f.size <= 100 * 1024 * 1024;
-      return false;
-    });
-    if (accepted.length !== files.length) {
-      toast.error('Some files were skipped (images up to 15MB, video up to 100MB).');
+    const VIDEO_MIME = ['video/mp4', 'video/webm', 'video/quicktime', 'video/mov'];
+    const VIDEO_EXT = ['mp4', 'webm', 'mov', 'qt'];
+    const IMAGE_EXT = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'heic', 'heif', 'avif'];
+
+    const classify = (f: File): 'image' | 'video' | null => {
+      const ext = f.name.split('.').pop()?.toLowerCase() ?? '';
+      if (f.type.startsWith('video/') || VIDEO_EXT.includes(ext)) return 'video';
+      if (f.type.startsWith('image/') || IMAGE_EXT.includes(ext)) return 'image';
+      return null;
+    };
+
+    const reasons: string[] = [];
+    const accepted: { file: File; kind: 'image' | 'video' }[] = [];
+    for (const file of Array.from(files)) {
+      const kind = classify(file);
+      if (!kind) { reasons.push(`${file.name}: not a photo or video`); continue; }
+      if (kind === 'image' && file.size > 15 * 1024 * 1024) { reasons.push(`${file.name}: photos must be under 15MB`); continue; }
+      if (kind === 'video') {
+        if (file.size > 100 * 1024 * 1024) { reasons.push(`${file.name}: videos must be under 100MB`); continue; }
+        const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
+        const okType = file.type ? VIDEO_MIME.includes(file.type) : VIDEO_EXT.includes(ext);
+        if (!okType) { reasons.push(`${file.name}: video must be MP4, WebM or MOV`); continue; }
+      }
+      accepted.push({ file, kind });
     }
-    setPhotos((prev) => [
-      ...prev,
-      ...accepted.map((file) => ({
+    if (reasons.length) toast.error(reasons.slice(0, 3).join(' · '));
+
+    setPhotos((prev) => {
+      const room = Math.max(0, 12 - prev.length);
+      if (accepted.length > room) toast.error(`You can attach up to 12 files — ${accepted.length - room} were not added.`);
+      const next = accepted.slice(0, room).map(({ file, kind }) => ({
         id: uid(),
         file,
         url: URL.createObjectURL(file),
-        kind: (file.type.startsWith('video/') ? 'video' : 'image') as 'image' | 'video',
-      })),
-    ].slice(0, 12));
+        kind,
+      }));
+      setMediaStatus((s) => {
+        const copy = { ...s };
+        next.forEach((n) => { copy[n.id] = 'pending'; });
+        return copy;
+      });
+      return [...prev, ...next];
+    });
   };
 
-  const removePhoto = (id: string) => setPhotos((prev) => prev.filter((p) => p.id !== id));
+  const removePhoto = (id: string) => {
+    setPhotos((prev) => prev.filter((p) => p.id !== id));
+    setMediaStatus((s) => { const c = { ...s }; delete c[id]; return c; });
+  };
+
 
   const localImages = photos.filter((p) => p.kind === 'image');
   const localVideos = photos.filter((p) => p.kind === 'video');
