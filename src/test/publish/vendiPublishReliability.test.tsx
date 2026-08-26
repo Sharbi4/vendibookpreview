@@ -84,6 +84,8 @@ const seedSession = (consentId: string | null) => {
         image_urls: ['https://cdn.test/a.jpg'],
       },
       answered: [
+        'import_choice',
+        'import_paste',
         'mode',
         'category',
         'subcategory',
