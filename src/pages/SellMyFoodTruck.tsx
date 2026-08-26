@@ -24,6 +24,8 @@ import JsonLd from '@/components/JsonLd';
 import { TellVendibookButton } from '@/components/lead/TellVendibookButton';
 import { useCatalogPrice } from '@/hooks/useCatalogPrices';
 import { ACTIVE_PRODUCT_SLUGS } from '@/lib/monetization/catalogPricing';
+import { useRealSaleListingPhotos } from '@/hooks/useRealSaleListingPhotos';
+
 import heroSelling from '@/assets/how-selling-hero.jpg';
 import heroTruck from '@/assets/hero-food-truck.jpg';
 import trailerGrill from '@/assets/trailer-orange-grill.jpg';
@@ -223,6 +225,27 @@ const SellMyFoodTruck = () => {
   const reduced = useReducedMotion();
   const pro = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.vendibookPro);
   const concierge = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.conciergeListing);
+  const { data: realPhotos = [] } = useRealSaleListingPhotos(8);
+
+  // Real marketplace photography first; bundled imagery only as a fallback.
+  const fallbackCollage = [
+    { src: heroTruck, alt: 'Food truck parked and serving customers at dusk' },
+    { src: trailerCafecito, alt: 'Coffee trailer with a serving window open' },
+    { src: trailerGrill, alt: 'Concession trailer set up for service at an outdoor event' },
+    { src: heroSelling, alt: 'Seller handing over keys to a food truck buyer' },
+  ];
+  const collage = fallbackCollage.map((fallback, i) => {
+    const real = realPhotos[i];
+    return real
+      ? {
+          src: real.imageUrl,
+          alt: `${real.title}${real.city ? ` in ${real.city}${real.state ? `, ${real.state}` : ''}` : ''} listed for sale on Vendibook`,
+        }
+      : fallback;
+  });
+  const featured = realPhotos[0];
+
+
 
   const fade = (delay = 0) =>
     reduced
@@ -329,33 +352,34 @@ const SellMyFoodTruck = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-4 pt-8">
                       <img
-                        src={heroTruck}
-                        alt="Food truck parked and serving customers at dusk"
+                        src={collage[0].src}
+                        alt={collage[0].alt}
                         loading="eager"
                         className="w-full aspect-[3/4] object-cover rounded-[28px] shadow-[0_24px_60px_-32px_rgba(24,20,16,0.45)]"
                       />
                       <img
-                        src={trailerCafecito}
-                        alt="Coffee trailer with a serving window open"
+                        src={collage[1].src}
+                        alt={collage[1].alt}
                         loading="lazy"
                         className="w-full aspect-square object-cover rounded-[24px] shadow-[0_18px_44px_-28px_rgba(24,20,16,0.4)]"
                       />
                     </div>
                     <div className="space-y-4">
                       <img
-                        src={trailerGrill}
-                        alt="Concession trailer set up for service at an outdoor event"
+                        src={collage[2].src}
+                        alt={collage[2].alt}
                         loading="lazy"
                         className="w-full aspect-square object-cover rounded-[24px] shadow-[0_18px_44px_-28px_rgba(24,20,16,0.4)]"
                       />
                       <img
-                        src={heroSelling}
-                        alt="Seller handing over keys to a food truck buyer"
+                        src={collage[3].src}
+                        alt={collage[3].alt}
                         loading="lazy"
                         className="w-full aspect-[3/4] object-cover rounded-[28px] shadow-[0_24px_60px_-32px_rgba(24,20,16,0.45)]"
                       />
                     </div>
                   </div>
+
                 </motion.div>
               </div>
             </div>
@@ -456,19 +480,28 @@ const SellMyFoodTruck = () => {
                           Live preview
                         </div>
                         <img
-                          src={heroTruck}
+                          src={featured?.imageUrl ?? heroTruck}
                           alt=""
                           loading="lazy"
                           className="w-full aspect-[4/3] object-cover"
                         />
                         <div className="p-4">
-                          <div className="text-sm font-medium text-foreground">
-                            2019 Step Van Food Truck
+                          <div className="text-sm font-medium text-foreground line-clamp-1">
+                            {featured?.title ?? '2019 Step Van Food Truck'}
                           </div>
-                          <div className="mt-1 text-xs text-muted-foreground">Full kitchen build</div>
-                          <div className="mt-3 text-base font-semibold text-foreground">$78,500</div>
+                          <div className="mt-1 text-xs text-muted-foreground">
+                            {featured?.city
+                              ? [featured.city, featured.state].filter(Boolean).join(', ')
+                              : 'Full kitchen build'}
+                          </div>
+                          <div className="mt-3 text-base font-semibold text-foreground">
+                            {featured?.priceSale
+                              ? `$${featured.priceSale.toLocaleString()}`
+                              : '$78,500'}
+                          </div>
                           <div className="mt-3 h-8 rounded-full bg-primary/90" />
                         </div>
+
                       </div>
                     </div>
                   </div>
@@ -512,11 +545,14 @@ const SellMyFoodTruck = () => {
                       </Link>
                     </div>
                     <img
-                      src={row.image}
-                      alt={row.alt}
+                      src={realPhotos[i + 4]?.imageUrl ?? realPhotos[i]?.imageUrl ?? row.image}
+                      alt={realPhotos[i + 4] || realPhotos[i]
+                        ? `${(realPhotos[i + 4] ?? realPhotos[i]).title} listed for sale on Vendibook`
+                        : row.alt}
                       loading="lazy"
                       className="w-full aspect-[4/3] object-cover rounded-[26px] shadow-[0_22px_56px_-34px_rgba(24,20,16,0.45)]"
                     />
+
                   </motion.div>
                 ))}
               </div>
