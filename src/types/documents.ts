@@ -140,7 +140,6 @@ export interface RequiredDocumentSetting {
 
 /** Host-authored insurance detail. Never a platform-wide rule. */
 export interface InsuranceRequirementInput {
-  [key: string]: unknown;
   insurance_required?: boolean;
   minimum_general_liability?: number | null;
   additional_insured_required?: boolean;
@@ -152,7 +151,6 @@ export interface InsuranceRequirementInput {
 export interface RequirementConfigInput {
   insurance?: InsuranceRequirementInput;
   accept_on_upload?: boolean;
-  [key: string]: unknown;
 }
 
 // Interface for an uploaded document

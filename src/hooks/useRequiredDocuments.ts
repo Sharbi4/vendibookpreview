@@ -260,17 +260,23 @@ export function useDocumentComplianceStatus(listingId: string | undefined, booki
         documentType: DocumentType;
         required: ListingRequiredDocument;
         uploaded: BookingDocument | null;
-        status: 'missing' | DocumentStatus;
+        status: 'missing' | 'pending' | 'approved' | 'rejected';
       }>,
     };
   }
 
   const documentStatuses = requiredDocs.map((req) => {
     const uploaded = uploadedDocs.find((doc) => doc.document_type === req.document_type);
-    let status: 'missing' | DocumentStatus = 'missing';
+    let status: 'missing' | 'pending' | 'approved' | 'rejected' = 'missing';
     
     if (uploaded) {
-      status = uploaded.status;
+      // Legacy consumers only understand the original four states.
+      status =
+        uploaded.status === 'under_review'
+          ? 'pending'
+          : uploaded.status === 'waived'
+            ? 'approved'
+            : uploaded.status;
     }
 
     return {

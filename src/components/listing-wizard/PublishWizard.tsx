@@ -2129,7 +2129,7 @@ export const PublishWizard: React.FC = () => {
             description: doc.description || null,
             title: doc.title?.trim() || null,
             instructions: doc.instructions?.trim() || null,
-            requirement_config: doc.requirement_config ?? {}}));
+            requirement_config: (doc.requirement_config ?? {}) as unknown as Record<string, never>}));
 
           const { error: insertError } = await supabase
             .from('listing_required_documents')
