@@ -265,12 +265,17 @@ export const BookingDocumentUpload = ({
     onDocumentsChange(stagedDocuments.filter(d => d.documentType !== docType));
   };
 
-  const allDocsStaged = requiredDocs.every(req =>
-    stagedDocuments.some(doc => doc.documentType === req.document_type)
+  // Only host-configured pre-booking requirements gate the Continue button.
+  const blockers = requiredDocs.filter(
+    (req) => req.is_required && req.deadline_type === 'before_booking_request',
   );
+  const missingBlockers = blockers.filter(
+    (req) => !stagedDocuments.some((doc) => doc.documentType === req.document_type),
+  );
+  const allDocsStaged = missingBlockers.length === 0;
 
   const stagedCount = stagedDocuments.length;
-  const totalRequired = requiredDocs.length;
+  const totalRequired = blockers.length;
 
   // If all docs are on file, show bypass UI
   if (docsOnFile) {
@@ -379,7 +384,9 @@ export const BookingDocumentUpload = ({
         className="w-full"
         variant="dark-shine"
       >
-        {allDocsStaged ? 'Continue' : `Upload ${totalRequired - stagedCount} more document${totalRequired - stagedCount > 1 ? 's' : ''}`}
+        {allDocsStaged
+          ? 'Continue'
+          : `Upload ${missingBlockers.length} more document${missingBlockers.length > 1 ? 's' : ''}`}
       </Button>
     </div>
   );
