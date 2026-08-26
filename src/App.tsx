@@ -59,6 +59,7 @@ const ConciergeOrderPage = lazy(() => import("./pages/ConciergeOrder"));
 
 const ListPage = lazy(() => import("./pages/List"));
 const AIListingCreator = lazy(() => import("./pages/AIListingCreator"));
+const ListWithVendi = lazy(() => import("./pages/ListWithVendi"));
 const ListingDetail = lazy(() => import("./pages/ListingDetail"));
 const Account = lazy(() => import("./pages/Account"));
 const Favorites = lazy(() => import("./pages/Favorites"));
