@@ -34,7 +34,7 @@ const server = {
       state: body.state,
       postal_code: body.zipCode,
       address: body.location,
-      images: [],
+      image_urls: [],
       created_at: new Date(Date.now() + this.inserts * 1000).toISOString(),
     };
     this.rows.push(row);
