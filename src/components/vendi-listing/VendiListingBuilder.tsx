@@ -16,6 +16,7 @@ import {
 } from '@/lib/vendi-listing/script';
 import type { DocumentType } from '@/types/documents';
 import { isSkip } from '@/lib/vendi-listing/extract';
+import { publishVendiListing } from '@/lib/vendi-listing/publishVendiListing';
 
 import {
   ATTESTATIONS,
@@ -79,6 +80,8 @@ const VendiListingBuilder: React.FC = () => {
   const [savingManually, setSavingManually] = useState(false);
 
   const creatingDraftRef = useRef(false);
+  const publishInFlightRef = useRef(false);
+
   const disclosureShownRef = useRef(false);
   const endRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -448,12 +451,19 @@ const VendiListingBuilder: React.FC = () => {
     }
   };
 
+  /**
+   * Publish. The listing only goes live through the SAME canonical publisher the
+   * step-by-step wizard uses, and the seller is only told they're live — and
+   * their local recovery state only cleared — after the server row has been
+   * re-read and verified.
+   */
   const handlePublish = async () => {
     if (blockers.length) return;
     if (!user || !consentId) return;
+    if (publishing || publishInFlightRef.current) return; // double-click guard
+    publishInFlightRef.current = true;
     setPublishing(true);
     try {
-
       const { data: sessionData } = await supabase.auth.getSession();
       const accessToken = sessionData.session?.access_token;
       if (!accessToken) throw new Error('Please sign in again to publish.');
@@ -477,11 +487,13 @@ const VendiListingBuilder: React.FC = () => {
         setDraftId(listingId);
       }
 
+      // 1. Flush media + fields and AWAIT them. Never race the debounced autosave.
       let imageUrls = uploadedUrls;
       let videoUrls = uploadedVideoUrls;
-      if (photos.length && !imageUrls.length && !videoUrls.length) {
+      if (photos.length && (!imageUrls.length || (localVideos.length && !videoUrls.length))) {
         const uploaded = await uploadMedia(listingId, user.id);
-        imageUrls = uploaded.images; videoUrls = uploaded.videos;
+        imageUrls = uploaded.images.length ? uploaded.images : imageUrls;
+        videoUrls = uploaded.videos.length ? uploaded.videos : videoUrls;
       }
       setUploadedUrls(imageUrls);
       setUploadedVideoUrls(videoUrls);
@@ -491,31 +503,36 @@ const VendiListingBuilder: React.FC = () => {
       if (updateError) throw updateError;
       await syncRequiredDocuments(listingId);
 
+      // 2. Canonical publish + authoritative verification.
+      const verified = await publishVendiListing({
+        listingId,
+        userId: user.id,
+        fields: payload as Record<string, unknown>,
+        expectedImages: imageUrls,
+      });
 
-      const { error: publishError } = await supabase
-        .from('listings')
-        .update({ status: 'published', published_at: new Date().toISOString() } as never)
-        .eq('id', listingId);
-
+      // 3. Only now is it safe to drop the local recovery state.
       if (storageKey) localStorage.removeItem(storageKey);
-
-      if (publishError) {
-        toast.message('Draft saved — a few details still need review before it can go live.', {
-          description: publishError.message,
-        });
-        navigate(`/create-listing/${listingId}`);
-        return;
-      }
-
-      toast.success('Your listing is live.');
-      navigate(`/listing/${listingId}`);
+      toast.success('Your listing is live 🎉', {
+        description: 'Buyers can find it now. You can keep editing it any time from your dashboard.',
+      });
+      navigate(verified.publicPath);
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Something went wrong.';
-      toast.error(message);
+      const id = draftId;
+      // Recovery state is deliberately untouched: the seller keeps their draft.
+      toast.error(message, {
+        description: 'Your draft is saved — nothing was lost. You can try again or finish in the full editor.',
+        ...(id
+          ? { action: { label: 'Review in full editor', onClick: () => navigate(`/create-listing/${id}`) } }
+          : {}),
+      });
     } finally {
+      publishInFlightRef.current = false;
       setPublishing(false);
     }
   };
+
 
   const startOver = () => {
     if (storageKey) localStorage.removeItem(storageKey);
