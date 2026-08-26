@@ -276,8 +276,11 @@ serve(async (req) => {
 
     // Live grounding for pricing + business-idea. Description is creative — skip search.
     const queries = buildResearchQueries(tool, data);
+    // Internal sale comparables (SALE only — rentals never anchor to sale comps).
+    const marketEvidence = tool === "pricing" ? await loadMarketEvidence(data) : null;
     const sources = queries.length ? await gatherSources(queries, 3, 8) : [];
     const sourceContext = formatSourceContext(sources);
+    const evidenceContext = marketEvidence ? formatMarketEvidenceContext(marketEvidence) : "";
 
     // Use Pro for grounded calls (better citation following); Flash for plain copywriting.
     const model = queries.length ? "google/gemini-3-pro-preview" : "google/gemini-3-flash-preview";
@@ -291,8 +294,9 @@ serve(async (req) => {
       body: JSON.stringify({
         model,
         messages: [
-          { role: "system", content: getSystemPrompt(tool, sources.length > 0) },
-          { role: "user", content: getUserPrompt(tool, data, sourceContext) },
+          { role: "system", content: getSystemPrompt(tool, sources.length > 0, !!marketEvidence) },
+          { role: "user", content: getUserPrompt(tool, data, sourceContext, evidenceContext) },
+
         ],
         response_format: { type: "json_object" },
       }),
