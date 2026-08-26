@@ -47,7 +47,7 @@ export function capturedFacts(
     if (value) facts.push({ questionId, label, value });
   };
 
-  push('category', 'Type', draft.category ? CATEGORY_LABELS[draft.category] ?? draft.category : null);
+  push('category', 'Type', draft.category ? (CATEGORY_LABELS as Record<string, string>)[draft.category] ?? draft.category : null);
   push('mode', 'Listing', draft.mode === 'sale' ? 'For sale' : draft.mode === 'rent' ? 'For rent' : null);
   push('subcategory', 'Build', draft.subcategory ? SUBCATEGORY_LABELS[draft.subcategory] ?? draft.subcategory : null);
   push('location', 'Location', [draft.city, draft.state].filter(Boolean).join(', ') || null);
