@@ -679,6 +679,35 @@ const VendiListingBuilder: React.FC = () => {
               </div>
             )}
 
+            {/* Tap-to-add chips for list questions (equipment, screening docs) */}
+            {current?.kind === 'list' && (current.options?.(draft)?.length ?? 0) > 0 && (
+              <div className="flex flex-wrap gap-2 pt-1">
+                {(current.options?.(draft) ?? []).map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setInput((prev) => (prev.trim() ? `${prev.replace(/,\s*$/, '')}, ${opt.label}` : opt.label))}
+                    className="rounded-full border border-white/[0.1] bg-white/[0.035] px-3.5 py-1.5 text-xs text-foreground/85 transition hover:border-[rgba(255,81,36,0.4)] hover:bg-white/[0.07]"
+                  >
+                    + {opt.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* One-tap suggestion built only from confirmed facts */}
+            {current?.suggest?.(draft) && (
+              <div className="pt-1">
+                <button
+                  type="button"
+                  onClick={() => submitAnswer(current.suggest?.(draft) ?? '')}
+                  className="rounded-full border border-[rgba(255,81,36,0.35)] bg-[rgba(255,81,36,0.09)] px-4 py-2 text-sm text-foreground transition hover:bg-[rgba(255,81,36,0.14)]"
+                >
+                  Use “{current.suggest?.(draft)}”
+                </button>
+              </div>
+            )}
+
             {current?.kind === 'photos' && (
               <div className="space-y-4 pt-1">
                 <div className="flex flex-wrap gap-2.5">
@@ -689,10 +718,17 @@ const VendiListingBuilder: React.FC = () => {
                       animate={{ opacity: 1, scale: 1 }}
                       className="relative h-[86px] w-[86px] overflow-hidden rounded-2xl border border-white/[0.1]"
                     >
-                      <img src={p.url} alt="Listing photo" className="h-full w-full object-cover" />
+                      {p.kind === 'video' ? (
+                        <div className="flex h-full w-full flex-col items-center justify-center gap-1 bg-white/[0.05] text-muted-foreground">
+                          <Video className="h-5 w-5" />
+                          <span className="text-[10px]">Video</span>
+                        </div>
+                      ) : (
+                        <img src={p.url} alt="Listing photo" className="h-full w-full object-cover" />
+                      )}
                       <button
                         type="button"
-                        aria-label="Remove photo"
+                        aria-label="Remove media"
                         onClick={() => removePhoto(p.id)}
                         className="absolute right-1.5 top-1.5 rounded-full border border-white/10 bg-black/65 p-1 backdrop-blur-md transition hover:bg-black/85"
                       >
@@ -704,17 +740,19 @@ const VendiListingBuilder: React.FC = () => {
                     type="button"
                     onClick={() => fileRef.current?.click()}
                     className="flex h-[86px] w-[86px] flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-white/15 text-muted-foreground transition hover:border-[rgba(255,81,36,0.45)] hover:text-foreground"
-                    aria-label="Add photos"
+                    aria-label="Add photos or video"
                   >
                     <ImagePlus className="h-5 w-5" />
                     <span className="text-[10px] tracking-wide">Add</span>
                   </button>
                 </div>
-                <Button onClick={() => submitAnswer('done')} disabled={!photos.length} className="rounded-full">
-                  Continue with {photos.length} photo{photos.length === 1 ? '' : 's'}
+                <Button onClick={() => submitAnswer('done')} disabled={!localImages.length} className="rounded-full">
+                  Continue with {localImages.length} photo{localImages.length === 1 ? '' : 's'}
+                  {localVideos.length ? ` and ${localVideos.length} video${localVideos.length === 1 ? '' : 's'}` : ''}
                 </Button>
               </div>
             )}
+
 
             {reviewing && (
               <motion.div
