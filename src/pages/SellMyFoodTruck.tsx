@@ -478,19 +478,28 @@ const SellMyFoodTruck = () => {
                           Live preview
                         </div>
                         <img
-                          src={heroTruck}
+                          src={featured?.imageUrl ?? heroTruck}
                           alt=""
                           loading="lazy"
                           className="w-full aspect-[4/3] object-cover"
                         />
                         <div className="p-4">
-                          <div className="text-sm font-medium text-foreground">
-                            2019 Step Van Food Truck
+                          <div className="text-sm font-medium text-foreground line-clamp-1">
+                            {featured?.title ?? '2019 Step Van Food Truck'}
                           </div>
-                          <div className="mt-1 text-xs text-muted-foreground">Full kitchen build</div>
-                          <div className="mt-3 text-base font-semibold text-foreground">$78,500</div>
+                          <div className="mt-1 text-xs text-muted-foreground">
+                            {featured?.city
+                              ? [featured.city, featured.state].filter(Boolean).join(', ')
+                              : 'Full kitchen build'}
+                          </div>
+                          <div className="mt-3 text-base font-semibold text-foreground">
+                            {featured?.priceSale
+                              ? `$${featured.priceSale.toLocaleString()}`
+                              : '$78,500'}
+                          </div>
                           <div className="mt-3 h-8 rounded-full bg-primary/90" />
                         </div>
+
                       </div>
                     </div>
                   </div>
