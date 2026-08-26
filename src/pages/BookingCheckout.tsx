@@ -91,6 +91,14 @@ const BookingCheckout = () => {
   const { data: docsOnFileData } = useDocumentsOnFile(requiredDocTypes);
   const docsOnFile = docsOnFileData?.docsOnFile ?? false;
   const hasRequiredDocs = requiredDocs && requiredDocs.length > 0;
+  /**
+   * Only requirements the host explicitly configured as due BEFORE booking may
+   * block checkout. Everything else (before approval / after approval) is
+   * collected later, so Instant Book stays instant.
+   */
+  const preBookingBlockers = (requiredDocs ?? []).filter(
+    (d) => d.is_required && d.deadline_type === 'before_booking_request',
+  );
 
   // Parse dates from URL params
   const startDateParam = searchParams.get('start');
@@ -249,7 +257,7 @@ const BookingCheckout = () => {
 
   const steps = [
     ...(requiresBusinessInfo ? [{ id: STEP_BUSINESS_INFO, label: 'Business information', icon: Building2 }] : []),
-    ...(hasRequiredDocs ? [{ id: STEP_DOCUMENTS, label: 'Required documents', icon: FileCheck }] : []),
+    ...(hasRequiredDocs ? [{ id: STEP_DOCUMENTS, label: 'Documents & insurance', icon: FileCheck }] : []),
     { id: STEP_FULFILLMENT, label: 'Fulfillment & details', icon: Truck },
     { id: STEP_REVIEW, label: 'Review & submit', icon: CheckCircle2 },
   ];
@@ -273,9 +281,9 @@ const BookingCheckout = () => {
   );
   const isStepBusinessInfoComplete = isBusinessInfoComplete && completedSteps.includes(STEP_BUSINESS_INFO);
   // Documents step is complete when all required docs are staged OR docs are on file
-  const allDocsStaged = !hasRequiredDocs || docsOnFile || (requiredDocs?.every(req =>
+  const allDocsStaged = !hasRequiredDocs || docsOnFile || preBookingBlockers.every(req =>
     stagedDocuments.some(doc => doc.documentType === req.document_type)
-  ) ?? false);
+  );
   const isStepDocsComplete = !hasRequiredDocs || (completedSteps.includes(STEP_DOCUMENTS) && allDocsStaged);
   const isFulfillmentComplete = userInfo?.agreedToTerms && 
     (fulfillmentSelected !== 'delivery' || deliveryAddress.trim());
@@ -912,7 +920,7 @@ const BookingCheckout = () => {
                   )}
                 >
                   <div className="flex items-center gap-4">
-                    <span className="text-lg font-semibold">{STEP_DOCUMENTS}. Required documents</span>
+                    <span className="text-lg font-semibold">{STEP_DOCUMENTS}. Documents & insurance</span>
                     {isStepDocsComplete && (
                       <CheckCircle2 className="h-5 w-5 text-emerald-500" />
                     )}
