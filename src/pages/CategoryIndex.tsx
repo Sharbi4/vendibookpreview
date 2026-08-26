@@ -117,7 +117,13 @@ const categoryLabel = (c: CategoryKey): string =>
 
 const baseSelect = 'id, title, description, cover_image_url, price_daily, price_weekly, price_sale, mode, category, city, state, address';
 
-const baseQuery = (categories: CategoryKey[], mode: ModeFilter, limit: number, orFilter?: string) => {
+const baseQuery = (
+  categories: CategoryKey[],
+  mode: ModeFilter,
+  limit: number,
+  orFilter?: string,
+  subcategories?: string[],
+) => {
   let q = supabase
     .from('listings')
     .select(baseSelect)
@@ -128,6 +134,7 @@ const baseQuery = (categories: CategoryKey[], mode: ModeFilter, limit: number, o
     .order('updated_at', { ascending: false })
     .limit(limit);
   if (mode !== 'any') q = q.eq('mode', mode);
+  if (subcategories?.length) q = q.in('subcategory', subcategories as any[]);
   if (orFilter) q = q.or(orFilter);
   return q;
 };
