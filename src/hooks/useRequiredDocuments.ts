@@ -3,6 +3,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import type { DocumentType, DocumentStatus, DocumentDeadlineType } from '@/types/documents';
+import {
+  evaluateRequirements,
+  type RequirementConfig,
+  type RequirementRecord,
+  type UploadRecord,
+  type RequirementEvaluation,
+} from '@/lib/documents/requirements';
 
 // Types for required documents from listing
 export interface ListingRequiredDocument {
@@ -13,6 +20,9 @@ export interface ListingRequiredDocument {
   deadline_type: DocumentDeadlineType;
   deadline_offset_hours: number | null;
   description: string | null;
+  title?: string | null;
+  instructions?: string | null;
+  requirement_config?: RequirementConfig | null;
 }
 
 // Types for uploaded booking documents
@@ -60,14 +70,15 @@ export function useListingRequiredDocuments(listingId: string | undefined) {
     queryFn: async () => {
       if (!listingId) return [];
       
+      // Return REQUIRED and OPTIONAL requirements — optional ones are shown to
+      // the renter but never block a booking.
       const { data, error } = await supabase
         .from('listing_required_documents')
         .select('*')
-        .eq('listing_id', listingId)
-        .eq('is_required', true);
+        .eq('listing_id', listingId);
 
       if (error) throw error;
-      return (data || []) as ListingRequiredDocument[];
+      return (data || []) as unknown as ListingRequiredDocument[];
     },
     enabled: !!listingId,
   });
@@ -285,4 +296,27 @@ export function useDocumentComplianceStatus(listingId: string | undefined, booki
     rejectedCount,
     documentStatuses,
   };
+}
+
+
+/**
+ * Single source of truth for "what does this renter still owe, and does any of
+ * it actually block the booking?". Instant Book is only ever blocked by
+ * requirements the host explicitly configured as due before booking.
+ */
+export function useRequirementEvaluation(params: {
+  listingId: string | undefined;
+  bookingId?: string | undefined;
+  isInstantBook?: boolean;
+}): RequirementEvaluation & { isLoading: boolean } {
+  const { data: requirements, isLoading: loadingReqs } = useListingRequiredDocuments(params.listingId);
+  const { data: uploads, isLoading: loadingUploads } = useBookingDocuments(params.bookingId);
+
+  const evaluation = evaluateRequirements({
+    requirements: (requirements ?? []) as unknown as RequirementRecord[],
+    uploads: (uploads ?? []) as unknown as UploadRecord[],
+    isInstantBook: params.isInstantBook,
+  });
+
+  return { ...evaluation, isLoading: loadingReqs || (!!params.bookingId && loadingUploads) };
 }
