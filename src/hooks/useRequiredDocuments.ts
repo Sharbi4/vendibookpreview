@@ -260,14 +260,14 @@ export function useDocumentComplianceStatus(listingId: string | undefined, booki
         documentType: DocumentType;
         required: ListingRequiredDocument;
         uploaded: BookingDocument | null;
-        status: 'missing' | 'pending' | 'approved' | 'rejected';
+        status: 'missing' | DocumentStatus;
       }>,
     };
   }
 
   const documentStatuses = requiredDocs.map((req) => {
     const uploaded = uploadedDocs.find((doc) => doc.document_type === req.document_type);
-    let status: 'missing' | 'pending' | 'approved' | 'rejected' = 'missing';
+    let status: 'missing' | DocumentStatus = 'missing';
     
     if (uploaded) {
       status = uploaded.status;
