@@ -221,7 +221,156 @@ export function resumeMessage(d: VendiDraft, answered: string[] = []): string {
   } Let’s keep going.`;
 }
 
+/**
+ * Equipment terms Vendi recognises when a seller names them outright. Matching a
+ * written term is not inference — nothing here is guessed from context, photos,
+ * or category. Longest match wins so "3-compartment sink" never also logs "sink".
+ */
+const EQUIPMENT_LEXICON = [
+  'espresso machine', 'espresso setup', 'coffee brewer', 'grinder', 'refrigerator', 'refrigeration',
+  'fridge', 'freezer', 'three-compartment sink', '3-compartment sink', 'three compartment sink',
+  '3 compartment sink', 'three comp sink', '3 comp sink', 'hand sink', 'sink', 'generator',
+  'griddle', 'flat top', 'deep fryer', 'fryer', 'pizza oven', 'convection oven', 'oven', 'smoker',
+  'char grill', 'grill', 'range', 'exhaust hood', 'hood', 'fire suppression', 'ice machine',
+  'water tank', 'fresh water tank', 'grey water tank', 'propane', 'air conditioning', 'pos system',
+  'soft serve machine', 'blender', 'food warmer', 'steam table', 'prep table', 'solar',
+];
+
+const titleFirst = (value: string) => value.charAt(0).toUpperCase() + value.slice(1);
+
+const listPhrase = (items: string[]): string =>
+  items.length <= 1
+    ? items[0] ?? ''
+    : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
+
+/** Equipment explicitly named in the seller's own words. */
+function matchEquipment(lower: string, category?: string | null): string[] {
+  const vocabulary = [
+    ...EQUIPMENT_LEXICON,
+    ...amenitySuggestions(category).map((a) => a.toLowerCase()),
+  ];
+  const hits = vocabulary.filter((term) => lower.includes(term));
+  // Drop any term fully contained in a longer match ("sink" inside "hand sink").
+  const distinct = hits.filter((term) => !hits.some((other) => other !== term && other.includes(term)));
+  return Array.from(new Set(distinct)).slice(0, 10).map(titleFirst);
+}
+
+/**
+ * Pull additional, explicitly-stated facts out of a free-text answer so a seller
+ * who says several things at once is never asked for them again. Only fields
+ * that are still empty are filled, and nothing is inferred.
+ */
+export function extractExtraFacts(
+  d: VendiDraft,
+  raw: string,
+): { patch: Partial<VendiDraft>; answeredIds: string[]; captured: string[] } {
+  const text = cleanText(raw);
+  const lower = text.toLowerCase();
+  const patch: Partial<VendiDraft> = {};
+  const answeredIds: string[] = [];
+  const captured: string[] = [];
+
+  // ── Location ──────────────────────────────────────────────────────────
+  if (!d.city || !d.state) {
+    const inline = text.match(/\b([A-Z][A-Za-z.'-]+(?:\s+[A-Z][A-Za-z.'-]+){0,2}),\s*([A-Z]{2})\b(?:\s+(\d{5}))?/);
+    if (inline) {
+      const loc = parseLocation(inline[0]);
+      if (loc.city && loc.state) {
+        patch.city = loc.city;
+        patch.state = loc.state;
+        patch.zip_code = loc.zip_code;
+        patch.address = `${loc.city}, ${loc.state}`;
+        answeredIds.push('location');
+        captured.push('location');
+      }
+    }
+  }
+
+  // ── Price (only when a currency amount is actually written) ───────────
+  if (text.includes('$')) {
+    const segment = text.match(/[^.\n]*\$\s?[0-9][^.\n]*/)?.[0] ?? '';
+    const periodic = /(per\s*(month|week|day|hour)|\/\s*(mo|wk|day|hr)|monthly|weekly|daily|hourly|a\s*(month|week|day|hour))/i;
+    if (d.mode === 'sale' && !d.price_sale && segment && !periodic.test(segment)) {
+      const amount = parseMoney(segment);
+      if (amount) {
+        patch.price_sale = amount;
+        answeredIds.push('sale_price');
+        captured.push('price');
+      }
+    }
+    const noRateYet = !(d.price_monthly || d.price_weekly || d.price_daily || d.price_hourly);
+    if (d.mode === 'rent' && noRateYet) {
+      const rates = parseExtraRates(text);
+      const keys = Object.keys(rates);
+      if (keys.length) {
+        Object.assign(patch, rates);
+        const period = Object.entries(RATE_KEY).find(([, field]) => keys.includes(field as string))?.[0];
+        if (period && !d.rent_period) {
+          (patch as VendiDraft).rent_period = period;
+          answeredIds.push('rent_period');
+        }
+        answeredIds.push('rent_price');
+        captured.push('rate');
+      }
+    }
+  }
+
+  // ── Dimensions ────────────────────────────────────────────────────────
+  if (!d.length_inches) {
+    const hasUnit = /\b(ft|foot|feet|in|inch|inches)\b|'|"/i.test(text);
+    const dims = parseDimensions(text);
+    if (dims.length_inches && dims.width_inches && hasUnit) {
+      Object.assign(patch, dims);
+      answeredIds.push('dimensions');
+      captured.push('dimensions');
+    } else {
+      const single = lower.match(/(\d{1,3})(?:\.\d+)?\s*-?\s*(?:ft|foot|feet)\b/);
+      if (single) {
+        patch.length_inches = Math.round(Number(single[1]) * 12);
+        answeredIds.push('dimensions');
+        captured.push('dimensions');
+      }
+    }
+  }
+
+  // ── Equipment named outright ──────────────────────────────────────────
+  if (!d.amenities?.length) {
+    const found = matchEquipment(lower, d.category);
+    if (found.length) {
+      patch.amenities = found;
+      answeredIds.push('amenities');
+      captured.push('equipment');
+    }
+  }
+
+  return { patch, answeredIds, captured };
+}
+
+/**
+ * A compact, conversational recap of what Vendi now holds. Every clause comes
+ * from a confirmed field — never from an assumption.
+ */
+export function captureSummary(d: VendiDraft): string {
+  const size = d.length_inches ? `${Math.round(d.length_inches / 12)}-foot ` : '';
+  const build = d.subcategory ? `${(SUBCATEGORY_LABELS[d.subcategory] ?? '').toLowerCase()} ` : '';
+  const label = categoryLabel(d);
+
+  const clauses: string[] = [];
+  if (label) clauses.push(`a ${size}${build}${label}`.replace(/\s+/g, ' '));
+  if (d.city && d.state) clauses.push(`in ${d.city}, ${d.state}`);
+  if (d.amenities?.length) clauses.push(`with ${listPhrase(d.amenities.slice(0, 5).map((a) => a.toLowerCase()))}`);
+  if (d.price_sale) clauses.push(`asking ${money(d.price_sale)}`);
+  else {
+    const rates = rateSummary(d);
+    if (rates) clauses.push(`at ${rates}`);
+  }
+
+  if (!clauses.length) return 'Got it — that’s in your listing now.';
+  return `Nice — that gives me a lot to work with. I’ve got ${clauses.join(', ')}. That’s already a strong start.`;
+}
+
 export const QUESTIONS: Question[] = [
+
   {
     id: 'import_choice',
     kind: 'choice',
