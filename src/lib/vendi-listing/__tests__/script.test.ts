@@ -41,9 +41,10 @@ describe('extraction', () => {
 });
 
 describe('interview branching', () => {
-  it('starts with mode and only asks rental questions for rentals', () => {
+  it('starts with the optional import offer, then mode', () => {
     const empty: VendiDraft = { title: null, description: null, category: null, mode: null };
-    expect(nextQuestion(empty, [])?.id).toBe('mode');
+    expect(nextQuestion(empty, [])?.id).toBe('import_choice');
+    expect(nextQuestion(empty, ['import_choice', 'import_paste'])?.id).toBe('mode');
 
     const rent = answer(answer(empty, 'mode', 'rent'), 'category', 'food_trailer');
     const rentIds = visibleQuestions(rent).map((x) => x.id);

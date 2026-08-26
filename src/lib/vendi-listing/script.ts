@@ -16,14 +16,17 @@ import type { ListingPreview } from '@/components/ai-listing/LivePreviewPanel';
 import {
   cleanText, isSkip, parseDimensions, parseList, parseLocation, parseMoney, parseYesNo,
 } from './extract';
+import { parseExistingListing, type PendingConfirm } from './importText';
 
 export type VendiDraft = ListingPreview & {
   zip_code?: string | null;
   /** Which rental rate the seller chose to price on. */
   rent_period?: string | null;
+  /** Ambiguous values pulled from a pasted listing, awaiting confirmation. */
+  pending_confirm?: PendingConfirm[];
 };
 
-export type QuestionKind = 'choice' | 'text' | 'money' | 'location' | 'yesno' | 'list' | 'photos';
+export type QuestionKind = 'choice' | 'text' | 'money' | 'location' | 'yesno' | 'list' | 'photos' | 'paste';
 
 export interface QuestionOption {
   value: string;
@@ -34,6 +37,10 @@ export interface QuestionOption {
 export interface ApplyResult {
   patch?: Partial<VendiDraft>;
   error?: string;
+  /** Other interview questions this answer already satisfies. */
+  answeredIds?: string[];
+  /** A friendly recap Vendi says after applying the answer. */
+  say?: string;
 }
 
 export interface Question {
@@ -46,6 +53,7 @@ export interface Question {
   when?: (d: VendiDraft) => boolean;
   apply: (d: VendiDraft, raw: string) => ApplyResult;
 }
+
 
 const MOBILE_CATEGORIES = ['food_truck', 'food_trailer'];
 
@@ -72,6 +80,45 @@ export const FULFILLMENT_OPTIONS: QuestionOption[] = [
 
 export const QUESTIONS: Question[] = [
   {
+    id: 'import_choice',
+    kind: 'choice',
+    prompt: () =>
+      'Before we start — already listed this somewhere else, like Facebook Marketplace, Craigslist, or a dealer site? Paste that listing text and I’ll prefill everything I can.',
+    options: () => [
+      { value: 'paste', label: 'Paste my existing listing', description: 'I’ll pull out what’s written' },
+      { value: 'fresh', label: 'Start fresh', description: 'Answer a few quick questions' },
+    ],
+    apply: (_d, raw) => {
+      const v = cleanText(raw).toLowerCase();
+      if (v.startsWith('paste') || v.startsWith('yes')) return { patch: {} };
+      if (v.startsWith('fresh') || v.startsWith('no') || v.startsWith('skip')) {
+        return { patch: {}, answeredIds: ['import_paste'] };
+      }
+      return { error: 'Paste your existing listing, or choose “Start fresh”.' };
+    },
+  },
+  {
+    id: 'import_paste',
+    kind: 'paste',
+    optional: true,
+    prompt: () =>
+      'Paste the listing text here — title, description, specs, price, location. I’ll only use what’s actually written, and nothing gets pulled from the other site.',
+    placeholder: 'Paste your existing listing text…',
+    apply: (_d, raw) => {
+      if (isSkip(raw)) return { patch: {} };
+      const result = parseExistingListing(raw);
+      if (!result.found.length && !result.confirms.length) {
+        return { error: 'I couldn’t find anything definite in that. Paste more of the listing, or type “skip”.' };
+      }
+      return {
+        patch: { ...(result.patch as Partial<VendiDraft>), pending_confirm: result.confirms },
+        answeredIds: result.answered,
+        say: `Here’s what I pulled in: ${result.found.join(', ')}. I’ll only ask about what’s still missing.`,
+      };
+    },
+  },
+  {
+
     id: 'mode',
     kind: 'choice',
     prompt: () => "Let's build your listing together. Are you renting this out, or selling it?",
@@ -276,13 +323,35 @@ export const QUESTIONS: Question[] = [
   },
 ];
 
+/** Yes/no questions generated from ambiguous values found in a pasted listing. */
+export function confirmQuestions(draft: VendiDraft): Question[] {
+  return (draft.pending_confirm ?? []).map((c) => ({
+    id: c.id,
+    kind: 'yesno' as const,
+    prompt: () => c.question,
+    apply: (_d: VendiDraft, raw: string): ApplyResult => {
+      const value = parseYesNo(raw);
+      if (value === null) return { error: 'Just yes or no works here.' };
+      if (!value) return { patch: {}, say: 'No problem — I’ll ask you directly instead.' };
+      return { patch: c.patch as Partial<VendiDraft>, answeredIds: c.answers };
+    },
+  }));
+}
+
 export function visibleQuestions(draft: VendiDraft): Question[] {
-  return QUESTIONS.filter((q) => !q.when || q.when(draft));
+  const base = QUESTIONS.filter((q) => !q.when || q.when(draft));
+  const confirms = confirmQuestions(draft);
+  if (!confirms.length) return base;
+  // Confirmations run right after the paste step, before the normal interview.
+  const pasteIndex = base.findIndex((q) => q.id === 'import_paste');
+  const at = pasteIndex === -1 ? 0 : pasteIndex + 1;
+  return [...base.slice(0, at), ...confirms, ...base.slice(at)];
 }
 
 export function nextQuestion(draft: VendiDraft, answered: string[]): Question | null {
   return visibleQuestions(draft).find((q) => !answered.includes(q.id)) ?? null;
 }
+
 
 export function progressPercent(draft: VendiDraft, answered: string[]): number {
   const visible = visibleQuestions(draft);
