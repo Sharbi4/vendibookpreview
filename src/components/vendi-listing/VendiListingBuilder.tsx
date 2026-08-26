@@ -113,34 +113,54 @@ const VendiListingBuilder: React.FC = () => {
     [draft, answered, reviewing],
   );
 
-  // Restore this signed-in owner's in-progress conversation. We never restart
-  // the interview or re-ask something they already answered.
+  // Single opening path. A fresh seller gets exactly one welcome; a returning
+  // seller gets exactly one resume line. Nothing is replayed after hydration.
   useEffect(() => {
     if (!storageKey) return;
+    let restoredSession = false;
     try {
       const raw = localStorage.getItem(storageKey);
-      if (raw) {
-        const parsed = JSON.parse(raw) as PersistedState;
-        if (parsed?.draft) {
-          setDraft(parsed.draft);
-          setAnswered(parsed.answered ?? []);
-          setUploadedUrls(parsed.uploadedUrls ?? []);
-          setUploadedVideoUrls(parsed.uploadedVideoUrls ?? []);
-          const restored = parsed.messages ?? [];
-          setMessages(restored.length
-            ? [...restored, {
-                id: uid(),
-                role: 'vendi' as const,
-                content: 'Welcome back — I saved your progress. We can pick up right where you left off.',
-              }]
-            : restored);
-          setDraftId(parsed.draftId ?? null);
-          setConsentId(parsed.consentId ?? null);
-        }
+      const parsed = raw ? (JSON.parse(raw) as PersistedState) : null;
+      if (parsed?.draft) {
+        restoredSession = true;
+        const restoredDraft = parsed.draft;
+        const restoredAnswered = parsed.answered ?? [];
+        const history = parsed.messages ?? [];
+        const askedSet = new Set(parsed.asked ?? []);
+
+        // If the saved conversation ends on an unanswered prompt, drop that
+        // trailing bubble so the resume line reads first and the question is
+        // re-stated once underneath it — never duplicated.
+        const pending = nextQuestion(restoredDraft, restoredAnswered);
+        const tail = history[history.length - 1];
+        const trimmed =
+          pending && tail?.role === 'vendi' && tail.content === promptText(pending, restoredDraft)
+            ? history.slice(0, -1)
+            : history;
+        if (pending) askedSet.delete(pending.id);
+
+        setDraft(restoredDraft);
+        setAnswered(restoredAnswered);
+        setUploadedUrls(parsed.uploadedUrls ?? []);
+        setUploadedVideoUrls(parsed.uploadedVideoUrls ?? []);
+        setDraftId(parsed.draftId ?? null);
+        setConsentId(parsed.consentId ?? null);
+        askedRef.current = askedSet;
+        setAsked(Array.from(askedSet));
+        setMessages([
+          ...trimmed,
+          { id: uid(), role: 'vendi' as const, content: resumeMessage(restoredDraft, restoredAnswered) },
+        ]);
       }
     } catch { /* ignore corrupt state */ }
+
+    if (!restoredSession) {
+      askedRef.current = new Set();
+      setAsked([]);
+      setMessages([{ id: uid(), role: 'vendi', content: VENDI_WELCOME }]);
+    }
     setHydrated(true);
-  }, [storageKey]);
+  }, [storageKey, sessionSeq]);
 
   useEffect(() => {
     if (!hydrated || !storageKey) return;
@@ -148,6 +168,7 @@ const VendiListingBuilder: React.FC = () => {
       localStorage.setItem(storageKey, JSON.stringify({
         draft,
         answered,
+        asked,
         messages,
         draftId,
         consentId,
@@ -155,7 +176,8 @@ const VendiListingBuilder: React.FC = () => {
         uploadedVideoUrls,
       }));
     } catch { /* quota — non-fatal */ }
-  }, [draft, answered, messages, draftId, consentId, uploadedUrls, uploadedVideoUrls, hydrated, storageKey]);
+  }, [draft, answered, asked, messages, draftId, consentId, uploadedUrls, uploadedVideoUrls, hydrated, storageKey]);
+
 
 
 
