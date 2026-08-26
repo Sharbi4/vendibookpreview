@@ -208,46 +208,79 @@ const VendiListingBuilder: React.FC = () => {
 
   const progress = progressPercent(draft, answered);
 
+  const previewPanel = (
+    <LivePreviewPanel preview={draft} images={previewImages} ready={blockers.length === 0} />
+  );
+
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-20 border-b border-border/60 bg-background/85 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} aria-label="Go back">
+    <div className="dashboard-shell relative min-h-screen overflow-hidden bg-[#08080a] text-foreground">
+      {/* Ambient depth — restrained, no loud gradients */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            'radial-gradient(90% 60% at 12% -10%, rgba(255,81,36,0.10), transparent 60%), radial-gradient(70% 50% at 100% 0%, rgba(255,255,255,0.05), transparent 65%)',
+        }}
+      />
+
+      <header className="sticky top-0 z-30 border-b border-white/[0.07] bg-[#08080a]/70 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3.5 sm:px-6">
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} aria-label="Go back" className="text-foreground/70 hover:text-foreground">
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <img src={vendibookFavicon} alt="" className="h-7 w-7 rounded-lg" />
+          <img src={vendibookFavicon} alt="" className="h-7 w-7 rounded-lg ring-1 ring-white/10" />
           <div className="min-w-0 flex-1">
-            <h1 className="truncate text-sm font-semibold">List with Vendi</h1>
-            <p className="truncate text-xs text-muted-foreground">Free guided listing builder — {progress}% complete</p>
+            <h1 className="truncate text-[15px] font-semibold tracking-[-0.01em]">List with Vendi</h1>
+            <p className="truncate text-xs text-muted-foreground">Guided listing builder · {progress}% complete</p>
           </div>
-          <Button variant="ghost" size="sm" className="hidden sm:inline-flex" onClick={() => navigate('/list')}>
+          <Button variant="ghost" size="sm" className="hidden text-muted-foreground hover:text-foreground sm:inline-flex" onClick={() => navigate('/list')}>
             <Wrench className="mr-2 h-4 w-4" /> Build it myself
           </Button>
-          <Button variant="ghost" size="sm" className="lg:hidden" onClick={() => setShowMobilePreview((v) => !v)}>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-foreground lg:hidden"
+            onClick={() => setShowMobilePreview(true)}
+          >
             <Eye className="mr-2 h-4 w-4" /> Preview
           </Button>
         </div>
-        <div className="h-0.5 w-full bg-muted">
-          <motion.div className="h-full bg-primary" animate={{ width: `${progress}%` }} transition={{ duration: 0.4 }} />
+        <div className="h-px w-full bg-white/[0.06]">
+          <motion.div
+            className="h-full"
+            style={{ background: 'linear-gradient(90deg, rgba(255,81,36,0.55), rgba(255,81,36,1))' }}
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 0.45, ease: 'easeOut' }}
+          />
         </div>
       </header>
 
-      <div className="mx-auto grid max-w-6xl gap-6 px-4 py-6 lg:grid-cols-[1fr_380px]">
-        <section className="flex min-h-[60vh] flex-col">
-          <div className="flex-1 space-y-4">
+      <div className="relative mx-auto grid max-w-6xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[1fr_400px] lg:py-10">
+        <section className="dash-glass flex min-h-[68vh] flex-col overflow-hidden p-0">
+          <div className="flex-1 space-y-5 overflow-y-auto px-4 py-6 sm:px-7 sm:py-8">
             <AnimatePresence initial={false}>
               {messages.map((m) => (
                 <motion.div
                   key={m.id}
-                  initial={{ opacity: 0, y: 8 }}
+                  initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
                   className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
-                  <div className={`max-w-[85%] rounded-2xl px-4 py-3 text-sm leading-relaxed ${
-                    m.role === 'user'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'border border-border/70 bg-card text-foreground'
-                  }`}>
+                  <div
+                    className={`max-w-[86%] px-4 py-3 text-[15px] leading-relaxed sm:max-w-[76%] ${
+                      m.role === 'user'
+                        ? 'rounded-[18px] rounded-br-[6px] border border-[rgba(255,81,36,0.28)] bg-[rgba(255,81,36,0.10)] text-foreground'
+                        : 'rounded-[18px] rounded-bl-[6px] border border-white/[0.08] bg-white/[0.045] text-foreground/90'
+                    }`}
+                  >
+                    {m.role === 'vendi' && (
+                      <span className="mb-1 block text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                        Vendi
+                      </span>
+                    )}
                     {m.content}
                   </div>
                 </motion.div>
@@ -255,81 +288,107 @@ const VendiListingBuilder: React.FC = () => {
             </AnimatePresence>
 
             {current?.kind === 'choice' && (
-              <div className="flex flex-wrap gap-2">
+              <motion.div
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3, ease: [0.22, 1, 0.36, 1] }}
+                className="flex flex-wrap gap-2.5 pt-1"
+              >
                 {(current.options?.(draft) ?? []).map((opt) => (
                   <button
                     key={opt.value}
                     type="button"
                     onClick={() => submitAnswer(opt.value)}
-                    className="rounded-xl border border-border/70 bg-card px-4 py-2 text-left text-sm transition hover:border-primary hover:bg-primary/5"
+                    className="group rounded-2xl border border-white/[0.09] bg-white/[0.035] px-4 py-3 text-left transition-all duration-200 hover:-translate-y-[1px] hover:border-[rgba(255,81,36,0.4)] hover:bg-white/[0.06]"
                   >
-                    <span className="font-medium">{opt.label}</span>
-                    {opt.description && <span className="block text-xs text-muted-foreground">{opt.description}</span>}
+                    <span className="block text-sm font-medium text-foreground">{opt.label}</span>
+                    {opt.description && (
+                      <span className="mt-0.5 block text-xs text-muted-foreground">{opt.description}</span>
+                    )}
+                  </button>
+                ))}
+              </motion.div>
+            )}
+
+            {current?.kind === 'yesno' && (
+              <div className="flex gap-2.5 pt-1">
+                {(['yes', 'no'] as const).map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => submitAnswer(v)}
+                    className="rounded-full border border-white/[0.1] bg-white/[0.04] px-6 py-2.5 text-sm font-medium capitalize transition-all duration-200 hover:border-[rgba(255,81,36,0.4)] hover:bg-white/[0.07]"
+                  >
+                    {v}
                   </button>
                 ))}
               </div>
             )}
 
-            {current?.kind === 'yesno' && (
-              <div className="flex gap-2">
-                <Button variant="outline" onClick={() => submitAnswer('yes')}>Yes</Button>
-                <Button variant="outline" onClick={() => submitAnswer('no')}>No</Button>
-              </div>
-            )}
-
             {current?.kind === 'photos' && (
-              <div className="space-y-3">
-                <div className="flex flex-wrap gap-2">
+              <div className="space-y-4 pt-1">
+                <div className="flex flex-wrap gap-2.5">
                   {photos.map((p) => (
-                    <div key={p.id} className="relative h-20 w-20 overflow-hidden rounded-xl border border-border/70">
+                    <motion.div
+                      key={p.id}
+                      initial={{ opacity: 0, scale: 0.94 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      className="relative h-[86px] w-[86px] overflow-hidden rounded-2xl border border-white/[0.1]"
+                    >
                       <img src={p.url} alt="Listing photo" className="h-full w-full object-cover" />
                       <button
                         type="button"
                         aria-label="Remove photo"
                         onClick={() => removePhoto(p.id)}
-                        className="absolute right-1 top-1 rounded-full bg-background/90 p-1"
+                        className="absolute right-1.5 top-1.5 rounded-full border border-white/10 bg-black/65 p-1 backdrop-blur-md transition hover:bg-black/85"
                       >
                         <X className="h-3 w-3" />
                       </button>
-                    </div>
+                    </motion.div>
                   ))}
                   <button
                     type="button"
                     onClick={() => fileRef.current?.click()}
-                    className="flex h-20 w-20 items-center justify-center rounded-xl border border-dashed border-border text-muted-foreground hover:border-primary"
+                    className="flex h-[86px] w-[86px] flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-white/15 text-muted-foreground transition hover:border-[rgba(255,81,36,0.45)] hover:text-foreground"
                     aria-label="Add photos"
                   >
                     <ImagePlus className="h-5 w-5" />
+                    <span className="text-[10px] tracking-wide">Add</span>
                   </button>
                 </div>
-                <Button onClick={() => submitAnswer('done')} disabled={!photos.length}>
+                <Button onClick={() => submitAnswer('done')} disabled={!photos.length} className="rounded-full">
                   Continue with {photos.length} photo{photos.length === 1 ? '' : 's'}
                 </Button>
               </div>
             )}
 
             {reviewing && (
-              <div className="rounded-2xl border border-border/70 bg-card p-5">
-                <h2 className="text-base font-semibold">Review and publish</h2>
-                <p className="mt-1 text-sm text-muted-foreground">
+              <motion.div
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
+                className="dash-glass dash-glass-ember p-6"
+              >
+                <h2 className="text-lg font-semibold tracking-[-0.01em]">Review and publish</h2>
+                <p className="mt-1.5 text-sm text-muted-foreground">
                   Everything below came straight from your answers. Nothing was added for you.
                 </p>
                 {blockers.length > 0 && (
-                  <ul className="mt-4 space-y-1 text-sm text-destructive">
+                  <ul className="mt-4 space-y-1.5 text-sm text-destructive">
                     {blockers.map((b) => <li key={b}>• {b}</li>)}
                   </ul>
                 )}
-                <div className="mt-5 flex flex-wrap gap-2">
-                  <Button onClick={handlePublish} disabled={publishing || blockers.length > 0}>
+                <div className="mt-6 flex flex-wrap gap-2.5">
+                  <Button onClick={handlePublish} disabled={publishing || blockers.length > 0} className="rounded-full">
                     {publishing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
                     Publish listing
                   </Button>
-                  <Button variant="outline" onClick={() => { setReviewing(false); setAnswered((prev) => prev.slice(0, -1)); }}>
+                  <Button variant="outline" className="rounded-full border-white/12 bg-white/[0.04]" onClick={() => { setReviewing(false); setAnswered((prev) => prev.slice(0, -1)); }}>
                     Make changes
                   </Button>
-                  <Button variant="ghost" onClick={startOver}>Start over</Button>
+                  <Button variant="ghost" className="rounded-full text-muted-foreground" onClick={startOver}>Start over</Button>
                 </div>
-              </div>
+              </motion.div>
             )}
 
             <div ref={endRef} />
@@ -337,24 +396,30 @@ const VendiListingBuilder: React.FC = () => {
 
           {current && !['choice', 'yesno', 'photos'].includes(current.kind) && (
             <form
-              className="sticky bottom-0 mt-4 flex items-end gap-2 border-t border-border/60 bg-background/90 py-3 backdrop-blur"
+              className="sticky bottom-0 border-t border-white/[0.07] bg-[#0c0c0f]/80 px-4 py-3.5 backdrop-blur-xl sm:px-7"
               onSubmit={(e) => { e.preventDefault(); submitAnswer(input); }}
             >
-              <textarea
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitAnswer(input); }
-                }}
-                rows={1}
-                placeholder={current.placeholder ?? 'Type your answer…'}
-                aria-label={current.prompt(draft)}
-                className="min-h-[48px] flex-1 resize-none rounded-xl border border-border bg-card px-4 py-3 text-base outline-none focus:border-primary"
-              />
-              {current.optional && (
-                <Button type="button" variant="ghost" onClick={() => submitAnswer('skip')}>Skip</Button>
-              )}
-              <Button type="submit" size="icon" aria-label="Send answer"><Send className="h-4 w-4" /></Button>
+              <div className="flex items-end gap-2 rounded-[20px] border border-white/[0.09] bg-white/[0.04] px-3 py-2 transition focus-within:border-[rgba(255,81,36,0.45)]">
+                <textarea
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitAnswer(input); }
+                  }}
+                  rows={1}
+                  placeholder={current.placeholder ?? 'Type your answer…'}
+                  aria-label={current.prompt(draft)}
+                  className="min-h-[44px] flex-1 resize-none border-0 bg-transparent px-2 py-2.5 text-base text-foreground outline-none placeholder:text-muted-foreground"
+                />
+                {current.optional && (
+                  <Button type="button" variant="ghost" size="sm" className="rounded-full text-muted-foreground" onClick={() => submitAnswer('skip')}>
+                    Skip
+                  </Button>
+                )}
+                <Button type="submit" size="icon" aria-label="Send answer" className="h-10 w-10 shrink-0 rounded-full">
+                  <Send className="h-4 w-4" />
+                </Button>
+              </div>
             </form>
           )}
 
@@ -368,14 +433,37 @@ const VendiListingBuilder: React.FC = () => {
           />
         </section>
 
-        <aside className={`${showMobilePreview ? 'block' : 'hidden'} lg:block`}>
-          <div className="sticky top-24 h-[70vh] overflow-hidden rounded-2xl border border-border/70 bg-card">
-            <LivePreviewPanel preview={draft} images={previewImages} ready={blockers.length === 0} />
+        <aside className="hidden lg:block">
+          <div className="dash-glass sticky top-28 h-[72vh] overflow-hidden p-0">
+            {previewPanel}
           </div>
         </aside>
       </div>
+
+      {/* Mobile: polished preview sheet */}
+      <Sheet open={showMobilePreview} onOpenChange={setShowMobilePreview}>
+        <SheetContent
+          side="bottom"
+          className="h-[85vh] rounded-t-[24px] border-white/[0.08] bg-[#0c0c0f]/95 p-0 backdrop-blur-2xl lg:hidden"
+        >
+          <SheetHeader className="border-b border-white/[0.07] px-5 py-4 text-left">
+            <SheetTitle className="text-sm font-semibold text-foreground">Live preview</SheetTitle>
+          </SheetHeader>
+          <div className="h-[calc(85vh-64px)] overflow-hidden">{previewPanel}</div>
+        </SheetContent>
+      </Sheet>
+
+      {/* Mobile: persistent preview control */}
+      <button
+        type="button"
+        onClick={() => setShowMobilePreview(true)}
+        className="fixed bottom-24 right-4 z-20 flex items-center gap-2 rounded-full border border-white/[0.12] bg-[#121215]/90 px-4 py-2.5 text-xs font-medium text-foreground shadow-[0_12px_30px_-12px_rgba(0,0,0,0.8)] backdrop-blur-xl lg:hidden"
+      >
+        <Eye className="h-4 w-4" /> Preview
+      </button>
     </div>
   );
 };
 
 export default VendiListingBuilder;
+
