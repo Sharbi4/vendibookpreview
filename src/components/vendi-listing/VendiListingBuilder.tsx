@@ -11,10 +11,14 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import vendibookFavicon from '@/assets/vendibook-favicon.png';
 import VendiAuthGate from '@/components/vendi-listing/VendiAuthGate';
 import {
-  buildListingPayload, getPublishBlockers, nextQuestion, progressPercent,
+  buildListingPayload, getPublishBlockers, nextQuestion,
   promptText, resumeMessage, VENDI_WELCOME,
   Question, VendiDraft,
 } from '@/lib/vendi-listing/script';
+import {
+  rankedNextQuestion, readinessProgress, remainingQuestionIds, READY_MESSAGE,
+} from '@/lib/vendi-listing/prioritize';
+import { parseCommand } from '@/lib/vendi-listing/commands';
 
 import type { DocumentType } from '@/types/documents';
 import { isSkip } from '@/lib/vendi-listing/extract';
@@ -25,6 +29,7 @@ import {
 } from '@/lib/vendi-listing/session';
 import { deriveAnsweredFromDraft, mergeServerDraft } from '@/lib/vendi-listing/hydrate';
 import { trackVendi } from '@/lib/vendi-listing/telemetry';
+
 
 import {
   ATTESTATIONS,
@@ -99,6 +104,10 @@ const VendiListingBuilder: React.FC = () => {
   /** Unfinished Vendi drafts on this account that belong to another session. */
   const [resumeOffers, setResumeOffers] = useState<ActiveVendiDraft[]>([]);
 
+  /** Field-level history for "undo that" — the last few confirmed drafts. */
+  const [history, setHistory] = useState<VendiDraft[]>([]);
+
+
   const creatingDraftRef = useRef(false);
   const resolvingRef = useRef(false);
   const publishInFlightRef = useRef(false);
@@ -111,6 +120,10 @@ const VendiListingBuilder: React.FC = () => {
   /** local media id → uploaded URL. Makes uploads dedupe-safe and resumable. */
   const uploadedByItemRef = useRef<Map<string, { url: string; kind: 'image' | 'video' }>>(new Map());
   const uploadingMediaRef = useRef(false);
+  /** "Ready to publish" is announced exactly once per session. */
+  const readyAnnouncedRef = useRef(false);
+  const startedAnnouncedRef = useRef(false);
+
 
 
   const disclosureShownRef = useRef(false);
@@ -132,10 +145,18 @@ const VendiListingBuilder: React.FC = () => {
   const recordConsent = useRecordConsent();
   const acceptanceText = publishAcceptanceText(draft.mode);
 
+  /** Photos that actually count toward publish readiness (stored or local). */
+  const imageCount = uploadedUrls.length || photos.filter((p) => p.kind === 'image').length;
+
+  /**
+   * The next question, ranked by publish viability rather than script order:
+   * blockers first, then the publish/improve gate, then buyer-value extras.
+   */
   const current: Question | null = useMemo(
-    () => (reviewing ? null : nextQuestion(draft, answered)),
-    [draft, answered, reviewing],
+    () => (reviewing ? null : rankedNextQuestion(draft, answered, imageCount)),
+    [draft, answered, reviewing, imageCount],
   );
+
 
   // Single opening path. A fresh seller gets exactly one welcome; a returning
   // seller gets exactly one resume line. Nothing is replayed after hydration.
@@ -324,21 +345,40 @@ const VendiListingBuilder: React.FC = () => {
     return () => window.clearTimeout(timer);
   }, [draft, uploadedUrls, uploadedVideoUrls, draftId, hydrated, resumeChecked, resumeOffers.length, user?.id]);
 
-  // Ask the next unanswered question — once, and only once per question.
+  // Ask the next unanswered question — once, and only once per question, and
+  // always the highest-value one rather than the next line of a script.
   useEffect(() => {
     if (!hydrated || reviewing) return;
-    const q = nextQuestion(draft, answered);
+    const q = rankedNextQuestion(draft, answered, imageCount);
     if (!q) { setReviewing(true); return; }
     if (askedRef.current.has(q.id)) return;
     askedRef.current.add(q.id);
     setAsked((prev) => (prev.includes(q.id) ? prev : [...prev, q.id]));
+    trackVendi('vendi_question_shown', { userId: user?.id, listingId: draftId, metadata: { question: q.id } });
     const prompt = promptText(q, draft);
     setMessages((prev) => {
       const last = prev[prev.length - 1];
       if (last?.role === 'vendi' && last.content === prompt) return prev;
       return [...prev, { id: uid(), role: 'vendi', content: prompt }];
     });
-  }, [draft, answered, hydrated, reviewing]);
+  }, [draft, answered, hydrated, reviewing, imageCount, user?.id, draftId]);
+
+  // The moment the listing first becomes viable, say so plainly. Vendi never
+  // publishes on its own — this is an offer, not an action.
+  useEffect(() => {
+    if (!hydrated || readyAnnouncedRef.current) return;
+    if (getPublishBlockers(draft, imageCount).length) return;
+    readyAnnouncedRef.current = true;
+    trackVendi('vendi_ready_to_publish', { userId: user?.id, listingId: draftId });
+    setMessages((prev) => [...prev, { id: uid(), role: 'vendi', content: READY_MESSAGE }]);
+  }, [draft, imageCount, hydrated, user?.id, draftId]);
+
+  // One "started" event per interview.
+  useEffect(() => {
+    if (!hydrated || !user || startedAnnouncedRef.current) return;
+    startedAnnouncedRef.current = true;
+    trackVendi('vendi_started', { userId: user.id, sessionKey: sessionKeyRef.current });
+  }, [hydrated, user]);
 
 
   // Final publish gate: present the same seller disclosure the step-by-step
@@ -364,12 +404,60 @@ const VendiListingBuilder: React.FC = () => {
   const say = (role: Msg['role'], content: string) =>
     setMessages((prev) => [...prev, { id: uid(), role, content }]);
 
-  const submitAnswer = useCallback((raw: string, display?: string) => {
+  /**
+   * Every seller message goes through corrections first.
+   *
+   * "change the price to 119k", "remove generator", "actually it’s in North
+   * Charleston, SC", "undo that", "what’s missing?" are handled wherever the
+   * seller is in the interview — the draft is edited in place and the interview
+   * never restarts. Only when a message is not a command is it treated as the
+   * answer to the current question.
+   */
+  const submitAnswer = useCallback((raw: string, display?: string, fromButton = false) => {
     const q = current;
-    if (!q) return;
     const text = raw.trim();
     if (!text) return;
     const echo = display ?? (text.length > 420 ? `${text.slice(0, 420)}…` : text);
+
+    if (!fromButton) {
+      const command = parseCommand(text, draft, imageCount);
+      if (command?.kind === 'answer') {
+        say('user', echo); setInput('');
+        say('vendi', command.text);
+        return;
+      }
+      if (command?.kind === 'undo') {
+        say('user', echo); setInput('');
+        if (!history.length) { say('vendi', 'Nothing to undo yet.'); return; }
+        const previous = history[history.length - 1];
+        setHistory((h) => h.slice(0, -1));
+        setDraft(previous);
+        say('vendi', 'Reverted that last change. Everything else is untouched.');
+        return;
+      }
+      if (command?.kind === 'edit') {
+        say('user', echo); setInput('');
+        setHistory((h) => [...h, draft].slice(-10));
+        setDraft((prev) => ({ ...prev, ...command.patch }));
+        if (command.dropAnswered?.length) {
+          const drop = new Set(command.dropAnswered);
+          drop.forEach((id) => askedRef.current.delete(id));
+          setAsked((ids) => ids.filter((id) => !drop.has(id)));
+          setAnswered((ids) => ids.filter((id) => !drop.has(id)));
+          setReviewing(false);
+        }
+        if (command.answeredIds?.length) {
+          setAnswered((ids) => Array.from(new Set([...ids, ...command.answeredIds!])));
+        }
+        trackVendi('vendi_field_corrected', {
+          userId: user?.id, listingId: draftId, metadata: { fields: command.fields.join(',') },
+        });
+        say('vendi', command.ack);
+        return;
+      }
+    }
+
+    if (!q) return;
     say('user', echo);
     setInput('');
 
@@ -380,10 +468,34 @@ const VendiListingBuilder: React.FC = () => {
 
     const result = q.apply(draft, text);
     if (result.error) { say('vendi', result.error); return; }
+
+    setHistory((h) => [...h, draft].slice(-10));
     setDraft((prev) => ({ ...prev, ...(result.patch ?? {}) }));
-    setAnswered((prev) => [...prev, q.id, ...(result.answeredIds ?? [])]);
+
+    // "Publish now" at the ready gate must end the interview, not hand the
+    // seller the rest of the optional questions one at a time.
+    const skipRest = q.id === 'ready_gate' && /review|publish|no|skip/i.test(text);
+    setAnswered((prev) => {
+      const next = [...prev, q.id, ...(result.answeredIds ?? [])];
+      return skipRest
+        ? Array.from(new Set([...next, ...remainingQuestionIds(draft, next)]))
+        : next;
+    });
+
+    if (q.id === 'import_paste') {
+      trackVendi('vendi_bulk_input_used', {
+        userId: user?.id, listingId: draftId,
+        metadata: { fields: (result.answeredIds ?? []).join(',') },
+      });
+    }
+    if (result.answeredIds?.length) {
+      trackVendi('vendi_field_captured', {
+        userId: user?.id, listingId: draftId, metadata: { fields: result.answeredIds.join(',') },
+      });
+    }
     if (result.say) say('vendi', result.say);
-  }, [current, draft]);
+  }, [current, draft, imageCount, history, user?.id, draftId]);
+
 
 
   const handlePhotos = (files: FileList | null) => {
@@ -751,7 +863,11 @@ const VendiListingBuilder: React.FC = () => {
 
 
 
-  const progress = progressPercent(draft, answered);
+  // Honest progress: the share of real publish requirements that are met, not
+  // the share of script questions that have scrolled past.
+  const readiness = readinessProgress(draft, previewImages.length);
+  const progress = readiness.percent;
+
 
   const previewPanel = (
     <LivePreviewPanel preview={draft} images={previewImages} ready={blockers.length === 0} />
@@ -868,7 +984,7 @@ const VendiListingBuilder: React.FC = () => {
           <div className="min-w-0 flex-1">
             <h1 className="truncate text-[15px] font-semibold tracking-[-0.01em]">List with Vendi</h1>
             <p className="truncate text-xs text-muted-foreground">
-              {blockers.length === 0 ? 'Ready to publish' : `Guided listing builder · ${progress}%`}
+              {readiness.ready ? 'Ready to publish' : `${progress}% ready · ${readiness.blockers.length} left`}
               {saveState !== 'idle' && (
                 <span className={cn('ml-2', saveState === 'error' && 'text-destructive')}>
                   ·{' '}
@@ -956,7 +1072,7 @@ const VendiListingBuilder: React.FC = () => {
                   <button
                     key={opt.value}
                     type="button"
-                    onClick={() => submitAnswer(opt.value, opt.label)}
+                    onClick={() => submitAnswer(opt.value, opt.label, true)}
                     className="group rounded-2xl border border-white/[0.09] bg-white/[0.035] px-4 py-3 text-left transition-all duration-200 hover:-translate-y-[1px] hover:border-[rgba(255,81,36,0.4)] hover:bg-white/[0.06]"
                   >
                     <span className="block text-sm font-medium text-foreground">{opt.label}</span>
@@ -974,7 +1090,7 @@ const VendiListingBuilder: React.FC = () => {
                   <button
                     key={v}
                     type="button"
-                    onClick={() => submitAnswer(v)}
+                    onClick={() => submitAnswer(v, undefined, true)}
                     className="rounded-full border border-white/[0.1] bg-white/[0.04] px-6 py-2.5 text-sm font-medium capitalize transition-all duration-200 hover:border-[rgba(255,81,36,0.4)] hover:bg-white/[0.07]"
                   >
                     {v}
@@ -1004,7 +1120,7 @@ const VendiListingBuilder: React.FC = () => {
               <div className="pt-1">
                 <button
                   type="button"
-                  onClick={() => submitAnswer(current.suggest?.(draft) ?? '')}
+                  onClick={() => submitAnswer(current.suggest?.(draft) ?? '', undefined, true)}
                   className="rounded-full border border-[rgba(255,81,36,0.35)] bg-[rgba(255,81,36,0.09)] px-4 py-2 text-sm text-foreground transition hover:bg-[rgba(255,81,36,0.14)]"
                 >
                   Use “{current.suggest?.(draft)}”
@@ -1050,7 +1166,7 @@ const VendiListingBuilder: React.FC = () => {
                     <span className="text-[10px] tracking-wide">Add</span>
                   </button>
                 </div>
-                <Button onClick={() => submitAnswer('done')} disabled={!localImages.length} className="rounded-full">
+                <Button onClick={() => submitAnswer('done', undefined, true)} disabled={!localImages.length} className="rounded-full">
                   Continue with {localImages.length} photo{localImages.length === 1 ? '' : 's'}
                   {localVideos.length ? ` and ${localVideos.length} video${localVideos.length === 1 ? '' : 's'}` : ''}
                 </Button>
@@ -1190,12 +1306,15 @@ const VendiListingBuilder: React.FC = () => {
             <div ref={endRef} />
           </div>
 
-          {current && !['choice', 'yesno', 'photos'].includes(current.kind) && (
+          {/* One composer for every step: the seller can always type a
+              correction ("actually it's $42,000") or attach media, no matter
+              which question is on screen. */}
+          {current && (
             <form
               className="sticky bottom-0 border-t border-white/[0.07] bg-[#0c0c0f]/80 px-4 py-3.5 backdrop-blur-xl sm:px-7"
               onSubmit={(e) => { e.preventDefault(); submitAnswer(input); }}
             >
-              {current.kind === 'paste' && photos.length > 0 && (
+              {photos.length > 0 && (
                 <div className="mb-3 flex flex-wrap gap-2">
                   {photos.map((p) => (
                     <div key={p.id} className="relative h-14 w-14 overflow-hidden rounded-xl border border-white/[0.1]">
@@ -1220,18 +1339,16 @@ const VendiListingBuilder: React.FC = () => {
                 </div>
               )}
               <div className="flex items-end gap-2 rounded-[20px] border border-white/[0.09] bg-white/[0.04] px-3 py-2 transition focus-within:border-[rgba(255,81,36,0.45)]">
-                {current.kind === 'paste' && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    aria-label="Attach photos from your other listing"
-                    className="h-10 w-10 shrink-0 rounded-full text-muted-foreground"
-                    onClick={() => fileRef.current?.click()}
-                  >
-                    <ImagePlus className="h-4 w-4" />
-                  </Button>
-                )}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Add photos or video"
+                  className="h-10 w-10 shrink-0 rounded-full text-muted-foreground"
+                  onClick={() => fileRef.current?.click()}
+                >
+                  <ImagePlus className="h-4 w-4" />
+                </Button>
                 <textarea
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
@@ -1241,12 +1358,17 @@ const VendiListingBuilder: React.FC = () => {
                     }
                   }}
                   rows={current.kind === 'paste' ? 5 : 1}
-                  placeholder={current.placeholder ?? 'Type your answer…'}
+                  placeholder={
+                    current.placeholder
+                    ?? (['choice', 'yesno', 'photos'].includes(current.kind)
+                      ? 'Or type an answer or correction…'
+                      : 'Type your answer…')
+                  }
                   aria-label={current.prompt(draft)}
                   className="min-h-[44px] flex-1 resize-none border-0 bg-transparent px-2 py-2.5 text-base text-foreground outline-none placeholder:text-muted-foreground"
                 />
                 {current.optional && (
-                  <Button type="button" variant="ghost" size="sm" className="rounded-full text-muted-foreground" onClick={() => submitAnswer('skip')}>
+                  <Button type="button" variant="ghost" size="sm" className="rounded-full text-muted-foreground" onClick={() => submitAnswer('skip', undefined, true)}>
                     Skip
                   </Button>
                 )}
@@ -1254,13 +1376,14 @@ const VendiListingBuilder: React.FC = () => {
                   <Send className="h-4 w-4" />
                 </Button>
               </div>
-              {current.kind === 'paste' && (
-                <p className="mt-2 px-1 text-[11px] leading-relaxed text-muted-foreground">
-                  Paste your own text only — Vendi never pulls anything from Facebook Marketplace or other sites. Attached photos become your listing photos.
-                </p>
-              )}
+              <p className="mt-2 px-1 text-[11px] leading-relaxed text-muted-foreground">
+                {current.kind === 'paste'
+                  ? 'Paste your own text only — Vendi never pulls anything from Facebook Marketplace or other sites. Attached photos become your listing photos.'
+                  : 'You can change anything at any time — try “change the price to $42,000”, “what’s missing?” or “undo that”.'}
+              </p>
             </form>
           )}
+
 
 
           <input
