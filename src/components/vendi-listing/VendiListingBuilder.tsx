@@ -19,7 +19,7 @@ type Msg = { id: string; role: 'vendi' | 'user'; content: string };
 
 interface LocalPhoto { id: string; file: File; url: string }
 
-const STORAGE_KEY = 'vendibook_list_with_vendi_v1';
+const storageKeyFor = (userId: string) => `vendibook_list_with_vendi_v1:${userId}`;
 
 const emptyDraft: VendiDraft = {
   title: null, description: null, category: null, mode: null,
