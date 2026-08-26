@@ -80,8 +80,13 @@ const ListingCardOverlay = ({ open, onClose, listing }: ListingCardOverlayProps)
       ? `$${Number(listing.price_daily).toLocaleString()}/day`
       : anyListing.price_hourly
         ? `$${Number(anyListing.price_hourly).toLocaleString()}/hr`
-        : ''
+        : anyListing.price_weekly
+          ? `$${Number(anyListing.price_weekly).toLocaleString()}/week`
+          : anyListing.price_monthly
+            ? `$${Number(anyListing.price_monthly).toLocaleString()}/mo`
+            : ''
     : '';
+
 
   const headline = isSale ? 'Start your purchase' : 'View availability';
   const subhead = isSale

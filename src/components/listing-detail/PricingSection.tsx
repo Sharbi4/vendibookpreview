@@ -50,13 +50,14 @@ const PricingSection = ({
               <span className="font-medium">${priceDaily.toLocaleString()}/day</span>
             </div>
           ) : (
-            !priceHourly && (
+            !priceHourly && !priceWeekly && !priceMonthly && (
               <div className="flex justify-between items-center">
                 <span className="text-sm text-muted-foreground">Daily rate</span>
                 <span className="font-medium text-muted-foreground">Price TBD</span>
               </div>
             )
           )}
+
           {priceWeekly && priceWeekly > 0 && (
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground flex items-center gap-1.5">
