@@ -253,3 +253,9 @@ verify_jwt = false
 
 [functions.auth-email-hook]
 verify_jwt = false
+
+[functions.signnow-webhook]
+verify_jwt = false
+
+[functions.signnow-bootstrap]
+verify_jwt = false

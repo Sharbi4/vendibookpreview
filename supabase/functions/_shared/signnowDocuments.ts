@@ -12,9 +12,25 @@ import { createClient } from 'npm:@supabase/supabase-js@2.45.0';
 import {
   createDocumentFromTemplate,
   createEmbeddedInvite,
+  inviteIdForEmail,
   prefillFields,
   isSignNowConfigured,
+  registerDocumentWebhook,
 } from './signnow.ts';
+
+/**
+ * Subscribe to document.complete / document.update for this document so the
+ * signnow-webhook function can advance status + store the signed PDF.
+ * Registration failures must not lose the document we just created.
+ */
+async function safeRegisterWebhook(signnowDocId: string): Promise<void> {
+  try {
+    await registerDocumentWebhook(signnowDocId);
+  } catch (e) {
+    console.error('[signnow] webhook registration failed', signnowDocId, (e as Error).message);
+  }
+}
+
 
 export interface SignerRecord {
   role: 'host' | 'renter' | 'seller' | 'buyer';
@@ -101,12 +117,14 @@ export async function ensureRentalAgreement(bookingId: string): Promise<{ docume
     { email: renter.email, role_name: 'Renter', order: 1, first_name: renter.first_name ?? undefined, last_name: renter.last_name ?? undefined },
     { email: host.email,   role_name: 'Host',   order: 2, first_name: host.first_name ?? undefined,   last_name: host.last_name ?? undefined },
   ];
-  const _inviteRes = await createEmbeddedInvite(signnowDocId, signers);
+  const invites = await createEmbeddedInvite(signnowDocId, signers);
+  await safeRegisterWebhook(signnowDocId);
 
   const signerRecords: SignerRecord[] = [
-    { role: 'renter', user_id: booking.shopper_id, email: renter.email, first_name: renter.first_name ?? undefined, last_name: renter.last_name ?? undefined, signed_at: null },
-    { role: 'host',   user_id: booking.host_id,    email: host.email,   first_name: host.first_name ?? undefined,   last_name: host.last_name ?? undefined,   signed_at: null },
+    { role: 'renter', user_id: booking.shopper_id, email: renter.email, first_name: renter.first_name ?? undefined, last_name: renter.last_name ?? undefined, invite_id: inviteIdForEmail(invites, renter.email), signed_at: null },
+    { role: 'host',   user_id: booking.host_id,    email: host.email,   first_name: host.first_name ?? undefined,   last_name: host.last_name ?? undefined,   invite_id: inviteIdForEmail(invites, host.email),   signed_at: null },
   ];
+
 
   const { data: row, error: insErr } = await supabase
     .from('documents')
@@ -120,7 +138,17 @@ export async function ensureRentalAgreement(bookingId: string): Promise<{ docume
     })
     .select('id')
     .single();
-  if (insErr) throw new Error(`documents insert failed: ${insErr.message}`);
+  if (insErr) {
+    // Concurrent ensure call won the race — return the existing row.
+    const { data: raced } = await supabase
+      .from('documents')
+      .select('id')
+      .eq('booking_id', bookingId)
+      .eq('document_type', 'rental_agreement')
+      .maybeSingle();
+    if (raced) return { document_id: raced.id, created: false };
+    throw new Error(`documents insert failed: ${insErr.message}`);
+  }
 
   return { document_id: row.id, created: true };
 }
@@ -178,12 +206,14 @@ export async function ensureBillOfSale(transactionId: string): Promise<{ documen
     { email: buyer.email,  role_name: 'Buyer',  order: 1, first_name: buyer.first_name ?? undefined,  last_name: buyer.last_name ?? undefined },
     { email: seller.email, role_name: 'Seller', order: 2, first_name: seller.first_name ?? undefined, last_name: seller.last_name ?? undefined },
   ];
-  await createEmbeddedInvite(signnowDocId, signers);
+  const invites = await createEmbeddedInvite(signnowDocId, signers);
+  await safeRegisterWebhook(signnowDocId);
 
   const signerRecords: SignerRecord[] = [
-    { role: 'buyer',  user_id: tx.buyer_id,  email: buyer.email,  first_name: buyer.first_name ?? undefined,  last_name: buyer.last_name ?? undefined,  signed_at: null },
-    { role: 'seller', user_id: tx.seller_id, email: seller.email, first_name: seller.first_name ?? undefined, last_name: seller.last_name ?? undefined, signed_at: null },
+    { role: 'buyer',  user_id: tx.buyer_id,  email: buyer.email,  first_name: buyer.first_name ?? undefined,  last_name: buyer.last_name ?? undefined,  invite_id: inviteIdForEmail(invites, buyer.email),  signed_at: null },
+    { role: 'seller', user_id: tx.seller_id, email: seller.email, first_name: seller.first_name ?? undefined, last_name: seller.last_name ?? undefined, invite_id: inviteIdForEmail(invites, seller.email), signed_at: null },
   ];
+
 
   const { data: row, error: insErr } = await supabase
     .from('documents')
@@ -197,7 +227,17 @@ export async function ensureBillOfSale(transactionId: string): Promise<{ documen
     })
     .select('id')
     .single();
-  if (insErr) throw new Error(`documents insert failed: ${insErr.message}`);
+  if (insErr) {
+    // Concurrent ensure call won the race — return the existing row.
+    const { data: raced } = await supabase
+      .from('documents')
+      .select('id')
+      .eq('transaction_id', transactionId)
+      .eq('document_type', 'bill_of_sale')
+      .maybeSingle();
+    if (raced) return { document_id: raced.id, created: false };
+    throw new Error(`documents insert failed: ${insErr.message}`);
+  }
 
   return { document_id: row.id, created: true };
 }

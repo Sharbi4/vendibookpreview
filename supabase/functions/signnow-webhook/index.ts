@@ -16,10 +16,12 @@ Deno.serve(async (req) => {
   const raw = await req.text();
   const secret = Deno.env.get('SIGNNOW_WEBHOOK_SECRET');
   const sig = req.headers.get('x-neap-signature') ?? req.headers.get('X-Neap-Signature');
-  if (secret) {
-    const ok = await verifyWebhookSignature(raw, sig, secret);
-    if (!ok) return jsonError(401, 'invalid_signature', 'signature mismatch');
+  if (!secret) {
+    console.error('[signnow-webhook] SIGNNOW_WEBHOOK_SECRET not configured — rejecting');
+    return jsonError(503, 'not_configured', 'webhook secret not configured');
   }
+  const ok = await verifyWebhookSignature(raw, sig, secret);
+  if (!ok) return jsonError(401, 'invalid_signature', 'signature mismatch');
 
   let payload: any;
   try { payload = JSON.parse(raw); } catch { return jsonError(400, 'invalid_json', 'bad body'); }
@@ -54,7 +56,7 @@ Deno.serve(async (req) => {
 
     const { data: doc } = await svc
       .from('documents')
-      .select('id,document_type,transaction_id,booking_id,signers,status')
+      .select('id,document_type,transaction_id,booking_id,signers,status,signed_pdf_path')
       .eq('signnow_document_id', signnowDocId)
       .maybeSingle();
     if (!doc) return jsonResponse(200, { ok: true, note: 'unknown document' });
@@ -77,14 +79,18 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Status only ever moves forward — a replayed or out-of-order webhook must
+    // never regress a completed document back to partially_signed.
+    const rank: Record<string, number> = { draft: 0, sent: 1, partially_signed: 2, completed: 3, voided: 3 };
     let nextStatus: string = doc.status;
     if (allSigned) nextStatus = 'completed';
     else if (anySigned) nextStatus = 'partially_signed';
+    if ((rank[nextStatus] ?? 0) < (rank[doc.status] ?? 0)) nextStatus = doc.status;
 
     const updates: Record<string, unknown> = { signers, status: nextStatus, updated_at: new Date().toISOString() };
 
     // On completion, pull PDF and stash it in private storage.
-    if (allSigned && doc.status !== 'completed') {
+    if (allSigned && doc.status !== 'completed' && !(doc as any).signed_pdf_path) {
       try {
         const pdf = await downloadDocumentPdf(signnowDocId);
         const path = `${doc.id}.pdf`;

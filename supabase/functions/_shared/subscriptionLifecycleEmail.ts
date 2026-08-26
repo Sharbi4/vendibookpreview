@@ -12,13 +12,14 @@
  */
 import { formatUsd } from "./adminPaymentAlert.ts";
 import { isProTierSlug } from "./proBoostCredit.ts";
+import { invokeTransactionalEmail } from "./invokeTransactionalEmail.ts";
 import {
-import { invokeTransactionalEmail } from './invokeTransactionalEmail.ts'
   type MembershipEmailKind,
   membershipEmailKey,
   type MembershipSubscription,
   sendProMembershipEmail,
 } from "./proMembershipEmail.ts";
+
 
 // deno-lint-ignore no-explicit-any
 type Admin = any;
