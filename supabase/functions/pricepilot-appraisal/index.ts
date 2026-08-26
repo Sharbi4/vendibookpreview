@@ -386,6 +386,12 @@ Deno.serve(async (req) => {
                 marketScope: SCOPE_HEADLINE[scope],
               },
               adjustments: valuation.adjustmentSummary,
+              equipmentAndBuildout: {
+                ...equipment.section,
+                guidance:
+                  'Replacement cost is what this equipment costs new today. It is NOT resale value and must never be added on top of the comparable median. Comparables already embed a typical equipment package; treat this as a cross-check that explains why the recommendation sits above or below the comps.',
+              },
+
               warnings: valuation.warnings,
               topComparables: valuation.comparables.slice(0, 8).map((c) => ({
                 title: c.title,
