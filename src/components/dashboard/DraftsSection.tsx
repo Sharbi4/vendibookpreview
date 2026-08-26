@@ -22,6 +22,8 @@ interface Draft {
   mode: string;
   cover_image_url: string | null;
   updated_at: string;
+  /** Present when the draft was started (or claimed) by List with Vendi. */
+  vendi_session_key?: string | null;
 }
 
 interface DraftsSectionProps {
@@ -86,6 +88,11 @@ const DraftsSection = ({ drafts, onDelete }: DraftsSectionProps) => {
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-foreground truncate">
                   {draft.title || 'Untitled Draft'}
+                  {draft.vendi_session_key && (
+                    <span className="ml-2 align-middle text-[10px] uppercase tracking-wide text-primary">
+                      Vendi
+                    </span>
+                  )}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {CATEGORY_LABELS[draft.category] || draft.category} • {draft.mode === 'rent' ? 'For Rent' : 'For Sale'} • Updated {formatDistanceToNow(new Date(draft.updated_at), { addSuffix: true })}
@@ -122,17 +129,45 @@ const DraftsSection = ({ drafts, onDelete }: DraftsSectionProps) => {
                   </AlertDialogContent>
                 </AlertDialog>
 
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  asChild
-                  className="h-8 text-xs text-primary hover:text-primary"
-                >
-                  <Link to={`/create-listing/${draft.id}`}>
-                    Continue
-                    <ArrowRight className="h-3 w-3 ml-1" />
-                  </Link>
-                </Button>
+                {/* A Vendi draft resumes the SAME row in the chat it was started
+                    in; the full editor stays available as the secondary path. */}
+                {draft.vendi_session_key ? (
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      asChild
+                      className="h-8 text-xs text-muted-foreground hover:text-foreground"
+                    >
+                      <Link to={`/create-listing/${draft.id}`}>Edit full listing</Link>
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      asChild
+                      className="h-8 text-xs text-primary hover:text-primary"
+                    >
+                      <Link to={`/list-with-vendi?listing=${draft.id}`}>
+                        Continue with Vendi
+                        <ArrowRight className="h-3 w-3 ml-1" />
+                      </Link>
+                    </Button>
+                  </>
+                ) : (
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    asChild
+                    className="h-8 text-xs text-primary hover:text-primary"
+                  >
+                    <Link to={`/create-listing/${draft.id}`}>
+                      Continue
+                      <ArrowRight className="h-3 w-3 ml-1" />
+                    </Link>
+                  </Button>
+                )}
+              </div>
+
               </div>
             </div>
           ))}

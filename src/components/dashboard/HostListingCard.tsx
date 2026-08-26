@@ -298,6 +298,9 @@ const HostListingCard = ({
   // ── Primary + secondary actions per status (max 3 visible + kebab) ──
   const renderActions = () => {
     if (isDraft) {
+      // Drafts started in List with Vendi resume in the SAME chat and the SAME
+      // row; the full editor remains available as the secondary action.
+      const vendiDraft = !!(listing as { vendi_session_key?: string | null }).vendi_session_key;
       return (
         <>
           <Button
@@ -305,11 +308,17 @@ const HostListingCard = ({
             className={ACTION_BTN}
             asChild
           >
-            <Link to={`/create-listing/${listing.id}`}>
+            <Link to={vendiDraft ? `/list-with-vendi?listing=${listing.id}` : `/create-listing/${listing.id}`}>
               <FileEdit className="h-4 w-4 mr-1.5" />
-              Continue editing
+              {vendiDraft ? 'Continue with Vendi' : 'Continue editing'}
             </Link>
           </Button>
+          {vendiDraft && (
+            <Button size="sm" variant="outline" asChild>
+              <Link to={`/create-listing/${listing.id}`}>Edit full listing</Link>
+            </Button>
+          )}
+
           <KebabMenu>
             {onPublish && (
               <DropdownMenuItem onClick={() => onPublish(listing.id)} className="gap-2">

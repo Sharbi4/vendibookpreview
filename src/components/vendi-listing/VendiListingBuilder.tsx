@@ -26,6 +26,7 @@ import { publishVendiListing } from '@/lib/vendi-listing/publishVendiListing';
 import {
   ActiveVendiDraft, adoptVendiSessionKey, createOrResumeVendiDraft, resolveVendiResume,
   loadRequiredDocuments, getVendiSessionKey, rotateVendiSessionKey, VendiSessionRetiredError,
+  verifyVendiDraft, adoptDraftIntoVendiSession,
 } from '@/lib/vendi-listing/session';
 import { deriveAnsweredFromDraft, mergeServerDraft } from '@/lib/vendi-listing/hydrate';
 import { trackVendi } from '@/lib/vendi-listing/telemetry';
@@ -103,6 +104,22 @@ const VendiListingBuilder: React.FC = () => {
   const [resumeChecked, setResumeChecked] = useState(false);
   /** Unfinished Vendi drafts on this account that belong to another session. */
   const [resumeOffers, setResumeOffers] = useState<ActiveVendiDraft[]>([]);
+  /**
+   * The row this browser was editing is no longer an unfinished draft — it was
+   * deleted, archived, paused or published somewhere else. Vendi stops writing
+   * to it immediately and offers a clean start instead of resurrecting it.
+   */
+  const [detached, setDetached] = useState<null | 'gone' | 'not_draft'>(null);
+  /** Bumped when the tab regains focus, to re-read the server row. */
+  const [revalidateSeq, setRevalidateSeq] = useState(0);
+  /**
+   * "Continue with Vendi" deep link (`/list-with-vendi?listing=<id>`) from the
+   * dashboard or the full editor. Resolved before any create can happen.
+   */
+  const [deepLinkId, setDeepLinkId] = useState<string | null>(() => {
+    try { return new URLSearchParams(window.location.search).get('listing'); } catch { return null; }
+  });
+
 
   /** Field-level history for "undo that" — the last few confirmed drafts. */
   const [history, setHistory] = useState<VendiDraft[]>([]);
@@ -123,6 +140,13 @@ const VendiListingBuilder: React.FC = () => {
   /** "Ready to publish" is announced exactly once per session. */
   const readyAnnouncedRef = useRef(false);
   const startedAnnouncedRef = useRef(false);
+  /** `${draftId}:${revalidateSeq}` already verified against the server. */
+  const verifiedForRef = useRef<string | null>(null);
+  /** This browser created the current row, so there is nothing newer to fetch. */
+  const createdHereRef = useRef(false);
+  /** Focus revalidation must never interrupt an in-flight save. */
+  const saveStateRef = useRef<'idle' | 'saving' | 'saved' | 'error'>('idle');
+
 
 
 
@@ -233,7 +257,7 @@ const VendiListingBuilder: React.FC = () => {
   // (every Vendi-supported column, media and required documents) and the
   // answered ledger is derived from it, so nothing already saved is re-asked.
   useEffect(() => {
-    if (!hydrated || !user || draftId || resolvingRef.current) return;
+    if (!hydrated || !user || draftId || deepLinkId || resolvingRef.current) return;
     resolvingRef.current = true;
     let cancelled = false;
     void (async () => {
@@ -281,7 +305,125 @@ const VendiListingBuilder: React.FC = () => {
       }
     })();
     return () => { cancelled = true; };
-  }, [hydrated, user, draftId]);
+  }, [hydrated, user, draftId, deepLinkId]);
+
+  /**
+   * Apply an authoritative server row to the interview. The database is the
+   * source of truth for everything it has stored — edits made in the full
+   * editor, on another device, or in a second tab win over this browser's cache
+   * — and restored media is merged, never duplicated.
+   */
+  const applyServerDraft = useCallback((row: ActiveVendiDraft) => {
+    const union = (prev: string[], next: string[] | null) =>
+      Array.from(new Set([...(next ?? []), ...prev]));
+    setDraftId(row.id);
+    setDetached(null);
+    setDraft((prev) => mergeServerDraft(prev, {
+      ...row.draft,
+      ...(row.required_documents.length ? { required_documents: row.required_documents } : {}),
+    }, { preferServer: true }));
+    setAnswered((prev) => Array.from(new Set([
+      ...prev,
+      ...deriveAnsweredFromDraft(row.draft, { hasMedia: !!row.image_urls?.length }),
+    ])));
+    setUploadedUrls((prev) => union(prev, row.image_urls));
+    setUploadedVideoUrls((prev) => union(prev, row.video_urls));
+  }, []);
+
+  /**
+   * "Continue with Vendi" from the dashboard / full editor. The chosen draft's
+   * session is adopted (or claimed, for a draft started in the manual wizard),
+   * so continuing an existing listing can never mint a second row.
+   */
+  useEffect(() => {
+    if (!hydrated || !user || !deepLinkId) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const result = await adoptDraftIntoVendiSession(deepLinkId, user.id, sessionKeyRef.current);
+        if (cancelled) return;
+        if (result.state === 'active') {
+          if (result.draft.session_key) {
+            sessionKeyRef.current = result.draft.session_key;
+            adoptVendiSessionKey(user.id, result.draft.session_key);
+          }
+          applyServerDraft(result.draft);
+          verifiedForRef.current = `${result.draft.id}:0`;
+          trackVendi('vendi_session_resumed', {
+            userId: user.id, listingId: result.draft.id, sessionKey: sessionKeyRef.current,
+            metadata: { source: 'deep_link' },
+          });
+        } else {
+          toast.message(
+            result.state === 'gone'
+              ? 'That draft is no longer available.'
+              : 'That listing is not an unfinished draft any more.',
+            { description: 'Starting a fresh listing instead — nothing was changed.' },
+          );
+        }
+      } catch {
+        /* fall through to the normal resume path */
+      } finally {
+        if (!cancelled) {
+          try {
+            window.history.replaceState({}, '', window.location.pathname);
+          } catch { /* ignore */ }
+          setDeepLinkId(null);
+        }
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [hydrated, user, deepLinkId, applyServerDraft]);
+
+  /**
+   * A cached `draftId` is only a hint. Verify it against the server on arrival
+   * and whenever the tab regains focus, so returning from the full editor shows
+   * the newest saved values, and a draft that was deleted, archived or
+   * published elsewhere is detached instead of silently written to.
+   */
+  useEffect(() => {
+    if (!hydrated || !user || !draftId) return;
+    const token = `${draftId}:${revalidateSeq}`;
+    if (verifiedForRef.current === token) return;
+    verifiedForRef.current = token;
+    if (createdHereRef.current && revalidateSeq === 0) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const result = await verifyVendiDraft(draftId, user.id);
+        if (cancelled) return;
+        if (result.state === 'active') { applyServerDraft(result.draft); return; }
+        setDetached(result.state);
+        trackVendi('vendi_session_retired', {
+          userId: user.id, listingId: draftId, sessionKey: sessionKeyRef.current,
+          metadata: { reason: result.state },
+        });
+      } catch {
+        /* transient network failure: keep the local state, retry on next focus */
+        verifiedForRef.current = null;
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [hydrated, user, draftId, revalidateSeq, applyServerDraft]);
+
+  // Coming back from another tab, the dashboard or the full editor re-reads the
+  // row — but never mid-save, so a pending answer is not clobbered.
+  useEffect(() => {
+    const revalidate = () => {
+      if (document.visibilityState !== 'visible') return;
+      if (saveStateRef.current === 'saving') return;
+      setRevalidateSeq((n) => n + 1);
+    };
+    window.addEventListener('focus', revalidate);
+    document.addEventListener('visibilitychange', revalidate);
+    return () => {
+      window.removeEventListener('focus', revalidate);
+      document.removeEventListener('visibilitychange', revalidate);
+    };
+  }, []);
+
+  useEffect(() => { saveStateRef.current = saveState; }, [saveState]);
+
 
   // Create the owned draft row as soon as we know mode + category, so every
   // later answer and upload is autosaved against the seller's account. The
@@ -289,7 +431,7 @@ const VendiListingBuilder: React.FC = () => {
   // double-invocations, remounts and second tabs all resolve to one row.
   useEffect(() => {
     if (!hydrated || !user || draftId || creatingDraftRef.current) return;
-    if (!resumeChecked || resumeOffers.length) return;
+    if (!resumeChecked || resumeOffers.length || deepLinkId || detached) return;
     if (!draft.mode || !draft.category) return;
     creatingDraftRef.current = true;
     void (async () => {
@@ -303,11 +445,13 @@ const VendiListingBuilder: React.FC = () => {
           zipCode: draft.zip_code ?? null,
           location: draft.address ?? null,
         });
+        createdHereRef.current = true;
         setDraftId(id);
         trackVendi('vendi_draft_created', {
           userId: user.id, listingId: id, sessionKey: sessionKeyRef.current,
           metadata: { mode: draft.mode ?? null, category: draft.category ?? null },
         });
+
       } catch (error) {
         creatingDraftRef.current = false;
         if (error instanceof VendiSessionRetiredError) {
@@ -328,7 +472,7 @@ const VendiListingBuilder: React.FC = () => {
   // server resume settles, so a stale browser payload can't overwrite newer
   // server values, and it never runs while a resume choice is pending.
   useEffect(() => {
-    if (!draftId || !hydrated || !resumeChecked || resumeOffers.length) return;
+    if (!draftId || !hydrated || !resumeChecked || resumeOffers.length || detached) return;
     setSaveState('saving');
     const timer = window.setTimeout(() => {
       const payload = buildListingPayload(draft, uploadedUrls, uploadedVideoUrls);
@@ -343,7 +487,8 @@ const VendiListingBuilder: React.FC = () => {
         });
     }, 1200);
     return () => window.clearTimeout(timer);
-  }, [draft, uploadedUrls, uploadedVideoUrls, draftId, hydrated, resumeChecked, resumeOffers.length, user?.id]);
+  }, [draft, uploadedUrls, uploadedVideoUrls, draftId, hydrated, resumeChecked, resumeOffers.length, detached, user?.id]);
+
 
   // Ask the next unanswered question — once, and only once per question, and
   // always the highest-value one rather than the next line of a script.
@@ -650,7 +795,8 @@ const VendiListingBuilder: React.FC = () => {
       const { error: updateError } = await supabase
         .from('listings')
         .update(buildListingPayload(draft, images, videos) as never)
-        .eq('id', listingId);
+        .eq('id', listingId)
+        .eq('status', 'draft'); // never write over a listing that already went live
       if (updateError) throw updateError;
       await syncRequiredDocuments(listingId);
 
@@ -821,12 +967,16 @@ const VendiListingBuilder: React.FC = () => {
     setDraft(emptyDraft); setAnswered([]); setMessages([]); setPhotos([]); setUploadedUrls([]);
     setUploadedVideoUrls([]); setReviewing(false);
     setDraftId(null); creatingDraftRef.current = false; resolvingRef.current = false;
+    createdHereRef.current = false; verifiedForRef.current = null;
+    uploadedByItemRef.current = new Map();
+    setDetached(null); setDeepLinkId(null);
     setResumeOffers([]); setResumeChecked(true);
     setConsentId(null); setAttestInput(''); disclosureShownRef.current = false;
     setSaveState('idle');
     askedRef.current = new Set(); setAsked([]);
     // Re-run the opening effect against the now-empty storage: one clean welcome.
     setHydrated(false); setSessionSeq((n) => n + 1);
+
   };
 
   /**
@@ -839,6 +989,8 @@ const VendiListingBuilder: React.FC = () => {
     adoptVendiSessionKey(user.id, offer.session_key);
     sessionKeyRef.current = offer.session_key;
     setDraftId(offer.id);
+    setDetached(null);
+    verifiedForRef.current = `${offer.id}:${revalidateSeq}`;
     setResumeOffers([]);
     setDraft((prev) => mergeServerDraft(prev, offer.draft, { preferServer: true }));
     setAnswered((prev) => Array.from(new Set([
@@ -895,10 +1047,47 @@ const VendiListingBuilder: React.FC = () => {
     );
   }
 
+  // The listing this session was editing left the draft lifecycle — deleted,
+  // archived, paused or published elsewhere. It is never resurrected, and it is
+  // never written to again: the seller starts a clean listing instead.
+  if (detached) {
+    return (
+      <div className="relative flex min-h-[80vh] items-center justify-center bg-[#08080a] px-4 py-16">
+        <div
+          className="w-full max-w-md rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-foreground shadow-[0_30px_90px_-40px_rgba(0,0,0,0.9)] backdrop-blur-xl"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="vendi-detached-title"
+        >
+          <p className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">List with Vendi</p>
+          <h1 id="vendi-detached-title" className="mt-3 text-2xl font-semibold leading-snug">
+            {detached === 'gone' ? 'That draft was deleted' : 'That listing is no longer a draft'}
+          </h1>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            {detached === 'gone'
+              ? 'The listing this chat was building is no longer in your account, so I stopped saving to it. Nothing else was changed.'
+              : 'It was published or archived somewhere else, so I stopped editing it here. You can manage it from your dashboard.'}
+          </p>
+          <div className="mt-6 space-y-2">
+            <Button className="w-full" onClick={startOver}>Start a new listing</Button>
+            <Button
+              variant="outline"
+              className="w-full border-white/15 bg-white/[0.03]"
+              onClick={() => navigate('/dashboard')}
+            >
+              Go to dashboard
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Cross-device / cleared-storage arrival with unfinished Vendi drafts on the
   // account. Continuing is the primary action; a new listing is an explicit
   // choice, and an arbitrary draft is never adopted silently.
   if (resumeOffers.length) {
+
     const many = resumeOffers.length > 1;
     return (
       <div className="relative flex min-h-[80vh] items-center justify-center bg-[#08080a] px-4 py-16">
