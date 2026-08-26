@@ -1022,6 +1022,23 @@ const VendiListingBuilder: React.FC = () => {
   const readiness = readinessProgress(draft, previewImages.length);
   const progress = readiness.percent;
 
+  // Everything Vendi has actually captured, shown back so the seller never has
+  // to scroll the transcript to check whether an answer landed.
+  const facts = capturedFacts(draft, previewImages.length, localVideos.length);
+
+  /**
+   * Tap a captured fact to correct it: the question that produced it is
+   * reopened (and review is left) instead of forcing a typed correction.
+   */
+  const reopenFact = (questionId: string) => {
+    askedRef.current.delete(questionId);
+    setAsked((ids) => ids.filter((id) => id !== questionId));
+    setAnswered((prev) => prev.filter((id) => id !== questionId));
+    setReviewing(false);
+  };
+
+
+
 
   const previewPanel = (
     <LivePreviewPanel preview={draft} images={previewImages} ready={blockers.length === 0} />
