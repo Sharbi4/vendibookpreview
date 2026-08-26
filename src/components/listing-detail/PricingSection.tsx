@@ -25,6 +25,12 @@ const PricingSection = ({
   vendibookFreightEnabled,
 }: PricingSectionProps) => {
   const hasDelivery = fulfillmentType === 'delivery' || fulfillmentType === 'both';
+  const rentalRates = listRentalRates({
+    price_hourly: priceHourly,
+    price_daily: priceDaily,
+    price_weekly: priceWeekly,
+    price_monthly: priceMonthly,
+  });
 
   return (
     <div className="space-y-3">
