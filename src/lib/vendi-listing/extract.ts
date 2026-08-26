@@ -144,5 +144,14 @@ export function parseDimensions(raw: string): ParsedDimensions {
 
 /** Detect a user asking to skip the current question. */
 export function isSkip(raw: string): boolean {
-  return /^(skip|pass|later|not sure|idk|i don'?t know|none|n\/a)\b/i.test(cleanText(raw));
+  return /^(skip|pass|later|not sure|idk|i don'?t know|i dont know|none|n\/a)\b/i.test(cleanText(raw));
+}
+
+/**
+ * Detect a seller asking for help rather than answering.
+ * Vendi explains and re-offers the question; it never invents a value.
+ */
+export function isHelpRequest(raw: string): boolean {
+  const t = cleanText(raw).toLowerCase();
+  return /^(help|help me|i need help|help me figure|what does (this|that) mean|what do you mean|i'?m not sure what|explain|why do you need|why are you asking|what should i (put|say|enter))\b/.test(t);
 }
