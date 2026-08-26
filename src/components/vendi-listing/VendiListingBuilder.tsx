@@ -302,7 +302,7 @@ const VendiListingBuilder: React.FC = () => {
                   <button
                     key={opt.value}
                     type="button"
-                    onClick={() => submitAnswer(opt.value)}
+                    onClick={() => submitAnswer(opt.value, opt.label)}
                     className="group rounded-2xl border border-white/[0.09] bg-white/[0.035] px-4 py-3 text-left transition-all duration-200 hover:-translate-y-[1px] hover:border-[rgba(255,81,36,0.4)] hover:bg-white/[0.06]"
                   >
                     <span className="block text-sm font-medium text-foreground">{opt.label}</span>
