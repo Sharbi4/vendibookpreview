@@ -15,7 +15,21 @@ import {
   inviteIdForEmail,
   prefillFields,
   isSignNowConfigured,
+  registerDocumentWebhook,
 } from './signnow.ts';
+
+/**
+ * Subscribe to document.complete / document.update for this document so the
+ * signnow-webhook function can advance status + store the signed PDF.
+ * Registration failures must not lose the document we just created.
+ */
+async function safeRegisterWebhook(signnowDocId: string): Promise<void> {
+  try {
+    await registerDocumentWebhook(signnowDocId);
+  } catch (e) {
+    console.error('[signnow] webhook registration failed', signnowDocId, (e as Error).message);
+  }
+}
 
 
 export interface SignerRecord {
@@ -104,6 +118,7 @@ export async function ensureRentalAgreement(bookingId: string): Promise<{ docume
     { email: host.email,   role_name: 'Host',   order: 2, first_name: host.first_name ?? undefined,   last_name: host.last_name ?? undefined },
   ];
   const invites = await createEmbeddedInvite(signnowDocId, signers);
+  await safeRegisterWebhook(signnowDocId);
 
   const signerRecords: SignerRecord[] = [
     { role: 'renter', user_id: booking.shopper_id, email: renter.email, first_name: renter.first_name ?? undefined, last_name: renter.last_name ?? undefined, invite_id: inviteIdForEmail(invites, renter.email), signed_at: null },
@@ -192,6 +207,7 @@ export async function ensureBillOfSale(transactionId: string): Promise<{ documen
     { email: seller.email, role_name: 'Seller', order: 2, first_name: seller.first_name ?? undefined, last_name: seller.last_name ?? undefined },
   ];
   const invites = await createEmbeddedInvite(signnowDocId, signers);
+  await safeRegisterWebhook(signnowDocId);
 
   const signerRecords: SignerRecord[] = [
     { role: 'buyer',  user_id: tx.buyer_id,  email: buyer.email,  first_name: buyer.first_name ?? undefined,  last_name: buyer.last_name ?? undefined,  invite_id: inviteIdForEmail(invites, buyer.email),  signed_at: null },

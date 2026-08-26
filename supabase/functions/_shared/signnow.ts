@@ -159,7 +159,7 @@ export async function registerDocumentWebhook(
   const results: { id: string; event: string }[] = [];
   for (const event of events) {
     try {
-      const json = await apiFetch('/v2/event-subscriptions', {
+      const res = await apiFetch('/v2/event-subscriptions', {
         method: 'POST',
         json: {
           event,
@@ -172,7 +172,8 @@ export async function registerDocumentWebhook(
           },
         },
       });
-      results.push({ id: json?.data?.id ?? json?.id ?? 'unknown', event });
+      const json = await res.json().catch(() => ({}));
+      results.push({ id: String(json?.data?.id ?? json?.id ?? 'unknown'), event });
     } catch (e: any) {
       if (e.message?.includes('subscription already exists') || e.message?.includes('duplicate')) {
         results.push({ id: 'existing', event });
