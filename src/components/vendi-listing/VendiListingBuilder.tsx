@@ -253,11 +253,46 @@ const VendiListingBuilder: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draftId, user, photos.length, uploadedUrls.length]);
 
+  /**
+   * Typed acknowledgment of the publish disclosure. Only an exact, capitalised
+   * `YES` counts — no inferred or button-only consent — and it is written
+   * through the same `record_user_consent` audit path as the wizard's
+   * ConsentModal before the Publish action unlocks.
+   */
+  const handleAttest = async (raw: string) => {
+    const text = raw.trim();
+    if (!text || attesting || consentId) return;
+    say('user', text);
+    setAttestInput('');
+    if (text !== 'YES') {
+      say('vendi', 'To affirm the disclosure I need exactly YES, in capital letters. Nothing is published until then.');
+      return;
+    }
+    setAttesting(true);
+    try {
+      const id = await recordConsent.mutateAsync({
+        documentType,
+        documentVersion: legalDoc?.version ?? CURRENT_VERSIONS[documentType],
+        trigger: CONSENT_TRIGGERS.PUBLISH_LISTING,
+        acceptanceText: `${acceptanceText} ${ATTESTATIONS.map((a) => a.text).join(' ')} Acknowledged by typing YES in the List with Vendi builder.`,
+        relatedIds: draftId ? { listing_id: draftId } : undefined,
+      });
+      setConsentId(id);
+      say('vendi', 'Recorded and dated. Publish Listing is now unlocked — publishing is still your explicit action.');
+    } catch (error) {
+      say('vendi', 'I could not record your acknowledgment. Please try typing YES again, or contact support@vendibook.com.');
+      toast.error(error instanceof Error ? error.message : 'Could not record your acceptance.');
+    } finally {
+      setAttesting(false);
+    }
+  };
+
   const handlePublish = async () => {
     if (blockers.length) return;
-    if (!user) return;
+    if (!user || !consentId) return;
     setPublishing(true);
     try {
+
       const { data: sessionData } = await supabase.auth.getSession();
       const accessToken = sessionData.session?.access_token;
       if (!accessToken) throw new Error('Please sign in again to publish.');
