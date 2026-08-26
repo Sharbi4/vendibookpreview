@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Lock, ShieldCheck, ExternalLink } from 'lucide-react';
 import { PayPalWordmark, PlaidLogo } from '@/components/brand/ProviderLogos';
