@@ -145,7 +145,6 @@ describe('List with Vendi opening', () => {
     fireEvent.click(await screen.findByRole('button', { name: /start over/i }));
 
     await waitFor(() => expect(occurrences(VENDI_WELCOME)).toBe(1));
-    if (occurrences('Welcome back')) console.log('DOM>>>', document.body.textContent);
     expect(occurrences('Welcome back')).toBe(0);
     expect(occurrences(promptText(question('import_choice'), EMPTY))).toBe(1);
     expect(localStorage.getItem(STORAGE_KEY)).not.toContain('Welcome back');

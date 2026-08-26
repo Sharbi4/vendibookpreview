@@ -178,7 +178,6 @@ const VendiListingBuilder: React.FC = () => {
       }
     } catch { /* ignore corrupt state */ }
 
-    console.log('HYDRATE', restoredSession, sessionSeq);
     if (!restoredSession) {
       askedRef.current = new Set();
       setAsked([]);
@@ -752,7 +751,6 @@ const VendiListingBuilder: React.FC = () => {
 
 
 
-  console.log('RENDER msgs', messages.map(m=>m.content.slice(0,18)), 'seq', sessionSeq, 'hyd', hydrated);
   const progress = progressPercent(draft, answered);
 
   const previewPanel = (
