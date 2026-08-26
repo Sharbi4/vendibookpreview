@@ -38,8 +38,8 @@ vi.mock('@/components/vendi-listing/VendiAuthGate', () => ({ default: () => null
 vi.mock('@/integrations/supabase/client', () => {
   const table = () => {
     const b: any = {
-      update: () => ({ eq: async () => listingUpdate() }),
-      delete: () => ({ eq: async () => ({ error: null }) }),
+      update: () => b,
+      delete: () => b,
       insert: async () => ({ error: null }),
       select: () => b,
       eq: () => b,
