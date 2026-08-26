@@ -7,18 +7,23 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
  * only be cleared once the server row is verified live.
  */
 
-const navigate = vi.fn();
+const { navigate, toastSuccess, toastError, USER, listingUpdate, publishVendiListing } = vi.hoisted(() => ({
+  navigate: vi.fn(),
+  toastSuccess: vi.fn(),
+  toastError: vi.fn(),
+  USER: { id: 'user-1', email: 'seller@example.com' },
+  listingUpdate: vi.fn(async () => ({ error: null })),
+  publishVendiListing: vi.fn(),
+}));
+
 vi.mock('react-router-dom', () => ({
   useNavigate: () => navigate,
 }));
 
-const toastSuccess = vi.fn();
-const toastError = vi.fn();
 vi.mock('sonner', () => ({
   toast: Object.assign(vi.fn(), { success: toastSuccess, error: toastError, message: vi.fn() }),
 }));
 
-const USER = { id: 'user-1', email: 'seller@example.com' };
 vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({ user: USER, isLoading: false }),
 }));
@@ -30,7 +35,6 @@ vi.mock('@/hooks/useRecordConsent', () => ({
 vi.mock('@/components/ai-listing/LivePreviewPanel', () => ({ default: () => null }));
 vi.mock('@/components/vendi-listing/VendiAuthGate', () => ({ default: () => null }));
 
-const listingUpdate = vi.fn(async () => ({ error: null }));
 vi.mock('@/integrations/supabase/client', () => {
   const table = () => {
     const b: any = {
@@ -53,7 +57,6 @@ vi.mock('@/integrations/supabase/client', () => {
   };
 });
 
-const publishVendiListing = vi.fn();
 vi.mock('@/lib/vendi-listing/publishVendiListing', () => ({
   publishVendiListing: (...a: unknown[]) => publishVendiListing(...a),
   publicListingPath: (id: string) => `/listing/${id}`,
