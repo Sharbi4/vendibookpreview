@@ -350,33 +350,34 @@ const SellMyFoodTruck = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-4 pt-8">
                       <img
-                        src={heroTruck}
-                        alt="Food truck parked and serving customers at dusk"
+                        src={collage[0].src}
+                        alt={collage[0].alt}
                         loading="eager"
                         className="w-full aspect-[3/4] object-cover rounded-[28px] shadow-[0_24px_60px_-32px_rgba(24,20,16,0.45)]"
                       />
                       <img
-                        src={trailerCafecito}
-                        alt="Coffee trailer with a serving window open"
+                        src={collage[1].src}
+                        alt={collage[1].alt}
                         loading="lazy"
                         className="w-full aspect-square object-cover rounded-[24px] shadow-[0_18px_44px_-28px_rgba(24,20,16,0.4)]"
                       />
                     </div>
                     <div className="space-y-4">
                       <img
-                        src={trailerGrill}
-                        alt="Concession trailer set up for service at an outdoor event"
+                        src={collage[2].src}
+                        alt={collage[2].alt}
                         loading="lazy"
                         className="w-full aspect-square object-cover rounded-[24px] shadow-[0_18px_44px_-28px_rgba(24,20,16,0.4)]"
                       />
                       <img
-                        src={heroSelling}
-                        alt="Seller handing over keys to a food truck buyer"
+                        src={collage[3].src}
+                        alt={collage[3].alt}
                         loading="lazy"
                         className="w-full aspect-[3/4] object-cover rounded-[28px] shadow-[0_24px_60px_-32px_rgba(24,20,16,0.45)]"
                       />
                     </div>
                   </div>
+
                 </motion.div>
               </div>
             </div>
