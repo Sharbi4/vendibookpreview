@@ -543,11 +543,14 @@ const SellMyFoodTruck = () => {
                       </Link>
                     </div>
                     <img
-                      src={row.image}
-                      alt={row.alt}
+                      src={realPhotos[i + 4]?.imageUrl ?? realPhotos[i]?.imageUrl ?? row.image}
+                      alt={realPhotos[i + 4] || realPhotos[i]
+                        ? `${(realPhotos[i + 4] ?? realPhotos[i]).title} listed for sale on Vendibook`
+                        : row.alt}
                       loading="lazy"
                       className="w-full aspect-[4/3] object-cover rounded-[26px] shadow-[0_22px_56px_-34px_rgba(24,20,16,0.45)]"
                     />
+
                   </motion.div>
                 ))}
               </div>
