@@ -107,15 +107,17 @@ const STATE_RENT_PAGE_CODES: Record<CategoryKey, Set<string>> = {
   vendor_space: new Set(),
 };
 
-const formatPrice = (l: ListingRow): string =>
-  formatListingPriceLabel({
+const formatPrice = (l: ListingRow): string => {
+  const label = formatListingPriceLabel({
     mode: l.mode,
     price_sale: l.price_sale,
     price_hourly: l.price_hourly,
     price_daily: l.price_daily,
     price_weekly: l.price_weekly,
     price_monthly: l.price_monthly,
-  }, { fallback: 'Contact for price' });
+  });
+  return label === PRICE_TBD ? 'Contact for price' : label;
+};
 
 const categoryLabel = (c: CategoryKey): string =>
   c === 'food_truck' ? 'Food Truck'
