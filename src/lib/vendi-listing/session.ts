@@ -68,12 +68,12 @@ export interface ActiveVendiDraft {
   state: string | null;
   postal_code: string | null;
   address: string | null;
-  images: string[] | null;
+  image_urls: string[] | null;
   created_at: string;
 }
 
 const ACTIVE_DRAFT_COLUMNS =
-  'id,vendi_session_key,title,description,category,mode,city,state,postal_code,address,images,created_at,status';
+  'id,vendi_session_key,title,description,category,mode,city,state,postal_code,address,image_urls,created_at,status';
 
 type DraftRow = Record<string, unknown>;
 
@@ -88,7 +88,7 @@ const toActive = (row: DraftRow): ActiveVendiDraft => ({
   state: (row.state as string) || null,
   postal_code: (row.postal_code as string) || null,
   address: (row.address as string) || null,
-  images: (row.images as string[]) ?? null,
+  images: (row.image_urls as string[]) ?? null,
   created_at: String(row.created_at),
 });
 
