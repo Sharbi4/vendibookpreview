@@ -262,3 +262,9 @@ verify_jwt = false
 
 [functions.admin-send-account-access]
 verify_jwt = false
+
+[functions.paypal-authorize-order]
+verify_jwt = false
+
+[functions.paypal-settle-authorization]
+verify_jwt = false

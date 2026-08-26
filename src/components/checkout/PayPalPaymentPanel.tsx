@@ -28,12 +28,26 @@ interface PayPalPaymentPanelProps {
   /** Where to send the buyer after a verified capture. */
   returnUrl?: string;
   /** Called once the server confirms the capture. */
-  onSuccess?: (result: { reference?: string; capture_id?: string; pending?: boolean }) => void;
+  onSuccess?: (result: {
+    reference?: string;
+    capture_id?: string;
+    pending?: boolean;
+    authorized?: boolean;
+    message?: string;
+  }) => void;
   /** Total in USD — used for Pay Later messaging. */
   totalUsd?: number;
 }
 
-type PanelState = 'loading' | 'ready' | 'processing' | 'success' | 'pending' | 'error';
+type PanelState =
+  | 'loading'
+  | 'ready'
+  | 'processing'
+  | 'success'
+  | 'pending'
+  /** PayPal is holding the funds; nothing has been charged yet. */
+  | 'authorized'
+  | 'error';
 
 /**
  * Vendibook-branded PayPal checkout in a dark-glass modal. Buyers pay with
@@ -63,6 +77,12 @@ const PayPalPaymentPanel = ({
   const [cardEligible, setCardEligible] = useState(false);
   const [cardOpen, setCardOpen] = useState(false);
   const [cardSubmitting, setCardSubmitting] = useState(false);
+  /**
+   * Set from the server's create-order response. The server alone decides
+   * whether this checkout captures now or places a temporary hold.
+   */
+  const intentRef = useRef<'CAPTURE' | 'AUTHORIZE'>('CAPTURE');
+  const [holdMessage, setHoldMessage] = useState<string | null>(null);
   const stateRef = useRef<PanelState>('loading');
   stateRef.current = state;
 
@@ -100,11 +120,39 @@ const PayPalPaymentPanel = ({
       fail('Payment could not be started', message);
       throw new Error(message);
     }
+    intentRef.current = data.payment_intent === 'AUTHORIZE' ? 'AUTHORIZE' : 'CAPTURE';
+    setHoldMessage(typeof data.buyer_message === 'string' ? data.buyer_message : null);
     return data.order_id as string;
   };
 
   const finishOrder = async (orderID: string) => {
     setState('processing');
+
+    // AUTHORIZE flow: place the temporary hold. No money moves until the
+    // transaction is confirmed and the hold is captured server-side.
+    if (intentRef.current === 'AUTHORIZE') {
+      const { data: auth, error: authErr } = await supabase.functions.invoke(
+        'paypal-authorize-order',
+        { body: { order_id: orderID } },
+      );
+      if (authErr || !auth || (auth.status !== 'authorized' && auth.status !== 'completed')) {
+        setState('error');
+        setError({
+          title: 'Payment not authorized',
+          detail: auth?.message || authErr?.message ||
+            'We could not authorize this payment and nothing has been charged. Please try again or use another method.',
+        });
+        return;
+      }
+      setHoldMessage(auth.message ?? null);
+      setState('authorized');
+      onSuccess?.({ reference: auth.reference, authorized: true, message: auth.message });
+      setTimeout(() => {
+        if (returnUrl) window.location.href = returnUrl;
+      }, 1400);
+      return;
+    }
+
     const { data: result, error: fnError } = await supabase.functions.invoke(
       'paypal-capture-order',
       { body: { order_id: orderID } },
@@ -319,6 +367,19 @@ const PayPalPaymentPanel = ({
                   <p className="mt-4 text-lg font-semibold text-foreground">Payment confirmed</p>
                   <p className="text-xs text-muted-foreground mt-1">Redirecting to your receipt…</p>
                 </div>
+              ) : state === 'authorized' ? (
+                <div className="py-10 flex flex-col items-center justify-center text-center animate-fade-in">
+                  <div className="relative h-16 w-16 rounded-full bg-primary/15 flex items-center justify-center border border-primary/30">
+                    <ShieldCheck className="h-9 w-9 text-primary" />
+                  </div>
+                  <p className="mt-4 text-lg font-semibold text-foreground">
+                    Payment authorized — not charged yet
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1 max-w-sm">
+                    {holdMessage ??
+                      'PayPal is holding these funds temporarily. You are only charged once this transaction is confirmed.'}
+                  </p>
+                </div>
               ) : state === 'pending' ? (
                 <div className="py-8 text-center space-y-2">
                   <p className="text-base font-semibold text-foreground">Payment is being reviewed</p>
@@ -327,6 +388,7 @@ const PayPalPaymentPanel = ({
                     nothing further is needed from you.
                   </p>
                 </div>
+
               ) : (
                 <>
                   <div ref={messagesRef} />

@@ -580,6 +580,8 @@ export type Database = {
         Row: {
           access_instructions_snapshot: string | null
           address_snapshot: string | null
+          balance_due_at: string | null
+          balance_due_cents: number
           booking_end_timestamp: string | null
           business_info: Json | null
           checkout_session_id: string | null
@@ -625,6 +627,7 @@ export type Database = {
           payment_intent_id: string | null
           payment_provider: Database["public"]["Enums"]["payment_provider"]
           payment_status: string | null
+          payment_strategy: string | null
           payout_hold_reason: string | null
           payout_hold_set_by: string | null
           payout_hold_until: string | null
@@ -651,6 +654,8 @@ export type Database = {
         Insert: {
           access_instructions_snapshot?: string | null
           address_snapshot?: string | null
+          balance_due_at?: string | null
+          balance_due_cents?: number
           booking_end_timestamp?: string | null
           business_info?: Json | null
           checkout_session_id?: string | null
@@ -696,6 +701,7 @@ export type Database = {
           payment_intent_id?: string | null
           payment_provider?: Database["public"]["Enums"]["payment_provider"]
           payment_status?: string | null
+          payment_strategy?: string | null
           payout_hold_reason?: string | null
           payout_hold_set_by?: string | null
           payout_hold_until?: string | null
@@ -722,6 +728,8 @@ export type Database = {
         Update: {
           access_instructions_snapshot?: string | null
           address_snapshot?: string | null
+          balance_due_at?: string | null
+          balance_due_cents?: number
           booking_end_timestamp?: string | null
           business_info?: Json | null
           checkout_session_id?: string | null
@@ -767,6 +775,7 @@ export type Database = {
           payment_intent_id?: string | null
           payment_provider?: Database["public"]["Enums"]["payment_provider"]
           payment_status?: string | null
+          payment_strategy?: string | null
           payout_hold_reason?: string | null
           payout_hold_set_by?: string | null
           payout_hold_until?: string | null
@@ -4969,9 +4978,17 @@ export type Database = {
       }
       payment_records: {
         Row: {
+          authorization_expires_at: string | null
+          authorization_honor_expires_at: string | null
+          authorization_status: string | null
+          authorization_voided_at: string | null
+          authorized_at: string | null
+          balance_due_at: string | null
+          balance_due_cents: number
           booking_request_id: string | null
           buyer_email: string | null
           buyer_id: string | null
+          captured_amount_cents: number
           captured_at: string | null
           created_at: string
           currency: string
@@ -4989,8 +5006,11 @@ export type Database = {
           listing_id: string | null
           metadata: Json
           monetization_purchase_id: string | null
+          payment_intent: string
           payment_source: string | null
           payment_status: Database["public"]["Enums"]["paypal_payment_status"]
+          payment_strategy: string | null
+          paypal_authorization_id: string | null
           paypal_capture_id: string | null
           paypal_order_id: string | null
           paypal_payer_id: string | null
@@ -5009,9 +5029,17 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          authorization_expires_at?: string | null
+          authorization_honor_expires_at?: string | null
+          authorization_status?: string | null
+          authorization_voided_at?: string | null
+          authorized_at?: string | null
+          balance_due_at?: string | null
+          balance_due_cents?: number
           booking_request_id?: string | null
           buyer_email?: string | null
           buyer_id?: string | null
+          captured_amount_cents?: number
           captured_at?: string | null
           created_at?: string
           currency?: string
@@ -5029,8 +5057,11 @@ export type Database = {
           listing_id?: string | null
           metadata?: Json
           monetization_purchase_id?: string | null
+          payment_intent?: string
           payment_source?: string | null
           payment_status?: Database["public"]["Enums"]["paypal_payment_status"]
+          payment_strategy?: string | null
+          paypal_authorization_id?: string | null
           paypal_capture_id?: string | null
           paypal_order_id?: string | null
           paypal_payer_id?: string | null
@@ -5049,9 +5080,17 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          authorization_expires_at?: string | null
+          authorization_honor_expires_at?: string | null
+          authorization_status?: string | null
+          authorization_voided_at?: string | null
+          authorized_at?: string | null
+          balance_due_at?: string | null
+          balance_due_cents?: number
           booking_request_id?: string | null
           buyer_email?: string | null
           buyer_id?: string | null
+          captured_amount_cents?: number
           captured_at?: string | null
           created_at?: string
           currency?: string
@@ -5069,8 +5108,11 @@ export type Database = {
           listing_id?: string | null
           metadata?: Json
           monetization_purchase_id?: string | null
+          payment_intent?: string
           payment_source?: string | null
           payment_status?: Database["public"]["Enums"]["paypal_payment_status"]
+          payment_strategy?: string | null
+          paypal_authorization_id?: string | null
           paypal_capture_id?: string | null
           paypal_order_id?: string | null
           paypal_payer_id?: string | null
@@ -7133,6 +7175,7 @@ export type Database = {
           message: string | null
           payment_intent_id: string | null
           payment_provider: Database["public"]["Enums"]["payment_provider"]
+          payment_strategy: string | null
           payout_completed_at: string | null
           platform_fee: number
           pro_discount: number
@@ -7188,6 +7231,7 @@ export type Database = {
           message?: string | null
           payment_intent_id?: string | null
           payment_provider?: Database["public"]["Enums"]["payment_provider"]
+          payment_strategy?: string | null
           payout_completed_at?: string | null
           platform_fee: number
           pro_discount?: number
@@ -7243,6 +7287,7 @@ export type Database = {
           message?: string | null
           payment_intent_id?: string | null
           payment_provider?: Database["public"]["Enums"]["payment_provider"]
+          payment_strategy?: string | null
           payout_completed_at?: string | null
           platform_fee?: number
           pro_discount?: number
@@ -10593,6 +10638,7 @@ export type Database = {
           message: string | null
           payment_intent_id: string | null
           payment_provider: Database["public"]["Enums"]["payment_provider"]
+          payment_strategy: string | null
           payout_completed_at: string | null
           platform_fee: number
           pro_discount: number
@@ -10759,6 +10805,11 @@ export type Database = {
         | "partially_refunded"
         | "refunded"
         | "reversed"
+        | "authorized"
+        | "partially_captured"
+        | "authorization_voided"
+        | "authorization_expired"
+        | "deposit_paid_balance_due"
       protected_sale_handoff_mode: "pickup" | "delivery"
       protected_sale_status:
         | "initiated"
@@ -11056,6 +11107,11 @@ export const Constants = {
         "partially_refunded",
         "refunded",
         "reversed",
+        "authorized",
+        "partially_captured",
+        "authorization_voided",
+        "authorization_expired",
+        "deposit_paid_balance_due",
       ],
       protected_sale_handoff_mode: ["pickup", "delivery"],
       protected_sale_status: [

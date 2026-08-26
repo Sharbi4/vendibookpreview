@@ -15,6 +15,11 @@ import {
   type QuoteResult,
 } from "../_shared/paypalAccounting.ts";
 import {
+  determinePaymentStrategy,
+  type PaymentStrategyContext,
+  type PaymentStrategyDecision,
+} from "../_shared/payments/paymentStrategy.ts";
+import {
   parseStateZipFromAddress,
   quoteSalesTax,
   type TaxDestination,
@@ -72,6 +77,11 @@ serve(async (req) => {
     let taxKind: TaxKind = "service";
     /** Deposits toward a future sale are taxed on the sale itself, not here. */
     let skipTax = false;
+    /**
+     * Rental/sale context for the deterministic payment policy. Left null for
+     * Vendibook-owned products and service charges, which always capture now.
+     */
+    let strategyContext: Omit<PaymentStrategyContext, "grossCents"> | null = null;
 
     /** Buyer profile location — used for Vendibook-owned products/services. */
     const buyerTaxLocation = async (): Promise<TaxDestination> => {
@@ -103,6 +113,12 @@ serve(async (req) => {
       }
       quote = quoteSaleTransaction(tx, (tx as any).listing?.title ?? "Listing");
       saleTransactionId = tx.id;
+      strategyContext = {
+        mode: "sale",
+        // Once the seller has confirmed there is nothing left to gate on, so
+        // we charge outright. Otherwise PayPal holds the funds until they do.
+        requiresSellerAcceptance: !tx.seller_confirmed_at,
+      };
       taxKind = "sale";
       // Destination sourcing: delivery/freight tax where the goods land;
       // pickup/on-site tax where the listing sits.
@@ -137,6 +153,16 @@ serve(async (req) => {
         : { isPro: (await resolveProStatus(admin, booking.host_id)).isPro };
       quote = quoteBookingRequest(booking, (booking as any).listing?.title ?? "Listing", hostPro);
       bookingRequestId = booking.id;
+      strategyContext = {
+        mode: "rent",
+        instantBook: !!booking.is_instant_book,
+        bookingStartAt: booking.start_date
+          ? new Date(`${booking.start_date}T${booking.start_time ?? "00:00:00"}`).toISOString()
+          : null,
+        hostApproved: booking.status === "approved",
+        hostDeclined: booking.status === "declined" || booking.status === "cancelled",
+        securityDepositCents: Math.round(Number(booking.deposit_amount ?? 0) * 100),
+      };
       taxKind = "rental";
       // Rentals are taxed where the rental happens — the listing's location.
       const bookingListingLoc = parseStateZipFromAddress((booking as any).listing?.address);
@@ -406,6 +432,17 @@ serve(async (req) => {
       return jsonError(400, "invalid_amount", "This transaction has no amount due.");
     }
 
+    // ── Payment policy ───────────────────────────────────────────────────
+    // Decided server-side only. The browser never chooses whether money is
+    // captured now or merely authorized (a temporary PayPal hold).
+    const decision: PaymentStrategyDecision = strategyContext
+      ? determinePaymentStrategy({ ...strategyContext, grossCents: quote.grossCents })
+      : determinePaymentStrategy({ mode: "sale", grossCents: quote.grossCents, requiresSellerAcceptance: false });
+
+    if (decision.blocked) {
+      return jsonError(409, "payment_not_ready", decision.buyerMessage);
+    }
+
     // Reuse an in-flight order for the same target so a double click or a
     // page refresh can never create two PayPal orders.
     const inflightFilter = saleTransactionId
@@ -441,6 +478,8 @@ serve(async (req) => {
           currency: quote.currency,
           breakdown: quote.breakdown,
           tax: taxPayload(quote),
+          payment_intent: decision.intent,
+          payment_strategy: decision.strategy,
           reused: true,
         });
       }
@@ -466,6 +505,8 @@ serve(async (req) => {
           currency: quote.currency,
           breakdown: quote.breakdown,
           tax: taxPayload(quote),
+          payment_intent: decision.intent,
+          payment_strategy: decision.strategy,
           reused: true,
         });
       }
@@ -507,6 +548,10 @@ serve(async (req) => {
         seller_proceeds_cents: quote.sellerProceedsCents,
         payment_status: "created",
         internal_status: "awaiting_buyer_approval",
+        payment_strategy: decision.strategy,
+        payment_intent: decision.intent,
+        balance_due_cents: decision.balanceDueCents || null,
+        balance_due_at: decision.balanceDueAt,
         idempotency_key: quote.reference,
         fee_breakdown: {
           lines: quote.breakdown,
@@ -530,6 +575,7 @@ serve(async (req) => {
       description: quote.description,
       idempotencyKey: quote.reference,
       softDescriptor: "VENDIBOOK",
+      intent: decision.intent === "AUTHORIZE" ? "AUTHORIZE" : "CAPTURE",
       // Itemized amounts must reconcile exactly with the order total.
       breakdown: quote.taxCents > 0
         ? { itemTotalCents: quote.grossCents - quote.taxCents, taxCents: quote.taxCents }
@@ -570,6 +616,11 @@ serve(async (req) => {
       currency: quote.currency,
       breakdown: quote.breakdown,
       tax: taxPayload(quote),
+      payment_intent: decision.intent,
+      payment_strategy: decision.strategy,
+      buyer_message: decision.buyerMessage,
+      balance_due_cents: decision.balanceDueCents,
+      balance_due_at: decision.balanceDueAt,
     });
   } catch (err) {
     if (err instanceof PaymentProviderError || err instanceof PayPalError) {

@@ -84,6 +84,11 @@ export interface CreateOrderRequest {
   /** Overrides the default reference-derived idempotency key. */
   idempotencyKey?: string;
   metadata?: Record<string, unknown>;
+  /**
+   * CAPTURE (default) charges on payer approval. AUTHORIZE places a temporary
+   * hold that must later be captured or voided explicitly.
+   */
+  intent?: "CAPTURE" | "AUTHORIZE";
 }
 
 export interface ProviderOrder {
@@ -103,6 +108,61 @@ export interface CaptureResult {
   paymentSource?: string | null;
   raw: unknown;
 }
+
+/** Normalized lifecycle of a temporary hold (PayPal authorization). */
+export type NormalizedAuthorizationStatus =
+  | "created"
+  | "pending"
+  | "partially_captured"
+  | "captured"
+  | "voided"
+  | "expired"
+  | "denied";
+
+export interface ProviderAuthorization {
+  providerOrderId: string;
+  authorizationId: string;
+  status: NormalizedAuthorizationStatus;
+  amount: Money;
+  /** Last moment this hold may still be captured, ISO. */
+  expiresAt: string | null;
+  payerId?: string | null;
+  paymentSource?: string | null;
+  raw: unknown;
+}
+
+/**
+ * Optional provider capability. A provider that cannot place temporary holds
+ * simply does not implement this, and the policy layer falls back to capture.
+ */
+export interface AuthorizationCapableProvider {
+  /** Turn an approved AUTHORIZE order into a temporary hold. */
+  authorizeOrder(
+    providerOrderId: string,
+    idempotencyKey: string,
+  ): Promise<ProviderAuthorization>;
+  getAuthorization(authorizationId: string): Promise<ProviderAuthorization>;
+  /** Capture (all or part of) an existing hold. Money moves here, not before. */
+  captureAuthorization(
+    authorizationId: string,
+    idempotencyKey: string,
+    amount?: Money,
+  ): Promise<CaptureResult>;
+  /** Release a hold without charging. */
+  voidAuthorization(authorizationId: string): Promise<void>;
+}
+
+export function supportsAuthorization(
+  provider: unknown,
+): provider is PaymentProvider & AuthorizationCapableProvider {
+  const p = provider as Partial<AuthorizationCapableProvider> | null;
+  return (
+    typeof p?.authorizeOrder === "function" &&
+    typeof p?.captureAuthorization === "function" &&
+    typeof p?.voidAuthorization === "function"
+  );
+}
+
 
 export interface RefundRequest {
   captureId: string;
