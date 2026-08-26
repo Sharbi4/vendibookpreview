@@ -49,6 +49,8 @@ interface PersistedState {
   messages: Msg[];
   draftId?: string | null;
   consentId?: string | null;
+  uploadedUrls?: string[];
+  uploadedVideoUrls?: string[];
 }
 
 const uid = () => Math.random().toString(36).slice(2);
