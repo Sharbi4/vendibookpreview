@@ -101,6 +101,14 @@ const VendiListingBuilder: React.FC = () => {
   const [attestInput, setAttestInput] = useState('');
   const [attestError, setAttestError] = useState<string | null>(null);
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  /**
+   * Repeated save / upload / publish failures are a support problem, not a
+   * seller problem. After the second one we offer a human instead of letting
+   * them keep retrying alone. Success resets it.
+   */
+  const [troubles, setTroubles] = useState(0);
+  const noteTrouble = () => setTroubles((n) => n + 1);
+
   const [savingManually, setSavingManually] = useState(false);
   /** Server lookup for an unfinished Vendi draft has completed. */
   const [resumeChecked, setResumeChecked] = useState(false);
@@ -462,6 +470,7 @@ const VendiListingBuilder: React.FC = () => {
           sessionKeyRef.current = rotateVendiSessionKey(user.id);
           trackVendi('vendi_session_retired', { userId: user.id, sessionKey: sessionKeyRef.current });
         } else {
+          noteTrouble();
           trackVendi('vendi_save_failed', { userId: user.id, metadata: { stage: 'create' } });
         }
       }
@@ -485,7 +494,10 @@ const VendiListingBuilder: React.FC = () => {
         .eq('status', 'draft') // never write over a listing that already went live
         .then(({ error }) => {
           setSaveState(error ? 'error' : 'saved');
-          if (error) trackVendi('vendi_save_failed', { userId: user?.id, listingId: draftId, metadata: { stage: 'autosave' } });
+          if (error) {
+            noteTrouble();
+            trackVendi('vendi_save_failed', { userId: user?.id, listingId: draftId, metadata: { stage: 'autosave' } });
+          } else setTroubles(0);
         });
     }, 1200);
     return () => window.clearTimeout(timer);
@@ -699,6 +711,7 @@ const VendiListingBuilder: React.FC = () => {
       });
       if (error) {
         failed += 1;
+        noteTrouble();
         trackVendi('vendi_media_upload_failed', { userId, listingId, metadata: { kind: item.kind } });
         continue; // keep the successful uploads; this item is retried later
       }
@@ -809,6 +822,7 @@ const VendiListingBuilder: React.FC = () => {
       });
     } catch (error) {
       setSaveState('error');
+      noteTrouble();
       toast.error(
         error instanceof Error ? error.message : 'We could not save your draft.',
         { description: 'Your answers are still here — try again in a moment.' },
@@ -939,6 +953,7 @@ const VendiListingBuilder: React.FC = () => {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Something went wrong.';
       const id = draftId;
+      noteTrouble();
       trackVendi('vendi_publish_failed', { userId: user?.id, listingId: id, metadata: { reason: message.slice(0, 80) } });
       // Recovery state is deliberately untouched: the seller keeps their draft.
       toast.error(message, {
@@ -1537,6 +1552,37 @@ const VendiListingBuilder: React.FC = () => {
 
             <div ref={endRef} />
           </div>
+
+          {/* Repeated failures: offer a person, never a restart. The draft and
+              every answer stay exactly where they are. */}
+          {troubles >= 2 && (
+            <div className="border-t border-amber-500/20 bg-amber-500/[0.06] px-4 py-3 sm:px-7">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
+                <span className="text-foreground/90">
+                  That's failed a couple of times. Your draft is safe — want a hand from our team?
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    trackVendi('vendi_support_requested', {
+                      userId: user?.id, listingId: draftId, sessionKey: sessionKeyRef.current,
+                    });
+                    navigate(`/contact?topic=listing${draftId ? `&ref=${draftId}` : ''}`);
+                  }}
+                  className="rounded-full border border-amber-400/40 bg-amber-400/10 px-3.5 py-1.5 text-xs font-medium text-amber-200 transition hover:bg-amber-400/20"
+                >
+                  Get help
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTroubles(0)}
+                  className="text-xs text-muted-foreground underline-offset-4 hover:underline"
+                >
+                  Keep going
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Captured-facts strip: proof that Vendi heard every answer, and a
               one-tap way to correct any of them without typing. */}

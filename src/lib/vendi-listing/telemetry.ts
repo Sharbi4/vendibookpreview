@@ -29,6 +29,7 @@ export type VendiEvent =
   | 'vendi_media_upload_failed'
   | 'vendi_publish_attempt'
   | 'vendi_publish_failed'
+  | 'vendi_support_requested'
   | 'vendi_published';
 
 
