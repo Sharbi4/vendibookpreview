@@ -470,6 +470,7 @@ const VendiListingBuilder: React.FC = () => {
           sessionKeyRef.current = rotateVendiSessionKey(user.id);
           trackVendi('vendi_session_retired', { userId: user.id, sessionKey: sessionKeyRef.current });
         } else {
+          noteTrouble();
           trackVendi('vendi_save_failed', { userId: user.id, metadata: { stage: 'create' } });
         }
       }
