@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import {
   gatherSources,
   formatSourceContext,
@@ -7,6 +8,14 @@ import {
 } from "../_shared/firecrawl-research.ts";
 import { gateToolAccess } from "../_shared/gateToolAccess.ts";
 import type { ToolSlug } from "../_shared/toolAccess.ts";
+import {
+  buildMarketEvidence,
+  formatMarketEvidenceContext,
+  parseLocation,
+  type ComparableRow,
+  type MarketEvidence,
+} from "../_shared/marketComparables.ts";
+
 
 const TOOL_MAP: Record<string, ToolSlug> = {
   pricing: "pricepilot",
