@@ -24,6 +24,8 @@ import {
 } from '@/lib/legalDocuments';
 import { useLegalDocument } from '@/hooks/useLegalDocument';
 import { useRecordConsent } from '@/hooks/useRecordConsent';
+import { cn } from '@/lib/utils';
+
 
 type Msg = { id: string; role: 'vendi' | 'user'; content: string };
 
