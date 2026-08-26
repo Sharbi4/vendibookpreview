@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import {
   gatherSources,
   formatSourceContext,
@@ -7,6 +8,14 @@ import {
 } from "../_shared/firecrawl-research.ts";
 import { gateToolAccess } from "../_shared/gateToolAccess.ts";
 import type { ToolSlug } from "../_shared/toolAccess.ts";
+import {
+  buildMarketEvidence,
+  formatMarketEvidenceContext,
+  parseLocation,
+  type ComparableRow,
+  type MarketEvidence,
+} from "../_shared/marketComparables.ts";
+
 
 const TOOL_MAP: Record<string, ToolSlug> = {
   pricing: "pricepilot",
@@ -27,18 +36,31 @@ interface RequestBody {
 const TODAY = todayISO();
 const YEAR = new Date().getUTCFullYear();
 
-const getSystemPrompt = (tool: string, hasSources: boolean): string => {
+const getSystemPrompt = (tool: string, hasSources: boolean, hasInternalEvidence = false): string => {
   const groundingRule = hasSources
     ? `Ground every specific number, trend, or claim in the SOURCE MATERIAL provided. Cite source indexes inline like [1], [2] where used. If a fact is not in the sources, fall back to general industry knowledge and flag it with "(estimate — verify locally)".`
     : `Live web sources were unavailable. Use your most current training knowledge, mark any specific dollar amounts as approximate, and tell the user to verify locally.`;
+
+  const evidenceRule = hasInternalEvidence
+    ? `
+INTERNAL MARKET EVIDENCE RULES (highest priority for SALE pricing):
+- The INTERNAL MARKET EVIDENCE block contains Vendibook's own structured comparable observations. When several close comparables are present, anchor the sale recommendation on them rather than on generic web snippets. Treat live web sources as supplemental context.
+- Facebook Marketplace records with sold status are OBSERVED marketplace evidence only. A "sold" status means the listing was marked sold at a displayed marketplace price — it is NOT a verified final transaction price or closing price.
+- Use wording such as "observed sold-status listing", "displayed marketplace price", "market evidence", and "comparable". Never say verified sale, confirmed sale, closing price, or appraised value for these records.
+- Only comparables explicitly flagged as VERIFIED transaction price may be described as verified sale evidence.
+- Pending observations are weaker evidence than sold observations.
+- Never state or imply a guaranteed value, certified appraisal, or confidence score.`
+    : '';
 
   switch (tool) {
     case "pricing":
       return `You are a senior pricing strategist for the U.S. mobile food industry (food trucks, trailers, carts, ghost/commissary kitchens, vendor lots). Today is ${TODAY}. You produce data-grounded daily/weekly rental rates and sale prices based on local market comps.
 
 ${groundingRule}
+${evidenceRule}
 
 Consider: regional market rates, equipment included, condition/age, seasonality, local competition, fuel/insurance overhead, and platform fees.
+
 
 Respond ONLY in this JSON shape — no prose, no markdown fences:
 {
@@ -104,8 +126,14 @@ Generate exactly 3 diverse, creative ideas.`;
   }
 };
 
-const getUserPrompt = (tool: string, data: Record<string, string>, sourceContext: string): string => {
+const getUserPrompt = (
+  tool: string,
+  data: Record<string, string>,
+  sourceContext: string,
+  evidenceContext = "",
+): string => {
   const sourceBlock = `\n\nSOURCE MATERIAL (live web results, ${TODAY}):\n${sourceContext}`;
+  const evidenceBlock = evidenceContext ? `\n\n${evidenceContext}` : "";
   switch (tool) {
     case "pricing":
       return `Generate pricing for this listing:
@@ -114,7 +142,8 @@ Location: ${data.location || "Not specified"}
 Mode: ${data.mode || "Rental"}
 Equipment/Features: ${data.features || "Standard equipment"}
 Condition: ${data.condition || "Good"}
-Additional Info: ${data.additional || "None"}${sourceBlock}`;
+Additional Info: ${data.additional || "None"}${evidenceBlock}${sourceBlock}`;
+
 
     case "description":
       return `Write a listing description for:
@@ -167,6 +196,69 @@ function buildResearchQueries(tool: string, data: Record<string, string>): strin
   return [];
 }
 
+/** Map free-form PricePilot category text onto the comparables taxonomy. */
+function normalizeCategory(raw?: string): string | null {
+  const c = (raw || "").toLowerCase().replace(/[\s-]+/g, "_");
+  if (!c) return null;
+  if (c.includes("trailer")) return "food_trailer";
+  if (c.includes("cart")) return "food_cart";
+  if (c.includes("bar")) return "mobile_bar";
+  if (c.includes("truck") || c.includes("mobile_kitchen")) return "food_truck";
+  return c;
+}
+
+function isSaleMode(mode?: string): boolean {
+  const m = (mode || "").toLowerCase();
+  return m.includes("sale") || m.includes("sell") || m.includes("buy");
+}
+
+/** SALE-only: pull internal comparables with the service role client. */
+async function loadMarketEvidence(data: Record<string, string>): Promise<MarketEvidence | null> {
+  if (!isSaleMode(data.mode)) return null;
+  const url = Deno.env.get("SUPABASE_URL");
+  const key = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!url || !key) return null;
+
+  const category = normalizeCategory(data.category);
+  const { city, state } = parseLocation(data.location);
+  const year = Number(data.year) || null;
+  const lengthFt = Number(data.lengthFt || data.length) || null;
+
+  try {
+    const service = createClient(url, key, { auth: { persistSession: false } });
+    let query = service
+      .from("pricepilot_market_comparables")
+      .select(
+        "source, source_title, observed_status, asset_category, valuation_mode, city, state, year, make, model, length_ft, displayed_price, verified_transaction_price, transaction_price_verified, extraction_confidence, evidence_confidence, usable_for_valuation, normalized_features",
+      )
+      .eq("usable_for_valuation", true)
+      .eq("valuation_mode", "sale")
+      .limit(400);
+    if (category) {
+      const siblings = category === "food_trailer"
+        ? ["food_trailer", "food_cart"]
+        : category === "food_truck"
+          ? ["food_truck", "mobile_kitchen"]
+          : [category];
+      query = query.in("asset_category", siblings);
+    }
+    const { data: rows, error } = await query;
+    if (error || !rows?.length) return null;
+    return buildMarketEvidence(rows as ComparableRow[], {
+      mode: "sale",
+      category,
+      city,
+      state,
+      year,
+      lengthFt,
+    }, 6);
+  } catch (e) {
+    console.error("market comparables lookup failed", e);
+    return null;
+  }
+}
+
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -184,8 +276,11 @@ serve(async (req) => {
 
     // Live grounding for pricing + business-idea. Description is creative — skip search.
     const queries = buildResearchQueries(tool, data);
+    // Internal sale comparables (SALE only — rentals never anchor to sale comps).
+    const marketEvidence = tool === "pricing" ? await loadMarketEvidence(data) : null;
     const sources = queries.length ? await gatherSources(queries, 3, 8) : [];
     const sourceContext = formatSourceContext(sources);
+    const evidenceContext = marketEvidence ? formatMarketEvidenceContext(marketEvidence) : "";
 
     // Use Pro for grounded calls (better citation following); Flash for plain copywriting.
     const model = queries.length ? "google/gemini-3-pro-preview" : "google/gemini-3-flash-preview";
@@ -199,8 +294,9 @@ serve(async (req) => {
       body: JSON.stringify({
         model,
         messages: [
-          { role: "system", content: getSystemPrompt(tool, sources.length > 0) },
-          { role: "user", content: getUserPrompt(tool, data, sourceContext) },
+          { role: "system", content: getSystemPrompt(tool, sources.length > 0, !!marketEvidence) },
+          { role: "user", content: getUserPrompt(tool, data, sourceContext, evidenceContext) },
+
         ],
         response_format: { type: "json_object" },
       }),
@@ -241,6 +337,9 @@ serve(async (req) => {
       parsed.sources = sourcesToCitations(sources);
       if (!parsed.lastUpdated) parsed.lastUpdated = TODAY;
     }
+    // Backward-compatible internal evidence block (safe display fields only, no DB ids)
+    if (marketEvidence) parsed.marketEvidence = marketEvidence;
+
 
     return new Response(JSON.stringify({ result: parsed }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },

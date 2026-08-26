@@ -14,6 +14,8 @@
  */
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
 import { gateToolAccess } from '../_shared/gateToolAccess.ts';
+import { buildMarketEvidence, type ComparableRow } from '../_shared/marketComparables.ts';
+
 import { jsonError, jsonResponse, unknownErrorResponse } from '../_shared/jsonError.ts';
 import { generatePricePilotNarrative } from '../_shared/pricepilot/model.ts';
 import {
@@ -233,13 +235,14 @@ Deno.serve(async (req) => {
     );
 
     const comps: CompRecord[] = [];
+    let saleEvidenceRows: ComparableRow[] = [];
 
     if (subject.mode === 'sale') {
       // 1. Observed marketplace evidence (Facebook sold/pending status).
       const { data: observed, error: obsErr } = await service
         .from('pricepilot_market_comparables')
         .select(
-          'id, source_title, city, state, year, make, model, length_ft, displayed_price, previous_displayed_price, observed_status, evidence_confidence, quality_flags, normalized_features',
+          'id, source, source_title, asset_category, valuation_mode, city, state, year, make, model, length_ft, displayed_price, previous_displayed_price, verified_transaction_price, transaction_price_verified, observed_status, extraction_confidence, evidence_confidence, usable_for_valuation, quality_flags, normalized_features',
         )
         .eq('valuation_mode', 'sale')
         .eq('asset_category', subject.assetCategory)
@@ -247,6 +250,8 @@ Deno.serve(async (req) => {
         .not('displayed_price', 'is', null)
         .limit(200);
       if (obsErr) console.warn('comp query failed:', obsErr.message);
+      saleEvidenceRows = (observed ?? []) as unknown as ComparableRow[];
+
       for (const row of observed ?? []) {
         comps.push({
           id: row.id,
@@ -392,7 +397,17 @@ Deno.serve(async (req) => {
         priceDrivers: saleDrivers,
         pricingMoves: saleMoves,
         sources: describeSources(pool, scope),
+        // Observed market evidence — displayed marketplace prices, never closing prices.
+        marketEvidence: buildMarketEvidence(saleEvidenceRows, {
+          mode: 'sale',
+          category: subject.assetCategory,
+          city: subject.city ?? null,
+          state: subject.state ?? null,
+          year: subject.year ?? null,
+          lengthFt: subject.lengthFt ?? null,
+        }, 6),
         lastUpdated: generatedAt,
+
         // ── Legacy shape (kept for backwards compatibility) ──
         subject: {
           assetCategory: subject.assetCategory,

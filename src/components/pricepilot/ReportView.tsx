@@ -192,7 +192,59 @@ export const ReportView: React.FC<{
         </Reveal>
       )}
 
+      {/* Market evidence — deterministic stats from observed comparables */}
+      {result.marketEvidence && result.marketEvidence.comparables.length > 0 && (
+        <Reveal>
+          <div className="mt-12 border-t border-border pt-10">
+            <Eyebrow>Market evidence</Eyebrow>
+            <dl className="mt-5 grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-4">
+              {[
+                { k: 'Observations analyzed', v: String(result.marketEvidence.observationsAnalyzed) },
+                { k: 'Close matches', v: String(result.marketEvidence.closeMatches) },
+                { k: 'Scope', v: result.marketEvidence.geographicScope },
+                { k: 'Median displayed', v: fmt(result.marketEvidence.medianDisplayedPrice) },
+              ].map((s) => (
+                <div key={s.k}>
+                  <dt className="text-[11px] uppercase tracking-wide text-muted-foreground">{s.k}</dt>
+                  <dd className="mt-1 text-sm font-semibold text-foreground">{s.v}</dd>
+                </div>
+              ))}
+            </dl>
+            {result.marketEvidence.rangeLow !== null && result.marketEvidence.rangeHigh !== null && (
+              <p className="mt-4 text-[13px] text-foreground/75">
+                Observed displayed-price range: {fmt(result.marketEvidence.rangeLow)} – {fmt(result.marketEvidence.rangeHigh)}
+              </p>
+            )}
+            <ul className="mt-5 divide-y divide-border">
+              {result.marketEvidence.comparables.slice(0, 6).map((c, i) => (
+                <li key={`${c.title}-${i}`} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-3.5">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium text-foreground">{c.title}</p>
+                    <p className="text-[12px] text-muted-foreground">
+                      {[c.year, c.lengthFt ? `${c.lengthFt} ft` : null, [c.city, c.state].filter(Boolean).join(', '), c.sourceLabel]
+                        .filter(Boolean).join(' · ')}
+                    </p>
+                  </div>
+                  {c.transactionPriceVerified
+                    ? <Pill tone="good">Verified transaction</Pill>
+                    : c.observedStatus === 'sold'
+                      ? <Pill tone="good">Sold-status observed</Pill>
+                      : c.observedStatus === 'pending'
+                        ? <Pill tone="warn">Pending</Pill>
+                        : null}
+                  <span className="text-sm font-semibold tabular-nums text-foreground">{fmt(c.displayedPrice)}</span>
+                </li>
+              ))}
+            </ul>
+            <p className="mt-4 text-[11px] leading-relaxed text-muted-foreground">
+              Marketplace sold status indicates the listing was marked sold. The displayed price is not necessarily the final transaction price.
+            </p>
+          </div>
+        </Reveal>
+      )}
+
       {/* Comparable evidence — real rows only, never invented */}
+
       {result.comparables.length > 0 && (
         <Reveal>
           <div className="mt-12 border-t border-border pt-10">
