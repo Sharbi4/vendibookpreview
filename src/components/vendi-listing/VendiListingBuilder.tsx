@@ -565,11 +565,32 @@ const VendiListingBuilder: React.FC = () => {
           <img src={vendibookFavicon} alt="" className="h-7 w-7 rounded-lg ring-1 ring-white/10" />
           <div className="min-w-0 flex-1">
             <h1 className="truncate text-[15px] font-semibold tracking-[-0.01em]">List with Vendi</h1>
-            <p className="truncate text-xs text-muted-foreground">Guided listing builder · {progress}% complete</p>
+            <p className="truncate text-xs text-muted-foreground">
+              {blockers.length === 0 ? 'Ready to publish' : `Guided listing builder · ${progress}%`}
+              {saveState !== 'idle' && (
+                <span className={cn('ml-2', saveState === 'error' && 'text-destructive')}>
+                  ·{' '}
+                  {saveState === 'saving' ? 'Saving…' : saveState === 'saved' ? 'All changes saved' : 'Not saved'}
+                </span>
+              )}
+            </p>
           </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-foreground"
+            onClick={() => void handleSaveDraft()}
+            disabled={savingManually}
+          >
+            {savingManually
+              ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              : <CloudUpload className="mr-2 h-4 w-4" />}
+            <span className="hidden xs:inline sm:inline">Save draft</span>
+          </Button>
           <Button variant="ghost" size="sm" className="hidden text-muted-foreground hover:text-foreground sm:inline-flex" onClick={() => navigate('/list')}>
             <Wrench className="mr-2 h-4 w-4" /> Build it myself
           </Button>
+
           <Button
             variant="ghost"
             size="sm"
