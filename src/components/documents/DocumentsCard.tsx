@@ -139,10 +139,19 @@ export function DocumentsCard({ scope, title = 'Documents' }: { scope: Scope; ti
       </Card>
 
       <Dialog open={!!signingUrl} onOpenChange={(o) => !o && setSigningUrl(null)}>
-        <DialogContent className="max-w-4xl w-[95vw] h-[85vh] p-0 gap-0 overflow-hidden">
-          <DialogHeader className="p-4 border-b-[1.5px]"><DialogTitle>Sign document</DialogTitle></DialogHeader>
+        <DialogContent className="max-w-4xl w-[calc(100vw-1.5rem)] sm:w-[95vw] h-[90dvh] p-0 gap-0 overflow-hidden flex flex-col">
+          <DialogHeader className="shrink-0 p-4 border-b-[1.5px]">
+            <DialogTitle className="text-base">Review &amp; sign</DialogTitle>
+          </DialogHeader>
           {signingUrl && (
-            <iframe title="SignNow" src={signingUrl} className="w-full h-full" allow="camera; microphone" />
+            <div className="flex-1 min-h-0 w-full overflow-hidden">
+              <iframe
+                title="Vendibook document signing"
+                src={signingUrl}
+                className="block h-full w-full max-w-full border-0"
+                allow="camera; microphone"
+              />
+            </div>
           )}
         </DialogContent>
       </Dialog>
