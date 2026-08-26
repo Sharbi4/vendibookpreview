@@ -238,7 +238,11 @@ const RentItOut: React.FC = () => {
 
   const goNext = async () => {
     if (step === 0 && !pricingValid) {
-      toast({ title: 'Add a rental rate', description: 'Enter at least one rate to continue.', variant: 'destructive' });
+      toast({
+        title: 'Check your rental pricing',
+        description: pricingError ?? 'Enter at least one rate to continue.',
+        variant: 'destructive',
+      });
       return;
     }
     const saved = await persist();
