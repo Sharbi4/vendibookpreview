@@ -12,9 +12,11 @@ import { createClient } from 'npm:@supabase/supabase-js@2.45.0';
 import {
   createDocumentFromTemplate,
   createEmbeddedInvite,
+  inviteIdForEmail,
   prefillFields,
   isSignNowConfigured,
 } from './signnow.ts';
+
 
 export interface SignerRecord {
   role: 'host' | 'renter' | 'seller' | 'buyer';
