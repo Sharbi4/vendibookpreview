@@ -367,6 +367,19 @@ const PayPalPaymentPanel = ({
                   <p className="mt-4 text-lg font-semibold text-foreground">Payment confirmed</p>
                   <p className="text-xs text-muted-foreground mt-1">Redirecting to your receipt…</p>
                 </div>
+              ) : state === 'authorized' ? (
+                <div className="py-10 flex flex-col items-center justify-center text-center animate-fade-in">
+                  <div className="relative h-16 w-16 rounded-full bg-primary/15 flex items-center justify-center border border-primary/30">
+                    <ShieldCheck className="h-9 w-9 text-primary" />
+                  </div>
+                  <p className="mt-4 text-lg font-semibold text-foreground">
+                    Payment authorized — not charged yet
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1 max-w-sm">
+                    {holdMessage ??
+                      'PayPal is holding these funds temporarily. You are only charged once this transaction is confirmed.'}
+                  </p>
+                </div>
               ) : state === 'pending' ? (
                 <div className="py-8 text-center space-y-2">
                   <p className="text-base font-semibold text-foreground">Payment is being reviewed</p>
@@ -375,6 +388,7 @@ const PayPalPaymentPanel = ({
                     nothing further is needed from you.
                   </p>
                 </div>
+
               ) : (
                 <>
                   <div ref={messagesRef} />
