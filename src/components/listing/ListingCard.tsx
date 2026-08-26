@@ -1,4 +1,5 @@
 import { deliveryRateLabel } from '@/lib/fulfillment/delivery';
+import { formatListingPriceLabel, type ListingPriceInput } from '@/lib/listings/rentalPricing';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Plug, Zap, Droplet, Refrigerator, Flame, Wind, Wifi, Car, Shield, Sun, Truck, Calendar, Clock, ArrowRight, Banknote, Coffee, IceCreamCone } from 'lucide-react';
