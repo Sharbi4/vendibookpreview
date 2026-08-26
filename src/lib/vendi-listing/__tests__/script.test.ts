@@ -2,8 +2,10 @@ import { describe, it, expect } from 'vitest';
 import { parseDimensions, parseList, parseLocation, parseMoney, parseYesNo, isSkip } from '../extract';
 import {
   QUESTIONS, REVIEW_GATE_ID, VendiDraft, buildListingPayload, getPublishBlockers, nextQuestion,
-  parseExtraRates, visibleQuestions,
+  parseExtraRates, visibleQuestions, extractExtraFacts, captureSummary, resumeMessage,
+  promptText, VENDI_WELCOME,
 } from '../script';
+
 
 const q = (id: string) => {
   const found = QUESTIONS.find((x) => x.id === id);
@@ -42,10 +44,14 @@ describe('extraction', () => {
 });
 
 describe('interview branching', () => {
-  it('starts with the optional import offer, then mode', () => {
+  it('opens with the existing-listing decision, then category, then mode', () => {
     const empty: VendiDraft = { title: null, description: null, category: null, mode: null };
     expect(nextQuestion(empty, [])?.id).toBe('import_choice');
-    expect(nextQuestion(empty, ['import_choice', 'import_paste'])?.id).toBe('mode');
+    expect(nextQuestion(empty, ['import_choice', 'import_paste'])?.id).toBe('category');
+    expect(
+      nextQuestion({ ...empty, category: 'food_trailer' }, ['import_choice', 'import_paste', 'category'])?.id,
+    ).toBe('mode');
+
 
     const rent = answer(answer(empty, 'mode', 'rent'), 'category', 'food_trailer');
     const rentIds = visibleQuestions(rent).map((x) => x.id);
@@ -226,5 +232,91 @@ describe('progressive interview and optional depth', () => {
     const blockers = getPublishBlockers(bare, 0);
     expect(blockers).toContain('Choose rent or sale.');
     expect(blockers).toContain('Add at least one photo.');
+  });
+});
+
+describe('natural multi-fact answers', () => {
+  const saleDraft: VendiDraft = {
+    title: null, description: null, category: 'food_trailer', mode: 'sale', subcategory: 'coffee_beverage',
+  };
+
+  it('captures several explicitly stated facts from one description', () => {
+    const raw =
+      "It's a 2022 16-foot coffee trailer in Mesa, AZ, excellent condition, espresso machine, grinder, " +
+      'fridge, three-compartment sink and a generator. Asking $45,000.';
+    const { patch, answeredIds } = extractExtraFacts(saleDraft, raw);
+
+    expect(patch.city).toBe('Mesa');
+    expect(patch.state).toBe('AZ');
+    expect(patch.price_sale).toBe(45000);
+    expect(patch.length_inches).toBe(192);
+    expect(patch.amenities).toEqual(
+      expect.arrayContaining(['Espresso machine', 'Grinder', 'Fridge', 'Generator']),
+    );
+    // "sink" must not be logged separately alongside "three-compartment sink".
+    expect(patch.amenities).not.toContain('Sink');
+    expect(answeredIds).toEqual(expect.arrayContaining(['location', 'sale_price', 'dimensions', 'amenities']));
+  });
+
+  it('never re-asks a field the seller already covered in prose', () => {
+    const raw = 'Coffee trailer in Mesa, AZ. Asking $45,000. Espresso machine and a fridge on board.';
+    const { patch, answeredIds } = extractExtraFacts(saleDraft, raw);
+    const merged = { ...saleDraft, ...patch, description: raw };
+    const answered = ['import_choice', 'import_paste', 'category', 'mode', 'subcategory', 'description', ...answeredIds];
+    const remaining = [];
+    let cursor = nextQuestion(merged, answered);
+    while (cursor && remaining.length < 12) {
+      remaining.push(cursor.id);
+      cursor = nextQuestion(merged, [...answered, ...remaining]);
+    }
+    expect(remaining).not.toContain('location');
+    expect(remaining).not.toContain('sale_price');
+    expect(remaining).not.toContain('amenities');
+  });
+
+  it('does not invent facts that were never stated', () => {
+    const { patch, captured } = extractExtraFacts(saleDraft, 'It runs great and has been well maintained.');
+    expect(patch).toEqual({});
+    expect(captured).toEqual([]);
+  });
+
+  it('leaves already-confirmed fields untouched', () => {
+    const known: VendiDraft = { ...saleDraft, city: 'Tucson', state: 'AZ', price_sale: 30000 };
+    const { patch } = extractExtraFacts(known, 'Now located in Mesa, AZ. Asking $45,000.');
+    expect(patch.city).toBeUndefined();
+    expect(patch.price_sale).toBeUndefined();
+  });
+
+  it('reads back only confirmed facts in the recap', () => {
+    const recap = captureSummary({
+      ...saleDraft, city: 'Mesa', state: 'AZ', price_sale: 45000,
+      length_inches: 192, amenities: ['Espresso machine', 'Grinder'],
+    });
+    expect(recap).toContain('16-foot');
+    expect(recap).toContain('Mesa, AZ');
+    expect(recap).toContain('$45,000');
+    expect(recap).toContain('espresso machine');
+  });
+});
+
+describe('opening copy', () => {
+  it('welcomes without the old scripted filler', () => {
+    expect(VENDI_WELCOME).toContain('I’m Vendi');
+    expect(VENDI_WELCOME).not.toContain('Quick head start');
+    expect(promptText(q('import_choice'), { title: null, description: null, category: null, mode: null }))
+      .not.toContain('Quick head start');
+  });
+
+  it('resumes with saved context and only one line', () => {
+    const generic = resumeMessage({ title: null, description: null, category: null, mode: null }, []);
+    expect(generic.split('\n')).toHaveLength(1);
+    expect(generic).toContain('Welcome back');
+
+    const known = resumeMessage(
+      { title: null, description: null, category: 'food_trailer', mode: 'sale', city: 'Mesa', state: 'AZ' },
+      ['category', 'mode', 'location'],
+    );
+    expect(known).toContain('food trailer');
+    expect(known).toContain('Mesa, AZ');
   });
 });

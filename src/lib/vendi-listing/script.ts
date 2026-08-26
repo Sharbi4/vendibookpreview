@@ -176,24 +176,222 @@ const parseDateRange = (raw: string): { from: string | null; to: string | null }
   return { from: dates[0] ?? null, to: dates[1] ?? null };
 };
 
+/**
+ * Vendi's voice — applied to every prompt, tip and acknowledgement below.
+ *
+ *  - Warm, knowledgeable marketplace assistant; a helpful person, not a form.
+ *  - Concise and natural. Acknowledge what was just learned, then ask the single
+ *    highest-value missing thing.
+ *  - Explain why a question matters only when it actually helps.
+ *  - A seller may answer several fields at once; anything captured is never
+ *    asked again (see `extractExtraFacts`).
+ *  - Never invent a spec. Only explicitly stated facts are captured.
+ *  - No canned filler: no "Quick head start", "First things first",
+ *    "A few quick questions", or "Perfect!" on every turn.
+ */
+export const VENDI_WELCOME =
+  'Hey! I’m Vendi 👋 I’m here to help you get your listing ready. You can just talk to me normally — tell me what you’re ' +
+  'selling or renting, upload photos or video as we go, and I’ll organize everything into the listing for you. You can ' +
+  'review it, make changes, save it for later, and nothing goes live until you’re ready.';
+
+/** Plain, lowercase asset wording for inline sentences ("a food trailer"). */
+export const categoryLabel = (d: VendiDraft): string | null => {
+  if (!d.category) return null;
+  const label = CATEGORY_LABELS[d.category as ListingCategory];
+  return label ? label.toLowerCase() : null;
+};
+
+/** The exact bubble text for a question, including its contextual tip. */
+export function promptText(q: Question, d: VendiDraft): string {
+  const tip = q.tip?.(d);
+  return tip ? `${q.prompt(d)}\n\n${tip}` : q.prompt(d);
+}
+
+/**
+ * One short resume line for a returning seller. Only confirmed saved fields are
+ * used — nothing about the listing is invented to sound smarter.
+ */
+export function resumeMessage(d: VendiDraft, answered: string[] = []): string {
+  const label = categoryLabel(d);
+  if (!label) return 'Welcome back 👋 I saved where we left off. Let’s keep going.';
+  const where = d.city && d.state ? ` in ${d.city}, ${d.state}` : '';
+  const nearlyDone = progressPercent(d, answered) >= 70;
+  return `Welcome back 👋 I saved your ${label} listing${where}.${
+    nearlyDone ? ' We were almost done —' : ''
+  } Let’s keep going.`;
+}
+
+/**
+ * Equipment terms Vendi recognises when a seller names them outright. Matching a
+ * written term is not inference — nothing here is guessed from context, photos,
+ * or category. Longest match wins so "3-compartment sink" never also logs "sink".
+ */
+const EQUIPMENT_LEXICON = [
+  'espresso machine', 'espresso setup', 'coffee brewer', 'grinder', 'refrigerator', 'refrigeration',
+  'fridge', 'freezer', 'three-compartment sink', '3-compartment sink', 'three compartment sink',
+  '3 compartment sink', 'three comp sink', '3 comp sink', 'hand sink', 'sink', 'generator',
+  'griddle', 'flat top', 'deep fryer', 'fryer', 'pizza oven', 'convection oven', 'oven', 'smoker',
+  'char grill', 'grill', 'range', 'exhaust hood', 'hood', 'fire suppression', 'ice machine',
+  'water tank', 'fresh water tank', 'grey water tank', 'propane', 'air conditioning', 'pos system',
+  'soft serve machine', 'blender', 'food warmer', 'steam table', 'prep table', 'solar',
+];
+
+const titleFirst = (value: string) => value.charAt(0).toUpperCase() + value.slice(1);
+
+const listPhrase = (items: string[]): string =>
+  items.length <= 1
+    ? items[0] ?? ''
+    : `${items.slice(0, -1).join(', ')} and ${items[items.length - 1]}`;
+
+/** Equipment explicitly named in the seller's own words. */
+function matchEquipment(lower: string, category?: string | null): string[] {
+  const vocabulary = [
+    ...EQUIPMENT_LEXICON,
+    ...amenitySuggestions(category).map((a) => a.toLowerCase()),
+  ];
+  const hits = vocabulary.filter((term) => lower.includes(term));
+  // Drop any term fully contained in a longer match ("sink" inside "hand sink").
+  const distinct = hits.filter((term) => !hits.some((other) => other !== term && other.includes(term)));
+  return Array.from(new Set(distinct)).slice(0, 10).map(titleFirst);
+}
+
+/**
+ * Pull additional, explicitly-stated facts out of a free-text answer so a seller
+ * who says several things at once is never asked for them again. Only fields
+ * that are still empty are filled, and nothing is inferred.
+ */
+export function extractExtraFacts(
+  d: VendiDraft,
+  raw: string,
+): { patch: Partial<VendiDraft>; answeredIds: string[]; captured: string[] } {
+  const text = cleanText(raw);
+  const lower = text.toLowerCase();
+  const patch: Partial<VendiDraft> = {};
+  const answeredIds: string[] = [];
+  const captured: string[] = [];
+
+  // ── Location ──────────────────────────────────────────────────────────
+  if (!d.city || !d.state) {
+    const inline = text.match(/\b([A-Z][A-Za-z.'-]+(?:\s+[A-Z][A-Za-z.'-]+){0,2}),\s*([A-Z]{2})\b(?:\s+(\d{5}))?/);
+    if (inline) {
+      const loc = parseLocation(inline[0]);
+      if (loc.city && loc.state) {
+        patch.city = loc.city;
+        patch.state = loc.state;
+        patch.zip_code = loc.zip_code;
+        patch.address = `${loc.city}, ${loc.state}`;
+        answeredIds.push('location');
+        captured.push('location');
+      }
+    }
+  }
+
+  // ── Price (only when a currency amount is actually written) ───────────
+  if (text.includes('$')) {
+    const segment = text.match(/[^.\n]*\$\s?[0-9][^.\n]*/)?.[0] ?? '';
+    const periodic = /(per\s*(month|week|day|hour)|\/\s*(mo|wk|day|hr)|monthly|weekly|daily|hourly|a\s*(month|week|day|hour))/i;
+    if (d.mode === 'sale' && !d.price_sale && segment && !periodic.test(segment)) {
+      const amount = parseMoney(segment);
+      if (amount) {
+        patch.price_sale = amount;
+        answeredIds.push('sale_price');
+        captured.push('price');
+      }
+    }
+    const noRateYet = !(d.price_monthly || d.price_weekly || d.price_daily || d.price_hourly);
+    if (d.mode === 'rent' && noRateYet) {
+      const rates = parseExtraRates(text);
+      const keys = Object.keys(rates);
+      if (keys.length) {
+        Object.assign(patch, rates);
+        const period = Object.entries(RATE_KEY).find(([, field]) => keys.includes(field as string))?.[0];
+        if (period && !d.rent_period) {
+          (patch as VendiDraft).rent_period = period;
+          answeredIds.push('rent_period');
+        }
+        answeredIds.push('rent_price');
+        captured.push('rate');
+      }
+    }
+  }
+
+  // ── Dimensions ────────────────────────────────────────────────────────
+  if (!d.length_inches) {
+    const hasUnit = /\b(ft|foot|feet|in|inch|inches)\b|'|"/i.test(text);
+    const dims = parseDimensions(text);
+    if (dims.length_inches && dims.width_inches && hasUnit) {
+      Object.assign(patch, dims);
+      answeredIds.push('dimensions');
+      captured.push('dimensions');
+    } else {
+      const single = lower.match(/(\d{1,3})(?:\.\d+)?\s*-?\s*(?:ft|foot|feet)\b/);
+      if (single) {
+        patch.length_inches = Math.round(Number(single[1]) * 12);
+        answeredIds.push('dimensions');
+        captured.push('dimensions');
+      }
+    }
+  }
+
+  // ── Equipment named outright ──────────────────────────────────────────
+  if (!d.amenities?.length) {
+    const found = matchEquipment(lower, d.category);
+    if (found.length) {
+      patch.amenities = found;
+      answeredIds.push('amenities');
+      captured.push('equipment');
+    }
+  }
+
+  return { patch, answeredIds, captured };
+}
+
+/**
+ * A compact, conversational recap of what Vendi now holds. Every clause comes
+ * from a confirmed field — never from an assumption.
+ */
+export function captureSummary(d: VendiDraft): string {
+  const size = d.length_inches ? `${Math.round(d.length_inches / 12)}-foot ` : '';
+  const build = d.subcategory ? `${(SUBCATEGORY_LABELS[d.subcategory] ?? '').toLowerCase()} ` : '';
+  const label = categoryLabel(d);
+
+  const clauses: string[] = [];
+  if (label) clauses.push(`a ${size}${build}${label}`.replace(/\s+/g, ' '));
+  if (d.city && d.state) clauses.push(`in ${d.city}, ${d.state}`);
+  if (d.amenities?.length) clauses.push(`with ${listPhrase(d.amenities.slice(0, 5).map((a) => a.toLowerCase()))}`);
+  if (d.price_sale) clauses.push(`asking ${money(d.price_sale)}`);
+  else {
+    const rates = rateSummary(d);
+    if (rates) clauses.push(`at ${rates}`);
+  }
+
+  if (!clauses.length) return 'Got it — that’s in your listing now.';
+  return `Nice — that gives me a lot to work with. I’ve got ${clauses.join(', ')}. That’s already a strong start.`;
+}
+
 export const QUESTIONS: Question[] = [
+
   {
     id: 'import_choice',
     kind: 'choice',
     tier: 'core',
     prompt: () =>
-      'Quick head start — is this already listed somewhere else, like Facebook Marketplace, Craigslist, or a dealer site? Paste the text and I’ll fill in what’s written.',
+      'Do you already have a listing or description somewhere that you want me to work from, or should we build it together?',
     options: () => [
-      { value: 'paste', label: 'Paste my existing listing', description: 'I’ll pull out what’s written' },
-      { value: 'fresh', label: 'Start fresh', description: 'A few quick questions' },
+      { value: 'paste', label: 'Use something I already have', description: 'Paste a listing, description, or notes' },
+      { value: 'fresh', label: 'Start with Vendi', description: 'Tell me about it and I’ll guide you' },
     ],
     apply: (_d, raw) => {
       const v = cleanText(raw).toLowerCase();
-      if (v.startsWith('paste') || v.startsWith('yes')) return { patch: {} };
-      if (v.startsWith('fresh') || v.startsWith('no') || v.startsWith('skip')) {
-        return { patch: {}, answeredIds: ['import_paste'] };
+      if (v.startsWith('paste') || v.startsWith('use') || v.startsWith('yes')) return { patch: {} };
+      if (v.startsWith('fresh') || v.startsWith('start') || v.startsWith('no') || v.startsWith('skip')) {
+        return {
+          patch: {},
+          answeredIds: ['import_paste'],
+          say: 'Perfect — we’ll build it together. 😊',
+        };
       }
-      return { error: 'Paste your existing listing, or choose “Start fresh”.' };
+      return { error: 'Either paste what you already have, or choose “Start with Vendi”.' };
     },
   },
   {
@@ -202,8 +400,11 @@ export const QUESTIONS: Question[] = [
     tier: 'core',
     optional: true,
     prompt: () =>
-      'Go ahead and paste it — title, description, specs, price, location. I only use what’s actually written, and I never pull anything from the other site.',
-    placeholder: 'Paste your existing listing text…',
+      'Perfect — paste whatever you have. It doesn’t have to be formatted or complete. I’ll pull out the details that are ' +
+      'actually there, show you what I found, and then we’ll fill in anything important that’s missing.',
+    tip: () =>
+      'Anything works: a marketplace or dealer page you wrote, an old description, or rough notes. Paste your own text — I never pull anything from another site.',
+    placeholder: 'Paste your listing, description, or notes…',
     apply: (_d, raw) => {
       if (isSkip(raw)) return { patch: {} };
       const result = parseExistingListing(raw);
@@ -213,37 +414,46 @@ export const QUESTIONS: Question[] = [
       return {
         patch: { ...(result.patch as Partial<VendiDraft>), pending_confirm: result.confirms },
         answeredIds: result.answered,
-        say: `Nice — I pulled in ${result.found.join(', ')}. I won’t ask you for any of that again.`,
+        say: `Got it — I pulled in ${result.found.join(', ')}. I won’t ask you for any of that again.`,
       };
-    },
-  },
-  {
-    id: 'mode',
-    kind: 'choice',
-    tier: 'core',
-    prompt: () => 'First things first — are you renting this out, or selling it?',
-    options: () => [
-      { value: 'rent', label: 'Rent it out', description: 'Recurring income from bookings' },
-      { value: 'sale', label: 'Sell it', description: 'One-time sale to a buyer' },
-    ],
-    apply: (_d, raw) => {
-      const v = cleanText(raw).toLowerCase();
-      if (v.startsWith('rent') || v.startsWith('lease')) return { patch: { mode: 'rent' } };
-      if (v.startsWith('sale') || v.startsWith('sell')) return { patch: { mode: 'sale' } };
-      return { error: 'Rent it out, or sell it — either one works, I just need to know which.' };
     },
   },
   {
     id: 'category',
     kind: 'choice',
     tier: 'core',
-    prompt: (d) => (d.mode === 'sale' ? 'Great. What are you selling?' : 'Great. What are you renting out?'),
+    prompt: () => 'What are you looking to list?',
     options: () => CATEGORY_OPTIONS,
     apply: (_d, raw) => {
       const v = cleanText(raw).toLowerCase().replace(/\s+/g, '_');
       const match = CATEGORY_OPTIONS.find((o) => o.value === v);
       if (!match) return { error: 'Pick the closest category — that’s how buyers find you.' };
       return { patch: { category: match.value } };
+    },
+  },
+  {
+    id: 'mode',
+    kind: 'choice',
+    tier: 'core',
+    prompt: (d) => {
+      const label = categoryLabel(d);
+      return label
+        ? `Got it — a ${label}. Are you looking to sell it or rent it out?`
+        : 'Are you looking to sell it or rent it out?';
+    },
+    options: () => [
+      { value: 'sale', label: 'Sell it', description: 'One-time sale to a buyer' },
+      { value: 'rent', label: 'Rent it out', description: 'Recurring income from bookings' },
+    ],
+    apply: (_d, raw) => {
+      const v = cleanText(raw).toLowerCase();
+      if (v.startsWith('rent') || v.startsWith('lease')) {
+        return { patch: { mode: 'rent' }, say: 'Great — you’re renting it out. Let’s make sure renters get a clear picture of what you have.' };
+      }
+      if (v.startsWith('sale') || v.startsWith('sell')) {
+        return { patch: { mode: 'sale' }, say: 'Great — you’re selling it. Let’s make sure buyers get a clear picture of what you have.' };
+      }
+      return { error: 'Selling it, or renting it out — either one works, I just need to know which.' };
     },
   },
   {
@@ -268,10 +478,12 @@ export const QUESTIONS: Question[] = [
     id: 'location',
     kind: 'location',
     tier: 'core',
-    prompt: (d) => (isStaticLocation(d.category)
-      ? 'Where is the space? City and state is enough — a ZIP helps local search.'
-      : 'Where is it based? City and state is enough — a ZIP helps local search.'),
-    tip: () => 'Your exact address stays private until a booking or sale is confirmed.',
+    prompt: (d) => {
+      if (isStaticLocation(d.category)) return 'Where is the space?';
+      const label = categoryLabel(d);
+      return label ? `Where is the ${label} located?` : 'Where is it based?';
+    },
+    tip: () => 'City and state is enough — a ZIP helps local search. Your exact address stays private until a booking or sale is confirmed.',
     placeholder: 'e.g. Mesa, AZ 85201',
     apply: (_d, raw) => {
       const loc = parseLocation(raw);
@@ -285,10 +497,11 @@ export const QUESTIONS: Question[] = [
           zip_code: loc.zip_code,
           address: [loc.city, loc.state].filter(Boolean).join(', '),
         },
-        say: `${loc.city}, ${loc.state} — added to your preview.`,
+        say: `${loc.city}, ${loc.state} — that’s on your preview now.`,
       };
     },
   },
+
   {
     id: 'sale_price',
     kind: 'money',
@@ -343,17 +556,32 @@ export const QUESTIONS: Question[] = [
     id: 'description',
     kind: 'text',
     tier: 'core',
-    prompt: (d) => (isStaticLocation(d.category)
-      ? 'Tell me about the space in your own words — equipment, size, who it suits.'
-      : 'Tell me about it in your own words — the build, equipment, condition, what’s included.'),
+    prompt: (d) => {
+      const label = categoryLabel(d);
+      if (isStaticLocation(d.category)) {
+        return 'Now tell me about the space in your own words — size, equipment, who it suits, anything a vendor would want to know. ' +
+          'You don’t have to organize it; I’ll do that part.';
+      }
+      return `Now tell me about the ${label ?? 'it'} in your own words — year, condition, what it was used for, equipment that’s ` +
+        'included, anything you think a buyer would want to know. You don’t have to organize it; I’ll do that part.';
+    },
     tip: () => 'Naming the actual equipment is what turns browsers into buyers. Only what you know for sure.',
     placeholder: 'Tell me about the build, equipment, and condition…',
-    apply: (_d, raw) => {
+    apply: (d, raw) => {
       const description = cleanText(raw).slice(0, 4000);
       if (description.length < 20) return { error: 'A couple more sentences would help — at least 20 characters.' };
-      return { patch: { description } };
+      // A seller can answer several fields at once. Anything explicitly stated
+      // here is captured now and never asked again.
+      const facts = extractExtraFacts(d, raw);
+      const merged = { ...d, description, ...facts.patch } as VendiDraft;
+      return {
+        patch: { description, ...facts.patch },
+        answeredIds: facts.answeredIds,
+        say: facts.captured.length ? captureSummary(merged) : undefined,
+      };
     },
   },
+
   {
     id: 'fulfillment',
     kind: 'choice',
