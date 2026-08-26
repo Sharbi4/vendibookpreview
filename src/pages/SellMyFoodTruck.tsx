@@ -319,13 +319,20 @@ const SellMyFoodTruck = () => {
 
                   <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-muted-foreground">
                     {[
-                      { icon: Banknote, label: 'Financing options for eligible buyers' },
-                      { icon: Truck, label: 'Pickup, delivery, or freight' },
-                      { icon: ImagePlus, label: 'Guided listing with saved drafts' },
+                      { icon: Banknote, label: 'Financing options for eligible buyers', href: '/financing' },
+                      { icon: ShieldCheck, label: 'Secure PayPal checkout, optional', href: '/payments' },
+                      { icon: Truck, label: 'Pickup, delivery, or Vendibook Freight', href: '/ship-your-food-truck' },
+                      { icon: ImagePlus, label: 'Guided listing with saved drafts', href: null },
                     ].map((cue) => (
                       <span key={cue.label} className="inline-flex items-center gap-2">
                         <cue.icon className="h-4 w-4 text-primary" aria-hidden="true" />
-                        {cue.label}
+                        {cue.href ? (
+                          <Link to={cue.href} className="hover:text-foreground underline-offset-4 hover:underline">
+                            {cue.label}
+                          </Link>
+                        ) : (
+                          cue.label
+                        )}
                       </span>
                     ))}
                   </div>
