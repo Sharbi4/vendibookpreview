@@ -287,15 +287,17 @@ export async function ensureBillOfSale(transactionId: string): Promise<{ documen
 
   const { data: tx, error: tErr } = await supabase
     .from('sale_transactions')
-    .select('id,listing_id,buyer_id,seller_id,amount,status')
+    .select('id,listing_id,buyer_id,seller_id,amount,status,terms_id')
     .eq('id', transactionId)
     .maybeSingle();
   if (tErr || !tx) throw new Error(`transaction not found: ${tErr?.message ?? transactionId}`);
-  if (tx.status !== 'paid') return { skipped: 'not_paid' };
+  // Generate once payment is authorized OR captured — never for an
+  // unapproved / unauthorized transaction.
+  if (!BILL_OF_SALE_ELIGIBLE_STATUSES.has(String(tx.status))) return { skipped: 'not_payment_authorized' };
 
   const { data: listing } = await supabase
     .from('listings')
-    .select('id,title,category,address,city,state')
+    .select('id,title,category,address,city,state,postal_code,make,model,year_built,mileage,condition,title_status,has_lien')
     .eq('id', tx.listing_id)
     .maybeSingle();
 
@@ -308,14 +310,26 @@ export async function ensureBillOfSale(transactionId: string): Promise<{ documen
 
   await prefillFields(signnowDocId, {
     seller_name: partyName(seller),
+    seller_email: seller.email,
     buyer_name: partyName(buyer),
+    buyer_email: buyer.email,
     listing_title: listing?.title ?? '',
-    listing_address: [listing?.address, listing?.city, listing?.state].filter(Boolean).join(', '),
+    listing_address: [listing?.address, listing?.city, listing?.state, listing?.postal_code].filter(Boolean).join(', '),
     category: listing?.category ?? '',
+    asset_description: [listing?.year_built, listing?.make, listing?.model].filter(Boolean).join(' '),
+    odometer: listing?.mileage != null ? String(listing.mileage) : '',
+    condition: listing?.condition ?? '',
+    title_status: listing?.title_status ?? '',
+    lien_disclosure: listing?.has_lien == null ? '' : listing.has_lien ? 'Seller has disclosed an existing lien on the asset.' : 'Seller has disclosed no existing lien on the asset.',
     price: `$${Number(tx.amount).toFixed(2)}`,
     sale_date: new Date().toISOString().slice(0, 10),
     as_is_clause: 'Sold as-is, where-is. No warranty expressed or implied.',
+    electronic_signature_consent: DEFAULT_ESIGN_CONSENT,
+    agreement_version: BILL_OF_SALE_VERSION,
+    transaction_id: transactionId,
+    generated_at: new Date().toISOString(),
   });
+
 
   const signers = [
     { email: buyer.email,  role_name: 'Buyer',  order: 1, first_name: buyer.first_name ?? undefined,  last_name: buyer.last_name ?? undefined },
