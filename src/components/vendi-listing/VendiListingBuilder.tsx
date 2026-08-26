@@ -583,7 +583,11 @@ const VendiListingBuilder: React.FC = () => {
     setDraftId(null); creatingDraftRef.current = false;
     setConsentId(null); setAttestInput(''); disclosureShownRef.current = false;
     setSaveState('idle');
+    askedRef.current = new Set(); setAsked([]);
+    // Re-run the opening effect against the now-empty storage: one clean welcome.
+    setHydrated(false); setSessionSeq((n) => n + 1);
   };
+
 
 
 
