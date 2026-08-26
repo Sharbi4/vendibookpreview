@@ -667,7 +667,11 @@ const HowPurchasingWorks = () => {
               </Button>
               <p className="text-xs text-muted-foreground mt-6 inline-flex items-center gap-1.5">
                 <LifeBuoy className="w-3.5 h-3.5" />
-                Have questions before you buy? Visit the{' '}
+                Have questions before you buy? See{' '}
+                <Link to="/payments" className="underline underline-offset-2 hover:text-foreground">
+                  how payments work
+                </Link>{' '}
+                or visit the{' '}
                 <Link to="/help" className="underline underline-offset-2 hover:text-foreground">
                   Help Center
                 </Link>
