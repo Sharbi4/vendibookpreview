@@ -141,7 +141,9 @@ describe('List with Vendi publish reliability', () => {
     seedSession('consent-1');
     publishVendiListing.mockRejectedValue(new Error('Publishing did not complete.'));
     render(<VendiListingBuilder />);
-    fireEvent.click(await publishButton());
+    const btn = await publishButton();
+    expect(btn).not.toBeDisabled();
+    fireEvent.click(btn);
 
     await waitFor(() => expect(toastError).toHaveBeenCalled());
     expect(toastSuccess).not.toHaveBeenCalled();
