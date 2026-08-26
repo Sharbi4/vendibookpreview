@@ -112,6 +112,44 @@ async function handleEvent(admin: any, event: any) {
         .eq("payment_status", "created");
       return;
 
+    // ── Authorization (temporary hold) lifecycle ───────────────────────
+    // Idempotent: applyAuthorization / markAuthorizationExpired no-op when
+    // the state has already been recorded by the authorize endpoint.
+    case "PAYMENT.AUTHORIZATION.CREATED": {
+      const reference = resource.custom_id || resource.invoice_id;
+      const record = await findRecord(admin, reference, undefined, resource.supplementary_data);
+      if (!record) return;
+      await applyAuthorization(admin, record, {
+        authorizationId: resource.id,
+        status: String(resource.status ?? "CREATED").toLowerCase(),
+        amountCents: centsFromPayPalAmount(resource.amount?.value),
+        currency: resource.amount?.currency_code ?? "USD",
+        expiresAt: resource.expiration_time ?? null,
+      }, "webhook");
+      return;
+    }
+
+    case "PAYMENT.AUTHORIZATION.VOIDED": {
+      const reference = resource.custom_id || resource.invoice_id;
+      const record = await findRecord(admin, reference, undefined, resource.supplementary_data);
+      if (!record || record.payment_status === "completed") return;
+      await admin.from("payment_records").update({
+        authorization_status: "voided",
+        authorization_voided_at: new Date().toISOString(),
+        payment_status: "cancelled",
+        internal_status: "authorization_voided:provider",
+      }).eq("id", record.id).neq("payment_status", "completed");
+      return;
+    }
+
+    case "PAYMENT.AUTHORIZATION.EXPIRED": {
+      const reference = resource.custom_id || resource.invoice_id;
+      const record = await findRecord(admin, reference, undefined, resource.supplementary_data);
+      if (!record || record.payment_status === "completed") return;
+      await markAuthorizationExpired(admin, record);
+      return;
+    }
+
     case "PAYMENT.CAPTURE.COMPLETED":
     case "PAYMENT.CAPTURE.PENDING":
     case "PAYMENT.CAPTURE.DENIED": {
