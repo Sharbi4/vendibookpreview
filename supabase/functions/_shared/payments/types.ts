@@ -84,6 +84,11 @@ export interface CreateOrderRequest {
   /** Overrides the default reference-derived idempotency key. */
   idempotencyKey?: string;
   metadata?: Record<string, unknown>;
+  /**
+   * CAPTURE (default) charges on payer approval. AUTHORIZE places a temporary
+   * hold that must later be captured or voided explicitly.
+   */
+  intent?: "CAPTURE" | "AUTHORIZE";
 }
 
 export interface ProviderOrder {
