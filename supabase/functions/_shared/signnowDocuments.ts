@@ -17,6 +17,36 @@ import {
   isSignNowConfigured,
   registerDocumentWebhook,
 } from './signnow.ts';
+import {
+  buildRequirementsSnapshot,
+  describeRequirements,
+  describeInsuranceSection,
+  REQUIREMENTS_SNAPSHOT_VERSION,
+  RENTAL_AGREEMENT_VERSION,
+  BILL_OF_SALE_VERSION,
+} from './rentalRequirements.ts';
+
+/**
+ * Generic, non listing-specific clause text. Listing-specific facts are only
+ * ever pulled from stored listing / booking / requirement data.
+ */
+const DEFAULT_CANCELLATION_POLICY =
+  'Cancellations are handled through Vendibook. Platform service fees are non-refundable once a booking is confirmed. Any security deposit is returned after the rental ends if there is no damage or late return.';
+const DEFAULT_CONDITION_CLAUSE =
+  'Renter accepts the asset in its current condition at pickup and shall return it in the same condition, ordinary wear and tear excepted. Both parties should document condition with photos at pickup and return.';
+const DEFAULT_DAMAGE_CLAUSE =
+  'Renter is responsible for loss of or damage to the asset occurring during the rental period, excluding ordinary wear and tear.';
+const DEFAULT_PERMITTED_USE =
+  'The asset may be used only for the lawful purpose agreed between the parties. Renter may not sublease, assign, or transfer possession of the asset to any other party without the Host\u2019s written consent.';
+const DEFAULT_INCIDENT_CLAUSE =
+  'Renter shall notify the Host and Vendibook promptly of any accident, theft, mechanical failure, injury, or other incident involving the asset during the rental period.';
+const DEFAULT_LICENSES_CLAUSE =
+  'Renter is responsible for obtaining and maintaining any licenses, permits, or approvals required by law for Renter\u2019s use of the asset.';
+const DEFAULT_LIABILITY_CLAUSE =
+  'To the fullest extent permitted by law, Renter assumes responsibility for its use of the asset and shall indemnify and hold harmless the Host and Vendibook from claims, damages, and expenses arising out of Renter\u2019s use, except to the extent caused by the Host\u2019s own negligence or willful misconduct. Vendibook is a marketplace and is not a party to the rental itself.';
+const DEFAULT_ESIGN_CONSENT =
+  'The parties consent to sign this agreement electronically. An electronic signature has the same legal effect as a handwritten signature, and each party may request a copy of the completed document.';
+
 
 /**
  * Subscribe to document.complete / document.update for this document so the
