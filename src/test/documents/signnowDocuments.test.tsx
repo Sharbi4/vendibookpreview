@@ -1,6 +1,11 @@
 import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
-import { inviteIdForEmail } from '../../../supabase/functions/_shared/signnow';
+
+// Mirrors supabase/functions/_shared/signnow.ts#inviteIdForEmail (Deno module,
+// not importable from the browser typecheck graph).
+type Invite = { id: string; email: string; role_name?: string };
+const inviteIdForEmail = (invites: Invite[], email: string) =>
+  invites.find((i) => i.email?.toLowerCase() === email.toLowerCase())?.id;
 
 const invokeMock = vi.fn();
 const rows: Array<Record<string, unknown>> = [];
