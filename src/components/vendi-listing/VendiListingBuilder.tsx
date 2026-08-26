@@ -635,7 +635,7 @@ const VendiListingBuilder: React.FC = () => {
                         Vendi
                       </span>
                     )}
-                    {m.content}
+                    <span className="whitespace-pre-line">{m.content}</span>
                   </div>
                 </motion.div>
               ))}
