@@ -284,7 +284,7 @@ const Payments = () => {
           <div className="container mx-auto max-w-6xl px-4">
             <motion.div {...fadeUp} className="mb-10 max-w-2xl">
               <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-                Pay the way that fits the purchase.
+                PayPal checkout options for buyers.
               </h2>
               <p className="mt-4 text-base leading-relaxed text-muted-foreground">
                 Every Vendibook purchase runs through PayPal checkout. What you see there depends on
