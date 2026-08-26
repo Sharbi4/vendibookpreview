@@ -164,7 +164,25 @@ const VendiListingBuilder: React.FC = () => {
     });
   }, [draft, answered, hydrated, reviewing]);
 
+  // Final publish gate: present the same seller disclosure the step-by-step
+  // wizard shows, in the chat, before publishing can unlock.
+  useEffect(() => {
+    if (!reviewing || consentId || disclosureShownRef.current) return;
+    disclosureShownRef.current = true;
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: uid(),
+        role: 'vendi',
+        content:
+          'One last legal step before this can go live. Please read the disclosure below — it is the same attestation used in the standard listing wizard. ' +
+          'When you have read it, type YES (in capitals) to affirm it.',
+      },
+    ]);
+  }, [reviewing, consentId]);
+
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, reviewing]);
+
 
   const say = (role: Msg['role'], content: string) =>
     setMessages((prev) => [...prev, { id: uid(), role, content }]);
