@@ -352,7 +352,9 @@ const VendiListingBuilder: React.FC = () => {
     if (storageKey) localStorage.removeItem(storageKey);
     setDraft(emptyDraft); setAnswered([]); setMessages([]); setPhotos([]); setUploadedUrls([]); setReviewing(false);
     setDraftId(null); creatingDraftRef.current = false;
+    setConsentId(null); setAttestInput(''); disclosureShownRef.current = false;
   };
+
 
   const progress = progressPercent(draft, answered);
 
