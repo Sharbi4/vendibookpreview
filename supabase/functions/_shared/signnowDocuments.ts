@@ -123,7 +123,17 @@ export async function ensureRentalAgreement(bookingId: string): Promise<{ docume
     })
     .select('id')
     .single();
-  if (insErr) throw new Error(`documents insert failed: ${insErr.message}`);
+  if (insErr) {
+    // Concurrent ensure call won the race — return the existing row.
+    const { data: raced } = await supabase
+      .from('documents')
+      .select('id')
+      .eq('booking_id', bookingId)
+      .eq('document_type', 'rental_agreement')
+      .maybeSingle();
+    if (raced) return { document_id: raced.id, created: false };
+    throw new Error(`documents insert failed: ${insErr.message}`);
+  }
 
   return { document_id: row.id, created: true };
 }
@@ -201,7 +211,17 @@ export async function ensureBillOfSale(transactionId: string): Promise<{ documen
     })
     .select('id')
     .single();
-  if (insErr) throw new Error(`documents insert failed: ${insErr.message}`);
+  if (insErr) {
+    // Concurrent ensure call won the race — return the existing row.
+    const { data: raced } = await supabase
+      .from('documents')
+      .select('id')
+      .eq('transaction_id', transactionId)
+      .eq('document_type', 'bill_of_sale')
+      .maybeSingle();
+    if (raced) return { document_id: raced.id, created: false };
+    throw new Error(`documents insert failed: ${insErr.message}`);
+  }
 
   return { document_id: row.id, created: true };
 }
