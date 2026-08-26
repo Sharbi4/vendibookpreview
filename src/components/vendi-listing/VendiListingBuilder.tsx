@@ -477,12 +477,20 @@ const VendiListingBuilder: React.FC = () => {
         setDraftId(listingId);
       }
 
-      const imageUrls = uploadedUrls.length ? uploadedUrls : await uploadPhotos(listingId, user.id);
+      let imageUrls = uploadedUrls;
+      let videoUrls = uploadedVideoUrls;
+      if (photos.length && !imageUrls.length && !videoUrls.length) {
+        const uploaded = await uploadMedia(listingId, user.id);
+        imageUrls = uploaded.images; videoUrls = uploaded.videos;
+      }
       setUploadedUrls(imageUrls);
+      setUploadedVideoUrls(videoUrls);
 
-      const payload = buildListingPayload(draft, imageUrls);
+      const payload = buildListingPayload(draft, imageUrls, videoUrls);
       const { error: updateError } = await supabase.from('listings').update(payload as never).eq('id', listingId);
       if (updateError) throw updateError;
+      await syncRequiredDocuments(listingId);
+
 
       const { error: publishError } = await supabase
         .from('listings')
