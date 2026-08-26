@@ -288,7 +288,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/e0ad7bc7-5a18-4534-a849-94501f5bc008</loc>
-    <lastmod>2026-08-25</lastmod>
+    <lastmod>2026-08-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -441,17 +441,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/587b1919-9828-46ef-bba8-76da9553f962</loc>
-    <lastmod>2026-08-26</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/de0d03a7-c0cf-4078-808c-cd4a1251af5a/587b1919-9828-46ef-bba8-76da9553f962/1787587038899-tl7owm.jpg</image:loc>
-      <image:title>Brand New 2025 Dreamfly Airstream Ready to Go! Never been used!</image:title>
-      <image:caption>Brand New 2025 Dreamfly Airstream Ready to Go! Never been used! in Stoughton, MA on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/ddb8e4cb-3e16-482e-a9c5-845cd6068e4c</loc>
     <lastmod>2026-08-26</lastmod>
     <changefreq>weekly</changefreq>
@@ -471,17 +460,6 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/d8046cdd-aa84-42b4-b739-938de47c7c04/5534f230-99a7-4ff6-a2b4-f495cdac1946/1782332644864-g1ujpc.jpeg</image:loc>
       <image:title>Food trailer 8x15</image:title>
       <image:caption>Food trailer 8x15 in Missouri City, TX on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://vendibook.com/listing/db4c8d64-a1ec-4db4-9715-4ca6ae8fd3b7</loc>
-    <lastmod>2026-08-25</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/f6fb5b0a-6f90-44cb-97f3-addda2c2b10a/db4c8d64-a1ec-4db4-9715-4ca6ae8fd3b7/1786668909921-r3xdro.jpg</image:loc>
-      <image:title>Fully equipped custom build food trailer</image:title>
-      <image:caption>Fully equipped custom build food trailer in Charlottesville, VA on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -606,17 +584,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/a3ead971-38c7-4c0c-8f3f-2b02185c7c2f</loc>
-    <lastmod>2026-08-26</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/bf4754c8-46ce-472e-8a71-2b8a7769a833/a3ead971-38c7-4c0c-8f3f-2b02185c7c2f/1770294077101-jgoyi.jpg</image:loc>
-      <image:title>Custom-Built 6&apos; x 12&apos; Pop-Up Lemonade Concession Trailer</image:title>
-      <image:caption>Custom-Built 6&apos; x 12&apos; Pop-Up Lemonade Concession Trailer in Charlotte, NC on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/2ee148f3-0b56-4739-86b1-b96208fcf1af</loc>
     <lastmod>2026-08-22</lastmod>
     <changefreq>weekly</changefreq>
@@ -647,6 +614,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/04eccfc2-efde-4d72-a0e9-dbcfea829376/26bd6a6a-f814-4f31-923d-68e7e326ff06/1785968367203-hxdpyo.jpeg</image:loc>
       <image:title>Fully equipped food trailer </image:title>
       <image:caption>Fully equipped food trailer  in Saginaw, MI on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/a3ead971-38c7-4c0c-8f3f-2b02185c7c2f</loc>
+    <lastmod>2026-08-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/bf4754c8-46ce-472e-8a71-2b8a7769a833/a3ead971-38c7-4c0c-8f3f-2b02185c7c2f/1770294077101-jgoyi.jpg</image:loc>
+      <image:title>Custom-Built 6&apos; x 12&apos; Pop-Up Lemonade Concession Trailer</image:title>
+      <image:caption>Custom-Built 6&apos; x 12&apos; Pop-Up Lemonade Concession Trailer in Charlotte, NC on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -749,6 +727,17 @@
     </image:image>
   </url>
   <url>
+    <loc>https://vendibook.com/listing/587b1919-9828-46ef-bba8-76da9553f962</loc>
+    <lastmod>2026-08-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/de0d03a7-c0cf-4078-808c-cd4a1251af5a/587b1919-9828-46ef-bba8-76da9553f962/1787587038899-tl7owm.jpg</image:loc>
+      <image:title>Brand New 2025 Dreamfly Airstream Ready to Go! Never been used!</image:title>
+      <image:caption>Brand New 2025 Dreamfly Airstream Ready to Go! Never been used! in Stoughton, MA on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://vendibook.com/listing/24594068-25df-4bbe-b142-7bad96aacf39</loc>
     <lastmod>2026-08-26</lastmod>
     <changefreq>weekly</changefreq>
@@ -834,6 +823,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/f2865e60-125e-4921-b7c5-898ba1675045/f4d5e5ae-31eb-4ba0-9d2b-13df7279d020/1769084137377-0pz8o6.jpg</image:loc>
       <image:title>🔥 TURNKEY SHIPPING CONTAINER KITCHEN🔥</image:title>
       <image:caption>🔥 TURNKEY SHIPPING CONTAINER KITCHEN🔥 in Atlanta, GA on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/db4c8d64-a1ec-4db4-9715-4ca6ae8fd3b7</loc>
+    <lastmod>2026-08-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/f6fb5b0a-6f90-44cb-97f3-addda2c2b10a/db4c8d64-a1ec-4db4-9715-4ca6ae8fd3b7/1786668909921-r3xdro.jpg</image:loc>
+      <image:title>Fully equipped custom build food trailer</image:title>
+      <image:caption>Fully equipped custom build food trailer in Charlottesville, VA on Vendibook</image:caption>
     </image:image>
   </url>
   <url>

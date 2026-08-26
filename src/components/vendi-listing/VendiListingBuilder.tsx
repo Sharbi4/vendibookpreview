@@ -19,6 +19,8 @@ import {
   rankedNextQuestion, readinessProgress, remainingQuestionIds, READY_MESSAGE,
 } from '@/lib/vendi-listing/prioritize';
 import { parseCommand } from '@/lib/vendi-listing/commands';
+import { capturedFacts } from '@/lib/vendi-listing/summary';
+
 
 import type { DocumentType } from '@/types/documents';
 import { isSkip } from '@/lib/vendi-listing/extract';
@@ -1020,6 +1022,23 @@ const VendiListingBuilder: React.FC = () => {
   const readiness = readinessProgress(draft, previewImages.length);
   const progress = readiness.percent;
 
+  // Everything Vendi has actually captured, shown back so the seller never has
+  // to scroll the transcript to check whether an answer landed.
+  const facts = capturedFacts(draft, previewImages.length, localVideos.length);
+
+  /**
+   * Tap a captured fact to correct it: the question that produced it is
+   * reopened (and review is left) instead of forcing a typed correction.
+   */
+  const reopenFact = (questionId: string) => {
+    askedRef.current.delete(questionId);
+    setAsked((ids) => ids.filter((id) => id !== questionId));
+    setAnswered((prev) => prev.filter((id) => id !== questionId));
+    setReviewing(false);
+  };
+
+
+
 
   const previewPanel = (
     <LivePreviewPanel preview={draft} images={previewImages} ready={blockers.length === 0} />
@@ -1380,6 +1399,30 @@ const VendiListingBuilder: React.FC = () => {
                   </ul>
                 )}
 
+                {/* Plain-language recap of the captured facts. Each row is
+                    tappable so a last-second correction never means retyping. */}
+                {facts.length > 0 && (
+                  <dl className="mt-5 divide-y divide-white/[0.06] overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.025]">
+                    {facts.map((f) => (
+                      <div key={`review-${f.questionId}-${f.label}`} className="flex items-start gap-3 px-4 py-2.5">
+                        <dt className="w-28 flex-none text-xs uppercase tracking-[0.12em] text-muted-foreground">
+                          {f.label}
+                        </dt>
+                        <dd className="min-w-0 flex-1 text-sm text-foreground/90">{f.value}</dd>
+                        <button
+                          type="button"
+                          onClick={() => reopenFact(f.questionId)}
+                          className="flex-none text-xs text-primary underline-offset-4 hover:underline"
+                        >
+                          Change
+                        </button>
+                      </div>
+                    ))}
+                  </dl>
+                )}
+
+
+
                 {/* Seller disclosure — identical language to the standard wizard */}
                 <div className="mt-6 rounded-2xl border border-white/[0.1] bg-white/[0.03] p-5">
                   <h3 className="text-sm font-semibold tracking-[-0.01em]">Before you publish</h3>
@@ -1494,6 +1537,32 @@ const VendiListingBuilder: React.FC = () => {
 
             <div ref={endRef} />
           </div>
+
+          {/* Captured-facts strip: proof that Vendi heard every answer, and a
+              one-tap way to correct any of them without typing. */}
+          {!reviewing && facts.length > 0 && (
+            <div className="border-t border-white/[0.06] bg-[#0c0c0f]/60 px-4 py-2.5 backdrop-blur-xl sm:px-7">
+              <div className="flex items-center gap-2 overflow-x-auto pb-0.5">
+                <span className="flex-none text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
+                  Saved
+                </span>
+                {facts.map((f) => (
+                  <button
+                    key={`${f.questionId}-${f.label}`}
+                    type="button"
+                    onClick={() => reopenFact(f.questionId)}
+                    title={`Change ${f.label.toLowerCase()}`}
+                    aria-label={`${f.label}: ${f.value}. Tap to change.`}
+                    className="flex-none rounded-full border border-white/[0.09] bg-white/[0.04] px-3 py-1 text-xs text-foreground/85 transition hover:border-[rgba(255,81,36,0.4)] hover:bg-white/[0.07]"
+                  >
+                    <span className="text-muted-foreground">{f.label}:</span> {f.value}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+
 
           {/* One composer for every step: the seller can always type a
               correction ("actually it's $42,000") or attach media, no matter
