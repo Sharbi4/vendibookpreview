@@ -91,6 +91,8 @@ const VendiListingBuilder: React.FC = () => {
   const [photos, setPhotos] = useState<LocalPhoto[]>([]);
   const [uploadedUrls, setUploadedUrls] = useState<string[]>([]);
   const [uploadedVideoUrls, setUploadedVideoUrls] = useState<string[]>([]);
+  /** Per-file upload state so the seller always sees what happened. */
+  const [mediaStatus, setMediaStatus] = useState<Record<string, 'pending' | 'uploading' | 'done' | 'error'>>({});
   const [reviewing, setReviewing] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [showMobilePreview, setShowMobilePreview] = useState(false);
