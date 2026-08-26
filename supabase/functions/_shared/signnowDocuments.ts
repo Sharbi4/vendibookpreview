@@ -365,6 +365,9 @@ export async function ensureBillOfSale(transactionId: string): Promise<{ documen
       signnow_template_id: templateId,
       status: 'sent',
       signers: signerRecords,
+      agreement_version: BILL_OF_SALE_VERSION,
+      terms_id: (tx as any).terms_id ?? null,
+
     })
     .select('id')
     .single();
