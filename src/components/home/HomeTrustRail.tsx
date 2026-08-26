@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import { TrustStrip } from '@/components/brand/TrustStrip';
 import { usePublicFeatureFlag } from '@/hooks/usePublicFeatureFlag';
