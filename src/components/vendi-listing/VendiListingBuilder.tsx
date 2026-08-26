@@ -219,7 +219,7 @@ const VendiListingBuilder: React.FC = () => {
           zip_code: prev.zip_code ?? existing.postal_code,
           address: prev.address ?? existing.address,
         }));
-        setUploadedUrls((prev) => (prev.length ? prev : existing.images ?? []));
+        setUploadedUrls((prev) => (prev.length ? prev : existing.image_urls ?? []));
         // Cross-device / cleared-storage arrival: offer an explicit choice
         // instead of silently starting a second listing.
         if (existing.session_key && existing.session_key !== sessionKeyRef.current) {
