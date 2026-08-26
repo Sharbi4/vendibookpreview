@@ -208,8 +208,17 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
       if (listing.price_hourly && listing.price_hourly > 0) {
         return `$${listing.price_hourly.toLocaleString()}/hr`;
       }
+      const weekly = (listing as any).price_weekly as number | null | undefined;
+      if (weekly && weekly > 0) {
+        return `$${weekly.toLocaleString()}/week`;
+      }
+      const monthly = (listing as any).price_monthly as number | null | undefined;
+      if (monthly && monthly > 0) {
+        return `$${monthly.toLocaleString()}/mo`;
+      }
       return 'Price TBD';
     }
+
     // Sale mode
     if (listing.price_sale && listing.price_sale > 0) {
       return `$${listing.price_sale.toLocaleString()}`;
