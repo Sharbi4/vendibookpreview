@@ -714,6 +714,8 @@ const SellMyFoodTruck = () => {
                 <li><Link to="/financing" className="font-medium text-primary hover:underline">How buyer financing works →</Link></li>
                 <li><Link to="/how-it-works?role=sell" className="font-medium text-primary hover:underline">The full seller journey →</Link></li>
                 <li><Link to="/tools/pricepilot" className="font-medium text-primary hover:underline">Estimate your asking price with PricePilot →</Link></li>
+                <li><Link to="/payments" className="font-medium text-primary hover:underline">Secure PayPal checkout on Vendibook →</Link></li>
+                <li><Link to="/ship-your-food-truck" className="font-medium text-primary hover:underline">Vendibook Freight delivery →</Link></li>
                 <li><Link to="/pricing" className="font-medium text-primary hover:underline">Pricing and Vendibook Pro →</Link></li>
               </ul>
             </div>
