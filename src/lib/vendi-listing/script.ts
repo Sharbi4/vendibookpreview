@@ -16,14 +16,17 @@ import type { ListingPreview } from '@/components/ai-listing/LivePreviewPanel';
 import {
   cleanText, isSkip, parseDimensions, parseList, parseLocation, parseMoney, parseYesNo,
 } from './extract';
+import { parseExistingListing, type PendingConfirm } from './importText';
 
 export type VendiDraft = ListingPreview & {
   zip_code?: string | null;
   /** Which rental rate the seller chose to price on. */
   rent_period?: string | null;
+  /** Ambiguous values pulled from a pasted listing, awaiting confirmation. */
+  pending_confirm?: PendingConfirm[];
 };
 
-export type QuestionKind = 'choice' | 'text' | 'money' | 'location' | 'yesno' | 'list' | 'photos';
+export type QuestionKind = 'choice' | 'text' | 'money' | 'location' | 'yesno' | 'list' | 'photos' | 'paste';
 
 export interface QuestionOption {
   value: string;
@@ -34,6 +37,10 @@ export interface QuestionOption {
 export interface ApplyResult {
   patch?: Partial<VendiDraft>;
   error?: string;
+  /** Other interview questions this answer already satisfies. */
+  answeredIds?: string[];
+  /** A friendly recap Vendi says after applying the answer. */
+  say?: string;
 }
 
 export interface Question {
@@ -46,6 +53,7 @@ export interface Question {
   when?: (d: VendiDraft) => boolean;
   apply: (d: VendiDraft, raw: string) => ApplyResult;
 }
+
 
 const MOBILE_CATEGORIES = ['food_truck', 'food_trailer'];
 
