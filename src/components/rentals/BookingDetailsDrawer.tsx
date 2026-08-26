@@ -13,6 +13,8 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { triggerOrchestrator } from '@/lib/orchestrator';
 import { DocumentsCard } from '@/components/documents/DocumentsCard';
+import { DocumentsInsurancePanel } from '@/components/booking/DocumentsInsurancePanel';
+import { useRequirementEvaluation } from '@/hooks/useRequiredDocuments';
 import {
   User,
   Calendar,
@@ -412,6 +414,10 @@ END:VCALENDAR`;
               </Link>
             </Button>
 
+            {/* C. Documents & insurance — only rendered when the host asked for any. */}
+            <DocumentsInsurancePanel evaluation={requirementEvaluation} />
+
+            {/* D. Rental agreement */}
             <DocumentsCard scope={{ booking_id: booking.id }} title="Rental agreement" />
           </div>
         </div>
