@@ -168,9 +168,9 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
       setStateFallback([]);
       setNationwideFallback([]);
 
-      // Tier 1: city OR state OR specialty OR all
+      // Tier 1: city OR state OR specialty/subcategory OR all
       const specialtyFilter = config.specialty ? specialtyOrFilter(config.specialty) : undefined;
-      let q1 = baseQuery(categories, config.mode, 48, specialtyFilter);
+      let q1 = baseQuery(categories, config.mode, 48, specialtyFilter, config.subcategories);
       if (config.city) {
         q1 = q1.or(`city.ilike.${config.city.name},address.ilike.%${config.city.name}%`);
       } else if (config.state) {
@@ -183,9 +183,9 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
 
       const excludeIds = new Set(primaryRows.map((r) => r.id));
 
-      // Specialty pages never fall back to unrelated inventory — only real
-      // specialty matches may appear on the collection.
-      if (!config.specialty) {
+      // Specialty / subcategory pages never fall back to unrelated inventory —
+      // only real matches may appear on the collection.
+      if (!config.specialty && !config.subcategories?.length) {
         // Tier 2: state fallback (only when city is set AND primary is thin)
         if (config.city && primaryRows.length < MIN_TIER) {
           let q2 = baseQuery(categories, config.mode, 24);
