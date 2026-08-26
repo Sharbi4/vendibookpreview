@@ -47,6 +47,18 @@ const DEFAULT_LIABILITY_CLAUSE =
 const DEFAULT_ESIGN_CONSENT =
   'The parties consent to sign this agreement electronically. An electronic signature has the same legal effect as a handwritten signature, and each party may request a copy of the completed document.';
 
+/**
+ * Bill of Sale may be generated once the buyer's payment is authorized or
+ * captured — never for a pending/unauthorized or cancelled transaction.
+ */
+const BILL_OF_SALE_ELIGIBLE_STATUSES = new Set([
+  'paid',
+  'buyer_confirmed',
+  'seller_confirmed',
+  'completed',
+]);
+
+
 
 /**
  * Subscribe to document.complete / document.update for this document so the
