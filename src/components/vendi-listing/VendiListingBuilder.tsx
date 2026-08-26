@@ -226,25 +226,22 @@ const VendiListingBuilder: React.FC = () => {
     return () => window.clearTimeout(timer);
   }, [draft, uploadedUrls, uploadedVideoUrls, draftId, hydrated]);
 
-  // Warm welcome before the first question
-  useEffect(() => {
-    if (!hydrated) return;
-    setMessages((prev) => (prev.length ? prev : [{ id: uid(), role: 'vendi', content: WELCOME }]));
-  }, [hydrated]);
-
-  // Ask the first / next question
+  // Ask the next unanswered question — once, and only once per question.
   useEffect(() => {
     if (!hydrated || reviewing) return;
     const q = nextQuestion(draft, answered);
     if (!q) { setReviewing(true); return; }
+    if (askedRef.current.has(q.id)) return;
+    askedRef.current.add(q.id);
+    setAsked((prev) => (prev.includes(q.id) ? prev : [...prev, q.id]));
+    const prompt = promptText(q, draft);
     setMessages((prev) => {
-      const tip = q.tip?.(draft);
-      const prompt = tip ? `${q.prompt(draft)}\n\n${tip}` : q.prompt(draft);
       const last = prev[prev.length - 1];
       if (last?.role === 'vendi' && last.content === prompt) return prev;
       return [...prev, { id: uid(), role: 'vendi', content: prompt }];
     });
   }, [draft, answered, hydrated, reviewing]);
+
 
   // Final publish gate: present the same seller disclosure the step-by-step
   // wizard shows, in the chat, before publishing can unlock.
