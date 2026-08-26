@@ -403,14 +403,45 @@ const VendiListingBuilder: React.FC = () => {
               className="sticky bottom-0 border-t border-white/[0.07] bg-[#0c0c0f]/80 px-4 py-3.5 backdrop-blur-xl sm:px-7"
               onSubmit={(e) => { e.preventDefault(); submitAnswer(input); }}
             >
+              {current.kind === 'paste' && photos.length > 0 && (
+                <div className="mb-3 flex flex-wrap gap-2">
+                  {photos.map((p) => (
+                    <div key={p.id} className="relative h-14 w-14 overflow-hidden rounded-xl border border-white/[0.1]">
+                      <img src={p.url} alt="Attached" className="h-full w-full object-cover" />
+                      <button
+                        type="button"
+                        aria-label="Remove attachment"
+                        onClick={() => removePhoto(p.id)}
+                        className="absolute right-0.5 top-0.5 rounded-full bg-black/70 p-0.5"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
               <div className="flex items-end gap-2 rounded-[20px] border border-white/[0.09] bg-white/[0.04] px-3 py-2 transition focus-within:border-[rgba(255,81,36,0.45)]">
+                {current.kind === 'paste' && (
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    aria-label="Attach photos from your other listing"
+                    className="h-10 w-10 shrink-0 rounded-full text-muted-foreground"
+                    onClick={() => fileRef.current?.click()}
+                  >
+                    <ImagePlus className="h-4 w-4" />
+                  </Button>
+                )}
                 <textarea
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); submitAnswer(input); }
+                    if (e.key === 'Enter' && !e.shiftKey && current.kind !== 'paste') {
+                      e.preventDefault(); submitAnswer(input);
+                    }
                   }}
-                  rows={1}
+                  rows={current.kind === 'paste' ? 5 : 1}
                   placeholder={current.placeholder ?? 'Type your answer…'}
                   aria-label={current.prompt(draft)}
                   className="min-h-[44px] flex-1 resize-none border-0 bg-transparent px-2 py-2.5 text-base text-foreground outline-none placeholder:text-muted-foreground"
@@ -424,8 +455,14 @@ const VendiListingBuilder: React.FC = () => {
                   <Send className="h-4 w-4" />
                 </Button>
               </div>
+              {current.kind === 'paste' && (
+                <p className="mt-2 px-1 text-[11px] leading-relaxed text-muted-foreground">
+                  Paste your own text only — Vendi never pulls anything from Facebook Marketplace or other sites. Attached photos become your listing photos.
+                </p>
+              )}
             </form>
           )}
+
 
           <input
             ref={fileRef}
