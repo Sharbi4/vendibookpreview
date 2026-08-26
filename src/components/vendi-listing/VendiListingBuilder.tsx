@@ -104,6 +104,11 @@ const VendiListingBuilder: React.FC = () => {
   /** Unfinished Vendi drafts on this account that belong to another session. */
   const [resumeOffers, setResumeOffers] = useState<ActiveVendiDraft[]>([]);
 
+  /** Per-item media state so a retry only re-sends what actually failed. */
+  const [mediaStatus, setMediaStatus] = useState<Record<string, 'pending' | 'uploading' | 'done' | 'error'>>({});
+  /** Field-level history for "undo that" — the last few confirmed drafts. */
+  const [history, setHistory] = useState<VendiDraft[]>([]);
+
   const creatingDraftRef = useRef(false);
   const resolvingRef = useRef(false);
   const publishInFlightRef = useRef(false);
@@ -116,6 +121,10 @@ const VendiListingBuilder: React.FC = () => {
   /** local media id → uploaded URL. Makes uploads dedupe-safe and resumable. */
   const uploadedByItemRef = useRef<Map<string, { url: string; kind: 'image' | 'video' }>>(new Map());
   const uploadingMediaRef = useRef(false);
+  /** "Ready to publish" is announced exactly once per session. */
+  const readyAnnouncedRef = useRef(false);
+  const startedAnnouncedRef = useRef(false);
+
 
 
   const disclosureShownRef = useRef(false);
