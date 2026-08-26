@@ -17,7 +17,11 @@ import {
   cleanText, isSkip, parseDimensions, parseList, parseLocation, parseMoney, parseYesNo,
 } from './extract';
 
-export type VendiDraft = ListingPreview & { zip_code?: string | null };
+export type VendiDraft = ListingPreview & {
+  zip_code?: string | null;
+  /** Which rental rate the seller chose to price on. */
+  rent_period?: string | null;
+};
 
 export type QuestionKind = 'choice' | 'text' | 'money' | 'location' | 'yesno' | 'list' | 'photos';
 
