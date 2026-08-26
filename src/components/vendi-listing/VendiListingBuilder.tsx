@@ -1553,6 +1553,37 @@ const VendiListingBuilder: React.FC = () => {
             <div ref={endRef} />
           </div>
 
+          {/* Repeated failures: offer a person, never a restart. The draft and
+              every answer stay exactly where they are. */}
+          {troubles >= 2 && (
+            <div className="border-t border-amber-500/20 bg-amber-500/[0.06] px-4 py-3 sm:px-7">
+              <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-sm">
+                <span className="text-foreground/90">
+                  That's failed a couple of times. Your draft is safe — want a hand from our team?
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    trackVendi('vendi_support_requested', {
+                      userId: user?.id, listingId: draftId, sessionKey: sessionKeyRef.current,
+                    });
+                    navigate(`/contact?topic=listing${draftId ? `&ref=${draftId}` : ''}`);
+                  }}
+                  className="rounded-full border border-amber-400/40 bg-amber-400/10 px-3.5 py-1.5 text-xs font-medium text-amber-200 transition hover:bg-amber-400/20"
+                >
+                  Get help
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setTroubles(0)}
+                  className="text-xs text-muted-foreground underline-offset-4 hover:underline"
+                >
+                  Keep going
+                </button>
+              </div>
+            </div>
+          )}
+
           {/* Captured-facts strip: proof that Vendi heard every answer, and a
               one-tap way to correct any of them without typing. */}
           {!reviewing && facts.length > 0 && (
