@@ -15,6 +15,7 @@ import Header from '@/components/layout/Header';
 import SEO from '@/components/SEO';
 import { Button } from '@/components/ui/button';
 import FieldHelp from '@/components/common/FieldHelp';
+import ListingPathChoice from '@/components/listing/ListingPathChoice';
 import { useAuth } from '@/contexts/AuthContext';
 import { trackEvent } from '@/lib/analytics';
 import { LISTING_ROUTES, authReturnTo } from '@/lib/listings/routes';
@@ -120,7 +121,8 @@ const ListingStart: React.FC = () => {
 
   const startSelf = () => {
     trackEvent({ category: 'Supply', action: 'listing_path_self_selected' });
-    navigate(user ? LISTING_ROUTES.quickStart : authReturnTo(LISTING_ROUTES.quickStart));
+    const manual = `${LISTING_ROUTES.quickStart}?path=self`;
+    navigate(user ? manual : authReturnTo(manual));
   };
 
   const startConcierge = () => {
@@ -168,22 +170,11 @@ const ListingStart: React.FC = () => {
           ))}
         </ul>
 
-        <div className="mt-8 grid gap-5 sm:mt-10 md:grid-cols-2">
-          <PathCard
-            icon={<PencilLine className="h-5 w-5" aria-hidden="true" />}
-            title="Create it myself"
-            price="Free"
-            blurb="A guided builder walks you through the details buyers and renters care about most."
-            benefits={SELF_SERVE_BENEFITS}
-            cta="Start my listing"
-            onClick={startSelf}
-            emphasis
-          >
-            <p className="mt-3 text-center text-xs text-muted-foreground">
-              No card required. Publishing is always free.
-            </p>
-          </PathCard>
+        <div className="mt-8 sm:mt-10">
+          <ListingPathChoice onChooseManual={startSelf} />
+        </div>
 
+        <div className="mt-5 grid gap-5 md:grid-cols-2">
           <PathCard
             icon={<ConciergeBell className="h-5 w-5" aria-hidden="true" />}
             title={LISTING_CONCIERGE.name}
