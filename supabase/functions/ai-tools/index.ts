@@ -337,6 +337,9 @@ serve(async (req) => {
       parsed.sources = sourcesToCitations(sources);
       if (!parsed.lastUpdated) parsed.lastUpdated = TODAY;
     }
+    // Backward-compatible internal evidence block (safe display fields only, no DB ids)
+    if (marketEvidence) parsed.marketEvidence = marketEvidence;
+
 
     return new Response(JSON.stringify({ result: parsed }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
