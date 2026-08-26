@@ -19,6 +19,8 @@ import {
   rankedNextQuestion, readinessProgress, remainingQuestionIds, READY_MESSAGE,
 } from '@/lib/vendi-listing/prioritize';
 import { parseCommand } from '@/lib/vendi-listing/commands';
+import { capturedFacts } from '@/lib/vendi-listing/summary';
+
 
 import type { DocumentType } from '@/types/documents';
 import { isSkip } from '@/lib/vendi-listing/extract';
