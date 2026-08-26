@@ -744,6 +744,9 @@ const SellMyFoodTruck = () => {
                   <Button size="lg" variant="ghost" className="rounded-2xl text-foreground" asChild>
                     <Link to="/food-trucks-for-sale">Browse food trucks for sale</Link>
                   </Button>
+                  <Button size="lg" variant="ghost" className="rounded-2xl text-foreground" asChild>
+                    <Link to="/payments">See how payments work</Link>
+                  </Button>
                 </div>
               </motion.div>
             </div>
