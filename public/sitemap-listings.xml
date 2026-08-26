@@ -1,17 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
-    <loc>https://vendibook.com/listing/9fa1aac0-10d3-4c75-8e60-d8e16f7a0a47</loc>
-    <lastmod>2026-08-26</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/3756d71d-fcff-48e2-960f-7f8c565e7c46/9fa1aac0-10d3-4c75-8e60-d8e16f7a0a47/1784143204036-fmnpm.jpeg</image:loc>
-      <image:title>FOOD TRUCK FOR SALE OR LONG-TERM LEASE - $76,000 (Chicago)</image:title>
-      <image:caption>FOOD TRUCK FOR SALE OR LONG-TERM LEASE - $76,000 (Chicago) in Chicago, IL on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/c2a323e2-8b8a-469a-b5e3-d61c3fe305e5</loc>
     <lastmod>2026-08-25</lastmod>
     <changefreq>weekly</changefreq>
@@ -64,6 +53,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/24050d09-bc26-42d9-91e2-7c445f9203dc/f814bc22-d682-4ddf-818e-049472578f49/1785261976822-ubjk.jpg</image:loc>
       <image:title>2023 SDG 37&apos; Custom Commercial Kitchen on Wheels</image:title>
       <image:caption>2023 SDG 37&apos; Custom Commercial Kitchen on Wheels in Birch Run, MI on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/9fa1aac0-10d3-4c75-8e60-d8e16f7a0a47</loc>
+    <lastmod>2026-08-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/3756d71d-fcff-48e2-960f-7f8c565e7c46/9fa1aac0-10d3-4c75-8e60-d8e16f7a0a47/1784143204036-fmnpm.jpeg</image:loc>
+      <image:title>FOOD TRUCK FOR SALE OR LONG-TERM LEASE - $76,000 (Chicago)</image:title>
+      <image:caption>FOOD TRUCK FOR SALE OR LONG-TERM LEASE - $76,000 (Chicago) in Chicago, IL on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -145,7 +145,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/171bf57c-6225-4188-819f-81d4230a9a17</loc>
-    <lastmod>2026-08-02</lastmod>
+    <lastmod>2026-08-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
