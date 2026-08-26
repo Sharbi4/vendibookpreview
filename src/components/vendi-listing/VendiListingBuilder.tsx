@@ -921,9 +921,25 @@ const VendiListingBuilder: React.FC = () => {
                     {publishing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
                     Publish listing
                   </Button>
-                  <Button variant="outline" className="rounded-full border-white/12 bg-white/[0.04]" onClick={() => { setReviewing(false); setAnswered((prev) => prev.slice(0, -1)); }}>
+                  <Button
+                    variant="outline"
+                    className="rounded-full border-white/12 bg-white/[0.04]"
+                    onClick={() => {
+                      setReviewing(false);
+                      setAnswered((prev) => {
+                        const reopened = prev[prev.length - 1];
+                        // Reopening a question means Vendi may ask it again.
+                        if (reopened) {
+                          askedRef.current.delete(reopened);
+                          setAsked((ids) => ids.filter((id) => id !== reopened));
+                        }
+                        return prev.slice(0, -1);
+                      });
+                    }}
+                  >
                     Make changes
                   </Button>
+
                   <Button variant="ghost" className="rounded-full text-muted-foreground" onClick={startOver}>Start over</Button>
                 </div>
               </motion.div>
