@@ -49,6 +49,8 @@ interface PersistedState {
   messages: Msg[];
   draftId?: string | null;
   consentId?: string | null;
+  uploadedUrls?: string[];
+  uploadedVideoUrls?: string[];
 }
 
 const uid = () => Math.random().toString(36).slice(2);
@@ -111,6 +113,8 @@ const VendiListingBuilder: React.FC = () => {
         if (parsed?.draft) {
           setDraft(parsed.draft);
           setAnswered(parsed.answered ?? []);
+          setUploadedUrls(parsed.uploadedUrls ?? []);
+          setUploadedVideoUrls(parsed.uploadedVideoUrls ?? []);
           const restored = parsed.messages ?? [];
           setMessages(restored.length
             ? [...restored, {
@@ -130,9 +134,17 @@ const VendiListingBuilder: React.FC = () => {
   useEffect(() => {
     if (!hydrated || !storageKey) return;
     try {
-      localStorage.setItem(storageKey, JSON.stringify({ draft, answered, messages, draftId, consentId }));
+      localStorage.setItem(storageKey, JSON.stringify({
+        draft,
+        answered,
+        messages,
+        draftId,
+        consentId,
+        uploadedUrls,
+        uploadedVideoUrls,
+      }));
     } catch { /* quota — non-fatal */ }
-  }, [draft, answered, messages, draftId, consentId, hydrated, storageKey]);
+  }, [draft, answered, messages, draftId, consentId, uploadedUrls, uploadedVideoUrls, hydrated, storageKey]);
 
 
 
