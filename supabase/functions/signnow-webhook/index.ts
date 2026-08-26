@@ -56,7 +56,7 @@ Deno.serve(async (req) => {
 
     const { data: doc } = await svc
       .from('documents')
-      .select('id,document_type,transaction_id,booking_id,signers,status,signed_pdf_path')
+      .select('id,document_type,transaction_id,booking_id,signers,status,signed_pdf_path,renter_signed_at,host_signed_at')
       .eq('signnow_document_id', signnowDocId)
       .maybeSingle();
     if (!doc) return jsonResponse(200, { ok: true, note: 'unknown document' });
