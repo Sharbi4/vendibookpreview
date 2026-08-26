@@ -494,7 +494,10 @@ const VendiListingBuilder: React.FC = () => {
         .eq('status', 'draft') // never write over a listing that already went live
         .then(({ error }) => {
           setSaveState(error ? 'error' : 'saved');
-          if (error) trackVendi('vendi_save_failed', { userId: user?.id, listingId: draftId, metadata: { stage: 'autosave' } });
+          if (error) {
+            noteTrouble();
+            trackVendi('vendi_save_failed', { userId: user?.id, listingId: draftId, metadata: { stage: 'autosave' } });
+          } else setTroubles(0);
         });
     }, 1200);
     return () => window.clearTimeout(timer);
