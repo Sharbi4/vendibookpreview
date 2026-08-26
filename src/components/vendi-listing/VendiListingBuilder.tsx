@@ -96,12 +96,13 @@ const VendiListingBuilder: React.FC = () => {
   const say = (role: Msg['role'], content: string) =>
     setMessages((prev) => [...prev, { id: uid(), role, content }]);
 
-  const submitAnswer = useCallback((raw: string) => {
+  const submitAnswer = useCallback((raw: string, display?: string) => {
     const q = current;
     if (!q) return;
     const text = raw.trim();
     if (!text) return;
-    say('user', text);
+    const echo = display ?? (text.length > 420 ? `${text.slice(0, 420)}…` : text);
+    say('user', echo);
     setInput('');
 
     if (q.optional && isSkip(text)) {
@@ -112,8 +113,10 @@ const VendiListingBuilder: React.FC = () => {
     const result = q.apply(draft, text);
     if (result.error) { say('vendi', result.error); return; }
     setDraft((prev) => ({ ...prev, ...(result.patch ?? {}) }));
-    setAnswered((prev) => [...prev, q.id]);
+    setAnswered((prev) => [...prev, q.id, ...(result.answeredIds ?? [])]);
+    if (result.say) say('vendi', result.say);
   }, [current, draft]);
+
 
   const handlePhotos = (files: FileList | null) => {
     if (!files?.length) return;
