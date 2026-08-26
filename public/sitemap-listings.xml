@@ -453,7 +453,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/ddb8e4cb-3e16-482e-a9c5-845cd6068e4c</loc>
-    <lastmod>2026-08-25</lastmod>
+    <lastmod>2026-08-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -650,6 +650,17 @@
     </image:image>
   </url>
   <url>
+    <loc>https://vendibook.com/listing/3d4b8b98-aec6-4bdd-9af8-d45470c091c7</loc>
+    <lastmod>2026-08-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800</image:loc>
+      <image:title>Basic Food Prep Trailer</image:title>
+      <image:caption>Basic Food Prep Trailer in Tucson, AZ on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://vendibook.com/listing/fec5ac8b-3e30-4500-b3c4-e95820aaa00e</loc>
     <lastmod>2026-08-15</lastmod>
     <changefreq>weekly</changefreq>
@@ -658,17 +669,6 @@
       <image:loc>https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=800</image:loc>
       <image:title>Established Taco Truck</image:title>
       <image:caption>Established Taco Truck in Albuquerque, NM on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://vendibook.com/listing/3d4b8b98-aec6-4bdd-9af8-d45470c091c7</loc>
-    <lastmod>2026-08-25</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800</image:loc>
-      <image:title>Basic Food Prep Trailer</image:title>
-      <image:caption>Basic Food Prep Trailer in Tucson, AZ on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
