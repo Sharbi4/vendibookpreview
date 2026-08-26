@@ -837,7 +837,7 @@ const VendiListingBuilder: React.FC = () => {
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draftId, user, photos]);
+  }, [draftId, user, photos, retrySeq]);
 
 
   /**
