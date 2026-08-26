@@ -700,17 +700,10 @@ const SellMyFoodTruck = () => {
             </div>
           </section>
 
-          <div className="h-20 md:hidden" aria-hidden="true" />
         </main>
 
         <Footer />
 
-        {/* Sticky mobile CTA — single action */}
-        <div className="fixed bottom-0 left-0 right-0 z-40 md:hidden border-t border-border bg-[#fbfaf8]/95 backdrop-blur-sm px-4 py-3">
-          <Button variant="cta" className="w-full" asChild>
-            <Link to={LIST_HREF}>List my food truck free</Link>
-          </Button>
-        </div>
       </div>
     </>
   );
