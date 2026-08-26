@@ -7,7 +7,6 @@ import {
   ConciergeBell,
   Clock,
   Lock,
-  PencilLine,
   Rocket,
   Layers,
 } from 'lucide-react';
@@ -23,7 +22,6 @@ import { useCatalogPrice } from '@/hooks/useCatalogPrices';
 import {
   CONCIERGE_BENEFITS,
   LISTING_CONCIERGE,
-  SELF_SERVE_BENEFITS,
 } from '@/config/listingConcierge';
 
 const BENEFITS = [
