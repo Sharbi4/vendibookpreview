@@ -7,6 +7,7 @@ import { trackLeadEvent } from '@/lib/leadTracking';
 import { RentalAvailabilityPicker } from '@/components/listing/RentalAvailabilityPicker';
 import { cn } from '@/lib/utils';
 import type { Listing } from '@/types/listing';
+import { formatRentalRate, resolveRentalRate, type ListingPriceInput } from '@/lib/listings/rentalPricing';
 
 interface ListingCardOverlayProps {
   open: boolean;
