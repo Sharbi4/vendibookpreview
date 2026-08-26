@@ -129,7 +129,12 @@ describe('List with Vendi opening', () => {
           price_monthly: 1000, rent_period: 'monthly', fulfillment_type: 'pickup',
           image_urls: ['https://cdn.test/a.jpg'],
         },
-        answered: QUESTIONS.map((x) => x.id),
+        answered: [
+          'import_choice', 'import_paste', 'category', 'mode', 'subcategory', 'location',
+          'rent_period', 'rent_price', 'description', 'fulfillment', 'instant_book', 'photos',
+          'title', 'ready_gate', 'rent_extra_rates', 'deposit', 'availability',
+          'required_documents', 'pickup_instructions', 'amenities', 'highlights', 'dimensions',
+        ],
         asked: QUESTIONS.map((x) => x.id),
         messages: [],
         uploadedUrls: ['https://cdn.test/a.jpg'],
