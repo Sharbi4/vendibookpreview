@@ -16,7 +16,15 @@ const BodySchema = z.object({
   zipCode: z.string().trim().max(20).optional().nullable(),
   latitude: z.number().finite().optional().nullable(),
   longitude: z.number().finite().optional().nullable(),
+  /**
+   * Durable per-session idempotency key for the "List with Vendi" builder.
+   * One key == one listing row for this owner, forever. Repeated effects,
+   * remounts, StrictMode double-invocations, second tabs, reloads mid-create
+   * and auth redirects all resolve to the same id instead of a new draft.
+   */
+  sessionKey: z.string().trim().min(8).max(80).optional().nullable(),
 });
+
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -50,11 +58,25 @@ serve(async (req) => {
       auth: { persistSession: false },
     });
 
-    const { mode, category, location, city, state, zipCode, latitude, longitude } = parsed.data;
+    const { mode, category, location, city, state, zipCode, latitude, longitude, sessionKey } = parsed.data;
     const normalizedLocation = location || [city, state].filter(Boolean).join(", ") || null;
     const fulfillmentType = category === "ghost_kitchen" || category === "vendor_lot" || category === "vendor_space"
       ? "on_site"
       : "pickup";
+
+    // IDEMPOTENCY: a session key that already produced a row always returns
+    // that same row. This is the server-authoritative guard that replaced the
+    // browser-local draftId as the source of truth for listing identity.
+    if (sessionKey) {
+      const { data: existing } = await admin
+        .from("listings")
+        .select("id")
+        .eq("host_id", user.id)
+        .eq("vendi_session_key", sessionKey)
+        .maybeSingle();
+      if (existing?.id) return json({ id: existing.id, resumed: true });
+    }
+
 
     // Guarantee a profiles row exists BEFORE any downstream code (identity
     // gate, quota, listing insert) reads it. If the auth trigger is missing
@@ -101,6 +123,7 @@ serve(async (req) => {
         postal_code: zipCode || null,
         latitude: latitude ?? null,
         longitude: longitude ?? null,
+        vendi_session_key: sessionKey ?? null,
         // accept_paypal_checkout is NOT NULL in the database — never write null.
         accept_paypal_checkout: mode === "sale",
         accept_cash_payment: false,
@@ -109,6 +132,17 @@ serve(async (req) => {
       .single();
 
     if (listingError) {
+      // Two tabs raced the same session key: the partial unique index rejected
+      // the loser. Return the winner's row instead of surfacing an error.
+      if (sessionKey && listingError.code === "23505") {
+        const { data: winner } = await admin
+          .from("listings")
+          .select("id")
+          .eq("host_id", user.id)
+          .eq("vendi_session_key", sessionKey)
+          .maybeSingle();
+        if (winner?.id) return json({ id: winner.id, resumed: true });
+      }
       console.error("[create-listing-draft] insert failed", listingError);
       return json(
         { error: `We couldn't start your draft: ${listingError.message}`, code: listingError.code ?? null },
@@ -116,7 +150,32 @@ serve(async (req) => {
       );
     }
 
-    return json({ id: listing.id });
+    // Telemetry only — never merges or deletes anything. Surfaces same-owner
+    // draft bursts (the Earl Wigger pattern) so admins can spot regressions.
+    if (sessionKey) {
+      const since = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+      const { count } = await admin
+        .from("listings")
+        .select("id", { count: "exact", head: true })
+        .eq("host_id", user.id)
+        .eq("status", "draft")
+        .not("vendi_session_key", "is", null)
+        .gte("created_at", since);
+      if ((count ?? 0) > 1) {
+        console.warn(`[create-listing-draft] vendi_draft_burst host=${user.id} drafts_30m=${count}`);
+        await admin.from("analytics_events").insert({
+          event_name: "vendi_draft_burst",
+          event_category: "Supply",
+          user_id: user.id,
+          listing_id: listing.id,
+          metadata: { drafts_last_30m: count },
+        } as never);
+
+      }
+    }
+
+    return json({ id: listing.id, resumed: false });
+
   } catch (error) {
     const message = error instanceof Error ? error.message : "unknown_error";
     return json({ error: message }, 500);

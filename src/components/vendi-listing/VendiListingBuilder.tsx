@@ -19,6 +19,10 @@ import {
 import type { DocumentType } from '@/types/documents';
 import { isSkip } from '@/lib/vendi-listing/extract';
 import { publishVendiListing } from '@/lib/vendi-listing/publishVendiListing';
+import {
+  ActiveVendiDraft, adoptVendiSessionKey, createOrResumeVendiDraft, findActiveVendiDraft,
+  getVendiSessionKey, rotateVendiSessionKey,
+} from '@/lib/vendi-listing/session';
 
 import {
   ATTESTATIONS,
@@ -88,9 +92,16 @@ const VendiListingBuilder: React.FC = () => {
   const [attestError, setAttestError] = useState<string | null>(null);
   const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const [savingManually, setSavingManually] = useState(false);
+  /** Server lookup for an unfinished Vendi draft has completed. */
+  const [resumeChecked, setResumeChecked] = useState(false);
+  /** Set when the server draft belongs to a different session (new device / cleared storage). */
+  const [resumeOffer, setResumeOffer] = useState<ActiveVendiDraft | null>(null);
 
   const creatingDraftRef = useRef(false);
+  const resolvingRef = useRef(false);
   const publishInFlightRef = useRef(false);
+  /** Durable idempotency key — one key means one listing row, server-side. */
+  const sessionKeyRef = useRef<string>('');
   /** Synchronous mirror of `asked` — effects can run twice before a re-render. */
   const askedRef = useRef<Set<string>>(new Set());
 
@@ -99,6 +110,8 @@ const VendiListingBuilder: React.FC = () => {
   const endRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const storageKey = user ? storageKeyFor(user.id) : null;
+  if (user && !sessionKeyRef.current) sessionKeyRef.current = getVendiSessionKey(user.id);
+
 
   // Same document + acceptance wording the step-by-step wizard records.
   const documentType = draft.mode === 'rent'
@@ -181,36 +194,74 @@ const VendiListingBuilder: React.FC = () => {
 
 
 
+  // SERVER-AUTHORITATIVE RESUME. Before this can ever create a row, ask the
+  // server whether this owner already has an unfinished Vendi draft for the
+  // current session. Missing/cleared/stale browser state must never be read as
+  // "this seller has no draft yet" — that is what produced duplicate listings.
+  useEffect(() => {
+    if (!hydrated || !user || draftId || resolvingRef.current) return;
+    resolvingRef.current = true;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const existing = await findActiveVendiDraft(user.id, sessionKeyRef.current);
+        if (cancelled || !existing) return;
+        setDraftId(existing.id);
+        // Never let empty browser state clobber server-confirmed values.
+        setDraft((prev) => ({
+          ...prev,
+          title: prev.title ?? existing.title,
+          description: prev.description ?? existing.description,
+          category: (prev.category ?? existing.category) as VendiDraft['category'],
+          mode: (prev.mode ?? existing.mode) as VendiDraft['mode'],
+          city: prev.city ?? existing.city,
+          state: prev.state ?? existing.state,
+          zip_code: prev.zip_code ?? existing.postal_code,
+          address: prev.address ?? existing.address,
+        }));
+        setUploadedUrls((prev) => (prev.length ? prev : existing.images ?? []));
+        // Cross-device / cleared-storage arrival: offer an explicit choice
+        // instead of silently starting a second listing.
+        if (existing.session_key && existing.session_key !== sessionKeyRef.current) {
+          setResumeOffer(existing);
+        }
+      } catch {
+        /* resume is best-effort; creation stays blocked until it settles */
+      } finally {
+        if (!cancelled) resolvingRef.current = false;
+        setResumeChecked(true);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [hydrated, user, draftId]);
+
   // Create the owned draft row as soon as we know mode + category, so every
-  // later answer and upload is autosaved against the seller's account.
+  // later answer and upload is autosaved against the seller's account. The
+  // sessionKey makes this idempotent server-side: repeated effects, StrictMode
+  // double-invocations, remounts and second tabs all resolve to one row.
   useEffect(() => {
     if (!hydrated || !user || draftId || creatingDraftRef.current) return;
+    if (!resumeChecked || resumeOffer) return;
     if (!draft.mode || !draft.category) return;
     creatingDraftRef.current = true;
     void (async () => {
       try {
-        const { data: sessionData } = await supabase.auth.getSession();
-        const accessToken = sessionData.session?.access_token;
-        if (!accessToken) return;
-        const { data: created, error } = await supabase.functions.invoke('create-listing-draft', {
-          headers: { Authorization: `Bearer ${accessToken}` },
-          body: {
-            mode: draft.mode === 'sale' ? 'sale' : 'rent',
-            category: draft.category,
-            city: draft.city ?? null,
-            state: draft.state ?? null,
-            zipCode: draft.zip_code ?? null,
-            location: draft.address ?? null,
-          },
+        const id = await createOrResumeVendiDraft({
+          sessionKey: sessionKeyRef.current,
+          mode: draft.mode === 'sale' ? 'sale' : 'rent',
+          category: draft.category as string,
+          city: draft.city ?? null,
+          state: draft.state ?? null,
+          zipCode: draft.zip_code ?? null,
+          location: draft.address ?? null,
         });
-        if (error) throw error;
-        const id = (created as { id?: string } | null)?.id;
-        if (id) setDraftId(id);
+        setDraftId(id);
       } catch {
         creatingDraftRef.current = false;
       }
     })();
-  }, [hydrated, user, draftId, draft.mode, draft.category, draft.city, draft.state, draft.zip_code, draft.address]);
+  }, [hydrated, user, draftId, resumeChecked, resumeOffer, draft.mode, draft.category, draft.city, draft.state, draft.zip_code, draft.address]);
+
 
   // Debounced autosave of collected answers onto the owned draft. The row stays
   // status=draft until the owner explicitly publishes.
@@ -392,20 +443,15 @@ const VendiListingBuilder: React.FC = () => {
           setSaveState('idle');
           return;
         }
-        const { data: created, error } = await supabase.functions.invoke('create-listing-draft', {
-          headers: { Authorization: `Bearer ${accessToken}` },
-          body: {
-            mode: draft.mode === 'sale' ? 'sale' : 'rent',
-            category: draft.category,
-            city: draft.city ?? null,
-            state: draft.state ?? null,
-            zipCode: draft.zip_code ?? null,
-            location: draft.address ?? null,
-          },
+        listingId = await createOrResumeVendiDraft({
+          sessionKey: sessionKeyRef.current,
+          mode: draft.mode === 'sale' ? 'sale' : 'rent',
+          category: draft.category as string,
+          city: draft.city ?? null,
+          state: draft.state ?? null,
+          zipCode: draft.zip_code ?? null,
+          location: draft.address ?? null,
         });
-        if (error) throw error;
-        listingId = (created as { id?: string } | null)?.id ?? null;
-        if (!listingId) throw new Error('We could not start your draft.');
         setDraftId(listingId);
       }
 
@@ -512,20 +558,15 @@ const VendiListingBuilder: React.FC = () => {
 
       let listingId = draftId;
       if (!listingId) {
-        const { data: created, error: draftError } = await supabase.functions.invoke('create-listing-draft', {
-          headers: { Authorization: `Bearer ${accessToken}` },
-          body: {
-            mode: draft.mode === 'sale' ? 'sale' : 'rent',
-            category: draft.category,
-            city: draft.city ?? null,
-            state: draft.state ?? null,
-            zipCode: draft.zip_code ?? null,
-            location: draft.address ?? null,
-          },
+        listingId = await createOrResumeVendiDraft({
+          sessionKey: sessionKeyRef.current,
+          mode: draft.mode === 'sale' ? 'sale' : 'rent',
+          category: draft.category as string,
+          city: draft.city ?? null,
+          state: draft.state ?? null,
+          zipCode: draft.zip_code ?? null,
+          location: draft.address ?? null,
         });
-        if (draftError) throw draftError;
-        listingId = (created as { id?: string } | null)?.id ?? null;
-        if (!listingId) throw new Error('We could not start your draft. Please try again.');
         setDraftId(listingId);
       }
 
@@ -553,8 +594,11 @@ const VendiListingBuilder: React.FC = () => {
         expectedImages: imageUrls,
       });
 
-      // 3. Only now is it safe to drop the local recovery state.
+      // 3. Only now is it safe to drop the local recovery state. The session
+      //    key is retired too, so the next visit starts a genuinely new listing
+      //    instead of resuming the one that just went live.
       if (storageKey) localStorage.removeItem(storageKey);
+      if (user) sessionKeyRef.current = rotateVendiSessionKey(user.id);
       toast.success('Your listing is live 🎉', {
         description: 'Buyers can find it now. You can keep editing it any time from your dashboard.',
       });
@@ -576,17 +620,35 @@ const VendiListingBuilder: React.FC = () => {
   };
 
 
+  /**
+   * Explicit "Start over" / "Start a new listing". The previous draft is NOT
+   * deleted — it stays in the seller's dashboard drafts. We simply retire the
+   * current Vendi session (new idempotency key) so the next create call makes a
+   * genuinely new row, by deliberate user choice rather than lost storage.
+   */
   const startOver = () => {
     if (storageKey) localStorage.removeItem(storageKey);
+    if (user) sessionKeyRef.current = rotateVendiSessionKey(user.id);
     setDraft(emptyDraft); setAnswered([]); setMessages([]); setPhotos([]); setUploadedUrls([]);
     setUploadedVideoUrls([]); setReviewing(false);
-    setDraftId(null); creatingDraftRef.current = false;
+    setDraftId(null); creatingDraftRef.current = false; resolvingRef.current = false;
+    setResumeOffer(null); setResumeChecked(true);
     setConsentId(null); setAttestInput(''); disclosureShownRef.current = false;
     setSaveState('idle');
     askedRef.current = new Set(); setAsked([]);
     // Re-run the opening effect against the now-empty storage: one clean welcome.
     setHydrated(false); setSessionSeq((n) => n + 1);
   };
+
+  /** "Continue listing" — adopt the server draft's session as this browser's. */
+  const continueServerDraft = () => {
+    if (!resumeOffer || !user) return;
+    adoptVendiSessionKey(user.id, resumeOffer.session_key);
+    sessionKeyRef.current = resumeOffer.session_key;
+    setDraftId(resumeOffer.id);
+    setResumeOffer(null);
+  };
+
 
 
 
@@ -608,7 +670,40 @@ const VendiListingBuilder: React.FC = () => {
   }
   if (!user) return <VendiAuthGate />;
 
+  // Cross-device / cleared-storage arrival with an unfinished Vendi draft on the
+  // account. Continuing is the primary action; a new listing is an explicit choice.
+  if (resumeOffer) {
+    const label = resumeOffer.title?.trim() || 'your unfinished listing';
+    return (
+      <div className="relative flex min-h-[80vh] items-center justify-center bg-[#08080a] px-4 py-16">
+        <motion.div
+          initial={{ opacity: 0, y: 16 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.45, ease: 'easeOut' }}
+          className="w-full max-w-md rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-foreground shadow-[0_30px_90px_-40px_rgba(0,0,0,0.9)] backdrop-blur-xl"
+        >
+          <p className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">List with Vendi</p>
+          <h1 className="mt-3 text-2xl font-semibold leading-snug">Welcome back — continue {label}?</h1>
+          <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
+            You already have an unfinished listing saved to your account. Pick it back up right where
+            you left off — nothing was lost.
+          </p>
+          <div className="mt-7 space-y-3">
+            <Button className="w-full" onClick={continueServerDraft}>Continue listing</Button>
+            <Button variant="outline" className="w-full border-white/15 bg-white/[0.03]" onClick={startOver}>
+              Start a new listing
+            </Button>
+          </div>
+          <p className="mt-4 text-center text-xs text-muted-foreground">
+            Starting a new listing keeps this draft safe in your dashboard.
+          </p>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
+
     <div className="dashboard-shell relative min-h-screen overflow-hidden bg-[#08080a] text-foreground">
       {/* Ambient depth — restrained, no loud gradients */}
       <div

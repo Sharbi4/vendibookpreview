@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.1"
+    PostgrestVersion: "14.17"
   }
   public: {
     Tables: {
@@ -3714,6 +3714,7 @@ export type Database = {
           title_status: string | null
           total_slots: number | null
           updated_at: string
+          vendi_session_key: string | null
           vendibook_freight_enabled: boolean | null
           video_urls: string[] | null
           view_count: number | null
@@ -3814,6 +3815,7 @@ export type Database = {
           title_status?: string | null
           total_slots?: number | null
           updated_at?: string
+          vendi_session_key?: string | null
           vendibook_freight_enabled?: boolean | null
           video_urls?: string[] | null
           view_count?: number | null
@@ -3914,6 +3916,7 @@ export type Database = {
           title_status?: string | null
           total_slots?: number | null
           updated_at?: string
+          vendi_session_key?: string | null
           vendibook_freight_enabled?: boolean | null
           video_urls?: string[] | null
           view_count?: number | null
@@ -9926,6 +9929,7 @@ export type Database = {
           title_status: string | null
           total_slots: number | null
           updated_at: string
+          vendi_session_key: string | null
           vendibook_freight_enabled: boolean | null
           video_urls: string[] | null
           view_count: number | null
