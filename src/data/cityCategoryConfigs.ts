@@ -202,6 +202,7 @@ const CITY_SALE_SPECS: CitySaleSpec[] = [
   { citySlug: 'tucson-az',       cityName: 'Tucson',       stateCode: 'AZ', stateName: 'Arizona',       category: 'food_trailer' },
   { citySlug: 'phoenix-az',      cityName: 'Phoenix',      stateCode: 'AZ', stateName: 'Arizona',       category: 'food_trailer' },
   { citySlug: 'houston-tx',      cityName: 'Houston',      stateCode: 'TX', stateName: 'Texas',         category: 'food_trailer' },
+  { citySlug: 'mesa-az',         cityName: 'Mesa',         stateCode: 'AZ', stateName: 'Arizona',       category: 'food_trailer' },
 ];
 
 const citySaleSlug = (c: CategoryKey): string =>
