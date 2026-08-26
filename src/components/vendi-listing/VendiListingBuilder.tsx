@@ -864,7 +864,11 @@ const VendiListingBuilder: React.FC = () => {
 
 
 
-  const progress = progressPercent(draft, answered);
+  // Honest progress: the share of real publish requirements that are met, not
+  // the share of script questions that have scrolled past.
+  const readiness = readinessProgress(draft, previewImages.length);
+  const progress = readiness.percent;
+
 
   const previewPanel = (
     <LivePreviewPanel preview={draft} images={previewImages} ready={blockers.length === 0} />
