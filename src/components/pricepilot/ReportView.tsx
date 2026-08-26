@@ -243,6 +243,80 @@ export const ReportView: React.FC<{
         </Reveal>
       )}
 
+      {/* Equipment & buildout — replacement-cost context, depreciated */}
+      {result.equipmentValue && (result.equipmentValue.majorComponents.length > 0 || result.equipmentValue.notes.length > 0) && (
+        <Reveal>
+          <div className="mt-12 border-t border-border pt-10">
+            <Eyebrow>Equipment &amp; buildout</Eyebrow>
+            <dl className="mt-5 grid grid-cols-1 gap-x-6 gap-y-4 sm:grid-cols-3">
+              <div>
+                <dt className="text-[11px] uppercase tracking-wide text-muted-foreground">Buildout profile</dt>
+                <dd className="mt-1 text-sm font-semibold capitalize text-foreground">
+                  {result.equipmentValue.buildoutTier.replace(/_/g, ' ')}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[11px] uppercase tracking-wide text-muted-foreground">Replacement cost (new)</dt>
+                <dd className="mt-1 text-sm font-semibold text-foreground">
+                  {result.equipmentValue.estimatedReplacementRangeLow !== null
+                    ? `${fmt(result.equipmentValue.estimatedReplacementRangeLow)} – ${fmt(result.equipmentValue.estimatedReplacementRangeHigh)}`
+                    : 'Not enough detail supplied'}
+                </dd>
+              </div>
+              <div>
+                <dt className="text-[11px] uppercase tracking-wide text-muted-foreground">Estimated used contribution</dt>
+                <dd className="mt-1 text-sm font-semibold text-foreground">
+                  {result.equipmentValue.estimatedUsedContributionLow !== null
+                    ? `${fmt(result.equipmentValue.estimatedUsedContributionLow)} – ${fmt(result.equipmentValue.estimatedUsedContributionHigh)}`
+                    : 'Not estimated'}
+                </dd>
+              </div>
+            </dl>
+
+            {result.equipmentValue.majorComponents.length > 0 && (
+              <ul className="mt-5 divide-y divide-border">
+                {result.equipmentValue.majorComponents.slice(0, 6).map((c) => (
+                  <li key={c.name} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-3">
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate text-sm font-medium text-foreground">{c.name}</p>
+                      <p className="text-[12px] text-muted-foreground">{c.condition} · {c.valuationImpact}</p>
+                    </div>
+                    <span className="text-sm font-semibold tabular-nums text-foreground">{c.estimatedNewRange}</span>
+                  </li>
+                ))}
+              </ul>
+            )}
+
+            {result.equipmentValue.notes.length > 0 && (
+              <ul className="mt-4 space-y-1.5">
+                {result.equipmentValue.notes.slice(0, 5).map((n) => (
+                  <li key={n} className="text-[12px] leading-relaxed text-foreground/75">{n}</li>
+                ))}
+              </ul>
+            )}
+
+            {result.equipmentValue.sources.length > 0 && (
+              <p className="mt-3 text-[11px] text-muted-foreground">
+                Cost context:{' '}
+                {result.equipmentValue.sources.map((s, i) => (
+                  <span key={s.url}>
+                    {i > 0 && ', '}
+                    <a href={s.url} target="_blank" rel="noopener noreferrer" className="underline underline-offset-2">
+                      {s.title}
+                    </a>
+                  </span>
+                ))}
+              </p>
+            )}
+
+            <p className="mt-4 text-[11px] leading-relaxed text-muted-foreground">
+              These are estimated component and replacement values used to inform the valuation. They are not guaranteed resale values and are not added on top of comparable market evidence.
+            </p>
+          </div>
+        </Reveal>
+      )}
+
+
       {/* Comparable evidence — real rows only, never invented */}
 
       {result.comparables.length > 0 && (
