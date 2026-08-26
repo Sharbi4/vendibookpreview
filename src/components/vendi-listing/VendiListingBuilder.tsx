@@ -1307,12 +1307,15 @@ const VendiListingBuilder: React.FC = () => {
             <div ref={endRef} />
           </div>
 
-          {current && !['choice', 'yesno', 'photos'].includes(current.kind) && (
+          {/* One composer for every step: the seller can always type a
+              correction ("actually it's $42,000") or attach media, no matter
+              which question is on screen. */}
+          {current && (
             <form
               className="sticky bottom-0 border-t border-white/[0.07] bg-[#0c0c0f]/80 px-4 py-3.5 backdrop-blur-xl sm:px-7"
               onSubmit={(e) => { e.preventDefault(); submitAnswer(input); }}
             >
-              {current.kind === 'paste' && photos.length > 0 && (
+              {photos.length > 0 && (
                 <div className="mb-3 flex flex-wrap gap-2">
                   {photos.map((p) => (
                     <div key={p.id} className="relative h-14 w-14 overflow-hidden rounded-xl border border-white/[0.1]">
@@ -1337,18 +1340,16 @@ const VendiListingBuilder: React.FC = () => {
                 </div>
               )}
               <div className="flex items-end gap-2 rounded-[20px] border border-white/[0.09] bg-white/[0.04] px-3 py-2 transition focus-within:border-[rgba(255,81,36,0.45)]">
-                {current.kind === 'paste' && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    aria-label="Attach photos from your other listing"
-                    className="h-10 w-10 shrink-0 rounded-full text-muted-foreground"
-                    onClick={() => fileRef.current?.click()}
-                  >
-                    <ImagePlus className="h-4 w-4" />
-                  </Button>
-                )}
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon"
+                  aria-label="Add photos or video"
+                  className="h-10 w-10 shrink-0 rounded-full text-muted-foreground"
+                  onClick={() => fileRef.current?.click()}
+                >
+                  <ImagePlus className="h-4 w-4" />
+                </Button>
                 <textarea
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
@@ -1358,12 +1359,17 @@ const VendiListingBuilder: React.FC = () => {
                     }
                   }}
                   rows={current.kind === 'paste' ? 5 : 1}
-                  placeholder={current.placeholder ?? 'Type your answer…'}
+                  placeholder={
+                    current.placeholder
+                    ?? (['choice', 'yesno', 'photos'].includes(current.kind)
+                      ? 'Or type an answer or correction…'
+                      : 'Type your answer…')
+                  }
                   aria-label={current.prompt(draft)}
                   className="min-h-[44px] flex-1 resize-none border-0 bg-transparent px-2 py-2.5 text-base text-foreground outline-none placeholder:text-muted-foreground"
                 />
                 {current.optional && (
-                  <Button type="button" variant="ghost" size="sm" className="rounded-full text-muted-foreground" onClick={() => submitAnswer('skip')}>
+                  <Button type="button" variant="ghost" size="sm" className="rounded-full text-muted-foreground" onClick={() => submitAnswer('skip', undefined, true)}>
                     Skip
                   </Button>
                 )}
@@ -1371,13 +1377,14 @@ const VendiListingBuilder: React.FC = () => {
                   <Send className="h-4 w-4" />
                 </Button>
               </div>
-              {current.kind === 'paste' && (
-                <p className="mt-2 px-1 text-[11px] leading-relaxed text-muted-foreground">
-                  Paste your own text only — Vendi never pulls anything from Facebook Marketplace or other sites. Attached photos become your listing photos.
-                </p>
-              )}
+              <p className="mt-2 px-1 text-[11px] leading-relaxed text-muted-foreground">
+                {current.kind === 'paste'
+                  ? 'Paste your own text only — Vendi never pulls anything from Facebook Marketplace or other sites. Attached photos become your listing photos.'
+                  : 'You can change anything at any time — try “change the price to $42,000”, “what’s missing?” or “undo that”.'}
+              </p>
             </form>
           )}
+
 
 
           <input
