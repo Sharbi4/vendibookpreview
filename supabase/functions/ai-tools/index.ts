@@ -36,18 +36,31 @@ interface RequestBody {
 const TODAY = todayISO();
 const YEAR = new Date().getUTCFullYear();
 
-const getSystemPrompt = (tool: string, hasSources: boolean): string => {
+const getSystemPrompt = (tool: string, hasSources: boolean, hasInternalEvidence = false): string => {
   const groundingRule = hasSources
     ? `Ground every specific number, trend, or claim in the SOURCE MATERIAL provided. Cite source indexes inline like [1], [2] where used. If a fact is not in the sources, fall back to general industry knowledge and flag it with "(estimate — verify locally)".`
     : `Live web sources were unavailable. Use your most current training knowledge, mark any specific dollar amounts as approximate, and tell the user to verify locally.`;
+
+  const evidenceRule = hasInternalEvidence
+    ? `
+INTERNAL MARKET EVIDENCE RULES (highest priority for SALE pricing):
+- The INTERNAL MARKET EVIDENCE block contains Vendibook's own structured comparable observations. When several close comparables are present, anchor the sale recommendation on them rather than on generic web snippets. Treat live web sources as supplemental context.
+- Facebook Marketplace records with sold status are OBSERVED marketplace evidence only. A "sold" status means the listing was marked sold at a displayed marketplace price — it is NOT a verified final transaction price or closing price.
+- Use wording such as "observed sold-status listing", "displayed marketplace price", "market evidence", and "comparable". Never say verified sale, confirmed sale, closing price, or appraised value for these records.
+- Only comparables explicitly flagged as VERIFIED transaction price may be described as verified sale evidence.
+- Pending observations are weaker evidence than sold observations.
+- Never state or imply a guaranteed value, certified appraisal, or confidence score.`
+    : '';
 
   switch (tool) {
     case "pricing":
       return `You are a senior pricing strategist for the U.S. mobile food industry (food trucks, trailers, carts, ghost/commissary kitchens, vendor lots). Today is ${TODAY}. You produce data-grounded daily/weekly rental rates and sale prices based on local market comps.
 
 ${groundingRule}
+${evidenceRule}
 
 Consider: regional market rates, equipment included, condition/age, seasonality, local competition, fuel/insurance overhead, and platform fees.
+
 
 Respond ONLY in this JSON shape — no prose, no markdown fences:
 {
