@@ -58,28 +58,71 @@ const VendiListingBuilder: React.FC = () => {
     [draft, answered, reviewing],
   );
 
-  // Restore anonymous progress
+  // Restore this signed-in owner's in-progress conversation
   useEffect(() => {
+    if (!storageKey) return;
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const raw = localStorage.getItem(storageKey);
       if (raw) {
         const parsed = JSON.parse(raw) as PersistedState;
         if (parsed?.draft) {
           setDraft(parsed.draft);
           setAnswered(parsed.answered ?? []);
           setMessages(parsed.messages ?? []);
+          setDraftId(parsed.draftId ?? null);
         }
       }
     } catch { /* ignore corrupt state */ }
     setHydrated(true);
-  }, []);
+  }, [storageKey]);
 
   useEffect(() => {
-    if (!hydrated) return;
+    if (!hydrated || !storageKey) return;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ draft, answered, messages }));
+      localStorage.setItem(storageKey, JSON.stringify({ draft, answered, messages, draftId }));
     } catch { /* quota — non-fatal */ }
-  }, [draft, answered, messages, hydrated]);
+  }, [draft, answered, messages, draftId, hydrated, storageKey]);
+
+  // Create the owned draft row as soon as we know mode + category, so every
+  // later answer and upload is autosaved against the seller's account.
+  useEffect(() => {
+    if (!hydrated || !user || draftId || creatingDraftRef.current) return;
+    if (!draft.mode || !draft.category) return;
+    creatingDraftRef.current = true;
+    void (async () => {
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const accessToken = sessionData.session?.access_token;
+        if (!accessToken) return;
+        const { data: created, error } = await supabase.functions.invoke('create-listing-draft', {
+          headers: { Authorization: `Bearer ${accessToken}` },
+          body: {
+            mode: draft.mode === 'sale' ? 'sale' : 'rent',
+            category: draft.category,
+            city: draft.city ?? null,
+            state: draft.state ?? null,
+            zipCode: draft.zip_code ?? null,
+            location: draft.address ?? null,
+          },
+        });
+        if (error) throw error;
+        const id = (created as { id?: string } | null)?.id;
+        if (id) setDraftId(id);
+      } catch {
+        creatingDraftRef.current = false;
+      }
+    })();
+  }, [hydrated, user, draftId, draft.mode, draft.category, draft.city, draft.state, draft.zip_code, draft.address]);
+
+  // Debounced autosave of collected answers onto the owned draft
+  useEffect(() => {
+    if (!draftId || !hydrated) return;
+    const timer = window.setTimeout(() => {
+      const payload = buildListingPayload(draft, uploadedUrls);
+      void supabase.from('listings').update(payload as never).eq('id', draftId);
+    }, 1200);
+    return () => window.clearTimeout(timer);
+  }, [draft, uploadedUrls, draftId, hydrated]);
 
   // Ask the first / next question
   useEffect(() => {
