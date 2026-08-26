@@ -126,8 +126,14 @@ Generate exactly 3 diverse, creative ideas.`;
   }
 };
 
-const getUserPrompt = (tool: string, data: Record<string, string>, sourceContext: string): string => {
+const getUserPrompt = (
+  tool: string,
+  data: Record<string, string>,
+  sourceContext: string,
+  evidenceContext = "",
+): string => {
   const sourceBlock = `\n\nSOURCE MATERIAL (live web results, ${TODAY}):\n${sourceContext}`;
+  const evidenceBlock = evidenceContext ? `\n\n${evidenceContext}` : "";
   switch (tool) {
     case "pricing":
       return `Generate pricing for this listing:
@@ -136,7 +142,8 @@ Location: ${data.location || "Not specified"}
 Mode: ${data.mode || "Rental"}
 Equipment/Features: ${data.features || "Standard equipment"}
 Condition: ${data.condition || "Good"}
-Additional Info: ${data.additional || "None"}${sourceBlock}`;
+Additional Info: ${data.additional || "None"}${evidenceBlock}${sourceBlock}`;
+
 
     case "description":
       return `Write a listing description for:
