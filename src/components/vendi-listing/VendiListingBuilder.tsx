@@ -1722,6 +1722,21 @@ const VendiListingBuilder: React.FC = () => {
                       ) : (
                         <img src={p.url} alt="Attached" className="h-full w-full object-cover" />
                       )}
+                      {mediaStatus[p.id] === 'uploading' && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/55" aria-label="Uploading">
+                          <Loader2 className="h-3.5 w-3.5 animate-spin text-white" />
+                        </div>
+                      )}
+                      {mediaStatus[p.id] === 'error' && (
+                        <button
+                          type="button"
+                          onClick={() => retryMedia(p.id)}
+                          className="absolute inset-x-0 bottom-0 bg-red-600/85 py-0.5 text-[9px] font-medium text-white"
+                        >
+                          Retry
+                        </button>
+                      )}
+
 
                       <button
                         type="button"
