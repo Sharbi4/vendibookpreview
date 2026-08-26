@@ -65,6 +65,16 @@ const faqs = [
       'Vendibook online checkout is optional. A completed equipment sale through online checkout carries a standard 12.9% seller fee, or 10.9% for active Vendibook Pro sellers, with Pro savings capped at $500 per completed transaction. Payment-processing costs charged by the payment provider are separate where applicable.',
   },
   {
+    question: 'How does secure PayPal checkout work for a sale?',
+    answer:
+      'If you turn on optional Vendibook online checkout, the buyer pays through PayPal’s secure hosted checkout rather than handing you cash or a wire. Card details are handled by PayPal, not by Vendibook, and eligible buyers may see PayPal Pay Later options at checkout. Payouts on completed online sales are reviewed and issued by Vendibook. You can read the full breakdown on the Vendibook payments page.',
+  },
+  {
+    question: 'Can Vendibook Freight deliver the truck to my buyer?',
+    answer:
+      'Where coordination is available, buyers can review Vendibook Freight delivery options from the listing before they commit, so you do not have to drive it across the country yourself. Availability and cost depend on the listing, the route, and the equipment, and many sales are still simple local pickup.',
+  },
+  {
     question: 'Can a buyer finance my food truck or trailer?',
     answer:
       'Eligible buyers can apply with third-party financing partners from a for-sale listing. Approval depends on the applicant and the equipment, and provider approval applies. Vendibook is not a lender: it does not approve applicants, set rates or terms, or guarantee funding, and you do not manage the buyer’s application.',
@@ -319,13 +329,20 @@ const SellMyFoodTruck = () => {
 
                   <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-muted-foreground">
                     {[
-                      { icon: Banknote, label: 'Financing options for eligible buyers' },
-                      { icon: Truck, label: 'Pickup, delivery, or freight' },
-                      { icon: ImagePlus, label: 'Guided listing with saved drafts' },
+                      { icon: Banknote, label: 'Financing options for eligible buyers', href: '/financing' },
+                      { icon: ShieldCheck, label: 'Secure PayPal checkout, optional', href: '/payments' },
+                      { icon: Truck, label: 'Pickup, delivery, or Vendibook Freight', href: '/ship-your-food-truck' },
+                      { icon: ImagePlus, label: 'Guided listing with saved drafts', href: null },
                     ].map((cue) => (
                       <span key={cue.label} className="inline-flex items-center gap-2">
                         <cue.icon className="h-4 w-4 text-primary" aria-hidden="true" />
-                        {cue.label}
+                        {cue.href ? (
+                          <Link to={cue.href} className="hover:text-foreground underline-offset-4 hover:underline">
+                            {cue.label}
+                          </Link>
+                        ) : (
+                          cue.label
+                        )}
                       </span>
                     ))}
                   </div>
@@ -610,6 +627,9 @@ const SellMyFoodTruck = () => {
                   <Link to="/pricing">See pricing and Pro details</Link>
                 </Button>
                 <Button variant="ghost" className="rounded-2xl text-foreground" asChild>
+                  <Link to="/payments">How secure PayPal checkout works</Link>
+                </Button>
+                <Button variant="ghost" className="rounded-2xl text-foreground" asChild>
                   <Link to="/list/concierge">Optional Concierge Listing · {concierge.label}</Link>
                 </Button>
               </div>
@@ -704,6 +724,8 @@ const SellMyFoodTruck = () => {
                 <li><Link to="/financing" className="font-medium text-primary hover:underline">How buyer financing works →</Link></li>
                 <li><Link to="/how-it-works?role=sell" className="font-medium text-primary hover:underline">The full seller journey →</Link></li>
                 <li><Link to="/tools/pricepilot" className="font-medium text-primary hover:underline">Estimate your asking price with PricePilot →</Link></li>
+                <li><Link to="/payments" className="font-medium text-primary hover:underline">Secure PayPal checkout on Vendibook →</Link></li>
+                <li><Link to="/ship-your-food-truck" className="font-medium text-primary hover:underline">Vendibook Freight delivery →</Link></li>
                 <li><Link to="/pricing" className="font-medium text-primary hover:underline">Pricing and Vendibook Pro →</Link></li>
               </ul>
             </div>
@@ -731,6 +753,9 @@ const SellMyFoodTruck = () => {
                   </Button>
                   <Button size="lg" variant="ghost" className="rounded-2xl text-foreground" asChild>
                     <Link to="/food-trucks-for-sale">Browse food trucks for sale</Link>
+                  </Button>
+                  <Button size="lg" variant="ghost" className="rounded-2xl text-foreground" asChild>
+                    <Link to="/payments">See how payments work</Link>
                   </Button>
                 </div>
               </motion.div>
