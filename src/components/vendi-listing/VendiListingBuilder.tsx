@@ -12,8 +12,10 @@ import vendibookFavicon from '@/assets/vendibook-favicon.png';
 import VendiAuthGate from '@/components/vendi-listing/VendiAuthGate';
 import {
   buildListingPayload, getPublishBlockers, nextQuestion, progressPercent,
+  promptText, resumeMessage, VENDI_WELCOME,
   Question, VendiDraft,
 } from '@/lib/vendi-listing/script';
+
 import type { DocumentType } from '@/types/documents';
 import { isSkip } from '@/lib/vendi-listing/extract';
 import { publishVendiListing } from '@/lib/vendi-listing/publishVendiListing';
