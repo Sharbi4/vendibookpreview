@@ -1,6 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
+    <loc>https://vendibook.com/listing/9fa1aac0-10d3-4c75-8e60-d8e16f7a0a47</loc>
+    <lastmod>2026-08-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/3756d71d-fcff-48e2-960f-7f8c565e7c46/9fa1aac0-10d3-4c75-8e60-d8e16f7a0a47/1784143204036-fmnpm.jpeg</image:loc>
+      <image:title>FOOD TRUCK FOR SALE OR LONG-TERM LEASE - $76,000 (Chicago)</image:title>
+      <image:caption>FOOD TRUCK FOR SALE OR LONG-TERM LEASE - $76,000 (Chicago) in Chicago, IL on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://vendibook.com/listing/c2a323e2-8b8a-469a-b5e3-d61c3fe305e5</loc>
     <lastmod>2026-08-25</lastmod>
     <changefreq>weekly</changefreq>
@@ -306,17 +317,6 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/47f2051d-318e-4f40-b9ae-b6984e7fc5d2/99d179ad-16ad-4bb3-9ccb-cd1a8e157284/1771012875547-2ec6o.jpg</image:loc>
       <image:title>Food Trailer (Best financing option in the market $680-$980)</image:title>
       <image:caption>Food Trailer (Best financing option in the market $680-$980) in Scottsdale, AZ on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://vendibook.com/listing/9fa1aac0-10d3-4c75-8e60-d8e16f7a0a47</loc>
-    <lastmod>2026-08-26</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/3756d71d-fcff-48e2-960f-7f8c565e7c46/9fa1aac0-10d3-4c75-8e60-d8e16f7a0a47/1784143204036-fmnpm.jpeg</image:loc>
-      <image:title>FOOD TRUCK FOR SALE OR LONG-TERM LEASE - $76,000 (Chicago)</image:title>
-      <image:caption>FOOD TRUCK FOR SALE OR LONG-TERM LEASE - $76,000 (Chicago) in Chicago, IL on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
