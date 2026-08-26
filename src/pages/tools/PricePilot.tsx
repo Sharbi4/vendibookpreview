@@ -101,6 +101,7 @@ export interface PricingResponse {
   };
   comparables: CompRow[];
   marketEvidence?: MarketEvidence | null;
+  equipmentValue?: EquipmentValue | null;
   narrative: Narrative | null;
   generatedAt: string;
 }
