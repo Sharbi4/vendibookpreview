@@ -209,6 +209,8 @@ export interface CreateOrderInput {
   };
   idempotencyKey: string;
   softDescriptor?: string;
+  /** Defaults to CAPTURE. AUTHORIZE creates a temporary hold instead. */
+  intent?: "CAPTURE" | "AUTHORIZE";
 }
 
 const money = (cents: number, currency: string) => ({
