@@ -177,7 +177,22 @@ const RentItOut: React.FC = () => {
     ];
   }, [source]);
 
-  const pricingValid = numberOrNull(priceDaily) !== null || numberOrNull(priceMonthly) !== null || numberOrNull(priceWeekly) !== null;
+  const rateValidation = useMemo(
+    () =>
+      validateRentalRates({
+        price_daily: priceDaily,
+        price_weekly: priceWeekly,
+        price_monthly: priceMonthly,
+      }),
+    [priceDaily, priceWeekly, priceMonthly],
+  );
+  const pricingValid = rateValidation.valid;
+  const pricingError =
+    rateValidation.errors.root ??
+    rateValidation.errors.daily ??
+    rateValidation.errors.weekly ??
+    rateValidation.errors.monthly ??
+    null;
 
   const persist = async (extra?: Record<string, unknown>) => {
     if (!rental) return false;
