@@ -93,6 +93,7 @@ const VendiListingBuilder: React.FC = () => {
   const [uploadedVideoUrls, setUploadedVideoUrls] = useState<string[]>([]);
   /** Per-file upload state so the seller always sees what happened. */
   const [mediaStatus, setMediaStatus] = useState<Record<string, 'pending' | 'uploading' | 'done' | 'error'>>({});
+  const [retrySeq, setRetrySeq] = useState(0);
   const [reviewing, setReviewing] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [showMobilePreview, setShowMobilePreview] = useState(false);
