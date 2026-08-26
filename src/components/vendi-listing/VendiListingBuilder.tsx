@@ -146,10 +146,18 @@ const VendiListingBuilder: React.FC = () => {
   const recordConsent = useRecordConsent();
   const acceptanceText = publishAcceptanceText(draft.mode);
 
+  /** Photos that actually count toward publish readiness (stored or local). */
+  const imageCount = uploadedUrls.length || photos.filter((p) => p.kind === 'image').length;
+
+  /**
+   * The next question, ranked by publish viability rather than script order:
+   * blockers first, then the publish/improve gate, then buyer-value extras.
+   */
   const current: Question | null = useMemo(
-    () => (reviewing ? null : nextQuestion(draft, answered)),
-    [draft, answered, reviewing],
+    () => (reviewing ? null : rankedNextQuestion(draft, answered, imageCount)),
+    [draft, answered, reviewing, imageCount],
   );
+
 
   // Single opening path. A fresh seller gets exactly one welcome; a returning
   // seller gets exactly one resume line. Nothing is replayed after hydration.
