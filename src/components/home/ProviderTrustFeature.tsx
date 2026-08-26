@@ -53,15 +53,23 @@ export function ProviderTrustFeature() {
             Applies only to payments completed through Vendibook checkout. Pay-in-person and other
             off-platform payments are not processed by Vendibook.
           </p>
-          <a
-            href="https://www.paypal.com/us/digital-wallet/security-and-protection"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold text-foreground/80 underline underline-offset-4 transition-colors hover:text-primary"
-          >
-            PayPal security
-            <ExternalLink className="h-3 w-3" aria-hidden="true" />
-          </a>
+          <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2">
+            <Link
+              to="/payments"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-foreground/80 underline underline-offset-4 transition-colors hover:text-primary"
+            >
+              How payments work on Vendibook
+            </Link>
+            <a
+              href="https://www.paypal.com/us/digital-wallet/security-and-protection"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs font-semibold text-foreground/80 underline underline-offset-4 transition-colors hover:text-primary"
+            >
+              PayPal security
+              <ExternalLink className="h-3 w-3" aria-hidden="true" />
+            </a>
+          </div>
         </div>
 
         {verifiedSellerEnabled && (
