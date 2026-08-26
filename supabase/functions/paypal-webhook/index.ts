@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { alertAdminsOfPaymentOnce, formatUsd } from "../_shared/adminPaymentAlert.ts";
 import { corsHeaders, jsonResponse } from "../_shared/jsonError.ts";
 import { centsFromPayPalAmount, safeLog, verifyPayPalWebhook } from "../_shared/paypal.ts";
+import { applyAuthorization, markAuthorizationExpired } from "../_shared/paypalAuthorization.ts";
 import { extractCaptureFacts, finalizeCapture } from "../_shared/paypalFinalize.ts";
 import { appendLedgerEntry, recalculatePayableAfterRefund } from "../_shared/paypalAccounting.ts";
 import { notifyOrderParties, notifyUser } from "../_shared/notify.ts";
