@@ -281,6 +281,17 @@ const VendiListingBuilder: React.FC = () => {
     <LivePreviewPanel preview={draft} images={previewImages} ready={blockers.length === 0} />
   );
 
+  // The interview never starts anonymously — the draft, answers and media must
+  // belong to a real account from the very first question.
+  if (authLoading) {
+    return (
+      <div className="flex min-h-[70vh] items-center justify-center bg-[#08080a]">
+        <Loader2 className="h-6 w-6 animate-spin text-white/50" />
+      </div>
+    );
+  }
+  if (!user) return <VendiAuthGate />;
+
   return (
     <div className="dashboard-shell relative min-h-screen overflow-hidden bg-[#08080a] text-foreground">
       {/* Ambient depth — restrained, no loud gradients */}
