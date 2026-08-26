@@ -580,7 +580,7 @@ const Financing = () => {
               <p className="text-xs text-muted-foreground mt-6 inline-flex items-center gap-1.5">
                 <HandCoins className="w-3.5 h-3.5" />
                 Prefer to pay another way? See{' '}
-                <Link to="/how-purchasing-works" className="underline underline-offset-2 hover:text-foreground">
+                <Link to="/payments" className="underline underline-offset-2 hover:text-foreground">
                   PayPal checkout and Pay in Person
                 </Link>
                 , or{' '}
