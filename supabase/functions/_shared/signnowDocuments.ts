@@ -101,12 +101,13 @@ export async function ensureRentalAgreement(bookingId: string): Promise<{ docume
     { email: renter.email, role_name: 'Renter', order: 1, first_name: renter.first_name ?? undefined, last_name: renter.last_name ?? undefined },
     { email: host.email,   role_name: 'Host',   order: 2, first_name: host.first_name ?? undefined,   last_name: host.last_name ?? undefined },
   ];
-  const _inviteRes = await createEmbeddedInvite(signnowDocId, signers);
+  const invites = await createEmbeddedInvite(signnowDocId, signers);
 
   const signerRecords: SignerRecord[] = [
-    { role: 'renter', user_id: booking.shopper_id, email: renter.email, first_name: renter.first_name ?? undefined, last_name: renter.last_name ?? undefined, signed_at: null },
-    { role: 'host',   user_id: booking.host_id,    email: host.email,   first_name: host.first_name ?? undefined,   last_name: host.last_name ?? undefined,   signed_at: null },
+    { role: 'renter', user_id: booking.shopper_id, email: renter.email, first_name: renter.first_name ?? undefined, last_name: renter.last_name ?? undefined, invite_id: inviteIdForEmail(invites, renter.email), signed_at: null },
+    { role: 'host',   user_id: booking.host_id,    email: host.email,   first_name: host.first_name ?? undefined,   last_name: host.last_name ?? undefined,   invite_id: inviteIdForEmail(invites, host.email),   signed_at: null },
   ];
+
 
   const { data: row, error: insErr } = await supabase
     .from('documents')
