@@ -1073,7 +1073,7 @@ const VendiListingBuilder: React.FC = () => {
                   <button
                     key={opt.value}
                     type="button"
-                    onClick={() => submitAnswer(opt.value, opt.label)}
+                    onClick={() => submitAnswer(opt.value, opt.label, true)}
                     className="group rounded-2xl border border-white/[0.09] bg-white/[0.035] px-4 py-3 text-left transition-all duration-200 hover:-translate-y-[1px] hover:border-[rgba(255,81,36,0.4)] hover:bg-white/[0.06]"
                   >
                     <span className="block text-sm font-medium text-foreground">{opt.label}</span>
@@ -1091,7 +1091,7 @@ const VendiListingBuilder: React.FC = () => {
                   <button
                     key={v}
                     type="button"
-                    onClick={() => submitAnswer(v)}
+                    onClick={() => submitAnswer(v, undefined, true)}
                     className="rounded-full border border-white/[0.1] bg-white/[0.04] px-6 py-2.5 text-sm font-medium capitalize transition-all duration-200 hover:border-[rgba(255,81,36,0.4)] hover:bg-white/[0.07]"
                   >
                     {v}
@@ -1121,7 +1121,7 @@ const VendiListingBuilder: React.FC = () => {
               <div className="pt-1">
                 <button
                   type="button"
-                  onClick={() => submitAnswer(current.suggest?.(draft) ?? '')}
+                  onClick={() => submitAnswer(current.suggest?.(draft) ?? '', undefined, true)}
                   className="rounded-full border border-[rgba(255,81,36,0.35)] bg-[rgba(255,81,36,0.09)] px-4 py-2 text-sm text-foreground transition hover:bg-[rgba(255,81,36,0.14)]"
                 >
                   Use “{current.suggest?.(draft)}”
@@ -1167,7 +1167,7 @@ const VendiListingBuilder: React.FC = () => {
                     <span className="text-[10px] tracking-wide">Add</span>
                   </button>
                 </div>
-                <Button onClick={() => submitAnswer('done')} disabled={!localImages.length} className="rounded-full">
+                <Button onClick={() => submitAnswer('done', undefined, true)} disabled={!localImages.length} className="rounded-full">
                   Continue with {localImages.length} photo{localImages.length === 1 ? '' : 's'}
                   {localVideos.length ? ` and ${localVideos.length} video${localVideos.length === 1 ? '' : 's'}` : ''}
                 </Button>
