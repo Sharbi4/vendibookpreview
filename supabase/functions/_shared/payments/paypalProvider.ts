@@ -5,10 +5,13 @@
  * payment interface. Callers depend on `PaymentProvider`, never on this file.
  */
 import {
+  authorizePayPalOrder,
   cancelPayPalSubscription,
+  capturePayPalAuthorization,
   capturePayPalOrder,
   centsFromPayPalAmount,
   createPayPalOrder,
+  getPayPalAuthorization,
   getPayPalOrder,
   getPayPalSubscription,
   paypalConfigStatus,
@@ -18,6 +21,7 @@ import {
   refundPayPalCapture,
   suspendPayPalSubscription,
   verifyPayPalWebhook,
+  voidPayPalAuthorization,
 } from "../paypal.ts";
 import {
   activateBillingPlan,
@@ -36,11 +40,14 @@ import {
   type CreateSubscriptionRequest,
   defaultMarketplaceFees,
   type MarketplaceFeeInput,
+  type AuthorizationCapableProvider,
+  type NormalizedAuthorizationStatus,
   type NormalizedPaymentStatus,
   type PaymentLinkRequest,
   type PaymentLinkResult,
   type PaymentProvider,
   PaymentProviderError,
+  type ProviderAuthorization,
   type ProviderOrder,
   type ProviderSubscription,
   type QueuePayoutInput,
@@ -92,7 +99,31 @@ function wrap(err: unknown): never {
   throw err;
 }
 
-export class PayPalProvider implements PaymentProvider {
+/** PayPal authorization states → normalized hold lifecycle. */
+function normalizeAuthorizationStatus(
+  status: string | undefined,
+): NormalizedAuthorizationStatus {
+  switch ((status ?? "").toUpperCase()) {
+    case "CREATED":
+      return "created";
+    case "PENDING":
+      return "pending";
+    case "PARTIALLY_CAPTURED":
+      return "partially_captured";
+    case "CAPTURED":
+      return "captured";
+    case "VOIDED":
+      return "voided";
+    case "EXPIRED":
+      return "expired";
+    case "DENIED":
+      return "denied";
+    default:
+      return "pending";
+  }
+}
+
+export class PayPalProvider implements PaymentProvider, AuthorizationCapableProvider {
   readonly name = "paypal" as const;
 
   get environment() {
@@ -119,6 +150,7 @@ export class PayPalProvider implements PaymentProvider {
         breakdown: req.breakdown,
         softDescriptor: req.softDescriptor,
         idempotencyKey: req.idempotencyKey ?? `order:${req.reference}`,
+        intent: req.intent,
       });
       return {
         providerOrderId: order.id,
