@@ -14,7 +14,9 @@ import {
   buildListingPayload, getPublishBlockers, nextQuestion, progressPercent,
   Question, VendiDraft,
 } from '@/lib/vendi-listing/script';
+import type { DocumentType } from '@/types/documents';
 import { isSkip } from '@/lib/vendi-listing/extract';
+
 import {
   ATTESTATIONS,
   publishAcceptanceText,
