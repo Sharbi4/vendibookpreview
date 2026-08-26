@@ -323,13 +323,35 @@ export const QUESTIONS: Question[] = [
   },
 ];
 
+/** Yes/no questions generated from ambiguous values found in a pasted listing. */
+export function confirmQuestions(draft: VendiDraft): Question[] {
+  return (draft.pending_confirm ?? []).map((c) => ({
+    id: c.id,
+    kind: 'yesno' as const,
+    prompt: () => c.question,
+    apply: (_d: VendiDraft, raw: string): ApplyResult => {
+      const value = parseYesNo(raw);
+      if (value === null) return { error: 'Just yes or no works here.' };
+      if (!value) return { patch: {}, say: 'No problem — I’ll ask you directly instead.' };
+      return { patch: c.patch as Partial<VendiDraft>, answeredIds: c.answers };
+    },
+  }));
+}
+
 export function visibleQuestions(draft: VendiDraft): Question[] {
-  return QUESTIONS.filter((q) => !q.when || q.when(draft));
+  const base = QUESTIONS.filter((q) => !q.when || q.when(draft));
+  const confirms = confirmQuestions(draft);
+  if (!confirms.length) return base;
+  // Confirmations run right after the paste step, before the normal interview.
+  const pasteIndex = base.findIndex((q) => q.id === 'import_paste');
+  const at = pasteIndex === -1 ? 0 : pasteIndex + 1;
+  return [...base.slice(0, at), ...confirms, ...base.slice(at)];
 }
 
 export function nextQuestion(draft: VendiDraft, answered: string[]): Question | null {
   return visibleQuestions(draft).find((q) => !answered.includes(q.id)) ?? null;
 }
+
 
 export function progressPercent(draft: VendiDraft, answered: string[]): number {
   const visible = visibleQuestions(draft);
