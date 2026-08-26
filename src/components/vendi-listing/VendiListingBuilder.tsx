@@ -15,6 +15,15 @@ import {
   Question, VendiDraft,
 } from '@/lib/vendi-listing/script';
 import { isSkip } from '@/lib/vendi-listing/extract';
+import {
+  ATTESTATIONS,
+  publishAcceptanceText,
+} from '@/components/listing-wizard/stages/PublishAttestations';
+import {
+  CONSENT_TRIGGERS, CURRENT_VERSIONS, DOCUMENT_SLUGS, DOCUMENT_TYPES,
+} from '@/lib/legalDocuments';
+import { useLegalDocument } from '@/hooks/useLegalDocument';
+import { useRecordConsent } from '@/hooks/useRecordConsent';
 
 type Msg = { id: string; role: 'vendi' | 'user'; content: string };
 
@@ -31,9 +40,11 @@ interface PersistedState {
   answered: string[];
   messages: Msg[];
   draftId?: string | null;
+  consentId?: string | null;
 }
 
 const uid = () => Math.random().toString(36).slice(2);
+
 
 const VendiListingBuilder: React.FC = () => {
   const navigate = useNavigate();
@@ -50,10 +61,22 @@ const VendiListingBuilder: React.FC = () => {
   const [showMobilePreview, setShowMobilePreview] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [draftId, setDraftId] = useState<string | null>(null);
+  const [consentId, setConsentId] = useState<string | null>(null);
+  const [attesting, setAttesting] = useState(false);
+  const [attestInput, setAttestInput] = useState('');
   const creatingDraftRef = useRef(false);
+  const disclosureShownRef = useRef(false);
   const endRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const storageKey = user ? storageKeyFor(user.id) : null;
+
+  // Same document + acceptance wording the step-by-step wizard records.
+  const documentType = draft.mode === 'rent'
+    ? DOCUMENT_TYPES.RENTER_TERMS
+    : DOCUMENT_TYPES.SELLER_TERMS;
+  const { data: legalDoc } = useLegalDocument(documentType);
+  const recordConsent = useRecordConsent();
+  const acceptanceText = publishAcceptanceText(draft.mode);
 
   const current: Question | null = useMemo(
     () => (reviewing ? null : nextQuestion(draft, answered)),
@@ -72,6 +95,7 @@ const VendiListingBuilder: React.FC = () => {
           setAnswered(parsed.answered ?? []);
           setMessages(parsed.messages ?? []);
           setDraftId(parsed.draftId ?? null);
+          setConsentId(parsed.consentId ?? null);
         }
       }
     } catch { /* ignore corrupt state */ }
@@ -81,9 +105,10 @@ const VendiListingBuilder: React.FC = () => {
   useEffect(() => {
     if (!hydrated || !storageKey) return;
     try {
-      localStorage.setItem(storageKey, JSON.stringify({ draft, answered, messages, draftId }));
+      localStorage.setItem(storageKey, JSON.stringify({ draft, answered, messages, draftId, consentId }));
     } catch { /* quota — non-fatal */ }
-  }, [draft, answered, messages, draftId, hydrated, storageKey]);
+  }, [draft, answered, messages, draftId, consentId, hydrated, storageKey]);
+
 
   // Create the owned draft row as soon as we know mode + category, so every
   // later answer and upload is autosaved against the seller's account.
@@ -139,7 +164,25 @@ const VendiListingBuilder: React.FC = () => {
     });
   }, [draft, answered, hydrated, reviewing]);
 
+  // Final publish gate: present the same seller disclosure the step-by-step
+  // wizard shows, in the chat, before publishing can unlock.
+  useEffect(() => {
+    if (!reviewing || consentId || disclosureShownRef.current) return;
+    disclosureShownRef.current = true;
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: uid(),
+        role: 'vendi',
+        content:
+          'One last legal step before this can go live. Please read the disclosure below — it is the same attestation used in the standard listing wizard. ' +
+          'When you have read it, type YES (in capitals) to affirm it.',
+      },
+    ]);
+  }, [reviewing, consentId]);
+
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages, reviewing]);
+
 
   const say = (role: Msg['role'], content: string) =>
     setMessages((prev) => [...prev, { id: uid(), role, content }]);
@@ -210,11 +253,46 @@ const VendiListingBuilder: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [draftId, user, photos.length, uploadedUrls.length]);
 
+  /**
+   * Typed acknowledgment of the publish disclosure. Only an exact, capitalised
+   * `YES` counts — no inferred or button-only consent — and it is written
+   * through the same `record_user_consent` audit path as the wizard's
+   * ConsentModal before the Publish action unlocks.
+   */
+  const handleAttest = async (raw: string) => {
+    const text = raw.trim();
+    if (!text || attesting || consentId) return;
+    say('user', text);
+    setAttestInput('');
+    if (text !== 'YES') {
+      say('vendi', 'To affirm the disclosure I need exactly YES, in capital letters. Nothing is published until then.');
+      return;
+    }
+    setAttesting(true);
+    try {
+      const id = await recordConsent.mutateAsync({
+        documentType,
+        documentVersion: legalDoc?.version ?? CURRENT_VERSIONS[documentType],
+        trigger: CONSENT_TRIGGERS.PUBLISH_LISTING,
+        acceptanceText: `${acceptanceText} ${ATTESTATIONS.map((a) => a.text).join(' ')} Acknowledged by typing YES in the List with Vendi builder.`,
+        relatedIds: draftId ? { listing_id: draftId } : undefined,
+      });
+      setConsentId(id);
+      say('vendi', 'Recorded and dated. Publish Listing is now unlocked — publishing is still your explicit action.');
+    } catch (error) {
+      say('vendi', 'I could not record your acknowledgment. Please try typing YES again, or contact support@vendibook.com.');
+      toast.error(error instanceof Error ? error.message : 'Could not record your acceptance.');
+    } finally {
+      setAttesting(false);
+    }
+  };
+
   const handlePublish = async () => {
     if (blockers.length) return;
-    if (!user) return;
+    if (!user || !consentId) return;
     setPublishing(true);
     try {
+
       const { data: sessionData } = await supabase.auth.getSession();
       const accessToken = sessionData.session?.access_token;
       if (!accessToken) throw new Error('Please sign in again to publish.');
@@ -274,7 +352,9 @@ const VendiListingBuilder: React.FC = () => {
     if (storageKey) localStorage.removeItem(storageKey);
     setDraft(emptyDraft); setAnswered([]); setMessages([]); setPhotos([]); setUploadedUrls([]); setReviewing(false);
     setDraftId(null); creatingDraftRef.current = false;
+    setConsentId(null); setAttestInput(''); disclosureShownRef.current = false;
   };
+
 
   const progress = progressPercent(draft, answered);
 
@@ -459,8 +539,67 @@ const VendiListingBuilder: React.FC = () => {
                     {blockers.map((b) => <li key={b}>• {b}</li>)}
                   </ul>
                 )}
+
+                {/* Seller disclosure — identical language to the standard wizard */}
+                <div className="mt-6 rounded-2xl border border-white/[0.1] bg-white/[0.03] p-5">
+                  <h3 className="text-sm font-semibold tracking-[-0.01em]">Before you publish</h3>
+                  <ul className="mt-3 space-y-2 text-sm leading-relaxed text-foreground/85">
+                    {ATTESTATIONS.map((a) => <li key={a.key}>• {a.text}</li>)}
+                  </ul>
+                  <p className="mt-4 text-sm leading-relaxed text-foreground/85">{acceptanceText}</p>
+                  <p className="mt-3 text-xs text-muted-foreground">
+                    {legalDoc ? `Version ${legalDoc.version}` : `Version ${CURRENT_VERSIONS[documentType]}`} ·{' '}
+                    <a
+                      href={`/legal/${DOCUMENT_SLUGS[documentType]}`}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="underline underline-offset-4 hover:text-foreground"
+                    >
+                      {draft.mode === 'rent' ? 'Host / Renter Terms' : 'Seller Terms'}
+                    </a>{' '}
+                    ·{' '}
+                    <a href="/terms" target="_blank" rel="noreferrer" className="underline underline-offset-4 hover:text-foreground">
+                      Terms of Service
+                    </a>{' '}
+                    ·{' '}
+                    <a href="/privacy" target="_blank" rel="noreferrer" className="underline underline-offset-4 hover:text-foreground">
+                      Privacy Policy
+                    </a>
+                  </p>
+
+                  {consentId ? (
+                    <p className="mt-4 flex items-center gap-2 text-sm text-foreground/90">
+                      <Check className="h-4 w-4 text-[rgb(255,81,36)]" aria-hidden />
+                      Acknowledged and recorded. You can publish when you're ready.
+                    </p>
+                  ) : (
+                    <form
+                      className="mt-4 space-y-2"
+                      onSubmit={(e) => { e.preventDefault(); void handleAttest(attestInput); }}
+                    >
+                      <label htmlFor="vendi-attest" className="block text-xs text-muted-foreground">
+                        Type YES to affirm the disclosure above. This is your legal acknowledgment — it does not publish your listing.
+                      </label>
+                      <div className="flex items-center gap-2 rounded-[18px] border border-white/[0.1] bg-white/[0.04] px-3 py-2 focus-within:border-[rgba(255,81,36,0.45)]">
+                        <input
+                          id="vendi-attest"
+                          value={attestInput}
+                          onChange={(e) => setAttestInput(e.target.value)}
+                          placeholder="Type YES"
+                          autoComplete="off"
+                          className="min-h-[40px] flex-1 border-0 bg-transparent px-1 text-base text-foreground outline-none placeholder:text-muted-foreground"
+                        />
+                        <Button type="submit" size="sm" disabled={attesting} className="rounded-full">
+                          {attesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+                          Affirm
+                        </Button>
+                      </div>
+                    </form>
+                  )}
+                </div>
+
                 <div className="mt-6 flex flex-wrap gap-2.5">
-                  <Button onClick={handlePublish} disabled={publishing || blockers.length > 0} className="rounded-full">
+                  <Button onClick={handlePublish} disabled={publishing || blockers.length > 0 || !consentId} className="rounded-full">
                     {publishing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
                     Publish listing
                   </Button>
@@ -471,6 +610,7 @@ const VendiListingBuilder: React.FC = () => {
                 </div>
               </motion.div>
             )}
+
 
             <div ref={endRef} />
           </div>

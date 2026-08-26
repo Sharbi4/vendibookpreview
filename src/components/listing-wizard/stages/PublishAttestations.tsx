@@ -53,6 +53,18 @@ export function allAttested(value: Record<AttestationKey, boolean>): boolean {
 }
 
 /**
+ * The exact acceptance wording recorded with the publish consent. Shared by
+ * the step-by-step wizard's ConsentModal and the List with Vendi chat gate so
+ * both flows attest to identical language.
+ */
+export function publishAcceptanceText(mode: 'rent' | 'sale' | string | null | undefined): string {
+  return mode === 'rent'
+    ? "I agree to VendiBook's Host / Renter Terms and confirm this listing accurately represents my asset."
+    : "I agree to VendiBook's Seller Terms and confirm this listing accurately represents my asset.";
+}
+
+
+/**
  * Stage 6 attestations. Always rendered unchecked — never pre-selected — and
  * recorded through the existing versioned agreement logging on publish.
  */
