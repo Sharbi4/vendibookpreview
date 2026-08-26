@@ -254,20 +254,36 @@ const VendiListingBuilder: React.FC = () => {
   }, [draftId, user, photos.length, uploadedUrls.length]);
 
   /**
+   * Exactly `YES` — uppercase, no surrounding punctuation, no extra words.
+   * Partial matches ("YE", "YES."), lowercase, and any auto-filled variant are
+   * rejected, and the Affirm control stays disabled until the value matches, so
+   * a button click alone can never satisfy the acknowledgment.
+   */
+  const isExactYes = attestInput === 'YES';
+
+  /**
    * Typed acknowledgment of the publish disclosure. Only an exact, capitalised
    * `YES` counts — no inferred or button-only consent — and it is written
    * through the same `record_user_consent` audit path as the wizard's
    * ConsentModal before the Publish action unlocks.
    */
   const handleAttest = async (raw: string) => {
-    const text = raw.trim();
-    if (!text || attesting || consentId) return;
-    say('user', text);
-    setAttestInput('');
+    const text = raw;
+    if (attesting || consentId) return;
     if (text !== 'YES') {
-      say('vendi', 'To affirm the disclosure I need exactly YES, in capital letters. Nothing is published until then.');
+      const reason = !text.trim()
+        ? 'Type YES to affirm the disclosure.'
+        : text.trim().toUpperCase() === 'YES'
+          ? 'Use capital letters with no extra spaces or punctuation: YES.'
+          : 'That does not match. Type exactly YES (capital letters, nothing else).';
+      setAttestError(reason);
+      say('vendi', `${reason} Nothing is published until then.`);
       return;
     }
+    setAttestError(null);
+    say('user', text);
+    setAttestInput('');
+
     setAttesting(true);
     try {
       const id = await recordConsent.mutateAsync({
