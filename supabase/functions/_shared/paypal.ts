@@ -232,11 +232,15 @@ export async function createPayPalOrder(input: CreateOrderInput) {
     };
   }
 
+  // AUTHORIZE places a temporary hold on approval; nothing is charged until
+  // an explicit capture. CAPTURE (the default) charges on approval.
+  const intent = input.intent === "AUTHORIZE" ? "AUTHORIZE" : "CAPTURE";
+
   return await paypalRequest("/v2/checkout/orders", {
     method: "POST",
     idempotencyKey: input.idempotencyKey,
     body: {
-      intent: "CAPTURE",
+      intent,
       purchase_units: [{
         reference_id: input.reference,
         invoice_id: input.reference,
@@ -252,7 +256,7 @@ export async function createPayPalOrder(input: CreateOrderInput) {
           experience_context: {
             brand_name: "Vendibook",
             shipping_preference: "NO_SHIPPING",
-            user_action: "PAY_NOW",
+            user_action: intent === "AUTHORIZE" ? "CONTINUE" : "PAY_NOW",
             landing_page: "LOGIN",
           },
         },
