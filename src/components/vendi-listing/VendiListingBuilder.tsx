@@ -91,6 +91,9 @@ const VendiListingBuilder: React.FC = () => {
   const [photos, setPhotos] = useState<LocalPhoto[]>([]);
   const [uploadedUrls, setUploadedUrls] = useState<string[]>([]);
   const [uploadedVideoUrls, setUploadedVideoUrls] = useState<string[]>([]);
+  /** Per-file upload state so the seller always sees what happened. */
+  const [mediaStatus, setMediaStatus] = useState<Record<string, 'pending' | 'uploading' | 'done' | 'error'>>({});
+  const [retrySeq, setRetrySeq] = useState(0);
   const [reviewing, setReviewing] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [showMobilePreview, setShowMobilePreview] = useState(false);
@@ -680,26 +683,56 @@ const VendiListingBuilder: React.FC = () => {
 
   const handlePhotos = (files: FileList | null) => {
     if (!files?.length) return;
-    const accepted = Array.from(files).filter((f) => {
-      if (f.type.startsWith('image/')) return f.size <= 15 * 1024 * 1024;
-      if (f.type.startsWith('video/')) return f.size <= 100 * 1024 * 1024;
-      return false;
-    });
-    if (accepted.length !== files.length) {
-      toast.error('Some files were skipped (images up to 15MB, video up to 100MB).');
+    const VIDEO_MIME = ['video/mp4', 'video/webm', 'video/quicktime', 'video/mov'];
+    const VIDEO_EXT = ['mp4', 'webm', 'mov', 'qt'];
+    const IMAGE_EXT = ['jpg', 'jpeg', 'png', 'webp', 'gif', 'heic', 'heif', 'avif'];
+
+    const classify = (f: File): 'image' | 'video' | null => {
+      const ext = f.name.split('.').pop()?.toLowerCase() ?? '';
+      if (f.type.startsWith('video/') || VIDEO_EXT.includes(ext)) return 'video';
+      if (f.type.startsWith('image/') || IMAGE_EXT.includes(ext)) return 'image';
+      return null;
+    };
+
+    const reasons: string[] = [];
+    const accepted: { file: File; kind: 'image' | 'video' }[] = [];
+    for (const file of Array.from(files)) {
+      const kind = classify(file);
+      if (!kind) { reasons.push(`${file.name}: not a photo or video`); continue; }
+      if (kind === 'image' && file.size > 15 * 1024 * 1024) { reasons.push(`${file.name}: photos must be under 15MB`); continue; }
+      if (kind === 'video') {
+        if (file.size > 100 * 1024 * 1024) { reasons.push(`${file.name}: videos must be under 100MB`); continue; }
+        const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
+        const okType = file.type ? VIDEO_MIME.includes(file.type) : VIDEO_EXT.includes(ext);
+        if (!okType) { reasons.push(`${file.name}: video must be MP4, WebM or MOV`); continue; }
+      }
+      accepted.push({ file, kind });
     }
-    setPhotos((prev) => [
-      ...prev,
-      ...accepted.map((file) => ({
+    if (reasons.length) toast.error(reasons.slice(0, 3).join(' · '));
+
+    setPhotos((prev) => {
+      const room = Math.max(0, 12 - prev.length);
+      if (accepted.length > room) toast.error(`You can attach up to 12 files — ${accepted.length - room} were not added.`);
+      const next = accepted.slice(0, room).map(({ file, kind }) => ({
         id: uid(),
         file,
         url: URL.createObjectURL(file),
-        kind: (file.type.startsWith('video/') ? 'video' : 'image') as 'image' | 'video',
-      })),
-    ].slice(0, 12));
+        kind,
+      }));
+      setMediaStatus((s) => {
+        const copy = { ...s };
+        next.forEach((n) => { copy[n.id] = 'pending'; });
+        return copy;
+      });
+      return [...prev, ...next];
+    });
   };
 
-  const removePhoto = (id: string) => setPhotos((prev) => prev.filter((p) => p.id !== id));
+  const removePhoto = (id: string) => {
+    setPhotos((prev) => prev.filter((p) => p.id !== id));
+    setMediaStatus((s) => { const c = { ...s }; delete c[id]; return c; });
+  };
+
 
   const localImages = photos.filter((p) => p.kind === 'image');
   const localVideos = photos.filter((p) => p.kind === 'video');
@@ -719,8 +752,10 @@ const VendiListingBuilder: React.FC = () => {
     userId: string,
   ): Promise<{ images: string[]; videos: string[] }> => {
     let failed = 0;
+    let lastMessage = '';
     for (const item of photos) {
       if (uploadedByItemRef.current.has(item.id)) continue;
+      setMediaStatus((s) => ({ ...s, [item.id]: 'uploading' }));
       const isVideo = item.kind === 'video';
       const bucket = isVideo ? 'listing-videos' : 'listing-images';
       const ext = item.file.name.split('.').pop()?.toLowerCase() || (isVideo ? 'mp4' : 'jpg');
@@ -732,21 +767,38 @@ const VendiListingBuilder: React.FC = () => {
       });
       if (error) {
         failed += 1;
+        lastMessage = error.message;
+        setMediaStatus((s) => ({ ...s, [item.id]: 'error' }));
         noteTrouble();
         trackVendi('vendi_media_upload_failed', { userId, listingId, metadata: { kind: item.kind } });
         continue; // keep the successful uploads; this item is retried later
       }
       const { data } = supabase.storage.from(bucket).getPublicUrl(path);
       uploadedByItemRef.current.set(item.id, { url: data.publicUrl, kind: item.kind });
+      setMediaStatus((s) => ({ ...s, [item.id]: 'done' }));
     }
 
     const stored = Array.from(uploadedByItemRef.current.values());
     const images = [...uploadedUrls, ...stored.filter((s) => s.kind === 'image').map((s) => s.url)];
     const videos = [...uploadedVideoUrls, ...stored.filter((s) => s.kind === 'video').map((s) => s.url)];
     const dedupe = (list: string[]) => Array.from(new Set(list));
+    if (failed) {
+      toast.error(
+        failed === 1
+          ? `1 file didn't upload — tap Retry on it.${lastMessage ? ` (${lastMessage})` : ''}`
+          : `${failed} files didn't upload — tap Retry on them.`,
+      );
+    }
     if (failed && !stored.length) throw new Error('Upload failed. Please try again.');
     return { images: dedupe(images), videos: dedupe(videos) };
   };
+
+  /** Re-attempt a single failed file. */
+  const retryMedia = (id: string) => {
+    setMediaStatus((s) => ({ ...s, [id]: 'pending' }));
+    setRetrySeq((n) => n + 1);
+  };
+
 
   /** Rental screening documents live in their own table, same as the wizard. */
   const syncRequiredDocuments = async (listingId: string) => {
@@ -785,7 +837,7 @@ const VendiListingBuilder: React.FC = () => {
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draftId, user, photos]);
+  }, [draftId, user, photos, retrySeq]);
 
 
   /**
@@ -1390,6 +1442,25 @@ const VendiListingBuilder: React.FC = () => {
                       ) : (
                         <img src={p.url} alt="Listing photo" className="h-full w-full object-cover" />
                       )}
+                      {mediaStatus[p.id] === 'uploading' && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/55" aria-label="Uploading">
+                          <Loader2 className="h-4 w-4 animate-spin text-white" />
+                        </div>
+                      )}
+                      {mediaStatus[p.id] === 'done' && (
+                        <span className="absolute bottom-1 left-1 rounded-full bg-black/70 p-1" aria-label="Uploaded">
+                          <Check className="h-3 w-3 text-emerald-400" />
+                        </span>
+                      )}
+                      {mediaStatus[p.id] === 'error' && (
+                        <button
+                          type="button"
+                          onClick={() => retryMedia(p.id)}
+                          className="absolute inset-x-0 bottom-0 bg-red-600/85 py-1 text-[10px] font-medium text-white"
+                        >
+                          Retry
+                        </button>
+                      )}
                       <button
                         type="button"
                         aria-label="Remove media"
@@ -1399,6 +1470,7 @@ const VendiListingBuilder: React.FC = () => {
                         <X className="h-3 w-3" />
                       </button>
                     </motion.div>
+
                   ))}
                   <button
                     type="button"
@@ -1650,6 +1722,21 @@ const VendiListingBuilder: React.FC = () => {
                       ) : (
                         <img src={p.url} alt="Attached" className="h-full w-full object-cover" />
                       )}
+                      {mediaStatus[p.id] === 'uploading' && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/55" aria-label="Uploading">
+                          <Loader2 className="h-3.5 w-3.5 animate-spin text-white" />
+                        </div>
+                      )}
+                      {mediaStatus[p.id] === 'error' && (
+                        <button
+                          type="button"
+                          onClick={() => retryMedia(p.id)}
+                          className="absolute inset-x-0 bottom-0 bg-red-600/85 py-0.5 text-[9px] font-medium text-white"
+                        >
+                          Retry
+                        </button>
+                      )}
+
 
                       <button
                         type="button"
