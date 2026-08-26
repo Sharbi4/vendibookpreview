@@ -11,10 +11,14 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sh
 import vendibookFavicon from '@/assets/vendibook-favicon.png';
 import VendiAuthGate from '@/components/vendi-listing/VendiAuthGate';
 import {
-  buildListingPayload, getPublishBlockers, nextQuestion, progressPercent,
+  buildListingPayload, getPublishBlockers, nextQuestion,
   promptText, resumeMessage, VENDI_WELCOME,
   Question, VendiDraft,
 } from '@/lib/vendi-listing/script';
+import {
+  rankedNextQuestion, readinessProgress, remainingQuestionIds, READY_MESSAGE,
+} from '@/lib/vendi-listing/prioritize';
+import { parseCommand } from '@/lib/vendi-listing/commands';
 
 import type { DocumentType } from '@/types/documents';
 import { isSkip } from '@/lib/vendi-listing/extract';
@@ -25,6 +29,7 @@ import {
 } from '@/lib/vendi-listing/session';
 import { deriveAnsweredFromDraft, mergeServerDraft } from '@/lib/vendi-listing/hydrate';
 import { trackVendi } from '@/lib/vendi-listing/telemetry';
+
 
 import {
   ATTESTATIONS,
