@@ -289,6 +289,12 @@ const ECOSYSTEM: { icon: LucideIcon; name: string; note: string; to: string }[] 
     to: '/financing',
   },
   {
+    icon: Wallet,
+    name: 'Payments',
+    note: 'Secure PayPal checkout, Pay in Person, and how payouts work.',
+    to: '/payments',
+  },
+  {
     icon: Truck,
     name: 'Vendibook Freight',
     note: 'Professional transport, coordinated with your transaction.',
