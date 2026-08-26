@@ -16,6 +16,7 @@ import {
 } from '@/lib/vendi-listing/script';
 import type { DocumentType } from '@/types/documents';
 import { isSkip } from '@/lib/vendi-listing/extract';
+import { publishVendiListing } from '@/lib/vendi-listing/publishVendiListing';
 
 import {
   ATTESTATIONS,
