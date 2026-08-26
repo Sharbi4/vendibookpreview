@@ -179,12 +179,13 @@ export async function ensureBillOfSale(transactionId: string): Promise<{ documen
     { email: buyer.email,  role_name: 'Buyer',  order: 1, first_name: buyer.first_name ?? undefined,  last_name: buyer.last_name ?? undefined },
     { email: seller.email, role_name: 'Seller', order: 2, first_name: seller.first_name ?? undefined, last_name: seller.last_name ?? undefined },
   ];
-  await createEmbeddedInvite(signnowDocId, signers);
+  const invites = await createEmbeddedInvite(signnowDocId, signers);
 
   const signerRecords: SignerRecord[] = [
-    { role: 'buyer',  user_id: tx.buyer_id,  email: buyer.email,  first_name: buyer.first_name ?? undefined,  last_name: buyer.last_name ?? undefined,  signed_at: null },
-    { role: 'seller', user_id: tx.seller_id, email: seller.email, first_name: seller.first_name ?? undefined, last_name: seller.last_name ?? undefined, signed_at: null },
+    { role: 'buyer',  user_id: tx.buyer_id,  email: buyer.email,  first_name: buyer.first_name ?? undefined,  last_name: buyer.last_name ?? undefined,  invite_id: inviteIdForEmail(invites, buyer.email),  signed_at: null },
+    { role: 'seller', user_id: tx.seller_id, email: seller.email, first_name: seller.first_name ?? undefined, last_name: seller.last_name ?? undefined, invite_id: inviteIdForEmail(invites, seller.email), signed_at: null },
   ];
+
 
   const { data: row, error: insErr } = await supabase
     .from('documents')
