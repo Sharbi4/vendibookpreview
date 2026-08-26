@@ -167,9 +167,8 @@ const DraftsSection = ({ drafts, onDelete }: DraftsSectionProps) => {
                   </Button>
                 )}
               </div>
-
-              </div>
             </div>
+
           ))}
         </div>
 
