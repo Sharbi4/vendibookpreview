@@ -953,6 +953,7 @@ const VendiListingBuilder: React.FC = () => {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Something went wrong.';
       const id = draftId;
+      noteTrouble();
       trackVendi('vendi_publish_failed', { userId: user?.id, listingId: id, metadata: { reason: message.slice(0, 80) } });
       // Recovery state is deliberately untouched: the seller keeps their draft.
       toast.error(message, {
