@@ -202,6 +202,7 @@ const CITY_SALE_SPECS: CitySaleSpec[] = [
   { citySlug: 'tucson-az',       cityName: 'Tucson',       stateCode: 'AZ', stateName: 'Arizona',       category: 'food_trailer' },
   { citySlug: 'phoenix-az',      cityName: 'Phoenix',      stateCode: 'AZ', stateName: 'Arizona',       category: 'food_trailer' },
   { citySlug: 'houston-tx',      cityName: 'Houston',      stateCode: 'TX', stateName: 'Texas',         category: 'food_trailer' },
+  { citySlug: 'mesa-az',         cityName: 'Mesa',         stateCode: 'AZ', stateName: 'Arizona',       category: 'food_trailer' },
 ];
 
 const citySaleSlug = (c: CategoryKey): string =>
@@ -658,4 +659,113 @@ CITY_CATEGORY_CONFIGS.push(
       { href: '/rent-out-my-food-truck', label: 'Rent out your food truck' },
     ],
   }))
+);
+
+// ============================================================================
+// Trailer-specific RENTAL spokes. Created only where real rental inventory
+// exists, so the page is never a thin/empty doorway. Tennessee is live because
+// Vendibook carries owner-listed monthly trailer rental inventory in the
+// Nashville / Spring Hill corridor.
+//   /food-trailers-for-rent/tennessee   → state spoke of /food-trailers-for-rent
+//   /food-trailers-for-rent/spring-hill-tn → exact-match local page
+// ============================================================================
+type TrailerRentSpec = {
+  stateName: string;
+  stateCode: string;
+  city?: { name: string; slug: string };
+  context: string;
+};
+
+const TRAILER_RENT_SPECS: TrailerRentSpec[] = [
+  {
+    stateName: 'Tennessee',
+    stateCode: 'TN',
+    context:
+      'Tennessee rental demand concentrates in the Nashville metro and the fast-growing Williamson and Maury County corridor south of the city, where operators lease trailers monthly for markets, breweries, and event calendars.',
+  },
+  {
+    stateName: 'Tennessee',
+    stateCode: 'TN',
+    city: { name: 'Spring Hill', slug: 'spring-hill-tn' },
+    context:
+      'Spring Hill sits in the Nashville–Columbia corridor, where monthly food trailer leases are a practical way to start operating without buying equipment outright.',
+  },
+];
+
+const trailerRentFaqs = (place: string) => [
+  {
+    q: `Can I rent a food trailer in ${place}?`,
+    a: `Yes. Vendibook lists owner-managed food trailers for rent in and around ${place}. Compare the listings on this page, review the owner's rates and terms, and book directly through Vendibook.`,
+  },
+  {
+    q: `Can I lease a food trailer monthly in ${place}?`,
+    a: `Often, yes. Monthly leases are common for trailers — the term and rate are set by each owner and shown on the listing, so check the individual listing or message the owner.`,
+  },
+  {
+    q: `How much does it cost to rent a food trailer in ${place}?`,
+    a: `Cost depends on trailer size, equipment, condition, and rental term. Each Vendibook listing shows the owner's current rate so you can compare real options rather than averages.`,
+  },
+  {
+    q: `Do I need permits to operate a rented food trailer in ${place}?`,
+    a: `Yes — permits follow you as the operator, not the equipment. Most operators need a mobile food vendor permit, health-department certification, and a commissary agreement. Vendibook's PermitPath tool walks through the steps for your city.`,
+  },
+  {
+    q: `Can I list my food trailer for rent in ${place}?`,
+    a: `Yes — listing on Vendibook is free. Add photos, your rates, and availability, and start receiving booking requests from operators near ${place}.`,
+  },
+];
+
+CITY_CATEGORY_CONFIGS.push(
+  ...TRAILER_RENT_SPECS.map((s): CategoryIndexConfig => {
+    const place = s.city ? `${s.city.name}, ${s.stateCode}` : s.stateName;
+    const path = s.city
+      ? `/food-trailers-for-rent/${s.city.slug}`
+      : `/food-trailers-for-rent/${slugify(s.stateName)}`;
+    return {
+      path,
+      category: 'food_trailer',
+      mode: 'rent',
+      ...(s.city
+        ? { city: { name: s.city.name, stateCode: s.stateCode } }
+        : { state: { name: s.stateName, code: s.stateCode } }),
+      h1: `Food Trailers for Rent in ${place}`,
+      title: `Food Trailers for Rent in ${place} | Concession Trailer Rentals | Vendibook`,
+      description: `Rent a food trailer in ${place}. Compare owner-listed concession trailers with photos, equipment details, and monthly, weekly, or daily rates on Vendibook.`,
+      intro: `Browse food trailers available to rent in ${place}. ${s.context} Every listing is owner-managed with photos, equipment details, and transparent rates, and you message the owner directly before booking.`,
+      clarification:
+        'This is equipment rental: you rent the trailer and operate it yourself. Terms — daily, weekly, or monthly — are set by each owner and shown on the listing.',
+      sections: [
+        {
+          heading: `Monthly food trailer leases in ${place}`,
+          paragraphs: [
+            `Monthly leases are the most common arrangement for trailers in ${place}: you take the trailer for a full operating month instead of paying daily event rates. Confirm towing requirements, utility hookups, and commissary arrangements with the owner before you book.`,
+          ],
+          links: [
+            { href: '/tools/permitpath', label: 'Permit & licensing checklist' },
+            { href: '/food-trailers-for-rent', label: 'All food trailers for rent' },
+          ],
+        },
+        {
+          heading: 'Rent now, buy later',
+          paragraphs: [
+            'Many operators lease a trailer first and buy once the concept is proven. When you are ready to own, compare trailers for sale and financing options for qualifying purchases.',
+          ],
+          links: [
+            { href: '/food-trailers-for-sale', label: 'Food trailers for sale' },
+            { href: '/financing', label: 'Equipment financing options' },
+          ],
+        },
+      ],
+      faqs: trailerRentFaqs(place),
+      related: [
+        { href: '/food-trailers-for-rent', label: 'All food trailers for rent' },
+        { href: '/food-trucks-for-rent', label: 'Food trucks for rent' },
+        ...(s.city
+          ? [{ href: `/food-trailers-for-rent/${slugify(s.stateName)}`, label: `Food trailers for rent in ${s.stateName}` }]
+          : [{ href: '/food-trailers-for-rent/spring-hill-tn', label: 'Food trailers for rent in Spring Hill, TN' }]),
+        { href: '/food-trailers-for-sale', label: 'Food trailers for sale' },
+        { href: '/rent-out-my-food-truck', label: 'Rent out your trailer' },
+      ],
+    };
+  })
 );

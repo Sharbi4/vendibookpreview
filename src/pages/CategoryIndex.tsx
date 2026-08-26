@@ -17,6 +17,7 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { CITY_DATA, getCityStateSlug } from '@/data/cityData';
+import { PRICE_TBD, formatListingPriceLabel } from '@/lib/listings/rentalPricing';
 import { SPECIALTY_DEFS, specialtyOrFilter, specialtyBrowseLinks, specialtyVehicleHref, SPECIALTY_VEHICLE_LABELS, type SpecialtyKey } from '@/lib/listings/specialty';
 import BrowseByBusinessType from '@/components/marketplace/BrowseByBusinessType';
 import { useNationwideInventory } from '@/hooks/useNationwideInventory';
@@ -57,6 +58,11 @@ export interface CategoryIndexConfig {
    *  specialty and disables geographic fallback tiers so unrelated listings
    *  are never shown as specialty matches. */
   specialty?: SpecialtyKey;
+  /** Optional structured subcategory filter (e.g. ['coffee_beverage']).
+   *  Applied on top of category/mode. Like `specialty`, it disables the
+   *  geographic fallback tiers so an unrelated listing can never be shown
+   *  as a match for a filtered collection. */
+  subcategories?: string[];
   /** Breadcrumb parent between Home and the page (specialty hubs). */
   breadcrumbParent?: { name: string; href: string };
   /** Overrides the hero search CTA href. */
@@ -74,6 +80,8 @@ interface ListingRow {
   cover_image_url: string | null;
   price_daily: number | null;
   price_weekly: number | null;
+  price_hourly: number | null;
+  price_monthly: number | null;
   price_sale: number | null;
   mode: string;
   category: string;
@@ -87,7 +95,7 @@ const MIN_TIER = 6;
 // States with a live state-level page, for breadcrumb parent links.
 const STATE_NAME_BY_CODE: Record<string, string> = {
   TX: 'Texas', AZ: 'Arizona', GA: 'Georgia', FL: 'Florida', MI: 'Michigan',
-  OH: 'Ohio', NC: 'North Carolina', OR: 'Oregon', CA: 'California',
+  OH: 'Ohio', NC: 'North Carolina', OR: 'Oregon', CA: 'California', TN: 'Tennessee',
 };
 const STATE_SALE_PAGE_CODES: Record<CategoryKey, Set<string>> = {
   food_truck: new Set(['TX', 'AZ', 'GA', 'FL', 'MI', 'OH', 'NC', 'OR', 'CA']),
@@ -95,13 +103,23 @@ const STATE_SALE_PAGE_CODES: Record<CategoryKey, Set<string>> = {
   ghost_kitchen: new Set(),
   vendor_space: new Set(),
 };
-const STATE_RENT_PAGE_CODES = new Set(['TX', 'FL', 'CA']);
+const STATE_RENT_PAGE_CODES: Record<CategoryKey, Set<string>> = {
+  food_truck: new Set(['TX', 'FL', 'CA']),
+  food_trailer: new Set(['TN']),
+  ghost_kitchen: new Set(),
+  vendor_space: new Set(),
+};
 
 const formatPrice = (l: ListingRow): string => {
-  if (l.mode === 'sale' && l.price_sale) return `$${Number(l.price_sale).toLocaleString()}`;
-  if (l.price_daily) return `$${Number(l.price_daily).toLocaleString()}/day`;
-  if (l.price_weekly) return `$${Number(l.price_weekly).toLocaleString()}/week`;
-  return 'Contact for price';
+  const label = formatListingPriceLabel({
+    mode: l.mode,
+    price_sale: l.price_sale,
+    price_hourly: l.price_hourly,
+    price_daily: l.price_daily,
+    price_weekly: l.price_weekly,
+    price_monthly: l.price_monthly,
+  });
+  return label === PRICE_TBD ? 'Contact for price' : label;
 };
 
 const categoryLabel = (c: CategoryKey): string =>
@@ -110,9 +128,15 @@ const categoryLabel = (c: CategoryKey): string =>
     : c === 'ghost_kitchen' ? 'Shared Kitchen'
     : 'Vendor Space';
 
-const baseSelect = 'id, title, description, cover_image_url, price_daily, price_weekly, price_sale, mode, category, city, state, address';
+const baseSelect = 'id, title, description, cover_image_url, price_hourly, price_daily, price_weekly, price_monthly, price_sale, mode, category, city, state, address';
 
-const baseQuery = (categories: CategoryKey[], mode: ModeFilter, limit: number, orFilter?: string) => {
+const baseQuery = (
+  categories: CategoryKey[],
+  mode: ModeFilter,
+  limit: number,
+  orFilter?: string,
+  subcategories?: string[],
+) => {
   let q = supabase
     .from('listings')
     .select(baseSelect)
@@ -123,6 +147,7 @@ const baseQuery = (categories: CategoryKey[], mode: ModeFilter, limit: number, o
     .order('updated_at', { ascending: false })
     .limit(limit);
   if (mode !== 'any') q = q.eq('mode', mode);
+  if (subcategories?.length) q = q.in('subcategory', subcategories as any[]);
   if (orFilter) q = q.or(orFilter);
   return q;
 };
@@ -156,9 +181,9 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
       setStateFallback([]);
       setNationwideFallback([]);
 
-      // Tier 1: city OR state OR specialty OR all
+      // Tier 1: city OR state OR specialty/subcategory OR all
       const specialtyFilter = config.specialty ? specialtyOrFilter(config.specialty) : undefined;
-      let q1 = baseQuery(categories, config.mode, 48, specialtyFilter);
+      let q1 = baseQuery(categories, config.mode, 48, specialtyFilter, config.subcategories);
       if (config.city) {
         q1 = q1.or(`city.ilike.${config.city.name},address.ilike.%${config.city.name}%`);
       } else if (config.state) {
@@ -171,9 +196,9 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
 
       const excludeIds = new Set(primaryRows.map((r) => r.id));
 
-      // Specialty pages never fall back to unrelated inventory — only real
-      // specialty matches may appear on the collection.
-      if (!config.specialty) {
+      // Specialty / subcategory pages never fall back to unrelated inventory —
+      // only real matches may appear on the collection.
+      if (!config.specialty && !config.subcategories?.length) {
         // Tier 2: state fallback (only when city is set AND primary is thin)
         if (config.city && primaryRows.length < MIN_TIER) {
           let q2 = baseQuery(categories, config.mode, 24);
@@ -200,7 +225,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
       setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [config.category, config.mode, config.city?.name, config.state?.code, config.specialty, categories.join(',')]);
+  }, [config.category, config.mode, config.city?.name, config.state?.code, config.specialty, config.subcategories?.join(','), categories.join(',')]);
 
   const canonical = config.path;
   const totalListings = primary.length + stateFallback.length + nationwideFallback.length;
@@ -231,8 +256,8 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
   const statePageExists = !!(config.city && config.city.stateCode && cityStateSlug && (
     config.mode === 'sale'
       ? STATE_SALE_PAGE_CODES[config.category]?.has(config.city.stateCode)
-      : config.mode === 'rent' && config.category === 'food_truck'
-        ? STATE_RENT_PAGE_CODES.has(config.city.stateCode)
+      : config.mode === 'rent'
+        ? !!STATE_RENT_PAGE_CODES[config.category]?.has(config.city.stateCode)
         : false
   ));
 
