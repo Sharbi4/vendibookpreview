@@ -80,6 +80,8 @@ const VendiListingBuilder: React.FC = () => {
   const [savingManually, setSavingManually] = useState(false);
 
   const creatingDraftRef = useRef(false);
+  const publishInFlightRef = useRef(false);
+
   const disclosureShownRef = useRef(false);
   const endRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
