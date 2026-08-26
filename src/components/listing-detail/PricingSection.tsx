@@ -1,5 +1,6 @@
 import { DollarSign, Truck, Clock, CalendarDays } from 'lucide-react';
 import { FreightLink } from '@/components/shared/FreightLink';
+import { PRICE_TBD, formatRentalRate, listRentalRates } from '@/lib/listings/rentalPricing';
 
 interface PricingSectionProps {
   isRental: boolean;
