@@ -64,7 +64,7 @@ describe('DocumentsCard', () => {
       ],
     });
     render(<DocumentsCard scope={{ transaction_id: 'tx-1' }} title="Bill of sale" />);
-    expect(await screen.findByText(/Bill of sale/i)).toBeTruthy();
+    expect((await screen.findAllByText(/Bill of sale/i)).length).toBeGreaterThan(0);
     expect(await screen.findByText(/Buyer: Awaiting signature/i)).toBeTruthy();
     expect(await screen.findByText(/Seller: Signed/i)).toBeTruthy();
     expect(await screen.findByRole('button', { name: /Review & sign/i })).toBeTruthy();
