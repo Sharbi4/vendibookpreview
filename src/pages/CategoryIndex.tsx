@@ -92,7 +92,7 @@ const MIN_TIER = 6;
 // States with a live state-level page, for breadcrumb parent links.
 const STATE_NAME_BY_CODE: Record<string, string> = {
   TX: 'Texas', AZ: 'Arizona', GA: 'Georgia', FL: 'Florida', MI: 'Michigan',
-  OH: 'Ohio', NC: 'North Carolina', OR: 'Oregon', CA: 'California',
+  OH: 'Ohio', NC: 'North Carolina', OR: 'Oregon', CA: 'California', TN: 'Tennessee',
 };
 const STATE_SALE_PAGE_CODES: Record<CategoryKey, Set<string>> = {
   food_truck: new Set(['TX', 'AZ', 'GA', 'FL', 'MI', 'OH', 'NC', 'OR', 'CA']),
@@ -100,14 +100,22 @@ const STATE_SALE_PAGE_CODES: Record<CategoryKey, Set<string>> = {
   ghost_kitchen: new Set(),
   vendor_space: new Set(),
 };
-const STATE_RENT_PAGE_CODES = new Set(['TX', 'FL', 'CA']);
-
-const formatPrice = (l: ListingRow): string => {
-  if (l.mode === 'sale' && l.price_sale) return `$${Number(l.price_sale).toLocaleString()}`;
-  if (l.price_daily) return `$${Number(l.price_daily).toLocaleString()}/day`;
-  if (l.price_weekly) return `$${Number(l.price_weekly).toLocaleString()}/week`;
-  return 'Contact for price';
+const STATE_RENT_PAGE_CODES: Record<CategoryKey, Set<string>> = {
+  food_truck: new Set(['TX', 'FL', 'CA']),
+  food_trailer: new Set(['TN']),
+  ghost_kitchen: new Set(),
+  vendor_space: new Set(),
 };
+
+const formatPrice = (l: ListingRow): string =>
+  formatListingPriceLabel({
+    mode: l.mode,
+    price_sale: l.price_sale,
+    price_hourly: l.price_hourly,
+    price_daily: l.price_daily,
+    price_weekly: l.price_weekly,
+    price_monthly: l.price_monthly,
+  }, { fallback: 'Contact for price' });
 
 const categoryLabel = (c: CategoryKey): string =>
   c === 'food_truck' ? 'Food Truck'
