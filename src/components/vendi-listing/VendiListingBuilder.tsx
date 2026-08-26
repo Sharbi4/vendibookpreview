@@ -35,7 +35,7 @@ const uid = () => Math.random().toString(36).slice(2);
 
 const VendiListingBuilder: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
 
   const [draft, setDraft] = useState<VendiDraft>(emptyDraft);
   const [answered, setAnswered] = useState<string[]>([]);
@@ -47,8 +47,11 @@ const VendiListingBuilder: React.FC = () => {
   const [publishing, setPublishing] = useState(false);
   const [showMobilePreview, setShowMobilePreview] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [draftId, setDraftId] = useState<string | null>(null);
+  const creatingDraftRef = useRef(false);
   const endRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const storageKey = user ? storageKeyFor(user.id) : null;
 
   const current: Question | null = useMemo(
     () => (reviewing ? null : nextQuestion(draft, answered)),
