@@ -164,15 +164,25 @@ const VendiListingBuilder: React.FC = () => {
     })();
   }, [hydrated, user, draftId, draft.mode, draft.category, draft.city, draft.state, draft.zip_code, draft.address]);
 
-  // Debounced autosave of collected answers onto the owned draft
+  // Debounced autosave of collected answers onto the owned draft. The row stays
+  // status=draft until the owner explicitly publishes.
   useEffect(() => {
     if (!draftId || !hydrated) return;
+    setSaveState('saving');
     const timer = window.setTimeout(() => {
-      const payload = buildListingPayload(draft, uploadedUrls);
-      void supabase.from('listings').update(payload as never).eq('id', draftId);
+      const payload = buildListingPayload(draft, uploadedUrls, uploadedVideoUrls);
+      void supabase.from('listings').update(payload as never).eq('id', draftId).then(({ error }) => {
+        setSaveState(error ? 'error' : 'saved');
+      });
     }, 1200);
     return () => window.clearTimeout(timer);
-  }, [draft, uploadedUrls, draftId, hydrated]);
+  }, [draft, uploadedUrls, uploadedVideoUrls, draftId, hydrated]);
+
+  // Warm welcome before the first question
+  useEffect(() => {
+    if (!hydrated) return;
+    setMessages((prev) => (prev.length ? prev : [{ id: uid(), role: 'vendi', content: WELCOME }]));
+  }, [hydrated]);
 
   // Ask the first / next question
   useEffect(() => {
@@ -180,8 +190,9 @@ const VendiListingBuilder: React.FC = () => {
     const q = nextQuestion(draft, answered);
     if (!q) { setReviewing(true); return; }
     setMessages((prev) => {
+      const tip = q.tip?.(draft);
+      const prompt = tip ? `${q.prompt(draft)}\n\n${tip}` : q.prompt(draft);
       const last = prev[prev.length - 1];
-      const prompt = q.prompt(draft);
       if (last?.role === 'vendi' && last.content === prompt) return prev;
       return [...prev, { id: uid(), role: 'vendi', content: prompt }];
     });
@@ -234,47 +245,156 @@ const VendiListingBuilder: React.FC = () => {
 
   const handlePhotos = (files: FileList | null) => {
     if (!files?.length) return;
-    const accepted = Array.from(files).filter((f) => f.type.startsWith('image/') && f.size <= 15 * 1024 * 1024);
-    if (accepted.length !== files.length) toast.error('Some files were skipped (images up to 15MB only).');
-    setPhotos((prev) => [...prev, ...accepted.map((file) => ({ id: uid(), file, url: URL.createObjectURL(file) }))].slice(0, 12));
+    const accepted = Array.from(files).filter((f) => {
+      if (f.type.startsWith('image/')) return f.size <= 15 * 1024 * 1024;
+      if (f.type.startsWith('video/')) return f.size <= 100 * 1024 * 1024;
+      return false;
+    });
+    if (accepted.length !== files.length) {
+      toast.error('Some files were skipped (images up to 15MB, video up to 100MB).');
+    }
+    setPhotos((prev) => [
+      ...prev,
+      ...accepted.map((file) => ({
+        id: uid(),
+        file,
+        url: URL.createObjectURL(file),
+        kind: (file.type.startsWith('video/') ? 'video' : 'image') as 'image' | 'video',
+      })),
+    ].slice(0, 12));
   };
 
   const removePhoto = (id: string) => setPhotos((prev) => prev.filter((p) => p.id !== id));
 
-  const previewImages = uploadedUrls.length ? uploadedUrls : photos.map((p) => p.url);
+  const localImages = photos.filter((p) => p.kind === 'image');
+  const localVideos = photos.filter((p) => p.kind === 'video');
+  const previewImages = uploadedUrls.length ? uploadedUrls : localImages.map((p) => p.url);
   const blockers = getPublishBlockers(draft, previewImages.length);
 
-  const uploadPhotos = async (listingId: string, userId: string): Promise<string[]> => {
-    const urls: string[] = [];
-    for (const photo of photos) {
-      const ext = photo.file.name.split('.').pop()?.toLowerCase() || 'jpg';
+  const uploadMedia = async (
+    listingId: string,
+    userId: string,
+  ): Promise<{ images: string[]; videos: string[] }> => {
+    const images: string[] = [];
+    const videos: string[] = [];
+    for (const item of photos) {
+      const isVideo = item.kind === 'video';
+      const bucket = isVideo ? 'listing-videos' : 'listing-images';
+      const ext = item.file.name.split('.').pop()?.toLowerCase() || (isVideo ? 'mp4' : 'jpg');
       const path = `${userId}/${listingId}/${Date.now()}-${uid()}.${ext}`;
-      const { error } = await supabase.storage.from('listing-images').upload(path, photo.file, {
-        cacheControl: '3600', upsert: true, contentType: photo.file.type || 'image/jpeg',
+      const { error } = await supabase.storage.from(bucket).upload(path, item.file, {
+        cacheControl: '3600',
+        upsert: true,
+        contentType: item.file.type || (isVideo ? 'video/mp4' : 'image/jpeg'),
       });
-      if (error) throw new Error(`Photo upload failed: ${error.message}`);
-      const { data } = supabase.storage.from('listing-images').getPublicUrl(path);
-      urls.push(data.publicUrl);
+      if (error) throw new Error(`Upload failed: ${error.message}`);
+      const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+      (isVideo ? videos : images).push(data.publicUrl);
     }
-    return urls;
+    return { images, videos };
+  };
+
+  /** Rental screening documents live in their own table, same as the wizard. */
+  const syncRequiredDocuments = async (listingId: string) => {
+    const docs = (draft.required_documents ?? []) as DocumentType[];
+    if (draft.mode !== 'rent') return;
+    await supabase.from('listing_required_documents').delete().eq('listing_id', listingId);
+    if (!docs.length) return;
+    await supabase.from('listing_required_documents').insert(
+      docs.map((document_type) => ({
+        listing_id: listingId,
+        document_type,
+        is_required: true,
+        deadline_type: 'before_approval' as const,
+      })),
+    );
   };
 
   // Persist media to the owner's draft as soon as both exist, so photos survive
   // a closed tab just like the answers do.
   useEffect(() => {
-    if (!draftId || !user || !photos.length || uploadedUrls.length) return;
+    if (!draftId || !user || !photos.length || uploadedUrls.length || uploadedVideoUrls.length) return;
     let cancelled = false;
     void (async () => {
       try {
-        const urls = await uploadPhotos(draftId, user.id);
-        if (!cancelled) setUploadedUrls(urls);
+        const { images, videos } = await uploadMedia(draftId, user.id);
+        if (!cancelled) { setUploadedUrls(images); setUploadedVideoUrls(videos); }
       } catch {
         /* keep local previews; publish retries the upload */
       }
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draftId, user, photos.length, uploadedUrls.length]);
+  }, [draftId, user, photos.length, uploadedUrls.length, uploadedVideoUrls.length]);
+
+  /**
+   * Explicit "Save draft" — flushes the debounce immediately, persists pending
+   * media, and keeps local recovery state intact either way.
+   */
+  const handleSaveDraft = async () => {
+    if (!user || savingManually) return;
+    setSavingManually(true);
+    setSaveState('saving');
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) throw new Error('Please sign in again to save.');
+
+      let listingId = draftId;
+      if (!listingId) {
+        if (!draft.mode || !draft.category) {
+          toast.message('Nothing to save yet — tell me what you’re listing first.');
+          setSaveState('idle');
+          return;
+        }
+        const { data: created, error } = await supabase.functions.invoke('create-listing-draft', {
+          headers: { Authorization: `Bearer ${accessToken}` },
+          body: {
+            mode: draft.mode === 'sale' ? 'sale' : 'rent',
+            category: draft.category,
+            city: draft.city ?? null,
+            state: draft.state ?? null,
+            zipCode: draft.zip_code ?? null,
+            location: draft.address ?? null,
+          },
+        });
+        if (error) throw error;
+        listingId = (created as { id?: string } | null)?.id ?? null;
+        if (!listingId) throw new Error('We could not start your draft.');
+        setDraftId(listingId);
+      }
+
+      let images = uploadedUrls;
+      let videos = uploadedVideoUrls;
+      if (photos.length && !images.length && !videos.length) {
+        const uploaded = await uploadMedia(listingId, user.id);
+        images = uploaded.images; videos = uploaded.videos;
+        setUploadedUrls(images); setUploadedVideoUrls(videos);
+      }
+
+      const { error: updateError } = await supabase
+        .from('listings')
+        .update(buildListingPayload(draft, images, videos) as never)
+        .eq('id', listingId);
+      if (updateError) throw updateError;
+      await syncRequiredDocuments(listingId);
+
+      setSaveState('saved');
+      toast.success('Draft saved.', {
+        description: 'You can pick up right where you left off from your dashboard.',
+        action: { label: 'Go to dashboard', onClick: () => navigate('/dashboard') },
+      });
+    } catch (error) {
+      setSaveState('error');
+      toast.error(
+        error instanceof Error ? error.message : 'We could not save your draft.',
+        { description: 'Your answers are still here — try again in a moment.' },
+      );
+    } finally {
+      setSavingManually(false);
+    }
+  };
+
 
   /**
    * Exactly `YES` — uppercase, no surrounding punctuation, no extra words.
