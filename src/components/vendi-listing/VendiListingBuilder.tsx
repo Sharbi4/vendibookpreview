@@ -38,9 +38,6 @@ interface LocalPhoto { id: string; file: File; url: string; kind: 'image' | 'vid
 
 const storageKeyFor = (userId: string) => `vendibook_list_with_vendi_v1:${userId}`;
 
-const WELCOME =
-  'Hey! I’m Vendi 👋 I’ll help you put together a great listing. I’ll only ask what we need, and you can save and come back anytime.';
-
 const emptyDraft: VendiDraft = {
   title: null, description: null, category: null, mode: null,
 };
@@ -48,12 +45,15 @@ const emptyDraft: VendiDraft = {
 interface PersistedState {
   draft: VendiDraft;
   answered: string[];
+  /** Question ids already spoken aloud — prevents a prompt being asked twice. */
+  asked?: string[];
   messages: Msg[];
   draftId?: string | null;
   consentId?: string | null;
   uploadedUrls?: string[];
   uploadedVideoUrls?: string[];
 }
+
 
 const uid = () => Math.random().toString(36).slice(2);
 
