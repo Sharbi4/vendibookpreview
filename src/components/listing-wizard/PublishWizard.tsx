@@ -5347,11 +5347,8 @@ export const PublishWizard: React.FC = () => {
         onOpenChange={setShowConsentModal}
         documentType={listing?.mode === 'rent' ? DOCUMENT_TYPES.RENTER_TERMS : DOCUMENT_TYPES.SELLER_TERMS}
         trigger={CONSENT_TRIGGERS.PUBLISH_LISTING}
-        acceptanceText={
-          listing?.mode === 'rent'
-            ? "I agree to VendiBook's Host / Renter Terms and confirm this listing accurately represents my asset."
-            : "I agree to VendiBook's Seller Terms and confirm this listing accurately represents my asset."
-        }
+        acceptanceText={publishAcceptanceText(listing?.mode)}
+
         relatedIds={listing?.id ? { listing_id: listing.id } : undefined}
         intro="Review the terms that govern this listing. Your acceptance is recorded and dated."
         primaryLabel={isSaving ? 'Publishing…' : 'Accept and publish'}
