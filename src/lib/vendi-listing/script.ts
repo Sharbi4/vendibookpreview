@@ -376,22 +376,23 @@ export const QUESTIONS: Question[] = [
     kind: 'choice',
     tier: 'core',
     prompt: () =>
-      'Do you already have a listing or description somewhere that you want me to work from, or should we build it together?',
+      'Fastest way to do this: tell me everything you already know in one go — year, build, equipment, condition, price, ' +
+      'city — or paste a description you’ve already written. I’ll sort it into the listing. Prefer questions one at a time? That works too.',
     options: () => [
-      { value: 'paste', label: 'Use something I already have', description: 'Paste a listing, description, or notes' },
-      { value: 'fresh', label: 'Start with Vendi', description: 'Tell me about it and I’ll guide you' },
+      { value: 'paste', label: 'Tell me everything at once', description: 'Type or paste it all — I’ll organise it' },
+      { value: 'fresh', label: 'Ask me one at a time', description: 'Short guided questions' },
     ],
     apply: (_d, raw) => {
       const v = cleanText(raw).toLowerCase();
-      if (v.startsWith('paste') || v.startsWith('use') || v.startsWith('yes')) return { patch: {} };
-      if (v.startsWith('fresh') || v.startsWith('start') || v.startsWith('no') || v.startsWith('skip')) {
+      if (v.startsWith('paste') || v.startsWith('use') || v.startsWith('tell') || v.startsWith('yes')) return { patch: {} };
+      if (v.startsWith('fresh') || v.startsWith('ask') || v.startsWith('start') || v.startsWith('no') || v.startsWith('skip')) {
         return {
           patch: {},
           answeredIds: ['import_paste'],
           say: 'Perfect — we’ll build it together. 😊',
         };
       }
-      return { error: 'Either paste what you already have, or choose “Start with Vendi”.' };
+      return { error: 'Either tell me everything at once, or choose “Ask me one at a time”.' };
     },
   },
   {
@@ -400,24 +401,38 @@ export const QUESTIONS: Question[] = [
     tier: 'core',
     optional: true,
     prompt: () =>
-      'Perfect — paste whatever you have. It doesn’t have to be formatted or complete. I’ll pull out the details that are ' +
-      'actually there, show you what I found, and then we’ll fill in anything important that’s missing.',
+      'Go ahead — everything you know, in any order. It doesn’t have to be formatted or complete. I’ll pull out the details ' +
+      'that are actually there, show you exactly what I captured, and then we’ll only fill in what’s missing.',
     tip: () =>
       'Anything works: a marketplace or dealer page you wrote, an old description, or rough notes. Paste your own text — I never pull anything from another site.',
-    placeholder: 'Paste your listing, description, or notes…',
-    apply: (_d, raw) => {
+    placeholder: 'e.g. 2019 20ft coffee trailer, espresso machine, 3-compartment sink, Mesa AZ, asking $45,000…',
+    apply: (d, raw) => {
       if (isSkip(raw)) return { patch: {} };
+      if (isUrlOnly(raw)) return { error: URL_ONLY_REPLY };
       const result = parseExistingListing(raw);
-      if (!result.found.length && !result.confirms.length) {
-        return { error: 'I couldn’t find anything definite in there. Paste a bit more, or type “skip” and we’ll do it together.' };
+      // A bulk dump often carries facts a listing-shaped parse won't label
+      // (equipment named in a sentence, dimensions, an inline city).
+      const seeded = { ...d, ...(result.patch as Partial<VendiDraft>) } as VendiDraft;
+      const extra = extractExtraFacts(seeded, raw);
+      const found = [...result.found];
+      if (extra.captured.includes('equipment') && !found.some((f) => f.startsWith('Equipment'))) found.push('Equipment list');
+      if (extra.captured.includes('dimensions')) found.push('Dimensions');
+      if (extra.captured.includes('location') && !found.some((f) => f.startsWith('Location'))) found.push('Location');
+      if (!found.length && !result.confirms.length) {
+        return { error: 'I couldn’t find anything definite in there. Add a bit more, or type “skip” and we’ll do it together.' };
       }
       return {
-        patch: { ...(result.patch as Partial<VendiDraft>), pending_confirm: result.confirms },
-        answeredIds: result.answered,
-        say: `Got it — I pulled in ${result.found.join(', ')}. I won’t ask you for any of that again.`,
+        patch: {
+          ...(result.patch as Partial<VendiDraft>),
+          ...extra.patch,
+          pending_confirm: result.confirms,
+        },
+        answeredIds: [...result.answered, ...extra.answeredIds],
+        say: importSummary({ ...result, found }),
       };
     },
   },
+
   {
     id: 'category',
     kind: 'choice',
