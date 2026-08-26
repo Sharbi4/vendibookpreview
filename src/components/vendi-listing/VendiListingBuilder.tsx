@@ -946,7 +946,7 @@ const VendiListingBuilder: React.FC = () => {
           <input
             ref={fileRef}
             type="file"
-            accept="image/*"
+            accept="image/*,video/*"
             multiple
             className="hidden"
             onChange={(e) => { handlePhotos(e.target.files); e.target.value = ''; }}
