@@ -245,10 +245,10 @@ const Payments = () => {
               >
                 <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-foreground shadow-sm">
                   <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden="true" />
-                  Vendibook + PayPal
+                  PayPal checkout
                 </div>
                 <h1 className="mb-5 text-4xl font-bold leading-[1.12] tracking-tight text-foreground sm:text-5xl md:text-[3.2rem]">
-                  A better way to pay for the equipment that moves your business.
+                  PayPal checkout for food trucks, trailers &amp; mobile kitchens.
                 </h1>
                 <p className="mb-8 max-w-xl text-lg leading-relaxed text-muted-foreground">
                   Vendibook checkout uses PayPal to give buyers familiar payment options — while the
