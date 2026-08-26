@@ -122,7 +122,7 @@ serve(async (req) => {
       metadata: { source: "admin-provision-customer-listing", listing_id: listing.id },
     });
 
-    return jsonResponse({
+    return jsonResponse(200, {
       user_id: userId,
       created_account: createdAccount,
       temp_password_issued: Boolean(tempPassword),
