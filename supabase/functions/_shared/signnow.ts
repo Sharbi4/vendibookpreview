@@ -194,16 +194,24 @@ export interface EmbeddedInviteSigner {
   last_name?: string;
 }
 
+export interface CreatedInvite {
+  id: string;
+  email: string;
+  role_name?: string;
+  order?: number;
+}
+
 /**
- * Create an embedded invite for a document. Returns the invite id needed
- * later to generate short-lived signing links.
+ * Create embedded invites for a document. Returns ALL created invites so the
+ * caller can map each Vendibook signer to its own SignNow invite id
+ * deterministically (never assume the first invite belongs to everyone).
  * https://docs.signnow.com/docs/signnow/reference/operations/embedded-invites
  */
 export async function createEmbeddedInvite(
   documentId: string,
   signers: EmbeddedInviteSigner[],
   nameFormula?: string,
-): Promise<string> {
+): Promise<CreatedInvite[]> {
   const res = await apiFetch(`/v2/documents/${documentId}/embedded-invites`, {
     method: 'POST',
     json: {
@@ -220,8 +228,45 @@ export async function createEmbeddedInvite(
   });
   const json = await res.json();
   // Response returns { data: [{ id, email, role_name, order, ... }] }
-  return String(json?.data?.[0]?.id ?? json?.id ?? '');
+  const rows: any[] = Array.isArray(json?.data) ? json.data : (json?.id ? [json] : []);
+  let created: CreatedInvite[] = rows
+    .filter((r) => r?.id)
+    .map((r) => ({
+      id: String(r.id),
+      email: String(r.email ?? ''),
+      role_name: r.role_name ? String(r.role_name) : undefined,
+      order: r.order != null ? Number(r.order) : undefined,
+    }));
+
+  // Some SignNow responses omit per-invite emails. Fall back to reading the
+  // document's field_invites, which always carries email + role_name.
+  if (created.length < signers.length || created.some((c) => !c.email)) {
+    try {
+      const remote = await getDocument(documentId);
+      const fi: any[] = remote?.field_invites ?? [];
+      if (fi.length) {
+        created = fi
+          .filter((i) => i?.id)
+          .map((i) => ({
+            id: String(i.id),
+            email: String(i.email ?? ''),
+            role_name: i.role ? String(i.role) : undefined,
+            order: i.order != null ? Number(i.order) : undefined,
+          }));
+      }
+    } catch (_e) {
+      // Non-fatal: create-embedded-session resolves invite ids lazily too.
+    }
+  }
+  return created;
 }
+
+/** Map created invites back onto signer records by email (case-insensitive). */
+export function inviteIdForEmail(invites: CreatedInvite[], email: string): string | undefined {
+  const hit = invites.find((i) => i.email?.toLowerCase() === email.toLowerCase());
+  return hit?.id;
+}
+
 
 /**
  * Generate a short-lived signing link for one embedded signer.
