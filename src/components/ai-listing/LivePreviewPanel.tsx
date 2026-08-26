@@ -82,7 +82,10 @@ const LivePreviewPanel: React.FC<{ preview: ListingPreview | null; images: strin
 
   const price = p?.mode === 'sale'
     ? p?.price_sale ? `$${p.price_sale.toLocaleString()}` : null
-    : p?.price_daily ? `$${p.price_daily}/day` : p?.price_hourly ? `$${p.price_hourly}/hr` : null;
+    : p?.price_monthly ? `$${p.price_monthly.toLocaleString()}/mo`
+      : p?.price_weekly ? `$${p.price_weekly.toLocaleString()}/wk`
+        : p?.price_daily ? `$${p.price_daily.toLocaleString()}/day`
+          : p?.price_hourly ? `$${p.price_hourly.toLocaleString()}/hr` : null;
 
   return (
     <div className="h-full flex flex-col">
