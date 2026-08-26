@@ -617,6 +617,9 @@ const SellMyFoodTruck = () => {
                   <Link to="/pricing">See pricing and Pro details</Link>
                 </Button>
                 <Button variant="ghost" className="rounded-2xl text-foreground" asChild>
+                  <Link to="/payments">How secure PayPal checkout works</Link>
+                </Button>
+                <Button variant="ghost" className="rounded-2xl text-foreground" asChild>
                   <Link to="/list/concierge">Optional Concierge Listing · {concierge.label}</Link>
                 </Button>
               </div>
