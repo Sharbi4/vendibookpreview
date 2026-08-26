@@ -14,6 +14,8 @@
  */
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
 import { gateToolAccess } from '../_shared/gateToolAccess.ts';
+import { buildMarketEvidence, type ComparableRow } from '../_shared/marketComparables.ts';
+
 import { jsonError, jsonResponse, unknownErrorResponse } from '../_shared/jsonError.ts';
 import { generatePricePilotNarrative } from '../_shared/pricepilot/model.ts';
 import {
