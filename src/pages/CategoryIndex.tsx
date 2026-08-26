@@ -212,7 +212,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
       setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [config.category, config.mode, config.city?.name, config.state?.code, config.specialty, categories.join(',')]);
+  }, [config.category, config.mode, config.city?.name, config.state?.code, config.specialty, config.subcategories?.join(','), categories.join(',')]);
 
   const canonical = config.path;
   const totalListings = primary.length + stateFallback.length + nationwideFallback.length;
