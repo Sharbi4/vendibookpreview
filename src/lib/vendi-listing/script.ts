@@ -80,6 +80,45 @@ export const FULFILLMENT_OPTIONS: QuestionOption[] = [
 
 export const QUESTIONS: Question[] = [
   {
+    id: 'import_choice',
+    kind: 'choice',
+    prompt: () =>
+      'Before we start — already listed this somewhere else, like Facebook Marketplace, Craigslist, or a dealer site? Paste that listing text and I’ll prefill everything I can.',
+    options: () => [
+      { value: 'paste', label: 'Paste my existing listing', description: 'I’ll pull out what’s written' },
+      { value: 'fresh', label: 'Start fresh', description: 'Answer a few quick questions' },
+    ],
+    apply: (_d, raw) => {
+      const v = cleanText(raw).toLowerCase();
+      if (v.startsWith('paste') || v.startsWith('yes')) return { patch: {} };
+      if (v.startsWith('fresh') || v.startsWith('no') || v.startsWith('skip')) {
+        return { patch: {}, answeredIds: ['import_paste'] };
+      }
+      return { error: 'Paste your existing listing, or choose “Start fresh”.' };
+    },
+  },
+  {
+    id: 'import_paste',
+    kind: 'paste',
+    optional: true,
+    prompt: () =>
+      'Paste the listing text here — title, description, specs, price, location. I’ll only use what’s actually written, and nothing gets pulled from the other site.',
+    placeholder: 'Paste your existing listing text…',
+    apply: (_d, raw) => {
+      if (isSkip(raw)) return { patch: {} };
+      const result = parseExistingListing(raw);
+      if (!result.found.length && !result.confirms.length) {
+        return { error: 'I couldn’t find anything definite in that. Paste more of the listing, or type “skip”.' };
+      }
+      return {
+        patch: { ...(result.patch as Partial<VendiDraft>), pending_confirm: result.confirms },
+        answeredIds: result.answered,
+        say: `Here’s what I pulled in: ${result.found.join(', ')}. I’ll only ask about what’s still missing.`,
+      };
+    },
+  },
+  {
+
     id: 'mode',
     kind: 'choice',
     prompt: () => "Let's build your listing together. Are you renting this out, or selling it?",
