@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import { TrustStrip } from '@/components/brand/TrustStrip';
 import { usePublicFeatureFlag } from '@/hooks/usePublicFeatureFlag';
@@ -22,7 +23,9 @@ const HomeTrustRail = () => {
           transition={{ duration: 0.45 }}
           className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/45"
         >
-          Checkout by PayPal · Optional Plaid verification · Pay in person where offered
+          <Link to="/payments" className="transition-colors hover:text-foreground/70">
+            Checkout by PayPal · Optional Plaid verification · Pay in person where offered
+          </Link>
         </motion.p>
         <TrustStrip showPlaid={verifiedSellerEnabled} />
       </div>

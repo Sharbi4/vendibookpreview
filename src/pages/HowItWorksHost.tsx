@@ -493,7 +493,11 @@ const HowItWorksHost = () => {
                 <Link to="/pricing" className="underline underline-offset-2 hover:text-foreground">
                   Vendibook Pro
                 </Link>{' '}
-                lowers the host-side fee on completed bookings, among other benefits.
+                lowers the host-side fee on completed bookings, among other benefits. See{' '}
+                <Link to="/payments" className="underline underline-offset-2 hover:text-foreground">
+                  how PayPal checkout and payouts work
+                </Link>
+                .
               </p>
             </motion.div>
           </div>

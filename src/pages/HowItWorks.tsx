@@ -183,8 +183,11 @@ const FLOW: FlowStep[] = [
     title: 'Make the purchase',
     body: (
       <>
-        Negotiate in writing, make an offer, and check out through secure PayPal online
-        payment — or Pay in Person where the listing allows it. Either way, the agreement,
+        Negotiate in writing, make an offer, and check out through{' '}
+        <Link to="/payments" className="font-medium text-primary underline underline-offset-2 decoration-primary/40 hover:text-primary/80">
+          secure PayPal online payment
+        </Link>{' '}
+        — or Pay in Person where the listing allows it. Either way, the agreement,
         the messages, and the payment live on one transaction record.
       </>
     ),
@@ -284,6 +287,12 @@ const ECOSYSTEM: { icon: LucideIcon; name: string; note: string; to: string }[] 
     name: 'Financing',
     note: 'Apply with third-party lending partners on eligible equipment.',
     to: '/financing',
+  },
+  {
+    icon: Wallet,
+    name: 'Payments',
+    note: 'Secure PayPal checkout, Pay in Person, and how payouts work.',
+    to: '/payments',
   },
   {
     icon: Truck,
