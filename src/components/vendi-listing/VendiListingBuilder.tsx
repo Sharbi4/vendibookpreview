@@ -23,7 +23,7 @@ import { capturedFacts } from '@/lib/vendi-listing/summary';
 
 
 import type { DocumentType } from '@/types/documents';
-import { isSkip } from '@/lib/vendi-listing/extract';
+import { isHelpRequest, isSkip } from '@/lib/vendi-listing/extract';
 import { publishVendiListing } from '@/lib/vendi-listing/publishVendiListing';
 import {
   ActiveVendiDraft, adoptVendiSessionKey, createOrResumeVendiDraft, resolveVendiResume,
