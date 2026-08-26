@@ -29,6 +29,7 @@ interface PersistedState {
   draft: VendiDraft;
   answered: string[];
   messages: Msg[];
+  draftId?: string | null;
 }
 
 const uid = () => Math.random().toString(36).slice(2);
