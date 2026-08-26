@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import LivePreviewPanel from '@/components/ai-listing/LivePreviewPanel';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import vendibookFavicon from '@/assets/vendibook-favicon.png';
+import VendiAuthGate from '@/components/vendi-listing/VendiAuthGate';
 import {
   buildListingPayload, getPublishBlockers, nextQuestion, progressPercent,
   Question, VendiDraft,
