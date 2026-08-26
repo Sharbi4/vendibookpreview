@@ -56,7 +56,7 @@ Deno.serve(async (req) => {
 
     const { data: doc } = await svc
       .from('documents')
-      .select('id,document_type,transaction_id,booking_id,signers,status,signed_pdf_path')
+      .select('id,document_type,transaction_id,booking_id,signers,status,signed_pdf_path,renter_signed_at,host_signed_at')
       .eq('signnow_document_id', signnowDocId)
       .maybeSingle();
     if (!doc) return jsonResponse(200, { ok: true, note: 'unknown document' });
@@ -88,6 +88,14 @@ Deno.serve(async (req) => {
     if ((rank[nextStatus] ?? 0) < (rank[doc.status] ?? 0)) nextStatus = doc.status;
 
     const updates: Record<string, unknown> = { signers, status: nextStatus, updated_at: new Date().toISOString() };
+
+    // Denormalized per-party timestamps for dashboards + dispute records.
+    // Written once and never cleared by a replayed webhook.
+    const renterSigned = signers.find((s: any) => s.role === 'renter' || s.role === 'buyer')?.signed_at;
+    const hostSigned = signers.find((s: any) => s.role === 'host' || s.role === 'seller')?.signed_at;
+    if (renterSigned && !(doc as any).renter_signed_at) updates.renter_signed_at = renterSigned;
+    if (hostSigned && !(doc as any).host_signed_at) updates.host_signed_at = hostSigned;
+
 
     // On completion, pull PDF and stash it in private storage.
     if (allSigned && doc.status !== 'completed' && !(doc as any).signed_pdf_path) {

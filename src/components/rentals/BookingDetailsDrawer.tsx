@@ -13,6 +13,8 @@ import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { triggerOrchestrator } from '@/lib/orchestrator';
 import { DocumentsCard } from '@/components/documents/DocumentsCard';
+import { DocumentsInsurancePanel } from '@/components/booking/DocumentsInsurancePanel';
+import { useRequirementEvaluation } from '@/hooks/useRequiredDocuments';
 import {
   User,
   Calendar,
@@ -75,6 +77,13 @@ const BookingDetailsDrawer = ({
   const [isApproving, setIsApproving] = useState(false);
   const [isDeclining, setIsDeclining] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
+
+  const requirementEvaluation = useRequirementEvaluation({
+    listingId: (booking as any).listing_id ?? undefined,
+    bookingId: booking.id,
+    isInstantBook: !!(booking as any).is_instant_book,
+  });
+
 
   // Calculate host payout (total minus platform fee)
   const platformFeePercent = 0.10; // 10% platform fee
@@ -412,6 +421,10 @@ END:VCALENDAR`;
               </Link>
             </Button>
 
+            {/* C. Documents & insurance — only rendered when the host asked for any. */}
+            <DocumentsInsurancePanel evaluation={requirementEvaluation} />
+
+            {/* D. Rental agreement */}
             <DocumentsCard scope={{ booking_id: booking.id }} title="Rental agreement" />
           </div>
         </div>

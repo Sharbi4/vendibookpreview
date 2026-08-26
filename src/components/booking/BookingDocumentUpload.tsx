@@ -114,16 +114,20 @@ const DocumentUploadItem = ({
             </h4>
           </div>
           <p className="text-xs text-muted-foreground">
-            {requirement.description || DOCUMENT_TYPE_DESCRIPTIONS[requirement.document_type]}
+            {requirement.instructions ||
+              requirement.description ||
+              DOCUMENT_TYPE_DESCRIPTIONS[requirement.document_type]}
           </p>
         </div>
         <Badge 
           variant="outline" 
           className={cn(
             'gap-1',
-            stagedFile 
-              ? 'bg-emerald-100 text-emerald-700 border-emerald-200' 
-              : 'bg-amber-100 text-amber-700 border-amber-200'
+            stagedFile
+              ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
+              : requirement.is_required && requirement.deadline_type === 'before_booking_request'
+                ? 'bg-amber-100 text-amber-700 border-amber-200'
+                : 'bg-muted text-muted-foreground border-border'
           )}
         >
           {stagedFile ? (
@@ -131,10 +135,20 @@ const DocumentUploadItem = ({
               <Clock className="h-3 w-3" />
               Ready
             </>
-          ) : (
+          ) : !requirement.is_required ? (
+            <>
+              <Info className="h-3 w-3" />
+              Optional
+            </>
+          ) : requirement.deadline_type === 'before_booking_request' ? (
             <>
               <AlertTriangle className="h-3 w-3" />
-              Required
+              Due before booking
+            </>
+          ) : (
+            <>
+              <Clock className="h-3 w-3" />
+              Due before pickup
             </>
           )}
         </Badge>
@@ -251,12 +265,17 @@ export const BookingDocumentUpload = ({
     onDocumentsChange(stagedDocuments.filter(d => d.documentType !== docType));
   };
 
-  const allDocsStaged = requiredDocs.every(req =>
-    stagedDocuments.some(doc => doc.documentType === req.document_type)
+  // Only host-configured pre-booking requirements gate the Continue button.
+  const blockers = requiredDocs.filter(
+    (req) => req.is_required && req.deadline_type === 'before_booking_request',
   );
+  const missingBlockers = blockers.filter(
+    (req) => !stagedDocuments.some((doc) => doc.documentType === req.document_type),
+  );
+  const allDocsStaged = missingBlockers.length === 0;
 
   const stagedCount = stagedDocuments.length;
-  const totalRequired = requiredDocs.length;
+  const totalRequired = blockers.length;
 
   // If all docs are on file, show bypass UI
   if (docsOnFile) {
@@ -365,7 +384,9 @@ export const BookingDocumentUpload = ({
         className="w-full"
         variant="dark-shine"
       >
-        {allDocsStaged ? 'Continue' : `Upload ${totalRequired - stagedCount} more document${totalRequired - stagedCount > 1 ? 's' : ''}`}
+        {allDocsStaged
+          ? 'Continue'
+          : `Upload ${missingBlockers.length} more document${missingBlockers.length > 1 ? 's' : ''}`}
       </Button>
     </div>
   );

@@ -429,6 +429,8 @@ export type Database = {
           file_url: string
           id: string
           rejection_reason: string | null
+          requirement_id: string | null
+          review_notes: string | null
           reviewed_at: string | null
           reviewed_by: string | null
           status: Database["public"]["Enums"]["document_status"]
@@ -441,6 +443,8 @@ export type Database = {
           file_url: string
           id?: string
           rejection_reason?: string | null
+          requirement_id?: string | null
+          review_notes?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: Database["public"]["Enums"]["document_status"]
@@ -453,6 +457,8 @@ export type Database = {
           file_url?: string
           id?: string
           rejection_reason?: string | null
+          requirement_id?: string | null
+          review_notes?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: Database["public"]["Enums"]["document_status"]
@@ -464,6 +470,13 @@ export type Database = {
             columns: ["booking_id"]
             isOneToOne: false
             referencedRelation: "booking_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_documents_requirement_id_fkey"
+            columns: ["requirement_id"]
+            isOneToOne: false
+            referencedRelation: "listing_required_documents"
             referencedColumns: ["id"]
           },
         ]
@@ -1323,44 +1336,59 @@ export type Database = {
       }
       documents: {
         Row: {
+          agreement_version: string | null
           booking_id: string | null
           created_at: string
           document_type: string
+          host_signed_at: string | null
           id: string
           metadata: Json
+          renter_signed_at: string | null
+          requirements_snapshot: Json
           signed_pdf_path: string | null
           signers: Json
           signnow_document_id: string | null
           signnow_template_id: string | null
           status: string
+          terms_id: string | null
           transaction_id: string | null
           updated_at: string
         }
         Insert: {
+          agreement_version?: string | null
           booking_id?: string | null
           created_at?: string
           document_type: string
+          host_signed_at?: string | null
           id?: string
           metadata?: Json
+          renter_signed_at?: string | null
+          requirements_snapshot?: Json
           signed_pdf_path?: string | null
           signers?: Json
           signnow_document_id?: string | null
           signnow_template_id?: string | null
           status?: string
+          terms_id?: string | null
           transaction_id?: string | null
           updated_at?: string
         }
         Update: {
+          agreement_version?: string | null
           booking_id?: string | null
           created_at?: string
           document_type?: string
+          host_signed_at?: string | null
           id?: string
           metadata?: Json
+          renter_signed_at?: string | null
+          requirements_snapshot?: Json
           signed_pdf_path?: string | null
           signers?: Json
           signnow_document_id?: string | null
           signnow_template_id?: string | null
           status?: string
+          terms_id?: string | null
           transaction_id?: string | null
           updated_at?: string
         }
@@ -1370,6 +1398,13 @@ export type Database = {
             columns: ["booking_id"]
             isOneToOne: false
             referencedRelation: "booking_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_terms_id_fkey"
+            columns: ["terms_id"]
+            isOneToOne: false
+            referencedRelation: "transaction_terms"
             referencedColumns: ["id"]
           },
           {
@@ -3105,8 +3140,11 @@ export type Database = {
           description: string | null
           document_type: Database["public"]["Enums"]["document_type"]
           id: string
+          instructions: string | null
           is_required: boolean
           listing_id: string
+          requirement_config: Json
+          title: string | null
           updated_at: string
         }
         Insert: {
@@ -3116,8 +3154,11 @@ export type Database = {
           description?: string | null
           document_type: Database["public"]["Enums"]["document_type"]
           id?: string
+          instructions?: string | null
           is_required?: boolean
           listing_id: string
+          requirement_config?: Json
+          title?: string | null
           updated_at?: string
         }
         Update: {
@@ -3127,8 +3168,11 @@ export type Database = {
           description?: string | null
           document_type?: Database["public"]["Enums"]["document_type"]
           id?: string
+          instructions?: string | null
           is_required?: boolean
           listing_id?: string
+          requirement_config?: Json
+          title?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -10605,7 +10649,12 @@ export type Database = {
         | "before_booking_request"
         | "before_approval"
         | "after_approval_deadline"
-      document_status: "pending" | "approved" | "rejected"
+      document_status:
+        | "pending"
+        | "approved"
+        | "rejected"
+        | "under_review"
+        | "waived"
       document_type:
         | "drivers_license"
         | "business_license"
@@ -10617,6 +10666,7 @@ export type Database = {
         | "certificate_of_insurance"
         | "work_history_proof"
         | "prior_experience_proof"
+        | "custom_requirement"
       fulfillment_type: "pickup" | "delivery" | "both" | "on_site"
       listing_category:
         | "food_truck"
@@ -10885,7 +10935,13 @@ export const Constants = {
         "before_approval",
         "after_approval_deadline",
       ],
-      document_status: ["pending", "approved", "rejected"],
+      document_status: [
+        "pending",
+        "approved",
+        "rejected",
+        "under_review",
+        "waived",
+      ],
       document_type: [
         "drivers_license",
         "business_license",
@@ -10897,6 +10953,7 @@ export const Constants = {
         "certificate_of_insurance",
         "work_history_proof",
         "prior_experience_proof",
+        "custom_requirement",
       ],
       fulfillment_type: ["pickup", "delivery", "both", "on_site"],
       listing_category: [

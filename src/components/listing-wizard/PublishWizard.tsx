@@ -1081,7 +1081,11 @@ export const PublishWizard: React.FC = () => {
           // Map existing documents
           const loadedDocs: RequiredDocumentSetting[] = docsData.map(d => ({
             document_type: d.document_type as DocumentType,
+            enabled: true,
             is_required: d.is_required,
+            title: (d as any).title || undefined,
+            instructions: (d as any).instructions || undefined,
+            requirement_config: ((d as any).requirement_config ?? undefined),
             deadline_type: d.deadline_type as DocumentDeadlineType,
             deadline_offset_hours: d.deadline_offset_hours || undefined,
             description: d.description || undefined}));
@@ -2101,7 +2105,9 @@ export const PublishWizard: React.FC = () => {
           hourly_special_pricing: hourlySpecialPricing};
       } else if (step === 'documents') {
         // Save required documents to the database
-        const enabledDocs = requiredDocuments.filter(d => d.is_required);
+        // Enabled requirements include host-marked OPTIONAL ones — is_required
+        // now means "blocks per its deadline rule", not "listed at all".
+        const enabledDocs = requiredDocuments.filter(d => d.enabled ?? d.is_required);
         
         // Delete existing documents first — a failed delete must surface as
         // an error instead of silently stacking duplicate requirement rows.
@@ -2117,10 +2123,13 @@ export const PublishWizard: React.FC = () => {
           const docsToInsert = enabledDocs.map(doc => ({
             listing_id: listing.id,
             document_type: doc.document_type,
-            is_required: true,
+            is_required: doc.is_required !== false,
             deadline_type: doc.deadline_type,
             deadline_offset_hours: doc.deadline_offset_hours || null,
-            description: doc.description || null}));
+            description: doc.description || null,
+            title: doc.title?.trim() || null,
+            instructions: doc.instructions?.trim() || null,
+            requirement_config: (doc.requirement_config ?? {}) as unknown as Record<string, never>}));
 
           const { error: insertError } = await supabase
             .from('listing_required_documents')
