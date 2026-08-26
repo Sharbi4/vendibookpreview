@@ -132,9 +132,17 @@ const VendiListingBuilder: React.FC = () => {
   useEffect(() => {
     if (!hydrated || !storageKey) return;
     try {
-      localStorage.setItem(storageKey, JSON.stringify({ draft, answered, messages, draftId, consentId }));
+      localStorage.setItem(storageKey, JSON.stringify({
+        draft,
+        answered,
+        messages,
+        draftId,
+        consentId,
+        uploadedUrls,
+        uploadedVideoUrls,
+      }));
     } catch { /* quota — non-fatal */ }
-  }, [draft, answered, messages, draftId, consentId, hydrated, storageKey]);
+  }, [draft, answered, messages, draftId, consentId, uploadedUrls, uploadedVideoUrls, hydrated, storageKey]);
 
 
 
