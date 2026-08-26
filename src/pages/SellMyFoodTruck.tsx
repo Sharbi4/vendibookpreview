@@ -190,7 +190,7 @@ const SellMyFoodTruck = () => {
   };
 
   const fadeUp = reduceMotion
-    ? undefined
+    ? {}
     : {
         initial: { opacity: 0, y: 18 },
         whileInView: { opacity: 1, y: 0 },
@@ -308,7 +308,7 @@ const SellMyFoodTruck = () => {
                     </div>
                   </div>
 
-                  <div className="absolute -bottom-5 left-4 sm:left-8 max-w-[275px] rounded-[22px] border border-white/70 bg-white/88 p-4 shadow-[0_18px_50px_rgba(42,36,31,0.14)] backdrop-blur-xl">
+                  <div className="absolute -bottom-5 left-4 sm:left-8 max-w-[275px] rounded-[22px] border border-white/70 bg-white/[0.88] p-4 shadow-[0_18px_50px_rgba(42,36,31,0.14)] backdrop-blur-xl">
                     <div className="flex items-start gap-3">
                       <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-full bg-[#f4eee7]">
                         <CheckCircle2 className="h-4 w-4 text-[#5d544b]" />
@@ -368,7 +368,7 @@ const SellMyFoodTruck = () => {
             <div className="container max-w-6xl mx-auto px-4">
               <motion.div
                 {...fadeUp}
-                className="rounded-[34px] border border-white/80 bg-white/72 shadow-[0_26px_80px_rgba(55,45,37,0.08)] backdrop-blur-xl overflow-hidden"
+                className="rounded-[34px] border border-white/80 bg-white/[0.72] shadow-[0_26px_80px_rgba(55,45,37,0.08)] backdrop-blur-xl overflow-hidden"
               >
                 <div className="grid lg:grid-cols-[0.9fr_1.1fr]">
                   <div className="p-7 sm:p-10 lg:p-12 flex flex-col justify-center">
@@ -396,8 +396,8 @@ const SellMyFoodTruck = () => {
                     </Button>
                   </div>
 
-                  <div className="p-4 sm:p-6 lg:p-8 bg-white/35">
-                    <div className="h-full min-h-[470px] rounded-[28px] border border-white/90 bg-white/72 p-4 sm:p-5 shadow-inner backdrop-blur-xl flex flex-col">
+                  <div className="p-4 sm:p-6 lg:p-8 bg-white/[0.35]">
+                    <div className="h-full min-h-[470px] rounded-[28px] border border-white/90 bg-white/[0.72] p-4 sm:p-5 shadow-inner backdrop-blur-xl flex flex-col">
                       <div className="flex items-center justify-between border-b border-[#ece6df] pb-4">
                         <div className="flex items-center gap-3">
                           <div className="h-9 w-9 rounded-full bg-[#efe7df] flex items-center justify-center">
@@ -486,7 +486,7 @@ const SellMyFoodTruck = () => {
             </div>
           </section>
 
-          <section className="py-14 md:py-18 bg-[#f7f3ee] border-y border-[#ece5de]">
+          <section className="py-14 md:py-20 bg-[#f7f3ee] border-y border-[#ece5de]">
             <div className="container max-w-6xl mx-auto px-4">
               <div className="grid md:grid-cols-3 gap-8 md:gap-12">
                 <div>
@@ -612,7 +612,7 @@ const SellMyFoodTruck = () => {
 
         <Footer />
 
-        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-[#e5ded7] bg-[#fbfaf8]/94 p-3 backdrop-blur-xl md:hidden">
+        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-[#e5ded7] bg-[#fbfaf8]/[0.94] p-3 backdrop-blur-xl md:hidden">
           <Button variant="glass-cta" size="lg" className="w-full rounded-full" asChild>
             <Link to="/list?mode=sale">
               List my food truck free
