@@ -180,10 +180,118 @@ export class PayPalProvider implements PaymentProvider {
     }
   }
 
+  // ----------------------------------------------- authorizations (holds)
+
+  /**
+   * Converts an approved AUTHORIZE order into a temporary hold. No money
+   * moves here — the payer's funds are reserved by PayPal until we capture
+   * or void. Never described to buyers as escrow.
+   */
+  async authorizeOrder(
+    providerOrderId: string,
+    idempotencyKey: string,
+  ): Promise<ProviderAuthorization> {
+    try {
+      const order = await authorizePayPalOrder(providerOrderId, idempotencyKey);
+      const auth = order?.purchase_units?.[0]?.payments?.authorizations?.[0];
+      if (!auth?.id) {
+        throw new PaymentProviderError({
+          provider: "paypal",
+          message: "PayPal did not return an authorization. Nothing was charged.",
+          code: "authorization_unverified",
+          status: 502,
+        });
+      }
+      return {
+        providerOrderId,
+        authorizationId: auth.id,
+        status: normalizeAuthorizationStatus(auth.status),
+        amount: {
+          amountCents: centsFromPayPalAmount(auth.amount?.value),
+          currency: auth.amount?.currency_code ?? "USD",
+        },
+        expiresAt: auth.expiration_time ?? null,
+        payerId: order?.payer?.payer_id ?? order?.payment_source?.paypal?.account_id ?? null,
+        paymentSource: order?.payment_source ? Object.keys(order.payment_source)[0] : null,
+        raw: order,
+      };
+    } catch (err) {
+      wrap(err);
+    }
+  }
+
+  async getAuthorization(authorizationId: string): Promise<ProviderAuthorization> {
+    try {
+      const auth = await getPayPalAuthorization(authorizationId);
+      return {
+        providerOrderId: auth?.supplementary_data?.related_ids?.order_id ?? "",
+        authorizationId: auth.id,
+        status: normalizeAuthorizationStatus(auth.status),
+        amount: {
+          amountCents: centsFromPayPalAmount(auth.amount?.value),
+          currency: auth.amount?.currency_code ?? "USD",
+        },
+        expiresAt: auth.expiration_time ?? null,
+        raw: auth,
+      };
+    } catch (err) {
+      wrap(err);
+    }
+  }
+
+  async captureAuthorization(
+    authorizationId: string,
+    idempotencyKey: string,
+    amount?: { amountCents: number; currency?: string },
+    invoiceId?: string,
+  ): Promise<CaptureResult> {
+    try {
+      const current = amount ?? (await this.getAuthorization(authorizationId)).amount;
+      const capture = await capturePayPalAuthorization({
+        authorizationId,
+        amountCents: current.amountCents,
+        currency: (current.currency || "USD").toUpperCase(),
+        invoiceId,
+        idempotencyKey,
+      });
+      if (!capture?.id) {
+        throw new PaymentProviderError({
+          provider: "paypal",
+          message: "PayPal returned no capture record for this hold.",
+          code: "capture_unverified",
+          status: 502,
+        });
+      }
+      return {
+        providerOrderId: capture?.supplementary_data?.related_ids?.order_id ?? "",
+        captureId: capture.id,
+        status: normalizeStatus(capture.status),
+        amount: {
+          amountCents: centsFromPayPalAmount(capture.amount?.value),
+          currency: capture.amount?.currency_code ?? "USD",
+        },
+        raw: capture,
+      };
+    } catch (err) {
+      wrap(err);
+    }
+  }
+
+  /** Releases a hold. Safe to call twice — an already-voided hold resolves. */
+  async voidAuthorization(authorizationId: string): Promise<void> {
+    try {
+      await voidPayPalAuthorization(authorizationId, `void:${authorizationId}`);
+    } catch (err) {
+      if (err instanceof PayPalError && (err.status === 404 || err.status === 422)) return;
+      wrap(err);
+    }
+  }
+
   async cancelOrder(_providerOrderId: string, _reason?: string): Promise<void> {
     // PayPal orders expire on their own; there is no void endpoint for an
     // uncaptured Orders v2 order. Intentionally a no-op.
   }
+
 
   async refundOrder(req: RefundRequest): Promise<RefundResult> {
     try {
