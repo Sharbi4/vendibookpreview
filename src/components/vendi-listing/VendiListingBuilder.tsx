@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 import LivePreviewPanel from '@/components/ai-listing/LivePreviewPanel';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import vendibookFavicon from '@/assets/vendibook-favicon.png';
+import VendiAuthGate from '@/components/vendi-listing/VendiAuthGate';
 import {
   buildListingPayload, getPublishBlockers, nextQuestion, progressPercent,
   Question, VendiDraft,
@@ -19,7 +20,7 @@ type Msg = { id: string; role: 'vendi' | 'user'; content: string };
 
 interface LocalPhoto { id: string; file: File; url: string }
 
-const STORAGE_KEY = 'vendibook_list_with_vendi_v1';
+const storageKeyFor = (userId: string) => `vendibook_list_with_vendi_v1:${userId}`;
 
 const emptyDraft: VendiDraft = {
   title: null, description: null, category: null, mode: null,
@@ -29,13 +30,14 @@ interface PersistedState {
   draft: VendiDraft;
   answered: string[];
   messages: Msg[];
+  draftId?: string | null;
 }
 
 const uid = () => Math.random().toString(36).slice(2);
 
 const VendiListingBuilder: React.FC = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
 
   const [draft, setDraft] = useState<VendiDraft>(emptyDraft);
   const [answered, setAnswered] = useState<string[]>([]);
@@ -47,36 +49,82 @@ const VendiListingBuilder: React.FC = () => {
   const [publishing, setPublishing] = useState(false);
   const [showMobilePreview, setShowMobilePreview] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [draftId, setDraftId] = useState<string | null>(null);
+  const creatingDraftRef = useRef(false);
   const endRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
+  const storageKey = user ? storageKeyFor(user.id) : null;
 
   const current: Question | null = useMemo(
     () => (reviewing ? null : nextQuestion(draft, answered)),
     [draft, answered, reviewing],
   );
 
-  // Restore anonymous progress
+  // Restore this signed-in owner's in-progress conversation
   useEffect(() => {
+    if (!storageKey) return;
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
+      const raw = localStorage.getItem(storageKey);
       if (raw) {
         const parsed = JSON.parse(raw) as PersistedState;
         if (parsed?.draft) {
           setDraft(parsed.draft);
           setAnswered(parsed.answered ?? []);
           setMessages(parsed.messages ?? []);
+          setDraftId(parsed.draftId ?? null);
         }
       }
     } catch { /* ignore corrupt state */ }
     setHydrated(true);
-  }, []);
+  }, [storageKey]);
 
   useEffect(() => {
-    if (!hydrated) return;
+    if (!hydrated || !storageKey) return;
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify({ draft, answered, messages }));
+      localStorage.setItem(storageKey, JSON.stringify({ draft, answered, messages, draftId }));
     } catch { /* quota — non-fatal */ }
-  }, [draft, answered, messages, hydrated]);
+  }, [draft, answered, messages, draftId, hydrated, storageKey]);
+
+  // Create the owned draft row as soon as we know mode + category, so every
+  // later answer and upload is autosaved against the seller's account.
+  useEffect(() => {
+    if (!hydrated || !user || draftId || creatingDraftRef.current) return;
+    if (!draft.mode || !draft.category) return;
+    creatingDraftRef.current = true;
+    void (async () => {
+      try {
+        const { data: sessionData } = await supabase.auth.getSession();
+        const accessToken = sessionData.session?.access_token;
+        if (!accessToken) return;
+        const { data: created, error } = await supabase.functions.invoke('create-listing-draft', {
+          headers: { Authorization: `Bearer ${accessToken}` },
+          body: {
+            mode: draft.mode === 'sale' ? 'sale' : 'rent',
+            category: draft.category,
+            city: draft.city ?? null,
+            state: draft.state ?? null,
+            zipCode: draft.zip_code ?? null,
+            location: draft.address ?? null,
+          },
+        });
+        if (error) throw error;
+        const id = (created as { id?: string } | null)?.id;
+        if (id) setDraftId(id);
+      } catch {
+        creatingDraftRef.current = false;
+      }
+    })();
+  }, [hydrated, user, draftId, draft.mode, draft.category, draft.city, draft.state, draft.zip_code, draft.address]);
+
+  // Debounced autosave of collected answers onto the owned draft
+  useEffect(() => {
+    if (!draftId || !hydrated) return;
+    const timer = window.setTimeout(() => {
+      const payload = buildListingPayload(draft, uploadedUrls);
+      void supabase.from('listings').update(payload as never).eq('id', draftId);
+    }, 1200);
+    return () => window.clearTimeout(timer);
+  }, [draft, uploadedUrls, draftId, hydrated]);
 
   // Ask the first / next question
   useEffect(() => {
@@ -145,33 +193,50 @@ const VendiListingBuilder: React.FC = () => {
     return urls;
   };
 
+  // Persist media to the owner's draft as soon as both exist, so photos survive
+  // a closed tab just like the answers do.
+  useEffect(() => {
+    if (!draftId || !user || !photos.length || uploadedUrls.length) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const urls = await uploadPhotos(draftId, user.id);
+        if (!cancelled) setUploadedUrls(urls);
+      } catch {
+        /* keep local previews; publish retries the upload */
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftId, user, photos.length, uploadedUrls.length]);
+
   const handlePublish = async () => {
     if (blockers.length) return;
-    if (!user) {
-      toast.info('Create your free account to publish — your answers are saved.');
-      navigate('/auth?redirect=/list-with-vendi');
-      return;
-    }
+    if (!user) return;
     setPublishing(true);
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       const accessToken = sessionData.session?.access_token;
       if (!accessToken) throw new Error('Please sign in again to publish.');
 
-      const { data: created, error: draftError } = await supabase.functions.invoke('create-listing-draft', {
-        headers: { Authorization: `Bearer ${accessToken}` },
-        body: {
-          mode: draft.mode === 'sale' ? 'sale' : 'rent',
-          category: draft.category,
-          city: draft.city ?? null,
-          state: draft.state ?? null,
-          zipCode: draft.zip_code ?? null,
-          location: draft.address ?? null,
-        },
-      });
-      if (draftError) throw draftError;
-      const listingId = (created as { id?: string } | null)?.id;
-      if (!listingId) throw new Error('We could not start your draft. Please try again.');
+      let listingId = draftId;
+      if (!listingId) {
+        const { data: created, error: draftError } = await supabase.functions.invoke('create-listing-draft', {
+          headers: { Authorization: `Bearer ${accessToken}` },
+          body: {
+            mode: draft.mode === 'sale' ? 'sale' : 'rent',
+            category: draft.category,
+            city: draft.city ?? null,
+            state: draft.state ?? null,
+            zipCode: draft.zip_code ?? null,
+            location: draft.address ?? null,
+          },
+        });
+        if (draftError) throw draftError;
+        listingId = (created as { id?: string } | null)?.id ?? null;
+        if (!listingId) throw new Error('We could not start your draft. Please try again.');
+        setDraftId(listingId);
+      }
 
       const imageUrls = uploadedUrls.length ? uploadedUrls : await uploadPhotos(listingId, user.id);
       setUploadedUrls(imageUrls);
@@ -185,7 +250,7 @@ const VendiListingBuilder: React.FC = () => {
         .update({ status: 'published', published_at: new Date().toISOString() } as never)
         .eq('id', listingId);
 
-      localStorage.removeItem(STORAGE_KEY);
+      if (storageKey) localStorage.removeItem(storageKey);
 
       if (publishError) {
         toast.message('Draft saved — a few details still need review before it can go live.', {
@@ -206,8 +271,9 @@ const VendiListingBuilder: React.FC = () => {
   };
 
   const startOver = () => {
-    localStorage.removeItem(STORAGE_KEY);
+    if (storageKey) localStorage.removeItem(storageKey);
     setDraft(emptyDraft); setAnswered([]); setMessages([]); setPhotos([]); setUploadedUrls([]); setReviewing(false);
+    setDraftId(null); creatingDraftRef.current = false;
   };
 
   const progress = progressPercent(draft, answered);
@@ -215,6 +281,17 @@ const VendiListingBuilder: React.FC = () => {
   const previewPanel = (
     <LivePreviewPanel preview={draft} images={previewImages} ready={blockers.length === 0} />
   );
+
+  // The interview never starts anonymously — the draft, answers and media must
+  // belong to a real account from the very first question.
+  if (authLoading) {
+    return (
+      <div className="flex min-h-[70vh] items-center justify-center bg-[#08080a]">
+        <Loader2 className="h-6 w-6 animate-spin text-white/50" />
+      </div>
+    );
+  }
+  if (!user) return <VendiAuthGate />;
 
   return (
     <div className="dashboard-shell relative min-h-screen overflow-hidden bg-[#08080a] text-foreground">
