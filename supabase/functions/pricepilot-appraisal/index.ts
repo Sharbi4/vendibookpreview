@@ -233,13 +233,14 @@ Deno.serve(async (req) => {
     );
 
     const comps: CompRecord[] = [];
+    let saleEvidenceRows: ComparableRow[] = [];
 
     if (subject.mode === 'sale') {
       // 1. Observed marketplace evidence (Facebook sold/pending status).
       const { data: observed, error: obsErr } = await service
         .from('pricepilot_market_comparables')
         .select(
-          'id, source_title, city, state, year, make, model, length_ft, displayed_price, previous_displayed_price, observed_status, evidence_confidence, quality_flags, normalized_features',
+          'id, source, source_title, asset_category, valuation_mode, city, state, year, make, model, length_ft, displayed_price, previous_displayed_price, verified_transaction_price, transaction_price_verified, observed_status, extraction_confidence, evidence_confidence, usable_for_valuation, quality_flags, normalized_features',
         )
         .eq('valuation_mode', 'sale')
         .eq('asset_category', subject.assetCategory)
@@ -247,6 +248,8 @@ Deno.serve(async (req) => {
         .not('displayed_price', 'is', null)
         .limit(200);
       if (obsErr) console.warn('comp query failed:', obsErr.message);
+      saleEvidenceRows = (observed ?? []) as unknown as ComparableRow[];
+
       for (const row of observed ?? []) {
         comps.push({
           id: row.id,
