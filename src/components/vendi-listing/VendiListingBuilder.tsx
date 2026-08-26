@@ -1442,6 +1442,25 @@ const VendiListingBuilder: React.FC = () => {
                       ) : (
                         <img src={p.url} alt="Listing photo" className="h-full w-full object-cover" />
                       )}
+                      {mediaStatus[p.id] === 'uploading' && (
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/55" aria-label="Uploading">
+                          <Loader2 className="h-4 w-4 animate-spin text-white" />
+                        </div>
+                      )}
+                      {mediaStatus[p.id] === 'done' && (
+                        <span className="absolute bottom-1 left-1 rounded-full bg-black/70 p-1" aria-label="Uploaded">
+                          <Check className="h-3 w-3 text-emerald-400" />
+                        </span>
+                      )}
+                      {mediaStatus[p.id] === 'error' && (
+                        <button
+                          type="button"
+                          onClick={() => retryMedia(p.id)}
+                          className="absolute inset-x-0 bottom-0 bg-red-600/85 py-1 text-[10px] font-medium text-white"
+                        >
+                          Retry
+                        </button>
+                      )}
                       <button
                         type="button"
                         aria-label="Remove media"
@@ -1451,6 +1470,7 @@ const VendiListingBuilder: React.FC = () => {
                         <X className="h-3 w-3" />
                       </button>
                     </motion.div>
+
                   ))}
                   <button
                     type="button"
