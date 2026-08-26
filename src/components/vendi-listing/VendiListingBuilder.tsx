@@ -879,7 +879,14 @@ const VendiListingBuilder: React.FC = () => {
                 <div className="mb-3 flex flex-wrap gap-2">
                   {photos.map((p) => (
                     <div key={p.id} className="relative h-14 w-14 overflow-hidden rounded-xl border border-white/[0.1]">
-                      <img src={p.url} alt="Attached" className="h-full w-full object-cover" />
+                      {p.kind === 'video' ? (
+                        <div className="flex h-full w-full items-center justify-center bg-white/[0.05] text-muted-foreground">
+                          <Video className="h-4 w-4" />
+                        </div>
+                      ) : (
+                        <img src={p.url} alt="Attached" className="h-full w-full object-cover" />
+                      )}
+
                       <button
                         type="button"
                         aria-label="Remove attachment"
