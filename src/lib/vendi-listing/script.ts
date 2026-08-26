@@ -7,11 +7,16 @@
  *
  * Rules:
  *  - Only explicitly-stated facts are captured. Nothing is inferred.
- *  - Rental listings may be priced monthly, weekly, daily, or hourly.
+ *  - Rental listings may be priced monthly, weekly, daily, and/or hourly.
  *  - The user always sees a final review and must explicitly confirm publish.
+ *  - Field names and allowed values mirror the step-by-step wizard exactly.
  */
 
-import { SUBCATEGORIES_BY_CATEGORY, ListingCategory } from '@/types/listing';
+import {
+  AMENITIES_BY_CATEGORY, SUBCATEGORIES_BY_CATEGORY, SUBCATEGORY_LABELS,
+  CATEGORY_LABELS, ListingCategory,
+} from '@/types/listing';
+import { DOCUMENT_TYPE_LABELS, type DocumentType } from '@/types/documents';
 import type { ListingPreview } from '@/components/ai-listing/LivePreviewPanel';
 import {
   cleanText, isSkip, parseDimensions, parseList, parseLocation, parseMoney, parseYesNo,
@@ -20,13 +25,30 @@ import { parseExistingListing, type PendingConfirm } from './importText';
 
 export type VendiDraft = ListingPreview & {
   zip_code?: string | null;
-  /** Which rental rate the seller chose to price on. */
+  /** Which rental rate the seller priced first. */
   rent_period?: string | null;
   /** Ambiguous values pulled from a pasted listing, awaiting confirmation. */
   pending_confirm?: PendingConfirm[];
+  // Fulfillment / logistics — same columns the manual wizard writes.
+  delivery_fee?: number | null;
+  delivery_radius_miles?: number | null;
+  pickup_instructions?: string | null;
+  delivery_instructions?: string | null;
+  // Static-location detail (shared kitchens, vendor spaces).
+  access_instructions?: string | null;
+  hours_of_access?: string | null;
+  location_notes?: string | null;
+  // Sale payment preferences (PayPal / pay in person only).
+  accept_paypal_checkout?: boolean | null;
+  accept_cash_payment?: boolean | null;
+  // Optional freight branch for eligible sale listings.
+  vendibook_freight_enabled?: boolean | null;
+  /** Rental screening documents, written to listing_required_documents. */
+  required_documents?: DocumentType[];
 };
 
-export type QuestionKind = 'choice' | 'text' | 'money' | 'location' | 'yesno' | 'list' | 'photos' | 'paste';
+export type QuestionKind =
+  | 'choice' | 'text' | 'money' | 'location' | 'yesno' | 'list' | 'photos' | 'paste' | 'date_range';
 
 export interface QuestionOption {
   value: string;
@@ -46,16 +68,25 @@ export interface ApplyResult {
 export interface Question {
   id: string;
   kind: QuestionKind;
+  /** `core` runs before review; `extra` only if the owner asks to go deeper. */
+  tier?: 'core' | 'extra';
   prompt: (d: VendiDraft) => string;
+  /** A short, contextual tip shown under the prompt. */
+  tip?: (d: VendiDraft) => string | null;
   placeholder?: string;
   optional?: boolean;
   options?: (d: VendiDraft) => QuestionOption[];
+  /** Offers a one-tap value built only from already-confirmed facts. */
+  suggest?: (d: VendiDraft) => string | null;
   when?: (d: VendiDraft) => boolean;
   apply: (d: VendiDraft, raw: string) => ApplyResult;
 }
 
-
 const MOBILE_CATEGORIES = ['food_truck', 'food_trailer'];
+const STATIC_CATEGORIES = ['ghost_kitchen', 'vendor_space', 'vendor_lot'];
+
+export const isMobileAsset = (category?: string | null) => MOBILE_CATEGORIES.includes(category ?? '');
+export const isStaticLocation = (category?: string | null) => STATIC_CATEGORIES.includes(category ?? '');
 
 export const CATEGORY_OPTIONS: QuestionOption[] = [
   { value: 'food_truck', label: 'Food Truck', description: 'Drivable mobile kitchen' },
@@ -78,15 +109,83 @@ export const FULFILLMENT_OPTIONS: QuestionOption[] = [
   { value: 'both', label: 'Pickup or delivery' },
 ];
 
+export const PAYMENT_OPTIONS: QuestionOption[] = [
+  { value: 'both', label: 'PayPal or in person', description: 'Widest reach — recommended' },
+  { value: 'paypal', label: 'PayPal checkout only', description: 'Buyer pays online' },
+  { value: 'in_person', label: 'In person only', description: 'Cash sales are free on Vendibook' },
+];
+
+export const RENTAL_DOC_OPTIONS: DocumentType[] = [
+  'drivers_license',
+  'commercial_liability_insurance',
+  'vehicle_insurance',
+  'food_handler_certificate',
+  'business_license',
+];
+
+const RATE_KEY: Record<string, keyof VendiDraft> = {
+  monthly: 'price_monthly', weekly: 'price_weekly', daily: 'price_daily', hourly: 'price_hourly',
+};
+
+const money = (n: number) => `$${n.toLocaleString('en-US')}`;
+
+const amenitySuggestions = (category?: string | null): string[] => {
+  const groups = AMENITIES_BY_CATEGORY[(category ?? '') as ListingCategory];
+  if (!groups) return [];
+  return groups.flatMap((g) => g.items.map((i) => i.label)).slice(0, 8);
+};
+
+/** Parses "daily 250, weekly 900" style multi-rate input. Explicit only. */
+export function parseExtraRates(raw: string): Partial<VendiDraft> {
+  const patch: Partial<VendiDraft> = {};
+  const text = raw.toLowerCase();
+  const periods: Array<[string, RegExp]> = [
+    ['monthly', /(month|monthly|\/\s*mo\b|per month)/],
+    ['weekly', /(week|weekly|\/\s*wk\b|per week)/],
+    ['daily', /(day|daily|\/\s*day|per day)/],
+    ['hourly', /(hour|hourly|\/\s*hr\b|per hour)/],
+  ];
+  for (const segment of raw.split(/[,;\n]+/)) {
+    const seg = segment.toLowerCase();
+    const value = parseMoney(seg);
+    if (!value) continue;
+    const period = periods.find(([, re]) => re.test(seg));
+    if (!period) continue;
+    patch[RATE_KEY[period[0]] as 'price_monthly'] = value;
+  }
+  // A single trailing period word applied to the whole line, e.g. "250 a day"
+  if (!Object.keys(patch).length) {
+    const value = parseMoney(text);
+    const period = periods.find(([, re]) => re.test(text));
+    if (value && period) patch[RATE_KEY[period[0]] as 'price_monthly'] = value;
+  }
+  return patch;
+}
+
+const rateSummary = (d: VendiDraft): string => {
+  const parts: string[] = [];
+  if (d.price_monthly) parts.push(`${money(d.price_monthly)}/month`);
+  if (d.price_weekly) parts.push(`${money(d.price_weekly)}/week`);
+  if (d.price_daily) parts.push(`${money(d.price_daily)}/day`);
+  if (d.price_hourly) parts.push(`${money(d.price_hourly)}/hour`);
+  return parts.join(' · ');
+};
+
+const parseDateRange = (raw: string): { from: string | null; to: string | null } => {
+  const dates = raw.match(/\d{4}-\d{2}-\d{2}/g) ?? [];
+  return { from: dates[0] ?? null, to: dates[1] ?? null };
+};
+
 export const QUESTIONS: Question[] = [
   {
     id: 'import_choice',
     kind: 'choice',
+    tier: 'core',
     prompt: () =>
-      'Before we start — already listed this somewhere else, like Facebook Marketplace, Craigslist, or a dealer site? Paste that listing text and I’ll prefill everything I can.',
+      'Quick head start — is this already listed somewhere else, like Facebook Marketplace, Craigslist, or a dealer site? Paste the text and I’ll fill in what’s written.',
     options: () => [
       { value: 'paste', label: 'Paste my existing listing', description: 'I’ll pull out what’s written' },
-      { value: 'fresh', label: 'Start fresh', description: 'Answer a few quick questions' },
+      { value: 'fresh', label: 'Start fresh', description: 'A few quick questions' },
     ],
     apply: (_d, raw) => {
       const v = cleanText(raw).toLowerCase();
@@ -100,28 +199,29 @@ export const QUESTIONS: Question[] = [
   {
     id: 'import_paste',
     kind: 'paste',
+    tier: 'core',
     optional: true,
     prompt: () =>
-      'Paste the listing text here — title, description, specs, price, location. I’ll only use what’s actually written, and nothing gets pulled from the other site.',
+      'Go ahead and paste it — title, description, specs, price, location. I only use what’s actually written, and I never pull anything from the other site.',
     placeholder: 'Paste your existing listing text…',
     apply: (_d, raw) => {
       if (isSkip(raw)) return { patch: {} };
       const result = parseExistingListing(raw);
       if (!result.found.length && !result.confirms.length) {
-        return { error: 'I couldn’t find anything definite in that. Paste more of the listing, or type “skip”.' };
+        return { error: 'I couldn’t find anything definite in there. Paste a bit more, or type “skip” and we’ll do it together.' };
       }
       return {
         patch: { ...(result.patch as Partial<VendiDraft>), pending_confirm: result.confirms },
         answeredIds: result.answered,
-        say: `Here’s what I pulled in: ${result.found.join(', ')}. I’ll only ask about what’s still missing.`,
+        say: `Nice — I pulled in ${result.found.join(', ')}. I won’t ask you for any of that again.`,
       };
     },
   },
   {
-
     id: 'mode',
     kind: 'choice',
-    prompt: () => "Let's build your listing together. Are you renting this out, or selling it?",
+    tier: 'core',
+    prompt: () => 'First things first — are you renting this out, or selling it?',
     options: () => [
       { value: 'rent', label: 'Rent it out', description: 'Recurring income from bookings' },
       { value: 'sale', label: 'Sell it', description: 'One-time sale to a buyer' },
@@ -130,64 +230,49 @@ export const QUESTIONS: Question[] = [
       const v = cleanText(raw).toLowerCase();
       if (v.startsWith('rent') || v.startsWith('lease')) return { patch: { mode: 'rent' } };
       if (v.startsWith('sale') || v.startsWith('sell')) return { patch: { mode: 'sale' } };
-      return { error: 'Choose “Rent it out” or “Sell it” so I set the listing up correctly.' };
+      return { error: 'Rent it out, or sell it — either one works, I just need to know which.' };
     },
   },
   {
     id: 'category',
     kind: 'choice',
-    prompt: (d) => (d.mode === 'sale' ? 'What are you selling?' : 'What are you renting out?'),
+    tier: 'core',
+    prompt: (d) => (d.mode === 'sale' ? 'Great. What are you selling?' : 'Great. What are you renting out?'),
     options: () => CATEGORY_OPTIONS,
     apply: (_d, raw) => {
       const v = cleanText(raw).toLowerCase().replace(/\s+/g, '_');
       const match = CATEGORY_OPTIONS.find((o) => o.value === v);
-      if (!match) return { error: 'Pick one of the categories so buyers can find it.' };
+      if (!match) return { error: 'Pick the closest category — that’s how buyers find you.' };
       return { patch: { category: match.value } };
     },
   },
   {
     id: 'subcategory',
     kind: 'choice',
+    tier: 'core',
     optional: true,
     when: (d) => !!d.category && (SUBCATEGORIES_BY_CATEGORY[d.category as ListingCategory]?.length ?? 0) > 0,
-    prompt: () => 'Which build is it closest to? This decides which specialty pages it shows up on.',
+    prompt: () => 'Which build is it closest to?',
+    tip: () => 'This puts you on the right specialty pages — coffee, BBQ, pizza and so on.',
     options: (d) => SUBCATEGORIES_BY_CATEGORY[d.category as ListingCategory] ?? [],
     apply: (d, raw) => {
       if (isSkip(raw)) return { patch: { subcategory: null } };
       const v = cleanText(raw).toLowerCase().replace(/\s+/g, '_');
       const list = SUBCATEGORIES_BY_CATEGORY[d.category as ListingCategory] ?? [];
       const match = list.find((o) => o.value === v);
-      if (!match) return { error: 'Pick one of the build types, or skip it.' };
+      if (!match) return { error: 'Pick one of the build types, or skip it — we can always add it later.' };
       return { patch: { subcategory: match.value } };
-    },
-  },
-  {
-    id: 'title',
-    kind: 'text',
-    prompt: () => 'Give it a title — what would you call it in one line?',
-    placeholder: 'e.g. Turnkey coffee trailer, fully equipped',
-    apply: (_d, raw) => {
-      const title = cleanText(raw).slice(0, 120);
-      if (title.length < 8) return { error: 'A little longer, please — at least 8 characters.' };
-      return { patch: { title } };
-    },
-  },
-  {
-    id: 'description',
-    kind: 'text',
-    prompt: () => 'Describe it in your own words. Equipment, condition, what’s included — only what you know for sure.',
-    placeholder: 'Tell me about the build, equipment, and condition…',
-    apply: (_d, raw) => {
-      const description = cleanText(raw).slice(0, 4000);
-      if (description.length < 20) return { error: 'Add a bit more detail — at least 20 characters.' };
-      return { patch: { description } };
     },
   },
   {
     id: 'location',
     kind: 'location',
-    prompt: () => 'Where is it located? City and state is enough.',
-    placeholder: 'e.g. Mesa, AZ',
+    tier: 'core',
+    prompt: (d) => (isStaticLocation(d.category)
+      ? 'Where is the space? City and state is enough — a ZIP helps local search.'
+      : 'Where is it based? City and state is enough — a ZIP helps local search.'),
+    tip: () => 'Your exact address stays private until a booking or sale is confirmed.',
+    placeholder: 'e.g. Mesa, AZ 85201',
     apply: (_d, raw) => {
       const loc = parseLocation(raw);
       if (!loc.city || !loc.state) {
@@ -200,58 +285,163 @@ export const QUESTIONS: Question[] = [
           zip_code: loc.zip_code,
           address: [loc.city, loc.state].filter(Boolean).join(', '),
         },
+        say: `${loc.city}, ${loc.state} — added to your preview.`,
       };
     },
   },
   {
     id: 'sale_price',
     kind: 'money',
+    tier: 'core',
     when: (d) => d.mode === 'sale',
     prompt: () => 'What’s your asking price?',
     placeholder: 'e.g. $45,000',
     apply: (_d, raw) => {
       const value = parseMoney(raw);
       if (!value) return { error: 'Give me a number, like $45,000.' };
-      return { patch: { price_sale: value } };
+      return { patch: { price_sale: value }, say: `${money(value)} asking. Buyers can still send you offers.` };
     },
   },
   {
     id: 'rent_period',
     kind: 'choice',
+    tier: 'core',
     when: (d) => d.mode === 'rent',
-    prompt: () => 'How do you want to price the rental?',
+    prompt: () => 'How do you want to price it?',
+    tip: () => 'Pick your main rate now — you can add more rates in a moment.',
     options: () => RENT_PERIOD_OPTIONS,
     apply: (_d, raw) => {
       const v = cleanText(raw).toLowerCase();
       const match = RENT_PERIOD_OPTIONS.find((o) => v.includes(o.value) || v.includes(o.label.toLowerCase()));
-      if (!match) return { error: 'Pick monthly, weekly, daily, or hourly.' };
+      if (!match) return { error: 'Monthly, weekly, daily, or hourly — whichever fits how you rent it.' };
       return { patch: { rent_period: match.value } as Partial<VendiDraft> };
     },
   },
   {
     id: 'rent_price',
     kind: 'money',
-    when: (d) => d.mode === 'rent' && !!(d as any).rent_period,
+    tier: 'core',
+    when: (d) => d.mode === 'rent' && !!d.rent_period,
     prompt: (d) => {
-      const period = (d as any).rent_period as string;
-      const label = RENT_PERIOD_OPTIONS.find((o) => o.value === period)?.label.toLowerCase() ?? 'per month';
+      const label = RENT_PERIOD_OPTIONS.find((o) => o.value === d.rent_period)?.label.toLowerCase() ?? 'per month';
       return `What’s the rate ${label}?`;
     },
     placeholder: 'e.g. $1,000',
     apply: (d, raw) => {
       const value = parseMoney(raw);
       if (!value) return { error: 'Give me a number, like $1,000.' };
-      const period = (d as any).rent_period as string;
-      const key = ({
-        monthly: 'price_monthly', weekly: 'price_weekly', daily: 'price_daily', hourly: 'price_hourly',
-      } as Record<string, keyof VendiDraft>)[period];
+      const key = RATE_KEY[d.rent_period ?? ''];
       if (!key) return { error: 'Let me know the rental period first.' };
-      return { patch: { [key]: value } as Partial<VendiDraft> };
+      const period = (d.rent_period ?? 'monthly').replace('ly', '');
+      return {
+        patch: { [key]: value } as Partial<VendiDraft>,
+        say: `Perfect — ${money(value)} per ${period === 'dai' ? 'day' : period}. I’ve added that to your preview.`,
+      };
+    },
+  },
+  {
+    id: 'description',
+    kind: 'text',
+    tier: 'core',
+    prompt: (d) => (isStaticLocation(d.category)
+      ? 'Tell me about the space in your own words — equipment, size, who it suits.'
+      : 'Tell me about it in your own words — the build, equipment, condition, what’s included.'),
+    tip: () => 'Naming the actual equipment is what turns browsers into buyers. Only what you know for sure.',
+    placeholder: 'Tell me about the build, equipment, and condition…',
+    apply: (_d, raw) => {
+      const description = cleanText(raw).slice(0, 4000);
+      if (description.length < 20) return { error: 'A couple more sentences would help — at least 20 characters.' };
+      return { patch: { description } };
+    },
+  },
+  {
+    id: 'fulfillment',
+    kind: 'choice',
+    tier: 'core',
+    when: (d) => isMobileAsset(d.category),
+    prompt: () => 'How does the handoff work?',
+    options: () => FULFILLMENT_OPTIONS,
+    apply: (_d, raw) => {
+      const v = cleanText(raw).toLowerCase();
+      const match = FULFILLMENT_OPTIONS.find((o) => v.includes(o.value));
+      if (!match) return { error: 'Pickup, delivery, or both.' };
+      return {
+        patch: { fulfillment_type: match.value },
+        say: match.value === 'pickup' ? 'Got it. Pickup only.' : undefined,
+      };
+    },
+  },
+  {
+    id: 'instant_book',
+    kind: 'yesno',
+    tier: 'core',
+    when: (d) => d.mode === 'rent',
+    prompt: () => 'Should renters be able to book instantly, or do you want to approve each request?',
+    tip: () => 'Instant Book fills more dates; approval gives you the final say.',
+    apply: (_d, raw) => {
+      const value = parseYesNo(raw);
+      if (value === null) return { error: 'Yes for instant booking, no if you’d rather approve each one.' };
+      return {
+        patch: { instant_book: value },
+        say: value ? 'Instant Book is on.' : 'You’ll approve each request.',
+      };
+    },
+  },
+  {
+    id: 'photos',
+    kind: 'photos',
+    tier: 'core',
+    prompt: () => 'Now the part buyers care about most — photos.',
+    tip: (d) => (isStaticLocation(d.category)
+      ? 'A wide shot of the space, the equipment, and the entrance go a long way.'
+      : 'Exterior, interior, and a few equipment close-ups do the heavy lifting. Video works too.'),
+    apply: () => ({ patch: {} }),
+  },
+  {
+    id: 'title',
+    kind: 'text',
+    tier: 'core',
+    prompt: () => 'Last core piece — the headline buyers see first. Here’s one I put together from your answers, or write your own.',
+    placeholder: 'e.g. Turnkey coffee trailer, fully equipped',
+    suggest: (d) => {
+      if (!d.category) return null;
+      const build = d.subcategory ? SUBCATEGORY_LABELS[d.subcategory] : null;
+      const asset = build ?? CATEGORY_LABELS[d.category as ListingCategory] ?? null;
+      if (!asset) return null;
+      const where = d.city && d.state ? ` in ${d.city}, ${d.state}` : '';
+      const lead = d.mode === 'rent' ? 'for rent' : 'for sale';
+      return `${asset} ${lead}${where}`.slice(0, 120);
+    },
+    apply: (_d, raw) => {
+      const title = cleanText(raw).slice(0, 120);
+      if (title.length < 8) return { error: 'A little longer, please — at least 8 characters.' };
+      return { patch: { title } };
+    },
+  },
+
+  // ——— Optional depth, only after the listing can already publish ———
+
+  {
+    id: 'rent_extra_rates',
+    kind: 'text',
+    tier: 'extra',
+    optional: true,
+    when: (d) => d.mode === 'rent',
+    prompt: () => 'Want to offer more than one rate? Tell me any others, like “weekly 900, daily 250”.',
+    placeholder: 'e.g. weekly $900, daily $250',
+    apply: (_d, raw) => {
+      if (isSkip(raw)) return { patch: {} };
+      const patch = parseExtraRates(raw);
+      if (!Object.keys(patch).length) {
+        return { error: 'Try it like “weekly $900, daily $250” — I need the amount and the period together.' };
+      }
+      return { patch, say: `Added. Your rates: ${rateSummary({ ...(patch as VendiDraft) })}` };
     },
   },
   {
     id: 'deposit',
     kind: 'money',
+    tier: 'extra',
     optional: true,
     when: (d) => d.mode === 'rent',
     prompt: () => 'Do you want a refundable security deposit? Tell me the amount, or skip.',
@@ -260,38 +450,136 @@ export const QUESTIONS: Question[] = [
       if (isSkip(raw)) return { patch: { deposit_amount: null } };
       const value = parseMoney(raw);
       if (!value) return { error: 'Give me a deposit amount, or skip it.' };
-      return { patch: { deposit_amount: value } };
+      return { patch: { deposit_amount: value }, say: `${money(value)} refundable deposit noted.` };
     },
   },
   {
-    id: 'instant_book',
-    kind: 'yesno',
+    id: 'availability',
+    kind: 'date_range',
+    tier: 'extra',
+    optional: true,
     when: (d) => d.mode === 'rent',
-    prompt: () => 'Should renters be able to book instantly, without waiting for your approval?',
+    prompt: () => 'Is it available for a set window? Give me the dates, or skip to keep it open-ended.',
+    placeholder: 'e.g. 2026-09-01 to 2027-03-01',
     apply: (_d, raw) => {
-      const value = parseYesNo(raw);
-      if (value === null) return { error: 'Just yes or no works here.' };
-      return { patch: { instant_book: value } };
+      if (isSkip(raw)) return { patch: { available_from: null, available_to: null } };
+      const { from, to } = parseDateRange(raw);
+      if (!from) return { error: 'Use dates like 2026-09-01, or skip to stay open-ended.' };
+      return { patch: { available_from: from, available_to: to } };
     },
   },
   {
-    id: 'fulfillment',
-    kind: 'choice',
-    when: (d) => MOBILE_CATEGORIES.includes(d.category ?? ''),
-    prompt: () => 'How does the handoff work?',
-    options: () => FULFILLMENT_OPTIONS,
+    id: 'required_documents',
+    kind: 'list',
+    tier: 'extra',
+    optional: true,
+    when: (d) => d.mode === 'rent',
+    prompt: () => 'Anything renters must provide before they book? Pick what applies, or skip.',
+    tip: () => 'Most hosts ask for a driver’s license and insurance. Nothing here is required.',
+    options: () => RENTAL_DOC_OPTIONS.map((value) => ({ value, label: DOCUMENT_TYPE_LABELS[value] })),
     apply: (_d, raw) => {
-      const v = cleanText(raw).toLowerCase();
-      const match = FULFILLMENT_OPTIONS.find((o) => v.includes(o.value));
-      if (!match) return { error: 'Pick pickup, delivery, or both.' };
-      return { patch: { fulfillment_type: match.value } };
+      if (isSkip(raw)) return { patch: { required_documents: [] } };
+      const wanted = parseList(raw).map((s) => s.toLowerCase());
+      const picked = RENTAL_DOC_OPTIONS.filter((doc) =>
+        wanted.some((w) => w === doc || DOCUMENT_TYPE_LABELS[doc].toLowerCase().includes(w)));
+      if (!picked.length) return { error: 'Pick from the options shown, or skip this one.' };
+      return { patch: { required_documents: picked } };
+    },
+  },
+  {
+    id: 'delivery_terms',
+    kind: 'text',
+    tier: 'extra',
+    optional: true,
+    when: (d) => isMobileAsset(d.category) && ['delivery', 'both'].includes(d.fulfillment_type ?? ''),
+    prompt: () => 'How far will you deliver, and what do you charge? Something like “50 miles, $200”.',
+    placeholder: 'e.g. 50 miles, $200',
+    apply: (_d, raw) => {
+      if (isSkip(raw)) return { patch: {} };
+      const miles = raw.match(/(\d{1,4})\s*(mi|mile)/i);
+      const fee = parseMoney(raw.replace(/(\d{1,4})\s*(mi|mile)\w*/gi, ''));
+      if (!miles && !fee) return { error: 'Try “50 miles, $200”, or skip it.' };
+      return {
+        patch: {
+          delivery_radius_miles: miles ? Number(miles[1]) : null,
+          delivery_fee: fee ?? null,
+        },
+      };
+    },
+  },
+  {
+    id: 'delivery_instructions',
+    kind: 'text',
+    tier: 'extra',
+    optional: true,
+    when: (d) => ['delivery', 'both'].includes(d.fulfillment_type ?? ''),
+    prompt: () => 'Anything the renter or buyer should know about delivery day?',
+    placeholder: 'e.g. I tow it in and set it up, 48 hours notice',
+    apply: (_d, raw) => {
+      if (isSkip(raw)) return { patch: {} };
+      return { patch: { delivery_instructions: cleanText(raw).slice(0, 1000) } };
+    },
+  },
+  {
+    id: 'pickup_instructions',
+    kind: 'text',
+    tier: 'extra',
+    optional: true,
+    when: (d) => isMobileAsset(d.category) && ['pickup', 'both'].includes(d.fulfillment_type ?? ''),
+    prompt: () => 'Anything they should know about pickup? Hitch type, gate access, best times.',
+    placeholder: 'e.g. 2-5/16" ball, weekday pickups only',
+    apply: (_d, raw) => {
+      if (isSkip(raw)) return { patch: {} };
+      return { patch: { pickup_instructions: cleanText(raw).slice(0, 1000) } };
+    },
+  },
+  {
+    id: 'hours_of_access',
+    kind: 'text',
+    tier: 'extra',
+    optional: true,
+    when: (d) => isStaticLocation(d.category),
+    prompt: () => 'When can vendors use the space?',
+    placeholder: 'e.g. Mon–Fri 6am–10pm, weekends by arrangement',
+    apply: (_d, raw) => {
+      if (isSkip(raw)) return { patch: {} };
+      return { patch: { hours_of_access: cleanText(raw).slice(0, 500) } };
+    },
+  },
+  {
+    id: 'access_instructions',
+    kind: 'text',
+    tier: 'extra',
+    optional: true,
+    when: (d) => isStaticLocation(d.category),
+    prompt: () => 'How do they get in — keys, codes, check-in with someone?',
+    placeholder: 'e.g. Keypad at the side door, code shared after booking',
+    apply: (_d, raw) => {
+      if (isSkip(raw)) return { patch: {} };
+      return { patch: { access_instructions: cleanText(raw).slice(0, 1000) } };
+    },
+  },
+  {
+    id: 'location_notes',
+    kind: 'text',
+    tier: 'extra',
+    optional: true,
+    when: (d) => isStaticLocation(d.category),
+    prompt: () => 'Anything useful about the site itself? Parking, loading, foot traffic, power on site.',
+    placeholder: 'e.g. Rear loading dock, 20 dedicated parking spots',
+    apply: (_d, raw) => {
+      if (isSkip(raw)) return { patch: {} };
+      return { patch: { location_notes: cleanText(raw).slice(0, 1000) } };
     },
   },
   {
     id: 'amenities',
     kind: 'list',
+    tier: 'extra',
     optional: true,
-    prompt: () => 'List the equipment and features included — comma separated. Only what’s actually there.',
+    prompt: () => 'What equipment and features are included? Tap the common ones or type your own.',
+    tip: () => 'Specific equipment is one of the biggest trust signals on a listing.',
+    options: (d) => amenitySuggestions(d.category).map((label) => ({ value: label, label })),
     placeholder: 'e.g. Espresso machine, 3-compartment sink, generator',
     apply: (_d, raw) => {
       if (isSkip(raw)) return { patch: { amenities: [] } };
@@ -301,11 +589,48 @@ export const QUESTIONS: Question[] = [
     },
   },
   {
+    id: 'highlights',
+    kind: 'list',
+    tier: 'extra',
+    optional: true,
+    prompt: () => 'Any standout points you want at the top of the listing? Three short lines at most.',
+    placeholder: 'e.g. New tires, health-inspected 2026, low hours',
+    apply: (_d, raw) => {
+      if (isSkip(raw)) return { patch: { highlights: [] } };
+      const highlights = parseList(raw).slice(0, 3);
+      if (!highlights.length) return { error: 'Separate them with commas, or skip.' };
+      return { patch: { highlights } };
+    },
+  },
+  {
+    id: 'payment_prefs',
+    kind: 'choice',
+    tier: 'extra',
+    optional: true,
+    when: (d) => d.mode === 'sale',
+    prompt: () => 'How would you like to get paid?',
+    tip: () => 'Pay-in-person sales are completely free — no commission, no buyer fee.',
+    options: () => PAYMENT_OPTIONS,
+    apply: (_d, raw) => {
+      if (isSkip(raw)) return { patch: {} };
+      const v = cleanText(raw).toLowerCase();
+      if (v.includes('paypal') && !v.includes('person')) {
+        return { patch: { accept_paypal_checkout: true, accept_cash_payment: false } };
+      }
+      if (v.includes('person') || v.includes('cash')) {
+        return { patch: { accept_paypal_checkout: false, accept_cash_payment: true } };
+      }
+      if (v.includes('both')) return { patch: { accept_paypal_checkout: true, accept_cash_payment: true } };
+      return { error: 'Pick one of the payment options, or skip to keep both open.' };
+    },
+  },
+  {
     id: 'dimensions',
     kind: 'text',
+    tier: 'extra',
     optional: true,
-    when: (d) => MOBILE_CATEGORIES.includes(d.category ?? ''),
-    prompt: () => 'What are the dimensions? Length x width x height. Skip if you’re not sure.',
+    when: (d) => isMobileAsset(d.category),
+    prompt: () => 'Do you know the dimensions? Length x width x height.',
     placeholder: 'e.g. 20 x 8 x 9 ft',
     apply: (_d, raw) => {
       if (isSkip(raw)) return { patch: {} };
@@ -315,19 +640,49 @@ export const QUESTIONS: Question[] = [
     },
   },
   {
-    id: 'photos',
-    kind: 'photos',
+    id: 'freight',
+    kind: 'yesno',
+    tier: 'extra',
     optional: true,
-    prompt: () => 'Add photos — listings with photos get far more interest. Upload a few, then continue.',
-    apply: () => ({ patch: {} }),
+    when: (d) => d.mode === 'sale' && isMobileAsset(d.category) && !!d.length_inches,
+    prompt: () => 'Since you have the dimensions — want out-of-state buyers to see a Vendibook Freight shipping estimate?',
+    apply: (_d, raw) => {
+      if (isSkip(raw)) return { patch: {} };
+      const value = parseYesNo(raw);
+      if (value === null) return { error: 'Yes or no — you can change this later either way.' };
+      return { patch: { vendibook_freight_enabled: value } };
+    },
   },
 ];
+
+/** The gate between the required interview and the optional depth questions. */
+export const REVIEW_GATE_ID = 'ready_gate';
+
+export const readyGateQuestion = (extras: Question[]): Question => ({
+  id: REVIEW_GATE_ID,
+  kind: 'choice',
+  prompt: () =>
+    'Good news — your listing has everything it needs to publish. I can ask a few optional questions that tend to help buyers, or you can review it now.',
+  options: () => [
+    { value: 'strengthen', label: 'Strengthen my listing', description: 'A few optional details' },
+    { value: 'review', label: 'Review listing', description: 'Go straight to publish' },
+  ],
+  apply: (_d, raw) => {
+    const v = cleanText(raw).toLowerCase();
+    if (v.startsWith('strengthen') || v.startsWith('yes')) return { patch: {} };
+    if (v.startsWith('review') || v.startsWith('no') || v.startsWith('skip')) {
+      return { patch: {}, answeredIds: extras.map((q) => q.id) };
+    }
+    return { error: 'Strengthen the listing, or jump to review — your call.' };
+  },
+});
 
 /** Yes/no questions generated from ambiguous values found in a pasted listing. */
 export function confirmQuestions(draft: VendiDraft): Question[] {
   return (draft.pending_confirm ?? []).map((c) => ({
     id: c.id,
     kind: 'yesno' as const,
+    tier: 'core' as const,
     prompt: () => c.question,
     apply: (_d: VendiDraft, raw: string): ApplyResult => {
       const value = parseYesNo(raw);
@@ -339,22 +694,27 @@ export function confirmQuestions(draft: VendiDraft): Question[] {
 }
 
 export function visibleQuestions(draft: VendiDraft): Question[] {
-  const base = QUESTIONS.filter((q) => !q.when || q.when(draft));
+  const applicable = QUESTIONS.filter((q) => !q.when || q.when(draft));
+  const core = applicable.filter((q) => q.tier !== 'extra');
+  const extras = applicable.filter((q) => q.tier === 'extra');
+
   const confirms = confirmQuestions(draft);
-  if (!confirms.length) return base;
-  // Confirmations run right after the paste step, before the normal interview.
-  const pasteIndex = base.findIndex((q) => q.id === 'import_paste');
-  const at = pasteIndex === -1 ? 0 : pasteIndex + 1;
-  return [...base.slice(0, at), ...confirms, ...base.slice(at)];
+  let ordered = core;
+  if (confirms.length) {
+    const pasteIndex = core.findIndex((q) => q.id === 'import_paste');
+    const at = pasteIndex === -1 ? 0 : pasteIndex + 1;
+    ordered = [...core.slice(0, at), ...confirms, ...core.slice(at)];
+  }
+  return [...ordered, readyGateQuestion(extras), ...extras];
 }
 
 export function nextQuestion(draft: VendiDraft, answered: string[]): Question | null {
   return visibleQuestions(draft).find((q) => !answered.includes(q.id)) ?? null;
 }
 
-
+/** Percentage of the *required* interview that is done. Optional depth is extra. */
 export function progressPercent(draft: VendiDraft, answered: string[]): number {
-  const visible = visibleQuestions(draft);
+  const visible = visibleQuestions(draft).filter((q) => q.tier !== 'extra' && q.id !== REVIEW_GATE_ID);
   if (!visible.length) return 0;
   const done = visible.filter((q) => answered.includes(q.id)).length;
   return Math.round((done / visible.length) * 100);
@@ -377,16 +737,21 @@ export function getPublishBlockers(draft: VendiDraft, imageCount: number): strin
 }
 
 /** Fields written to the listings row. Never includes retired payment paths. */
-export function buildListingPayload(draft: VendiDraft, imageUrls: string[]): Record<string, unknown> {
+export function buildListingPayload(
+  draft: VendiDraft,
+  imageUrls: string[],
+  videoUrls: string[] = [],
+): Record<string, unknown> {
   const isSale = draft.mode === 'sale';
+  const mobile = isMobileAsset(draft.category);
+  const delivers = ['delivery', 'both'].includes(draft.fulfillment_type ?? '');
   return {
     title: draft.title ?? '',
     description: draft.description ?? '',
     category: draft.category,
     mode: isSale ? 'sale' : 'rent',
     subcategory: draft.subcategory ?? null,
-    fulfillment_type: draft.fulfillment_type
-      ?? (MOBILE_CATEGORIES.includes(draft.category ?? '') ? 'pickup' : 'on_site'),
+    fulfillment_type: draft.fulfillment_type ?? (mobile ? 'pickup' : 'on_site'),
     address: draft.address ?? null,
     pickup_location_text: draft.address ?? null,
     city: draft.city ?? null,
@@ -400,13 +765,24 @@ export function buildListingPayload(draft: VendiDraft, imageUrls: string[]): Rec
     price_daily: isSale ? null : draft.price_daily ?? null,
     price_hourly: isSale ? null : draft.price_hourly ?? null,
     deposit_amount: isSale ? null : draft.deposit_amount ?? null,
+    available_from: isSale ? null : draft.available_from ?? null,
+    available_to: isSale ? null : draft.available_to ?? null,
     instant_book: isSale ? false : !!draft.instant_book,
+    delivery_radius_miles: delivers ? draft.delivery_radius_miles ?? null : null,
+    delivery_fee: delivers ? draft.delivery_fee ?? null : null,
+    pickup_instructions: draft.pickup_instructions ?? null,
+    delivery_instructions: delivers ? draft.delivery_instructions ?? null : null,
+    access_instructions: draft.access_instructions ?? null,
+    hours_of_access: draft.hours_of_access ?? null,
+    location_notes: draft.location_notes ?? null,
     length_inches: draft.length_inches ?? null,
     width_inches: draft.width_inches ?? null,
     height_inches: draft.height_inches ?? null,
+    vendibook_freight_enabled: isSale ? !!draft.vendibook_freight_enabled : false,
     image_urls: imageUrls.length ? imageUrls : null,
     cover_image_url: imageUrls[0] ?? null,
-    accept_paypal_checkout: isSale,
-    accept_cash_payment: isSale ? true : false,
+    video_urls: videoUrls.length ? videoUrls : null,
+    accept_paypal_checkout: isSale ? draft.accept_paypal_checkout ?? true : false,
+    accept_cash_payment: isSale ? draft.accept_cash_payment ?? true : false,
   };
 }

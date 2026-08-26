@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import { parseDimensions, parseList, parseLocation, parseMoney, parseYesNo, isSkip } from '../extract';
 import {
-  QUESTIONS, VendiDraft, buildListingPayload, getPublishBlockers, nextQuestion, visibleQuestions,
+  QUESTIONS, REVIEW_GATE_ID, VendiDraft, buildListingPayload, getPublishBlockers, nextQuestion,
+  parseExtraRates, visibleQuestions,
 } from '../script';
 
 const q = (id: string) => {
@@ -109,5 +110,121 @@ describe('rental monthly pricing', () => {
       accept_paypal_checkout: false,
       cover_image_url: 'https://example.com/a.jpg',
     });
+  });
+});
+
+describe('progressive interview and optional depth', () => {
+  const coreRental = (): VendiDraft => {
+    let d: VendiDraft = { title: null, description: null, category: null, mode: null };
+    d = answer(d, 'mode', 'rent');
+    d = answer(d, 'category', 'food_trailer');
+    d = answer(d, 'location', 'Spring Hill, TN');
+    d = answer(d, 'rent_period', 'monthly');
+    d = answer(d, 'rent_price', '$1,000');
+    d = answer(d, 'description', 'Turnkey trailer available for monthly lease in Spring Hill.');
+    d = answer(d, 'fulfillment', 'pickup');
+    d = answer(d, 'instant_book', 'no');
+    d = answer(d, 'title', 'Like new turnkey food trailer for lease');
+    return d;
+  };
+
+  const coreAnswers = [
+    'import_choice', 'import_paste', 'mode', 'category', 'subcategory', 'location',
+    'rent_period', 'rent_price', 'description', 'fulfillment', 'instant_book', 'photos', 'title',
+  ];
+
+  it('asks the title only after the substantive facts are gathered', () => {
+    const ids = visibleQuestions(coreRental()).filter((x) => x.tier !== 'extra').map((x) => x.id);
+    expect(ids.indexOf('title')).toBeGreaterThan(ids.indexOf('description'));
+    expect(ids.indexOf('title')).toBeGreaterThan(ids.indexOf('rent_price'));
+  });
+
+  it('suggests a title only from confirmed facts', () => {
+    const d = { ...coreRental(), subcategory: 'coffee_beverage' };
+    expect(q('title').suggest?.(d)).toBe('Coffee & Beverage for rent in Spring Hill, TN');
+  });
+
+  it('offers review once minimum publish requirements are met', () => {
+    const d = coreRental();
+    expect(getPublishBlockers(d, 1)).toEqual([]);
+    const gate = nextQuestion(d, coreAnswers);
+    expect(gate?.id).toBe(REVIEW_GATE_ID);
+    const res = gate!.apply(d, 'review');
+    expect(res.error).toBeUndefined();
+    // Choosing review marks all optional questions answered — no forced depth.
+    expect(nextQuestion(d, [...coreAnswers, REVIEW_GATE_ID, ...(res.answeredIds ?? [])])).toBeNull();
+    // Choosing to strengthen keeps them queued.
+    expect(nextQuestion(d, [...coreAnswers, REVIEW_GATE_ID])?.tier).toBe('extra');
+  });
+
+  it('branches static-location questions away from mobile assets', () => {
+    const kitchen: VendiDraft = { title: null, description: null, category: 'ghost_kitchen', mode: 'rent' };
+    const kitchenIds = visibleQuestions(kitchen).map((x) => x.id);
+    expect(kitchenIds).toContain('hours_of_access');
+    expect(kitchenIds).toContain('access_instructions');
+    expect(kitchenIds).toContain('location_notes');
+    expect(kitchenIds).not.toContain('fulfillment');
+    expect(kitchenIds).not.toContain('dimensions');
+
+    const truck: VendiDraft = { title: null, description: null, category: 'food_truck', mode: 'sale' };
+    const truckIds = visibleQuestions(truck).map((x) => x.id);
+    expect(truckIds).toContain('dimensions');
+    expect(truckIds).not.toContain('hours_of_access');
+  });
+
+  it('shows delivery detail questions only when delivery is offered', () => {
+    const pickup: VendiDraft = { title: null, description: null, category: 'food_trailer', mode: 'rent', fulfillment_type: 'pickup' };
+    expect(visibleQuestions(pickup).map((x) => x.id)).not.toContain('delivery_terms');
+    const delivers = { ...pickup, fulfillment_type: 'both' };
+    const ids = visibleQuestions(delivers).map((x) => x.id);
+    expect(ids).toContain('delivery_terms');
+    expect(ids).toContain('pickup_instructions');
+  });
+
+  it('supports multiple rental rates at once', () => {
+    let d = coreRental();
+    d = answer(d, 'rent_extra_rates', 'weekly $900, daily 250');
+    expect(d.price_monthly).toBe(1000);
+    expect(d.price_weekly).toBe(900);
+    expect(d.price_daily).toBe(250);
+    const payload = buildListingPayload(d, ['https://example.com/a.jpg']);
+    expect(payload).toMatchObject({ price_monthly: 1000, price_weekly: 900, price_daily: 250, price_hourly: null });
+    expect(parseExtraRates('no idea')).toEqual({});
+  });
+
+  it('maps sale payment preferences to the current PayPal / in-person fields', () => {
+    const base: VendiDraft = { title: null, description: null, category: 'food_truck', mode: 'sale' };
+    const inPerson = answer(base, 'payment_prefs', 'in_person');
+    expect(buildListingPayload(inPerson, [])).toMatchObject({
+      accept_paypal_checkout: false, accept_cash_payment: true,
+    });
+    const paypal = answer(base, 'payment_prefs', 'paypal');
+    expect(buildListingPayload(paypal, [])).toMatchObject({
+      accept_paypal_checkout: true, accept_cash_payment: false,
+    });
+  });
+
+  it('persists static-location and video fields on the payload', () => {
+    const kitchen: VendiDraft = {
+      title: 'Prep kitchen downtown', description: 'A licensed prep kitchen available by the month.',
+      category: 'ghost_kitchen', mode: 'rent', city: 'Mesa', state: 'AZ', price_monthly: 900,
+      hours_of_access: 'Mon-Fri 6am-10pm', access_instructions: 'Keypad at side door',
+      location_notes: 'Rear loading dock',
+    };
+    const payload = buildListingPayload(kitchen, ['https://example.com/a.jpg'], ['https://example.com/a.mp4']);
+    expect(payload).toMatchObject({
+      fulfillment_type: 'on_site',
+      hours_of_access: 'Mon-Fri 6am-10pm',
+      access_instructions: 'Keypad at side door',
+      location_notes: 'Rear loading dock',
+      video_urls: ['https://example.com/a.mp4'],
+    });
+  });
+
+  it('still blocks publishing until the required fields exist', () => {
+    const bare: VendiDraft = { title: null, description: null, category: null, mode: null };
+    const blockers = getPublishBlockers(bare, 0);
+    expect(blockers).toContain('Choose rent or sale.');
+    expect(blockers).toContain('Add at least one photo.');
   });
 });

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Check, ImagePlus, Loader2, Send, X, Wrench, Eye } from 'lucide-react';
+import { ArrowLeft, Check, CloudUpload, ImagePlus, Loader2, Send, X, Wrench, Eye, Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,7 +14,9 @@ import {
   buildListingPayload, getPublishBlockers, nextQuestion, progressPercent,
   Question, VendiDraft,
 } from '@/lib/vendi-listing/script';
+import type { DocumentType } from '@/types/documents';
 import { isSkip } from '@/lib/vendi-listing/extract';
+
 import {
   ATTESTATIONS,
   publishAcceptanceText,
@@ -29,9 +31,12 @@ import { cn } from '@/lib/utils';
 
 type Msg = { id: string; role: 'vendi' | 'user'; content: string };
 
-interface LocalPhoto { id: string; file: File; url: string }
+interface LocalPhoto { id: string; file: File; url: string; kind: 'image' | 'video' }
 
 const storageKeyFor = (userId: string) => `vendibook_list_with_vendi_v1:${userId}`;
+
+const WELCOME =
+  'Hey! I’m Vendi 👋 I’ll help you put together a great listing. I’ll only ask what we need, and you can save and come back anytime.';
 
 const emptyDraft: VendiDraft = {
   title: null, description: null, category: null, mode: null,
@@ -48,6 +53,8 @@ interface PersistedState {
 const uid = () => Math.random().toString(36).slice(2);
 
 
+
+
 const VendiListingBuilder: React.FC = () => {
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
@@ -58,6 +65,7 @@ const VendiListingBuilder: React.FC = () => {
   const [input, setInput] = useState('');
   const [photos, setPhotos] = useState<LocalPhoto[]>([]);
   const [uploadedUrls, setUploadedUrls] = useState<string[]>([]);
+  const [uploadedVideoUrls, setUploadedVideoUrls] = useState<string[]>([]);
   const [reviewing, setReviewing] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [showMobilePreview, setShowMobilePreview] = useState(false);
@@ -67,6 +75,8 @@ const VendiListingBuilder: React.FC = () => {
   const [attesting, setAttesting] = useState(false);
   const [attestInput, setAttestInput] = useState('');
   const [attestError, setAttestError] = useState<string | null>(null);
+  const [saveState, setSaveState] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const [savingManually, setSavingManually] = useState(false);
 
   const creatingDraftRef = useRef(false);
   const disclosureShownRef = useRef(false);
@@ -87,7 +97,8 @@ const VendiListingBuilder: React.FC = () => {
     [draft, answered, reviewing],
   );
 
-  // Restore this signed-in owner's in-progress conversation
+  // Restore this signed-in owner's in-progress conversation. We never restart
+  // the interview or re-ask something they already answered.
   useEffect(() => {
     if (!storageKey) return;
     try {
@@ -97,7 +108,14 @@ const VendiListingBuilder: React.FC = () => {
         if (parsed?.draft) {
           setDraft(parsed.draft);
           setAnswered(parsed.answered ?? []);
-          setMessages(parsed.messages ?? []);
+          const restored = parsed.messages ?? [];
+          setMessages(restored.length
+            ? [...restored, {
+                id: uid(),
+                role: 'vendi' as const,
+                content: 'Welcome back — I saved your progress. We can pick up right where you left off.',
+              }]
+            : restored);
           setDraftId(parsed.draftId ?? null);
           setConsentId(parsed.consentId ?? null);
         }
@@ -112,6 +130,7 @@ const VendiListingBuilder: React.FC = () => {
       localStorage.setItem(storageKey, JSON.stringify({ draft, answered, messages, draftId, consentId }));
     } catch { /* quota — non-fatal */ }
   }, [draft, answered, messages, draftId, consentId, hydrated, storageKey]);
+
 
 
   // Create the owned draft row as soon as we know mode + category, so every
@@ -145,15 +164,25 @@ const VendiListingBuilder: React.FC = () => {
     })();
   }, [hydrated, user, draftId, draft.mode, draft.category, draft.city, draft.state, draft.zip_code, draft.address]);
 
-  // Debounced autosave of collected answers onto the owned draft
+  // Debounced autosave of collected answers onto the owned draft. The row stays
+  // status=draft until the owner explicitly publishes.
   useEffect(() => {
     if (!draftId || !hydrated) return;
+    setSaveState('saving');
     const timer = window.setTimeout(() => {
-      const payload = buildListingPayload(draft, uploadedUrls);
-      void supabase.from('listings').update(payload as never).eq('id', draftId);
+      const payload = buildListingPayload(draft, uploadedUrls, uploadedVideoUrls);
+      void supabase.from('listings').update(payload as never).eq('id', draftId).then(({ error }) => {
+        setSaveState(error ? 'error' : 'saved');
+      });
     }, 1200);
     return () => window.clearTimeout(timer);
-  }, [draft, uploadedUrls, draftId, hydrated]);
+  }, [draft, uploadedUrls, uploadedVideoUrls, draftId, hydrated]);
+
+  // Warm welcome before the first question
+  useEffect(() => {
+    if (!hydrated) return;
+    setMessages((prev) => (prev.length ? prev : [{ id: uid(), role: 'vendi', content: WELCOME }]));
+  }, [hydrated]);
 
   // Ask the first / next question
   useEffect(() => {
@@ -161,8 +190,9 @@ const VendiListingBuilder: React.FC = () => {
     const q = nextQuestion(draft, answered);
     if (!q) { setReviewing(true); return; }
     setMessages((prev) => {
+      const tip = q.tip?.(draft);
+      const prompt = tip ? `${q.prompt(draft)}\n\n${tip}` : q.prompt(draft);
       const last = prev[prev.length - 1];
-      const prompt = q.prompt(draft);
       if (last?.role === 'vendi' && last.content === prompt) return prev;
       return [...prev, { id: uid(), role: 'vendi', content: prompt }];
     });
@@ -215,47 +245,156 @@ const VendiListingBuilder: React.FC = () => {
 
   const handlePhotos = (files: FileList | null) => {
     if (!files?.length) return;
-    const accepted = Array.from(files).filter((f) => f.type.startsWith('image/') && f.size <= 15 * 1024 * 1024);
-    if (accepted.length !== files.length) toast.error('Some files were skipped (images up to 15MB only).');
-    setPhotos((prev) => [...prev, ...accepted.map((file) => ({ id: uid(), file, url: URL.createObjectURL(file) }))].slice(0, 12));
+    const accepted = Array.from(files).filter((f) => {
+      if (f.type.startsWith('image/')) return f.size <= 15 * 1024 * 1024;
+      if (f.type.startsWith('video/')) return f.size <= 100 * 1024 * 1024;
+      return false;
+    });
+    if (accepted.length !== files.length) {
+      toast.error('Some files were skipped (images up to 15MB, video up to 100MB).');
+    }
+    setPhotos((prev) => [
+      ...prev,
+      ...accepted.map((file) => ({
+        id: uid(),
+        file,
+        url: URL.createObjectURL(file),
+        kind: (file.type.startsWith('video/') ? 'video' : 'image') as 'image' | 'video',
+      })),
+    ].slice(0, 12));
   };
 
   const removePhoto = (id: string) => setPhotos((prev) => prev.filter((p) => p.id !== id));
 
-  const previewImages = uploadedUrls.length ? uploadedUrls : photos.map((p) => p.url);
+  const localImages = photos.filter((p) => p.kind === 'image');
+  const localVideos = photos.filter((p) => p.kind === 'video');
+  const previewImages = uploadedUrls.length ? uploadedUrls : localImages.map((p) => p.url);
   const blockers = getPublishBlockers(draft, previewImages.length);
 
-  const uploadPhotos = async (listingId: string, userId: string): Promise<string[]> => {
-    const urls: string[] = [];
-    for (const photo of photos) {
-      const ext = photo.file.name.split('.').pop()?.toLowerCase() || 'jpg';
+  const uploadMedia = async (
+    listingId: string,
+    userId: string,
+  ): Promise<{ images: string[]; videos: string[] }> => {
+    const images: string[] = [];
+    const videos: string[] = [];
+    for (const item of photos) {
+      const isVideo = item.kind === 'video';
+      const bucket = isVideo ? 'listing-videos' : 'listing-images';
+      const ext = item.file.name.split('.').pop()?.toLowerCase() || (isVideo ? 'mp4' : 'jpg');
       const path = `${userId}/${listingId}/${Date.now()}-${uid()}.${ext}`;
-      const { error } = await supabase.storage.from('listing-images').upload(path, photo.file, {
-        cacheControl: '3600', upsert: true, contentType: photo.file.type || 'image/jpeg',
+      const { error } = await supabase.storage.from(bucket).upload(path, item.file, {
+        cacheControl: '3600',
+        upsert: true,
+        contentType: item.file.type || (isVideo ? 'video/mp4' : 'image/jpeg'),
       });
-      if (error) throw new Error(`Photo upload failed: ${error.message}`);
-      const { data } = supabase.storage.from('listing-images').getPublicUrl(path);
-      urls.push(data.publicUrl);
+      if (error) throw new Error(`Upload failed: ${error.message}`);
+      const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+      (isVideo ? videos : images).push(data.publicUrl);
     }
-    return urls;
+    return { images, videos };
+  };
+
+  /** Rental screening documents live in their own table, same as the wizard. */
+  const syncRequiredDocuments = async (listingId: string) => {
+    const docs = (draft.required_documents ?? []) as DocumentType[];
+    if (draft.mode !== 'rent') return;
+    await supabase.from('listing_required_documents').delete().eq('listing_id', listingId);
+    if (!docs.length) return;
+    await supabase.from('listing_required_documents').insert(
+      docs.map((document_type) => ({
+        listing_id: listingId,
+        document_type,
+        is_required: true,
+        deadline_type: 'before_approval' as const,
+      })),
+    );
   };
 
   // Persist media to the owner's draft as soon as both exist, so photos survive
   // a closed tab just like the answers do.
   useEffect(() => {
-    if (!draftId || !user || !photos.length || uploadedUrls.length) return;
+    if (!draftId || !user || !photos.length || uploadedUrls.length || uploadedVideoUrls.length) return;
     let cancelled = false;
     void (async () => {
       try {
-        const urls = await uploadPhotos(draftId, user.id);
-        if (!cancelled) setUploadedUrls(urls);
+        const { images, videos } = await uploadMedia(draftId, user.id);
+        if (!cancelled) { setUploadedUrls(images); setUploadedVideoUrls(videos); }
       } catch {
         /* keep local previews; publish retries the upload */
       }
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draftId, user, photos.length, uploadedUrls.length]);
+  }, [draftId, user, photos.length, uploadedUrls.length, uploadedVideoUrls.length]);
+
+  /**
+   * Explicit "Save draft" — flushes the debounce immediately, persists pending
+   * media, and keeps local recovery state intact either way.
+   */
+  const handleSaveDraft = async () => {
+    if (!user || savingManually) return;
+    setSavingManually(true);
+    setSaveState('saving');
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) throw new Error('Please sign in again to save.');
+
+      let listingId = draftId;
+      if (!listingId) {
+        if (!draft.mode || !draft.category) {
+          toast.message('Nothing to save yet — tell me what you’re listing first.');
+          setSaveState('idle');
+          return;
+        }
+        const { data: created, error } = await supabase.functions.invoke('create-listing-draft', {
+          headers: { Authorization: `Bearer ${accessToken}` },
+          body: {
+            mode: draft.mode === 'sale' ? 'sale' : 'rent',
+            category: draft.category,
+            city: draft.city ?? null,
+            state: draft.state ?? null,
+            zipCode: draft.zip_code ?? null,
+            location: draft.address ?? null,
+          },
+        });
+        if (error) throw error;
+        listingId = (created as { id?: string } | null)?.id ?? null;
+        if (!listingId) throw new Error('We could not start your draft.');
+        setDraftId(listingId);
+      }
+
+      let images = uploadedUrls;
+      let videos = uploadedVideoUrls;
+      if (photos.length && !images.length && !videos.length) {
+        const uploaded = await uploadMedia(listingId, user.id);
+        images = uploaded.images; videos = uploaded.videos;
+        setUploadedUrls(images); setUploadedVideoUrls(videos);
+      }
+
+      const { error: updateError } = await supabase
+        .from('listings')
+        .update(buildListingPayload(draft, images, videos) as never)
+        .eq('id', listingId);
+      if (updateError) throw updateError;
+      await syncRequiredDocuments(listingId);
+
+      setSaveState('saved');
+      toast.success('Draft saved.', {
+        description: 'You can pick up right where you left off from your dashboard.',
+        action: { label: 'Go to dashboard', onClick: () => navigate('/dashboard') },
+      });
+    } catch (error) {
+      setSaveState('error');
+      toast.error(
+        error instanceof Error ? error.message : 'We could not save your draft.',
+        { description: 'Your answers are still here — try again in a moment.' },
+      );
+    } finally {
+      setSavingManually(false);
+    }
+  };
+
 
   /**
    * Exactly `YES` — uppercase, no surrounding punctuation, no extra words.
@@ -338,12 +477,20 @@ const VendiListingBuilder: React.FC = () => {
         setDraftId(listingId);
       }
 
-      const imageUrls = uploadedUrls.length ? uploadedUrls : await uploadPhotos(listingId, user.id);
+      let imageUrls = uploadedUrls;
+      let videoUrls = uploadedVideoUrls;
+      if (photos.length && !imageUrls.length && !videoUrls.length) {
+        const uploaded = await uploadMedia(listingId, user.id);
+        imageUrls = uploaded.images; videoUrls = uploaded.videos;
+      }
       setUploadedUrls(imageUrls);
+      setUploadedVideoUrls(videoUrls);
 
-      const payload = buildListingPayload(draft, imageUrls);
+      const payload = buildListingPayload(draft, imageUrls, videoUrls);
       const { error: updateError } = await supabase.from('listings').update(payload as never).eq('id', listingId);
       if (updateError) throw updateError;
+      await syncRequiredDocuments(listingId);
+
 
       const { error: publishError } = await supabase
         .from('listings')
@@ -372,10 +519,13 @@ const VendiListingBuilder: React.FC = () => {
 
   const startOver = () => {
     if (storageKey) localStorage.removeItem(storageKey);
-    setDraft(emptyDraft); setAnswered([]); setMessages([]); setPhotos([]); setUploadedUrls([]); setReviewing(false);
+    setDraft(emptyDraft); setAnswered([]); setMessages([]); setPhotos([]); setUploadedUrls([]);
+    setUploadedVideoUrls([]); setReviewing(false);
     setDraftId(null); creatingDraftRef.current = false;
     setConsentId(null); setAttestInput(''); disclosureShownRef.current = false;
+    setSaveState('idle');
   };
+
 
 
   const progress = progressPercent(draft, answered);
@@ -415,11 +565,32 @@ const VendiListingBuilder: React.FC = () => {
           <img src={vendibookFavicon} alt="" className="h-7 w-7 rounded-lg ring-1 ring-white/10" />
           <div className="min-w-0 flex-1">
             <h1 className="truncate text-[15px] font-semibold tracking-[-0.01em]">List with Vendi</h1>
-            <p className="truncate text-xs text-muted-foreground">Guided listing builder · {progress}% complete</p>
+            <p className="truncate text-xs text-muted-foreground">
+              {blockers.length === 0 ? 'Ready to publish' : `Guided listing builder · ${progress}%`}
+              {saveState !== 'idle' && (
+                <span className={cn('ml-2', saveState === 'error' && 'text-destructive')}>
+                  ·{' '}
+                  {saveState === 'saving' ? 'Saving…' : saveState === 'saved' ? 'All changes saved' : 'Not saved'}
+                </span>
+              )}
+            </p>
           </div>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-foreground"
+            onClick={() => void handleSaveDraft()}
+            disabled={savingManually}
+          >
+            {savingManually
+              ? <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              : <CloudUpload className="mr-2 h-4 w-4" />}
+            <span className="hidden xs:inline sm:inline">Save draft</span>
+          </Button>
           <Button variant="ghost" size="sm" className="hidden text-muted-foreground hover:text-foreground sm:inline-flex" onClick={() => navigate('/list')}>
             <Wrench className="mr-2 h-4 w-4" /> Build it myself
           </Button>
+
           <Button
             variant="ghost"
             size="sm"
@@ -464,7 +635,7 @@ const VendiListingBuilder: React.FC = () => {
                         Vendi
                       </span>
                     )}
-                    {m.content}
+                    <span className="whitespace-pre-line">{m.content}</span>
                   </div>
                 </motion.div>
               ))}
@@ -508,6 +679,35 @@ const VendiListingBuilder: React.FC = () => {
               </div>
             )}
 
+            {/* Tap-to-add chips for list questions (equipment, screening docs) */}
+            {current?.kind === 'list' && (current.options?.(draft)?.length ?? 0) > 0 && (
+              <div className="flex flex-wrap gap-2 pt-1">
+                {(current.options?.(draft) ?? []).map((opt) => (
+                  <button
+                    key={opt.value}
+                    type="button"
+                    onClick={() => setInput((prev) => (prev.trim() ? `${prev.replace(/,\s*$/, '')}, ${opt.label}` : opt.label))}
+                    className="rounded-full border border-white/[0.1] bg-white/[0.035] px-3.5 py-1.5 text-xs text-foreground/85 transition hover:border-[rgba(255,81,36,0.4)] hover:bg-white/[0.07]"
+                  >
+                    + {opt.label}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* One-tap suggestion built only from confirmed facts */}
+            {current?.suggest?.(draft) && (
+              <div className="pt-1">
+                <button
+                  type="button"
+                  onClick={() => submitAnswer(current.suggest?.(draft) ?? '')}
+                  className="rounded-full border border-[rgba(255,81,36,0.35)] bg-[rgba(255,81,36,0.09)] px-4 py-2 text-sm text-foreground transition hover:bg-[rgba(255,81,36,0.14)]"
+                >
+                  Use “{current.suggest?.(draft)}”
+                </button>
+              </div>
+            )}
+
             {current?.kind === 'photos' && (
               <div className="space-y-4 pt-1">
                 <div className="flex flex-wrap gap-2.5">
@@ -518,10 +718,17 @@ const VendiListingBuilder: React.FC = () => {
                       animate={{ opacity: 1, scale: 1 }}
                       className="relative h-[86px] w-[86px] overflow-hidden rounded-2xl border border-white/[0.1]"
                     >
-                      <img src={p.url} alt="Listing photo" className="h-full w-full object-cover" />
+                      {p.kind === 'video' ? (
+                        <div className="flex h-full w-full flex-col items-center justify-center gap-1 bg-white/[0.05] text-muted-foreground">
+                          <Video className="h-5 w-5" />
+                          <span className="text-[10px]">Video</span>
+                        </div>
+                      ) : (
+                        <img src={p.url} alt="Listing photo" className="h-full w-full object-cover" />
+                      )}
                       <button
                         type="button"
-                        aria-label="Remove photo"
+                        aria-label="Remove media"
                         onClick={() => removePhoto(p.id)}
                         className="absolute right-1.5 top-1.5 rounded-full border border-white/10 bg-black/65 p-1 backdrop-blur-md transition hover:bg-black/85"
                       >
@@ -533,17 +740,19 @@ const VendiListingBuilder: React.FC = () => {
                     type="button"
                     onClick={() => fileRef.current?.click()}
                     className="flex h-[86px] w-[86px] flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-white/15 text-muted-foreground transition hover:border-[rgba(255,81,36,0.45)] hover:text-foreground"
-                    aria-label="Add photos"
+                    aria-label="Add photos or video"
                   >
                     <ImagePlus className="h-5 w-5" />
                     <span className="text-[10px] tracking-wide">Add</span>
                   </button>
                 </div>
-                <Button onClick={() => submitAnswer('done')} disabled={!photos.length} className="rounded-full">
-                  Continue with {photos.length} photo{photos.length === 1 ? '' : 's'}
+                <Button onClick={() => submitAnswer('done')} disabled={!localImages.length} className="rounded-full">
+                  Continue with {localImages.length} photo{localImages.length === 1 ? '' : 's'}
+                  {localVideos.length ? ` and ${localVideos.length} video${localVideos.length === 1 ? '' : 's'}` : ''}
                 </Button>
               </div>
             )}
+
 
             {reviewing && (
               <motion.div
@@ -670,7 +879,14 @@ const VendiListingBuilder: React.FC = () => {
                 <div className="mb-3 flex flex-wrap gap-2">
                   {photos.map((p) => (
                     <div key={p.id} className="relative h-14 w-14 overflow-hidden rounded-xl border border-white/[0.1]">
-                      <img src={p.url} alt="Attached" className="h-full w-full object-cover" />
+                      {p.kind === 'video' ? (
+                        <div className="flex h-full w-full items-center justify-center bg-white/[0.05] text-muted-foreground">
+                          <Video className="h-4 w-4" />
+                        </div>
+                      ) : (
+                        <img src={p.url} alt="Attached" className="h-full w-full object-cover" />
+                      )}
+
                       <button
                         type="button"
                         aria-label="Remove attachment"
@@ -730,7 +946,7 @@ const VendiListingBuilder: React.FC = () => {
           <input
             ref={fileRef}
             type="file"
-            accept="image/*"
+            accept="image/*,video/*"
             multiple
             className="hidden"
             onChange={(e) => { handlePhotos(e.target.files); e.target.value = ''; }}
