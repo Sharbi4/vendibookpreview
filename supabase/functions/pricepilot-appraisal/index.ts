@@ -395,7 +395,17 @@ Deno.serve(async (req) => {
         priceDrivers: saleDrivers,
         pricingMoves: saleMoves,
         sources: describeSources(pool, scope),
+        // Observed market evidence — displayed marketplace prices, never closing prices.
+        marketEvidence: buildMarketEvidence(saleEvidenceRows, {
+          mode: 'sale',
+          category: subject.assetCategory,
+          city: subject.city,
+          state: subject.state,
+          year: subject.year,
+          lengthFt: subject.lengthFt,
+        }, 6),
         lastUpdated: generatedAt,
+
         // ── Legacy shape (kept for backwards compatibility) ──
         subject: {
           assetCategory: subject.assetCategory,
