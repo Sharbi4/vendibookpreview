@@ -1,5 +1,6 @@
 import { DollarSign, Truck, Clock, CalendarDays } from 'lucide-react';
 import { FreightLink } from '@/components/shared/FreightLink';
+import { PRICE_TBD, formatRentalRate, listRentalRates } from '@/lib/listings/rentalPricing';
 
 interface PricingSectionProps {
   isRental: boolean;
@@ -25,6 +26,12 @@ const PricingSection = ({
   vendibookFreightEnabled,
 }: PricingSectionProps) => {
   const hasDelivery = fulfillmentType === 'delivery' || fulfillmentType === 'both';
+  const rentalRates = listRentalRates({
+    price_hourly: priceHourly,
+    price_daily: priceDaily,
+    price_weekly: priceWeekly,
+    price_monthly: priceMonthly,
+  });
 
   return (
     <div className="space-y-3">
@@ -35,45 +42,24 @@ const PricingSection = ({
 
       {isRental ? (
         <div className="space-y-2">
-          {priceHourly && priceHourly > 0 && (
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground flex items-center gap-1.5">
-                <Clock className="h-3.5 w-3.5" />
-                Hourly rate
-              </span>
-              <span className="font-medium">${priceHourly.toLocaleString()}/hr</span>
-            </div>
-          )}
-          {priceDaily && priceDaily > 0 ? (
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground">Daily rate</span>
-              <span className="font-medium">${priceDaily.toLocaleString()}/day</span>
-            </div>
-          ) : (
-            !priceHourly && !priceWeekly && !priceMonthly && (
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-muted-foreground">Daily rate</span>
-                <span className="font-medium text-muted-foreground">Price TBD</span>
+          {rentalRates.length > 0 ? (
+            rentalRates.map((rate) => (
+              <div key={rate.unit} className="flex justify-between items-center" data-testid={`rate-${rate.unit}`}>
+                <span className="text-sm text-muted-foreground flex items-center gap-1.5">
+                  {rate.unit === 'hourly' ? (
+                    <Clock className="h-3.5 w-3.5" />
+                  ) : rate.unit === 'daily' ? null : (
+                    <CalendarDays className="h-3.5 w-3.5" />
+                  )}
+                  {rate.label}
+                </span>
+                <span className="font-medium">{formatRentalRate(rate)}</span>
               </div>
-            )
-          )}
-
-          {priceWeekly && priceWeekly > 0 && (
+            ))
+          ) : (
             <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground flex items-center gap-1.5">
-                <CalendarDays className="h-3.5 w-3.5" />
-                Weekly rate
-              </span>
-              <span className="font-medium">${priceWeekly.toLocaleString()}/week</span>
-            </div>
-          )}
-          {priceMonthly && priceMonthly > 0 && (
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-muted-foreground flex items-center gap-1.5">
-                <CalendarDays className="h-3.5 w-3.5" />
-                Monthly rate
-              </span>
-              <span className="font-medium">${priceMonthly.toLocaleString()}/mo</span>
+              <span className="text-sm text-muted-foreground">Rental rate</span>
+              <span className="font-medium text-muted-foreground">{PRICE_TBD}</span>
             </div>
           )}
           {hasDelivery && deliveryFee && (

@@ -29,6 +29,7 @@ import {
   isRentalConversionEligible,
 } from '@/lib/listings/rentalConversion';
 import { DOCUMENT_TYPE_LABELS, type DocumentType } from '@/types/documents';
+import { validateRentalRates } from '@/lib/listings/rentalPricing';
 
 type Listing = Tables<'listings'>;
 
@@ -177,15 +178,30 @@ const RentItOut: React.FC = () => {
     ];
   }, [source]);
 
-  const pricingValid = numberOrNull(priceDaily) !== null || numberOrNull(priceMonthly) !== null || numberOrNull(priceWeekly) !== null;
+  const rateValidation = useMemo(
+    () =>
+      validateRentalRates({
+        price_daily: priceDaily,
+        price_weekly: priceWeekly,
+        price_monthly: priceMonthly,
+      }),
+    [priceDaily, priceWeekly, priceMonthly],
+  );
+  const pricingValid = rateValidation.valid;
+  const pricingError =
+    rateValidation.errors.root ??
+    rateValidation.errors.daily ??
+    rateValidation.errors.weekly ??
+    rateValidation.errors.monthly ??
+    null;
 
   const persist = async (extra?: Record<string, unknown>) => {
     if (!rental) return false;
     setSaving(true);
     const payload = {
-      price_daily: numberOrNull(priceDaily),
-      price_weekly: numberOrNull(priceWeekly),
-      price_monthly: numberOrNull(priceMonthly),
+      price_daily: rateValidation.values.daily,
+      price_weekly: rateValidation.values.weekly,
+      price_monthly: rateValidation.values.monthly,
       deposit_amount: numberOrNull(deposit),
       rental_min_days: numberOrNull(minDays) ?? 1,
       available_from: availableFrom || null,
@@ -223,7 +239,11 @@ const RentItOut: React.FC = () => {
 
   const goNext = async () => {
     if (step === 0 && !pricingValid) {
-      toast({ title: 'Add a rental rate', description: 'Enter at least one rate to continue.', variant: 'destructive' });
+      toast({
+        title: 'Check your rental pricing',
+        description: pricingError ?? 'Enter at least one rate to continue.',
+        variant: 'destructive',
+      });
       return;
     }
     const saved = await persist();

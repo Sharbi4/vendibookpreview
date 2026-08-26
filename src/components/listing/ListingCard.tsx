@@ -1,4 +1,5 @@
 import { deliveryRateLabel } from '@/lib/fulfillment/delivery';
+import { formatListingPriceLabel, type ListingPriceInput } from '@/lib/listings/rentalPricing';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Plug, Zap, Droplet, Refrigerator, Flame, Wind, Wifi, Car, Shield, Sun, Truck, Calendar, Clock, ArrowRight, Banknote, Coffee, IceCreamCone } from 'lucide-react';
@@ -199,31 +200,9 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
     : null;
 
 
-  // Safely format price with proper null handling
+  // Shared resolver: never shows "Price TBD" when any rate (incl. monthly) exists.
   const formatListingPrice = () => {
-    if (listing.mode === 'rent') {
-      if (listing.price_daily && listing.price_daily > 0) {
-        return `$${listing.price_daily.toLocaleString()}/day`;
-      }
-      if (listing.price_hourly && listing.price_hourly > 0) {
-        return `$${listing.price_hourly.toLocaleString()}/hr`;
-      }
-      const weekly = (listing as any).price_weekly as number | null | undefined;
-      if (weekly && weekly > 0) {
-        return `$${weekly.toLocaleString()}/week`;
-      }
-      const monthly = (listing as any).price_monthly as number | null | undefined;
-      if (monthly && monthly > 0) {
-        return `$${monthly.toLocaleString()}/mo`;
-      }
-      return 'Price TBD';
-    }
-
-    // Sale mode
-    if (listing.price_sale && listing.price_sale > 0) {
-      return `$${listing.price_sale.toLocaleString()}`;
-    }
-    return 'Price TBD';
+    return formatListingPriceLabel(listing as ListingPriceInput);
   };
   
   const price = formatListingPrice();

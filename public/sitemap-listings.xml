@@ -144,17 +144,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/587b1919-9828-46ef-bba8-76da9553f962</loc>
-    <lastmod>2026-08-26</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/de0d03a7-c0cf-4078-808c-cd4a1251af5a/587b1919-9828-46ef-bba8-76da9553f962/1787587038899-tl7owm.jpg</image:loc>
-      <image:title>Brand New 2025 Dreamfly Airstream Ready to Go! Never been used!</image:title>
-      <image:caption>Brand New 2025 Dreamfly Airstream Ready to Go! Never been used! in Stoughton, MA on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/4e50a07a-6909-411b-a4e0-429fee24c52a</loc>
     <lastmod>2026-08-25</lastmod>
     <changefreq>weekly</changefreq>
@@ -449,6 +438,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/concierge/petrou-trailer/exterior-side.webp</image:loc>
       <image:title>Like new turnkey food trailer for lease</image:title>
       <image:caption>Like new turnkey food trailer for lease in Spring Hill, TN on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/587b1919-9828-46ef-bba8-76da9553f962</loc>
+    <lastmod>2026-08-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/de0d03a7-c0cf-4078-808c-cd4a1251af5a/587b1919-9828-46ef-bba8-76da9553f962/1787587038899-tl7owm.jpg</image:loc>
+      <image:title>Brand New 2025 Dreamfly Airstream Ready to Go! Never been used!</image:title>
+      <image:caption>Brand New 2025 Dreamfly Airstream Ready to Go! Never been used! in Stoughton, MA on Vendibook</image:caption>
     </image:image>
   </url>
   <url>

@@ -7,6 +7,7 @@ import { trackLeadEvent } from '@/lib/leadTracking';
 import { RentalAvailabilityPicker } from '@/components/listing/RentalAvailabilityPicker';
 import { cn } from '@/lib/utils';
 import type { Listing } from '@/types/listing';
+import { formatRentalRate, resolveRentalRate, type ListingPriceInput } from '@/lib/listings/rentalPricing';
 
 interface ListingCardOverlayProps {
   open: boolean;
@@ -75,17 +76,8 @@ const ListingCardOverlay = ({ open, onClose, listing }: ListingCardOverlayProps)
   const cover = anyListing.cover_image_url || anyListing.cover_image || (anyListing.images?.[0] ?? null);
   const locationParts = [anyListing.city, anyListing.state].filter(Boolean);
   const location = locationParts.join(', ');
-  const priceSummary = !isSale
-    ? listing.price_daily
-      ? `$${Number(listing.price_daily).toLocaleString()}/day`
-      : anyListing.price_hourly
-        ? `$${Number(anyListing.price_hourly).toLocaleString()}/hr`
-        : anyListing.price_weekly
-          ? `$${Number(anyListing.price_weekly).toLocaleString()}/week`
-          : anyListing.price_monthly
-            ? `$${Number(anyListing.price_monthly).toLocaleString()}/mo`
-            : ''
-    : '';
+  const overlayRate = !isSale ? resolveRentalRate(anyListing as ListingPriceInput) : null;
+  const priceSummary = overlayRate ? formatRentalRate(overlayRate) : '';
 
 
   const headline = isSale ? 'Start your purchase' : 'View availability';
