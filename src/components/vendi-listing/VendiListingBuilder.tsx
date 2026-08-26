@@ -751,8 +751,10 @@ const VendiListingBuilder: React.FC = () => {
     userId: string,
   ): Promise<{ images: string[]; videos: string[] }> => {
     let failed = 0;
+    let lastMessage = '';
     for (const item of photos) {
       if (uploadedByItemRef.current.has(item.id)) continue;
+      setMediaStatus((s) => ({ ...s, [item.id]: 'uploading' }));
       const isVideo = item.kind === 'video';
       const bucket = isVideo ? 'listing-videos' : 'listing-images';
       const ext = item.file.name.split('.').pop()?.toLowerCase() || (isVideo ? 'mp4' : 'jpg');
@@ -764,21 +766,38 @@ const VendiListingBuilder: React.FC = () => {
       });
       if (error) {
         failed += 1;
+        lastMessage = error.message;
+        setMediaStatus((s) => ({ ...s, [item.id]: 'error' }));
         noteTrouble();
         trackVendi('vendi_media_upload_failed', { userId, listingId, metadata: { kind: item.kind } });
         continue; // keep the successful uploads; this item is retried later
       }
       const { data } = supabase.storage.from(bucket).getPublicUrl(path);
       uploadedByItemRef.current.set(item.id, { url: data.publicUrl, kind: item.kind });
+      setMediaStatus((s) => ({ ...s, [item.id]: 'done' }));
     }
 
     const stored = Array.from(uploadedByItemRef.current.values());
     const images = [...uploadedUrls, ...stored.filter((s) => s.kind === 'image').map((s) => s.url)];
     const videos = [...uploadedVideoUrls, ...stored.filter((s) => s.kind === 'video').map((s) => s.url)];
     const dedupe = (list: string[]) => Array.from(new Set(list));
+    if (failed) {
+      toast.error(
+        failed === 1
+          ? `1 file didn't upload — tap Retry on it.${lastMessage ? ` (${lastMessage})` : ''}`
+          : `${failed} files didn't upload — tap Retry on them.`,
+      );
+    }
     if (failed && !stored.length) throw new Error('Upload failed. Please try again.');
     return { images: dedupe(images), videos: dedupe(videos) };
   };
+
+  /** Re-attempt a single failed file. */
+  const retryMedia = (id: string) => {
+    setMediaStatus((s) => ({ ...s, [id]: 'pending' }));
+    setRetrySeq((n) => n + 1);
+  };
+
 
   /** Rental screening documents live in their own table, same as the wizard. */
   const syncRequiredDocuments = async (listingId: string) => {
