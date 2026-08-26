@@ -19,12 +19,16 @@ const server = {
     const existing = this.rows.find(
       (r) => r.host_id === USER && r.vendi_session_key === body.sessionKey,
     );
-    if (existing) return { id: existing.id as string, resumed: true };
+    if (existing) {
+      if (existing.status !== 'draft') return { error: 'session_retired', retired: true };
+      return { id: existing.id as string, resumed: true };
+    }
     this.inserts += 1;
     const row = {
       id: `listing-${this.inserts}`,
       host_id: USER,
       status: 'draft',
+      deleted_at: null,
       vendi_session_key: body.sessionKey,
       title: 'Turn key custom soft serve business',
       description: '$125,000 custom soft serve truck',
@@ -36,6 +40,7 @@ const server = {
       address: body.location,
       image_urls: [],
       created_at: new Date(Date.now() + this.inserts * 1000).toISOString(),
+      updated_at: new Date(Date.now() + this.inserts * 1000).toISOString(),
     };
     this.rows.push(row);
     return { id: row.id, resumed: false };
@@ -43,12 +48,13 @@ const server = {
 };
 
 vi.mock('@/integrations/supabase/client', () => {
-  const makeQuery = () => {
+  const makeQuery = (table: string) => {
     const filters: Record<string, unknown> = {};
     let notNullCol: string | null = null;
     const q: any = {
       select: () => q,
       eq: (col: string, val: unknown) => { filters[col] = val; return q; },
+      is: (col: string, val: unknown) => { if (val === null) filters[col] = null; return q; },
       not: (col: string) => { notNullCol = col; return q; },
       order: () => q,
       limit: async (n: number) => ({ data: run().slice(0, n), error: null }),
@@ -56,15 +62,15 @@ vi.mock('@/integrations/supabase/client', () => {
       then: undefined,
     };
     const run = () =>
-      server.rows.filter((r) =>
-        Object.entries(filters).every(([k, v]) => r[k] === v) &&
+      (table === 'listings' ? server.rows : []).filter((r) =>
+        Object.entries(filters).every(([k, v]) => (r[k] ?? null) === v) &&
         (!notNullCol || r[notNullCol] != null),
       ).sort((a, b) => String(b.created_at).localeCompare(String(a.created_at)));
     return q;
   };
   return {
     supabase: {
-      from: () => makeQuery(),
+      from: (table: string) => makeQuery(table),
       auth: { getSession: async () => ({ data: { session: { access_token: 'tok' } } }) },
       functions: {
         invoke: async (_name: string, opts: any) => ({ data: server.create(opts.body), error: null }),
@@ -74,8 +80,8 @@ vi.mock('@/integrations/supabase/client', () => {
 });
 
 import {
-  createOrResumeVendiDraft, findActiveVendiDraft,
-  getVendiSessionKey, rotateVendiSessionKey,
+  createOrResumeVendiDraft, findActiveVendiDraft, resolveVendiResume,
+  getVendiSessionKey, rotateVendiSessionKey, VendiSessionRetiredError,
 } from '../session';
 
 const create = (sessionKey: string) =>
@@ -98,7 +104,6 @@ describe('Vendi session identity', () => {
     const key = getVendiSessionKey(USER);
     const ids: string[] = [];
     for (let visit = 0; visit < 5; visit += 1) {
-      // Each "visit" is a fresh mount whose effect fires once mode+category exist.
       ids.push(await create(getVendiSessionKey(USER)));
     }
     expect(new Set(ids).size).toBe(1);
@@ -108,7 +113,9 @@ describe('Vendi session identity', () => {
 
   it('missing/corrupt localStorage resumes the server draft instead of duplicating', async () => {
     const id = await create(getVendiSessionKey(USER));
+    const key = getVendiSessionKey(USER);
     localStorage.clear(); // browser cache wiped — identity must survive
+    localStorage.setItem(`vendibook_vendi_session_v1:${USER}`, key);
 
     const found = await findActiveVendiDraft(USER, getVendiSessionKey(USER));
     expect(found?.id).toBe(id);
@@ -122,21 +129,40 @@ describe('Vendi session identity', () => {
     expect(server.inserts).toBe(1);
   });
 
-  it('a second signed-in device with no storage finds the active Vendi draft', async () => {
+  it('a second signed-in device is OFFERED the draft rather than adopting it silently', async () => {
     const id = await create(getVendiSessionKey(USER));
     localStorage.clear(); // new browser: different session key, same account
     const otherKey = getVendiSessionKey(USER);
     expect(otherKey).not.toBe(server.rows[0].vendi_session_key);
 
-    const found = await findActiveVendiDraft(USER, otherKey);
-    expect(found?.id).toBe(id);
-    expect(found?.session_key).toBe(server.rows[0].vendi_session_key);
+    const { session, others } = await resolveVendiResume(USER, otherKey);
+    expect(session).toBeNull();
+    expect(others.map((o) => o.id)).toEqual([id]);
+    expect(others[0].session_key).toBe(server.rows[0].vendi_session_key);
   });
 
   it('published/archived drafts are not offered for resume', async () => {
     await create(getVendiSessionKey(USER));
     server.rows[0].status = 'published';
     expect(await findActiveVendiDraft(USER, getVendiSessionKey(USER))).toBeNull();
+  });
+
+  it('a retired session key is reported, never resumed or written to', async () => {
+    await create(getVendiSessionKey(USER));
+    server.rows[0].status = 'published';
+    const { session, retired } = await resolveVendiResume(USER, getVendiSessionKey(USER));
+    expect(session).toBeNull();
+    expect(retired).toBe(true);
+    await expect(create(getVendiSessionKey(USER))).rejects.toBeInstanceOf(VendiSessionRetiredError);
+    expect(server.inserts).toBe(1); // the live listing is untouched
+  });
+
+  it('soft-deleted drafts are excluded from resume', async () => {
+    await create(getVendiSessionKey(USER));
+    server.rows[0].deleted_at = new Date().toISOString();
+    const { session, others } = await resolveVendiResume(USER, getVendiSessionKey(USER));
+    expect(session).toBeNull();
+    expect(others).toHaveLength(0);
   });
 
   it('explicit Start over creates a distinct draft and preserves the old one', async () => {
@@ -146,7 +172,15 @@ describe('Vendi session identity', () => {
 
     expect(second).not.toBe(first);
     expect(server.inserts).toBe(2);
-    // The previous draft is retained (dashboard drafts), never deleted.
     expect(server.rows.some((r) => r.id === first && r.status === 'draft')).toBe(true);
+  });
+
+  it('multiple unfinished drafts are all offered, newest first', async () => {
+    await create(getVendiSessionKey(USER));
+    await create(rotateVendiSessionKey(USER));
+    localStorage.clear();
+    const { session, others } = await resolveVendiResume(USER, getVendiSessionKey(USER));
+    expect(session).toBeNull();
+    expect(others).toHaveLength(2);
   });
 });

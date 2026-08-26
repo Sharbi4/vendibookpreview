@@ -64,18 +64,26 @@ serve(async (req) => {
       ? "on_site"
       : "pickup";
 
-    // IDEMPOTENCY: a session key that already produced a row always returns
-    // that same row. This is the server-authoritative guard that replaced the
-    // browser-local draftId as the source of truth for listing identity.
+    // IDEMPOTENCY: a session key that already produced a DRAFT row always
+    // returns that same row. This is the server-authoritative guard that
+    // replaced the browser-local draftId as the source of truth for listing
+    // identity. A key whose listing already went live (or was archived/
+    // deleted) is RETIRED: it must never be resumed or autosaved onto, so an
+    // old tab is told to start a fresh session instead.
     if (sessionKey) {
       const { data: existing } = await admin
         .from("listings")
-        .select("id")
+        .select("id, status, deleted_at")
         .eq("host_id", user.id)
         .eq("vendi_session_key", sessionKey)
         .maybeSingle();
-      if (existing?.id) return json({ id: existing.id, resumed: true });
+      if (existing?.id) {
+        const resumable = existing.status === "draft" && !existing.deleted_at;
+        if (resumable) return json({ id: existing.id, resumed: true });
+        return json({ error: "session_retired", retired: true }, 409);
+      }
     }
+
 
 
     // Guarantee a profiles row exists BEFORE any downstream code (identity
