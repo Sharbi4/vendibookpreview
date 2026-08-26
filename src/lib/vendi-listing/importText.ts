@@ -187,3 +187,40 @@ export function parseExistingListing(raw: string): ImportResult {
 
   return { patch, answered, confirms, found };
 }
+
+/**
+ * True when the seller pasted only a link. Vendibook never fetches another
+ * marketplace, so we must ask for the text instead of implying we can read it.
+ */
+export function isUrlOnly(raw: string): boolean {
+  const text = cleanText(raw);
+  if (!text) return false;
+  return /^https?:\/\/\S+$/i.test(text) || /^www\.\S+$/i.test(text);
+}
+
+export const URL_ONLY_REPLY =
+  'I can’t open links — Vendibook never pulls anything from another marketplace. Copy the words out of that page and paste ' +
+  'them here instead, and I’ll pick out everything that’s actually written.';
+
+/**
+ * A human-readable recap of a paste: what was captured, what still needs the
+ * seller's confirmation, and what is genuinely still missing. Never implies
+ * anything was fetched from an external site.
+ */
+export function importSummary(result: ImportResult): string {
+  const lines: string[] = [];
+  if (result.found.length) {
+    lines.push('Here’s what I pulled out of your text:');
+    lines.push(...result.found.map((f) => `• ${f}`));
+  }
+  if (result.confirms.length) {
+    lines.push('');
+    lines.push('A couple of things I don’t want to guess at:');
+    lines.push(...result.confirms.map((c) => `• ${c.display} — I’ll ask you to confirm`));
+  }
+  if (!lines.length) return 'I couldn’t find anything definite in that text.';
+  lines.push('');
+  lines.push('I won’t ask you for any of that again — we’ll only fill in what’s still missing.');
+  return lines.join('\n');
+}
+
