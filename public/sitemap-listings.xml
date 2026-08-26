@@ -145,7 +145,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/587b1919-9828-46ef-bba8-76da9553f962</loc>
-    <lastmod>2026-08-25</lastmod>
+    <lastmod>2026-08-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -738,6 +738,17 @@
     </image:image>
   </url>
   <url>
+    <loc>https://vendibook.com/listing/24594068-25df-4bbe-b142-7bad96aacf39</loc>
+    <lastmod>2026-08-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/bf4754c8-46ce-472e-8a71-2b8a7769a833/24594068-25df-4bbe-b142-7bad96aacf39/1770302856730-he0b8f.jpg</image:loc>
+      <image:title>Commissary Kitchen For Rent</image:title>
+      <image:caption>Commissary Kitchen For Rent in Charlotte, NC on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://vendibook.com/listing/5485ce08-9cd6-4c4c-851e-824e4b7d9451</loc>
     <lastmod>2026-08-25</lastmod>
     <changefreq>weekly</changefreq>
@@ -746,17 +757,6 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/4fc00959-da4f-4cee-9bac-d8e036254198/5485ce08-9cd6-4c4c-851e-824e4b7d9451/1784943180177-hlai2.jpeg</image:loc>
       <image:title>2025 Fully Equipped Food Trailer </image:title>
       <image:caption>2025 Fully Equipped Food Trailer  in Dumfries, VA on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://vendibook.com/listing/24594068-25df-4bbe-b142-7bad96aacf39</loc>
-    <lastmod>2026-08-25</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/bf4754c8-46ce-472e-8a71-2b8a7769a833/24594068-25df-4bbe-b142-7bad96aacf39/1770302856730-he0b8f.jpg</image:loc>
-      <image:title>Commissary Kitchen For Rent</image:title>
-      <image:caption>Commissary Kitchen For Rent in Charlotte, NC on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
