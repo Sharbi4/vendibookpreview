@@ -223,6 +223,27 @@ const SellMyFoodTruck = () => {
   const reduced = useReducedMotion();
   const pro = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.vendibookPro);
   const concierge = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.conciergeListing);
+  const { data: realPhotos = [] } = useRealSaleListingPhotos(8);
+
+  // Real marketplace photography first; bundled imagery only as a fallback.
+  const fallbackCollage = [
+    { src: heroTruck, alt: 'Food truck parked and serving customers at dusk' },
+    { src: trailerCafecito, alt: 'Coffee trailer with a serving window open' },
+    { src: trailerGrill, alt: 'Concession trailer set up for service at an outdoor event' },
+    { src: heroSelling, alt: 'Seller handing over keys to a food truck buyer' },
+  ];
+  const collage = fallbackCollage.map((fallback, i) => {
+    const real = realPhotos[i];
+    return real
+      ? {
+          src: real.imageUrl,
+          alt: `${real.title}${real.city ? ` in ${real.city}${real.state ? `, ${real.state}` : ''}` : ''} listed for sale on Vendibook`,
+        }
+      : fallback;
+  });
+  const featured = realPhotos[0];
+
+
 
   const fade = (delay = 0) =>
     reduced
