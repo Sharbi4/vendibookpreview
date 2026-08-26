@@ -20,9 +20,11 @@ import type { DocumentType } from '@/types/documents';
 import { isSkip } from '@/lib/vendi-listing/extract';
 import { publishVendiListing } from '@/lib/vendi-listing/publishVendiListing';
 import {
-  ActiveVendiDraft, adoptVendiSessionKey, createOrResumeVendiDraft, findActiveVendiDraft,
-  getVendiSessionKey, rotateVendiSessionKey,
+  ActiveVendiDraft, adoptVendiSessionKey, createOrResumeVendiDraft, resolveVendiResume,
+  loadRequiredDocuments, getVendiSessionKey, rotateVendiSessionKey, VendiSessionRetiredError,
 } from '@/lib/vendi-listing/session';
+import { deriveAnsweredFromDraft, mergeServerDraft } from '@/lib/vendi-listing/hydrate';
+import { trackVendi } from '@/lib/vendi-listing/telemetry';
 
 import {
   ATTESTATIONS,
@@ -94,23 +96,32 @@ const VendiListingBuilder: React.FC = () => {
   const [savingManually, setSavingManually] = useState(false);
   /** Server lookup for an unfinished Vendi draft has completed. */
   const [resumeChecked, setResumeChecked] = useState(false);
-  /** Set when the server draft belongs to a different session (new device / cleared storage). */
-  const [resumeOffer, setResumeOffer] = useState<ActiveVendiDraft | null>(null);
+  /** Unfinished Vendi drafts on this account that belong to another session. */
+  const [resumeOffers, setResumeOffers] = useState<ActiveVendiDraft[]>([]);
 
   const creatingDraftRef = useRef(false);
   const resolvingRef = useRef(false);
   const publishInFlightRef = useRef(false);
   /** Durable idempotency key — one key means one listing row, server-side. */
   const sessionKeyRef = useRef<string>('');
+  /** Which account the current session key belongs to (account-switch safety). */
+  const sessionOwnerRef = useRef<string | null>(null);
   /** Synchronous mirror of `asked` — effects can run twice before a re-render. */
   const askedRef = useRef<Set<string>>(new Set());
+  /** local media id → uploaded URL. Makes uploads dedupe-safe and resumable. */
+  const uploadedByItemRef = useRef<Map<string, { url: string; kind: 'image' | 'video' }>>(new Map());
+  const uploadingMediaRef = useRef(false);
 
 
   const disclosureShownRef = useRef(false);
   const endRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const storageKey = user ? storageKeyFor(user.id) : null;
-  if (user && !sessionKeyRef.current) sessionKeyRef.current = getVendiSessionKey(user.id);
+  // Re-mint on account switch: a session key is only ever valid for its owner.
+  if (user && (!sessionKeyRef.current || sessionOwnerRef.current !== user.id)) {
+    sessionKeyRef.current = getVendiSessionKey(user.id);
+    sessionOwnerRef.current = user.id;
+  }
 
 
   // Same document + acceptance wording the step-by-step wizard records.
@@ -195,35 +206,51 @@ const VendiListingBuilder: React.FC = () => {
 
 
   // SERVER-AUTHORITATIVE RESUME. Before this can ever create a row, ask the
-  // server whether this owner already has an unfinished Vendi draft for the
-  // current session. Missing/cleared/stale browser state must never be read as
-  // "this seller has no draft yet" — that is what produced duplicate listings.
+  // server which unfinished Vendi drafts this owner has. Missing/cleared/stale
+  // browser state must never be read as "this seller has no draft yet" — that
+  // is what produced duplicate listings. The saved row is hydrated in FULL
+  // (every Vendi-supported column, media and required documents) and the
+  // answered ledger is derived from it, so nothing already saved is re-asked.
   useEffect(() => {
     if (!hydrated || !user || draftId || resolvingRef.current) return;
     resolvingRef.current = true;
     let cancelled = false;
     void (async () => {
       try {
-        const existing = await findActiveVendiDraft(user.id, sessionKeyRef.current);
-        if (cancelled || !existing) return;
-        setDraftId(existing.id);
-        // Never let empty browser state clobber server-confirmed values.
-        setDraft((prev) => ({
-          ...prev,
-          title: prev.title ?? existing.title,
-          description: prev.description ?? existing.description,
-          category: (prev.category ?? existing.category) as VendiDraft['category'],
-          mode: (prev.mode ?? existing.mode) as VendiDraft['mode'],
-          city: prev.city ?? existing.city,
-          state: prev.state ?? existing.state,
-          zip_code: prev.zip_code ?? existing.postal_code,
-          address: prev.address ?? existing.address,
-        }));
-        setUploadedUrls((prev) => (prev.length ? prev : existing.image_urls ?? []));
-        // Cross-device / cleared-storage arrival: offer an explicit choice
-        // instead of silently starting a second listing.
-        if (existing.session_key && existing.session_key !== sessionKeyRef.current) {
-          setResumeOffer(existing);
+        const { session, others, retired } = await resolveVendiResume(user.id, sessionKeyRef.current);
+        if (cancelled) return;
+
+        if (retired) {
+          // This browser's key belongs to a listing that already went live or
+          // was archived. Never autosave onto it — start a clean session.
+          trackVendi('vendi_session_retired', { userId: user.id, sessionKey: sessionKeyRef.current });
+          sessionKeyRef.current = rotateVendiSessionKey(user.id);
+        }
+
+        if (session) {
+          const docs = session.mode === 'rent' ? await loadRequiredDocuments(session.id) : [];
+          if (cancelled) return;
+          setDraftId(session.id);
+          setDraft((prev) => mergeServerDraft(
+            prev,
+            { ...session.draft, ...(docs.length ? { required_documents: docs } : {}) },
+          ));
+          setAnswered((prev) => Array.from(new Set([
+            ...prev,
+            ...deriveAnsweredFromDraft(session.draft, { hasMedia: !!session.image_urls?.length }),
+          ])));
+          setUploadedUrls((prev) => (prev.length ? prev : session.image_urls ?? []));
+          setUploadedVideoUrls((prev) => (prev.length ? prev : session.video_urls ?? []));
+          trackVendi('vendi_session_resumed', {
+            userId: user.id, listingId: session.id, sessionKey: sessionKeyRef.current,
+          });
+        } else if (others.length) {
+          // Cross-device / cleared-storage arrival: offer an explicit choice
+          // instead of silently adopting a draft or starting a second listing.
+          setResumeOffers(others);
+          trackVendi('vendi_resume_choice_shown', {
+            userId: user.id, metadata: { drafts: others.length },
+          });
         }
       } catch {
         /* resume is best-effort; creation stays blocked until it settles */
@@ -241,7 +268,7 @@ const VendiListingBuilder: React.FC = () => {
   // double-invocations, remounts and second tabs all resolve to one row.
   useEffect(() => {
     if (!hydrated || !user || draftId || creatingDraftRef.current) return;
-    if (!resumeChecked || resumeOffer) return;
+    if (!resumeChecked || resumeOffers.length) return;
     if (!draft.mode || !draft.category) return;
     creatingDraftRef.current = true;
     void (async () => {
@@ -256,26 +283,46 @@ const VendiListingBuilder: React.FC = () => {
           location: draft.address ?? null,
         });
         setDraftId(id);
-      } catch {
+        trackVendi('vendi_draft_created', {
+          userId: user.id, listingId: id, sessionKey: sessionKeyRef.current,
+          metadata: { mode: draft.mode ?? null, category: draft.category ?? null },
+        });
+      } catch (error) {
         creatingDraftRef.current = false;
+        if (error instanceof VendiSessionRetiredError) {
+          // Old tab whose listing already published: mint a clean session and
+          // let the next pass create a genuinely new draft.
+          sessionKeyRef.current = rotateVendiSessionKey(user.id);
+          trackVendi('vendi_session_retired', { userId: user.id, sessionKey: sessionKeyRef.current });
+        } else {
+          trackVendi('vendi_save_failed', { userId: user.id, metadata: { stage: 'create' } });
+        }
       }
     })();
-  }, [hydrated, user, draftId, resumeChecked, resumeOffer, draft.mode, draft.category, draft.city, draft.state, draft.zip_code, draft.address]);
+  }, [hydrated, user, draftId, resumeChecked, resumeOffers.length, draft.mode, draft.category, draft.city, draft.state, draft.zip_code, draft.address]);
 
 
   // Debounced autosave of collected answers onto the owned draft. The row stays
-  // status=draft until the owner explicitly publishes.
+  // status=draft until the owner explicitly publishes. It never runs before the
+  // server resume settles, so a stale browser payload can't overwrite newer
+  // server values, and it never runs while a resume choice is pending.
   useEffect(() => {
-    if (!draftId || !hydrated) return;
+    if (!draftId || !hydrated || !resumeChecked || resumeOffers.length) return;
     setSaveState('saving');
     const timer = window.setTimeout(() => {
       const payload = buildListingPayload(draft, uploadedUrls, uploadedVideoUrls);
-      void supabase.from('listings').update(payload as never).eq('id', draftId).then(({ error }) => {
-        setSaveState(error ? 'error' : 'saved');
-      });
+      void supabase
+        .from('listings')
+        .update(payload as never)
+        .eq('id', draftId)
+        .eq('status', 'draft') // never write over a listing that already went live
+        .then(({ error }) => {
+          setSaveState(error ? 'error' : 'saved');
+          if (error) trackVendi('vendi_save_failed', { userId: user?.id, listingId: draftId, metadata: { stage: 'autosave' } });
+        });
     }, 1200);
     return () => window.clearTimeout(timer);
-  }, [draft, uploadedUrls, uploadedVideoUrls, draftId, hydrated]);
+  }, [draft, uploadedUrls, uploadedVideoUrls, draftId, hydrated, resumeChecked, resumeOffers.length, user?.id]);
 
   // Ask the next unanswered question — once, and only once per question.
   useEffect(() => {
@@ -367,13 +414,21 @@ const VendiListingBuilder: React.FC = () => {
   const previewImages = uploadedUrls.length ? uploadedUrls : localImages.map((p) => p.url);
   const blockers = getPublishBlockers(draft, previewImages.length);
 
+  /**
+   * Upload any local media that is not already stored.
+   *
+   * Deduplicated and resumable: each local item's uploaded URL is remembered,
+   * so adding a photo later APPENDS instead of re-uploading the set, a retry
+   * after a failure only re-sends what actually failed, and the returned lists
+   * always describe the full current media set (server-restored URLs included).
+   */
   const uploadMedia = async (
     listingId: string,
     userId: string,
   ): Promise<{ images: string[]; videos: string[] }> => {
-    const images: string[] = [];
-    const videos: string[] = [];
+    let failed = 0;
     for (const item of photos) {
+      if (uploadedByItemRef.current.has(item.id)) continue;
       const isVideo = item.kind === 'video';
       const bucket = isVideo ? 'listing-videos' : 'listing-images';
       const ext = item.file.name.split('.').pop()?.toLowerCase() || (isVideo ? 'mp4' : 'jpg');
@@ -383,11 +438,21 @@ const VendiListingBuilder: React.FC = () => {
         upsert: true,
         contentType: item.file.type || (isVideo ? 'video/mp4' : 'image/jpeg'),
       });
-      if (error) throw new Error(`Upload failed: ${error.message}`);
+      if (error) {
+        failed += 1;
+        trackVendi('vendi_media_upload_failed', { userId, listingId, metadata: { kind: item.kind } });
+        continue; // keep the successful uploads; this item is retried later
+      }
       const { data } = supabase.storage.from(bucket).getPublicUrl(path);
-      (isVideo ? videos : images).push(data.publicUrl);
+      uploadedByItemRef.current.set(item.id, { url: data.publicUrl, kind: item.kind });
     }
-    return { images, videos };
+
+    const stored = Array.from(uploadedByItemRef.current.values());
+    const images = [...uploadedUrls, ...stored.filter((s) => s.kind === 'image').map((s) => s.url)];
+    const videos = [...uploadedVideoUrls, ...stored.filter((s) => s.kind === 'video').map((s) => s.url)];
+    const dedupe = (list: string[]) => Array.from(new Set(list));
+    if (failed && !stored.length) throw new Error('Upload failed. Please try again.');
+    return { images: dedupe(images), videos: dedupe(videos) };
   };
 
   /** Rental screening documents live in their own table, same as the wizard. */
@@ -407,9 +472,13 @@ const VendiListingBuilder: React.FC = () => {
   };
 
   // Persist media to the owner's draft as soon as both exist, so photos survive
-  // a closed tab just like the answers do.
+  // a closed tab just like the answers do. Runs again whenever media is added
+  // or a previous upload failed — never re-uploading what already succeeded.
   useEffect(() => {
-    if (!draftId || !user || !photos.length || uploadedUrls.length || uploadedVideoUrls.length) return;
+    if (!draftId || !user) return;
+    const pending = photos.some((p) => !uploadedByItemRef.current.has(p.id));
+    if (!pending || uploadingMediaRef.current) return;
+    uploadingMediaRef.current = true;
     let cancelled = false;
     void (async () => {
       try {
@@ -417,11 +486,14 @@ const VendiListingBuilder: React.FC = () => {
         if (!cancelled) { setUploadedUrls(images); setUploadedVideoUrls(videos); }
       } catch {
         /* keep local previews; publish retries the upload */
+      } finally {
+        uploadingMediaRef.current = false;
       }
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [draftId, user, photos.length, uploadedUrls.length, uploadedVideoUrls.length]);
+  }, [draftId, user, photos]);
+
 
   /**
    * Explicit "Save draft" — flushes the debounce immediately, persists pending
@@ -457,7 +529,7 @@ const VendiListingBuilder: React.FC = () => {
 
       let images = uploadedUrls;
       let videos = uploadedVideoUrls;
-      if (photos.length && !images.length && !videos.length) {
+      if (photos.some((p) => !uploadedByItemRef.current.has(p.id))) {
         const uploaded = await uploadMedia(listingId, user.id);
         images = uploaded.images; videos = uploaded.videos;
         setUploadedUrls(images); setUploadedVideoUrls(videos);
@@ -573,7 +645,7 @@ const VendiListingBuilder: React.FC = () => {
       // 1. Flush media + fields and AWAIT them. Never race the debounced autosave.
       let imageUrls = uploadedUrls;
       let videoUrls = uploadedVideoUrls;
-      if (photos.length && (!imageUrls.length || (localVideos.length && !videoUrls.length))) {
+      if (photos.some((p) => !uploadedByItemRef.current.has(p.id))) {
         const uploaded = await uploadMedia(listingId, user.id);
         imageUrls = uploaded.images.length ? uploaded.images : imageUrls;
         videoUrls = uploaded.videos.length ? uploaded.videos : videoUrls;
@@ -598,6 +670,7 @@ const VendiListingBuilder: React.FC = () => {
       //    key is retired too, so the next visit starts a genuinely new listing
       //    instead of resuming the one that just went live.
       if (storageKey) localStorage.removeItem(storageKey);
+      trackVendi('vendi_published', { userId: user.id, listingId, sessionKey: sessionKeyRef.current });
       if (user) sessionKeyRef.current = rotateVendiSessionKey(user.id);
       toast.success('Your listing is live 🎉', {
         description: 'Buyers can find it now. You can keep editing it any time from your dashboard.',
@@ -606,6 +679,7 @@ const VendiListingBuilder: React.FC = () => {
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Something went wrong.';
       const id = draftId;
+      trackVendi('vendi_publish_failed', { userId: user?.id, listingId: id, metadata: { reason: message.slice(0, 80) } });
       // Recovery state is deliberately untouched: the seller keeps their draft.
       toast.error(message, {
         description: 'Your draft is saved — nothing was lost. You can try again or finish in the full editor.',
@@ -628,11 +702,14 @@ const VendiListingBuilder: React.FC = () => {
    */
   const startOver = () => {
     if (storageKey) localStorage.removeItem(storageKey);
-    if (user) sessionKeyRef.current = rotateVendiSessionKey(user.id);
+    if (user) {
+      sessionKeyRef.current = rotateVendiSessionKey(user.id);
+      trackVendi('vendi_session_started', { userId: user.id, sessionKey: sessionKeyRef.current, metadata: { reason: 'start_over' } });
+    }
     setDraft(emptyDraft); setAnswered([]); setMessages([]); setPhotos([]); setUploadedUrls([]);
     setUploadedVideoUrls([]); setReviewing(false);
     setDraftId(null); creatingDraftRef.current = false; resolvingRef.current = false;
-    setResumeOffer(null); setResumeChecked(true);
+    setResumeOffers([]); setResumeChecked(true);
     setConsentId(null); setAttestInput(''); disclosureShownRef.current = false;
     setSaveState('idle');
     askedRef.current = new Set(); setAsked([]);
@@ -640,14 +717,35 @@ const VendiListingBuilder: React.FC = () => {
     setHydrated(false); setSessionSeq((n) => n + 1);
   };
 
-  /** "Continue listing" — adopt the server draft's session as this browser's. */
-  const continueServerDraft = () => {
-    if (!resumeOffer || !user) return;
-    adoptVendiSessionKey(user.id, resumeOffer.session_key);
-    sessionKeyRef.current = resumeOffer.session_key;
-    setDraftId(resumeOffer.id);
-    setResumeOffer(null);
+  /**
+   * "Continue listing" — adopt the chosen draft's session as this browser's and
+   * hydrate every saved field, its media and its screening documents, so the
+   * interview picks up exactly where the database left off.
+   */
+  const continueServerDraft = (offer: ActiveVendiDraft) => {
+    if (!user) return;
+    adoptVendiSessionKey(user.id, offer.session_key);
+    sessionKeyRef.current = offer.session_key;
+    setDraftId(offer.id);
+    setResumeOffers([]);
+    setDraft((prev) => mergeServerDraft(prev, offer.draft, { preferServer: true }));
+    setAnswered((prev) => Array.from(new Set([
+      ...prev,
+      ...deriveAnsweredFromDraft(offer.draft, { hasMedia: !!offer.image_urls?.length }),
+    ])));
+    setUploadedUrls(offer.image_urls ?? []);
+    setUploadedVideoUrls(offer.video_urls ?? []);
+    trackVendi('vendi_session_resumed', {
+      userId: user.id, listingId: offer.id, sessionKey: offer.session_key,
+      metadata: { source: 'chooser' },
+    });
+    if (offer.mode === 'rent') {
+      void loadRequiredDocuments(offer.id).then((docs) => {
+        if (docs.length) setDraft((prev) => ({ ...prev, required_documents: docs }));
+      });
+    }
   };
+
 
 
 
@@ -670,10 +768,22 @@ const VendiListingBuilder: React.FC = () => {
   }
   if (!user) return <VendiAuthGate />;
 
-  // Cross-device / cleared-storage arrival with an unfinished Vendi draft on the
-  // account. Continuing is the primary action; a new listing is an explicit choice.
-  if (resumeOffer) {
-    const label = resumeOffer.title?.trim() || 'your unfinished listing';
+  // Resolving server identity. Rendering the interview before this settles is
+  // what let a stale browser cache look like "no draft yet".
+  if (!resumeChecked && !draftId) {
+    return (
+      <div className="flex min-h-[70vh] flex-col items-center justify-center gap-3 bg-[#08080a]">
+        <Loader2 className="h-6 w-6 animate-spin text-white/50" />
+        <p className="text-sm text-muted-foreground">Checking for a listing you already started…</p>
+      </div>
+    );
+  }
+
+  // Cross-device / cleared-storage arrival with unfinished Vendi drafts on the
+  // account. Continuing is the primary action; a new listing is an explicit
+  // choice, and an arbitrary draft is never adopted silently.
+  if (resumeOffers.length) {
+    const many = resumeOffers.length > 1;
     return (
       <div className="relative flex min-h-[80vh] items-center justify-center bg-[#08080a] px-4 py-16">
         <motion.div
@@ -681,26 +791,60 @@ const VendiListingBuilder: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, ease: 'easeOut' }}
           className="w-full max-w-md rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-foreground shadow-[0_30px_90px_-40px_rgba(0,0,0,0.9)] backdrop-blur-xl"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="vendi-resume-title"
         >
           <p className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">List with Vendi</p>
-          <h1 className="mt-3 text-2xl font-semibold leading-snug">Welcome back — continue {label}?</h1>
+          <h1 id="vendi-resume-title" className="mt-3 text-2xl font-semibold leading-snug">
+            {many ? 'Welcome back — which listing should we finish?' : 'Welcome back — continue where you left off?'}
+          </h1>
           <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
-            You already have an unfinished listing saved to your account. Pick it back up right where
-            you left off — nothing was lost.
+            {many
+              ? 'These unfinished listings are saved to your account. Pick one to continue — the others stay safe in your dashboard.'
+              : 'You already have an unfinished listing saved to your account. Pick it back up right where you left off — nothing was lost.'}
           </p>
-          <div className="mt-7 space-y-3">
-            <Button className="w-full" onClick={continueServerDraft}>Continue listing</Button>
-            <Button variant="outline" className="w-full border-white/15 bg-white/[0.03]" onClick={startOver}>
-              Start a new listing
-            </Button>
-          </div>
+          <ul className="mt-6 space-y-3">
+            {resumeOffers.map((offer) => (
+              <li key={offer.id}>
+                <button
+                  type="button"
+                  onClick={() => continueServerDraft(offer)}
+                  className="flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3 text-left transition hover:border-white/20 hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                >
+                  {offer.cover_image_url ? (
+                    <img src={offer.cover_image_url} alt="" className="h-12 w-12 flex-none rounded-xl object-cover ring-1 ring-white/10" />
+                  ) : (
+                    <span className="flex h-12 w-12 flex-none items-center justify-center rounded-xl bg-white/[0.06] ring-1 ring-white/10">
+                      <ImagePlus className="h-5 w-5 text-white/40" aria-hidden />
+                    </span>
+                  )}
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium">
+                      {offer.title?.trim() || 'Untitled listing'}
+                    </span>
+                    <span className="block truncate text-xs text-muted-foreground">
+                      {[offer.mode === 'sale' ? 'For sale' : 'For rent',
+                        [offer.city, offer.state].filter(Boolean).join(', ')]
+                        .filter(Boolean).join(' · ')}
+                    </span>
+                  </span>
+                  <span className="text-xs text-primary">Continue</span>
+                </button>
+              </li>
+            ))}
+          </ul>
+          <Button variant="outline" className="mt-5 w-full border-white/15 bg-white/[0.03]" onClick={startOver}>
+            Start a new listing
+          </Button>
           <p className="mt-4 text-center text-xs text-muted-foreground">
-            Starting a new listing keeps this draft safe in your dashboard.
+            Starting a new listing keeps your saved drafts safe in your dashboard.
           </p>
         </motion.div>
       </div>
     );
   }
+
 
   return (
 
@@ -770,7 +914,9 @@ const VendiListingBuilder: React.FC = () => {
 
       <div className="relative mx-auto grid max-w-6xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[1fr_400px] lg:py-10">
         <section className="dash-glass flex min-h-[68vh] flex-col overflow-hidden p-0">
-          <div className="flex-1 space-y-5 overflow-y-auto px-4 py-6 sm:px-7 sm:py-8">
+          {/* Keyed by session: "Start over" drops the old thread instantly
+              instead of leaving exiting bubbles on screen. */}
+          <div key={sessionSeq} className="flex-1 space-y-5 overflow-y-auto px-4 py-6 sm:px-7 sm:py-8">
             <AnimatePresence initial={false}>
               {messages.map((m) => (
                 <motion.div
