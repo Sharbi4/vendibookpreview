@@ -103,8 +103,10 @@ import {
   PublishAttestations,
   emptyAttestations,
   allAttested,
+  publishAcceptanceText,
   type AttestationKey,
 } from './stages/PublishAttestations';
+
 import { PayPalMonogram, EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
 import {
   EQUINOX_DISCLOSURE_TEXT,
