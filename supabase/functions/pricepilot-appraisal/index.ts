@@ -401,10 +401,10 @@ Deno.serve(async (req) => {
         marketEvidence: buildMarketEvidence(saleEvidenceRows, {
           mode: 'sale',
           category: subject.assetCategory,
-          city: subject.city,
-          state: subject.state,
-          year: subject.year,
-          lengthFt: subject.lengthFt,
+          city: subject.city ?? null,
+          state: subject.state ?? null,
+          year: subject.year ?? null,
+          lengthFt: subject.lengthFt ?? null,
         }, 6),
         lastUpdated: generatedAt,
 
