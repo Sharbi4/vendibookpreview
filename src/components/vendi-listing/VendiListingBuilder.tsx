@@ -598,20 +598,44 @@ const VendiListingBuilder: React.FC = () => {
                       <label htmlFor="vendi-attest" className="block text-xs text-muted-foreground">
                         Type YES to affirm the disclosure above. This is your legal acknowledgment — it does not publish your listing.
                       </label>
-                      <div className="flex items-center gap-2 rounded-[18px] border border-white/[0.1] bg-white/[0.04] px-3 py-2 focus-within:border-[rgba(255,81,36,0.45)]">
+                      <div
+                        className={cn(
+                          'flex items-center gap-2 rounded-[18px] border px-3 py-2',
+                          attestError
+                            ? 'border-destructive/60 bg-destructive/[0.06]'
+                            : 'border-white/[0.1] bg-white/[0.04] focus-within:border-[rgba(255,81,36,0.45)]',
+                        )}
+                      >
                         <input
                           id="vendi-attest"
                           value={attestInput}
-                          onChange={(e) => setAttestInput(e.target.value)}
+                          onChange={(e) => {
+                            setAttestInput(e.target.value);
+                            if (attestError) setAttestError(null);
+                          }}
                           placeholder="Type YES"
                           autoComplete="off"
+                          autoCorrect="off"
+                          autoCapitalize="none"
+                          spellCheck={false}
+                          name="vendi-attest-no-autofill"
+                          inputMode="text"
+                          maxLength={12}
+                          aria-invalid={attestError ? true : undefined}
+                          aria-describedby={attestError ? 'vendi-attest-error' : undefined}
                           className="min-h-[40px] flex-1 border-0 bg-transparent px-1 text-base text-foreground outline-none placeholder:text-muted-foreground"
                         />
-                        <Button type="submit" size="sm" disabled={attesting} className="rounded-full">
+                        <Button type="submit" size="sm" disabled={attesting || !isExactYes} className="rounded-full">
                           {attesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                           Affirm
                         </Button>
                       </div>
+                      {attestError ? (
+                        <p id="vendi-attest-error" role="alert" className="text-xs text-destructive">
+                          {attestError}
+                        </p>
+                      ) : null}
+
                     </form>
                   )}
                 </div>
