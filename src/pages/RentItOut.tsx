@@ -29,6 +29,7 @@ import {
   isRentalConversionEligible,
 } from '@/lib/listings/rentalConversion';
 import { DOCUMENT_TYPE_LABELS, type DocumentType } from '@/types/documents';
+import { validateRentalRates } from '@/lib/listings/rentalPricing';
 
 type Listing = Tables<'listings'>;
 
