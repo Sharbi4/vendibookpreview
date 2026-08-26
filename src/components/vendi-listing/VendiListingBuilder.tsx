@@ -985,7 +985,7 @@ const VendiListingBuilder: React.FC = () => {
           <div className="min-w-0 flex-1">
             <h1 className="truncate text-[15px] font-semibold tracking-[-0.01em]">List with Vendi</h1>
             <p className="truncate text-xs text-muted-foreground">
-              {blockers.length === 0 ? 'Ready to publish' : `Guided listing builder · ${progress}%`}
+              {readiness.ready ? 'Ready to publish' : `${progress}% ready · ${readiness.blockers.length} left`}
               {saveState !== 'idle' && (
                 <span className={cn('ml-2', saveState === 'error' && 'text-destructive')}>
                   ·{' '}
