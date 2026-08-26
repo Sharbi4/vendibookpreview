@@ -24,6 +24,8 @@ import {
 } from '@/lib/legalDocuments';
 import { useLegalDocument } from '@/hooks/useLegalDocument';
 import { useRecordConsent } from '@/hooks/useRecordConsent';
+import { cn } from '@/lib/utils';
+
 
 type Msg = { id: string; role: 'vendi' | 'user'; content: string };
 
@@ -64,6 +66,8 @@ const VendiListingBuilder: React.FC = () => {
   const [consentId, setConsentId] = useState<string | null>(null);
   const [attesting, setAttesting] = useState(false);
   const [attestInput, setAttestInput] = useState('');
+  const [attestError, setAttestError] = useState<string | null>(null);
+
   const creatingDraftRef = useRef(false);
   const disclosureShownRef = useRef(false);
   const endRef = useRef<HTMLDivElement>(null);
@@ -254,20 +258,36 @@ const VendiListingBuilder: React.FC = () => {
   }, [draftId, user, photos.length, uploadedUrls.length]);
 
   /**
+   * Exactly `YES` — uppercase, no surrounding punctuation, no extra words.
+   * Partial matches ("YE", "YES."), lowercase, and any auto-filled variant are
+   * rejected, and the Affirm control stays disabled until the value matches, so
+   * a button click alone can never satisfy the acknowledgment.
+   */
+  const isExactYes = attestInput === 'YES';
+
+  /**
    * Typed acknowledgment of the publish disclosure. Only an exact, capitalised
    * `YES` counts — no inferred or button-only consent — and it is written
    * through the same `record_user_consent` audit path as the wizard's
    * ConsentModal before the Publish action unlocks.
    */
   const handleAttest = async (raw: string) => {
-    const text = raw.trim();
-    if (!text || attesting || consentId) return;
-    say('user', text);
-    setAttestInput('');
+    const text = raw;
+    if (attesting || consentId) return;
     if (text !== 'YES') {
-      say('vendi', 'To affirm the disclosure I need exactly YES, in capital letters. Nothing is published until then.');
+      const reason = !text.trim()
+        ? 'Type YES to affirm the disclosure.'
+        : text.trim().toUpperCase() === 'YES'
+          ? 'Use capital letters with no extra spaces or punctuation: YES.'
+          : 'That does not match. Type exactly YES (capital letters, nothing else).';
+      setAttestError(reason);
+      say('vendi', `${reason} Nothing is published until then.`);
       return;
     }
+    setAttestError(null);
+    say('user', text);
+    setAttestInput('');
+
     setAttesting(true);
     try {
       const id = await recordConsent.mutateAsync({
@@ -280,8 +300,10 @@ const VendiListingBuilder: React.FC = () => {
       setConsentId(id);
       say('vendi', 'Recorded and dated. Publish Listing is now unlocked — publishing is still your explicit action.');
     } catch (error) {
+      setAttestError('We could not record your acknowledgment. Type YES again to retry.');
       say('vendi', 'I could not record your acknowledgment. Please try typing YES again, or contact support@vendibook.com.');
       toast.error(error instanceof Error ? error.message : 'Could not record your acceptance.');
+
     } finally {
       setAttesting(false);
     }
@@ -580,20 +602,44 @@ const VendiListingBuilder: React.FC = () => {
                       <label htmlFor="vendi-attest" className="block text-xs text-muted-foreground">
                         Type YES to affirm the disclosure above. This is your legal acknowledgment — it does not publish your listing.
                       </label>
-                      <div className="flex items-center gap-2 rounded-[18px] border border-white/[0.1] bg-white/[0.04] px-3 py-2 focus-within:border-[rgba(255,81,36,0.45)]">
+                      <div
+                        className={cn(
+                          'flex items-center gap-2 rounded-[18px] border px-3 py-2',
+                          attestError
+                            ? 'border-destructive/60 bg-destructive/[0.06]'
+                            : 'border-white/[0.1] bg-white/[0.04] focus-within:border-[rgba(255,81,36,0.45)]',
+                        )}
+                      >
                         <input
                           id="vendi-attest"
                           value={attestInput}
-                          onChange={(e) => setAttestInput(e.target.value)}
+                          onChange={(e) => {
+                            setAttestInput(e.target.value);
+                            if (attestError) setAttestError(null);
+                          }}
                           placeholder="Type YES"
                           autoComplete="off"
+                          autoCorrect="off"
+                          autoCapitalize="none"
+                          spellCheck={false}
+                          name="vendi-attest-no-autofill"
+                          inputMode="text"
+                          maxLength={12}
+                          aria-invalid={attestError ? true : undefined}
+                          aria-describedby={attestError ? 'vendi-attest-error' : undefined}
                           className="min-h-[40px] flex-1 border-0 bg-transparent px-1 text-base text-foreground outline-none placeholder:text-muted-foreground"
                         />
-                        <Button type="submit" size="sm" disabled={attesting} className="rounded-full">
+                        <Button type="submit" size="sm" disabled={attesting || !isExactYes} className="rounded-full">
                           {attesting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
                           Affirm
                         </Button>
                       </div>
+                      {attestError ? (
+                        <p id="vendi-attest-error" role="alert" className="text-xs text-destructive">
+                          {attestError}
+                        </p>
+                      ) : null}
+
                     </form>
                   )}
                 </div>
