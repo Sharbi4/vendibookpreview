@@ -822,6 +822,7 @@ const VendiListingBuilder: React.FC = () => {
       });
     } catch (error) {
       setSaveState('error');
+      noteTrouble();
       toast.error(
         error instanceof Error ? error.message : 'We could not save your draft.',
         { description: 'Your answers are still here — try again in a moment.' },
