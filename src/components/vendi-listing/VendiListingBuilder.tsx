@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Check, ImagePlus, Loader2, Send, X, Wrench, Eye } from 'lucide-react';
+import { ArrowLeft, Check, CloudUpload, ImagePlus, Loader2, Send, X, Wrench, Eye, Video } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
