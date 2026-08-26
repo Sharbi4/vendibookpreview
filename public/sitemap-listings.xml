@@ -266,7 +266,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/e65b145b-c462-46d9-9198-ca4761361e17</loc>
-    <lastmod>2026-08-25</lastmod>
+    <lastmod>2026-08-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -438,6 +438,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/f559486d-0ccb-4caf-b28d-421b960e0a4b/d93c53cb-f440-4672-ba6c-912c8266cda8/1775752366530-nw9ey9.jpeg</image:loc>
       <image:title>2025 8.5&apos; X 16&apos; FOOD TRAILER CALIFORNIA</image:title>
       <image:caption>2025 8.5&apos; X 16&apos; FOOD TRAILER CALIFORNIA in La Feria, TX on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/97b9f9ac-0eb6-4c21-98c8-991657e18c49</loc>
+    <lastmod>2026-08-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/concierge/petrou-trailer/exterior-side.webp</image:loc>
+      <image:title>Like new turnkey food trailer for lease</image:title>
+      <image:caption>Like new turnkey food trailer for lease in Spring Hill, TN on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
