@@ -21,7 +21,9 @@ import type { ListingPreview } from '@/components/ai-listing/LivePreviewPanel';
 import {
   cleanText, isSkip, parseDimensions, parseList, parseLocation, parseMoney, parseYesNo,
 } from './extract';
-import { parseExistingListing, type PendingConfirm } from './importText';
+import {
+  importSummary, isUrlOnly, parseExistingListing, URL_ONLY_REPLY, type PendingConfirm,
+} from './importText';
 
 export type VendiDraft = ListingPreview & {
   zip_code?: string | null;
