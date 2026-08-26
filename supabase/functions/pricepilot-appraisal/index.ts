@@ -446,7 +446,11 @@ Deno.serve(async (req) => {
           year: subject.year ?? null,
           lengthFt: subject.lengthFt ?? null,
         }, 6),
+        // Estimated equipment / buildout contribution (replacement-cost context,
+        // depreciated — never a guaranteed resale value).
+        equipmentValue: equipment.section,
         lastUpdated: generatedAt,
+
 
         // ── Legacy shape (kept for backwards compatibility) ──
         subject: {
