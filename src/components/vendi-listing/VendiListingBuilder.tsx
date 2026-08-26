@@ -633,7 +633,7 @@ const VendiListingBuilder: React.FC = () => {
               {saveState !== 'idle' && (
                 <span className={cn('ml-2', saveState === 'error' && 'text-destructive')}>
                   ·{' '}
-                  {saveState === 'saving' ? 'Saving…' : saveState === 'saved' ? 'All changes saved' : 'Not saved'}
+                  {saveState === 'saving' ? 'Saving…' : saveState === 'saved' ? 'Draft saved' : 'Not saved'}
                 </span>
               )}
             </p>
