@@ -68,7 +68,7 @@ const LivePreviewPanel: React.FC<{ preview: ListingPreview | null; images: strin
     { label: 'Title', filled: !!p?.title },
     { label: 'Location', filled: !!(p?.city || p?.address) },
     { label: 'Description', filled: !!p?.description },
-    { label: 'Pricing', filled: !!(p?.price_daily || p?.price_sale || p?.price_hourly) },
+    { label: 'Pricing', filled: !!(p?.price_monthly || p?.price_weekly || p?.price_daily || p?.price_sale || p?.price_hourly) },
     { label: 'Deposit & Booking', filled: p?.instant_book !== null && p?.instant_book !== undefined },
     { label: 'Availability', filled: !!(p?.available_from || p?.operating_hours_start) },
     { label: 'Photos', filled: images.length > 0 },
@@ -82,7 +82,10 @@ const LivePreviewPanel: React.FC<{ preview: ListingPreview | null; images: strin
 
   const price = p?.mode === 'sale'
     ? p?.price_sale ? `$${p.price_sale.toLocaleString()}` : null
-    : p?.price_daily ? `$${p.price_daily}/day` : p?.price_hourly ? `$${p.price_hourly}/hr` : null;
+    : p?.price_monthly ? `$${p.price_monthly.toLocaleString()}/mo`
+      : p?.price_weekly ? `$${p.price_weekly.toLocaleString()}/wk`
+        : p?.price_daily ? `$${p.price_daily.toLocaleString()}/day`
+          : p?.price_hourly ? `$${p.price_hourly.toLocaleString()}/hr` : null;
 
   return (
     <div className="h-full flex flex-col">
