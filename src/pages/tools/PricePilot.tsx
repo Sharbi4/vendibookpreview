@@ -51,6 +51,19 @@ export interface MarketEvidence {
   rangeHigh: number | null;
   comparables: MarketEvidenceComp[];
 }
+export interface EquipmentValueComponent {
+  name: string; estimatedNewRange: string; condition: string; valuationImpact: string;
+}
+export interface EquipmentValue {
+  estimatedReplacementRangeLow: number | null;
+  estimatedReplacementRangeHigh: number | null;
+  estimatedUsedContributionLow: number | null;
+  estimatedUsedContributionHigh: number | null;
+  buildoutTier: 'unknown' | 'bare_shell' | 'partially_equipped' | 'equipped' | 'turnkey_premium';
+  majorComponents: EquipmentValueComponent[];
+  notes: string[];
+  sources: { title: string; url: string }[];
+}
 interface Narrative {
   headline?: string; summary?: string;
   drivers_positive?: string[]; drivers_negative?: string[];
@@ -88,6 +101,7 @@ export interface PricingResponse {
   };
   comparables: CompRow[];
   marketEvidence?: MarketEvidence | null;
+  equipmentValue?: EquipmentValue | null;
   narrative: Narrative | null;
   generatedAt: string;
 }

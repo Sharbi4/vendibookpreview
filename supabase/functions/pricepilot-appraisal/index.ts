@@ -15,6 +15,8 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
 import { gateToolAccess } from '../_shared/gateToolAccess.ts';
 import { buildMarketEvidence, type ComparableRow } from '../_shared/marketComparables.ts';
+import { assessEquipmentValue } from '../_shared/pricepilot/equipmentValue.ts';
+import { gatherSources } from '../_shared/firecrawl-research.ts';
 
 import { jsonError, jsonResponse, unknownErrorResponse } from '../_shared/jsonError.ts';
 import { generatePricePilotNarrative } from '../_shared/pricepilot/model.ts';
@@ -315,6 +317,38 @@ Deno.serve(async (req) => {
         valuation.warnings.push('This is a modeled directional estimate from your equipment profile and broad industry bands, not a read of live local comps.');
       }
 
+      // ── Equipment / buildout value layer ────────────────────────────────
+      // Parses supplied equipment only, prices replacement cost context (with
+      // live web research when available), depreciates it, and nudges the
+      // recommendation within a hard cap. Never added on top of comp medians.
+      const preAssessment = assessEquipmentValue(subject);
+      let equipmentSources: { title: string; url: string }[] = [];
+      if (preAssessment.researchQueries.length) {
+        try {
+          const found = await gatherSources(preAssessment.researchQueries, 2, 4);
+          equipmentSources = found.map((s) => ({ title: s.title || s.url, url: s.url }));
+        } catch (e) {
+          console.warn('equipment cost research failed:', e);
+        }
+      }
+      const equipment = assessEquipmentValue(subject, equipmentSources);
+
+      if (equipment.priceBias !== 0) {
+        const clamp = (n: number) =>
+          Math.round(Math.min(valuation.estimatedMarketHigh, Math.max(valuation.estimatedMarketLow, n)));
+        const f = 1 + equipment.priceBias;
+        valuation.recommendedListPrice = clamp(valuation.recommendedListPrice * f);
+        valuation.quickSalePrice = clamp(valuation.quickSalePrice * f);
+        valuation.premiumPositionPrice = clamp(valuation.premiumPositionPrice * f);
+        valuation.adjustmentSummary.push({
+          label: 'Installed equipment & buildout',
+          direction: equipment.priceBias > 0 ? 'up' : 'down',
+          detail: equipment.biasExplanation ?? 'Adjusted for the documented buildout relative to a typical comparable.',
+        });
+      }
+
+
+
       const { narrative, model } = await generatePricePilotNarrative({
         photos,
         systemPrompt:
@@ -352,6 +386,12 @@ Deno.serve(async (req) => {
                 marketScope: SCOPE_HEADLINE[scope],
               },
               adjustments: valuation.adjustmentSummary,
+              equipmentAndBuildout: {
+                ...equipment.section,
+                guidance:
+                  'Replacement cost is what this equipment costs new today. It is NOT resale value and must never be added on top of the comparable median. Comparables already embed a typical equipment package; treat this as a cross-check that explains why the recommendation sits above or below the comps.',
+              },
+
               warnings: valuation.warnings,
               topComparables: valuation.comparables.slice(0, 8).map((c) => ({
                 title: c.title,
@@ -406,7 +446,11 @@ Deno.serve(async (req) => {
           year: subject.year ?? null,
           lengthFt: subject.lengthFt ?? null,
         }, 6),
+        // Estimated equipment / buildout contribution (replacement-cost context,
+        // depreciated — never a guaranteed resale value).
+        equipmentValue: equipment.section,
         lastUpdated: generatedAt,
+
 
         // ── Legacy shape (kept for backwards compatibility) ──
         subject: {
