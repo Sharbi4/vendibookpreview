@@ -57,6 +57,11 @@ export interface CategoryIndexConfig {
    *  specialty and disables geographic fallback tiers so unrelated listings
    *  are never shown as specialty matches. */
   specialty?: SpecialtyKey;
+  /** Optional structured subcategory filter (e.g. ['coffee_beverage']).
+   *  Applied on top of category/mode. Like `specialty`, it disables the
+   *  geographic fallback tiers so an unrelated listing can never be shown
+   *  as a match for a filtered collection. */
+  subcategories?: string[];
   /** Breadcrumb parent between Home and the page (specialty hubs). */
   breadcrumbParent?: { name: string; href: string };
   /** Overrides the hero search CTA href. */
