@@ -27,6 +27,7 @@ import {
   CITY_DATA,
 } from '@/data/cityData';
 import { useNationwideInventory, type InventoryCategory } from '@/hooks/useNationwideInventory';
+import { formatListingPriceLabel, PRICE_TBD } from '@/lib/listings/rentalPricing';
 import ExpandSearchModule, { LowInventoryInlineLine, LOW_INVENTORY_THRESHOLD, NEAR_EMPTY_THRESHOLD } from '@/components/seo/ExpandSearchModule';
 
 interface CategoryCityPageProps {
@@ -38,8 +39,10 @@ interface ListingRow {
   title: string;
   description: string;
   cover_image_url: string | null;
+  price_hourly: number | null;
   price_daily: number | null;
   price_weekly: number | null;
+  price_monthly: number | null;
   price_sale: number | null;
   mode: string;
   category: string;
@@ -115,7 +118,7 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
 
       const { data } = await supabase
         .from('listings')
-        .select('id, title, description, cover_image_url, price_daily, price_weekly, price_sale, mode, category, address, status, published_at, deleted_at, moderation_status, instant_book')
+        .select('id, title, description, cover_image_url, price_hourly, price_daily, price_weekly, price_monthly, price_sale, mode, category, address, status, published_at, deleted_at, moderation_status, instant_book')
         .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
         .eq('category', dbCategory as any)
         .eq('mode', dbMode)
@@ -330,8 +333,7 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
             )}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {listings.map((l) => {
-                const price = l.mode === 'rent' ? (l.price_daily || l.price_weekly) : l.price_sale;
-                const priceLabel = l.mode === 'rent' ? (l.price_daily ? '/day' : '/week') : '';
+                const priceText = formatListingPriceLabel(l);
                 const locationShort = l.address?.split(',').slice(-2).join(',').trim();
 
                 return (
@@ -363,10 +365,8 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
                           {locationShort}
                         </p>
                       )}
-                      {price != null && (
-                        <p className="text-base font-bold text-foreground">
-                          ${price.toLocaleString()}{priceLabel}
-                        </p>
+                      {priceText !== PRICE_TBD && (
+                        <p className="text-base font-bold text-foreground">{priceText}</p>
                       )}
                     </div>
                   </Link>
