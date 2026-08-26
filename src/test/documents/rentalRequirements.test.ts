@@ -63,8 +63,8 @@ describe('rental requirement evaluation', () => {
 
   it('F. snapshot freezes the requirement set at signing time', () => {
     const snap = buildRequirementsSnapshot([req({ title: 'COI' })]);
-    expect(snap.requirements).toHaveLength(1);
-    expect(snap.version).toBeTruthy();
+    expect(snap).toHaveLength(1);
+    expect(snap[0].label).toBe('COI');
     // Later host edits are a new array and must not mutate the snapshot.
     const snapshotJson = JSON.stringify(snap);
     buildRequirementsSnapshot([]);
