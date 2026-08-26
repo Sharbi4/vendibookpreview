@@ -61,10 +61,22 @@ const VendiListingBuilder: React.FC = () => {
   const [showMobilePreview, setShowMobilePreview] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [draftId, setDraftId] = useState<string | null>(null);
+  const [consentId, setConsentId] = useState<string | null>(null);
+  const [attesting, setAttesting] = useState(false);
+  const [attestInput, setAttestInput] = useState('');
   const creatingDraftRef = useRef(false);
+  const disclosureShownRef = useRef(false);
   const endRef = useRef<HTMLDivElement>(null);
   const fileRef = useRef<HTMLInputElement>(null);
   const storageKey = user ? storageKeyFor(user.id) : null;
+
+  // Same document + acceptance wording the step-by-step wizard records.
+  const documentType = draft.mode === 'rent'
+    ? DOCUMENT_TYPES.RENTER_TERMS
+    : DOCUMENT_TYPES.SELLER_TERMS;
+  const { data: legalDoc } = useLegalDocument(documentType);
+  const recordConsent = useRecordConsent();
+  const acceptanceText = publishAcceptanceText(draft.mode);
 
   const current: Question | null = useMemo(
     () => (reviewing ? null : nextQuestion(draft, answered)),
@@ -83,6 +95,7 @@ const VendiListingBuilder: React.FC = () => {
           setAnswered(parsed.answered ?? []);
           setMessages(parsed.messages ?? []);
           setDraftId(parsed.draftId ?? null);
+          setConsentId(parsed.consentId ?? null);
         }
       }
     } catch { /* ignore corrupt state */ }
@@ -92,9 +105,10 @@ const VendiListingBuilder: React.FC = () => {
   useEffect(() => {
     if (!hydrated || !storageKey) return;
     try {
-      localStorage.setItem(storageKey, JSON.stringify({ draft, answered, messages, draftId }));
+      localStorage.setItem(storageKey, JSON.stringify({ draft, answered, messages, draftId, consentId }));
     } catch { /* quota — non-fatal */ }
-  }, [draft, answered, messages, draftId, hydrated, storageKey]);
+  }, [draft, answered, messages, draftId, consentId, hydrated, storageKey]);
+
 
   // Create the owned draft row as soon as we know mode + category, so every
   // later answer and upload is autosaved against the seller's account.
