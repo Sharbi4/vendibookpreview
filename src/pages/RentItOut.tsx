@@ -53,7 +53,7 @@ const money = (n: number | null | undefined) =>
 const RentItOut: React.FC = () => {
   const { listingId } = useParams<{ listingId: string }>();
   const navigate = useNavigate();
-  const { user, loading: authLoading } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const { toast } = useToast();
 
   const [loading, setLoading] = useState(true);
@@ -118,7 +118,7 @@ const RentItOut: React.FC = () => {
 
       const created = await createLinkedRentalDraft(src.id);
       if (cancelled) return;
-      if (!created.ok) {
+      if ('error' in created) {
         setError(created.error);
         setLoading(false);
         return;

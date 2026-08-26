@@ -36,7 +36,7 @@ export const useCreateLinkedRental = () => {
   return useMutation({
     mutationFn: async (saleListingId: string) => {
       const result = await createLinkedRentalDraft(saleListingId);
-      if (!result.ok) throw new Error(result.error);
+      if ('error' in result) throw new Error(result.error);
       return result;
     },
     onSuccess: (_data, saleListingId) => {
