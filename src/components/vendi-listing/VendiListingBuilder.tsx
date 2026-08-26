@@ -192,33 +192,50 @@ const VendiListingBuilder: React.FC = () => {
     return urls;
   };
 
+  // Persist media to the owner's draft as soon as both exist, so photos survive
+  // a closed tab just like the answers do.
+  useEffect(() => {
+    if (!draftId || !user || !photos.length || uploadedUrls.length) return;
+    let cancelled = false;
+    void (async () => {
+      try {
+        const urls = await uploadPhotos(draftId, user.id);
+        if (!cancelled) setUploadedUrls(urls);
+      } catch {
+        /* keep local previews; publish retries the upload */
+      }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [draftId, user, photos.length, uploadedUrls.length]);
+
   const handlePublish = async () => {
     if (blockers.length) return;
-    if (!user) {
-      toast.info('Create your free account to publish — your answers are saved.');
-      navigate('/auth?redirect=/list-with-vendi');
-      return;
-    }
+    if (!user) return;
     setPublishing(true);
     try {
       const { data: sessionData } = await supabase.auth.getSession();
       const accessToken = sessionData.session?.access_token;
       if (!accessToken) throw new Error('Please sign in again to publish.');
 
-      const { data: created, error: draftError } = await supabase.functions.invoke('create-listing-draft', {
-        headers: { Authorization: `Bearer ${accessToken}` },
-        body: {
-          mode: draft.mode === 'sale' ? 'sale' : 'rent',
-          category: draft.category,
-          city: draft.city ?? null,
-          state: draft.state ?? null,
-          zipCode: draft.zip_code ?? null,
-          location: draft.address ?? null,
-        },
-      });
-      if (draftError) throw draftError;
-      const listingId = (created as { id?: string } | null)?.id;
-      if (!listingId) throw new Error('We could not start your draft. Please try again.');
+      let listingId = draftId;
+      if (!listingId) {
+        const { data: created, error: draftError } = await supabase.functions.invoke('create-listing-draft', {
+          headers: { Authorization: `Bearer ${accessToken}` },
+          body: {
+            mode: draft.mode === 'sale' ? 'sale' : 'rent',
+            category: draft.category,
+            city: draft.city ?? null,
+            state: draft.state ?? null,
+            zipCode: draft.zip_code ?? null,
+            location: draft.address ?? null,
+          },
+        });
+        if (draftError) throw draftError;
+        listingId = (created as { id?: string } | null)?.id ?? null;
+        if (!listingId) throw new Error('We could not start your draft. Please try again.');
+        setDraftId(listingId);
+      }
 
       const imageUrls = uploadedUrls.length ? uploadedUrls : await uploadPhotos(listingId, user.id);
       setUploadedUrls(imageUrls);
@@ -232,7 +249,7 @@ const VendiListingBuilder: React.FC = () => {
         .update({ status: 'published', published_at: new Date().toISOString() } as never)
         .eq('id', listingId);
 
-      localStorage.removeItem(STORAGE_KEY);
+      if (storageKey) localStorage.removeItem(storageKey);
 
       if (publishError) {
         toast.message('Draft saved — a few details still need review before it can go live.', {
@@ -253,8 +270,9 @@ const VendiListingBuilder: React.FC = () => {
   };
 
   const startOver = () => {
-    localStorage.removeItem(STORAGE_KEY);
+    if (storageKey) localStorage.removeItem(storageKey);
     setDraft(emptyDraft); setAnswered([]); setMessages([]); setPhotos([]); setUploadedUrls([]); setReviewing(false);
+    setDraftId(null); creatingDraftRef.current = false;
   };
 
   const progress = progressPercent(draft, answered);
