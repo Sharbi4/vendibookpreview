@@ -24,6 +24,8 @@ import JsonLd from '@/components/JsonLd';
 import { TellVendibookButton } from '@/components/lead/TellVendibookButton';
 import { useCatalogPrice } from '@/hooks/useCatalogPrices';
 import { ACTIVE_PRODUCT_SLUGS } from '@/lib/monetization/catalogPricing';
+import { useRealSaleListingPhotos } from '@/hooks/useRealSaleListingPhotos';
+
 import heroSelling from '@/assets/how-selling-hero.jpg';
 import heroTruck from '@/assets/hero-food-truck.jpg';
 import trailerGrill from '@/assets/trailer-orange-grill.jpg';
