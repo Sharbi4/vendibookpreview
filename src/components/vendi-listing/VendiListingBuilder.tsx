@@ -620,8 +620,29 @@ const VendiListingBuilder: React.FC = () => {
     say('user', echo);
     setInput('');
 
-    if (q.optional && isSkip(text)) {
-      setAnswered((prev) => [...prev, q.id]);
+    // "Help me figure that out" — explain, never invent a value.
+    if (isHelpRequest(text)) {
+      const tip = q.tip?.(draft);
+      say('vendi', [
+        tip ?? 'Happy to help.',
+        q.optional
+          ? 'This one is optional — say “skip” and we’ll move on.'
+          : 'I need this one before you can publish, so take your time. Answer in your own words and I’ll tidy it up.',
+      ].join(' '));
+      return;
+    }
+
+    if (isSkip(text)) {
+      if (q.optional) {
+        setAnswered((prev) => [...prev, q.id]);
+        return;
+      }
+      // Required and unknown: explain why, keep the question open, invent nothing.
+      say('vendi', [
+        'No problem — I won’t guess on this one.',
+        q.tip?.(draft) ?? '',
+        'It’s required before your listing can publish, so we can come back to it. Say “what’s missing” any time to see what’s left.',
+      ].filter(Boolean).join(' '));
       return;
     }
 
