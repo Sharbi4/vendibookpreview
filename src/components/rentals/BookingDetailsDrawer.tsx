@@ -78,6 +78,13 @@ const BookingDetailsDrawer = ({
   const [isDeclining, setIsDeclining] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
 
+  const requirementEvaluation = useRequirementEvaluation({
+    listingId: (booking as any).listing_id ?? undefined,
+    bookingId: booking.id,
+    isInstantBook: !!(booking as any).is_instant_book,
+  });
+
+
   // Calculate host payout (total minus platform fee)
   const platformFeePercent = 0.10; // 10% platform fee
   const hostPayout = booking.total_price ? booking.total_price * (1 - platformFeePercent) : 0;
