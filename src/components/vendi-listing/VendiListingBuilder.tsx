@@ -15,6 +15,15 @@ import {
   Question, VendiDraft,
 } from '@/lib/vendi-listing/script';
 import { isSkip } from '@/lib/vendi-listing/extract';
+import {
+  ATTESTATIONS,
+  publishAcceptanceText,
+} from '@/components/listing-wizard/stages/PublishAttestations';
+import {
+  CONSENT_TRIGGERS, CURRENT_VERSIONS, DOCUMENT_SLUGS, DOCUMENT_TYPES,
+} from '@/lib/legalDocuments';
+import { useLegalDocument } from '@/hooks/useLegalDocument';
+import { useRecordConsent } from '@/hooks/useRecordConsent';
 
 type Msg = { id: string; role: 'vendi' | 'user'; content: string };
 
@@ -31,9 +40,11 @@ interface PersistedState {
   answered: string[];
   messages: Msg[];
   draftId?: string | null;
+  consentId?: string | null;
 }
 
 const uid = () => Math.random().toString(36).slice(2);
+
 
 const VendiListingBuilder: React.FC = () => {
   const navigate = useNavigate();
