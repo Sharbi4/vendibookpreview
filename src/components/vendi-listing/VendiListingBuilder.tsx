@@ -91,6 +91,9 @@ const VendiListingBuilder: React.FC = () => {
 
   const creatingDraftRef = useRef(false);
   const publishInFlightRef = useRef(false);
+  /** Synchronous mirror of `asked` — effects can run twice before a re-render. */
+  const askedRef = useRef<Set<string>>(new Set());
+
 
   const disclosureShownRef = useRef(false);
   const endRef = useRef<HTMLDivElement>(null);
