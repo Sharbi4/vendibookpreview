@@ -198,9 +198,9 @@ const RentItOut: React.FC = () => {
     if (!rental) return false;
     setSaving(true);
     const payload = {
-      price_daily: numberOrNull(priceDaily),
-      price_weekly: numberOrNull(priceWeekly),
-      price_monthly: numberOrNull(priceMonthly),
+      price_daily: rateValidation.values.daily,
+      price_weekly: rateValidation.values.weekly,
+      price_monthly: rateValidation.values.monthly,
       deposit_amount: numberOrNull(deposit),
       rental_min_days: numberOrNull(minDays) ?? 1,
       available_from: availableFrom || null,
