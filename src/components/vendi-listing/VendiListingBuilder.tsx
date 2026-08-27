@@ -1788,6 +1788,20 @@ const VendiListingBuilder: React.FC = () => {
                   <Send className="h-4 w-4" />
                 </Button>
               </div>
+              {/* Hands-free option: Vendi Voice asks the same question aloud and
+                  hands the spoken answer back through the normal extraction. */}
+              <div className="mt-3">
+                <VendiVoiceAgent
+                  disabled={publishing}
+                  onAnswer={(text) => submitAnswer(text)}
+                  context={[
+                    `Current question: ${current.prompt(draft)}`,
+                    facts.length ? `Saved so far: ${facts.map((f) => `${f.label}: ${f.value}`).join('; ')}` : '',
+                    draft.mode ? `Listing mode: ${draft.mode}` : '',
+                    draft.category ? `Category: ${draft.category}` : '',
+                  ].filter(Boolean).join('\n')}
+                />
+              </div>
               <p className="mt-2 px-1 text-[11px] leading-relaxed text-muted-foreground">
                 {current.kind === 'paste'
                   ? 'Paste your own text only — Vendi never pulls anything from Facebook Marketplace or other sites. Attached photos become your listing photos.'
