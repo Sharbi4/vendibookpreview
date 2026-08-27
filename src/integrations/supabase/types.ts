@@ -3647,6 +3647,7 @@ export type Database = {
           condition: string | null
           cover_image_url: string | null
           created_at: string
+          creation_session_key: string | null
           daily_enabled: boolean | null
           deleted_at: string | null
           delivery_fee: number | null
@@ -3748,6 +3749,7 @@ export type Database = {
           condition?: string | null
           cover_image_url?: string | null
           created_at?: string
+          creation_session_key?: string | null
           daily_enabled?: boolean | null
           deleted_at?: string | null
           delivery_fee?: number | null
@@ -3849,6 +3851,7 @@ export type Database = {
           condition?: string | null
           cover_image_url?: string | null
           created_at?: string
+          creation_session_key?: string | null
           daily_enabled?: boolean | null
           deleted_at?: string | null
           delivery_fee?: number | null
@@ -9898,6 +9901,7 @@ export type Database = {
           condition: string | null
           cover_image_url: string | null
           created_at: string
+          creation_session_key: string | null
           daily_enabled: boolean | null
           deleted_at: string | null
           delivery_fee: number | null

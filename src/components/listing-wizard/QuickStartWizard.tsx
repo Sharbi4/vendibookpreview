@@ -11,6 +11,12 @@ import { invokeEdge } from '@/lib/edge/invokeFunction';
 import { ListingCategory, ListingMode, CATEGORY_LABELS } from '@/types/listing';
 import { cn } from '@/lib/utils';
 import { trackDraftCreated, trackEvent } from '@/lib/analytics';
+import {
+  createOrResumeListingDraft,
+  CreationSessionRetiredError,
+  rotateCreationSessionKey,
+} from '@/lib/listings/creationSession';
+
 
 const LIST_GATEWAY = '/list';
 
@@ -143,6 +149,9 @@ export const QuickStartWizard: React.FC = () => {
     mode: seededMode,
   });
   const [isCreating, setIsCreating] = useState(false);
+  /** Synchronous in-flight guard (state updates are async and race-prone). */
+  const creatingRef = useRef(false);
+
   const [isLookingUpZip, setIsLookingUpZip] = useState(false);
   const [zipError, setZipError] = useState<string | null>(null);
   const [zipConfirmed, setZipConfirmed] = useState(!!persisted?.data?.latitude);
@@ -293,6 +302,9 @@ export const QuickStartWizard: React.FC = () => {
 
   const handleCreateDraft = async () => {
     if (!data.category || !data.mode) return;
+    // In-flight guard: a double click, a remount-triggered resume and the
+    // click handler must never issue two create calls.
+    if (creatingRef.current) return;
 
     // User must be authenticated to create a listing
     if (!user) {
@@ -305,13 +317,10 @@ export const QuickStartWizard: React.FC = () => {
       return;
     }
 
+    creatingRef.current = true;
     setIsCreating(true);
 
     try {
-      // Use coordinates from ZIP lookup (already geocoded)
-      const latitude = data.latitude;
-      const longitude = data.longitude;
-
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData.session) {
         // User exists but has no active session — most commonly they just
@@ -325,26 +334,27 @@ export const QuickStartWizard: React.FC = () => {
         return;
       }
 
-      // Create draft through the backend so new users receive the host role safely.
-      const { data: listing, error } = await invokeEdge<{ id?: string }>('create-listing-draft', {
-        headers: { Authorization: `Bearer ${sessionData.session.access_token}` },
-        body: {
-          mode: data.mode,
-          category: data.category,
-          location: data.location || null,
-          city: data.city || null,
-          state: data.state || null,
-          zipCode: data.zipCode || null,
-          latitude,
-          longitude,
-        },
+      // Idempotent: the durable creation-session key means remounts, retries,
+      // the post-sign-in auto-resume effect and duplicate clicks all resolve
+      // to the SAME draft row instead of inserting another one.
+      const listingId = await createOrResumeListingDraft({
+        userId: user.id,
+        flow: 'manual',
+        mode: data.mode,
+        category: data.category,
+        location: data.location || null,
+        city: data.city || null,
+        state: data.state || null,
+        zipCode: data.zipCode || null,
+        latitude: data.latitude,
+        longitude: data.longitude,
       });
-
-      if (error) throw new Error(error);
-      if (!listing?.id) throw new Error('Draft was not created. Please try again.');
       await refreshProfile();
 
-      setCreatedListingId(listing.id);
+      // Draft now has its own identity; retire the key so the seller's NEXT
+      // quick start creates a genuinely new listing.
+      rotateCreationSessionKey(user.id, 'manual');
+      setCreatedListingId(listingId);
       setStep('created', true);
 
       // Clear persisted quick-start progress now that the draft is safely on the server.
@@ -358,15 +368,22 @@ export const QuickStartWizard: React.FC = () => {
 
     } catch (error) {
       console.error('Error creating draft:', error);
+      if (error instanceof CreationSessionRetiredError) {
+        // The previous session's listing already went live — mint a fresh key
+        // so the seller can start a genuinely new listing.
+        rotateCreationSessionKey(user.id, 'manual');
+      }
       const raw = error instanceof Error ? error.message : String(error);
       toast({
         title: 'Error creating draft',
         description: raw || 'Please try again — your progress is saved.',
         variant: 'destructive'});
     } finally {
+      creatingRef.current = false;
       setIsCreating(false);
     }
   };
+
 
   // Auto-resume draft creation after user returns from sign-in with progress intact.
   useEffect(() => {

@@ -9,6 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import vendibookFavicon from '@/assets/vendibook-favicon.png';
 import LivePreviewPanel, { ListingPreview } from '@/components/ai-listing/LivePreviewPanel';
+import { createOrResumeListingDraft, rotateCreationSessionKey } from '@/lib/listings/creationSession';
 import VoiceInputButton from '@/components/ai-listing/VoiceInputButton';
 
 type Msg = { role: 'user' | 'assistant'; content: string };
@@ -101,23 +102,20 @@ const AIListingCreator: React.FC = () => {
         commercial_kitchen: 'ghost_kitchen', vendor_lot: 'vendor_lot', vendor_space: 'vendor_space'};
       const fulfillmentMap: Record<string, string> = {
         pickup: 'pickup', delivery: 'delivery', both: 'both', on_site: 'on_site'};
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData.session) throw new Error('Please sign in to save your listing.');
-
-      const { data: draft, error: draftError } = await supabase.functions.invoke('create-listing-draft', {
-        headers: { Authorization: `Bearer ${sessionData.session.access_token}` },
-        body: {
-          mode: listingData.mode === 'sale' ? 'sale' : 'rent',
-          category: categoryMap[listingData.category || 'food_truck'] || 'food_truck',
-          location: listingData.address || null,
-          city: listingData.city || null,
-          state: listingData.state || null,
-          latitude: listingData.latitude || null,
-          longitude: listingData.longitude || null,
-        },
+      // Idempotent per creation session: re-saving after an edit or a failed
+      // attempt reuses the same draft row instead of inserting another.
+      const draftId = await createOrResumeListingDraft({
+        userId: user.id,
+        flow: 'ai',
+        mode: listingData.mode === 'sale' ? 'sale' : 'rent',
+        category: categoryMap[listingData.category || 'food_truck'] || 'food_truck',
+        location: listingData.address || null,
+        city: listingData.city || null,
+        state: listingData.state || null,
+        latitude: listingData.latitude || null,
+        longitude: listingData.longitude || null,
       });
-      if (draftError) throw draftError;
-      if (!draft?.id) throw new Error('Draft was not created. Please try again.');
+
 
       const updateData: any = {
         title: listingData.title || 'Untitled Listing',
@@ -154,16 +152,17 @@ const AIListingCreator: React.FC = () => {
         cover_image_url: uploadedImages.length > 0 ? uploadedImages[0] : null,
         accept_paypal_checkout: listingData.accept_paypal_checkout ?? (listingData.mode === 'sale' ? true : null),
         accept_cash_payment: listingData.accept_cash_payment ?? null};
-      const { error } = await supabase.from('listings').update(updateData).eq('id', draft.id);
+      const { error } = await supabase.from('listings').update(updateData).eq('id', draftId);
       if (error) throw error;
       await refreshProfile();
+      rotateCreationSessionKey(user.id, 'ai');
       toast.success('Draft saved! Redirecting to your dashboard...');
       // Add a next-steps message to the chat before redirecting
       setMessages(prev => [...prev, {
         role: 'assistant' as const,
         content: `🎉 **Your draft has been saved!**\n\nHere's what to do next:\n\n1. **Open your draft** — You'll land on your Dashboard. Tap on the draft to open the editor.\n2. **${uploadedImages.length > 0 ? 'Review your photos — they\'re attached! Add more or rearrange in the editor.' : 'Add photos — listings with photos get 5x more views! Upload at least 3-5 in the editor.'}**\n3. **Connect payments** — Set up PayPal so you can get paid (takes ~2 min).\n4. **Hit Publish** — Your listing goes live instantly!\n5. **Share it** — Use the Share Kit to post on social media and generate a QR code.\n\nRedirecting you to your dashboard now...`
       }]);
-      setTimeout(() => navigate(`/create-listing/${draft.id}`), 4000);
+      setTimeout(() => navigate(`/create-listing/${draftId}`), 4000);
     } catch (e: any) {
       console.error('Save listing error:', e);
       toast.error('Failed to save listing. Please try again.');

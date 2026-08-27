@@ -23,7 +23,14 @@ const BodySchema = z.object({
    * and auth redirects all resolve to the same id instead of a new draft.
    */
   sessionKey: z.string().trim().min(8).max(80).optional().nullable(),
+  /**
+   * Same idempotency contract for every NON-Vendi creation flow (manual
+   * quick-start wizard, import/paste wizard, AI creator). Kept in its own
+   * column so the Vendi resume chooser never offers a manual draft.
+   */
+  creationSessionKey: z.string().trim().min(8).max(80).optional().nullable(),
 });
+
 
 
 const json = (body: unknown, status = 200) =>
@@ -58,7 +65,10 @@ serve(async (req) => {
       auth: { persistSession: false },
     });
 
-    const { mode, category, location, city, state, zipCode, latitude, longitude, sessionKey } = parsed.data;
+    const {
+      mode, category, location, city, state, zipCode, latitude, longitude,
+      sessionKey, creationSessionKey,
+    } = parsed.data;
     const normalizedLocation = location || [city, state].filter(Boolean).join(", ") || null;
     const fulfillmentType = category === "ghost_kitchen" || category === "vendor_lot" || category === "vendor_space"
       ? "on_site"
@@ -70,12 +80,19 @@ serve(async (req) => {
     // identity. A key whose listing already went live (or was archived/
     // deleted) is RETIRED: it must never be resumed or autosaved onto, so an
     // old tab is told to start a fresh session instead.
-    if (sessionKey) {
+    // Both flows share the contract; only the column differs.
+    const idempotency: Array<{ column: string; value: string }> = [];
+    if (sessionKey) idempotency.push({ column: "vendi_session_key", value: sessionKey });
+    if (creationSessionKey) {
+      idempotency.push({ column: "creation_session_key", value: creationSessionKey });
+    }
+
+    for (const { column, value } of idempotency) {
       const { data: existing } = await admin
         .from("listings")
         .select("id, status, deleted_at")
         .eq("host_id", user.id)
-        .eq("vendi_session_key", sessionKey)
+        .eq(column, value)
         .maybeSingle();
       if (existing?.id) {
         const resumable = existing.status === "draft" && !existing.deleted_at;
@@ -83,6 +100,7 @@ serve(async (req) => {
         return json({ error: "session_retired", retired: true }, 409);
       }
     }
+
 
 
 
@@ -132,6 +150,7 @@ serve(async (req) => {
         latitude: latitude ?? null,
         longitude: longitude ?? null,
         vendi_session_key: sessionKey ?? null,
+        creation_session_key: creationSessionKey ?? null,
         // accept_paypal_checkout is NOT NULL in the database — never write null.
         accept_paypal_checkout: mode === "sale",
         accept_cash_payment: false,
@@ -142,14 +161,16 @@ serve(async (req) => {
     if (listingError) {
       // Two tabs raced the same session key: the partial unique index rejected
       // the loser. Return the winner's row instead of surfacing an error.
-      if (sessionKey && listingError.code === "23505") {
-        const { data: winner } = await admin
-          .from("listings")
-          .select("id")
-          .eq("host_id", user.id)
-          .eq("vendi_session_key", sessionKey)
-          .maybeSingle();
-        if (winner?.id) return json({ id: winner.id, resumed: true });
+      if (idempotency.length && listingError.code === "23505") {
+        for (const { column, value } of idempotency) {
+          const { data: winner } = await admin
+            .from("listings")
+            .select("id")
+            .eq("host_id", user.id)
+            .eq(column, value)
+            .maybeSingle();
+          if (winner?.id) return json({ id: winner.id, resumed: true });
+        }
       }
       console.error("[create-listing-draft] insert failed", listingError);
       return json(
@@ -160,26 +181,27 @@ serve(async (req) => {
 
     // Telemetry only — never merges or deletes anything. Surfaces same-owner
     // draft bursts (the Earl Wigger pattern) so admins can spot regressions.
-    if (sessionKey) {
+    {
       const since = new Date(Date.now() - 30 * 60 * 1000).toISOString();
       const { count } = await admin
         .from("listings")
         .select("id", { count: "exact", head: true })
         .eq("host_id", user.id)
         .eq("status", "draft")
-        .not("vendi_session_key", "is", null)
         .gte("created_at", since);
       if ((count ?? 0) > 1) {
-        console.warn(`[create-listing-draft] vendi_draft_burst host=${user.id} drafts_30m=${count}`);
+        const flow = sessionKey ? "vendi" : creationSessionKey ? "manual" : "unkeyed";
+        console.warn(`[create-listing-draft] draft_burst host=${user.id} flow=${flow} drafts_30m=${count}`);
         await admin.from("analytics_events").insert({
-          event_name: "vendi_draft_burst",
+          event_name: "listing_draft_burst",
           event_category: "Supply",
           user_id: user.id,
           listing_id: listing.id,
-          metadata: { drafts_last_30m: count },
+          metadata: { drafts_last_30m: count, flow, keyed: Boolean(sessionKey || creationSessionKey) },
         } as never);
 
       }
+
     }
 
     return json({ id: listing.id, resumed: false });
