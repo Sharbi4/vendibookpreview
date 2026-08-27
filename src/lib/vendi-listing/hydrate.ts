@@ -189,6 +189,19 @@ export function deriveAnsweredFromDraft(
   mark('amenities', draft.amenities?.length);
   mark('highlights', draft.highlights?.length);
   mark('dimensions', draft.length_inches);
+  mark('sale_dimensions', draft.length_inches && draft.height_inches);
+
+  // Disclosures. `no_known_problems` and `photos_exclusions_answered` carry
+  // database defaults (false), so only a truthy value proves a real answer.
+  mark('condition', draft.condition);
+  mark('operational_status', draft.operational_status);
+  mark('title_status', draft.title_status);
+  mark('has_lien', draft.has_lien);
+  mark('known_problems', draft.no_known_problems === true || (draft.known_problems?.length ?? 0) > 0);
+  mark('included_items', (draft.included_items?.trim().length ?? 0) >= 3);
+  mark('photo_exclusions', draft.photos_exclusions_answered === true);
+
+
 
   return Array.from(new Set(done));
 }
