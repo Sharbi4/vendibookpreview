@@ -10,19 +10,31 @@ import { cn } from '@/lib/utils';
 
 export const VENDI_VOICE_AGENT_ID = 'agent_0101kdmd2dn7exys7w22pnscqasf';
 
-/** Upsells Vendi Voice is allowed to surface. Every one routes to /pricing. */
-const UPSELLS: Record<string, { title: string; body: string; cta: string; href: string }> = {
+/**
+ * Upsells Vendi Voice is allowed to surface.
+ *
+ * `href` is the default destination. Featured Boost is a one-time product, so
+ * it opens the hosted PayPal product checkout for the seller's own listing
+ * (`hostedSlug`). Vendibook Pro is a recurring subscription and must always go
+ * through the /pricing hub first, where plan selection and the recurring
+ * billing consent live — Vendi never starts a subscription by voice.
+ */
+const UPSELLS: Record<
+  string,
+  { title: string; body: string; cta: string; href: string; hostedSlug?: string }
+> = {
   pro: {
     title: 'Vendibook Pro',
-    body: 'Lower seller commission (10.9%) plus priority placement for your listing.',
+    body: 'Seller commission drops to 10.9%, PricePilot appraisals are included, and every billing period comes with a Featured Boost credit.',
     cta: 'See Pro plans',
     href: '/pricing',
   },
   featured: {
     title: 'Featured boost',
-    body: 'Pin your listing to the top of search results in your city.',
-    cta: 'See boost options',
+    body: 'Pin this listing to the top of search results in your city for 30 days. Paid securely with PayPal.',
+    cta: 'Boost this listing',
     href: '/pricing',
+    hostedSlug: 'boost-featured-30',
   },
   concierge: {
     title: 'Listing concierge',
