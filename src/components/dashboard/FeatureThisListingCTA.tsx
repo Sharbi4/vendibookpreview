@@ -67,7 +67,7 @@ export const FeatureThisListingCTA: React.FC<Props> = ({ listingId, priceLabel }
           Want more eyes on it? Feature this listing.
         </p>
         <p className="text-xs text-muted-foreground">
-          Pinned to the top of search and category pages for {durationDays} days — {displayPrice}.
+          Pinned to the top of search and category pages for {durationDays} days — {displayPrice} plus sales tax.
         </p>
       </div>
       <div className="flex items-center gap-2">

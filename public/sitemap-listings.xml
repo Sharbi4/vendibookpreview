@@ -683,17 +683,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/2ee148f3-0b56-4739-86b1-b96208fcf1af</loc>
-    <lastmod>2026-08-22</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://images.unsplash.com/photo-1619740455993-9e612b50c961?w=800</image:loc>
-      <image:title>Compact Hot Dog Cart</image:title>
-      <image:caption>Compact Hot Dog Cart in Phoenix, AZ on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/a3ead971-38c7-4c0c-8f3f-2b02185c7c2f</loc>
     <lastmod>2026-08-27</lastmod>
     <changefreq>weekly</changefreq>
@@ -702,6 +691,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/bf4754c8-46ce-472e-8a71-2b8a7769a833/a3ead971-38c7-4c0c-8f3f-2b02185c7c2f/1770294077101-jgoyi.jpg</image:loc>
       <image:title>Custom-Built 6&apos; x 12&apos; Pop-Up Lemonade Concession Trailer</image:title>
       <image:caption>Custom-Built 6&apos; x 12&apos; Pop-Up Lemonade Concession Trailer in Charlotte, NC on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/2ee148f3-0b56-4739-86b1-b96208fcf1af</loc>
+    <lastmod>2026-08-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1619740455993-9e612b50c961?w=800</image:loc>
+      <image:title>Compact Hot Dog Cart</image:title>
+      <image:caption>Compact Hot Dog Cart in Phoenix, AZ on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -749,17 +749,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/779d5773-de60-4075-b92d-32387da86dd3</loc>
-    <lastmod>2026-08-27</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/3b59adbf-20d5-4154-a54e-bf20a1bddbed/779d5773-de60-4075-b92d-32387da86dd3/1770139433353-pqedyd.png</image:loc>
-      <image:title>Pre-Owned Concession Trailer with Deep Freezer – Priced to Sell</image:title>
-      <image:caption>Pre-Owned Concession Trailer with Deep Freezer – Priced to Sell in Baton Rouge, LA on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/a18288e0-872e-4024-adc5-eced6eee0e0a</loc>
     <lastmod>2026-08-27</lastmod>
     <changefreq>weekly</changefreq>
@@ -768,6 +757,17 @@
       <image:loc>https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=800</image:loc>
       <image:title>Downtown Ghost Kitchen - Prime Location</image:title>
       <image:caption>Downtown Ghost Kitchen - Prime Location in Dallas, TX on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/779d5773-de60-4075-b92d-32387da86dd3</loc>
+    <lastmod>2026-08-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/3b59adbf-20d5-4154-a54e-bf20a1bddbed/779d5773-de60-4075-b92d-32387da86dd3/1770139433353-pqedyd.png</image:loc>
+      <image:title>Pre-Owned Concession Trailer with Deep Freezer – Priced to Sell</image:title>
+      <image:caption>Pre-Owned Concession Trailer with Deep Freezer – Priced to Sell in Baton Rouge, LA on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
