@@ -35,28 +35,21 @@ serve(async (req) => {
       { auth: { persistSession: false } },
     );
 
-    // Maintenance bootstrap token (set only while configuring the agent) OR an admin session.
-    const bootstrap = Deno.env.get("VENDI_AGENT_BOOTSTRAP_TOKEN");
-    const provided = req.headers.get("x-bootstrap-token") ?? "";
-    let authorized = Boolean(bootstrap && provided && provided === bootstrap);
+    // Admin session required.
+    const authHeader = req.headers.get("Authorization") ?? "";
+    if (!authHeader) return json({ error: "unauthenticated" }, 401);
+    const { data: userData, error: userErr } = await admin.auth.getUser(
+      authHeader.replace("Bearer ", ""),
+    );
+    if (userErr || !userData.user) return json({ error: "unauthenticated" }, 401);
 
-    if (!authorized) {
-      const authHeader = req.headers.get("Authorization") ?? "";
-      if (!authHeader) return json({ error: "unauthenticated" }, 401);
-      const { data: userData, error: userErr } = await admin.auth.getUser(
-        authHeader.replace("Bearer ", ""),
-      );
-      if (userErr || !userData.user) return json({ error: "unauthenticated" }, 401);
-
-      const { data: role } = await admin
-        .from("user_roles")
-        .select("role")
-        .eq("user_id", userData.user.id)
-        .eq("role", "admin")
-        .maybeSingle();
-      if (!role) return json({ error: "admin_required" }, 403);
-      authorized = true;
-    }
+    const { data: role } = await admin
+      .from("user_roles")
+      .select("role")
+      .eq("user_id", userData.user.id)
+      .eq("role", "admin")
+      .maybeSingle();
+    if (!role) return json({ error: "admin_required" }, 403);
 
     const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
     const action = String(body?.action ?? "get");
