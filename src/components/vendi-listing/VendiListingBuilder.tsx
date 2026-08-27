@@ -1641,7 +1641,29 @@ const VendiListingBuilder: React.FC = () => {
 
                   <Button variant="ghost" className="rounded-full text-muted-foreground" onClick={startOver}>Start over</Button>
                 </div>
+
+                {/* Same voice agent, available through review: it can read what's
+                    left and run the publish action once YES is typed. */}
+                <div className="mt-5 border-t border-white/[0.07] pt-4">
+                  <VendiVoiceAgent
+                    disabled={publishing}
+                    onAnswer={(text) => submitAnswer(text)}
+                    blockers={blockers}
+                    canPublish={!publishing && blockers.length === 0 && !!consentId}
+                    onGoToReview={() => setReviewing(true)}
+                    onPublish={handlePublish}
+                    context={[
+                      'The seller is on the review and publish step.',
+                      facts.length ? `Listing facts: ${facts.map((f) => `${f.label}: ${f.value}`).join('; ')}` : '',
+                      blockers.length ? `Still missing: ${blockers.join('; ')}` : 'Nothing missing.',
+                      consentId
+                        ? 'Disclosure affirmed — publishing is unlocked.'
+                        : 'Seller must type YES on screen before publishing is allowed.',
+                    ].filter(Boolean).join('\n')}
+                  />
+                </div>
               </motion.div>
+
             )}
 
 
