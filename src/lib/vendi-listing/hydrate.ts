@@ -13,7 +13,9 @@
  *    `nextQuestion` skips anything the database already holds.
  */
 import type { DocumentType } from '@/types/documents';
+import { parseKnownProblems } from '@/lib/listings/stages';
 import type { VendiDraft } from './script';
+
 
 export type ListingRow = Record<string, unknown>;
 
