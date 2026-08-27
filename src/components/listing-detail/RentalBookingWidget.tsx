@@ -800,8 +800,9 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
             {daysInMonth.map(date => {
               const status = getDayStatus(date);
               const isSelected = isInSelectedRange(date);
-              const isStart = startDate && isSameDay(date, startDate);
-              const isEnd = endDate && isSameDay(date, endDate);
+              const isStart = !!(startDate && isSameDay(date, startDate));
+              const isEnd = !!(endDate && isSameDay(date, endDate));
+              const isRangeMiddle = isSelected && !isStart && !isEnd;
               const { available } = getAvailability(date);
               const isDisabled = status === 'past' || status === 'outside' || status === 'full';
               const isActiveHourly = isActiveHourlyDate(date);
