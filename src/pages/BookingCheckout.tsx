@@ -371,8 +371,9 @@ const BookingCheckout = () => {
     // Move to next step
     const nextStep = steps.find(s => s.id > stepId);
     if (nextStep) {
-      setActiveStep(nextStep.id);
+      goToStep(nextStep.id);
     }
+
   };
 
   const termsGate = useTermsGate();
