@@ -74,6 +74,8 @@ interface VendiVoiceAgentProps {
   onRequestMedia?: () => void;
   /** How many photos are already attached to the draft. */
   imageCount?: number;
+  /** The seller's own listing/draft id, used to attach a Featured Boost purchase. */
+  listingId?: string | null;
 }
 
 /**
