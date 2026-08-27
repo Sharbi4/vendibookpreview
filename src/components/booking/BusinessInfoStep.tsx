@@ -125,7 +125,7 @@ export const BusinessInfoStep = ({
     onBusinessInfoChange(updated);
   };
 
-  const slides = ['intro', 'license', 'certs', 'insurance', 'use', 'extras'] as const;
+  const slides = ['intro', 'license', 'certs', 'insurance', 'staffing', 'use', 'extras'] as const;
   const current = slides[slide];
 
   const canAdvance = (() => {
@@ -135,7 +135,9 @@ export const BusinessInfoStep = ({
           formData.licenseType && (formData.licenseType !== 'other' || formData.licenseTypeOther?.trim()),
         );
       case 'insurance':
-        return Boolean(formData.liabilityInsuranceAnswer && formData.employeeCount);
+        return Boolean(formData.liabilityInsuranceAnswer);
+      case 'staffing':
+        return Boolean(formData.employeeCount);
       case 'use':
         return Boolean(formData.cuisineType.trim() && formData.intendedUse.trim());
       default:
