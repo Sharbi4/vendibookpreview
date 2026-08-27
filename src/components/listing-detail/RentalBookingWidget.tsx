@@ -44,6 +44,8 @@ import {
   TooltipTrigger} from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { calculateRentalFees, formatCurrency } from '@/lib/commissions';
+import { supabase } from '@/integrations/supabase/client';
+import { quoteRentalPeriod, resolveRentalRate, formatAmount } from '@/lib/listings/rentalPricing';
 import { useBlockedDates } from '@/hooks/useBlockedDates';
 import { useHourlyAvailability } from '@/hooks/useHourlyAvailability';
 import { todayInTimeZone, currentHourInTimeZone } from '@/lib/listingTimezone';
@@ -80,44 +82,10 @@ interface RentalBookingWidgetProps {
   deliveryFee?: number | null;
 }
 
-// Calculate tiered pricing (7 days = weekly, 30 days = monthly)
-const calculateTieredPrice = (
-  days: number,
-  priceDaily: number | null,
-  priceWeekly?: number | null,
-  priceMonthly?: number | null
-): { total: number; breakdown: string } => {
-  if (!priceDaily || days <= 0) return { total: 0, breakdown: '' };
-
-  let remaining = days;
-  let total = 0;
-  const parts: string[] = [];
-
-  // Apply monthly rate for 30+ day chunks
-  if (priceMonthly && remaining >= 30) {
-    const months = Math.floor(remaining / 30);
-    total += months * priceMonthly;
-    parts.push(`${months} month${months > 1 ? 's' : ''} @ $${priceMonthly.toLocaleString()}`);
-    remaining = remaining % 30;
-  }
-
-  // Apply weekly rate for 7+ day chunks
-  if (priceWeekly && remaining >= 7) {
-    const weeks = Math.floor(remaining / 7);
-    total += weeks * priceWeekly;
-    parts.push(`${weeks} week${weeks > 1 ? 's' : ''} @ $${priceWeekly.toLocaleString()}`);
-    remaining = remaining % 7;
-  }
-
-  // Apply daily rate for remaining days
-  if (remaining > 0) {
-    total += remaining * priceDaily;
-    parts.push(`${remaining} day${remaining > 1 ? 's' : ''} @ $${priceDaily.toLocaleString()}`);
-  }
-
-  return { total, breakdown: parts.join(' + ') };
-};
-
+/**
+ * Period pricing now lives in `@/lib/listings/rentalPricing` so the widget,
+ * the checkout summary and the server quote can never disagree.
+ */
 export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   listingId,
   listingTitle,
@@ -154,7 +122,12 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   // If priceDaily is set, treat listing as daily-capable regardless of flag
   // ─────────────────────────────────────────────────────────────────────────────
   const hasHourlyPricing = !!priceHourly && priceHourly > 0;
-  const hasDailyPricing = !!priceDaily && priceDaily > 0;
+  // A listing priced only weekly or only monthly is still date-bookable —
+  // gating on `price_daily` alone hid the whole calendar for long-term leases.
+  const hasDailyPricing =
+    (!!priceDaily && priceDaily > 0) ||
+    (!!priceWeekly && priceWeekly > 0) ||
+    (!!priceMonthly && priceMonthly > 0);
   
   // Effective enabled states: explicit flag OR has pricing
   const hourlyEnabled = hourlyEnabledProp || hasHourlyPricing;
@@ -428,25 +401,35 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
         duration: hours,
         durationLabel: `${hours} hour${hours > 1 ? 's' : ''}${daysLabel}`,
         breakdown: `$${priceHourly}/hr × ${hours} hrs${selectedSlotCount > 1 ? ` × ${selectedSlotCount} slots` : ''}`,
+        roundedUpNote: null,
         basePrice,
         serviceFee: fees.renterFee,
         total: fees.customerTotal};
     } else {
-      if (!startDate || !priceDaily) return null;
-      
+      if (!startDate) return null;
+
       // Inclusive day counting: same start/end = 1 day
       const days = endDate ? differenceInDays(endDate, startDate) + 1 : 1;
       if (days <= 0) return null;
-      
-      const { total: baseBeforeSlots, breakdown } = calculateTieredPrice(days, priceDaily, priceWeekly, priceMonthly);
-      const basePrice = baseBeforeSlots * selectedSlotCount;
+
+      const quote = quoteRentalPeriod(days, {
+        price_daily: priceDaily,
+        price_weekly: priceWeekly,
+        price_monthly: priceMonthly,
+      });
+      if (!quote) return null;
+
+      const basePrice = quote.subtotal * selectedSlotCount;
       const fees = calculateRentalFees(basePrice);
-      
+
       return {
         type: 'daily' as const,
         duration: days,
         durationLabel: `${days} day${days > 1 ? 's' : ''}`,
-        breakdown: selectedSlotCount > 1 ? `${breakdown} × ${selectedSlotCount} slots` : breakdown,
+        breakdown: selectedSlotCount > 1 ? `${quote.breakdown} × ${selectedSlotCount} slots` : quote.breakdown,
+        roundedUpNote: quote.roundedUp
+          ? `This host bills in full ${quote.lines[0]?.unit === 'monthly' ? 'months' : 'weeks'}, so ${quote.billedDays} days are billed for your ${days}-day dates.`
+          : null,
         basePrice,
         serviceFee: fees.renterFee,
         total: fees.customerTotal};
