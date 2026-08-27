@@ -428,7 +428,23 @@ const PayPalPaymentPanel = ({
                   </p>
                 </div>
 
+              ) : state === 'signin' ? (
+                <div className="py-8 text-center space-y-3">
+                  <p className="text-base font-semibold text-foreground">Sign in to pay securely</p>
+                  <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                    Payments are tied to your Vendibook account so we can send your receipt and keep
+                    this purchase on your dashboard. Nothing has been charged.
+                  </p>
+                  <a
+                    href={authPath()}
+                    className="inline-flex w-full items-center justify-center rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+                  >
+                    Sign in to continue
+                  </a>
+                </div>
+
               ) : (
+
                 <>
                   <div ref={messagesRef} />
 
