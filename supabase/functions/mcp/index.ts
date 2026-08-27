@@ -209,8 +209,133 @@ function supabaseForUser3(ctx) {
   });
 }
 
+// src/lib/listings/stages.ts
+var MOBILE_VEHICLE_CATEGORIES = ["food_truck"];
+var TOWABLE_CATEGORIES = ["food_trailer"];
+function getCategoryBasics(category) {
+  if (MOBILE_VEHICLE_CATEGORIES.includes(category)) {
+    return {
+      modelYear: true,
+      kitchenBuildYear: true,
+      dimensions: true,
+      titled: true,
+      readiness: "drivable"
+    };
+  }
+  if (TOWABLE_CATEGORIES.includes(category)) {
+    return {
+      modelYear: true,
+      kitchenBuildYear: true,
+      dimensions: true,
+      titled: true,
+      readiness: "towable"
+    };
+  }
+  return {
+    modelYear: false,
+    kitchenBuildYear: category === "ghost_kitchen",
+    dimensions: false,
+    titled: false,
+    readiness: "operational"
+  };
+}
+function isTitledAsset(category, mode) {
+  return mode === "sale" && getCategoryBasics(category).titled;
+}
+var DIMENSION_REQUIRED_CATEGORIES = ["food_truck", "food_trailer"];
+var requiresSaleDimensions = (mode, category) => mode === "sale" && DIMENSION_REQUIRED_CATEGORIES.includes(category);
+function getStageRequirements(input) {
+  const basics = getCategoryBasics(input.category);
+  const missing = [];
+  if (!input.condition) {
+    missing.push({
+      fieldId: "listing-condition",
+      label: "Select the overall condition",
+      stage: "what",
+      step: "basics"
+    });
+  }
+  if (!input.operationalStatus) {
+    missing.push({
+      fieldId: "listing-operational-status",
+      label: basics.readiness === "drivable" ? "Tell buyers whether it starts, runs and drives" : basics.readiness === "towable" ? "Tell buyers whether it is currently towable" : "Tell buyers whether the space is operational",
+      stage: "what",
+      step: "basics"
+    });
+  }
+  if (isTitledAsset(input.category, input.mode)) {
+    if (!input.titleStatus) {
+      missing.push({
+        fieldId: "listing-title-status",
+        label: "Select the title status",
+        stage: "details",
+        step: "includes"
+      });
+    }
+    if (!input.hasLien) {
+      missing.push({
+        fieldId: "listing-lien",
+        label: "Disclose whether there is a lien on the asset",
+        stage: "details",
+        step: "includes"
+      });
+    }
+  }
+  if (!input.noKnownProblems && input.knownProblems.length === 0) {
+    missing.push({
+      fieldId: "listing-known-problems",
+      label: "Select any known problems, or confirm there are none",
+      stage: "details",
+      step: "includes"
+    });
+  }
+  const unexplained = input.noKnownProblems ? [] : input.knownProblems.filter((p) => (p.note ?? "").trim().length < 3);
+  if (unexplained.length > 0) {
+    missing.push({
+      fieldId: `known-problem-${unexplained[0].category}`,
+      label: "Add a short explanation for each problem you selected",
+      stage: "details",
+      step: "includes"
+    });
+  }
+  if (!input.includedItems || input.includedItems.trim().length < 3) {
+    missing.push({
+      fieldId: "listing-included-items",
+      label: "Describe what is included in the advertised price",
+      stage: "details",
+      step: "includes"
+    });
+  }
+  if (requiresSaleDimensions(input.mode, input.category)) {
+    if (!input.lengthInches || input.lengthInches <= 0) {
+      missing.push({
+        fieldId: "length_ft",
+        label: "Enter the overall length in feet",
+        stage: "details",
+        step: "includes"
+      });
+    }
+    if (!input.heightInches || input.heightInches <= 0) {
+      missing.push({
+        fieldId: "height_ft",
+        label: "Enter the overall height in feet",
+        stage: "details",
+        step: "includes"
+      });
+    }
+  }
+  if (!input.photosExclusionsAnswered) {
+    missing.push({
+      fieldId: "listing-photo-exclusions",
+      label: "Answer whether anything shown in the photos is not included",
+      stage: "details",
+      step: "includes"
+    });
+  }
+  return missing;
+}
+
 // src/lib/mcp/tools/check-listing-blockers.ts
-import { getStageRequirements } from "npm:@/lib/listings/stages";
 var check_listing_blockers_default = defineTool5({
   name: "check_listing_blockers",
   title: "Check listing publish blockers",
@@ -305,7 +430,6 @@ var check_listing_blockers_default = defineTool5({
 // src/lib/mcp/tools/publish-listing.ts
 import { defineTool as defineTool6 } from "npm:@lovable.dev/mcp-js@0.24.0";
 import { z as z6 } from "npm:zod@^3.25.76";
-import { getStageRequirements as getStageRequirements2 } from "npm:@/lib/listings/stages";
 var BLOCKED_STATUSES = /* @__PURE__ */ new Set([
   "removed",
   "deleted",
@@ -391,7 +515,7 @@ var publish_listing_default = defineTool6({
     }
     if (mode && listing.category) {
       try {
-        const stageReqs = getStageRequirements2({
+        const stageReqs = getStageRequirements({
           mode,
           category: listing.category,
           condition: listing.condition ?? null,
