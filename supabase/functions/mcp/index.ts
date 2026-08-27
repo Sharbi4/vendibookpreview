@@ -503,6 +503,8 @@ var list_upsell_products_default = defineTool7({
         slug: p.slug,
         name: p.name,
         description: p.description,
+        highlights: HIGHLIGHTS[p.slug] ?? [],
+        requires_listing_id: p.slug === "boost-featured-30" || p.slug === "pro_listing_30",
         price_display: `${price}${cadence}`,
         listing_id: listing_id ?? null
       };
