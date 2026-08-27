@@ -216,25 +216,22 @@ export const RentalListingLayout = ({
           </div>
         </header>
 
-        {/* Mobile: a compact rate summary; the bottom bar opens the booking sheet
-            so the calendar surface is never duplicated on the page. */}
+        {/* Mobile / tablet: the real booking calendar lives inline on the page
+            (no bottom sheet). Desktop keeps the sticky card in the right rail. */}
         {!isOwner && (
-          <SaleCard padding="md" className="lg:hidden mb-6 flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-lg font-bold leading-tight">{headlineRate}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {instantBook ? 'Instant Book · pay at checkout' : 'Request to book · authorized, not charged'}
+          <section id="check-dates" className="lg:hidden mb-8 scroll-mt-24">
+            <div className="mb-3">
+              <h2 className="text-lg font-semibold tracking-tight">Check dates</h2>
+              <p className="text-sm text-muted-foreground">
+                {instantBook
+                  ? 'Instant Book · pick your dates to see the full total'
+                  : 'Request to book · pick your dates to see the full total'}
               </p>
             </div>
-            <Button
-              variant="cta"
-              size="sm"
-              onClick={() => document.getElementById('sticky-mobile-cta-primary')?.click()}
-            >
-              Check dates
-            </Button>
-          </SaleCard>
+            {bookingWidget('mobile')}
+          </section>
         )}
+
 
 
         <div className="grid lg:grid-cols-3 gap-6 lg:gap-12">
