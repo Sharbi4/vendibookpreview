@@ -117,10 +117,12 @@ export interface VendiReadiness {
 
 /** Honest progress: the share of real publish requirements that are satisfied. */
 export function readinessProgress(draft: VendiDraft, imageCount: number): VendiReadiness {
-  // mode, category, title, description, location, price, one photo
-  const TOTAL_REQUIREMENTS = 7;
+  // mode, category, title, description, location, price, one photo + the
+  // disclosure requirements this category/mode actually carries.
+  const TOTAL_REQUIREMENTS = 7 + disclosureRequirementCount(draft);
   const blockers = getPublishBlockers(draft, imageCount);
   const met = Math.max(0, TOTAL_REQUIREMENTS - blockers.length);
+
   const improvements: string[] = [];
   if (!draft.amenities?.length) improvements.push('Equipment and features');
   if (!draft.highlights?.length) improvements.push('Standout highlights');
