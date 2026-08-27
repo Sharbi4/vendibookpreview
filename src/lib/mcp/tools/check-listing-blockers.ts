@@ -1,7 +1,8 @@
 import { defineTool, type ToolContext } from "@lovable.dev/mcp-js";
 import { z } from "zod";
 import { supabaseForUser } from "../supabase";
-import { getStageRequirements, type ListingCategory } from "@/lib/listings/stages";
+import { getStageRequirements } from "@/lib/listings/stages";
+import type { ListingCategory } from "@/types/listing";
 
 export default defineTool({
   name: "check_listing_blockers",
