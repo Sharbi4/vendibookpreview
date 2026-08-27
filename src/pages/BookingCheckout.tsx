@@ -286,15 +286,17 @@ const BookingCheckout = () => {
         ? { label: 'Sales tax', amount: 0, muted: true, valueLabel: 'Calculated at payment' }
         : null;
 
-  // Step definitions - dynamic based on listing requirements
-  // Auth is now deferred: guests can fill everything first, auth is required only at submission
-  // Step order: Business Info (if food) -> Documents (if required) -> Fulfillment -> Review
-  const STEP_BUSINESS_INFO = requiresBusinessInfo ? 1 : -1;
-  const STEP_DOCUMENTS = hasRequiredDocs ? (requiresBusinessInfo ? 2 : 1) : -1;
-  const STEP_FULFILLMENT = 1 + (requiresBusinessInfo ? 1 : 0) + (hasRequiredDocs ? 1 : 0);
+  // Step definitions — a single-page slide wizard (one screen at a time).
+  // Order: About you (contact) -> Business info (if food) -> Documents (if required)
+  //        -> Fulfillment -> Review
+  const STEP_CONTACT = 1;
+  const STEP_BUSINESS_INFO = requiresBusinessInfo ? 2 : -1;
+  const STEP_DOCUMENTS = hasRequiredDocs ? (requiresBusinessInfo ? 3 : 2) : -1;
+  const STEP_FULFILLMENT = 2 + (requiresBusinessInfo ? 1 : 0) + (hasRequiredDocs ? 1 : 0);
   const STEP_REVIEW = STEP_FULFILLMENT + 1;
 
   const steps = [
+    { id: STEP_CONTACT, label: 'About you', icon: CheckCircle2 },
     ...(requiresBusinessInfo ? [{ id: STEP_BUSINESS_INFO, label: 'Business information', icon: Building2 }] : []),
     ...(hasRequiredDocs ? [{ id: STEP_DOCUMENTS, label: 'Documents & insurance', icon: FileCheck }] : []),
     { id: STEP_FULFILLMENT, label: 'Fulfillment & details', icon: Truck },
@@ -303,13 +305,11 @@ const BookingCheckout = () => {
 
   // Set initial active step
   useEffect(() => {
-    if (activeStep === null || activeStep === 1) {
-      const firstStep = steps[0]?.id || STEP_FULFILLMENT;
-      setActiveStep(firstStep);
-    }
+    if (activeStep === null) setActiveStep(STEP_CONTACT);
   }, []);
 
   // Check step completion
+  const isStepContactComplete = Boolean(userInfo?.agreedToTerms);
   // Business info is complete when all required fields are filled
   const isBusinessInfoComplete = !requiresBusinessInfo || (
     businessInfo?.licenseType &&
@@ -324,26 +324,30 @@ const BookingCheckout = () => {
     stagedDocuments.some(doc => doc.documentType === req.document_type)
   );
   const isStepDocsComplete = !hasRequiredDocs || (completedSteps.includes(STEP_DOCUMENTS) && allDocsStaged);
-  const isFulfillmentComplete = userInfo?.agreedToTerms && 
-    (fulfillmentSelected !== 'delivery' || deliveryAddress.trim());
+  const isFulfillmentComplete = Boolean(userInfo?.agreedToTerms) &&
+    (fulfillmentSelected !== 'delivery' || Boolean(deliveryAddress.trim()));
   const isStepFulfillmentComplete = isFulfillmentComplete;
 
   // Determine which step can be accessed (no longer blocked by auth)
   const canAccessStep = (stepId: number): boolean => {
-    if (stepId === STEP_BUSINESS_INFO) return true;
-    if (stepId === STEP_DOCUMENTS) return !requiresBusinessInfo || isStepBusinessInfoComplete;
-    if (stepId === STEP_FULFILLMENT) return (!requiresBusinessInfo || isStepBusinessInfoComplete) && (!hasRequiredDocs || isStepDocsComplete);
+    if (stepId === STEP_CONTACT) return true;
+    if (stepId === STEP_BUSINESS_INFO) return isStepContactComplete;
+    if (stepId === STEP_DOCUMENTS) return isStepContactComplete && (!requiresBusinessInfo || isStepBusinessInfoComplete);
+    if (stepId === STEP_FULFILLMENT) return isStepContactComplete && (!requiresBusinessInfo || isStepBusinessInfoComplete) && (!hasRequiredDocs || isStepDocsComplete);
     if (stepId === STEP_REVIEW) return Boolean(isStepFulfillmentComplete);
     return true;
   };
 
-  // Auto-open first step on mount (no auth gate)
-  useEffect(() => {
-    if (user && !completedSteps.includes(1)) {
-      // If user is already logged in, silently mark old step 1 as done
-      setCompletedSteps(prev => [...prev, 1]);
-    }
-  }, [user]);
+  const goToStep = (stepId: number) => {
+    setActiveStep(stepId);
+    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const goBackStep = () => {
+    const idx = steps.findIndex((s) => s.id === activeStep);
+    if (idx > 0) goToStep(steps[idx - 1].id);
+  };
+
 
   const handleDatesSelected = (start: Date, end: Date) => {
     setStartDate(start);
