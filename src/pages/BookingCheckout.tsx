@@ -823,10 +823,10 @@ const BookingCheckout = () => {
 
   return (
 
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-background bg-[radial-gradient(1100px_520px_at_50%_-6%,hsl(var(--primary)/0.06),transparent_70%)]">
       <Header />
       
-      <main className="flex-1 container py-6 lg:py-10">
+      <main className="flex-1 container py-8 lg:py-14">
         {/* Back Button */}
         <Button 
           variant="ghost" 
@@ -840,10 +840,21 @@ const BookingCheckout = () => {
           </Link>
         </Button>
 
-        {/* Title */}
-        <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-8">
-          {instantConfirm ? 'Book instantly' : 'Request to book'}
-        </h1>
+        {/* Editorial title block — matches the How It Works type scale */}
+        <div className="mb-10 max-w-2xl">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">
+            Vendibook checkout
+          </p>
+          <h1 className="mt-2 text-3xl lg:text-4xl font-semibold tracking-tight text-foreground">
+            {instantConfirm ? 'Book instantly' : 'Request to book'}
+          </h1>
+          <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
+            {instantConfirm
+              ? 'Confirm your dates and details — your booking is confirmed as soon as payment goes through.'
+              : 'Send your dates and details to the host. Nothing is charged until your request is accepted.'}
+          </p>
+        </div>
+
 
         <div className="grid lg:grid-cols-5 gap-8 lg:gap-12">
           {/* Left Column - Steps */}
