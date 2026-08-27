@@ -196,7 +196,7 @@ const VendiVoiceAgent: React.FC<VendiVoiceAgentProps> = ({
         return 'Dismissed.';
       },
     }),
-    [navigate],
+    [navigate, upsellHref],
   );
 
 
