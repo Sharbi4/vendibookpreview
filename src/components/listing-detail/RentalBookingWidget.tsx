@@ -996,47 +996,45 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="p-4 rounded-2xl border border-border/70 bg-muted/30 space-y-2"
+              className="pt-1 space-y-1.5"
             >
-              <div className="flex items-center justify-between text-sm text-muted-foreground">
-                <span>{pricingInfo.breakdown}</span>
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span className="underline decoration-dotted underline-offset-2">{pricingInfo.breakdown}</span>
                 <span>${pricingInfo.basePrice.toLocaleString()}</span>
               </div>
               {pricingInfo.roundedUpNote && (
-                <p className="text-xs text-muted-foreground">{pricingInfo.roundedUpNote}</p>
+                <p className="text-[11px] text-muted-foreground">{pricingInfo.roundedUpNote}</p>
               )}
-              <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>Service fee</span>
                 <span>${pricingInfo.serviceFee.toLocaleString()}</span>
               </div>
-              <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>{taxEstimate?.label || 'Estimated sales tax'}</span>
                 <span>
                   {taxAmount > 0
                     ? formatAmount(taxAmount)
                     : taxState === 'loading'
                       ? 'Calculating…'
-                      : 'Calculated at payment'}
+                      : 'At payment'}
                 </span>
               </div>
-              <Separator className="bg-border" />
-              <div className="flex items-center justify-between pt-1">
-                <span className="font-semibold text-foreground">
+              <Separator className="bg-border/60" />
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-foreground">
                   {instantBook ? 'Est. total' : 'Est. total to authorize'}
                 </span>
-                <motion.span 
-                  className="text-xl font-bold text-foreground"
-                  initial={{ scale: 1 }}
-                  whileHover={{ scale: 1.05 }}
+                <span 
+                  className="text-base font-semibold text-foreground"
                   data-testid="rental-widget-total"
                 >
                   {formatAmount(estimatedTotal)}
-                </motion.span>
+                </span>
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[11px] text-muted-foreground">
                 {instantBook
-                  ? 'Charged when your booking is confirmed. Any security deposit is handled separately and is not charged today.'
-                  : 'Authorized now, not charged. You are only charged if the host approves your request.'}
+                  ? 'Charged when your booking is confirmed. Security deposits are handled separately.'
+                  : 'Authorized now, not charged. Only charged if the host approves.'}
               </p>
             </motion.div>
           )}
