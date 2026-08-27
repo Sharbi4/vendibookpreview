@@ -332,14 +332,59 @@ async function dispatchTool(name: string, args: unknown, uid: string, token: str
   }
 }
 
-serve(async (req) => {
-  if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
-  if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
+const SESSION_ID = "vendibook-mcp";
 
-  const auth = await validateToken(req);
-  if (!auth) {
-    return json({ error: "unauthenticated", message: "Provide a valid Supabase access token in the Authorization header." }, 401);
+function rpcRespond(req: Request, payload: unknown, status = 200) {
+  const accept = req.headers.get("accept") ?? "";
+  const wantsSse = accept.includes("text/event-stream") && !accept.includes("application/json");
+  if (wantsSse) {
+    const body = `event: message\ndata: ${JSON.stringify(payload)}\n\n`;
+    return new Response(body, {
+      status,
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        "Mcp-Session-Id": SESSION_ID,
+      },
+    });
   }
+  return json(payload, status, { "Mcp-Session-Id": SESSION_ID });
+}
+
+serve(async (req) => {
+  if (req.method === "OPTIONS") {
+    return new Response("ok", {
+      headers: {
+        ...corsHeaders,
+        "Access-Control-Allow-Methods": "GET, POST, DELETE, OPTIONS",
+        "Access-Control-Allow-Headers":
+          "authorization, x-client-info, apikey, content-type, accept, mcp-session-id, mcp-protocol-version",
+        "Access-Control-Expose-Headers": "Mcp-Session-Id",
+      },
+    });
+  }
+
+  // Streamable HTTP clients may open a GET stream or close the session with DELETE.
+  if (req.method === "GET") {
+    const stream = new ReadableStream({
+      start(controller) {
+        controller.enqueue(new TextEncoder().encode(": connected\n\n"));
+      },
+    });
+    return new Response(stream, {
+      headers: {
+        ...corsHeaders,
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        "Mcp-Session-Id": SESSION_ID,
+      },
+    });
+  }
+  if (req.method === "DELETE") {
+    return new Response(null, { status: 204, headers: corsHeaders });
+  }
+  if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
 
   let body: unknown;
   try {
@@ -350,44 +395,72 @@ serve(async (req) => {
 
   const rpc = body as { jsonrpc?: string; id?: number | string | null; method?: string; params?: any };
   if (rpc.jsonrpc !== "2.0") {
-    return json({ jsonrpc: "2.0", id: rpc.id ?? null, error: { code: -32600, message: "Invalid Request" } }, 400);
+    return rpcRespond(req, { jsonrpc: "2.0", id: rpc.id ?? null, error: { code: -32600, message: "Invalid Request" } }, 400);
   }
 
   const method = rpc.method ?? "";
 
+  // Handshake + discovery are unauthenticated so MCP clients can validate the
+  // connection before a user session token is available. Tool execution below
+  // still requires a valid Supabase access token.
   if (method === "initialize") {
-    return json({
+    const requested = rpc.params?.protocolVersion;
+    return rpcRespond(req, {
       jsonrpc: "2.0",
       id: rpc.id ?? null,
       result: {
-        protocolVersion: MCP_VERSION,
-        capabilities: { tools: {}, logging: {} },
+        protocolVersion: typeof requested === "string" && requested ? requested : MCP_VERSION,
+        capabilities: { tools: { listChanged: false } },
         serverInfo: { name: "vendibook-elevenlabs-mcp", version: "0.1.0" },
       },
     });
   }
 
-  if (method === "notifications/initialized") {
+  if (typeof method === "string" && method.startsWith("notifications/")) {
     return new Response(null, { status: 202, headers: corsHeaders });
   }
 
+  if (method === "ping") {
+    return rpcRespond(req, { jsonrpc: "2.0", id: rpc.id ?? null, result: {} });
+  }
+
   if (method === "tools/list") {
-    return json({
-      jsonrpc: "2.0",
-      id: rpc.id ?? null,
-      result: { tools: TOOLS },
-    });
+    return rpcRespond(req, { jsonrpc: "2.0", id: rpc.id ?? null, result: { tools: TOOLS } });
+  }
+
+  if (method === "resources/list") {
+    return rpcRespond(req, { jsonrpc: "2.0", id: rpc.id ?? null, result: { resources: [] } });
+  }
+
+  if (method === "prompts/list") {
+    return rpcRespond(req, { jsonrpc: "2.0", id: rpc.id ?? null, result: { prompts: [] } });
   }
 
   if (method === "tools/call") {
+    const auth = await validateToken(req);
+    if (!auth) {
+      return rpcRespond(req, {
+        jsonrpc: "2.0",
+        id: rpc.id ?? null,
+        result: {
+          content: [
+            {
+              type: "text",
+              text: "You need to be signed in to Vendibook for this action. Ask the user to sign in and start the session again.",
+            },
+          ],
+          isError: true,
+        },
+      });
+    }
     const name = rpc.params?.name as string | undefined;
     const args = rpc.params?.arguments ?? {};
     if (!name) {
-      return json({ jsonrpc: "2.0", id: rpc.id ?? null, error: { code: -32602, message: "Missing tool name" } }, 400);
+      return rpcRespond(req, { jsonrpc: "2.0", id: rpc.id ?? null, error: { code: -32602, message: "Missing tool name" } }, 400);
     }
     try {
       const result = await dispatchTool(name, args, auth.user.id, auth.token);
-      return json({
+      return rpcRespond(req, {
         jsonrpc: "2.0",
         id: rpc.id ?? null,
         result: {
@@ -397,7 +470,7 @@ serve(async (req) => {
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : "tool_error";
-      return json({
+      return rpcRespond(req, {
         jsonrpc: "2.0",
         id: rpc.id ?? null,
         result: { content: [{ type: "text", text: message }], isError: true },
@@ -405,5 +478,6 @@ serve(async (req) => {
     }
   }
 
-  return json({ jsonrpc: "2.0", id: rpc.id ?? null, error: { code: -32601, message: `Method not found: ${method}` } }, 404);
+  return rpcRespond(req, { jsonrpc: "2.0", id: rpc.id ?? null, error: { code: -32601, message: `Method not found: ${method}` } }, 404);
 });
+
