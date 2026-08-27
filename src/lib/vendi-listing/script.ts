@@ -1242,5 +1242,16 @@ export function buildListingPayload(
     video_urls: videoUrls.length ? videoUrls : null,
     accept_paypal_checkout: isSale ? draft.accept_paypal_checkout ?? true : false,
     accept_cash_payment: isSale ? draft.accept_cash_payment ?? true : false,
+    // Seller disclosures — same columns the manual wizard writes.
+    condition: draft.condition ?? null,
+    operational_status: draft.operational_status ?? null,
+    title_status: isSale ? draft.title_status ?? null : null,
+    has_lien: isSale ? draft.has_lien ?? null : null,
+    no_known_problems: !!draft.no_known_problems,
+    known_problems: draft.no_known_problems ? [] : draft.known_problems ?? [],
+    included_items: draft.included_items ?? null,
+    photos_exclusions_answered: !!draft.photos_exclusions_answered,
+    photos_exclusions_note: draft.photos_exclusions_note ?? null,
+
   };
 }
