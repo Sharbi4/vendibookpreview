@@ -9,6 +9,7 @@ import { TRUST_COPY } from '@/lib/transactionVocabulary';
 
 import { PayPalMonogram } from '@/components/brand/ProviderLogos';
 import PaymentFormSkeleton from './PaymentFormSkeleton';
+import WalletPayButtons from './WalletPayButtons';
 import TrustRow from './TrustRow';
 
 export type PayPalCheckoutTarget =
