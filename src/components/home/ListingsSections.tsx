@@ -10,12 +10,14 @@ import { useSellerVerifiedMap } from '@/hooks/useSellerIdentityBadgeMap';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion } from 'framer-motion';
 import { trackLeadEvent } from '@/lib/leadTracking';
-import { isListingFeatured, sortFeaturedFirstFair } from '@/lib/featured';
+import { isListingFeatured, sortNewFirstThenFeatured } from '@/lib/featured';
 
-// Featured-first, with fair daily rotation among featured listings (see src/lib/featured.ts).
-const sortFeaturedFirst = <T extends { id: string; featured_enabled?: boolean | null; featured_expires_at?: string | null }>(
+// Brand-new listings (published in the last 48h) lead the row, then
+// featured-first with fair daily rotation (see src/lib/featured.ts).
+const sortFeaturedFirst = <T extends { id: string; published_at?: string | null; featured_enabled?: boolean | null; featured_expires_at?: string | null }>(
   items: T[],
-): T[] => sortFeaturedFirstFair(items as any) as T[];
+): T[] => sortNewFirstThenFeatured(items as any) as T[];
+
 
 type RowKey = 'rent' | 'sale' | 'trucks' | 'trailers';
 

@@ -100,3 +100,38 @@ export function sortFeaturedFreshFirstThenFair<
   return [...fresh, ...rotated, ...rest];
 }
 
+/** Window during which a brand-new published listing is pinned to the front. */
+export const NEW_LISTING_WINDOW_MS = 48 * 60 * 60 * 1000;
+
+export interface PublishedAtField {
+  published_at?: string | null;
+}
+
+/**
+ * Homepage row ordering: brand-new listings first.
+ *
+ * Any listing published within the last 48h is pinned to the very front
+ * (newest first) so a seller who just published sees their listing at the
+ * beginning of the row. Everything after that keeps the existing
+ * featured-first + fair daily rotation ordering.
+ */
+export function sortNewFirstThenFeatured<
+  T extends FeaturedFields & PublishedAtField & { id: string },
+>(items: T[]): T[] {
+  const now = Date.now();
+  const publishedTime = (i: T) => {
+    if (!i.published_at) return NaN;
+    return new Date(i.published_at).getTime();
+  };
+  const isNew = (i: T) => {
+    const t = publishedTime(i);
+    return !Number.isNaN(t) && now - t < NEW_LISTING_WINDOW_MS;
+  };
+  const fresh = items
+    .filter(isNew)
+    .sort((a, b) => publishedTime(b) - publishedTime(a));
+  const rest = sortFeaturedFirstFair(items.filter((i) => !isNew(i)));
+  return [...fresh, ...rest];
+}
+
+
