@@ -56,6 +56,7 @@ import { template as cashSellerConfirmedBuyer } from './cash-seller-confirmed-bu
 import { template as cashBuyerConfirmedSeller } from './cash-buyer-confirmed-seller.tsx'
 import { template as listingDraftConsolidated } from './listing-draft-consolidated.tsx'
 import { template as listingRecoveryCs } from './listing-recovery-cs.tsx'
+import { template as checkoutRecoveryCs } from './checkout-recovery-cs.tsx'
 import { template as subscriptionActivated } from './subscription-activated.tsx'
 import { template as subscriptionUpdated } from './subscription-updated.tsx'
 import { template as subscriptionPaymentFailed } from './subscription-payment-failed.tsx'
@@ -100,6 +101,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'listing-draft-nudge': listingDraftNudge,
   'listing-draft-consolidated': listingDraftConsolidated,
   'listing-recovery-cs': listingRecoveryCs,
+  'checkout-recovery-cs': checkoutRecoveryCs,
   'document-status': documentStatus,
   'new-message': newMessage,
   'host-weekly-digest': hostWeeklyDigest,
