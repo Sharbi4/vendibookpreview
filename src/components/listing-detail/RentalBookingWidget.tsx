@@ -19,20 +19,12 @@ import {
   isToday} from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Calendar, 
   Zap, 
-  ArrowRight, 
-  Shield, 
   Clock, 
-  Sun,
-  CalendarRange,
   Minus,
   Plus,
   ChevronLeft,
   ChevronRight,
-  Users,
-  MapPin,
-  CheckCircle,
   Info} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -43,7 +35,7 @@ import {
   TooltipProvider,
   TooltipTrigger} from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { calculateRentalFees, formatCurrency } from '@/lib/commissions';
+import { calculateRentalFees } from '@/lib/commissions';
 import { supabase } from '@/integrations/supabase/client';
 import { quoteRentalPeriod, resolveRentalRate, formatAmount } from '@/lib/listings/rentalPricing';
 import { useBlockedDates } from '@/hooks/useBlockedDates';
