@@ -3,7 +3,10 @@ import { CheckCircle2, Loader2, Lock, ShieldCheck, X } from 'lucide-react';
 
 import { supabase } from '@/integrations/supabase/client';
 import { loadPayPalSdk } from '@/lib/paypalClient';
+import { parseEdgeError } from '@/lib/edgeErrors';
+import { authPath } from '@/lib/auth/returnTo';
 import { TRUST_COPY } from '@/lib/transactionVocabulary';
+
 import { PayPalMonogram } from '@/components/brand/ProviderLogos';
 import PaymentFormSkeleton from './PaymentFormSkeleton';
 import TrustRow from './TrustRow';
@@ -41,6 +44,9 @@ interface PayPalPaymentPanelProps {
 
 type PanelState =
   | 'loading'
+  /** No session — PayPal cannot be started until the payer signs in. */
+  | 'signin'
+
   | 'ready'
   | 'processing'
   | 'success'
@@ -111,15 +117,32 @@ const PayPalPaymentPanel = ({
 
   const startOrder = async (): Promise<string> => {
     setError(null);
+    // Re-check the session right before creating the order: a token that
+    // expired while the panel sat open would otherwise surface as a generic
+    // PayPal failure after the payer already opened the window.
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
+      setState('signin');
+      throw new Error('Please sign in to continue.');
+    }
     const { data, error: fnError } = await supabase.functions.invoke('paypal-create-order', {
       body: target,
     });
     if (fnError || !data?.order_id) {
-      const message = data?.message || fnError?.message ||
+      // A non-2xx response hides the server's reason inside `fnError.context`,
+      // so parse it — otherwise every failure reads "please try again".
+      const parsed = await parseEdgeError(fnError, data?.error ? data : null);
+      if (parsed.code === 'unauthenticated' || parsed.status === 401) {
+        setState('signin');
+        throw new Error('Please sign in to continue.');
+      }
+      const message = parsed.message ||
         'We could not start this payment. Please try again.';
       fail('Payment could not be started', message);
       throw new Error(message);
     }
+
+
     intentRef.current = data.payment_intent === 'AUTHORIZE' ? 'AUTHORIZE' : 'CAPTURE';
     setHoldMessage(typeof data.buyer_message === 'string' ? data.buyer_message : null);
     return data.order_id as string;
@@ -136,10 +159,11 @@ const PayPalPaymentPanel = ({
         { body: { order_id: orderID } },
       );
       if (authErr || !auth || (auth.status !== 'authorized' && auth.status !== 'completed')) {
+        const parsed = await parseEdgeError(authErr, auth?.error ? auth : null);
         setState('error');
         setError({
           title: 'Payment not authorized',
-          detail: auth?.message || authErr?.message ||
+          detail: auth?.message || parsed.message ||
             'We could not authorize this payment and nothing has been charged. Please try again or use another method.',
         });
         return;
@@ -159,14 +183,16 @@ const PayPalPaymentPanel = ({
     );
 
     if (fnError || !result || (result.status !== 'completed' && !result.pending)) {
+      const parsed = await parseEdgeError(fnError, result?.error ? result : null);
       setState('error');
       setError({
         title: 'Payment not completed',
-        detail: result?.message || fnError?.message ||
+        detail: result?.message || parsed.message ||
           'Your payment was not completed and nothing has been confirmed. You have not been charged twice — try again or use another method.',
       });
       return;
     }
+
 
     if (result.pending) {
       setState('pending');
@@ -184,7 +210,9 @@ const PayPalPaymentPanel = ({
   const handlersRef = useRef({ startOrder, finishOrder, fail });
   handlersRef.current = { startOrder, finishOrder, fail };
 
-  // Mount the PayPal Buttons once.
+  // Mount the PayPal Buttons once — but only for a signed-in payer. Every
+  // `paypal-create-order` call requires a session, so rendering the buttons to
+  // a signed-out visitor would open PayPal and then fail after the fact.
   useEffect(() => {
     let cancelled = false;
     let instance: any = null;
@@ -196,8 +224,19 @@ const PayPalPaymentPanel = ({
     };
 
 
-    loadPayPalSdk()
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        if (cancelled) return null;
+        if (!data.session) {
+          setState('signin');
+          return null;
+        }
+        return loadPayPalSdk();
+      })
       .then((paypal) => {
+        if (!paypal) return;
+
         if (cancelled || !buttonsRef.current) return;
 
         if (paypal.Messages && messagesRef.current && (totalUsd ?? 0) >= 50) {
@@ -389,7 +428,23 @@ const PayPalPaymentPanel = ({
                   </p>
                 </div>
 
+              ) : state === 'signin' ? (
+                <div className="py-8 text-center space-y-3">
+                  <p className="text-base font-semibold text-foreground">Sign in to pay securely</p>
+                  <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+                    Payments are tied to your Vendibook account so we can send your receipt and keep
+                    this purchase on your dashboard. Nothing has been charged.
+                  </p>
+                  <a
+                    href={authPath()}
+                    className="inline-flex w-full items-center justify-center rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+                  >
+                    Sign in to continue
+                  </a>
+                </div>
+
               ) : (
+
                 <>
                   <div ref={messagesRef} />
 
