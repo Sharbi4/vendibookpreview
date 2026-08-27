@@ -200,8 +200,28 @@ const VendiVoiceAgent: React.FC<VendiVoiceAgentProps> = ({
   );
 
 
+  // Tracks whether the seller ended the call on purpose, so an unexpected
+  // drop can be explained instead of silently vanishing.
+  const intentionalStopRef = useRef(false);
+  const startingRef = useRef(false);
+
   const conversation = useConversation({
     clientTools,
+    onDisconnect: (details: unknown) => {
+      const reason =
+        (details as { reason?: string; message?: string } | undefined)?.reason ??
+        (details as { message?: string } | undefined)?.message;
+      if (intentionalStopRef.current) {
+        intentionalStopRef.current = false;
+        return;
+      }
+      console.warn('Vendi Voice disconnected:', details);
+      toast.message('Voice call ended', {
+        description: reason
+          ? `Vendi dropped the call (${reason}). Tap “Talk to Vendi” to reconnect — typing keeps working.`
+          : 'Vendi dropped the call. Tap “Talk to Vendi” to reconnect — typing keeps working.',
+      });
+    },
     onError: (error: unknown) => {
       console.error('Vendi Voice error:', error);
       toast.error('Voice ended unexpectedly. You can keep typing.');
@@ -211,10 +231,19 @@ const VendiVoiceAgent: React.FC<VendiVoiceAgentProps> = ({
   const connected = conversation.status === 'connected';
 
   const start = useCallback(async () => {
+    // A second startSession while one is in flight reuses a single-use token
+    // and drops the freshly-opened call, so only one attempt may run.
+    if (startingRef.current) return;
+    startingRef.current = true;
     setConnecting(true);
+
+    // Permission probe only — the SDK opens its own capture track, and leaving
+    // this one live competes with it and can drop the call seconds later.
     try {
-      await navigator.mediaDevices.getUserMedia({ audio: true });
+      const probe = await navigator.mediaDevices.getUserMedia({ audio: true });
+      probe.getTracks().forEach((t) => t.stop());
     } catch {
+      startingRef.current = false;
       setConnecting(false);
       toast.error('Allow microphone access to talk with Vendi.');
       return;
@@ -231,36 +260,56 @@ const VendiVoiceAgent: React.FC<VendiVoiceAgentProps> = ({
 
       const accessToken = sessionData.session?.access_token;
       const userId = sessionData.session?.user?.id;
+      // Vendi's tool server authenticates with this token. Without it the
+      // agent's tool handshake fails and the platform tears the call down a
+      // few seconds after it connects, so refuse to start instead.
+      if (!accessToken || !userId) {
+        toast.error('Your session expired — sign in again to use Vendi Voice.');
+        return;
+      }
 
+      intentionalStopRef.current = false;
       await conversation.startSession({
         conversationToken: data.token,
         connectionType: 'webrtc',
-        dynamicVariables: {
-          ...(accessToken ? { access_token: accessToken } : {}),
-          ...(userId ? { user_id: userId } : {}),
-        },
+        dynamicVariables: { access_token: accessToken, user_id: userId },
       });
-      if (context) conversation.sendContextualUpdate(context);
+      try {
+        if (context) conversation.sendContextualUpdate(context);
+      } catch (ctxErr) {
+        console.warn('Vendi Voice context update skipped:', ctxErr);
+      }
       setMuted(false);
     } catch (err) {
       console.error('Vendi Voice start failed:', err);
       toast.error('Voice is unavailable right now — typing still works perfectly.');
     } finally {
+      startingRef.current = false;
       setConnecting(false);
     }
   }, [conversation, context]);
 
   const stop = useCallback(() => {
+    intentionalStopRef.current = true;
     void conversation.endSession();
   }, [conversation]);
 
   // Keep the agent aware of where the seller is in the interview.
   useEffect(() => {
-    if (connected && context) conversation.sendContextualUpdate(context);
+    if (!connected || !context) return;
+    try {
+      conversation.sendContextualUpdate(context);
+    } catch (err) {
+      console.warn('Vendi Voice context update skipped:', err);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connected, context]);
 
-  useEffect(() => () => { void conversation.endSession(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => () => {
+    intentionalStopRef.current = true;
+    void conversation.endSession();
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
 
   const toggleMute = useCallback(async () => {
     const next = !muted;

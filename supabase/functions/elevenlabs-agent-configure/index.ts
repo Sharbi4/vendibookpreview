@@ -77,6 +77,33 @@ serve(async (req) => {
       return json({ agent, tools }, agent.ok ? 200 : agent.status);
     }
 
+    // Why did the last voice calls end? Returns termination reasons/errors for
+    // recent conversations so dropped calls can be diagnosed without exposing
+    // the API key or transcripts of unrelated agents.
+    if (action === "diagnose") {
+      const list = await el(`/convai/conversations?agent_id=${AGENT_ID}&page_size=5`);
+      if (!list.ok) return json({ step: "list_conversations", ...list }, list.status);
+      const rows = (list.body as { conversations?: Array<{ conversation_id?: string }> })?.conversations ?? [];
+      const details: Array<Record<string, unknown>> = [];
+      for (const row of rows.slice(0, 5)) {
+        const id = row?.conversation_id;
+        if (!id) continue;
+        const res = await el(`/convai/conversations/${id}`);
+        const meta = (res.body as Record<string, any>)?.metadata ?? {};
+        details.push({
+          conversation_id: id,
+          status: meta?.status,
+          termination_reason: meta?.termination_reason,
+          error: meta?.error,
+          warnings: meta?.warnings,
+          duration_secs: meta?.call_duration_secs,
+          mcp: meta?.features_usage?.external_mcp_servers,
+        });
+      }
+      return json({ conversations: details });
+    }
+
+
     if (action === "apply") {
       const prompt = String(body?.prompt ?? "");
       const firstMessage = String(body?.first_message ?? "");
