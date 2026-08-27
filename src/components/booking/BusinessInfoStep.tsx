@@ -380,6 +380,10 @@ export const BusinessInfoStep = ({
         </div>
       )}
 
+      {!canAdvance && slide > 0 && (
+        <p className="text-sm text-muted-foreground">Select an answer above to continue.</p>
+      )}
+
       <div className="flex items-center gap-3 pt-2">
         {slide > 0 && (
           <Button variant="outline" onClick={() => setSlide((s) => Math.max(0, s - 1))} disabled={disabled}>
