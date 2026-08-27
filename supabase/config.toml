@@ -270,3 +270,6 @@ verify_jwt = false
 
 [functions.paypal-settle-authorization]
 verify_jwt = false
+
+[functions.mcp-elevenlabs]
+verify_jwt = false

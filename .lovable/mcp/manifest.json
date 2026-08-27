@@ -147,6 +147,126 @@
           "$schema": "http://json-schema.org/draft-07/schema#"
         },
         "outputSchema": null
+      },
+      {
+        "name": "check_listing_blockers",
+        "title": "Check listing publish blockers",
+        "description": "Return the remaining blockers that prevent a Vendibook listing from being published. The caller must own the listing.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "listing_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The listing UUID to inspect."
+            }
+          },
+          "required": [
+            "listing_id"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "publish_listing",
+        "title": "Publish a Vendibook listing",
+        "description": "Publish a Vendibook listing owned by the signed-in user. Requires all blockers to be cleared and a legal acknowledgment. The caller must have already recorded the typed YES consent in the app; this tool verifies it was recorded before publishing.",
+        "annotations": {
+          "readOnlyHint": false,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "listing_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "The listing UUID to publish."
+            },
+            "consent_acknowledged": {
+              "type": "boolean",
+              "description": "Must be true. The tool verifies the seller's typed YES consent is recorded server-side.",
+              "default": false
+            }
+          },
+          "required": [
+            "listing_id"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "list_upsell_products",
+        "title": "List Vendibook upgrade products",
+        "description": "Return the Vendibook upsell products available to the signed-in user, such as Vendibook Pro membership, Featured Boost, Listing Concierge, and buyer financing/freight options. Prices come from the live catalog.",
+        "annotations": {
+          "readOnlyHint": true,
+          "idempotentHint": true,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "listing_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Optional listing UUID to scope upgrades to."
+            }
+          },
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
+      },
+      {
+        "name": "create_upgrade_checkout",
+        "title": "Create an upgrade checkout link",
+        "description": "Return a Vendibook checkout URL for an upgrade product (Vendibook Pro, Featured Boost, Listing Concierge). The user completes payment on the secure PayPal checkout page. Does not charge the payment method directly.",
+        "annotations": {
+          "readOnlyHint": false,
+          "idempotentHint": false,
+          "openWorldHint": false
+        },
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "product_slug": {
+              "type": "string",
+              "enum": [
+                "vendibook_pro",
+                "boost-featured-30",
+                "pro_listing_30",
+                "listing_concierge"
+              ],
+              "description": "The upgrade product to purchase."
+            },
+            "listing_id": {
+              "type": "string",
+              "format": "uuid",
+              "description": "Optional listing UUID to attach the upgrade to (required for featured boost)."
+            },
+            "discount_code": {
+              "type": "string",
+              "description": "Optional promo/discount code."
+            }
+          },
+          "required": [
+            "product_slug"
+          ],
+          "additionalProperties": false,
+          "$schema": "http://json-schema.org/draft-07/schema#"
+        },
+        "outputSchema": null
       }
     ]
   }

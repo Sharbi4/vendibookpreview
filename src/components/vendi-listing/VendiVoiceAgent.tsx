@@ -155,14 +155,24 @@ const VendiVoiceAgent: React.FC<VendiVoiceAgentProps> = ({
     }
 
     try {
-      const { data, error } = await supabase.functions.invoke('elevenlabs-agent-token', {
-        body: { agentId: VENDI_VOICE_AGENT_ID },
-      });
+      const [{ data: sessionData }, { data, error }] = await Promise.all([
+        supabase.auth.getSession(),
+        supabase.functions.invoke('elevenlabs-agent-token', {
+          body: { agentId: VENDI_VOICE_AGENT_ID },
+        }),
+      ]);
       if (error || !data?.token) throw new Error('token');
+
+      const accessToken = sessionData.session?.access_token;
+      const userId = sessionData.session?.user?.id;
 
       await conversation.startSession({
         conversationToken: data.token,
         connectionType: 'webrtc',
+        dynamicVariables: {
+          ...(accessToken ? { access_token: accessToken } : {}),
+          ...(userId ? { user_id: userId } : {}),
+        },
       });
       if (context) conversation.sendContextualUpdate(context);
       setMuted(false);
