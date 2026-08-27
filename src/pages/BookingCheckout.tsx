@@ -1225,39 +1225,6 @@ const BookingCheckout = () => {
               </AnimatePresence>
             </div>
 
-
-            {/* Sticky mobile-first primary path */}
-            <PrimaryActionBar
-              sticky
-              helper={
-                activeStep === STEP_REVIEW
-                  ? 'Confirm and pay using the panel above.'
-                  : 'Complete each step above to unlock review & payment.'
-              }
-              primary={{
-                label:
-                  activeStep === STEP_REVIEW
-                    ? instantConfirm
-                      ? 'Confirm and pay'
-                      : 'Continue to payment'
-                    : 'Jump to review',
-                onClick: () => {
-                  if (activeStep === STEP_REVIEW) {
-                    handleSubmit();
-                  } else {
-                    setActiveStep(STEP_REVIEW);
-                  }
-                },
-                disabled:
-                  activeStep === STEP_REVIEW
-                    ? isSubmitting
-                    : !canAccessStep(STEP_REVIEW),
-              }}
-              secondary={{
-                label: 'Back to listing',
-                onClick: () => navigate(`/listing/${listingId}`),
-              }}
-            />
           </div>
 
           {/* Right Column - Summary Card */}
