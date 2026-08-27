@@ -32,6 +32,7 @@ import {
   verifyVendiDraft, adoptDraftIntoVendiSession,
 } from '@/lib/vendi-listing/session';
 import { deriveAnsweredFromDraft, mergeServerDraft } from '@/lib/vendi-listing/hydrate';
+import { resolveVendiCoordinates } from '@/lib/vendi-listing/location';
 import { trackVendi } from '@/lib/vendi-listing/telemetry';
 
 
