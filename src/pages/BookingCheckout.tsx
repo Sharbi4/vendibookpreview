@@ -295,8 +295,8 @@ const BookingCheckout = () => {
   const STEP_REVIEW = STEP_FULFILLMENT + 1;
 
   const steps = [
-    { id: STEP_CONTACT, label: 'About you', icon: CheckCircle2 },
-    ...(requiresBusinessInfo ? [{ id: STEP_BUSINESS_INFO, label: 'Business information', icon: Building2 }] : []),
+    { id: STEP_CONTACT, label: 'Tell us more about yourself', icon: CheckCircle2 },
+    ...(requiresBusinessInfo ? [{ id: STEP_BUSINESS_INFO, label: 'Tell us about your business', icon: Building2 }] : []),
     ...(hasRequiredDocs ? [{ id: STEP_DOCUMENTS, label: 'Documents & insurance', icon: FileCheck }] : []),
     { id: STEP_FULFILLMENT, label: 'Fulfillment & details', icon: Truck },
     { id: STEP_REVIEW, label: 'Review & submit', icon: CheckCircle2 },
@@ -923,7 +923,7 @@ const BookingCheckout = () => {
                     Step {Math.max(1, steps.findIndex((s) => s.id === activeStep) + 1)} of {steps.length}
                   </p>
                   <h2 className="mt-1 text-xl font-semibold tracking-tight text-foreground">
-                    {steps.find((s) => s.id === activeStep)?.label ?? 'About you'}
+                    {steps.find((s) => s.id === activeStep)?.label ?? 'Tell us more about yourself'}
                   </h2>
                 </div>
                 {steps.findIndex((s) => s.id === activeStep) > 0 && (
