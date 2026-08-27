@@ -828,7 +828,6 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                           !isDisabled && !isSelected && !isActiveHourly && "hover:ring-1 hover:ring-foreground",
                           (isStart || isEnd) && "bg-foreground text-background",
                           isRangeMiddle && "rounded-none w-full bg-muted text-foreground",
-                          isRangeMiddle && isStart === false && isEnd === false && "",
                           isActiveHourly && !isSelected && "ring-1 ring-foreground bg-muted",
                           status === 'partial' && !isSelected && !isActiveHourly && "bg-muted/60",
                           isToday(date) && !isSelected && !isActiveHourly && "ring-1 ring-foreground/40",
@@ -839,7 +838,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                         {mode === 'hourly' && hasHourly && (
                           <span className={cn(
                             "text-[8px] leading-none font-bold",
-                            isSelected ? "text-primary-foreground" : "text-primary"
+                            (isStart || isEnd) ? "text-background" : "text-foreground"
                           )}>
                             {hoursOnDate}h
                           </span>
@@ -847,7 +846,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                         {mode !== 'hourly' && totalSlots > 1 && status !== 'past' && status !== 'outside' && (
                           <span className={cn(
                             "text-[8px] leading-none",
-                            isSelected ? "text-primary-foreground/80" : "text-muted-foreground"
+                            (isStart || isEnd) ? "text-background/80" : "text-muted-foreground"
                           )}>
                             {available}/{totalSlots}
                           </span>
