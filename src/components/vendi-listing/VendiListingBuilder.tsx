@@ -1245,13 +1245,13 @@ const VendiListingBuilder: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => continueServerDraft(offer)}
-                  className="flex w-full items-center gap-3 rounded-2xl border border-border bg-secondary/70 p-3 text-left transition hover:border-white/20 hover:bg-secondary/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  className="flex w-full items-center gap-3 rounded-2xl border border-border bg-secondary/70 p-3 text-left transition hover:border-foreground/25 hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
                   {offer.cover_image_url ? (
                     <img src={offer.cover_image_url} alt="" className="h-12 w-12 flex-none rounded-xl object-cover ring-1 ring-border" />
                   ) : (
                     <span className="flex h-12 w-12 flex-none items-center justify-center rounded-xl bg-secondary/70 ring-1 ring-border">
-                      <ImagePlus className="h-5 w-5 text-white/40" aria-hidden />
+                      <ImagePlus className="h-5 w-5 text-muted-foreground" aria-hidden />
                     </span>
                   )}
                   <span className="min-w-0 flex-1">
@@ -1533,7 +1533,7 @@ const VendiListingBuilder: React.FC = () => {
                 {/* Plain-language recap of the captured facts. Each row is
                     tappable so a last-second correction never means retyping. */}
                 {facts.length > 0 && (
-                  <dl className="mt-5 divide-y divide-white/[0.06] overflow-hidden rounded-2xl border border-border bg-secondary/70">
+                  <dl className="mt-5 divide-y divide-border overflow-hidden rounded-2xl border border-border bg-secondary/70">
                     {facts.map((f) => (
                       <div key={`review-${f.questionId}-${f.label}`} className="flex items-start gap-3 px-4 py-2.5">
                         <dt className="w-28 flex-none text-xs uppercase tracking-[0.12em] text-muted-foreground">
