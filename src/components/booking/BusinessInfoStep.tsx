@@ -285,7 +285,11 @@ export const BusinessInfoStep = ({
             {(formData.liabilityInsuranceAnswer === 'no' ||
               formData.liabilityInsuranceAnswer === 'unsure') && <InsuranceEducationCard />}
           </div>
+        </div>
+      )}
 
+      {current === 'staffing' && (
+        <div className="space-y-6">
           <div className="space-y-3">
             <Label className="text-base font-semibold flex items-center gap-2">
               <Users className="h-4 w-4 text-primary" />
