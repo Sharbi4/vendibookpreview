@@ -31,10 +31,10 @@ const SaleCheckoutShell = ({
   aside,
   children,
 }: SaleCheckoutShellProps) => (
-  <div className="sale-light min-h-dvh">
-    <header className="sticky top-0 z-30 border-b border-border/80 bg-background/85 backdrop-blur-xl">
-      <div className="container max-w-5xl mx-auto px-4">
-        <div className="h-14 flex items-center justify-between gap-4">
+  <div className="sale-light min-h-dvh bg-[radial-gradient(1100px_520px_at_50%_-8%,hsl(var(--primary)/0.06),transparent_70%)]">
+    <header className="sticky top-0 z-30 border-b border-border/70 bg-background/80 backdrop-blur-xl">
+      <div className="container max-w-5xl mx-auto px-4 sm:px-6">
+        <div className="h-16 flex items-center justify-between gap-4">
           <Link
             to={exitHref}
             className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors rounded-lg -ml-1 px-1 py-1"
@@ -45,26 +45,38 @@ const SaleCheckoutShell = ({
 
           <SaleStepper steps={steps} currentIndex={currentIndex} />
 
-          <span className="hidden sm:inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Lock className="h-3.5 w-3.5" />
-            Secure checkout
+          <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1.5 text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+            <Lock className="h-3 w-3" />
+            Secure
           </span>
         </div>
       </div>
     </header>
 
-    <main className="container max-w-5xl mx-auto px-4 py-6 sm:py-10">
-      <div className={cn('grid gap-8', aside ? 'lg:grid-cols-[minmax(0,1fr)_20rem]' : '')}>
-        <div className="min-w-0 space-y-5">{children}</div>
+    <main className="container max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-14">
+      <div className="mb-8 sm:mb-10 max-w-2xl">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">
+          Vendibook checkout
+        </p>
+        <h1 className="mt-2 text-3xl sm:text-4xl font-semibold tracking-tight text-foreground">
+          Complete your purchase
+        </h1>
+        <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
+          A few short steps — delivery, details, then payment. Nothing is charged until you confirm.
+        </p>
+      </div>
+      <div className={cn('grid gap-8 lg:gap-12', aside ? 'lg:grid-cols-[minmax(0,1fr)_20rem]' : '')}>
+        <div className="min-w-0 space-y-6">{children}</div>
         {aside ? (
           <aside className="hidden lg:block">
-            <div className="sticky top-24 space-y-4">{aside}</div>
+            <div className="sticky top-28 space-y-4">{aside}</div>
           </aside>
         ) : null}
       </div>
     </main>
   </div>
 );
+
 
 const SaleStepper = ({ steps, currentIndex }: { steps: SaleCheckoutStep[]; currentIndex: number }) => (
   <ol className="flex items-center gap-2 sm:gap-3" aria-label="Checkout progress">
