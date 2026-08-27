@@ -550,7 +550,9 @@ serve(async (req) => {
         internal_status: "awaiting_buyer_approval",
         payment_strategy: decision.strategy,
         payment_intent: decision.intent,
-        balance_due_cents: decision.balanceDueCents || null,
+        // balance_due_cents is NOT NULL DEFAULT 0 — an explicit NULL violates
+        // the constraint and kills order creation for every checkout.
+        balance_due_cents: decision.balanceDueCents ?? 0,
         balance_due_at: decision.balanceDueAt,
         idempotency_key: quote.reference,
         fee_breakdown: {
