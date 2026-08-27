@@ -109,15 +109,12 @@ const AIListingCreator: React.FC = () => {
         mode: listingData.mode === 'sale' ? 'sale' : 'rent',
         category: categoryMap[listingData.category || 'food_truck'] || 'food_truck',
         location: listingData.address || null,
-
-          city: listingData.city || null,
-          state: listingData.state || null,
-          latitude: listingData.latitude || null,
-          longitude: listingData.longitude || null,
-        },
+        city: listingData.city || null,
+        state: listingData.state || null,
+        latitude: listingData.latitude || null,
+        longitude: listingData.longitude || null,
       });
-      if (draftError) throw draftError;
-      if (!draft?.id) throw new Error('Draft was not created. Please try again.');
+
 
       const updateData: any = {
         title: listingData.title || 'Untitled Listing',
