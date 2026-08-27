@@ -224,9 +224,14 @@ const BookingCheckout = () => {
   // `paypal-create-order`; this is only so the renter sees the real total
   // before the PayPal window opens.
   const [taxEstimate, setTaxEstimate] = useState<{ tax_cents: number; rate_pct: number; label: string } | null>(null);
+  // Quote lifecycle, so the summary can show an explicit tax row
+  // ("calculating…" / "calculated at payment") instead of silently omitting
+  // tax while the estimate is pending or unavailable.
+  const [taxState, setTaxState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   useEffect(() => {
-    if (!listing?.id || !fees.customerTotal) { setTaxEstimate(null); return; }
+    if (!listing?.id || !fees.customerTotal) { setTaxEstimate(null); setTaxState('idle'); return; }
     const controller = new AbortController();
+    setTaxState('loading');
     const t = setTimeout(() => {
       supabase.functions
         .invoke('tax-quote', {
@@ -237,15 +242,39 @@ const BookingCheckout = () => {
           },
         })
         .then(({ data, error }) => {
-          if (!error && data && !controller.signal.aborted) setTaxEstimate(data);
+          if (controller.signal.aborted) return;
+          if (!error && data) {
+            setTaxEstimate(data);
+            setTaxState('ready');
+          } else {
+            setTaxEstimate(null);
+            setTaxState('error');
+          }
         })
-        .catch(() => { /* estimate is cosmetic; server re-computes authoritatively */ });
+        .catch(() => {
+          // Estimate is cosmetic; the server re-computes authoritatively.
+          if (!controller.signal.aborted) {
+            setTaxEstimate(null);
+            setTaxState('error');
+          }
+        });
     }, 350);
     return () => { clearTimeout(t); controller.abort(); };
   }, [listing?.id, fees.customerTotal]);
 
   const taxAmount = (taxEstimate?.tax_cents ?? 0) / 100;
   const totalChargedToday = fees.customerTotal + taxAmount;
+
+  // Always-visible tax row for the PayPal panel summary: real amount when
+  // quoted, an explicit placeholder while calculating or when the estimate
+  // is unavailable (the server still adds tax authoritatively at payment).
+  const taxSummaryLine: OrderSummaryLine | null = taxAmount > 0
+    ? { label: taxEstimate?.label || 'Estimated sales tax', amount: taxAmount }
+    : taxState === 'loading'
+      ? { label: 'Estimated sales tax', amount: 0, muted: true, valueLabel: 'Calculating…' }
+      : taxState === 'error'
+        ? { label: 'Sales tax', amount: 0, muted: true, valueLabel: 'Calculated at payment' }
+        : null;
 
   // Step definitions - dynamic based on listing requirements
   // Auth is now deferred: guests can fill everything first, auth is required only at submission
