@@ -785,6 +785,51 @@ export const QUESTIONS: Question[] = [
     apply: () => ({ patch: {} }),
   },
   {
+    id: 'photo_exclusions',
+    kind: 'text',
+    tier: 'core',
+    when: (d) => !!d.category,
+    prompt: () => 'Is everything shown in your photos included? Say “yes”, or tell me what stays with you.',
+    tip: () => 'This one prevents most handoff disputes — buyers assume anything pictured is included.',
+    placeholder: 'e.g. Yes — or “the POS tablet and the wrap are not included”',
+    apply: (_d, raw) => {
+      const text = cleanText(raw);
+      const lower = text.toLowerCase();
+      if (!text.length) return { error: 'Say “yes” if it’s all included, or name what isn’t.' };
+      if (/^(yes|yep|yeah|all included|everything|correct|it all is)\b/.test(lower)) {
+        return {
+          patch: { photos_exclusions_answered: true, photos_exclusions_note: null },
+          say: 'Everything pictured is included — noted on the listing.',
+        };
+      }
+      if (text.length < 3) return { error: 'A few more words, please — or say “yes”.' };
+      return {
+        patch: { photos_exclusions_answered: true, photos_exclusions_note: text.slice(0, 1000) },
+        say: 'Noted — buyers will see what is not included.',
+      };
+    },
+  },
+  {
+    // Sale trucks and trailers must ship with real measurements: buyers size
+    // doors, garages and freight quotes off them, so this is not optional.
+    id: 'sale_dimensions',
+    kind: 'text',
+    tier: 'core',
+    when: (d) => !!d.category && !!d.mode
+      && requiresSaleDimensions(d.mode as 'rent' | 'sale', d.category as ListingCategory),
+    prompt: () => 'What are the outside dimensions? Length x width x height, in feet.',
+    tip: () => 'Buyers need these to check clearances, and they power your freight estimate.',
+    placeholder: 'e.g. 20 x 8 x 9 ft',
+    apply: (_d, raw) => {
+      const dims = parseDimensions(raw);
+      if (!dims.length_inches || !dims.height_inches) {
+        return { error: 'I need at least the length and the height, like “20 x 8 x 9 ft”.' };
+      }
+      return { patch: dims };
+    },
+  },
+
+  {
     id: 'title',
     kind: 'text',
     tier: 'core',
