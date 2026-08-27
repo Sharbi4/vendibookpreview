@@ -481,6 +481,18 @@ var list_upsell_products_default = defineTool7({
     if (error) {
       return { content: [{ type: "text", text: `Catalog lookup failed: ${error.message}` }], isError: true };
     }
+    const HIGHLIGHTS = {
+      vendibook_pro: [
+        "Seller/host commission drops from 12.9% to 10.9% (max $500 savings per transaction)",
+        "PricePilot appraisals included",
+        "One Featured Boost credit each billing period (does not roll over)"
+      ],
+      "boost-featured-30": [
+        "Pins one listing to the top of search in its city for 30 days",
+        "Applies to a specific listing \u2014 requires the seller's own listing_id",
+        "One-time PayPal payment on the Vendibook checkout page"
+      ]
+    };
     const products = (data ?? []).map((p) => {
       const now = Date.now();
       const inPromo = p.promo_price_cents != null && (!p.promo_starts_at || new Date(p.promo_starts_at).getTime() <= now) && (!p.promo_ends_at || new Date(p.promo_ends_at).getTime() > now);

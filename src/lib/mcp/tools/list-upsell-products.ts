@@ -33,6 +33,25 @@ export default defineTool({
       return { content: [{ type: "text", text: `Catalog lookup failed: ${error.message}` }], isError: true };
     }
 
+    /**
+     * Benefit highlights the agent may state out loud. These mirror shipped
+     * product behaviour (fee math in `_shared/proFee.ts`, the monthly boost
+     * credit in `pro_boost_credits`, PricePilot's `minTier: 'pro'` gate) — they
+     * are never a second pricing source; prices always come from the catalog.
+     */
+    const HIGHLIGHTS: Record<string, string[]> = {
+      vendibook_pro: [
+        "Seller/host commission drops from 12.9% to 10.9% (max $500 savings per transaction)",
+        "PricePilot appraisals included",
+        "One Featured Boost credit each billing period (does not roll over)",
+      ],
+      "boost-featured-30": [
+        "Pins one listing to the top of search in its city for 30 days",
+        "Applies to a specific listing — requires the seller's own listing_id",
+        "One-time PayPal payment on the Vendibook checkout page",
+      ],
+    };
+
     const products = (data ?? []).map((p) => {
       const now = Date.now();
       const inPromo =
