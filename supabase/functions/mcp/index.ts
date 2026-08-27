@@ -529,6 +529,22 @@ var create_upgrade_checkout_default = defineTool8({
     if (!VALID_UPGRADE_SLUGS.has(product_slug)) {
       return { content: [{ type: "text", text: "Unknown upgrade product." }], isError: true };
     }
+    const LISTING_SCOPED = /* @__PURE__ */ new Set(["boost-featured-30", "pro_listing_30"]);
+    if (LISTING_SCOPED.has(product_slug)) {
+      if (!listing_id) {
+        return {
+          content: [{ type: "text", text: "That upgrade applies to a specific listing \u2014 provide the listing_id first." }],
+          isError: true
+        };
+      }
+      const { data: owned, error: ownErr } = await supabase.from("listings").select("id").eq("id", listing_id).maybeSingle();
+      if (ownErr) {
+        return { content: [{ type: "text", text: `Listing lookup failed: ${ownErr.message}` }], isError: true };
+      }
+      if (!owned) {
+        return { content: [{ type: "text", text: "That listing was not found on this account." }], isError: true };
+      }
+    }
     const { data: product, error } = await supabase.from("monetization_products").select("billing_type, is_active").eq("slug", product_slug).maybeSingle();
     if (error) {
       return { content: [{ type: "text", text: `Catalog lookup failed: ${error.message}` }], isError: true };
