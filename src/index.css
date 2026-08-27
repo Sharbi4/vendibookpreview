@@ -1770,3 +1770,15 @@
     animation: none !important;
   }
 }
+
+/* Suppress the third-party support chat bubble on the List with Vendi
+   builder so it never covers the composer or publish controls. */
+html.hide-support-chat iframe[src*="tawk.to"],
+html.hide-support-chat iframe[title*="chat" i],
+html.hide-support-chat #tawkchat-container,
+html.hide-support-chat .widget-visible {
+  display: none !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}

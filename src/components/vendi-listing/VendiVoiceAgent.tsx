@@ -337,7 +337,7 @@ const VendiVoiceAgent: React.FC<VendiVoiceAgentProps> = ({
             variant="outline"
             disabled={disabled || connecting}
             onClick={start}
-            className="rounded-full border-white/12 bg-white/[0.04]"
+            className="rounded-full border-border bg-secondary/70"
           >
             {connecting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Mic className="mr-2 h-4 w-4" />}
             {connecting ? 'Connecting…' : 'Talk to Vendi'}
@@ -374,7 +374,7 @@ const VendiVoiceAgent: React.FC<VendiVoiceAgentProps> = ({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
-            className="rounded-[18px] border border-white/[0.09] bg-white/[0.04] p-4"
+            className="rounded-[18px] border border-border bg-secondary/70 p-4"
           >
             <div className="flex items-start gap-3">
               <span className="mt-0.5 flex h-8 w-8 flex-none items-center justify-center rounded-full bg-[rgba(255,81,36,0.12)] text-[rgb(255,81,36)]">
