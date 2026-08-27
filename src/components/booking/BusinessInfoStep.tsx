@@ -261,8 +261,14 @@ export const BusinessInfoStep = ({
             <RadioGroup
               value={formData.liabilityInsuranceAnswer ?? ''}
               onValueChange={(val) => {
-                updateField('liabilityInsuranceAnswer', val as 'yes' | 'no' | 'unsure');
-                updateField('hasLiabilityInsurance', val === 'yes');
+                const answer = val as 'yes' | 'no' | 'unsure';
+                const updated = {
+                  ...formData,
+                  liabilityInsuranceAnswer: answer,
+                  hasLiabilityInsurance: answer === 'yes',
+                };
+                setFormData(updated);
+                onBusinessInfoChange(updated);
               }}
               className="grid grid-cols-3 gap-2"
             >
