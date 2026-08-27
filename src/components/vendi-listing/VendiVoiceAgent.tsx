@@ -87,8 +87,8 @@ const VendiVoiceAgent: React.FC<VendiVoiceAgentProps> = ({
   const answerRef = useRef(onAnswer);
   answerRef.current = onAnswer;
   // Live refs so the agent's tools always read current builder state.
-  const stateRef = useRef({ blockers, canPublish, onGoToReview, onPublish });
-  stateRef.current = { blockers, canPublish, onGoToReview, onPublish };
+  const stateRef = useRef({ blockers, canPublish, onGoToReview, onPublish, onRequestMedia, imageCount });
+  stateRef.current = { blockers, canPublish, onGoToReview, onPublish, onRequestMedia, imageCount };
 
   const clientTools = useMemo(
     () => ({
