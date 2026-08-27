@@ -665,7 +665,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
       transition={{ type: 'spring', stiffness: 100, damping: 20 }}
       onHoverStart={() => setIsHovered(true)}
       onHoverEnd={() => setIsHovered(false)}
-      className="rounded-2xl border border-border shadow-xl bg-card overflow-hidden relative"
+      className="rounded-[22px] border border-border/70 bg-card overflow-hidden relative shadow-[0_20px_60px_-30px_hsl(var(--foreground)/0.35)]"
     >
       {/* Glow effect */}
       <motion.div
