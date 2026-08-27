@@ -1619,6 +1619,7 @@ const VendiListingBuilder: React.FC = () => {
                     {publishing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
                     Publish listing
                   </Button>
+
                   <Button
                     variant="outline"
                     className="rounded-full border-white/12 bg-white/[0.04]"
