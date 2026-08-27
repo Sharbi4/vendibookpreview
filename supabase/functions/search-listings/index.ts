@@ -39,14 +39,12 @@ interface SearchRequest {
   delivery_capable?: boolean;
   fulfillment_types?: Array<'pickup' | 'delivery' | 'on_site'>;
   featured_only?: boolean;
-
   page?: number;
   page_size?: number;
   sort_by?: 'newest' | 'price_low' | 'price_high' | 'distance' | 'relevance';
 }
 
 Deno.serve(async (req) => {
-  // Handle CORS preflight
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -75,29 +73,27 @@ Deno.serve(async (req) => {
       delivery_capable,
       fulfillment_types,
       featured_only,
-
       page = 1,
       page_size = 20,
       sort_by = 'newest',
     } = body;
 
-    // Clamp page_size to max 50
     const effectivePageSize = Math.min(page_size, 50);
     const offset = (page - 1) * effectivePageSize;
 
-    // Start building the query
     let queryBuilder = supabaseClient
       .from('listings')
       .select('*', { count: 'exact' })
-      .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
+      .eq('status', 'published')
+      .not('published_at', 'is', null)
+      .is('deleted_at', null)
+      .eq('moderation_status', 'clear')
       .not('title', 'ilike', 'Demo %');
 
-    // Apply mode filter
     if (mode) {
       queryBuilder = queryBuilder.eq('mode', mode);
     }
 
-    // Apply category filter (supports comma-separated list)
     if (category) {
       const cats = category.split(',').map((c) => c.trim()).filter(Boolean);
       if (cats.length > 1) {
@@ -107,7 +103,6 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Smart query parsing: extract intent, strip filler words, map to categories
     const categoryKeywords: Record<string, string> = {
       'kitchen': 'ghost_kitchen',
       'ghost kitchen': 'ghost_kitchen',
@@ -123,12 +118,10 @@ Deno.serve(async (req) => {
       'vending': 'vendor_space',
     };
 
-    // Strip mode-related filler words from query
     let cleanedQuery = (query || '').trim();
     const modeFillers = /\b(for\s+rent|for\s+sale|to\s+rent|to\s+buy|rental|rentals)\b/gi;
     cleanedQuery = cleanedQuery.replace(modeFillers, '').trim();
 
-    // Check if cleaned query maps to a known category
     const queryLower = cleanedQuery.toLowerCase();
     let inferredCategory: string | null = null;
     for (const [keyword, cat] of Object.entries(categoryKeywords)) {
@@ -138,80 +131,53 @@ Deno.serve(async (req) => {
       }
     }
 
-    // If we inferred a category and no explicit category was set, apply it as a filter
     if (inferredCategory && !category) {
       queryBuilder = queryBuilder.eq('category', inferredCategory);
     }
 
-    // Apply text search (ILIKE on title, description, address, city, state)
+    // Text/location search. Include structured state + ZIP fields so location
+    // searches continue to work even when an older/newer listing is missing lat/lng.
     if (cleanedQuery) {
-      // Parse "City, State" format for location searches
       const parts = cleanedQuery.split(',').map(p => p.trim()).filter(Boolean);
-      
+
       if (parts.length >= 2) {
         const city = parts[0];
+        const stateOrRegion = parts[1];
         queryBuilder = queryBuilder.or(
-          `city.ilike.%${city}%,address.ilike.%${city}%,title.ilike.%${city}%`
+          `city.ilike.%${city}%,address.ilike.%${city}%,title.ilike.%${city}%,state.ilike.%${stateOrRegion}%,zip.ilike.%${stateOrRegion}%`
         );
       } else if (!inferredCategory) {
-        // Only do text search if we didn't already narrow by category
         const searchTerm = `%${cleanedQuery}%`;
         queryBuilder = queryBuilder.or(
-          `title.ilike.${searchTerm},description.ilike.${searchTerm},address.ilike.${searchTerm},city.ilike.${searchTerm}`
+          `title.ilike.${searchTerm},description.ilike.${searchTerm},address.ilike.${searchTerm},city.ilike.${searchTerm},state.ilike.${searchTerm},zip.ilike.${searchTerm}`
         );
       }
     }
 
-    // Apply price filters
-    // Note: For rentals, we check both price_daily and price_hourly since listings can have either or both
     if (min_price !== undefined && min_price > 0) {
       if (mode === 'sale') {
         queryBuilder = queryBuilder.gte('price_sale', min_price);
-      } else if (mode === 'rent') {
-        // For rentals, include listings that have daily OR hourly pricing meeting the minimum
-        // We'll do precise filtering in post-processing since we need to consider both pricing options
-      } else {
-        // For 'all' mode, we'll filter in post-processing
       }
     }
 
     if (max_price !== undefined && max_price < Infinity) {
       if (mode === 'sale') {
         queryBuilder = queryBuilder.lte('price_sale', max_price);
-      } else if (mode === 'rent') {
-        // For rentals, we'll filter in post-processing to consider both daily and hourly pricing
       }
     }
 
-    // Apply instant book filter
     if (instant_book_only) {
       queryBuilder = queryBuilder.eq('instant_book', true);
     }
 
-    // Apply amenities filter (all must be present)
     if (amenities && amenities.length > 0) {
       queryBuilder = queryBuilder.contains('amenities', amenities);
     }
 
-    // Apply bounding box for location filtering (optimization before Haversine)
-    if (latitude !== undefined && longitude !== undefined) {
-      // ~69 miles per degree of latitude, longitude varies by latitude
-      const latDelta = radius_miles / 69;
-      const lngDelta = radius_miles / (69 * Math.cos(toRad(latitude)));
-      
-      queryBuilder = queryBuilder
-        .gte('latitude', latitude - latDelta)
-        .lte('latitude', latitude + latDelta)
-        .gte('longitude', longitude - lngDelta)
-        .lte('longitude', longitude + lngDelta);
-    }
-
-    // Fetch ALL matching listings first (we'll filter/paginate in memory for complex filters)
-    // This is because we need to:
-    // 1. Apply precise Haversine distance
-    // 2. Check availability
-    // 3. Check host verification
-    const { data: listings, error: listingsError, count: totalBeforeComplexFilters } = await queryBuilder;
+    // Do NOT apply a database bounding box here. PostgREST range comparisons
+    // exclude NULL latitude/longitude rows before we get a chance to use their
+    // city/state/ZIP as a fallback. Exact Haversine filtering is done below.
+    const { data: listings, error: listingsError } = await queryBuilder;
 
     if (listingsError) {
       throw listingsError;
@@ -230,15 +196,13 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Get unique host IDs for verification check
     const hostIds = [...new Set(listings.map(l => l.host_id).filter(Boolean))];
 
-    // Fetch host verification status
     let hostVerificationMap: Record<string, boolean> = {};
     if (hostIds.length > 0) {
       const { data: profiles } = await supabaseClient
         .rpc('get_host_verification_status', { host_ids: hostIds });
-      
+
       if (profiles) {
         profiles.forEach((p: { id: string; identity_verified: boolean }) => {
           hostVerificationMap[p.id] = p.identity_verified ?? false;
@@ -246,12 +210,10 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Check availability if date range is specified
     let unavailableListingIds: Set<string> = new Set();
     if (start_date && end_date) {
       const listingIds = listings.map(l => l.id);
 
-      // Get blocked dates in range
       const { data: blockedDates } = await supabaseClient
         .from('listing_blocked_dates')
         .select('listing_id')
@@ -263,7 +225,6 @@ Deno.serve(async (req) => {
         blockedDates.forEach(bd => unavailableListingIds.add(bd.listing_id));
       }
 
-      // Get approved bookings that overlap with date range
       const { data: bookings } = await supabaseClient
         .from('booking_requests')
         .select('listing_id')
@@ -277,26 +238,29 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Apply complex filters in memory
     let filteredListings = listings.map(listing => {
-      // Calculate distance if location provided
       let distance_miles: number | null = null;
-      if (latitude !== undefined && longitude !== undefined && listing.latitude && listing.longitude) {
+      if (
+        latitude !== undefined &&
+        longitude !== undefined &&
+        listing.latitude != null &&
+        listing.longitude != null
+      ) {
         distance_miles = calculateDistance(latitude, longitude, listing.latitude, listing.longitude);
       }
 
-      // Check if host is verified
       const host_verified = hostVerificationMap[listing.host_id] ?? false;
-
-      // Check availability
       const is_available = !unavailableListingIds.has(listing.id);
 
-      // Check delivery capability
       let can_deliver = false;
-      if (latitude !== undefined && longitude !== undefined && 
-          listing.latitude && listing.longitude &&
-          listing.delivery_radius_miles &&
-          (listing.fulfillment_type === 'delivery' || listing.fulfillment_type === 'both')) {
+      if (
+        latitude !== undefined &&
+        longitude !== undefined &&
+        listing.latitude != null &&
+        listing.longitude != null &&
+        listing.delivery_radius_miles &&
+        (listing.fulfillment_type === 'delivery' || listing.fulfillment_type === 'both')
+      ) {
         const distFromListing = calculateDistance(listing.latitude, listing.longitude, latitude, longitude);
         can_deliver = distFromListing <= listing.delivery_radius_miles;
       }
@@ -310,30 +274,29 @@ Deno.serve(async (req) => {
       };
     });
 
-    // Filter by precise distance (Haversine)
+    // Exact radius for geocoded listings. If a listing has no coordinates but
+    // already matched the user's city/state/ZIP text query above, keep it instead
+    // of silently deleting it from location results.
     if (latitude !== undefined && longitude !== undefined) {
+      const hasLocationTextFallback = Boolean(cleanedQuery && !inferredCategory);
       filteredListings = filteredListings.filter(l => {
-        if (l.distance_miles === null) return false; // Exclude listings without coordinates in location searches
+        if (l.distance_miles === null) return hasLocationTextFallback;
         return l.distance_miles <= radius_miles;
       });
     }
 
-    // Filter by date availability
     if (start_date && end_date) {
       filteredListings = filteredListings.filter(l => l.is_available);
     }
 
-    // Filter by verified hosts
     if (verified_hosts_only) {
       filteredListings = filteredListings.filter(l => l.host_verified);
     }
 
-    // Filter by delivery capability (must deliver to searcher's coords)
     if (delivery_capable) {
       filteredListings = filteredListings.filter(l => l.can_deliver);
     }
 
-    // Filter by fulfillment types (any-of). 'both' matches pickup or delivery.
     if (Array.isArray(fulfillment_types) && fulfillment_types.length > 0) {
       const wants = new Set(fulfillment_types);
       filteredListings = filteredListings.filter(l => {
@@ -346,21 +309,17 @@ Deno.serve(async (req) => {
       });
     }
 
-
-    // Filter by featured listings
     if (featured_only) {
       const now = new Date().toISOString();
-      filteredListings = filteredListings.filter(l => 
+      filteredListings = filteredListings.filter(l =>
         l.featured_enabled && l.featured_expires_at && l.featured_expires_at > now
       );
     }
 
-    // Apply price filter for 'all' mode or rent mode with hourly consideration
     if (min_price !== undefined || max_price !== undefined) {
       filteredListings = filteredListings.filter(l => {
-        // For rentals, use the primary price (daily if available, otherwise hourly)
-        const price = l.mode === 'rent' 
-          ? (l.price_daily || l.price_hourly || 0) 
+        const price = l.mode === 'rent'
+          ? (l.price_daily || l.price_hourly || 0)
           : (l.price_sale || 0);
         const meetsMin = min_price === undefined || min_price <= 0 || price >= min_price;
         const meetsMax = max_price === undefined || max_price >= Infinity || price <= max_price;
@@ -368,8 +327,6 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Featured-first PRIMARY sort key + fair daily rotation among the featured cohort.
-    // Mirrors src/lib/featured.ts (dailyFeaturedRotationKey).
     const nowIso = new Date().toISOString();
     const isFeatured = (l: any) =>
       !!(l.featured_enabled && l.featured_expires_at && l.featured_expires_at > nowIso);
@@ -377,7 +334,10 @@ Deno.serve(async (req) => {
     const rotKey = (l: any): number => {
       const seed = `${l.id}|${today}`;
       let h = 2166136261;
-      for (let i = 0; i < seed.length; i++) { h ^= seed.charCodeAt(i); h = Math.imul(h, 16777619); }
+      for (let i = 0; i < seed.length; i++) {
+        h ^= seed.charCodeAt(i);
+        h = Math.imul(h, 16777619);
+      }
       return h >>> 0;
     };
     const featuredTiebreak = (a: any, b: any): number => {
@@ -387,8 +347,6 @@ Deno.serve(async (req) => {
       return 0;
     };
 
-
-    // Apply sorting (featured-first, then requested order)
     if (sort_by === 'distance' && latitude !== undefined && longitude !== undefined) {
       filteredListings.sort((a, b) => {
         const _f = featuredTiebreak(a, b); if (_f !== 0) return _f;
@@ -421,18 +379,14 @@ Deno.serve(async (req) => {
         return new Date(b.published_at || b.created_at).getTime() - new Date(a.published_at || a.created_at).getTime();
       });
     } else {
-      // Default: newest (featured-first)
       filteredListings.sort((a, b) => {
         const _f = featuredTiebreak(a, b); if (_f !== 0) return _f;
         return new Date(b.published_at || b.created_at).getTime() - new Date(a.published_at || a.created_at).getTime();
       });
     }
 
-    // Calculate total after all filters
     const totalCount = filteredListings.length;
     const totalPages = Math.ceil(totalCount / effectivePageSize);
-
-    // Apply pagination
     const paginatedListings = filteredListings.slice(offset, offset + effectivePageSize);
 
     return new Response(
@@ -445,7 +399,6 @@ Deno.serve(async (req) => {
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
-
   } catch (error) {
     console.error('Search error:', error);
     const errorMessage = error instanceof Error ? error.message : 'Internal server error';
