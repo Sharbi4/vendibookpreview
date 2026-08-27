@@ -1185,7 +1185,7 @@ const BookingCheckout = () => {
 
           {/* Right Column - Summary Card */}
           <div className="lg:col-span-2">
-            <div className="sticky top-24 border border-border rounded-2xl p-5 bg-card space-y-4">
+            <div className="lg:sticky lg:top-24 max-h-[calc(100vh-7rem)] overflow-y-auto border border-border/70 rounded-[22px] p-5 bg-card shadow-[0_1px_2px_rgba(24,20,16,0.04),0_28px_64px_-40px_rgba(24,20,16,0.45)] space-y-4">
               {/* Listing preview */}
               <div className="flex gap-4">
                 <img
