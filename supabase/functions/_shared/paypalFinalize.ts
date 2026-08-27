@@ -235,7 +235,7 @@ export async function finalizeCapture(
   }
 
 
-  const { data: updated } = await supabase
+  const { data: updated, error: updateErr } = await supabase
     .from("payment_records")
     .update({
       paypal_capture_id: facts.captureId,
@@ -248,12 +248,36 @@ export async function finalizeCapture(
     })
     .eq("id", record.id)
     // Race-safe: only transition out of a non-terminal state.
-    .not("payment_status", "in", `(${[...TERMINAL_PAYMENT_STATES].join(",")})`)
+    .not("payment_status", "in", `(${TERMINAL_PAYMENT_STATES_SQL.join(",")})`)
     .select()
     .maybeSingle();
 
-  const current = updated ?? record;
+  // A failed or no-op write must never be treated as a successful capture:
+  // money has moved at PayPal, so surface it for review instead of pretending
+  // the record was finalised.
+  if (updateErr || !updated) {
+    safeLog("capture_record_update_failed", {
+      reference: record.reference,
+      source,
+      code: (updateErr as { code?: string } | null)?.code ?? "no_row",
+    });
+    await supabase.from("payment_records").update({
+      internal_status: "needs_review",
+      last_error: {
+        reason: "capture_record_update_failed",
+        code: (updateErr as { code?: string } | null)?.code ?? "no_row",
+        capture_id: facts.captureId,
+      },
+    }).eq("id", record.id);
+    throw new CaptureRejectedError(
+      "capture_record_update_failed",
+      `We received your payment but couldn't finalise order ${record.reference}. Our team has been alerted — please contact support with this reference.`,
+    );
+  }
+
+  const current = updated;
   if (!isPaid) {
+
     if (paymentStatus === "pending") {
       await notifyOrderParties(supabase, current, {
         type: "payment_pending",
