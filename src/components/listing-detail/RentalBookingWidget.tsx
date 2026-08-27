@@ -1050,60 +1050,36 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
           </div>
         )}
 
-        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-          <Button
-            variant={instantBook ? 'dark-shine' : 'outline'}
-            className={cn(
-              'w-full h-14 text-base font-semibold',
-              instantBook ? 'shadow-lg' : 'border-primary/40 hover:bg-primary/5'
-            )}
-            size="lg"
-            onClick={() => {
-              trackLeadEvent('check_availability_click', {
-                listing_id: listingId,
-                source: 'rental_booking_widget',
-                instant_book: instantBook});
-              handleContinue();
-            }}
-            disabled={!canContinue}
-            data-testid="rental-widget-cta"
-            data-instant-book={instantBook ? 'true' : 'false'}
-          >
-            {instantBook ? (
-              <>
-                <Zap className="h-5 w-5 mr-2" />
-                Continue to book
-              </>
-            ) : (
-              'Continue to request'
-            )}
-            {pricingInfo && (
-              <span className="ml-2 opacity-80">
-                · {pricingInfo.durationLabel}
-              </span>
-            )}
-            <ArrowRight className="h-5 w-5 ml-2" />
-          </Button>
-        </motion.div>
+        <Button
+          variant={instantBook ? 'dark-shine' : 'outline'}
+          className={cn(
+            'w-full h-11 text-sm font-semibold rounded-lg',
+            !instantBook && 'border-foreground/60 hover:bg-muted/50'
+          )}
+          onClick={() => {
+            trackLeadEvent('check_availability_click', {
+              listing_id: listingId,
+              source: 'rental_booking_widget',
+              instant_book: instantBook});
+            handleContinue();
+          }}
+          disabled={!canContinue}
+          data-testid="rental-widget-cta"
+          data-instant-book={instantBook ? 'true' : 'false'}
+        >
+          {instantBook ? 'Continue to book' : 'Continue to request'}
+          {pricingInfo && (
+            <span className="ml-1.5 opacity-80 font-normal">
+              · {pricingInfo.durationLabel}
+            </span>
+          )}
+        </Button>
 
-        <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1.5">
-          <Shield className="h-3.5 w-3.5" />
+        <p className="text-[11px] text-center text-muted-foreground">
           {instantBook
-            ? 'Instant Book — no host approval needed. Payment is taken when the booking is confirmed.'
-            : 'Request to Book — payment authorized now, not charged. Only charged if the host approves.'}
+            ? "You won't be charged until your booking is confirmed."
+            : 'Payment authorized now — only charged if the host approves.'}
         </p>
-
-        {/* Trust indicators */}
-        <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground pt-2">
-          <span className="flex items-center gap-1.5">
-            <Shield className="h-3.5 w-3.5" />
-            Secure booking
-          </span>
-          <span className="flex items-center gap-1.5">
-            <Clock className="h-3.5 w-3.5" />
-            Free cancellation
-          </span>
-        </div>
       </div>
     </motion.div>
   );
