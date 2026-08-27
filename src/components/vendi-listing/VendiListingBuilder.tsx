@@ -904,7 +904,7 @@ const VendiListingBuilder: React.FC = () => {
 
       const { error: updateError } = await supabase
         .from('listings')
-        .update(buildListingPayload(draft, images, videos) as never)
+        .update((await withCoordinates(listingId, buildListingPayload(draft, images, videos))) as never)
         .eq('id', listingId)
         .eq('status', 'draft'); // never write over a listing that already went live
       if (updateError) throw updateError;
