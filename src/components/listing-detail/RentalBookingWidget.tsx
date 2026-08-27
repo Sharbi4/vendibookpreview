@@ -713,34 +713,70 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                     {headlineRate ? headlineRate.suffix.replace('/', '/ ').trim() : '/day'}
                   </span>
                 </div>
-                
-                {/* Tiered pricing indicators */}
-                <div className="mt-1 space-y-0.5">
-                  {priceHourly && hourlyEnabled && (
-                    <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-                      <Clock className="h-3.5 w-3.5 text-primary" />
-                      ${priceHourly.toLocaleString()}/hr for hourly
-                    </p>
+                {priceHourly && hourlyEnabled ? (
+                  <p className="mt-1 text-sm text-muted-foreground flex items-center gap-1.5">
+                    <Clock className="h-3.5 w-3.5 text-primary" />
+                    ${priceHourly.toLocaleString()}/hr for hourly bookings
+                  </p>
+                ) : null}
+              </>
+            )}
+          </div>
+
+          {/* Badges */}
+          <div className="flex flex-col gap-2 items-end">
+            {instantBook && (
+              <Badge className="bg-emerald-500 text-white border-0 shadow-md">
+                <Zap className="h-3 w-3 mr-1" />
+                Instant
+              </Badge>
+            )}
+            {totalSlots > 1 && (
+              <Badge variant="secondary" className="text-xs">
+                <MapPin className="h-3 w-3 mr-1" />
+                {totalSlots} Spots
+              </Badge>
+            )}
+          </div>
+        </div>
+
+        {/* Rate matrix — every published rate, always visible */}
+        {mode !== 'hourly' && (priceDaily || priceWeekly || priceMonthly) ? (
+          <div className="mt-4 grid grid-cols-3 gap-2">
+            {[
+              { label: 'Daily', amount: priceDaily, note: 'per day' },
+              { label: 'Weekly', amount: priceWeekly, note: '7+ days' },
+              { label: 'Monthly', amount: priceMonthly, note: '30+ days' },
+            ].map(rate => (
+              <div
+                key={rate.label}
+                className={cn(
+                  'rounded-xl border px-2.5 py-2 text-center transition-colors',
+                  rate.amount
+                    ? 'border-border/70 bg-background/70'
+                    : 'border-dashed border-border/50 bg-transparent',
+                )}
+              >
+                <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
+                  {rate.label}
+                </p>
+                <p
+                  className={cn(
+                    'mt-0.5 text-sm font-semibold',
+                    rate.amount ? 'text-foreground' : 'text-muted-foreground',
                   )}
-                  {priceDaily && headlineRate?.unit !== 'daily' && (
-                    <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-                      <Sun className="h-3.5 w-3.5 text-primary" />
-                      ${priceDaily.toLocaleString()}/day
-                    </p>
-                  )}
-                  {priceWeekly && headlineRate?.unit !== 'weekly' && (
-                    <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-                      
-                      ${priceWeekly.toLocaleString()}/week for 7+ days
-                    </p>
-                  )}
-                  {priceMonthly && headlineRate?.unit !== 'monthly' && (
-                    <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-                      <CalendarRange className="h-3.5 w-3.5 text-primary" />
-                      ${priceMonthly.toLocaleString()}/month for 30+ days
-                    </p>
-                  )}
-                </div>
+                >
+                  {rate.amount ? `$${rate.amount.toLocaleString()}` : '—'}
+                </p>
+                <p className="text-[10px] text-muted-foreground">
+                  {rate.amount ? rate.note : 'not offered'}
+                </p>
+              </div>
+            ))}
+          </div>
+        ) : null}
+      </div>
+
               </>
             )}
           </div>
