@@ -117,9 +117,13 @@ const ProductCheckout = () => {
             )}
             <div className="space-y-0.5 pt-1">
               <p className="text-sm">{formatUsd(priceCents)}</p>
-              {taxCents > 0 && (
+              {taxCents > 0 ? (
                 <p className="text-sm text-muted-foreground">
                   {taxEstimate?.label || 'Estimated sales tax'} · {formatUsd(taxCents)}
+                </p>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  Sales tax, if applicable, is calculated at payment.
                 </p>
               )}
               <p className="text-lg font-semibold">{formatUsd(totalCents)}</p>
