@@ -1022,7 +1022,7 @@ const VendiListingBuilder: React.FC = () => {
       setUploadedUrls(imageUrls);
       setUploadedVideoUrls(videoUrls);
 
-      const payload = buildListingPayload(draft, imageUrls, videoUrls);
+      const payload = await withCoordinates(listingId, buildListingPayload(draft, imageUrls, videoUrls));
       const { error: updateError } = await supabase.from('listings').update(payload as never).eq('id', listingId);
       if (updateError) throw updateError;
       await syncRequiredDocuments(listingId);
