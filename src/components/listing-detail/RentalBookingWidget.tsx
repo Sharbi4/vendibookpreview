@@ -44,6 +44,8 @@ import {
   TooltipTrigger} from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { calculateRentalFees, formatCurrency } from '@/lib/commissions';
+import { supabase } from '@/integrations/supabase/client';
+import { quoteRentalPeriod, resolveRentalRate, formatAmount } from '@/lib/listings/rentalPricing';
 import { useBlockedDates } from '@/hooks/useBlockedDates';
 import { useHourlyAvailability } from '@/hooks/useHourlyAvailability';
 import { todayInTimeZone, currentHourInTimeZone } from '@/lib/listingTimezone';
@@ -80,44 +82,10 @@ interface RentalBookingWidgetProps {
   deliveryFee?: number | null;
 }
 
-// Calculate tiered pricing (7 days = weekly, 30 days = monthly)
-const calculateTieredPrice = (
-  days: number,
-  priceDaily: number | null,
-  priceWeekly?: number | null,
-  priceMonthly?: number | null
-): { total: number; breakdown: string } => {
-  if (!priceDaily || days <= 0) return { total: 0, breakdown: '' };
-
-  let remaining = days;
-  let total = 0;
-  const parts: string[] = [];
-
-  // Apply monthly rate for 30+ day chunks
-  if (priceMonthly && remaining >= 30) {
-    const months = Math.floor(remaining / 30);
-    total += months * priceMonthly;
-    parts.push(`${months} month${months > 1 ? 's' : ''} @ $${priceMonthly.toLocaleString()}`);
-    remaining = remaining % 30;
-  }
-
-  // Apply weekly rate for 7+ day chunks
-  if (priceWeekly && remaining >= 7) {
-    const weeks = Math.floor(remaining / 7);
-    total += weeks * priceWeekly;
-    parts.push(`${weeks} week${weeks > 1 ? 's' : ''} @ $${priceWeekly.toLocaleString()}`);
-    remaining = remaining % 7;
-  }
-
-  // Apply daily rate for remaining days
-  if (remaining > 0) {
-    total += remaining * priceDaily;
-    parts.push(`${remaining} day${remaining > 1 ? 's' : ''} @ $${priceDaily.toLocaleString()}`);
-  }
-
-  return { total, breakdown: parts.join(' + ') };
-};
-
+/**
+ * Period pricing now lives in `@/lib/listings/rentalPricing` so the widget,
+ * the checkout summary and the server quote can never disagree.
+ */
 export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   listingId,
   listingTitle,
@@ -154,7 +122,12 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   // If priceDaily is set, treat listing as daily-capable regardless of flag
   // ─────────────────────────────────────────────────────────────────────────────
   const hasHourlyPricing = !!priceHourly && priceHourly > 0;
-  const hasDailyPricing = !!priceDaily && priceDaily > 0;
+  // A listing priced only weekly or only monthly is still date-bookable —
+  // gating on `price_daily` alone hid the whole calendar for long-term leases.
+  const hasDailyPricing =
+    (!!priceDaily && priceDaily > 0) ||
+    (!!priceWeekly && priceWeekly > 0) ||
+    (!!priceMonthly && priceMonthly > 0);
   
   // Effective enabled states: explicit flag OR has pricing
   const hourlyEnabled = hourlyEnabledProp || hasHourlyPricing;
@@ -164,6 +137,16 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   // STATE: Duration Mode
   // ─────────────────────────────────────────────────────────────────────────────
   const [mode, setMode] = useState<'hourly' | 'daily'>('daily');
+
+  /** Shortest bookable rate the host configured — drives the headline price. */
+  const headlineRate = useMemo(
+    () => resolveRentalRate({
+      price_daily: priceDaily,
+      price_weekly: priceWeekly,
+      price_monthly: priceMonthly,
+    }),
+    [priceDaily, priceWeekly, priceMonthly],
+  );
   
   // ─────────────────────────────────────────────────────────────────────────────
   // STATE: Date Selection
@@ -428,30 +411,86 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
         duration: hours,
         durationLabel: `${hours} hour${hours > 1 ? 's' : ''}${daysLabel}`,
         breakdown: `$${priceHourly}/hr × ${hours} hrs${selectedSlotCount > 1 ? ` × ${selectedSlotCount} slots` : ''}`,
+        roundedUpNote: null,
         basePrice,
         serviceFee: fees.renterFee,
         total: fees.customerTotal};
     } else {
-      if (!startDate || !priceDaily) return null;
-      
+      if (!startDate) return null;
+
       // Inclusive day counting: same start/end = 1 day
       const days = endDate ? differenceInDays(endDate, startDate) + 1 : 1;
       if (days <= 0) return null;
-      
-      const { total: baseBeforeSlots, breakdown } = calculateTieredPrice(days, priceDaily, priceWeekly, priceMonthly);
-      const basePrice = baseBeforeSlots * selectedSlotCount;
+
+      const quote = quoteRentalPeriod(days, {
+        price_daily: priceDaily,
+        price_weekly: priceWeekly,
+        price_monthly: priceMonthly,
+      });
+      if (!quote) return null;
+
+      const basePrice = quote.subtotal * selectedSlotCount;
       const fees = calculateRentalFees(basePrice);
-      
+
       return {
         type: 'daily' as const,
         duration: days,
         durationLabel: `${days} day${days > 1 ? 's' : ''}`,
-        breakdown: selectedSlotCount > 1 ? `${breakdown} × ${selectedSlotCount} slots` : breakdown,
+        breakdown: selectedSlotCount > 1 ? `${quote.breakdown} × ${selectedSlotCount} slots` : quote.breakdown,
+        roundedUpNote: quote.roundedUp
+          ? `This host bills in full ${quote.lines[0]?.unit === 'monthly' ? 'months' : 'weeks'}, so ${quote.billedDays} days are billed for your ${days}-day dates.`
+          : null,
         basePrice,
         serviceFee: fees.renterFee,
         total: fees.customerTotal};
     }
   }, [mode, totalSelectedHours, selectedDatesCount, startDate, endDate, priceHourly, priceDaily, priceWeekly, priceMonthly, selectedSlotCount]);
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // LIVE TAX ESTIMATE
+  // Same `tax-quote` source the checkout summary uses, so the renter never sees
+  // the total jump between this widget and checkout. Cosmetic only — the
+  // authoritative amount is re-locked server-side at order creation.
+  // ─────────────────────────────────────────────────────────────────────────────
+  const [taxEstimate, setTaxEstimate] = useState<{ tax_cents: number; label: string } | null>(null);
+  const [taxState, setTaxState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  const quotedTotal = pricingInfo?.total ?? 0;
+
+  useEffect(() => {
+    if (!listingId || quotedTotal <= 0) {
+      setTaxEstimate(null);
+      setTaxState('idle');
+      return;
+    }
+    const controller = new AbortController();
+    setTaxState('loading');
+    const t = setTimeout(() => {
+      supabase.functions
+        .invoke('tax-quote', {
+          body: { kind: 'rental', listing_id: listingId, total_cents: Math.round(quotedTotal * 100) },
+        })
+        .then(({ data, error }) => {
+          if (controller.signal.aborted) return;
+          if (!error && data) {
+            setTaxEstimate(data as { tax_cents: number; label: string });
+            setTaxState('ready');
+          } else {
+            setTaxEstimate(null);
+            setTaxState('error');
+          }
+        })
+        .catch(() => {
+          if (!controller.signal.aborted) {
+            setTaxEstimate(null);
+            setTaxState('error');
+          }
+        });
+    }, 400);
+    return () => { clearTimeout(t); controller.abort(); };
+  }, [listingId, quotedTotal]);
+
+  const taxAmount = (taxEstimate?.tax_cents ?? 0) / 100;
+  const estimatedTotal = quotedTotal + taxAmount;
 
   // ─────────────────────────────────────────────────────────────────────────────
   // CAN CONTINUE CHECK
@@ -668,9 +707,11 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                     initial={{ scale: 1 }}
                     whileHover={{ scale: 1.02 }}
                   >
-                    ${priceDaily?.toLocaleString() || '—'}
+                    {headlineRate ? formatAmount(headlineRate.amount) : '—'}
                   </motion.span>
-                  <span className="text-muted-foreground text-lg">/day</span>
+                  <span className="text-muted-foreground text-lg">
+                    {headlineRate ? headlineRate.suffix.replace('/', '/ ').trim() : '/day'}
+                  </span>
                 </div>
                 
                 {/* Tiered pricing indicators */}
@@ -681,13 +722,19 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                       ${priceHourly.toLocaleString()}/hr for hourly
                     </p>
                   )}
-                  {priceWeekly && (
+                  {priceDaily && headlineRate?.unit !== 'daily' && (
+                    <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                      <Sun className="h-3.5 w-3.5 text-primary" />
+                      ${priceDaily.toLocaleString()}/day
+                    </p>
+                  )}
+                  {priceWeekly && headlineRate?.unit !== 'weekly' && (
                     <p className="text-sm text-muted-foreground flex items-center gap-1.5">
                       
                       ${priceWeekly.toLocaleString()}/week for 7+ days
                     </p>
                   )}
-                  {priceMonthly && (
+                  {priceMonthly && headlineRate?.unit !== 'monthly' && (
                     <p className="text-sm text-muted-foreground flex items-center gap-1.5">
                       <CalendarRange className="h-3.5 w-3.5 text-primary" />
                       ${priceMonthly.toLocaleString()}/month for 30+ days
@@ -997,21 +1044,42 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                 <span>{pricingInfo.breakdown}</span>
                 <span>${pricingInfo.basePrice.toLocaleString()}</span>
               </div>
+              {pricingInfo.roundedUpNote && (
+                <p className="text-xs text-muted-foreground">{pricingInfo.roundedUpNote}</p>
+              )}
               <div className="flex items-center justify-between text-sm text-muted-foreground">
                 <span>Service fee</span>
                 <span>${pricingInfo.serviceFee.toLocaleString()}</span>
               </div>
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <span>{taxEstimate?.label || 'Estimated sales tax'}</span>
+                <span>
+                  {taxAmount > 0
+                    ? formatAmount(taxAmount)
+                    : taxState === 'loading'
+                      ? 'Calculating…'
+                      : 'Calculated at payment'}
+                </span>
+              </div>
               <Separator className="bg-primary/20" />
               <div className="flex items-center justify-between pt-1">
-                <span className="font-semibold text-foreground">Est. total</span>
+                <span className="font-semibold text-foreground">
+                  {instantBook ? 'Est. total' : 'Est. total to authorize'}
+                </span>
                 <motion.span 
                   className="text-xl font-bold text-foreground"
                   initial={{ scale: 1 }}
                   whileHover={{ scale: 1.05 }}
+                  data-testid="rental-widget-total"
                 >
-                  ${pricingInfo.total.toLocaleString()}
+                  {formatAmount(estimatedTotal)}
                 </motion.span>
               </div>
+              <p className="text-xs text-muted-foreground">
+                {instantBook
+                  ? 'Charged when your booking is confirmed. Any security deposit is handled separately and is not charged today.'
+                  : 'Authorized now, not charged. You are only charged if the host approves your request.'}
+              </p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -1048,10 +1116,10 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
             {instantBook ? (
               <>
                 <Zap className="h-5 w-5 mr-2" />
-                Book Now
+                Continue to book
               </>
             ) : (
-              'Request to Book'
+              'Continue to request'
             )}
             {pricingInfo && (
               <span className="ml-2 opacity-80">
@@ -1062,12 +1130,12 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
           </Button>
         </motion.div>
 
-        {!instantBook && (
-          <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1.5">
-            <Shield className="h-3.5 w-3.5" />
-            Your card will be authorized now and only charged if approved
-          </p>
-        )}
+        <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1.5">
+          <Shield className="h-3.5 w-3.5" />
+          {instantBook
+            ? 'Instant Book — no host approval needed. Payment is taken when the booking is confirmed.'
+            : 'Request to Book — payment authorized now, not charged. Only charged if the host approves.'}
+        </p>
 
         {/* Trust indicators */}
         <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground pt-2">

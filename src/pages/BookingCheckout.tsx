@@ -36,6 +36,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { calculateRentalFees } from '@/lib/commissions';
+import { quoteRentalPeriod } from '@/lib/listings/rentalPricing';
 import { trackFormSubmitConversion } from '@/lib/gtagConversions';
 import { trackRequestStarted, trackRequestSubmitted } from '@/lib/analytics';
 import { PayPalPaymentPanel } from '@/components/checkout';
@@ -198,20 +199,29 @@ const BookingCheckout = () => {
   // Inclusive day counting: same start/end = 1 day
   const rentalDays = startDate && endDate ? differenceInDays(endDate, startDate) + 1 : 0;
   
+  /** Shared period quote (weekly/monthly bundling), also used for the summary line. */
+  const rentalQuote = useMemo(
+    () =>
+      listing && rentalDays > 0
+        ? quoteRentalPeriod(rentalDays, {
+            price_daily: listing.price_daily,
+            price_weekly: listing.price_weekly,
+            price_monthly: (listing as { price_monthly?: number | null }).price_monthly,
+          })
+        : null,
+    [listing, rentalDays],
+  );
+
   const calculateBasePrice = () => {
     // For hourly bookings, use hourly rate
     if (isHourlyBooking && (listing as any)?.price_hourly && durationHours > 0) {
       return durationHours * (listing as any).price_hourly;
     }
     
-    // For daily bookings
-    if (!listing?.price_daily || rentalDays <= 0) return 0;
-    const weeks = Math.floor(rentalDays / 7);
-    const remainingDays = rentalDays % 7;
-    if (listing.price_weekly && weeks > 0) {
-      return (weeks * listing.price_weekly) + (remainingDays * listing.price_daily);
-    }
-    return rentalDays * listing.price_daily;
+    // For daily bookings — same shared engine the listing-detail widget uses,
+    // so the total never changes between the calendar and this page. Handles
+    // weekly/monthly-only listings that have no daily rate at all.
+    return rentalQuote?.subtotal ?? 0;
   };
 
   const basePrice = calculateBasePrice();
@@ -1425,9 +1435,7 @@ const BookingCheckout = () => {
                         {durationHours} hr × ${listing.price_hourly?.toLocaleString()}
                       </>
                     ) : (
-                      <>
-                        {rentalDays} day{rentalDays > 1 ? 's' : ''} × ${listing.price_daily?.toLocaleString()}
-                      </>
+                      <>{rentalQuote?.breakdown || `${rentalDays} day${rentalDays > 1 ? 's' : ''}`}</>
                     )}
                   </span>
                   <span>${basePrice.toLocaleString()}</span>

@@ -148,3 +148,124 @@ export const validateRentalRates = (input: {
 
   return { valid: Object.keys(errors).length === 0, values, errors };
 };
+
+// ─────────────────────────────────────────────────────────────────────────────
+// PERIOD QUOTING
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface RentalQuoteLine {
+  unit: Exclude<RentalRateUnit, 'hourly'>;
+  /** How many whole periods of this unit are billed. */
+  count: number;
+  /** Rate charged per period. */
+  rate: number;
+  amount: number;
+  label: string;
+}
+
+export interface RentalQuote {
+  /** Inclusive day count the renter selected. */
+  days: number;
+  lines: RentalQuoteLine[];
+  /** Base rental subtotal before service fee, delivery and tax. */
+  subtotal: number;
+  /** Single-line human summary, e.g. `1 month @ $1,000`. */
+  breakdown: string;
+  /**
+   * True when the billed periods cover more calendar days than selected —
+   * e.g. a 3-day stay on a monthly-only listing bills one full month.
+   */
+  roundedUp: boolean;
+  /** Calendar days actually paid for once periods are rounded up. */
+  billedDays: number;
+}
+
+const PERIOD_DAYS: Record<Exclude<RentalRateUnit, 'hourly'>, number> = {
+  daily: 1,
+  weekly: 7,
+  monthly: 30,
+};
+
+const PERIOD_ORDER: Exclude<RentalRateUnit, 'hourly'>[] = ['monthly', 'weekly', 'daily'];
+
+/**
+ * Cheapest valid combination of the host's configured periods for a stay of
+ * `days`, using exact dynamic programming rather than naive daily multiplication.
+ *
+ * Handles listings that price only weekly or only monthly (a very common case
+ * for commissary and long-term trailer leases): a 3-day request on a
+ * monthly-only listing bills one month rather than rendering "Price TBD".
+ * Never bills more than the cheapest covering combination — if a week is
+ * cheaper than 6 remaining days, the week is used.
+ *
+ * Returns `null` when the listing has no daily/weekly/monthly rate configured.
+ */
+export const quoteRentalPeriod = (
+  days: number,
+  rates: RentalRateInput | null | undefined,
+): RentalQuote | null => {
+  if (!rates || !Number.isFinite(days) || days <= 0) return null;
+
+  const available = PERIOD_ORDER.map((unit) => ({
+    unit,
+    length: PERIOD_DAYS[unit],
+    rate: toPositiveAmount(rates[FIELD_BY_UNIT[unit]]),
+  })).filter((p): p is { unit: Exclude<RentalRateUnit, 'hourly'>; length: number; rate: number } =>
+    p.rate !== null,
+  );
+
+  if (!available.length) return null;
+
+  const n = Math.min(Math.floor(days), 3660); // ~10 years, guards pathological input
+  // cost[d] = cheapest way to cover at least d days.
+  const cost = new Array<number>(n + 1).fill(Infinity);
+  const pick = new Array<number>(n + 1).fill(-1);
+  cost[0] = 0;
+
+  for (let d = 1; d <= n; d += 1) {
+    available.forEach((period, idx) => {
+      const prev = Math.max(0, d - period.length);
+      const candidate = cost[prev] + period.rate;
+      if (candidate < cost[d]) {
+        cost[d] = candidate;
+        pick[d] = idx;
+      }
+    });
+  }
+
+  if (!Number.isFinite(cost[n]) || pick[n] < 0) return null;
+
+  const counts = new Map<Exclude<RentalRateUnit, 'hourly'>, { count: number; rate: number }>();
+  let billedDays = 0;
+  for (let d = n; d > 0; ) {
+    const period = available[pick[d]];
+    const entry = counts.get(period.unit) ?? { count: 0, rate: period.rate };
+    entry.count += 1;
+    counts.set(period.unit, entry);
+    billedDays += period.length;
+    d = Math.max(0, d - period.length);
+  }
+
+  const lines: RentalQuoteLine[] = PERIOD_ORDER.filter((u) => counts.has(u)).map((unit) => {
+    const { count, rate } = counts.get(unit)!;
+    const noun = unit === 'monthly' ? 'month' : unit === 'weekly' ? 'week' : 'day';
+    return {
+      unit,
+      count,
+      rate,
+      amount: count * rate,
+      label: `${count} ${noun}${count > 1 ? 's' : ''} @ ${formatAmount(rate)}`,
+    };
+  });
+
+  const subtotal = Number(lines.reduce((sum, l) => sum + l.amount, 0).toFixed(2));
+
+  return {
+    days: n,
+    lines,
+    subtotal,
+    breakdown: lines.map((l) => l.label).join(' + '),
+    roundedUp: billedDays > n,
+    billedDays,
+  };
+};
