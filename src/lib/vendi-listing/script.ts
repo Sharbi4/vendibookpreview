@@ -24,6 +24,14 @@ import {
 import {
   importSummary, isUrlOnly, parseExistingListing, URL_ONLY_REPLY, type PendingConfirm,
 } from './importText';
+// The manual wizard's disclosure matrix is the single source of truth. Vendi
+// asks the same questions in conversation so both paths publish listings with
+// identical buyer-facing disclosures.
+import {
+  CONDITION_OPTIONS, LIEN_OPTIONS, READINESS_OPTIONS, TITLE_STATUS_OPTIONS,
+  getCategoryBasics, getStageRequirements, isTitledAsset, requiresSaleDimensions,
+  type KnownProblem,
+} from '@/lib/listings/stages';
 
 export type VendiDraft = ListingPreview & {
   zip_code?: string | null;
@@ -40,6 +48,16 @@ export type VendiDraft = ListingPreview & {
   access_instructions?: string | null;
   hours_of_access?: string | null;
   location_notes?: string | null;
+  // Seller disclosures — parity with the manual wizard's required matrix.
+  condition?: string | null;
+  operational_status?: string | null;
+  title_status?: string | null;
+  has_lien?: string | null;
+  no_known_problems?: boolean | null;
+  known_problems?: KnownProblem[];
+  included_items?: string | null;
+  photos_exclusions_answered?: boolean | null;
+  photos_exclusions_note?: string | null;
   // Sale payment preferences (PayPal / pay in person only).
   accept_paypal_checkout?: boolean | null;
   accept_cash_payment?: boolean | null;
@@ -48,6 +66,7 @@ export type VendiDraft = ListingPreview & {
   /** Rental screening documents, written to listing_required_documents. */
   required_documents?: DocumentType[];
 };
+
 
 export type QuestionKind =
   | 'choice' | 'text' | 'money' | 'location' | 'yesno' | 'list' | 'photos' | 'paste' | 'date_range';
