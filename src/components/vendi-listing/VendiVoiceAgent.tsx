@@ -172,7 +172,17 @@ const VendiVoiceAgent: React.FC<VendiVoiceAgentProps> = ({
         const key = (product ?? '').toLowerCase();
         const target = UPSELLS[key];
         if (!target) return 'Unknown upgrade.';
-        navigate(target.href);
+        const href = upsellHref(key);
+        if (!href) return 'Unknown upgrade.';
+        navigate(href);
+        if (key === 'featured') {
+          return stateRef.current.listingId
+            ? 'Opened the Featured Boost checkout for this listing. The seller reviews the price and pays with PayPal on screen — nothing is charged until they approve it there.'
+            : 'Opened the boost options page. The listing has to be saved before a boost can be attached to it.';
+        }
+        if (key === 'pro') {
+          return 'Opened the Vendibook Pro plans page. The seller picks a plan and approves the recurring PayPal billing there — I cannot start a subscription for them.';
+        }
         return `Opened the ${target.title} page where payment is completed securely.`;
       },
       suggest_upgrade: ({ product }: { product: string }) => {
