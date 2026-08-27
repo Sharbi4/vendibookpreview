@@ -93,6 +93,7 @@ const VendiVoiceAgent: React.FC<VendiVoiceAgentProps> = ({
   onPublish,
   onRequestMedia,
   imageCount = 0,
+  listingId = null,
 }) => {
   const navigate = useNavigate();
   const [connecting, setConnecting] = useState(false);
@@ -101,8 +102,29 @@ const VendiVoiceAgent: React.FC<VendiVoiceAgentProps> = ({
   const answerRef = useRef(onAnswer);
   answerRef.current = onAnswer;
   // Live refs so the agent's tools always read current builder state.
-  const stateRef = useRef({ blockers, canPublish, onGoToReview, onPublish, onRequestMedia, imageCount });
-  stateRef.current = { blockers, canPublish, onGoToReview, onPublish, onRequestMedia, imageCount };
+  const stateRef = useRef({ blockers, canPublish, onGoToReview, onPublish, onRequestMedia, imageCount, listingId });
+  stateRef.current = { blockers, canPublish, onGoToReview, onPublish, onRequestMedia, imageCount, listingId };
+
+  /**
+   * Where an upgrade card / voice checkout should send the seller.
+   * One-time products (Featured Boost) open the hosted PayPal product checkout
+   * scoped to this listing; Pro keeps routing through the /pricing hub.
+   */
+  const upsellHref = useCallback(
+    (key: string) => {
+      const target = UPSELLS[key];
+      if (!target) return null;
+      const id = stateRef.current.listingId;
+      if (!target.hostedSlug || !id) return target.href;
+      const params = new URLSearchParams({
+        listing_id: id,
+        success: `/listing/${id}`,
+        cancel: '/list-with-vendi',
+      });
+      return `/checkout/product/${target.hostedSlug}?${params.toString()}`;
+    },
+    [],
+  );
 
   const clientTools = useMemo(
     () => ({
