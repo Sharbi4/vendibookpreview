@@ -1284,24 +1284,24 @@ const VendiListingBuilder: React.FC = () => {
   return (
 
     <div className="sale-light relative min-h-screen overflow-hidden bg-background text-foreground">
-      {/* Ambient depth — restrained, no loud gradients */}
+      {/* Ambient warmth — restrained, editorial */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0"
+        className="pointer-events-none absolute inset-x-0 top-0 h-[520px]"
         style={{
           background:
-            'radial-gradient(90% 60% at 12% -10%, rgba(255,81,36,0.10), transparent 60%), radial-gradient(70% 50% at 100% 0%, rgba(255,255,255,0.05), transparent 65%)',
+            'radial-gradient(1100px 520px at 50% -14%, rgba(255,214,184,0.32), transparent 64%)',
         }}
       />
 
       <header className="sticky top-0 z-30 border-b border-border bg-background/85 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3.5 sm:px-6">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} aria-label="Go back" className="text-foreground/70 hover:text-foreground">
+        <div className="mx-auto flex max-w-6xl items-center gap-2 px-4 py-3 sm:gap-3 sm:px-6">
+          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} aria-label="Go back" className="text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <img src={vendibookFavicon} alt="" className="h-7 w-7 rounded-lg ring-1 ring-border" />
+          <img src={vendibookFavicon} alt="" className="h-8 w-8 rounded-xl ring-1 ring-border" />
           <div className="min-w-0 flex-1">
-            <h1 className="truncate text-[15px] font-semibold tracking-[-0.01em]">List with Vendi</h1>
+            <p className="truncate text-[15px] font-semibold tracking-[-0.01em]">List with Vendi</p>
             <p className="truncate text-xs text-muted-foreground">
               {readiness.ready ? 'Ready to publish' : `${progress}% ready · ${readiness.blockers.length} left`}
               {saveState !== 'idle' && (
@@ -1315,7 +1315,7 @@ const VendiListingBuilder: React.FC = () => {
           <Button
             variant="ghost"
             size="sm"
-            className="text-muted-foreground hover:text-foreground"
+            className="rounded-full text-muted-foreground hover:text-foreground"
             onClick={() => void handleSaveDraft()}
             disabled={savingManually}
           >
@@ -1324,20 +1324,20 @@ const VendiListingBuilder: React.FC = () => {
               : <CloudUpload className="mr-2 h-4 w-4" />}
             <span className="hidden xs:inline sm:inline">Save draft</span>
           </Button>
-          <Button variant="ghost" size="sm" className="hidden text-muted-foreground hover:text-foreground sm:inline-flex" onClick={() => navigate('/list')}>
+          <Button variant="ghost" size="sm" className="hidden rounded-full text-muted-foreground hover:text-foreground sm:inline-flex" onClick={() => navigate('/list')}>
             <Wrench className="mr-2 h-4 w-4" /> Build it myself
           </Button>
 
           <Button
             variant="ghost"
             size="sm"
-            className="text-muted-foreground hover:text-foreground lg:hidden"
+            className="rounded-full text-muted-foreground hover:text-foreground lg:hidden"
             onClick={() => setShowMobilePreview(true)}
           >
             <Eye className="mr-2 h-4 w-4" /> Preview
           </Button>
         </div>
-        <div className="h-px w-full bg-secondary/70">
+        <div className="h-px w-full bg-border">
           <motion.div
             className="h-full"
             style={{ background: 'linear-gradient(90deg, rgba(255,81,36,0.55), rgba(255,81,36,1))' }}
@@ -1347,11 +1347,27 @@ const VendiListingBuilder: React.FC = () => {
         </div>
       </header>
 
-      <div className="relative mx-auto grid max-w-6xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[1fr_400px] lg:py-10">
+      <div className="relative mx-auto max-w-6xl px-4 pt-8 sm:px-6 sm:pt-12">
+        <div className="max-w-2xl">
+          <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3.5 py-1.5 text-[11px] font-semibold uppercase tracking-[0.16em] text-foreground shadow-sm">
+            <span className="h-1.5 w-1.5 rounded-full bg-primary" aria-hidden />
+            Guided listing
+          </span>
+          <h1 className="mt-5 text-3xl font-semibold leading-[1.1] tracking-[-0.02em] sm:text-[40px]">
+            Tell Vendi about it. We'll build the listing.
+          </h1>
+          <p className="mt-3 text-base leading-relaxed text-muted-foreground sm:text-lg">
+            One question at a time. Nothing is invented — every detail comes from your answers, and your draft saves as you go.
+          </p>
+        </div>
+      </div>
+
+      <div className="relative mx-auto grid max-w-6xl items-start gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_384px] lg:gap-8 lg:py-12">
         <section className="flex min-h-[72vh] flex-col overflow-hidden rounded-[28px] border border-border bg-card shadow-[0_1px_2px_rgba(24,20,16,0.04),0_26px_60px_-30px_rgba(24,20,16,0.30)]">
           {/* Keyed by session: "Start over" drops the old thread instantly
               instead of leaving exiting bubbles on screen. */}
-          <div key={sessionSeq} className="flex-1 space-y-5 overflow-y-auto px-4 py-6 sm:px-7 sm:py-8">
+          <div key={sessionSeq} className="flex-1 space-y-6 overflow-y-auto px-5 py-7 sm:px-9 sm:py-10">
+
             <AnimatePresence initial={false}>
               {messages.map((m) => (
                 <motion.div
