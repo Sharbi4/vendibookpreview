@@ -878,10 +878,8 @@ const BookingCheckout = () => {
             <div className="border border-border/70 rounded-[22px] overflow-hidden bg-card shadow-[0_1px_2px_rgba(24,20,16,0.04),0_28px_64px_-40px_rgba(24,20,16,0.45)]">
               <div className="flex items-center justify-between gap-3 px-5 pt-5">
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">
-                    Step {Math.max(1, steps.findIndex((s) => s.id === activeStep) + 1)} of {steps.length}
-                  </p>
-                  <h2 className="mt-1 text-xl font-semibold tracking-tight text-foreground">
+                  <h2 className="text-xl font-semibold tracking-tight text-foreground">
+
                     {steps.find((s) => s.id === activeStep)?.label ?? 'Tell us more about yourself'}
                   </h2>
                 </div>
