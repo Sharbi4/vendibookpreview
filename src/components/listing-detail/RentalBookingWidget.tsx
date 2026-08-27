@@ -870,27 +870,27 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
 
           {/* Date Selection Summary */}
           {mode === 'daily' && startDate && (
-            <div className="mt-3 pt-3 border-t border-border text-sm text-center">
+            <div className="mt-2 pt-2 border-t border-border/60 text-xs text-center">
               <span className="text-muted-foreground">
                 {endDate 
-                  ? `${format(startDate, 'MMM d')} → ${format(endDate, 'MMM d')} (${pricingInfo?.durationLabel})`
-                  : `${format(startDate, 'MMM d')} (tap end date or continue for 1 day)`
+                  ? `${format(startDate, 'MMM d')} → ${format(endDate, 'MMM d')} · ${pricingInfo?.durationLabel}`
+                  : `${format(startDate, 'MMM d')} · tap an end date (or continue for 1 day)`
                 }
               </span>
             </div>
           )}
           
           {mode === 'hourly' && totalSelectedHours > 0 && (
-            <div className="mt-3 pt-3 border-t border-border text-sm text-center">
+            <div className="mt-2 pt-2 border-t border-border/60 text-xs text-center">
               <span className="text-muted-foreground">
-                {selectedDatesCount} day{selectedDatesCount > 1 ? 's' : ''} • {totalSelectedHours} hour{totalSelectedHours > 1 ? 's' : ''} total
+                {selectedDatesCount} day{selectedDatesCount > 1 ? 's' : ''} · {totalSelectedHours} hour{totalSelectedHours > 1 ? 's' : ''} total
               </span>
             </div>
           )}
           
           {mode === 'hourly' && activeHourlyDate && (
-            <div className="mt-2 text-sm text-center">
-              <span className="font-medium text-primary">
+            <div className="mt-1.5 text-xs text-center">
+              <span className="font-medium text-foreground">
                 {format(activeHourlyDate, 'EEEE, MMMM d')}
               </span>
             </div>
