@@ -826,8 +826,10 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                           "flex flex-col items-center justify-center",
                           isDisabled && "opacity-30 cursor-not-allowed line-through",
                           !isDisabled && !isSelected && !isActiveHourly && "hover:ring-1 hover:ring-foreground",
-                          isSelected && "bg-foreground text-background",
-                          isActiveHourly && !isSelected && "ring-1.5 ring-foreground bg-muted",
+                          (isStart || isEnd) && "bg-foreground text-background",
+                          isRangeMiddle && "rounded-none w-full bg-muted text-foreground",
+                          isRangeMiddle && isStart === false && isEnd === false && "",
+                          isActiveHourly && !isSelected && "ring-1 ring-foreground bg-muted",
                           status === 'partial' && !isSelected && !isActiveHourly && "bg-muted/60",
                           isToday(date) && !isSelected && !isActiveHourly && "ring-1 ring-foreground/40",
                         )}
