@@ -65,7 +65,10 @@ serve(async (req) => {
       auth: { persistSession: false },
     });
 
-    const { mode, category, location, city, state, zipCode, latitude, longitude, sessionKey } = parsed.data;
+    const {
+      mode, category, location, city, state, zipCode, latitude, longitude,
+      sessionKey, creationSessionKey,
+    } = parsed.data;
     const normalizedLocation = location || [city, state].filter(Boolean).join(", ") || null;
     const fulfillmentType = category === "ghost_kitchen" || category === "vendor_lot" || category === "vendor_space"
       ? "on_site"
@@ -77,12 +80,19 @@ serve(async (req) => {
     // identity. A key whose listing already went live (or was archived/
     // deleted) is RETIRED: it must never be resumed or autosaved onto, so an
     // old tab is told to start a fresh session instead.
-    if (sessionKey) {
+    // Both flows share the contract; only the column differs.
+    const idempotency: Array<{ column: string; value: string }> = [];
+    if (sessionKey) idempotency.push({ column: "vendi_session_key", value: sessionKey });
+    if (creationSessionKey) {
+      idempotency.push({ column: "creation_session_key", value: creationSessionKey });
+    }
+
+    for (const { column, value } of idempotency) {
       const { data: existing } = await admin
         .from("listings")
         .select("id, status, deleted_at")
         .eq("host_id", user.id)
-        .eq("vendi_session_key", sessionKey)
+        .eq(column, value)
         .maybeSingle();
       if (existing?.id) {
         const resumable = existing.status === "draft" && !existing.deleted_at;
@@ -90,6 +100,7 @@ serve(async (req) => {
         return json({ error: "session_retired", retired: true }, 409);
       }
     }
+
 
 
 
