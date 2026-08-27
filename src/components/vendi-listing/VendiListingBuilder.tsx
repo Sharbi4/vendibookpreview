@@ -1816,7 +1816,7 @@ const VendiListingBuilder: React.FC = () => {
                   ))}
                 </div>
               )}
-              <div className="flex items-end gap-2 rounded-[20px] border border-border bg-secondary/70 px-3 py-2 transition focus-within:border-[rgba(255,81,36,0.45)]">
+              <div className="flex items-end gap-2 rounded-[22px] border border-border bg-background px-3 py-2 shadow-[0_1px_2px_rgba(24,20,16,0.04)] transition focus-within:border-[rgba(255,81,36,0.45)]">
                 <Button
                   type="button"
                   variant="ghost"
