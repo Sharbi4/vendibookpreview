@@ -32,6 +32,7 @@ import {
   verifyVendiDraft, adoptDraftIntoVendiSession,
 } from '@/lib/vendi-listing/session';
 import { deriveAnsweredFromDraft, mergeServerDraft } from '@/lib/vendi-listing/hydrate';
+import { resolveVendiCoordinates } from '@/lib/vendi-listing/location';
 import { trackVendi } from '@/lib/vendi-listing/telemetry';
 
 
@@ -481,6 +482,25 @@ const VendiListingBuilder: React.FC = () => {
     })();
   }, [hydrated, user, draftId, resumeChecked, resumeOffers.length, draft.mode, draft.category, draft.city, draft.state, draft.zip_code, draft.address]);
 
+  // Merge latitude/longitude into a save payload using the same geocoding rules
+  // the manual wizard uses. Coordinates are only resolved when the stated
+  // location is new or unresolved, and never guessed when the geocoder can't
+  // confidently anchor to the seller's city/state/ZIP.
+  const withCoordinates = useCallback(
+    async (listingId: string, payload: Record<string, unknown>): Promise<Record<string, unknown>> => {
+      const coords = await resolveVendiCoordinates({
+        listingId,
+        city: draft.city,
+        state: draft.state,
+        zipCode: draft.zip_code,
+        hasStoredCoords:
+          typeof draft.latitude === 'number' && typeof draft.longitude === 'number',
+      });
+      return coords ? { ...payload, ...coords } : payload;
+    },
+    [draft.city, draft.state, draft.zip_code, draft.latitude, draft.longitude],
+  );
+
 
   // Debounced autosave of collected answers onto the owned draft. The row stays
   // status=draft until the owner explicitly publishes. It never runs before the
@@ -490,7 +510,8 @@ const VendiListingBuilder: React.FC = () => {
     if (!draftId || !hydrated || !resumeChecked || resumeOffers.length || detached) return;
     setSaveState('saving');
     const timer = window.setTimeout(() => {
-      const payload = buildListingPayload(draft, uploadedUrls, uploadedVideoUrls);
+      void (async () => {
+      const payload = await withCoordinates(draftId, buildListingPayload(draft, uploadedUrls, uploadedVideoUrls));
       void supabase
         .from('listings')
         .update(payload as never)
@@ -503,6 +524,7 @@ const VendiListingBuilder: React.FC = () => {
             trackVendi('vendi_save_failed', { userId: user?.id, listingId: draftId, metadata: { stage: 'autosave' } });
           } else setTroubles(0);
         });
+      })();
     }, 1200);
     return () => window.clearTimeout(timer);
   }, [draft, uploadedUrls, uploadedVideoUrls, draftId, hydrated, resumeChecked, resumeOffers.length, detached, user?.id]);
@@ -883,7 +905,7 @@ const VendiListingBuilder: React.FC = () => {
 
       const { error: updateError } = await supabase
         .from('listings')
-        .update(buildListingPayload(draft, images, videos) as never)
+        .update((await withCoordinates(listingId, buildListingPayload(draft, images, videos))) as never)
         .eq('id', listingId)
         .eq('status', 'draft'); // never write over a listing that already went live
       if (updateError) throw updateError;
@@ -1001,7 +1023,7 @@ const VendiListingBuilder: React.FC = () => {
       setUploadedUrls(imageUrls);
       setUploadedVideoUrls(videoUrls);
 
-      const payload = buildListingPayload(draft, imageUrls, videoUrls);
+      const payload = await withCoordinates(listingId, buildListingPayload(draft, imageUrls, videoUrls));
       const { error: updateError } = await supabase.from('listings').update(payload as never).eq('id', listingId);
       if (updateError) throw updateError;
       await syncRequiredDocuments(listingId);
