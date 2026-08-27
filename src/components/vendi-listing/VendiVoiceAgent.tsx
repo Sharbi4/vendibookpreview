@@ -272,7 +272,15 @@ const VendiVoiceAgent: React.FC<VendiVoiceAgentProps> = ({
       await conversation.startSession({
         conversationToken: data.token,
         connectionType: 'webrtc',
-        dynamicVariables: { access_token: accessToken, user_id: userId },
+        // ElevenLabs' MCP configuration API normalizes the configured variable
+        // name to `{{access_token}}`. Send both representations so the current
+        // MCP resolver and SDK clients can resolve the same short-lived session
+        // token instead of terminating the call after the first message.
+        dynamicVariables: {
+          access_token: accessToken,
+          '{{access_token}}': accessToken,
+          user_id: userId,
+        },
       });
       try {
         if (context) conversation.sendContextualUpdate(context);
