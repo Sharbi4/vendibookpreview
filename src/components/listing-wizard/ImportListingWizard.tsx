@@ -578,6 +578,9 @@ export const ImportListingWizard: React.FC = () => {
         console.warn('Analytics tracking failed:', e);
       }
       
+      // The draft now has its own identity (listing id). Retire the creation
+      // key so a later, genuinely new import creates a new row.
+      rotateCreationSessionKey(user.id, 'import');
       setCreatedListingId(listingId);
       setStep('success');
     } catch (error) {

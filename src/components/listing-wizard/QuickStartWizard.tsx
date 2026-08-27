@@ -351,6 +351,9 @@ export const QuickStartWizard: React.FC = () => {
       });
       await refreshProfile();
 
+      // Draft now has its own identity; retire the key so the seller's NEXT
+      // quick start creates a genuinely new listing.
+      rotateCreationSessionKey(user.id, 'manual');
       setCreatedListingId(listingId);
       setStep('created', true);
 

@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import ReactMarkdown from 'react-markdown';
 import vendibookFavicon from '@/assets/vendibook-favicon.png';
 import LivePreviewPanel, { ListingPreview } from '@/components/ai-listing/LivePreviewPanel';
-import { createOrResumeListingDraft } from '@/lib/listings/creationSession';
+import { createOrResumeListingDraft, rotateCreationSessionKey } from '@/lib/listings/creationSession';
 import VoiceInputButton from '@/components/ai-listing/VoiceInputButton';
 
 type Msg = { role: 'user' | 'assistant'; content: string };
@@ -155,6 +155,7 @@ const AIListingCreator: React.FC = () => {
       const { error } = await supabase.from('listings').update(updateData).eq('id', draftId);
       if (error) throw error;
       await refreshProfile();
+      rotateCreationSessionKey(user.id, 'ai');
       toast.success('Draft saved! Redirecting to your dashboard...');
       // Add a next-steps message to the chat before redirecting
       setMessages(prev => [...prev, {
