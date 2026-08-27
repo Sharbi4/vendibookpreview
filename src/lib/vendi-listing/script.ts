@@ -1168,7 +1168,30 @@ export function getPublishBlockers(draft: VendiDraft, imageCount: number): strin
     blockers.push('Add a rental rate (monthly, weekly, daily, or hourly).');
   }
   if (imageCount < 1) blockers.push('Add at least one photo.');
+
+  // Disclosure parity: once mode and category are known, Vendi enforces the
+  // exact same required disclosures as the manual wizard, so both paths cannot
+  // publish listings with different levels of buyer protection.
+  if (draft.mode && draft.category) {
+    for (const req of getStageRequirements({
+      mode: draft.mode as 'rent' | 'sale',
+      category: draft.category as ListingCategory,
+      condition: draft.condition ?? null,
+      operationalStatus: draft.operational_status ?? null,
+      titleStatus: draft.title_status ?? null,
+      hasLien: draft.has_lien ?? null,
+      noKnownProblems: !!draft.no_known_problems,
+      knownProblems: draft.known_problems ?? [],
+      includedItems: draft.included_items ?? null,
+      photosExclusionsAnswered: !!draft.photos_exclusions_answered,
+      lengthInches: draft.length_inches ?? null,
+      heightInches: draft.height_inches ?? null,
+    })) {
+      blockers.push(`${req.label}.`);
+    }
+  }
   return blockers;
+
 }
 
 /** Fields written to the listings row. Never includes retired payment paths. */
