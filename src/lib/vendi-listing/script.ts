@@ -24,6 +24,14 @@ import {
 import {
   importSummary, isUrlOnly, parseExistingListing, URL_ONLY_REPLY, type PendingConfirm,
 } from './importText';
+// The manual wizard's disclosure matrix is the single source of truth. Vendi
+// asks the same questions in conversation so both paths publish listings with
+// identical buyer-facing disclosures.
+import {
+  CONDITION_OPTIONS, LIEN_OPTIONS, READINESS_OPTIONS, TITLE_STATUS_OPTIONS,
+  getCategoryBasics, getStageRequirements, isTitledAsset, requiresSaleDimensions,
+  type KnownProblem,
+} from '@/lib/listings/stages';
 
 export type VendiDraft = ListingPreview & {
   zip_code?: string | null;
@@ -40,6 +48,16 @@ export type VendiDraft = ListingPreview & {
   access_instructions?: string | null;
   hours_of_access?: string | null;
   location_notes?: string | null;
+  // Seller disclosures — parity with the manual wizard's required matrix.
+  condition?: string | null;
+  operational_status?: string | null;
+  title_status?: string | null;
+  has_lien?: string | null;
+  no_known_problems?: boolean | null;
+  known_problems?: KnownProblem[];
+  included_items?: string | null;
+  photos_exclusions_answered?: boolean | null;
+  photos_exclusions_note?: string | null;
   // Sale payment preferences (PayPal / pay in person only).
   accept_paypal_checkout?: boolean | null;
   accept_cash_payment?: boolean | null;
@@ -48,6 +66,7 @@ export type VendiDraft = ListingPreview & {
   /** Rental screening documents, written to listing_required_documents. */
   required_documents?: DocumentType[];
 };
+
 
 export type QuestionKind =
   | 'choice' | 'text' | 'money' | 'location' | 'yesno' | 'list' | 'photos' | 'paste' | 'date_range';
@@ -599,6 +618,129 @@ export const QUESTIONS: Question[] = [
     },
   },
 
+  // ——— Seller disclosures (identical requirements to the manual wizard) ———
+
+  {
+    id: 'condition',
+    kind: 'choice',
+    tier: 'core',
+    when: (d) => !!d.category,
+    prompt: () => 'How would you describe the overall condition?',
+    tip: () => 'Buyers trust an honest rating far more than a perfect one.',
+    options: () => CONDITION_OPTIONS.map((o) => ({ value: o.value, label: o.label })),
+    apply: (_d, raw) => {
+      const v = cleanText(raw).toLowerCase().replace(/\s+/g, '_');
+      const match = CONDITION_OPTIONS.find((o) => o.value === v || o.label.toLowerCase() === cleanText(raw).toLowerCase());
+      if (!match) return { error: 'Pick the condition that fits best — new, like new, good, fair, or needs work.' };
+      return { patch: { condition: match.value } };
+    },
+  },
+  {
+    id: 'operational_status',
+    kind: 'choice',
+    tier: 'core',
+    when: (d) => !!d.category,
+    prompt: (d) => {
+      const readiness = getCategoryBasics(d.category as ListingCategory).readiness;
+      if (readiness === 'drivable') return 'Does it start, run and drive right now?';
+      if (readiness === 'towable') return 'Is it road ready and towable right now?';
+      return 'Is the space operational and usable today?';
+    },
+    tip: () => 'This is the question buyers ask first, so answering it here saves you a dozen messages.',
+    options: (d) => {
+      const readiness = getCategoryBasics(d.category as ListingCategory).readiness;
+      return READINESS_OPTIONS[readiness].map((o) => ({ value: o.value, label: o.label }));
+    },
+    apply: (d, raw) => {
+      const readiness = getCategoryBasics(d.category as ListingCategory).readiness;
+      const list = READINESS_OPTIONS[readiness];
+      const text = cleanText(raw).toLowerCase();
+      const match = list.find((o) => o.value === text.replace(/\s+/g, '_') || o.label.toLowerCase() === text);
+      if (!match) return { error: 'Pick the option that matches — “Not sure” is a perfectly good answer.' };
+      return { patch: { operational_status: match.value } };
+    },
+  },
+  {
+    id: 'title_status',
+    kind: 'choice',
+    tier: 'core',
+    when: (d) => !!d.category && !!d.mode && isTitledAsset(d.category as ListingCategory, d.mode as 'rent' | 'sale'),
+    prompt: () => 'What’s the title status?',
+    tip: () => 'Required disclosure on any titled sale. Buyers and lenders both check it.',
+    options: () => TITLE_STATUS_OPTIONS.map((o) => ({ value: o.value, label: o.label })),
+    apply: (_d, raw) => {
+      const text = cleanText(raw).toLowerCase();
+      const match = TITLE_STATUS_OPTIONS.find(
+        (o) => o.value === text.replace(/\s+/g, '_') || o.label.toLowerCase() === text,
+      );
+      if (!match) return { error: 'Choose the title status — “Not sure” is allowed.' };
+      return { patch: { title_status: match.value } };
+    },
+  },
+  {
+    id: 'has_lien',
+    kind: 'choice',
+    tier: 'core',
+    when: (d) => !!d.category && !!d.mode && isTitledAsset(d.category as ListingCategory, d.mode as 'rent' | 'sale'),
+    prompt: () => 'Is there a lien or outstanding loan on it?',
+    tip: () => 'A lien doesn’t stop a sale — it just has to be disclosed up front.',
+    options: () => LIEN_OPTIONS.map((o) => ({ value: o.value, label: o.label })),
+    apply: (_d, raw) => {
+      const text = cleanText(raw).toLowerCase();
+      const match = LIEN_OPTIONS.find((o) => o.value === text.replace(/\s+/g, '_') || o.label.toLowerCase() === text);
+      const yn = match ? null : parseYesNo(raw);
+      if (!match && yn === null) return { error: 'Yes, no, or not sure — whichever is accurate.' };
+      return { patch: { has_lien: match ? match.value : yn ? 'yes' : 'no' } };
+    },
+  },
+  {
+    id: 'known_problems',
+    kind: 'text',
+    tier: 'core',
+    when: (d) => !!d.category,
+    prompt: () => 'Anything a buyer should know that isn’t working, or needs repair? Tell me in plain words, or say “none”.',
+    tip: () => 'Disclosed problems rarely lose the sale. Undisclosed ones lose it after the deposit.',
+    placeholder: 'e.g. Generator needs a new pull cord — or “none”',
+    apply: (_d, raw) => {
+      const text = cleanText(raw);
+      const lower = text.toLowerCase();
+      if (!text.length) return { error: 'Describe anything that needs work, or say “none”.' };
+      if (/^(none|no|nope|nothing|n\/a|all good|everything works)\b/.test(lower)) {
+        return {
+          patch: { no_known_problems: true, known_problems: [] },
+          say: 'Noted — nothing known to disclose.',
+        };
+      }
+      if (text.length < 3) return { error: 'A few more words, please — or say “none”.' };
+      return {
+        patch: {
+          no_known_problems: false,
+          known_problems: [{ category: 'other', note: text.slice(0, 1000), photo_url: null }],
+        },
+        say: 'Added to your disclosures.',
+      };
+    },
+  },
+  {
+    id: 'included_items',
+    kind: 'text',
+    tier: 'core',
+    when: (d) => !!d.category,
+    prompt: (d) =>
+      d.mode === 'rent'
+        ? 'What’s included in the rental rate?'
+        : 'What’s included in your asking price?',
+    tip: () => 'Equipment, tanks, generator, smallwares, permits — whatever actually goes with it.',
+    placeholder: 'e.g. All cooking equipment, generator, 2 propane tanks, smallwares',
+    apply: (_d, raw) => {
+      const text = cleanText(raw).slice(0, 2000);
+      if (text.length < 3) return { error: 'A short list is enough — even “everything pictured” works.' };
+      return { patch: { included_items: text } };
+    },
+  },
+
+
+
   {
     id: 'fulfillment',
     kind: 'choice',
@@ -642,6 +784,51 @@ export const QUESTIONS: Question[] = [
       : 'Exterior, interior, and a few equipment close-ups do the heavy lifting. Video works too.'),
     apply: () => ({ patch: {} }),
   },
+  {
+    id: 'photo_exclusions',
+    kind: 'text',
+    tier: 'core',
+    when: (d) => !!d.category,
+    prompt: () => 'Is everything shown in your photos included? Say “yes”, or tell me what stays with you.',
+    tip: () => 'This one prevents most handoff disputes — buyers assume anything pictured is included.',
+    placeholder: 'e.g. Yes — or “the POS tablet and the wrap are not included”',
+    apply: (_d, raw) => {
+      const text = cleanText(raw);
+      const lower = text.toLowerCase();
+      if (!text.length) return { error: 'Say “yes” if it’s all included, or name what isn’t.' };
+      if (/^(yes|yep|yeah|all included|everything|correct|it all is)\b/.test(lower)) {
+        return {
+          patch: { photos_exclusions_answered: true, photos_exclusions_note: null },
+          say: 'Everything pictured is included — noted on the listing.',
+        };
+      }
+      if (text.length < 3) return { error: 'A few more words, please — or say “yes”.' };
+      return {
+        patch: { photos_exclusions_answered: true, photos_exclusions_note: text.slice(0, 1000) },
+        say: 'Noted — buyers will see what is not included.',
+      };
+    },
+  },
+  {
+    // Sale trucks and trailers must ship with real measurements: buyers size
+    // doors, garages and freight quotes off them, so this is not optional.
+    id: 'sale_dimensions',
+    kind: 'text',
+    tier: 'core',
+    when: (d) => !!d.category && !!d.mode
+      && requiresSaleDimensions(d.mode as 'rent' | 'sale', d.category as ListingCategory),
+    prompt: () => 'What are the outside dimensions? Length x width x height, in feet.',
+    tip: () => 'Buyers need these to check clearances, and they power your freight estimate.',
+    placeholder: 'e.g. 20 x 8 x 9 ft',
+    apply: (_d, raw) => {
+      const dims = parseDimensions(raw);
+      if (!dims.length_inches || !dims.height_inches) {
+        return { error: 'I need at least the length and the height, like “20 x 8 x 9 ft”.' };
+      }
+      return { patch: dims };
+    },
+  },
+
   {
     id: 'title',
     kind: 'text',
@@ -874,7 +1061,10 @@ export const QUESTIONS: Question[] = [
     kind: 'text',
     tier: 'extra',
     optional: true,
-    when: (d) => isMobileAsset(d.category),
+    // Sale trucks/trailers answer the required `sale_dimensions` question instead.
+    when: (d) => isMobileAsset(d.category)
+      && !(d.mode && requiresSaleDimensions(d.mode as 'rent' | 'sale', d.category as ListingCategory)),
+
     prompt: () => 'Do you know the dimensions? Length x width x height.',
     placeholder: 'e.g. 20 x 8 x 9 ft',
     apply: (_d, raw) => {
@@ -978,7 +1168,30 @@ export function getPublishBlockers(draft: VendiDraft, imageCount: number): strin
     blockers.push('Add a rental rate (monthly, weekly, daily, or hourly).');
   }
   if (imageCount < 1) blockers.push('Add at least one photo.');
+
+  // Disclosure parity: once mode and category are known, Vendi enforces the
+  // exact same required disclosures as the manual wizard, so both paths cannot
+  // publish listings with different levels of buyer protection.
+  if (draft.mode && draft.category) {
+    for (const req of getStageRequirements({
+      mode: draft.mode as 'rent' | 'sale',
+      category: draft.category as ListingCategory,
+      condition: draft.condition ?? null,
+      operationalStatus: draft.operational_status ?? null,
+      titleStatus: draft.title_status ?? null,
+      hasLien: draft.has_lien ?? null,
+      noKnownProblems: !!draft.no_known_problems,
+      knownProblems: draft.known_problems ?? [],
+      includedItems: draft.included_items ?? null,
+      photosExclusionsAnswered: !!draft.photos_exclusions_answered,
+      lengthInches: draft.length_inches ?? null,
+      heightInches: draft.height_inches ?? null,
+    })) {
+      blockers.push(`${req.label}.`);
+    }
+  }
   return blockers;
+
 }
 
 /** Fields written to the listings row. Never includes retired payment paths. */
@@ -1029,5 +1242,16 @@ export function buildListingPayload(
     video_urls: videoUrls.length ? videoUrls : null,
     accept_paypal_checkout: isSale ? draft.accept_paypal_checkout ?? true : false,
     accept_cash_payment: isSale ? draft.accept_cash_payment ?? true : false,
+    // Seller disclosures — same columns the manual wizard writes.
+    condition: draft.condition ?? null,
+    operational_status: draft.operational_status ?? null,
+    title_status: isSale ? draft.title_status ?? null : null,
+    has_lien: isSale ? draft.has_lien ?? null : null,
+    no_known_problems: !!draft.no_known_problems,
+    known_problems: draft.no_known_problems ? [] : draft.known_problems ?? [],
+    included_items: draft.included_items ?? null,
+    photos_exclusions_answered: !!draft.photos_exclusions_answered,
+    photos_exclusions_note: draft.photos_exclusions_note ?? null,
+
   };
 }

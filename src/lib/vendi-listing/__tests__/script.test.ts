@@ -94,6 +94,11 @@ describe('rental monthly pricing', () => {
     d = answer(d, 'rent_price', '$1,000');
     d = answer(d, 'instant_book', 'no');
     d = answer(d, 'fulfillment', 'pickup');
+    d = answer(d, 'condition', 'like_new');
+    d = answer(d, 'operational_status', 'towable');
+    d = answer(d, 'known_problems', 'none');
+    d = answer(d, 'included_items', 'All cooking equipment and two propane tanks');
+    d = answer(d, 'photo_exclusions', 'yes');
     return d;
   };
 
@@ -131,12 +136,19 @@ describe('progressive interview and optional depth', () => {
     d = answer(d, 'fulfillment', 'pickup');
     d = answer(d, 'instant_book', 'no');
     d = answer(d, 'title', 'Like new turnkey food trailer for lease');
+    // Seller disclosures are required for publish parity with the manual wizard.
+    d = answer(d, 'condition', 'like_new');
+    d = answer(d, 'operational_status', 'towable');
+    d = answer(d, 'known_problems', 'none');
+    d = answer(d, 'included_items', 'All cooking equipment and two propane tanks');
+    d = answer(d, 'photo_exclusions', 'yes');
     return d;
   };
 
   const coreAnswers = [
     'import_choice', 'import_paste', 'mode', 'category', 'subcategory', 'location',
     'rent_period', 'rent_price', 'description', 'fulfillment', 'instant_book', 'photos', 'title',
+    'condition', 'operational_status', 'known_problems', 'included_items', 'photo_exclusions',
   ];
 
   it('asks the title only after the substantive facts are gathered', () => {
@@ -174,7 +186,7 @@ describe('progressive interview and optional depth', () => {
 
     const truck: VendiDraft = { title: null, description: null, category: 'food_truck', mode: 'sale' };
     const truckIds = visibleQuestions(truck).map((x) => x.id);
-    expect(truckIds).toContain('dimensions');
+    expect(truckIds).toContain('sale_dimensions');
     expect(truckIds).not.toContain('hours_of_access');
   });
 
