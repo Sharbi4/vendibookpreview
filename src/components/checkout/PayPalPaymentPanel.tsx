@@ -126,15 +126,19 @@ const PayPalPaymentPanel = ({
       body: target,
     });
     if (fnError || !data?.order_id) {
-      if (data?.code === 'unauthenticated') {
+      // A non-2xx response hides the server's reason inside `fnError.context`,
+      // so parse it — otherwise every failure reads "please try again".
+      const parsed = await parseEdgeError(fnError, data?.error ? data : null);
+      if (parsed.code === 'unauthenticated' || parsed.status === 401) {
         setState('signin');
         throw new Error('Please sign in to continue.');
       }
-      const message = data?.message || fnError?.message ||
+      const message = parsed.message ||
         'We could not start this payment. Please try again.';
       fail('Payment could not be started', message);
       throw new Error(message);
     }
+
 
     intentRef.current = data.payment_intent === 'AUTHORIZE' ? 'AUTHORIZE' : 'CAPTURE';
     setHoldMessage(typeof data.buyer_message === 'string' ? data.buyer_message : null);
