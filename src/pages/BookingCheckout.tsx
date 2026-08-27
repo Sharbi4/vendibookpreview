@@ -49,7 +49,7 @@ import { FinalReviewSheet } from '@/components/transaction/FinalReviewSheet';
 import { useTermsGate } from '@/hooks/useTermsGate';
 import { buildTerms } from '@/lib/transactionTerms';
 import { cn } from '@/lib/utils';
-import { BookingInfoModal, type BookingUserInfo, SlotSelector, BusinessInfoStep, type BusinessInfoData } from '@/components/booking';
+import { type BookingUserInfo, SlotSelector, BusinessInfoStep, type BusinessInfoData, ContactInfoWizard } from '@/components/booking';
 import { BookingDocumentUpload, type StagedDocument } from '@/components/booking/BookingDocumentUpload';
 import { useDocumentsOnFile } from '@/hooks/useDocumentsOnFile';
 import HourlySelectionSummary from '@/components/booking/HourlySelectionSummary';
@@ -1122,10 +1122,10 @@ const BookingCheckout = () => {
                         />
                       </div>
 
-                      {/* Your info */}
+                      {/* Your info — step-by-step contact onboarding */}
                       <div>
                         <Label className="text-sm font-medium mb-2 block">Your information</Label>
-                        {userInfo?.agreedToTerms ? (
+                        {userInfo?.agreedToTerms && !showInfoModal ? (
                           <div className="flex items-center justify-between p-4 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl border border-emerald-200 dark:border-emerald-800/50">
                             <div className="flex items-center gap-3">
                               <CheckCircle2 className="h-5 w-5 text-emerald-600" />
@@ -1134,7 +1134,7 @@ const BookingCheckout = () => {
                                   {userInfo.firstName} {userInfo.lastName}
                                 </span>
                                 <span className="text-xs text-emerald-600 dark:text-emerald-400 block">
-                                  Information complete
+                                  Contact details saved
                                 </span>
                               </div>
                             </div>
@@ -1143,13 +1143,15 @@ const BookingCheckout = () => {
                             </Button>
                           </div>
                         ) : (
-                          <Button
-                            variant="outline"
-                            className="w-full h-12 border-dashed"
-                            onClick={() => setShowInfoModal(true)}
-                          >
-                            Complete your information
-                          </Button>
+                          <ContactInfoWizard
+                            listingId={listingId}
+                            initialData={userInfo || undefined}
+                            onPartialChange={(partial) => setUserInfo(partial)}
+                            onComplete={(info) => {
+                              setUserInfo(info);
+                              setShowInfoModal(false);
+                            }}
+                          />
                         )}
                       </div>
 
@@ -1513,15 +1515,6 @@ const BookingCheckout = () => {
         onDatesSelected={handleDatesSelected}
       />
 
-      <BookingInfoModal
-        open={showInfoModal}
-        onOpenChange={setShowInfoModal}
-        onComplete={(info) => {
-          setUserInfo(info);
-          setShowInfoModal(false);
-        }}
-        initialData={userInfo || undefined}
-      />
 
       {/* Auth Gate Modal - shown when guest tries to submit */}
       <AuthGateOfferModal
