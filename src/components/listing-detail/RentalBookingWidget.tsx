@@ -677,7 +677,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
       {/* ═══════════════════════════════════════════════════════════════════════ */}
       {/* HEADER - PRICE DISPLAY */}
       {/* ═══════════════════════════════════════════════════════════════════════ */}
-      <div className="p-5 bg-gradient-to-br from-muted/50 to-muted/30 border-b border-border relative">
+      <div className="px-5 pt-5 pb-4 bg-gradient-to-b from-muted/40 to-transparent border-b border-border/70 relative">
         <div className="flex items-start justify-between gap-3">
           <div>
             {mode === 'hourly' && priceHourly ? (
