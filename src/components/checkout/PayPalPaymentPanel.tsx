@@ -41,6 +41,9 @@ interface PayPalPaymentPanelProps {
 
 type PanelState =
   | 'loading'
+  /** No session — PayPal cannot be started until the payer signs in. */
+  | 'signin'
+
   | 'ready'
   | 'processing'
   | 'success'
