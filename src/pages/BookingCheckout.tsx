@@ -199,6 +199,19 @@ const BookingCheckout = () => {
   // Inclusive day counting: same start/end = 1 day
   const rentalDays = startDate && endDate ? differenceInDays(endDate, startDate) + 1 : 0;
   
+  /** Shared period quote (weekly/monthly bundling), also used for the summary line. */
+  const rentalQuote = useMemo(
+    () =>
+      listing && rentalDays > 0
+        ? quoteRentalPeriod(rentalDays, {
+            price_daily: listing.price_daily,
+            price_weekly: listing.price_weekly,
+            price_monthly: (listing as { price_monthly?: number | null }).price_monthly,
+          })
+        : null,
+    [listing, rentalDays],
+  );
+
   const calculateBasePrice = () => {
     // For hourly bookings, use hourly rate
     if (isHourlyBooking && (listing as any)?.price_hourly && durationHours > 0) {
@@ -208,12 +221,7 @@ const BookingCheckout = () => {
     // For daily bookings — same shared engine the listing-detail widget uses,
     // so the total never changes between the calendar and this page. Handles
     // weekly/monthly-only listings that have no daily rate at all.
-    if (!listing || rentalDays <= 0) return 0;
-    return quoteRentalPeriod(rentalDays, {
-      price_daily: listing.price_daily,
-      price_weekly: listing.price_weekly,
-      price_monthly: (listing as { price_monthly?: number | null }).price_monthly,
-    })?.subtotal ?? 0;
+    return rentalQuote?.subtotal ?? 0;
   };
 
   const basePrice = calculateBasePrice();
