@@ -447,6 +447,15 @@ const PayPalPaymentPanel = ({
               ) : (
 
                 <>
+                  {state !== 'processing' ? (
+                    <WalletPayButtons
+                      totalUsd={totalUsd}
+                      startOrder={() => handlersRef.current.startOrder()}
+                      finishOrder={(orderId) => handlersRef.current.finishOrder(orderId)}
+                      onFailure={(title, detail) => handlersRef.current.fail(title, detail)}
+                    />
+                  ) : null}
+
                   <div ref={messagesRef} />
 
                   {state === 'loading' ? <PaymentFormSkeleton /> : null}
