@@ -81,10 +81,21 @@ export function listingRowToVendiDraft(
     height_inches: num(row.height_inches),
     weight_lbs: num(row.weight_lbs),
 
+    condition: str(row.condition),
+    operational_status: str(row.operational_status),
+    title_status: str(row.title_status),
+    has_lien: str(row.has_lien),
+    no_known_problems: bool(row.no_known_problems),
+    known_problems: parseKnownProblems(row.known_problems),
+    included_items: str(row.included_items),
+    photos_exclusions_answered: bool(row.photos_exclusions_answered),
+    photos_exclusions_note: str(row.photos_exclusions_note),
+
     accept_paypal_checkout: bool(row.accept_paypal_checkout),
     accept_cash_payment: bool(row.accept_cash_payment),
     vendibook_freight_enabled: bool(row.vendibook_freight_enabled),
   };
+
 
   // Which rate the seller priced first is not a column; derive it from the
   // rates that actually exist so the rate question is not re-asked.
