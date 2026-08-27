@@ -618,6 +618,129 @@ export const QUESTIONS: Question[] = [
     },
   },
 
+  // ——— Seller disclosures (identical requirements to the manual wizard) ———
+
+  {
+    id: 'condition',
+    kind: 'choice',
+    tier: 'core',
+    when: (d) => !!d.category,
+    prompt: () => 'How would you describe the overall condition?',
+    tip: () => 'Buyers trust an honest rating far more than a perfect one.',
+    options: () => CONDITION_OPTIONS.map((o) => ({ value: o.value, label: o.label })),
+    apply: (_d, raw) => {
+      const v = cleanText(raw).toLowerCase().replace(/\s+/g, '_');
+      const match = CONDITION_OPTIONS.find((o) => o.value === v || o.label.toLowerCase() === cleanText(raw).toLowerCase());
+      if (!match) return { error: 'Pick the condition that fits best — new, like new, good, fair, or needs work.' };
+      return { patch: { condition: match.value } };
+    },
+  },
+  {
+    id: 'operational_status',
+    kind: 'choice',
+    tier: 'core',
+    when: (d) => !!d.category,
+    prompt: (d) => {
+      const readiness = getCategoryBasics(d.category as ListingCategory).readiness;
+      if (readiness === 'drivable') return 'Does it start, run and drive right now?';
+      if (readiness === 'towable') return 'Is it road ready and towable right now?';
+      return 'Is the space operational and usable today?';
+    },
+    tip: () => 'This is the question buyers ask first, so answering it here saves you a dozen messages.',
+    options: (d) => {
+      const readiness = getCategoryBasics(d.category as ListingCategory).readiness;
+      return READINESS_OPTIONS[readiness].map((o) => ({ value: o.value, label: o.label }));
+    },
+    apply: (d, raw) => {
+      const readiness = getCategoryBasics(d.category as ListingCategory).readiness;
+      const list = READINESS_OPTIONS[readiness];
+      const text = cleanText(raw).toLowerCase();
+      const match = list.find((o) => o.value === text.replace(/\s+/g, '_') || o.label.toLowerCase() === text);
+      if (!match) return { error: 'Pick the option that matches — “Not sure” is a perfectly good answer.' };
+      return { patch: { operational_status: match.value } };
+    },
+  },
+  {
+    id: 'title_status',
+    kind: 'choice',
+    tier: 'core',
+    when: (d) => !!d.category && !!d.mode && isTitledAsset(d.category as ListingCategory, d.mode as 'rent' | 'sale'),
+    prompt: () => 'What’s the title status?',
+    tip: () => 'Required disclosure on any titled sale. Buyers and lenders both check it.',
+    options: () => TITLE_STATUS_OPTIONS.map((o) => ({ value: o.value, label: o.label })),
+    apply: (_d, raw) => {
+      const text = cleanText(raw).toLowerCase();
+      const match = TITLE_STATUS_OPTIONS.find(
+        (o) => o.value === text.replace(/\s+/g, '_') || o.label.toLowerCase() === text,
+      );
+      if (!match) return { error: 'Choose the title status — “Not sure” is allowed.' };
+      return { patch: { title_status: match.value } };
+    },
+  },
+  {
+    id: 'has_lien',
+    kind: 'choice',
+    tier: 'core',
+    when: (d) => !!d.category && !!d.mode && isTitledAsset(d.category as ListingCategory, d.mode as 'rent' | 'sale'),
+    prompt: () => 'Is there a lien or outstanding loan on it?',
+    tip: () => 'A lien doesn’t stop a sale — it just has to be disclosed up front.',
+    options: () => LIEN_OPTIONS.map((o) => ({ value: o.value, label: o.label })),
+    apply: (_d, raw) => {
+      const text = cleanText(raw).toLowerCase();
+      const match = LIEN_OPTIONS.find((o) => o.value === text.replace(/\s+/g, '_') || o.label.toLowerCase() === text);
+      const yn = match ? null : parseYesNo(raw);
+      if (!match && yn === null) return { error: 'Yes, no, or not sure — whichever is accurate.' };
+      return { patch: { has_lien: match ? match.value : yn ? 'yes' : 'no' } };
+    },
+  },
+  {
+    id: 'known_problems',
+    kind: 'text',
+    tier: 'core',
+    when: (d) => !!d.category,
+    prompt: () => 'Anything a buyer should know that isn’t working, or needs repair? Tell me in plain words, or say “none”.',
+    tip: () => 'Disclosed problems rarely lose the sale. Undisclosed ones lose it after the deposit.',
+    placeholder: 'e.g. Generator needs a new pull cord — or “none”',
+    apply: (_d, raw) => {
+      const text = cleanText(raw);
+      const lower = text.toLowerCase();
+      if (!text.length) return { error: 'Describe anything that needs work, or say “none”.' };
+      if (/^(none|no|nope|nothing|n\/a|all good|everything works)\b/.test(lower)) {
+        return {
+          patch: { no_known_problems: true, known_problems: [] },
+          say: 'Noted — nothing known to disclose.',
+        };
+      }
+      if (text.length < 3) return { error: 'A few more words, please — or say “none”.' };
+      return {
+        patch: {
+          no_known_problems: false,
+          known_problems: [{ category: 'other', note: text.slice(0, 1000), photo_url: null }],
+        },
+        say: 'Added to your disclosures.',
+      };
+    },
+  },
+  {
+    id: 'included_items',
+    kind: 'text',
+    tier: 'core',
+    when: (d) => !!d.category,
+    prompt: (d) =>
+      d.mode === 'rent'
+        ? 'What’s included in the rental rate?'
+        : 'What’s included in your asking price?',
+    tip: () => 'Equipment, tanks, generator, smallwares, permits — whatever actually goes with it.',
+    placeholder: 'e.g. All cooking equipment, generator, 2 propane tanks, smallwares',
+    apply: (_d, raw) => {
+      const text = cleanText(raw).slice(0, 2000);
+      if (text.length < 3) return { error: 'A short list is enough — even “everything pictured” works.' };
+      return { patch: { included_items: text } };
+    },
+  },
+
+
+
   {
     id: 'fulfillment',
     kind: 'choice',
