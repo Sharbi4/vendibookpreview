@@ -284,10 +284,15 @@ export const PromoteListingModal = ({
                     {BOOST_DURATION_DAYS} days · no auto-renew
                   </p>
                 </div>
-                <span className="text-2xl font-bold text-foreground">
-                  {boostPrice.label}
-                </span>
+                <div className="text-right">
+                  <span className="text-2xl font-bold text-foreground">
+                    {boostPrice.label}
+                  </span>
+                  {/* Tax is computed server-side at checkout, so this is pre-tax. */}
+                  <p className="text-[11px] text-muted-foreground">+ sales tax</p>
+                </div>
               </div>
+
               <Button
                 variant="dark-shine"
                 className="w-full rounded-xl h-12"
