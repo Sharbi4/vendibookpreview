@@ -457,14 +457,21 @@ export const ImportListingWizard: React.FC = () => {
         }
       }
 
-      // Create the draft listing
-      const { data: listing, error: insertError } = await supabase
+      // Create (or resume) the draft through the canonical, idempotent path.
+      // A retry after a failed upload no longer produces a second listing row.
+      const listingId = await createOrResumeListingDraft({
+        userId: user.id,
+        flow: 'import',
+        mode: formData.mode as 'rent' | 'sale',
+        category: formData.category as string,
+        location: formData.location?.trim() || null,
+      });
+
+      const { error: insertError } = await supabase
         .from('listings')
-        .insert({
-          host_id: user.id,
+        .update({
           mode: formData.mode,
           category: formData.category,
-          status: 'draft',
           title,
           description: formData.text?.trim() || '',
           highlights: Array.isArray(formData.highlights) ? formData.highlights : [],
@@ -473,17 +480,13 @@ export const ImportListingWizard: React.FC = () => {
           pickup_location_text: formData.location?.trim() || null,
           price_daily: priceDaily,
           price_sale: priceSale} as any)
-        .select()
-        .single();
+        .eq('id', listingId);
 
       if (insertError) {
-        console.error('Insert error:', insertError);
-        throw new Error(insertError.message || 'Failed to create listing');
+        console.error('Import update error:', insertError);
+        throw new Error(insertError.message || 'Failed to save imported listing');
       }
 
-      if (!listing || !listing.id) {
-        throw new Error('Failed to create listing - no listing ID returned');
-      }
 
       // Upload photos if any
       const uploadedImageUrls: string[] = [];
