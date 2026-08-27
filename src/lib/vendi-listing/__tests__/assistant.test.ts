@@ -19,6 +19,17 @@ const publishable = (over: Partial<VendiDraft> = {}): VendiDraft => base({
   city: 'Mesa',
   state: 'AZ',
   price_sale: 45000,
+  // Required seller disclosures (parity with the manual wizard).
+  condition: 'good',
+  operational_status: 'towable',
+  title_status: 'clean',
+  has_lien: 'no',
+  no_known_problems: true,
+  known_problems: [],
+  included_items: 'Espresso machine, grinder, sink and generator',
+  photos_exclusions_answered: true,
+  length_inches: 240,
+  height_inches: 108,
   ...over,
 });
 
@@ -32,7 +43,11 @@ describe('prioritisation', () => {
 
   it('offers the publish gate as soon as the listing is viable', () => {
     const draft = publishable();
-    const answered = ['import_choice', 'import_paste', 'category', 'mode', 'location', 'sale_price', 'description', 'title', 'photos'];
+    const answered = [
+      'import_choice', 'import_paste', 'category', 'mode', 'location', 'sale_price', 'description',
+      'title', 'photos', 'condition', 'operational_status', 'title_status', 'has_lien',
+      'known_problems', 'included_items', 'photo_exclusions', 'sale_dimensions',
+    ];
     expect(blockingQuestionIds(draft, 1)).toHaveLength(0);
     expect(rankedNextQuestion(draft, answered, 1)?.id).toBe('ready_gate');
   });
