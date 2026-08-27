@@ -40,7 +40,7 @@ import { trackFormSubmitConversion } from '@/lib/gtagConversions';
 import { trackRequestStarted, trackRequestSubmitted } from '@/lib/analytics';
 import { PayPalPaymentPanel } from '@/components/checkout';
 
-import CheckoutOrderSummary from '@/components/checkout/CheckoutOrderSummary';
+import CheckoutOrderSummary, { type OrderSummaryLine } from '@/components/checkout/CheckoutOrderSummary';
 import { isEmbeddedCheckoutEnabled } from '@/lib/featureFlags';
 import { parseEdgeError } from '@/lib/edgeErrors';
 import { checkoutErrorCopy } from '@/lib/checkoutErrorCopy';
@@ -224,9 +224,14 @@ const BookingCheckout = () => {
   // `paypal-create-order`; this is only so the renter sees the real total
   // before the PayPal window opens.
   const [taxEstimate, setTaxEstimate] = useState<{ tax_cents: number; rate_pct: number; label: string } | null>(null);
+  // Quote lifecycle, so the summary can show an explicit tax row
+  // ("calculating…" / "calculated at payment") instead of silently omitting
+  // tax while the estimate is pending or unavailable.
+  const [taxState, setTaxState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   useEffect(() => {
-    if (!listing?.id || !fees.customerTotal) { setTaxEstimate(null); return; }
+    if (!listing?.id || !fees.customerTotal) { setTaxEstimate(null); setTaxState('idle'); return; }
     const controller = new AbortController();
+    setTaxState('loading');
     const t = setTimeout(() => {
       supabase.functions
         .invoke('tax-quote', {
@@ -237,15 +242,39 @@ const BookingCheckout = () => {
           },
         })
         .then(({ data, error }) => {
-          if (!error && data && !controller.signal.aborted) setTaxEstimate(data);
+          if (controller.signal.aborted) return;
+          if (!error && data) {
+            setTaxEstimate(data);
+            setTaxState('ready');
+          } else {
+            setTaxEstimate(null);
+            setTaxState('error');
+          }
         })
-        .catch(() => { /* estimate is cosmetic; server re-computes authoritatively */ });
+        .catch(() => {
+          // Estimate is cosmetic; the server re-computes authoritatively.
+          if (!controller.signal.aborted) {
+            setTaxEstimate(null);
+            setTaxState('error');
+          }
+        });
     }, 350);
     return () => { clearTimeout(t); controller.abort(); };
   }, [listing?.id, fees.customerTotal]);
 
   const taxAmount = (taxEstimate?.tax_cents ?? 0) / 100;
   const totalChargedToday = fees.customerTotal + taxAmount;
+
+  // Always-visible tax row for the PayPal panel summary: real amount when
+  // quoted, an explicit placeholder while calculating or when the estimate
+  // is unavailable (the server still adds tax authoritatively at payment).
+  const taxSummaryLine: OrderSummaryLine | null = taxAmount > 0
+    ? { label: taxEstimate?.label || 'Estimated sales tax', amount: taxAmount }
+    : taxState === 'loading'
+      ? { label: 'Estimated sales tax', amount: 0, muted: true, valueLabel: 'Calculating…' }
+      : taxState === 'error'
+        ? { label: 'Sales tax', amount: 0, muted: true, valueLabel: 'Calculated at payment' }
+        : null;
 
   // Step definitions - dynamic based on listing requirements
   // Auth is now deferred: guests can fill everything first, auth is required only at submission
@@ -1398,12 +1427,22 @@ const BookingCheckout = () => {
                   <span>${fees.renterFee.toLocaleString()}</span>
                 </div>
 
-                {taxAmount > 0 && (
+                {taxAmount > 0 ? (
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">{taxEstimate?.label || 'Estimated sales tax'}</span>
                     <span>${taxAmount.toLocaleString()}</span>
                   </div>
-                )}
+                ) : taxState === 'loading' ? (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Estimated sales tax</span>
+                    <span className="text-muted-foreground">Calculating…</span>
+                  </div>
+                ) : taxState === 'error' ? (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Sales tax</span>
+                    <span className="text-muted-foreground">Calculated at payment</span>
+                  </div>
+                ) : null}
 
                 <div className="flex items-center justify-between pt-3 border-t border-border">
                   <span className="font-semibold">Total charged today</span>
@@ -1504,7 +1543,7 @@ const BookingCheckout = () => {
                   ? [{ label: 'Delivery', amount: currentDeliveryFee }]
                   : []),
                 { label: 'Service fee', amount: fees.renterFee },
-                ...(taxAmount > 0 ? [{ label: taxEstimate?.label || 'Estimated sales tax', amount: taxAmount }] : []),
+                ...(taxSummaryLine ? [taxSummaryLine] : []),
               ]}
               total={totalChargedToday}
             />

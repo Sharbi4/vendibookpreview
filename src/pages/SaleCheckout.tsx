@@ -486,11 +486,16 @@ const SaleCheckout = () => {
   // sees the real total before PayPal opens. The authoritative amount is
   // re-locked at order creation in `paypal-create-order`.
   const [taxEstimate, setTaxEstimate] = useState<{ tax_cents: number; rate_pct: number; label: string } | null>(null);
+  // Quote lifecycle, so the summary can show an explicit tax row
+  // ("calculating…" / "calculated at payment") instead of silently omitting
+  // tax while the estimate is pending or unavailable.
+  const [taxState, setTaxState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   useEffect(() => {
-    if (!listing?.id || !priceSale) { setTaxEstimate(null); return; }
+    if (!listing?.id || !priceSale) { setTaxEstimate(null); setTaxState('idle'); return; }
     const isDelivery = fulfillmentSelected === 'delivery' || fulfillmentSelected === 'vendibook_freight';
-    if (isDelivery && !deliveryAddress.trim()) { setTaxEstimate(null); return; }
+    if (isDelivery && !deliveryAddress.trim()) { setTaxEstimate(null); setTaxState('idle'); return; }
     const controller = new AbortController();
+    setTaxState('loading');
     const t = setTimeout(() => {
       supabase.functions
         .invoke('tax-quote', {
@@ -503,15 +508,39 @@ const SaleCheckout = () => {
           },
         })
         .then(({ data, error }) => {
-          if (!error && data && !controller.signal.aborted) setTaxEstimate(data);
+          if (controller.signal.aborted) return;
+          if (!error && data) {
+            setTaxEstimate(data);
+            setTaxState('ready');
+          } else {
+            setTaxEstimate(null);
+            setTaxState('error');
+          }
         })
-        .catch(() => { /* estimate is cosmetic; server re-computes authoritatively */ });
+        .catch(() => {
+          // Estimate is cosmetic; the server re-computes authoritatively.
+          if (!controller.signal.aborted) {
+            setTaxEstimate(null);
+            setTaxState('error');
+          }
+        });
     }, 350);
     return () => { clearTimeout(t); controller.abort(); };
   }, [listing?.id, priceSale, fulfillmentSelected, currentDeliveryFee, deliveryAddress]);
 
   const taxAmount = (taxEstimate?.tax_cents ?? 0) / 100;
   const totalPrice = priceSale + currentDeliveryFee + taxAmount;
+
+  // Always-visible tax row: real amount when quoted, an explicit placeholder
+  // while calculating or when the estimate is unavailable (the server still
+  // adds tax authoritatively at payment time).
+  const taxSummaryLine: SaleSummaryLine | null = taxAmount > 0
+    ? { label: taxEstimate?.label || 'Estimated sales tax', amount: taxAmount }
+    : taxState === 'loading'
+      ? { label: 'Estimated sales tax', amount: 0, muted: true, valueLabel: 'Calculating…' }
+      : taxState === 'error'
+        ? { label: 'Sales tax', amount: 0, muted: true, valueLabel: 'Calculated at payment' }
+        : null;
 
 
   // Validation
@@ -907,7 +936,7 @@ const SaleCheckout = () => {
           amount: currentDeliveryFee,
         }]
       : []),
-    ...(taxAmount > 0 ? [{ label: taxEstimate?.label || 'Estimated sales tax', amount: taxAmount }] : []),
+    ...(taxSummaryLine ? [taxSummaryLine] : []),
   ];
 
   const fulfillmentDetail =
@@ -1257,7 +1286,7 @@ const SaleCheckout = () => {
                       amount: currentDeliveryFee,
                     }]
                   : []),
-                ...(taxAmount > 0 ? [{ label: taxEstimate?.label || 'Estimated sales tax', amount: taxAmount }] : []),
+                ...(taxSummaryLine ? [taxSummaryLine] : []),
               ]}
               total={totalPrice}
             />
