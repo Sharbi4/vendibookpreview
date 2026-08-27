@@ -936,7 +936,7 @@ const SaleCheckout = () => {
           amount: currentDeliveryFee,
         }]
       : []),
-    ...(taxAmount > 0 ? [{ label: taxEstimate?.label || 'Estimated sales tax', amount: taxAmount }] : []),
+    ...(taxSummaryLine ? [taxSummaryLine] : []),
   ];
 
   const fulfillmentDetail =
@@ -1286,7 +1286,7 @@ const SaleCheckout = () => {
                       amount: currentDeliveryFee,
                     }]
                   : []),
-                ...(taxAmount > 0 ? [{ label: taxEstimate?.label || 'Estimated sales tax', amount: taxAmount }] : []),
+                ...(taxSummaryLine ? [taxSummaryLine] : []),
               ]}
               total={totalPrice}
             />
