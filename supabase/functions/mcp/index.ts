@@ -537,7 +537,7 @@ var create_upgrade_checkout_default = defineTool8({
           isError: true
         };
       }
-      const { data: owned, error: ownErr } = await supabase.from("listings").select("id").eq("id", listing_id).maybeSingle();
+      const { data: owned, error: ownErr } = await supabase.from("listings").select("id").eq("id", listing_id).eq("host_id", ctx.getUserId() ?? "").maybeSingle();
       if (ownErr) {
         return { content: [{ type: "text", text: `Listing lookup failed: ${ownErr.message}` }], isError: true };
       }

@@ -46,6 +46,7 @@ export default defineTool({
         .from("listings")
         .select("id")
         .eq("id", listing_id)
+        .eq("host_id", ctx.getUserId() ?? "")
         .maybeSingle();
       if (ownErr) {
         return { content: [{ type: "text", text: `Listing lookup failed: ${ownErr.message}` }], isError: true };
