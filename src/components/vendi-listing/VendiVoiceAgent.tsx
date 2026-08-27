@@ -328,7 +328,7 @@ const VendiVoiceAgent: React.FC<VendiVoiceAgentProps> = ({
                 <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{card.body}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Button asChild size="sm" className="rounded-full">
-                    <Link to={card.href}>
+                    <Link to={(upsell && upsellHref(upsell)) || card.href}>
                       {card.cta} <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
                     </Link>
                   </Button>
