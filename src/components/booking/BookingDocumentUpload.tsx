@@ -18,6 +18,7 @@ import { DOCUMENT_TYPE_LABELS, DOCUMENT_TYPE_DESCRIPTIONS } from '@/types/docume
 import type { DocumentType } from '@/types/documents';
 import type { ListingRequiredDocument } from '@/hooks/useRequiredDocuments';
 import { TrustModule, DOCUMENT_TRUST_POINTS, DOCUMENT_DISCLAIMER } from '@/components/journey';
+import { InsuranceEducationCard } from '@/components/booking/InsuranceEducationCard';
 
 export interface StagedDocument {
   documentType: DocumentType;
@@ -274,6 +275,13 @@ export const BookingDocumentUpload = ({
   );
   const allDocsStaged = missingBlockers.length === 0;
 
+  /** Host requires proof of commercial liability / COI. */
+  const requiresInsuranceDoc = requiredDocs.some(
+    (req) =>
+      req.document_type === 'commercial_liability_insurance' ||
+      req.document_type === 'certificate_of_insurance',
+  );
+
   const stagedCount = stagedDocuments.length;
   const totalRequired = blockers.length;
 
@@ -370,9 +378,13 @@ export const BookingDocumentUpload = ({
         </div>
       </div>
 
+      {requiresInsuranceDoc && (
+        <InsuranceEducationCard reason="This host requires proof of commercial general liability insurance for this booking." />
+      )}
+
       <TrustModule
         variant="compact"
-        title="Your documents stay private"
+        title="Private document storage"
         points={DOCUMENT_TRUST_POINTS}
         disclaimer={DOCUMENT_DISCLAIMER}
       />

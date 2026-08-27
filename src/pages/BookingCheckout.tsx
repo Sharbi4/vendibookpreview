@@ -940,6 +940,7 @@ const BookingCheckout = () => {
                           onBusinessInfoChange={setBusinessInfo}
                           onComplete={() => handleCompleteStep(STEP_BUSINESS_INFO)}
                           disabled={isSubmitting}
+                          category={listing.category}
                         />
                       </div>
                     </motion.div>
@@ -1366,9 +1367,15 @@ const BookingCheckout = () => {
                     <span className="text-sm font-medium">Cancellation policy</span>
                     <p className="text-xs text-muted-foreground">
                       {cancellationPolicyText ?? (
-                        <Link to={`/listing/${listingId}#terms`} className="underline underline-offset-2">
-                          Review cancellation policy
-                        </Link>
+                        <>
+                          This host hasn't published a custom policy, so Vendibook's standard
+                          rental policy applies: cancel before the host accepts for a full
+                          refund; after acceptance, refunds follow the terms you accept at
+                          payment.{' '}
+                          <Link to={`/listing/${listingId}#terms`} className="underline underline-offset-2">
+                            See rental terms
+                          </Link>
+                        </>
                       )}
                     </p>
                   </div>
