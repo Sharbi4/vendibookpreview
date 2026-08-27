@@ -169,11 +169,6 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   const [selectedSlotNumber, setSelectedSlotNumber] = useState<number | null>(null);
 
   // ─────────────────────────────────────────────────────────────────────────────
-  // STATE: UI
-  // ─────────────────────────────────────────────────────────────────────────────
-  const [isHovered, setIsHovered] = useState(false);
-
-  // ─────────────────────────────────────────────────────────────────────────────
   // EFFECTS
   // ─────────────────────────────────────────────────────────────────────────────
   
@@ -955,14 +950,14 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
         {/* STEP 3: SLOT COUNTER (Multi-slot listings only) */}
         {/* ─────────────────────────────────────────────────────────────────────── */}
         {totalSlots > 1 && (startDate || totalSelectedHours > 0) && (
-          <div className="flex items-center justify-between p-3 bg-muted/30 rounded-xl">
+          <div className="flex items-center justify-between p-2.5 bg-muted/30 rounded-lg">
             <div>
-              <span className="text-sm font-medium text-foreground">Spots needed</span>
-              <p className="text-xs text-muted-foreground">
+              <span className="text-xs font-medium text-foreground">Spots needed</span>
+              <p className="text-[11px] text-muted-foreground">
                 {totalSlots - selectedSlotCount} remaining
               </p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5">
               <Button
                 variant="outline"
                 size="icon"
