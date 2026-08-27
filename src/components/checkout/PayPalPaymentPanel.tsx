@@ -156,10 +156,11 @@ const PayPalPaymentPanel = ({
         { body: { order_id: orderID } },
       );
       if (authErr || !auth || (auth.status !== 'authorized' && auth.status !== 'completed')) {
+        const parsed = await parseEdgeError(authErr, auth?.error ? auth : null);
         setState('error');
         setError({
           title: 'Payment not authorized',
-          detail: auth?.message || authErr?.message ||
+          detail: auth?.message || parsed.message ||
             'We could not authorize this payment and nothing has been charged. Please try again or use another method.',
         });
         return;
@@ -179,14 +180,16 @@ const PayPalPaymentPanel = ({
     );
 
     if (fnError || !result || (result.status !== 'completed' && !result.pending)) {
+      const parsed = await parseEdgeError(fnError, result?.error ? result : null);
       setState('error');
       setError({
         title: 'Payment not completed',
-        detail: result?.message || fnError?.message ||
+        detail: result?.message || parsed.message ||
           'Your payment was not completed and nothing has been confirmed. You have not been charged twice — try again or use another method.',
       });
       return;
     }
+
 
     if (result.pending) {
       setState('pending');
