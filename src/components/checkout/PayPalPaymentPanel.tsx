@@ -114,15 +114,28 @@ const PayPalPaymentPanel = ({
 
   const startOrder = async (): Promise<string> => {
     setError(null);
+    // Re-check the session right before creating the order: a token that
+    // expired while the panel sat open would otherwise surface as a generic
+    // PayPal failure after the payer already opened the window.
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
+      setState('signin');
+      throw new Error('Please sign in to continue.');
+    }
     const { data, error: fnError } = await supabase.functions.invoke('paypal-create-order', {
       body: target,
     });
     if (fnError || !data?.order_id) {
+      if (data?.code === 'unauthenticated') {
+        setState('signin');
+        throw new Error('Please sign in to continue.');
+      }
       const message = data?.message || fnError?.message ||
         'We could not start this payment. Please try again.';
       fail('Payment could not be started', message);
       throw new Error(message);
     }
+
     intentRef.current = data.payment_intent === 'AUTHORIZE' ? 'AUTHORIZE' : 'CAPTURE';
     setHoldMessage(typeof data.buyer_message === 'string' ? data.buyer_message : null);
     return data.order_id as string;
