@@ -79,3 +79,44 @@ describe('validateRentalRates', () => {
     expect(validateRentalRates({ price_daily: 400, price_weekly: 2000, price_monthly: 6000 }).valid).toBe(true);
   });
 });
+
+describe('quoteRentalPeriod', () => {
+  it('bills plain days when only a daily rate exists', () => {
+    const q = quoteRentalPeriod(3, { price_daily: 300 });
+    expect(q?.subtotal).toBe(900);
+    expect(q?.breakdown).toBe('3 days @ $300');
+    expect(q?.roundedUp).toBe(false);
+  });
+
+  it('bundles weeks and remaining days when weekly is cheaper', () => {
+    const q = quoteRentalPeriod(9, { price_daily: 300, price_weekly: 1500 });
+    // 1 week ($1500) + 2 days ($600) beats 9 daily ($2700)
+    expect(q?.subtotal).toBe(2100);
+    expect(q?.lines.map((l) => l.unit)).toEqual(['weekly', 'daily']);
+  });
+
+  it('uses a full week when the remainder is more expensive than one week', () => {
+    const q = quoteRentalPeriod(6, { price_daily: 300, price_weekly: 1500 });
+    expect(q?.subtotal).toBe(1500);
+    expect(q?.roundedUp).toBe(true);
+    expect(q?.billedDays).toBe(7);
+  });
+
+  it('bundles months for long stays', () => {
+    const q = quoteRentalPeriod(65, { price_daily: 300, price_weekly: 1500, price_monthly: 4000 });
+    // 2 months ($8000) + 5 days ($1500) = 9500
+    expect(q?.subtotal).toBe(9500);
+  });
+
+  it('quotes a monthly-only listing instead of returning nothing', () => {
+    const q = quoteRentalPeriod(3, { price_monthly: 1000 });
+    expect(q?.subtotal).toBe(1000);
+    expect(q?.breakdown).toBe('1 month @ $1,000');
+    expect(q?.roundedUp).toBe(true);
+  });
+
+  it('returns null when no period rate is configured', () => {
+    expect(quoteRentalPeriod(3, { price_hourly: 50 })).toBeNull();
+    expect(quoteRentalPeriod(0, { price_daily: 300 })).toBeNull();
+  });
+});

@@ -177,17 +177,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/4e50a07a-6909-411b-a4e0-429fee24c52a</loc>
-    <lastmod>2026-08-27</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/7825c02f-90ed-4e89-b173-dfae547ab1c8/4e50a07a-6909-411b-a4e0-429fee24c52a/1780430632481-ow7rui.jpg</image:loc>
-      <image:title>Immaculate Custom 2018 Ford F59 Food Truck by Prestige (Only 5,100 Miles!) </image:title>
-      <image:caption>Immaculate Custom 2018 Ford F59 Food Truck by Prestige (Only 5,100 Miles!)  in Denver, CO on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/208387b2-6318-4488-963f-3741be63d929</loc>
     <lastmod>2026-08-27</lastmod>
     <changefreq>weekly</changefreq>
@@ -273,6 +262,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/e887b32d-e6ab-4ed9-bf07-a245b157f79d/7639ec91-baf6-4ca7-95ea-4f489fd173d2/1786671354573-cia44.jpeg</image:loc>
       <image:title>Shaved Ice trailer/ or business of your choice</image:title>
       <image:caption>Shaved Ice trailer/ or business of your choice in Joplin, MO on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/4e50a07a-6909-411b-a4e0-429fee24c52a</loc>
+    <lastmod>2026-08-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/7825c02f-90ed-4e89-b173-dfae547ab1c8/4e50a07a-6909-411b-a4e0-429fee24c52a/1780430632481-ow7rui.jpg</image:loc>
+      <image:title>Immaculate Custom 2018 Ford F59 Food Truck by Prestige (Only 5,100 Miles!) </image:title>
+      <image:caption>Immaculate Custom 2018 Ford F59 Food Truck by Prestige (Only 5,100 Miles!)  in Denver, CO on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
