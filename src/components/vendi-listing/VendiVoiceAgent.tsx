@@ -104,6 +104,20 @@ const VendiVoiceAgent: React.FC<VendiVoiceAgentProps> = ({
           ? `Still needed before publishing: ${left.join('; ')}.`
           : 'Nothing is missing — the listing is ready to review and publish.';
       },
+      request_media_upload: () => {
+        const { onRequestMedia: open, imageCount: count } = stateRef.current;
+        if (!open) return 'The photo picker is not available on this step.';
+        open();
+        return count
+          ? `Opened the photo and video picker on screen. ${count} photo${count === 1 ? '' : 's'} attached so far — new files are added, nothing is replaced.`
+          : 'Opened the photo and video picker on screen. Choose photos or a short video and they attach to the draft.';
+      },
+      media_status: () => {
+        const count = stateRef.current.imageCount;
+        return count
+          ? `${count} photo${count === 1 ? '' : 's'} attached to this listing.`
+          : 'No photos attached yet — at least one photo is required to publish.';
+      },
       go_to_review: () => {
         stateRef.current.onGoToReview?.();
         return 'Opened the review and publish step on screen.';
