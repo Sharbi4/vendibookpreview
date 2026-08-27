@@ -9,6 +9,7 @@ import { TRUST_COPY } from '@/lib/transactionVocabulary';
 
 import { PayPalMonogram } from '@/components/brand/ProviderLogos';
 import PaymentFormSkeleton from './PaymentFormSkeleton';
+import WalletPayButtons from './WalletPayButtons';
 import TrustRow from './TrustRow';
 
 export type PayPalCheckoutTarget =
@@ -447,6 +448,15 @@ const PayPalPaymentPanel = ({
               ) : (
 
                 <>
+                  {state !== 'processing' ? (
+                    <WalletPayButtons
+                      totalUsd={totalUsd}
+                      startOrder={() => handlersRef.current.startOrder()}
+                      finishOrder={(orderId) => handlersRef.current.finishOrder(orderId)}
+                      onFailure={(title, detail) => handlersRef.current.fail(title, detail)}
+                    />
+                  ) : null}
+
                   <div ref={messagesRef} />
 
                   {state === 'loading' ? <PaymentFormSkeleton /> : null}
