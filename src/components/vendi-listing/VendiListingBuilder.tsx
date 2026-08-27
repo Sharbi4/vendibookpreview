@@ -1795,14 +1795,21 @@ const VendiListingBuilder: React.FC = () => {
                 <VendiVoiceAgent
                   disabled={publishing}
                   onAnswer={(text) => submitAnswer(text)}
+                  blockers={blockers}
+                  canPublish={!publishing && blockers.length === 0 && !!consentId}
+                  onGoToReview={() => setReviewing(true)}
+                  onPublish={handlePublish}
                   context={[
                     `Current question: ${current.prompt(draft)}`,
                     facts.length ? `Saved so far: ${facts.map((f) => `${f.label}: ${f.value}`).join('; ')}` : '',
                     draft.mode ? `Listing mode: ${draft.mode}` : '',
                     draft.category ? `Category: ${draft.category}` : '',
+                    blockers.length ? `Still missing: ${blockers.join('; ')}` : 'Nothing missing — ready to review.',
+                    consentId ? 'Seller disclosure already affirmed.' : 'Seller has not typed YES yet; publishing is locked.',
                   ].filter(Boolean).join('\n')}
                 />
               </div>
+
               <p className="mt-2 px-1 text-[11px] leading-relaxed text-muted-foreground">
                 {current.kind === 'paste'
                   ? 'Paste your own text only — Vendi never pulls anything from Facebook Marketplace or other sites. Attached photos become your listing photos.'
