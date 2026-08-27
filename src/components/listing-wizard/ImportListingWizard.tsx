@@ -32,6 +32,7 @@ import {
   trackImportFinishLaterClicked
 } from '@/lib/analytics';
 import { ListingCategory, ListingMode, CATEGORY_LABELS, MODE_LABELS } from '@/types/listing';
+import { createOrResumeListingDraft, rotateCreationSessionKey } from '@/lib/listings/creationSession';
 import { cn } from '@/lib/utils';
 
 type ImportMethod = 'url' | 'text' | 'photos';
@@ -494,7 +495,7 @@ export const ImportListingWizard: React.FC = () => {
         for (const photo of formData.photos) {
           try {
             const fileExt = photo.name.split('.').pop() || 'jpg';
-            const fileName = `${listing.id}/${crypto.randomUUID()}.${fileExt}`;
+            const fileName = `${listingId}/${crypto.randomUUID()}.${fileExt}`;
             
             const { error: uploadError } = await supabase.storage
               .from('listings')
@@ -523,7 +524,7 @@ export const ImportListingWizard: React.FC = () => {
         for (const video of formData.videos) {
           try {
             const fileExt = video.name.split('.').pop() || 'mp4';
-            const fileName = `${listing.id}/${crypto.randomUUID()}.${fileExt}`;
+            const fileName = `${listingId}/${crypto.randomUUID()}.${fileExt}`;
             
             const { error: uploadError } = await supabase.storage
               .from('listings')
@@ -562,7 +563,7 @@ export const ImportListingWizard: React.FC = () => {
         const { error: updateError } = await supabase
           .from('listings')
           .update(updateData)
-          .eq('id', listing.id);
+          .eq('id', listingId);
         
         if (updateError) {
           console.warn('Error updating listing with media:', updateError);
@@ -577,7 +578,7 @@ export const ImportListingWizard: React.FC = () => {
         console.warn('Analytics tracking failed:', e);
       }
       
-      setCreatedListingId(listing.id);
+      setCreatedListingId(listingId);
       setStep('success');
     } catch (error) {
       console.error('Error creating draft:', error);
