@@ -903,17 +903,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/1fcfc8c8-8742-4534-b5f6-5ecca7eabf17</loc>
-    <lastmod>2026-08-26</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/65c3a84b-d9a3-496a-96be-ebe7b66bca9b/1fcfc8c8-8742-4534-b5f6-5ecca7eabf17/1786033254827-l6oclj.jpeg</image:loc>
-      <image:title>2024 16’ Food Trailer, Fully Equipped </image:title>
-      <image:caption>2024 16’ Food Trailer, Fully Equipped  in Montgomery, TX on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/5894832e-034c-48ba-8315-1321e9b32080</loc>
     <lastmod>2026-08-27</lastmod>
     <changefreq>weekly</changefreq>
@@ -922,6 +911,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/ce5ab03f-9d2e-4052-b7c3-1a1347ad5b5d/5894832e-034c-48ba-8315-1321e9b32080/1784989676916-sqm31s.jpeg</image:loc>
       <image:title>BBQ Food Trailer (large smoker included)</image:title>
       <image:caption>BBQ Food Trailer (large smoker included) in Myakka City, FL on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/1fcfc8c8-8742-4534-b5f6-5ecca7eabf17</loc>
+    <lastmod>2026-08-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/65c3a84b-d9a3-496a-96be-ebe7b66bca9b/1fcfc8c8-8742-4534-b5f6-5ecca7eabf17/1786033254827-l6oclj.jpeg</image:loc>
+      <image:title>2024 16’ Food Trailer, Fully Equipped </image:title>
+      <image:caption>2024 16’ Food Trailer, Fully Equipped  in Montgomery, TX on Vendibook</image:caption>
     </image:image>
   </url>
 </urlset>
