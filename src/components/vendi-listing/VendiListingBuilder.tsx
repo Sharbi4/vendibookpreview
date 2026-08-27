@@ -1652,6 +1652,8 @@ const VendiListingBuilder: React.FC = () => {
                     canPublish={!publishing && blockers.length === 0 && !!consentId}
                     onGoToReview={() => setReviewing(true)}
                     onPublish={handlePublish}
+                    onRequestMedia={() => fileRef.current?.click()}
+                    imageCount={imageCount}
                     context={[
                       'The seller is on the review and publish step.',
                       facts.length ? `Listing facts: ${facts.map((f) => `${f.label}: ${f.value}`).join('; ')}` : '',
@@ -1822,8 +1824,13 @@ const VendiListingBuilder: React.FC = () => {
                   canPublish={!publishing && blockers.length === 0 && !!consentId}
                   onGoToReview={() => setReviewing(true)}
                   onPublish={handlePublish}
+                  onRequestMedia={() => fileRef.current?.click()}
+                  imageCount={imageCount}
                   context={[
                     `Current question: ${current.prompt(draft)}`,
+                    imageCount
+                      ? `${imageCount} photo(s) attached. Use request_media_upload to open the picker for more.`
+                      : 'No photos attached yet. Use request_media_upload to open the photo/video picker on screen.',
                     facts.length ? `Saved so far: ${facts.map((f) => `${f.label}: ${f.value}`).join('; ')}` : '',
                     draft.mode ? `Listing mode: ${draft.mode}` : '',
                     draft.category ? `Category: ${draft.category}` : '',
