@@ -1122,10 +1122,10 @@ const BookingCheckout = () => {
                         />
                       </div>
 
-                      {/* Your info */}
+                      {/* Your info — step-by-step contact onboarding */}
                       <div>
                         <Label className="text-sm font-medium mb-2 block">Your information</Label>
-                        {userInfo?.agreedToTerms ? (
+                        {userInfo?.agreedToTerms && !showInfoModal ? (
                           <div className="flex items-center justify-between p-4 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl border border-emerald-200 dark:border-emerald-800/50">
                             <div className="flex items-center gap-3">
                               <CheckCircle2 className="h-5 w-5 text-emerald-600" />
@@ -1134,7 +1134,7 @@ const BookingCheckout = () => {
                                   {userInfo.firstName} {userInfo.lastName}
                                 </span>
                                 <span className="text-xs text-emerald-600 dark:text-emerald-400 block">
-                                  Information complete
+                                  Contact details saved
                                 </span>
                               </div>
                             </div>
@@ -1143,13 +1143,15 @@ const BookingCheckout = () => {
                             </Button>
                           </div>
                         ) : (
-                          <Button
-                            variant="outline"
-                            className="w-full h-12 border-dashed"
-                            onClick={() => setShowInfoModal(true)}
-                          >
-                            Complete your information
-                          </Button>
+                          <ContactInfoWizard
+                            listingId={listingId}
+                            initialData={userInfo || undefined}
+                            onPartialChange={(partial) => setUserInfo(partial)}
+                            onComplete={(info) => {
+                              setUserInfo(info);
+                              setShowInfoModal(false);
+                            }}
+                          />
                         )}
                       </div>
 
