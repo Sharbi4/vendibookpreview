@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useConversation } from '@elevenlabs/react';
 import { Loader2, Mic, MicOff, PhoneOff, ArrowRight, Rocket } from 'lucide-react';
@@ -50,6 +50,14 @@ interface VendiVoiceAgentProps {
   /** Plain-language context (current question + saved facts) for the agent. */
   context: string;
   disabled?: boolean;
+  /** Outstanding publish blockers, spoken back on request. */
+  blockers?: string[];
+  /** Move the builder to the review-and-publish step. */
+  onGoToReview?: () => void;
+  /** True only once blockers are clear and typed-YES consent is recorded. */
+  canPublish?: boolean;
+  /** Runs the same publish action as the on-screen button. */
+  onPublish?: () => void | Promise<void>;
 }
 
 /**
@@ -57,12 +65,24 @@ interface VendiVoiceAgentProps {
  * Vendi chat. It only ever hands plain text back to the builder, which keeps
  * the existing explicit-facts-only extraction and publish gates in charge.
  */
-const VendiVoiceAgent: React.FC<VendiVoiceAgentProps> = ({ onAnswer, context, disabled }) => {
+const VendiVoiceAgent: React.FC<VendiVoiceAgentProps> = ({
+  onAnswer,
+  context,
+  disabled,
+  blockers = [],
+  onGoToReview,
+  canPublish = false,
+  onPublish,
+}) => {
+  const navigate = useNavigate();
   const [connecting, setConnecting] = useState(false);
   const [muted, setMuted] = useState(false);
   const [upsell, setUpsell] = useState<string | null>(null);
   const answerRef = useRef(onAnswer);
   answerRef.current = onAnswer;
+  // Live refs so the agent's tools always read current builder state.
+  const stateRef = useRef({ blockers, canPublish, onGoToReview, onPublish });
+  stateRef.current = { blockers, canPublish, onGoToReview, onPublish };
 
   const clientTools = useMemo(
     () => ({
@@ -71,6 +91,33 @@ const VendiVoiceAgent: React.FC<VendiVoiceAgentProps> = ({ onAnswer, context, di
         if (!text) return 'No answer captured.';
         answerRef.current(text);
         return 'Saved to the listing draft.';
+      },
+      list_missing: () => {
+        const left = stateRef.current.blockers;
+        return left.length
+          ? `Still needed before publishing: ${left.join('; ')}.`
+          : 'Nothing is missing — the listing is ready to review and publish.';
+      },
+      go_to_review: () => {
+        stateRef.current.onGoToReview?.();
+        return 'Opened the review and publish step on screen.';
+      },
+      publish_listing: async () => {
+        const { canPublish: ok, onPublish: run, blockers: left } = stateRef.current;
+        if (left.length) return `Cannot publish yet. Missing: ${left.join('; ')}.`;
+        if (!ok || !run) {
+          stateRef.current.onGoToReview?.();
+          return 'The seller must read the disclosure and type YES on screen before publishing. I opened the review step.';
+        }
+        await run();
+        return 'Publish started. Confirmation appears on screen.';
+      },
+      open_checkout: ({ product }: { product: string }) => {
+        const key = (product ?? '').toLowerCase();
+        const target = UPSELLS[key];
+        if (!target) return 'Unknown upgrade.';
+        navigate(target.href);
+        return `Opened the ${target.title} page where payment is completed securely.`;
       },
       suggest_upgrade: ({ product }: { product: string }) => {
         const key = (product ?? '').toLowerCase();
@@ -83,8 +130,9 @@ const VendiVoiceAgent: React.FC<VendiVoiceAgentProps> = ({ onAnswer, context, di
         return 'Dismissed.';
       },
     }),
-    [],
+    [navigate],
   );
+
 
   const conversation = useConversation({
     clientTools,

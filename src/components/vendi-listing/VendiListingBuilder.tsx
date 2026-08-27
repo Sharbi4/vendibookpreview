@@ -1619,6 +1619,7 @@ const VendiListingBuilder: React.FC = () => {
                     {publishing ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Check className="mr-2 h-4 w-4" />}
                     Publish listing
                   </Button>
+
                   <Button
                     variant="outline"
                     className="rounded-full border-white/12 bg-white/[0.04]"
@@ -1640,7 +1641,29 @@ const VendiListingBuilder: React.FC = () => {
 
                   <Button variant="ghost" className="rounded-full text-muted-foreground" onClick={startOver}>Start over</Button>
                 </div>
+
+                {/* Same voice agent, available through review: it can read what's
+                    left and run the publish action once YES is typed. */}
+                <div className="mt-5 border-t border-white/[0.07] pt-4">
+                  <VendiVoiceAgent
+                    disabled={publishing}
+                    onAnswer={(text) => submitAnswer(text)}
+                    blockers={blockers}
+                    canPublish={!publishing && blockers.length === 0 && !!consentId}
+                    onGoToReview={() => setReviewing(true)}
+                    onPublish={handlePublish}
+                    context={[
+                      'The seller is on the review and publish step.',
+                      facts.length ? `Listing facts: ${facts.map((f) => `${f.label}: ${f.value}`).join('; ')}` : '',
+                      blockers.length ? `Still missing: ${blockers.join('; ')}` : 'Nothing missing.',
+                      consentId
+                        ? 'Disclosure affirmed — publishing is unlocked.'
+                        : 'Seller must type YES on screen before publishing is allowed.',
+                    ].filter(Boolean).join('\n')}
+                  />
+                </div>
               </motion.div>
+
             )}
 
 
@@ -1795,14 +1818,21 @@ const VendiListingBuilder: React.FC = () => {
                 <VendiVoiceAgent
                   disabled={publishing}
                   onAnswer={(text) => submitAnswer(text)}
+                  blockers={blockers}
+                  canPublish={!publishing && blockers.length === 0 && !!consentId}
+                  onGoToReview={() => setReviewing(true)}
+                  onPublish={handlePublish}
                   context={[
                     `Current question: ${current.prompt(draft)}`,
                     facts.length ? `Saved so far: ${facts.map((f) => `${f.label}: ${f.value}`).join('; ')}` : '',
                     draft.mode ? `Listing mode: ${draft.mode}` : '',
                     draft.category ? `Category: ${draft.category}` : '',
+                    blockers.length ? `Still missing: ${blockers.join('; ')}` : 'Nothing missing — ready to review.',
+                    consentId ? 'Seller disclosure already affirmed.' : 'Seller has not typed YES yet; publishing is locked.',
                   ].filter(Boolean).join('\n')}
                 />
               </div>
+
               <p className="mt-2 px-1 text-[11px] leading-relaxed text-muted-foreground">
                 {current.kind === 'paste'
                   ? 'Paste your own text only — Vendi never pulls anything from Facebook Marketplace or other sites. Attached photos become your listing photos.'
