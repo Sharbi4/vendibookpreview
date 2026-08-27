@@ -663,126 +663,68 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: 'spring', stiffness: 100, damping: 20 }}
-      onHoverStart={() => setIsHovered(true)}
-      onHoverEnd={() => setIsHovered(false)}
-      className="rounded-[22px] border border-border/70 bg-card overflow-hidden relative shadow-[0_20px_60px_-30px_hsl(var(--foreground)/0.35)]"
+      className="rounded-xl border border-border bg-card overflow-hidden relative shadow-sm"
     >
-      {/* Glow effect */}
-      <motion.div
-        className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 opacity-0 pointer-events-none"
-        animate={{ opacity: isHovered ? 1 : 0 }}
-        transition={{ duration: 0.3 }}
-      />
-
       {/* ═══════════════════════════════════════════════════════════════════════ */}
-      {/* HEADER - PRICE DISPLAY */}
+      {/* HEADER - PRICE DISPLAY (compact, Airbnb-style) */}
       {/* ═══════════════════════════════════════════════════════════════════════ */}
-      <div className="px-5 pt-5 pb-4 bg-gradient-to-b from-muted/40 to-transparent border-b border-border/70 relative">
-        <div className="flex items-start justify-between gap-3">
-          <div>
+      <div className="px-4 pt-4 pb-3 border-b border-border/60">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-baseline gap-1.5">
             {mode === 'hourly' && priceHourly ? (
               <>
-                <div className="flex items-baseline gap-2">
-                  <motion.span 
-                    className="text-3xl font-bold text-foreground"
-                    initial={{ scale: 1 }}
-                    whileHover={{ scale: 1.02 }}
-                  >
-                    ${priceHourly?.toLocaleString() || '—'}
-                  </motion.span>
-                  <span className="text-muted-foreground text-lg">/hour</span>
-                </div>
-                {priceDaily && (
-                  <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
-                    <Sun className="h-3.5 w-3.5 text-primary" />
-                    Full day from ${priceDaily.toLocaleString()}
-                  </p>
-                )}
+                <span className="text-xl font-semibold text-foreground">
+                  ${priceHourly?.toLocaleString() || '—'}
+                </span>
+                <span className="text-sm text-muted-foreground">/ hour</span>
               </>
             ) : (
               <>
-                <div className="flex items-baseline gap-2">
-                  <motion.span 
-                    className="text-3xl font-bold text-foreground"
-                    initial={{ scale: 1 }}
-                    whileHover={{ scale: 1.02 }}
-                  >
-                    {headlineRate ? formatAmount(headlineRate.amount) : '—'}
-                  </motion.span>
-                  <span className="text-muted-foreground text-lg">
-                    {headlineRate ? headlineRate.suffix.replace('/', '/ ').trim() : '/day'}
-                  </span>
-                </div>
-                {priceHourly && hourlyEnabled ? (
-                  <p className="mt-1 text-sm text-muted-foreground flex items-center gap-1.5">
-                    <Clock className="h-3.5 w-3.5 text-primary" />
-                    ${priceHourly.toLocaleString()}/hr for hourly bookings
-                  </p>
-                ) : null}
+                <span className="text-xl font-semibold text-foreground">
+                  {headlineRate ? formatAmount(headlineRate.amount) : '—'}
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  {headlineRate ? headlineRate.suffix.replace('/', '/ ').trim() : '/ day'}
+                </span>
               </>
             )}
           </div>
 
           {/* Badges */}
-          <div className="flex flex-col gap-2 items-end">
+          <div className="flex gap-1.5 items-center">
             {instantBook && (
-              <Badge className="bg-emerald-500 text-white border-0 shadow-md">
-                <Zap className="h-3 w-3 mr-1" />
+              <Badge className="bg-emerald-500 text-white border-0 text-[10px] px-1.5 py-0.5">
+                <Zap className="h-2.5 w-2.5 mr-0.5" />
                 Instant
               </Badge>
             )}
             {totalSlots > 1 && (
-              <Badge variant="secondary" className="text-xs">
-                <MapPin className="h-3 w-3 mr-1" />
-                {totalSlots} Spots
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0.5">
+                {totalSlots} spots
               </Badge>
             )}
           </div>
         </div>
 
-        {/* Rate matrix — every published rate, always visible */}
+        {/* Rate strip — every published rate in one compact line */}
         {mode !== 'hourly' && (priceDaily || priceWeekly || priceMonthly) ? (
-          <div className="mt-4 grid grid-cols-3 gap-2">
-            {[
-              { label: 'Daily', amount: priceDaily, note: 'per day' },
-              { label: 'Weekly', amount: priceWeekly, note: '7+ days' },
-              { label: 'Monthly', amount: priceMonthly, note: '30+ days' },
-            ].map(rate => (
-              <div
-                key={rate.label}
-                className={cn(
-                  'rounded-xl border px-2.5 py-2 text-center transition-colors',
-                  rate.amount
-                    ? 'border-border/70 bg-background/70'
-                    : 'border-dashed border-border/50 bg-transparent',
-                )}
-              >
-                <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-                  {rate.label}
-                </p>
-                <p
-                  className={cn(
-                    'mt-0.5 text-sm font-semibold',
-                    rate.amount ? 'text-foreground' : 'text-muted-foreground',
-                  )}
-                >
-                  {rate.amount ? `$${rate.amount.toLocaleString()}` : '—'}
-                </p>
-                <p className="text-[10px] text-muted-foreground">
-                  {rate.amount ? rate.note : 'not offered'}
-                </p>
-              </div>
-            ))}
+          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+            {priceDaily ? <span><span className="font-medium text-foreground">${priceDaily.toLocaleString()}</span> /day</span> : null}
+            {priceWeekly ? <span><span className="font-medium text-foreground">${priceWeekly.toLocaleString()}</span> /week</span> : null}
+            {priceMonthly ? <span><span className="font-medium text-foreground">${priceMonthly.toLocaleString()}</span> /month</span> : null}
           </div>
         ) : null}
+        {mode === 'hourly' && priceDaily ? (
+          <p className="mt-1 text-xs text-muted-foreground">
+            Full day from ${priceDaily.toLocaleString()}
+          </p>
+        ) : null}
       </div>
-
-
 
       {/* ═══════════════════════════════════════════════════════════════════════ */}
       {/* BODY - BOOKING FLOW */}
       {/* ═══════════════════════════════════════════════════════════════════════ */}
-      <div className="p-5 space-y-4 relative z-10">
+      <div className="p-4 space-y-3 relative z-10">
         
         {/* ─────────────────────────────────────────────────────────────────────── */}
         {/* STEP 1: MODE TOGGLE (Only if both modes enabled) */}
