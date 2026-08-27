@@ -19,20 +19,12 @@ import {
   isToday} from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Calendar, 
   Zap, 
-  ArrowRight, 
-  Shield, 
   Clock, 
-  Sun,
-  CalendarRange,
   Minus,
   Plus,
   ChevronLeft,
   ChevronRight,
-  Users,
-  MapPin,
-  CheckCircle,
   Info} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -43,7 +35,7 @@ import {
   TooltipProvider,
   TooltipTrigger} from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { calculateRentalFees, formatCurrency } from '@/lib/commissions';
+import { calculateRentalFees } from '@/lib/commissions';
 import { supabase } from '@/integrations/supabase/client';
 import { quoteRentalPeriod, resolveRentalRate, formatAmount } from '@/lib/listings/rentalPricing';
 import { useBlockedDates } from '@/hooks/useBlockedDates';
@@ -167,11 +159,6 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   // ─────────────────────────────────────────────────────────────────────────────
   const [selectedSlotCount, setSelectedSlotCount] = useState(1);
   const [selectedSlotNumber, setSelectedSlotNumber] = useState<number | null>(null);
-
-  // ─────────────────────────────────────────────────────────────────────────────
-  // STATE: UI
-  // ─────────────────────────────────────────────────────────────────────────────
-  const [isHovered, setIsHovered] = useState(false);
 
   // ─────────────────────────────────────────────────────────────────────────────
   // EFFECTS
@@ -663,203 +650,146 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: 'spring', stiffness: 100, damping: 20 }}
-      onHoverStart={() => setIsHovered(true)}
-      onHoverEnd={() => setIsHovered(false)}
-      className="rounded-[22px] border border-border/70 bg-card overflow-hidden relative shadow-[0_20px_60px_-30px_hsl(var(--foreground)/0.35)]"
+      className="rounded-xl border border-border bg-card overflow-hidden relative shadow-sm"
     >
-      {/* Glow effect */}
-      <motion.div
-        className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 opacity-0 pointer-events-none"
-        animate={{ opacity: isHovered ? 1 : 0 }}
-        transition={{ duration: 0.3 }}
-      />
-
       {/* ═══════════════════════════════════════════════════════════════════════ */}
-      {/* HEADER - PRICE DISPLAY */}
+      {/* HEADER - PRICE DISPLAY (compact, Airbnb-style) */}
       {/* ═══════════════════════════════════════════════════════════════════════ */}
-      <div className="px-5 pt-5 pb-4 bg-gradient-to-b from-muted/40 to-transparent border-b border-border/70 relative">
-        <div className="flex items-start justify-between gap-3">
-          <div>
+      <div className="px-4 pt-4 pb-3 border-b border-border/60">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-baseline gap-1.5">
             {mode === 'hourly' && priceHourly ? (
               <>
-                <div className="flex items-baseline gap-2">
-                  <motion.span 
-                    className="text-3xl font-bold text-foreground"
-                    initial={{ scale: 1 }}
-                    whileHover={{ scale: 1.02 }}
-                  >
-                    ${priceHourly?.toLocaleString() || '—'}
-                  </motion.span>
-                  <span className="text-muted-foreground text-lg">/hour</span>
-                </div>
-                {priceDaily && (
-                  <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
-                    <Sun className="h-3.5 w-3.5 text-primary" />
-                    Full day from ${priceDaily.toLocaleString()}
-                  </p>
-                )}
+                <span className="text-xl font-semibold text-foreground">
+                  ${priceHourly?.toLocaleString() || '—'}
+                </span>
+                <span className="text-sm text-muted-foreground">/ hour</span>
               </>
             ) : (
               <>
-                <div className="flex items-baseline gap-2">
-                  <motion.span 
-                    className="text-3xl font-bold text-foreground"
-                    initial={{ scale: 1 }}
-                    whileHover={{ scale: 1.02 }}
-                  >
-                    {headlineRate ? formatAmount(headlineRate.amount) : '—'}
-                  </motion.span>
-                  <span className="text-muted-foreground text-lg">
-                    {headlineRate ? headlineRate.suffix.replace('/', '/ ').trim() : '/day'}
-                  </span>
-                </div>
-                {priceHourly && hourlyEnabled ? (
-                  <p className="mt-1 text-sm text-muted-foreground flex items-center gap-1.5">
-                    <Clock className="h-3.5 w-3.5 text-primary" />
-                    ${priceHourly.toLocaleString()}/hr for hourly bookings
-                  </p>
-                ) : null}
+                <span className="text-xl font-semibold text-foreground">
+                  {headlineRate ? formatAmount(headlineRate.amount) : '—'}
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  {headlineRate ? headlineRate.suffix.replace('/', '/ ').trim() : '/ day'}
+                </span>
               </>
             )}
           </div>
 
           {/* Badges */}
-          <div className="flex flex-col gap-2 items-end">
+          <div className="flex gap-1.5 items-center">
             {instantBook && (
-              <Badge className="bg-emerald-500 text-white border-0 shadow-md">
-                <Zap className="h-3 w-3 mr-1" />
+              <Badge className="bg-emerald-500 text-white border-0 text-[10px] px-1.5 py-0.5">
+                <Zap className="h-2.5 w-2.5 mr-0.5" />
                 Instant
               </Badge>
             )}
             {totalSlots > 1 && (
-              <Badge variant="secondary" className="text-xs">
-                <MapPin className="h-3 w-3 mr-1" />
-                {totalSlots} Spots
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0.5">
+                {totalSlots} spots
               </Badge>
             )}
           </div>
         </div>
 
-        {/* Rate matrix — every published rate, always visible */}
+        {/* Rate strip — every published rate in one compact line */}
         {mode !== 'hourly' && (priceDaily || priceWeekly || priceMonthly) ? (
-          <div className="mt-4 grid grid-cols-3 gap-2">
-            {[
-              { label: 'Daily', amount: priceDaily, note: 'per day' },
-              { label: 'Weekly', amount: priceWeekly, note: '7+ days' },
-              { label: 'Monthly', amount: priceMonthly, note: '30+ days' },
-            ].map(rate => (
-              <div
-                key={rate.label}
-                className={cn(
-                  'rounded-xl border px-2.5 py-2 text-center transition-colors',
-                  rate.amount
-                    ? 'border-border/70 bg-background/70'
-                    : 'border-dashed border-border/50 bg-transparent',
-                )}
-              >
-                <p className="text-[10px] uppercase tracking-[0.14em] text-muted-foreground">
-                  {rate.label}
-                </p>
-                <p
-                  className={cn(
-                    'mt-0.5 text-sm font-semibold',
-                    rate.amount ? 'text-foreground' : 'text-muted-foreground',
-                  )}
-                >
-                  {rate.amount ? `$${rate.amount.toLocaleString()}` : '—'}
-                </p>
-                <p className="text-[10px] text-muted-foreground">
-                  {rate.amount ? rate.note : 'not offered'}
-                </p>
-              </div>
-            ))}
+          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+            {priceDaily ? <span><span className="font-medium text-foreground">${priceDaily.toLocaleString()}</span> /day</span> : null}
+            {priceWeekly ? <span><span className="font-medium text-foreground">${priceWeekly.toLocaleString()}</span> /week</span> : null}
+            {priceMonthly ? <span><span className="font-medium text-foreground">${priceMonthly.toLocaleString()}</span> /month</span> : null}
           </div>
         ) : null}
+        {mode === 'hourly' && priceDaily ? (
+          <p className="mt-1 text-xs text-muted-foreground">
+            Full day from ${priceDaily.toLocaleString()}
+          </p>
+        ) : null}
       </div>
-
-
 
       {/* ═══════════════════════════════════════════════════════════════════════ */}
       {/* BODY - BOOKING FLOW */}
       {/* ═══════════════════════════════════════════════════════════════════════ */}
-      <div className="p-5 space-y-4 relative z-10">
+      <div className="p-4 space-y-3 relative z-10">
         
         {/* ─────────────────────────────────────────────────────────────────────── */}
         {/* STEP 1: MODE TOGGLE (Only if both modes enabled) */}
         {/* ─────────────────────────────────────────────────────────────────────── */}
         {hourlyEnabled && dailyEnabled && (
-          <div className="flex rounded-lg bg-muted/50 p-1">
+          <div className="flex rounded-full bg-muted/60 p-0.5">
             <button
               onClick={() => { setMode('hourly'); handleReset(); }}
               className={cn(
-                "flex-1 py-2 px-3 text-sm font-medium rounded-md transition-all duration-200 flex items-center justify-center gap-1.5",
+                "flex-1 py-1.5 px-3 text-xs font-medium rounded-full transition-all duration-200",
                 mode === 'hourly' 
                   ? "bg-background text-foreground shadow-sm" 
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <Clock className="h-4 w-4" />
               Hourly
             </button>
             <button
               onClick={() => { setMode('daily'); handleReset(); }}
               className={cn(
-                "flex-1 py-2 px-3 text-sm font-medium rounded-md transition-all duration-200 flex items-center justify-center gap-1.5",
+                "flex-1 py-1.5 px-3 text-xs font-medium rounded-full transition-all duration-200",
                 mode === 'daily' 
                   ? "bg-background text-foreground shadow-sm" 
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <Sun className="h-4 w-4" />
               Daily / Weekly
             </button>
           </div>
         )}
 
         {/* ─────────────────────────────────────────────────────────────────────── */}
-        {/* STEP 2: CALENDAR */}
+        {/* STEP 2: CALENDAR (compact Airbnb-style) */}
         {/* ─────────────────────────────────────────────────────────────────────── */}
-        <div className="bg-background rounded-2xl border border-border/60 p-3">
+        <div className="rounded-xl border border-border/60 p-2.5">
           {/* Calendar Header */}
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-1.5">
             <button
               onClick={handlePrevMonth}
               disabled={!canGoPrev}
-              className="p-1.5 rounded-full hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
+              aria-label="Previous month"
+              className="p-1 rounded-full hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-3.5 w-3.5" />
             </button>
-            <span className="font-medium text-sm">
+            <span className="font-medium text-xs">
               {format(currentMonth, 'MMMM yyyy')}
             </span>
             <button
               onClick={handleNextMonth}
               disabled={!canGoNext}
-              className="p-1.5 rounded-full hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
+              aria-label="Next month"
+              className="p-1 rounded-full hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-3.5 w-3.5" />
             </button>
           </div>
 
           {/* Weekday Headers */}
-          <div className="grid grid-cols-7 gap-0.5 mb-1">
-            {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => (
-              <div key={day} className="text-center text-[10px] font-medium text-muted-foreground py-1">
+          <div className="grid grid-cols-7 mb-0.5">
+            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+              <div key={`${day}-${i}`} className="text-center text-[9px] font-medium text-muted-foreground py-0.5">
                 {day}
               </div>
             ))}
           </div>
 
           {/* Calendar Grid */}
-          <div className="grid grid-cols-7 gap-0.5">
+          <div className="grid grid-cols-7 gap-y-0.5">
             {paddingDays.map((_, i) => (
               <div key={`pad-${i}`} />
             ))}
             {daysInMonth.map(date => {
               const status = getDayStatus(date);
               const isSelected = isInSelectedRange(date);
-              const isStart = startDate && isSameDay(date, startDate);
-              const isEnd = endDate && isSameDay(date, endDate);
+              const isStart = !!(startDate && isSameDay(date, startDate));
+              const isEnd = !!(endDate && isSameDay(date, endDate));
+              const isRangeMiddle = isSelected && !isStart && !isEnd;
               const { available } = getAvailability(date);
               const isDisabled = status === 'past' || status === 'outside' || status === 'full';
               const isActiveHourly = isActiveHourlyDate(date);
@@ -879,16 +809,15 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                         data-day-status={status}
                         data-day-disabled={isDisabled ? 'true' : 'false'}
                         className={cn(
-                          "aspect-square p-0.5 rounded-md text-xs font-medium transition-all relative",
+                          "h-8 w-8 mx-auto rounded-full text-[11px] font-medium transition-all relative",
                           "flex flex-col items-center justify-center",
-                          isDisabled && "opacity-30 cursor-not-allowed",
-                          !isDisabled && !isSelected && !isActiveHourly && "hover:bg-muted",
-                          isSelected && "bg-primary text-primary-foreground",
-                          isActiveHourly && !isSelected && "ring-2 ring-primary bg-primary/10",
-                          isStart && "rounded-l-md",
-                          isEnd && "rounded-r-md",
-                          status === 'partial' && !isSelected && !isActiveHourly && "bg-amber-50 dark:bg-amber-950/30",
-                          isToday(date) && !isSelected && !isActiveHourly && "ring-1 ring-primary/50",
+                          isDisabled && "opacity-30 cursor-not-allowed line-through",
+                          !isDisabled && !isSelected && !isActiveHourly && "hover:ring-1 hover:ring-foreground",
+                          (isStart || isEnd) && "bg-foreground text-background",
+                          isRangeMiddle && "rounded-none w-full bg-muted text-foreground",
+                          isActiveHourly && !isSelected && "ring-1 ring-foreground bg-muted",
+                          status === 'partial' && !isSelected && !isActiveHourly && "bg-muted/60",
+                          isToday(date) && !isSelected && !isActiveHourly && "ring-1 ring-foreground/40",
                         )}
                       >
                         <span>{format(date, 'd')}</span>
@@ -896,7 +825,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                         {mode === 'hourly' && hasHourly && (
                           <span className={cn(
                             "text-[8px] leading-none font-bold",
-                            isSelected ? "text-primary-foreground" : "text-primary"
+                            (isStart || isEnd) ? "text-background" : "text-foreground"
                           )}>
                             {hoursOnDate}h
                           </span>
@@ -904,7 +833,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                         {mode !== 'hourly' && totalSlots > 1 && status !== 'past' && status !== 'outside' && (
                           <span className={cn(
                             "text-[8px] leading-none",
-                            isSelected ? "text-primary-foreground/80" : "text-muted-foreground"
+                            (isStart || isEnd) ? "text-background/80" : "text-muted-foreground"
                           )}>
                             {available}/{totalSlots}
                           </span>
@@ -928,27 +857,27 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
 
           {/* Date Selection Summary */}
           {mode === 'daily' && startDate && (
-            <div className="mt-3 pt-3 border-t border-border text-sm text-center">
+            <div className="mt-2 pt-2 border-t border-border/60 text-xs text-center">
               <span className="text-muted-foreground">
                 {endDate 
-                  ? `${format(startDate, 'MMM d')} → ${format(endDate, 'MMM d')} (${pricingInfo?.durationLabel})`
-                  : `${format(startDate, 'MMM d')} (tap end date or continue for 1 day)`
+                  ? `${format(startDate, 'MMM d')} → ${format(endDate, 'MMM d')} · ${pricingInfo?.durationLabel}`
+                  : `${format(startDate, 'MMM d')} · tap an end date (or continue for 1 day)`
                 }
               </span>
             </div>
           )}
           
           {mode === 'hourly' && totalSelectedHours > 0 && (
-            <div className="mt-3 pt-3 border-t border-border text-sm text-center">
+            <div className="mt-2 pt-2 border-t border-border/60 text-xs text-center">
               <span className="text-muted-foreground">
-                {selectedDatesCount} day{selectedDatesCount > 1 ? 's' : ''} • {totalSelectedHours} hour{totalSelectedHours > 1 ? 's' : ''} total
+                {selectedDatesCount} day{selectedDatesCount > 1 ? 's' : ''} · {totalSelectedHours} hour{totalSelectedHours > 1 ? 's' : ''} total
               </span>
             </div>
           )}
           
           {mode === 'hourly' && activeHourlyDate && (
-            <div className="mt-2 text-sm text-center">
-              <span className="font-medium text-primary">
+            <div className="mt-1.5 text-xs text-center">
+              <span className="font-medium text-foreground">
                 {format(activeHourlyDate, 'EEEE, MMMM d')}
               </span>
             </div>
@@ -1013,14 +942,14 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
         {/* STEP 3: SLOT COUNTER (Multi-slot listings only) */}
         {/* ─────────────────────────────────────────────────────────────────────── */}
         {totalSlots > 1 && (startDate || totalSelectedHours > 0) && (
-          <div className="flex items-center justify-between p-3 bg-muted/30 rounded-xl">
+          <div className="flex items-center justify-between p-2.5 bg-muted/30 rounded-lg">
             <div>
-              <span className="text-sm font-medium text-foreground">Spots needed</span>
-              <p className="text-xs text-muted-foreground">
+              <span className="text-xs font-medium text-foreground">Spots needed</span>
+              <p className="text-[11px] text-muted-foreground">
                 {totalSlots - selectedSlotCount} remaining
               </p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5">
               <Button
                 variant="outline"
                 size="icon"
@@ -1054,47 +983,45 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="p-4 rounded-2xl border border-border/70 bg-muted/30 space-y-2"
+              className="pt-1 space-y-1.5"
             >
-              <div className="flex items-center justify-between text-sm text-muted-foreground">
-                <span>{pricingInfo.breakdown}</span>
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span className="underline decoration-dotted underline-offset-2">{pricingInfo.breakdown}</span>
                 <span>${pricingInfo.basePrice.toLocaleString()}</span>
               </div>
               {pricingInfo.roundedUpNote && (
-                <p className="text-xs text-muted-foreground">{pricingInfo.roundedUpNote}</p>
+                <p className="text-[11px] text-muted-foreground">{pricingInfo.roundedUpNote}</p>
               )}
-              <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>Service fee</span>
                 <span>${pricingInfo.serviceFee.toLocaleString()}</span>
               </div>
-              <div className="flex items-center justify-between text-sm text-muted-foreground">
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>{taxEstimate?.label || 'Estimated sales tax'}</span>
                 <span>
                   {taxAmount > 0
                     ? formatAmount(taxAmount)
                     : taxState === 'loading'
                       ? 'Calculating…'
-                      : 'Calculated at payment'}
+                      : 'At payment'}
                 </span>
               </div>
-              <Separator className="bg-border" />
-              <div className="flex items-center justify-between pt-1">
-                <span className="font-semibold text-foreground">
+              <Separator className="bg-border/60" />
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-foreground">
                   {instantBook ? 'Est. total' : 'Est. total to authorize'}
                 </span>
-                <motion.span 
-                  className="text-xl font-bold text-foreground"
-                  initial={{ scale: 1 }}
-                  whileHover={{ scale: 1.05 }}
+                <span 
+                  className="text-base font-semibold text-foreground"
                   data-testid="rental-widget-total"
                 >
                   {formatAmount(estimatedTotal)}
-                </motion.span>
+                </span>
               </div>
-              <p className="text-xs text-muted-foreground">
+              <p className="text-[11px] text-muted-foreground">
                 {instantBook
-                  ? 'Charged when your booking is confirmed. Any security deposit is handled separately and is not charged today.'
-                  : 'Authorized now, not charged. You are only charged if the host approves your request.'}
+                  ? 'Charged when your booking is confirmed. Security deposits are handled separately.'
+                  : 'Authorized now, not charged. Only charged if the host approves.'}
               </p>
             </motion.div>
           )}
@@ -1110,60 +1037,36 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
           </div>
         )}
 
-        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-          <Button
-            variant={instantBook ? 'dark-shine' : 'outline'}
-            className={cn(
-              'w-full h-14 text-base font-semibold',
-              instantBook ? 'shadow-lg' : 'border-primary/40 hover:bg-primary/5'
-            )}
-            size="lg"
-            onClick={() => {
-              trackLeadEvent('check_availability_click', {
-                listing_id: listingId,
-                source: 'rental_booking_widget',
-                instant_book: instantBook});
-              handleContinue();
-            }}
-            disabled={!canContinue}
-            data-testid="rental-widget-cta"
-            data-instant-book={instantBook ? 'true' : 'false'}
-          >
-            {instantBook ? (
-              <>
-                <Zap className="h-5 w-5 mr-2" />
-                Continue to book
-              </>
-            ) : (
-              'Continue to request'
-            )}
-            {pricingInfo && (
-              <span className="ml-2 opacity-80">
-                · {pricingInfo.durationLabel}
-              </span>
-            )}
-            <ArrowRight className="h-5 w-5 ml-2" />
-          </Button>
-        </motion.div>
+        <Button
+          variant={instantBook ? 'dark-shine' : 'outline'}
+          className={cn(
+            'w-full h-11 text-sm font-semibold rounded-lg',
+            !instantBook && 'border-foreground/60 hover:bg-muted/50'
+          )}
+          onClick={() => {
+            trackLeadEvent('check_availability_click', {
+              listing_id: listingId,
+              source: 'rental_booking_widget',
+              instant_book: instantBook});
+            handleContinue();
+          }}
+          disabled={!canContinue}
+          data-testid="rental-widget-cta"
+          data-instant-book={instantBook ? 'true' : 'false'}
+        >
+          {instantBook ? 'Continue to book' : 'Continue to request'}
+          {pricingInfo && (
+            <span className="ml-1.5 opacity-80 font-normal">
+              · {pricingInfo.durationLabel}
+            </span>
+          )}
+        </Button>
 
-        <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1.5">
-          <Shield className="h-3.5 w-3.5" />
+        <p className="text-[11px] text-center text-muted-foreground">
           {instantBook
-            ? 'Instant Book — no host approval needed. Payment is taken when the booking is confirmed.'
-            : 'Request to Book — payment authorized now, not charged. Only charged if the host approves.'}
+            ? "You won't be charged until your booking is confirmed."
+            : 'Payment authorized now — only charged if the host approves.'}
         </p>
-
-        {/* Trust indicators */}
-        <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground pt-2">
-          <span className="flex items-center gap-1.5">
-            <Shield className="h-3.5 w-3.5" />
-            Secure booking
-          </span>
-          <span className="flex items-center gap-1.5">
-            <Clock className="h-3.5 w-3.5" />
-            Free cancellation
-          </span>
-        </div>
       </div>
     </motion.div>
   );

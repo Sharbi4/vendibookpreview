@@ -386,17 +386,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/55edfe53-5622-438f-b663-7ced764cc9ca</loc>
-    <lastmod>2026-08-27</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/454f16ce-dcff-4a55-a5a1-e91e158758fe/55edfe53-5622-438f-b663-7ced764cc9ca/1782870668773-sbnj2.jpeg</image:loc>
-      <image:title>Mobile Bar Trailer</image:title>
-      <image:caption>Mobile Bar Trailer in Tomball, TX on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/e0ad7bc7-5a18-4534-a849-94501f5bc008</loc>
     <lastmod>2026-08-27</lastmod>
     <changefreq>weekly</changefreq>
@@ -460,6 +449,17 @@
       <image:loc>https://images.unsplash.com/photo-1544025162-d76694265947?w=800</image:loc>
       <image:title>Luxury Steakhouse Truck</image:title>
       <image:caption>Luxury Steakhouse Truck in Las Vegas, NV on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/55edfe53-5622-438f-b663-7ced764cc9ca</loc>
+    <lastmod>2026-08-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/454f16ce-dcff-4a55-a5a1-e91e158758fe/55edfe53-5622-438f-b663-7ced764cc9ca/1782870668773-sbnj2.jpeg</image:loc>
+      <image:title>Mobile Bar Trailer</image:title>
+      <image:caption>Mobile Bar Trailer in Tomball, TX on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
