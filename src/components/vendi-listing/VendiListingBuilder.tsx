@@ -1652,6 +1652,8 @@ const VendiListingBuilder: React.FC = () => {
                     canPublish={!publishing && blockers.length === 0 && !!consentId}
                     onGoToReview={() => setReviewing(true)}
                     onPublish={handlePublish}
+                    onRequestMedia={() => fileRef.current?.click()}
+                    imageCount={imageCount}
                     context={[
                       'The seller is on the review and publish step.',
                       facts.length ? `Listing facts: ${facts.map((f) => `${f.label}: ${f.value}`).join('; ')}` : '',
