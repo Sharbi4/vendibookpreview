@@ -21,16 +21,16 @@ const SaleCheckoutCard = ({
 }: SaleCheckoutCardProps) => (
   <section
     className={cn(
-      'rounded-2xl border border-border/80 bg-card shadow-[0_1px_2px_rgba(24,20,16,0.04),0_12px_32px_-24px_rgba(24,20,16,0.35)]',
-      padding === 'md' ? 'p-5 sm:p-6' : 'p-4',
+      'rounded-[22px] border border-border/70 bg-card shadow-[0_1px_2px_rgba(24,20,16,0.04),0_28px_64px_-40px_rgba(24,20,16,0.45)]',
+      padding === 'md' ? 'p-6 sm:p-8' : 'p-5',
       className,
     )}
   >
     {(title || action) && (
-      <header className="flex items-start justify-between gap-3 mb-4">
+      <header className="flex items-start justify-between gap-3 mb-5">
         <div className="min-w-0">
-          {title ? <h2 className="text-base sm:text-lg font-semibold text-foreground">{title}</h2> : null}
-          {subtitle ? <p className="text-sm text-muted-foreground mt-0.5">{subtitle}</p> : null}
+          {title ? <h2 className="text-lg sm:text-xl font-semibold tracking-tight text-foreground">{title}</h2> : null}
+          {subtitle ? <p className="text-sm leading-relaxed text-muted-foreground mt-1">{subtitle}</p> : null}
         </div>
         {action}
       </header>
