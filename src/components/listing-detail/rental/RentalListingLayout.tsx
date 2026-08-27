@@ -16,7 +16,6 @@ import { SaleQuickSpecs } from '@/components/listing-detail/sale/SaleQuickSpecs'
 import { SaleFeaturesGrid } from '@/components/listing-detail/sale/SaleFeaturesGrid';
 import { SaleLocationCard } from '@/components/listing-detail/sale/SaleSharedSections';
 import { RentalBookingWidget } from '@/components/listing-detail/RentalBookingWidget';
-import { StickyMobileCTA } from '@/components/listing-detail/StickyMobileCTA';
 import { WeeklyHoursDisplay } from '@/components/listing-detail/WeeklyHoursDisplay';
 import { VendorSlotAvailability } from '@/components/listing-detail/VendorSlotAvailability';
 import { ListingEventsSection } from '@/components/storefront';
@@ -357,33 +356,6 @@ export const RentalListingLayout = ({
         </div>
       </div>
 
-      <StickyMobileCTA
-        listingId={listing.id}
-        hostId={listing.host_id}
-        isRental
-        priceDaily={listing.price_daily}
-        priceSale={listing.price_sale}
-        status={listing.status}
-        instantBook={instantBook}
-        category={listing.category}
-        fulfillmentType={listing.fulfillment_type}
-        priceWeekly={listing.price_weekly}
-        priceMonthly={listing.price_monthly}
-        priceHourly={listing.price_hourly}
-        hourlyEnabled={hourlyEnabled}
-        dailyEnabled={listing.daily_enabled !== false}
-        availableFrom={listing.available_from}
-        availableTo={listing.available_to}
-        pickupLocation={listing.pickup_location_text}
-        deliveryFee={listing.delivery_fee}
-        deliveryRadiusMiles={listing.delivery_radius_miles}
-        listingTitle={listing.title}
-        totalSlots={listing.total_slots || 1}
-        slotNames={listing.slot_names}
-        minHours={listing.min_hours}
-        minDays={listing.rental_min_days}
-        minNoticeHours={listing.min_notice_hours}
-      />
     </main>
   );
 };
