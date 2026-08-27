@@ -1159,8 +1159,8 @@ const VendiListingBuilder: React.FC = () => {
   // belong to a real account from the very first question.
   if (authLoading) {
     return (
-      <div className="flex min-h-[70vh] items-center justify-center bg-[#08080a]">
-        <Loader2 className="h-6 w-6 animate-spin text-white/50" />
+      <div className="flex min-h-[70vh] items-center justify-center bg-background">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -1170,8 +1170,8 @@ const VendiListingBuilder: React.FC = () => {
   // what let a stale browser cache look like "no draft yet".
   if (!resumeChecked && !draftId) {
     return (
-      <div className="flex min-h-[70vh] flex-col items-center justify-center gap-3 bg-[#08080a]">
-        <Loader2 className="h-6 w-6 animate-spin text-white/50" />
+      <div className="flex min-h-[70vh] flex-col items-center justify-center gap-3 bg-background">
+        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
         <p className="text-sm text-muted-foreground">Checking for a listing you already started…</p>
       </div>
     );
@@ -1182,9 +1182,9 @@ const VendiListingBuilder: React.FC = () => {
   // never written to again: the seller starts a clean listing instead.
   if (detached) {
     return (
-      <div className="relative flex min-h-[80vh] items-center justify-center bg-[#08080a] px-4 py-16">
+      <div className="relative flex min-h-[80vh] items-center justify-center bg-background px-4 py-16">
         <div
-          className="w-full max-w-md rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-foreground shadow-[0_30px_90px_-40px_rgba(0,0,0,0.9)] backdrop-blur-xl"
+          className="w-full max-w-md rounded-3xl border border-border bg-secondary/70 p-8 text-foreground shadow-[0_26px_60px_-30px_rgba(24,20,16,0.30)]"
           role="dialog"
           aria-modal="true"
           aria-labelledby="vendi-detached-title"
@@ -1202,7 +1202,7 @@ const VendiListingBuilder: React.FC = () => {
             <Button className="w-full" onClick={startOver}>Start a new listing</Button>
             <Button
               variant="outline"
-              className="w-full border-white/15 bg-white/[0.03]"
+              className="w-full border-border bg-secondary/70"
               onClick={() => navigate('/dashboard')}
             >
               Go to dashboard
@@ -1220,12 +1220,12 @@ const VendiListingBuilder: React.FC = () => {
 
     const many = resumeOffers.length > 1;
     return (
-      <div className="relative flex min-h-[80vh] items-center justify-center bg-[#08080a] px-4 py-16">
+      <div className="relative flex min-h-[80vh] items-center justify-center bg-background px-4 py-16">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.45, ease: 'easeOut' }}
-          className="w-full max-w-md rounded-3xl border border-white/10 bg-white/[0.04] p-8 text-foreground shadow-[0_30px_90px_-40px_rgba(0,0,0,0.9)] backdrop-blur-xl"
+          className="w-full max-w-md rounded-3xl border border-border bg-secondary/70 p-8 text-foreground shadow-[0_26px_60px_-30px_rgba(24,20,16,0.30)]"
           role="dialog"
           aria-modal="true"
           aria-labelledby="vendi-resume-title"
@@ -1245,12 +1245,12 @@ const VendiListingBuilder: React.FC = () => {
                 <button
                   type="button"
                   onClick={() => continueServerDraft(offer)}
-                  className="flex w-full items-center gap-3 rounded-2xl border border-white/10 bg-white/[0.03] p-3 text-left transition hover:border-white/20 hover:bg-white/[0.06] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
+                  className="flex w-full items-center gap-3 rounded-2xl border border-border bg-secondary/70 p-3 text-left transition hover:border-white/20 hover:bg-secondary/70 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
                   {offer.cover_image_url ? (
-                    <img src={offer.cover_image_url} alt="" className="h-12 w-12 flex-none rounded-xl object-cover ring-1 ring-white/10" />
+                    <img src={offer.cover_image_url} alt="" className="h-12 w-12 flex-none rounded-xl object-cover ring-1 ring-border" />
                   ) : (
-                    <span className="flex h-12 w-12 flex-none items-center justify-center rounded-xl bg-white/[0.06] ring-1 ring-white/10">
+                    <span className="flex h-12 w-12 flex-none items-center justify-center rounded-xl bg-secondary/70 ring-1 ring-border">
                       <ImagePlus className="h-5 w-5 text-white/40" aria-hidden />
                     </span>
                   )}
@@ -1269,7 +1269,7 @@ const VendiListingBuilder: React.FC = () => {
               </li>
             ))}
           </ul>
-          <Button variant="outline" className="mt-5 w-full border-white/15 bg-white/[0.03]" onClick={startOver}>
+          <Button variant="outline" className="mt-5 w-full border-border bg-secondary/70" onClick={startOver}>
             Start a new listing
           </Button>
           <p className="mt-4 text-center text-xs text-muted-foreground">
@@ -1283,7 +1283,7 @@ const VendiListingBuilder: React.FC = () => {
 
   return (
 
-    <div className="dashboard-shell relative min-h-screen overflow-hidden bg-[#08080a] text-foreground">
+    <div className="sale-light relative min-h-screen overflow-hidden bg-background text-foreground">
       {/* Ambient depth — restrained, no loud gradients */}
       <div
         aria-hidden
@@ -1294,12 +1294,12 @@ const VendiListingBuilder: React.FC = () => {
         }}
       />
 
-      <header className="sticky top-0 z-30 border-b border-white/[0.07] bg-[#08080a]/70 backdrop-blur-xl">
+      <header className="sticky top-0 z-30 border-b border-border bg-background/85 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center gap-3 px-4 py-3.5 sm:px-6">
           <Button variant="ghost" size="icon" onClick={() => navigate(-1)} aria-label="Go back" className="text-foreground/70 hover:text-foreground">
             <ArrowLeft className="h-5 w-5" />
           </Button>
-          <img src={vendibookFavicon} alt="" className="h-7 w-7 rounded-lg ring-1 ring-white/10" />
+          <img src={vendibookFavicon} alt="" className="h-7 w-7 rounded-lg ring-1 ring-border" />
           <div className="min-w-0 flex-1">
             <h1 className="truncate text-[15px] font-semibold tracking-[-0.01em]">List with Vendi</h1>
             <p className="truncate text-xs text-muted-foreground">
@@ -1337,7 +1337,7 @@ const VendiListingBuilder: React.FC = () => {
             <Eye className="mr-2 h-4 w-4" /> Preview
           </Button>
         </div>
-        <div className="h-px w-full bg-white/[0.06]">
+        <div className="h-px w-full bg-secondary/70">
           <motion.div
             className="h-full"
             style={{ background: 'linear-gradient(90deg, rgba(255,81,36,0.55), rgba(255,81,36,1))' }}
@@ -1348,7 +1348,7 @@ const VendiListingBuilder: React.FC = () => {
       </header>
 
       <div className="relative mx-auto grid max-w-6xl gap-6 px-4 py-6 sm:px-6 lg:grid-cols-[1fr_400px] lg:py-10">
-        <section className="dash-glass flex min-h-[68vh] flex-col overflow-hidden p-0">
+        <section className="flex min-h-[72vh] flex-col overflow-hidden rounded-[28px] border border-border bg-card shadow-[0_1px_2px_rgba(24,20,16,0.04),0_26px_60px_-30px_rgba(24,20,16,0.30)]">
           {/* Keyed by session: "Start over" drops the old thread instantly
               instead of leaving exiting bubbles on screen. */}
           <div key={sessionSeq} className="flex-1 space-y-5 overflow-y-auto px-4 py-6 sm:px-7 sm:py-8">
@@ -1366,7 +1366,7 @@ const VendiListingBuilder: React.FC = () => {
                     className={`max-w-[86%] px-4 py-3 text-[15px] leading-relaxed sm:max-w-[76%] ${
                       m.role === 'user'
                         ? 'rounded-[18px] rounded-br-[6px] border border-[rgba(255,81,36,0.28)] bg-[rgba(255,81,36,0.10)] text-foreground'
-                        : 'rounded-[18px] rounded-bl-[6px] border border-white/[0.08] bg-white/[0.045] text-foreground/90'
+                        : 'rounded-[18px] rounded-bl-[6px] border border-border bg-secondary/70 text-foreground/90'
                     }`}
                   >
                     {m.role === 'vendi' && (
@@ -1392,7 +1392,7 @@ const VendiListingBuilder: React.FC = () => {
                     key={opt.value}
                     type="button"
                     onClick={() => submitAnswer(opt.value, opt.label, true)}
-                    className="group rounded-2xl border border-white/[0.09] bg-white/[0.035] px-4 py-3 text-left transition-all duration-200 hover:-translate-y-[1px] hover:border-[rgba(255,81,36,0.4)] hover:bg-white/[0.06]"
+                    className="group rounded-2xl border border-border bg-secondary/70 px-4 py-3 text-left transition-all duration-200 hover:-translate-y-[1px] hover:border-[rgba(255,81,36,0.4)] hover:bg-secondary/70"
                   >
                     <span className="block text-sm font-medium text-foreground">{opt.label}</span>
                     {opt.description && (
@@ -1410,7 +1410,7 @@ const VendiListingBuilder: React.FC = () => {
                     key={v}
                     type="button"
                     onClick={() => submitAnswer(v, undefined, true)}
-                    className="rounded-full border border-white/[0.1] bg-white/[0.04] px-6 py-2.5 text-sm font-medium capitalize transition-all duration-200 hover:border-[rgba(255,81,36,0.4)] hover:bg-white/[0.07]"
+                    className="rounded-full border border-border bg-secondary/70 px-6 py-2.5 text-sm font-medium capitalize transition-all duration-200 hover:border-[rgba(255,81,36,0.4)] hover:bg-secondary/70"
                   >
                     {v}
                   </button>
@@ -1426,7 +1426,7 @@ const VendiListingBuilder: React.FC = () => {
                     key={opt.value}
                     type="button"
                     onClick={() => setInput((prev) => (prev.trim() ? `${prev.replace(/,\s*$/, '')}, ${opt.label}` : opt.label))}
-                    className="rounded-full border border-white/[0.1] bg-white/[0.035] px-3.5 py-1.5 text-xs text-foreground/85 transition hover:border-[rgba(255,81,36,0.4)] hover:bg-white/[0.07]"
+                    className="rounded-full border border-border bg-secondary/70 px-3.5 py-1.5 text-xs text-foreground/85 transition hover:border-[rgba(255,81,36,0.4)] hover:bg-secondary/70"
                   >
                     + {opt.label}
                   </button>
@@ -1455,10 +1455,10 @@ const VendiListingBuilder: React.FC = () => {
                       key={p.id}
                       initial={{ opacity: 0, scale: 0.94 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="relative h-[86px] w-[86px] overflow-hidden rounded-2xl border border-white/[0.1]"
+                      className="relative h-[86px] w-[86px] overflow-hidden rounded-2xl border border-border"
                     >
                       {p.kind === 'video' ? (
-                        <div className="flex h-full w-full flex-col items-center justify-center gap-1 bg-white/[0.05] text-muted-foreground">
+                        <div className="flex h-full w-full flex-col items-center justify-center gap-1 bg-secondary/70 text-muted-foreground">
                           <Video className="h-5 w-5" />
                           <span className="text-[10px]">Video</span>
                         </div>
@@ -1488,7 +1488,7 @@ const VendiListingBuilder: React.FC = () => {
                         type="button"
                         aria-label="Remove media"
                         onClick={() => removePhoto(p.id)}
-                        className="absolute right-1.5 top-1.5 rounded-full border border-white/10 bg-black/65 p-1 backdrop-blur-md transition hover:bg-black/85"
+                        className="absolute right-1.5 top-1.5 rounded-full border border-border bg-black/65 p-1 backdrop-blur-md transition hover:bg-black/85"
                       >
                         <X className="h-3 w-3" />
                       </button>
@@ -1498,7 +1498,7 @@ const VendiListingBuilder: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => fileRef.current?.click()}
-                    className="flex h-[86px] w-[86px] flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-white/15 text-muted-foreground transition hover:border-[rgba(255,81,36,0.45)] hover:text-foreground"
+                    className="flex h-[86px] w-[86px] flex-col items-center justify-center gap-1 rounded-2xl border border-dashed border-border text-muted-foreground transition hover:border-[rgba(255,81,36,0.45)] hover:text-foreground"
                     aria-label="Add photos or video"
                   >
                     <ImagePlus className="h-5 w-5" />
@@ -1518,7 +1518,7 @@ const VendiListingBuilder: React.FC = () => {
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.35, ease: [0.22, 1, 0.36, 1] }}
-                className="dash-glass dash-glass-ember p-6"
+                className="rounded-[28px] border border-border bg-card shadow-[0_1px_2px_rgba(24,20,16,0.04),0_18px_44px_-26px_rgba(24,20,16,0.28)] p-6 sm:p-8"
               >
                 <h2 className="text-lg font-semibold tracking-[-0.01em]">Review and publish</h2>
                 <p className="mt-1.5 text-sm text-muted-foreground">
@@ -1533,7 +1533,7 @@ const VendiListingBuilder: React.FC = () => {
                 {/* Plain-language recap of the captured facts. Each row is
                     tappable so a last-second correction never means retyping. */}
                 {facts.length > 0 && (
-                  <dl className="mt-5 divide-y divide-white/[0.06] overflow-hidden rounded-2xl border border-white/[0.08] bg-white/[0.025]">
+                  <dl className="mt-5 divide-y divide-white/[0.06] overflow-hidden rounded-2xl border border-border bg-secondary/70">
                     {facts.map((f) => (
                       <div key={`review-${f.questionId}-${f.label}`} className="flex items-start gap-3 px-4 py-2.5">
                         <dt className="w-28 flex-none text-xs uppercase tracking-[0.12em] text-muted-foreground">
@@ -1555,7 +1555,7 @@ const VendiListingBuilder: React.FC = () => {
 
 
                 {/* Seller disclosure — identical language to the standard wizard */}
-                <div className="mt-6 rounded-2xl border border-white/[0.1] bg-white/[0.03] p-5">
+                <div className="mt-6 rounded-2xl border border-border bg-secondary/70 p-5">
                   <h3 className="text-sm font-semibold tracking-[-0.01em]">Before you publish</h3>
                   <ul className="mt-3 space-y-2 text-sm leading-relaxed text-foreground/85">
                     {ATTESTATIONS.map((a) => <li key={a.key}>• {a.text}</li>)}
@@ -1599,7 +1599,7 @@ const VendiListingBuilder: React.FC = () => {
                           'flex items-center gap-2 rounded-[18px] border px-3 py-2',
                           attestError
                             ? 'border-destructive/60 bg-destructive/[0.06]'
-                            : 'border-white/[0.1] bg-white/[0.04] focus-within:border-[rgba(255,81,36,0.45)]',
+                            : 'border-border bg-secondary/70 focus-within:border-[rgba(255,81,36,0.45)]',
                         )}
                       >
                         <input
@@ -1644,7 +1644,7 @@ const VendiListingBuilder: React.FC = () => {
 
                   <Button
                     variant="outline"
-                    className="rounded-full border-white/12 bg-white/[0.04]"
+                    className="rounded-full border-border bg-secondary/70"
                     onClick={() => {
                       setReviewing(false);
                       setAnswered((prev) => {
@@ -1666,7 +1666,7 @@ const VendiListingBuilder: React.FC = () => {
 
                 {/* Same voice agent, available through review: it can read what's
                     left and run the publish action once YES is typed. */}
-                <div className="mt-5 border-t border-white/[0.07] pt-4">
+                <div className="mt-5 border-t border-border pt-4">
                   <VendiVoiceAgent
                     disabled={publishing}
                     onAnswer={(text) => submitAnswer(text)}
@@ -1711,7 +1711,7 @@ const VendiListingBuilder: React.FC = () => {
                     });
                     navigate(`/contact?topic=listing${draftId ? `&ref=${draftId}` : ''}`);
                   }}
-                  className="rounded-full border border-amber-400/40 bg-amber-400/10 px-3.5 py-1.5 text-xs font-medium text-amber-200 transition hover:bg-amber-400/20"
+                  className="rounded-full border border-amber-400/40 bg-amber-400/10 px-3.5 py-1.5 text-xs font-medium text-amber-700 transition hover:bg-amber-400/20"
                 >
                   Get help
                 </button>
@@ -1729,7 +1729,7 @@ const VendiListingBuilder: React.FC = () => {
           {/* Captured-facts strip: proof that Vendi heard every answer, and a
               one-tap way to correct any of them without typing. */}
           {!reviewing && facts.length > 0 && (
-            <div className="border-t border-white/[0.06] bg-[#0c0c0f]/60 px-4 py-2.5 backdrop-blur-xl sm:px-7">
+            <div className="border-t border-border bg-secondary/60 px-4 py-2.5 backdrop-blur-xl sm:px-7">
               <div className="flex items-center gap-2 overflow-x-auto pb-0.5">
                 <span className="flex-none text-[11px] uppercase tracking-[0.14em] text-muted-foreground">
                   Saved
@@ -1741,7 +1741,7 @@ const VendiListingBuilder: React.FC = () => {
                     onClick={() => reopenFact(f.questionId)}
                     title={`Change ${f.label.toLowerCase()}`}
                     aria-label={`${f.label}: ${f.value}. Tap to change.`}
-                    className="flex-none rounded-full border border-white/[0.09] bg-white/[0.04] px-3 py-1 text-xs text-foreground/85 transition hover:border-[rgba(255,81,36,0.4)] hover:bg-white/[0.07]"
+                    className="flex-none rounded-full border border-border bg-secondary/70 px-3 py-1 text-xs text-foreground/85 transition hover:border-[rgba(255,81,36,0.4)] hover:bg-secondary/70"
                   >
                     <span className="text-muted-foreground">{f.label}:</span> {f.value}
                   </button>
@@ -1757,15 +1757,15 @@ const VendiListingBuilder: React.FC = () => {
               which question is on screen. */}
           {current && (
             <form
-              className="sticky bottom-0 border-t border-white/[0.07] bg-[#0c0c0f]/80 px-4 py-3.5 backdrop-blur-xl sm:px-7"
+              className="sticky bottom-0 border-t border-border bg-card/95 px-4 py-3.5 backdrop-blur-xl sm:px-7"
               onSubmit={(e) => { e.preventDefault(); submitAnswer(input); }}
             >
               {photos.length > 0 && (
                 <div className="mb-3 flex flex-wrap gap-2">
                   {photos.map((p) => (
-                    <div key={p.id} className="relative h-14 w-14 overflow-hidden rounded-xl border border-white/[0.1]">
+                    <div key={p.id} className="relative h-14 w-14 overflow-hidden rounded-xl border border-border">
                       {p.kind === 'video' ? (
-                        <div className="flex h-full w-full items-center justify-center bg-white/[0.05] text-muted-foreground">
+                        <div className="flex h-full w-full items-center justify-center bg-secondary/70 text-muted-foreground">
                           <Video className="h-4 w-4" />
                         </div>
                       ) : (
@@ -1799,7 +1799,7 @@ const VendiListingBuilder: React.FC = () => {
                   ))}
                 </div>
               )}
-              <div className="flex items-end gap-2 rounded-[20px] border border-white/[0.09] bg-white/[0.04] px-3 py-2 transition focus-within:border-[rgba(255,81,36,0.45)]">
+              <div className="flex items-end gap-2 rounded-[20px] border border-border bg-secondary/70 px-3 py-2 transition focus-within:border-[rgba(255,81,36,0.45)]">
                 <Button
                   type="button"
                   variant="ghost"
@@ -1885,7 +1885,7 @@ const VendiListingBuilder: React.FC = () => {
         </section>
 
         <aside className="hidden lg:block">
-          <div className="dash-glass sticky top-28 h-[72vh] overflow-hidden p-0">
+          <div className="sticky top-28 h-[72vh] overflow-hidden rounded-[28px] border border-border bg-card shadow-[0_1px_2px_rgba(24,20,16,0.04),0_26px_60px_-30px_rgba(24,20,16,0.30)]">
             {previewPanel}
           </div>
         </aside>
@@ -1895,9 +1895,9 @@ const VendiListingBuilder: React.FC = () => {
       <Sheet open={showMobilePreview} onOpenChange={setShowMobilePreview}>
         <SheetContent
           side="bottom"
-          className="h-[85vh] rounded-t-[24px] border-white/[0.08] bg-[#0c0c0f]/95 p-0 backdrop-blur-2xl lg:hidden"
+          className="h-[85vh] rounded-t-[24px] border-border bg-card p-0 backdrop-blur-2xl lg:hidden"
         >
-          <SheetHeader className="border-b border-white/[0.07] px-5 py-4 text-left">
+          <SheetHeader className="border-b border-border px-5 py-4 text-left">
             <SheetTitle className="text-sm font-semibold text-foreground">Live preview</SheetTitle>
           </SheetHeader>
           <div className="h-[calc(85vh-64px)] overflow-hidden">{previewPanel}</div>
@@ -1908,7 +1908,7 @@ const VendiListingBuilder: React.FC = () => {
       <button
         type="button"
         onClick={() => setShowMobilePreview(true)}
-        className="fixed bottom-24 right-4 z-20 flex items-center gap-2 rounded-full border border-white/[0.12] bg-[#121215]/90 px-4 py-2.5 text-xs font-medium text-foreground shadow-[0_12px_30px_-12px_rgba(0,0,0,0.8)] backdrop-blur-xl lg:hidden"
+        className="fixed bottom-24 right-4 z-20 flex items-center gap-2 rounded-full border border-border bg-card px-4 py-2.5 text-xs font-medium text-foreground shadow-[0_16px_36px_-18px_rgba(24,20,16,0.35)] lg:hidden"
       >
         <Eye className="h-4 w-4" /> Preview
       </button>
