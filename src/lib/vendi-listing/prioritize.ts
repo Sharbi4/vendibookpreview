@@ -6,6 +6,8 @@
  * value. Progress is derived from listing readiness (real required fields), not
  * from "how many script questions have scrolled past".
  */
+import type { ListingCategory } from '@/types/listing';
+import { getStageRequirements, isTitledAsset, requiresSaleDimensions } from '@/lib/listings/stages';
 import {
   getPublishBlockers, REVIEW_GATE_ID, visibleQuestions, type Question, type VendiDraft,
 } from './script';
@@ -23,8 +25,47 @@ export function blockingQuestionIds(draft: VendiDraft, imageCount: number): stri
   if (!draft.description || draft.description.trim().length < 20) ids.push('description');
   if (imageCount < 1) ids.push('photos');
   if (!draft.title || draft.title.trim().length < 8) ids.push('title');
+
+  // Required seller disclosures block publishing exactly as they do in the
+  // manual wizard, so they must outrank the "ready to publish" gate.
+  if (!draft.condition) ids.push('condition');
+  if (!draft.operational_status) ids.push('operational_status');
+  if (draft.mode && draft.category && isTitledAsset(draft.category as ListingCategory, draft.mode as 'rent' | 'sale')) {
+    if (!draft.title_status) ids.push('title_status');
+    if (!draft.has_lien) ids.push('has_lien');
+  }
+  if (!draft.no_known_problems && !(draft.known_problems?.length)) ids.push('known_problems');
+  if ((draft.included_items?.trim().length ?? 0) < 3) ids.push('included_items');
+  if (!draft.photos_exclusions_answered) ids.push('photo_exclusions');
+  if (
+    draft.mode && draft.category
+    && requiresSaleDimensions(draft.mode as 'rent' | 'sale', draft.category as ListingCategory)
+    && (!draft.length_inches || !draft.height_inches)
+  ) {
+    ids.push('sale_dimensions');
+  }
   return ids;
 }
+
+/** How many disclosure requirements apply to this listing at all. */
+function disclosureRequirementCount(draft: VendiDraft): number {
+  if (!draft.mode || !draft.category) return 0;
+  return getStageRequirements({
+    mode: draft.mode as 'rent' | 'sale',
+    category: draft.category as ListingCategory,
+    condition: null,
+    operationalStatus: null,
+    titleStatus: null,
+    hasLien: null,
+    noKnownProblems: false,
+    knownProblems: [],
+    includedItems: null,
+    photosExclusionsAnswered: false,
+    lengthInches: null,
+    heightInches: null,
+  }).length;
+}
+
 
 /** Optional fields that measurably help buyers, in descending value order. */
 export const HIGH_VALUE_EXTRAS = [
