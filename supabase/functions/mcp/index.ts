@@ -481,6 +481,18 @@ var list_upsell_products_default = defineTool7({
     if (error) {
       return { content: [{ type: "text", text: `Catalog lookup failed: ${error.message}` }], isError: true };
     }
+    const HIGHLIGHTS = {
+      vendibook_pro: [
+        "Seller/host commission drops from 12.9% to 10.9% (max $500 savings per transaction)",
+        "PricePilot appraisals included",
+        "One Featured Boost credit each billing period (does not roll over)"
+      ],
+      "boost-featured-30": [
+        "Pins one listing to the top of search in its city for 30 days",
+        "Applies to a specific listing \u2014 requires the seller's own listing_id",
+        "One-time PayPal payment on the Vendibook checkout page"
+      ]
+    };
     const products = (data ?? []).map((p) => {
       const now = Date.now();
       const inPromo = p.promo_price_cents != null && (!p.promo_starts_at || new Date(p.promo_starts_at).getTime() <= now) && (!p.promo_ends_at || new Date(p.promo_ends_at).getTime() > now);
@@ -491,6 +503,8 @@ var list_upsell_products_default = defineTool7({
         slug: p.slug,
         name: p.name,
         description: p.description,
+        highlights: HIGHLIGHTS[p.slug] ?? [],
+        requires_listing_id: p.slug === "boost-featured-30" || p.slug === "pro_listing_30",
         price_display: `${price}${cadence}`,
         listing_id: listing_id ?? null
       };
@@ -528,6 +542,22 @@ var create_upgrade_checkout_default = defineTool8({
     const supabase = supabaseForUser3(ctx);
     if (!VALID_UPGRADE_SLUGS.has(product_slug)) {
       return { content: [{ type: "text", text: "Unknown upgrade product." }], isError: true };
+    }
+    const LISTING_SCOPED = /* @__PURE__ */ new Set(["boost-featured-30", "pro_listing_30"]);
+    if (LISTING_SCOPED.has(product_slug)) {
+      if (!listing_id) {
+        return {
+          content: [{ type: "text", text: "That upgrade applies to a specific listing \u2014 provide the listing_id first." }],
+          isError: true
+        };
+      }
+      const { data: owned, error: ownErr } = await supabase.from("listings").select("id").eq("id", listing_id).eq("host_id", ctx.getUserId() ?? "").maybeSingle();
+      if (ownErr) {
+        return { content: [{ type: "text", text: `Listing lookup failed: ${ownErr.message}` }], isError: true };
+      }
+      if (!owned) {
+        return { content: [{ type: "text", text: "That listing was not found on this account." }], isError: true };
+      }
     }
     const { data: product, error } = await supabase.from("monetization_products").select("billing_type, is_active").eq("slug", product_slug).maybeSingle();
     if (error) {

@@ -10,19 +10,31 @@ import { cn } from '@/lib/utils';
 
 export const VENDI_VOICE_AGENT_ID = 'agent_0101kdmd2dn7exys7w22pnscqasf';
 
-/** Upsells Vendi Voice is allowed to surface. Every one routes to /pricing. */
-const UPSELLS: Record<string, { title: string; body: string; cta: string; href: string }> = {
+/**
+ * Upsells Vendi Voice is allowed to surface.
+ *
+ * `href` is the default destination. Featured Boost is a one-time product, so
+ * it opens the hosted PayPal product checkout for the seller's own listing
+ * (`hostedSlug`). Vendibook Pro is a recurring subscription and must always go
+ * through the /pricing hub first, where plan selection and the recurring
+ * billing consent live — Vendi never starts a subscription by voice.
+ */
+const UPSELLS: Record<
+  string,
+  { title: string; body: string; cta: string; href: string; hostedSlug?: string }
+> = {
   pro: {
     title: 'Vendibook Pro',
-    body: 'Lower seller commission (10.9%) plus priority placement for your listing.',
+    body: 'Seller commission drops to 10.9%, PricePilot appraisals are included, and every billing period comes with a Featured Boost credit.',
     cta: 'See Pro plans',
     href: '/pricing',
   },
   featured: {
     title: 'Featured boost',
-    body: 'Pin your listing to the top of search results in your city.',
-    cta: 'See boost options',
+    body: 'Pin this listing to the top of search results in your city for 30 days. Paid securely with PayPal.',
+    cta: 'Boost this listing',
     href: '/pricing',
+    hostedSlug: 'boost-featured-30',
   },
   concierge: {
     title: 'Listing concierge',
@@ -62,6 +74,8 @@ interface VendiVoiceAgentProps {
   onRequestMedia?: () => void;
   /** How many photos are already attached to the draft. */
   imageCount?: number;
+  /** The seller's own listing/draft id, used to attach a Featured Boost purchase. */
+  listingId?: string | null;
 }
 
 /**
@@ -79,6 +93,7 @@ const VendiVoiceAgent: React.FC<VendiVoiceAgentProps> = ({
   onPublish,
   onRequestMedia,
   imageCount = 0,
+  listingId = null,
 }) => {
   const navigate = useNavigate();
   const [connecting, setConnecting] = useState(false);
@@ -87,8 +102,29 @@ const VendiVoiceAgent: React.FC<VendiVoiceAgentProps> = ({
   const answerRef = useRef(onAnswer);
   answerRef.current = onAnswer;
   // Live refs so the agent's tools always read current builder state.
-  const stateRef = useRef({ blockers, canPublish, onGoToReview, onPublish, onRequestMedia, imageCount });
-  stateRef.current = { blockers, canPublish, onGoToReview, onPublish, onRequestMedia, imageCount };
+  const stateRef = useRef({ blockers, canPublish, onGoToReview, onPublish, onRequestMedia, imageCount, listingId });
+  stateRef.current = { blockers, canPublish, onGoToReview, onPublish, onRequestMedia, imageCount, listingId };
+
+  /**
+   * Where an upgrade card / voice checkout should send the seller.
+   * One-time products (Featured Boost) open the hosted PayPal product checkout
+   * scoped to this listing; Pro keeps routing through the /pricing hub.
+   */
+  const upsellHref = useCallback(
+    (key: string) => {
+      const target = UPSELLS[key];
+      if (!target) return null;
+      const id = stateRef.current.listingId;
+      if (!target.hostedSlug || !id) return target.href;
+      const params = new URLSearchParams({
+        listing_id: id,
+        success: `/listing/${id}`,
+        cancel: '/list-with-vendi',
+      });
+      return `/checkout/product/${target.hostedSlug}?${params.toString()}`;
+    },
+    [],
+  );
 
   const clientTools = useMemo(
     () => ({
@@ -136,7 +172,17 @@ const VendiVoiceAgent: React.FC<VendiVoiceAgentProps> = ({
         const key = (product ?? '').toLowerCase();
         const target = UPSELLS[key];
         if (!target) return 'Unknown upgrade.';
-        navigate(target.href);
+        const href = upsellHref(key);
+        if (!href) return 'Unknown upgrade.';
+        navigate(href);
+        if (key === 'featured') {
+          return stateRef.current.listingId
+            ? 'Opened the Featured Boost checkout for this listing. The seller reviews the price and pays with PayPal on screen — nothing is charged until they approve it there.'
+            : 'Opened the boost options page. The listing has to be saved before a boost can be attached to it.';
+        }
+        if (key === 'pro') {
+          return 'Opened the Vendibook Pro plans page. The seller picks a plan and approves the recurring PayPal billing there — I cannot start a subscription for them.';
+        }
         return `Opened the ${target.title} page where payment is completed securely.`;
       },
       suggest_upgrade: ({ product }: { product: string }) => {
@@ -150,7 +196,7 @@ const VendiVoiceAgent: React.FC<VendiVoiceAgentProps> = ({
         return 'Dismissed.';
       },
     }),
-    [navigate],
+    [navigate, upsellHref],
   );
 
 
@@ -282,7 +328,7 @@ const VendiVoiceAgent: React.FC<VendiVoiceAgentProps> = ({
                 <p className="mt-1 text-xs leading-relaxed text-muted-foreground">{card.body}</p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <Button asChild size="sm" className="rounded-full">
-                    <Link to={card.href}>
+                    <Link to={(upsell && upsellHref(upsell)) || card.href}>
                       {card.cta} <ArrowRight className="ml-1.5 h-3.5 w-3.5" />
                     </Link>
                   </Button>

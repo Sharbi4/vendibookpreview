@@ -1654,6 +1654,7 @@ const VendiListingBuilder: React.FC = () => {
                     onPublish={handlePublish}
                     onRequestMedia={() => fileRef.current?.click()}
                     imageCount={imageCount}
+                    listingId={draftId}
                     context={[
                       'The seller is on the review and publish step.',
                       facts.length ? `Listing facts: ${facts.map((f) => `${f.label}: ${f.value}`).join('; ')}` : '',
@@ -1826,6 +1827,7 @@ const VendiListingBuilder: React.FC = () => {
                   onPublish={handlePublish}
                   onRequestMedia={() => fileRef.current?.click()}
                   imageCount={imageCount}
+                  listingId={draftId}
                   context={[
                     `Current question: ${current.prompt(draft)}`,
                     imageCount
