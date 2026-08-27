@@ -40,7 +40,7 @@ import { trackFormSubmitConversion } from '@/lib/gtagConversions';
 import { trackRequestStarted, trackRequestSubmitted } from '@/lib/analytics';
 import { PayPalPaymentPanel } from '@/components/checkout';
 
-import CheckoutOrderSummary from '@/components/checkout/CheckoutOrderSummary';
+import CheckoutOrderSummary, { type OrderSummaryLine } from '@/components/checkout/CheckoutOrderSummary';
 import { isEmbeddedCheckoutEnabled } from '@/lib/featureFlags';
 import { parseEdgeError } from '@/lib/edgeErrors';
 import { checkoutErrorCopy } from '@/lib/checkoutErrorCopy';
@@ -1427,12 +1427,22 @@ const BookingCheckout = () => {
                   <span>${fees.renterFee.toLocaleString()}</span>
                 </div>
 
-                {taxAmount > 0 && (
+                {taxAmount > 0 ? (
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-muted-foreground">{taxEstimate?.label || 'Estimated sales tax'}</span>
                     <span>${taxAmount.toLocaleString()}</span>
                   </div>
-                )}
+                ) : taxState === 'loading' ? (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Estimated sales tax</span>
+                    <span className="text-muted-foreground">Calculating…</span>
+                  </div>
+                ) : taxState === 'error' ? (
+                  <div className="flex items-center justify-between text-sm">
+                    <span className="text-muted-foreground">Sales tax</span>
+                    <span className="text-muted-foreground">Calculated at payment</span>
+                  </div>
+                ) : null}
 
                 <div className="flex items-center justify-between pt-3 border-t border-border">
                   <span className="font-semibold">Total charged today</span>
@@ -1533,7 +1543,7 @@ const BookingCheckout = () => {
                   ? [{ label: 'Delivery', amount: currentDeliveryFee }]
                   : []),
                 { label: 'Service fee', amount: fees.renterFee },
-                ...(taxAmount > 0 ? [{ label: taxEstimate?.label || 'Estimated sales tax', amount: taxAmount }] : []),
+                ...(taxSummaryLine ? [taxSummaryLine] : []),
               ]}
               total={totalChargedToday}
             />
