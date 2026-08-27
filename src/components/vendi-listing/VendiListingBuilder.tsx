@@ -481,6 +481,25 @@ const VendiListingBuilder: React.FC = () => {
     })();
   }, [hydrated, user, draftId, resumeChecked, resumeOffers.length, draft.mode, draft.category, draft.city, draft.state, draft.zip_code, draft.address]);
 
+  // Merge latitude/longitude into a save payload using the same geocoding rules
+  // the manual wizard uses. Coordinates are only resolved when the stated
+  // location is new or unresolved, and never guessed when the geocoder can't
+  // confidently anchor to the seller's city/state/ZIP.
+  const withCoordinates = useCallback(
+    async (listingId: string, payload: Record<string, unknown>): Promise<Record<string, unknown>> => {
+      const coords = await resolveVendiCoordinates({
+        listingId,
+        city: draft.city,
+        state: draft.state,
+        zipCode: draft.zip_code,
+        hasStoredCoords:
+          typeof draft.latitude === 'number' && typeof draft.longitude === 'number',
+      });
+      return coords ? { ...payload, ...coords } : payload;
+    },
+    [draft.city, draft.state, draft.zip_code, draft.latitude, draft.longitude],
+  );
+
 
   // Debounced autosave of collected answers onto the owned draft. The row stays
   // status=draft until the owner explicitly publishes. It never runs before the
