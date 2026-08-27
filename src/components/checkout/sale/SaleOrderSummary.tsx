@@ -5,6 +5,8 @@ export interface SaleSummaryLine {
   label: string;
   amount: number;
   muted?: boolean;
+  /** Overrides the rendered value (e.g. "Calculating…") instead of $amount. */
+  valueLabel?: string;
 }
 
 interface SaleOrderSummaryProps {
@@ -63,8 +65,8 @@ const SaleOrderSummary = ({
             <span className={cn('min-w-0 truncate', l.muted ? 'text-muted-foreground' : 'text-foreground/80')}>
               {l.label}
             </span>
-            <span className="shrink-0 tabular-nums text-foreground">
-              {l.amount > 0 ? `$${l.amount.toLocaleString()}` : 'Free'}
+            <span className={cn('shrink-0 tabular-nums', l.valueLabel ? 'text-muted-foreground' : 'text-foreground')}>
+              {l.valueLabel ?? (l.amount > 0 ? `$${l.amount.toLocaleString()}` : 'Free')}
             </span>
           </div>
         ))}
