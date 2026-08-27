@@ -1061,7 +1061,10 @@ export const QUESTIONS: Question[] = [
     kind: 'text',
     tier: 'extra',
     optional: true,
-    when: (d) => isMobileAsset(d.category),
+    // Sale trucks/trailers answer the required `sale_dimensions` question instead.
+    when: (d) => isMobileAsset(d.category)
+      && !(d.mode && requiresSaleDimensions(d.mode as 'rent' | 'sale', d.category as ListingCategory)),
+
     prompt: () => 'Do you know the dimensions? Length x width x height.',
     placeholder: 'e.g. 20 x 8 x 9 ft',
     apply: (_d, raw) => {
