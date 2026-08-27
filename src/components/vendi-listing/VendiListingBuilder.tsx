@@ -1379,17 +1379,18 @@ const VendiListingBuilder: React.FC = () => {
                   className={`flex ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[86%] px-4 py-3 text-[15px] leading-relaxed sm:max-w-[76%] ${
+                    className={`max-w-[88%] px-5 py-3.5 text-[16px] leading-[1.6] sm:max-w-[78%] ${
                       m.role === 'user'
-                        ? 'rounded-[18px] rounded-br-[6px] border border-[rgba(255,81,36,0.28)] bg-[rgba(255,81,36,0.10)] text-foreground'
-                        : 'rounded-[18px] rounded-bl-[6px] border border-border bg-secondary/70 text-foreground/90'
+                        ? 'rounded-[22px] rounded-br-[8px] border border-[rgba(255,81,36,0.28)] bg-[rgba(255,81,36,0.08)] text-foreground'
+                        : 'rounded-[22px] rounded-bl-[8px] border border-border bg-background text-foreground shadow-[0_1px_2px_rgba(24,20,16,0.04)]'
                     }`}
                   >
                     {m.role === 'vendi' && (
-                      <span className="mb-1 block text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">
+                      <span className="mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">
                         Vendi
                       </span>
                     )}
+
                     <span className="whitespace-pre-line">{m.content}</span>
                   </div>
                 </motion.div>
