@@ -1,8 +1,8 @@
 import { defineTool, type ToolContext } from "@lovable.dev/mcp-js";
 import { z } from "zod";
 import { supabaseForUser } from "../supabase";
-import { getStageRequirements } from "@/lib/listings/stages";
-import type { ListingCategory } from "@/types/listing";
+import { getStageRequirements } from "../../listings/stages";
+import type { ListingCategory } from "../../../types/listing";
 
 const BLOCKED_STATUSES = new Set([
   "removed",
