@@ -1515,15 +1515,6 @@ const BookingCheckout = () => {
         onDatesSelected={handleDatesSelected}
       />
 
-      <BookingInfoModal
-        open={showInfoModal}
-        onOpenChange={setShowInfoModal}
-        onComplete={(info) => {
-          setUserInfo(info);
-          setShowInfoModal(false);
-        }}
-        initialData={userInfo || undefined}
-      />
 
       {/* Auth Gate Modal - shown when guest tries to submit */}
       <AuthGateOfferModal
