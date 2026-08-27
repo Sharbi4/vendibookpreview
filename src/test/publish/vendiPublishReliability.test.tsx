@@ -96,6 +96,12 @@ const seedSession = (consentId: string | null) => {
         rent_period: 'monthly',
         fulfillment_type: 'pickup',
         image_urls: ['https://cdn.test/a.jpg'],
+        condition: 'like_new',
+        operational_status: 'towable',
+        no_known_problems: true,
+        known_problems: [],
+        included_items: 'All cooking equipment and two propane tanks',
+        photos_exclusions_answered: true,
       },
       answered: [
         'import_choice',

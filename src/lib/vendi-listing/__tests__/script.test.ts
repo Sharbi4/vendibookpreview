@@ -94,6 +94,11 @@ describe('rental monthly pricing', () => {
     d = answer(d, 'rent_price', '$1,000');
     d = answer(d, 'instant_book', 'no');
     d = answer(d, 'fulfillment', 'pickup');
+    d = answer(d, 'condition', 'like_new');
+    d = answer(d, 'operational_status', 'towable');
+    d = answer(d, 'known_problems', 'none');
+    d = answer(d, 'included_items', 'All cooking equipment and two propane tanks');
+    d = answer(d, 'photo_exclusions', 'yes');
     return d;
   };
 
