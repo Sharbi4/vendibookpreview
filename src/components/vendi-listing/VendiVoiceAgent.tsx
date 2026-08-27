@@ -58,6 +58,10 @@ interface VendiVoiceAgentProps {
   canPublish?: boolean;
   /** Runs the same publish action as the on-screen button. */
   onPublish?: () => void | Promise<void>;
+  /** Opens the normal photo/video picker on screen. */
+  onRequestMedia?: () => void;
+  /** How many photos are already attached to the draft. */
+  imageCount?: number;
 }
 
 /**
