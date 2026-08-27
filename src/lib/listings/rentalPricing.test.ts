@@ -6,6 +6,7 @@ import {
   listRentalRates,
   resolveRentalRate,
   validateRentalRates,
+  quoteRentalPeriod,
 } from './rentalPricing';
 
 describe('resolveRentalRate', () => {
