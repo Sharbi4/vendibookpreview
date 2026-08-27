@@ -8,7 +8,7 @@ import {
   MapPin, 
   FileCheck, 
   CreditCard,
-  ChevronDown, 
+
   CheckCircle2, 
   Zap,
   Shield,
@@ -60,7 +60,6 @@ import type { DocumentType } from '@/types/documents';
 import { AuthGateOfferModal } from '@/components/offers/AuthGateOfferModal';
 import {
   JourneyProgress,
-  PrimaryActionBar,
   type JourneyStep,
 } from '@/components/journey';
 
