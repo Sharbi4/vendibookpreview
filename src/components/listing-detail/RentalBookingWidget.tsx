@@ -730,70 +730,70 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
         {/* STEP 1: MODE TOGGLE (Only if both modes enabled) */}
         {/* ─────────────────────────────────────────────────────────────────────── */}
         {hourlyEnabled && dailyEnabled && (
-          <div className="flex rounded-lg bg-muted/50 p-1">
+          <div className="flex rounded-full bg-muted/60 p-0.5">
             <button
               onClick={() => { setMode('hourly'); handleReset(); }}
               className={cn(
-                "flex-1 py-2 px-3 text-sm font-medium rounded-md transition-all duration-200 flex items-center justify-center gap-1.5",
+                "flex-1 py-1.5 px-3 text-xs font-medium rounded-full transition-all duration-200",
                 mode === 'hourly' 
                   ? "bg-background text-foreground shadow-sm" 
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <Clock className="h-4 w-4" />
               Hourly
             </button>
             <button
               onClick={() => { setMode('daily'); handleReset(); }}
               className={cn(
-                "flex-1 py-2 px-3 text-sm font-medium rounded-md transition-all duration-200 flex items-center justify-center gap-1.5",
+                "flex-1 py-1.5 px-3 text-xs font-medium rounded-full transition-all duration-200",
                 mode === 'daily' 
                   ? "bg-background text-foreground shadow-sm" 
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <Sun className="h-4 w-4" />
               Daily / Weekly
             </button>
           </div>
         )}
 
         {/* ─────────────────────────────────────────────────────────────────────── */}
-        {/* STEP 2: CALENDAR */}
+        {/* STEP 2: CALENDAR (compact Airbnb-style) */}
         {/* ─────────────────────────────────────────────────────────────────────── */}
-        <div className="bg-background rounded-2xl border border-border/60 p-3">
+        <div className="rounded-xl border border-border/60 p-2.5">
           {/* Calendar Header */}
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-1.5">
             <button
               onClick={handlePrevMonth}
               disabled={!canGoPrev}
-              className="p-1.5 rounded-full hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
+              aria-label="Previous month"
+              className="p-1 rounded-full hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
             >
-              <ChevronLeft className="h-4 w-4" />
+              <ChevronLeft className="h-3.5 w-3.5" />
             </button>
-            <span className="font-medium text-sm">
+            <span className="font-medium text-xs">
               {format(currentMonth, 'MMMM yyyy')}
             </span>
             <button
               onClick={handleNextMonth}
               disabled={!canGoNext}
-              className="p-1.5 rounded-full hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
+              aria-label="Next month"
+              className="p-1 rounded-full hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
             >
-              <ChevronRight className="h-4 w-4" />
+              <ChevronRight className="h-3.5 w-3.5" />
             </button>
           </div>
 
           {/* Weekday Headers */}
-          <div className="grid grid-cols-7 gap-0.5 mb-1">
-            {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => (
-              <div key={day} className="text-center text-[10px] font-medium text-muted-foreground py-1">
+          <div className="grid grid-cols-7 mb-0.5">
+            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+              <div key={`${day}-${i}`} className="text-center text-[9px] font-medium text-muted-foreground py-0.5">
                 {day}
               </div>
             ))}
           </div>
 
           {/* Calendar Grid */}
-          <div className="grid grid-cols-7 gap-0.5">
+          <div className="grid grid-cols-7 gap-y-0.5">
             {paddingDays.map((_, i) => (
               <div key={`pad-${i}`} />
             ))}
