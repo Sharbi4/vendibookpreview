@@ -101,15 +101,15 @@ const AIListingCreator: React.FC = () => {
         commercial_kitchen: 'ghost_kitchen', vendor_lot: 'vendor_lot', vendor_space: 'vendor_space'};
       const fulfillmentMap: Record<string, string> = {
         pickup: 'pickup', delivery: 'delivery', both: 'both', on_site: 'on_site'};
-      const { data: sessionData } = await supabase.auth.getSession();
-      if (!sessionData.session) throw new Error('Please sign in to save your listing.');
+      // Idempotent per creation session: re-saving after an edit or a failed
+      // attempt reuses the same draft row instead of inserting another.
+      const draftId = await createOrResumeListingDraft({
+        userId: user.id,
+        flow: 'ai',
+        mode: listingData.mode === 'sale' ? 'sale' : 'rent',
+        category: categoryMap[listingData.category || 'food_truck'] || 'food_truck',
+        location: listingData.address || null,
 
-      const { data: draft, error: draftError } = await supabase.functions.invoke('create-listing-draft', {
-        headers: { Authorization: `Bearer ${sessionData.session.access_token}` },
-        body: {
-          mode: listingData.mode === 'sale' ? 'sale' : 'rent',
-          category: categoryMap[listingData.category || 'food_truck'] || 'food_truck',
-          location: listingData.address || null,
           city: listingData.city || null,
           state: listingData.state || null,
           latitude: listingData.latitude || null,
