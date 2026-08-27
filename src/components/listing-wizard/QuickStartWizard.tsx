@@ -143,6 +143,9 @@ export const QuickStartWizard: React.FC = () => {
     mode: seededMode,
   });
   const [isCreating, setIsCreating] = useState(false);
+  /** Synchronous in-flight guard (state updates are async and race-prone). */
+  const creatingRef = useRef(false);
+
   const [isLookingUpZip, setIsLookingUpZip] = useState(false);
   const [zipError, setZipError] = useState<string | null>(null);
   const [zipConfirmed, setZipConfirmed] = useState(!!persisted?.data?.latitude);
