@@ -20,19 +20,19 @@ const points = [
  * from the very first answer.
  */
 const VendiAuthGate: React.FC = () => (
-  <div className="relative min-h-[80vh] overflow-hidden bg-[#08080a] px-4 py-16 text-white/90">
-    <div className="pointer-events-none absolute -top-32 left-1/2 h-[420px] w-[720px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(255,122,26,0.18),transparent_65%)] blur-3xl" />
+  <div className="sale-light relative min-h-[80vh] overflow-hidden bg-background px-4 py-16 text-foreground">
+    <div className="pointer-events-none absolute -top-32 left-1/2 h-[420px] w-[720px] -translate-x-1/2 rounded-full bg-[radial-gradient(circle,rgba(255,122,26,0.12),transparent_65%)] blur-3xl" />
     <motion.div
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
-      className="relative mx-auto w-full max-w-md rounded-3xl border border-white/10 bg-white/[0.04] p-8 shadow-[0_30px_90px_-40px_rgba(0,0,0,0.9)] backdrop-blur-xl"
+      className="relative mx-auto w-full max-w-md rounded-[28px] border border-border bg-card p-8 shadow-[0_1px_2px_rgba(24,20,16,0.04),0_26px_60px_-30px_rgba(24,20,16,0.30)]"
     >
-      <p className="text-[11px] uppercase tracking-[0.22em] text-white/45">List with Vendi</p>
-      <h1 className="mt-3 text-2xl font-semibold leading-snug text-white">
+      <p className="text-[11px] uppercase tracking-[0.22em] text-muted-foreground">List with Vendi</p>
+      <h1 className="mt-3 text-2xl font-semibold leading-snug text-foreground">
         Sign in to start your free Vendi listing
       </h1>
-      <p className="mt-2 text-sm leading-relaxed text-white/60">
+      <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
         We’ll save everything as you go — so you can step away and come back without losing a word.
       </p>
 
@@ -41,36 +41,36 @@ const VendiAuthGate: React.FC = () => (
         <Button
           asChild
           variant="outline"
-          className="w-full border-white/15 bg-white/[0.03] text-white hover:bg-white/[0.08] hover:text-white"
+          className="w-full"
         >
           <Link to={`/auth?redirect=${encodeURIComponent(RETURN_PATH)}`}>
             <Mail className="mr-2 h-4 w-4" />
             Continue with email
           </Link>
         </Button>
-        <p className="text-center text-xs text-white/45">
+        <p className="text-center text-xs text-muted-foreground">
           New to Vendibook?{' '}
           <Link
             to={`/auth?mode=signup&redirect=${encodeURIComponent(RETURN_PATH)}`}
-            className="text-[#ff7a1a] underline-offset-4 hover:underline"
+            className="text-primary underline-offset-4 hover:underline"
           >
             Create a free account
           </Link>
         </p>
       </div>
 
-      <ul className="mt-8 space-y-3 border-t border-white/10 pt-6">
+      <ul className="mt-8 space-y-3 border-t border-border pt-6">
         {points.map(({ icon: Icon, text }) => (
-          <li key={text} className="flex gap-3 text-sm text-white/60">
-            <Icon className="mt-0.5 h-4 w-4 shrink-0 text-[#ff7a1a]" aria-hidden />
+          <li key={text} className="flex gap-3 text-sm text-muted-foreground">
+            <Icon className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
             <span>{text}</span>
           </li>
         ))}
       </ul>
 
-      <p className="mt-6 text-center text-xs text-white/40">
+      <p className="mt-6 text-center text-xs text-muted-foreground">
         Prefer the step-by-step wizard?{' '}
-        <Link to="/list/start?path=self" className="underline underline-offset-4 hover:text-white/70">
+        <Link to="/list/start?path=self" className="underline underline-offset-4 hover:text-foreground">
           Build it myself
         </Link>
       </p>
