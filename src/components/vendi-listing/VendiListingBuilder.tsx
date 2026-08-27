@@ -504,6 +504,7 @@ const VendiListingBuilder: React.FC = () => {
             trackVendi('vendi_save_failed', { userId: user?.id, listingId: draftId, metadata: { stage: 'autosave' } });
           } else setTroubles(0);
         });
+      })();
     }, 1200);
     return () => window.clearTimeout(timer);
   }, [draft, uploadedUrls, uploadedVideoUrls, draftId, hydrated, resumeChecked, resumeOffers.length, detached, user?.id]);
