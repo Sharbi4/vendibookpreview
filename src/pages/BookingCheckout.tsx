@@ -58,10 +58,6 @@ import DateSelectionModal from '@/components/listing-detail/DateSelectionModal';
 import type { ListingCategory, FulfillmentType } from '@/types/listing';
 import type { DocumentType } from '@/types/documents';
 import { AuthGateOfferModal } from '@/components/offers/AuthGateOfferModal';
-import {
-  JourneyProgress,
-  type JourneyStep,
-} from '@/components/journey';
 
 import { trackLeadEvent } from '@/lib/leadTracking';
 import { detectAvailabilityConflict } from '@/lib/availabilityConflict';
@@ -854,48 +850,10 @@ const BookingCheckout = () => {
           </Link>
         </Button>
 
-        {/* Editorial title block — matches the How It Works type scale */}
-        <div className="mb-10 max-w-2xl">
-          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">
-            Vendibook checkout
-          </p>
-          <h1 className="mt-2 text-3xl lg:text-4xl font-semibold tracking-tight text-foreground">
-            {instantConfirm ? 'Book instantly' : 'Request to book'}
-          </h1>
-          <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
-            {instantConfirm
-              ? 'Confirm your dates and details — your booking is confirmed as soon as payment goes through.'
-              : 'Send your dates and details to the host. Nothing is charged until your request is accepted.'}
-          </p>
-        </div>
-
-
         <div className="grid lg:grid-cols-5 gap-8 lg:gap-12">
           {/* Left Column - Steps */}
           <div className="lg:col-span-3 space-y-4">
-            {/* Persistent roadmap — mirrors the dynamic accordion steps */}
-            <JourneyProgress
-              steps={steps.map((s): JourneyStep => ({
-                id: String(s.id),
-                label: s.label,
-              }))}
-              currentIndex={Math.max(
-                0,
-                steps.findIndex((s) => s.id === activeStep),
-              )}
-              estimate="About 3 minutes"
-            />
-            {/* Auth Status Banner - informational only, not blocking */}
-            {user ? (
-              <div className="border border-border/70 rounded-[22px] overflow-hidden bg-card shadow-[0_1px_2px_rgba(24,20,16,0.04),0_28px_64px_-40px_rgba(24,20,16,0.45)] p-5">
-                <div className="flex items-center gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                  <p className="text-sm text-muted-foreground">
-                    Logged in as <span className="font-medium text-foreground">{user?.email}</span>
-                  </p>
-                </div>
-              </div>
-            ) : (
+            {!user && (
               <div className="border border-primary/40 rounded-2xl overflow-hidden bg-primary/[0.06] p-5">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div>
@@ -915,14 +873,13 @@ const BookingCheckout = () => {
             )}
 
 
+
             {/* One-page slide wizard — a single screen at a time, Continue advances */}
             <div className="border border-border/70 rounded-[22px] overflow-hidden bg-card shadow-[0_1px_2px_rgba(24,20,16,0.04),0_28px_64px_-40px_rgba(24,20,16,0.45)]">
               <div className="flex items-center justify-between gap-3 px-5 pt-5">
                 <div>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">
-                    Step {Math.max(1, steps.findIndex((s) => s.id === activeStep) + 1)} of {steps.length}
-                  </p>
-                  <h2 className="mt-1 text-xl font-semibold tracking-tight text-foreground">
+                  <h2 className="text-xl font-semibold tracking-tight text-foreground">
+
                     {steps.find((s) => s.id === activeStep)?.label ?? 'Tell us more about yourself'}
                   </h2>
                 </div>
@@ -1228,7 +1185,7 @@ const BookingCheckout = () => {
 
           {/* Right Column - Summary Card */}
           <div className="lg:col-span-2">
-            <div className="sticky top-24 border border-border rounded-2xl p-5 bg-card space-y-4">
+            <div className="lg:sticky lg:top-24 max-h-[calc(100vh-7rem)] overflow-y-auto border border-border/70 rounded-[22px] p-5 bg-card shadow-[0_1px_2px_rgba(24,20,16,0.04),0_28px_64px_-40px_rgba(24,20,16,0.45)] space-y-4">
               {/* Listing preview */}
               <div className="flex gap-4">
                 <img
