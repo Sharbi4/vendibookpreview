@@ -490,7 +490,8 @@ const VendiListingBuilder: React.FC = () => {
     if (!draftId || !hydrated || !resumeChecked || resumeOffers.length || detached) return;
     setSaveState('saving');
     const timer = window.setTimeout(() => {
-      const payload = buildListingPayload(draft, uploadedUrls, uploadedVideoUrls);
+      void (async () => {
+      const payload = await withCoordinates(draftId, buildListingPayload(draft, uploadedUrls, uploadedVideoUrls));
       void supabase
         .from('listings')
         .update(payload as never)
