@@ -370,9 +370,13 @@ export const BookingDocumentUpload = ({
         </div>
       </div>
 
+      {requiresInsuranceDoc && (
+        <InsuranceEducationCard reason="This host requires proof of commercial general liability insurance for this booking." />
+      )}
+
       <TrustModule
         variant="compact"
-        title="Your documents stay private"
+        title="Private document storage"
         points={DOCUMENT_TRUST_POINTS}
         disclaimer={DOCUMENT_DISCLAIMER}
       />
