@@ -819,7 +819,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
         {/* ─────────────────────────────────────────────────────────────────────── */}
         {/* STEP 2: CALENDAR */}
         {/* ─────────────────────────────────────────────────────────────────────── */}
-        <div className="bg-muted/30 rounded-xl p-3">
+        <div className="bg-background rounded-2xl border border-border/60 p-3">
           {/* Calendar Header */}
           <div className="flex items-center justify-between mb-3">
             <button
@@ -1054,7 +1054,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="p-4 bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl border border-primary/20 space-y-2"
+              className="p-4 rounded-2xl border border-border/70 bg-muted/30 space-y-2"
             >
               <div className="flex items-center justify-between text-sm text-muted-foreground">
                 <span>{pricingInfo.breakdown}</span>
@@ -1077,7 +1077,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                       : 'Calculated at payment'}
                 </span>
               </div>
-              <Separator className="bg-primary/20" />
+              <Separator className="bg-border" />
               <div className="flex items-center justify-between pt-1">
                 <span className="font-semibold text-foreground">
                   {instantBook ? 'Est. total' : 'Est. total to authorize'}
@@ -1104,7 +1104,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
         {/* CTA BUTTON */}
         {/* ─────────────────────────────────────────────────────────────────────── */}
         {minimumMessage && (
-          <div className="flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/10 px-3 py-2 text-xs text-amber-200">
+          <div className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-200">
             <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
             <span>{minimumMessage}</span>
           </div>
