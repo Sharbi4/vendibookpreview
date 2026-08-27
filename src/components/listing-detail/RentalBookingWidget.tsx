@@ -777,27 +777,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
         ) : null}
       </div>
 
-              </>
-            )}
-          </div>
 
-          {/* Badges */}
-          <div className="flex flex-col gap-2 items-end">
-            {instantBook && (
-              <Badge className="bg-emerald-500 text-white border-0 shadow-md">
-                <Zap className="h-3 w-3 mr-1" />
-                Instant
-              </Badge>
-            )}
-            {totalSlots > 1 && (
-              <Badge variant="secondary" className="text-xs">
-                <MapPin className="h-3 w-3 mr-1" />
-                {totalSlots} Spots
-              </Badge>
-            )}
-          </div>
-        </div>
-      </div>
 
       {/* ═══════════════════════════════════════════════════════════════════════ */}
       {/* BODY - BOOKING FLOW */}
