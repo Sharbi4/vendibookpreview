@@ -10,6 +10,7 @@ import LivePreviewPanel from '@/components/ai-listing/LivePreviewPanel';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import vendibookFavicon from '@/assets/vendibook-favicon.png';
 import VendiAuthGate from '@/components/vendi-listing/VendiAuthGate';
+import VendiVoiceAgent from '@/components/vendi-listing/VendiVoiceAgent';
 import {
   buildListingPayload, getPublishBlockers, nextQuestion,
   promptText, resumeMessage, VENDI_WELCOME,
@@ -1787,6 +1788,20 @@ const VendiListingBuilder: React.FC = () => {
                 <Button type="submit" size="icon" aria-label="Send answer" className="h-10 w-10 shrink-0 rounded-full">
                   <Send className="h-4 w-4" />
                 </Button>
+              </div>
+              {/* Hands-free option: Vendi Voice asks the same question aloud and
+                  hands the spoken answer back through the normal extraction. */}
+              <div className="mt-3">
+                <VendiVoiceAgent
+                  disabled={publishing}
+                  onAnswer={(text) => submitAnswer(text)}
+                  context={[
+                    `Current question: ${current.prompt(draft)}`,
+                    facts.length ? `Saved so far: ${facts.map((f) => `${f.label}: ${f.value}`).join('; ')}` : '',
+                    draft.mode ? `Listing mode: ${draft.mode}` : '',
+                    draft.category ? `Category: ${draft.category}` : '',
+                  ].filter(Boolean).join('\n')}
+                />
               </div>
               <p className="mt-2 px-1 text-[11px] leading-relaxed text-muted-foreground">
                 {current.kind === 'paste'
