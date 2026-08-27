@@ -1427,9 +1427,7 @@ const BookingCheckout = () => {
                         {durationHours} hr × ${listing.price_hourly?.toLocaleString()}
                       </>
                     ) : (
-                      <>
-                        {rentalDays} day{rentalDays > 1 ? 's' : ''} × ${listing.price_daily?.toLocaleString()}
-                      </>
+                      <>{rentalQuote?.breakdown || `${rentalDays} day${rentalDays > 1 ? 's' : ''}`}</>
                     )}
                   </span>
                   <span>${basePrice.toLocaleString()}</span>
