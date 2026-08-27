@@ -77,6 +77,8 @@ const VendiVoiceAgent: React.FC<VendiVoiceAgentProps> = ({
   onGoToReview,
   canPublish = false,
   onPublish,
+  onRequestMedia,
+  imageCount = 0,
 }) => {
   const navigate = useNavigate();
   const [connecting, setConnecting] = useState(false);
