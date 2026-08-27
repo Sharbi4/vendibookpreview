@@ -364,12 +364,12 @@ const PayPalPaymentPanel = ({
       role="dialog"
       aria-modal="true"
       aria-label="Secure checkout"
-      className="fixed inset-0 z-[100] bg-background/95 backdrop-blur-md overflow-y-auto"
+      className="fixed inset-0 z-[100] bg-foreground/25 backdrop-blur-md overflow-y-auto"
     >
       <div className="min-h-full flex items-stretch md:items-center justify-center md:py-6 md:px-4">
         <div
           ref={containerRef}
-          className="relative w-full md:max-w-lg md:rounded-2xl rounded-t-2xl border border-border/60 bg-card shadow-2xl mt-6 md:mt-0 flex flex-col max-h-[calc(100dvh-1.5rem)] md:max-h-[calc(100dvh-3rem)]"
+          className="sale-light relative w-full md:max-w-lg md:rounded-[26px] rounded-t-[26px] border border-border/70 bg-card shadow-[0_40px_120px_-40px_rgba(24,20,16,0.55)] mt-6 md:mt-0 flex flex-col max-h-[calc(100dvh-1.5rem)] md:max-h-[calc(100dvh-3rem)]"
         >
           <button
             type="button"
@@ -381,20 +381,21 @@ const PayPalPaymentPanel = ({
             <X className="h-4 w-4" />
           </button>
 
-          <div className="px-6 pt-6 pb-4 border-b border-border/60 flex-shrink-0">
-            <div className="flex items-center gap-2 text-foreground">
+          <div className="px-7 pt-7 pb-5 border-b border-border/70 flex-shrink-0">
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">Vendibook</p>
+            <div className="mt-1.5 flex items-center gap-2 text-foreground">
               <ShieldCheck className="h-5 w-5 text-primary" />
-              <span className="text-base font-semibold">Secure checkout</span>
+              <span className="text-xl font-semibold tracking-tight">Secure checkout</span>
             </div>
-            <p className="mt-1 text-xs text-muted-foreground flex items-center gap-1.5">
+            <p className="mt-2 text-xs text-muted-foreground flex items-center gap-1.5">
               <Lock className="h-3 w-3" /> {TRUST_COPY.short}
             </p>
           </div>
 
           <div className="flex-1 overflow-y-auto">
-            {summary ? <div className="px-6 py-4 border-b border-border/60">{summary}</div> : null}
+            {summary ? <div className="px-7 py-5 border-b border-border/70 bg-muted/25">{summary}</div> : null}
 
-            <div className="px-6 py-5 space-y-4">
+            <div className="px-7 py-6 space-y-5">
               {state === 'success' ? (
                 <div className="py-10 flex flex-col items-center justify-center text-center animate-fade-in">
                   <div className="relative">
@@ -437,7 +438,7 @@ const PayPalPaymentPanel = ({
                   </p>
                   <a
                     href={authPath()}
-                    className="inline-flex w-full items-center justify-center rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground transition-opacity hover:opacity-90"
+                    className="inline-flex w-full items-center justify-center rounded-2xl bg-primary px-4 py-3.5 text-sm font-semibold text-primary-foreground shadow-[0_16px_36px_-20px_hsl(var(--primary)/0.8)] transition-opacity hover:opacity-95"
                   >
                     Sign in to continue
                   </a>
@@ -469,7 +470,7 @@ const PayPalPaymentPanel = ({
                         <button
                           type="button"
                           onClick={() => setCardOpen(true)}
-                          className="w-full rounded-xl border border-border/70 bg-background px-4 py-3 text-sm font-medium text-foreground hover:bg-muted/40 transition-colors"
+                          className="w-full rounded-2xl border border-border/70 bg-background px-4 py-3.5 text-sm font-semibold text-foreground hover:bg-muted/40 transition-colors"
                         >
                           Pay with debit or credit card
                         </button>
@@ -488,7 +489,7 @@ const PayPalPaymentPanel = ({
                             type="button"
                             onClick={submitCard}
                             disabled={cardSubmitting}
-                            className="w-full rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-primary-foreground disabled:opacity-60 transition-opacity"
+                            className="w-full rounded-2xl bg-primary px-4 py-3.5 text-sm font-semibold text-primary-foreground shadow-[0_16px_36px_-20px_hsl(var(--primary)/0.8)] disabled:opacity-60 transition-opacity hover:opacity-95"
                           >
                             {cardSubmitting ? 'Processing…' : 'Pay with card'}
                           </button>

@@ -110,25 +110,38 @@ const ProductCheckout = () => {
           navigate(successPath);
         }}
         summary={
-          <div className="space-y-1">
-            <p className="text-sm font-medium">{product.name}</p>
+          <div>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+              Order summary
+            </p>
+            <p className="mt-2 text-lg font-semibold tracking-tight text-foreground">{product.name}</p>
             {product.description && (
-              <p className="text-xs text-muted-foreground">{product.description}</p>
+              <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{product.description}</p>
             )}
-            <div className="space-y-0.5 pt-1">
-              <p className="text-sm">{formatUsd(priceCents)}</p>
+            <dl className="mt-4 space-y-1.5 border-t border-border/70 pt-4 text-sm">
+              <div className="flex items-baseline justify-between">
+                <dt className="text-muted-foreground">Subtotal</dt>
+                <dd className="text-foreground">{formatUsd(priceCents)}</dd>
+              </div>
               {taxCents > 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  {taxEstimate?.label || 'Estimated sales tax'} · {formatUsd(taxCents)}
-                </p>
+                <div className="flex items-baseline justify-between">
+                  <dt className="text-muted-foreground">{taxEstimate?.label || 'Estimated sales tax'}</dt>
+                  <dd className="text-foreground">{formatUsd(taxCents)}</dd>
+                </div>
               ) : (
                 <p className="text-xs text-muted-foreground">
                   Sales tax, if applicable, is calculated at payment.
                 </p>
               )}
-              <p className="text-lg font-semibold">{formatUsd(totalCents)}</p>
-            </div>
+              <div className="flex items-baseline justify-between pt-2">
+                <dt className="text-sm font-medium text-foreground">Total</dt>
+                <dd className="text-2xl font-semibold tracking-tight text-foreground">
+                  {formatUsd(totalCents)}
+                </dd>
+              </div>
+            </dl>
           </div>
+
         }
       />
     </>

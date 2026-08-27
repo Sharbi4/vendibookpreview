@@ -823,10 +823,10 @@ const BookingCheckout = () => {
 
   return (
 
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col bg-background bg-[radial-gradient(1100px_520px_at_50%_-6%,hsl(var(--primary)/0.06),transparent_70%)]">
       <Header />
       
-      <main className="flex-1 container py-6 lg:py-10">
+      <main className="flex-1 container py-8 lg:py-14">
         {/* Back Button */}
         <Button 
           variant="ghost" 
@@ -840,10 +840,21 @@ const BookingCheckout = () => {
           </Link>
         </Button>
 
-        {/* Title */}
-        <h1 className="text-2xl lg:text-3xl font-bold text-foreground mb-8">
-          {instantConfirm ? 'Book instantly' : 'Request to book'}
-        </h1>
+        {/* Editorial title block — matches the How It Works type scale */}
+        <div className="mb-10 max-w-2xl">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">
+            Vendibook checkout
+          </p>
+          <h1 className="mt-2 text-3xl lg:text-4xl font-semibold tracking-tight text-foreground">
+            {instantConfirm ? 'Book instantly' : 'Request to book'}
+          </h1>
+          <p className="mt-3 text-[15px] leading-relaxed text-muted-foreground">
+            {instantConfirm
+              ? 'Confirm your dates and details — your booking is confirmed as soon as payment goes through.'
+              : 'Send your dates and details to the host. Nothing is charged until your request is accepted.'}
+          </p>
+        </div>
+
 
         <div className="grid lg:grid-cols-5 gap-8 lg:gap-12">
           {/* Left Column - Steps */}
@@ -862,7 +873,7 @@ const BookingCheckout = () => {
             />
             {/* Auth Status Banner - informational only, not blocking */}
             {user ? (
-              <div className="border border-border rounded-2xl overflow-hidden bg-card p-5">
+              <div className="border border-border/70 rounded-[22px] overflow-hidden bg-card shadow-[0_1px_2px_rgba(24,20,16,0.04),0_28px_64px_-40px_rgba(24,20,16,0.45)] p-5">
                 <div className="flex items-center gap-3">
                   <CheckCircle2 className="h-5 w-5 text-emerald-500" />
                   <p className="text-sm text-muted-foreground">
@@ -892,7 +903,7 @@ const BookingCheckout = () => {
 
             {/* Step 2: Business Info (for food-related categories) */}
             {requiresBusinessInfo && (
-              <div className="border border-border rounded-2xl overflow-hidden bg-card">
+              <div className="border border-border/70 rounded-[22px] overflow-hidden bg-card shadow-[0_1px_2px_rgba(24,20,16,0.04),0_28px_64px_-40px_rgba(24,20,16,0.45)]">
                 <button
                   onClick={() => canAccessStep(STEP_BUSINESS_INFO) && setActiveStep(activeStep === STEP_BUSINESS_INFO ? null : STEP_BUSINESS_INFO)}
                   disabled={!canAccessStep(STEP_BUSINESS_INFO)}
@@ -939,7 +950,7 @@ const BookingCheckout = () => {
 
             {/* Step: Documents (if required) */}
             {hasRequiredDocs && (
-              <div className="border border-border rounded-2xl overflow-hidden bg-card">
+              <div className="border border-border/70 rounded-[22px] overflow-hidden bg-card shadow-[0_1px_2px_rgba(24,20,16,0.04),0_28px_64px_-40px_rgba(24,20,16,0.45)]">
                 <button
                   onClick={() => canAccessStep(STEP_DOCUMENTS) && setActiveStep(activeStep === STEP_DOCUMENTS ? null : STEP_DOCUMENTS)}
                   disabled={!canAccessStep(STEP_DOCUMENTS)}
@@ -985,7 +996,7 @@ const BookingCheckout = () => {
             )}
 
             {/* Step: Fulfillment & Details */}
-            <div className="border border-border rounded-2xl overflow-hidden bg-card">
+            <div className="border border-border/70 rounded-[22px] overflow-hidden bg-card shadow-[0_1px_2px_rgba(24,20,16,0.04),0_28px_64px_-40px_rgba(24,20,16,0.45)]">
               <button
                 onClick={() => canAccessStep(STEP_FULFILLMENT) && setActiveStep(activeStep === STEP_FULFILLMENT ? null : STEP_FULFILLMENT)}
                 disabled={!canAccessStep(STEP_FULFILLMENT)}
@@ -1145,7 +1156,7 @@ const BookingCheckout = () => {
             </div>
 
             {/* Step: Review */}
-            <div className="border border-border rounded-2xl overflow-hidden bg-card">
+            <div className="border border-border/70 rounded-[22px] overflow-hidden bg-card shadow-[0_1px_2px_rgba(24,20,16,0.04),0_28px_64px_-40px_rgba(24,20,16,0.45)]">
               <button
                 onClick={() => canAccessStep(STEP_REVIEW) && setActiveStep(activeStep === STEP_REVIEW ? null : STEP_REVIEW)}
                 disabled={!canAccessStep(STEP_REVIEW)}
