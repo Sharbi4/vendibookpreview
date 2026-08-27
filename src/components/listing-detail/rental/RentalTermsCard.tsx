@@ -50,7 +50,7 @@ export const RentalTermsCard = ({
 }: RentalTermsCardProps) => {
   const from = fmtDate(availableFrom);
   const to = fmtDate(availableTo);
-  const window = from || to ? `${from || 'Now'} – ${to || 'ongoing'}` : 'Ask the host about dates';
+  const window = from || to ? `${from || 'Now'} – ${to || 'ongoing'}` : 'Select dates in the booking calendar';
 
   const minimum = hourlyEnabled && minHours
     ? `${minHours} hour${minHours === 1 ? '' : 's'}`
