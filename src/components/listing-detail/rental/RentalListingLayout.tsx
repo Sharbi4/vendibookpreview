@@ -16,7 +16,6 @@ import { SaleQuickSpecs } from '@/components/listing-detail/sale/SaleQuickSpecs'
 import { SaleFeaturesGrid } from '@/components/listing-detail/sale/SaleFeaturesGrid';
 import { SaleLocationCard } from '@/components/listing-detail/sale/SaleSharedSections';
 import { RentalBookingWidget } from '@/components/listing-detail/RentalBookingWidget';
-import { StickyMobileCTA } from '@/components/listing-detail/StickyMobileCTA';
 import { WeeklyHoursDisplay } from '@/components/listing-detail/WeeklyHoursDisplay';
 import { VendorSlotAvailability } from '@/components/listing-detail/VendorSlotAvailability';
 import { ListingEventsSection } from '@/components/storefront';
@@ -124,7 +123,7 @@ export const RentalListingLayout = ({
         <EnhancedPhotoGallery images={images} videos={videos} title={listing.title} />
       </div>
 
-      <div className="container pt-5 pb-40 md:pb-32 lg:pb-20">
+      <div className="container pt-5 pb-16 lg:pb-20">
         {/* Breadcrumb + utilities */}
         <div className="flex items-center justify-between gap-3 mb-3">
           <nav className="flex items-center gap-1 text-xs text-muted-foreground min-w-0">
@@ -216,25 +215,22 @@ export const RentalListingLayout = ({
           </div>
         </header>
 
-        {/* Mobile: a compact rate summary; the bottom bar opens the booking sheet
-            so the calendar surface is never duplicated on the page. */}
+        {/* Mobile / tablet: the real booking calendar lives inline on the page
+            (no bottom sheet). Desktop keeps the sticky card in the right rail. */}
         {!isOwner && (
-          <SaleCard padding="md" className="lg:hidden mb-6 flex items-center justify-between gap-3">
-            <div className="min-w-0">
-              <p className="text-lg font-bold leading-tight">{headlineRate}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">
-                {instantBook ? 'Instant Book · pay at checkout' : 'Request to book · authorized, not charged'}
+          <section id="check-dates" className="lg:hidden mb-8 scroll-mt-24">
+            <div className="mb-3">
+              <h2 className="text-lg font-semibold tracking-tight">Check dates</h2>
+              <p className="text-sm text-muted-foreground">
+                {instantBook
+                  ? 'Instant Book · pick your dates to see the full total'
+                  : 'Request to book · pick your dates to see the full total'}
               </p>
             </div>
-            <Button
-              variant="cta"
-              size="sm"
-              onClick={() => document.getElementById('sticky-mobile-cta-primary')?.click()}
-            >
-              Check dates
-            </Button>
-          </SaleCard>
+            {bookingWidget('mobile')}
+          </section>
         )}
+
 
 
         <div className="grid lg:grid-cols-3 gap-6 lg:gap-12">
@@ -360,33 +356,6 @@ export const RentalListingLayout = ({
         </div>
       </div>
 
-      <StickyMobileCTA
-        listingId={listing.id}
-        hostId={listing.host_id}
-        isRental
-        priceDaily={listing.price_daily}
-        priceSale={listing.price_sale}
-        status={listing.status}
-        instantBook={instantBook}
-        category={listing.category}
-        fulfillmentType={listing.fulfillment_type}
-        priceWeekly={listing.price_weekly}
-        priceMonthly={listing.price_monthly}
-        priceHourly={listing.price_hourly}
-        hourlyEnabled={hourlyEnabled}
-        dailyEnabled={listing.daily_enabled !== false}
-        availableFrom={listing.available_from}
-        availableTo={listing.available_to}
-        pickupLocation={listing.pickup_location_text}
-        deliveryFee={listing.delivery_fee}
-        deliveryRadiusMiles={listing.delivery_radius_miles}
-        listingTitle={listing.title}
-        totalSlots={listing.total_slots || 1}
-        slotNames={listing.slot_names}
-        minHours={listing.min_hours}
-        minDays={listing.rental_min_days}
-        minNoticeHours={listing.min_notice_hours}
-      />
     </main>
   );
 };
