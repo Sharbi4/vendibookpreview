@@ -821,16 +821,14 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                         data-day-status={status}
                         data-day-disabled={isDisabled ? 'true' : 'false'}
                         className={cn(
-                          "aspect-square p-0.5 rounded-md text-xs font-medium transition-all relative",
+                          "h-8 w-8 mx-auto rounded-full text-[11px] font-medium transition-all relative",
                           "flex flex-col items-center justify-center",
-                          isDisabled && "opacity-30 cursor-not-allowed",
-                          !isDisabled && !isSelected && !isActiveHourly && "hover:bg-muted",
-                          isSelected && "bg-primary text-primary-foreground",
-                          isActiveHourly && !isSelected && "ring-2 ring-primary bg-primary/10",
-                          isStart && "rounded-l-md",
-                          isEnd && "rounded-r-md",
-                          status === 'partial' && !isSelected && !isActiveHourly && "bg-amber-50 dark:bg-amber-950/30",
-                          isToday(date) && !isSelected && !isActiveHourly && "ring-1 ring-primary/50",
+                          isDisabled && "opacity-30 cursor-not-allowed line-through",
+                          !isDisabled && !isSelected && !isActiveHourly && "hover:ring-1 hover:ring-foreground",
+                          isSelected && "bg-foreground text-background",
+                          isActiveHourly && !isSelected && "ring-1.5 ring-foreground bg-muted",
+                          status === 'partial' && !isSelected && !isActiveHourly && "bg-muted/60",
+                          isToday(date) && !isSelected && !isActiveHourly && "ring-1 ring-foreground/40",
                         )}
                       >
                         <span>{format(date, 'd')}</span>
