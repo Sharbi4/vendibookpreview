@@ -14,13 +14,18 @@ export const IDENTITY_DISCLAIMER =
 
 /** Trust points to render next to document upload widgets. */
 export const DOCUMENT_TRUST_POINTS: TrustPoint[] = [
-  { icon: Server, label: 'Private storage', detail: 'Files live in access-controlled storage — only you and your host can see them.' },
-  { icon: FileCheck, label: 'Reviewed manually', detail: 'A real person checks each document before approval.' },
-  { icon: Lock, label: 'Never shared', detail: 'Documents are never sold, ranked by AI, or shown to advertisers.' },
+  {
+    icon: Server,
+    label: 'Access-controlled storage',
+    detail:
+      'Files are stored in access-controlled storage and are available only to authorized Vendibook document review personnel and other parties authorized for the booking workflow as applicable.',
+  },
+  { icon: FileCheck, label: 'Reviewed before approval', detail: 'Each document is checked against the host requirement before it is marked approved.' },
+  { icon: Lock, label: 'Not sold or advertised', detail: 'Documents are never sold or shared with advertisers.' },
 ];
 
 export const DOCUMENT_DISCLAIMER =
-  'Vendibook stores documents only for the length of your booking cycle and any required audit window.';
+  'Vendibook retains documents for the booking cycle and any required audit or legal retention window.';
 
 /** Trust points to render next to payment/checkout CTAs. */
 export const PAYMENT_TRUST_POINTS: TrustPoint[] = [
