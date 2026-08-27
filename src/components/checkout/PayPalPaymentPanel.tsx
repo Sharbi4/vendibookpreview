@@ -3,7 +3,10 @@ import { CheckCircle2, Loader2, Lock, ShieldCheck, X } from 'lucide-react';
 
 import { supabase } from '@/integrations/supabase/client';
 import { loadPayPalSdk } from '@/lib/paypalClient';
+import { parseEdgeError } from '@/lib/edgeErrors';
+import { authPath } from '@/lib/auth/returnTo';
 import { TRUST_COPY } from '@/lib/transactionVocabulary';
+
 import { PayPalMonogram } from '@/components/brand/ProviderLogos';
 import PaymentFormSkeleton from './PaymentFormSkeleton';
 import TrustRow from './TrustRow';
