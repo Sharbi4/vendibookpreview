@@ -3,6 +3,10 @@ import searchListingsTool from "./tools/search-listings";
 import getListingTool from "./tools/get-listing";
 import listMyListingsTool from "./tools/list-my-listings";
 import listMyBookingsTool from "./tools/list-my-bookings";
+import checkListingBlockersTool from "./tools/check-listing-blockers";
+import publishListingTool from "./tools/publish-listing";
+import listUpsellProductsTool from "./tools/list-upsell-products";
+import createUpgradeCheckoutTool from "./tools/create-upgrade-checkout";
 
 // Build the OAuth issuer from the project ref (Vite inlines this at build
 // time as a string literal, so the entry stays import-safe). Never derive
@@ -17,10 +21,19 @@ export default defineMcp({
   title: "Vendibook",
   version: "0.1.0",
   instructions:
-    "Tools for Vendibook — the marketplace for food trucks, trailers, shared kitchens, and vendor lots. Use `search_listings` and `get_listing` for public marketplace data. Use `list_my_listings` and `list_my_bookings` to act as the signed-in user. All per-user tools respect Vendibook's ownership and privacy rules.",
+    "Tools for Vendibook — the marketplace for food trucks, trailers, shared kitchens, and vendor lots. Public tools: `search_listings`, `get_listing`. Authenticated tools: `list_my_listings`, `list_my_bookings`, `check_listing_blockers`, `publish_listing`, `list_upsell_products`, `create_upgrade_checkout`. Use `check_listing_blockers` before publishing. Use `list_upsell_products` and `create_upgrade_checkout` for Vendibook Pro, Featured Boost, and Listing Concierge upgrades.",
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated",
   }),
-  tools: [searchListingsTool, getListingTool, listMyListingsTool, listMyBookingsTool],
+  tools: [
+    searchListingsTool,
+    getListingTool,
+    listMyListingsTool,
+    listMyBookingsTool,
+    checkListingBlockersTool,
+    publishListingTool,
+    listUpsellProductsTool,
+    createUpgradeCheckoutTool,
+  ],
 });
