@@ -437,6 +437,52 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   }, [mode, totalSelectedHours, selectedDatesCount, startDate, endDate, priceHourly, priceDaily, priceWeekly, priceMonthly, selectedSlotCount]);
 
   // ─────────────────────────────────────────────────────────────────────────────
+  // LIVE TAX ESTIMATE
+  // Same `tax-quote` source the checkout summary uses, so the renter never sees
+  // the total jump between this widget and checkout. Cosmetic only — the
+  // authoritative amount is re-locked server-side at order creation.
+  // ─────────────────────────────────────────────────────────────────────────────
+  const [taxEstimate, setTaxEstimate] = useState<{ tax_cents: number; label: string } | null>(null);
+  const [taxState, setTaxState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  const quotedTotal = pricingInfo?.total ?? 0;
+
+  useEffect(() => {
+    if (!listingId || quotedTotal <= 0) {
+      setTaxEstimate(null);
+      setTaxState('idle');
+      return;
+    }
+    const controller = new AbortController();
+    setTaxState('loading');
+    const t = setTimeout(() => {
+      supabase.functions
+        .invoke('tax-quote', {
+          body: { kind: 'rental', listing_id: listingId, total_cents: Math.round(quotedTotal * 100) },
+        })
+        .then(({ data, error }) => {
+          if (controller.signal.aborted) return;
+          if (!error && data) {
+            setTaxEstimate(data as { tax_cents: number; label: string });
+            setTaxState('ready');
+          } else {
+            setTaxEstimate(null);
+            setTaxState('error');
+          }
+        })
+        .catch(() => {
+          if (!controller.signal.aborted) {
+            setTaxEstimate(null);
+            setTaxState('error');
+          }
+        });
+    }, 400);
+    return () => { clearTimeout(t); controller.abort(); };
+  }, [listingId, quotedTotal]);
+
+  const taxAmount = (taxEstimate?.tax_cents ?? 0) / 100;
+  const estimatedTotal = quotedTotal + taxAmount;
+
+  // ─────────────────────────────────────────────────────────────────────────────
   // CAN CONTINUE CHECK
   // ─────────────────────────────────────────────────────────────────────────────
   // Host-defined minimums (normalized)
@@ -651,9 +697,11 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                     initial={{ scale: 1 }}
                     whileHover={{ scale: 1.02 }}
                   >
-                    ${priceDaily?.toLocaleString() || '—'}
+                    {headlineRate ? formatAmount(headlineRate.amount) : '—'}
                   </motion.span>
-                  <span className="text-muted-foreground text-lg">/day</span>
+                  <span className="text-muted-foreground text-lg">
+                    {headlineRate ? headlineRate.suffix.replace('/', '/ ').trim() : '/day'}
+                  </span>
                 </div>
                 
                 {/* Tiered pricing indicators */}
@@ -664,13 +712,19 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                       ${priceHourly.toLocaleString()}/hr for hourly
                     </p>
                   )}
-                  {priceWeekly && (
+                  {priceDaily && headlineRate?.unit !== 'daily' && (
+                    <p className="text-sm text-muted-foreground flex items-center gap-1.5">
+                      <Sun className="h-3.5 w-3.5 text-primary" />
+                      ${priceDaily.toLocaleString()}/day
+                    </p>
+                  )}
+                  {priceWeekly && headlineRate?.unit !== 'weekly' && (
                     <p className="text-sm text-muted-foreground flex items-center gap-1.5">
                       
                       ${priceWeekly.toLocaleString()}/week for 7+ days
                     </p>
                   )}
-                  {priceMonthly && (
+                  {priceMonthly && headlineRate?.unit !== 'monthly' && (
                     <p className="text-sm text-muted-foreground flex items-center gap-1.5">
                       <CalendarRange className="h-3.5 w-3.5 text-primary" />
                       ${priceMonthly.toLocaleString()}/month for 30+ days
