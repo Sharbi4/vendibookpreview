@@ -184,7 +184,9 @@ const PayPalPaymentPanel = ({
   const handlersRef = useRef({ startOrder, finishOrder, fail });
   handlersRef.current = { startOrder, finishOrder, fail };
 
-  // Mount the PayPal Buttons once.
+  // Mount the PayPal Buttons once — but only for a signed-in payer. Every
+  // `paypal-create-order` call requires a session, so rendering the buttons to
+  // a signed-out visitor would open PayPal and then fail after the fact.
   useEffect(() => {
     let cancelled = false;
     let instance: any = null;
@@ -196,8 +198,19 @@ const PayPalPaymentPanel = ({
     };
 
 
-    loadPayPalSdk()
+    supabase.auth
+      .getSession()
+      .then(({ data }) => {
+        if (cancelled) return null;
+        if (!data.session) {
+          setState('signin');
+          return null;
+        }
+        return loadPayPalSdk();
+      })
       .then((paypal) => {
+        if (!paypal) return;
+
         if (cancelled || !buttonsRef.current) return;
 
         if (paypal.Messages && messagesRef.current && (totalUsd ?? 0) >= 50) {
