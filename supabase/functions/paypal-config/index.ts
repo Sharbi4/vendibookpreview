@@ -15,7 +15,9 @@ serve((req) => {
     environment: status.environment,
     client_id: paypalPublicClientId(),
     currency: "USD",
-    components: ["buttons", "messages", "card-fields"],
+    // applepay/googlepay are express wallets layered on the same PayPal order
+    // lifecycle; the SDK hides them automatically when they are not eligible.
+    components: ["buttons", "messages", "card-fields", "applepay", "googlepay"],
     enable_funding: ["venmo", "paylater"],
   });
 });
