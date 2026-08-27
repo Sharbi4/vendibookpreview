@@ -74,6 +74,35 @@ export const TERMINAL_PAYMENT_STATES = new Set([
   "disputed_lost",
 ]);
 
+/**
+ * Only the subset of terminal states that exist in the `paypal_payment_status`
+ * enum may be used inside a SQL filter. Passing a label the enum does not know
+ * (e.g. "chargeback") makes Postgres reject the whole statement with 22P02,
+ * which previously made every capture update fail silently.
+ */
+const ENUM_PAYMENT_STATES = new Set([
+  "created",
+  "approved",
+  "pending",
+  "completed",
+  "declined",
+  "failed",
+  "cancelled",
+  "partially_refunded",
+  "refunded",
+  "reversed",
+  "authorized",
+  "partially_captured",
+  "authorization_voided",
+  "authorization_expired",
+  "deposit_paid_balance_due",
+]);
+
+export const TERMINAL_PAYMENT_STATES_SQL = [...TERMINAL_PAYMENT_STATES].filter((s) =>
+  ENUM_PAYMENT_STATES.has(s)
+);
+
+
 export class CaptureRejectedError extends Error {
   constructor(public reason: string, message: string) {
     super(message);
