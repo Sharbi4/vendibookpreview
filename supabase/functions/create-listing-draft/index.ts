@@ -23,7 +23,14 @@ const BodySchema = z.object({
    * and auth redirects all resolve to the same id instead of a new draft.
    */
   sessionKey: z.string().trim().min(8).max(80).optional().nullable(),
+  /**
+   * Same idempotency contract for every NON-Vendi creation flow (manual
+   * quick-start wizard, import/paste wizard, AI creator). Kept in its own
+   * column so the Vendi resume chooser never offers a manual draft.
+   */
+  creationSessionKey: z.string().trim().min(8).max(80).optional().nullable(),
 });
+
 
 
 const json = (body: unknown, status = 200) =>
