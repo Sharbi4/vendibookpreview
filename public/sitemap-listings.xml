@@ -23,17 +23,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/c8d152a4-dbc2-4239-8e0a-56cecac50266</loc>
-    <lastmod>2026-08-27</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/b420d8c8-f0f5-4f20-8250-64d70c9993df/c8d152a4-dbc2-4239-8e0a-56cecac50266/1786451155485-v4zvfc.jpeg</image:loc>
-      <image:title>2026 Fully loaded Food trailer READY </image:title>
-      <image:caption>2026 Fully loaded Food trailer READY  in Lilburn, GA on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/205c63e8-ba53-41e8-b447-290bbd1006a7</loc>
     <lastmod>2026-08-27</lastmod>
     <changefreq>weekly</changefreq>
@@ -515,6 +504,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/398e66a8-04a9-4c70-b24d-e6736d619b29/cbb5119a-c8f5-45fc-a357-b8e5c15f84d8/1785588236498-87xgp.jpeg</image:loc>
       <image:title>8x16 Kitchen trailer for sale</image:title>
       <image:caption>8x16 Kitchen trailer for sale in Colbert, GA on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/c8d152a4-dbc2-4239-8e0a-56cecac50266</loc>
+    <lastmod>2026-08-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/b420d8c8-f0f5-4f20-8250-64d70c9993df/c8d152a4-dbc2-4239-8e0a-56cecac50266/1786451155485-v4zvfc.jpeg</image:loc>
+      <image:title>2026 Fully loaded Food trailer READY </image:title>
+      <image:caption>2026 Fully loaded Food trailer READY  in Lilburn, GA on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
