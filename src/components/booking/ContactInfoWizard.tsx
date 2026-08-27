@@ -11,16 +11,14 @@
  *  - SMS and email consent checkboxes are ALWAYS unchecked by default, never
  *    bundled together, and never inferred from a stored phone number.
  */
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { ValidatedInput, validators } from '@/components/ui/validated-input';
-import { CheckCircle2, User, Phone, MapPin, Mail, FileText, Loader2, ExternalLink } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Loader2, ExternalLink } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -105,7 +103,6 @@ export function ContactInfoWizard({
   const [loadingProfile, setLoadingProfile] = useState(Boolean(user));
   const [savingStep, setSavingStep] = useState<StepKey | null>(null);
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
-  const [activeStep, setActiveStep] = useState<StepKey>('name');
   const [doneSteps, setDoneSteps] = useState<StepKey[]>([]);
   const hydrated = useRef(false);
 
@@ -170,8 +167,6 @@ export function ContactInfoWizard({
         done.push('address');
       }
       setDoneSteps(done);
-      const order: StepKey[] = ['name', 'phone', 'address', 'preferences', 'agree'];
-      setActiveStep(order.find((s) => !done.includes(s)) ?? 'agree');
     };
 
     void hydrate();
