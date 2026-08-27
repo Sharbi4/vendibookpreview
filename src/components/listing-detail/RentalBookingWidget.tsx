@@ -137,6 +137,16 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   // STATE: Duration Mode
   // ─────────────────────────────────────────────────────────────────────────────
   const [mode, setMode] = useState<'hourly' | 'daily'>('daily');
+
+  /** Shortest bookable rate the host configured — drives the headline price. */
+  const headlineRate = useMemo(
+    () => resolveRentalRate({
+      price_daily: priceDaily,
+      price_weekly: priceWeekly,
+      price_monthly: priceMonthly,
+    }),
+    [priceDaily, priceWeekly, priceMonthly],
+  );
   
   // ─────────────────────────────────────────────────────────────────────────────
   // STATE: Date Selection
@@ -1034,21 +1044,42 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                 <span>{pricingInfo.breakdown}</span>
                 <span>${pricingInfo.basePrice.toLocaleString()}</span>
               </div>
+              {pricingInfo.roundedUpNote && (
+                <p className="text-xs text-muted-foreground">{pricingInfo.roundedUpNote}</p>
+              )}
               <div className="flex items-center justify-between text-sm text-muted-foreground">
                 <span>Service fee</span>
                 <span>${pricingInfo.serviceFee.toLocaleString()}</span>
               </div>
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <span>{taxEstimate?.label || 'Estimated sales tax'}</span>
+                <span>
+                  {taxAmount > 0
+                    ? formatAmount(taxAmount)
+                    : taxState === 'loading'
+                      ? 'Calculating…'
+                      : 'Calculated at payment'}
+                </span>
+              </div>
               <Separator className="bg-primary/20" />
               <div className="flex items-center justify-between pt-1">
-                <span className="font-semibold text-foreground">Est. total</span>
+                <span className="font-semibold text-foreground">
+                  {instantBook ? 'Est. total' : 'Est. total to authorize'}
+                </span>
                 <motion.span 
                   className="text-xl font-bold text-foreground"
                   initial={{ scale: 1 }}
                   whileHover={{ scale: 1.05 }}
+                  data-testid="rental-widget-total"
                 >
-                  ${pricingInfo.total.toLocaleString()}
+                  {formatAmount(estimatedTotal)}
                 </motion.span>
               </div>
+              <p className="text-xs text-muted-foreground">
+                {instantBook
+                  ? 'Charged when your booking is confirmed. Any security deposit is handled separately and is not charged today.'
+                  : 'Authorized now, not charged. You are only charged if the host approves your request.'}
+              </p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -1085,10 +1116,10 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
             {instantBook ? (
               <>
                 <Zap className="h-5 w-5 mr-2" />
-                Book Now
+                Continue to book
               </>
             ) : (
-              'Request to Book'
+              'Continue to request'
             )}
             {pricingInfo && (
               <span className="ml-2 opacity-80">
@@ -1099,12 +1130,12 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
           </Button>
         </motion.div>
 
-        {!instantBook && (
-          <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1.5">
-            <Shield className="h-3.5 w-3.5" />
-            Your card will be authorized now and only charged if approved
-          </p>
-        )}
+        <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1.5">
+          <Shield className="h-3.5 w-3.5" />
+          {instantBook
+            ? 'Instant Book — no host approval needed. Payment is taken when the booking is confirmed.'
+            : 'Request to Book — payment authorized now, not charged. Only charged if the host approves.'}
+        </p>
 
         {/* Trust indicators */}
         <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground pt-2">
