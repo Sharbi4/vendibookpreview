@@ -35,8 +35,8 @@ import { useTermsGate } from '@/hooks/useTermsGate';
 import { buildTerms } from '@/lib/transactionTerms';
 import { ProtectionOptInCard } from '@/components/protected-sale/ProtectionOptInCard';
 import { useCheckoutState } from '@/hooks/useCheckoutState';
-import {
 import { getPublicDisplayName } from '@/lib/displayName';
+import {
   JourneyProgress,
   PrimaryActionBar,
   TrustModule,

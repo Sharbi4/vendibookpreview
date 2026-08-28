@@ -294,10 +294,12 @@ const Search = () => {
     setPage(1);
     if (location) {
       setLocationCoords(location.coordinates);
+      setLocationText(location.name);
       const params = new URLSearchParams(searchParams);
       params.set('lat', location.coordinates[1].toString());
       params.set('lng', location.coordinates[0].toString());
       params.set('radius', searchRadius.toString());
+      params.set('location', location.name);
       params.delete('page');
       setSearchParams(params);
     } else {
@@ -306,6 +308,7 @@ const Search = () => {
       params.delete('lat');
       params.delete('lng');
       params.delete('radius');
+      params.delete('location');
       params.delete('page');
       setSearchParams(params);
     }
@@ -451,7 +454,7 @@ const Search = () => {
   const activeFiltersCount = [
     mode !== 'all',
     category !== 'all',
-    locationCoords !== null,
+    locationCoords !== null || locationText.trim().length > 0,
     priceRange[0] > 0 || priceRange[1] !== Infinity,
     dateRange?.from && dateRange?.to,
     selectedAmenities.length > 0,
@@ -625,6 +628,20 @@ const Search = () => {
                 </div>
               </div>
 
+              {/* First-class location search */}
+              <div className="hidden sm:block w-[280px] lg:w-[340px] shrink-0">
+                <LocationSearchInput
+                  value={locationText}
+                  onChange={setLocationText}
+                  onLocationSelect={handleLocationSelect}
+                  selectedCoordinates={locationCoords}
+                  placeholder="City, state, or ZIP"
+                  showRadiusSelector={false}
+                  radius={searchRadius}
+                  onRadiusChange={handleRadiusChange}
+                />
+              </div>
+
               {/* Filter Button */}
               <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
                 <SheetTrigger asChild>
@@ -768,11 +785,15 @@ const Search = () => {
               >
                 <div className="flex items-center justify-between">
                   <h2 className="font-semibold text-foreground">Filters</h2>
-                  {activeFiltersCount > 0 && (
-                    <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs text-primary hover:text-primary">
-                      Clear all
-                    </Button>
-                  )}
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={clearFilters}
+                    disabled={activeFiltersCount === 0 && !searchQuery.trim()}
+                    className="text-xs text-primary hover:text-primary disabled:opacity-40"
+                  >
+                    Clear all
+                  </Button>
                 </div>
                 <FilterContent
                   mode={mode}
@@ -1267,6 +1288,7 @@ const FilterContent = ({
 
   onInstantBookChange,
   onVerifiedHostsChange,
+  onClear,
 }: FilterContentProps) => {
   // Get amenities to show based on selected category
   const getAvailableAmenities = () => {
@@ -1280,6 +1302,13 @@ const FilterContent = ({
   const availableAmenities = getAvailableAmenities();
   return (
     <div className="space-y-5">
+      <div className="flex items-center justify-between border-b border-border/60 pb-3">
+        <span className="text-xs text-muted-foreground">Refine marketplace results</span>
+        <Button type="button" variant="ghost" size="sm" onClick={onClear} className="h-8 px-2 text-xs text-primary">
+          Clear all filters
+        </Button>
+      </div>
+
       {/* Type Filter - First */}
       <div className="space-y-2">
         <Label className="text-sm font-medium flex items-center gap-2">
