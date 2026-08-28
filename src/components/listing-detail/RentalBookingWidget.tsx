@@ -110,7 +110,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   depositAmount = null}) => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { blockedDates, isDateUnavailable, getUnavailabilityReason, timeZone } = useBlockedDates({ listingId });
+  const { blockedDates, isDateUnavailable, getUnavailabilityReason, timeZone, isLoading: availabilityLoading } = useBlockedDates({ listingId });
   const { 
     settings: hourlySettings, 
     getDayAvailabilityInfo,
