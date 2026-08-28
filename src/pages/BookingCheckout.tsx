@@ -1429,9 +1429,9 @@ const BookingCheckout = () => {
                 {depositAmount ? (
                   <div className="flex items-start justify-between text-sm pt-2">
                     <span className="text-muted-foreground flex items-center gap-1">
-                      Security deposit
+                      Security deposit (held)
                       <InfoTooltip
-                        content="This host requires a security deposit. It is arranged directly with the host and is not part of today's Vendibook charge. Refund terms are set by the host."
+                        content="This refundable security deposit is charged today and held by Vendibook. After your rental, any damages, fees, or late-return charges may be deducted and the remaining balance is returned to your payment method."
                         side="top"
                       />
                     </span>
