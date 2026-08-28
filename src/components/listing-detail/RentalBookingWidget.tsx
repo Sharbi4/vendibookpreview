@@ -232,6 +232,60 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
     setCurrentMonth(addMonths(currentMonth, 1));
   };
 
+  // ── Keyboard navigation: roving tabindex across the calendar grid ──────────
+  const gridRef = React.useRef<HTMLDivElement | null>(null);
+  const [focusedDate, setFocusedDate] = useState<Date>(() => startOfDay(new Date()));
+  const [shouldFocusDay, setShouldFocusDay] = useState(false);
+
+  const clampToRange = (d: Date) => {
+    if (isBefore(d, today)) return today;
+    if (isAfter(d, maxDate)) return maxDate;
+    return d;
+  };
+
+  const moveFocus = (next: Date) => {
+    const target = clampToRange(startOfDay(next));
+    setFocusedDate(target);
+    setShouldFocusDay(true);
+    const targetMonth = startOfMonth(target);
+    if (!isSameDay(targetMonth, monthStart)) {
+      setMonthDirection(isAfter(targetMonth, monthStart) ? 1 : -1);
+      setCurrentMonth(targetMonth);
+    }
+  };
+
+  const handleGridKeyDown = (e: React.KeyboardEvent) => {
+    const keys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown'];
+    if (!keys.includes(e.key)) return;
+    e.preventDefault();
+    switch (e.key) {
+      case 'ArrowLeft': moveFocus(addDays(focusedDate, -1)); break;
+      case 'ArrowRight': moveFocus(addDays(focusedDate, 1)); break;
+      case 'ArrowUp': moveFocus(addDays(focusedDate, -7)); break;
+      case 'ArrowDown': moveFocus(addDays(focusedDate, 7)); break;
+      case 'Home': moveFocus(addDays(focusedDate, -focusedDate.getDay())); break;
+      case 'End': moveFocus(addDays(focusedDate, 6 - focusedDate.getDay())); break;
+      case 'PageUp': moveFocus(subMonths(focusedDate, 1)); break;
+      case 'PageDown': moveFocus(addMonths(focusedDate, 1)); break;
+    }
+  };
+
+  // Move DOM focus after the grid re-renders (including month changes)
+  useEffect(() => {
+    if (!shouldFocusDay) return;
+    const key = format(focusedDate, 'yyyy-MM-dd');
+    const el = gridRef.current?.querySelector<HTMLButtonElement>(`[data-day-key="${key}"]`);
+    el?.focus();
+    setShouldFocusDay(false);
+  }, [shouldFocusDay, focusedDate, currentMonth]);
+
+  // Keep the roving focus inside the visible month when navigating by header/swipe
+  useEffect(() => {
+    if (isSameDay(startOfMonth(focusedDate), monthStart)) return;
+    setFocusedDate(clampToRange(monthStart));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentMonth]);
+
   // Touch swipe to switch months on mobile
   const swipeRef = React.useRef<{ x: number; y: number } | null>(null);
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -250,6 +304,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
       else handlePrevMonth();
     }
   };
+
 
   // ─────────────────────────────────────────────────────────────────────────────
   // DATE VALIDATION
@@ -920,11 +975,14 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
         {/* STEP 1: MODE TOGGLE (Only if both modes enabled) */}
         {/* ─────────────────────────────────────────────────────────────────────── */}
         {hourlyEnabled && dailyEnabled && (
-          <div className="flex rounded-full bg-muted/60 p-0.5">
+          <div className="flex rounded-full bg-muted/60 p-0.5" role="group" aria-label="Booking rate type">
             <button
+              type="button"
+              aria-pressed={mode === 'hourly'}
               onClick={() => { setMode('hourly'); handleReset(); }}
               className={cn(
                 "flex-1 py-1.5 px-3 text-xs font-medium rounded-full transition-all duration-200",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                 mode === 'hourly' 
                   ? "bg-background text-foreground shadow-sm" 
                   : "text-muted-foreground hover:text-foreground"
@@ -933,9 +991,12 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
               Hourly
             </button>
             <button
+              type="button"
+              aria-pressed={mode === 'daily'}
               onClick={() => { setMode('daily'); handleReset(); }}
               className={cn(
                 "flex-1 py-1.5 px-3 text-xs font-medium rounded-full transition-all duration-200",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                 mode === 'daily' 
                   ? "bg-background text-foreground shadow-sm" 
                   : "text-muted-foreground hover:text-foreground"
@@ -960,7 +1021,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
               onClick={handlePrevMonth}
               disabled={!canGoPrev}
               aria-label="Previous month"
-              className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-muted active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-muted active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
@@ -980,7 +1041,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
               onClick={handleNextMonth}
               disabled={!canGoNext}
               aria-label="Next month"
-              className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-muted active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-muted active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
@@ -1015,7 +1076,12 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
             exit={{ opacity: 0, x: monthDirection * -40 }}
             transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
             className="grid grid-cols-7 gap-y-0.5"
+            ref={gridRef}
+            role="group"
+            aria-label={`Availability calendar for ${format(currentMonth, 'MMMM yyyy')}. Use arrow keys to move between days, Page Up and Page Down to change months, Enter to select.`}
+            onKeyDown={handleGridKeyDown}
           >
+
             {paddingDays.map((_, i) => (
               <div key={`pad-${i}`} />
             ))}
@@ -1041,22 +1107,32 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
+                        type="button"
                         onClick={() => handleDateClick(date)}
-                        disabled={isDisabled}
+                        onFocus={() => setFocusedDate(startOfDay(date))}
+                        tabIndex={isSameDay(date, focusedDate) ? 0 : -1}
                         data-testid="rental-calendar-day"
                         data-day-key={dateKey}
                         data-day-status={status}
                         data-day-disabled={isDisabled ? 'true' : 'false'}
                         aria-disabled={isDisabled}
+                        aria-pressed={!isDisabled ? isSelected : undefined}
+                        aria-current={isToday(date) ? 'date' : undefined}
                         aria-label={
                           isDisabled
-                            ? `${format(date, 'EEEE, MMMM d')} — unavailable. ${blockReason ?? ''}`.trim()
-                            : format(date, 'EEEE, MMMM d')
+                            ? `${format(date, 'EEEE, MMMM d, yyyy')} — unavailable. ${blockReason ?? ''}`.trim()
+                            : [
+                                format(date, 'EEEE, MMMM d, yyyy'),
+                                isStart ? 'selected check-in' : isEnd ? 'selected check-out' : isSelected ? 'in selected stay' : 'available',
+                                mode !== 'hourly' && totalSlots > 1 ? `${available} of ${totalSlots} spots available` : '',
+                                mode === 'hourly' && hasHourly ? `${hoursOnDate} hour${hoursOnDate > 1 ? 's' : ''} selected` : '',
+                              ].filter(Boolean).join(', ')
                         }
                         className={cn(
                           // Larger tap target on touch screens, tighter on desktop
                           "h-9 w-9 sm:h-8 sm:w-8 mx-auto rounded-full text-[12px] sm:text-[11px] font-medium transition-all duration-150 relative",
                           "flex flex-col items-center justify-center active:scale-90",
+                          "focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:z-10",
                           isDisabled && "opacity-30 cursor-not-allowed line-through",
                           beyondLimit && "opacity-40 no-underline",
                           !isDisabled && !isSelected && !isActiveHourly && "hover:ring-1 hover:ring-foreground",
@@ -1069,6 +1145,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                           isToday(date) && !isSelected && !isActiveHourly && "ring-1 ring-foreground/40",
                         )}
                       >
+
                         <span>{format(date, 'd')}</span>
                         {/* Slot availability indicator for multi-slot OR hourly selection indicator */}
                         {mode === 'hourly' && hasHourly && (
@@ -1258,6 +1335,16 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
           </div>
         )}
 
+        {/* Screen-reader status: selection + live total */}
+        <p className="sr-only" role="status" aria-live="polite">
+          {startDate
+            ? `${format(startDate, 'MMMM d, yyyy')}${endDate ? ` to ${format(endDate, 'MMMM d, yyyy')}` : ''} selected.`
+            : mode === 'hourly'
+              ? `${totalSelectedHours} hour${totalSelectedHours === 1 ? '' : 's'} selected.`
+              : 'No dates selected yet.'}
+          {pricingInfo ? ` Estimated total ${formatAmount(estimatedTotal)}.` : ''}
+        </p>
+
         {/* ─────────────────────────────────────────────────────────────────────── */}
         {/* PRICE BREAKDOWN */}
         {/* ─────────────────────────────────────────────────────────────────────── */}
@@ -1269,6 +1356,9 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               className="pt-1 space-y-1.5"
+              role="region"
+              aria-label="Price breakdown"
+              aria-live="polite"
             >
               {pricingInfo.lines.map((line) => (
                 <div
@@ -1322,6 +1412,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                 <span 
                   className="text-base font-semibold text-foreground"
                   data-testid="rental-widget-total"
+                  aria-label={`${isInstant ? 'Estimated total' : 'Estimated total to authorize'}: ${formatAmount(estimatedTotal)}`}
                 >
                   {formatAmount(estimatedTotal)}
                 </span>
