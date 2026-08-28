@@ -1101,22 +1101,32 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
+                        type="button"
                         onClick={() => handleDateClick(date)}
-                        disabled={isDisabled}
+                        onFocus={() => setFocusedDate(startOfDay(date))}
+                        tabIndex={isSameDay(date, focusedDate) ? 0 : -1}
                         data-testid="rental-calendar-day"
                         data-day-key={dateKey}
                         data-day-status={status}
                         data-day-disabled={isDisabled ? 'true' : 'false'}
                         aria-disabled={isDisabled}
+                        aria-pressed={!isDisabled ? isSelected : undefined}
+                        aria-current={isToday(date) ? 'date' : undefined}
                         aria-label={
                           isDisabled
-                            ? `${format(date, 'EEEE, MMMM d')} — unavailable. ${blockReason ?? ''}`.trim()
-                            : format(date, 'EEEE, MMMM d')
+                            ? `${format(date, 'EEEE, MMMM d, yyyy')} — unavailable. ${blockReason ?? ''}`.trim()
+                            : [
+                                format(date, 'EEEE, MMMM d, yyyy'),
+                                isStart ? 'selected check-in' : isEnd ? 'selected check-out' : isSelected ? 'in selected stay' : 'available',
+                                mode !== 'hourly' && totalSlots > 1 ? `${available} of ${totalSlots} spots available` : '',
+                                mode === 'hourly' && hasHourly ? `${hoursOnDate} hour${hoursOnDate > 1 ? 's' : ''} selected` : '',
+                              ].filter(Boolean).join(', ')
                         }
                         className={cn(
                           // Larger tap target on touch screens, tighter on desktop
                           "h-9 w-9 sm:h-8 sm:w-8 mx-auto rounded-full text-[12px] sm:text-[11px] font-medium transition-all duration-150 relative",
                           "flex flex-col items-center justify-center active:scale-90",
+                          "focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:z-10",
                           isDisabled && "opacity-30 cursor-not-allowed line-through",
                           beyondLimit && "opacity-40 no-underline",
                           !isDisabled && !isSelected && !isActiveHourly && "hover:ring-1 hover:ring-foreground",
@@ -1129,6 +1139,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                           isToday(date) && !isSelected && !isActiveHourly && "ring-1 ring-foreground/40",
                         )}
                       >
+
                         <span>{format(date, 'd')}</span>
                         {/* Slot availability indicator for multi-slot OR hourly selection indicator */}
                         {mode === 'hourly' && hasHourly && (
