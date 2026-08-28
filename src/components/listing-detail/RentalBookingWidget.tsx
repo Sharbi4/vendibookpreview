@@ -1070,7 +1070,12 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
             exit={{ opacity: 0, x: monthDirection * -40 }}
             transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
             className="grid grid-cols-7 gap-y-0.5"
+            ref={gridRef}
+            role="group"
+            aria-label={`Availability calendar for ${format(currentMonth, 'MMMM yyyy')}. Use arrow keys to move between days, Page Up and Page Down to change months, Enter to select.`}
+            onKeyDown={handleGridKeyDown}
           >
+
             {paddingDays.map((_, i) => (
               <div key={`pad-${i}`} />
             ))}
