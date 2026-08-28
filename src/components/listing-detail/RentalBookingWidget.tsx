@@ -40,6 +40,7 @@ import { calculateRentalFees } from '@/lib/commissions';
 import { supabase } from '@/integrations/supabase/client';
 import { quoteRentalPeriod, resolveRentalRate, formatAmount } from '@/lib/listings/rentalPricing';
 import { useBlockedDates } from '@/hooks/useBlockedDates';
+import { useToast } from '@/hooks/use-toast';
 import { useHourlyAvailability } from '@/hooks/useHourlyAvailability';
 import { todayInTimeZone, currentHourInTimeZone } from '@/lib/listingTimezone';
 import { trackCTAClick } from '@/lib/analytics';
@@ -105,7 +106,8 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   deliveryFee,
   depositAmount = null}) => {
   const navigate = useNavigate();
-  const { blockedDates, isDateUnavailable, timeZone } = useBlockedDates({ listingId });
+  const { toast } = useToast();
+  const { blockedDates, isDateUnavailable, getUnavailabilityReason, timeZone } = useBlockedDates({ listingId });
   const { 
     settings: hourlySettings, 
     getDayAvailabilityInfo,
@@ -235,6 +237,47 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
     return isDateUnavailable(date);
   };
 
+  /**
+   * Plain-language explanation of why a day can't be picked.
+   * Returns null when the day is selectable.
+   */
+  const getDayBlockReason = (date: Date): string | null => {
+    if (isBefore(date, today)) return 'This date has already passed.';
+    if (isAfter(date, maxDate)) return 'Bookings open up to 12 months ahead.';
+    if (availableFrom && isBefore(date, startOfDay(parseISO(availableFrom)))) {
+      return `This rental becomes available ${format(startOfDay(parseISO(availableFrom)), 'MMM d, yyyy')}.`;
+    }
+    if (availableTo && isBefore(startOfDay(parseISO(availableTo)), date)) {
+      return `This rental is only available through ${format(startOfDay(parseISO(availableTo)), 'MMM d, yyyy')}.`;
+    }
+    const reason = getUnavailabilityReason(date);
+    if (reason) return reason.label;
+    const info = getDayAvailabilityInfo(date);
+    if (info.isUnavailable) return 'Fully booked — no spots left.';
+    return null;
+  };
+
+  /**
+   * First unavailable day after the chosen start date. A stay can never span
+   * it, so every day from here on is locked while an end date is being picked.
+   */
+  const rangeLimit = useMemo(() => {
+    if (mode !== 'daily' || !startDate) return null;
+    for (let i = 1; i <= 400; i += 1) {
+      const candidate = addDays(startDate, i);
+      if (isAfter(candidate, maxDate)) return null;
+      if (isDateDisabled(candidate)) return candidate;
+    }
+    return null;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, startDate, blockedDates, isDateUnavailable, availableFrom, availableTo]);
+
+  /** True when the day sits past the first blocked day after the start date. */
+  const isBeyondRangeLimit = (date: Date): boolean => {
+    if (mode !== 'daily' || !startDate || endDate || !rangeLimit) return false;
+    return isAfter(date, startDate) && !isBefore(date, rangeLimit);
+  };
+
   const getDayStatus = (date: Date): 'available' | 'partial' | 'full' | 'past' | 'outside' => {
     if (isBefore(date, today)) return 'past';
     if (isAfter(date, maxDate)) return 'outside';
@@ -281,7 +324,25 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   // ─────────────────────────────────────────────────────────────────────────────
   const handleDateClick = (date: Date) => {
     const status = getDayStatus(date);
-    if (status === 'past' || status === 'outside' || status === 'full') return;
+    if (status === 'past' || status === 'outside' || status === 'full') {
+      const reason = getDayBlockReason(date);
+      if (reason) {
+        toast({
+          title: `${format(date, 'MMM d')} is unavailable`,
+          description: reason,
+        });
+      }
+      return;
+    }
+    if (isBeyondRangeLimit(date)) {
+      toast({
+        title: 'Your stay would cross an unavailable day',
+        description: rangeLimit
+          ? `${format(rangeLimit, 'MMM d')} is unavailable — ${getDayBlockReason(rangeLimit) ?? 'pick an earlier end date.'}`
+          : 'Pick an earlier end date.',
+      });
+      return;
+    }
 
     if (mode === 'hourly') {
       // Multi-day hourly: set active date to show time slots (preserve existing selections)
@@ -568,7 +629,20 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
       navigate(`/book/${listingId}?${params.toString()}`);
     } else {
       if (!startDate) return;
-      
+
+      // Final guard: never send a range that crosses an unavailable day.
+      const conflict = eachDayOfInterval({ start: startDate, end: endDate ?? startDate })
+        .find(day => isDateDisabled(day));
+      if (conflict) {
+        toast({
+          title: 'Those dates are not available',
+          description: `${format(conflict, 'MMM d')} is unavailable — ${getDayBlockReason(conflict) ?? 'please choose different dates.'}`,
+          variant: 'destructive',
+        });
+        setEndDate(undefined);
+        return;
+      }
+
       const startStr = format(startDate, 'yyyy-MM-dd');
       const endStr = endDate ? format(endDate, 'yyyy-MM-dd') : startStr;
       
@@ -798,7 +872,11 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
               const isEnd = !!(endDate && isSameDay(date, endDate));
               const isRangeMiddle = isSelected && !isStart && !isEnd;
               const { available } = getAvailability(date);
-              const isDisabled = status === 'past' || status === 'outside' || status === 'full';
+              const beyondLimit = isBeyondRangeLimit(date);
+              const isDisabled = status === 'past' || status === 'outside' || status === 'full' || beyondLimit;
+              const blockReason = beyondLimit
+                ? `Your stay can't continue past ${rangeLimit ? format(rangeLimit, 'MMM d') : 'this date'} — ${rangeLimit ? (getDayBlockReason(rangeLimit) ?? 'that day is unavailable.') : 'a later day is unavailable.'}`
+                : getDayBlockReason(date);
               const isActiveHourly = isActiveHourlyDate(date);
               const hasHourly = mode === 'hourly' && hasHourlySelection(date);
               const dateKey = format(date, 'yyyy-MM-dd');
@@ -815,10 +893,17 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                         data-day-key={dateKey}
                         data-day-status={status}
                         data-day-disabled={isDisabled ? 'true' : 'false'}
+                        aria-disabled={isDisabled}
+                        aria-label={
+                          isDisabled
+                            ? `${format(date, 'EEEE, MMMM d')} — unavailable. ${blockReason ?? ''}`.trim()
+                            : format(date, 'EEEE, MMMM d')
+                        }
                         className={cn(
                           "h-8 w-8 mx-auto rounded-full text-[11px] font-medium transition-all relative",
                           "flex flex-col items-center justify-center",
                           isDisabled && "opacity-30 cursor-not-allowed line-through",
+                          beyondLimit && "opacity-40 no-underline",
                           !isDisabled && !isSelected && !isActiveHourly && "hover:ring-1 hover:ring-foreground",
                           (isStart || isEnd) && "bg-foreground text-background",
                           isRangeMiddle && "rounded-none w-full bg-muted text-foreground",
@@ -847,14 +932,20 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                         )}
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent side="top" className="text-xs">
-                      {mode === 'hourly' && hasHourly && `${hoursOnDate} hour${hoursOnDate > 1 ? 's' : ''} selected`}
-                      {mode === 'hourly' && !hasHourly && status === 'available' && 'Tap to select hours'}
-                      {mode !== 'hourly' && status === 'available' && `${available} spot${available > 1 ? 's' : ''} available`}
-                      {status === 'partial' && `${available} of ${totalSlots} spots available`}
-                      {status === 'full' && 'Fully booked'}
-                      {status === 'past' && 'Past date'}
-                      {status === 'outside' && 'Outside availability'}
+                    <TooltipContent side="top" className="max-w-[220px] text-xs">
+                      {isDisabled ? (
+                        <span className="block">
+                          <span className="block font-medium">{format(date, 'EEE, MMM d')} · Unavailable</span>
+                          <span className="block text-muted-foreground">{blockReason ?? 'Not available for booking.'}</span>
+                        </span>
+                      ) : (
+                        <>
+                          {mode === 'hourly' && hasHourly && `${hoursOnDate} hour${hoursOnDate > 1 ? 's' : ''} selected`}
+                          {mode === 'hourly' && !hasHourly && 'Tap to select hours'}
+                          {mode !== 'hourly' && status === 'partial' && `${available} of ${totalSlots} spots available`}
+                          {mode !== 'hourly' && status === 'available' && `${available} spot${available > 1 ? 's' : ''} available`}
+                        </>
+                      )}
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -871,6 +962,11 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                   : `${format(startDate, 'MMM d')} · tap an end date (or continue for 1 day)`
                 }
               </span>
+              {!endDate && rangeLimit && (
+                <p className="mt-1 text-[11px] text-muted-foreground/90">
+                  Available through {format(addDays(rangeLimit, -1), 'MMM d')} — {getDayBlockReason(rangeLimit)?.toLowerCase()} on {format(rangeLimit, 'MMM d')}.
+                </p>
+              )}
             </div>
           )}
           
