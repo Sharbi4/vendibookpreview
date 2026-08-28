@@ -332,6 +332,8 @@ const AnimatedRoutes = () => {
           <Route path="/verify-identity" element={<PageTransition><IdentityVerification /></PageTransition>} />
           <Route path="/verification-complete" element={<PageTransition><VerificationComplete /></PageTransition>} />
           <Route path="/booking-confirmation" element={<PageTransition><BookingConfirmation /></PageTransition>} />
+          <Route path="/order-confirmation" element={<PageTransition><OrderConfirmation /></PageTransition>} />
+          <Route path="/order-confirmation/:reference" element={<PageTransition><OrderConfirmation /></PageTransition>} />
           <Route path="/payment-success" element={<PageTransition><PaymentSuccess /></PageTransition>} />
           <Route path="/payment-cancelled" element={<PageTransition><PaymentCancelled /></PageTransition>} />
           <Route path="/messages" element={<PageTransition><Messages /></PageTransition>} />
