@@ -938,27 +938,40 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
         {/* ─────────────────────────────────────────────────────────────────────── */}
         {/* STEP 2: CALENDAR (compact Airbnb-style) */}
         {/* ─────────────────────────────────────────────────────────────────────── */}
-        <div className="rounded-xl border border-border/60 p-2.5">
+        <div
+          className="rounded-xl border border-border/60 p-2.5 overflow-hidden"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
           {/* Calendar Header */}
           <div className="flex items-center justify-between mb-1.5">
             <button
               onClick={handlePrevMonth}
               disabled={!canGoPrev}
               aria-label="Previous month"
-              className="p-1 rounded-full hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
+              className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-muted active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
             >
-              <ChevronLeft className="h-3.5 w-3.5" />
+              <ChevronLeft className="h-4 w-4" />
             </button>
-            <span className="font-medium text-xs">
-              {format(currentMonth, 'MMMM yyyy')}
-            </span>
+            <AnimatePresence mode="wait" initial={false} custom={monthDirection}>
+              <motion.span
+                key={format(currentMonth, 'yyyy-MM')}
+                initial={{ opacity: 0, y: monthDirection * 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: monthDirection * -6 }}
+                transition={{ duration: 0.18, ease: 'easeOut' }}
+                className="font-medium text-xs"
+              >
+                {format(currentMonth, 'MMMM yyyy')}
+              </motion.span>
+            </AnimatePresence>
             <button
               onClick={handleNextMonth}
               disabled={!canGoNext}
               aria-label="Next month"
-              className="p-1 rounded-full hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
+              className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-muted active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
             >
-              <ChevronRight className="h-3.5 w-3.5" />
+              <ChevronRight className="h-4 w-4" />
             </button>
           </div>
 
@@ -971,8 +984,27 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
             ))}
           </div>
 
-          {/* Calendar Grid */}
-          <div className="grid grid-cols-7 gap-y-0.5">
+          {/* Calendar Grid — skeleton while availability loads, slide on month change */}
+          {availabilityLoading ? (
+            <div className="grid grid-cols-7 gap-y-1 animate-pulse" aria-busy="true" aria-label="Loading availability">
+              {paddingDays.map((_, i) => (
+                <div key={`pad-${i}`} />
+              ))}
+              {daysInMonth.map(date => (
+                <div key={`skel-${date.toISOString()}`} className="h-9 w-9 mx-auto rounded-full bg-muted/70" />
+              ))}
+            </div>
+          ) : (
+          <AnimatePresence mode="popLayout" initial={false} custom={monthDirection}>
+          <motion.div
+            key={format(currentMonth, 'yyyy-MM')}
+            custom={monthDirection}
+            initial={{ opacity: 0, x: monthDirection * 40 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: monthDirection * -40 }}
+            transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
+            className="grid grid-cols-7 gap-y-0.5"
+          >
             {paddingDays.map((_, i) => (
               <div key={`pad-${i}`} />
             ))}
