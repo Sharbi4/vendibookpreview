@@ -64,6 +64,8 @@ interface RentalBookingWidgetProps {
   hourlyEnabled?: boolean;
   dailyEnabled?: boolean;
   instantBook?: boolean;
+  /** Instant Book only stays instant when the host is identity verified. */
+  hostIdentityVerified?: boolean;
   // Host-defined minimums
   minHours?: number | null;
   minDays?: number | null;
@@ -97,6 +99,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   hourlyEnabled: hourlyEnabledProp = false,
   dailyEnabled: dailyEnabledProp = true,
   instantBook = false,
+  hostIdentityVerified = false,
   minHours,
   minDays,
   minNoticeHours,
@@ -597,6 +600,67 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   }, [mode, totalSelectedHours, requiredHours, startDate, selectedDays, requiredDays, noticeViolation]);
 
   // ─────────────────────────────────────────────────────────────────────────────
+  // BOOKING FLOW: instant book vs request to book
+  // Instant Book is a host setting, but it only holds when the host is verified
+  // and the selected dates are cleanly available. Anything else falls back to a
+  // request the host must approve — the same rule checkout enforces.
+  // ─────────────────────────────────────────────────────────────────────────────
+  const bookingFlow = useMemo(() => {
+    if (!instantBook) {
+      return {
+        instant: false as const,
+        reason: 'This host reviews every request before confirming.',
+      };
+    }
+    if (!hostIdentityVerified) {
+      return {
+        instant: false as const,
+        reason: 'Instant Book turns on once this host finishes identity verification.',
+      };
+    }
+
+    const selectedDates = mode === 'hourly'
+      ? sortedSelectedDates.map(key => parseISO(key))
+      : startDate
+        ? eachDayOfInterval({ start: startDate, end: endDate ?? startDate })
+        : [];
+
+    // Multi-slot: instant confirmation needs the full requested capacity free.
+    if (totalSlots > 1 && selectedDates.length > 0) {
+      const tight = selectedDates.find(day => getAvailability(day).available < selectedSlotCount);
+      if (tight) {
+        return {
+          instant: false as const,
+          reason: `Limited spots left on ${format(tight, 'MMM d')} — the host confirms this one manually.`,
+        };
+      }
+    }
+
+    // Partially booked days (hourly listings) always need host review.
+    if (mode === 'hourly' && selectedDates.some(day => getDayAvailabilityInfo(day).isLimited)) {
+      return {
+        instant: false as const,
+        reason: 'Part of your selected time is already booked — the host will confirm.',
+      };
+    }
+
+    return { instant: true as const, reason: null };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    instantBook,
+    hostIdentityVerified,
+    mode,
+    sortedSelectedDates,
+    startDate,
+    endDate,
+    totalSlots,
+    selectedSlotCount,
+    blockedDates,
+  ]);
+
+  const isInstant = bookingFlow.instant;
+
+  // ─────────────────────────────────────────────────────────────────────────────
   // CONTINUE TO BOOKING HANDLER
   // ─────────────────────────────────────────────────────────────────────────────
   const handleContinue = () => {
@@ -626,6 +690,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
         params.set('slotCount', selectedSlotCount.toString());
       }
       
+      if (!isInstant) params.set('flow', 'request');
       navigate(`/book/${listingId}?${params.toString()}`);
     } else {
       if (!startDate) return;
@@ -658,6 +723,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
         params.set('slotCount', selectedSlotCount.toString());
       }
       
+      if (!isInstant) params.set('flow', 'request');
       navigate(`/book/${listingId}?${params.toString()}`);
     }
   };
@@ -760,7 +826,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
 
           {/* Badges */}
           <div className="flex gap-1.5 items-center">
-            {instantBook && (
+            {isInstant && (
               <Badge className="bg-emerald-500 text-white border-0 text-[10px] px-1.5 py-0.5">
                 <Zap className="h-2.5 w-2.5 mr-0.5" />
                 Instant
@@ -1118,7 +1184,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
               <Separator className="bg-border/60" />
               <div className="flex items-center justify-between">
                 <span className="text-sm font-semibold text-foreground">
-                  {instantBook ? 'Est. total' : 'Est. total to authorize'}
+                  {isInstant ? 'Est. total' : 'Est. total to authorize'}
                 </span>
                 <span 
                   className="text-base font-semibold text-foreground"
@@ -1128,7 +1194,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                 </span>
               </div>
               <p className="text-[11px] text-muted-foreground">
-                {instantBook
+                {isInstant
                   ? 'Charged when your booking is confirmed. Any security deposit is charged today and held — refunded (minus damages/fees) after your rental.'
                   : 'Authorized now, not charged. Only charged if the host approves. Any security deposit is held and refunded (minus damages/fees) after your rental.'}
               </p>
@@ -1156,23 +1222,25 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
         )}
 
         <Button
-          variant={instantBook ? 'dark-shine' : 'outline'}
+          variant={isInstant ? 'dark-shine' : 'outline'}
           className={cn(
             'w-full h-11 text-sm font-semibold rounded-lg',
-            !instantBook && 'border-foreground/60 hover:bg-muted/50'
+            !isInstant && 'border-foreground/60 hover:bg-muted/50'
           )}
           onClick={() => {
             trackLeadEvent('check_availability_click', {
               listing_id: listingId,
               source: 'rental_booking_widget',
-              instant_book: instantBook});
+              instant_book: isInstant,
+              instant_book_setting: instantBook});
             handleContinue();
           }}
           disabled={!canContinue}
           data-testid="rental-widget-cta"
-          data-instant-book={instantBook ? 'true' : 'false'}
+          data-instant-book={isInstant ? 'true' : 'false'}
+          data-booking-flow={isInstant ? 'instant' : 'request'}
         >
-          {instantBook ? 'Continue to book' : 'Continue to request'}
+          {isInstant ? 'Continue to book' : 'Continue to request'}
           {pricingInfo && (
             <span className="ml-1.5 opacity-80 font-normal">
               · {pricingInfo.durationLabel}
@@ -1181,10 +1249,15 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
         </Button>
 
         <p className="text-[11px] text-center text-muted-foreground">
-          {instantBook
+          {isInstant
             ? "You won't be charged until your booking is confirmed."
             : 'Payment authorized now — only charged if the host approves.'}
         </p>
+        {!isInstant && bookingFlow.reason && (
+          <p className="text-[11px] text-center text-muted-foreground/90">
+            {bookingFlow.reason}
+          </p>
+        )}
         {depositValue > 0 && (
           <p className="text-[11px] text-center text-muted-foreground">
             Security deposit charged today and held; refunded (minus damages/fees) after your rental.

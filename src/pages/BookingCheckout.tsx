@@ -81,7 +81,11 @@ const BookingCheckout = () => {
    * accept. Mirrors the server rule in `paypalFinalize`.
    */
   const { verified: hostIdentityVerified } = useSellerVerifiedBadge(listing?.host_id);
-  const instantConfirm = !!listing?.instant_book && hostIdentityVerified;
+  // The widget can downgrade an instant listing to a request (e.g. limited
+  // spots left on a selected day) and signals that with ?flow=request.
+  const requestedFlow = searchParams.get('flow');
+  const instantConfirm =
+    !!listing?.instant_book && hostIdentityVerified && requestedFlow !== 'request';
   const { data: ratingData } = useListingAverageRating(listingId);
   const { data: requiredDocs } = useListingRequiredDocuments(listingId || '');
   const requiredDocTypes = requiredDocs?.map(d => d.document_type as string);
