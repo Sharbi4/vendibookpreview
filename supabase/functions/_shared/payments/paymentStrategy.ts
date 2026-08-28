@@ -50,11 +50,15 @@ export type PaymentIntent = "CAPTURE" | "AUTHORIZE" | "NONE";
 
 export interface PaymentStrategyContext {
   mode: TransactionMode;
-  /** Total the buyer/renter owes for the rental or purchase, in cents. */
+  /** Total the buyer/renter owes for the rental or purchase, in cents.
+   * For rentals this INCLUDES the refundable security deposit, which is
+   * charged today and held by the platform (refunded after the rental minus
+   * any damages / fees). */
   grossCents: number;
   /**
-   * Refundable damage/security deposit in cents. Tracked separately and never
-   * treated as revenue — it is NOT part of `grossCents`.
+   * Refundable damage/security deposit in cents. Surfaced separately for
+   * tracking/refund. For rentals it is part of `grossCents` (charged today,
+   * never treated as revenue or seller proceeds).
    */
   securityDepositCents?: number;
   /** Disclosed, non-refundable-per-terms reservation deposit, in cents. */
