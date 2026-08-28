@@ -1346,6 +1346,9 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
               className="pt-1 space-y-1.5"
+              role="region"
+              aria-label="Price breakdown"
+              aria-live="polite"
             >
               {pricingInfo.lines.map((line) => (
                 <div
@@ -1399,6 +1402,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                 <span 
                   className="text-base font-semibold text-foreground"
                   data-testid="rental-widget-total"
+                  aria-label={`${isInstant ? 'Estimated total' : 'Estimated total to authorize'}: ${formatAmount(estimatedTotal)}`}
                 >
                   {formatAmount(estimatedTotal)}
                 </span>
