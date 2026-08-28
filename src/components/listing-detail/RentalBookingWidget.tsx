@@ -1079,6 +1079,11 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
             ? "You won't be charged until your booking is confirmed."
             : 'Payment authorized now — only charged if the host approves.'}
         </p>
+        {depositValue > 0 && (
+          <p className="text-[11px] text-center text-muted-foreground">
+            Security deposit charged today and held; refunded (minus damages/fees) after your rental.
+          </p>
+        )}
       </div>
     </motion.div>
   );
