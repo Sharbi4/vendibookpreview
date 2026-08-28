@@ -854,7 +854,11 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
               const isEnd = !!(endDate && isSameDay(date, endDate));
               const isRangeMiddle = isSelected && !isStart && !isEnd;
               const { available } = getAvailability(date);
-              const isDisabled = status === 'past' || status === 'outside' || status === 'full';
+              const beyondLimit = isBeyondRangeLimit(date);
+              const isDisabled = status === 'past' || status === 'outside' || status === 'full' || beyondLimit;
+              const blockReason = beyondLimit
+                ? `Your stay can't continue past ${rangeLimit ? format(rangeLimit, 'MMM d') : 'this date'} — ${rangeLimit ? (getDayBlockReason(rangeLimit) ?? 'that day is unavailable.') : 'a later day is unavailable.'}`
+                : getDayBlockReason(date);
               const isActiveHourly = isActiveHourlyDate(date);
               const hasHourly = mode === 'hourly' && hasHourlySelection(date);
               const dateKey = format(date, 'yyyy-MM-dd');
@@ -871,10 +875,17 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                         data-day-key={dateKey}
                         data-day-status={status}
                         data-day-disabled={isDisabled ? 'true' : 'false'}
+                        aria-disabled={isDisabled}
+                        aria-label={
+                          isDisabled
+                            ? `${format(date, 'EEEE, MMMM d')} — unavailable. ${blockReason ?? ''}`.trim()
+                            : format(date, 'EEEE, MMMM d')
+                        }
                         className={cn(
                           "h-8 w-8 mx-auto rounded-full text-[11px] font-medium transition-all relative",
                           "flex flex-col items-center justify-center",
                           isDisabled && "opacity-30 cursor-not-allowed line-through",
+                          beyondLimit && "opacity-40 no-underline",
                           !isDisabled && !isSelected && !isActiveHourly && "hover:ring-1 hover:ring-foreground",
                           (isStart || isEnd) && "bg-foreground text-background",
                           isRangeMiddle && "rounded-none w-full bg-muted text-foreground",
@@ -903,14 +914,20 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                         )}
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent side="top" className="text-xs">
-                      {mode === 'hourly' && hasHourly && `${hoursOnDate} hour${hoursOnDate > 1 ? 's' : ''} selected`}
-                      {mode === 'hourly' && !hasHourly && status === 'available' && 'Tap to select hours'}
-                      {mode !== 'hourly' && status === 'available' && `${available} spot${available > 1 ? 's' : ''} available`}
-                      {status === 'partial' && `${available} of ${totalSlots} spots available`}
-                      {status === 'full' && 'Fully booked'}
-                      {status === 'past' && 'Past date'}
-                      {status === 'outside' && 'Outside availability'}
+                    <TooltipContent side="top" className="max-w-[220px] text-xs">
+                      {isDisabled ? (
+                        <span className="block">
+                          <span className="block font-medium">{format(date, 'EEE, MMM d')} · Unavailable</span>
+                          <span className="block text-muted-foreground">{blockReason ?? 'Not available for booking.'}</span>
+                        </span>
+                      ) : (
+                        <>
+                          {mode === 'hourly' && hasHourly && `${hoursOnDate} hour${hoursOnDate > 1 ? 's' : ''} selected`}
+                          {mode === 'hourly' && !hasHourly && 'Tap to select hours'}
+                          {mode !== 'hourly' && status === 'partial' && `${available} of ${totalSlots} spots available`}
+                          {mode !== 'hourly' && status === 'available' && `${available} spot${available > 1 ? 's' : ''} available`}
+                        </>
+                      )}
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
@@ -927,6 +944,11 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                   : `${format(startDate, 'MMM d')} · tap an end date (or continue for 1 day)`
                 }
               </span>
+              {!endDate && rangeLimit && (
+                <p className="mt-1 text-[11px] text-muted-foreground/90">
+                  Available through {format(addDays(rangeLimit, -1), 'MMM d')} — {getDayBlockReason(rangeLimit)?.toLowerCase()} on {format(rangeLimit, 'MMM d')}.
+                </p>
+              )}
             </div>
           )}
           
