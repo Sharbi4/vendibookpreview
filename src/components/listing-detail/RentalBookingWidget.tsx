@@ -40,6 +40,7 @@ import { calculateRentalFees } from '@/lib/commissions';
 import { supabase } from '@/integrations/supabase/client';
 import { quoteRentalPeriod, resolveRentalRate, formatAmount } from '@/lib/listings/rentalPricing';
 import { useBlockedDates } from '@/hooks/useBlockedDates';
+import { useToast } from '@/hooks/use-toast';
 import { useHourlyAvailability } from '@/hooks/useHourlyAvailability';
 import { todayInTimeZone, currentHourInTimeZone } from '@/lib/listingTimezone';
 import { trackCTAClick } from '@/lib/analytics';
@@ -105,7 +106,8 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   deliveryFee,
   depositAmount = null}) => {
   const navigate = useNavigate();
-  const { blockedDates, isDateUnavailable, timeZone } = useBlockedDates({ listingId });
+  const { toast } = useToast();
+  const { blockedDates, isDateUnavailable, getUnavailabilityReason, timeZone } = useBlockedDates({ listingId });
   const { 
     settings: hourlySettings, 
     getDayAvailabilityInfo,
@@ -233,6 +235,47 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
     }
     
     return isDateUnavailable(date);
+  };
+
+  /**
+   * Plain-language explanation of why a day can't be picked.
+   * Returns null when the day is selectable.
+   */
+  const getDayBlockReason = (date: Date): string | null => {
+    if (isBefore(date, today)) return 'This date has already passed.';
+    if (isAfter(date, maxDate)) return 'Bookings open up to 12 months ahead.';
+    if (availableFrom && isBefore(date, startOfDay(parseISO(availableFrom)))) {
+      return `This rental becomes available ${format(startOfDay(parseISO(availableFrom)), 'MMM d, yyyy')}.`;
+    }
+    if (availableTo && isBefore(startOfDay(parseISO(availableTo)), date)) {
+      return `This rental is only available through ${format(startOfDay(parseISO(availableTo)), 'MMM d, yyyy')}.`;
+    }
+    const reason = getUnavailabilityReason(date);
+    if (reason) return reason.label;
+    const info = getDayAvailabilityInfo(date);
+    if (info.isUnavailable) return 'Fully booked — no spots left.';
+    return null;
+  };
+
+  /**
+   * First unavailable day after the chosen start date. A stay can never span
+   * it, so every day from here on is locked while an end date is being picked.
+   */
+  const rangeLimit = useMemo(() => {
+    if (mode !== 'daily' || !startDate) return null;
+    for (let i = 1; i <= 400; i += 1) {
+      const candidate = addDays(startDate, i);
+      if (isAfter(candidate, maxDate)) return null;
+      if (isDateDisabled(candidate)) return candidate;
+    }
+    return null;
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mode, startDate, blockedDates, isDateUnavailable, availableFrom, availableTo]);
+
+  /** True when the day sits past the first blocked day after the start date. */
+  const isBeyondRangeLimit = (date: Date): boolean => {
+    if (mode !== 'daily' || !startDate || endDate || !rangeLimit) return false;
+    return isAfter(date, startDate) && !isBefore(date, rangeLimit);
   };
 
   const getDayStatus = (date: Date): 'available' | 'partial' | 'full' | 'past' | 'outside' => {
@@ -568,7 +611,20 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
       navigate(`/book/${listingId}?${params.toString()}`);
     } else {
       if (!startDate) return;
-      
+
+      // Final guard: never send a range that crosses an unavailable day.
+      const conflict = eachDayOfInterval({ start: startDate, end: endDate ?? startDate })
+        .find(day => isDateDisabled(day));
+      if (conflict) {
+        toast({
+          title: 'Those dates are not available',
+          description: `${format(conflict, 'MMM d')} is unavailable — ${getDayBlockReason(conflict) ?? 'please choose different dates.'}`,
+          variant: 'destructive',
+        });
+        setEndDate(undefined);
+        return;
+      }
+
       const startStr = format(startDate, 'yyyy-MM-dd');
       const endStr = endDate ? format(endDate, 'yyyy-MM-dd') : startStr;
       
