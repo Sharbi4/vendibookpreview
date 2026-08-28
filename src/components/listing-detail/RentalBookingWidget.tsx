@@ -72,6 +72,8 @@ interface RentalBookingWidgetProps {
   // Fulfillment
   fulfillmentType?: FulfillmentType;
   deliveryFee?: number | null;
+  // Refundable security deposit (charged today, held, refunded after rental)
+  depositAmount?: number | null;
 }
 
 /**
@@ -99,7 +101,8 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   totalSlots = 1,
   slotNames,
   fulfillmentType = 'pickup',
-  deliveryFee}) => {
+  deliveryFee,
+  depositAmount = null}) => {
   const navigate = useNavigate();
   const { blockedDates, isDateUnavailable, timeZone } = useBlockedDates({ listingId });
   const { 
@@ -477,7 +480,10 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   }, [listingId, quotedTotal]);
 
   const taxAmount = (taxEstimate?.tax_cents ?? 0) / 100;
-  const estimatedTotal = quotedTotal + taxAmount;
+  // The refundable security deposit is charged today and held; it is part of
+  // the total the renter sees here so it matches the PayPal capture amount.
+  const depositValue = depositAmount ?? 0;
+  const estimatedTotal = quotedTotal + taxAmount + depositValue;
 
   // ─────────────────────────────────────────────────────────────────────────────
   // CAN CONTINUE CHECK
@@ -996,6 +1002,12 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                 <span>Service fee</span>
                 <span>${pricingInfo.serviceFee.toLocaleString()}</span>
               </div>
+              {depositValue > 0 && (
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>Security deposit (refundable)</span>
+                  <span>${depositValue.toLocaleString()}</span>
+                </div>
+              )}
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>{taxEstimate?.label || 'Estimated sales tax'}</span>
                 <span>
@@ -1020,8 +1032,8 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
               </div>
               <p className="text-[11px] text-muted-foreground">
                 {instantBook
-                  ? 'Charged when your booking is confirmed. Security deposits are handled separately.'
-                  : 'Authorized now, not charged. Only charged if the host approves.'}
+                  ? 'Charged when your booking is confirmed. Any security deposit is charged today and held — refunded (minus damages/fees) after your rental.'
+                  : 'Authorized now, not charged. Only charged if the host approves. Any security deposit is held and refunded (minus damages/fees) after your rental.'}
               </p>
             </motion.div>
           )}
@@ -1067,6 +1079,11 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
             ? "You won't be charged until your booking is confirmed."
             : 'Payment authorized now — only charged if the host approves.'}
         </p>
+        {depositValue > 0 && (
+          <p className="text-[11px] text-center text-muted-foreground">
+            Security deposit charged today and held; refunded (minus damages/fees) after your rental.
+          </p>
+        )}
       </div>
     </motion.div>
   );

@@ -113,6 +113,7 @@ export const RentalListingLayout = ({
       slotNames={listing.slot_names}
       fulfillmentType={listing.fulfillment_type}
       deliveryFee={listing.delivery_fee}
+      depositAmount={listing.deposit_amount}
     />
   );
 

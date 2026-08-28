@@ -290,7 +290,10 @@ const BookingCheckout = () => {
   }, [listing?.id, fees.customerTotal]);
 
   const taxAmount = (taxEstimate?.tax_cents ?? 0) / 100;
-  const totalChargedToday = fees.customerTotal + taxAmount;
+  // The refundable security deposit is charged today alongside the rental and
+  // held by the platform; it is refunded (minus any damages/fees) after the
+  // rental ends, so it is part of today's charge.
+  const totalChargedToday = fees.customerTotal + taxAmount + (depositAmount ?? 0);
 
   // Always-visible tax row for the PayPal panel summary: real amount when
   // quoted, an explicit placeholder while calculating or when the estimate
@@ -1183,7 +1186,7 @@ const BookingCheckout = () => {
                         }
                         totalToday={totalChargedToday}
                         depositAmount={depositAmount}
-                        depositChargedToday={false}
+                        depositChargedToday={true}
                         bookingMode={instantConfirm ? 'instant' : 'request'}
                         dateLabel={`${format(startDate, 'MMM d')} – ${format(endDate, 'MMM d, yyyy')}`}
                         durationLabel={
@@ -1426,9 +1429,9 @@ const BookingCheckout = () => {
                 {depositAmount ? (
                   <div className="flex items-start justify-between text-sm pt-2">
                     <span className="text-muted-foreground flex items-center gap-1">
-                      Security deposit
+                      Security deposit (held)
                       <InfoTooltip
-                        content="This host requires a security deposit. It is arranged directly with the host and is not part of today's Vendibook charge. Refund terms are set by the host."
+                        content="This refundable security deposit is charged today and held by Vendibook. After your rental, any damages, fees, or late-return charges may be deducted and the remaining balance is returned to your payment method."
                         side="top"
                       />
                     </span>

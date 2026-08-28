@@ -170,7 +170,11 @@ export function quoteBookingRequest(
       ? "booking_deposit"
       : "rental",
     currency: "USD",
-    grossCents: buyerTotalCents,
+    // The refundable security deposit is charged today alongside the rental
+    // and held by the platform. It is NOT host revenue — it stays out of
+    // sellerProceedsCents and is tracked via depositCents for refund (minus any
+    // damages / late fees) after the rental ends.
+    grossCents: buyerTotalCents + depositCents,
     platformFeeCents: renterFeeCents + hostFeeCents,
     taxCents: 0,
     taxableBaseCents: subtotalCents,
