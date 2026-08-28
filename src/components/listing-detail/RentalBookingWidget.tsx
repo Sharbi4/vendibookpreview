@@ -1335,6 +1335,16 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
           </div>
         )}
 
+        {/* Screen-reader status: selection + live total */}
+        <p className="sr-only" role="status" aria-live="polite">
+          {startDate
+            ? `${format(startDate, 'MMMM d, yyyy')}${endDate ? ` to ${format(endDate, 'MMMM d, yyyy')}` : ''} selected.`
+            : mode === 'hourly'
+              ? `${totalSelectedHours} hour${totalSelectedHours === 1 ? '' : 's'} selected.`
+              : 'No dates selected yet.'}
+          {pricingInfo ? ` Estimated total ${formatAmount(estimatedTotal)}.` : ''}
+        </p>
+
         {/* ─────────────────────────────────────────────────────────────────────── */}
         {/* PRICE BREAKDOWN */}
         {/* ─────────────────────────────────────────────────────────────────────── */}
