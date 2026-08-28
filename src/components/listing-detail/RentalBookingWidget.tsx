@@ -466,10 +466,19 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
         duration: hours,
         durationLabel: `${hours} hour${hours > 1 ? 's' : ''}${daysLabel}`,
         breakdown: `$${priceHourly}/hr × ${hours} hrs${selectedSlotCount > 1 ? ` × ${selectedSlotCount} slots` : ''}`,
+        lines: [
+          {
+            key: 'hourly',
+            label: `${hours} hour${hours > 1 ? 's' : ''} @ ${formatAmount(priceHourly)}/hr`,
+            amount: hours * priceHourly * selectedSlotCount,
+          },
+        ],
+        perDay: null as number | null,
         roundedUpNote: null,
         basePrice,
         serviceFee: fees.renterFee,
         total: fees.customerTotal};
+
     } else {
       if (!startDate) return null;
 
