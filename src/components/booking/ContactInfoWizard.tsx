@@ -28,7 +28,7 @@ import {
   SMS_TERMS_URL,
 } from '@/lib/sms/consent';
 import { normalizeNanpToE164 } from '@/lib/sms/phone';
-import type { BookingUserInfo } from './BookingInfoModal';
+import type { BookingUserInfo } from './types';
 
 export interface ContactWizardValue extends BookingUserInfo {
   /** Affirmative, unbundled SMS opt-in captured in this flow. */
