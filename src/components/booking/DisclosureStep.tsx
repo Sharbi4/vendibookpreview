@@ -67,7 +67,13 @@ interface DisclosureStepProps {
   /** Bubbles the renter's insurance answer up so the booking payload keeps it. */
   onInsuranceAnswer?: (answer: InsuranceAnswer) => void;
   /** Fires once the attestation is recorded and identity is settled. */
-  onComplete: (state: { attested: boolean; identityStatus: string }) => void;
+  onComplete: (state: {
+    attested: boolean;
+    identityStatus: string;
+    attestedAt: string | null;
+    documentVersion: string | null;
+    insuranceAnswer: InsuranceAnswer | null;
+  }) => void;
   disabled?: boolean;
 }
 
@@ -399,7 +405,13 @@ export function DisclosureStep({
         className="h-12 w-full"
         disabled={disabled || working || !attested || !identityDone}
         onClick={() =>
-          onComplete({ attested: true, identityStatus: identity?.status ?? 'not_available' })
+          onComplete({
+            attested: true,
+            identityStatus: identity?.status ?? 'not_available',
+            attestedAt: attestation?.attested_at ?? null,
+            documentVersion: attestation?.document_version ?? null,
+            insuranceAnswer: (insurance || null) as InsuranceAnswer | null,
+          })
         }
       >
         Continue to review

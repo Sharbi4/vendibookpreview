@@ -36,7 +36,7 @@ import { useListingAverageRating } from '@/hooks/useReviews';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { calculateRentalFees } from '@/lib/commissions';
+import { calculateRentalFees, formatCurrency } from '@/lib/commissions';
 import { quoteRentalPeriod } from '@/lib/listings/rentalPricing';
 import { trackFormSubmitConversion } from '@/lib/gtagConversions';
 import { trackRequestStarted, trackRequestSubmitted } from '@/lib/analytics';
@@ -50,7 +50,7 @@ import { FinalReviewSheet } from '@/components/transaction/FinalReviewSheet';
 import { useTermsGate } from '@/hooks/useTermsGate';
 import { buildTerms } from '@/lib/transactionTerms';
 import { cn } from '@/lib/utils';
-import { type BookingUserInfo, SlotSelector, BusinessInfoStep, type BusinessInfoData, ContactInfoWizard, TowingHandoffPanel, DisclosureStep } from '@/components/booking';
+import { type BookingUserInfo, SlotSelector, BusinessInfoStep, type BusinessInfoData, ContactInfoWizard, TowingHandoffPanel, DisclosureStep, BookingReviewPanel } from '@/components/booking';
 import { BookingDocumentUpload, type StagedDocument } from '@/components/booking/BookingDocumentUpload';
 import { useDocumentsOnFile } from '@/hooks/useDocumentsOnFile';
 import HourlySelectionSummary from '@/components/booking/HourlySelectionSummary';
@@ -163,6 +163,13 @@ const BookingCheckout = () => {
   
   // Business info state for food-related categories
   const [businessInfo, setBusinessInfo] = useState<BusinessInfoData | null>(null);
+  /** What the disclosure step recorded server-side, surfaced on review. */
+  const [disclosureRecord, setDisclosureRecord] = useState<{
+    attestedAt: string | null;
+    documentVersion: string | null;
+    identityStatus: string | null;
+    insuranceAnswer: 'yes' | 'no' | 'unsure' | null;
+  } | null>(null);
   
   // Slot selection state for vendor spaces
   const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
@@ -295,6 +302,31 @@ const BookingCheckout = () => {
       : taxState === 'error'
         ? { label: 'Sales tax', amount: 0, muted: true, valueLabel: 'Calculated at payment' }
         : null;
+
+  /** Human rate line for the review breakdown (never invents a rate). */
+  const reviewRateLabel = isHourlyBooking && (listing as any)?.price_hourly
+    ? `${formatCurrency((listing as any).price_hourly)} × ${durationHours} hour${durationHours === 1 ? '' : 's'}`
+    : rentalQuote?.breakdown
+      ? rentalQuote.breakdown
+      : rentalDays > 0 && listing?.price_daily
+        ? `${formatCurrency(listing.price_daily)} × ${rentalDays} day${rentalDays > 1 ? 's' : ''}`
+        : 'Rental subtotal';
+
+  /** Explicit host-provided handoff facts only — no assumptions. */
+  const reviewHandoffFacts = [
+    towingFields.hitch_ball_size && { label: 'Hitch ball size', value: towingFields.hitch_ball_size },
+    towingFields.coupler_type && { label: 'Coupler type', value: towingFields.coupler_type },
+    towingFields.trailer_plug_type && { label: 'Trailer plug', value: towingFields.trailer_plug_type },
+    towingFields.renter_provides_tow_vehicle !== null && {
+      label: 'Tow vehicle',
+      value: towingFields.renter_provides_tow_vehicle ? 'You provide it' : 'Host provides it',
+    },
+    towingFields.tow_vehicle_requirement && {
+      label: 'Tow requirement',
+      value: towingFields.tow_vehicle_requirement,
+    },
+    towingFields.return_instructions && { label: 'Return', value: towingFields.return_instructions },
+  ].filter(Boolean) as Array<{ label: string; value: string }>;
 
   // Step definitions — a single-page slide wizard (one screen at a time).
   // Order: About you (contact) -> Business info (if food) -> Documents (if required)
@@ -1120,61 +1152,74 @@ const BookingCheckout = () => {
                             : prev,
                         )
                       }
-                      onComplete={() => handleCompleteStep(STEP_DISCLOSURE)}
+                      onComplete={(state) => {
+                        setDisclosureRecord({
+                          attestedAt: state.attestedAt,
+                          documentVersion: state.documentVersion,
+                          identityStatus: state.identityStatus,
+                          insuranceAnswer: state.insuranceAnswer,
+                        });
+                        handleCompleteStep(STEP_DISCLOSURE);
+                      }}
                     />
                   )}
 
                   {/* Step: Review */}
                   {activeStep === STEP_REVIEW && (
                     <div className="space-y-4">
-                      {/* Summary */}
-                      <div className="space-y-3">
-                        {hasMultipleSlots && selectedSlotName && (
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-muted-foreground">Space</span>
-                            <span className="font-medium">{selectedSlotName}</span>
-                          </div>
-                        )}
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">Dates</span>
-                          <span className="font-medium">
-                            {format(startDate, 'MMM d')} – {format(endDate, 'MMM d, yyyy')}
-                          </span>
-                        </div>
-                        {isHourlyBooking ? (
-                          <>
-                            <div className="flex items-center justify-between text-sm">
-                              <span className="text-muted-foreground">Hours</span>
-                              <span className="font-medium">
-                                {durationHours} hour{durationHours === 1 ? '' : 's'}
-                                {selectedHourlyDays > 0
+                      <BookingReviewPanel
+                        rateLabel={reviewRateLabel}
+                        subtotal={fees.subtotal}
+                        deliveryFee={currentDeliveryFee}
+                        serviceFee={fees.renterFee}
+                        taxLine={
+                          taxSummaryLine
+                            ? {
+                                label: taxSummaryLine.label,
+                                value: taxSummaryLine.valueLabel ?? formatCurrency(taxSummaryLine.amount),
+                                muted: taxSummaryLine.muted,
+                              }
+                            : null
+                        }
+                        totalToday={totalChargedToday}
+                        depositAmount={depositAmount}
+                        depositChargedToday={false}
+                        bookingMode={instantConfirm ? 'instant' : 'request'}
+                        dateLabel={`${format(startDate, 'MMM d')} – ${format(endDate, 'MMM d, yyyy')}`}
+                        durationLabel={
+                          isHourlyBooking
+                            ? `${durationHours} hour${durationHours === 1 ? '' : 's'}${
+                                selectedHourlyDays > 0
                                   ? ` across ${selectedHourlyDays} day${selectedHourlyDays === 1 ? '' : 's'}`
-                                  : ''}
-                              </span>
-                            </div>
-
-                            {startTime && endTime ? (
-                              <div className="flex items-center justify-between text-sm">
-                                <span className="text-muted-foreground">Time</span>
-                                <span className="font-medium">
-                                  {startTime} – {endTime}
-                                </span>
-                              </div>
-                            ) : null}
-
-                            <HourlySelectionSummary selections={hourlySelections} />
-                          </>
-                        ) : (
-                          <div className="flex items-center justify-between text-sm">
-                            <span className="text-muted-foreground">Duration</span>
-                            <span className="font-medium">{rentalDays} day{rentalDays > 1 ? 's' : ''}</span>
-                          </div>
-                        )}
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-muted-foreground">Fulfillment</span>
-                          <span className="font-medium capitalize">{fulfillmentSelected.replace('_', ' ')}</span>
-                        </div>
-                      </div>
+                                  : ''
+                              }`
+                            : `${rentalDays} day${rentalDays > 1 ? 's' : ''}`
+                        }
+                        timeLabel={isHourlyBooking && startTime && endTime ? `${startTime} – ${endTime}` : null}
+                        slotName={hasMultipleSlots ? selectedSlotName : null}
+                        fulfillment={fulfillmentSelected}
+                        fulfillmentDetail={fulfillmentSelected === 'delivery' ? deliveryAddress : null}
+                        handoffFacts={reviewHandoffFacts}
+                        documents={
+                          hasRequiredDocs
+                            ? {
+                                required: preBookingBlockers.length,
+                                satisfied: preBookingBlockers.filter((req) =>
+                                  stagedDocuments.some((doc) => doc.documentType === req.document_type),
+                                ).length,
+                                onFile: docsOnFile,
+                              }
+                            : null
+                        }
+                        disclosures={disclosureRecord}
+                        cancellationPolicy={
+                          cancellationPolicyText ??
+                          "This host hasn't published a custom policy, so Vendibook's standard rental policy applies: cancel before the host accepts for a full refund; after acceptance, refunds follow the terms you accepted before payment."
+                        }
+                        listingId={listingId}
+                        message={message}
+                        onMessageChange={setMessage}
+                      />
 
                       {/* Referral code */}
                       <div className="p-3 border border-border rounded-lg">
