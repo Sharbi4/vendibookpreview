@@ -466,10 +466,19 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
         duration: hours,
         durationLabel: `${hours} hour${hours > 1 ? 's' : ''}${daysLabel}`,
         breakdown: `$${priceHourly}/hr × ${hours} hrs${selectedSlotCount > 1 ? ` × ${selectedSlotCount} slots` : ''}`,
+        lines: [
+          {
+            key: 'hourly',
+            label: `${hours} hour${hours > 1 ? 's' : ''} @ ${formatAmount(priceHourly)}/hr`,
+            amount: hours * priceHourly * selectedSlotCount,
+          },
+        ],
+        perDay: null as number | null,
         roundedUpNote: null,
         basePrice,
         serviceFee: fees.renterFee,
         total: fees.customerTotal};
+
     } else {
       if (!startDate) return null;
 
@@ -492,12 +501,19 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
         duration: days,
         durationLabel: `${days} day${days > 1 ? 's' : ''}`,
         breakdown: selectedSlotCount > 1 ? `${quote.breakdown} × ${selectedSlotCount} slots` : quote.breakdown,
+        lines: quote.lines.map((l) => ({
+          key: l.unit,
+          label: `${l.count} ${l.unit === 'monthly' ? 'month' : l.unit === 'weekly' ? 'week' : 'day'}${l.count > 1 ? 's' : ''} × ${formatAmount(l.rate)}${l.unit === 'monthly' ? '/mo' : l.unit === 'weekly' ? '/week' : '/day'}${selectedSlotCount > 1 ? ` × ${selectedSlotCount} slots` : ''}`,
+          amount: l.amount * selectedSlotCount,
+        })),
+        perDay: days > 0 ? (quote.subtotal * selectedSlotCount) / days : null,
         roundedUpNote: quote.roundedUp
           ? `This host bills in full ${quote.lines[0]?.unit === 'monthly' ? 'months' : 'weeks'}, so ${quote.billedDays} days are billed for your ${days}-day dates.`
           : null,
         basePrice,
         serviceFee: fees.renterFee,
         total: fees.customerTotal};
+
     }
   }, [mode, totalSelectedHours, selectedDatesCount, startDate, endDate, priceHourly, priceDaily, priceWeekly, priceMonthly, selectedSlotCount]);
 
@@ -1154,17 +1170,34 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
               exit={{ opacity: 0, height: 0 }}
               className="pt-1 space-y-1.5"
             >
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span className="underline decoration-dotted underline-offset-2">{pricingInfo.breakdown}</span>
-                <span>${pricingInfo.basePrice.toLocaleString()}</span>
-              </div>
+              {pricingInfo.lines.map((line) => (
+                <div
+                  key={line.key}
+                  className="flex items-center justify-between text-xs text-muted-foreground"
+                >
+                  <span className="underline decoration-dotted underline-offset-2">{line.label}</span>
+                  <span className="tabular-nums">{formatAmount(line.amount)}</span>
+                </div>
+              ))}
+              {pricingInfo.lines.length > 1 && (
+                <div className="flex items-center justify-between text-xs text-foreground/80">
+                  <span>Rental subtotal</span>
+                  <span className="tabular-nums">{formatAmount(pricingInfo.basePrice)}</span>
+                </div>
+              )}
+              {pricingInfo.perDay !== null && pricingInfo.duration > 1 && (
+                <p className="text-[11px] text-muted-foreground">
+                  Works out to {formatAmount(Math.round(pricingInfo.perDay * 100) / 100)}/day
+                </p>
+              )}
               {pricingInfo.roundedUpNote && (
                 <p className="text-[11px] text-muted-foreground">{pricingInfo.roundedUpNote}</p>
               )}
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>Service fee</span>
-                <span>${pricingInfo.serviceFee.toLocaleString()}</span>
+                <span className="tabular-nums">{formatAmount(pricingInfo.serviceFee)}</span>
               </div>
+
               {depositValue > 0 && (
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>Security deposit (refundable)</span>
