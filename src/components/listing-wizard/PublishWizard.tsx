@@ -561,6 +561,13 @@ export const PublishWizard: React.FC = () => {
   const [deliveryRadiusMiles, setDeliveryRadiusMiles] = useState('');
   const [deliveryFeeType, setDeliveryFeeType] = useState<'flat' | 'per_mile'>('flat');
   const [pickupInstructions, setPickupInstructions] = useState('');
+  // Towing & handoff (rental mobile assets)
+  const [hitchBallSize, setHitchBallSize] = useState('');
+  const [couplerType, setCouplerType] = useState('');
+  const [trailerPlugType, setTrailerPlugType] = useState('');
+  const [renterProvidesTowVehicle, setRenterProvidesTowVehicle] = useState<'yes' | 'no' | ''>('');
+  const [towVehicleRequirement, setTowVehicleRequirement] = useState('');
+  const [returnInstructions, setReturnInstructions] = useState('');
   const [deliveryInstructions, setDeliveryInstructions] = useState('');
   const [accessInstructions, setAccessInstructions] = useState('');
   const [hoursOfAccess, setHoursOfAccess] = useState('');
@@ -638,6 +645,12 @@ export const PublishWizard: React.FC = () => {
       deliveryRadiusMiles,
       deliveryFeeType,
       pickupInstructions,
+      hitchBallSize,
+      couplerType,
+      trailerPlugType,
+      renterProvidesTowVehicle,
+      towVehicleRequirement,
+      returnInstructions,
       deliveryInstructions,
       accessInstructions,
       hoursOfAccess,
@@ -666,6 +679,8 @@ export const PublishWizard: React.FC = () => {
       vinSerial, vinUnavailable, sellerPhone, fulfillmentType,
       pickupLocationText, address, streetAddress, aptSuite, locCity, locState, locZipCode,
       deliveryFee, deliveryRadiusMiles, deliveryFeeType, pickupInstructions, deliveryInstructions,
+      hitchBallSize, couplerType, trailerPlugType, renterProvidesTowVehicle, towVehicleRequirement,
+      returnInstructions,
       accessInstructions, hoursOfAccess, locationNotes, isStaticLocation, availableFrom, availableTo,
       hourlyEnabled, dailyEnabled, minHours, maxHours, bufferTimeMins, minNoticeHours, hourlySchedule,
       rentalMinDays, hourlySpecialPricing, requiredDocuments, globalDeadline, deadlineHours,
@@ -723,6 +738,12 @@ export const PublishWizard: React.FC = () => {
     apply(cached.deliveryRadiusMiles, setDeliveryRadiusMiles);
     apply(cached.deliveryFeeType, setDeliveryFeeType);
     apply(cached.pickupInstructions, setPickupInstructions);
+    apply(cached.hitchBallSize, setHitchBallSize);
+    apply(cached.couplerType, setCouplerType);
+    apply(cached.trailerPlugType, setTrailerPlugType);
+    apply(cached.renterProvidesTowVehicle, setRenterProvidesTowVehicle);
+    apply(cached.towVehicleRequirement, setTowVehicleRequirement);
+    apply(cached.returnInstructions, setReturnInstructions);
     apply(cached.deliveryInstructions, setDeliveryInstructions);
     apply(cached.accessInstructions, setAccessInstructions);
     apply(cached.hoursOfAccess, setHoursOfAccess);
@@ -844,6 +865,7 @@ export const PublishWizard: React.FC = () => {
       updateData.delivery_radius_miles = parseFloat(deliveryRadiusMiles) || listing.delivery_radius_miles || null;
       (updateData as any).delivery_fee_type = deliveryFeeType;
       updateData.pickup_instructions = pickupInstructions || listing.pickup_instructions || null;
+      Object.assign(updateData as any, towingHandoffColumns());
       updateData.delivery_instructions = deliveryInstructions || listing.delivery_instructions || null;
       updateData.access_instructions = accessInstructions || listing.access_instructions || null;
       updateData.hours_of_access = hoursOfAccess || listing.hours_of_access || null;
@@ -1047,6 +1069,15 @@ export const PublishWizard: React.FC = () => {
       setDeliveryRadiusMiles(data.delivery_radius_miles?.toString() || '');
       setDeliveryFeeType(((data as any).delivery_fee_type === 'per_mile') ? 'per_mile' : 'flat');
       setPickupInstructions(data.pickup_instructions || '');
+      const towSrc = data as any;
+      setHitchBallSize(towSrc.hitch_ball_size || '');
+      setCouplerType(towSrc.coupler_type || '');
+      setTrailerPlugType(towSrc.trailer_plug_type || '');
+      setRenterProvidesTowVehicle(
+        towSrc.renter_provides_tow_vehicle === true ? 'yes' : towSrc.renter_provides_tow_vehicle === false ? 'no' : ''
+      );
+      setTowVehicleRequirement(towSrc.tow_vehicle_requirement || '');
+      setReturnInstructions(towSrc.return_instructions || '');
       setDeliveryInstructions(data.delivery_instructions || '');
       setAccessInstructions(data.access_instructions || '');
       setHoursOfAccess(data.hours_of_access || '');
@@ -1223,6 +1254,7 @@ export const PublishWizard: React.FC = () => {
         delivery_radius_miles: parseFloat(deliveryRadiusMiles) || listing.delivery_radius_miles || null,
         delivery_fee_type: deliveryFeeType,
         pickup_instructions: pickupInstructions || listing.pickup_instructions || null,
+        ...towingHandoffColumns(),
         delivery_instructions: deliveryInstructions || listing.delivery_instructions || null,
         access_instructions: accessInstructions || listing.access_instructions || null,
         hours_of_access: hoursOfAccess || listing.hours_of_access || null,
@@ -2070,6 +2102,7 @@ export const PublishWizard: React.FC = () => {
           delivery_radius_miles: parseFloat(deliveryRadiusMiles) || null,
           delivery_fee_type: deliveryFeeType,
           pickup_instructions: pickupInstructions || null,
+          ...towingHandoffColumns(),
           delivery_instructions: deliveryInstructions || null,
           access_instructions: accessInstructions || null,
           hours_of_access: hoursOfAccess || null,
@@ -2358,6 +2391,7 @@ export const PublishWizard: React.FC = () => {
         delivery_radius_miles: parseFloat(deliveryRadiusMiles) || null,
         delivery_fee_type: deliveryFeeType,
         pickup_instructions: pickupInstructions || null,
+        ...towingHandoffColumns(),
         delivery_instructions: deliveryInstructions || null,
         access_instructions: accessInstructions || null,
         hours_of_access: hoursOfAccess || null,
