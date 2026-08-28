@@ -1170,17 +1170,34 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
               exit={{ opacity: 0, height: 0 }}
               className="pt-1 space-y-1.5"
             >
-              <div className="flex items-center justify-between text-xs text-muted-foreground">
-                <span className="underline decoration-dotted underline-offset-2">{pricingInfo.breakdown}</span>
-                <span>${pricingInfo.basePrice.toLocaleString()}</span>
-              </div>
+              {pricingInfo.lines.map((line) => (
+                <div
+                  key={line.key}
+                  className="flex items-center justify-between text-xs text-muted-foreground"
+                >
+                  <span className="underline decoration-dotted underline-offset-2">{line.label}</span>
+                  <span className="tabular-nums">{formatAmount(line.amount)}</span>
+                </div>
+              ))}
+              {pricingInfo.lines.length > 1 && (
+                <div className="flex items-center justify-between text-xs text-foreground/80">
+                  <span>Rental subtotal</span>
+                  <span className="tabular-nums">{formatAmount(pricingInfo.basePrice)}</span>
+                </div>
+              )}
+              {pricingInfo.perDay !== null && pricingInfo.duration > 1 && (
+                <p className="text-[11px] text-muted-foreground">
+                  Works out to {formatAmount(Math.round(pricingInfo.perDay * 100) / 100)}/day
+                </p>
+              )}
               {pricingInfo.roundedUpNote && (
                 <p className="text-[11px] text-muted-foreground">{pricingInfo.roundedUpNote}</p>
               )}
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>Service fee</span>
-                <span>${pricingInfo.serviceFee.toLocaleString()}</span>
+                <span className="tabular-nums">{formatAmount(pricingInfo.serviceFee)}</span>
               </div>
+
               {depositValue > 0 && (
                 <div className="flex items-center justify-between text-xs text-muted-foreground">
                   <span>Security deposit (refundable)</span>
