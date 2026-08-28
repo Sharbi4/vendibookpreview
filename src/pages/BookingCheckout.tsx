@@ -290,7 +290,10 @@ const BookingCheckout = () => {
   }, [listing?.id, fees.customerTotal]);
 
   const taxAmount = (taxEstimate?.tax_cents ?? 0) / 100;
-  const totalChargedToday = fees.customerTotal + taxAmount;
+  // The refundable security deposit is charged today alongside the rental and
+  // held by the platform; it is refunded (minus any damages/fees) after the
+  // rental ends, so it is part of today's charge.
+  const totalChargedToday = fees.customerTotal + taxAmount + (depositAmount ?? 0);
 
   // Always-visible tax row for the PayPal panel summary: real amount when
   // quoted, an explicit placeholder while calculating or when the estimate
