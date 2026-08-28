@@ -975,11 +975,14 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
         {/* STEP 1: MODE TOGGLE (Only if both modes enabled) */}
         {/* ─────────────────────────────────────────────────────────────────────── */}
         {hourlyEnabled && dailyEnabled && (
-          <div className="flex rounded-full bg-muted/60 p-0.5">
+          <div className="flex rounded-full bg-muted/60 p-0.5" role="group" aria-label="Booking rate type">
             <button
+              type="button"
+              aria-pressed={mode === 'hourly'}
               onClick={() => { setMode('hourly'); handleReset(); }}
               className={cn(
                 "flex-1 py-1.5 px-3 text-xs font-medium rounded-full transition-all duration-200",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                 mode === 'hourly' 
                   ? "bg-background text-foreground shadow-sm" 
                   : "text-muted-foreground hover:text-foreground"
@@ -988,9 +991,12 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
               Hourly
             </button>
             <button
+              type="button"
+              aria-pressed={mode === 'daily'}
               onClick={() => { setMode('daily'); handleReset(); }}
               className={cn(
                 "flex-1 py-1.5 px-3 text-xs font-medium rounded-full transition-all duration-200",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                 mode === 'daily' 
                   ? "bg-background text-foreground shadow-sm" 
                   : "text-muted-foreground hover:text-foreground"
@@ -1015,7 +1021,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
               onClick={handlePrevMonth}
               disabled={!canGoPrev}
               aria-label="Previous month"
-              className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-muted active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-muted active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
@@ -1035,7 +1041,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
               onClick={handleNextMonth}
               disabled={!canGoNext}
               aria-label="Next month"
-              className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-muted active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+              className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-muted active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
