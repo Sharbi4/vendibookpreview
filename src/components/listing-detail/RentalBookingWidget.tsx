@@ -1,5 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+
 import { 
   format, 
   differenceInDays, 
@@ -110,7 +111,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   depositAmount = null}) => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { blockedDates, isDateUnavailable, getUnavailabilityReason, timeZone } = useBlockedDates({ listingId });
+  const { blockedDates, isDateUnavailable, getUnavailabilityReason, timeZone, isLoading: availabilityLoading } = useBlockedDates({ listingId });
   const { 
     settings: hourlySettings, 
     getDayAvailabilityInfo,
@@ -218,8 +219,37 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   const canGoPrev = isAfter(monthStart, minMonth);
   const canGoNext = isBefore(monthStart, maxMonth);
 
-  const handlePrevMonth = () => canGoPrev && setCurrentMonth(subMonths(currentMonth, 1));
-  const handleNextMonth = () => canGoNext && setCurrentMonth(addMonths(currentMonth, 1));
+  // Month slide direction drives the transition animation
+  const [monthDirection, setMonthDirection] = useState<1 | -1>(1);
+  const handlePrevMonth = () => {
+    if (!canGoPrev) return;
+    setMonthDirection(-1);
+    setCurrentMonth(subMonths(currentMonth, 1));
+  };
+  const handleNextMonth = () => {
+    if (!canGoNext) return;
+    setMonthDirection(1);
+    setCurrentMonth(addMonths(currentMonth, 1));
+  };
+
+  // Touch swipe to switch months on mobile
+  const swipeRef = React.useRef<{ x: number; y: number } | null>(null);
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    swipeRef.current = { x: t.clientX, y: t.clientY };
+  };
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!swipeRef.current) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - swipeRef.current.x;
+    const dy = t.clientY - swipeRef.current.y;
+    swipeRef.current = null;
+    // Horizontal swipe only — ignore mostly-vertical scroll gestures
+    if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      if (dx < 0) handleNextMonth();
+      else handlePrevMonth();
+    }
+  };
 
   // ─────────────────────────────────────────────────────────────────────────────
   // DATE VALIDATION
@@ -274,6 +304,16 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
     return null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, startDate, blockedDates, isDateUnavailable, availableFrom, availableTo]);
+
+  /** True when no day in the visible month is bookable — drives the empty state. */
+  const monthFullyUnavailable = useMemo(() => {
+    if (availabilityLoading) return false;
+    return daysInMonth.every(d => {
+      const s = getDayStatus(d);
+      return s !== 'available' && s !== 'partial';
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [availabilityLoading, currentMonth, blockedDates, availableFrom, availableTo]);
 
   /** True when the day sits past the first blocked day after the start date. */
   const isBeyondRangeLimit = (date: Date): boolean => {
@@ -909,27 +949,40 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
         {/* ─────────────────────────────────────────────────────────────────────── */}
         {/* STEP 2: CALENDAR (compact Airbnb-style) */}
         {/* ─────────────────────────────────────────────────────────────────────── */}
-        <div className="rounded-xl border border-border/60 p-2.5">
+        <div
+          className="rounded-xl border border-border/60 p-2.5 overflow-hidden"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
           {/* Calendar Header */}
           <div className="flex items-center justify-between mb-1.5">
             <button
               onClick={handlePrevMonth}
               disabled={!canGoPrev}
               aria-label="Previous month"
-              className="p-1 rounded-full hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
+              className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-muted active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
             >
-              <ChevronLeft className="h-3.5 w-3.5" />
+              <ChevronLeft className="h-4 w-4" />
             </button>
-            <span className="font-medium text-xs">
-              {format(currentMonth, 'MMMM yyyy')}
-            </span>
+            <AnimatePresence mode="wait" initial={false} custom={monthDirection}>
+              <motion.span
+                key={format(currentMonth, 'yyyy-MM')}
+                initial={{ opacity: 0, y: monthDirection * 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: monthDirection * -6 }}
+                transition={{ duration: 0.18, ease: 'easeOut' }}
+                className="font-medium text-xs"
+              >
+                {format(currentMonth, 'MMMM yyyy')}
+              </motion.span>
+            </AnimatePresence>
             <button
               onClick={handleNextMonth}
               disabled={!canGoNext}
               aria-label="Next month"
-              className="p-1 rounded-full hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
+              className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-muted active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
             >
-              <ChevronRight className="h-3.5 w-3.5" />
+              <ChevronRight className="h-4 w-4" />
             </button>
           </div>
 
@@ -942,8 +995,27 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
             ))}
           </div>
 
-          {/* Calendar Grid */}
-          <div className="grid grid-cols-7 gap-y-0.5">
+          {/* Calendar Grid — skeleton while availability loads, slide on month change */}
+          {availabilityLoading ? (
+            <div className="grid grid-cols-7 gap-y-1 animate-pulse" aria-busy="true" aria-label="Loading availability">
+              {paddingDays.map((_, i) => (
+                <div key={`pad-${i}`} />
+              ))}
+              {daysInMonth.map(date => (
+                <div key={`skel-${date.toISOString()}`} className="h-9 w-9 mx-auto rounded-full bg-muted/70" />
+              ))}
+            </div>
+          ) : (
+          <AnimatePresence mode="popLayout" initial={false} custom={monthDirection}>
+          <motion.div
+            key={format(currentMonth, 'yyyy-MM')}
+            custom={monthDirection}
+            initial={{ opacity: 0, x: monthDirection * 40 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: monthDirection * -40 }}
+            transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
+            className="grid grid-cols-7 gap-y-0.5"
+          >
             {paddingDays.map((_, i) => (
               <div key={`pad-${i}`} />
             ))}
@@ -982,12 +1054,15 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                             : format(date, 'EEEE, MMMM d')
                         }
                         className={cn(
-                          "h-8 w-8 mx-auto rounded-full text-[11px] font-medium transition-all relative",
-                          "flex flex-col items-center justify-center",
+                          // Larger tap target on touch screens, tighter on desktop
+                          "h-9 w-9 sm:h-8 sm:w-8 mx-auto rounded-full text-[12px] sm:text-[11px] font-medium transition-all duration-150 relative",
+                          "flex flex-col items-center justify-center active:scale-90",
                           isDisabled && "opacity-30 cursor-not-allowed line-through",
                           beyondLimit && "opacity-40 no-underline",
                           !isDisabled && !isSelected && !isActiveHourly && "hover:ring-1 hover:ring-foreground",
-                          (isStart || isEnd) && "bg-foreground text-background",
+                          (isStart || isEnd) && "bg-foreground text-background shadow-sm scale-[1.06]",
+                          isStart && endDate && !isSameDay(startDate!, endDate) && "rounded-r-none w-full",
+                          isEnd && startDate && !isSameDay(startDate, endDate) && "rounded-l-none w-full",
                           isRangeMiddle && "rounded-none w-full bg-muted text-foreground",
                           isActiveHourly && !isSelected && "ring-1 ring-foreground bg-muted",
                           status === 'partial' && !isSelected && !isActiveHourly && "bg-muted/60",
@@ -1033,7 +1108,32 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                 </TooltipProvider>
               );
             })}
-          </div>
+          </motion.div>
+          </AnimatePresence>
+          )}
+
+          {/* Empty state: nothing bookable in this month */}
+          {!availabilityLoading && monthFullyUnavailable && (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mt-2 flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground text-center"
+            >
+              <CalendarClock className="h-3.5 w-3.5 shrink-0" />
+              No open dates in {format(currentMonth, 'MMMM')} — try the next month.
+            </motion.p>
+          )}
+
+          {/* Range selection hint (daily mode) */}
+          {mode === 'daily' && !availabilityLoading && (
+            <p className="mt-1.5 text-[11px] text-muted-foreground text-center" aria-live="polite">
+              {!startDate
+                ? 'Tap a date to start your stay'
+                : !endDate
+                  ? 'Now tap your end date — or continue for a 1-day rental'
+                  : null}
+            </p>
+          )}
 
           {/* Date Selection Summary */}
           {mode === 'daily' && startDate && (
