@@ -306,8 +306,8 @@ const BookingCheckout = () => {
   /** Human rate line for the review breakdown (never invents a rate). */
   const reviewRateLabel = isHourlyBooking && (listing as any)?.price_hourly
     ? `${formatCurrency((listing as any).price_hourly)} × ${durationHours} hour${durationHours === 1 ? '' : 's'}`
-    : rentalQuote?.label
-      ? rentalQuote.label
+    : rentalQuote?.breakdown
+      ? rentalQuote.breakdown
       : rentalDays > 0 && listing?.price_daily
         ? `${formatCurrency(listing.price_daily)} × ${rentalDays} day${rentalDays > 1 ? 's' : ''}`
         : 'Rental subtotal';
