@@ -25,7 +25,7 @@ const corsHeaders = {
 interface Body {
   listing_id: string;
   mode: 'rent' | 'sale';
-  payment_method: 'stripe_card' | 'pay_in_person' | 'offer' | 'other';
+  payment_method: 'paypal_checkout' | 'stripe_card' | 'pay_in_person' | 'offer' | 'other';
   snapshot: Record<string, unknown>;
   total_cents: number;
   subtotal_cents: number;
