@@ -1054,12 +1054,15 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                             : format(date, 'EEEE, MMMM d')
                         }
                         className={cn(
-                          "h-8 w-8 mx-auto rounded-full text-[11px] font-medium transition-all relative",
-                          "flex flex-col items-center justify-center",
+                          // Larger tap target on touch screens, tighter on desktop
+                          "h-9 w-9 sm:h-8 sm:w-8 mx-auto rounded-full text-[12px] sm:text-[11px] font-medium transition-all duration-150 relative",
+                          "flex flex-col items-center justify-center active:scale-90",
                           isDisabled && "opacity-30 cursor-not-allowed line-through",
                           beyondLimit && "opacity-40 no-underline",
                           !isDisabled && !isSelected && !isActiveHourly && "hover:ring-1 hover:ring-foreground",
-                          (isStart || isEnd) && "bg-foreground text-background",
+                          (isStart || isEnd) && "bg-foreground text-background shadow-sm scale-[1.06]",
+                          isStart && endDate && !isSameDay(startDate!, endDate) && "rounded-r-none w-full",
+                          isEnd && startDate && !isSameDay(startDate, endDate) && "rounded-l-none w-full",
                           isRangeMiddle && "rounded-none w-full bg-muted text-foreground",
                           isActiveHourly && !isSelected && "ring-1 ring-foreground bg-muted",
                           status === 'partial' && !isSelected && !isActiveHourly && "bg-muted/60",
