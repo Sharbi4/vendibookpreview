@@ -232,6 +232,60 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
     setCurrentMonth(addMonths(currentMonth, 1));
   };
 
+  // ── Keyboard navigation: roving tabindex across the calendar grid ──────────
+  const gridRef = React.useRef<HTMLDivElement | null>(null);
+  const [focusedDate, setFocusedDate] = useState<Date>(() => startOfDay(new Date()));
+  const [shouldFocusDay, setShouldFocusDay] = useState(false);
+
+  const clampToRange = (d: Date) => {
+    if (isBefore(d, today)) return today;
+    if (isAfter(d, maxDate)) return maxDate;
+    return d;
+  };
+
+  const moveFocus = (next: Date) => {
+    const target = clampToRange(startOfDay(next));
+    setFocusedDate(target);
+    setShouldFocusDay(true);
+    const targetMonth = startOfMonth(target);
+    if (!isSameDay(targetMonth, monthStart)) {
+      setMonthDirection(isAfter(targetMonth, monthStart) ? 1 : -1);
+      setCurrentMonth(targetMonth);
+    }
+  };
+
+  const handleGridKeyDown = (e: React.KeyboardEvent) => {
+    const keys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown'];
+    if (!keys.includes(e.key)) return;
+    e.preventDefault();
+    switch (e.key) {
+      case 'ArrowLeft': moveFocus(addDays(focusedDate, -1)); break;
+      case 'ArrowRight': moveFocus(addDays(focusedDate, 1)); break;
+      case 'ArrowUp': moveFocus(addDays(focusedDate, -7)); break;
+      case 'ArrowDown': moveFocus(addDays(focusedDate, 7)); break;
+      case 'Home': moveFocus(addDays(focusedDate, -focusedDate.getDay())); break;
+      case 'End': moveFocus(addDays(focusedDate, 6 - focusedDate.getDay())); break;
+      case 'PageUp': moveFocus(subMonths(focusedDate, 1)); break;
+      case 'PageDown': moveFocus(addMonths(focusedDate, 1)); break;
+    }
+  };
+
+  // Move DOM focus after the grid re-renders (including month changes)
+  useEffect(() => {
+    if (!shouldFocusDay) return;
+    const key = format(focusedDate, 'yyyy-MM-dd');
+    const el = gridRef.current?.querySelector<HTMLButtonElement>(`[data-day-key="${key}"]`);
+    el?.focus();
+    setShouldFocusDay(false);
+  }, [shouldFocusDay, focusedDate, currentMonth]);
+
+  // Keep the roving focus inside the visible month when navigating by header/swipe
+  useEffect(() => {
+    if (isSameDay(startOfMonth(focusedDate), monthStart)) return;
+    setFocusedDate(clampToRange(monthStart));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentMonth]);
+
   // Touch swipe to switch months on mobile
   const swipeRef = React.useRef<{ x: number; y: number } | null>(null);
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -250,6 +304,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
       else handlePrevMonth();
     }
   };
+
 
   // ─────────────────────────────────────────────────────────────────────────────
   // DATE VALIDATION
