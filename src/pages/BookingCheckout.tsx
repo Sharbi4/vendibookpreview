@@ -49,7 +49,7 @@ import { FinalReviewSheet } from '@/components/transaction/FinalReviewSheet';
 import { useTermsGate } from '@/hooks/useTermsGate';
 import { buildTerms } from '@/lib/transactionTerms';
 import { cn } from '@/lib/utils';
-import { type BookingUserInfo, SlotSelector, BusinessInfoStep, type BusinessInfoData, ContactInfoWizard, TowingHandoffPanel } from '@/components/booking';
+import { type BookingUserInfo, SlotSelector, BusinessInfoStep, type BusinessInfoData, ContactInfoWizard, TowingHandoffPanel, DisclosureStep } from '@/components/booking';
 import { BookingDocumentUpload, type StagedDocument } from '@/components/booking/BookingDocumentUpload';
 import { useDocumentsOnFile } from '@/hooks/useDocumentsOnFile';
 import HourlySelectionSummary from '@/components/booking/HourlySelectionSummary';
@@ -302,13 +302,16 @@ const BookingCheckout = () => {
   const STEP_BUSINESS_INFO = requiresBusinessInfo ? 2 : -1;
   const STEP_DOCUMENTS = hasRequiredDocs ? (requiresBusinessInfo ? 3 : 2) : -1;
   const STEP_FULFILLMENT = 2 + (requiresBusinessInfo ? 1 : 0) + (hasRequiredDocs ? 1 : 0);
-  const STEP_REVIEW = STEP_FULFILLMENT + 1;
+  // Disclosure + identity always sits immediately before payment.
+  const STEP_DISCLOSURE = STEP_FULFILLMENT + 1;
+  const STEP_REVIEW = STEP_DISCLOSURE + 1;
 
   const steps = [
     { id: STEP_CONTACT, label: 'Tell us more about yourself', icon: CheckCircle2 },
     ...(requiresBusinessInfo ? [{ id: STEP_BUSINESS_INFO, label: 'Tell us about your business', icon: Building2 }] : []),
     ...(hasRequiredDocs ? [{ id: STEP_DOCUMENTS, label: 'Documents & insurance', icon: FileCheck }] : []),
     { id: STEP_FULFILLMENT, label: 'Fulfillment & details', icon: Truck },
+    { id: STEP_DISCLOSURE, label: 'Disclosures & verification', icon: ShieldCheck },
     { id: STEP_REVIEW, label: 'Review & submit', icon: CheckCircle2 },
   ];
 
@@ -336,6 +339,8 @@ const BookingCheckout = () => {
   const isFulfillmentComplete = Boolean(userInfo?.agreedToTerms) &&
     (fulfillmentSelected !== 'delivery' || Boolean(deliveryAddress.trim()));
   const isStepFulfillmentComplete = isFulfillmentComplete;
+  // The server records the attestation; this only tracks that the step was passed.
+  const isStepDisclosureComplete = completedSteps.includes(STEP_DISCLOSURE);
 
   // Determine which step can be accessed (no longer blocked by auth)
   const canAccessStep = (stepId: number): boolean => {
@@ -343,7 +348,8 @@ const BookingCheckout = () => {
     if (stepId === STEP_BUSINESS_INFO) return isStepContactComplete;
     if (stepId === STEP_DOCUMENTS) return isStepContactComplete && (!requiresBusinessInfo || isStepBusinessInfoComplete);
     if (stepId === STEP_FULFILLMENT) return isStepContactComplete && (!requiresBusinessInfo || isStepBusinessInfoComplete) && (!hasRequiredDocs || isStepDocsComplete);
-    if (stepId === STEP_REVIEW) return Boolean(isStepFulfillmentComplete);
+    if (stepId === STEP_DISCLOSURE) return Boolean(isStepFulfillmentComplete);
+    if (stepId === STEP_REVIEW) return Boolean(isStepFulfillmentComplete) && isStepDisclosureComplete;
     return true;
   };
 
@@ -1100,6 +1106,21 @@ const BookingCheckout = () => {
                         Continue to review
                       </Button>
                     </div>
+                  )}
+
+                  {/* Step: Disclosures & verification (immediately before payment) */}
+                  {activeStep === STEP_DISCLOSURE && listing?.id && (
+                    <DisclosureStep
+                      listingId={listing.id}
+                      onInsuranceAnswer={(answer) =>
+                        setBusinessInfo((prev) =>
+                          prev
+                            ? { ...prev, liabilityInsuranceAnswer: answer, hasLiabilityInsurance: answer === 'yes' }
+                            : prev,
+                        )
+                      }
+                      onComplete={() => handleCompleteStep(STEP_DISCLOSURE)}
+                    />
                   )}
 
                   {/* Step: Review */}
