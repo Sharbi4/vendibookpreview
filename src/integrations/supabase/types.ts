@@ -532,6 +532,54 @@ export type Database = {
         }
         Relationships: []
       }
+      booking_identity_verifications: {
+        Row: {
+          attempt_count: number
+          created_at: string
+          id: string
+          identity_status: string | null
+          last_reason_code: string | null
+          plaid_verification_id: string | null
+          retry_allowance: number
+          reused_from: string | null
+          status: string
+          template_id: string | null
+          updated_at: string
+          user_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          attempt_count?: number
+          created_at?: string
+          id?: string
+          identity_status?: string | null
+          last_reason_code?: string | null
+          plaid_verification_id?: string | null
+          retry_allowance?: number
+          reused_from?: string | null
+          status?: string
+          template_id?: string | null
+          updated_at?: string
+          user_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          attempt_count?: number
+          created_at?: string
+          id?: string
+          identity_status?: string | null
+          last_reason_code?: string | null
+          plaid_verification_id?: string | null
+          retry_allowance?: number
+          reused_from?: string | null
+          status?: string
+          template_id?: string | null
+          updated_at?: string
+          user_id?: string
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       booking_messages: {
         Row: {
           attachment_name: string | null
