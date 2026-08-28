@@ -79,10 +79,48 @@ serve(async (req) => {
       .eq("plaid_verification_id", verificationId)
       .maybeSingle();
 
+    /**
+     * Free booking-purpose identity checks share the same Plaid template, so
+     * the same webhook carries their outcome. Money is never involved here —
+     * we only mirror the authoritative status onto the booking record.
+     */
+    const { data: bookingIdv } = await admin
+      .from("booking_identity_verifications")
+      .select("user_id")
+      .eq("plaid_verification_id", verificationId)
+      .maybeSingle();
+
+    if (bookingIdv?.user_id) {
+      try {
+        const live = await getIdentityVerification(verificationId) as { status?: string };
+        const mapped = live?.status === "success"
+          ? "verified"
+          : live?.status === "pending_review"
+          ? "pending_review"
+          : ["failed", "expired", "canceled"].includes(String(live?.status))
+          ? String(live?.status)
+          : "in_progress";
+        await admin
+          .from("booking_identity_verifications")
+          .update({
+            status: mapped,
+            identity_status: live?.status ?? null,
+            verified_at: mapped === "verified" ? new Date().toISOString() : null,
+          })
+          .eq("user_id", bookingIdv.user_id);
+      } catch (bookingErr) {
+        plaidLog("booking_idv_webhook_sync_failed", {
+          verification_id: verificationId,
+          message: (bookingErr as Error).message,
+        });
+      }
+    }
+
     if (!attempt?.user_id) {
       plaidLog("webhook_unknown_attempt", { verification_id: verificationId });
-      return jsonResponse(200, { received: true, processed: false });
+      return jsonResponse(200, { received: true, processed: !!bookingIdv?.user_id });
     }
+
 
     /**
      * Official STATUS_UPDATED bodies are byte-identical across transitions, so
