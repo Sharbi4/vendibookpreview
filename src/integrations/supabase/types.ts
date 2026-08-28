@@ -3645,6 +3645,7 @@ export type Database = {
           category: Database["public"]["Enums"]["listing_category"]
           city: string | null
           condition: string | null
+          coupler_type: string | null
           cover_image_url: string | null
           created_at: string
           creation_session_key: string | null
@@ -3668,6 +3669,7 @@ export type Database = {
           has_lien: string | null
           height_inches: number | null
           highlights: string[] | null
+          hitch_ball_size: string | null
           host_id: string | null
           hourly_enabled: boolean | null
           hourly_schedule: Json | null
@@ -3714,6 +3716,8 @@ export type Database = {
           published_at: string | null
           rental_buffer_days: number | null
           rental_min_days: number | null
+          renter_provides_tow_vehicle: boolean | null
+          return_instructions: string | null
           slot_names: string[] | null
           source_listing_id: string | null
           space_sqft: number | null
@@ -3723,6 +3727,8 @@ export type Database = {
           title: string
           title_status: string | null
           total_slots: number | null
+          tow_vehicle_requirement: string | null
+          trailer_plug_type: string | null
           updated_at: string
           vendi_session_key: string | null
           vendibook_freight_enabled: boolean | null
@@ -3747,6 +3753,7 @@ export type Database = {
           category: Database["public"]["Enums"]["listing_category"]
           city?: string | null
           condition?: string | null
+          coupler_type?: string | null
           cover_image_url?: string | null
           created_at?: string
           creation_session_key?: string | null
@@ -3770,6 +3777,7 @@ export type Database = {
           has_lien?: string | null
           height_inches?: number | null
           highlights?: string[] | null
+          hitch_ball_size?: string | null
           host_id?: string | null
           hourly_enabled?: boolean | null
           hourly_schedule?: Json | null
@@ -3816,6 +3824,8 @@ export type Database = {
           published_at?: string | null
           rental_buffer_days?: number | null
           rental_min_days?: number | null
+          renter_provides_tow_vehicle?: boolean | null
+          return_instructions?: string | null
           slot_names?: string[] | null
           source_listing_id?: string | null
           space_sqft?: number | null
@@ -3825,6 +3835,8 @@ export type Database = {
           title: string
           title_status?: string | null
           total_slots?: number | null
+          tow_vehicle_requirement?: string | null
+          trailer_plug_type?: string | null
           updated_at?: string
           vendi_session_key?: string | null
           vendibook_freight_enabled?: boolean | null
@@ -3849,6 +3861,7 @@ export type Database = {
           category?: Database["public"]["Enums"]["listing_category"]
           city?: string | null
           condition?: string | null
+          coupler_type?: string | null
           cover_image_url?: string | null
           created_at?: string
           creation_session_key?: string | null
@@ -3872,6 +3885,7 @@ export type Database = {
           has_lien?: string | null
           height_inches?: number | null
           highlights?: string[] | null
+          hitch_ball_size?: string | null
           host_id?: string | null
           hourly_enabled?: boolean | null
           hourly_schedule?: Json | null
@@ -3918,6 +3932,8 @@ export type Database = {
           published_at?: string | null
           rental_buffer_days?: number | null
           rental_min_days?: number | null
+          renter_provides_tow_vehicle?: boolean | null
+          return_instructions?: string | null
           slot_names?: string[] | null
           source_listing_id?: string | null
           space_sqft?: number | null
@@ -3927,6 +3943,8 @@ export type Database = {
           title?: string
           title_status?: string | null
           total_slots?: number | null
+          tow_vehicle_requirement?: string | null
+          trailer_plug_type?: string | null
           updated_at?: string
           vendi_session_key?: string | null
           vendibook_freight_enabled?: boolean | null
@@ -9899,6 +9917,7 @@ export type Database = {
           category: Database["public"]["Enums"]["listing_category"]
           city: string | null
           condition: string | null
+          coupler_type: string | null
           cover_image_url: string | null
           created_at: string
           creation_session_key: string | null
@@ -9922,6 +9941,7 @@ export type Database = {
           has_lien: string | null
           height_inches: number | null
           highlights: string[] | null
+          hitch_ball_size: string | null
           host_id: string | null
           hourly_enabled: boolean | null
           hourly_schedule: Json | null
@@ -9968,6 +9988,8 @@ export type Database = {
           published_at: string | null
           rental_buffer_days: number | null
           rental_min_days: number | null
+          renter_provides_tow_vehicle: boolean | null
+          return_instructions: string | null
           slot_names: string[] | null
           source_listing_id: string | null
           space_sqft: number | null
@@ -9977,6 +9999,8 @@ export type Database = {
           title: string
           title_status: string | null
           total_slots: number | null
+          tow_vehicle_requirement: string | null
+          trailer_plug_type: string | null
           updated_at: string
           vendi_session_key: string | null
           vendibook_freight_enabled: boolean | null

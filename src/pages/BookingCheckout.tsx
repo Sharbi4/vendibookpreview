@@ -49,7 +49,7 @@ import { FinalReviewSheet } from '@/components/transaction/FinalReviewSheet';
 import { useTermsGate } from '@/hooks/useTermsGate';
 import { buildTerms } from '@/lib/transactionTerms';
 import { cn } from '@/lib/utils';
-import { type BookingUserInfo, SlotSelector, BusinessInfoStep, type BusinessInfoData, ContactInfoWizard } from '@/components/booking';
+import { type BookingUserInfo, SlotSelector, BusinessInfoStep, type BusinessInfoData, ContactInfoWizard, TowingHandoffPanel } from '@/components/booking';
 import { BookingDocumentUpload, type StagedDocument } from '@/components/booking/BookingDocumentUpload';
 import { useDocumentsOnFile } from '@/hooks/useDocumentsOnFile';
 import HourlySelectionSummary from '@/components/booking/HourlySelectionSummary';
@@ -170,6 +170,20 @@ const BookingCheckout = () => {
 
 
   const isMobileAsset = listing?.category === 'food_truck' || listing?.category === 'food_trailer';
+  /** Host-provided towing/handoff columns (may be absent on older listings). */
+  const towingFields = useMemo(() => {
+    const l = (listing ?? {}) as Record<string, unknown>;
+    const s = (k: string) => (typeof l[k] === 'string' ? (l[k] as string) : null);
+    return {
+      hitch_ball_size: s('hitch_ball_size'),
+      coupler_type: s('coupler_type'),
+      trailer_plug_type: s('trailer_plug_type'),
+      renter_provides_tow_vehicle:
+        typeof l.renter_provides_tow_vehicle === 'boolean' ? (l.renter_provides_tow_vehicle as boolean) : null,
+      tow_vehicle_requirement: s('tow_vehicle_requirement'),
+      return_instructions: s('return_instructions'),
+    };
+  }, [listing]);
   const isStaticLocation = listing?.category === 'ghost_kitchen' || listing?.category === 'vendor_lot' || listing?.category === 'vendor_space';
   // Categories that require business info (food-related)
   const requiresBusinessInfo = ['food_truck', 'food_trailer', 'ghost_kitchen'].includes(listing?.category || '');
@@ -1031,6 +1045,21 @@ const BookingCheckout = () => {
                             </div>
                           </div>
                         </div>
+                      )}
+
+                      {/* Towing & handoff details — mobile assets picked up by the renter */}
+                      {isMobileAsset && fulfillmentSelected === 'pickup' && listingId && (
+                        <TowingHandoffPanel
+                          listingId={listingId}
+                          category={listing.category}
+                          hitchBallSize={towingFields.hitch_ball_size}
+                          couplerType={towingFields.coupler_type}
+                          trailerPlugType={towingFields.trailer_plug_type}
+                          renterProvidesTowVehicle={towingFields.renter_provides_tow_vehicle}
+                          towVehicleRequirement={towingFields.tow_vehicle_requirement}
+                          pickupInstructions={listing.pickup_instructions}
+                          returnInstructions={towingFields.return_instructions}
+                        />
                       )}
 
                       {/* Delivery address */}
