@@ -25,6 +25,7 @@ import {
   Plus,
   ChevronLeft,
   ChevronRight,
+  CalendarClock,
   Info} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -1043,10 +1044,19 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
         {/* CTA BUTTON */}
         {/* ─────────────────────────────────────────────────────────────────────── */}
         {minimumMessage && (
-          <div className="flex items-start gap-2 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-700 dark:text-amber-200">
-            <Info className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-            <span>{minimumMessage}</span>
-          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+            className="relative rounded-xl p-px bg-gradient-to-r from-primary/70 via-orange-400/80 to-primary/70 shadow-[0_0_20px_-4px_hsl(var(--primary)/0.45)]"
+          >
+            <div className="flex items-center gap-2.5 rounded-[11px] bg-background/90 backdrop-blur-sm px-3.5 py-2.5">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30">
+                <CalendarClock className="h-3.5 w-3.5 text-primary" />
+              </div>
+              <span className="text-xs font-medium tracking-wide text-foreground/90">{minimumMessage}</span>
+            </div>
+          </motion.div>
         )}
 
         <Button
