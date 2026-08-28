@@ -32,7 +32,7 @@ serve(async (req) => {
 
     const { data: listing } = await admin
       .from("listings")
-      .select("id, title, host_id, price_sale, status, listing_mode")
+      .select("id, title, host_id, price_sale, status, mode")
       .eq("id", listingId)
       .maybeSingle();
 
