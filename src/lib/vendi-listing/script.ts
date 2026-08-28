@@ -544,6 +544,49 @@ export const QUESTIONS: Question[] = [
   },
 
   {
+    // Publish parity: the manual wizard requires a structured street address on
+    // every listing except a delivery-only sale, plus a ZIP on all of them.
+    id: 'street_address',
+    kind: 'text',
+    tier: 'core',
+    when: (d) => !!d.city && requiresStreetAddress(
+      (d.mode as 'rent' | 'sale' | null | undefined) ?? null,
+      d.category,
+      d.fulfillment_type,
+    ),
+    prompt: (d) => (isStaticLocation(d.category)
+      ? 'What’s the street address of the space?'
+      : 'What’s the street address where it’s kept?'),
+    tip: () => 'Kept private — buyers and renters only see the approximate area until a booking or sale is confirmed.',
+    placeholder: 'e.g. 1421 W Broadway Rd',
+    apply: (d, raw) => {
+      const text = cleanText(raw).slice(0, 200);
+      if (text.length < 4) return { error: 'I need the street address — it stays private on your listing.' };
+      const loc = parseLocation(raw);
+      return {
+        patch: {
+          street_address: text,
+          zip_code: loc.zip_code ?? d.zip_code ?? null,
+        },
+        say: 'Saved privately. Only the city and approximate area show publicly.',
+      };
+    },
+  },
+  {
+    id: 'zip_code',
+    kind: 'text',
+    tier: 'core',
+    when: (d) => !!d.city && !d.zip_code,
+    prompt: () => 'What’s the ZIP code?',
+    tip: () => 'ZIP drives local search and tax estimates, so it’s required to publish.',
+    placeholder: 'e.g. 85201',
+    apply: (_d, raw) => {
+      const match = cleanText(raw).match(/\b\d{5}\b/);
+      if (!match) return { error: 'A five-digit ZIP, like 85201.' };
+      return { patch: { zip_code: match[0] } };
+    },
+  },
+  {
     id: 'sale_price',
     kind: 'money',
     tier: 'core',
@@ -591,6 +634,21 @@ export const QUESTIONS: Question[] = [
         patch: { [key]: value } as Partial<VendiDraft>,
         say: `Perfect — ${money(value)} per ${period === 'dai' ? 'day' : period}. I’ve added that to your preview.`,
       };
+    },
+  },
+  {
+    // Every rental publishes with a daily rate — same rule as the manual wizard.
+    id: 'rent_daily_rate',
+    kind: 'money',
+    tier: 'core',
+    when: (d) => d.mode === 'rent' && !!d.rent_period && d.rent_period !== 'daily' && !d.price_daily,
+    prompt: () => 'And what would you charge for a single day?',
+    tip: () => 'A daily rate is required to publish, and it’s what most renters search on.',
+    placeholder: 'e.g. $250',
+    apply: (_d, raw) => {
+      const value = parseMoney(raw);
+      if (!value) return { error: 'Give me a number, like $250 a day.' };
+      return { patch: { price_daily: value }, say: `${money(value)} a day — added to your preview.` };
     },
   },
   {
