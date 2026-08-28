@@ -1033,6 +1033,21 @@ const BookingCheckout = () => {
                         </div>
                       )}
 
+                      {/* Towing & handoff details — mobile assets picked up by the renter */}
+                      {isMobileAsset && fulfillmentSelected === 'pickup' && listingId && (
+                        <TowingHandoffPanel
+                          listingId={listingId}
+                          category={listing.category}
+                          hitchBallSize={towingFields.hitch_ball_size}
+                          couplerType={towingFields.coupler_type}
+                          trailerPlugType={towingFields.trailer_plug_type}
+                          renterProvidesTowVehicle={towingFields.renter_provides_tow_vehicle}
+                          towVehicleRequirement={towingFields.tow_vehicle_requirement}
+                          pickupInstructions={listing.pickup_instructions}
+                          returnInstructions={towingFields.return_instructions}
+                        />
+                      )}
+
                       {/* Delivery address */}
                       {fulfillmentSelected === 'delivery' && (
                         <div>
