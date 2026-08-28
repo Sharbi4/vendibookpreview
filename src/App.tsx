@@ -78,6 +78,7 @@ const IdentityVerificationInfo = lazy(() => import("./pages/IdentityVerification
 const VerificationComplete = lazy(() => import("./pages/VerificationComplete"));
 const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
 const BookingConfirmation = lazy(() => import("./pages/BookingConfirmation"));
+const OrderConfirmation = lazy(() => import("./pages/OrderConfirmation"));
 const PaymentCancelled = lazy(() => import("./pages/PaymentCancelled"));
 const Messages = lazy(() => import("./pages/Messages"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
