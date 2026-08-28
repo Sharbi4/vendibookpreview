@@ -219,15 +219,15 @@ export function BookingReviewPanel({
           </div>
         </div>
 
-        {/* Security deposit — explicitly outside today's charge unless collected */}
+        {/* Security deposit — charged today and held; refunded after the rental */}
         {depositAmount ? (
           <div className="mt-3 rounded-xl border border-dashed border-border bg-muted/30 p-3">
             <div className="flex items-start justify-between gap-4">
               <div>
-                <p className="text-sm font-medium">Security deposit</p>
+                <p className="text-sm font-medium">Security deposit (held)</p>
                 <p className="text-xs leading-relaxed text-muted-foreground">
                   {depositChargedToday
-                    ? 'Collected with this payment and refundable after the rental, per the host’s terms.'
+                    ? 'Charged today and held by Vendibook. After your rental, any damages, fees, or late-return charges may be deducted and the remaining balance is returned to your payment method.'
                     : 'Not charged today. The host handles this deposit directly with you, and it is not included in the total above.'}
                 </p>
               </div>
@@ -236,7 +236,7 @@ export function BookingReviewPanel({
                   {formatCurrency(depositAmount)}
                 </span>
                 <Badge variant="secondary" className="mt-1 block text-[10px]">
-                  {depositChargedToday ? 'Included' : 'Not charged today'}
+                  {depositChargedToday ? 'Charged today' : 'Not charged today'}
                 </Badge>
               </div>
             </div>
