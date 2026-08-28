@@ -218,8 +218,37 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   const canGoPrev = isAfter(monthStart, minMonth);
   const canGoNext = isBefore(monthStart, maxMonth);
 
-  const handlePrevMonth = () => canGoPrev && setCurrentMonth(subMonths(currentMonth, 1));
-  const handleNextMonth = () => canGoNext && setCurrentMonth(addMonths(currentMonth, 1));
+  // Month slide direction drives the transition animation
+  const [monthDirection, setMonthDirection] = useState<1 | -1>(1);
+  const handlePrevMonth = () => {
+    if (!canGoPrev) return;
+    setMonthDirection(-1);
+    setCurrentMonth(subMonths(currentMonth, 1));
+  };
+  const handleNextMonth = () => {
+    if (!canGoNext) return;
+    setMonthDirection(1);
+    setCurrentMonth(addMonths(currentMonth, 1));
+  };
+
+  // Touch swipe to switch months on mobile
+  const swipeRef = React.useRef<{ x: number; y: number } | null>(null);
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    swipeRef.current = { x: t.clientX, y: t.clientY };
+  };
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!swipeRef.current) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - swipeRef.current.x;
+    const dy = t.clientY - swipeRef.current.y;
+    swipeRef.current = null;
+    // Horizontal swipe only — ignore mostly-vertical scroll gestures
+    if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      if (dx < 0) handleNextMonth();
+      else handlePrevMonth();
+    }
+  };
 
   // ─────────────────────────────────────────────────────────────────────────────
   // DATE VALIDATION
