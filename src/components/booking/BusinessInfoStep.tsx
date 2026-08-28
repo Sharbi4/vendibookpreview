@@ -6,7 +6,6 @@ import {
   Users,
   Utensils,
   BadgeCheck,
-  ShieldCheck,
   ArrowLeft,
   ArrowRight,
 } from 'lucide-react';
@@ -17,7 +16,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
-import { InsuranceEducationCard } from '@/components/booking/InsuranceEducationCard';
 
 /**
  * Data shape is unchanged for backward compatibility with existing
@@ -64,12 +62,6 @@ const EMPLOYEE_COUNTS = [
   { value: '4-6', label: '4–6 people' },
   { value: '7+', label: '7+ people' },
 ];
-
-const INSURANCE_ANSWERS = [
-  { value: 'yes', label: 'Yes' },
-  { value: 'no', label: 'No' },
-  { value: 'unsure', label: 'Not sure' },
-] as const;
 
 function copyForCategory(category?: string) {
   const mobile = category === 'food_truck' || category === 'food_trailer';
@@ -125,7 +117,7 @@ export const BusinessInfoStep = ({
     onBusinessInfoChange(updated);
   };
 
-  const slides = ['intro', 'license', 'certs', 'insurance', 'staffing', 'use', 'extras'] as const;
+  const slides = ['intro', 'license', 'certs', 'staffing', 'use', 'extras'] as const;
   const current = slides[slide];
 
   const canAdvance = (() => {
@@ -134,8 +126,6 @@ export const BusinessInfoStep = ({
         return Boolean(
           formData.licenseType && (formData.licenseType !== 'other' || formData.licenseTypeOther?.trim()),
         );
-      case 'insurance':
-        return Boolean(formData.liabilityInsuranceAnswer);
       case 'staffing':
         return Boolean(formData.employeeCount);
       case 'use':
@@ -251,48 +241,6 @@ export const BusinessInfoStep = ({
         </div>
       )}
 
-      {current === 'insurance' && (
-        <div className="space-y-6">
-          <div className="space-y-3">
-            <Label className="text-base font-semibold flex items-center gap-2">
-              <ShieldCheck className="h-4 w-4 text-primary" />
-              Do you currently have Commercial General Liability Insurance?
-            </Label>
-            <RadioGroup
-              value={formData.liabilityInsuranceAnswer ?? ''}
-              onValueChange={(val) => {
-                const answer = val as 'yes' | 'no' | 'unsure';
-                const updated = {
-                  ...formData,
-                  liabilityInsuranceAnswer: answer,
-                  hasLiabilityInsurance: answer === 'yes',
-                };
-                setFormData(updated);
-                onBusinessInfoChange(updated);
-              }}
-              className="grid grid-cols-3 gap-2"
-            >
-              {INSURANCE_ANSWERS.map((opt) => (
-                <div key={opt.value} className="relative">
-                  <RadioGroupItem value={opt.value} id={`ins-${opt.value}`} className="peer sr-only" />
-                  <Label
-                    htmlFor={`ins-${opt.value}`}
-                    className={cn(
-                      'flex items-center justify-center rounded-xl border p-3.5 cursor-pointer transition-all text-sm',
-                      'peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5',
-                      'hover:border-primary/50 border-border',
-                    )}
-                  >
-                    {opt.label}
-                  </Label>
-                </div>
-              ))}
-            </RadioGroup>
-            {(formData.liabilityInsuranceAnswer === 'no' ||
-              formData.liabilityInsuranceAnswer === 'unsure') && <InsuranceEducationCard />}
-          </div>
-        </div>
-      )}
 
       {current === 'staffing' && (
         <div className="space-y-6">
