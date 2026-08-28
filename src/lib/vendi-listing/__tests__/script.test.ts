@@ -90,8 +90,11 @@ describe('rental monthly pricing', () => {
     d = answer(d, 'title', 'Like new turnkey food trailer for lease');
     d = answer(d, 'description', 'Turnkey trailer available for monthly lease in Spring Hill.');
     d = answer(d, 'location', 'Spring Hill, TN');
+    d = answer(d, 'zip_code', '37174');
+    d = answer(d, 'street_address', '1200 Duplex Rd');
     d = answer(d, 'rent_period', 'monthly');
     d = answer(d, 'rent_price', '$1,000');
+    d = answer(d, 'rent_daily_rate', '$250');
     d = answer(d, 'instant_book', 'no');
     d = answer(d, 'fulfillment', 'pickup');
     d = answer(d, 'condition', 'like_new');
@@ -106,7 +109,7 @@ describe('rental monthly pricing', () => {
     const d = buildMonthlyRental();
     expect(d.price_monthly).toBe(1000);
     expect(d.price_daily).toBeUndefined();
-    expect(getPublishBlockers(d, 1)).toEqual([]);
+    expect(getPublishBlockers(d, 3)).toEqual([]);
     expect(getPublishBlockers(d, 0)).toContain('Add at least one photo.');
   });
 
@@ -146,8 +149,8 @@ describe('progressive interview and optional depth', () => {
   };
 
   const coreAnswers = [
-    'import_choice', 'import_paste', 'mode', 'category', 'subcategory', 'location',
-    'rent_period', 'rent_price', 'description', 'fulfillment', 'instant_book', 'photos', 'title',
+    'import_choice', 'import_paste', 'mode', 'category', 'subcategory', 'location', 'zip_code', 'street_address',
+    'rent_period', 'rent_price', 'rent_daily_rate', 'description', 'fulfillment', 'instant_book', 'photos', 'title',
     'condition', 'operational_status', 'known_problems', 'included_items', 'photo_exclusions',
   ];
 
@@ -164,7 +167,7 @@ describe('progressive interview and optional depth', () => {
 
   it('offers review once minimum publish requirements are met', () => {
     const d = coreRental();
-    expect(getPublishBlockers(d, 1)).toEqual([]);
+    expect(getPublishBlockers(d, 3)).toEqual([]);
     const gate = nextQuestion(d, coreAnswers);
     expect(gate?.id).toBe(REVIEW_GATE_ID);
     const res = gate!.apply(d, 'review');
@@ -243,7 +246,7 @@ describe('progressive interview and optional depth', () => {
     const bare: VendiDraft = { title: null, description: null, category: null, mode: null };
     const blockers = getPublishBlockers(bare, 0);
     expect(blockers).toContain('Choose rent or sale.');
-    expect(blockers).toContain('Add at least one photo.');
+    expect(blockers).toContain('Add at least 3 photos.');
   });
 });
 
