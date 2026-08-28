@@ -4775,6 +4775,101 @@ export const PublishWizard: React.FC = () => {
                         </div>
                       )}
 
+                      {/* Towing & handoff — rental mobile assets */}
+                      {listing.mode !== 'sale' &&
+                        (listing.category === 'food_trailer' || listing.category === 'food_truck') &&
+                        (fulfillmentType === 'pickup' || fulfillmentType === 'both') && (
+                        <div className="space-y-4 rounded-xl border border-border p-4">
+                          <div>
+                            <Label className="text-base font-medium">Towing &amp; handoff (optional)</Label>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Renters see these before they book. Only fill in what you know — blanks show as
+                              &ldquo;Ask host&rdquo;.
+                            </p>
+                          </div>
+
+                          {listing.category === 'food_trailer' && (
+                            <div className="grid gap-3 sm:grid-cols-3">
+                              <div className="space-y-1.5">
+                                <Label className="text-sm">Coupler / hitch type</Label>
+                                <Input
+                                  value={couplerType}
+                                  onChange={(e) => setCouplerType(e.target.value)}
+                                  placeholder="Bumper pull"
+                                />
+                              </div>
+                              <div className="space-y-1.5">
+                                <Label className="text-sm">Hitch ball size</Label>
+                                <Input
+                                  value={hitchBallSize}
+                                  onChange={(e) => setHitchBallSize(e.target.value)}
+                                  placeholder={'2 5/16"'}
+                                />
+                              </div>
+                              <div className="space-y-1.5">
+                                <Label className="text-sm">Trailer plug</Label>
+                                <Input
+                                  value={trailerPlugType}
+                                  onChange={(e) => setTrailerPlugType(e.target.value)}
+                                  placeholder="7-pin"
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="space-y-2">
+                            <Label className="text-sm">Does the renter bring their own tow vehicle?</Label>
+                            <div className="flex gap-2">
+                              {([
+                                { value: 'yes' as const, label: 'Yes, renter tows' },
+                                { value: 'no' as const, label: 'No, I tow or deliver' },
+                              ]).map((opt) => (
+                                <button
+                                  key={opt.value}
+                                  type="button"
+                                  onClick={() =>
+                                    setRenterProvidesTowVehicle(
+                                      renterProvidesTowVehicle === opt.value ? '' : opt.value
+                                    )
+                                  }
+                                  className={cn(
+                                    'px-4 py-2 rounded-lg border-2 text-sm transition-all',
+                                    renterProvidesTowVehicle === opt.value
+                                      ? 'border-primary bg-primary/5 text-primary'
+                                      : 'border-border text-muted-foreground hover:border-muted-foreground'
+                                  )}
+                                >
+                                  {opt.label}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {renterProvidesTowVehicle === 'yes' && (
+                            <div className="space-y-1.5">
+                              <Label className="text-sm">Tow vehicle requirement (optional)</Label>
+                              <Input
+                                value={towVehicleRequirement}
+                                onChange={(e) => setTowVehicleRequirement(e.target.value)}
+                                placeholder="3/4 ton truck or better, 10,000 lb tow rating"
+                              />
+                            </div>
+                          )}
+
+                          <div className="space-y-1.5">
+                            <Label className="text-sm">Return instructions (optional)</Label>
+                            <Textarea
+                              value={returnInstructions}
+                              onChange={(e) => setReturnInstructions(e.target.value)}
+                              placeholder="Return by 6pm, cleaned out, tanks emptied, park in the same spot…"
+                              rows={2}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+
+
                       {(fulfillmentType === 'delivery' || fulfillmentType === 'both') && (
                         <>
                           <div className="space-y-2">
