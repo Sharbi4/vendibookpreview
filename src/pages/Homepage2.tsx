@@ -122,14 +122,37 @@ const Homepage2 = () => {
         page: pageNum,
         page_size: PAGE_SIZE,
         sort_by: sortBy};
-      if (query.trim()) body.query = query.trim();
+      const trimmed = query.trim();
+      if (trimmed) body.query = trimmed;
       if (mode) body.mode = mode;
       if (category) body.category = category;
       if (coordinates) {
         body.latitude = coordinates[1];
         body.longitude = coordinates[0];
         body.radius_miles = filters.radiusMiles ? Number(filters.radiusMiles) : 25;
+      } else if (trimmed) {
+        // City / state / ZIP typed into the search box: geocode it so results
+        // come from a radius around that place instead of a literal text match.
+        const isZip = /^\d{5}(-\d{4})?$/.test(trimmed);
+        const isCityState = /^[A-Za-z .'-]+,\s*[A-Za-z .]{2,}$/.test(trimmed);
+        if (isZip || isCityState) {
+          try {
+            const { data: geo } = await supabase.functions.invoke('geocode-location', {
+              body: { query: trimmed, limit: 1 }});
+            const hit = geo?.results?.[0];
+            const center = hit?.center || (hit?.longitude !== undefined ? [hit.longitude, hit.latitude] : null);
+            if (center) {
+              body.longitude = center[0];
+              body.latitude = center[1];
+              body.radius_miles = filters.radiusMiles ? Number(filters.radiusMiles) : 100;
+              body.location_scoped = true;
+            }
+          } catch {
+            // fall back to plain text search
+          }
+        }
       }
+
       // Apply filters
       if (filters.minPrice) body.min_price = Number(filters.minPrice);
       if (filters.maxPrice) body.max_price = Number(filters.maxPrice);

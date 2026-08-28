@@ -1,17 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
-    <loc>https://vendibook.com/listing/c2a323e2-8b8a-469a-b5e3-d61c3fe305e5</loc>
-    <lastmod>2026-08-27</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/d126f042-e517-46ee-b89d-0bd83483a88d/c2a323e2-8b8a-469a-b5e3-d61c3fe305e5/1787594421955-f3tg1e.webp</image:loc>
-      <image:title>Turnkey 17.5ft LeMontH Classic Food Trailer — Fully Equipped, Ready to Operate |</image:title>
-      <image:caption>Turnkey 17.5ft LeMontH Classic Food Trailer — Fully Equipped, Ready to Operate | in Key West, FL on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/ede54357-a79d-4325-bb1f-153c75fd89dc</loc>
     <lastmod>2026-08-27</lastmod>
     <changefreq>weekly</changefreq>
@@ -20,6 +9,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/4bcf4516-26c3-44f5-8ac1-d2555a52a0de/ede54357-a79d-4325-bb1f-153c75fd89dc/1769731206306-ljk3x6.jpg</image:loc>
       <image:title>Commercial Kitchen Rental</image:title>
       <image:caption>Commercial Kitchen Rental in Dallas, OR on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/c2a323e2-8b8a-469a-b5e3-d61c3fe305e5</loc>
+    <lastmod>2026-08-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/d126f042-e517-46ee-b89d-0bd83483a88d/c2a323e2-8b8a-469a-b5e3-d61c3fe305e5/1787594421955-f3tg1e.webp</image:loc>
+      <image:title>Turnkey 17.5ft LeMontH Classic Food Trailer — Fully Equipped, Ready to Operate |</image:title>
+      <image:caption>Turnkey 17.5ft LeMontH Classic Food Trailer — Fully Equipped, Ready to Operate | in Key West, FL on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -34,17 +34,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/9fa1aac0-10d3-4c75-8e60-d8e16f7a0a47</loc>
-    <lastmod>2026-08-27</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/3756d71d-fcff-48e2-960f-7f8c565e7c46/9fa1aac0-10d3-4c75-8e60-d8e16f7a0a47/1784143204036-fmnpm.jpeg</image:loc>
-      <image:title>FOOD TRUCK FOR SALE OR LONG-TERM LEASE - $76,000 (Chicago)</image:title>
-      <image:caption>FOOD TRUCK FOR SALE OR LONG-TERM LEASE - $76,000 (Chicago) in Chicago, IL on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/f814bc22-d682-4ddf-818e-049472578f49</loc>
     <lastmod>2026-08-27</lastmod>
     <changefreq>weekly</changefreq>
@@ -53,17 +42,6 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/24050d09-bc26-42d9-91e2-7c445f9203dc/f814bc22-d682-4ddf-818e-049472578f49/1785261976822-ubjk.jpg</image:loc>
       <image:title>2023 SDG 37&apos; Custom Commercial Kitchen on Wheels</image:title>
       <image:caption>2023 SDG 37&apos; Custom Commercial Kitchen on Wheels in Birch Run, MI on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://vendibook.com/listing/ee20ce79-1fbc-4885-aaf8-61f4c3a5cc25</loc>
-    <lastmod>2026-08-27</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800</image:loc>
-      <image:title>Gourmet Coffee Cart - Complete Setup</image:title>
-      <image:caption>Gourmet Coffee Cart - Complete Setup in Fort Worth, TX on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -78,25 +56,25 @@
     </image:image>
   </url>
   <url>
+    <loc>https://vendibook.com/listing/ee20ce79-1fbc-4885-aaf8-61f4c3a5cc25</loc>
+    <lastmod>2026-08-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?w=800</image:loc>
+      <image:title>Gourmet Coffee Cart - Complete Setup</image:title>
+      <image:caption>Gourmet Coffee Cart - Complete Setup in Fort Worth, TX on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://vendibook.com/listing/154df4be-3102-44c9-b014-b36bafce8391</loc>
-    <lastmod>2026-08-22</lastmod>
+    <lastmod>2026-08-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/609b6034-da38-445b-b0bb-9fc2b1ef74f5/154df4be-3102-44c9-b014-b36bafce8391/1781182024445-ppp4gp.jpeg</image:loc>
       <image:title>My Food Trailer</image:title>
       <image:caption>My Food Trailer in Norcross, GA on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://vendibook.com/listing/b7392745-3c33-48be-b4e9-2c5afc0d5890</loc>
-    <lastmod>2026-08-27</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/7b0ce910-912e-47a4-bf55-6243abe7cbb8/b7392745-3c33-48be-b4e9-2c5afc0d5890/1784131173628-98kr4j.jpeg</image:loc>
-      <image:title>2024 fully equipped Cynergy concession trailer</image:title>
-      <image:caption>2024 fully equipped Cynergy concession trailer in Toledo, OH on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -166,17 +144,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/208387b2-6318-4488-963f-3741be63d929</loc>
-    <lastmod>2026-08-27</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/3a50f35c-f05e-49b8-8603-0cd7533e5ddf/208387b2-6318-4488-963f-3741be63d929/1783706767535-fuouu.jpg</image:loc>
-      <image:title>2024 8.5&apos;x16&apos; Red Mobile Food Kitchen Trailer with Pro Fire System </image:title>
-      <image:caption>2024 8.5&apos;x16&apos; Red Mobile Food Kitchen Trailer with Pro Fire System  in Huntsville, TN on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/4804542d-6b42-4e93-a90e-17e04009f4cc</loc>
     <lastmod>2026-08-27</lastmod>
     <changefreq>weekly</changefreq>
@@ -210,17 +177,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/10ae96b2-12c7-413a-a612-92110bc2050e</loc>
-    <lastmod>2026-08-27</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/5fbd89d5-fa6b-424c-97b8-dea19753eda8/10ae96b2-12c7-413a-a612-92110bc2050e/1781406117162-jk7v8.jpeg</image:loc>
-      <image:title>Food Truck renovated inside - out</image:title>
-      <image:caption>Food Truck renovated inside - out in Austin, TX on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/f5582bd0-afac-44f1-9f85-3acf24c279f5</loc>
     <lastmod>2026-08-27</lastmod>
     <changefreq>weekly</changefreq>
@@ -229,17 +185,6 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/863d4cc1-7581-4d3c-8d73-6b33740931cf/f5582bd0-afac-44f1-9f85-3acf24c279f5/1781472783823-3n5lzg.jpeg</image:loc>
       <image:title>Vintage (1955) one-of-a-kind fully restored Chevy all-purpose food truck</image:title>
       <image:caption>Vintage (1955) one-of-a-kind fully restored Chevy all-purpose food truck in Farmingdale, NJ on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://vendibook.com/listing/fec458ae-0672-4073-ac92-c120de896c8a</loc>
-    <lastmod>2026-08-27</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800</image:loc>
-      <image:title>Premium Seafood Truck Empire</image:title>
-      <image:caption>Premium Seafood Truck Empire in Seattle, WA on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -254,6 +199,17 @@
     </image:image>
   </url>
   <url>
+    <loc>https://vendibook.com/listing/fec458ae-0672-4073-ac92-c120de896c8a</loc>
+    <lastmod>2026-08-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800</image:loc>
+      <image:title>Premium Seafood Truck Empire</image:title>
+      <image:caption>Premium Seafood Truck Empire in Seattle, WA on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://vendibook.com/listing/4e50a07a-6909-411b-a4e0-429fee24c52a</loc>
     <lastmod>2026-08-27</lastmod>
     <changefreq>weekly</changefreq>
@@ -265,14 +221,14 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/9d335dc0-71f2-4e1c-ada1-93a4ee2f9d77</loc>
+    <loc>https://vendibook.com/listing/650be60a-4d7a-4bb8-a677-0893d6a6451a</loc>
     <lastmod>2026-08-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/f559486d-0ccb-4caf-b28d-421b960e0a4b/9d335dc0-71f2-4e1c-ada1-93a4ee2f9d77/1771959901921-4pbsb7.jpeg</image:loc>
-      <image:title>FOOD TRAILER - EXP 16X 8 FT</image:title>
-      <image:caption>FOOD TRAILER - EXP 16X 8 FT in La Feria, TX on Vendibook</image:caption>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/de07e405-c77a-461a-bf6a-16936ed6b0b6/650be60a-4d7a-4bb8-a677-0893d6a6451a/1787862092829-n5t9a.png</image:loc>
+      <image:title>MA’Z TACOS – TURNKEY TUCSON FOOD TRUCK BUSINESS FOR SALE BRAND-NEW 2026 </image:title>
+      <image:caption>MA’Z TACOS – TURNKEY TUCSON FOOD TRUCK BUSINESS FOR SALE BRAND-NEW 2026  in Tucson, AZ on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -284,6 +240,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/0b669ac2-7bf0-4013-b671-0576eea77e00/a02adafe-ad00-40cb-90c7-2a8ccc55f469/1768963055920-fywcc.jpg</image:loc>
       <image:title>Coffee Tailer</image:title>
       <image:caption>Coffee Tailer in San Francisco, CA on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/d93c53cb-f440-4672-ba6c-912c8266cda8</loc>
+    <lastmod>2026-08-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/f559486d-0ccb-4caf-b28d-421b960e0a4b/d93c53cb-f440-4672-ba6c-912c8266cda8/1775752366530-nw9ey9.jpeg</image:loc>
+      <image:title>2025 8.5&apos; X 16&apos; FOOD TRAILER CALIFORNIA</image:title>
+      <image:caption>2025 8.5&apos; X 16&apos; FOOD TRAILER CALIFORNIA in La Feria, TX on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -309,6 +276,17 @@
     </image:image>
   </url>
   <url>
+    <loc>https://vendibook.com/listing/dc2dd4ff-cc23-41a8-8a4f-4e496fc6ff62</loc>
+    <lastmod>2026-08-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/0a3a80fa-4189-4c7b-a1cd-f2faf3a4e543/dc2dd4ff-cc23-41a8-8a4f-4e496fc6ff62/1785787420959-cov6i5.jpeg</image:loc>
+      <image:title>2002 workhorse P42 6.5 L diesel</image:title>
+      <image:caption>2002 workhorse P42 6.5 L diesel in Chambersburg, PA on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://vendibook.com/listing/ac5cf2e2-0b92-4665-b562-2d818f4313d6</loc>
     <lastmod>2026-08-27</lastmod>
     <changefreq>weekly</changefreq>
@@ -328,17 +306,6 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/481e4bf0-531b-4343-bd3b-c4c78795f147/f1a879a6-6c16-4c17-b902-a2c84b1036ff/1786409044323-ilg5fa.jpg</image:loc>
       <image:title>Mobile Ice Cream Trailer For Sale - See Profits Fast</image:title>
       <image:caption>Mobile Ice Cream Trailer For Sale - See Profits Fast in Everett, WA on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://vendibook.com/listing/dc2dd4ff-cc23-41a8-8a4f-4e496fc6ff62</loc>
-    <lastmod>2026-08-27</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/0a3a80fa-4189-4c7b-a1cd-f2faf3a4e543/dc2dd4ff-cc23-41a8-8a4f-4e496fc6ff62/1785787420959-cov6i5.jpeg</image:loc>
-      <image:title>2002 workhorse P42 6.5 L diesel</image:title>
-      <image:caption>2002 workhorse P42 6.5 L diesel in Chambersburg, PA on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -365,7 +332,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/33ee8fd3-f9fd-44b3-af28-64d94eb7f9e9</loc>
-    <lastmod>2026-08-25</lastmod>
+    <lastmod>2026-08-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -386,17 +353,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/99d179ad-16ad-4bb3-9ccb-cd1a8e157284</loc>
-    <lastmod>2026-08-27</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/47f2051d-318e-4f40-b9ae-b6984e7fc5d2/99d179ad-16ad-4bb3-9ccb-cd1a8e157284/1771012875547-2ec6o.jpg</image:loc>
-      <image:title>Food Trailer (Best financing option in the market $680-$980)</image:title>
-      <image:caption>Food Trailer (Best financing option in the market $680-$980) in Scottsdale, AZ on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/f4d5e5ae-31eb-4ba0-9d2b-13df7279d020</loc>
     <lastmod>2026-08-27</lastmod>
     <changefreq>weekly</changefreq>
@@ -405,17 +361,6 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/f2865e60-125e-4921-b7c5-898ba1675045/f4d5e5ae-31eb-4ba0-9d2b-13df7279d020/1769084137377-0pz8o6.jpg</image:loc>
       <image:title>🔥 TURNKEY SHIPPING CONTAINER KITCHEN🔥</image:title>
       <image:caption>🔥 TURNKEY SHIPPING CONTAINER KITCHEN🔥 in Atlanta, GA on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://vendibook.com/listing/3c5c4943-dca5-40cd-bfef-547446077f46</loc>
-    <lastmod>2026-08-27</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/d7077653-fd60-40ec-b980-2e52862f7b0a/3c5c4943-dca5-40cd-bfef-547446077f46/1786672754920-pb52rn.jpg</image:loc>
-      <image:title>2021 8.5 X 24 ENCLOSED, REFRIGERATED, 16K CAPACITY CARGO TRAILER</image:title>
-      <image:caption>2021 8.5 X 24 ENCLOSED, REFRIGERATED, 16K CAPACITY CARGO TRAILER in Sparta, TN on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -507,28 +452,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/c8d152a4-dbc2-4239-8e0a-56cecac50266</loc>
-    <lastmod>2026-08-27</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/b420d8c8-f0f5-4f20-8250-64d70c9993df/c8d152a4-dbc2-4239-8e0a-56cecac50266/1786451155485-v4zvfc.jpeg</image:loc>
-      <image:title>2026 Fully loaded Food trailer READY </image:title>
-      <image:caption>2026 Fully loaded Food trailer READY  in Lilburn, GA on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://vendibook.com/listing/d93c53cb-f440-4672-ba6c-912c8266cda8</loc>
-    <lastmod>2026-08-22</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/f559486d-0ccb-4caf-b28d-421b960e0a4b/d93c53cb-f440-4672-ba6c-912c8266cda8/1775752366530-nw9ey9.jpeg</image:loc>
-      <image:title>2025 8.5&apos; X 16&apos; FOOD TRAILER CALIFORNIA</image:title>
-      <image:caption>2025 8.5&apos; X 16&apos; FOOD TRAILER CALIFORNIA in La Feria, TX on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/ddb8e4cb-3e16-482e-a9c5-845cd6068e4c</loc>
     <lastmod>2026-08-27</lastmod>
     <changefreq>weekly</changefreq>
@@ -537,6 +460,28 @@
       <image:loc>https://images.unsplash.com/photo-1501443762994-82bd5dace89a?w=800</image:loc>
       <image:title>Dessert &amp; Ice Cream Trailer</image:title>
       <image:caption>Dessert &amp; Ice Cream Trailer in San Diego, CA on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/99d179ad-16ad-4bb3-9ccb-cd1a8e157284</loc>
+    <lastmod>2026-08-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/47f2051d-318e-4f40-b9ae-b6984e7fc5d2/99d179ad-16ad-4bb3-9ccb-cd1a8e157284/1771012875547-2ec6o.jpg</image:loc>
+      <image:title>Food Trailer (Best financing option in the market $680-$980)</image:title>
+      <image:caption>Food Trailer (Best financing option in the market $680-$980) in Scottsdale, AZ on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/10ae96b2-12c7-413a-a612-92110bc2050e</loc>
+    <lastmod>2026-08-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/5fbd89d5-fa6b-424c-97b8-dea19753eda8/10ae96b2-12c7-413a-a612-92110bc2050e/1781406117162-jk7v8.jpeg</image:loc>
+      <image:title>Food Truck renovated inside - out</image:title>
+      <image:caption>Food Truck renovated inside - out in Austin, TX on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -562,17 +507,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/6f438a50-85bb-43bd-b0ad-c6253251b12d</loc>
-    <lastmod>2026-08-27</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/2d6d68c7-7efe-40cb-8061-42ac57b351a4/6f438a50-85bb-43bd-b0ad-c6253251b12d/1783710987986-af3kb.jpg</image:loc>
-      <image:title>Fully Equipped Mobile Juice Truck-Van - Ready to Roll</image:title>
-      <image:caption>Fully Equipped Mobile Juice Truck-Van - Ready to Roll in Centennial, CO on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/38bea00a-bf1b-42fa-a235-25332aa654ca</loc>
     <lastmod>2026-08-27</lastmod>
     <changefreq>weekly</changefreq>
@@ -592,6 +526,28 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/a428d36b-4816-4cc3-9c9f-125c57d54e7f/d4e891ae-bbf4-4580-9998-28681e04d2d4/1781025625049-uzgo9z.jpeg</image:loc>
       <image:title>INVESTMENT OPPORTUNITY IN HOUSTON</image:title>
       <image:caption>INVESTMENT OPPORTUNITY IN HOUSTON in Cypress, TX on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/6f438a50-85bb-43bd-b0ad-c6253251b12d</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/2d6d68c7-7efe-40cb-8061-42ac57b351a4/6f438a50-85bb-43bd-b0ad-c6253251b12d/1783710987986-af3kb.jpg</image:loc>
+      <image:title>Fully Equipped Mobile Juice Truck-Van - Ready to Roll</image:title>
+      <image:caption>Fully Equipped Mobile Juice Truck-Van - Ready to Roll in Centennial, CO on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/208387b2-6318-4488-963f-3741be63d929</loc>
+    <lastmod>2026-08-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/3a50f35c-f05e-49b8-8603-0cd7533e5ddf/208387b2-6318-4488-963f-3741be63d929/1783706767535-fuouu.jpg</image:loc>
+      <image:title>2024 8.5&apos;x16&apos; Red Mobile Food Kitchen Trailer with Pro Fire System </image:title>
+      <image:caption>2024 8.5&apos;x16&apos; Red Mobile Food Kitchen Trailer with Pro Fire System  in Huntsville, TN on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -629,7 +585,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/c649440f-d3df-4f3a-a622-e118767efb4d</loc>
-    <lastmod>2026-08-26</lastmod>
+    <lastmod>2026-08-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -661,14 +617,14 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/26bd6a6a-f814-4f31-923d-68e7e326ff06</loc>
+    <loc>https://vendibook.com/listing/a3ead971-38c7-4c0c-8f3f-2b02185c7c2f</loc>
     <lastmod>2026-08-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/04eccfc2-efde-4d72-a0e9-dbcfea829376/26bd6a6a-f814-4f31-923d-68e7e326ff06/1785968367203-hxdpyo.jpeg</image:loc>
-      <image:title>Fully equipped food trailer </image:title>
-      <image:caption>Fully equipped food trailer  in Saginaw, MI on Vendibook</image:caption>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/bf4754c8-46ce-472e-8a71-2b8a7769a833/a3ead971-38c7-4c0c-8f3f-2b02185c7c2f/1770294077101-jgoyi.jpg</image:loc>
+      <image:title>Custom-Built 6&apos; x 12&apos; Pop-Up Lemonade Concession Trailer</image:title>
+      <image:caption>Custom-Built 6&apos; x 12&apos; Pop-Up Lemonade Concession Trailer in Charlotte, NC on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -683,17 +639,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/a3ead971-38c7-4c0c-8f3f-2b02185c7c2f</loc>
-    <lastmod>2026-08-27</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/bf4754c8-46ce-472e-8a71-2b8a7769a833/a3ead971-38c7-4c0c-8f3f-2b02185c7c2f/1770294077101-jgoyi.jpg</image:loc>
-      <image:title>Custom-Built 6&apos; x 12&apos; Pop-Up Lemonade Concession Trailer</image:title>
-      <image:caption>Custom-Built 6&apos; x 12&apos; Pop-Up Lemonade Concession Trailer in Charlotte, NC on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/2ee148f3-0b56-4739-86b1-b96208fcf1af</loc>
     <lastmod>2026-08-27</lastmod>
     <changefreq>weekly</changefreq>
@@ -705,6 +650,28 @@
     </image:image>
   </url>
   <url>
+    <loc>https://vendibook.com/listing/26bd6a6a-f814-4f31-923d-68e7e326ff06</loc>
+    <lastmod>2026-08-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/04eccfc2-efde-4d72-a0e9-dbcfea829376/26bd6a6a-f814-4f31-923d-68e7e326ff06/1785968367203-hxdpyo.jpeg</image:loc>
+      <image:title>Fully equipped food trailer </image:title>
+      <image:caption>Fully equipped food trailer  in Saginaw, MI on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/c8d152a4-dbc2-4239-8e0a-56cecac50266</loc>
+    <lastmod>2026-08-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/b420d8c8-f0f5-4f20-8250-64d70c9993df/c8d152a4-dbc2-4239-8e0a-56cecac50266/1786451155485-v4zvfc.jpeg</image:loc>
+      <image:title>2026 Fully loaded Food trailer READY </image:title>
+      <image:caption>2026 Fully loaded Food trailer READY  in Lilburn, GA on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://vendibook.com/listing/c07375f0-c3c6-4ab4-a353-2deba419773b</loc>
     <lastmod>2026-08-27</lastmod>
     <changefreq>weekly</changefreq>
@@ -713,17 +680,6 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/00f5eddf-153e-451c-998a-f7a2a410b959/c07375f0-c3c6-4ab4-a353-2deba419773b/1770413583980-o76z5.jpg</image:loc>
       <image:title>The Q — Commercial Kitchen &amp; Commissary (Downtown Boaz, AL)</image:title>
       <image:caption>The Q — Commercial Kitchen &amp; Commissary (Downtown Boaz, AL) in Boaz, AL on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://vendibook.com/listing/fec5ac8b-3e30-4500-b3c4-e95820aaa00e</loc>
-    <lastmod>2026-08-15</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=800</image:loc>
-      <image:title>Established Taco Truck</image:title>
-      <image:caption>Established Taco Truck in Albuquerque, NM on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -746,6 +702,17 @@
       <image:loc>https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800</image:loc>
       <image:title>Basic Food Prep Trailer</image:title>
       <image:caption>Basic Food Prep Trailer in Tucson, AZ on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/fec5ac8b-3e30-4500-b3c4-e95820aaa00e</loc>
+    <lastmod>2026-08-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=800</image:loc>
+      <image:title>Established Taco Truck</image:title>
+      <image:caption>Established Taco Truck in Albuquerque, NM on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -793,14 +760,36 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/587b1919-9828-46ef-bba8-76da9553f962</loc>
+    <loc>https://vendibook.com/listing/9d335dc0-71f2-4e1c-ada1-93a4ee2f9d77</loc>
     <lastmod>2026-08-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/de0d03a7-c0cf-4078-808c-cd4a1251af5a/587b1919-9828-46ef-bba8-76da9553f962/1787587038899-tl7owm.jpg</image:loc>
-      <image:title>Brand New 2025 Dreamfly Airstream Ready to Go! Never been used!</image:title>
-      <image:caption>Brand New 2025 Dreamfly Airstream Ready to Go! Never been used! in Stoughton, MA on Vendibook</image:caption>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/f559486d-0ccb-4caf-b28d-421b960e0a4b/9d335dc0-71f2-4e1c-ada1-93a4ee2f9d77/1771959901921-4pbsb7.jpeg</image:loc>
+      <image:title>FOOD TRAILER - EXP 16X 8 FT</image:title>
+      <image:caption>FOOD TRAILER - EXP 16X 8 FT in La Feria, TX on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/5485ce08-9cd6-4c4c-851e-824e4b7d9451</loc>
+    <lastmod>2026-08-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/4fc00959-da4f-4cee-9bac-d8e036254198/5485ce08-9cd6-4c4c-851e-824e4b7d9451/1784943180177-hlai2.jpeg</image:loc>
+      <image:title>2025 Fully Equipped Food Trailer </image:title>
+      <image:caption>2025 Fully Equipped Food Trailer  in Dumfries, VA on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/3c5c4943-dca5-40cd-bfef-547446077f46</loc>
+    <lastmod>2026-08-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/d7077653-fd60-40ec-b980-2e52862f7b0a/3c5c4943-dca5-40cd-bfef-547446077f46/1786672754920-pb52rn.jpg</image:loc>
+      <image:title>2021 8.5 X 24 ENCLOSED, REFRIGERATED, 16K CAPACITY CARGO TRAILER</image:title>
+      <image:caption>2021 8.5 X 24 ENCLOSED, REFRIGERATED, 16K CAPACITY CARGO TRAILER in Sparta, TN on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -812,17 +801,6 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/bf4754c8-46ce-472e-8a71-2b8a7769a833/24594068-25df-4bbe-b142-7bad96aacf39/1770302856730-he0b8f.jpg</image:loc>
       <image:title>Commissary Kitchen For Rent</image:title>
       <image:caption>Commissary Kitchen For Rent in Charlotte, NC on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://vendibook.com/listing/5485ce08-9cd6-4c4c-851e-824e4b7d9451</loc>
-    <lastmod>2026-08-25</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/4fc00959-da4f-4cee-9bac-d8e036254198/5485ce08-9cd6-4c4c-851e-824e4b7d9451/1784943180177-hlai2.jpeg</image:loc>
-      <image:title>2025 Fully Equipped Food Trailer </image:title>
-      <image:caption>2025 Fully Equipped Food Trailer  in Dumfries, VA on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -849,13 +827,24 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/efa664df-1f34-421f-90f8-2ebc88e471fd</loc>
-    <lastmod>2026-08-25</lastmod>
+    <lastmod>2026-08-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/33fb896d-2c60-42e7-b3eb-20d2e44ee08e/efa664df-1f34-421f-90f8-2ebc88e471fd/1779931710472-2sthj.jpeg</image:loc>
       <image:title>Food trailer (Indian food truck)</image:title>
       <image:caption>Food trailer (Indian food truck) in Bradenton, FL on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/587b1919-9828-46ef-bba8-76da9553f962</loc>
+    <lastmod>2026-08-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/de0d03a7-c0cf-4078-808c-cd4a1251af5a/587b1919-9828-46ef-bba8-76da9553f962/1787587038899-tl7owm.jpg</image:loc>
+      <image:title>Brand New 2025 Dreamfly Airstream Ready to Go! Never been used!</image:title>
+      <image:caption>Brand New 2025 Dreamfly Airstream Ready to Go! Never been used! in Stoughton, MA on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -870,6 +859,17 @@
     </image:image>
   </url>
   <url>
+    <loc>https://vendibook.com/listing/b7392745-3c33-48be-b4e9-2c5afc0d5890</loc>
+    <lastmod>2026-08-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/7b0ce910-912e-47a4-bf55-6243abe7cbb8/b7392745-3c33-48be-b4e9-2c5afc0d5890/1784131173628-98kr4j.jpeg</image:loc>
+      <image:title>2024 fully equipped Cynergy concession trailer</image:title>
+      <image:caption>2024 fully equipped Cynergy concession trailer in Toledo, OH on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://vendibook.com/listing/cd1c62cd-1e1f-4d72-8811-576957af53f4</loc>
     <lastmod>2026-08-27</lastmod>
     <changefreq>weekly</changefreq>
@@ -878,6 +878,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/97dc8bb1-d9d3-4bf9-960a-8674082ded44/cd1c62cd-1e1f-4d72-8811-576957af53f4/1772215158047-hcat5w2.jpg</image:loc>
       <image:title>Downtown Phoenix Private Commercial Kitchens For Rent</image:title>
       <image:caption>Downtown Phoenix Private Commercial Kitchens For Rent in Phoenix, AZ on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/9fa1aac0-10d3-4c75-8e60-d8e16f7a0a47</loc>
+    <lastmod>2026-08-27</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/3756d71d-fcff-48e2-960f-7f8c565e7c46/9fa1aac0-10d3-4c75-8e60-d8e16f7a0a47/1784143204036-fmnpm.jpeg</image:loc>
+      <image:title>FOOD TRUCK FOR SALE OR LONG-TERM LEASE - $76,000 (Chicago)</image:title>
+      <image:caption>FOOD TRUCK FOR SALE OR LONG-TERM LEASE - $76,000 (Chicago) in Chicago, IL on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -915,7 +926,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/1fcfc8c8-8742-4534-b5f6-5ecca7eabf17</loc>
-    <lastmod>2026-08-26</lastmod>
+    <lastmod>2026-08-27</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
