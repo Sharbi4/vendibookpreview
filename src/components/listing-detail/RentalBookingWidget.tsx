@@ -324,7 +324,25 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   // ─────────────────────────────────────────────────────────────────────────────
   const handleDateClick = (date: Date) => {
     const status = getDayStatus(date);
-    if (status === 'past' || status === 'outside' || status === 'full') return;
+    if (status === 'past' || status === 'outside' || status === 'full') {
+      const reason = getDayBlockReason(date);
+      if (reason) {
+        toast({
+          title: `${format(date, 'MMM d')} is unavailable`,
+          description: reason,
+        });
+      }
+      return;
+    }
+    if (isBeyondRangeLimit(date)) {
+      toast({
+        title: 'Your stay would cross an unavailable day',
+        description: rangeLimit
+          ? `${format(rangeLimit, 'MMM d')} is unavailable — ${getDayBlockReason(rangeLimit) ?? 'pick an earlier end date.'}`
+          : 'Pick an earlier end date.',
+      });
+      return;
+    }
 
     if (mode === 'hourly') {
       // Multi-day hourly: set active date to show time slots (preserve existing selections)
