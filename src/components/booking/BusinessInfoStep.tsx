@@ -6,7 +6,6 @@ import {
   Users,
   Utensils,
   BadgeCheck,
-  ShieldCheck,
   ArrowLeft,
   ArrowRight,
 } from 'lucide-react';
@@ -63,12 +62,6 @@ const EMPLOYEE_COUNTS = [
   { value: '4-6', label: '4–6 people' },
   { value: '7+', label: '7+ people' },
 ];
-
-const INSURANCE_ANSWERS = [
-  { value: 'yes', label: 'Yes' },
-  { value: 'no', label: 'No' },
-  { value: 'unsure', label: 'Not sure' },
-] as const;
 
 function copyForCategory(category?: string) {
   const mobile = category === 'food_truck' || category === 'food_trailer';
