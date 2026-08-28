@@ -1186,7 +1186,7 @@ const BookingCheckout = () => {
                         }
                         totalToday={totalChargedToday}
                         depositAmount={depositAmount}
-                        depositChargedToday={false}
+                        depositChargedToday={true}
                         bookingMode={instantConfirm ? 'instant' : 'request'}
                         dateLabel={`${format(startDate, 'MMM d')} – ${format(endDate, 'MMM d, yyyy')}`}
                         durationLabel={
