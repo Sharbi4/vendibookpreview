@@ -9,6 +9,10 @@
 import type { ListingCategory } from '@/types/listing';
 import { getStageRequirements, isTitledAsset, requiresSaleDimensions } from '@/lib/listings/stages';
 import {
+  MIN_DESCRIPTION_LENGTH, MIN_PHOTOS, MIN_TITLE_LENGTH,
+  isStaticLocationCategory, requiresStreetAddress,
+} from '@/lib/listings/publishParity';
+import {
   getPublishBlockers, REVIEW_GATE_ID, visibleQuestions, type Question, type VendiDraft,
 } from './script';
 
@@ -18,13 +22,26 @@ export function blockingQuestionIds(draft: VendiDraft, imageCount: number): stri
   if (!draft.category) ids.push('category');
   if (!draft.mode) ids.push('mode');
   if (!draft.city || !draft.state) ids.push('location');
-  if (draft.mode === 'sale' && !draft.price_sale) ids.push('sale_price');
-  if (draft.mode === 'rent' && !(draft.price_monthly || draft.price_weekly || draft.price_daily || draft.price_hourly)) {
-    ids.push('rent_period', 'rent_price');
+  if (!draft.zip_code) ids.push('zip_code');
+  if (
+    !draft.street_address
+    && requiresStreetAddress(
+      (draft.mode as 'rent' | 'sale' | null | undefined) ?? null,
+      draft.category,
+      draft.fulfillment_type,
+    )
+  ) {
+    ids.push('street_address');
   }
-  if (!draft.description || draft.description.trim().length < 20) ids.push('description');
-  if (imageCount < 1) ids.push('photos');
-  if (!draft.title || draft.title.trim().length < 8) ids.push('title');
+  if (draft.mode === 'sale' && !draft.price_sale) ids.push('sale_price');
+  if (draft.mode === 'rent' && !draft.price_daily) {
+    ids.push('rent_period', 'rent_price', 'rent_daily_rate');
+  }
+  if (!draft.description || draft.description.trim().length < MIN_DESCRIPTION_LENGTH) ids.push('description');
+  if (imageCount < MIN_PHOTOS) ids.push('photos');
+  if (!draft.title || draft.title.trim().length < MIN_TITLE_LENGTH) ids.push('title');
+  if (isStaticLocationCategory(draft.category) && !draft.access_instructions) ids.push('access_instructions');
+  if (!isStaticLocationCategory(draft.category) && !draft.fulfillment_type) ids.push('fulfillment');
 
   // Required seller disclosures block publishing exactly as they do in the
   // manual wizard, so they must outrank the "ready to publish" gate.

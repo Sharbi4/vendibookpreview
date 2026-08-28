@@ -18,6 +18,9 @@ const publishable = (over: Partial<VendiDraft> = {}): VendiDraft => base({
   mode: 'sale',
   city: 'Mesa',
   state: 'AZ',
+  zip_code: '85201',
+  street_address: '1421 W Broadway Rd',
+  fulfillment_type: 'pickup',
   price_sale: 45000,
   // Required seller disclosures (parity with the manual wizard).
   condition: 'good',
@@ -48,13 +51,13 @@ describe('prioritisation', () => {
       'title', 'photos', 'condition', 'operational_status', 'title_status', 'has_lien',
       'known_problems', 'included_items', 'photo_exclusions', 'sale_dimensions',
     ];
-    expect(blockingQuestionIds(draft, 1)).toHaveLength(0);
-    expect(rankedNextQuestion(draft, answered, 1)?.id).toBe('ready_gate');
+    expect(blockingQuestionIds(draft, 3)).toHaveLength(0);
+    expect(rankedNextQuestion(draft, answered, 3)?.id).toBe('ready_gate');
   });
 
   it('reports honest readiness progress, not question count', () => {
     expect(readinessProgress(base(), 0).percent).toBeLessThan(20);
-    const ready = readinessProgress(publishable(), 1);
+    const ready = readinessProgress(publishable(), 3);
     expect(ready.ready).toBe(true);
     expect(ready.percent).toBe(100);
     expect(ready.label).toBe('Ready to publish');
