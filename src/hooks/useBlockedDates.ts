@@ -132,15 +132,56 @@ const useBlockedDatesInternal = (listingId: string) => {
     fetchUnavailableDates();
   }, [listingId]);
 
-  const isDateUnavailable = (date: Date): boolean => {
+  // Fast lookup maps so calendars can resolve a day's status in O(1).
+  const blockedReasonByDate = useMemo(() => {
+    const map = new Map<string, string | null>();
+    blockedDates.forEach(record => map.set(record.blocked_date, record.reason ?? null));
+    return map;
+  }, [blockedDates]);
+
+  const bookedDateKeys = useMemo(
+    () => new Set(bookedDates.map(d => format(d, 'yyyy-MM-dd'))),
+    [bookedDates],
+  );
+
+  const bufferDateKeys = useMemo(
+    () => new Set(bufferDates.map(d => format(d, 'yyyy-MM-dd'))),
+    [bufferDates],
+  );
+
+  /**
+   * Why a specific day cannot be booked. Returns null when the day is open.
+   * `kind` drives styling; `label` is the short human reason shown in the UI.
+   */
+  const getUnavailabilityReason = useCallback((date: Date): UnavailabilityReason | null => {
     const dateStr = format(date, 'yyyy-MM-dd');
-    
-    const isBlocked = blockedDateObjects.some(d => format(d, 'yyyy-MM-dd') === dateStr);
-    const isBooked = bookedDates.some(d => format(d, 'yyyy-MM-dd') === dateStr);
-    const isBuffer = bufferDates.some(d => format(d, 'yyyy-MM-dd') === dateStr);
-    
-    return isBlocked || isBooked || isBuffer;
-  };
+
+    if (blockedReasonByDate.has(dateStr)) {
+      const reason = blockedReasonByDate.get(dateStr);
+      return {
+        kind: 'blocked',
+        label: reason ? `Blocked by host — ${reason}` : 'Blocked by the host',
+      };
+    }
+    if (bookedDateKeys.has(dateStr)) {
+      return { kind: 'booked', label: 'Already booked' };
+    }
+    if (bufferDateKeys.has(dateStr)) {
+      return {
+        kind: 'buffer',
+        label: bufferDays > 0
+          ? `Turnaround day (${bufferDays}-day buffer between bookings)`
+          : 'Turnaround day between bookings',
+      };
+    }
+    return null;
+  }, [blockedReasonByDate, bookedDateKeys, bufferDateKeys, bufferDays]);
+
+  const isDateUnavailable = useCallback(
+    (date: Date): boolean => getUnavailabilityReason(date) !== null,
+    [getUnavailabilityReason],
+  );
+
 
   const addBlockedDates = useCallback(async (dates: Date[], reason?: string) => {
     if (!listingId || dates.length === 0) return;
