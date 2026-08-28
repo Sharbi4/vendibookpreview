@@ -72,6 +72,8 @@ interface RentalBookingWidgetProps {
   // Fulfillment
   fulfillmentType?: FulfillmentType;
   deliveryFee?: number | null;
+  // Refundable security deposit (charged today, held, refunded after rental)
+  depositAmount?: number | null;
 }
 
 /**
