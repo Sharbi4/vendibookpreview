@@ -101,7 +101,8 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   totalSlots = 1,
   slotNames,
   fulfillmentType = 'pickup',
-  deliveryFee}) => {
+  deliveryFee,
+  depositAmount = null}) => {
   const navigate = useNavigate();
   const { blockedDates, isDateUnavailable, timeZone } = useBlockedDates({ listingId });
   const { 
