@@ -5,3 +5,4 @@ export { BusinessInfoStep, type BusinessInfoData } from './BusinessInfoStep';
 export { ContactInfoWizard, type ContactWizardValue } from './ContactInfoWizard';
 export { default as TowingHandoffPanel } from './TowingHandoffPanel';
 export { DisclosureStep } from './DisclosureStep';
+export { BookingReviewPanel } from './BookingReviewPanel';
