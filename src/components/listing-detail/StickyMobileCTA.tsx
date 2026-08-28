@@ -18,6 +18,7 @@ interface StickyMobileCTAProps {
   priceSale: number | null;
   status: 'draft' | 'published' | 'paused' | 'archived';
   instantBook?: boolean;
+  hostIdentityVerified?: boolean;
   // Additional props for booking
   category?: ListingCategory;
   fulfillmentType?: FulfillmentType;
@@ -49,6 +50,7 @@ export const StickyMobileCTA = ({
   priceSale,
   status,
   instantBook = false,
+  hostIdentityVerified = false,
   category,
   fulfillmentType = 'pickup',
   priceWeekly,
@@ -131,7 +133,7 @@ export const StickyMobileCTA = ({
     trackLeadEvent('check_availability_click', {
       listing_id: listingId,
       source: 'sticky_mobile_cta',
-      instant_book: instantBook,
+      instant_book: instantBook && hostIdentityVerified,
     });
     // Open unified booking modal
     setShowBookingModal(true);
@@ -187,11 +189,11 @@ export const StickyMobileCTA = ({
               onClick={handleRentalCTA}
               disabled={!isAvailable}
               data-testid="sticky-mobile-rent-cta"
-              data-instant-book={instantBook ? 'true' : 'false'}
+              data-instant-book={instantBook && hostIdentityVerified ? 'true' : 'false'}
               className="gap-2 min-w-[150px] h-12 text-base"
             >
-              {instantBook ? <Zap className="h-5 w-5" /> : <Calendar className="h-5 w-5" />}
-              {instantBook ? 'Book Now' : 'Request to Book'}
+              {instantBook && hostIdentityVerified ? <Zap className="h-5 w-5" /> : <Calendar className="h-5 w-5" />}
+              {instantBook && hostIdentityVerified ? 'Book Now' : 'Request to Book'}
             </Button>
           ) : (
 
@@ -254,6 +256,7 @@ export const StickyMobileCTA = ({
             availableFrom={availableFrom}
             availableTo={availableTo}
             instantBook={instantBook}
+            hostIdentityVerified={hostIdentityVerified}
             hourlyEnabled={hourlyEnabled}
             dailyEnabled={dailyEnabled}
             totalSlots={totalSlots}
