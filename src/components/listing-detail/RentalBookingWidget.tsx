@@ -480,7 +480,10 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   }, [listingId, quotedTotal]);
 
   const taxAmount = (taxEstimate?.tax_cents ?? 0) / 100;
-  const estimatedTotal = quotedTotal + taxAmount;
+  // The refundable security deposit is charged today and held; it is part of
+  // the total the renter sees here so it matches the PayPal capture amount.
+  const depositValue = depositAmount ?? 0;
+  const estimatedTotal = quotedTotal + taxAmount + depositValue;
 
   // ─────────────────────────────────────────────────────────────────────────────
   // CAN CONTINUE CHECK
