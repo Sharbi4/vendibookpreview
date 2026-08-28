@@ -1,8 +1,15 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { format, parseISO, eachDayOfInterval, addDays, subDays } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
 import { resolveListingTimeZone, todayInTimeZone } from '@/lib/listingTimezone';
+
+export type UnavailabilityKind = 'blocked' | 'booked' | 'buffer';
+
+export interface UnavailabilityReason {
+  kind: UnavailabilityKind;
+  label: string;
+}
 
 interface UseBlockedDatesOptions {
   listingId: string;
@@ -273,6 +280,7 @@ const useBlockedDatesInternal = (listingId: string) => {
     upcomingBookings,
     allUnavailableDates,
     isDateUnavailable,
+    getUnavailabilityReason,
     isLoading,
     addBlockedDates,
     removeBlockedDate,
