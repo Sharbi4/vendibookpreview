@@ -1094,7 +1094,32 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                 </TooltipProvider>
               );
             })}
-          </div>
+          </motion.div>
+          </AnimatePresence>
+          )}
+
+          {/* Empty state: nothing bookable in this month */}
+          {!availabilityLoading && monthFullyUnavailable && (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mt-2 flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground text-center"
+            >
+              <CalendarClock className="h-3.5 w-3.5 shrink-0" />
+              No open dates in {format(currentMonth, 'MMMM')} — try the next month.
+            </motion.p>
+          )}
+
+          {/* Range selection hint (daily mode) */}
+          {mode === 'daily' && !availabilityLoading && (
+            <p className="mt-1.5 text-[11px] text-muted-foreground text-center" aria-live="polite">
+              {!startDate
+                ? 'Tap a date to start your stay'
+                : !endDate
+                  ? 'Now tap your end date — or continue for a 1-day rental'
+                  : null}
+            </p>
+          )}
 
           {/* Date Selection Summary */}
           {mode === 'daily' && startDate && (
