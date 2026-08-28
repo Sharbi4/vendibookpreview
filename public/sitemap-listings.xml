@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://vendibook.com/listing/c2a323e2-8b8a-469a-b5e3-d61c3fe305e5</loc>
-    <lastmod>2026-08-27</lastmod>
+    <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -188,17 +188,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/31711bb6-93ed-4ad0-9218-20959c84236c</loc>
-    <lastmod>2026-08-28</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/273fe043-333c-4359-9ed4-dfbdde4e6f6e/31711bb6-93ed-4ad0-9218-20959c84236c/1784493905285-538p0v.jfif</image:loc>
-      <image:title>2025 mobile coffee trailer with Coffee/Espresso machine (and supplies)</image:title>
-      <image:caption>2025 mobile coffee trailer with Coffee/Espresso machine (and supplies) in Elgin, SC on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/f5582bd0-afac-44f1-9f85-3acf24c279f5</loc>
     <lastmod>2026-08-28</lastmod>
     <changefreq>weekly</changefreq>
@@ -218,6 +207,17 @@
       <image:loc>https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800</image:loc>
       <image:title>Premium Seafood Truck Empire</image:title>
       <image:caption>Premium Seafood Truck Empire in Seattle, WA on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/31711bb6-93ed-4ad0-9218-20959c84236c</loc>
+    <lastmod>2026-08-28</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/273fe043-333c-4359-9ed4-dfbdde4e6f6e/31711bb6-93ed-4ad0-9218-20959c84236c/1784493905285-538p0v.jfif</image:loc>
+      <image:title>2025 mobile coffee trailer with Coffee/Espresso machine (and supplies)</image:title>
+      <image:caption>2025 mobile coffee trailer with Coffee/Espresso machine (and supplies) in Elgin, SC on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
