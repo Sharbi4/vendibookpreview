@@ -1002,6 +1002,12 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                 <span>Service fee</span>
                 <span>${pricingInfo.serviceFee.toLocaleString()}</span>
               </div>
+              {depositValue > 0 && (
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>Security deposit (refundable)</span>
+                  <span>${depositValue.toLocaleString()}</span>
+                </div>
+              )}
               <div className="flex items-center justify-between text-xs text-muted-foreground">
                 <span>{taxEstimate?.label || 'Estimated sales tax'}</span>
                 <span>
@@ -1026,8 +1032,8 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
               </div>
               <p className="text-[11px] text-muted-foreground">
                 {instantBook
-                  ? 'Charged when your booking is confirmed. Security deposits are handled separately.'
-                  : 'Authorized now, not charged. Only charged if the host approves.'}
+                  ? 'Charged when your booking is confirmed. Any security deposit is charged today and held — refunded (minus damages/fees) after your rental.'
+                  : 'Authorized now, not charged. Only charged if the host approves. Any security deposit is held and refunded (minus damages/fees) after your rental.'}
               </p>
             </motion.div>
           )}
