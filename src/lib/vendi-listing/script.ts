@@ -32,9 +32,14 @@ import {
   getCategoryBasics, getStageRequirements, isTitledAsset, requiresSaleDimensions,
   type KnownProblem,
 } from '@/lib/listings/stages';
+import {
+  getPublishContentBlockers, requiresStreetAddress,
+} from '@/lib/listings/publishParity';
 
 export type VendiDraft = ListingPreview & {
   zip_code?: string | null;
+  /** Street address — required for publish parity with the manual wizard. */
+  street_address?: string | null;
   /** Which rental rate the seller priced first. */
   rent_period?: string | null;
   /** Ambiguous values pulled from a pasted listing, awaiting confirmation. */
@@ -981,14 +986,15 @@ export const QUESTIONS: Question[] = [
   {
     id: 'access_instructions',
     kind: 'text',
-    tier: 'extra',
-    optional: true,
+    tier: 'core',
     when: (d) => isStaticLocation(d.category),
     prompt: () => 'How do they get in — keys, codes, check-in with someone?',
+    tip: () => 'Required on every space listing, same as the step-by-step wizard.',
     placeholder: 'e.g. Keypad at the side door, code shared after booking',
     apply: (_d, raw) => {
-      if (isSkip(raw)) return { patch: {} };
-      return { patch: { access_instructions: cleanText(raw).slice(0, 1000) } };
+      const text = cleanText(raw).slice(0, 1000);
+      if (text.length < 3) return { error: 'A short sentence is enough — keys, a door code, or who to check in with.' };
+      return { patch: { access_instructions: text } };
     },
   },
   {
@@ -1157,17 +1163,28 @@ export function progressPercent(draft: VendiDraft, answered: string[]): number {
 
 /** Blocking problems that must be resolved before publishing. */
 export function getPublishBlockers(draft: VendiDraft, imageCount: number): string[] {
-  const blockers: string[] = [];
-  if (!draft.mode) blockers.push('Choose rent or sale.');
-  if (!draft.category) blockers.push('Choose a category.');
-  if (!draft.title || draft.title.trim().length < 8) blockers.push('Add a title (at least 8 characters).');
-  if (!draft.description || draft.description.trim().length < 20) blockers.push('Add a description (at least 20 characters).');
-  if (!draft.city || !draft.state) blockers.push('Add the city and state.');
-  if (draft.mode === 'sale' && !draft.price_sale) blockers.push('Add your asking price.');
-  if (draft.mode === 'rent' && !(draft.price_monthly || draft.price_weekly || draft.price_daily || draft.price_hourly)) {
-    blockers.push('Add a rental rate (monthly, weekly, daily, or hourly).');
-  }
-  if (imageCount < 1) blockers.push('Add at least one photo.');
+  // Content parity: exactly the requirements the step-by-step wizard's Launch
+  // Checklist enforces before it calls the same publish routine.
+  const blockers = getPublishContentBlockers({
+    mode: (draft.mode as 'rent' | 'sale' | null | undefined) ?? null,
+    category: draft.category ?? null,
+    title: draft.title ?? null,
+    description: draft.description ?? null,
+    photoCount: imageCount,
+    priceSale: draft.price_sale ?? null,
+    priceDaily: draft.price_daily ?? null,
+    priceWeekly: draft.price_weekly ?? null,
+    priceMonthly: draft.price_monthly ?? null,
+    priceHourly: draft.price_hourly ?? null,
+    acceptPayPalCheckout: draft.accept_paypal_checkout ?? null,
+    acceptCashPayment: draft.accept_cash_payment ?? null,
+    streetAddress: draft.street_address ?? null,
+    city: draft.city ?? null,
+    state: draft.state ?? null,
+    zipCode: draft.zip_code ?? null,
+    fulfillmentType: draft.fulfillment_type ?? null,
+    accessInstructions: draft.access_instructions ?? null,
+  }).map((b) => b.message);
 
   // Disclosure parity: once mode and category are known, Vendi enforces the
   // exact same required disclosures as the manual wizard, so both paths cannot
@@ -1191,7 +1208,6 @@ export function getPublishBlockers(draft: VendiDraft, imageCount: number): strin
     }
   }
   return blockers;
-
 }
 
 /** Fields written to the listings row. Never includes retired payment paths. */
@@ -1210,8 +1226,8 @@ export function buildListingPayload(
     mode: isSale ? 'sale' : 'rent',
     subcategory: draft.subcategory ?? null,
     fulfillment_type: draft.fulfillment_type ?? (mobile ? 'pickup' : 'on_site'),
-    address: draft.address ?? null,
-    pickup_location_text: draft.address ?? null,
+    address: draft.street_address ?? draft.address ?? null,
+    pickup_location_text: draft.street_address ?? draft.address ?? null,
     city: draft.city ?? null,
     state: draft.state ?? null,
     postal_code: draft.zip_code ?? null,
