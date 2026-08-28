@@ -568,6 +568,16 @@ export const PublishWizard: React.FC = () => {
   const [renterProvidesTowVehicle, setRenterProvidesTowVehicle] = useState<'yes' | 'no' | ''>('');
   const [towVehicleRequirement, setTowVehicleRequirement] = useState('');
   const [returnInstructions, setReturnInstructions] = useState('');
+  /** Host-stated towing/handoff columns saved on `listings`. Explicit facts only. */
+  const towingHandoffColumns = () => ({
+    hitch_ball_size: hitchBallSize.trim() || null,
+    coupler_type: couplerType.trim() || null,
+    trailer_plug_type: trailerPlugType.trim() || null,
+    renter_provides_tow_vehicle:
+      renterProvidesTowVehicle === 'yes' ? true : renterProvidesTowVehicle === 'no' ? false : null,
+    tow_vehicle_requirement: towVehicleRequirement.trim() || null,
+    return_instructions: returnInstructions.trim() || null,
+  });
   const [deliveryInstructions, setDeliveryInstructions] = useState('');
   const [accessInstructions, setAccessInstructions] = useState('');
   const [hoursOfAccess, setHoursOfAccess] = useState('');
