@@ -18,6 +18,7 @@ import {
   Loader2,
   Star,
   Building2,
+  ShieldCheck,
 } from 'lucide-react';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { Button } from '@/components/ui/button';
