@@ -637,7 +637,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
     }
 
     // Partially booked days (hourly listings) always need host review.
-    if (mode === 'hourly' && selectedDates.some(day => getDayAvailabilityInfo(day).isPartiallyBooked)) {
+    if (mode === 'hourly' && selectedDates.some(day => getDayAvailabilityInfo(day).isLimited)) {
       return {
         instant: false as const,
         reason: 'Part of your selected time is already booked — the host will confirm.',

@@ -104,6 +104,7 @@ export const RentalListingLayout = ({
       availableFrom={listing.available_from}
       availableTo={listing.available_to}
       instantBook={instantBook}
+      hostIdentityVerified={Boolean(hostVerified)}
       hourlyEnabled={hourlyEnabled}
       dailyEnabled={listing.daily_enabled !== false}
       minHours={listing.min_hours}
