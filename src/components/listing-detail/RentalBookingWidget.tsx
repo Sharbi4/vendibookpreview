@@ -501,12 +501,19 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
         duration: days,
         durationLabel: `${days} day${days > 1 ? 's' : ''}`,
         breakdown: selectedSlotCount > 1 ? `${quote.breakdown} × ${selectedSlotCount} slots` : quote.breakdown,
+        lines: quote.lines.map((l) => ({
+          key: l.unit,
+          label: `${l.count} ${l.unit === 'monthly' ? 'month' : l.unit === 'weekly' ? 'week' : 'day'}${l.count > 1 ? 's' : ''} × ${formatAmount(l.rate)}${l.unit === 'monthly' ? '/mo' : l.unit === 'weekly' ? '/week' : '/day'}${selectedSlotCount > 1 ? ` × ${selectedSlotCount} slots` : ''}`,
+          amount: l.amount * selectedSlotCount,
+        })),
+        perDay: days > 0 ? (quote.subtotal * selectedSlotCount) / days : null,
         roundedUpNote: quote.roundedUp
           ? `This host bills in full ${quote.lines[0]?.unit === 'monthly' ? 'months' : 'weeks'}, so ${quote.billedDays} days are billed for your ${days}-day dates.`
           : null,
         basePrice,
         serviceFee: fees.renterFee,
         total: fees.customerTotal};
+
     }
   }, [mode, totalSelectedHours, selectedDatesCount, startDate, endDate, priceHourly, priceDaily, priceWeekly, priceMonthly, selectedSlotCount]);
 
