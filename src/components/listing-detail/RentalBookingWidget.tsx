@@ -304,6 +304,16 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [mode, startDate, blockedDates, isDateUnavailable, availableFrom, availableTo]);
 
+  /** True when no day in the visible month is bookable — drives the empty state. */
+  const monthFullyUnavailable = useMemo(() => {
+    if (availabilityLoading) return false;
+    return daysInMonth.every(d => {
+      const s = getDayStatus(d);
+      return s !== 'available' && s !== 'partial';
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [availabilityLoading, currentMonth, blockedDates, availableFrom, availableTo]);
+
   /** True when the day sits past the first blocked day after the start date. */
   const isBeyondRangeLimit = (date: Date): boolean => {
     if (mode !== 'daily' || !startDate || endDate || !rangeLimit) return false;
