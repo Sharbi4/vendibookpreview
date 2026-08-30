@@ -280,6 +280,43 @@ export const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
   const showPanel =
     isOpen && (suggestions.length > 0 || status === 'no-match' || status === 'error' || status === 'denied');
 
+  // The field can live inside overflow-hidden cards, sheets and sticky bars.
+  // Rendering the panel into <body> with fixed coordinates guarantees it is
+  // never clipped or stacked behind the mobile filter sheet.
+  const [panelRect, setPanelRect] = useState<{ top: number; left: number; width: number; openUp: boolean } | null>(null);
+
+  useEffect(() => {
+    if (!showPanel) {
+      setPanelRect(null);
+      return;
+    }
+    const measure = () => {
+      const el = containerRef.current;
+      if (!el) return;
+      const r = el.getBoundingClientRect();
+      const spaceBelow = window.innerHeight - r.bottom;
+      const openUp = spaceBelow < 260 && r.top > spaceBelow;
+      setPanelRect({
+        top: openUp ? r.top - 4 : r.bottom + 4,
+        left: r.left,
+        width: r.width,
+        openUp,
+      });
+    };
+    measure();
+    window.addEventListener('resize', measure);
+    window.addEventListener('scroll', measure, true);
+    return () => {
+      window.removeEventListener('resize', measure);
+      window.removeEventListener('scroll', measure, true);
+    };
+  }, [showPanel]);
+
+  const panelMaxHeight = panelRect
+    ? Math.max(160, panelRect.openUp ? panelRect.top - 12 : window.innerHeight - panelRect.top - 12)
+    : 288;
+
+
   return (
     <div className={cn("space-y-2", className)}>
       <div ref={containerRef} className="relative">
