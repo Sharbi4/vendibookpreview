@@ -228,7 +228,7 @@ const Search = () => {
     page,
     page_size: 20,
     sort_by: sortBy === 'price-low' ? 'price_low' : sortBy === 'price-high' ? 'price_high' : sortBy,
-  }), [debouncedQuery, queryIsLocation, mode, category, locationCoords, searchRadius, dateRange, selectedAmenities, priceRange, instantBookOnly, verifiedHostsOnly, deliveryFilterEnabled, fulfillmentTypes, page, sortBy]);
+  }), [debouncedQuery, queryIsLocation, locationText, mode, category, locationCoords, searchRadius, dateRange, selectedAmenities, priceRange, instantBookOnly, verifiedHostsOnly, deliveryFilterEnabled, fulfillmentTypes, page, sortBy]);
 
 
   // Fetch listings from edge function
