@@ -941,7 +941,7 @@ const Search = () => {
                     <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-[#1b1714]/15" aria-hidden />
                     <SheetHeader className="flex-row items-center justify-between space-y-0 text-left">
                       <SheetTitle className="text-base tracking-tight">Filters</SheetTitle>
-                      {activeFiltersCount > 0 && (
+                      {hasActiveSearchState && (
                         <Button
                           variant="ghost"
                           size="sm"
@@ -956,6 +956,7 @@ const Search = () => {
                   <ScrollArea className="flex-1 px-6 pt-4 scroll-smooth">
                     <div className="pb-6">
                       <FilterContent
+                        locationFirst
                         mode={mode}
                         category={category}
                         locationText={locationText}
@@ -971,7 +972,7 @@ const Search = () => {
                         verifiedHostsOnly={verifiedHostsOnly}
                         onModeChange={handleModeChange}
                         onCategoryChange={handleCategoryChange}
-                        onLocationTextChange={setLocationText}
+                        onLocationTextChange={handleLocationTextChange}
                         onLocationSelect={handleLocationSelect}
                         onRadiusChange={handleRadiusChange}
                         onPriceRangeChange={handlePriceRangeChange}
@@ -986,15 +987,24 @@ const Search = () => {
                       />
                     </div>
                   </ScrollArea>
-                  <div className="shrink-0 border-t border-[#1b1714]/[0.08] px-6 py-3 pb-[calc(env(safe-area-inset-bottom,0px)+12px)]">
+                  <div className="shrink-0 border-t border-[#1b1714]/[0.08] px-6 py-3 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] flex items-center gap-3">
+                    <Button
+                      variant="ghost"
+                      className="h-12 px-3 rounded-2xl text-sm text-primary hover:text-primary shrink-0"
+                      onClick={clearFilters}
+                      disabled={!hasActiveSearchState}
+                    >
+                      Clear all
+                    </Button>
                     <Button
                       variant="cta"
-                      className="w-full h-12 rounded-2xl"
+                      className="flex-1 h-12 rounded-2xl"
                       onClick={() => setIsFiltersOpen(false)}
                     >
                       Show {totalCount.toLocaleString()} listing{totalCount !== 1 ? 's' : ''}
                     </Button>
                   </div>
+
                 </SheetContent>
               </Sheet>
             </div>
