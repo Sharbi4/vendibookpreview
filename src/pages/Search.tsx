@@ -71,6 +71,16 @@ interface SearchListing extends Listing {
   can_deliver?: boolean;
 }
 
+interface SearchMeta {
+  requested_radius_miles: number;
+  effective_radius_miles: number;
+  radius_expanded: boolean;
+  location_label: string | null;
+  result_count: number;
+  text_fallback_used: boolean;
+  state_only_search: boolean;
+}
+
 interface SearchResponse {
   listings: SearchListing[];
   sponsored?: SearchListing[];
@@ -78,6 +88,7 @@ interface SearchResponse {
   page: number;
   page_size: number;
   total_pages: number;
+  search_meta?: SearchMeta;
 }
 
 const Search = () => {
@@ -198,6 +209,8 @@ const Search = () => {
   const searchRequestParams = useMemo(() => ({
     query: debouncedQuery.trim() || undefined,
     location_scoped: queryIsLocation || undefined,
+    location_text: locationText?.trim() || undefined,
+    auto_expand_radius: true,
     mode: mode !== 'all' ? mode : undefined,
     category: category !== 'all' ? category : undefined,
     latitude: locationCoords?.[1],
@@ -215,7 +228,7 @@ const Search = () => {
     page,
     page_size: 20,
     sort_by: sortBy === 'price-low' ? 'price_low' : sortBy === 'price-high' ? 'price_high' : sortBy,
-  }), [debouncedQuery, queryIsLocation, mode, category, locationCoords, searchRadius, dateRange, selectedAmenities, priceRange, instantBookOnly, verifiedHostsOnly, deliveryFilterEnabled, fulfillmentTypes, page, sortBy]);
+  }), [debouncedQuery, queryIsLocation, locationText, mode, category, locationCoords, searchRadius, dateRange, selectedAmenities, priceRange, instantBookOnly, verifiedHostsOnly, deliveryFilterEnabled, fulfillmentTypes, page, sortBy]);
 
 
   // Fetch listings from edge function
@@ -258,11 +271,16 @@ const Search = () => {
     ...(locationCoords ? [{ value: 'distance', label: 'Distance' }] : []),
   ], [debouncedQuery, mode, locationCoords]);
 
-  // Sparse metros stay honest at the chosen radius — when a 50-mi location
-  // search returns very few listings, an explicit "Expand to 100 miles" CTA
-  // appears above the results instead of silently widening.
+  // Server-side search metadata: effective radius after sparse-inventory
+  // auto-expansion, plus whether coordinate-less city/state matches were used.
+  const searchMeta = searchResults?.search_meta;
+  const effectiveRadius = searchMeta?.effective_radius_miles ?? searchRadius;
+  const radiusAutoExpanded = !!searchMeta?.radius_expanded;
+
+  // Manual CTA only when the server did NOT already widen the search.
   const showExpandRadiusCta =
-    !!locationCoords && searchRadius < 100 && page === 1 && !isFetching && totalCount < 5;
+    !!locationCoords && searchRadius < 100 && page === 1 && !isFetching &&
+    !radiusAutoExpanded && totalCount < 5;
 
   // Debounced search_performed funnel event — fires ~600ms after results settle so we
   // don't double-count while the user is still typing or toggling filters.
@@ -1107,11 +1125,16 @@ const Search = () => {
                 <p className="text-sm text-muted-foreground min-w-0">
                   {locationCoords ? (
                     <>
-                      Showing within <span className="font-semibold text-foreground">{searchRadius} miles</span> of{' '}
+                      {radiusAutoExpanded ? 'Expanded search to ' : 'Showing within '}
+                      <span className="font-semibold text-foreground">{effectiveRadius} miles</span> of{' '}
                       <span className="font-semibold text-foreground">{locationText || 'selected location'}</span>
+                      {radiusAutoExpanded && ' — few listings nearby'}
                     </>
                   ) : (
                     'Showing all listings nationwide'
+                  )}
+                  {searchMeta?.text_fallback_used && (
+                    <span className="ml-1">Includes nearby city matches.</span>
                   )}
                   {showExpandRadiusCta && (
                     <button

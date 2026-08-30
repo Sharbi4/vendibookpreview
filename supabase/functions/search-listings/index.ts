@@ -4,6 +4,15 @@ import {
   getHoustonAreaCities,
   HOUSTON_SEARCH_STATE,
 } from '../_shared/houstonSearchArea.ts';
+import {
+  escapeOrValue,
+  haversineMiles,
+  MAX_RADIUS_MILES,
+  MIN_RELEVANT_RESULTS,
+  nextRadius,
+  parseLocationInput,
+  toRad,
+} from '../_shared/locationSearch.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,21 +20,8 @@ const corsHeaders = {
 };
 
 // Haversine distance calculation (returns miles)
-function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 3959; // Earth's radius in miles
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
+const calculateDistance = haversineMiles;
 
-function toRad(deg: number): number {
-  return deg * (Math.PI / 180);
-}
 
 interface SearchRequest {
   query?: string;
@@ -48,6 +44,10 @@ interface SearchRequest {
   // the radius filter already scopes geography, so the city text filter must
   // be skipped or surrounding suburbs get excluded (double-constraint bug).
   location_scoped?: boolean;
+  /** Raw location text ("Tucson, AZ", "85719", "Arizona") for structured fallback. */
+  location_text?: string;
+  /** Allow automatic radius expansion when local inventory is sparse (default true). */
+  auto_expand_radius?: boolean;
 
   page?: number;
   page_size?: number;
@@ -85,6 +85,8 @@ Deno.serve(async (req) => {
       fulfillment_types,
       featured_only,
       location_scoped,
+      location_text,
+      auto_expand_radius = true,
 
       page = 1,
       page_size = 20,
@@ -96,16 +98,35 @@ Deno.serve(async (req) => {
     const locationScoped =
       !!location_scoped && latitude !== undefined && longitude !== undefined;
 
+    const hasCoords = latitude !== undefined && longitude !== undefined
+      && Number.isFinite(latitude) && Number.isFinite(longitude);
+
+    // Structured location parsed from either the explicit location text or,
+    // when the shopper typed a place into the keyword box, the query itself.
+    const parsedLocation = parseLocationInput(
+      location_text || (locationScoped || !hasCoords ? query : undefined)
+    );
+    const hasStructuredLocation = !!(parsedLocation.city || parsedLocation.state || parsedLocation.zip);
+    // State-only searches ("Arizona", "AZ") are a structured filter, not a radius search.
+    const stateOnlySearch = parsedLocation.kind === 'state';
+
+    const requestedRadius = Math.max(1, Math.min(radius_miles, MAX_RADIUS_MILES));
+
     // Clamp page_size to max 50
     const effectivePageSize = Math.min(page_size, 50);
     const offset = (page - 1) * effectivePageSize;
 
-    // Start building the query
+
+    // Base query = every non-geographic filter. Rebuilt per geo attempt so a
+    // sparse-inventory radius expansion re-runs the identical filter set.
+    const buildBaseQuery = () => {
     let queryBuilder = supabaseClient
       .from('listings')
       .select('*', { count: 'exact' })
       .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
       .not('title', 'ilike', 'Demo %');
+
+
 
     // Apply mode filter
     if (mode) {
@@ -163,12 +184,17 @@ Deno.serve(async (req) => {
       queryBuilder = queryBuilder.eq('category', inferredCategory);
     }
 
+    // Structured location handling for a place typed into the keyword box.
+    // Only unambiguous shapes (ZIP, "City, ST", state name/abbr) count — a bare
+    // single word like "Phoenix" or "kitchen" keeps normal text search.
+    const queryPlace = location_text ? { kind: null } as ReturnType<typeof parseLocationInput> : parseLocationInput(cleanedQuery);
+    const queryIsStructuredPlace =
+      !location_text && (queryPlace.kind === 'zip' || queryPlace.kind === 'state' || queryPlace.kind === 'city_state');
+
     // Apply text search (ILIKE on title, description, address, city, state).
     // Skipped for location-scoped searches so metro suburbs inside the radius
     // aren't filtered out for not name-matching the searched city.
-    if (cleanedQuery && !locationScoped) {
-      // Parse "City, State" format for location searches
-      const parts = cleanedQuery.split(',').map(p => p.trim()).filter(Boolean);
+    if (cleanedQuery && !locationScoped && !queryIsStructuredPlace) {
       const houstonAreaCities = getHoustonAreaCities(cleanedQuery);
 
       if (houstonAreaCities) {
@@ -177,19 +203,15 @@ Deno.serve(async (req) => {
         queryBuilder = queryBuilder
           .eq('state', HOUSTON_SEARCH_STATE)
           .or(buildHoustonAreaOrFilter());
-      } else if (parts.length >= 2) {
-        const city = parts[0];
-        queryBuilder = queryBuilder.or(
-          `city.ilike.%${city}%,address.ilike.%${city}%,title.ilike.%${city}%`
-        );
       } else if (!inferredCategory) {
         // Only do text search if we didn't already narrow by category
-        const searchTerm = `%${cleanedQuery}%`;
+        const searchTerm = `%${escapeOrValue(cleanedQuery)}%`;
         queryBuilder = queryBuilder.or(
           `title.ilike.${searchTerm},description.ilike.${searchTerm},address.ilike.${searchTerm},city.ilike.${searchTerm}`
         );
       }
     }
+
 
     // Apply price filters
     // Note: For rentals, we check both price_daily and price_hourly since listings can have either or both
@@ -222,42 +244,130 @@ Deno.serve(async (req) => {
       queryBuilder = queryBuilder.contains('amenities', amenities);
     }
 
-    // Apply bounding box for location filtering (optimization before Haversine)
-    if (latitude !== undefined && longitude !== undefined) {
-      // ~69 miles per degree of latitude, longitude varies by latitude
-      const latDelta = radius_miles / 69;
-      const lngDelta = radius_miles / (69 * Math.cos(toRad(latitude)));
-      
-      queryBuilder = queryBuilder
-        .gte('latitude', latitude - latDelta)
-        .lte('latitude', latitude + latDelta)
-        .gte('longitude', longitude - lngDelta)
-        .lte('longitude', longitude + lngDelta);
+    return queryBuilder;
+    };
+
+    // ---- Geographic fetch passes -------------------------------------------
+    // Pass A: bounding box at the requested radius (cheap pre-filter for Haversine).
+    // Pass B: bounding box at 500 mi, only when local inventory is sparse.
+    // Pass C: structured city/state/ZIP match so listings with valid location
+    //         fields but NULL coordinates never disappear from a place search.
+    const HARD_FETCH_LIMIT = 1000;
+    const FALLBACK_FETCH_LIMIT = 300;
+
+    const withBoundingBox = (builder: any, radius: number) => {
+      const latDelta = radius / 69;
+      const lngDelta = radius / (69 * Math.max(0.05, Math.cos(toRad(latitude as number))));
+      return builder
+        .gte('latitude', (latitude as number) - latDelta)
+        .lte('latitude', (latitude as number) + latDelta)
+        .gte('longitude', (longitude as number) - lngDelta)
+        .lte('longitude', (longitude as number) + lngDelta);
+    };
+
+    const withStructuredLocation = (builder: any) => {
+      let b = builder;
+      if (parsedLocation.state) b = b.eq('state', parsedLocation.state);
+      const ors: string[] = [];
+      if (parsedLocation.zip) ors.push(`postal_code.ilike.%${escapeOrValue(parsedLocation.zip)}%`);
+      if (parsedLocation.city) {
+        const c = escapeOrValue(parsedLocation.city);
+        ors.push(`city.ilike.%${c}%`, `address.ilike.%${c}%`);
+      }
+      if (ors.length) b = b.or(ors.join(','));
+      return b;
+    };
+
+    const rowsById = new Map<string, any>();
+    const fallbackIds = new Set<string>();
+    const collect = (rows: any[] | null, markFallback = false) => {
+      for (const row of rows ?? []) {
+        if (!rowsById.has(row.id)) rowsById.set(row.id, row);
+        if (markFallback) fallbackIds.add(row.id);
+      }
+    };
+
+    let fetchRadius = requestedRadius;
+    let radiusExpanded = false;
+
+    if (hasCoords && !stateOnlySearch) {
+      const { data: nearRows, error: nearErr } = await withBoundingBox(buildBaseQuery(), requestedRadius)
+        .limit(HARD_FETCH_LIMIT);
+      if (nearErr) throw nearErr;
+      collect(nearRows);
+
+      const withinRequested = (nearRows ?? []).filter((l: any) =>
+        l.latitude != null && l.longitude != null &&
+        haversineMiles(latitude as number, longitude as number, l.latitude, l.longitude) <= requestedRadius
+      ).length;
+
+      if (auto_expand_radius && withinRequested < MIN_RELEVANT_RESULTS && requestedRadius < MAX_RADIUS_MILES) {
+        const { data: wideRows, error: wideErr } = await withBoundingBox(buildBaseQuery(), MAX_RADIUS_MILES)
+          .limit(HARD_FETCH_LIMIT);
+        if (wideErr) throw wideErr;
+        collect(wideRows);
+        fetchRadius = MAX_RADIUS_MILES;
+      }
     }
 
-    // Fetch ALL matching listings first (we'll filter/paginate in memory for complex filters)
-    // This is because we need to:
-    // 1. Apply precise Haversine distance
-    // 2. Check availability
-    // 3. Check host verification
-    const { data: listings, error: listingsError, count: totalBeforeComplexFilters } = await queryBuilder;
-
-    if (listingsError) {
-      throw listingsError;
+    // Structured fallback: same filters, matched on city/state/ZIP text.
+    let textFallbackUsed = false;
+    if (hasStructuredLocation) {
+      const { data: textRows, error: textErr } = await withStructuredLocation(buildBaseQuery())
+        .limit(FALLBACK_FETCH_LIMIT);
+      if (textErr) throw textErr;
+      const newOnes = (textRows ?? []).filter((r: any) => !rowsById.has(r.id) || r.latitude == null);
+      collect(textRows, false);
+      // Only coordinate-less rows count as a text fallback tier; coordinate rows
+      // are already ranked by true distance.
+      for (const r of textRows ?? []) {
+        if (r.latitude == null || r.longitude == null) {
+          fallbackIds.add(r.id);
+          textFallbackUsed = true;
+        }
+      }
+      void newOnes;
     }
 
-    if (!listings || listings.length === 0) {
+    // No geography at all → plain filtered fetch.
+    if (!hasCoords && !hasStructuredLocation) {
+      const { data: plainRows, error: plainErr } = await buildBaseQuery().limit(HARD_FETCH_LIMIT);
+      if (plainErr) throw plainErr;
+      collect(plainRows);
+    } else if (!hasCoords && stateOnlySearch && rowsById.size === 0) {
+      const { data: stateRows, error: stateErr } = await buildBaseQuery()
+        .eq('state', parsedLocation.state as string)
+        .limit(HARD_FETCH_LIMIT);
+      if (stateErr) throw stateErr;
+      collect(stateRows);
+    }
+
+    const listings = [...rowsById.values()];
+    void fetchRadius;
+
+    if (listings.length === 0) {
       return new Response(
         JSON.stringify({
           listings: [],
+          sponsored: [],
           total_count: 0,
           page,
           page_size: effectivePageSize,
           total_pages: 0,
+          search_meta: {
+            requested_radius_miles: requestedRadius,
+            effective_radius_miles: requestedRadius,
+            radius_expanded: false,
+            location_label: parsedLocation.label ?? null,
+            result_count: 0,
+            text_fallback_used: false,
+            state_only_search: stateOnlySearch,
+          },
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
 
     // Get unique host IDs for verification check
     const hostIds = [...new Set(listings.map(l => l.host_id).filter(Boolean))];
@@ -336,16 +446,15 @@ Deno.serve(async (req) => {
         host_verified,
         is_available,
         can_deliver,
+        // True when the listing matched by structured city/state/ZIP because it
+        // has no coordinates — surfaced after true-distance results.
+        location_text_match: distance_miles === null && fallbackIds.has(listing.id),
       };
     });
 
-    // Filter by precise distance (Haversine)
-    if (latitude !== undefined && longitude !== undefined) {
-      filteredListings = filteredListings.filter(l => {
-        if (l.distance_miles === null) return false; // Exclude listings without coordinates in location searches
-        return l.distance_miles <= radius_miles;
-      });
-    }
+    // NOTE: precise Haversine radius filtering happens after the remaining
+    // filters so the progressive-expansion threshold counts *relevant* results.
+
 
     // Filter by date availability
     if (start_date && end_date) {
@@ -396,6 +505,40 @@ Deno.serve(async (req) => {
         return meetsMin && meetsMax;
       });
     }
+
+    // ---- Progressive radius expansion --------------------------------------
+    // Widen only the geographic constraint (never mode/category/dates/verified
+    // /delivery/price) until at least MIN_RELEVANT_RESULTS relevant listings
+    // exist or the 500-mile ceiling is reached.
+    let effectiveRadius = requestedRadius;
+    if (hasCoords && !stateOnlySearch) {
+      const withCoords = filteredListings.filter((l) => l.distance_miles !== null);
+      const fallbackRows = filteredListings.filter((l) => l.location_text_match);
+
+      const countWithin = (radius: number) =>
+        withCoords.filter((l) => (l.distance_miles as number) <= radius).length + fallbackRows.length;
+
+      while (
+        auto_expand_radius &&
+        countWithin(effectiveRadius) < MIN_RELEVANT_RESULTS &&
+        effectiveRadius < MAX_RADIUS_MILES
+      ) {
+        const next = nextRadius(effectiveRadius);
+        if (!next || next === effectiveRadius) break;
+        effectiveRadius = next;
+      }
+
+      filteredListings = filteredListings.filter(
+        (l) => (l.distance_miles !== null && l.distance_miles <= effectiveRadius) || l.location_text_match
+      );
+    } else if (hasCoords) {
+      filteredListings = filteredListings.filter(
+        (l) => l.distance_miles === null || l.distance_miles <= effectiveRadius || l.location_text_match
+      );
+    }
+    const radiusWasExpanded = effectiveRadius > requestedRadius;
+    const usedTextFallback = textFallbackUsed && filteredListings.some((l) => l.location_text_match);
+
 
     // Featured-first PRIMARY sort key + fair daily rotation among the featured cohort.
     // Mirrors src/lib/featured.ts (dailyFeaturedRotationKey).
@@ -473,13 +616,27 @@ Deno.serve(async (req) => {
         return new Date(b.published_at || b.created_at).getTime() - new Date(a.published_at || a.created_at).getTime();
       });
     } else {
-      // Default `featured` discovery sort: active featured listings first with
-      // fair daily rotation inside the featured cohort, then newest rest.
+      // Default `featured` discovery sort. For a location search, results are
+      // tiered first — nearby (inside the requested radius), then structured
+      // city/state fallbacks with no coordinates, then expanded-area results —
+      // and featured rotation applies inside each tier.
+      const tierOf = (l: any): number => {
+        if (!hasCoords || stateOnlySearch) return 0;
+        if (l.distance_miles !== null && l.distance_miles <= requestedRadius) return 0;
+        if (l.location_text_match) return 1;
+        return 2;
+      };
       filteredListings.sort((a, b) => {
+        const ta = tierOf(a), tb = tierOf(b);
+        if (ta !== tb) return ta - tb;
         const _f = featuredTiebreak(a, b); if (_f !== 0) return _f;
+        if (ta === 2 && a.distance_miles !== null && b.distance_miles !== null) {
+          return a.distance_miles - b.distance_miles;
+        }
         return new Date(b.published_at || b.created_at).getTime() - new Date(a.published_at || a.created_at).getTime();
       });
     }
+
 
     // A listing shown in the Sponsored strip must not also appear in the
     // main results below it — the same truck would render twice on the page.
@@ -507,6 +664,15 @@ Deno.serve(async (req) => {
         page,
         page_size: effectivePageSize,
         total_pages: totalPages,
+        search_meta: {
+          requested_radius_miles: requestedRadius,
+          effective_radius_miles: effectiveRadius,
+          radius_expanded: radiusWasExpanded,
+          location_label: parsedLocation.label ?? null,
+          result_count: totalCount,
+          text_fallback_used: usedTextFallback,
+          state_only_search: stateOnlySearch,
+        },
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
