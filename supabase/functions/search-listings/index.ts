@@ -85,6 +85,8 @@ Deno.serve(async (req) => {
       fulfillment_types,
       featured_only,
       location_scoped,
+      location_text,
+      auto_expand_radius = true,
 
       page = 1,
       page_size = 20,
@@ -96,9 +98,24 @@ Deno.serve(async (req) => {
     const locationScoped =
       !!location_scoped && latitude !== undefined && longitude !== undefined;
 
+    const hasCoords = latitude !== undefined && longitude !== undefined
+      && Number.isFinite(latitude) && Number.isFinite(longitude);
+
+    // Structured location parsed from either the explicit location text or,
+    // when the shopper typed a place into the keyword box, the query itself.
+    const parsedLocation = parseLocationInput(
+      location_text || (locationScoped || !hasCoords ? query : undefined)
+    );
+    const hasStructuredLocation = !!(parsedLocation.city || parsedLocation.state || parsedLocation.zip);
+    // State-only searches ("Arizona", "AZ") are a structured filter, not a radius search.
+    const stateOnlySearch = parsedLocation.kind === 'state';
+
+    const requestedRadius = Math.max(1, Math.min(radius_miles, MAX_RADIUS_MILES));
+
     // Clamp page_size to max 50
     const effectivePageSize = Math.min(page_size, 50);
     const offset = (page - 1) * effectivePageSize;
+
 
     // Start building the query
     let queryBuilder = supabaseClient
