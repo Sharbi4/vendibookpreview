@@ -4,6 +4,15 @@ import {
   getHoustonAreaCities,
   HOUSTON_SEARCH_STATE,
 } from '../_shared/houstonSearchArea.ts';
+import {
+  escapeOrValue,
+  haversineMiles,
+  MAX_RADIUS_MILES,
+  MIN_RELEVANT_RESULTS,
+  nextRadius,
+  parseLocationInput,
+  toRad,
+} from '../_shared/locationSearch.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,21 +20,8 @@ const corsHeaders = {
 };
 
 // Haversine distance calculation (returns miles)
-function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
-  const R = 3959; // Earth's radius in miles
-  const dLat = toRad(lat2 - lat1);
-  const dLon = toRad(lon2 - lon1);
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) *
-    Math.sin(dLon / 2) * Math.sin(dLon / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
+const calculateDistance = haversineMiles;
 
-function toRad(deg: number): number {
-  return deg * (Math.PI / 180);
-}
 
 interface SearchRequest {
   query?: string;
