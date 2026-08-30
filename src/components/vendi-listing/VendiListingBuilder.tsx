@@ -12,7 +12,7 @@ import vendibookFavicon from '@/assets/vendibook-favicon.png';
 import VendiAuthGate from '@/components/vendi-listing/VendiAuthGate';
 import VendiVoiceAgent from '@/components/vendi-listing/VendiVoiceAgent';
 import {
-  buildListingPayload, getPublishBlockers, nextQuestion,
+  buildListingPayload, getPublishBlockers, getPublishBlockerDetails, nextQuestion,
   promptText, resumeMessage, VENDI_WELCOME,
   Question, VendiDraft,
 } from '@/lib/vendi-listing/script';
@@ -760,7 +760,8 @@ const VendiListingBuilder: React.FC = () => {
   const localImages = photos.filter((p) => p.kind === 'image');
   const localVideos = photos.filter((p) => p.kind === 'video');
   const previewImages = uploadedUrls.length ? uploadedUrls : localImages.map((p) => p.url);
-  const blockers = getPublishBlockers(draft, previewImages.length);
+  const blockerDetails = getPublishBlockerDetails(draft, previewImages.length);
+  const blockers = blockerDetails.map((b) => b.message);
 
   /**
    * Upload any local media that is not already stored.
@@ -1541,11 +1542,11 @@ const VendiListingBuilder: React.FC = () => {
                 <p className="mt-1.5 text-sm text-muted-foreground">
                   Everything below came straight from your answers. Nothing was added for you.
                 </p>
-                {blockers.length > 0 && (
-                  <ul className="mt-4 space-y-1.5 text-sm text-destructive">
-                    {blockers.map((b) => <li key={b}>• {b}</li>)}
-                  </ul>
-                )}
+                <PrePublishChecklist
+                  className="mt-4"
+                  blockers={blockerDetails}
+                  onGoToQuestion={reopenFact}
+                />
 
                 {/* Plain-language recap of the captured facts. Each row is
                     tappable so a last-second correction never means retyping. */}
