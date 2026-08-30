@@ -11,7 +11,7 @@
  * pure (no React, no Supabase) so both surfaces and their tests can share it.
  * Identity verification, payouts and merchant onboarding are never gates here.
  */
-import type { ListingCategory } from '@/lib/listings/stages';
+import type { ListingCategory } from '@/types/listing';
 
 /** Minimums mirrored by the wizard UI. */
 export const MIN_PHOTOS = 3;
