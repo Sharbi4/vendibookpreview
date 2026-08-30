@@ -1734,6 +1734,8 @@ const SortControl = ({ sortBy, options, onChange }: {
 
 // Filter Content Component
 interface FilterContentProps {
+  /** Render the Location block above Category (mobile filter sheet). */
+  locationFirst?: boolean;
   mode: ListingMode | 'all';
   category: ListingCategory | 'all';
   locationText: string;
@@ -1831,6 +1833,7 @@ const PriceRangeInputs = ({
 };
 
 const FilterContent = ({
+  locationFirst = false,
   mode,
   category,
   locationText,
