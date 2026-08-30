@@ -446,16 +446,15 @@ Deno.serve(async (req) => {
         host_verified,
         is_available,
         can_deliver,
+        // True when the listing matched by structured city/state/ZIP because it
+        // has no coordinates — surfaced after true-distance results.
+        location_text_match: distance_miles === null && fallbackIds.has(listing.id),
       };
     });
 
-    // Filter by precise distance (Haversine)
-    if (latitude !== undefined && longitude !== undefined) {
-      filteredListings = filteredListings.filter(l => {
-        if (l.distance_miles === null) return false; // Exclude listings without coordinates in location searches
-        return l.distance_miles <= radius_miles;
-      });
-    }
+    // NOTE: precise Haversine radius filtering happens after the remaining
+    // filters so the progressive-expansion threshold counts *relevant* results.
+
 
     // Filter by date availability
     if (start_date && end_date) {
