@@ -209,6 +209,8 @@ const Search = () => {
   const searchRequestParams = useMemo(() => ({
     query: debouncedQuery.trim() || undefined,
     location_scoped: queryIsLocation || undefined,
+    location_text: locationText?.trim() || undefined,
+    auto_expand_radius: true,
     mode: mode !== 'all' ? mode : undefined,
     category: category !== 'all' ? category : undefined,
     latitude: locationCoords?.[1],
