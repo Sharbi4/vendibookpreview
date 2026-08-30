@@ -184,12 +184,17 @@ Deno.serve(async (req) => {
       queryBuilder = queryBuilder.eq('category', inferredCategory);
     }
 
+    // Structured location handling for a place typed into the keyword box.
+    // Only unambiguous shapes (ZIP, "City, ST", state name/abbr) count — a bare
+    // single word like "Phoenix" or "kitchen" keeps normal text search.
+    const queryPlace = location_text ? { kind: null } as ReturnType<typeof parseLocationInput> : parseLocationInput(cleanedQuery);
+    const queryIsStructuredPlace =
+      !location_text && (queryPlace.kind === 'zip' || queryPlace.kind === 'state' || queryPlace.kind === 'city_state');
+
     // Apply text search (ILIKE on title, description, address, city, state).
     // Skipped for location-scoped searches so metro suburbs inside the radius
     // aren't filtered out for not name-matching the searched city.
-    if (cleanedQuery && !locationScoped) {
-      // Parse "City, State" format for location searches
-      const parts = cleanedQuery.split(',').map(p => p.trim()).filter(Boolean);
+    if (cleanedQuery && !locationScoped && !queryIsStructuredPlace) {
       const houstonAreaCities = getHoustonAreaCities(cleanedQuery);
 
       if (houstonAreaCities) {
@@ -198,19 +203,15 @@ Deno.serve(async (req) => {
         queryBuilder = queryBuilder
           .eq('state', HOUSTON_SEARCH_STATE)
           .or(buildHoustonAreaOrFilter());
-      } else if (parts.length >= 2) {
-        const city = parts[0];
-        queryBuilder = queryBuilder.or(
-          `city.ilike.%${city}%,address.ilike.%${city}%,title.ilike.%${city}%`
-        );
       } else if (!inferredCategory) {
         // Only do text search if we didn't already narrow by category
-        const searchTerm = `%${cleanedQuery}%`;
+        const searchTerm = `%${escapeOrValue(cleanedQuery)}%`;
         queryBuilder = queryBuilder.or(
           `title.ilike.${searchTerm},description.ilike.${searchTerm},address.ilike.${searchTerm},city.ilike.${searchTerm}`
         );
       }
     }
+
 
     // Apply price filters
     // Note: For rentals, we check both price_daily and price_hourly since listings can have either or both
