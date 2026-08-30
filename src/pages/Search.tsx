@@ -825,7 +825,11 @@ const Search = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    // `sale-light` is the same warm-ivory theme scope the For Sale listing
+    // detail page uses — white surfaces, charcoal type, soft hairlines, orange
+    // reserved for actions. Search now reads as the same product family.
+    <div className="sale-light min-h-screen flex flex-col bg-background">
+
       <SEO
         title={seoTitle}
         description={seoDescription}
