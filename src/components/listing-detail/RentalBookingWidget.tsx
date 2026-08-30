@@ -81,6 +81,72 @@ interface RentalBookingWidgetProps {
   depositAmount?: number | null;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// MODULE-SCOPE DATE STATUS HELPERS
+// Pure functions parameterized by an explicit context object, so no useMemo
+// inside the component can ever reference a helper declared later in the
+// render body (temporal-dead-zone / render-ordering hazard).
+// ─────────────────────────────────────────────────────────────────────────────
+export type DayStatus = 'available' | 'partial' | 'full' | 'past' | 'outside';
+
+export interface DayStatusContext {
+  today: Date;
+  maxDate: Date;
+  availableFrom?: string | null;
+  availableTo?: string | null;
+  isDateUnavailable: (date: Date) => boolean;
+  getUnavailabilityReason: (date: Date) => { label: string } | null;
+  getDayAvailabilityInfo: (date: Date) => { isUnavailable: boolean; isLimited: boolean };
+}
+
+export function isBookableDateDisabled(date: Date, ctx: DayStatusContext): boolean {
+  if (isBefore(date, ctx.today)) return true;
+  if (isAfter(date, ctx.maxDate)) return true;
+
+  if (ctx.availableFrom) {
+    const from = parseISO(ctx.availableFrom);
+    if (isBefore(date, startOfDay(from))) return true;
+  }
+  if (ctx.availableTo) {
+    const to = parseISO(ctx.availableTo);
+    if (isBefore(startOfDay(to), date)) return true;
+  }
+
+  return ctx.isDateUnavailable(date);
+}
+
+/**
+ * Plain-language explanation of why a day can't be picked.
+ * Returns null when the day is selectable.
+ */
+export function getBookableDayBlockReason(date: Date, ctx: DayStatusContext): string | null {
+  if (isBefore(date, ctx.today)) return 'This date has already passed.';
+  if (isAfter(date, ctx.maxDate)) return 'Bookings open up to 12 months ahead.';
+  if (ctx.availableFrom && isBefore(date, startOfDay(parseISO(ctx.availableFrom)))) {
+    return `This rental becomes available ${format(startOfDay(parseISO(ctx.availableFrom)), 'MMM d, yyyy')}.`;
+  }
+  if (ctx.availableTo && isBefore(startOfDay(parseISO(ctx.availableTo)), date)) {
+    return `This rental is only available through ${format(startOfDay(parseISO(ctx.availableTo)), 'MMM d, yyyy')}.`;
+  }
+  const reason = ctx.getUnavailabilityReason(date);
+  if (reason) return reason.label;
+  const info = ctx.getDayAvailabilityInfo(date);
+  if (info.isUnavailable) return 'Fully booked — no spots left.';
+  return null;
+}
+
+export function getBookableDayStatus(date: Date, ctx: DayStatusContext): DayStatus {
+  if (isBefore(date, ctx.today)) return 'past';
+  if (isAfter(date, ctx.maxDate)) return 'outside';
+
+  if (isBookableDateDisabled(date, ctx)) return 'full';
+
+  const info = ctx.getDayAvailabilityInfo(date);
+  if (info.isUnavailable) return 'full';
+  if (info.isLimited) return 'partial';
+  return 'available';
+}
+
 /**
  * Period pricing now lives in `@/lib/listings/rentalPricing` so the widget,
  * the checkout summary and the server quote can never disagree.
