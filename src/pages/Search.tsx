@@ -1919,36 +1919,8 @@ const FilterContent = ({
         </div>
       </div>
 
-      {/* Location Filter with Geocoding - Second */}
-      <div className="space-y-2">
-        <Label className="text-sm font-medium flex items-center gap-2">
-          <MapPin className="h-4 w-4" />
-          Location
-        </Label>
-        <div className="max-w-xs">
-          <LocationSearchInput
-            value={locationText}
-            onChange={onLocationTextChange}
-            onLocationSelect={onLocationSelect}
-            selectedCoordinates={locationCoords}
-            placeholder="City, state, or zip code"
-            showRadiusSelector
-            radius={searchRadius}
-            onRadiusChange={onRadiusChange}
-          />
-        </div>
-      </div>
+      {!locationFirst && locationBlock}
 
-      {/* Radius Filter - only show when no inline radius (i.e. no location selected) */}
-      {!locationCoords && (
-        <div className="max-w-xs">
-          <RadiusFilter
-            radius={searchRadius}
-            onChange={onRadiusChange}
-            disabled={!locationCoords}
-          />
-        </div>
-      )}
 
       {/* Price Filter — only in a single-mode context (sale $ vs rent $/day
           are incompatible units, so All mode intentionally has no price filter) */}
