@@ -664,6 +664,15 @@ Deno.serve(async (req) => {
         page,
         page_size: effectivePageSize,
         total_pages: totalPages,
+        search_meta: {
+          requested_radius_miles: requestedRadius,
+          effective_radius_miles: effectiveRadius,
+          radius_expanded: radiusWasExpanded,
+          location_label: parsedLocation.label ?? null,
+          result_count: totalCount,
+          text_fallback_used: usedTextFallback,
+          state_only_search: stateOnlySearch,
+        },
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
