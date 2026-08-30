@@ -148,71 +148,11 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Smart query parsing: extract intent, strip filler words, map to categories.
-    // Aliases are matched token-by-token with prefix tolerance so a shopper who
-    // has typed "food truc" (or "trailers", "kitchens") still lands on the right
-    // category instead of falling through to a literal phrase ILIKE that only
-    // matches the handful of titles containing that exact substring.
-    const categoryAliases: Array<[string, string]> = [
-      ['food truck', 'food_truck'],
-      ['foodtruck', 'food_truck'],
-      ['truck', 'food_truck'],
-      ['trucks', 'food_truck'],
-      ['food trailer', 'food_trailer'],
-      ['foodtrailer', 'food_trailer'],
-      ['concession trailer', 'food_trailer'],
-      ['trailer', 'food_trailer'],
-      ['trailers', 'food_trailer'],
-      ['ghost kitchen', 'ghost_kitchen'],
-      ['commercial kitchen', 'ghost_kitchen'],
-      ['shared kitchen', 'ghost_kitchen'],
-      ['commissary', 'ghost_kitchen'],
-      ['kitchen', 'ghost_kitchen'],
-      ['kitchens', 'ghost_kitchen'],
-      ['vendor space', 'vendor_space'],
-      ['vendor spaces', 'vendor_space'],
-      ['vendor lot', 'vendor_lot'],
-      ['lot', 'vendor_lot'],
-      ['space', 'vendor_space'],
-      ['vending', 'vendor_space'],
-    ];
-
-    // Strip mode-related filler words from query
-    let cleanedQuery = (query || '').trim();
-    const modeFillers = /\b(for\s+rent|for\s+sale|to\s+rent|to\s+buy|rental|rentals)\b/gi;
-    cleanedQuery = cleanedQuery.replace(modeFillers, '').trim();
-
-    const queryLower = cleanedQuery.toLowerCase().replace(/\s+/g, ' ').trim();
-    const queryTokens = queryLower.split(' ').filter(Boolean);
-
-    // A query matches an alias when every typed token is a prefix of the alias's
-    // corresponding token (min 3 chars so "f" doesn't select a category), or the
-    // alias appears verbatim inside the query.
-    const matchesAlias = (alias: string): boolean => {
-      if (!queryLower) return false;
-      if (queryLower.includes(alias)) return true;
-      const aliasTokens = alias.split(' ');
-      if (queryTokens.length === 0 || queryTokens.length > aliasTokens.length) return false;
-      return queryTokens.every((tok, i) => {
-        const target = aliasTokens[i];
-        if (!target) return false;
-        if (tok.length < 3) return tok === target;
-        return target.startsWith(tok);
-      });
-    };
-
-    let inferredCategory: string | null = null;
-    for (const [alias, cat] of categoryAliases) {
-      if (matchesAlias(alias)) {
-        inferredCategory = cat;
-        break;
-      }
-    }
-
     // If we inferred a category and no explicit category was set, apply it as a filter
     if (inferredCategory && !category) {
       queryBuilder = queryBuilder.eq('category', inferredCategory);
     }
+
 
     // Structured location handling for a place typed into the keyword box.
     // Only unambiguous shapes (ZIP, "City, ST", state name/abbr) count — a bare
