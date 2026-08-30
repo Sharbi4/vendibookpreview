@@ -161,12 +161,23 @@ Deno.serve(async (req) => {
 
     // Structured location parsed from either the explicit location text or,
     // when the shopper typed a place into the keyword box, the query itself.
-    // A keyword that resolves to a category ("food truck", "kitchen") is product
-    // intent, never a place — treating it as one wiped out the results.
-    const queryAsLocation = inferredCategory ? undefined : query;
+    // Two guards: a keyword that resolves to a category ("food truck",
+    // "kitchen") is product intent, never a place; and a bare word like
+    // "burger" is only treated as a location when it is an unambiguous place
+    // shape (ZIP, state, "City, ST") — otherwise it stays a keyword search
+    // instead of being filtered to zero by a city-name match.
+    const bareQueryPlace = parseLocationInput(query);
+    const queryLooksLikePlace =
+      bareQueryPlace.kind === 'zip' ||
+      bareQueryPlace.kind === 'state' ||
+      bareQueryPlace.kind === 'city_state';
+    const queryAsLocation = !inferredCategory && (locationScoped || queryLooksLikePlace)
+      ? query
+      : undefined;
     const parsedLocation = parseLocationInput(
       location_text || (locationScoped || !hasCoords ? queryAsLocation : undefined)
     );
+
 
     const hasStructuredLocation = !!(parsedLocation.city || parsedLocation.state || parsedLocation.zip);
     // State-only searches ("Arizona", "AZ") are a structured filter, not a radius search.
