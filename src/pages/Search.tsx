@@ -1171,7 +1171,7 @@ const Search = () => {
                   verifiedHostsOnly={verifiedHostsOnly}
                   onModeChange={handleModeChange}
                   onCategoryChange={handleCategoryChange}
-                  onLocationTextChange={setLocationText}
+                  onLocationTextChange={handleLocationTextChange}
                   onLocationSelect={handleLocationSelect}
                   onRadiusChange={handleRadiusChange}
                   onPriceRangeChange={handlePriceRangeChange}
