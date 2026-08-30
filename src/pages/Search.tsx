@@ -271,11 +271,16 @@ const Search = () => {
     ...(locationCoords ? [{ value: 'distance', label: 'Distance' }] : []),
   ], [debouncedQuery, mode, locationCoords]);
 
-  // Sparse metros stay honest at the chosen radius — when a 50-mi location
-  // search returns very few listings, an explicit "Expand to 100 miles" CTA
-  // appears above the results instead of silently widening.
+  // Server-side search metadata: effective radius after sparse-inventory
+  // auto-expansion, plus whether coordinate-less city/state matches were used.
+  const searchMeta = searchResults?.search_meta;
+  const effectiveRadius = searchMeta?.effective_radius_miles ?? searchRadius;
+  const radiusAutoExpanded = !!searchMeta?.radius_expanded;
+
+  // Manual CTA only when the server did NOT already widen the search.
   const showExpandRadiusCta =
-    !!locationCoords && searchRadius < 100 && page === 1 && !isFetching && totalCount < 5;
+    !!locationCoords && searchRadius < 100 && page === 1 && !isFetching &&
+    !radiusAutoExpanded && totalCount < 5;
 
   // Debounced search_performed funnel event — fires ~600ms after results settle so we
   // don't double-count while the user is still typing or toggling filters.
