@@ -242,8 +242,18 @@ const Search = () => {
       if (error) throw error;
       return data as SearchResponse;
     },
-    placeholderData: (previousData) => previousData, // Keep previous data while loading
+    // Keep previous results ONLY when nothing but the page changed. Any
+    // meaningful search change (location, filters, sort, keyword) must show a
+    // loading state instead of presenting stale inventory as the new result.
+    placeholderData: (previousData, previousQuery) => {
+      if (!previousData || !previousQuery) return undefined;
+      const prevParams = (previousQuery.queryKey as [string, typeof searchRequestParams])[1];
+      if (!prevParams) return undefined;
+      const stripPage = ({ page: _page, ...rest }: typeof searchRequestParams) => JSON.stringify(rest);
+      return stripPage(prevParams) === stripPage(searchRequestParams) ? previousData : undefined;
+    },
   });
+
 
   // Defensive: drop rows that stopped being publicly visible after the fetch
   // (paused/deleted/unpublished) so cached payloads can't surface dead links.
