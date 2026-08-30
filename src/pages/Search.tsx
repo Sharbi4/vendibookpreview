@@ -1119,36 +1119,111 @@ const Search = () => {
             </aside>
 
             {/* Results Grid */}
-            <div className="flex-1">
+            <div className="flex-1" ref={resultsRef}>
 
-              {/* Results context + primary Sort control, directly above listings */}
-              <div className="flex items-center justify-between gap-3 mb-4">
-                <p className="text-sm text-muted-foreground min-w-0">
-                  {locationCoords ? (
-                    <>
-                      {radiusAutoExpanded ? 'Expanded search to ' : 'Showing within '}
-                      <span className="font-semibold text-foreground">{effectiveRadius} miles</span> of{' '}
-                      <span className="font-semibold text-foreground">{locationText || 'selected location'}</span>
-                      {radiusAutoExpanded && ' — few listings nearby'}
-                    </>
+              {/* Results header — confident context, then sort / view / save.
+                  Fixed min-height so the row never jumps between fetches. */}
+              <div className="mb-4 flex min-h-[2.75rem] flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0" aria-live="polite">
+                  {isLoadingListings || isFetching ? (
+                    <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
+                      Searching the marketplace…
+                    </span>
                   ) : (
-                    'Showing all listings nationwide'
+                    <>
+                      <p className="text-[15px] font-semibold tracking-[-0.01em] text-foreground">
+                        {totalCount.toLocaleString()} listing{totalCount !== 1 ? 's' : ''}
+                        {locationText ? ` near ${locationText}` : ' nationwide'}
+                        {debouncedQuery ? ` for “${debouncedQuery}”` : ''}
+                      </p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {locationCoords ? (
+                          radiusAutoExpanded ? (
+                            <>Only a few listings nearby — expanded to {effectiveRadius} miles.</>
+                          ) : (
+                            <>Showing results within {effectiveRadius} miles.</>
+                          )
+                        ) : (
+                          'Add a location to see what’s closest to you.'
+                        )}
+                        {searchMeta?.text_fallback_used && ' Includes nearby city matches.'}
+                        {totalPages > 1 && (
+                          <span className="text-muted-foreground/70"> · Page {page} of {totalPages}</span>
+                        )}
+                        {showExpandRadiusCta && (
+                          <button
+                            type="button"
+                            onClick={() => handleRadiusChange(100)}
+                            className="ml-2 font-medium text-primary underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                          >
+                            Expand to 100 miles
+                          </button>
+                        )}
+                      </p>
+                    </>
                   )}
-                  {searchMeta?.text_fallback_used && (
-                    <span className="ml-1">Includes nearby city matches.</span>
-                  )}
-                  {showExpandRadiusCta && (
-                    <button
-                      type="button"
-                      onClick={() => handleRadiusChange(100)}
-                      className="ml-2 text-primary font-medium hover:underline underline-offset-2"
-                    >
-                      Expand to 100 miles
-                    </button>
-                  )}
-                </p>
-                <SortControl sortBy={sortBy} options={sortOptions} onChange={handleSortChange} />
+                </div>
+
+                <div className="flex shrink-0 items-center gap-2">
+                  <SaveSearchButton
+                    category={category !== 'all' ? category : undefined}
+                    mode={mode !== 'all' ? mode : undefined}
+                    locationText={locationText}
+                    latitude={locationCoords?.[1]}
+                    longitude={locationCoords?.[0]}
+                    radiusMiles={searchRadius}
+                    instantBookOnly={instantBookOnly}
+                    amenities={selectedAmenities}
+                  />
+                  <SortControl sortBy={sortBy} options={sortOptions} onChange={handleSortChange} />
+                  <ToggleGroup
+                    type="single"
+                    value={viewMode}
+                    onValueChange={(value) => value && setViewMode(value as 'grid' | 'map' | 'split' | 'list')}
+                    className="rounded-xl border border-[#1b1714]/[0.12] bg-card p-0.5"
+                  >
+                    <ToggleGroupItem value="grid" aria-label="Grid view" title="Grid view" className="h-8 rounded-lg px-2 text-muted-foreground transition-colors data-[state=on]:bg-foreground data-[state=on]:text-background">
+                      <LayoutGrid className="h-3.5 w-3.5" />
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="list" aria-label="List view" title="List view" className="h-8 rounded-lg px-2 text-muted-foreground transition-colors data-[state=on]:bg-foreground data-[state=on]:text-background">
+                      <Rows3 className="h-3.5 w-3.5" />
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="split" aria-label="Split view" title="Split view (list + map)" className="hidden h-8 rounded-lg px-2 text-muted-foreground transition-colors data-[state=on]:bg-foreground data-[state=on]:text-background md:flex">
+                      <Columns className="h-3.5 w-3.5" />
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="map" aria-label="Map view" title="Map view" className="h-8 rounded-lg px-2 text-muted-foreground transition-colors data-[state=on]:bg-foreground data-[state=on]:text-background">
+                      <Map className="h-3.5 w-3.5" />
+                    </ToggleGroupItem>
+                  </ToggleGroup>
+                </div>
               </div>
+
+              {/* Radius selector — "search closer" or widen, without hunting
+                  through the filter sheet. Only meaningful with coordinates. */}
+              {locationCoords && (
+                <div className="mb-4 flex flex-wrap items-center gap-1.5">
+                  <span className="text-xs text-muted-foreground">Within</span>
+                  {[10, 25, 50, 100, 250].map((r) => (
+                    <button
+                      key={r}
+                      type="button"
+                      onClick={() => handleRadiusChange(r)}
+                      aria-pressed={searchRadius === r}
+                      className={cn(
+                        'rounded-full border px-2.5 py-1 text-xs font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30',
+                        searchRadius === r
+                          ? 'border-foreground bg-foreground text-background'
+                          : 'border-[#1b1714]/[0.12] bg-card text-muted-foreground hover:text-foreground'
+                      )}
+                    >
+                      {r} mi
+                    </button>
+                  ))}
+                  <span className="text-xs text-muted-foreground">of {locationText || 'selected location'}</span>
+                </div>
+              )}
+
 
               {/* Active Filters Badges */}
               {(mode !== 'all' || category !== 'all' || locationCoords || locationText.trim() || dateRange?.from || selectedAmenities.length > 0 || instantBookOnly || verifiedHostsOnly) && (
