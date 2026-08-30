@@ -260,6 +260,9 @@ const Search = () => {
   const listings = filterPubliclyVisible(searchResults?.listings ?? []);
   const totalCount = searchResults?.total_count ?? 0;
   const totalPages = searchResults?.total_pages ?? 0;
+  // Anchor for the search button so results are always the visual priority.
+  const resultsRef = useRef<HTMLDivElement>(null);
+
   // Featured inventory returned separately for the labeled "Sponsored" strip
   // when the shopper picks an explicit sort — the main list honors it strictly.
   const sponsoredListings = useMemo(
