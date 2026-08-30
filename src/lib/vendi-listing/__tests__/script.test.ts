@@ -108,7 +108,8 @@ describe('rental monthly pricing', () => {
   it('stores a monthly rate and treats it as valid pricing', () => {
     const d = buildMonthlyRental();
     expect(d.price_monthly).toBe(1000);
-    expect(d.price_daily).toBeUndefined();
+    // Parity with the manual wizard: every rental carries a daily rate too.
+    expect(d.price_daily).toBe(250);
     expect(getPublishBlockers(d, 3)).toEqual([]);
     expect(getPublishBlockers(d, 0)).toContain('Add at least one photo.');
   });
@@ -133,8 +134,11 @@ describe('progressive interview and optional depth', () => {
     d = answer(d, 'mode', 'rent');
     d = answer(d, 'category', 'food_trailer');
     d = answer(d, 'location', 'Spring Hill, TN');
+    d = answer(d, 'zip_code', '37174');
+    d = answer(d, 'street_address', '1200 Duplex Rd');
     d = answer(d, 'rent_period', 'monthly');
     d = answer(d, 'rent_price', '$1,000');
+    d = answer(d, 'rent_daily_rate', '$250');
     d = answer(d, 'description', 'Turnkey trailer available for monthly lease in Spring Hill.');
     d = answer(d, 'fulfillment', 'pickup');
     d = answer(d, 'instant_book', 'no');
