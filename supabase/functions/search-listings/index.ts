@@ -244,42 +244,130 @@ Deno.serve(async (req) => {
       queryBuilder = queryBuilder.contains('amenities', amenities);
     }
 
-    // Apply bounding box for location filtering (optimization before Haversine)
-    if (latitude !== undefined && longitude !== undefined) {
-      // ~69 miles per degree of latitude, longitude varies by latitude
-      const latDelta = radius_miles / 69;
-      const lngDelta = radius_miles / (69 * Math.cos(toRad(latitude)));
-      
-      queryBuilder = queryBuilder
-        .gte('latitude', latitude - latDelta)
-        .lte('latitude', latitude + latDelta)
-        .gte('longitude', longitude - lngDelta)
-        .lte('longitude', longitude + lngDelta);
+    return queryBuilder;
+    };
+
+    // ---- Geographic fetch passes -------------------------------------------
+    // Pass A: bounding box at the requested radius (cheap pre-filter for Haversine).
+    // Pass B: bounding box at 500 mi, only when local inventory is sparse.
+    // Pass C: structured city/state/ZIP match so listings with valid location
+    //         fields but NULL coordinates never disappear from a place search.
+    const HARD_FETCH_LIMIT = 1000;
+    const FALLBACK_FETCH_LIMIT = 300;
+
+    const withBoundingBox = (builder: any, radius: number) => {
+      const latDelta = radius / 69;
+      const lngDelta = radius / (69 * Math.max(0.05, Math.cos(toRad(latitude as number))));
+      return builder
+        .gte('latitude', (latitude as number) - latDelta)
+        .lte('latitude', (latitude as number) + latDelta)
+        .gte('longitude', (longitude as number) - lngDelta)
+        .lte('longitude', (longitude as number) + lngDelta);
+    };
+
+    const withStructuredLocation = (builder: any) => {
+      let b = builder;
+      if (parsedLocation.state) b = b.eq('state', parsedLocation.state);
+      const ors: string[] = [];
+      if (parsedLocation.zip) ors.push(`zip_code.ilike.%${escapeOrValue(parsedLocation.zip)}%`);
+      if (parsedLocation.city) {
+        const c = escapeOrValue(parsedLocation.city);
+        ors.push(`city.ilike.%${c}%`, `address.ilike.%${c}%`);
+      }
+      if (ors.length) b = b.or(ors.join(','));
+      return b;
+    };
+
+    const rowsById = new Map<string, any>();
+    const fallbackIds = new Set<string>();
+    const collect = (rows: any[] | null, markFallback = false) => {
+      for (const row of rows ?? []) {
+        if (!rowsById.has(row.id)) rowsById.set(row.id, row);
+        if (markFallback) fallbackIds.add(row.id);
+      }
+    };
+
+    let fetchRadius = requestedRadius;
+    let radiusExpanded = false;
+
+    if (hasCoords && !stateOnlySearch) {
+      const { data: nearRows, error: nearErr } = await withBoundingBox(buildBaseQuery(), requestedRadius)
+        .limit(HARD_FETCH_LIMIT);
+      if (nearErr) throw nearErr;
+      collect(nearRows);
+
+      const withinRequested = (nearRows ?? []).filter((l: any) =>
+        l.latitude != null && l.longitude != null &&
+        haversineMiles(latitude as number, longitude as number, l.latitude, l.longitude) <= requestedRadius
+      ).length;
+
+      if (auto_expand_radius && withinRequested < MIN_RELEVANT_RESULTS && requestedRadius < MAX_RADIUS_MILES) {
+        const { data: wideRows, error: wideErr } = await withBoundingBox(buildBaseQuery(), MAX_RADIUS_MILES)
+          .limit(HARD_FETCH_LIMIT);
+        if (wideErr) throw wideErr;
+        collect(wideRows);
+        fetchRadius = MAX_RADIUS_MILES;
+      }
     }
 
-    // Fetch ALL matching listings first (we'll filter/paginate in memory for complex filters)
-    // This is because we need to:
-    // 1. Apply precise Haversine distance
-    // 2. Check availability
-    // 3. Check host verification
-    const { data: listings, error: listingsError, count: totalBeforeComplexFilters } = await queryBuilder;
-
-    if (listingsError) {
-      throw listingsError;
+    // Structured fallback: same filters, matched on city/state/ZIP text.
+    let textFallbackUsed = false;
+    if (hasStructuredLocation) {
+      const { data: textRows, error: textErr } = await withStructuredLocation(buildBaseQuery())
+        .limit(FALLBACK_FETCH_LIMIT);
+      if (textErr) throw textErr;
+      const newOnes = (textRows ?? []).filter((r: any) => !rowsById.has(r.id) || r.latitude == null);
+      collect(textRows, false);
+      // Only coordinate-less rows count as a text fallback tier; coordinate rows
+      // are already ranked by true distance.
+      for (const r of textRows ?? []) {
+        if (r.latitude == null || r.longitude == null) {
+          fallbackIds.add(r.id);
+          textFallbackUsed = true;
+        }
+      }
+      void newOnes;
     }
 
-    if (!listings || listings.length === 0) {
+    // No geography at all → plain filtered fetch.
+    if (!hasCoords && !hasStructuredLocation) {
+      const { data: plainRows, error: plainErr } = await buildBaseQuery().limit(HARD_FETCH_LIMIT);
+      if (plainErr) throw plainErr;
+      collect(plainRows);
+    } else if (!hasCoords && stateOnlySearch && rowsById.size === 0) {
+      const { data: stateRows, error: stateErr } = await buildBaseQuery()
+        .eq('state', parsedLocation.state as string)
+        .limit(HARD_FETCH_LIMIT);
+      if (stateErr) throw stateErr;
+      collect(stateRows);
+    }
+
+    const listings = [...rowsById.values()];
+    void fetchRadius;
+
+    if (listings.length === 0) {
       return new Response(
         JSON.stringify({
           listings: [],
+          sponsored: [],
           total_count: 0,
           page,
           page_size: effectivePageSize,
           total_pages: 0,
+          search_meta: {
+            requested_radius_miles: requestedRadius,
+            effective_radius_miles: requestedRadius,
+            radius_expanded: false,
+            location_label: parsedLocation.label ?? null,
+            result_count: 0,
+            text_fallback_used: false,
+            state_only_search: stateOnlySearch,
+          },
         }),
         { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
+
 
     // Get unique host IDs for verification check
     const hostIds = [...new Set(listings.map(l => l.host_id).filter(Boolean))];
