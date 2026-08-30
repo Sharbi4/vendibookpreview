@@ -345,6 +345,18 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
     return null;
   };
 
+  const getDayStatus = (date: Date): 'available' | 'partial' | 'full' | 'past' | 'outside' => {
+    if (isBefore(date, today)) return 'past';
+    if (isAfter(date, maxDate)) return 'outside';
+
+    if (isDateDisabled(date)) return 'full';
+
+    const info = getDayAvailabilityInfo(date);
+    if (info.isUnavailable) return 'full';
+    if (info.isLimited) return 'partial';
+    return 'available';
+  };
+
   /**
    * First unavailable day after the chosen start date. A stay can never span
    * it, so every day from here on is locked while an end date is being picked.
@@ -374,18 +386,6 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   const isBeyondRangeLimit = (date: Date): boolean => {
     if (mode !== 'daily' || !startDate || endDate || !rangeLimit) return false;
     return isAfter(date, startDate) && !isBefore(date, rangeLimit);
-  };
-
-  const getDayStatus = (date: Date): 'available' | 'partial' | 'full' | 'past' | 'outside' => {
-    if (isBefore(date, today)) return 'past';
-    if (isAfter(date, maxDate)) return 'outside';
-    
-    if (isDateDisabled(date)) return 'full';
-
-    const info = getDayAvailabilityInfo(date);
-    if (info.isUnavailable) return 'full';
-    if (info.isLimited) return 'partial';
-    return 'available';
   };
 
   const getAvailability = (date: Date) => {
