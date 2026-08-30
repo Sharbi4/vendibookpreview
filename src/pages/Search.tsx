@@ -1006,7 +1006,7 @@ const Search = () => {
                       className="h-12 flex-1 rounded-2xl"
                       onClick={() => setIsFiltersOpen(false)}
                     >
-                      Show {totalCount.toLocaleString()} listing{totalCount !== 1 ? 's' : ''}
+                      Show results
                     </Button>
                   </div>
                 </SheetContent>
@@ -1136,8 +1136,7 @@ const Search = () => {
                   ) : (
                     <>
                       <p className="text-[15px] font-semibold tracking-[-0.01em] text-foreground">
-                        {totalCount.toLocaleString()} listing{totalCount !== 1 ? 's' : ''}
-                        {locationText ? ` near ${locationText}` : ' nationwide'}
+                        {locationText ? `Listings near ${locationText}` : 'Listings nationwide'}
                         {debouncedQuery ? ` for “${debouncedQuery}”` : ''}
                       </p>
                       <p className="mt-0.5 text-xs text-muted-foreground">
