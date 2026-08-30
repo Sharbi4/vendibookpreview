@@ -1125,11 +1125,16 @@ const Search = () => {
                 <p className="text-sm text-muted-foreground min-w-0">
                   {locationCoords ? (
                     <>
-                      Showing within <span className="font-semibold text-foreground">{searchRadius} miles</span> of{' '}
+                      {radiusAutoExpanded ? 'Expanded search to ' : 'Showing within '}
+                      <span className="font-semibold text-foreground">{effectiveRadius} miles</span> of{' '}
                       <span className="font-semibold text-foreground">{locationText || 'selected location'}</span>
+                      {radiusAutoExpanded && ' — few listings nearby'}
                     </>
                   ) : (
                     'Showing all listings nationwide'
+                  )}
+                  {searchMeta?.text_fallback_used && (
+                    <span className="ml-1">Includes nearby city matches.</span>
                   )}
                   {showExpandRadiusCta && (
                     <button
