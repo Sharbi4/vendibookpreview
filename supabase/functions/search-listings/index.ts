@@ -506,6 +506,40 @@ Deno.serve(async (req) => {
       });
     }
 
+    // ---- Progressive radius expansion --------------------------------------
+    // Widen only the geographic constraint (never mode/category/dates/verified
+    // /delivery/price) until at least MIN_RELEVANT_RESULTS relevant listings
+    // exist or the 500-mile ceiling is reached.
+    let effectiveRadius = requestedRadius;
+    if (hasCoords && !stateOnlySearch) {
+      const withCoords = filteredListings.filter((l) => l.distance_miles !== null);
+      const fallbackRows = filteredListings.filter((l) => l.location_text_match);
+
+      const countWithin = (radius: number) =>
+        withCoords.filter((l) => (l.distance_miles as number) <= radius).length + fallbackRows.length;
+
+      while (
+        auto_expand_radius &&
+        countWithin(effectiveRadius) < MIN_RELEVANT_RESULTS &&
+        effectiveRadius < MAX_RADIUS_MILES
+      ) {
+        const next = nextRadius(effectiveRadius);
+        if (!next || next === effectiveRadius) break;
+        effectiveRadius = next;
+      }
+
+      filteredListings = filteredListings.filter(
+        (l) => (l.distance_miles !== null && l.distance_miles <= effectiveRadius) || l.location_text_match
+      );
+    } else if (hasCoords) {
+      filteredListings = filteredListings.filter(
+        (l) => l.distance_miles === null || l.distance_miles <= effectiveRadius || l.location_text_match
+      );
+    }
+    const radiusWasExpanded = effectiveRadius > requestedRadius;
+    const usedTextFallback = textFallbackUsed && filteredListings.some((l) => l.location_text_match);
+
+
     // Featured-first PRIMARY sort key + fair daily rotation among the featured cohort.
     // Mirrors src/lib/featured.ts (dailyFeaturedRotationKey).
     const nowIso = new Date().toISOString();
