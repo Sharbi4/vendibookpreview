@@ -616,13 +616,27 @@ Deno.serve(async (req) => {
         return new Date(b.published_at || b.created_at).getTime() - new Date(a.published_at || a.created_at).getTime();
       });
     } else {
-      // Default `featured` discovery sort: active featured listings first with
-      // fair daily rotation inside the featured cohort, then newest rest.
+      // Default `featured` discovery sort. For a location search, results are
+      // tiered first — nearby (inside the requested radius), then structured
+      // city/state fallbacks with no coordinates, then expanded-area results —
+      // and featured rotation applies inside each tier.
+      const tierOf = (l: any): number => {
+        if (!hasCoords || stateOnlySearch) return 0;
+        if (l.distance_miles !== null && l.distance_miles <= requestedRadius) return 0;
+        if (l.location_text_match) return 1;
+        return 2;
+      };
       filteredListings.sort((a, b) => {
+        const ta = tierOf(a), tb = tierOf(b);
+        if (ta !== tb) return ta - tb;
         const _f = featuredTiebreak(a, b); if (_f !== 0) return _f;
+        if (ta === 2 && a.distance_miles !== null && b.distance_miles !== null) {
+          return a.distance_miles - b.distance_miles;
+        }
         return new Date(b.published_at || b.created_at).getTime() - new Date(a.published_at || a.created_at).getTime();
       });
     }
+
 
     // A listing shown in the Sponsored strip must not also appear in the
     // main results below it — the same truck would render twice on the page.
