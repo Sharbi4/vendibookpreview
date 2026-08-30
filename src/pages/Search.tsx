@@ -71,6 +71,16 @@ interface SearchListing extends Listing {
   can_deliver?: boolean;
 }
 
+interface SearchMeta {
+  requested_radius_miles: number;
+  effective_radius_miles: number;
+  radius_expanded: boolean;
+  location_label: string | null;
+  result_count: number;
+  text_fallback_used: boolean;
+  state_only_search: boolean;
+}
+
 interface SearchResponse {
   listings: SearchListing[];
   sponsored?: SearchListing[];
@@ -78,6 +88,7 @@ interface SearchResponse {
   page: number;
   page_size: number;
   total_pages: number;
+  search_meta?: SearchMeta;
 }
 
 const Search = () => {
