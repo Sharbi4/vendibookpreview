@@ -286,7 +286,7 @@ const EnhancedPhotoGallery = ({ images, videos = [], title }: EnhancedPhotoGalle
       {/* Lightbox Modal with swipe support */}
       <Dialog open={lightboxOpen} onOpenChange={setLightboxOpen}>
         <DialogContent 
-          className="max-w-7xl w-full h-[95vh] p-0 bg-black border-none"
+          className="max-w-7xl w-full h-[95vh] p-0 bg-black border-none [&>button]:hidden"
           onKeyDown={handleKeyDown}
         >
           <div
@@ -313,7 +313,9 @@ const EnhancedPhotoGallery = ({ images, videos = [], title }: EnhancedPhotoGalle
               <Button
                 variant="ghost"
                 size="icon"
-                className="text-white hover:bg-white/20 rounded-full"
+                type="button"
+                aria-label="Close photo viewer"
+                className="relative z-30 text-white hover:bg-white/20 rounded-full pointer-events-auto"
                 onClick={() => setLightboxOpen(false)}
               >
                 <X className="h-5 w-5" />
