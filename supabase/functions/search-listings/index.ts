@@ -117,12 +117,16 @@ Deno.serve(async (req) => {
     const offset = (page - 1) * effectivePageSize;
 
 
-    // Start building the query
+    // Base query = every non-geographic filter. Rebuilt per geo attempt so a
+    // sparse-inventory radius expansion re-runs the identical filter set.
+    const buildBaseQuery = () => {
     let queryBuilder = supabaseClient
       .from('listings')
       .select('*', { count: 'exact' })
       .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
       .not('title', 'ilike', 'Demo %');
+
+
 
     // Apply mode filter
     if (mode) {
