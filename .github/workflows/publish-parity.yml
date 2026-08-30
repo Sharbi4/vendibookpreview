@@ -1,0 +1,53 @@
+name: Publish parity gate
+
+# Blocks any change touching publish requirements, the listing wizard, or the
+# "List with Vendi" builder unless TypeScript typechecks AND the publish-parity
+# unit tests pass. Both surfaces call the same publish routine, so a drift here
+# means one path can ship listings the other would reject.
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/lib/listings/**'
+      - 'src/lib/vendi-listing/**'
+      - 'src/components/vendi-listing/**'
+      - 'src/components/listing/**'
+      - 'src/pages/PublishWizard.tsx'
+      - 'src/types/listing.ts'
+      - '.github/workflows/publish-parity.yml'
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: publish-parity-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  parity:
+    name: Typecheck + publish-parity tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: TypeScript typecheck (blocking)
+        run: bunx tsc --noEmit -p tsconfig.app.json
+
+      - name: Publish-parity unit tests (blocking)
+        run: |
+          bunx vitest run \
+            src/lib/listings/__tests__/publishParity.test.ts \
+            src/lib/vendi-listing/__tests__/script.test.ts \
+            src/lib/vendi-listing/__tests__/publishVendiListing.test.ts \
+            src/lib/vendi-listing/__tests__/summary.test.ts \
+            --reporter=verbose
