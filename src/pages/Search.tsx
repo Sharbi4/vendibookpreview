@@ -242,8 +242,18 @@ const Search = () => {
       if (error) throw error;
       return data as SearchResponse;
     },
-    placeholderData: (previousData) => previousData, // Keep previous data while loading
+    // Keep previous results ONLY when nothing but the page changed. Any
+    // meaningful search change (location, filters, sort, keyword) must show a
+    // loading state instead of presenting stale inventory as the new result.
+    placeholderData: (previousData, previousQuery) => {
+      if (!previousData || !previousQuery) return undefined;
+      const prevParams = (previousQuery.queryKey as [string, typeof searchRequestParams])[1];
+      if (!prevParams) return undefined;
+      const stripPage = ({ page: _page, ...rest }: typeof searchRequestParams) => JSON.stringify(rest);
+      return stripPage(prevParams) === stripPage(searchRequestParams) ? previousData : undefined;
+    },
   });
+
 
   // Defensive: drop rows that stopped being publicly visible after the fetch
   // (paused/deleted/unpublished) so cached payloads can't surface dead links.
@@ -458,6 +468,24 @@ const Search = () => {
     setSearchParams(params);
   };
 
+  // Typed location text is part of the shareable search state even before a
+  // suggestion is picked, so it is persisted to the URL as `location`.
+  const handleLocationTextChange = (text: string) => {
+    setLocationText(text);
+    setSearchParams(prev => {
+      const params = new URLSearchParams(prev);
+      if (text.trim()) params.set('location', text);
+      else {
+        params.delete('location');
+        params.delete('lat');
+        params.delete('lng');
+        params.delete('radius');
+      }
+      params.delete('page');
+      return params;
+    }, { replace: true });
+  };
+
   const handleLocationSelect = (location: { name: string; coordinates: [number, number] } | null) => {
     setPage(1);
     if (location) {
@@ -470,14 +498,20 @@ const Search = () => {
       setSearchParams(params);
     } else {
       setLocationCoords(null);
+      // Radius / "delivers to me" are meaningless without coordinates.
+      setDeliveryFilterEnabled(false);
+      setSortBy(prev => (prev === 'distance' ? 'featured' : prev));
       const params = new URLSearchParams(searchParams);
       params.delete('lat');
       params.delete('lng');
       params.delete('radius');
+      params.delete('delivery');
+      if (params.get('sort') === 'distance') params.delete('sort');
       params.delete('page');
       setSearchParams(params);
     }
   };
+
 
   const handleRadiusChange = (radius: number) => {
     setSearchRadius(radius);
@@ -649,7 +683,8 @@ const Search = () => {
   const activeFiltersCount = [
     mode !== 'all',
     category !== 'all',
-    locationCoords !== null,
+    // Typed location text counts even before a suggestion resolves coordinates.
+    locationCoords !== null || !!locationText.trim(),
     priceRange[0] > 0 || priceRange[1] !== Infinity,
     dateRange?.from && dateRange?.to,
     selectedAmenities.length > 0,
@@ -659,6 +694,12 @@ const Search = () => {
     instantBookOnly,
     verifiedHostsOnly,
   ].filter(Boolean).length;
+
+  // "Clear all" must be reachable whenever ANY non-default search state exists —
+  // including a keyword or a non-default sort, which aren't filter chips.
+  const hasActiveSearchState =
+    activeFiltersCount > 0 || !!searchQuery.trim() || !!debouncedQuery.trim() || sortBy !== 'featured';
+
 
   // Generate structured data for Google Shopping / Search indexing
   const itemListSchema = useMemo(() => {
@@ -844,7 +885,8 @@ const Search = () => {
                   <SearchIcon className="absolute left-3.5 h-4 w-4 text-[#1b1714]/45 group-focus-within:text-primary transition-colors" />
                   <Input
                     type="text"
-                    placeholder="Search trucks, trailers, kitchens, locations…"
+                    placeholder="Search food trucks, trailers, kitchens…"
+                    aria-label="Search inventory by keyword"
                     value={searchQuery}
                     onChange={(e) => handleSearch(e.target.value)}
                     className="pl-10 pr-10 h-11 text-base sm:text-sm rounded-2xl border-0 bg-transparent text-[#1b1714] placeholder:text-[#1b1714]/45 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
@@ -860,6 +902,23 @@ const Search = () => {
                   )}
                 </div>
               </div>
+
+              {/* Dedicated location field — first-class on desktop, never buried
+                  in Filters. Mobile keeps it at the top of the filter sheet. */}
+              <div className="hidden md:block w-[15rem] lg:w-[17rem] shrink-0">
+                <div className="relative flex items-center bg-[#faf8f5] border border-[#1b1714]/10 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.10),0_12px_28px_-22px_rgba(0,0,0,0.5)] focus-within:border-primary/50 transition-all duration-200">
+                  <MapPin className="absolute left-3.5 z-10 h-4 w-4 text-[#1b1714]/45" />
+                  <LocationSearchInput
+                    value={locationText}
+                    onChange={handleLocationTextChange}
+                    onLocationSelect={handleLocationSelect}
+                    selectedCoordinates={locationCoords}
+                    placeholder="City, state, or ZIP"
+                    className="w-full [&>div:first-child]:w-full [&_input]:h-11 [&_input]:pl-10 [&_input]:rounded-2xl [&_input]:border-0 [&_input]:bg-transparent [&_input]:shadow-none [&_input]:text-base sm:[&_input]:text-sm [&_input]:focus-visible:ring-0 [&_input]:focus-visible:ring-offset-0"
+                  />
+                </div>
+              </div>
+
 
               {/* Filter Button */}
               <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
@@ -882,7 +941,7 @@ const Search = () => {
                     <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-[#1b1714]/15" aria-hidden />
                     <SheetHeader className="flex-row items-center justify-between space-y-0 text-left">
                       <SheetTitle className="text-base tracking-tight">Filters</SheetTitle>
-                      {activeFiltersCount > 0 && (
+                      {hasActiveSearchState && (
                         <Button
                           variant="ghost"
                           size="sm"
@@ -897,6 +956,7 @@ const Search = () => {
                   <ScrollArea className="flex-1 px-6 pt-4 scroll-smooth">
                     <div className="pb-6">
                       <FilterContent
+                        locationFirst
                         mode={mode}
                         category={category}
                         locationText={locationText}
@@ -912,7 +972,7 @@ const Search = () => {
                         verifiedHostsOnly={verifiedHostsOnly}
                         onModeChange={handleModeChange}
                         onCategoryChange={handleCategoryChange}
-                        onLocationTextChange={setLocationText}
+                        onLocationTextChange={handleLocationTextChange}
                         onLocationSelect={handleLocationSelect}
                         onRadiusChange={handleRadiusChange}
                         onPriceRangeChange={handlePriceRangeChange}
@@ -927,15 +987,24 @@ const Search = () => {
                       />
                     </div>
                   </ScrollArea>
-                  <div className="shrink-0 border-t border-[#1b1714]/[0.08] px-6 py-3 pb-[calc(env(safe-area-inset-bottom,0px)+12px)]">
+                  <div className="shrink-0 border-t border-[#1b1714]/[0.08] px-6 py-3 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] flex items-center gap-3">
+                    <Button
+                      variant="ghost"
+                      className="h-12 px-3 rounded-2xl text-sm text-primary hover:text-primary shrink-0"
+                      onClick={clearFilters}
+                      disabled={!hasActiveSearchState}
+                    >
+                      Clear all
+                    </Button>
                     <Button
                       variant="cta"
-                      className="w-full h-12 rounded-2xl"
+                      className="flex-1 h-12 rounded-2xl"
                       onClick={() => setIsFiltersOpen(false)}
                     >
                       Show {totalCount.toLocaleString()} listing{totalCount !== 1 ? 's' : ''}
                     </Button>
                   </div>
+
                 </SheetContent>
               </Sheet>
             </div>
@@ -990,7 +1059,7 @@ const Search = () => {
             <div className="mt-4 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2 min-w-0">
                 <p className="text-sm text-muted-foreground truncate">
-                  {isLoadingListings ? (
+                  {isLoadingListings || isFetching ? (
                     <span className="inline-flex items-center gap-1.5">
                       <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
                       Searching marketplace…
@@ -1080,11 +1149,12 @@ const Search = () => {
               >
                 <div className="flex items-center justify-between">
                   <h2 className="text-sm font-semibold tracking-tight text-foreground">Filters</h2>
-                  {activeFiltersCount > 0 && (
+                  {hasActiveSearchState && (
                     <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs text-primary hover:text-primary">
                       Clear all
                     </Button>
                   )}
+
                 </div>
                 <FilterContent
                   mode={mode}
@@ -1101,7 +1171,7 @@ const Search = () => {
                   verifiedHostsOnly={verifiedHostsOnly}
                   onModeChange={handleModeChange}
                   onCategoryChange={handleCategoryChange}
-                  onLocationTextChange={setLocationText}
+                  onLocationTextChange={handleLocationTextChange}
                   onLocationSelect={handleLocationSelect}
                   onRadiusChange={handleRadiusChange}
                   onPriceRangeChange={handlePriceRangeChange}
@@ -1150,7 +1220,7 @@ const Search = () => {
               </div>
 
               {/* Active Filters Badges */}
-              {(mode !== 'all' || category !== 'all' || locationCoords || dateRange?.from || selectedAmenities.length > 0 || instantBookOnly || verifiedHostsOnly) && (
+              {(mode !== 'all' || category !== 'all' || locationCoords || locationText.trim() || dateRange?.from || selectedAmenities.length > 0 || instantBookOnly || verifiedHostsOnly) && (
                 <div className="flex flex-wrap gap-2 mb-6">
                   {mode !== 'all' && (
                     <Badge variant="secondary" className="gap-1">
@@ -1187,7 +1257,7 @@ const Search = () => {
                       </button>
                     </Badge>
                   )}
-                  {locationCoords && (
+                  {locationCoords ? (
                     <Badge variant="secondary" className="gap-1">
                       <Navigation className="h-3 w-3" />
                       {locationText || 'Selected location'} ({searchRadius} mi)
@@ -1198,7 +1268,23 @@ const Search = () => {
                         <X className="h-3 w-3 ml-1" />
                       </button>
                     </Badge>
-                  )}
+                  ) : locationText.trim() ? (
+                    // Typed-but-unresolved location still filters server-side via location_text.
+                    <Badge variant="secondary" className="gap-1">
+                      <MapPin className="h-3 w-3" />
+                      {locationText}
+                      <button
+                        aria-label="Clear location"
+                        onClick={() => {
+                          setLocationText('');
+                          handleLocationSelect(null);
+                        }}
+                      >
+                        <X className="h-3 w-3 ml-1" />
+                      </button>
+                    </Badge>
+                  ) : null}
+
                   {dateRange?.from && dateRange?.to && (
                     <Badge variant="secondary" className="gap-1">
                       <CalendarIcon className="h-3 w-3" />
@@ -1648,6 +1734,8 @@ const SortControl = ({ sortBy, options, onChange }: {
 
 // Filter Content Component
 interface FilterContentProps {
+  /** Render the Location block above Category (mobile filter sheet). */
+  locationFirst?: boolean;
   mode: ListingMode | 'all';
   category: ListingCategory | 'all';
   locationText: string;
@@ -1745,6 +1833,7 @@ const PriceRangeInputs = ({
 };
 
 const FilterContent = ({
+  locationFirst = false,
   mode,
   category,
   locationText,
@@ -1782,9 +1871,40 @@ const FilterContent = ({
   };
 
   const availableAmenities = getAvailableAmenities();
+
+  // Location is the primary search axis — rendered first on mobile (locationFirst),
+  // and after Category on desktop where the header already carries a location field.
+  const locationBlock = (
+    <div className="space-y-2">
+      <Label className="text-sm font-medium flex items-center gap-2">
+        <MapPin className="h-4 w-4" />
+        Location
+      </Label>
+      <div className="max-w-xs">
+        <LocationSearchInput
+          value={locationText}
+          onChange={onLocationTextChange}
+          onLocationSelect={onLocationSelect}
+          selectedCoordinates={locationCoords}
+          placeholder="City, state, or ZIP"
+          showRadiusSelector
+          radius={searchRadius}
+          onRadiusChange={onRadiusChange}
+        />
+      </div>
+      {!locationCoords && (
+        <div className="max-w-xs pt-1">
+          <RadiusFilter radius={searchRadius} onChange={onRadiusChange} disabled={!locationCoords} />
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="space-y-5 [&>div+div]:pt-5 [&>div+div]:border-t [&>div+div]:border-foreground/[0.06]">
+      {locationFirst && locationBlock}
       {/* Category Filter */}
+
       <div className="space-y-2">
         <Label className="text-sm font-medium flex items-center">
           Category
@@ -1833,36 +1953,8 @@ const FilterContent = ({
         </div>
       </div>
 
-      {/* Location Filter with Geocoding - Second */}
-      <div className="space-y-2">
-        <Label className="text-sm font-medium flex items-center gap-2">
-          <MapPin className="h-4 w-4" />
-          Location
-        </Label>
-        <div className="max-w-xs">
-          <LocationSearchInput
-            value={locationText}
-            onChange={onLocationTextChange}
-            onLocationSelect={onLocationSelect}
-            selectedCoordinates={locationCoords}
-            placeholder="City, state, or zip code"
-            showRadiusSelector
-            radius={searchRadius}
-            onRadiusChange={onRadiusChange}
-          />
-        </div>
-      </div>
+      {!locationFirst && locationBlock}
 
-      {/* Radius Filter - only show when no inline radius (i.e. no location selected) */}
-      {!locationCoords && (
-        <div className="max-w-xs">
-          <RadiusFilter
-            radius={searchRadius}
-            onChange={onRadiusChange}
-            disabled={!locationCoords}
-          />
-        </div>
-      )}
 
       {/* Price Filter — only in a single-mode context (sale $ vs rent $/day
           are incompatible units, so All mode intentionally has no price filter) */}
