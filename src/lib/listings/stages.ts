@@ -13,6 +13,14 @@
 
 import type { ListingCategory } from '@/types/listing';
 
+/**
+ * Re-exported so listing modules (publish parity, wizard steps, Vendi) can pull
+ * the category union from this stage layer without reaching past it.
+ * `@/types/listing` remains the single definition.
+ */
+export type { ListingCategory };
+
+
 export type ListingStageId =
   | 'what'
   | 'account'

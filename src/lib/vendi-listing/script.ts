@@ -1219,11 +1219,51 @@ export function progressPercent(draft: VendiDraft, answered: string[]): number {
   return Math.round((done / visible.length) * 100);
 }
 
-/** Blocking problems that must be resolved before publishing. */
-export function getPublishBlockers(draft: VendiDraft, imageCount: number): string[] {
+/** A blocker paired with the interview question that resolves it. */
+export interface PublishBlockerDetail {
+  /** Stable blocker id (parity id, or the wizard field id for disclosures). */
+  id: string;
+  message: string;
+  /** Question to reopen so the seller lands exactly where the fix lives. */
+  questionId: string | null;
+}
+
+/** Parity blocker id -> Vendi question id. */
+const BLOCKER_QUESTION_IDS: Record<string, string> = {
+  mode: 'mode',
+  category: 'category',
+  title: 'title',
+  description: 'description',
+  photos: 'photos',
+  payment_method: 'payment_prefs',
+  street_address: 'street_address',
+  location: 'location',
+  zip_code: 'zip_code',
+  fulfillment: 'fulfillment',
+  access_instructions: 'access_instructions',
+};
+
+/** Wizard disclosure field id -> Vendi question id. */
+const REQUIREMENT_QUESTION_IDS: Record<string, string> = {
+  'listing-condition': 'condition',
+  'listing-operational-status': 'operational_status',
+  'listing-title-status': 'title_status',
+  'listing-lien': 'has_lien',
+  'listing-known-problems': 'known_problems',
+  'listing-included-items': 'included_items',
+  'listing-photo-exclusions': 'photo_exclusions',
+  length_ft: 'sale_dimensions',
+  height_ft: 'sale_dimensions',
+};
+
+/**
+ * Blocking problems that must be resolved before publishing, each linked to the
+ * question that fixes it so a checklist can route the seller straight there.
+ */
+export function getPublishBlockerDetails(draft: VendiDraft, imageCount: number): PublishBlockerDetail[] {
   // Content parity: exactly the requirements the step-by-step wizard's Launch
   // Checklist enforces before it calls the same publish routine.
-  const blockers = getPublishContentBlockers({
+  const details: PublishBlockerDetail[] = getPublishContentBlockers({
     mode: (draft.mode as 'rent' | 'sale' | null | undefined) ?? null,
     category: draft.category ?? null,
     title: draft.title ?? null,
@@ -1242,7 +1282,17 @@ export function getPublishBlockers(draft: VendiDraft, imageCount: number): strin
     zipCode: draft.zip_code ?? null,
     fulfillmentType: draft.fulfillment_type ?? null,
     accessInstructions: draft.access_instructions ?? null,
-  }).map((b) => b.message);
+  }).map((b) => ({
+    id: b.id,
+    message: b.message,
+    // Price lives on a different question per mode.
+    questionId:
+      b.id === 'price'
+        ? draft.mode === 'sale'
+          ? 'sale_price'
+          : 'rent_daily_rate'
+        : BLOCKER_QUESTION_IDS[b.id] ?? null,
+  }));
 
   // Disclosure parity: once mode and category are known, Vendi enforces the
   // exact same required disclosures as the manual wizard, so both paths cannot
@@ -1262,11 +1312,24 @@ export function getPublishBlockers(draft: VendiDraft, imageCount: number): strin
       lengthInches: draft.length_inches ?? null,
       heightInches: draft.height_inches ?? null,
     })) {
-      blockers.push(`${req.label}.`);
+      details.push({
+        id: req.fieldId,
+        message: `${req.label}.`,
+        questionId:
+          REQUIREMENT_QUESTION_IDS[req.fieldId] ??
+          // Per-problem explanations all route back to the problems question.
+          (req.fieldId.startsWith('known-problem-') ? 'known_problems' : null),
+      });
     }
   }
-  return blockers;
+  return details;
 }
+
+/** Blocking problems that must be resolved before publishing. */
+export function getPublishBlockers(draft: VendiDraft, imageCount: number): string[] {
+  return getPublishBlockerDetails(draft, imageCount).map((b) => b.message);
+}
+
 
 /** Fields written to the listings row. Never includes retired payment paths. */
 export function buildListingPayload(
