@@ -1257,7 +1257,7 @@ const Search = () => {
                       </button>
                     </Badge>
                   )}
-                  {locationCoords && (
+                  {locationCoords ? (
                     <Badge variant="secondary" className="gap-1">
                       <Navigation className="h-3 w-3" />
                       {locationText || 'Selected location'} ({searchRadius} mi)
@@ -1268,7 +1268,23 @@ const Search = () => {
                         <X className="h-3 w-3 ml-1" />
                       </button>
                     </Badge>
-                  )}
+                  ) : locationText.trim() ? (
+                    // Typed-but-unresolved location still filters server-side via location_text.
+                    <Badge variant="secondary" className="gap-1">
+                      <MapPin className="h-3 w-3" />
+                      {locationText}
+                      <button
+                        aria-label="Clear location"
+                        onClick={() => {
+                          setLocationText('');
+                          handleLocationSelect(null);
+                        }}
+                      >
+                        <X className="h-3 w-3 ml-1" />
+                      </button>
+                    </Badge>
+                  ) : null}
+
                   {dateRange?.from && dateRange?.to && (
                     <Badge variant="secondary" className="gap-1">
                       <CalendarIcon className="h-3 w-3" />
