@@ -129,13 +129,15 @@ export const LocationSearchInput: React.FC<LocationSearchInputProps> = ({
     };
   }, [value, selectedCoordinates, runSearch]);
 
-  // Close dropdowns on outside click
+  // Close dropdowns on outside click. The suggestion panel is portalled to
+  // <body>, so it is not a DOM descendant of containerRef — check it too.
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
-        setIsOpen(false);
-      }
-      if (radiusRef.current && !radiusRef.current.contains(event.target as Node)) {
+      const target = event.target as Node;
+      const insideField = containerRef.current?.contains(target);
+      const insidePanel = listRef.current?.contains(target);
+      if (!insideField && !insidePanel) setIsOpen(false);
+      if (radiusRef.current && !radiusRef.current.contains(target)) {
         setShowRadiusDropdown(false);
       }
     };
