@@ -94,62 +94,20 @@ Deno.serve(async (req) => {
     } = body;
 
     // ---- Keyword intent ------------------------------------------------------
-    // Smart query parsing: strip filler words, then map the keyword box to a
-    // category with token-prefix tolerance so a shopper mid-typing ("food truc")
-    // or using a plural ("trailers", "kitchens") still lands on real inventory
+    // Category intent comes from the shared canonical mapping so the edge
+    // function, the category pills and the parity tests all agree. Token-prefix
+    // tolerance means a shopper mid-typing ("food truc") or using a plural
+    // ("trailers", "kitchens") still lands on the full category inventory
     // instead of an exact-substring ILIKE that matches almost nothing.
-    const categoryAliases: Array<[string, string]> = [
-      ['food truck', 'food_truck'],
-      ['foodtruck', 'food_truck'],
-      ['mobile kitchen', 'food_truck'],
-      ['truck', 'food_truck'],
-      ['trucks', 'food_truck'],
-      ['food trailer', 'food_trailer'],
-      ['foodtrailer', 'food_trailer'],
-      ['concession trailer', 'food_trailer'],
-      ['concession', 'food_trailer'],
-      ['trailer', 'food_trailer'],
-      ['trailers', 'food_trailer'],
-      ['ghost kitchen', 'ghost_kitchen'],
-      ['commercial kitchen', 'ghost_kitchen'],
-      ['shared kitchen', 'ghost_kitchen'],
-      ['commissary', 'ghost_kitchen'],
-      ['kitchen', 'ghost_kitchen'],
-      ['kitchens', 'ghost_kitchen'],
-      ['vendor space', 'vendor_space'],
-      ['vendor spaces', 'vendor_space'],
-      ['vendor lot', 'vendor_lot'],
-      ['vending', 'vendor_space'],
-    ];
-
     let cleanedQuery = (query || '').trim();
     const modeFillers = /\b(for\s+rent|for\s+sale|to\s+rent|to\s+buy|rental|rentals)\b/gi;
     cleanedQuery = cleanedQuery.replace(modeFillers, '').trim();
 
-    const queryLower = cleanedQuery.toLowerCase().replace(/\s+/g, ' ').trim();
+    const queryLower = normalizeQuery(query);
     const queryTokens = queryLower.split(' ').filter(Boolean);
 
-    // Matches when the alias appears verbatim, or when every typed token is a
-    // prefix of the alias's matching token (min 3 chars so "f" selects nothing).
-    const matchesAlias = (alias: string): boolean => {
-      if (!queryLower) return false;
-      if (queryLower.includes(alias)) return true;
-      const aliasTokens = alias.split(' ');
-      if (queryTokens.length === 0 || queryTokens.length > aliasTokens.length) return false;
-      return queryTokens.every((tok, i) => {
-        const target = aliasTokens[i];
-        if (!target) return false;
-        return tok.length < 3 ? tok === target : target.startsWith(tok);
-      });
-    };
+    const inferredCategory: string | null = inferCategoryFromQuery(query);
 
-    let inferredCategory: string | null = null;
-    for (const [alias, cat] of categoryAliases) {
-      if (matchesAlias(alias)) {
-        inferredCategory = cat;
-        break;
-      }
-    }
 
     // When the query IS the geocoded location, suppress the city-name text
     // filter — the Haversine radius below is the geographic source of truth.
