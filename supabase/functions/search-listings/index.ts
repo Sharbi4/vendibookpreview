@@ -13,6 +13,11 @@ import {
   parseLocationInput,
   toRad,
 } from '../_shared/locationSearch.ts';
+import {
+  expandCategory,
+  inferCategoryFromQuery,
+  normalizeQuery,
+} from '../_shared/categoryIntent.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
