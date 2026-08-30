@@ -468,6 +468,24 @@ const Search = () => {
     setSearchParams(params);
   };
 
+  // Typed location text is part of the shareable search state even before a
+  // suggestion is picked, so it is persisted to the URL as `location`.
+  const handleLocationTextChange = (text: string) => {
+    setLocationText(text);
+    setSearchParams(prev => {
+      const params = new URLSearchParams(prev);
+      if (text.trim()) params.set('location', text);
+      else {
+        params.delete('location');
+        params.delete('lat');
+        params.delete('lng');
+        params.delete('radius');
+      }
+      params.delete('page');
+      return params;
+    }, { replace: true });
+  };
+
   const handleLocationSelect = (location: { name: string; coordinates: [number, number] } | null) => {
     setPage(1);
     if (location) {
@@ -480,14 +498,20 @@ const Search = () => {
       setSearchParams(params);
     } else {
       setLocationCoords(null);
+      // Radius / "delivers to me" are meaningless without coordinates.
+      setDeliveryFilterEnabled(false);
+      setSortBy(prev => (prev === 'distance' ? 'featured' : prev));
       const params = new URLSearchParams(searchParams);
       params.delete('lat');
       params.delete('lng');
       params.delete('radius');
+      params.delete('delivery');
+      if (params.get('sort') === 'distance') params.delete('sort');
       params.delete('page');
       setSearchParams(params);
     }
   };
+
 
   const handleRadiusChange = (radius: number) => {
     setSearchRadius(radius);
