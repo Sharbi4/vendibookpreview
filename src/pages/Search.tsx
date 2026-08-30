@@ -1059,7 +1059,7 @@ const Search = () => {
             <div className="mt-4 flex items-center justify-between gap-3">
               <div className="flex items-center gap-2 min-w-0">
                 <p className="text-sm text-muted-foreground truncate">
-                  {isLoadingListings ? (
+                  {isLoadingListings || isFetching ? (
                     <span className="inline-flex items-center gap-1.5">
                       <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
                       Searching marketplace…
