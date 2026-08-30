@@ -81,6 +81,72 @@ interface RentalBookingWidgetProps {
   depositAmount?: number | null;
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// MODULE-SCOPE DATE STATUS HELPERS
+// Pure functions parameterized by an explicit context object, so no useMemo
+// inside the component can ever reference a helper declared later in the
+// render body (temporal-dead-zone / render-ordering hazard).
+// ─────────────────────────────────────────────────────────────────────────────
+export type DayStatus = 'available' | 'partial' | 'full' | 'past' | 'outside';
+
+export interface DayStatusContext {
+  today: Date;
+  maxDate: Date;
+  availableFrom?: string | null;
+  availableTo?: string | null;
+  isDateUnavailable: (date: Date) => boolean;
+  getUnavailabilityReason: (date: Date) => { label: string } | null;
+  getDayAvailabilityInfo: (date: Date) => { isUnavailable: boolean; isLimited: boolean };
+}
+
+export function isBookableDateDisabled(date: Date, ctx: DayStatusContext): boolean {
+  if (isBefore(date, ctx.today)) return true;
+  if (isAfter(date, ctx.maxDate)) return true;
+
+  if (ctx.availableFrom) {
+    const from = parseISO(ctx.availableFrom);
+    if (isBefore(date, startOfDay(from))) return true;
+  }
+  if (ctx.availableTo) {
+    const to = parseISO(ctx.availableTo);
+    if (isBefore(startOfDay(to), date)) return true;
+  }
+
+  return ctx.isDateUnavailable(date);
+}
+
+/**
+ * Plain-language explanation of why a day can't be picked.
+ * Returns null when the day is selectable.
+ */
+export function getBookableDayBlockReason(date: Date, ctx: DayStatusContext): string | null {
+  if (isBefore(date, ctx.today)) return 'This date has already passed.';
+  if (isAfter(date, ctx.maxDate)) return 'Bookings open up to 12 months ahead.';
+  if (ctx.availableFrom && isBefore(date, startOfDay(parseISO(ctx.availableFrom)))) {
+    return `This rental becomes available ${format(startOfDay(parseISO(ctx.availableFrom)), 'MMM d, yyyy')}.`;
+  }
+  if (ctx.availableTo && isBefore(startOfDay(parseISO(ctx.availableTo)), date)) {
+    return `This rental is only available through ${format(startOfDay(parseISO(ctx.availableTo)), 'MMM d, yyyy')}.`;
+  }
+  const reason = ctx.getUnavailabilityReason(date);
+  if (reason) return reason.label;
+  const info = ctx.getDayAvailabilityInfo(date);
+  if (info.isUnavailable) return 'Fully booked — no spots left.';
+  return null;
+}
+
+export function getBookableDayStatus(date: Date, ctx: DayStatusContext): DayStatus {
+  if (isBefore(date, ctx.today)) return 'past';
+  if (isAfter(date, ctx.maxDate)) return 'outside';
+
+  if (isBookableDateDisabled(date, ctx)) return 'full';
+
+  const info = ctx.getDayAvailabilityInfo(date);
+  if (info.isUnavailable) return 'full';
+  if (info.isLimited) return 'partial';
+  return 'available';
+}
+
 /**
  * Period pricing now lives in `@/lib/listings/rentalPricing` so the widget,
  * the checkout summary and the server quote can never disagree.
@@ -308,54 +374,30 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
 
   // ─────────────────────────────────────────────────────────────────────────────
   // DATE VALIDATION
+  // All status logic lives in module-scope pure helpers (see DayStatusContext
+  // above). This memoized context is the single input, so useMemos below can
+  // never depend on a function declared later in the render body.
   // ─────────────────────────────────────────────────────────────────────────────
-  const isDateDisabled = (date: Date): boolean => {
-    if (isBefore(date, today)) return true;
-    if (isAfter(date, maxDate)) return true;
-    
-    if (availableFrom) {
-      const from = parseISO(availableFrom);
-      if (isBefore(date, startOfDay(from))) return true;
-    }
-    if (availableTo) {
-      const to = parseISO(availableTo);
-      if (isBefore(startOfDay(to), date)) return true;
-    }
-    
-    return isDateUnavailable(date);
-  };
+  const dayStatusCtx = useMemo<DayStatusContext>(
+    () => ({
+      today,
+      maxDate,
+      availableFrom,
+      availableTo,
+      isDateUnavailable,
+      getUnavailabilityReason,
+      getDayAvailabilityInfo,
+    }),
+    // today/maxDate are derived from timeZone; blockedDates invalidates the hook fns
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [timeZone, availableFrom, availableTo, isDateUnavailable, getUnavailabilityReason, getDayAvailabilityInfo, blockedDates],
+  );
 
-  /**
-   * Plain-language explanation of why a day can't be picked.
-   * Returns null when the day is selectable.
-   */
-  const getDayBlockReason = (date: Date): string | null => {
-    if (isBefore(date, today)) return 'This date has already passed.';
-    if (isAfter(date, maxDate)) return 'Bookings open up to 12 months ahead.';
-    if (availableFrom && isBefore(date, startOfDay(parseISO(availableFrom)))) {
-      return `This rental becomes available ${format(startOfDay(parseISO(availableFrom)), 'MMM d, yyyy')}.`;
-    }
-    if (availableTo && isBefore(startOfDay(parseISO(availableTo)), date)) {
-      return `This rental is only available through ${format(startOfDay(parseISO(availableTo)), 'MMM d, yyyy')}.`;
-    }
-    const reason = getUnavailabilityReason(date);
-    if (reason) return reason.label;
-    const info = getDayAvailabilityInfo(date);
-    if (info.isUnavailable) return 'Fully booked — no spots left.';
-    return null;
-  };
-
-  const getDayStatus = (date: Date): 'available' | 'partial' | 'full' | 'past' | 'outside' => {
-    if (isBefore(date, today)) return 'past';
-    if (isAfter(date, maxDate)) return 'outside';
-
-    if (isDateDisabled(date)) return 'full';
-
-    const info = getDayAvailabilityInfo(date);
-    if (info.isUnavailable) return 'full';
-    if (info.isLimited) return 'partial';
-    return 'available';
-  };
+  // Thin delegating wrappers — used only in event handlers and JSX below,
+  // never inside a useMemo, so declaration order cannot cause a TDZ crash.
+  const isDateDisabled = (date: Date): boolean => isBookableDateDisabled(date, dayStatusCtx);
+  const getDayBlockReason = (date: Date): string | null => getBookableDayBlockReason(date, dayStatusCtx);
+  const getDayStatus = (date: Date): DayStatus => getBookableDayStatus(date, dayStatusCtx);
 
   /**
    * First unavailable day after the chosen start date. A stay can never span
@@ -365,22 +407,22 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
     if (mode !== 'daily' || !startDate) return null;
     for (let i = 1; i <= 400; i += 1) {
       const candidate = addDays(startDate, i);
-      if (isAfter(candidate, maxDate)) return null;
-      if (isDateDisabled(candidate)) return candidate;
+      if (isAfter(candidate, dayStatusCtx.maxDate)) return null;
+      if (isBookableDateDisabled(candidate, dayStatusCtx)) return candidate;
     }
     return null;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mode, startDate, blockedDates, isDateUnavailable, availableFrom, availableTo]);
+  }, [mode, startDate, dayStatusCtx]);
 
   /** True when no day in the visible month is bookable — drives the empty state. */
   const monthFullyUnavailable = useMemo(() => {
     if (availabilityLoading) return false;
     return daysInMonth.every(d => {
-      const s = getDayStatus(d);
+      const s = getBookableDayStatus(d, dayStatusCtx);
       return s !== 'available' && s !== 'partial';
     });
+    // daysInMonth is derived from currentMonth
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [availabilityLoading, currentMonth, blockedDates, availableFrom, availableTo]);
+  }, [availabilityLoading, currentMonth, dayStatusCtx]);
 
   /** True when the day sits past the first blocked day after the start date. */
   const isBeyondRangeLimit = (date: Date): boolean => {
