@@ -269,7 +269,7 @@ Deno.serve(async (req) => {
       let b = builder;
       if (parsedLocation.state) b = b.eq('state', parsedLocation.state);
       const ors: string[] = [];
-      if (parsedLocation.zip) ors.push(`zip_code.ilike.%${escapeOrValue(parsedLocation.zip)}%`);
+      if (parsedLocation.zip) ors.push(`postal_code.ilike.%${escapeOrValue(parsedLocation.zip)}%`);
       if (parsedLocation.city) {
         const c = escapeOrValue(parsedLocation.city);
         ors.push(`city.ilike.%${c}%`, `address.ilike.%${c}%`);
