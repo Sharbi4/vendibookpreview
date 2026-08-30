@@ -1868,9 +1868,40 @@ const FilterContent = ({
   };
 
   const availableAmenities = getAvailableAmenities();
+
+  // Location is the primary search axis — rendered first on mobile (locationFirst),
+  // and after Category on desktop where the header already carries a location field.
+  const locationBlock = (
+    <div className="space-y-2">
+      <Label className="text-sm font-medium flex items-center gap-2">
+        <MapPin className="h-4 w-4" />
+        Location
+      </Label>
+      <div className="max-w-xs">
+        <LocationSearchInput
+          value={locationText}
+          onChange={onLocationTextChange}
+          onLocationSelect={onLocationSelect}
+          selectedCoordinates={locationCoords}
+          placeholder="City, state, or ZIP"
+          showRadiusSelector
+          radius={searchRadius}
+          onRadiusChange={onRadiusChange}
+        />
+      </div>
+      {!locationCoords && (
+        <div className="max-w-xs pt-1">
+          <RadiusFilter radius={searchRadius} onChange={onRadiusChange} disabled={!locationCoords} />
+        </div>
+      )}
+    </div>
+  );
+
   return (
     <div className="space-y-5 [&>div+div]:pt-5 [&>div+div]:border-t [&>div+div]:border-foreground/[0.06]">
+      {locationFirst && locationBlock}
       {/* Category Filter */}
+
       <div className="space-y-2">
         <Label className="text-sm font-medium flex items-center">
           Category
