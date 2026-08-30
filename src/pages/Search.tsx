@@ -1149,11 +1149,12 @@ const Search = () => {
               >
                 <div className="flex items-center justify-between">
                   <h2 className="text-sm font-semibold tracking-tight text-foreground">Filters</h2>
-                  {activeFiltersCount > 0 && (
+                  {hasActiveSearchState && (
                     <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs text-primary hover:text-primary">
                       Clear all
                     </Button>
                   )}
+
                 </div>
                 <FilterContent
                   mode={mode}
