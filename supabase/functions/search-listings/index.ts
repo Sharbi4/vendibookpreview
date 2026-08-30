@@ -44,6 +44,10 @@ interface SearchRequest {
   // the radius filter already scopes geography, so the city text filter must
   // be skipped or surrounding suburbs get excluded (double-constraint bug).
   location_scoped?: boolean;
+  /** Raw location text ("Tucson, AZ", "85719", "Arizona") for structured fallback. */
+  location_text?: string;
+  /** Allow automatic radius expansion when local inventory is sparse (default true). */
+  auto_expand_radius?: boolean;
 
   page?: number;
   page_size?: number;
