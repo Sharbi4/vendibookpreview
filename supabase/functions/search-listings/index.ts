@@ -93,6 +93,64 @@ Deno.serve(async (req) => {
       sort_by = 'featured',
     } = body;
 
+    // ---- Keyword intent ------------------------------------------------------
+    // Smart query parsing: strip filler words, then map the keyword box to a
+    // category with token-prefix tolerance so a shopper mid-typing ("food truc")
+    // or using a plural ("trailers", "kitchens") still lands on real inventory
+    // instead of an exact-substring ILIKE that matches almost nothing.
+    const categoryAliases: Array<[string, string]> = [
+      ['food truck', 'food_truck'],
+      ['foodtruck', 'food_truck'],
+      ['mobile kitchen', 'food_truck'],
+      ['truck', 'food_truck'],
+      ['trucks', 'food_truck'],
+      ['food trailer', 'food_trailer'],
+      ['foodtrailer', 'food_trailer'],
+      ['concession trailer', 'food_trailer'],
+      ['concession', 'food_trailer'],
+      ['trailer', 'food_trailer'],
+      ['trailers', 'food_trailer'],
+      ['ghost kitchen', 'ghost_kitchen'],
+      ['commercial kitchen', 'ghost_kitchen'],
+      ['shared kitchen', 'ghost_kitchen'],
+      ['commissary', 'ghost_kitchen'],
+      ['kitchen', 'ghost_kitchen'],
+      ['kitchens', 'ghost_kitchen'],
+      ['vendor space', 'vendor_space'],
+      ['vendor spaces', 'vendor_space'],
+      ['vendor lot', 'vendor_lot'],
+      ['vending', 'vendor_space'],
+    ];
+
+    let cleanedQuery = (query || '').trim();
+    const modeFillers = /\b(for\s+rent|for\s+sale|to\s+rent|to\s+buy|rental|rentals)\b/gi;
+    cleanedQuery = cleanedQuery.replace(modeFillers, '').trim();
+
+    const queryLower = cleanedQuery.toLowerCase().replace(/\s+/g, ' ').trim();
+    const queryTokens = queryLower.split(' ').filter(Boolean);
+
+    // Matches when the alias appears verbatim, or when every typed token is a
+    // prefix of the alias's matching token (min 3 chars so "f" selects nothing).
+    const matchesAlias = (alias: string): boolean => {
+      if (!queryLower) return false;
+      if (queryLower.includes(alias)) return true;
+      const aliasTokens = alias.split(' ');
+      if (queryTokens.length === 0 || queryTokens.length > aliasTokens.length) return false;
+      return queryTokens.every((tok, i) => {
+        const target = aliasTokens[i];
+        if (!target) return false;
+        return tok.length < 3 ? tok === target : target.startsWith(tok);
+      });
+    };
+
+    let inferredCategory: string | null = null;
+    for (const [alias, cat] of categoryAliases) {
+      if (matchesAlias(alias)) {
+        inferredCategory = cat;
+        break;
+      }
+    }
+
     // When the query IS the geocoded location, suppress the city-name text
     // filter — the Haversine radius below is the geographic source of truth.
     const locationScoped =
@@ -103,9 +161,24 @@ Deno.serve(async (req) => {
 
     // Structured location parsed from either the explicit location text or,
     // when the shopper typed a place into the keyword box, the query itself.
+    // Two guards: a keyword that resolves to a category ("food truck",
+    // "kitchen") is product intent, never a place; and a bare word like
+    // "burger" is only treated as a location when it is an unambiguous place
+    // shape (ZIP, state, "City, ST") — otherwise it stays a keyword search
+    // instead of being filtered to zero by a city-name match.
+    const bareQueryPlace = parseLocationInput(query);
+    const queryLooksLikePlace =
+      bareQueryPlace.kind === 'zip' ||
+      bareQueryPlace.kind === 'state' ||
+      bareQueryPlace.kind === 'city_state';
+    const queryAsLocation = !inferredCategory && (locationScoped || queryLooksLikePlace)
+      ? query
+      : undefined;
     const parsedLocation = parseLocationInput(
-      location_text || (locationScoped || !hasCoords ? query : undefined)
+      location_text || (locationScoped || !hasCoords ? queryAsLocation : undefined)
     );
+
+
     const hasStructuredLocation = !!(parsedLocation.city || parsedLocation.state || parsedLocation.zip);
     // State-only searches ("Arizona", "AZ") are a structured filter, not a radius search.
     const stateOnlySearch = parsedLocation.kind === 'state';
@@ -148,41 +221,11 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Smart query parsing: extract intent, strip filler words, map to categories
-    const categoryKeywords: Record<string, string> = {
-      'kitchen': 'ghost_kitchen',
-      'ghost kitchen': 'ghost_kitchen',
-      'commercial kitchen': 'ghost_kitchen',
-      'food truck': 'food_truck',
-      'truck': 'food_truck',
-      'food trailer': 'food_trailer',
-      'trailer': 'food_trailer',
-      'vendor lot': 'vendor_lot',
-      'lot': 'vendor_lot',
-      'vendor space': 'vendor_space',
-      'space': 'vendor_space',
-      'vending': 'vendor_space',
-    };
-
-    // Strip mode-related filler words from query
-    let cleanedQuery = (query || '').trim();
-    const modeFillers = /\b(for\s+rent|for\s+sale|to\s+rent|to\s+buy|rental|rentals)\b/gi;
-    cleanedQuery = cleanedQuery.replace(modeFillers, '').trim();
-
-    // Check if cleaned query maps to a known category
-    const queryLower = cleanedQuery.toLowerCase();
-    let inferredCategory: string | null = null;
-    for (const [keyword, cat] of Object.entries(categoryKeywords)) {
-      if (queryLower === keyword || queryLower.includes(keyword)) {
-        inferredCategory = cat;
-        break;
-      }
-    }
-
     // If we inferred a category and no explicit category was set, apply it as a filter
     if (inferredCategory && !category) {
       queryBuilder = queryBuilder.eq('category', inferredCategory);
     }
+
 
     // Structured location handling for a place typed into the keyword box.
     // Only unambiguous shapes (ZIP, "City, ST", state name/abbr) count — a bare
@@ -191,7 +234,7 @@ Deno.serve(async (req) => {
     const queryIsStructuredPlace =
       !location_text && (queryPlace.kind === 'zip' || queryPlace.kind === 'state' || queryPlace.kind === 'city_state');
 
-    // Apply text search (ILIKE on title, description, address, city, state).
+    // Apply text search (ILIKE on title, description, address, city).
     // Skipped for location-scoped searches so metro suburbs inside the radius
     // aren't filtered out for not name-matching the searched city.
     if (cleanedQuery && !locationScoped && !queryIsStructuredPlace) {
@@ -204,13 +247,25 @@ Deno.serve(async (req) => {
           .eq('state', HOUSTON_SEARCH_STATE)
           .or(buildHoustonAreaOrFilter());
       } else if (!inferredCategory) {
-        // Only do text search if we didn't already narrow by category
-        const searchTerm = `%${escapeOrValue(cleanedQuery)}%`;
-        queryBuilder = queryBuilder.or(
-          `title.ilike.${searchTerm},description.ilike.${searchTerm},address.ilike.${searchTerm},city.ilike.${searchTerm}`
-        );
+        // Token-wise OR: every meaningful token may match any text column, so a
+        // multi-word or partially typed phrase still returns sensible inventory
+        // instead of requiring the exact substring.
+        const terms = (queryTokens.length > 1 ? [queryLower, ...queryTokens] : [queryLower])
+          .filter((t) => t.length >= 3);
+        const ors: string[] = [];
+        for (const term of terms) {
+          const searchTerm = `%${escapeOrValue(term)}%`;
+          ors.push(
+            `title.ilike.${searchTerm}`,
+            `description.ilike.${searchTerm}`,
+            `address.ilike.${searchTerm}`,
+            `city.ilike.${searchTerm}`,
+          );
+        }
+        if (ors.length > 0) queryBuilder = queryBuilder.or(ors.join(','));
       }
     }
+
 
 
     // Apply price filters
