@@ -1,6 +1,6 @@
 // Shared location normalization + radius-ladder helpers for marketplace search.
 // Keeps "Tucson, AZ" / "Atlanta, Georgia" / "85719" / "Arizona" / "AZ" all
-// resolvable against listings.city / listings.state / listings.zip_code.
+// resolvable against listings.city / listings.state / listings.postal_code.
 
 export const STATE_ABBR_BY_NAME: Record<string, string> = {
   alabama: 'AL', alaska: 'AK', arizona: 'AZ', arkansas: 'AR', california: 'CA',
