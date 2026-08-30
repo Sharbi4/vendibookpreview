@@ -683,7 +683,8 @@ const Search = () => {
   const activeFiltersCount = [
     mode !== 'all',
     category !== 'all',
-    locationCoords !== null,
+    // Typed location text counts even before a suggestion resolves coordinates.
+    locationCoords !== null || !!locationText.trim(),
     priceRange[0] > 0 || priceRange[1] !== Infinity,
     dateRange?.from && dateRange?.to,
     selectedAmenities.length > 0,
@@ -693,6 +694,12 @@ const Search = () => {
     instantBookOnly,
     verifiedHostsOnly,
   ].filter(Boolean).length;
+
+  // "Clear all" must be reachable whenever ANY non-default search state exists —
+  // including a keyword or a non-default sort, which aren't filter chips.
+  const hasActiveSearchState =
+    activeFiltersCount > 0 || !!searchQuery.trim() || !!debouncedQuery.trim() || sortBy !== 'featured';
+
 
   // Generate structured data for Google Shopping / Search indexing
   const itemListSchema = useMemo(() => {
