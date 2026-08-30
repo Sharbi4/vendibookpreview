@@ -169,24 +169,21 @@ Deno.serve(async (req) => {
       queryBuilder = queryBuilder.eq('mode', mode);
     }
 
-    // Apply category filter (supports comma-separated list)
-    if (category) {
-      let cats = category.split(',').map((c) => c.trim()).filter(Boolean);
-      // Vendor Spaces alias: current `vendor_space` and legacy `vendor_lot`
-      // records are the same shopper concept — always search both.
-      if (cats.includes('vendor_space') || cats.includes('vendor_lot')) {
-        cats = [...new Set([...cats, 'vendor_space', 'vendor_lot'])];
-      }
-      if (cats.length > 1) {
-        queryBuilder = queryBuilder.in('category', cats);
-      } else if (cats.length === 1) {
-        queryBuilder = queryBuilder.eq('category', cats[0]);
-      }
-    }
+    // Apply category filter (supports comma-separated list). Category pills and
+    // typed synonyms share the same canonical expansion (vendor_space carries
+    // its legacy vendor_lot twin).
+    const requestedCats = category
+      ? [...new Set(
+          category.split(',').map((c) => c.trim()).filter(Boolean).flatMap(expandCategory)
+        )]
+      : inferredCategory
+        ? expandCategory(inferredCategory)
+        : [];
 
-    // If we inferred a category and no explicit category was set, apply it as a filter
-    if (inferredCategory && !category) {
-      queryBuilder = queryBuilder.eq('category', inferredCategory);
+    if (requestedCats.length > 1) {
+      queryBuilder = queryBuilder.in('category', requestedCats);
+    } else if (requestedCats.length === 1) {
+      queryBuilder = queryBuilder.eq('category', requestedCats[0]);
     }
 
 
