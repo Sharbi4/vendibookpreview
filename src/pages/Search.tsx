@@ -885,7 +885,8 @@ const Search = () => {
                   <SearchIcon className="absolute left-3.5 h-4 w-4 text-[#1b1714]/45 group-focus-within:text-primary transition-colors" />
                   <Input
                     type="text"
-                    placeholder="Search trucks, trailers, kitchens, locations…"
+                    placeholder="Search food trucks, trailers, kitchens…"
+                    aria-label="Search inventory by keyword"
                     value={searchQuery}
                     onChange={(e) => handleSearch(e.target.value)}
                     className="pl-10 pr-10 h-11 text-base sm:text-sm rounded-2xl border-0 bg-transparent text-[#1b1714] placeholder:text-[#1b1714]/45 focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
@@ -901,6 +902,23 @@ const Search = () => {
                   )}
                 </div>
               </div>
+
+              {/* Dedicated location field — first-class on desktop, never buried
+                  in Filters. Mobile keeps it at the top of the filter sheet. */}
+              <div className="hidden md:block w-[15rem] lg:w-[17rem] shrink-0">
+                <div className="relative flex items-center bg-[#faf8f5] border border-[#1b1714]/10 rounded-2xl shadow-[0_1px_2px_rgba(0,0,0,0.10),0_12px_28px_-22px_rgba(0,0,0,0.5)] focus-within:border-primary/50 transition-all duration-200">
+                  <MapPin className="absolute left-3.5 z-10 h-4 w-4 text-[#1b1714]/45" />
+                  <LocationSearchInput
+                    value={locationText}
+                    onChange={handleLocationTextChange}
+                    onLocationSelect={handleLocationSelect}
+                    selectedCoordinates={locationCoords}
+                    placeholder="City, state, or ZIP"
+                    className="w-full [&>div:first-child]:w-full [&_input]:h-11 [&_input]:pl-10 [&_input]:rounded-2xl [&_input]:border-0 [&_input]:bg-transparent [&_input]:shadow-none [&_input]:text-base sm:[&_input]:text-sm [&_input]:focus-visible:ring-0 [&_input]:focus-visible:ring-offset-0"
+                  />
+                </div>
+              </div>
+
 
               {/* Filter Button */}
               <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
