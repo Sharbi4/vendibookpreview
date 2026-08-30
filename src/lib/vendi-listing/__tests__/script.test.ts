@@ -111,7 +111,7 @@ describe('rental monthly pricing', () => {
     // Parity with the manual wizard: every rental carries a daily rate too.
     expect(d.price_daily).toBe(250);
     expect(getPublishBlockers(d, 3)).toEqual([]);
-    expect(getPublishBlockers(d, 0)).toContain('Add at least one photo.');
+    expect(getPublishBlockers(d, 0)).toContain('Add at least 3 photos.');
   });
 
   it('maps to a rent payload with no sale price and PayPal-only sale flags off', () => {
