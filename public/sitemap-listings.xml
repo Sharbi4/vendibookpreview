@@ -221,17 +221,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/f5582bd0-afac-44f1-9f85-3acf24c279f5</loc>
-    <lastmod>2026-08-28</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/863d4cc1-7581-4d3c-8d73-6b33740931cf/f5582bd0-afac-44f1-9f85-3acf24c279f5/1781472783823-3n5lzg.jpeg</image:loc>
-      <image:title>Vintage (1955) one-of-a-kind fully restored Chevy all-purpose food truck</image:title>
-      <image:caption>Vintage (1955) one-of-a-kind fully restored Chevy all-purpose food truck in Farmingdale, NJ on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/fec458ae-0672-4073-ac92-c120de896c8a</loc>
     <lastmod>2026-08-27</lastmod>
     <changefreq>weekly</changefreq>
@@ -240,6 +229,17 @@
       <image:loc>https://images.unsplash.com/photo-1559339352-11d035aa65de?w=800</image:loc>
       <image:title>Premium Seafood Truck Empire</image:title>
       <image:caption>Premium Seafood Truck Empire in Seattle, WA on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/f5582bd0-afac-44f1-9f85-3acf24c279f5</loc>
+    <lastmod>2026-08-31</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/863d4cc1-7581-4d3c-8d73-6b33740931cf/f5582bd0-afac-44f1-9f85-3acf24c279f5/1781472783823-3n5lzg.jpeg</image:loc>
+      <image:title>Vintage (1955) one-of-a-kind fully restored Chevy all-purpose food truck</image:title>
+      <image:caption>Vintage (1955) one-of-a-kind fully restored Chevy all-purpose food truck in Farmingdale, NJ on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -255,7 +255,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/4e50a07a-6909-411b-a4e0-429fee24c52a</loc>
-    <lastmod>2026-08-30</lastmod>
+    <lastmod>2026-08-31</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -596,7 +596,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/c2457bdb-fad5-4686-90e7-da1f82da7336</loc>
-    <lastmod>2026-08-30</lastmod>
+    <lastmod>2026-08-31</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -673,7 +673,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/fcdfd8df-0dd3-4ea7-9121-be902c5081ad</loc>
-    <lastmod>2026-08-29</lastmod>
+    <lastmod>2026-08-31</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
