@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import SEO from "@/components/SEO";
+import AdminSectionNav from "@/components/admin/AdminSectionNav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -38,7 +39,14 @@ type FreightRequest = {
   status: string;
   admin_notes: string | null;
   created_at: string;
+  quote_amount_cents: number | null;
+  quote_notes: string | null;
+  quote_transit_days: string | null;
+  quoted_at: string | null;
+  quoted_by: string | null;
 };
+
+type QuoteDraft = { price: string; transit: string; notes: string };
 
 const statusTone: Record<string, string> = {
   new: "bg-primary/15 text-primary border-primary/30",
@@ -56,6 +64,8 @@ export default function AdminFreightRequests() {
   const [filter, setFilter] = useState<Status | "all">("all");
   const [search, setSearch] = useState("");
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
+  const [quoteDrafts, setQuoteDrafts] = useState<Record<string, QuoteDraft>>({});
+  const [savingQuote, setSavingQuote] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isLoading && !user) navigate("/auth");
@@ -98,6 +108,67 @@ export default function AdminFreightRequests() {
     }
     setRows((r) => r.map((x) => (x.id === id ? { ...x, status } : x)));
     toast({ title: `Marked ${status}` });
+  };
+
+  const draftFor = (r: FreightRequest): QuoteDraft =>
+    quoteDrafts[r.id] ?? {
+      price: r.quote_amount_cents != null ? (r.quote_amount_cents / 100).toFixed(2) : "",
+      transit: r.quote_transit_days ?? "",
+      notes: r.quote_notes ?? "",
+    };
+
+  const saveQuote = async (r: FreightRequest) => {
+    const draft = draftFor(r);
+    const parsed = Number(draft.price.replace(/[^0-9.]/g, ""));
+    if (!draft.price.trim() || !Number.isFinite(parsed) || parsed <= 0) {
+      toast({ title: "Enter a valid quote price", variant: "destructive" });
+      return;
+    }
+    const payload = {
+      quote_amount_cents: Math.round(parsed * 100),
+      quote_transit_days: draft.transit.trim() || null,
+      quote_notes: draft.notes.trim() || null,
+      quoted_at: new Date().toISOString(),
+      quoted_by: user?.id ?? null,
+      status: "quoted",
+    };
+    setSavingQuote(r.id);
+    const { error } = await supabase.from("freight_requests").update(payload).eq("id", r.id);
+    setSavingQuote(null);
+    if (error) {
+      toast({ title: "Could not save quote", description: error.message, variant: "destructive" });
+      return;
+    }
+    setRows((rows) => rows.map((x) => (x.id === r.id ? { ...x, ...payload } : x)));
+    setQuoteDrafts((d) => {
+      const next = { ...d };
+      delete next[r.id];
+      return next;
+    });
+    toast({ title: "Quote saved", description: `$${parsed.toFixed(2)} recorded for this request.` });
+  };
+
+  const quoteMailto = (r: FreightRequest) => {
+    const draft = draftFor(r);
+    const price = draft.price ? `$${Number(draft.price.replace(/[^0-9.]/g, "") || 0).toFixed(2)}` : "";
+    const subject = `Your Vendibook freight quote: ${r.pickup_location} → ${r.delivery_location}`;
+    const body = [
+      `Hi ${r.contact_name.split(" ")[0] || "there"},`,
+      "",
+      `Here is your freight quote for the ${r.equipment_type} moving from ${r.pickup_location} to ${r.delivery_location}:`,
+      "",
+      `Quoted price: ${price}`,
+      draft.transit ? `Estimated transit: ${draft.transit}` : "",
+      draft.notes ? `Details: ${draft.notes}` : "",
+      "",
+      "Reply to this email to book, and we'll confirm pickup scheduling.",
+      "",
+      "Vendibook Freight",
+      "support@vendibook.com · (725) 755-9598",
+    ]
+      .filter(Boolean)
+      .join("\n");
+    return `mailto:${r.contact_email}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
   };
 
   const saveNote = async (id: string) => {
@@ -148,6 +219,7 @@ export default function AdminFreightRequests() {
       <SEO title="Freight Requests | Admin" description="Freight quote requests submitted from the site." noindex />
       <Header />
       <main className="flex-1 container max-w-6xl mx-auto px-4 py-10">
+        <AdminSectionNav />
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
@@ -238,6 +310,79 @@ export default function AdminFreightRequests() {
                   </div>
 
                   <Field label="Notes from requester" value={r.notes} />
+
+                  <div className="rounded-xl border border-primary/25 bg-primary/[0.04] p-4 space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-sm font-semibold">Quote response</p>
+                      {r.quoted_at && (
+                        <p className="text-[11px] text-muted-foreground">
+                          Last quoted {new Date(r.quoted_at).toLocaleString()}
+                          {r.quote_amount_cents != null
+                            ? ` · $${(r.quote_amount_cents / 100).toFixed(2)}`
+                            : ""}
+                        </p>
+                      )}
+                    </div>
+                    <div className="grid sm:grid-cols-2 gap-3">
+                      <div>
+                        <label htmlFor={`price-${r.id}`} className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                          Quoted price (USD)
+                        </label>
+                        <Input
+                          id={`price-${r.id}`}
+                          inputMode="decimal"
+                          placeholder="2450.00"
+                          className="h-11 mt-1.5 text-base sm:text-sm"
+                          value={draftFor(r).price}
+                          onChange={(e) =>
+                            setQuoteDrafts((d) => ({ ...d, [r.id]: { ...draftFor(r), price: e.target.value } }))
+                          }
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor={`transit-${r.id}`} className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                          Estimated transit
+                        </label>
+                        <Input
+                          id={`transit-${r.id}`}
+                          placeholder="5–7 days"
+                          className="h-11 mt-1.5 text-base sm:text-sm"
+                          value={draftFor(r).transit}
+                          onChange={(e) =>
+                            setQuoteDrafts((d) => ({ ...d, [r.id]: { ...draftFor(r), transit: e.target.value } }))
+                          }
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label htmlFor={`qnotes-${r.id}`} className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                        Quote details for the customer
+                      </label>
+                      <Textarea
+                        id={`qnotes-${r.id}`}
+                        rows={2}
+                        placeholder="Carrier, insurance coverage, what's included, expiration…"
+                        className="mt-1.5 text-sm"
+                        value={draftFor(r).notes}
+                        onChange={(e) =>
+                          setQuoteDrafts((d) => ({ ...d, [r.id]: { ...draftFor(r), notes: e.target.value } }))
+                        }
+                      />
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Button onClick={() => void saveQuote(r)} disabled={savingQuote === r.id}>
+                        {savingQuote === r.id && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                        Save quote
+                      </Button>
+                      <Button variant="outline" asChild>
+                        <a href={quoteMailto(r)}>
+                          <Mail className="w-4 h-4 mr-2" aria-hidden="true" /> Email quote
+                        </a>
+                      </Button>
+                    </div>
+                  </div>
+
+
 
                   <div className="grid sm:grid-cols-[1fr_auto] gap-3 items-end">
                     <div>
