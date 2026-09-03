@@ -870,17 +870,32 @@ const ShipYourFoodTruck = () => {
                             </div>
                           </div>
 
-                          <div>
-                            <Label htmlFor="pickup-date" className="mb-1.5 block text-sm font-semibold">
-                              Preferred pickup date
-                            </Label>
-                            <Input
-                              id="pickup-date"
-                              type="date"
-                              value={form.pickupDate}
-                              onChange={(e) => setField('pickupDate', e.target.value)}
-                              className={inputClass}
-                            />
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                              <Label htmlFor="pickup-date" className="mb-1.5 block text-sm font-semibold">
+                                Preferred pickup date
+                              </Label>
+                              <Input
+                                id="pickup-date"
+                                type="date"
+                                value={form.pickupDate}
+                                onChange={(e) => setField('pickupDate', e.target.value)}
+                                className={inputClass}
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="deliver-by-date" className="mb-1.5 block text-sm font-semibold">
+                                Deliver by date
+                              </Label>
+                              <Input
+                                id="deliver-by-date"
+                                type="date"
+                                min={form.pickupDate || undefined}
+                                value={form.deliverByDate}
+                                onChange={(e) => setField('deliverByDate', e.target.value)}
+                                className={inputClass}
+                              />
+                            </div>
                           </div>
                         </motion.div>
                       )}
