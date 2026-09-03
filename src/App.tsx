@@ -87,6 +87,7 @@ const AdminListings = lazy(() => import("./pages/AdminListings"));
 const AdminRisk = lazy(() => import("./pages/AdminRisk"));
 const AdminFinance = lazy(() => import("./pages/AdminFinance"));
 const AdminPayouts = lazy(() => import("./pages/AdminPayouts"));
+const AdminFreightRequests = lazy(() => import("./pages/AdminFreightRequests"));
 const AdminVerifiedSellers = lazy(() => import("./pages/AdminVerifiedSellers"));
 const OrderDetail = lazy(() => import("./pages/OrderDetail"));
 
