@@ -258,18 +258,30 @@ const ShipYourFoodTruck = () => {
   // Prefill contact details for signed-in users, without clobbering typing.
   useEffect(() => {
     if (prefilled.current) return;
-    if (!user && !profile) return;
-    const name = profile?.full_name || '';
-    const email = profile?.email || user?.email || '';
-    const phone = profile?.phone_number || '';
-    if (!name && !email && !phone) return;
+    if (!user) return;
     prefilled.current = true;
-    setForm((prev) => ({
-      ...prev,
-      contactName: prev.contactName || name,
-      contactEmail: prev.contactEmail || email,
-      contactPhone: prev.contactPhone || phone,
-    }));
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('full_name, email, phone_number')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (cancelled) return;
+      const name = data?.full_name || profile?.full_name || '';
+      const email = data?.email || profile?.email || user.email || '';
+      const phone = data?.phone_number || '';
+      if (!name && !email && !phone) return;
+      setForm((prev) => ({
+        ...prev,
+        contactName: prev.contactName || name,
+        contactEmail: prev.contactEmail || email,
+        contactPhone: prev.contactPhone || phone,
+      }));
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [user, profile]);
 
   const scrollToForm = () => {
