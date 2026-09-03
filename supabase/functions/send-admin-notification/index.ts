@@ -103,7 +103,7 @@ serve(async (req) => {
       .map(([k, v]) => ({
         label: labelMap[k] || k.replace(/_/g, " "),
         value: typeof v === "object" ? JSON.stringify(v) : String(v),
-        mono: k.endsWith("_id") || k === "email" || k === "host_email",
+        mono: k.endsWith("_id") || k === "email" || k === "host_email" || k === "contact_email",
       }));
 
     const results = await Promise.all(ADMIN_EMAILS.map(async (recipient) => {
