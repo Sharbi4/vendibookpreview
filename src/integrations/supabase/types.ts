@@ -2071,6 +2071,11 @@ export type Database = {
           notes: string | null
           pickup_date: string | null
           pickup_location: string
+          quote_amount_cents: number | null
+          quote_notes: string | null
+          quote_transit_days: string | null
+          quoted_at: string | null
+          quoted_by: string | null
           runs_and_drives: string | null
           source_page: string | null
           status: string
@@ -2095,6 +2100,11 @@ export type Database = {
           notes?: string | null
           pickup_date?: string | null
           pickup_location: string
+          quote_amount_cents?: number | null
+          quote_notes?: string | null
+          quote_transit_days?: string | null
+          quoted_at?: string | null
+          quoted_by?: string | null
           runs_and_drives?: string | null
           source_page?: string | null
           status?: string
@@ -2119,6 +2129,11 @@ export type Database = {
           notes?: string | null
           pickup_date?: string | null
           pickup_location?: string
+          quote_amount_cents?: number | null
+          quote_notes?: string | null
+          quote_transit_days?: string | null
+          quoted_at?: string | null
+          quoted_by?: string | null
           runs_and_drives?: string | null
           source_page?: string | null
           status?: string
