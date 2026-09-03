@@ -243,6 +243,7 @@ const inputClass =
 
 const ShipYourFoodTruck = () => {
   const reduce = useReducedMotion();
+  const { user, profile } = useAuth();
   const formSectionRef = useRef<HTMLDivElement>(null);
   const [form, setForm] = useState<QuoteForm>(EMPTY_FORM);
   const [errors, setErrors] = useState<QuoteErrors>({});
@@ -251,6 +252,24 @@ const ShipYourFoodTruck = () => {
   // Guards against stray/double-tap submits: the submit button replaces
   // Continue in the same spot, so a fast second tap could otherwise fire it.
   const step3EnteredAt = useRef(0);
+  const prefilled = useRef(false);
+
+  // Prefill contact details for signed-in users, without clobbering typing.
+  useEffect(() => {
+    if (prefilled.current) return;
+    if (!user && !profile) return;
+    const name = profile?.full_name || '';
+    const email = profile?.email || user?.email || '';
+    const phone = profile?.phone_number || '';
+    if (!name && !email && !phone) return;
+    prefilled.current = true;
+    setForm((prev) => ({
+      ...prev,
+      contactName: prev.contactName || name,
+      contactEmail: prev.contactEmail || email,
+      contactPhone: prev.contactPhone || phone,
+    }));
+  }, [user, profile]);
 
   const scrollToForm = () => {
     formSectionRef.current?.scrollIntoView({
