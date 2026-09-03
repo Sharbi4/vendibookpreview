@@ -38,7 +38,14 @@ type FreightRequest = {
   status: string;
   admin_notes: string | null;
   created_at: string;
+  quote_amount_cents: number | null;
+  quote_notes: string | null;
+  quote_transit_days: string | null;
+  quoted_at: string | null;
+  quoted_by: string | null;
 };
+
+type QuoteDraft = { price: string; transit: string; notes: string };
 
 const statusTone: Record<string, string> = {
   new: "bg-primary/15 text-primary border-primary/30",
