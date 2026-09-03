@@ -213,7 +213,7 @@ const Search = () => {
   const searchRequestParams = useMemo(() => ({
     query: debouncedQuery.trim() || undefined,
     location_scoped: queryIsLocation || undefined,
-    location_text: locationText?.trim() || undefined,
+    location_text: debouncedLocationText?.trim() || undefined,
     auto_expand_radius: true,
     mode: mode !== 'all' ? mode : undefined,
     category: category !== 'all' ? category : undefined,
@@ -232,7 +232,7 @@ const Search = () => {
     page,
     page_size: 20,
     sort_by: sortBy === 'price-low' ? 'price_low' : sortBy === 'price-high' ? 'price_high' : sortBy,
-  }), [debouncedQuery, queryIsLocation, locationText, mode, category, locationCoords, searchRadius, dateRange, selectedAmenities, priceRange, instantBookOnly, verifiedHostsOnly, deliveryFilterEnabled, fulfillmentTypes, page, sortBy]);
+  }), [debouncedQuery, queryIsLocation, debouncedLocationText, mode, category, locationCoords, searchRadius, dateRange, selectedAmenities, priceRange, instantBookOnly, verifiedHostsOnly, deliveryFilterEnabled, fulfillmentTypes, page, sortBy]);
 
 
   // Fetch listings from edge function
