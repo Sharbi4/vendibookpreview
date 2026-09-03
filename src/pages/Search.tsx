@@ -127,6 +127,10 @@ const Search = () => {
   const [mode, setMode] = useState<ListingMode | 'all'>(initialMode);
   const [category, setCategory] = useState<ListingCategory | 'all'>(initialCategory);
   const [locationText, setLocationText] = useState(searchParams.get('location') || '');
+  // Debounced twin of locationText — the input renders locationText immediately,
+  // but search requests use debouncedLocationText so typing "Atlanta" fires one
+  // fetch instead of one per character (which blanked results to skeletons).
+  const [debouncedLocationText, setDebouncedLocationText] = useState(searchParams.get('location') || '');
   const [locationCoords, setLocationCoords] = useState<[number, number] | null>(
     initialLat && initialLng ? [parseFloat(initialLng), parseFloat(initialLat)] : null
   );
