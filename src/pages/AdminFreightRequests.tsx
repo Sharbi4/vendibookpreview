@@ -63,6 +63,8 @@ export default function AdminFreightRequests() {
   const [filter, setFilter] = useState<Status | "all">("all");
   const [search, setSearch] = useState("");
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
+  const [quoteDrafts, setQuoteDrafts] = useState<Record<string, QuoteDraft>>({});
+  const [savingQuote, setSavingQuote] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isLoading && !user) navigate("/auth");
