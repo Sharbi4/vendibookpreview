@@ -89,6 +89,11 @@ serve(async (req) => {
       weight: "Approx. weight",
       runs_and_drives: "Runs and drives",
       preferred_pickup: "Preferred pickup",
+      deliver_by: "Deliver by",
+      contact_name: "Contact name",
+      contact_email: "Contact email",
+      contact_phone: "Contact phone",
+      account: "Account",
       notes: "Notes",
       source_page: "Source page",
     };
