@@ -127,6 +127,10 @@ const Search = () => {
   const [mode, setMode] = useState<ListingMode | 'all'>(initialMode);
   const [category, setCategory] = useState<ListingCategory | 'all'>(initialCategory);
   const [locationText, setLocationText] = useState(searchParams.get('location') || '');
+  // Debounced twin of locationText — the input renders locationText immediately,
+  // but search requests use debouncedLocationText so typing "Atlanta" fires one
+  // fetch instead of one per character (which blanked results to skeletons).
+  const [debouncedLocationText, setDebouncedLocationText] = useState(searchParams.get('location') || '');
   const [locationCoords, setLocationCoords] = useState<[number, number] | null>(
     initialLat && initialLng ? [parseFloat(initialLng), parseFloat(initialLat)] : null
   );
@@ -209,7 +213,7 @@ const Search = () => {
   const searchRequestParams = useMemo(() => ({
     query: debouncedQuery.trim() || undefined,
     location_scoped: queryIsLocation || undefined,
-    location_text: locationText?.trim() || undefined,
+    location_text: debouncedLocationText?.trim() || undefined,
     auto_expand_radius: true,
     mode: mode !== 'all' ? mode : undefined,
     category: category !== 'all' ? category : undefined,
@@ -228,7 +232,7 @@ const Search = () => {
     page,
     page_size: 20,
     sort_by: sortBy === 'price-low' ? 'price_low' : sortBy === 'price-high' ? 'price_high' : sortBy,
-  }), [debouncedQuery, queryIsLocation, locationText, mode, category, locationCoords, searchRadius, dateRange, selectedAmenities, priceRange, instantBookOnly, verifiedHostsOnly, deliveryFilterEnabled, fulfillmentTypes, page, sortBy]);
+  }), [debouncedQuery, queryIsLocation, debouncedLocationText, mode, category, locationCoords, searchRadius, dateRange, selectedAmenities, priceRange, instantBookOnly, verifiedHostsOnly, deliveryFilterEnabled, fulfillmentTypes, page, sortBy]);
 
 
   // Fetch listings from edge function
@@ -363,6 +367,19 @@ const Search = () => {
     // or as point-in-time snapshots to avoid clobbering concurrent filter taps.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery]);
+
+  // Debounce location text the same way: the input stays responsive, but the
+  // edge-function request only fires once typing pauses, so partial strings
+  // like "Atl" never blank the results to skeletons.
+  useEffect(() => {
+    if (locationText === debouncedLocationText) return;
+    const t = setTimeout(() => {
+      setDebouncedLocationText(locationText);
+      setPage(1);
+    }, 400);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locationText]);
 
   // Deep links (specialty "Browse coffee trucks" chips, hub CTAs) can change
   // the URL while /search is already mounted — re-sync the core filters from
