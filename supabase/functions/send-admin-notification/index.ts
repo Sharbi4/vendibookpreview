@@ -119,7 +119,10 @@ serve(async (req) => {
           paragraphs: ["This is a real-time Vendibook event notification."],
           details,
           ctaLabel: "Open admin",
-          ctaUrl: "https://vendibook.com/admin",
+          ctaUrl:
+            type === "freight_quote_request"
+              ? "https://vendibook.com/admin/freight"
+              : "https://vendibook.com/admin",
         },
       });
       if (!r.ok) {
