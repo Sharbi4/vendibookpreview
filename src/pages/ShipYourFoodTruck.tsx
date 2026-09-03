@@ -660,6 +660,66 @@ const ShipYourFoodTruck = () => {
                           </RequiredLegend>
 
                           <div>
+                            <Label htmlFor="contact-name" className="mb-1.5 block text-sm font-semibold">
+                              Your name <RequiredMark />
+                            </Label>
+                            <Input
+                              id="contact-name"
+                              value={form.contactName}
+                              onChange={(e) => setField('contactName', e.target.value)}
+                              placeholder="First and last name"
+                              autoComplete="name"
+                              aria-invalid={!!errors.contactName}
+                              className={inputClass}
+                            />
+                            {errors.contactName && (
+                              <p className="text-xs text-destructive mt-1.5">{errors.contactName}</p>
+                            )}
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                              <Label htmlFor="contact-email" className="mb-1.5 block text-sm font-semibold">
+                                Email <RequiredMark />
+                              </Label>
+                              <Input
+                                id="contact-email"
+                                type="email"
+                                inputMode="email"
+                                value={form.contactEmail}
+                                onChange={(e) => setField('contactEmail', e.target.value)}
+                                placeholder="you@example.com"
+                                autoComplete="email"
+                                aria-invalid={!!errors.contactEmail}
+                                className={inputClass}
+                              />
+                              {errors.contactEmail && (
+                                <p className="text-xs text-destructive mt-1.5">{errors.contactEmail}</p>
+                              )}
+                            </div>
+                            <div>
+                              <Label htmlFor="contact-phone" className="mb-1.5 block text-sm font-semibold">
+                                Phone <RequiredMark />
+                              </Label>
+                              <Input
+                                id="contact-phone"
+                                type="tel"
+                                inputMode="tel"
+                                value={form.contactPhone}
+                                onChange={(e) => setField('contactPhone', e.target.value)}
+                                placeholder="(555) 123-4567"
+                                autoComplete="tel"
+                                aria-invalid={!!errors.contactPhone}
+                                className={inputClass}
+                              />
+                              {errors.contactPhone && (
+                                <p className="text-xs text-destructive mt-1.5">{errors.contactPhone}</p>
+                              )}
+                            </div>
+                          </div>
+
+
+                          <div>
                             <Label htmlFor="pickup-location" className="mb-1.5 block text-sm font-semibold">
                               Pickup location <RequiredMark />
                             </Label>
