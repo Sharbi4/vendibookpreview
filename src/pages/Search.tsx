@@ -368,6 +368,19 @@ const Search = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery]);
 
+  // Debounce location text the same way: the input stays responsive, but the
+  // edge-function request only fires once typing pauses, so partial strings
+  // like "Atl" never blank the results to skeletons.
+  useEffect(() => {
+    if (locationText === debouncedLocationText) return;
+    const t = setTimeout(() => {
+      setDebouncedLocationText(locationText);
+      setPage(1);
+    }, 400);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locationText]);
+
   // Deep links (specialty "Browse coffee trucks" chips, hub CTAs) can change
   // the URL while /search is already mounted — re-sync the core filters from
   // the params. Only applies values that differ from current state so the
