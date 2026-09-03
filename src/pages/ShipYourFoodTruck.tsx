@@ -287,6 +287,18 @@ const ShipYourFoodTruck = () => {
 
   const validate = (): QuoteErrors => {
     const next: QuoteErrors = {};
+    if (!form.contactName.trim()) next.contactName = 'Enter your full name.';
+    if (!form.contactEmail.trim()) {
+      next.contactEmail = 'Enter your email address.';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.contactEmail.trim())) {
+      next.contactEmail = 'Enter a valid email address.';
+    }
+    const digits = form.contactPhone.replace(/\D/g, '');
+    if (!form.contactPhone.trim()) {
+      next.contactPhone = 'Enter a phone number we can reach you at.';
+    } else if (digits.length < 10) {
+      next.contactPhone = 'Enter a valid phone number.';
+    }
     if (!form.pickupLocation.trim()) next.pickupLocation = 'Enter the pickup city, state, or ZIP.';
     if (!form.deliveryLocation.trim()) next.deliveryLocation = 'Enter the delivery city, state, or ZIP.';
     if (!form.equipmentType) next.equipmentType = 'Choose the equipment type.';
@@ -319,27 +331,68 @@ const ShipYourFoodTruck = () => {
     if (Date.now() - step3EnteredAt.current < 700) return;
     const next = validate();
     setErrors(next);
-    if (Object.keys(next).length > 0) return;
+    if (Object.keys(next).length > 0) {
+      // Contact/route errors live on step 1 — send them back to fix it.
+      goToStep(1);
+      return;
+    }
     setSubmitted(true);
-    // Notify the freight team in the background — never blocks the
-    // confirmation state.
+
+    const dimensions = [
+      form.lengthFt && `${form.lengthFt} ft L`,
+      form.widthFt && `${form.widthFt} ft W`,
+      form.heightFt && `${form.heightFt} ft H`,
+    ]
+      .filter(Boolean)
+      .join(' × ');
+    const runsAndDrives =
+      form.runsAndDrives === 'yes' ? 'Yes' : form.runsAndDrives === 'no' ? 'No' : '';
+
+    // Persist first so the request is never lost, then notify — neither
+    // blocks the confirmation state.
+    supabase
+      .from('freight_requests')
+      .insert({
+        user_id: user?.id ?? null,
+        contact_name: form.contactName.trim(),
+        contact_email: form.contactEmail.trim(),
+        contact_phone: form.contactPhone.trim(),
+        pickup_location: form.pickupLocation.trim(),
+        delivery_location: form.deliveryLocation.trim(),
+        equipment_type: form.equipmentType,
+        year: form.year.trim() || null,
+        length_ft: form.lengthFt.trim() || null,
+        width_ft: form.widthFt.trim() || null,
+        height_ft: form.heightFt.trim() || null,
+        weight_lbs: form.weightLbs.trim() || null,
+        runs_and_drives: runsAndDrives || null,
+        pickup_date: form.pickupDate || null,
+        deliver_by_date: form.deliverByDate || null,
+        notes: form.notes.trim() || null,
+        source_page: '/ship-your-food-truck',
+      })
+      .then(({ error }) => {
+        if (error) console.error('Freight request save error:', error);
+      });
+
     supabase.functions
       .invoke('send-admin-notification', {
         body: {
           type: 'freight_quote_request',
           data: {
+            contact_name: form.contactName.trim(),
+            contact_email: form.contactEmail.trim(),
+            contact_phone: form.contactPhone.trim(),
+            account: user?.id ? `Signed in (${user.email ?? user.id})` : 'Guest (not signed in)',
             pickup_location: form.pickupLocation.trim(),
             delivery_location: form.deliveryLocation.trim(),
             equipment_type: form.equipmentType,
             year: form.year.trim(),
-            dimensions:
-              [form.lengthFt && `${form.lengthFt} ft L`, form.widthFt && `${form.widthFt} ft W`, form.heightFt && `${form.heightFt} ft H`]
-                .filter(Boolean)
-                .join(' × '),
+            dimensions,
             weight: form.weightLbs.trim() ? `${form.weightLbs.trim()} lbs` : '',
-            runs_and_drives:
-              form.runsAndDrives === 'yes' ? 'Yes' : form.runsAndDrives === 'no' ? 'No' : '',
+            runs_and_drives: runsAndDrives,
             preferred_pickup: form.pickupDate,
+            deliver_by: form.deliverByDate,
             notes: form.notes.trim(),
             source_page: '/ship-your-food-truck',
           },
@@ -355,6 +408,9 @@ const ShipYourFoodTruck = () => {
   };
 
   const summaryRows: Array<{ label: string; value: string }> = [
+    { label: 'Name', value: form.contactName.trim() },
+    { label: 'Email', value: form.contactEmail.trim() },
+    { label: 'Phone', value: form.contactPhone.trim() },
     { label: 'Pickup', value: form.pickupLocation.trim() },
     { label: 'Delivery', value: form.deliveryLocation.trim() },
     { label: 'Equipment', value: form.equipmentType },
@@ -372,6 +428,7 @@ const ShipYourFoodTruck = () => {
       value: form.runsAndDrives === 'yes' ? 'Yes' : form.runsAndDrives === 'no' ? 'No' : '',
     },
     { label: 'Preferred pickup', value: form.pickupDate },
+    { label: 'Deliver by', value: form.deliverByDate },
     { label: 'Notes', value: form.notes.trim() },
   ].filter((r) => r.value);
 
