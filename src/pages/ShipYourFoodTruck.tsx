@@ -185,6 +185,9 @@ const FAQS = [
 ];
 
 interface QuoteForm {
+  contactName: string;
+  contactEmail: string;
+  contactPhone: string;
   pickupLocation: string;
   deliveryLocation: string;
   equipmentType: string;
@@ -195,10 +198,14 @@ interface QuoteForm {
   weightLbs: string;
   runsAndDrives: '' | 'yes' | 'no';
   pickupDate: string;
+  deliverByDate: string;
   notes: string;
 }
 
 const EMPTY_FORM: QuoteForm = {
+  contactName: '',
+  contactEmail: '',
+  contactPhone: '',
   pickupLocation: '',
   deliveryLocation: '',
   equipmentType: '',
@@ -209,14 +216,25 @@ const EMPTY_FORM: QuoteForm = {
   weightLbs: '',
   runsAndDrives: '',
   pickupDate: '',
+  deliverByDate: '',
   notes: '',
 };
 
-type QuoteErrors = Partial<Record<'pickupLocation' | 'deliveryLocation' | 'equipmentType', string>>;
+type QuoteErrors = Partial<
+  Record<
+    | 'contactName'
+    | 'contactEmail'
+    | 'contactPhone'
+    | 'pickupLocation'
+    | 'deliveryLocation'
+    | 'equipmentType',
+    string
+  >
+>;
 
 const STEP_META = [
-  { label: 'Route & equipment', hint: 'Three essentials — takes under a minute.' },
-  { label: 'Equipment details', hint: 'All optional, but it sharpens the pricing.' },
+  { label: 'Contact & route', hint: 'How to reach you, plus the route — under a minute.' },
+  { label: 'Equipment & timing', hint: 'All optional, but it sharpens the pricing.' },
   { label: 'Review & send', hint: 'Confirm the details, then send your request.' },
 ] as const;
 
