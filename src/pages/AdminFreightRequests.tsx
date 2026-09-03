@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import SEO from "@/components/SEO";
+import AdminSectionNav from "@/components/admin/AdminSectionNav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -218,6 +219,7 @@ export default function AdminFreightRequests() {
       <SEO title="Freight Requests | Admin" description="Freight quote requests submitted from the site." noindex />
       <Header />
       <main className="flex-1 container max-w-6xl mx-auto px-4 py-10">
+        <AdminSectionNav />
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl font-bold tracking-tight flex items-center gap-2">
