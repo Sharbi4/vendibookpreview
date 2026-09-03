@@ -309,6 +309,79 @@ export default function AdminFreightRequests() {
 
                   <Field label="Notes from requester" value={r.notes} />
 
+                  <div className="rounded-xl border border-primary/25 bg-primary/[0.04] p-4 space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <p className="text-sm font-semibold">Quote response</p>
+                      {r.quoted_at && (
+                        <p className="text-[11px] text-muted-foreground">
+                          Last quoted {new Date(r.quoted_at).toLocaleString()}
+                          {r.quote_amount_cents != null
+                            ? ` · $${(r.quote_amount_cents / 100).toFixed(2)}`
+                            : ""}
+                        </p>
+                      )}
+                    </div>
+                    <div className="grid sm:grid-cols-2 gap-3">
+                      <div>
+                        <label htmlFor={`price-${r.id}`} className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                          Quoted price (USD)
+                        </label>
+                        <Input
+                          id={`price-${r.id}`}
+                          inputMode="decimal"
+                          placeholder="2450.00"
+                          className="h-11 mt-1.5 text-base sm:text-sm"
+                          value={draftFor(r).price}
+                          onChange={(e) =>
+                            setQuoteDrafts((d) => ({ ...d, [r.id]: { ...draftFor(r), price: e.target.value } }))
+                          }
+                        />
+                      </div>
+                      <div>
+                        <label htmlFor={`transit-${r.id}`} className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                          Estimated transit
+                        </label>
+                        <Input
+                          id={`transit-${r.id}`}
+                          placeholder="5–7 days"
+                          className="h-11 mt-1.5 text-base sm:text-sm"
+                          value={draftFor(r).transit}
+                          onChange={(e) =>
+                            setQuoteDrafts((d) => ({ ...d, [r.id]: { ...draftFor(r), transit: e.target.value } }))
+                          }
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <label htmlFor={`qnotes-${r.id}`} className="text-[11px] uppercase tracking-wider text-muted-foreground">
+                        Quote details for the customer
+                      </label>
+                      <Textarea
+                        id={`qnotes-${r.id}`}
+                        rows={2}
+                        placeholder="Carrier, insurance coverage, what's included, expiration…"
+                        className="mt-1.5 text-sm"
+                        value={draftFor(r).notes}
+                        onChange={(e) =>
+                          setQuoteDrafts((d) => ({ ...d, [r.id]: { ...draftFor(r), notes: e.target.value } }))
+                        }
+                      />
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      <Button onClick={() => void saveQuote(r)} disabled={savingQuote === r.id}>
+                        {savingQuote === r.id && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                        Save quote
+                      </Button>
+                      <Button variant="outline" asChild>
+                        <a href={quoteMailto(r)}>
+                          <Mail className="w-4 h-4 mr-2" aria-hidden="true" /> Email quote
+                        </a>
+                      </Button>
+                    </div>
+                  </div>
+
+
+
                   <div className="grid sm:grid-cols-[1fr_auto] gap-3 items-end">
                     <div>
                       <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1.5">Internal notes</p>
