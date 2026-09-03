@@ -89,6 +89,11 @@ serve(async (req) => {
       weight: "Approx. weight",
       runs_and_drives: "Runs and drives",
       preferred_pickup: "Preferred pickup",
+      deliver_by: "Deliver by",
+      contact_name: "Contact name",
+      contact_email: "Contact email",
+      contact_phone: "Contact phone",
+      account: "Account",
       notes: "Notes",
       source_page: "Source page",
     };
@@ -98,7 +103,7 @@ serve(async (req) => {
       .map(([k, v]) => ({
         label: labelMap[k] || k.replace(/_/g, " "),
         value: typeof v === "object" ? JSON.stringify(v) : String(v),
-        mono: k.endsWith("_id") || k === "email" || k === "host_email",
+        mono: k.endsWith("_id") || k === "email" || k === "host_email" || k === "contact_email",
       }));
 
     const results = await Promise.all(ADMIN_EMAILS.map(async (recipient) => {
@@ -114,7 +119,10 @@ serve(async (req) => {
           paragraphs: ["This is a real-time Vendibook event notification."],
           details,
           ctaLabel: "Open admin",
-          ctaUrl: "https://vendibook.com/admin",
+          ctaUrl:
+            type === "freight_quote_request"
+              ? "https://vendibook.com/admin/freight"
+              : "https://vendibook.com/admin",
         },
       });
       if (!r.ok) {

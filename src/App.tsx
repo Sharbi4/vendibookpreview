@@ -87,6 +87,7 @@ const AdminListings = lazy(() => import("./pages/AdminListings"));
 const AdminRisk = lazy(() => import("./pages/AdminRisk"));
 const AdminFinance = lazy(() => import("./pages/AdminFinance"));
 const AdminPayouts = lazy(() => import("./pages/AdminPayouts"));
+const AdminFreightRequests = lazy(() => import("./pages/AdminFreightRequests"));
 const AdminVerifiedSellers = lazy(() => import("./pages/AdminVerifiedSellers"));
 const OrderDetail = lazy(() => import("./pages/OrderDetail"));
 
@@ -346,6 +347,7 @@ const AnimatedRoutes = () => {
           <Route path="/orders/:orderId" element={<PageTransition><OrderDetail /></PageTransition>} />
           <Route path="/orders/:orderId/payment" element={<PageTransition><OrderDetail /></PageTransition>} />
           <Route path="/admin/payouts" element={<PageTransition><AdminPayouts /></PageTransition>} />
+          <Route path="/admin/freight" element={<PageTransition><AdminFreightRequests /></PageTransition>} />
           <Route path="/admin/verified-sellers" element={<PageTransition><AdminVerifiedSellers /></PageTransition>} />
 
 

@@ -2055,6 +2055,81 @@ export type Database = {
           },
         ]
       }
+      freight_requests: {
+        Row: {
+          admin_notes: string | null
+          contact_email: string
+          contact_name: string
+          contact_phone: string
+          created_at: string
+          deliver_by_date: string | null
+          delivery_location: string
+          equipment_type: string
+          height_ft: string | null
+          id: string
+          length_ft: string | null
+          notes: string | null
+          pickup_date: string | null
+          pickup_location: string
+          runs_and_drives: string | null
+          source_page: string | null
+          status: string
+          updated_at: string
+          user_id: string | null
+          weight_lbs: string | null
+          width_ft: string | null
+          year: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          contact_email: string
+          contact_name: string
+          contact_phone: string
+          created_at?: string
+          deliver_by_date?: string | null
+          delivery_location: string
+          equipment_type: string
+          height_ft?: string | null
+          id?: string
+          length_ft?: string | null
+          notes?: string | null
+          pickup_date?: string | null
+          pickup_location: string
+          runs_and_drives?: string | null
+          source_page?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+          weight_lbs?: string | null
+          width_ft?: string | null
+          year?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          contact_email?: string
+          contact_name?: string
+          contact_phone?: string
+          created_at?: string
+          deliver_by_date?: string | null
+          delivery_location?: string
+          equipment_type?: string
+          height_ft?: string | null
+          id?: string
+          length_ft?: string | null
+          notes?: string | null
+          pickup_date?: string | null
+          pickup_location?: string
+          runs_and_drives?: string | null
+          source_page?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+          weight_lbs?: string | null
+          width_ft?: string | null
+          year?: string | null
+        }
+        Relationships: []
+      }
       host_payment_eligibility: {
         Row: {
           charges_enabled: boolean

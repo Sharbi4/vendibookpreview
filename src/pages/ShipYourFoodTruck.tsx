@@ -40,6 +40,7 @@ import {
 } from '@/components/ui/accordion';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 import movingArt from '@/assets/education/moving.svg.asset.json';
 import deliveryMapArt from '@/assets/education/delivery-map.svg.asset.json';
 
@@ -185,6 +186,9 @@ const FAQS = [
 ];
 
 interface QuoteForm {
+  contactName: string;
+  contactEmail: string;
+  contactPhone: string;
   pickupLocation: string;
   deliveryLocation: string;
   equipmentType: string;
@@ -195,10 +199,14 @@ interface QuoteForm {
   weightLbs: string;
   runsAndDrives: '' | 'yes' | 'no';
   pickupDate: string;
+  deliverByDate: string;
   notes: string;
 }
 
 const EMPTY_FORM: QuoteForm = {
+  contactName: '',
+  contactEmail: '',
+  contactPhone: '',
   pickupLocation: '',
   deliveryLocation: '',
   equipmentType: '',
@@ -209,14 +217,25 @@ const EMPTY_FORM: QuoteForm = {
   weightLbs: '',
   runsAndDrives: '',
   pickupDate: '',
+  deliverByDate: '',
   notes: '',
 };
 
-type QuoteErrors = Partial<Record<'pickupLocation' | 'deliveryLocation' | 'equipmentType', string>>;
+type QuoteErrors = Partial<
+  Record<
+    | 'contactName'
+    | 'contactEmail'
+    | 'contactPhone'
+    | 'pickupLocation'
+    | 'deliveryLocation'
+    | 'equipmentType',
+    string
+  >
+>;
 
 const STEP_META = [
-  { label: 'Route & equipment', hint: 'Three essentials — takes under a minute.' },
-  { label: 'Equipment details', hint: 'All optional, but it sharpens the pricing.' },
+  { label: 'Contact & route', hint: 'How to reach you, plus the route — under a minute.' },
+  { label: 'Equipment & timing', hint: 'All optional, but it sharpens the pricing.' },
   { label: 'Review & send', hint: 'Confirm the details, then send your request.' },
 ] as const;
 
@@ -225,6 +244,7 @@ const inputClass =
 
 const ShipYourFoodTruck = () => {
   const reduce = useReducedMotion();
+  const { user, profile } = useAuth();
   const formSectionRef = useRef<HTMLDivElement>(null);
   const [form, setForm] = useState<QuoteForm>(EMPTY_FORM);
   const [errors, setErrors] = useState<QuoteErrors>({});
@@ -233,6 +253,36 @@ const ShipYourFoodTruck = () => {
   // Guards against stray/double-tap submits: the submit button replaces
   // Continue in the same spot, so a fast second tap could otherwise fire it.
   const step3EnteredAt = useRef(0);
+  const prefilled = useRef(false);
+
+  // Prefill contact details for signed-in users, without clobbering typing.
+  useEffect(() => {
+    if (prefilled.current) return;
+    if (!user) return;
+    prefilled.current = true;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('full_name, email, phone_number')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (cancelled) return;
+      const name = data?.full_name || profile?.full_name || '';
+      const email = data?.email || profile?.email || user.email || '';
+      const phone = data?.phone_number || '';
+      if (!name && !email && !phone) return;
+      setForm((prev) => ({
+        ...prev,
+        contactName: prev.contactName || name,
+        contactEmail: prev.contactEmail || email,
+        contactPhone: prev.contactPhone || phone,
+      }));
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user, profile]);
 
   const scrollToForm = () => {
     formSectionRef.current?.scrollIntoView({
@@ -250,6 +300,18 @@ const ShipYourFoodTruck = () => {
 
   const validate = (): QuoteErrors => {
     const next: QuoteErrors = {};
+    if (!form.contactName.trim()) next.contactName = 'Enter your full name.';
+    if (!form.contactEmail.trim()) {
+      next.contactEmail = 'Enter your email address.';
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.contactEmail.trim())) {
+      next.contactEmail = 'Enter a valid email address.';
+    }
+    const digits = form.contactPhone.replace(/\D/g, '');
+    if (!form.contactPhone.trim()) {
+      next.contactPhone = 'Enter a phone number we can reach you at.';
+    } else if (digits.length < 10) {
+      next.contactPhone = 'Enter a valid phone number.';
+    }
     if (!form.pickupLocation.trim()) next.pickupLocation = 'Enter the pickup city, state, or ZIP.';
     if (!form.deliveryLocation.trim()) next.deliveryLocation = 'Enter the delivery city, state, or ZIP.';
     if (!form.equipmentType) next.equipmentType = 'Choose the equipment type.';
@@ -282,27 +344,68 @@ const ShipYourFoodTruck = () => {
     if (Date.now() - step3EnteredAt.current < 700) return;
     const next = validate();
     setErrors(next);
-    if (Object.keys(next).length > 0) return;
+    if (Object.keys(next).length > 0) {
+      // Contact/route errors live on step 1 — send them back to fix it.
+      goToStep(1);
+      return;
+    }
     setSubmitted(true);
-    // Notify the freight team in the background — never blocks the
-    // confirmation state.
+
+    const dimensions = [
+      form.lengthFt && `${form.lengthFt} ft L`,
+      form.widthFt && `${form.widthFt} ft W`,
+      form.heightFt && `${form.heightFt} ft H`,
+    ]
+      .filter(Boolean)
+      .join(' × ');
+    const runsAndDrives =
+      form.runsAndDrives === 'yes' ? 'Yes' : form.runsAndDrives === 'no' ? 'No' : '';
+
+    // Persist first so the request is never lost, then notify — neither
+    // blocks the confirmation state.
+    supabase
+      .from('freight_requests')
+      .insert({
+        user_id: user?.id ?? null,
+        contact_name: form.contactName.trim(),
+        contact_email: form.contactEmail.trim(),
+        contact_phone: form.contactPhone.trim(),
+        pickup_location: form.pickupLocation.trim(),
+        delivery_location: form.deliveryLocation.trim(),
+        equipment_type: form.equipmentType,
+        year: form.year.trim() || null,
+        length_ft: form.lengthFt.trim() || null,
+        width_ft: form.widthFt.trim() || null,
+        height_ft: form.heightFt.trim() || null,
+        weight_lbs: form.weightLbs.trim() || null,
+        runs_and_drives: runsAndDrives || null,
+        pickup_date: form.pickupDate || null,
+        deliver_by_date: form.deliverByDate || null,
+        notes: form.notes.trim() || null,
+        source_page: '/ship-your-food-truck',
+      })
+      .then(({ error }) => {
+        if (error) console.error('Freight request save error:', error);
+      });
+
     supabase.functions
       .invoke('send-admin-notification', {
         body: {
           type: 'freight_quote_request',
           data: {
+            contact_name: form.contactName.trim(),
+            contact_email: form.contactEmail.trim(),
+            contact_phone: form.contactPhone.trim(),
+            account: user?.id ? `Signed in (${user.email ?? user.id})` : 'Guest (not signed in)',
             pickup_location: form.pickupLocation.trim(),
             delivery_location: form.deliveryLocation.trim(),
             equipment_type: form.equipmentType,
             year: form.year.trim(),
-            dimensions:
-              [form.lengthFt && `${form.lengthFt} ft L`, form.widthFt && `${form.widthFt} ft W`, form.heightFt && `${form.heightFt} ft H`]
-                .filter(Boolean)
-                .join(' × '),
+            dimensions,
             weight: form.weightLbs.trim() ? `${form.weightLbs.trim()} lbs` : '',
-            runs_and_drives:
-              form.runsAndDrives === 'yes' ? 'Yes' : form.runsAndDrives === 'no' ? 'No' : '',
+            runs_and_drives: runsAndDrives,
             preferred_pickup: form.pickupDate,
+            deliver_by: form.deliverByDate,
             notes: form.notes.trim(),
             source_page: '/ship-your-food-truck',
           },
@@ -318,6 +421,9 @@ const ShipYourFoodTruck = () => {
   };
 
   const summaryRows: Array<{ label: string; value: string }> = [
+    { label: 'Name', value: form.contactName.trim() },
+    { label: 'Email', value: form.contactEmail.trim() },
+    { label: 'Phone', value: form.contactPhone.trim() },
     { label: 'Pickup', value: form.pickupLocation.trim() },
     { label: 'Delivery', value: form.deliveryLocation.trim() },
     { label: 'Equipment', value: form.equipmentType },
@@ -335,6 +441,7 @@ const ShipYourFoodTruck = () => {
       value: form.runsAndDrives === 'yes' ? 'Yes' : form.runsAndDrives === 'no' ? 'No' : '',
     },
     { label: 'Preferred pickup', value: form.pickupDate },
+    { label: 'Deliver by', value: form.deliverByDate },
     { label: 'Notes', value: form.notes.trim() },
   ].filter((r) => r.value);
 
@@ -566,6 +673,66 @@ const ShipYourFoodTruck = () => {
                           </RequiredLegend>
 
                           <div>
+                            <Label htmlFor="contact-name" className="mb-1.5 block text-sm font-semibold">
+                              Your name <RequiredMark />
+                            </Label>
+                            <Input
+                              id="contact-name"
+                              value={form.contactName}
+                              onChange={(e) => setField('contactName', e.target.value)}
+                              placeholder="First and last name"
+                              autoComplete="name"
+                              aria-invalid={!!errors.contactName}
+                              className={inputClass}
+                            />
+                            {errors.contactName && (
+                              <p className="text-xs text-destructive mt-1.5">{errors.contactName}</p>
+                            )}
+                          </div>
+
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                              <Label htmlFor="contact-email" className="mb-1.5 block text-sm font-semibold">
+                                Email <RequiredMark />
+                              </Label>
+                              <Input
+                                id="contact-email"
+                                type="email"
+                                inputMode="email"
+                                value={form.contactEmail}
+                                onChange={(e) => setField('contactEmail', e.target.value)}
+                                placeholder="you@example.com"
+                                autoComplete="email"
+                                aria-invalid={!!errors.contactEmail}
+                                className={inputClass}
+                              />
+                              {errors.contactEmail && (
+                                <p className="text-xs text-destructive mt-1.5">{errors.contactEmail}</p>
+                              )}
+                            </div>
+                            <div>
+                              <Label htmlFor="contact-phone" className="mb-1.5 block text-sm font-semibold">
+                                Phone <RequiredMark />
+                              </Label>
+                              <Input
+                                id="contact-phone"
+                                type="tel"
+                                inputMode="tel"
+                                value={form.contactPhone}
+                                onChange={(e) => setField('contactPhone', e.target.value)}
+                                placeholder="(555) 123-4567"
+                                autoComplete="tel"
+                                aria-invalid={!!errors.contactPhone}
+                                className={inputClass}
+                              />
+                              {errors.contactPhone && (
+                                <p className="text-xs text-destructive mt-1.5">{errors.contactPhone}</p>
+                              )}
+                            </div>
+                          </div>
+
+
+                          <div>
                             <Label htmlFor="pickup-location" className="mb-1.5 block text-sm font-semibold">
                               Pickup location <RequiredMark />
                             </Label>
@@ -776,17 +943,32 @@ const ShipYourFoodTruck = () => {
                             </div>
                           </div>
 
-                          <div>
-                            <Label htmlFor="pickup-date" className="mb-1.5 block text-sm font-semibold">
-                              Preferred pickup date
-                            </Label>
-                            <Input
-                              id="pickup-date"
-                              type="date"
-                              value={form.pickupDate}
-                              onChange={(e) => setField('pickupDate', e.target.value)}
-                              className={inputClass}
-                            />
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                            <div>
+                              <Label htmlFor="pickup-date" className="mb-1.5 block text-sm font-semibold">
+                                Preferred pickup date
+                              </Label>
+                              <Input
+                                id="pickup-date"
+                                type="date"
+                                value={form.pickupDate}
+                                onChange={(e) => setField('pickupDate', e.target.value)}
+                                className={inputClass}
+                              />
+                            </div>
+                            <div>
+                              <Label htmlFor="deliver-by-date" className="mb-1.5 block text-sm font-semibold">
+                                Deliver by date
+                              </Label>
+                              <Input
+                                id="deliver-by-date"
+                                type="date"
+                                min={form.pickupDate || undefined}
+                                value={form.deliverByDate}
+                                onChange={(e) => setField('deliverByDate', e.target.value)}
+                                className={inputClass}
+                              />
+                            </div>
                           </div>
                         </motion.div>
                       )}
