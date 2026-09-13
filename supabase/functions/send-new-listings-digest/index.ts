@@ -331,6 +331,89 @@ Deno.serve(async (req) => {
       });
     }
 
+    // -- approved mass send -------------------------------------------------
+    if (action === "send") {
+      const RESEND_KEY_M = Deno.env.get("RESEND_API_KEY");
+      if (!RESEND_KEY_M) throw new Error("RESEND_API_KEY not configured");
+
+      const audience = await getAudienceEmails(supabase);
+
+      // never send the same campaign twice to the same address
+      const { data: already } = await supabase
+        .from("blog_campaign_sends")
+        .select("email")
+        .eq("campaign_id", CAMPAIGN);
+      const alreadySent = new Set(
+        (already ?? []).map((r: any) => String(r.email || "").toLowerCase()),
+      );
+      const recipients = audience.filter((e) => !alreadySent.has(e));
+
+      const unsubFor = (email: string) =>
+        `${Deno.env.get("SUPABASE_URL")}/functions/v1/marketing-unsubscribe?e=${encodeURIComponent(email)}`;
+
+      let sent = 0;
+      const failures: Array<{ email: string; error: string }> = [];
+
+      for (let i = 0; i < recipients.length; i += 50) {
+        const chunk = recipients.slice(i, i + 50);
+        const batch = chunk.map((email) => {
+          const unsub = unsubFor(email);
+          return {
+            from: MARKETING_FROM,
+            to: [email],
+            reply_to: MARKETING_REPLY_TO,
+            subject: SUBJECT,
+            html: buildDigestHtml({ forSale, rentals, unsubscribeUrl: unsub }),
+            headers: {
+              "List-Unsubscribe": `<${unsub}>`,
+              "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
+            },
+          };
+        });
+
+        const res = await fetch("https://api.resend.com/emails/batch", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${RESEND_KEY_M}`, "Content-Type": "application/json" },
+          body: JSON.stringify(batch),
+        });
+        const payload = await res.json().catch(() => ({}));
+
+        if (!res.ok) {
+          console.error("Resend rejected digest batch", res.status);
+          for (const email of chunk) {
+            failures.push({ email, error: String(payload?.message || `HTTP ${res.status}`) });
+          }
+        } else {
+          const ids: any[] = Array.isArray(payload?.data) ? payload.data : [];
+          const rows = chunk.map((email, idx) => ({
+            campaign_id: CAMPAIGN,
+            user_id: actorId,
+            email,
+            status: "sent",
+            resend_message_id: ids[idx]?.id ?? null,
+            is_test: false,
+          }));
+          await supabase.from("blog_campaign_sends").insert(rows);
+          sent += chunk.length;
+        }
+
+        if (i + 50 < recipients.length) await new Promise((r) => setTimeout(r, 1200));
+      }
+
+      return json({
+        success: true,
+        campaign: CAMPAIGN,
+        subject: SUBJECT,
+        eligible: audience.length,
+        skippedAlreadySent: audience.length - recipients.length,
+        sent,
+        failed: failures.length,
+        failures: failures.slice(0, 10),
+        forSale: forSale.map((l) => ({ id: l.id, title: l.title })),
+        rentals: rentals.map((l) => ({ id: l.id, title: l.title })),
+      });
+    }
+
     // -- single test send --------------------------------------------------
     const testEmail = String(body?.email || "").trim().toLowerCase();
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(testEmail)) {
