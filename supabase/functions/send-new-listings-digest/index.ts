@@ -272,7 +272,10 @@ Deno.serve(async (req) => {
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey);
 
     let actorId: string | null = null;
-    if (token !== serviceKey) {
+    const opsSecret = Deno.env.get("DIGEST_TEST_SECRET") || "";
+    const headerSecret = req.headers.get("x-digest-test-secret") || "";
+    const opsAuthorized = !!opsSecret && headerSecret === opsSecret;
+    if (!opsAuthorized && token !== serviceKey) {
       const { data: userData, error: userErr } = await supabase.auth.getUser(token);
       const user = userData?.user;
       if (userErr || !user) return json({ success: false, error: "Authentication required." }, 401);
@@ -280,6 +283,7 @@ Deno.serve(async (req) => {
       if (!isAdmin) return json({ success: false, error: "Admin access required." }, 403);
       actorId = user.id;
     }
+
 
     const body = await req.json().catch(() => ({}));
     const action = String(body?.action || "");
