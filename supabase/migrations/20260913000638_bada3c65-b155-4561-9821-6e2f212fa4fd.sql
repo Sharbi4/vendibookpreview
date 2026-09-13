@@ -1,0 +1,2 @@
+REVOKE EXECUTE ON FUNCTION public.protect_listing_monetized_fields() FROM anon, authenticated, public;
+REVOKE EXECUTE ON FUNCTION public.protect_profile_trust_fields() FROM anon, authenticated, public;
