@@ -27,6 +27,7 @@
   <url><loc>https://vendibook.com/cypress</loc><lastmod>2026-09-13</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/dallas</loc><lastmod>2026-09-13</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/dania-beach</loc><lastmod>2026-09-13</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://vendibook.com/daphne</loc><lastmod>2026-09-13</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/denver</loc><lastmod>2026-09-13</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/douglasville</loc><lastmod>2026-09-13</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/dumfries</loc><lastmod>2026-09-13</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
@@ -72,6 +73,7 @@
   <url><loc>https://vendibook.com/riverdale</loc><lastmod>2026-09-13</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/saginaw</loc><lastmod>2026-09-13</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/san-diego</loc><lastmod>2026-09-13</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://vendibook.com/san-dimas</loc><lastmod>2026-09-13</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/san-francisco</loc><lastmod>2026-09-13</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/sarasota</loc><lastmod>2026-09-13</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/scottsdale</loc><lastmod>2026-09-13</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
@@ -118,6 +120,8 @@
   <url><loc>https://vendibook.com/buy/food-trailer/cypress-tx</loc><lastmod>2026-09-13</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-trailer/dania-beach-fl</loc><lastmod>2026-09-13</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/buy/food-trailer/dania-beach-fl</loc><lastmod>2026-09-13</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://vendibook.com/rent/food-trailer/daphne-al</loc><lastmod>2026-09-13</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://vendibook.com/buy/food-trailer/daphne-al</loc><lastmod>2026-09-13</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-trailer/douglasville-ga</loc><lastmod>2026-09-13</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/buy/food-trailer/douglasville-ga</loc><lastmod>2026-09-13</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-trailer/dumfries-va</loc><lastmod>2026-09-13</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
@@ -188,6 +192,8 @@
   <url><loc>https://vendibook.com/buy/food-trailer/saginaw-mi</loc><lastmod>2026-09-13</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-trailer/san-diego-ca</loc><lastmod>2026-09-13</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/buy/food-trailer/san-diego-ca</loc><lastmod>2026-09-13</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://vendibook.com/rent/food-trailer/san-dimas-ca</loc><lastmod>2026-09-13</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://vendibook.com/buy/food-trailer/san-dimas-ca</loc><lastmod>2026-09-13</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-trailer/sarasota-fl</loc><lastmod>2026-09-13</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/buy/food-trailer/sarasota-fl</loc><lastmod>2026-09-13</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-trailer/scottsdale-az</loc><lastmod>2026-09-13</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
