@@ -306,9 +306,9 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const action = String(body?.action || "");
-    if (!["audience", "render", "test"].includes(action)) {
+    if (!["audience", "render", "test", "send"].includes(action)) {
       return json(
-        { success: false, error: "Unknown action. This digest supports audience, render, and test only." },
+        { success: false, error: "Unknown action. This digest supports audience, render, test, and send." },
         400,
       );
     }
