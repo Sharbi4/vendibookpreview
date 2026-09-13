@@ -233,26 +233,32 @@ async function loadRentals(supabase: any): Promise<Listing[]> {
     .slice(0, 2);
 }
 
-/** Same consent rules as the weekly digest audience. */
+/**
+ * Marketing audience = newsletter subscribers (explicit opt-in) + Vendibook
+ * account holders (existing-customer relationship), minus every suppression
+ * source. Marketing-scoped suppression and unsubscribes always win.
+ */
 async function getAudienceEmails(supabase: any): Promise<string[]> {
-  const { data: subs } = await supabase
-    .from("newsletter_subscribers")
-    .select("email")
-    .is("unsubscribed_at", null);
-  const { data: suppressed } = await supabase.from("suppressed_emails").select("email");
-  const { data: unsubbed } = await supabase.from("email_unsubscribes").select("email");
+  const [{ data: subs }, { data: accounts }, { data: suppressed }, { data: unsubbed }] =
+    await Promise.all([
+      supabase.from("newsletter_subscribers").select("email").is("unsubscribed_at", null),
+      supabase.from("profiles").select("email").not("email", "is", null),
+      supabase.from("suppressed_emails").select("email"),
+      supabase.from("email_unsubscribes").select("email"),
+    ]);
   const blocked = new Set([
     ...(suppressed ?? []).map((r: any) => String(r.email).toLowerCase()),
     ...(unsubbed ?? []).map((r: any) => String(r.email).toLowerCase()),
   ]);
   return Array.from(
     new Set(
-      (subs ?? [])
-        .map((r: any) => String(r.email || "").toLowerCase())
+      [...(subs ?? []), ...(accounts ?? [])]
+        .map((r: any) => String(r.email || "").toLowerCase().trim())
         .filter((e: string) => e && !blocked.has(e) && !e.endsWith("example.com") && !e.endsWith(".test")),
     ),
   );
 }
+
 
 function json(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
