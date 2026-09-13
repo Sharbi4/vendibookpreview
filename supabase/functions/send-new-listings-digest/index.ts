@@ -23,7 +23,7 @@ const corsHeaders = {
 
 const CAMPAIGN = "new_listings_digest_sep2026";
 const EQUINOX_LOGO =
-  "https://vendibook.com/__l5e/assets-v1/6d0ed30b-6291-4215-9a78-2e010ebc96bc/equinox-funding-logo.png";
+  "https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/equinox-funding-logo.png";
 
 const SUBJECT = "New on Vendibook: fresh trucks, trailers & rentals";
 const PREHEADER = "Just listed for sale, new rentals to book, and financing options for qualified buyers.";
@@ -83,7 +83,7 @@ function emailImage(src: string | null): string {
   if (!src) return fallback;
   if (src.includes("/storage/v1/object/public/")) {
     const rendered = src.replace("/storage/v1/object/public/", "/storage/v1/render/image/public/");
-    return `${rendered}${rendered.includes("?") ? "&" : "?"}width=1104&quality=75&resize=contain`;
+    return `${rendered}${rendered.includes("?") ? "&" : "?"}width=900&quality=70&resize=contain`;
   }
   return src;
 }
@@ -153,7 +153,7 @@ export function buildDigestHtml(opts: {
       <tr><td style="padding:22px 20px;text-align:center;">
         <div style="font-family:${FONT};font-size:11px;color:${MK.orangeOnWhite};text-transform:uppercase;font-weight:700;letter-spacing:1.5px;margin-bottom:12px;">Financing</div>
         <img src="${EQUINOX_LOGO}" alt="Equinox Funding" width="170" style="display:inline-block;width:170px;max-width:170px;height:auto;border:0;margin:0 0 14px;" />
-        <div style="font-family:${FONT};font-size:19px;font-weight:700;color:${MK.text};line-height:1.35;margin-bottom:8px;">Found the right truck? Financing may help you make it yours.</div>
+        <div style="font-family:${FONT};font-size:19px;font-weight:700;color:${MK.text};line-height:1.35;margin-bottom:8px;">Finance your truck or trailer with Equinox Funding</div>
         <p style="font-family:${FONT};font-size:14px;line-height:1.65;color:${MK.textSecondary};margin:0 auto 16px;max-width:420px;">Equipment financing is available to eligible buyers through our partner Equinox Funding. Quick online application, and many decisions come back within 24–48 hours.</p>
         ${mkButton("Explore financing options", utm("/financing", "financing"))}
         <p style="font-family:${FONT};font-size:11px;line-height:1.6;color:${MK.textMuted};margin:14px auto 0;max-width:440px;">Financing is provided by Equinox Funding, not Vendibook. Applications are subject to underwriting and approval; terms, rates, and availability vary. Approval is not guaranteed.</p>
