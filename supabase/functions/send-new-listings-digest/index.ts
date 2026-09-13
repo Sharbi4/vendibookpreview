@@ -267,15 +267,16 @@ Deno.serve(async (req) => {
   try {
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const token = (req.headers.get("Authorization") || "").replace(/^Bearer\s+/i, "");
-    if (!token) return json({ success: false, error: "Authentication required." }, 401);
+    const opsSecret = Deno.env.get("DIGEST_TEST_SECRET") || "";
+    const headerSecret = req.headers.get("x-digest-test-secret") || "";
+    const opsAuthorized = !!opsSecret && headerSecret === opsSecret;
+    if (!token && !opsAuthorized) return json({ success: false, error: "Authentication required." }, 401);
 
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, serviceKey);
 
     let actorId: string | null = null;
-    const opsSecret = Deno.env.get("DIGEST_TEST_SECRET") || "";
-    const headerSecret = req.headers.get("x-digest-test-secret") || "";
-    const opsAuthorized = !!opsSecret && headerSecret === opsSecret;
     if (!opsAuthorized && token !== serviceKey) {
+
       const { data: userData, error: userErr } = await supabase.auth.getUser(token);
       const user = userData?.user;
       if (userErr || !user) return json({ success: false, error: "Authentication required." }, 401);
