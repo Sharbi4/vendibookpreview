@@ -253,7 +253,7 @@ const Financing = () => {
 
       <Header />
 
-      <main className="flex-1 pb-24 md:pb-0">
+      <main className="flex-1 pb-44 md:pb-0">
         {/* HERO */}
         <section className="relative overflow-hidden pt-10 pb-12 md:pt-16 md:pb-16">
           <div className="absolute inset-0 bg-gradient-to-b from-foreground/[0.035] via-background to-background" />
