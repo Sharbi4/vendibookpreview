@@ -76,9 +76,21 @@ function sectionHeading(eyebrow: string, title: string, sub?: string): string {
   </div>`;
 }
 
+// Email clients (Gmail proxy) refuse to render very large originals.
+// Serve listing photos through the storage image transformer at email width.
+function emailImage(src: string | null): string {
+  const fallback = `${SITE_URL}/placeholder.svg`;
+  if (!src) return fallback;
+  if (src.includes("/storage/v1/object/public/")) {
+    const rendered = src.replace("/storage/v1/object/public/", "/storage/v1/render/image/public/");
+    return `${rendered}${rendered.includes("?") ? "&" : "?"}width=1104&quality=75&resize=contain`;
+  }
+  return src;
+}
+
 function listingCard(l: Listing, content: string, ctaLabel: string): string {
   const url = utm(`/listing/${l.id}`, content);
-  const img = l.cover_image_url || `${SITE_URL}/placeholder.svg`;
+  const img = emailImage(l.cover_image_url);
   const loc = [l.city, l.state].filter(Boolean).join(", ") || "United States";
   return `
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 14px;border:1px solid ${MK.border};border-radius:14px;overflow:hidden;background:${MK.surface};">
