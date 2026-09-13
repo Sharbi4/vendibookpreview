@@ -6,9 +6,11 @@ import { supabase } from '@/integrations/supabase/client';
 import {
   ArrowRight,
   Caravan,
-  ExternalLink,
+  Clock,
+  FileText,
   HandCoins,
-  MapPin,
+  Hammer,
+  ShieldCheck,
   ShoppingCart,
   Truck,
 } from 'lucide-react';
@@ -21,9 +23,13 @@ import { GuideBreadcrumb } from '@/components/education/GuideBreadcrumb';
 import { EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
 import { FinancingAvailableBadge } from '@/components/financing/FinancingAvailableBadge';
 import { useFinancingHandoff } from '@/hooks/useFinancingHandoff';
-import loanArt from '@/assets/education/loan.svg.asset.json';
+import heroTruck from '@/assets/hero-food-truck.jpg';
+import heroTrailer from '@/assets/trailer-orange-grill.jpg';
+import heroCoffee from '@/assets/food-truck-coffee.jpg';
+import cartImg from '@/assets/food-truck-popcorn.jpg';
+import buildImg from '@/assets/trailer-interior-floor.jpg';
+import trailerImg from '@/assets/trailer-white.jpg';
 import {
-  trackFinancingApplyClick,
   trackFinancingPageViewed,
   type FinancingSource,
 } from '@/lib/analytics';
@@ -58,7 +64,6 @@ const useFinancingListingContext = (listingId: string | null) =>
     },
   });
 
-const APPLY_URL = 'https://equinox-funding.com/efapplication/';
 const EMERALD = 'text-emerald-700';
 
 const ease = [0.22, 1, 0.36, 1] as const;
@@ -70,21 +75,52 @@ const fadeUp = {
   transition: { duration: 0.45, ease },
 };
 
+const TRUST = [
+  { icon: FileText, label: 'Quick online application' },
+  { icon: Clock, label: 'Many decisions in 24–48 hours' },
+  { icon: ShieldCheck, label: 'Startups & established businesses may qualify' },
+  { icon: Truck, label: 'Trucks, trailers, carts & builds' },
+];
+
+const STEPS = [
+  {
+    title: 'Choose a truck or trailer',
+    body: 'Browse eligible for-sale equipment on Vendibook and pick the one you want.',
+  },
+  {
+    title: 'Submit a short online application',
+    body: 'You apply with Equinox Funding — basic business, owner, and equipment details.',
+  },
+  {
+    title: 'Review any options you qualify for',
+    body: 'Qualified applicants review terms and sign electronically. Many decisions come back within 24–48 hours.',
+  },
+];
+
 const OPTIONS = [
   {
     icon: Truck,
+    image: heroTruck,
     title: 'Food trucks',
-    body: 'Turn-key and fully built trucks listed on Vendibook — including the kitchen build already installed.',
+    body: 'Turn-key and fully built trucks — including the kitchen build already installed.',
   },
   {
     icon: Caravan,
+    image: trailerImg,
     title: 'Food trailers',
     body: 'Concession and kitchen trailers, from compact units to full production trailers.',
   },
   {
     icon: ShoppingCart,
+    image: cartImg,
     title: 'Food carts',
     body: 'Carts and small mobile units — a lower-cost way to start serving.',
+  },
+  {
+    icon: Hammer,
+    image: buildImg,
+    title: 'Builds & conversions',
+    body: 'Fully custom builds and conversions may be financed, subject to underwriting.',
   },
 ];
 
@@ -159,26 +195,29 @@ const FAQ = [
 
 const ApplyCta = ({
   className = '',
+  label = 'Check financing options',
+  size = 'lg',
   source,
   listingId,
   onApply,
 }: {
   className?: string;
+  label?: string;
+  size?: 'lg' | 'default';
   source: FinancingSource;
   listingId?: string;
   onApply: (source: FinancingSource, listingId?: string) => void;
 }) => (
   <Button
     variant="cta"
-    size="lg"
-    className={`rounded-full ${className}`}
+    size={size}
+    className={`rounded-full font-semibold ${className}`}
     onClick={() => onApply(source, listingId)}
   >
-    Apply with Equinox Funding
-    <ExternalLink className="w-4 h-4 ml-1.5" aria-hidden />
+    {label}
+    <ArrowRight className="w-4 h-4 ml-1.5" aria-hidden />
   </Button>
 );
-
 
 const Financing = () => {
   const { startFinancingApply, financingLeadDialog } = useFinancingHandoff();
@@ -214,199 +253,313 @@ const Financing = () => {
 
       <Header />
 
-      <main className="flex-1">
-        {/* HERO — Vendibook first, Equinox as partner accent */}
-        <section className="relative pt-14 pb-14 md:pt-20 md:pb-16 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-foreground/[0.03] via-background to-background" />
-          <div className="container max-w-4xl mx-auto px-4 relative z-10">
+      <main className="flex-1 pb-44 md:pb-0">
+        {/* HERO */}
+        <section className="relative overflow-hidden pt-10 pb-12 md:pt-16 md:pb-16">
+          <div className="absolute inset-0 bg-gradient-to-b from-foreground/[0.035] via-background to-background" />
+          <div className="container max-w-6xl mx-auto px-4 relative z-10">
             <GuideBreadcrumb
               items={[
                 { label: 'Home', to: '/' },
                 { label: 'How Vendibook Works', to: '/how-it-works' },
                 { label: 'Financing' },
               ]}
-              className="mb-6 flex justify-center"
-              containerClassName="max-w-4xl"
+              className="mb-8"
+              containerClassName="max-w-6xl"
             />
-            <motion.div
-              initial={reduce ? undefined : { opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5 }}
-              className="text-center"
-            >
-              <div className="flex flex-wrap items-center justify-center gap-2.5 mb-5">
-                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-foreground/5 border border-border text-xs font-medium text-foreground">
-                  Financing for eligible equipment
-                </span>
-                <span className="inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 shadow-sm">
-                  <span className="text-[11px] font-medium tracking-tight text-muted-foreground">Vendibook</span>
+
+            <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_1fr] lg:gap-14">
+              <motion.div
+                initial={reduce ? undefined : { opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5 }}
+              >
+                <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+                  Food truck &amp; trailer financing
+                </p>
+                <h1 className="mt-3 text-[2.1rem] leading-[1.06] md:text-5xl font-bold tracking-tight text-foreground">
+                  Found the right truck? Financing may help you make it yours.
+                </h1>
+                <p className="mt-5 max-w-xl text-base md:text-lg text-muted-foreground leading-relaxed">
+                  A quick online application with our financing partner. Many
+                  decisions come back within 24–48 hours, with options for
+                  eligible food trucks, trailers, carts, and custom builds.
+                </p>
+
+                <div className="mt-7 flex flex-wrap gap-3">
+                  <ApplyCta
+                    onApply={startFinancingApply}
+                    source="financing_page_hero"
+                    listingId={listingId}
+                  />
+                  <Button variant="cta-outline" size="lg" className="rounded-full" asChild>
+                    <Link to="/browse">Browse trucks &amp; trailers</Link>
+                  </Button>
+                </div>
+                <p className="mt-3.5 max-w-md text-xs leading-relaxed text-muted-foreground">
+                  You apply with Equinox Funding, our third-party financing
+                  partner. Approval, rates, and terms are subject to underwriting
+                  and are not guaranteed.
+                </p>
+
+                <span className="mt-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 shadow-sm">
+                  <span className="text-[11px] font-medium tracking-tight text-muted-foreground">
+                    Vendibook
+                  </span>
                   <span className="text-border">×</span>
                   <EquinoxFundingLogo className="h-4 w-auto" />
                 </span>
-              </div>
-              <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground mb-5 leading-[1.08]">
-                Found the right truck? See what financing could make possible.
-              </h1>
-              <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto leading-relaxed">
-                Vendibook connects eligible buyers with third-party financing
-                partners for food trucks, trailers, carts, and qualifying
-                equipment. Apply with the financing provider, review the options
-                you qualify for, and decide what works for your business.
-              </p>
-              <div className="flex flex-wrap gap-3 justify-center">
-                <ApplyCta onApply={startFinancingApply} source="financing_page_hero" listingId={listingId} />
-                <Button variant="cta-outline" size="lg" className="rounded-full" asChild>
-                  <Link to="/browse">Keep browsing</Link>
-                </Button>
-              </div>
-              <p className="mt-4 text-xs text-muted-foreground">
-                You’ll leave Vendibook to apply on Equinox Funding’s site.
-              </p>
-            </motion.div>
+              </motion.div>
 
-            <motion.div
-              initial={reduce ? undefined : { opacity: 0, y: 12 }}
+              {/* Premium marketplace photo collage */}
+              <motion.div
+                initial={reduce ? undefined : { opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.55, delay: reduce ? 0 : 0.12 }}
+                className="relative"
+                aria-hidden
+              >
+                <div className="overflow-hidden rounded-[2rem] border border-border bg-card shadow-[0_30px_80px_-40px_rgba(0,0,0,0.35)]">
+                  <img
+                    src={heroTruck}
+                    alt=""
+                    loading="eager"
+                    className="h-[260px] w-full object-cover md:h-[340px]"
+                  />
+                </div>
+                <div className="mt-4 grid grid-cols-2 gap-4">
+                  <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-[0_18px_50px_-30px_rgba(0,0,0,0.3)]">
+                    <img src={heroTrailer} alt="" loading="lazy" className="h-28 w-full object-cover md:h-32" />
+                  </div>
+                  <div className="overflow-hidden rounded-3xl border border-border bg-card shadow-[0_18px_50px_-30px_rgba(0,0,0,0.3)]">
+                    <img src={heroCoffee} alt="" loading="lazy" className="h-28 w-full object-cover md:h-32" />
+                  </div>
+                </div>
+              </motion.div>
+            </div>
+
+            {/* TRUST STRIP */}
+            <motion.ul
+              initial={reduce ? undefined : { opacity: 0, y: 14 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: reduce ? 0 : 0.15 }}
-              className="mt-10 mx-auto max-w-xl overflow-hidden rounded-3xl border border-border bg-card p-4 shadow-[0_18px_50px_-24px_rgba(0,0,0,0.15)]"
+              transition={{ duration: 0.5, delay: reduce ? 0 : 0.2 }}
+              className="mt-10 grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
             >
-              <img
-                src={loanArt.url}
-                alt="Financing a food truck purchase"
-                loading="lazy"
-                className="mx-auto h-auto w-full max-w-sm object-contain"
-              />
-            </motion.div>
+              {TRUST.map(({ icon: Icon, label }) => (
+                <li
+                  key={label}
+                  className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 shadow-[0_12px_40px_-32px_rgba(0,0,0,0.4)]"
+                >
+                  <Icon className="h-4 w-4 shrink-0 text-emerald-700" aria-hidden />
+                  <span className="text-sm font-medium leading-snug text-foreground">{label}</span>
+                </li>
+              ))}
+            </motion.ul>
+            <p className="mt-3 text-[11px] text-muted-foreground">
+              Timing and eligibility vary by applicant. Not all applicants qualify.
+            </p>
 
-            {/* Listing context — only for a publicly visible for-sale listing */}
+            {/* LISTING CONTEXT */}
             {contextListing && (
               <motion.div
                 initial={reduce ? undefined : { opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: reduce ? 0 : 0.2 }}
-                className="mt-10 mx-auto max-w-xl flex items-center gap-4 rounded-3xl border border-border bg-card p-4 shadow-[0_18px_50px_-24px_rgba(0,0,0,0.15)]"
+                transition={{ duration: 0.5, delay: reduce ? 0 : 0.24 }}
+                className="mt-8 flex flex-col gap-4 rounded-3xl border border-border bg-card p-4 shadow-[0_18px_50px_-24px_rgba(0,0,0,0.2)] sm:flex-row sm:items-center"
               >
                 <img
                   src={contextListing.cover_image_url || '/placeholder.svg'}
                   alt={contextListing.title}
                   loading="lazy"
-                  className="h-16 w-24 shrink-0 rounded-2xl object-cover ring-1 ring-border"
+                  className="h-28 w-full shrink-0 rounded-2xl object-cover ring-1 ring-border sm:h-20 sm:w-32"
                 />
-                <div className="min-w-0">
+                <div className="min-w-0 flex-1">
                   <p className={`text-[10px] font-semibold uppercase tracking-[0.14em] ${EMERALD}`}>
                     Financing this listing
                   </p>
-                  <p className="truncate text-sm font-semibold text-foreground">{contextListing.title}</p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
+                  <p className="truncate text-base font-semibold text-foreground">
+                    {contextListing.title}
+                  </p>
+                  <p className="mt-0.5 text-sm text-muted-foreground">
                     {contextListing.price_sale
                       ? `$${Number(contextListing.price_sale).toLocaleString()}`
                       : 'Price on request'}
-                    {contextListing.category ? ` · ${String(contextListing.category).replace(/_/g, ' ')}` : ''}
-                    {contextListing.city ? ` · ${contextListing.city}${contextListing.state ? `, ${contextListing.state}` : ''}` : ''}
+                    {contextListing.city
+                      ? ` · ${contextListing.city}${contextListing.state ? `, ${contextListing.state}` : ''}`
+                      : ''}
                   </p>
                 </div>
+                <ApplyCta
+                  className="shrink-0"
+                  label="Check options for this listing"
+                  onApply={startFinancingApply}
+                  source="financing_page_context"
+                  listingId={listingId}
+                />
               </motion.div>
             )}
           </div>
         </section>
 
-        {/* A — WHAT CAN BE FINANCED */}
-        <section className="py-12 md:py-16 border-y border-border bg-card/40" aria-labelledby="options-heading">
+        {/* HOW IT WORKS */}
+        <section className="border-y border-border bg-card/40 py-12 md:py-16" aria-labelledby="how-heading">
           <div className="container max-w-5xl mx-auto px-4">
-            <motion.div {...(reduce ? {} : fadeUp)} className="mb-10 max-w-2xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground mb-2">
-                Eligible equipment
+            <motion.h2
+              {...(reduce ? {} : fadeUp)}
+              id="how-heading"
+              className="text-2xl md:text-3xl font-bold text-foreground"
+            >
+              How it works
+            </motion.h2>
+
+            <div className="mt-8 grid gap-6 sm:grid-cols-3">
+              {STEPS.map((step, i) => (
+                <motion.div
+                  key={step.title}
+                  {...(reduce ? {} : fadeUp)}
+                  transition={{ duration: 0.4, delay: reduce ? 0 : i * 0.07, ease }}
+                  className="rounded-3xl border border-border bg-card p-5"
+                >
+                  <span className={`text-sm font-semibold tabular-nums ${EMERALD}`}>
+                    {String(i + 1).padStart(2, '0')}
+                  </span>
+                  <h3 className="mt-2 text-lg font-semibold text-foreground">{step.title}</h3>
+                  <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{step.body}</p>
+                </motion.div>
+              ))}
+            </div>
+
+            <motion.div {...(reduce ? {} : fadeUp)} className="mt-8">
+              <ApplyCta
+                onApply={startFinancingApply}
+                source="financing_page_mid"
+                listingId={listingId}
+              />
+              <p className="mt-3 text-xs text-muted-foreground">
+                Applying is with Equinox Funding and subject to underwriting.
               </p>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* WHAT YOU CAN FINANCE */}
+        <section className="py-12 md:py-16" aria-labelledby="options-heading">
+          <div className="container max-w-6xl mx-auto px-4">
+            <motion.div {...(reduce ? {} : fadeUp)} className="mb-8 max-w-2xl">
               <h2 id="options-heading" className="text-2xl md:text-3xl font-bold text-foreground">
-                What can be financed?
+                What you can finance
               </h2>
-              <p className="text-base text-muted-foreground mt-3 leading-relaxed">
-                Financing applies to eligible food trucks, food trailers, and food
-                carts listed for sale on Vendibook. Terms vary by applicant and are
-                subject to underwriting.
+              <p className="mt-3 text-base leading-relaxed text-muted-foreground">
+                Eligible equipment listed for sale on Vendibook. Terms vary by
+                applicant and are subject to underwriting.
               </p>
             </motion.div>
 
-            <div className="grid sm:grid-cols-3 gap-8 md:gap-10">
-              {OPTIONS.map(({ icon: Icon, title: t, body }, i) => (
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {OPTIONS.map(({ icon: Icon, image, title: t, body }, i) => (
                 <motion.div
                   key={t}
                   {...(reduce ? {} : fadeUp)}
-                  transition={{ duration: 0.4, delay: reduce ? 0 : i * 0.07, ease }}
+                  transition={{ duration: 0.4, delay: reduce ? 0 : i * 0.06, ease }}
+                  className="overflow-hidden rounded-3xl border border-border bg-card shadow-[0_18px_50px_-38px_rgba(0,0,0,0.45)]"
                 >
-                  <span className="w-11 h-11 rounded-2xl bg-card border border-border flex items-center justify-center shadow-sm mb-5">
-                    <Icon className="w-5 h-5 text-foreground/70" />
-                  </span>
-                  <h3 className="text-lg font-semibold text-foreground mb-2">{t}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{body}</p>
+                  <img src={image} alt="" aria-hidden loading="lazy" className="h-36 w-full object-cover" />
+                  <div className="p-5">
+                    <span className="mb-3 flex h-9 w-9 items-center justify-center rounded-xl border border-border bg-background shadow-sm">
+                      <Icon className="h-4 w-4 text-foreground/70" aria-hidden />
+                    </span>
+                    <h3 className="text-base font-semibold text-foreground">{t}</h3>
+                    <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{body}</p>
+                  </div>
                 </motion.div>
               ))}
             </div>
 
             <motion.div
               {...(reduce ? {} : fadeUp)}
-              className="mt-10 flex flex-wrap items-center gap-3 rounded-3xl border border-border bg-card px-5 py-4"
+              className="mt-8 flex flex-wrap items-center gap-3 rounded-3xl border border-border bg-card px-5 py-4"
             >
               <FinancingAvailableBadge asLink={false} />
-              <p className="text-sm text-muted-foreground leading-relaxed flex-1 min-w-[240px]">
-                Look for this badge as you browse — financing is available on eligible
-                for-sale listings across Vendibook.
+              <p className="min-w-[240px] flex-1 text-sm leading-relaxed text-muted-foreground">
+                <span className="font-semibold text-foreground">Already found a listing?</span>{' '}
+                Look for this badge as you browse — financing can be used for eligible
+                for-sale inventory across Vendibook.
               </p>
-            </motion.div>
-
-            {/* Freight cross-link — transportation can ride along on financing */}
-            <motion.div
-              {...(reduce ? {} : fadeUp)}
-              className="mt-6 flex flex-col sm:flex-row sm:items-center gap-4 rounded-3xl border border-border bg-card px-5 py-4"
-            >
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-border bg-background shadow-sm">
-                <Truck className="h-4 w-4 text-foreground/70" aria-hidden />
-              </span>
-              <p className="flex-1 min-w-[240px] text-sm text-muted-foreground leading-relaxed">
-                <span className="font-semibold text-foreground">Buying from out of state?</span>{' '}
-                Vendibook Freight can be financed too — transportation may be included in
-                eligible financing arrangements, depending on the financing provider and
-                the transaction.
-              </p>
-              <Button variant="cta-outline" size="sm" className="rounded-full shrink-0" asChild>
-                <Link to="/vendibook-freight">
-                  About Vendibook Freight
-                  <ArrowRight className="w-3.5 h-3.5 ml-1" aria-hidden />
+              <Button variant="cta-outline" size="sm" className="shrink-0 rounded-full" asChild>
+                <Link to="/browse">
+                  Browse inventory
+                  <ArrowRight className="ml-1 h-3.5 w-3.5" aria-hidden />
                 </Link>
               </Button>
             </motion.div>
           </div>
         </section>
 
-        {/* B — WHAT HAPPENS AFTER YOU APPLY */}
-        <section className="py-12 md:py-16" aria-labelledby="process-heading">
-          <div className="container max-w-4xl mx-auto px-4">
-            <motion.div {...(reduce ? {} : fadeUp)} className="mb-10 max-w-2xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground mb-2">
-                The application
-              </p>
-              <h2 id="process-heading" className="text-2xl md:text-3xl font-bold text-foreground">
-                What happens after you apply?
+        {/* WHO THIS MAY WORK FOR */}
+        <section className="border-y border-border bg-card/40 py-12 md:py-16" aria-labelledby="qualify-heading">
+          <div className="container max-w-5xl mx-auto px-4">
+            <motion.div {...(reduce ? {} : fadeUp)} className="mb-8 max-w-2xl">
+              <h2 id="qualify-heading" className="text-2xl md:text-3xl font-bold text-foreground">
+                Who this may work for
               </h2>
+              <p className="mt-3 text-base leading-relaxed text-muted-foreground">
+                Approval is never guaranteed — but more profiles may qualify than
+                most people expect.
+              </p>
             </motion.div>
 
-            <ol className="space-y-0">
+            <div className="grid gap-8 sm:grid-cols-3 md:gap-10">
+              {QUALIFY.map((q, i) => (
+                <motion.div
+                  key={q.title}
+                  {...(reduce ? {} : fadeUp)}
+                  transition={{ duration: 0.4, delay: reduce ? 0 : i * 0.07, ease }}
+                >
+                  <span aria-hidden className="mb-5 block h-px w-10 bg-emerald-600/50" />
+                  <h3 className="mb-2 text-lg font-semibold text-foreground">{q.title}</h3>
+                  <p className="text-sm leading-relaxed text-muted-foreground">{q.body}</p>
+                </motion.div>
+              ))}
+            </div>
+
+            <motion.div {...(reduce ? {} : fadeUp)} className="mt-9">
+              <ApplyCta
+                onApply={startFinancingApply}
+                source="financing_page_mid"
+                listingId={listingId}
+              />
+            </motion.div>
+          </div>
+        </section>
+
+        {/* AFTER YOU APPLY */}
+        <section className="py-12 md:py-16" aria-labelledby="process-heading">
+          <div className="container max-w-4xl mx-auto px-4">
+            <motion.h2
+              {...(reduce ? {} : fadeUp)}
+              id="process-heading"
+              className="text-2xl md:text-3xl font-bold text-foreground"
+            >
+              What happens after you apply
+            </motion.h2>
+
+            <ol className="mt-6">
               {PROCESS.map((step, i) => (
                 <motion.li
                   key={step.title}
                   {...(reduce ? {} : fadeUp)}
                   transition={{ duration: 0.4, delay: reduce ? 0 : i * 0.05, ease }}
-                  className="flex gap-5 sm:gap-8 py-6 border-b border-border last:border-b-0"
+                  className="flex gap-5 border-b border-border py-6 last:border-b-0 sm:gap-8"
                 >
                   <span
                     aria-hidden
-                    className={`shrink-0 text-sm font-semibold tabular-nums pt-0.5 ${EMERALD}`}
+                    className={`shrink-0 pt-0.5 text-sm font-semibold tabular-nums ${EMERALD}`}
                   >
                     {String(i + 1).padStart(2, '0')}
                   </span>
                   <div>
-                    <h3 className="text-base font-semibold text-foreground mb-1">{step.title}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed max-w-xl">
+                    <h3 className="mb-1 text-base font-semibold text-foreground">{step.title}</h3>
+                    <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">
                       {step.body}
                     </p>
                   </div>
@@ -414,59 +567,43 @@ const Financing = () => {
               ))}
             </ol>
 
-            <motion.div {...(reduce ? {} : fadeUp)} className="mt-8">
-              <ApplyCta onApply={startFinancingApply} source="financing_page_mid" listingId={listingId} />
+            {/* Freight cross-link */}
+            <motion.div
+              {...(reduce ? {} : fadeUp)}
+              className="mt-8 flex flex-col gap-4 rounded-3xl border border-border bg-card px-5 py-4 sm:flex-row sm:items-center"
+            >
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-border bg-background shadow-sm">
+                <Truck className="h-4 w-4 text-foreground/70" aria-hidden />
+              </span>
+              <p className="min-w-[240px] flex-1 text-sm leading-relaxed text-muted-foreground">
+                <span className="font-semibold text-foreground">Buying from out of state?</span>{' '}
+                Vendibook Freight transportation may be included in eligible financing
+                arrangements, depending on the financing provider and the transaction.
+              </p>
+              <Button variant="cta-outline" size="sm" className="shrink-0 rounded-full" asChild>
+                <Link to="/vendibook-freight">
+                  About Vendibook Freight
+                  <ArrowRight className="ml-1 h-3.5 w-3.5" aria-hidden />
+                </Link>
+              </Button>
             </motion.div>
           </div>
         </section>
 
-        {/* C — WHO FINANCING MAY WORK FOR */}
-        <section className="py-12 md:py-16 border-y border-border bg-card/40" aria-labelledby="qualify-heading">
-          <div className="container max-w-5xl mx-auto px-4">
-            <motion.div {...(reduce ? {} : fadeUp)} className="mb-10 max-w-2xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground mb-2">
-                Fit
-              </p>
-              <h2 id="qualify-heading" className="text-2xl md:text-3xl font-bold text-foreground">
-                Who financing may work for.
-              </h2>
-              <p className="text-base text-muted-foreground mt-3 leading-relaxed">
-                Approval is never guaranteed — but more profiles qualify than most
-                people expect.
-              </p>
-            </motion.div>
-
-            <div className="grid sm:grid-cols-3 gap-8 md:gap-10">
-              {QUALIFY.map((q, i) => (
-                <motion.div
-                  key={q.title}
-                  {...(reduce ? {} : fadeUp)}
-                  transition={{ duration: 0.4, delay: reduce ? 0 : i * 0.07, ease }}
-                >
-                  <span aria-hidden className="block h-px w-10 bg-emerald-600/50 mb-5" />
-                  <h3 className="text-lg font-semibold text-foreground mb-2">{q.title}</h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{q.body}</p>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* D — KNOW BEFORE YOU APPLY */}
-        <section className="py-12 md:py-16" aria-labelledby="snapshot-heading">
+        {/* PROGRAM SNAPSHOT + DISCLOSURES */}
+        <section className="border-t border-border bg-card/40 py-12 md:py-16" aria-labelledby="snapshot-heading">
           <div className="container max-w-4xl mx-auto px-4">
-            <motion.div {...(reduce ? {} : fadeUp)} className="mb-8 max-w-2xl">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground mb-2">
-                The fine print, up front
-              </p>
-              <h2 id="snapshot-heading" className="text-2xl md:text-3xl font-bold text-foreground">
-                Know before you apply.
-              </h2>
-            </motion.div>
+            <motion.h2
+              {...(reduce ? {} : fadeUp)}
+              id="snapshot-heading"
+              className="text-2xl md:text-3xl font-bold text-foreground"
+            >
+              Program snapshot
+            </motion.h2>
 
             <motion.div
               {...(reduce ? {} : fadeUp)}
-              className="rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-[0_18px_50px_-24px_rgba(0,0,0,0.15)]"
+              className="mt-6 rounded-3xl border border-border bg-card p-6 shadow-[0_18px_50px_-24px_rgba(0,0,0,0.15)] sm:p-8"
             >
               <ul className="grid gap-3 sm:grid-cols-2">
                 {SNAPSHOT.map((item) => (
@@ -486,10 +623,10 @@ const Financing = () => {
               </p>
             </motion.div>
 
-            {/* Required disclosures — visually separated from persuasive content */}
+            {/* Required disclosures */}
             <motion.div
               {...(reduce ? {} : fadeUp)}
-              className="mt-6 space-y-4 rounded-3xl border border-border bg-card/40 p-6 sm:p-8"
+              className="mt-6 space-y-4 rounded-3xl border border-border bg-background/60 p-6 sm:p-8"
               aria-label="Disclosures"
             >
               <p className="text-xs leading-relaxed text-muted-foreground">
@@ -536,21 +673,23 @@ const Financing = () => {
           </div>
         </section>
 
-        {/* E — FAQ */}
-        <section className="py-12 md:py-16 border-y border-border bg-card/40" aria-labelledby="faq-heading">
+        {/* FAQ */}
+        <section className="border-y border-border py-12 md:py-16" aria-labelledby="faq-heading">
           <div className="container max-w-3xl mx-auto px-4">
-            <motion.div {...(reduce ? {} : fadeUp)} className="mb-8 text-center">
-              <h2 id="faq-heading" className="text-2xl md:text-3xl font-bold text-foreground">
-                Financing questions, answered.
-              </h2>
-            </motion.div>
-            <dl className="space-y-0">
+            <motion.h2
+              {...(reduce ? {} : fadeUp)}
+              id="faq-heading"
+              className="mb-8 text-center text-2xl md:text-3xl font-bold text-foreground"
+            >
+              Financing questions, answered.
+            </motion.h2>
+            <dl>
               {FAQ.map((item, i) => (
                 <motion.div
                   key={item.q}
                   {...(reduce ? {} : fadeUp)}
                   transition={{ duration: 0.4, delay: reduce ? 0 : i * 0.04, ease }}
-                  className="py-5 border-b border-border last:border-b-0"
+                  className="border-b border-border py-5 last:border-b-0"
                 >
                   <dt className="text-base font-semibold text-foreground">{item.q}</dt>
                   <dd className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{item.a}</dd>
@@ -560,33 +699,39 @@ const Financing = () => {
           </div>
         </section>
 
-        {/* FINAL CTA + related */}
+        {/* FINAL CTA */}
         <section className="py-16 md:py-20">
           <div className="container max-w-3xl mx-auto px-4 text-center">
             <motion.div {...(reduce ? {} : fadeUp)}>
-              <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
+              <h2 className="mb-3 text-2xl md:text-3xl font-bold text-foreground">
                 Ready to see your options?
               </h2>
-              <p className="text-base text-muted-foreground mb-7">
-                Applying takes a few minutes, and you’ll submit directly to Equinox
-                Funding — not to Vendibook.
+              <p className="mb-7 text-base text-muted-foreground">
+                The application takes a few minutes and goes directly to Equinox
+                Funding — approval is subject to underwriting.
               </p>
-              <div className="flex flex-wrap gap-3 justify-center">
-                <ApplyCta onApply={startFinancingApply} source="financing_page_footer" listingId={listingId} />
+              <div className="flex flex-wrap justify-center gap-3">
+                <ApplyCta
+                  onApply={startFinancingApply}
+                  source="financing_page_footer"
+                  listingId={listingId}
+                />
                 <Button variant="cta-outline" size="lg" className="rounded-full" asChild>
-                  <Link to="/how-purchasing-works">How purchasing works</Link>
+                  <Link to="/browse">Browse trucks &amp; trailers</Link>
                 </Button>
               </div>
-              <p className="text-xs text-muted-foreground mt-6 inline-flex items-center gap-1.5">
-                <HandCoins className="w-3.5 h-3.5" />
+              <p className="mt-6 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                <HandCoins className="h-3.5 w-3.5" aria-hidden />
                 Prefer to pay another way? See{' '}
                 <Link to="/payments" className="underline underline-offset-2 hover:text-foreground">
                   PayPal checkout and Pay in Person
                 </Link>
                 , or{' '}
-                <Link to="/browse" className="underline underline-offset-2 hover:text-foreground">
-                  keep browsing
-                  <ArrowRight className="w-3 h-3 inline ml-0.5 -mt-0.5" />
+                <Link
+                  to="/how-purchasing-works"
+                  className="underline underline-offset-2 hover:text-foreground"
+                >
+                  how purchasing works
                 </Link>
               </p>
             </motion.div>
@@ -594,10 +739,28 @@ const Financing = () => {
         </section>
       </main>
 
+      {/* STICKY MOBILE CTA */}
+      <div
+        className="fixed inset-x-0 z-40 border-t border-border bg-background/95 px-4 py-3 backdrop-blur-md md:hidden"
+        style={{ bottom: 'calc(3.5rem + env(safe-area-inset-bottom))' }}
+      >
+        <Button
+          variant="cta"
+          size="lg"
+          className="w-full rounded-full font-semibold"
+          onClick={() => startFinancingApply('financing_page_sticky', listingId)}
+        >
+          Check financing options
+          <ArrowRight className="ml-1.5 h-4 w-4" aria-hidden />
+        </Button>
+        <p className="mt-1.5 text-center text-[10px] leading-snug text-muted-foreground">
+          Apply with Equinox Funding · subject to underwriting
+        </p>
+      </div>
+
       <Footer />
       {financingLeadDialog}
     </div>
-
   );
 };
 

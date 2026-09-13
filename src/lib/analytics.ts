@@ -834,6 +834,7 @@ export type FinancingSource =
   | 'financing_page_mid'
   | 'financing_page_footer'
   | 'financing_page_context'
+  | 'financing_page_sticky'
   | 'listing_panel'
   | 'listing_price_line'
   | 'listing_card';
