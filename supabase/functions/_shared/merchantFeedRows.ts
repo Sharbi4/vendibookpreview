@@ -127,6 +127,7 @@ export async function fetchMerchantRows(): Promise<string[][]> {
     .map((l: any) => {
       const categoryLabel = CATEGORY_LABELS[l.category] || "Mobile Food Asset";
       const location = [l.city, l.state].filter(Boolean).join(", ");
+      const locationPlain = [l.city, l.state].filter(Boolean).join(" ");
       const brandName = resolveListingBrand(l);
       const condition = l.condition === "new" ? "new" : l.condition === "refurbished" ? "refurbished" : "used";
 
@@ -152,7 +153,7 @@ export async function fetchMerchantRows(): Promise<string[][]> {
         .join(",");
       const fallbackHighlights = [
         `${categoryLabel} ready for business`,
-        location ? `Located in ${noCommas(location)}` : "",
+        location ? `Located in ${locationPlain}` : "",
         l.condition ? `Condition: ${CONDITION_LABELS[l.condition] ?? "Used"}` : "",
       ].filter(Boolean).join(",");
 
@@ -160,7 +161,7 @@ export async function fetchMerchantRows(): Promise<string[][]> {
         ["General", "Type", categoryLabel],
         ["General", "Condition", CONDITION_LABELS[l.condition] ?? "Used"],
         l.kitchen_build_year ? ["General", "Build year", String(l.kitchen_build_year)] : null,
-        location ? ["General", "Location", location] : null,
+        location ? ["General", "Location", locationPlain] : null,
         l.title_status ? ["General", "Title status", String(l.title_status).replace(/_/g, " ")] : null,
         l.operational_status ? ["General", "Operational status", String(l.operational_status).replace(/_/g, " ")] : null,
         inches(l.length_inches) ? ["Dimensions", "Length", inches(l.length_inches)!] : null,
@@ -171,7 +172,7 @@ export async function fetchMerchantRows(): Promise<string[][]> {
         .map((d) => (d as string[]).map(noCommas).join(":"))
         .join(",");
 
-      const productType = `Food Trucks & Trailers > ${categoryLabel}s for Sale${location ? ` > ${noCommas(location)}` : ""}`;
+      const productType = `Food Trucks & Trailers > ${categoryLabel}s for Sale${location ? ` > ${locationPlain}` : ""}`;
 
       return [
         sanitizeField(l.id),
