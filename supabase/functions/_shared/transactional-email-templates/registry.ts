@@ -113,6 +113,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'feedback-request': feedbackRequest,
   'support-reply': supportReply,
   'featured-payment-receipt': featuredPaymentReceipt,
+  'freight-quote': freightQuote,
   'featured-payment-admin-alert': featuredPaymentAdminAlert,
   'featured-payment-refunded': featuredPaymentRefunded,
   'featured-boost-expired': featuredBoostExpired,
