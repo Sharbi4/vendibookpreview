@@ -44,6 +44,8 @@ type FreightRequest = {
   quote_transit_days: string | null;
   quoted_at: string | null;
   quoted_by: string | null;
+  paypal_invoice_url?: string | null;
+  paypal_invoice_id?: string | null;
 };
 
 type QuoteDraft = { price: string; transit: string; notes: string };
