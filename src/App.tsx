@@ -18,6 +18,7 @@ import CookieConsent from "@/components/CookieConsent";
 import ScrollToTop from "@/components/ScrollToTop";
 
 import PageTransition from "@/components/PageTransition";
+import PreserveQueryRedirect from "@/components/routing/PreserveQueryRedirect";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { usePageTracking } from "@/hooks/usePageTracking";
 import { usePendingMessage } from "@/hooks/usePendingMessage";
