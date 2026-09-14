@@ -45,11 +45,11 @@ Deno.serve(async (req) => {
       return json({ error: "Google Sheets connection is not configured" }, 500);
     }
 
-    const secret = Deno.env.get("DIGEST_TEST_SECRET");
+    const secrets = [Deno.env.get("DIGEST_TEST_SECRET"), Deno.env.get("FEATURE_CAMPAIGN_TOKEN")].filter(Boolean);
     const provided = req.headers.get("x-admin-task-secret");
     const serviceKey = req.headers.get("authorization")?.replace("Bearer ", "");
     const isService = serviceKey && serviceKey === Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-    if (!isService && !(secret && provided === secret)) {
+    if (!isService && !(provided && secrets.includes(provided))) {
       return json({ error: "Unauthorized" }, 401);
     }
 
