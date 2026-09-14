@@ -280,6 +280,8 @@ const AnimatedRoutes = () => {
           <Route path="/transaction/:transactionId" element={<PageTransition><TransactionDetail /></PageTransition>} />
           <Route path="/host/bookings" element={<PageTransition><HostBookings /></PageTransition>} />
           <Route path="/host/listings" element={<PageTransition><HostListings /></PageTransition>} />
+          {/* Campaign deep-link alias — keeps ?boost= and UTMs intact */}
+          <Route path="/dashboard/listings" element={<PreserveQueryRedirect to="/host/listings" />} />
           <Route path="/host/reporting" element={<PageTransition><HostReporting /></PageTransition>} />
           <Route path="/host/analytics" element={<PageTransition><HostAnalytics /></PageTransition>} />
           {/* Legacy listing-creation entries → canonical opening gateway */}
