@@ -279,3 +279,6 @@ verify_jwt = false
 
 [functions.send-freight-quote]
 verify_jwt = false
+
+[functions.send-feature-your-listing]
+verify_jwt = false
