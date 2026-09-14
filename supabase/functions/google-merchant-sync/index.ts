@@ -183,7 +183,7 @@ Deno.serve(async (req) => {
     serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
 
 
-    const accessToken = await getAccessToken(serviceAccount);
+    const accessToken = await getAccessToken(serviceAccount as { client_email: string; private_key: string });
 
     // Initialize Supabase client
     const supabase = createClient(
