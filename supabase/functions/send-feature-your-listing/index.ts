@@ -52,7 +52,11 @@ serve(async (req) => {
 
     // ---- auth: service-role/internal caller, or an admin end-user JWT ----
     let callerId: string | null = null;
-    if (!isInternalCaller(req)) {
+    const opsToken = Deno.env.get("FEATURE_CAMPAIGN_TOKEN") ?? "";
+    const headerToken = (req.headers.get("x-admin-task-secret") ?? "").trim();
+    const internalOps = !!opsToken && headerToken === opsToken;
+
+    if (!internalOps && !isInternalCaller(req)) {
       const token = (req.headers.get("Authorization") ?? "").replace("Bearer ", "");
       if (!token) return json({ error: "Unauthorized" }, 401);
       const { data: userRes } = await admin.auth.getUser(token);
