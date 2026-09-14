@@ -35,7 +35,12 @@ Deno.serve(async (req) => {
     const authHeader = req.headers.get("Authorization") ?? "";
     const bearer = authHeader.replace("Bearer ", "").trim();
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
-    let authorized = !!bearer && bearer === serviceKey;
+    // Internal admin-task secret (same shared secret the internal digest
+    // tooling uses) so an operator run doesn't need a browser session.
+    const taskSecret = (Deno.env.get("DIGEST_TEST_SECRET") ?? "").trim();
+    const headerSecret = (req.headers.get("x-admin-task-secret") ?? "").trim();
+    let authorized = (!!bearer && bearer === serviceKey) ||
+      (!!taskSecret && headerSecret === taskSecret);
     if (!authorized) {
       if (!bearer) return jsonError(401, "unauthenticated", "Please sign in.");
       const { data: userData } = await admin.auth.getUser(bearer);
