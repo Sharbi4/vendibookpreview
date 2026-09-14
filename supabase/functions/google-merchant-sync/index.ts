@@ -135,35 +135,53 @@ Deno.serve(async (req) => {
       throw new Error('Missing GOOGLE_MERCHANT_ID or GOOGLE_SERVICE_ACCOUNT_JSON');
     }
 
-    // Parse service account JSON - handle various encoding scenarios
-    let serviceAccount;
-    let rawJson = serviceAccountJson.trim();
-    
-    // Remove surrounding quotes if present
-    if ((rawJson.startsWith('"') && rawJson.endsWith('"')) || (rawJson.startsWith("'") && rawJson.endsWith("'"))) {
-      rawJson = rawJson.slice(1, -1);
+    // Parse service account credentials - tolerate raw JSON, quoted JSON, escaped JSON or base64
+    const raw = serviceAccountJson.trim();
+
+    const candidates: string[] = [];
+    const pushCandidate = (v: string) => {
+      const t = v.trim();
+      if (t && !candidates.includes(t)) candidates.push(t);
+    };
+
+    pushCandidate(raw);
+    if ((raw.startsWith('"') && raw.endsWith('"')) || (raw.startsWith("'") && raw.endsWith("'"))) {
+      pushCandidate(raw.slice(1, -1));
     }
-    
-    // Unescape common escape sequences
-    rawJson = rawJson.replace(/\\n/g, '\n').replace(/\\"/g, '"').replace(/\\\\/g, '\\');
-    
-    try {
-      serviceAccount = JSON.parse(rawJson);
-    } catch (e1) {
-      console.error('First parse attempt failed:', (e1 as Error).message);
-      console.error('First 100 chars of raw value:', rawJson.substring(0, 100));
-      // Try parsing without the unescape step
+    pushCandidate(raw.replace(/\\n/g, '\n').replace(/\\"/g, '"'));
+    if (!raw.startsWith('{')) {
       try {
-        serviceAccount = JSON.parse(serviceAccountJson.trim());
-      } catch (e2) {
-        console.error('Second parse attempt failed:', (e2 as Error).message);
-        throw new Error('Invalid GOOGLE_SERVICE_ACCOUNT_JSON format. Ensure you paste the raw JSON file contents without extra quotes or escaping.');
+        pushCandidate(atob(raw.replace(/\s+/g, '')));
+      } catch (_) {
+        // not base64
       }
+    }
+
+    let serviceAccount: { client_email?: string; private_key?: string } | undefined;
+    for (const candidate of candidates) {
+      try {
+        const parsed = JSON.parse(candidate);
+        if (parsed && typeof parsed === 'object') {
+          serviceAccount = parsed;
+          break;
+        }
+      } catch (_) {
+        // try next shape
+      }
+    }
+
+    if (!serviceAccount) {
+      console.error('Unable to parse service account credentials in any known format.');
+      throw new Error('Invalid GOOGLE_SERVICE_ACCOUNT_JSON format. Paste the raw JSON key file contents (or its base64 encoding) with no surrounding quotes.');
     }
 
     if (!serviceAccount.client_email || !serviceAccount.private_key) {
       throw new Error('Service account JSON missing client_email or private_key fields');
     }
+
+    // Normalize escaped newlines inside the PEM body
+    serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, '\n');
+
 
     const accessToken = await getAccessToken(serviceAccount);
 
