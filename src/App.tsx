@@ -200,6 +200,7 @@ const AdminEmailDashboard = lazy(() => import("./pages/AdminEmailDashboard"));
 const AdminCampaignNewExitPlan = lazy(() => import("./pages/AdminCampaignNewExitPlan"));
 const AdminCampaignEquinoxPartnership = lazy(() => import("./pages/AdminCampaignEquinoxPartnership"));
 const AdminCampaignSpotlightInvite = lazy(() => import("./pages/AdminCampaignSpotlightInvite"));
+const AdminCampaignFeatureYourListing = lazy(() => import("./pages/AdminCampaignFeatureYourListing"));
 const AdminSpotlights = lazy(() => import("./pages/AdminSpotlights"));
 const CommunitySpotlight = lazy(() => import("./pages/CommunitySpotlight"));
 const FinancingEnable = lazy(() => import("./pages/FinancingEnable"));
