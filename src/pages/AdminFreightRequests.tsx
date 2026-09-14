@@ -44,6 +44,8 @@ type FreightRequest = {
   quote_transit_days: string | null;
   quoted_at: string | null;
   quoted_by: string | null;
+  paypal_invoice_url?: string | null;
+  paypal_invoice_id?: string | null;
 };
 
 type QuoteDraft = { price: string; transit: string; notes: string };
@@ -66,6 +68,7 @@ export default function AdminFreightRequests() {
   const [noteDrafts, setNoteDrafts] = useState<Record<string, string>>({});
   const [quoteDrafts, setQuoteDrafts] = useState<Record<string, QuoteDraft>>({});
   const [savingQuote, setSavingQuote] = useState<string | null>(null);
+  const [sendingQuote, setSendingQuote] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isLoading && !user) navigate("/auth");
@@ -146,6 +149,39 @@ export default function AdminFreightRequests() {
       return next;
     });
     toast({ title: "Quote saved", description: `$${parsed.toFixed(2)} recorded for this request.` });
+  };
+
+  /** Emails the branded quote and creates/reuses the PayPal pay link. */
+  const sendQuoteEmail = async (r: FreightRequest) => {
+    const draft = draftFor(r);
+    const parsed = Number(draft.price.replace(/[^0-9.]/g, ""));
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      toast({ title: "Enter a valid quote price first", variant: "destructive" });
+      return;
+    }
+    setSendingQuote(r.id);
+    const { data, error } = await supabase.functions.invoke("send-freight-quote", {
+      body: {
+        request_id: r.id,
+        amount_cents: Math.round(parsed * 100),
+        transit_time: draft.transit.trim() || null,
+        notes: draft.notes.trim() || null,
+      },
+    });
+    setSendingQuote(null);
+    if (error) {
+      toast({ title: "Could not send the quote", description: error.message, variant: "destructive" });
+      return;
+    }
+    const payUrl = (data as { pay_url?: string } | null)?.pay_url ?? null;
+    setRows((rows) =>
+      rows.map((x) =>
+        x.id === r.id
+          ? { ...x, status: "quoted", quote_amount_cents: Math.round(parsed * 100), paypal_invoice_url: payUrl }
+          : x,
+      ),
+    );
+    toast({ title: "Quote emailed", description: `Sent to ${r.contact_email} with a PayPal payment link.` });
   };
 
   const quoteMailto = (r: FreightRequest) => {
@@ -374,12 +410,28 @@ export default function AdminFreightRequests() {
                         {savingQuote === r.id && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                         Save quote
                       </Button>
-                      <Button variant="outline" asChild>
-                        <a href={quoteMailto(r)}>
-                          <Mail className="w-4 h-4 mr-2" aria-hidden="true" /> Email quote
-                        </a>
+                      <Button
+                        variant="outline"
+                        onClick={() => void sendQuoteEmail(r)}
+                        disabled={sendingQuote === r.id}
+                      >
+                        {sendingQuote === r.id
+                          ? <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          : <Mail className="w-4 h-4 mr-2" aria-hidden="true" />}
+                        Send quote + PayPal link
+                      </Button>
+                      <Button variant="ghost" asChild>
+                        <a href={quoteMailto(r)}>Draft in mail app</a>
                       </Button>
                     </div>
+                    {r.paypal_invoice_url ? (
+                      <p className="text-xs text-muted-foreground break-all">
+                        PayPal pay link:{" "}
+                        <a className="underline" href={r.paypal_invoice_url} target="_blank" rel="noreferrer">
+                          {r.paypal_invoice_url}
+                        </a>
+                      </p>
+                    ) : null}
                   </div>
 
 

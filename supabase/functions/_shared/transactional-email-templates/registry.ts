@@ -38,6 +38,7 @@ import { template as feedbackRequest } from './feedback-request.tsx'
 import { template as bookingAbandoned } from './booking-abandoned.tsx'
 import { template as supportReply } from './support-reply.tsx'
 import { template as featuredPaymentReceipt } from './featured-payment-receipt.tsx'
+import { template as freightQuote } from './freight-quote.tsx'
 import { template as featuredPaymentAdminAlert } from './featured-payment-admin-alert.tsx'
 import { template as featuredPaymentRefunded } from './featured-payment-refunded.tsx'
 import { template as featuredBoostExpired } from './featured-boost-expired.tsx'
@@ -112,6 +113,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'feedback-request': feedbackRequest,
   'support-reply': supportReply,
   'featured-payment-receipt': featuredPaymentReceipt,
+  'freight-quote': freightQuote,
   'featured-payment-admin-alert': featuredPaymentAdminAlert,
   'featured-payment-refunded': featuredPaymentRefunded,
   'featured-boost-expired': featuredBoostExpired,

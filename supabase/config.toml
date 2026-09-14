@@ -276,3 +276,6 @@ verify_jwt = false
 
 [functions.admin-checkout-recovery-notify]
 verify_jwt = false
+
+[functions.send-freight-quote]
+verify_jwt = false
