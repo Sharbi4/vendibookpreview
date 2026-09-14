@@ -2069,10 +2069,13 @@ export type Database = {
           id: string
           length_ft: string | null
           notes: string | null
+          paypal_invoice_id: string | null
+          paypal_invoice_url: string | null
           pickup_date: string | null
           pickup_location: string
           quote_amount_cents: number | null
           quote_notes: string | null
+          quote_sent_at: string | null
           quote_transit_days: string | null
           quoted_at: string | null
           quoted_by: string | null
@@ -2098,10 +2101,13 @@ export type Database = {
           id?: string
           length_ft?: string | null
           notes?: string | null
+          paypal_invoice_id?: string | null
+          paypal_invoice_url?: string | null
           pickup_date?: string | null
           pickup_location: string
           quote_amount_cents?: number | null
           quote_notes?: string | null
+          quote_sent_at?: string | null
           quote_transit_days?: string | null
           quoted_at?: string | null
           quoted_by?: string | null
@@ -2127,10 +2133,13 @@ export type Database = {
           id?: string
           length_ft?: string | null
           notes?: string | null
+          paypal_invoice_id?: string | null
+          paypal_invoice_url?: string | null
           pickup_date?: string | null
           pickup_location?: string
           quote_amount_cents?: number | null
           quote_notes?: string | null
+          quote_sent_at?: string | null
           quote_transit_days?: string | null
           quoted_at?: string | null
           quoted_by?: string | null
