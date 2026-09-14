@@ -13,7 +13,8 @@ import { invokeTransactionalEmail } from "../_shared/invokeTransactionalEmail.ts
  * payouts, which stay manual.
  */
 
-const money = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+const money = (cents: number) =>
+  `$${(cents / 100).toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const fmtDate = (value?: string | null) => {
   if (!value) return null;
   const d = new Date(`${value}T12:00:00Z`);
