@@ -151,6 +151,39 @@ export default function AdminFreightRequests() {
     toast({ title: "Quote saved", description: `$${parsed.toFixed(2)} recorded for this request.` });
   };
 
+  /** Emails the branded quote and creates/reuses the PayPal pay link. */
+  const sendQuoteEmail = async (r: FreightRequest) => {
+    const draft = draftFor(r);
+    const parsed = Number(draft.price.replace(/[^0-9.]/g, ""));
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+      toast({ title: "Enter a valid quote price first", variant: "destructive" });
+      return;
+    }
+    setSendingQuote(r.id);
+    const { data, error } = await supabase.functions.invoke("send-freight-quote", {
+      body: {
+        request_id: r.id,
+        amount_cents: Math.round(parsed * 100),
+        transit_time: draft.transit.trim() || null,
+        notes: draft.notes.trim() || null,
+      },
+    });
+    setSendingQuote(null);
+    if (error) {
+      toast({ title: "Could not send the quote", description: error.message, variant: "destructive" });
+      return;
+    }
+    const payUrl = (data as { pay_url?: string } | null)?.pay_url ?? null;
+    setRows((rows) =>
+      rows.map((x) =>
+        x.id === r.id
+          ? { ...x, status: "quoted", quote_amount_cents: Math.round(parsed * 100), paypal_invoice_url: payUrl }
+          : x,
+      ),
+    );
+    toast({ title: "Quote emailed", description: `Sent to ${r.contact_email} with a PayPal payment link.` });
+  };
+
   const quoteMailto = (r: FreightRequest) => {
     const draft = draftFor(r);
     const price = draft.price ? `$${Number(draft.price.replace(/[^0-9.]/g, "") || 0).toFixed(2)}` : "";
