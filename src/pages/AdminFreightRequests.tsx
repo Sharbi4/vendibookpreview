@@ -374,12 +374,28 @@ export default function AdminFreightRequests() {
                         {savingQuote === r.id && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                         Save quote
                       </Button>
-                      <Button variant="outline" asChild>
-                        <a href={quoteMailto(r)}>
-                          <Mail className="w-4 h-4 mr-2" aria-hidden="true" /> Email quote
-                        </a>
+                      <Button
+                        variant="outline"
+                        onClick={() => void sendQuoteEmail(r)}
+                        disabled={sendingQuote === r.id}
+                      >
+                        {sendingQuote === r.id
+                          ? <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          : <Mail className="w-4 h-4 mr-2" aria-hidden="true" />}
+                        Send quote + PayPal link
+                      </Button>
+                      <Button variant="ghost" asChild>
+                        <a href={quoteMailto(r)}>Draft in mail app</a>
                       </Button>
                     </div>
+                    {r.paypal_invoice_url ? (
+                      <p className="text-xs text-muted-foreground break-all">
+                        PayPal pay link:{" "}
+                        <a className="underline" href={r.paypal_invoice_url} target="_blank" rel="noreferrer">
+                          {r.paypal_invoice_url}
+                        </a>
+                      </p>
+                    ) : null}
                   </div>
 
 
