@@ -171,9 +171,20 @@ Deno.serve(async (req) => {
     }
 
     if (!serviceAccount) {
-      console.error('Unable to parse service account credentials in any known format.');
-      throw new Error('Invalid GOOGLE_SERVICE_ACCOUNT_JSON format. Paste the raw JSON key file contents (or its base64 encoding) with no surrounding quotes.');
+      // Shape-only diagnostics (never the value itself)
+      const shape = {
+        length: raw.length,
+        startsWith: raw.slice(0, 1),
+        looksJson: raw.startsWith('{'),
+        hasClientEmail: raw.includes('client_email'),
+        hasPrivateKey: raw.includes('private_key'),
+      };
+      console.error('Unable to parse service account credentials. Shape:', JSON.stringify(shape));
+      throw new Error(
+        `Invalid GOOGLE_SERVICE_ACCOUNT_JSON format (shape: ${JSON.stringify(shape)}). Paste the raw JSON key file contents with no surrounding quotes.`,
+      );
     }
+
 
     if (!serviceAccount.client_email || !serviceAccount.private_key) {
       throw new Error('Service account JSON missing client_email or private_key fields');
