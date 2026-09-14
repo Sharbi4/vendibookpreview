@@ -56,7 +56,7 @@ export function AdditionalSellerSupportCards({
 
   // If checkout should open in a new tab, override startCheckout by
   // intercepting window.location via a targeted anchor. Simplest: patch by
-  // wrapping in a container that opens Stripe in new tab through window.open.
+  // wrapping in a container that opens checkout in a new tab through window.open.
   // ProductPricingCard uses window.location.href — for wizard use we override
   // via a temporary hook using open() below.
   useEffect(() => {
