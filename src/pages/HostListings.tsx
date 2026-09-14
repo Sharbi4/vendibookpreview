@@ -238,6 +238,15 @@ const HostListings = () => {
         )}
       </div>
 
+      {boostTarget && (
+        <PromoteListingModal
+          open={!!boostTarget}
+          onOpenChange={(open) => { if (!open) setBoostTarget(null); }}
+          listingId={boostTarget.id}
+          listingTitle={boostTarget.title}
+        />
+      )}
+
     </DashboardLayout>
   );
 };
