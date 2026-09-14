@@ -56,13 +56,13 @@ Deno.serve(async (req) => {
     const rows = await fetchMerchantRows();
 
     // Clear old products (keep the header row), then write the fresh set.
-    await sheets("POST", `/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_TAB}!A2:AL1000:clear`, {});
+    await sheets("POST", `/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_TAB}!A2:AN1000:clear`, {});
 
     const values = [MERCHANT_HEADER, ...rows];
     await sheets(
       "PUT",
-      `/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_TAB}!A1:AL${values.length}?valueInputOption=RAW`,
-      { range: `${SHEET_TAB}!A1:AL${values.length}`, majorDimension: "ROWS", values },
+      `/spreadsheets/${SPREADSHEET_ID}/values/${SHEET_TAB}!A1:AN${values.length}?valueInputOption=RAW`,
+      { range: `${SHEET_TAB}!A1:AN${values.length}`, majorDimension: "ROWS", values },
     );
 
     return json({ ok: true, products: rows.length, spreadsheetId: SPREADSHEET_ID, tab: SHEET_TAB });
