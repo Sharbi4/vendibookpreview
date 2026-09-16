@@ -310,13 +310,59 @@ export const CATEGORY_INDEX_CONFIGS: CategoryIndexConfig[] = [
     category: 'food_trailer',
     mode: 'rent',
     h1: 'Food Trailers for Rent',
-    title: 'Food Trailers for Rent | Concession Trailer Rentals | Vendibook',
+    title: 'Food Trailers for Rent — Daily, Weekly & Monthly | Vendibook',
     description:
-      'Rent a food trailer or concession trailer for your business. Daily, weekly, and monthly terms from owners nationwide, with photos, equipment details, and delivery options.',
+      'Rent a food trailer or concession trailer near you. Owner-listed trailers with real rates, photos, and equipment details — daily, weekly, and monthly terms, delivery available.',
     intro:
       'Rent a food trailer for your next season, market, pop-up, or full-time operation. Concession trailers tow behind a standard vehicle and typically rent for less than a self-propelled truck. Every listing is owner-managed with photos, equipment lists, transparent rates, and direct messaging.',
     clarification:
       'This is equipment rental: you rent the trailer and operate it yourself. Rental terms — daily, weekly, or monthly — are set by each owner and shown on the listing.',
+    sections: [
+      {
+        heading: 'Food trailer rental terms: daily, weekly, and monthly',
+        paragraphs: [
+          'Owners set their own rental terms, and most trailers on Vendibook are offered on more than one. Daily rates suit single festivals, weddings, and weekend markets. Weekly terms cover multi-day events and short seasonal runs. Monthly food trailer rental is common for operators covering a full season, bridging a build-out, or testing a new market before buying — message the owner through the listing to structure a longer term.',
+          'Every rate shown on a listing is the owner\'s own asking rate. There is no generic price sheet: compare the live listings on this page rather than an industry average.',
+        ],
+        links: [
+          { href: '/search?category=food_trailer&mode=rent', label: 'Search all food trailers for rent' },
+        ],
+      },
+      {
+        heading: 'Rent a food trailer by city',
+        paragraphs: [
+          'Trailer rental demand concentrates in a handful of markets. Browse city pages for local inventory, or use the listings on this page to compare nationwide options and arrange delivery.',
+        ],
+        links: [
+          { href: '/rent/food-trailers/los-angeles-ca', label: 'Food trailers for rent in Los Angeles' },
+          { href: '/rent/food-trailers/houston-tx', label: 'Food trailers for rent in Houston' },
+          { href: '/rent/food-trailers/miami-fl', label: 'Food trailers for rent in Miami' },
+          { href: '/rent/food-trailers/atlanta-ga', label: 'Food trailers for rent in Atlanta' },
+          { href: '/food-trucks-for-rent', label: 'Food trucks for rent nationwide' },
+        ],
+      },
+      {
+        heading: 'What to check before you rent a concession trailer',
+        paragraphs: [
+          'Confirm the tow requirements against your vehicle — hitch class, weight, and brake controller. Check the power and water setup: generator size, shore-power hookup, fresh and grey tank capacity, and whether a three-compartment sink is fitted. Ask the owner about health-department compliance in your county, insurance expectations, and whether delivery and setup are offered. All of it can be settled in the listing conversation before you book.',
+        ],
+        links: [
+          { href: '/tools/permitpath', label: 'Permit & licensing checklist' },
+          { href: '/tools/startup-guide', label: 'Mobile food startup guide' },
+        ],
+      },
+      {
+        heading: 'Rent now, or buy instead?',
+        paragraphs: [
+          'Renting keeps upfront cost low while you validate a concept, cover a season, or wait on a build. Buying makes sense once the concept is proven and you want to customize the equipment and build equity. Many Vendibook operators rent a trailer first and purchase once the numbers work.',
+        ],
+        links: [
+          { href: '/food-trailers-for-sale', label: 'Food trailers for sale' },
+          { href: '/food-truck-prices', label: 'Food truck & trailer price data' },
+          { href: '/rent-out-my-food-truck', label: 'Rent out your own trailer' },
+        ],
+      },
+    ],
     faqs: [
       ...trailerFaqs,
       {
