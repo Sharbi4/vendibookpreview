@@ -468,8 +468,10 @@ const AnimatedRoutes = () => {
           
           {/* Seller landing pages */}
           <Route path="/sell-my-food-truck" element={<PageTransition><SellMyFoodTruck /></PageTransition>} />
-          {/* Consolidated: /sell-food-truck permanently redirects to the canonical seller page */}
-          <Route path="/sell-food-truck" element={<Navigate to="/sell-my-food-truck" replace />} />
+          {/* Consolidated: /sell-food-truck redirects to the canonical seller page.
+              public/_redirects also declares a server 301; this keeps campaign/
+              search query strings intact when the SPA handles the hop. */}
+          <Route path="/sell-food-truck" element={<PreserveQueryRedirect to="/sell-my-food-truck" />} />
           <Route path="/sell-food-trailer" element={<PageTransition><SellFoodTrailer /></PageTransition>} />
           <Route path="/sell-concession-trailer" element={<PageTransition><SellConcessionTrailer /></PageTransition>} />
 
