@@ -89,6 +89,9 @@ const FoodTruckSellingFaq = () => (
           <Link to="/list">List Your Food Truck Free</Link>
         </Button>
         <Button asChild size="lg" variant="outline">
+          <Link to="/sell-my-food-truck">Sell my food truck</Link>
+        </Button>
+        <Button asChild size="lg" variant="outline">
           <Link to="/best-place-to-sell-a-food-truck">Compare ways to sell</Link>
         </Button>
       </div>
