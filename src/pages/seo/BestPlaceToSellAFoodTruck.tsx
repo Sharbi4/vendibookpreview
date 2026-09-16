@@ -213,6 +213,9 @@ const BestPlaceToSellAFoodTruck = () => (
           <Link to="/list">List Your Food Truck Free</Link>
         </Button>
         <Button asChild size="lg" variant="outline">
+          <Link to="/sell-my-food-truck">Sell my food truck</Link>
+        </Button>
+        <Button asChild size="lg" variant="outline">
           <Link to="/why-list-on-vendibook">Why list on Vendibook</Link>
         </Button>
       </div>

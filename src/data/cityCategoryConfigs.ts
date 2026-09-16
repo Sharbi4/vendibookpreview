@@ -161,7 +161,8 @@ CITY_CATEGORY_CONFIGS.push(
       intro: `Looking for ${plural} ${intentLabel.toLowerCase()} in ${s.cityName}? Vendibook is the dedicated marketplace for mobile food assets — every listing is owner-managed, with full specs, photos, and a clean inquiry flow. No tire-kickers, no scams, no losing your listing in a Marketplace feed.`,
       faqs: cityFaqs(s.cityName, s.category),
       related: [
-        { href: `/${s.citySlug}/${catSlug(s.category)}${modeSuffix(s.mode)}`, label: `${pluralTitle} ${intentLabel} in ${s.cityName} (alt URL)` },
+        // NOTE: the parallel /<city>/<category><mode> URL is intentionally not
+        // linked here — advertising two URLs for one intent splits authority.
         { href: `/${s.citySlug}/${catSlug(s.category)}${modeSuffix('rent')}`, label: `${pluralTitle} for Rent in ${s.cityName}` },
         { href: `/${catSlug(s.category)}${modeSuffix(s.mode)}`, label: `All ${pluralTitle.toLowerCase()} ${intentLabel.toLowerCase()}` },
         { href: '/sell-my-food-truck', label: `Sell your ${s.category === 'food_trailer' ? 'food trailer' : 'food truck'}` },
@@ -338,8 +339,8 @@ const STATE_CONTENT_OVERRIDES: Record<string, {
   extraRelated?: { href: string; label: string }[];
 }> = {
   'texas:food_truck': {
-    title: 'Food Trucks for Sale in Texas | Used & Owner-Listed | Vendibook',
-    description: 'Used food trucks for sale in Texas — Houston, DFW, Austin & San Antonio. Real photos, equipment specs, and asking prices from owners. Message sellers direct, financing & delivery available.',
+    title: 'Food Trucks for Sale in Texas — Houston, Dallas, Austin, San Antonio',
+    description: 'Browse used food trucks for sale in Texas with real photos, full equipment specs, and the owner\'s asking price. Message sellers directly — financing and statewide delivery available.',
     introExtra: 'Texas is one of the strongest mobile food markets in the country, and buyers here typically shop the Houston, Dallas–Fort Worth, Austin, and San Antonio corridors. It is also getting easier to operate statewide: as of July 1, 2026, Texas mobile food vendors move to a single statewide DSHS license, replacing the patchwork of county-by-county permits — so a truck bought in one metro can trade across the state with far less paperwork.',
     sections: [
       {

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, MapPin, ArrowRight, Tag, Info } from 'lucide-react';
@@ -315,6 +315,31 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
   // inventory (primary tier) — geographic fallback rows are not local supply.
   const localCount = primary.length;
   const isLowInventory = !loading && localCount < LOW_INVENTORY_THRESHOLD;
+
+  // Live inventory signals shown above the fold. Real numbers only — when a
+  // page has no on-topic inventory the whole block is withheld rather than
+  // rendering zeros or an invented range.
+  const inventoryStats = useMemo(() => {
+    if (primary.length === 0) return null;
+    const amounts = primary
+      .map((l) =>
+        config.mode === 'rent'
+          ? (l.price_daily ?? l.price_weekly ?? l.price_monthly ?? l.price_hourly)
+          : l.price_sale,
+      )
+      .filter((n): n is number => typeof n === 'number' && n > 0);
+    const money = (n: number) => `$${Math.round(n).toLocaleString('en-US')}`;
+    let priceRange: string | null = null;
+    if (amounts.length >= 3) {
+      const min = Math.min(...amounts);
+      const max = Math.max(...amounts);
+      priceRange = min === max ? money(min) : `${money(min)} – ${money(max)}`;
+    }
+    const locationCount = new Set(
+      primary.map((l) => [l.city, l.state].filter(Boolean).join(', ')).filter(Boolean),
+    ).size;
+    return { count: primary.length, priceRange, locationCount };
+  }, [primary, config.mode]);
   const nationwide = useNationwideInventory({
     categories,
     mode: config.mode,
@@ -506,6 +531,36 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
               </div>
             )}
           </header>
+
+          {!loading && inventoryStats && (
+            <section
+              aria-label="Current inventory"
+              className="grid grid-cols-2 gap-3 sm:grid-cols-4 rounded-2xl border border-border bg-card p-4 md:p-5"
+            >
+              <div>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Listings available</p>
+                <p className="text-xl md:text-2xl font-semibold text-foreground">{inventoryStats.count}</p>
+              </div>
+              {inventoryStats.priceRange && (
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                    {config.mode === 'rent' ? 'Rates from' : 'Price range'}
+                  </p>
+                  <p className="text-xl md:text-2xl font-semibold text-foreground">{inventoryStats.priceRange}</p>
+                </div>
+              )}
+              {inventoryStats.locationCount > 0 && (
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Locations</p>
+                  <p className="text-xl md:text-2xl font-semibold text-foreground">{inventoryStats.locationCount}</p>
+                </div>
+              )}
+              <div>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Updated</p>
+                <p className="text-xl md:text-2xl font-semibold text-foreground">Daily</p>
+              </div>
+            </section>
+          )}
 
           {loading ? (
             <div className="flex items-center justify-center py-16 text-muted-foreground">
