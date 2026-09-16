@@ -315,6 +315,31 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
   // inventory (primary tier) — geographic fallback rows are not local supply.
   const localCount = primary.length;
   const isLowInventory = !loading && localCount < LOW_INVENTORY_THRESHOLD;
+
+  // Live inventory signals shown above the fold. Real numbers only — when a
+  // page has no on-topic inventory the whole block is withheld rather than
+  // rendering zeros or an invented range.
+  const inventoryStats = useMemo(() => {
+    if (primary.length === 0) return null;
+    const amounts = primary
+      .map((l) =>
+        config.mode === 'rent'
+          ? (l.price_daily ?? l.price_weekly ?? l.price_monthly ?? l.price_hourly)
+          : l.price_sale,
+      )
+      .filter((n): n is number => typeof n === 'number' && n > 0);
+    const money = (n: number) => `$${Math.round(n).toLocaleString('en-US')}`;
+    let priceRange: string | null = null;
+    if (amounts.length >= 3) {
+      const min = Math.min(...amounts);
+      const max = Math.max(...amounts);
+      priceRange = min === max ? money(min) : `${money(min)} – ${money(max)}`;
+    }
+    const locationCount = new Set(
+      primary.map((l) => [l.city, l.state].filter(Boolean).join(', ')).filter(Boolean),
+    ).size;
+    return { count: primary.length, priceRange, locationCount };
+  }, [primary, config.mode]);
   const nationwide = useNationwideInventory({
     categories,
     mode: config.mode,
