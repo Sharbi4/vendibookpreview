@@ -507,6 +507,36 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
             )}
           </header>
 
+          {!loading && inventoryStats && (
+            <section
+              aria-label="Current inventory"
+              className="grid grid-cols-2 gap-3 sm:grid-cols-4 rounded-2xl border border-border bg-card p-4 md:p-5"
+            >
+              <div>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Listings available</p>
+                <p className="text-xl md:text-2xl font-semibold text-foreground">{inventoryStats.count}</p>
+              </div>
+              {inventoryStats.priceRange && (
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                    {config.mode === 'rent' ? 'Rates from' : 'Price range'}
+                  </p>
+                  <p className="text-xl md:text-2xl font-semibold text-foreground">{inventoryStats.priceRange}</p>
+                </div>
+              )}
+              {inventoryStats.locationCount > 0 && (
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Locations</p>
+                  <p className="text-xl md:text-2xl font-semibold text-foreground">{inventoryStats.locationCount}</p>
+                </div>
+              )}
+              <div>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Updated</p>
+                <p className="text-xl md:text-2xl font-semibold text-foreground">Daily</p>
+              </div>
+            </section>
+          )}
+
           {loading ? (
             <div className="flex items-center justify-center py-16 text-muted-foreground">
               <Loader2 className="h-6 w-6 animate-spin" />

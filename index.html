@@ -19,8 +19,9 @@
     <meta name="author" content="Vendibook" />
     <meta name="robots" content="index, follow" />
     
-    <!-- Canonical URL (prevents duplicate content issues) -->
-    <link rel="canonical" href="https://vendibook.com/" />
+    <!-- Canonical URL is emitted per route by src/components/SEO.tsx.
+         A hardcoded canonical here would tell crawlers every route is a copy
+         of the homepage, so it is intentionally NOT set in the static shell. -->
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
