@@ -2015,3 +2015,5 @@ html.hide-support-chat .widget-visible {
 .v2-embedded-section .rounded-xl, .v2-embedded-section .rounded-2xl { border-radius: 12px; }
 .v2-embedded-section .shadow-lg, .v2-embedded-section .shadow-xl, .v2-embedded-section .shadow-md { box-shadow: none; }
 .v2-embedded-section > div > .border, .v2-embedded-section [class*="card"] { border-color: hsl(var(--v2-line)); }
+.v2-topbar > a img { height: 26px; width: auto; max-width: 104px; object-fit: contain; flex: none; }
+@media (max-width: 767px) { .v2-search { width: auto; flex: 1; } }
