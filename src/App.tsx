@@ -60,6 +60,9 @@ const WorkspaceActivity = lazy(() => import("./pages/workspace/WorkspaceActivity
 const WorkspacePayments = lazy(() => import("./pages/workspace/WorkspacePayments"));
 const WorkspacePaymentSetup = lazy(() => import("./pages/workspace/WorkspacePaymentSetup"));
 const WorkspaceSellerOnboarding = lazy(() => import("./pages/workspace/WorkspaceSellerOnboarding"));
+const WorkspaceBookings = lazy(() => import("./pages/workspace/WorkspaceBookings"));
+const WorkspaceReporting = lazy(() => import("./pages/workspace/WorkspaceReporting"));
+const WorkspaceAnalytics = lazy(() => import("./pages/workspace/WorkspaceAnalytics"));
 const WorkspaceAccount = lazy(() => import("./pages/workspace/WorkspaceAccount"));
 const WorkspaceMessages = lazy(() => import("./pages/workspace/WorkspaceMessages"));
 const WorkspaceNotifications = lazy(() => import("./pages/workspace/WorkspaceNotifications"));
