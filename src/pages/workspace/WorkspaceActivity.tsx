@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUserTransactions } from '@/hooks/useUserTransactions';
 import { useShopperBookings } from '@/hooks/useShopperBookings';
 import { useHostBookings } from '@/hooks/useHostBookings';
+import { useHostListings } from '@/hooks/useHostListings';
 import WorkspaceHostBookings from '@/components/workspace/WorkspaceHostBookings';
 import WorkspaceListingActivity from '@/components/workspace/WorkspaceListingActivity';
 
@@ -224,7 +225,8 @@ export default function WorkspaceActivity() {
               ))}
             </section>
           ))
-        ) : hasHostBookings && (filter === 'all' || filter === 'requests') ? null : (
+        ) : (hasHostBookings && (filter === 'all' || filter === 'requests')) ||
+          (hasPublishedListings && (filter === 'all' || filter === 'sales' || filter === 'listings')) ? null : (
           <div className="v2-panel v2-empty">
             <ImageIcon className="opacity-40" />
             <p>
