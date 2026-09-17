@@ -31,7 +31,8 @@ export function PayPalMonogram({
   className?: string;
 }) {
   const [failed, setFailed] = useState(false);
-  if (failed) return <PayPalTextMark surface={surface} className={cn('text-xs', className)} />;
+  // The wordmark alongside already carries the PayPal name in its fallback.
+  if (failed) return null;
   return (
     <img
       src={paypalMonogram.url}
