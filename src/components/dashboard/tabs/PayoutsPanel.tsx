@@ -53,7 +53,7 @@ const PayoutsPanel = () => {
       const { data } = await (supabase as any)
         .from('seller_payables')
         .select(
-          'id, status, transaction_type, gross_collected_cents, platform_fee_cents, adjustments_cents, refunded_cents, net_payout_cents, release_due_at, payout_eligible_at, hold_reason, created_at',
+          'id, status, transaction_type, gross_collected_cents, platform_fee_cents, adjustments_cents, refunded_cents, net_payout_cents, release_due_at, payout_eligible_at, payout_completed_at, payout_provider, hold_reason, created_at',
         )
         .eq('seller_id', user!.id)
         .order('created_at', { ascending: false })
