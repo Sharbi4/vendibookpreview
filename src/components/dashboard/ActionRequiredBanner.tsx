@@ -85,7 +85,7 @@ const ActionRequiredBanner = ({ pendingRequests, pendingOffers, draftListings = 
               className="gap-1.5"
               onClick={() => {
                 if (primaryAction.tab === 'bookings') {
-                  navigate('/host/bookings');
+                  navigate('/dashboard/bookings');
                 } else if (primaryAction.tab === 'offers') {
                   navigate('/dashboard?view=host&tab=overview');
                 } else if (primaryAction.tab === 'listings') {

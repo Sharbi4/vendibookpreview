@@ -36,7 +36,7 @@ const HostBookings = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    if (!authLoading && !user) navigate('/auth?redirect=' + encodeURIComponent('/host/bookings'));
+    if (!authLoading && !user) navigate('/auth?redirect=' + encodeURIComponent('/dashboard/bookings'));
   }, [authLoading, user, navigate]);
 
   if (!authLoading && !user) return null;
