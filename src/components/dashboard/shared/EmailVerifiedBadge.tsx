@@ -36,7 +36,7 @@ const EmailVerifiedBadge = ({ className, compact }: EmailVerifiedBadgeProps) => 
 
   return (
     <Link
-      to="/account"
+      to="/dashboard/account"
       className={cn(
         'inline-flex items-center rounded-full border border-amber-500/35 bg-amber-500/10 text-amber-400 font-medium hover:bg-amber-500/15 transition-colors',
         compact ? 'gap-1 px-1.5 py-0.5 text-[10px]' : 'gap-1.5 px-2.5 py-1 text-[11px]',

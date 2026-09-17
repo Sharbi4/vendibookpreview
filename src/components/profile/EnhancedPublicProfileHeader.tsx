@@ -623,7 +623,7 @@ const EnhancedPublicProfileHeader = ({
                 </motion.div>
                 <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                   <Button variant="dark-shine" className="rounded-xl shadow-lg" asChild>
-                    <Link to="/account">Edit Profile</Link>
+                    <Link to="/dashboard/account">Edit Profile</Link>
                   </Button>
                 </motion.div>
               </div>

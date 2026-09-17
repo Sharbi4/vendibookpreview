@@ -49,7 +49,7 @@ export interface FaqCategory {
 // -------- Reusable action shortcuts --------
 const A = {
   createListing: { label: "Create a listing", href: "/list", requiresAuth: true },
-  viewTransactions: { label: "View transactions", href: "/transactions", requiresAuth: true },
+  viewTransactions: { label: "View transactions", href: "/dashboard/activity", requiresAuth: true },
   dashboard: { label: "Open dashboard", href: "/dashboard", requiresAuth: true },
   verify: { label: "Verify identity", href: "/verify-identity", requiresAuth: true },
   notifPrefs: { label: "Notification preferences", href: "/notification-preferences", requiresAuth: true },
@@ -57,8 +57,8 @@ const A = {
   browseRentals: { label: "Browse rentals", href: "/search?mode=rent" },
   browseSales: { label: "Browse for sale", href: "/search?mode=sale" },
   permitPath: { label: "Open PermitPath", href: "/tools/permitpath" },
-  messages: { label: "Open messages", href: "/messages", requiresAuth: true },
-  account: { label: "Account settings", href: "/account", requiresAuth: true },
+  messages: { label: "Open messages", href: "/dashboard/messages", requiresAuth: true },
+  account: { label: "Account settings", href: "/dashboard/account", requiresAuth: true },
   pricing: { label: "See plans", href: "/pricing" },
   subscription: { label: "Manage subscription", href: "/account/subscription", requiresAuth: true },
   tools: { label: "Open Premium Tools", href: "/dashboard/tools", requiresAuth: true },

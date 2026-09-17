@@ -193,7 +193,7 @@ function AddOnCard({
       </span>
     ) : requiresListing ? (
       <Button asChild variant="cta-outline" size="cta" className="w-full">
-        <Link to="/host/listings">
+        <Link to="/dashboard/listings">
           Boost a listing <ArrowRight className="h-4 w-4" />
         </Link>
       </Button>

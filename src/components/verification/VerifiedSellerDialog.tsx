@@ -357,7 +357,7 @@ const VerifiedSellerDialog = ({ open, onOpenChange, onVerified }: VerifiedSeller
                       </Link>
                     </Button>
                     <Button asChild variant="ghost" className="w-full min-h-11">
-                      <Link to="/account" onClick={() => onOpenChange(false)}>
+                      <Link to="/dashboard/account" onClick={() => onOpenChange(false)}>
                         View your profile badge
                       </Link>
                     </Button>
