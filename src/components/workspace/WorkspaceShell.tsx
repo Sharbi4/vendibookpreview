@@ -92,7 +92,7 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
             </NavLink>
           ))}
         </nav>
-        <Link to="/dashboard/account" className="v2-sidebar-profile">
+        <Link to="/dashboard/profile" className="v2-sidebar-profile">
           <Avatar className="h-9 w-9">
             <AvatarImage src={profile?.avatar_url || undefined} alt={name} />
             <AvatarFallback>{initials}</AvatarFallback>
