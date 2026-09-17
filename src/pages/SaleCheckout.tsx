@@ -1063,14 +1063,14 @@ const SaleCheckout = () => {
                 />
               )}
 
-              {freightDueLater > 0 && paymentMethod !== 'cash' ? (
+              {buyerFreightCharge > 0 && paymentMethod !== 'cash' ? (
                 <div className="flex items-start gap-3 rounded-xl bg-muted/40 p-4">
                   <Truck className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     Your quoted freight of{' '}
-                    <span className="font-medium text-foreground">${freightDueLater.toLocaleString()}</span>{' '}
-                    is billed separately once the seller confirms this sale — it is not
-                    included in today's payment.
+                    <span className="font-medium text-foreground">${buyerFreightCharge.toLocaleString()}</span>{' '}
+                    is included in the total below — shipping is arranged once the seller
+                    confirms this sale.
                   </p>
                 </div>
               ) : null}
