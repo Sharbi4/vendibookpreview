@@ -204,6 +204,11 @@ export default function AdminPayouts() {
                       </span>
                       <Badge variant="outline" className="text-[10px]">{row.transaction_type}</Badge>
                       <StatusBadge status={row.status} />
+                      {row.payout_provider === 'paypal' && row.status === 'payout_completed' ? (
+                        <Badge className="bg-emerald-500/15 text-emerald-500 border-emerald-500/30 text-[10px]">
+                          Auto-settled by PayPal
+                        </Badge>
+                      ) : null}
                       {row.dispute_status && row.dispute_status !== 'none' ? (
                         <Badge className="bg-destructive/15 text-destructive border-destructive/30 text-[10px]">
                           <AlertTriangle className="h-3 w-3 mr-1" />
