@@ -2017,3 +2017,4 @@ html.hide-support-chat .widget-visible {
 .v2-embedded-section > div > .border, .v2-embedded-section [class*="card"] { border-color: hsl(var(--v2-line)); }
 .v2-topbar > a img { height: 26px; width: auto; max-width: 104px; object-fit: contain; flex: none; }
 @media (max-width: 767px) { .v2-search { width: auto; flex: 1; } }
+@media (max-width: 767px) { .v2-search { min-width: 0; } .v2-topbar { gap: 8px; padding-inline: 12px; } }
