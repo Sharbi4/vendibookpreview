@@ -378,12 +378,10 @@ const SaleCheckout = () => {
 
   // Calculate prices
   //
-  // IMPORTANT — "due now" vs "due later":
-  // Vendibook freight is NOT part of the sale PayPal order. The backend
-  // (`quoteSaleTransaction`) charges item price + seller delivery only; freight
-  // is collected in a separate PayPal order *after* the seller confirms the
-  // sale (`kind: "freight"`). So freight must never be folded into the amount
-  // the buyer is told they are paying now, or PayPal would show a lower total.
+  // Buyer-paid Vendibook Freight is charged with the purchase in the same
+  // PayPal order — the backend (`quoteSaleTransaction`) adds it to the sale
+  // total, so the figures here must include it too. Seller-paid freight is
+  // never billed to the buyer.
   const getDeliveryFeeForSelection = (): number => {
     if (fulfillmentSelected === 'delivery' && deliveryRate) {
       return computeDeliveryFee(deliveryRate, deliveryFeeType, deliveryDistanceInfo.distance);
