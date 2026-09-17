@@ -2008,3 +2008,5 @@ html.hide-support-chat .widget-visible {
 .v2-status svg { width: 13px; height: 13px; margin-right: 4px; }
 .v2-account-grid .v2-panel h2 { font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: hsl(var(--v2-stone)); }
 .v2-account-row + .v2-account-row { border-top: 1px solid hsl(var(--v2-line)); }
+.v2-btn.hidden, .v2-btn-outline.hidden, .v2-btn-quiet.hidden { display: none; }
+@media (min-width: 640px) { .v2-btn.sm\:inline-flex { display: inline-flex; } }
