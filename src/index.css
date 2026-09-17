@@ -1994,3 +1994,7 @@ html.hide-support-chat .widget-visible {
 @media (min-width: 768px) { .v2-sidebar { display: flex; }.v2-main-column { margin-left: 256px; }.v2-mobile-nav { display: none; }.v2-content { padding-bottom: 64px; }.v2-quick-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }.v2-lead-listing { grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr); } }
 @media (min-width: 1024px) { .v2-content { padding: 46px 52px 72px; }.v2-two-column { grid-template-columns: minmax(0, 1.35fr) minmax(320px, .65fr); }.v2-listing-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 
+.v2-btn-light { display: inline-flex; min-height: 44px; align-items: center; gap: 8px; border-radius: 10px; background: hsl(40 30% 97%); padding: 0 22px; color: hsl(240 6% 8%); font-size: 14.5px; font-weight: 650; transition: background-color .15s ease, transform .15s ease; }
+.v2-btn-light:hover { background: #fff; transform: translateY(-1px); }
+.v2-btn-light:disabled { opacity: .6; transform: none; }
+.v2-btn-light svg { width: 16px; height: 16px; }

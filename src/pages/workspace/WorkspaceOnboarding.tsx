@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { ArrowRight, Compass, Loader2, Search, Store, Truck } from 'lucide-react';
+import { Helmet } from 'react-helmet-async';
+import { ArrowRight, Check, Compass, Loader2, Search, Store, Truck } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Button } from '@/components/ui/button';
 import logo from '@/assets/vendibook-wordmark-light.png';
 import { cn } from '@/lib/utils';
 
