@@ -1,5 +1,6 @@
 import { Suspense, lazy } from 'react';
 import WorkspaceShell from '@/components/workspace/WorkspaceShell';
+import PayPalReadyBadge from '@/components/workspace/PayPalReadyBadge';
 import SellerPayPalConnect from '@/components/account/SellerPayPalConnect';
 import { PayPalWordmark } from '@/components/brand/ProviderLogos';
 
@@ -33,7 +34,10 @@ export default function WorkspacePayments() {
               <p>Payment partner</p>
               <PayPalWordmark className="mt-2 h-6" />
             </div>
-            <span>Business account connection</span>
+            <div className="flex flex-col items-end gap-2">
+              <span>Business account connection</span>
+              <PayPalReadyBadge tone="dark" showDetails />
+            </div>
           </div>
           <div className="v2-paypal-body">
             <h2>Accept secure online payments</h2>

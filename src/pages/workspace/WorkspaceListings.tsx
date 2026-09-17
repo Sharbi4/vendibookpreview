@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { CreditCard, Eye, Image as ImageIcon, Megaphone, Pencil, Plus, Share2 } from 'lucide-react';
 import { toast } from 'sonner';
 import WorkspaceShell from '@/components/workspace/WorkspaceShell';
+import PayPalReadyBadge from '@/components/workspace/PayPalReadyBadge';
 import { useHostListings } from '@/hooks/useHostListings';
 import { useMyPayPalConnection } from '@/hooks/useMyPayPalConnection';
 import { PromoteListingModal } from '@/components/dashboard/PromoteListingModal';
@@ -122,10 +123,13 @@ export default function WorkspaceListings() {
               {counts.paused} paused
             </p>
           </div>
-          <Link to="/list" className="v2-btn">
-            <Plus />
-            List an asset
-          </Link>
+          <div className="flex flex-wrap items-center gap-2.5">
+            <PayPalReadyBadge />
+            <Link to="/list" className="v2-btn">
+              <Plus />
+              List an asset
+            </Link>
+          </div>
         </header>
 
         <div className="v2-filter-row">
