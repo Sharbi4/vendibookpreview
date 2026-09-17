@@ -141,7 +141,7 @@ const PayoutsPanel = () => {
                       </p>
                     </div>
                     <span className="text-xs font-medium text-foreground/80 shrink-0">
-                      {PAYABLE_STATUS_LABEL[p.status] ?? p.status}
+                      {autoPaid ? 'Paid to your PayPal' : PAYABLE_STATUS_LABEL[p.status] ?? p.status}
                     </span>
                   </div>
 
