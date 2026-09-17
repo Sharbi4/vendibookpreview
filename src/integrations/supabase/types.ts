@@ -7808,6 +7808,7 @@ export type Database = {
           created_at: string
           id: string
           last_status_check_at: string | null
+          last_webhook_event_id: string | null
           merchant_id: string | null
           oauth_scopes: string[]
           onboarding_status: string
@@ -7828,6 +7829,7 @@ export type Database = {
           created_at?: string
           id?: string
           last_status_check_at?: string | null
+          last_webhook_event_id?: string | null
           merchant_id?: string | null
           oauth_scopes?: string[]
           onboarding_status?: string
@@ -7848,6 +7850,7 @@ export type Database = {
           created_at?: string
           id?: string
           last_status_check_at?: string | null
+          last_webhook_event_id?: string | null
           merchant_id?: string | null
           oauth_scopes?: string[]
           onboarding_status?: string
