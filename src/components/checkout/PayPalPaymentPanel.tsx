@@ -114,7 +114,7 @@ const PayPalPaymentPanel = ({
       document.removeEventListener('keydown', onKey);
       document.body.style.overflow = prev;
     };
-  }, [onClose]);
+  }, [onClose, embedded]);
 
   // ── Shared payment handlers (used by both the PayPal buttons and the
   //    "pay with a card" fields, so a card payer follows the exact same
