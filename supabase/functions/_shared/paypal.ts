@@ -252,25 +252,90 @@ const money = (cents: number, currency: string) => ({
   value: (cents / 100).toFixed(2),
 });
 
+/**
+ * PayPal requires `purchase_units[].items` for certification. When a caller
+ * does not supply lines we derive a single line from the description so the
+ * itemised total always reconciles with `amount.breakdown.item_total`.
+ */
+function buildItems(input: CreateOrderInput, currency: string, itemTotalCents: number) {
+  const physical = !!input.shipping;
+  const lines = input.items?.length
+    ? input.items
+    : [{
+      name: input.description.slice(0, 127),
+      unitAmountCents: itemTotalCents,
+      quantity: 1,
+      category: physical ? "PHYSICAL_GOODS" as const : "DIGITAL_GOODS" as const,
+    }];
+
+  return lines.map((line) => ({
+    name: (line.name || "Vendibook").slice(0, 127),
+    quantity: String(Math.max(1, Math.round(line.quantity ?? 1))),
+    unit_amount: money(line.unitAmountCents, currency),
+    category: line.category ?? (physical ? "PHYSICAL_GOODS" : "DIGITAL_GOODS"),
+    ...(line.description ? { description: line.description.slice(0, 127) } : {}),
+    ...(line.sku ? { sku: line.sku.slice(0, 127) } : {}),
+  }));
+}
+
+function buildShipping(address?: OrderShippingAddress | null) {
+  if (!address) return undefined;
+  return {
+    ...(address.fullName ? { name: { full_name: address.fullName.slice(0, 300) } } : {}),
+    address: {
+      address_line_1: address.addressLine1,
+      ...(address.addressLine2 ? { address_line_2: address.addressLine2 } : {}),
+      admin_area_2: address.adminArea2,
+      admin_area_1: address.adminArea1,
+      postal_code: address.postalCode,
+      country_code: address.countryCode ?? "US",
+    },
+  };
+}
+
+/**
+ * Multiparty routing. `payee` sends the funds to the onboarded seller;
+ * `payment_instruction.platform_fees` keeps Vendibook's commission as a
+ * PayPal Partner Fee. Both are omitted for Vendibook's own products, which
+ * stay first-party exactly as they are today.
+ */
+function buildMultiparty(input: CreateOrderInput, currency: string) {
+  if (!input.payeeMerchantId) return {};
+  const fee = Math.max(0, Math.round(input.platformFeeCents ?? 0));
+  return {
+    payee: { merchant_id: input.payeeMerchantId },
+    ...(fee > 0
+      ? {
+        payment_instruction: {
+          disbursement_mode: "INSTANT",
+          platform_fees: [{ amount: money(fee, currency) }],
+        },
+      }
+      : {}),
+  };
+}
+
 export async function createPayPalOrder(input: CreateOrderInput) {
   const currency = (input.currency ?? "USD").toUpperCase();
   const b = input.breakdown;
+  const taxCents = b?.taxCents ?? 0;
+  const shippingCents = b?.shippingCents ?? 0;
+  const discountCents = b?.discountCents ?? 0;
+  const itemTotalCents = b?.itemTotalCents ??
+    Math.max(0, input.amountCents - taxCents - shippingCents + discountCents);
 
   const amount: Record<string, unknown> = money(input.amountCents, currency);
-  if (b) {
-    amount.breakdown = {
-      ...(b.itemTotalCents !== undefined
-        ? { item_total: money(b.itemTotalCents, currency) }
-        : {}),
-      ...(b.taxCents ? { tax_total: money(b.taxCents, currency) } : {}),
-      ...(b.shippingCents ? { shipping: money(b.shippingCents, currency) } : {}),
-      ...(b.discountCents ? { discount: money(b.discountCents, currency) } : {}),
-    };
-  }
+  amount.breakdown = {
+    item_total: money(itemTotalCents, currency),
+    ...(taxCents ? { tax_total: money(taxCents, currency) } : {}),
+    ...(shippingCents ? { shipping: money(shippingCents, currency) } : {}),
+    ...(discountCents ? { discount: money(discountCents, currency) } : {}),
+  };
 
   // AUTHORIZE places a temporary hold on approval; nothing is charged until
   // an explicit capture. CAPTURE (the default) charges on approval.
   const intent = input.intent === "AUTHORIZE" ? "AUTHORIZE" : "CAPTURE";
+  const shipping = buildShipping(input.shipping);
 
   return await paypalRequest("/v2/checkout/orders", {
     method: "POST",
@@ -283,6 +348,9 @@ export async function createPayPalOrder(input: CreateOrderInput) {
         description: input.description.slice(0, 127),
         custom_id: input.reference,
         amount,
+        items: buildItems(input, currency, itemTotalCents),
+        ...(shipping ? { shipping } : {}),
+        ...buildMultiparty(input, currency),
         ...(input.softDescriptor
           ? { soft_descriptor: input.softDescriptor.slice(0, 22) }
           : {}),
@@ -291,13 +359,16 @@ export async function createPayPalOrder(input: CreateOrderInput) {
         paypal: {
           experience_context: {
             brand_name: "Vendibook",
-            shipping_preference: "NO_SHIPPING",
+            // Physical assets that Vendibook ships need a real address;
+            // everything else is a service/digital line with no shipping.
+            shipping_preference: shipping ? "SET_PROVIDED_ADDRESS" : "NO_SHIPPING",
             user_action: intent === "AUTHORIZE" ? "CONTINUE" : "PAY_NOW",
             landing_page: "LOGIN",
           },
         },
       },
     },
+
   });
 }
 
