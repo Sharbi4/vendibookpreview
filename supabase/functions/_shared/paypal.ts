@@ -866,12 +866,20 @@ export async function getMerchantIntegrationStatus(
   }
   const encoded = encodeURIComponent(trackingOrMerchantId);
   if (trackingOrMerchantId.startsWith("vb-")) {
-    const result = await paypalRequest<{ merchant_integrations?: Record<string, any>[] }>(
+    // PayPal's tracking lookup takes the SINGULAR `tracking_id` query param.
+    // It answers with the merchant-integration object directly; older/partner
+    // responses wrap it in `merchant_integrations`, so accept both shapes.
+    const result = await paypalRequest<
+      Record<string, any> & { merchant_integrations?: Record<string, any>[] }
+    >(
       `/v1/customer/partners/${encodeURIComponent(partnerId)}/merchant-integrations` +
-        `?tracking_ids=${encoded}`,
+        `?tracking_id=${encoded}`,
       { environment: env },
     );
-    return result?.merchant_integrations?.[0] ?? {};
+    if (Array.isArray(result?.merchant_integrations)) {
+      return result.merchant_integrations[0] ?? {};
+    }
+    return result ?? {};
   }
   return await paypalRequest<Record<string, any>>(
     `/v1/customer/partners/${encodeURIComponent(partnerId)}/merchant-integrations/${encoded}`,
