@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
 import TicketFormDialog from './home/TicketFormDialog';
 
-const HIDDEN_ROUTES = ['/help', '/faq', '/list-with-vendi', '/list/vendi', '/onboarding-v2', '/dashboard-v2'];
+const HIDDEN_ROUTES = ['/help', '/faq', '/list-with-vendi', '/list/vendi', '/onboarding', '/welcome', '/onboarding-v2', '/dashboard', '/dashboard-v2'];
 
 const FloatingConciergeButton = () => {
   const [isHovered, setIsHovered] = useState(false);

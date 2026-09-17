@@ -1,0 +1,1 @@
+REVOKE EXECUTE ON FUNCTION public.seller_payment_readiness(uuid) FROM anon;

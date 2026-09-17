@@ -49,6 +49,11 @@ import SaleCheckoutCard from '@/components/checkout/sale/SaleCheckoutCard';
 import SaleListingSummary from '@/components/checkout/sale/SaleListingSummary';
 import SaleOrderSummary, { type SaleSummaryLine } from '@/components/checkout/sale/SaleOrderSummary';
 import SaleCheckoutFooter from '@/components/checkout/sale/SaleCheckoutFooter';
+import { useSellerPaymentReadiness } from '@/hooks/useSellerPaymentReadiness';
+import { PayPalMonogram, PayPalWordmark } from '@/components/brand/ProviderLogos';
+import FinancingActionPanel from '@/components/listing-detail/sale/FinancingActionPanel';
+import MessageHostForm from '@/components/messaging/MessageHostForm';
+import { MessageSquare } from 'lucide-react';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
 
@@ -407,6 +412,12 @@ const SaleCheckout = () => {
   // Server-derived (never a client flag). Verified buyers skip the step.
   const { verified: buyerVerified, loading: buyerVerificationLoading } =
     useSellerVerifiedBadge(user?.id ?? null);
+
+  // Seller payment-readiness gate. `gatingActive` is false today (see hook
+  // comment) so behaviour is unchanged; once the real check ships this
+  // blocks the PayPal purchase action without touching any money logic.
+  const sellerReadiness = useSellerPaymentReadiness(listing?.host_id ?? null);
+  const paypalPurchaseBlocked = sellerReadiness.gatingActive && !sellerReadiness.ready;
   const skipIdentityStep = Boolean(user?.id) && buyerVerified;
   // Identity runs inline (real Plaid check) instead of navigating away and
   // losing the in-progress order.
@@ -658,6 +669,14 @@ const SaleCheckout = () => {
 
   const handlePurchase = async () => {
     if (submitLockRef.current || isPurchasing || termsGate.preparing) return;
+    if (paypalPurchaseBlocked && paymentMethod !== 'cash') {
+      toast({
+        title: 'Seller setup incomplete',
+        description: "This seller hasn't finished payment setup yet. Message them or choose pay-in-person if available.",
+        variant: 'destructive',
+      });
+      return;
+    }
     if (!user) {
       navigate(`/auth?redirect=/checkout/${listingId}`);
       return;
@@ -944,6 +963,8 @@ const SaleCheckout = () => {
       ? locationLabel ? `Pick up near ${locationLabel}` : 'Arranged with the seller'
       : deliveryAddress || 'Address confirmed at the next step';
 
+  const sellerVerifiedFlag = Boolean((host as { identity_verified?: boolean } | null | undefined)?.identity_verified);
+
   const orderSummary = (
     <SaleOrderSummary
       imageUrl={coverImage}
@@ -952,6 +973,9 @@ const SaleCheckout = () => {
       total={totalPrice}
       fulfillment={fulfillmentSelected}
       fulfillmentDetail={fulfillmentDetail}
+      sellerName={sellerName}
+      sellerVerified={sellerVerifiedFlag}
+      locationLabel={locationLabel}
     />
   );
 
@@ -1181,22 +1205,67 @@ const SaleCheckout = () => {
 
             {effectiveStep === 'payment' && (
               <>
-                <SaleCheckoutCard>
-                  <PurchaseStepPayment
-                    embedded
-                    paymentMethod={paymentMethod}
-                    setPaymentMethod={setPaymentMethod}
-                    acceptPayPalCheckout={acceptPayPalCheckout}
-                    acceptCashPayment={acceptCashPayment}
-                    titleStatus={(listing as { title_status?: string | null }).title_status ?? null}
-                    hasLien={(listing as { has_lien?: string | null }).has_lien ?? null}
-                    vin={(listing as { vin?: string | null }).vin ?? null}
-                    totalPrice={totalPrice}
-                    submitting={isPurchasing || termsGate.preparing}
-                    onBack={goBack}
-                    onContinue={advance}
-                  />
-                </SaleCheckoutCard>
+                {paypalPurchaseBlocked && !acceptCashPayment ? (
+                  <SaleCheckoutCard title="Seller setup incomplete" padding="md">
+                    <div className="space-y-4">
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        This seller hasn't finished setting up payments yet, so we can't take a
+                        secure PayPal payment for this listing right now. You can message the
+                        seller directly, or come back once payment setup is complete.
+                      </p>
+                      {sellerReadiness.reasons.length > 0 ? (
+                        <ul className="text-xs text-muted-foreground list-disc pl-4 space-y-1">
+                          {sellerReadiness.reasons.map((r) => (
+                            <li key={r}>{r}</li>
+                          ))}
+                        </ul>
+                      ) : null}
+                      <div className="rounded-xl bg-muted/60 p-4">
+                        <div className="flex items-center gap-2 mb-3 text-sm font-semibold text-foreground">
+                          <MessageSquare className="h-4 w-4" /> Message the seller
+                        </div>
+                        <MessageHostForm listingId={listing.id} hostId={listing.host_id} listingTitle={listing.title} />
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => navigate(`/listing/${listingId}`)}
+                        className="text-sm font-medium text-primary hover:underline"
+                      >
+                        Back to listing
+                      </button>
+                    </div>
+                  </SaleCheckoutCard>
+                ) : (
+                  <>
+                    {acceptPayPalCheckout && paymentMethod === 'card' ? (
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span>Secure checkout with</span>
+                        <PayPalMonogram className="h-4" />
+                        <PayPalWordmark className="h-3.5 invert" />
+                      </div>
+                    ) : null}
+
+                    <SaleCheckoutCard>
+                      <PurchaseStepPayment
+                        embedded
+                        paymentMethod={paymentMethod}
+                        setPaymentMethod={setPaymentMethod}
+                        acceptPayPalCheckout={acceptPayPalCheckout && !paypalPurchaseBlocked}
+                        acceptCashPayment={acceptCashPayment}
+                        titleStatus={(listing as { title_status?: string | null }).title_status ?? null}
+                        hasLien={(listing as { has_lien?: string | null }).has_lien ?? null}
+                        vin={(listing as { vin?: string | null }).vin ?? null}
+                        totalPrice={totalPrice}
+                        submitting={isPurchasing || termsGate.preparing}
+                        onBack={goBack}
+                        onContinue={advance}
+                      />
+                    </SaleCheckoutCard>
+
+                    {/* Financing is a separate application, never mixed with the PayPal purchase flow above. */}
+                    <FinancingActionPanel listing={listing} host={host} />
+                  </>
+                )}
 
                 {freightDueLater > 0 && paymentMethod !== 'cash' ? (
                   <SaleCheckoutCard padding="sm">
@@ -1248,8 +1317,9 @@ const SaleCheckout = () => {
           backLabel={stepIndex > 0 ? 'Back' : 'Back to listing'}
           primaryLabel={primaryLabel}
           onPrimary={advance}
-          primaryDisabled={primaryDisabled}
+          primaryDisabled={primaryDisabled || (effectiveStep === 'payment' && paypalPurchaseBlocked && !acceptCashPayment)}
           busy={isPurchasing || termsGate.preparing}
+          total={totalPrice}
           helper={
             effectiveStep === 'payment'
               ? "You'll confirm the final total before any money moves."

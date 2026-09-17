@@ -10,7 +10,10 @@ import { useAuth } from '@/contexts/AuthContext';
  */
 const HIDDEN_PATTERNS = [
   /^\/auth/,
-  /^\/onboarding-v2/,
+  /^\/onboarding/,
+  /^\/welcome(?:$|\/(?!classic))/,
+  // Unified workspace ships its own bottom navigation (but not /dashboard/classic).
+  /^\/dashboard(?:$|\/(?!classic))/,
   /^\/dashboard-v2(?:\/|$)/,
   /^\/reset-password/,
   /^\/activation/,
