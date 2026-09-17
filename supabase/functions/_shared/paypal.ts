@@ -86,19 +86,37 @@ export function safeLog(step: string, details?: Record<string, unknown>) {
 
 
 // ---------------------------------------------------------------- auth
-let cachedToken: { value: string; expiresAt: number } | null = null;
+// Tokens are cached and reused until shortly before expiry (PayPal requires
+// access-token reuse). The cache is keyed by environment so a sandbox-scoped
+// onboarding token (PAYPAL_ONBOARDING_ENV=sandbox) never invalidates the live
+// token used by checkout.
+const tokenCache = new Map<PayPalEnvironment, { value: string; expiresAt: number }>();
 
-export async function getPayPalAccessToken(): Promise<string> {
+function clientCredentials(env: PayPalEnvironment): { id: string | null; secret: string | null } {
+  if (env === "sandbox") {
+    return {
+      id: Deno.env.get("PAYPAL_SANDBOX_CLIENT_ID") ?? Deno.env.get("PAYPAL_CLIENT_ID"),
+      secret: Deno.env.get("PAYPAL_SANDBOX_CLIENT_SECRET") ?? Deno.env.get("PAYPAL_CLIENT_SECRET"),
+    };
+  }
+  return {
+    id: Deno.env.get("PAYPAL_CLIENT_ID"),
+    secret: Deno.env.get("PAYPAL_CLIENT_SECRET"),
+  };
+}
+
+export async function getPayPalAccessTokenForEnv(env: PayPalEnvironment): Promise<string> {
   const now = Date.now();
-  if (cachedToken && cachedToken.expiresAt > now + 60_000) return cachedToken.value;
+  const cached = tokenCache.get(env);
+  if (cached && cached.expiresAt > now + 60_000) return cached.value;
 
-  const clientId = Deno.env.get("PAYPAL_CLIENT_ID");
-  const clientSecret = Deno.env.get("PAYPAL_CLIENT_SECRET");
+  const { id: clientId, secret: clientSecret } = clientCredentials(env);
   if (!clientId || !clientSecret) {
     throw new PayPalError("PayPal is not configured on this environment.", 503, "NOT_CONFIGURED");
   }
 
-  const res = await fetch(`${paypalApiBase()}/v1/oauth2/token`, {
+  const base = env === "live" ? LIVE_BASE : SANDBOX_BASE;
+  const res = await fetch(`${base}/v1/oauth2/token`, {
     method: "POST",
     headers: {
       Authorization: `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
@@ -115,7 +133,7 @@ export async function getPayPalAccessToken(): Promise<string> {
       const body = await res.json();
       issue = String(body?.error ?? body?.name ?? issue);
     } catch { /* non-JSON error body */ }
-    safeLog("oauth_failed", { http_status: res.status, issue, environment: paypalEnvironment() });
+    safeLog("oauth_failed", { http_status: res.status, issue, environment: env });
     throw new PayPalError(
       `PayPal rejected the client credentials (HTTP ${res.status}).`,
       res.status >= 500 ? 502 : 401,
@@ -123,11 +141,17 @@ export async function getPayPalAccessToken(): Promise<string> {
     );
   }
   const json = await res.json();
-  cachedToken = {
+  const entry = {
     value: json.access_token,
     expiresAt: now + (Number(json.expires_in ?? 3000) * 1000),
   };
-  return cachedToken.value;
+  tokenCache.set(env, entry);
+  return entry.value;
+}
+
+/** Default-environment token — unchanged behavior for all existing callers. */
+export async function getPayPalAccessToken(): Promise<string> {
+  return getPayPalAccessTokenForEnv(paypalEnvironment());
 }
 
 // ------------------------------------------------- partner attribution
@@ -164,6 +188,11 @@ interface PayPalRequestOptions {
   extraHeaders?: Record<string, string>;
   /** Vendibook payment/order reference, logged for reconciliation. */
   reference?: string | null;
+  /**
+   * Call PayPal in a specific environment (e.g. sandbox onboarding while live
+   * checkout runs). Defaults to the ambient PAYPAL_ENVIRONMENT.
+   */
+  environment?: PayPalEnvironment;
 }
 
 export async function paypalRequest<T = any>(
@@ -179,6 +208,7 @@ export async function paypalRequest<T = any>(
     actAsMerchantId,
     extraHeaders,
     reference,
+    environment,
   } = opts;
   let lastError: unknown;
 
@@ -187,7 +217,8 @@ export async function paypalRequest<T = any>(
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     const startedAt = Date.now();
     try {
-      const token = await getPayPalAccessToken();
+      const env = environment ?? paypalEnvironment();
+      const token = await getPayPalAccessTokenForEnv(env);
       const headers: Record<string, string> = {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
@@ -208,7 +239,7 @@ export async function paypalRequest<T = any>(
 
 
 
-      const res = await fetch(`${paypalApiBase()}${path}`, {
+      const res = await fetch(`${env === "live" ? LIVE_BASE : SANDBOX_BASE}${path}`, {
         method,
         headers,
         body: body === undefined ? undefined : JSON.stringify(body),
@@ -230,7 +261,7 @@ export async function paypalRequest<T = any>(
         status: res.status,
         debugId: json?.debug_id ?? correlationId,
         latencyMs: Date.now() - startedAt,
-        environment: paypalEnvironment(),
+        environment: env,
         attempt,
         ...(reference ? { reference } : {}),
         ...(idempotencyKey ? { requestId: idempotencyKey } : {}),
@@ -661,4 +692,111 @@ export function newPaymentReference(prefix = "VB"): string {
 export function centsFromPayPalAmount(value: string | number | undefined): number {
   if (value === undefined || value === null) return 0;
   return Math.round(Number(value) * 100);
+}
+
+// ---------------------------------------------------------------- onboarding
+// Step 2 — seller onboarding (Partner Referral / merchant-integration status).
+// Sandbox-first: the onboarding flow can run in the sandbox while live
+// checkout keeps using live credentials, because every call here is scoped to
+// the onboarding environment and its own token cache entry.
+
+/**
+ * Environment the seller-onboarding flow runs in. Defaults to the ambient
+ * PAYPAL_ENVIRONMENT so misconfiguration can never silently route live sellers
+ * into a sandbox signup (or vice versa).
+ */
+export function paypalOnboardingEnvironment(): PayPalEnvironment {
+  const raw = (Deno.env.get("PAYPAL_ONBOARDING_ENV") ?? "").toLowerCase();
+  if (raw === "sandbox" || raw === "live") return raw;
+  return paypalEnvironment();
+}
+
+/** Master switch for the seller connection UI/flow. Default OFF. */
+export function sellerOnboardingEnabled(): boolean {
+  return (Deno.env.get("PAYPAL_SELLER_ONBOARDING_ENABLED") ?? "").toLowerCase() === "true";
+}
+
+/** Vendibook's partner merchant id in the given environment. */
+function partnerMerchantIdForEnv(env: PayPalEnvironment): string | null {
+  if (env === "sandbox") {
+    return Deno.env.get("PAYPAL_SANDBOX_PARTNER_MERCHANT_ID") ??
+      Deno.env.get("PAYPAL_PARTNER_MERCHANT_ID") ?? null;
+  }
+  return Deno.env.get("PAYPAL_PARTNER_MERCHANT_ID") ?? null;
+}
+
+/**
+ * Creates a Partner Referral and returns PayPal's action_url (the hosted
+ * signup the seller is redirected to) plus the raw link set for diagnostics.
+ */
+export async function createPartnerReferral(opts: {
+  trackingId: string;
+  returnUrl: string;
+}): Promise<{ actionUrl: string | null; links: { rel: string; href: string }[] }> {
+  const env = paypalOnboardingEnvironment();
+  const result = await paypalRequest<{ links?: { rel: string; href: string }[] }>(
+    "/v2/customer/partner-referrals",
+    {
+      method: "POST",
+      environment: env,
+      reference: opts.trackingId,
+      body: {
+        tracking_id: opts.trackingId,
+        partner_config: {
+          partner_notification_url: opts.returnUrl,
+          return_url: opts.returnUrl,
+        },
+        operations: [{
+          operation: "API_INTEGRATION",
+          api_integration_preference: {
+            rest_api_integration: {
+              integration_method: "PAYPAL",
+              integration_type: "THIRD_PARTY",
+              third_party_details: {
+                features: [
+                  "PAYMENT",
+                  "REFUND",
+                  "ACCESS_MERCHANT_INFORMATION",
+                  "BILLING_AGREEMENT",
+                ],
+              },
+            },
+          },
+        }],
+        products: ["PPCP"],
+        legal_consents: [{ type: "SHARE_DATA_CONSENT", granted: true }],
+      },
+    },
+  );
+  const actionUrl = (result?.links ?? []).find((l) => l.rel === "action_url")?.href ?? null;
+  return { actionUrl, links: result?.links ?? [] };
+}
+
+/**
+ * Fetches PayPal's merchant-integration record for an onboarded seller.
+ * Accepts either the Vendibook tracking id (looked up via tracking_ids) or the
+ * PayPal merchant id (path lookup). Returns PayPal's raw record.
+ */
+export async function getMerchantIntegrationStatus(
+  trackingOrMerchantId: string,
+  opts?: { environment?: PayPalEnvironment },
+): Promise<Record<string, any>> {
+  const env = opts?.environment ?? paypalOnboardingEnvironment();
+  const partnerId = partnerMerchantIdForEnv(env);
+  if (!partnerId) {
+    throw new PayPalError("PayPal partner merchant id is not configured.", 503, "NOT_CONFIGURED");
+  }
+  const encoded = encodeURIComponent(trackingOrMerchantId);
+  if (trackingOrMerchantId.startsWith("vb-")) {
+    const result = await paypalRequest<{ merchant_integrations?: Record<string, any>[] }>(
+      `/v1/customer/partners/${encodeURIComponent(partnerId)}/merchant-integrations` +
+        `?tracking_ids=${encoded}`,
+      { environment: env },
+    );
+    return result?.merchant_integrations?.[0] ?? {};
+  }
+  return await paypalRequest<Record<string, any>>(
+    `/v1/customer/partners/${encodeURIComponent(partnerId)}/merchant-integrations/${encoded}`,
+    { environment: env },
+  );
 }

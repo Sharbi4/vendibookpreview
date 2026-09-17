@@ -7800,6 +7800,69 @@ export type Database = {
           },
         ]
       }
+      seller_paypal_accounts: {
+        Row: {
+          action_reasons: string[]
+          archived_at: string | null
+          consent_granted: boolean
+          created_at: string
+          id: string
+          last_status_check_at: string | null
+          merchant_id: string | null
+          oauth_scopes: string[]
+          onboarding_status: string
+          payments_receivable: boolean
+          paypal_email: string | null
+          primary_email_confirmed: boolean
+          products: Json | null
+          referral_url: string | null
+          status_payload: Json | null
+          tracking_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          action_reasons?: string[]
+          archived_at?: string | null
+          consent_granted?: boolean
+          created_at?: string
+          id?: string
+          last_status_check_at?: string | null
+          merchant_id?: string | null
+          oauth_scopes?: string[]
+          onboarding_status?: string
+          payments_receivable?: boolean
+          paypal_email?: string | null
+          primary_email_confirmed?: boolean
+          products?: Json | null
+          referral_url?: string | null
+          status_payload?: Json | null
+          tracking_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          action_reasons?: string[]
+          archived_at?: string | null
+          consent_granted?: boolean
+          created_at?: string
+          id?: string
+          last_status_check_at?: string | null
+          merchant_id?: string | null
+          oauth_scopes?: string[]
+          onboarding_status?: string
+          payments_receivable?: boolean
+          paypal_email?: string | null
+          primary_email_confirmed?: boolean
+          products?: Json | null
+          referral_url?: string | null
+          status_payload?: Json | null
+          tracking_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       seller_verification_attempts: {
         Row: {
           completed_at: string | null
@@ -10662,6 +10725,7 @@ export type Database = {
           verified_at: string
         }[]
       }
+      seller_paypal_ready: { Args: { _user_id: string }; Returns: boolean }
       soft_delete_permit_document: {
         Args: { p_document_id: string }
         Returns: {
