@@ -31,6 +31,7 @@ import QuickReplies from './QuickReplies';
 import { MessageReactionPicker, MessageReactionBadges } from './MessageReactions';
 import type { ReactionSummary } from '@/hooks/useMessageReactions';
 import { getCounterpartyName } from '@/lib/displayName';
+import WalkthroughCta from '@/components/video/WalkthroughCta';
 
 interface ConversationThreadProps {
   conversationId: string;
@@ -386,6 +387,7 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
             <p className="text-xs text-primary truncate">{conversation.listing.title}</p>
           )}
         </div>
+        <WalkthroughCta listingId={conversation?.listing_id} conversationId={conversationId} compact />
       </div>
 
       {/* Messages */}

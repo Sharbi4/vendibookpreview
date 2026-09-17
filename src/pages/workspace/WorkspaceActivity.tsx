@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { CalendarDays, Image as ImageIcon, Receipt } from 'lucide-react';
+import { CalendarDays, Image as ImageIcon, Receipt, Video } from 'lucide-react';
 import WorkspaceShell from '@/components/workspace/WorkspaceShell';
 import { useAuth } from '@/contexts/AuthContext';
 import { useUserTransactions } from '@/hooks/useUserTransactions';
@@ -9,12 +9,14 @@ import { useHostBookings } from '@/hooks/useHostBookings';
 import { useHostListings } from '@/hooks/useHostListings';
 import WorkspaceHostBookings from '@/components/workspace/WorkspaceHostBookings';
 import WorkspaceListingActivity from '@/components/workspace/WorkspaceListingActivity';
+import { useVideoWalkthroughs } from '@/hooks/useVideoWalkthroughs';
 
-type Filter = 'all' | 'purchases' | 'sales' | 'rentals' | 'requests' | 'disputes' | 'listings';
+type Filter = 'all' | 'purchases' | 'sales' | 'rentals' | 'requests' | 'disputes' | 'listings' | 'walkthroughs';
 
 const FILTERS: { key: Filter; label: string }[] = [
   { key: 'all', label: 'All' },
   { key: 'listings', label: 'Listings' },
+  { key: 'walkthroughs', label: 'Video walkthroughs' },
   { key: 'purchases', label: 'Purchases' },
   { key: 'sales', label: 'Sales' },
   { key: 'rentals', label: 'Rentals' },
@@ -47,6 +49,7 @@ export default function WorkspaceActivity() {
   const { bookings: buyerBookings } = useShopperBookings();
   const { bookings: sellerBookings } = useHostBookings();
   const { listings: hostListings } = useHostListings();
+  const { walkthroughs } = useVideoWalkthroughs();
   const [searchParams] = useSearchParams();
   const initial = (searchParams.get('filter') as Filter) || 'all';
   const [filter, setFilter] = useState<Filter>(
@@ -121,10 +124,11 @@ export default function WorkspaceActivity() {
         href: `/dashboard/bookings/${b.id}`,
       }));
 
-    return [...payments, ...buyer, ...seller].sort(
+    const videos: Item[] = walkthroughs.map((w) => ({ id:`walkthrough-${w.id}`, kind:'walkthroughs', title:w.listing?.title||'Video walkthrough', counterparty:w.seller_id===user?.id?'Meeting with buyer':'Meeting with seller', state:w.status, nextAction:['scheduled','rescheduled'].includes(w.status)?'View meeting details':null, date:w.starts_at, amount:null, reference:null, image:w.listing?.cover_image_url||null, href:`/walkthrough/${w.id}` }));
+    return [...payments, ...buyer, ...seller, ...videos].sort(
       (a, b) => +new Date(b.date) - +new Date(a.date),
     );
-  }, [transactions, buyerBookings, sellerBookings]);
+  }, [transactions, buyerBookings, sellerBookings, walkthroughs, user?.id]);
 
   const hasHostBookings = sellerBookings.length > 0;
   const hasPublishedListings = hostListings.some((l) => l.status === 'published');
@@ -193,6 +197,8 @@ export default function WorkspaceActivity() {
                   <span className="v2-activity-thumb">
                     {item.image ? (
                       <img src={item.image} alt="" loading="lazy" />
+                    ) : item.kind === 'walkthroughs' ? (
+                      <Video />
                     ) : item.kind === 'rentals' || item.kind === 'requests' ? (
                       <CalendarDays />
                     ) : (
