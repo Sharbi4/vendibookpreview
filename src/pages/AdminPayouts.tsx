@@ -223,7 +223,9 @@ export default function AdminPayouts() {
                     </p>
                     <p className="text-xs text-muted-foreground flex items-center gap-1.5">
                       <Clock className="h-3 w-3" />
-                      Release due {when(row.release_due_at)}
+                      {row.payout_provider === 'paypal' && row.status === 'payout_completed'
+                        ? `Settled by PayPal at capture ${when(row.payout_completed_at)} — no manual payout needed`
+                        : `Release due ${when(row.release_due_at)}`}
                       {row.external_payout_reference ? ` · transfer ${row.external_payout_reference}` : ''}
                     </p>
                     {row.hold_reason ? (
