@@ -217,7 +217,7 @@ const BookingConfirmation = ({
     const pickup = booking.fulfillment_selected === 'delivery' ? 'delivery' : 'pickup';
     if (view === 'confirmed') {
       return [
-        'Send the host any documents they require above — they can be uploaded any time before your start date.',
+        'If the host requires documents, upload them here any time before your start date.',
         `Message the host to agree on ${pickup} timing and the exact meeting point.`,
         'Add the dates to your calendar so you do not miss the start of the rental.',
         'Your booking and receipt stay available in your dashboard under Activity.',
@@ -226,7 +226,7 @@ const BookingConfirmation = ({
     if (view === 'awaiting_host') {
       return [
         'The host reviews your request — most hosts reply within a day.',
-        'Upload any required documents now so approval is not held up.',
+        'If the host requires documents, upload them now so approval is not held up.',
         'You will be emailed as soon as the host accepts or declines.',
         'If the host declines or does not respond, your payment is refunded to your original payment method.',
       ];
