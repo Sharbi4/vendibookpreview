@@ -12,7 +12,10 @@
  *   PAYPAL_ENVIRONMENT   'sandbox' | 'live'  (defaults to 'sandbox')
  */
 
+import { multipartyEnvEnabled } from "./paypalMultiparty.ts";
+
 const LIVE_BASE = "https://api-m.paypal.com";
+
 const SANDBOX_BASE = "https://api-m.sandbox.paypal.com";
 
 export type PayPalEnvironment = "sandbox" | "live";
