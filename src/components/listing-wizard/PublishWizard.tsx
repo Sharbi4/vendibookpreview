@@ -189,6 +189,9 @@ interface SaleSuggestions {
  * Categories where a VIN / serial is meaningful. Used only to decide whether
  * to show the optional VIN control — it never gates publishing.
  */
+/** Where "Save & exit" returns the seller: the start of their listings. */
+const LISTING_EXIT_PATH = '/dashboard/listings';
+
 const TITLED_SALE_CATEGORIES = ['food_truck', 'food_trailer'];
 const isTitledSaleCategory = (l: { mode?: string | null; category?: string | null } | null) =>
   !!l && l.mode === 'sale' && TITLED_SALE_CATEGORIES.includes(String(l.category));
@@ -1400,30 +1403,47 @@ export const PublishWizard: React.FC = () => {
   // existing upload path); guest drafts reuse saveGuestDraftFields. On
   // failure we stay on the page — the save helpers already surface why.
   const handleSaveAndExit = async () => {
-    if (isSaveExiting || isSaving || saveInFlightRef.current) return;
+    if (isSaveExiting) return;
     setIsSaveExiting(true);
+    // Where the seller lands after leaving the wizard: the start of their
+    // listings, not the dashboard home.
+    const exitTo = LISTING_EXIT_PATH;
     try {
+      // A stalled background save must never leave the button dead — cap the
+      // wait, then leave with an honest message about the last step's changes.
+      const guard = new Promise<'timeout'>((resolve) =>
+        window.setTimeout(() => resolve('timeout'), 15000),
+      );
+
       if (isGuestDraft && !user) {
-        // If a background auto-save is mid-flight, give it a moment to finish
-        // so the save below captures the latest in-memory edits.
         const waitStart = Date.now();
-        while (guestSaveBusyRef.current && Date.now() - waitStart < 27000) {
+        while (guestSaveBusyRef.current && Date.now() - waitStart < 10000) {
           await new Promise((r) => window.setTimeout(r, 250));
         }
-        const ok = await saveGuestDraftFields();
-        if (ok) {
-          navigate('/dashboard');
-        } else {
+        const result = await Promise.race([saveGuestDraftFields(), guard]);
+        if (result !== true) {
           toast({
-            title: "We couldn't save your draft",
-            description: 'Your changes were not saved. Check your connection and try again — your answers are still on this page.',
-            variant: 'destructive'});
+            title: 'Some changes may not have saved',
+            description:
+              "We couldn't confirm the last step was saved. Open your draft again to check those answers.",
+            variant: 'destructive',
+          });
         }
+        navigate(exitTo);
         return;
       }
-      const ok = await saveStep();
-      // saveStep already toasts on failure — only leave after a confirmed save.
-      if (ok) navigate('/dashboard');
+
+      const result = await Promise.race([saveStep(), guard]);
+      if (result !== true) {
+        // saveStep surfaces its own error detail; add the exit context.
+        toast({
+          title: 'Some changes may not have saved',
+          description:
+            "We couldn't confirm the last step was saved. Open your draft again to check those answers.",
+          variant: 'destructive',
+        });
+      }
+      navigate(exitTo);
     } finally {
       setIsSaveExiting(false);
     }
@@ -2789,7 +2809,7 @@ export const PublishWizard: React.FC = () => {
           <div className="h-14 flex items-center justify-between gap-4">
             <button
               onClick={handleSaveAndExit}
-              disabled={isSaveExiting || isSaving}
+              disabled={isSaveExiting}
               className="inline-flex items-center gap-2 rounded-lg -ml-1 px-1 py-1 text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-60 disabled:pointer-events-none"
             >
               {isSaveExiting || isSaving ? (
