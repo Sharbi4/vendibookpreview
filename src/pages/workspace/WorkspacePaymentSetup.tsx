@@ -95,15 +95,13 @@ export default function WorkspacePaymentSetup() {
 
   const connectState: StepState = isLoading
     ? 'pending'
-    : isReady || (connection && status !== 'disconnected' && status !== 'action_required')
-      ? connection && status !== 'disconnected'
-        ? status === 'ready'
-          ? 'done'
-          : 'pending'
-        : 'pending'
-      : connection
-        ? 'blocked'
-        : 'pending';
+    : !connection
+      ? 'pending'
+      : status === 'ready'
+        ? 'done'
+        : status === 'action_required' || status === 'revoked' || status === 'disconnected'
+          ? 'blocked'
+          : 'pending';
 
   const healthState: StepState = !connection
     ? 'pending'
