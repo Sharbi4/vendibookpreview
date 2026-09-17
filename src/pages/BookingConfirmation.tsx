@@ -23,12 +23,17 @@ import {
   MapPin,
   MessageSquare,
   AlertCircle,
+  FileText,
+  ShieldCheck,
+  Truck,
 } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import SEO from '@/components/SEO';
 import { supabase } from '@/integrations/supabase/client';
+import { AddToCalendarButton } from '@/components/booking/AddToCalendarButton';
+import { DocumentUploadSection } from '@/components/documents/DocumentUploadSection';
 
 interface BookingRow {
   id: string;
@@ -36,10 +41,20 @@ interface BookingRow {
   payment_status: string | null;
   start_date: string;
   end_date: string;
+  start_time: string | null;
+  end_time: string | null;
+  is_hourly_booking: boolean | null;
+  duration_hours: number | null;
+  slot_name: string | null;
   total_price: number | null;
+  tax_amount: number | null;
+  delivery_fee_snapshot: number | null;
   deposit_amount: number | null;
+  deposit_status: string | null;
   is_instant_book: boolean | null;
   fulfillment_selected: string | null;
+  delivery_address: string | null;
+  address_snapshot: string | null;
   listing_id: string;
   listings?: { title: string | null; cover_image_url: string | null; city: string | null; state: string | null } | null;
 }
