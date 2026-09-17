@@ -1,5 +1,6 @@
 import { Suspense, lazy } from 'react';
 import WorkspaceShell from '@/components/workspace/WorkspaceShell';
+import PayPalReadyBadge from '@/components/workspace/PayPalReadyBadge';
 import SellerPayPalConnect from '@/components/account/SellerPayPalConnect';
 import { PayPalWordmark } from '@/components/brand/ProviderLogos';
 
