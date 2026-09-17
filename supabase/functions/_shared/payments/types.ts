@@ -170,6 +170,11 @@ export interface RefundRequest {
   amount?: Money;
   reason?: string;
   idempotencyKey: string;
+  /**
+   * Set when the original capture was routed to a connected seller account;
+   * the provider then refunds on that seller's behalf.
+   */
+  sellerMerchantId?: string | null;
 }
 
 export interface RefundResult {
