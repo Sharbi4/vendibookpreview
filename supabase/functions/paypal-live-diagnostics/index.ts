@@ -94,31 +94,20 @@ serve(async (req) => {
     ? "sandbox_credentials_in_use"
     : "oauth_authentication_failed";
 
-  // Partner attribution proof. Sends the BN code on a harmless, read-only
-  // lookup of an order id that cannot exist — no money moves, nothing is
-  // created. PayPal answers 404 with a debug id, which is exactly the evidence
-  // certification asks for: the header went out on a real REST call.
-  let attribution: Record<string, unknown> = {
-    partner_attribution_id: PARTNER_ATTRIBUTION_ID,
-    probe: "skipped",
-  };
-  if (new URL(req.url).searchParams.get("attribution") === "1") {
-    try {
-      await paypalRequest("/v2/checkout/orders/VENDIBOOK-ATTRIBUTION-PROBE", {
-        retries: 0,
-      });
-      attribution = { partner_attribution_id: PARTNER_ATTRIBUTION_ID, probe: "unexpected_ok" };
-    } catch (err) {
-      const e = err as { status?: number; issue?: string; debugId?: string };
-      attribution = {
-        partner_attribution_id: PARTNER_ATTRIBUTION_ID,
-        probe: "sent",
-        http_status: e?.status ?? 0,
-        issue: e?.issue ?? null,
-        paypal_debug_id: e?.debugId ?? null,
-      };
-    }
-  }
+  /*
+   * Partner attribution (BN code) evidence — probe REMOVED on purpose.
+   *
+   * This endpoint is public, so it must never be able to trigger repeated
+   * PayPal API calls. The one-off verification was run on 2026-09-17 against
+   * the LIVE app: a read-only GET of a non-existent order sent through the
+   * shared helper returned HTTP 404 / INVALID_RESOURCE_ID with
+   * paypal-debug-id 1e49a9bbf2f7a (earlier run: ceeb8dbceae4c), proving
+   * `PayPal-Partner-Attribution-Id: VENDIBOOK_SP_PPCP` is sent on every REST
+   * call. Certification evidence will be recaptured from real sandbox order
+   * requests in the certification step; no checkout depends on this endpoint.
+   */
+  const attribution = { partner_attribution_id: PARTNER_ATTRIBUTION_ID };
+
 
   return new Response(
     JSON.stringify({
