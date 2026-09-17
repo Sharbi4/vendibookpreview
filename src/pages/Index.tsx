@@ -30,7 +30,9 @@ const SectionSkeleton = () => (
 
 const ROW_LIMIT = 8;
 
-const fetchListings = async (mode: 'sale' | 'rent', categories?: string[]) => {
+type ListingCategory = 'food_truck' | 'food_trailer' | 'ghost_kitchen' | 'vendor_lot' | 'vendor_space';
+
+const fetchListings = async (mode: 'sale' | 'rent', categories?: readonly ListingCategory[]) => {
   let query = supabase
     .from('listings')
     .select('*')
