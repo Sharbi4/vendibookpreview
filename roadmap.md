@@ -55,3 +55,16 @@
 - [x] Editorial Home, richer Listings, grouped Activity timeline, Account hero
 - [x] Shell/search/motion/color refinement; checkout+booking visual match
 - [x] Re-test all routes desktop + 390px
+
+## Booking flow in the workspace dashboard
+- [x] `/dashboard/bookings/new[/:listingId]` — start a rental booking inside the shell
+- [x] `/dashboard/bookings/:bookingId` — booking status/confirmation inside the shell
+- [x] Activity: booking amounts, payment state, working detail links
+- [x] Payments: rental bookings section (renter paid + host received)
+
+## PayPal certification videos (sandbox)
+- [ ] Seller linking flow recording — needs backend switched to sandbox
+- [ ] Buyer purchase recording — needs a sandbox PERSONAL (buyer) test account
+- [ ] Checkout method recording (PayPal button)
+- [ ] Declined payment recording — needs negative testing enabled on sandbox seller
+- [ ] Seller tools recording (transactions, refunds, unlink)
