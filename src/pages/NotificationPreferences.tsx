@@ -345,9 +345,8 @@ const NotificationPreferences = () => {
 
           <SmsNotificationSection />
         </div>
-      </main>
-      <Footer />
-    </div>
+      </div>
+    </WorkspaceShell>
   );
 };
 
