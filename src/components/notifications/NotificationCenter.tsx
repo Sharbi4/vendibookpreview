@@ -31,6 +31,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications, Notification } from '@/hooks/useNotifications';
 import { cn } from '@/lib/utils';
+import { toDashboardTarget } from '@/lib/navigation/dashboardTargets';
 
 const NOTIFICATION_ICONS: Record<string, typeof Bell> = {
   booking_request: Calendar,
@@ -144,8 +145,11 @@ const NotificationCenter = () => {
   const handleNavigate = (link: string | null) => {
     setOpen(false);
     setSearchQuery('');
-    if (link) {
-      navigate(link);
+    const target = toDashboardTarget(link);
+    if (target) {
+      navigate(target);
+    } else {
+      navigate('/dashboard/notifications');
     }
   };
 
@@ -180,7 +184,7 @@ const NotificationCenter = () => {
               className="h-7 w-7"
               onClick={() => {
                 setOpen(false);
-                navigate('/notification-preferences');
+                navigate('/dashboard/notifications/settings');
               }}
               title="Notification preferences"
             >
@@ -256,6 +260,21 @@ const NotificationCenter = () => {
             </div>
           )}
         </ScrollArea>
+
+        <Separator />
+        <div className="p-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full text-xs font-medium"
+            onClick={() => {
+              setOpen(false);
+              navigate('/dashboard/notifications');
+            }}
+          >
+            View all notifications
+          </Button>
+        </div>
 
         {notifications.length > 0 && (
           <>

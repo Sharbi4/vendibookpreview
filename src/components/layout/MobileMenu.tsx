@@ -169,7 +169,7 @@ const MobileMenu = ({
                     <AirbnbMenuItem 
                       icon={User} 
                       label="Account Settings" 
-                      onClick={() => handleNav('/account')} 
+                      onClick={() => handleNav('/dashboard/account')} 
                     />
                     <AirbnbMenuItem 
                       icon={HelpCircle} 
@@ -194,7 +194,7 @@ const MobileMenu = ({
                       icon={LayoutDashboard} 
                       label="Go to Dashboard" 
                       subtext="Manage your listings & bookings"
-                      onClick={() => handleNav('/dashboard?view=host')} 
+                      onClick={() => handleNav('/dashboard/listings')} 
                       highlight
                     />
                   </div>
@@ -206,17 +206,17 @@ const MobileMenu = ({
                     <AirbnbMenuItem 
                       icon={Heart} 
                       label="Favorites" 
-                      onClick={() => handleNav('/favorites')} 
+                      onClick={() => handleNav('/dashboard/saved')} 
                     />
                     <AirbnbMenuItem 
                       icon={CalendarDays} 
                       label="My Bookings" 
-                      onClick={() => handleNav('/transactions?tab=bookings')} 
+                      onClick={() => handleNav('/dashboard/activity')} 
                     />
                     <AirbnbMenuItem 
                       icon={MessageSquare} 
                       label="Messages" 
-                      onClick={() => handleNav('/messages')} 
+                      onClick={() => handleNav('/dashboard/messages')} 
                     />
                   </div>
 
@@ -245,7 +245,7 @@ const MobileMenu = ({
                     <AirbnbMenuItem 
                       icon={User} 
                       label="Account Settings" 
-                      onClick={() => handleNav('/account')} 
+                      onClick={() => handleNav('/dashboard/account')} 
                     />
                     <AirbnbMenuItem 
                       icon={HelpCircle} 
