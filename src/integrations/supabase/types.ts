@@ -10865,6 +10865,10 @@ export type Database = {
         }[]
       }
       listing_purchase_state: { Args: { _listing_id: string }; Returns: Json }
+      listing_video_walkthrough_enabled: {
+        Args: { _listing_id: string }
+        Returns: boolean
+      }
       log_referral_status_change:
         | {
             Args: {
