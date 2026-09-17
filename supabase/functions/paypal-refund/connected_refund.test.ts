@@ -45,7 +45,8 @@ Deno.test("connected-path refund is issued on the seller's PayPal account", asyn
   assert(call.url.endsWith("/v2/payments/captures/CAPTURE-ABC/refund"));
   // Auth assertion tells PayPal to act on the connected seller's behalf.
   assert(call.headers["paypal-auth-assertion"], "missing PayPal-Auth-Assertion header");
-  const payload = JSON.parse(atob(call.headers["paypal-auth-assertion"].split(".")[1]));
+  const seg = call.headers["paypal-auth-assertion"].split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
+  const payload = JSON.parse(atob(seg + "=".repeat((4 - seg.length % 4) % 4)));
   assertEquals(payload.payer_id, "SELLERMERCHANT1");
   assertEquals(call.headers["paypal-partner-attribution-id"], "VENDIBOOK_SP_PPCP");
   assertEquals(call.body.amount, { value: "25.00", currency_code: "USD" });
