@@ -30,7 +30,7 @@ import {
  */
 
 const SITE_URL = "https://vendibook.com";
-const RETURN_URL = `${SITE_URL}/account?paypal_return=1`;
+const RETURN_URL = `${SITE_URL}/dashboard/payments/setup?paypal_return=1`;
 
 interface DerivedStatus {
   status: "ready" | "action_required";
@@ -129,7 +129,21 @@ Deno.serve(async (req) => {
     };
 
     if (action === "create_referral") {
-      const existing = await activeRow();
+      let existing = await activeRow();
+      // A revoked consent cannot be resumed. Archive it and create a fresh
+      // referral so the seller always has a working recovery path.
+      if (existing?.onboarding_status === "revoked") {
+        const now = new Date().toISOString();
+        await admin
+          .from("seller_paypal_accounts")
+          .update({
+            archived_at: now,
+            referral_url: null,
+            updated_at: now,
+          })
+          .eq("id", existing.id);
+        existing = null;
+      }
       if (existing?.referral_url && existing.onboarding_status === "link_sent") {
         // Resume an unfinished signup instead of creating a second referral.
         return jsonResponse(200, {

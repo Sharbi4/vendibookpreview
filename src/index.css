@@ -1949,6 +1949,12 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
 .v2-paypal-ghost svg, .v2-paypal-cta svg { width: 15px; height: 15px; }
 .v2-paypal-note { color: hsl(213 18% 76%); font-size: 13px; line-height: 1.6; }
 .v2-paypal-warn { color: hsl(36 78% 74%); font-size: 13px; line-height: 1.6; }
+.v2-paypal-message { display: flex; align-items: flex-start; gap: 10px; border: 1px solid hsl(213 25% 42%); border-radius: 10px; padding: 12px 14px; color: hsl(213 22% 88%); background: hsl(214 35% 20%); font-size: 13px; line-height: 1.5; }
+.v2-paypal-message svg { width: 17px; height: 17px; flex: none; margin-top: 1px; }
+.v2-paypal-message.is-success { border-color: hsl(152 36% 42%); color: hsl(152 48% 82%); }
+.v2-paypal-message.is-error { border-color: hsl(4 46% 52%); color: hsl(8 74% 84%); }
+.v2-paypal-message button { margin-left: auto; color: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; }
+.v2-inline-error { border-left: 3px solid hsl(var(--destructive)); padding: 10px 12px; color: hsl(var(--destructive)); font-size: 13px; line-height: 1.5; }
 .v2-paypal-warn a, .v2-paypal-note a { color: #7cc0f5; text-decoration: underline; text-underline-offset: 3px; }
 .v2-checklist { display: flex; flex-direction: column; gap: 0; border: 1px solid hsl(0 0% 100% / .12); border-radius: 12px; background: hsl(0 0% 100% / .04); }
 .v2-checklist li { display: flex; align-items: center; gap: 12px; padding: 13px 16px; color: hsl(213 18% 82%); font-size: 13.5px; }
