@@ -1,8 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
-import { cn } from '@/lib/utils';
-import { Loader2, ArrowLeft, ShieldCheck, Truck } from 'lucide-react';
+import { Loader2, ShieldCheck, Truck, MessageSquare } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { useListing } from '@/hooks/useListing';
@@ -10,9 +8,6 @@ import { computeDeliveryFee, deliveryRateLabel, normalizeDeliveryFeeType } from 
 import { useToast } from '@/hooks/use-toast';
 import { useFreightEstimate } from '@/hooks/useFreightEstimate';
 import { supabase } from '@/integrations/supabase/client';
-import { CheckoutOverlay, PayPalPaymentPanel } from '@/components/checkout';
-import CheckoutOrderSummary from '@/components/checkout/CheckoutOrderSummary';
-import { isEmbeddedCheckoutEnabled } from '@/lib/featureFlags';
 import { parseEdgeError } from '@/lib/edgeErrors';
 import { checkoutErrorCopy } from '@/lib/checkoutErrorCopy';
 import { validators } from '@/components/ui/validated-input';
@@ -21,9 +16,6 @@ import { trackPurchase, trackInitiateCheckout } from '@/lib/facebookCAPI';
 import { calculateDistance } from '@/lib/geolocation';
 import SEO from '@/components/SEO';
 
-// Premium shared components
-
-// Step components
 import {
   PurchaseStepDelivery,
   PurchaseStepInfo,
@@ -32,7 +24,6 @@ import {
   type BuyerInfo,
   type DeliveryWindow,
 } from '@/components/purchase-wizard';
-import CheckoutIntro from '@/components/checkout/CheckoutIntro';
 
 import { ReferralCodeField } from '@/components/referrals/ReferralCodeField';
 import { FinalReviewSheet } from '@/components/transaction/FinalReviewSheet';
@@ -44,58 +35,23 @@ import VerifiedSellerDialog from '@/components/verification/VerifiedSellerDialog
 import { parseFormattedAddress } from '@/lib/fulfillment/parseAddress';
 import { getPublicDisplayName } from '@/lib/displayName';
 import { Checkbox } from '@/components/ui/checkbox';
-import SaleCheckoutShell from '@/components/checkout/sale/SaleCheckoutShell';
-import SaleCheckoutCard from '@/components/checkout/sale/SaleCheckoutCard';
-import SaleListingSummary from '@/components/checkout/sale/SaleListingSummary';
-import SaleOrderSummary, { type SaleSummaryLine } from '@/components/checkout/sale/SaleOrderSummary';
-import SaleCheckoutFooter from '@/components/checkout/sale/SaleCheckoutFooter';
 import { useSellerPaymentReadiness } from '@/hooks/useSellerPaymentReadiness';
-import { PayPalMonogram, PayPalWordmark } from '@/components/brand/ProviderLogos';
 import FinancingActionPanel from '@/components/listing-detail/sale/FinancingActionPanel';
 import MessageHostForm from '@/components/messaging/MessageHostForm';
-import { MessageSquare } from 'lucide-react';
+
+import TransactionCheckoutShell from '@/components/transaction/checkout/TransactionCheckoutShell';
+import CheckoutSection from '@/components/transaction/checkout/CheckoutSection';
+import ListingCheckoutSummary from '@/components/transaction/checkout/ListingCheckoutSummary';
+import MoneyBreakdown, { type MoneyLine } from '@/components/transaction/checkout/MoneyBreakdown';
+import PayPalEmbeddedPayment from '@/components/transaction/checkout/PayPalEmbeddedPayment';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
 
 /**
- * Three-step for-sale checkout:
- *   1. Review & fulfillment  2. Confirm details  3. Payment
- * The step machine is the only thing that changed — every money, eligibility
- * and edge-function rule below is untouched.
+ * Single-scroll for-sale checkout. Every money, eligibility and edge-function
+ * rule below is unchanged from the previous multi-step wizard — only the
+ * presentation (continuous sections instead of a stepper) has changed.
  */
-type CheckoutStep = 'intro' | 'fulfillment' | 'verify' | 'options' | 'payment';
-
-// High-value sale threshold. Below this we skip the intro screen and drop
-// buyers straight into the wizard (small tool/add-on purchases).
-const SALE_INTRO_MIN_PRICE = 1000;
-
-const STEP_LABELS: Record<Exclude<CheckoutStep, 'intro'>, string> = {
-  fulfillment: 'Review & fulfillment',
-  verify: 'Verify & details',
-  options: 'Options',
-  payment: 'Payment & review',
-};
-
-/** Older sessions persisted a 7-step machine; fold them onto the new four. */
-const LEGACY_STEP_MAP: Record<string, CheckoutStep> = {
-  intro: 'intro',
-  confirm: 'fulfillment',
-  delivery: 'fulfillment',
-  fulfillment: 'fulfillment',
-  identity: 'verify',
-  details: 'verify',
-  verify: 'verify',
-  addons: 'options',
-  options: 'options',
-  payment: 'payment',
-  review: 'payment',
-};
-const normalizeStep = (step: string | undefined): CheckoutStep =>
-  LEGACY_STEP_MAP[step ?? 'intro'] ?? 'intro';
-
-const STEP_ORDER: Exclude<CheckoutStep, 'intro'>[] = ['fulfillment', 'verify', 'options', 'payment'];
-
-
 const SaleCheckout = () => {
   const { listingId } = useParams();
   const navigate = useNavigate();
@@ -106,7 +62,7 @@ const SaleCheckout = () => {
   const { toast } = useToast();
   const { listing, host, isLoading: isListingLoading, error: listingError } = useListing(listingId || '');
   const { estimate, isLoading: isEstimating, error: estimateError, getEstimate, clearEstimate } = useFreightEstimate();
-  
+
   // Accepted offer state - price from negotiation
   const [acceptedOfferPrice, setAcceptedOfferPrice] = useState<number | null>(null);
   const [isLoadingOffer, setIsLoadingOffer] = useState(false);
@@ -116,23 +72,19 @@ const SaleCheckout = () => {
   // Check if user is the owner of this listing
   const isOwner = user?.id && listing?.host_id && user.id === listing.host_id;
 
-  // Multi-step state — persisted per-listing so leaving and returning
-  // restores the furthest step + typed data.
+  // Form state — persisted per-listing so leaving and returning restores it.
   const sessionKey = `sale:${listingId ?? 'unknown'}`;
   interface PersistedState {
-    step: CheckoutStep;
     buyerInfo: BuyerInfo;
     fulfillmentSelected: FulfillmentSelection;
     deliveryAddress: string;
     deliveryInstructions: string;
-    addOnSelections: Record<string, boolean>;
     preferredDate: string;
     preferredWindow: DeliveryWindow | '';
     onSiteContact: string;
     identityAcknowledged: boolean;
   }
   const persist = useCheckoutState<PersistedState>(sessionKey, {
-    step: 'intro',
     buyerInfo: {
       firstName: '', lastName: '', businessName: '', email: '', phone: '',
       address1: '', address2: '', city: '', state: '', zipCode: '',
@@ -140,19 +92,11 @@ const SaleCheckout = () => {
     fulfillmentSelected: 'pickup',
     deliveryAddress: '',
     deliveryInstructions: '',
-    addOnSelections: {},
     preferredDate: '',
     preferredWindow: '',
     onSiteContact: '',
     identityAcknowledged: false,
   });
-
-  const currentStep = normalizeStep(persist.state.step);
-  const setCurrentStep = (s: CheckoutStep) => {
-    persist.setState((prev) => ({ ...prev, step: s }));
-    persist.bumpFurthestStep(Math.max(0, STEP_ORDER.indexOf(s as Exclude<CheckoutStep, 'intro'>) + 1));
-  };
-
 
   const buyerInfo = persist.state.buyerInfo;
   const setBuyerInfo = (next: BuyerInfo | ((p: BuyerInfo) => BuyerInfo)) => {
@@ -164,12 +108,6 @@ const SaleCheckout = () => {
   const updateBuyerInfo = <K extends keyof BuyerInfo>(field: K, value: BuyerInfo[K]) => {
     setBuyerInfo((prev) => ({ ...prev, [field]: value }));
   };
-
-  // Legacy fields for backward compatibility - computed from buyerInfo
-  const name = `${buyerInfo.firstName} ${buyerInfo.lastName}`.trim();
-  const email = buyerInfo.email;
-  const phone = buyerInfo.phone;
-  const address = `${buyerInfo.address1}${buyerInfo.address2 ? ', ' + buyerInfo.address2 : ''}, ${buyerInfo.city}, ${buyerInfo.state} ${buyerInfo.zipCode}`.trim();
 
   // Fulfillment
   const fulfillmentSelected = persist.state.fulfillmentSelected;
@@ -193,20 +131,12 @@ const SaleCheckout = () => {
   const identityAcknowledged = persist.state.identityAcknowledged;
   const setIdentityAcknowledged = (v: boolean) =>
     persist.setState((prev) => ({ ...prev, identityAcknowledged: v }));
-  const addOnSelections = persist.state.addOnSelections;
-  const toggleAddOn = (id: string, next: boolean) =>
-    persist.setState((prev) => ({
-      ...prev,
-      addOnSelections: { ...prev.addOnSelections, [id]: next },
-    }));
   const [isAddressComplete, setIsAddressComplete] = useState(false);
   const [deliveryCoords, setDeliveryCoords] = useState<[number, number] | null>(null);
-  
+
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
-  const [showCheckoutOverlay, setShowCheckoutOverlay] = useState(false);
   const [paypalCheckout, setPaypalCheckout] = useState<{ transactionId: string; returnUrl: string } | null>(null);
-  
 
   // Validation
   const [fieldErrors, setFieldErrors] = useState<Record<string, string | undefined>>({});
@@ -217,10 +147,10 @@ const SaleCheckout = () => {
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
 
   /**
-   * Fulfillment selected from the listing page's delivery checker.
-   * Applied once so the buyer lands on the wizard with their method,
-   * destination ZIP and the estimate they just saw. Pricing itself is still
-   * recomputed by the existing checkout logic — nothing is trusted from here.
+   * Fulfillment selected from the listing page's delivery checker. Applied
+   * once so the buyer lands here with their method, destination ZIP and the
+   * estimate they just saw. Pricing is still recomputed below — nothing is
+   * trusted from here.
    */
   const deliveryChoiceApplied = useRef(false);
   useEffect(() => {
@@ -229,7 +159,6 @@ const SaleCheckout = () => {
     deliveryChoiceApplied.current = true;
     persist.setState((prev) => ({
       ...prev,
-      step: prev.step === 'intro' ? 'fulfillment' : prev.step,
       fulfillmentSelected:
         choice.method === 'vendibook_freight' ? 'vendibook_freight' : 'delivery',
       buyerInfo: {
@@ -241,7 +170,6 @@ const SaleCheckout = () => {
   }, [routerLocation.state]);
 
   // Initialize user data from profile
-
   useEffect(() => {
     if (profile?.full_name && !buyerInfo.firstName) {
       const nameParts = profile.full_name.split(' ');
@@ -255,8 +183,7 @@ const SaleCheckout = () => {
   useEffect(() => {
     const fetchAcceptedOffer = async () => {
       if (!user || !listingId) return;
-      
-      // Check URL param first for offer price
+
       const offerPriceParam = searchParams.get('offer_price');
       if (offerPriceParam) {
         const price = parseFloat(offerPriceParam);
@@ -265,8 +192,7 @@ const SaleCheckout = () => {
           return;
         }
       }
-      
-      // Otherwise fetch from database
+
       setIsLoadingOffer(true);
       try {
         const { data: offer, error } = await supabase
@@ -278,11 +204,10 @@ const SaleCheckout = () => {
           .order('updated_at', { ascending: false })
           .limit(1)
           .maybeSingle();
-        
+
         if (error) {
           console.error('Error fetching accepted offer:', error);
         } else if (offer) {
-          // Use counter_amount if it exists (counter was accepted), otherwise use offer_amount
           const agreedPrice = offer.counter_amount || offer.offer_amount;
           setAcceptedOfferPrice(agreedPrice);
         }
@@ -292,7 +217,7 @@ const SaleCheckout = () => {
         setIsLoadingOffer(false);
       }
     };
-    
+
     fetchAcceptedOffer();
   }, [user, listingId, searchParams]);
 
@@ -306,7 +231,7 @@ const SaleCheckout = () => {
       } else {
         setFulfillmentSelected('pickup');
       }
-      
+
       if (listing.accept_paypal_checkout) {
         setPaymentMethod('card');
       } else if (listing.accept_cash_payment) {
@@ -315,7 +240,7 @@ const SaleCheckout = () => {
     }
   }, [listing]);
 
-  // Field validators for new structured buyer info
+  // Field validators for buyer info
   const fieldValidators = {
     firstName: validators.compose(
       validators.required('First name is required'),
@@ -345,19 +270,6 @@ const SaleCheckout = () => {
   // Derived values - Use accepted offer price if available, otherwise listing price
   const priceSale = acceptedOfferPrice || listing?.price_sale || 0;
 
-  // Threshold guard: small purchases skip the intro screen entirely.
-  useEffect(() => {
-    if (
-      currentStep === 'intro' &&
-      !isListingLoading &&
-      priceSale > 0 &&
-      priceSale < SALE_INTRO_MIN_PRICE
-    ) {
-      setCurrentStep('fulfillment');
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentStep, isListingLoading, priceSale]);
-
   const deliveryRate = listing?.delivery_fee || 0;
   const deliveryFeeType = normalizeDeliveryFeeType((listing as any)?.delivery_fee_type);
   const fulfillmentType = listing?.fulfillment_type || 'pickup';
@@ -367,7 +279,6 @@ const SaleCheckout = () => {
   const acceptCashPayment = listing?.accept_cash_payment ?? false;
   const isFreightSellerPaid = vendibookFreightEnabled && freightPayer === 'seller';
   const freightCost = estimate?.total_cost ?? 0;
-  // hasValidEstimate is true when we have a successful estimate (regardless of isAddressComplete)
   const hasValidEstimate = estimate !== null && estimate.total_cost > 0 && !estimateError;
   const deliveryRadiusMiles = listing?.delivery_radius_miles || null;
 
@@ -376,16 +287,16 @@ const SaleCheckout = () => {
     if (fulfillmentSelected !== 'delivery' || !deliveryCoords || !listing?.latitude || !listing?.longitude) {
       return { distance: null, isOutsideRadius: false };
     }
-    
+
     const distance = calculateDistance(
       listing.latitude,
       listing.longitude,
       deliveryCoords[1],
       deliveryCoords[0]
     );
-    
+
     const isOutsideRadius = deliveryRadiusMiles ? distance > deliveryRadiusMiles : false;
-    
+
     return { distance: Math.round(distance * 10) / 10, isOutsideRadius };
   }, [fulfillmentSelected, deliveryCoords, listing?.latitude, listing?.longitude, deliveryRadiusMiles]);
 
@@ -405,22 +316,15 @@ const SaleCheckout = () => {
 
   const fulfillmentOptions = getAvailableFulfillmentOptions();
 
-  // Pickup-only listings need no fulfillment input — skip the step entirely.
-  const skipDeliveryStep = fulfillmentOptions.length === 1 && fulfillmentOptions[0] === 'pickup';
-
   // ── Buyer identity ────────────────────────────────────────────────
-  // Server-derived (never a client flag). Verified buyers skip the step.
   const { verified: buyerVerified, loading: buyerVerificationLoading } =
     useSellerVerifiedBadge(user?.id ?? null);
 
-  // Seller payment-readiness gate. `gatingActive` is false today (see hook
-  // comment) so behaviour is unchanged; once the real check ships this
-  // blocks the PayPal purchase action without touching any money logic.
+  // Seller payment-readiness gate. `gatingActive` is false today so
+  // behaviour is unchanged; once the real check ships this blocks the
+  // PayPal purchase action without touching any money logic.
   const sellerReadiness = useSellerPaymentReadiness(listing?.host_id ?? null);
   const paypalPurchaseBlocked = sellerReadiness.gatingActive && !sellerReadiness.ready;
-  const skipIdentityStep = Boolean(user?.id) && buyerVerified;
-  // Identity runs inline (real Plaid check) instead of navigating away and
-  // losing the in-progress order.
   const [identityDialogOpen, setIdentityDialogOpen] = useState(false);
   const [fulfillmentReady, setFulfillmentReady] = useState(false);
   const queryClient = useQueryClient();
@@ -441,7 +345,6 @@ const SaleCheckout = () => {
     if (deliveryInstructions.trim()) lines.push(deliveryInstructions.trim());
     return lines.join('\n');
   }, [fulfillmentSelected, preferredDate, preferredWindow, onSiteContact, deliveryInstructions]);
-
 
   // Freight estimation
   const fetchFreightEstimate = useCallback(async (destinationAddress: string) => {
@@ -497,9 +400,6 @@ const SaleCheckout = () => {
   // sees the real total before PayPal opens. The authoritative amount is
   // re-locked at order creation in `paypal-create-order`.
   const [taxEstimate, setTaxEstimate] = useState<{ tax_cents: number; rate_pct: number; label: string } | null>(null);
-  // Quote lifecycle, so the summary can show an explicit tax row
-  // ("calculating…" / "calculated at payment") instead of silently omitting
-  // tax while the estimate is pending or unavailable.
   const [taxState, setTaxState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   useEffect(() => {
     if (!listing?.id || !priceSale) { setTaxEstimate(null); setTaxState('idle'); return; }
@@ -529,7 +429,6 @@ const SaleCheckout = () => {
           }
         })
         .catch(() => {
-          // Estimate is cosmetic; the server re-computes authoritatively.
           if (!controller.signal.aborted) {
             setTaxEstimate(null);
             setTaxState('error');
@@ -542,79 +441,76 @@ const SaleCheckout = () => {
   const taxAmount = (taxEstimate?.tax_cents ?? 0) / 100;
   const totalPrice = priceSale + currentDeliveryFee + taxAmount;
 
-  // Always-visible tax row: real amount when quoted, an explicit placeholder
-  // while calculating or when the estimate is unavailable (the server still
-  // adds tax authoritatively at payment time).
-  const taxSummaryLine: SaleSummaryLine | null = taxAmount > 0
-    ? { label: taxEstimate?.label || 'Estimated sales tax', amount: taxAmount }
+  const taxSummaryLabel = taxAmount > 0
+    ? taxEstimate?.label || 'Estimated sales tax'
     : taxState === 'loading'
-      ? { label: 'Estimated sales tax', amount: 0, muted: true, valueLabel: 'Calculating…' }
+      ? 'Estimated sales tax'
       : taxState === 'error'
-        ? { label: 'Sales tax', amount: 0, muted: true, valueLabel: 'Calculated at payment' }
+        ? 'Sales tax'
         : null;
-
+  const taxSummaryValue = taxAmount > 0
+    ? `$${taxAmount.toLocaleString()}`
+    : taxState === 'loading'
+      ? 'Calculating…'
+      : 'Calculated at payment';
 
   // Validation
-  const validateStep = (step: CheckoutStep): boolean => {
-    if (step === 'fulfillment') {
-      if (fulfillmentSelected === 'vendibook_freight' && !hasValidEstimate) {
-        toast({ title: 'Enter delivery address', description: 'Please enter a complete address to get a freight quote.', variant: 'destructive' });
-        return false;
-      }
-      if ((fulfillmentSelected === 'delivery' || fulfillmentSelected === 'vendibook_freight') && !deliveryAddress.trim()) {
-        toast({ title: 'Missing address', description: 'Please enter a delivery address.', variant: 'destructive' });
-        return false;
-      }
-      // Never let a buyer pay for a delivery the seller doesn't cover.
-      if (fulfillmentSelected === 'delivery' && deliveryDistanceInfo.isOutsideRadius) {
-        toast({
-          title: 'Outside the delivery zone',
-          description: `This seller delivers within ${deliveryRadiusMiles} mi. Choose pickup or freight, or message the seller.`,
-          variant: 'destructive',
-        });
-        return false;
-      }
-      if (fulfillmentSelected === 'delivery' && !preferredDate) {
-        toast({ title: 'Pick a preferred date', description: 'Give the seller a target delivery date so they can confirm a window.', variant: 'destructive' });
-        return false;
-      }
-      return true;
+  const validateFulfillment = (): boolean => {
+    if (fulfillmentSelected === 'vendibook_freight' && !hasValidEstimate) {
+      toast({ title: 'Enter delivery address', description: 'Please enter a complete address to get a freight quote.', variant: 'destructive' });
+      return false;
     }
-    
-    if (step === 'verify') {
-      const needsAddress = fulfillmentSelected !== 'pickup';
-
-      const firstNameError = fieldValidators.firstName(buyerInfo.firstName);
-      const lastNameError = fieldValidators.lastName(buyerInfo.lastName);
-      const emailError = fieldValidators.email(buyerInfo.email);
-      const phoneError = fieldValidators.phone(buyerInfo.phone);
-      const address1Error = needsAddress ? fieldValidators.address1(buyerInfo.address1) : undefined;
-      const cityError = needsAddress ? fieldValidators.city(buyerInfo.city) : undefined;
-      const stateError = needsAddress ? fieldValidators.state(buyerInfo.state) : undefined;
-      const zipCodeError = needsAddress ? fieldValidators.zipCode(buyerInfo.zipCode) : undefined;
-
-      setFieldErrors({
-        firstName: firstNameError,
-        lastName: lastNameError,
-        email: emailError,
-        phone: phoneError,
-        address1: address1Error,
-        city: cityError,
-        state: stateError,
-        zipCode: zipCodeError,
+    if ((fulfillmentSelected === 'delivery' || fulfillmentSelected === 'vendibook_freight') && !deliveryAddress.trim()) {
+      toast({ title: 'Missing address', description: 'Please enter a delivery address.', variant: 'destructive' });
+      return false;
+    }
+    // Never let a buyer pay for a delivery the seller doesn't cover.
+    if (fulfillmentSelected === 'delivery' && deliveryDistanceInfo.isOutsideRadius) {
+      toast({
+        title: 'Outside the delivery zone',
+        description: `This seller delivers within ${deliveryRadiusMiles} mi. Choose pickup or freight, or message the seller.`,
+        variant: 'destructive',
       });
-      const touched = ['firstName', 'lastName', 'email', 'phone'];
-      if (needsAddress) touched.push('address1', 'city', 'state', 'zipCode');
-      setTouchedFields(new Set(touched));
-
-      const firstError = firstNameError || lastNameError || emailError || phoneError || address1Error || cityError || stateError || zipCodeError;
-      if (firstError) {
-        toast({ title: 'Missing information', description: firstError, variant: 'destructive' });
-        return false;
-      }
-      return true;
+      return false;
     }
+    if (fulfillmentSelected === 'delivery' && !preferredDate) {
+      toast({ title: 'Pick a preferred date', description: 'Give the seller a target delivery date so they can confirm a window.', variant: 'destructive' });
+      return false;
+    }
+    return true;
+  };
 
+  const validateDetails = (): boolean => {
+    const needsAddress = fulfillmentSelected !== 'pickup';
+
+    const firstNameError = fieldValidators.firstName(buyerInfo.firstName);
+    const lastNameError = fieldValidators.lastName(buyerInfo.lastName);
+    const emailError = fieldValidators.email(buyerInfo.email);
+    const phoneError = fieldValidators.phone(buyerInfo.phone);
+    const address1Error = needsAddress ? fieldValidators.address1(buyerInfo.address1) : undefined;
+    const cityError = needsAddress ? fieldValidators.city(buyerInfo.city) : undefined;
+    const stateError = needsAddress ? fieldValidators.state(buyerInfo.state) : undefined;
+    const zipCodeError = needsAddress ? fieldValidators.zipCode(buyerInfo.zipCode) : undefined;
+
+    setFieldErrors({
+      firstName: firstNameError,
+      lastName: lastNameError,
+      email: emailError,
+      phone: phoneError,
+      address1: address1Error,
+      city: cityError,
+      state: stateError,
+      zipCode: zipCodeError,
+    });
+    const touched = ['firstName', 'lastName', 'email', 'phone'];
+    if (needsAddress) touched.push('address1', 'city', 'state', 'zipCode');
+    setTouchedFields(new Set(touched));
+
+    const firstError = firstNameError || lastNameError || emailError || phoneError || address1Error || cityError || stateError || zipCodeError;
+    if (firstError) {
+      toast({ title: 'Missing information', description: firstError, variant: 'destructive' });
+      return false;
+    }
     return true;
   };
 
@@ -648,7 +544,6 @@ const SaleCheckout = () => {
         // later PayPal order and must not inflate "total due today".
         deliveryFeeDollars: currentDeliveryFee,
         isSellerPaidFreight: isFreightSellerPaid,
-
         isCashSale: paymentMethod === 'cash',
         fulfillmentType: fulfillmentSelected,
       },
@@ -669,6 +564,8 @@ const SaleCheckout = () => {
 
   const handlePurchase = async () => {
     if (submitLockRef.current || isPurchasing || termsGate.preparing) return;
+    if (!validateFulfillment()) return;
+    if (!validateDetails()) return;
     if (paypalPurchaseBlocked && paymentMethod !== 'cash') {
       toast({
         title: 'Seller setup incomplete',
@@ -783,7 +680,6 @@ const SaleCheckout = () => {
 
     // Handle card / PayPal payment
     setIsPurchasing(true);
-    setShowCheckoutOverlay(true);
 
     try {
       const isVendibookFreight = fulfillmentSelected === 'vendibook_freight';
@@ -808,7 +704,6 @@ const SaleCheckout = () => {
       if (error || data?.error || !data?.transaction_id) {
         const parsed = await parseEdgeError(error, data?.error ? { error: data.error, code: data.code } : null);
         const copy = checkoutErrorCopy(parsed);
-        setShowCheckoutOverlay(false);
         setPaypalCheckout(null);
         toast({
           title: copy.title,
@@ -844,13 +739,11 @@ const SaleCheckout = () => {
       });
 
       termsGate.reset();
-      setShowCheckoutOverlay(false);
       setPaypalCheckout({
         transactionId: data.transaction_id as string,
         returnUrl: `${window.location.origin}/order-tracking/${data.transaction_id}`,
       });
     } catch (error) {
-      setShowCheckoutOverlay(false);
       setPaypalCheckout(null);
       const parsed = await parseEdgeError(error);
       const copy = checkoutErrorCopy(parsed);
@@ -865,27 +758,23 @@ const SaleCheckout = () => {
     }
   };
 
-
-
-
-
   // Loading state
   if (isListingLoading || isLoadingOffer) {
     return (
-      <div className="v2-commerce min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="v2-checkout min-h-screen flex items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-foreground/60" />
       </div>
     );
   }
 
-  // Error state
+  // Error state — listing unavailable.
   if (listingError || !listing) {
     return (
-      <div className="v2-commerce min-h-screen flex items-center justify-center bg-background">
+      <div className="v2-checkout min-h-screen flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-xl font-semibold text-foreground mb-2">Listing not found</h2>
-          <button onClick={() => navigate('/browse')} className="text-primary hover:underline">
-            Browse Listings
+          <button onClick={() => navigate('/browse')} className="v2-btn-quiet">
+            Browse listings
           </button>
         </div>
       </div>
@@ -895,46 +784,31 @@ const SaleCheckout = () => {
   // Block owners from purchasing their own listings
   if (isOwner) {
     return (
-      <SaleCheckoutShell
-        steps={STEP_ORDER.filter((s) => s !== 'options').map((s) => ({ id: s, label: STEP_LABELS[s] }))}
-        currentIndex={0}
+      <TransactionCheckoutShell
+        title="You own this listing"
+        subtitle="You cannot purchase your own listing."
         exitHref={`/listing/${listingId}`}
       >
-        <div className="mx-auto max-w-md py-12 text-center">
-          <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-            <ArrowLeft className="w-8 h-8 text-muted-foreground" />
-          </div>
-          <h2 className="text-xl font-semibold text-foreground mb-2">You own this listing</h2>
-          <p className="text-muted-foreground mb-4">You cannot purchase your own listing.</p>
-          <button onClick={() => navigate(`/listing/${listingId}`)} className="text-primary hover:underline">
+        <CheckoutSection title="Cannot purchase your own listing">
+          <p className="text-sm text-muted-foreground">
+            You're the seller for this listing, so checkout isn't available here.
+          </p>
+          <button onClick={() => navigate(`/listing/${listingId}`)} className="v2-btn-outline mt-4">
             Back to listing
           </button>
-        </div>
-      </SaleCheckoutShell>
+        </CheckoutSection>
+      </TransactionCheckoutShell>
     );
   }
 
+  // Privacy-safe: business name, else "First L." — never a full legal name.
+  const sellerName = host ? getPublicDisplayName(host, 'Seller') : undefined;
+  const locationLabel = [listing.city, listing.state].filter(Boolean).join(', ') || undefined;
+  const coverImage = listing.cover_image_url || listing.image_urls?.[0] || null;
+  const sellerVerifiedFlag = Boolean((host as { identity_verified?: boolean } | null | undefined)?.identity_verified);
+  const financingEligible = priceSale >= 150 && acceptPayPalCheckout;
 
-  const hasMultiplePaymentOptions = acceptPayPalCheckout && acceptCashPayment;
-
-  // Checkout is exactly three real steps. (An "Options" step used to offer
-  // pre-purchase inspection / notarized title transfer — neither is an active
-  // Vendibook service, so nothing optional is sold to buyers here any more.)
-  const visibleSteps: Exclude<CheckoutStep, 'intro'>[] = ['fulfillment', 'verify', 'payment'];
-
-  const effectiveStep: Exclude<CheckoutStep, 'intro'> =
-    currentStep === 'intro' || currentStep === 'options'
-      ? currentStep === 'options' ? 'payment' : 'fulfillment'
-      : currentStep;
-
-
-  const stepIndex = Math.max(0, visibleSteps.indexOf(effectiveStep));
-
-  const goNext = () => setCurrentStep(visibleSteps[Math.min(stepIndex + 1, visibleSteps.length - 1)]);
-  const goBack = () => setCurrentStep(visibleSteps[Math.max(stepIndex - 1, 0)]);
-
-
-  /** Prefill the details step from the delivery address the buyer already typed. */
+  /** Prefill the details section from the delivery address the buyer already typed. */
   const prefillFromDeliveryAddress = () => {
     if (fulfillmentSelected === 'pickup' || buyerInfo.address1.trim()) return;
     const parsed = parseFormattedAddress(deliveryAddress);
@@ -942,427 +816,336 @@ const SaleCheckout = () => {
     setBuyerInfo((prev) => ({ ...prev, ...parsed }));
   };
 
-  // Privacy-safe: business name, else "First L." — never a full legal name.
-  const sellerName = host ? getPublicDisplayName(host, 'Seller') : undefined;
-  const locationLabel = [listing.city, listing.state].filter(Boolean).join(', ') || undefined;
-  const coverImage = listing.cover_image_url || listing.image_urls?.[0] || null;
-
-  const summaryLines: SaleSummaryLine[] = [
-    { label: listing.title, amount: priceSale },
-    ...(currentDeliveryFee > 0
-      ? [{
-          label: fulfillmentSelected === 'vendibook_freight' ? 'Vendibook freight' : 'Seller delivery',
-          amount: currentDeliveryFee,
-        }]
-      : []),
-    ...(taxSummaryLine ? [taxSummaryLine] : []),
-  ];
-
   const fulfillmentDetail =
     fulfillmentSelected === 'pickup'
       ? locationLabel ? `Pick up near ${locationLabel}` : 'Arranged with the seller'
-      : deliveryAddress || 'Address confirmed at the next step';
+      : deliveryAddress || 'Address confirmed below';
 
-  const sellerVerifiedFlag = Boolean((host as { identity_verified?: boolean } | null | undefined)?.identity_verified);
+  const moneyLines: MoneyLine[] = [
+    { label: listing.title, value: `$${priceSale.toLocaleString()}` },
+    ...(currentDeliveryFee > 0
+      ? [{
+          label: fulfillmentSelected === 'vendibook_freight' ? 'Vendibook freight' : 'Seller delivery',
+          value: `$${currentDeliveryFee.toLocaleString()}`,
+        }]
+      : []),
+    ...(taxSummaryLabel ? [{ label: taxSummaryLabel, value: taxSummaryValue, muted: taxAmount === 0 }] : []),
+  ];
 
-  const orderSummary = (
-    <SaleOrderSummary
-      imageUrl={coverImage}
-      title={listing.title}
-      lines={summaryLines}
-      total={totalPrice}
-      fulfillment={fulfillmentSelected}
-      fulfillmentDetail={fulfillmentDetail}
-      sellerName={sellerName}
-      sellerVerified={sellerVerifiedFlag}
-      locationLabel={locationLabel}
-    />
+  const moneyBreakdown = (
+    <MoneyBreakdown lines={moneyLines} total={`$${totalPrice.toLocaleString()}`} totalNote="Due today" />
   );
 
-  const advance = () => {
-    if (effectiveStep === 'fulfillment') {
-      if (!validateStep('fulfillment')) return;
-      prefillFromDeliveryAddress();
-      goNext();
-      return;
-    }
-    if (effectiveStep === 'verify') {
-      if (!validateStep('verify')) return;
-      goNext();
-      return;
-    }
-    if (!agreedToTerms) {
-      toast({
-        title: 'One more thing',
-        description: 'Please acknowledge that all sales are final to continue.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    handlePurchase();
-  };
+  const summaryMeta = [
+    { label: 'Fulfillment', value: fulfillmentSelected === 'vendibook_freight' ? 'Vendibook Freight' : fulfillmentSelected === 'delivery' ? 'Delivery' : 'Pickup' },
+    { label: 'Details', value: fulfillmentDetail },
+  ];
 
-  const primaryLabel =
-    effectiveStep === 'fulfillment'
-      ? 'Continue'
-      : effectiveStep === 'verify'
-        ? 'Continue to payment'
-        : paymentMethod === 'cash'
-          ? 'Confirm — arrange in person'
-          : `Review and pay $${totalPrice.toLocaleString()}`;
+  const summaryContent = (
+    <ListingCheckoutSummary
+      imageUrl={coverImage}
+      title={listing.title}
+      typeLabel={listing.category ?? null}
+      location={locationLabel}
+      counterpartyLabel={sellerName ? `Sold by ${sellerName}` : undefined}
+      priceLabel={`$${priceSale.toLocaleString()}`}
+      priceNote={acceptedOfferPrice ? 'Accepted offer price' : undefined}
+      meta={summaryMeta}
+    >
+      {moneyBreakdown}
+    </ListingCheckoutSummary>
+  );
 
-
-  const primaryDisabled =
-    (effectiveStep === 'fulfillment' && !fulfillmentReady) ||
-    (effectiveStep === 'payment' && !user);
-
-
-  // "Step 0" — enterprise-grade intro. Shown once per checkout session for
-  // high-value sales; small purchases fall through to the wizard.
-  if (currentStep === 'intro') {
-    return (
-      <>
-        <SEO title={`Checkout - ${listing.title}`} description={`Complete your purchase of ${listing.title}`} />
-        <div className="v2-commerce min-h-screen bg-background py-8 sm:py-12 px-4">
-          <CheckoutIntro
-            listingId={listing.id}
-            listingTitle={listing.title}
-            coverImageUrl={coverImage}
-            city={listing.city}
-            state={listing.state}
-            price={priceSale}
-            sellerName={sellerName}
-            sellerVerified={Boolean((host as { identity_verified?: boolean } | null | undefined)?.identity_verified)}
-            flow="sale"
-            financingEligible={priceSale >= 150 && acceptPayPalCheckout}
-            onBack={() => navigate(`/listing/${listingId}`)}
-            onContinue={() => setCurrentStep('fulfillment')}
-          />
-        </div>
-      </>
-    );
-  }
+  const canSubmit = fulfillmentReady && agreedToTerms && !isPurchasing && !termsGate.preparing;
 
   return (
     <>
       <SEO title={`Checkout - ${listing.title}`} description={`Complete your purchase of ${listing.title}`} />
 
-      <SaleCheckoutShell
-        steps={visibleSteps.map((id) => ({ id, label: STEP_LABELS[id] }))}
-        currentIndex={stepIndex}
+      <TransactionCheckoutShell
+        title="Checkout"
+        subtitle={listing.title}
         exitHref={`/listing/${listingId}`}
-        aside={orderSummary}
+        summary={summaryContent}
+        mobileSummary={summaryContent}
+        stickyAction={
+          <div className="v2-checkout-sticky-inner">
+            <div className="v2-checkout-sticky-total">
+              <span>Total due today</span>
+              <strong>${totalPrice.toLocaleString()}</strong>
+            </div>
+            {paymentMethod === 'cash' ? (
+              <button
+                type="button"
+                className="v2-btn"
+                onClick={handlePurchase}
+                disabled={!canSubmit}
+              >
+                Confirm
+              </button>
+            ) : (
+              <button
+                type="button"
+                className="v2-btn"
+                onClick={handlePurchase}
+                disabled={!canSubmit || Boolean(paypalCheckout)}
+              >
+                {paypalCheckout ? 'Complete above' : 'Review & pay'}
+              </button>
+            )}
+          </div>
+        }
       >
-        {/* Guest sign-in prompt — surfaced BEFORE the wizard so buyers don't lose typed info at the Pay step */}
         {!user && (
-          <div className="rounded-2xl border border-primary/30 bg-primary/[0.06] p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-            <div>
-              <div className="text-sm font-semibold text-foreground">Sign in to complete checkout</div>
-              <p className="text-xs text-muted-foreground mt-0.5">
+          <div className="v2-checkout-section" role="status">
+            <div className="v2-checkout-section-body">
+              <p className="text-sm font-semibold text-foreground">Sign in to complete checkout</p>
+              <p className="text-xs text-muted-foreground mt-1">
                 An account is required to pay securely. Sign in now so we can keep your details when you return.
               </p>
+              <button
+                onClick={() => navigate(`/auth?redirect=/checkout/${listingId}`)}
+                className="v2-btn mt-3"
+              >
+                Sign in / Create account
+              </button>
             </div>
-            <button
-              onClick={() => navigate(`/auth?redirect=/checkout/${listingId}`)}
-              className="shrink-0 h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
-            >
-              Sign in / Create account
-            </button>
           </div>
         )}
 
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={effectiveStep}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -8 }}
-            transition={{ duration: 0.18 }}
-            className="space-y-5"
-          >
-            {effectiveStep === 'fulfillment' && (
-              <>
-                <SaleCheckoutCard>
-                  <SaleListingSummary
-                    listingId={listing.id}
-                    title={listing.title}
-                    imageUrl={coverImage}
-                    price={priceSale}
-                    locationLabel={locationLabel}
-                    conditionLabel={(listing as { condition?: string | null }).condition ?? null}
-                    sellerName={sellerName}
-                    sellerVerified={Boolean((host as { identity_verified?: boolean } | null | undefined)?.identity_verified)}
-                  />
-                </SaleCheckoutCard>
+        {/* 1. Review your purchase */}
+        <CheckoutSection title="Review your purchase" description="Confirm this is the item, seller and price you're checking out.">
+          <ListingCheckoutSummary
+            imageUrl={coverImage}
+            title={listing.title}
+            typeLabel={listing.category ?? null}
+            location={locationLabel}
+            counterpartyLabel={sellerName ? `Sold by ${sellerName}${sellerVerifiedFlag ? ' · Verified' : ''}` : undefined}
+            priceLabel={`$${priceSale.toLocaleString()}`}
+            priceNote={acceptedOfferPrice ? 'Accepted offer price' : undefined}
+          />
+          {financingEligible && (
+            <p className="text-xs text-muted-foreground mt-3">
+              Financing may be available for this item — see the Payment section below.
+            </p>
+          )}
+        </CheckoutSection>
 
-                <SaleCheckoutCard>
-                  <PurchaseStepDelivery
-                    embedded
-                    onCanContinueChange={setFulfillmentReady}
-                    fulfillmentOptions={fulfillmentOptions}
-                    fulfillmentSelected={fulfillmentSelected}
-                    setFulfillmentSelected={setFulfillmentSelected}
-                    deliveryAddress={deliveryAddress}
-                    setDeliveryAddress={setDeliveryAddress}
-                    setDeliveryCoords={setDeliveryCoords}
-                    deliveryFee={currentDeliveryFee}
-                    deliveryRateText={deliveryRateLabel(deliveryRate, deliveryFeeType)}
-                    deliveryFeeType={deliveryFeeType}
-                    deliveryRadiusMiles={deliveryRadiusMiles}
-                    deliveryDistanceInfo={deliveryDistanceInfo}
-                    isFreightSellerPaid={isFreightSellerPaid}
-                    freightCost={freightCost}
-                    hasValidEstimate={hasValidEstimate}
-                    isEstimating={isEstimating}
-                    estimateError={estimateError}
-                    estimate={estimate}
-                    isAddressComplete={isAddressComplete}
-                    setIsAddressComplete={setIsAddressComplete}
-                    fetchFreightEstimate={fetchFreightEstimate}
-                    clearEstimate={clearEstimate}
-                    listingCity={listing.city}
-                    listingState={listing.state}
-                    preferredDate={preferredDate}
-                    setPreferredDate={setPreferredDate}
-                    preferredWindow={preferredWindow}
-                    setPreferredWindow={setPreferredWindow}
-                    onSiteContact={onSiteContact}
-                    setOnSiteContact={setOnSiteContact}
-                    onBack={goBack}
-                    onContinue={advance}
-                  />
-                </SaleCheckoutCard>
-              </>
-            )}
+        {/* 2. How you'll get it */}
+        <CheckoutSection title="How you'll get it">
+          <PurchaseStepDelivery
+            embedded
+            onCanContinueChange={setFulfillmentReady}
+            fulfillmentOptions={fulfillmentOptions}
+            fulfillmentSelected={fulfillmentSelected}
+            setFulfillmentSelected={setFulfillmentSelected}
+            deliveryAddress={deliveryAddress}
+            setDeliveryAddress={setDeliveryAddress}
+            setDeliveryCoords={setDeliveryCoords}
+            deliveryFee={currentDeliveryFee}
+            deliveryRateText={deliveryRateLabel(deliveryRate, deliveryFeeType)}
+            deliveryFeeType={deliveryFeeType}
+            deliveryRadiusMiles={deliveryRadiusMiles}
+            deliveryDistanceInfo={deliveryDistanceInfo}
+            isFreightSellerPaid={isFreightSellerPaid}
+            freightCost={freightCost}
+            hasValidEstimate={hasValidEstimate}
+            isEstimating={isEstimating}
+            estimateError={estimateError}
+            estimate={estimate}
+            isAddressComplete={isAddressComplete}
+            setIsAddressComplete={setIsAddressComplete}
+            fetchFreightEstimate={fetchFreightEstimate}
+            clearEstimate={clearEstimate}
+            listingCity={listing.city}
+            listingState={listing.state}
+            preferredDate={preferredDate}
+            setPreferredDate={setPreferredDate}
+            preferredWindow={preferredWindow}
+            setPreferredWindow={setPreferredWindow}
+            onSiteContact={onSiteContact}
+            setOnSiteContact={setOnSiteContact}
+            onBack={() => undefined}
+            onContinue={() => undefined}
+          />
+        </CheckoutSection>
 
-            {effectiveStep === 'verify' && (
-              <>
-                {!buyerVerificationLoading && !buyerVerified && (
-                  <SaleCheckoutCard title="Verify your identity" padding="md">
-                    <div className="space-y-3">
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        Verification is handled by Plaid — sellers only ever see a pass/fail result,
-                        never your documents. Verified buyers get pickup addresses and scheduling
-                        confirmed faster.
-                      </p>
-                      <div className="flex flex-wrap items-center gap-3">
-                        <button
-                          type="button"
-                          onClick={() => setIdentityDialogOpen(true)}
-                          className="h-10 px-4 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
-                        >
-                          Verify my identity
-                        </button>
-                        <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
-                          <Checkbox
-                            checked={identityAcknowledged}
-                            onCheckedChange={(v) => setIdentityAcknowledged(Boolean(v))}
-                          />
-                          Continue without verifying for now
-                        </label>
-                      </div>
-                    </div>
-                  </SaleCheckoutCard>
-                )}
-
-                {buyerVerified && (
-                  <SaleCheckoutCard padding="md">
-                    <div className="flex items-center gap-3">
-                      <ShieldCheck className="h-5 w-5 text-primary shrink-0" />
-                      <div>
-                        <div className="text-sm font-semibold text-foreground">Identity verified</div>
-                        <p className="text-xs text-muted-foreground">
-                          Your Plaid identity check is active — nothing else to do here.
-                        </p>
-                      </div>
-                    </div>
-                  </SaleCheckoutCard>
-                )}
-
-                <SaleCheckoutCard>
-                  <PurchaseStepInfo
-                    embedded
-                    buyerInfo={buyerInfo}
-                    updateBuyerInfo={updateBuyerInfo}
-                    deliveryInstructions={deliveryInstructions}
-                    setDeliveryInstructions={setDeliveryInstructions}
-                    fulfillmentSelected={fulfillmentSelected}
-                    fieldErrors={fieldErrors}
-                    touchedFields={touchedFields}
-                    setTouchedFields={setTouchedFields}
-                    hideAddress={fulfillmentSelected === 'pickup'}
-                    onBack={goBack}
-                    onContinue={advance}
-                  />
-                </SaleCheckoutCard>
-
-                <div className="lg:hidden">{orderSummary}</div>
-              </>
-            )}
-
-
-
-
-            {effectiveStep === 'payment' && (
-              <>
-                {paypalPurchaseBlocked && !acceptCashPayment ? (
-                  <SaleCheckoutCard title="Seller setup incomplete" padding="md">
-                    <div className="space-y-4">
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        This seller hasn't finished setting up payments yet, so we can't take a
-                        secure PayPal payment for this listing right now. You can message the
-                        seller directly, or come back once payment setup is complete.
-                      </p>
-                      {sellerReadiness.reasons.length > 0 ? (
-                        <ul className="text-xs text-muted-foreground list-disc pl-4 space-y-1">
-                          {sellerReadiness.reasons.map((r) => (
-                            <li key={r}>{r}</li>
-                          ))}
-                        </ul>
-                      ) : null}
-                      <div className="rounded-xl bg-muted/60 p-4">
-                        <div className="flex items-center gap-2 mb-3 text-sm font-semibold text-foreground">
-                          <MessageSquare className="h-4 w-4" /> Message the seller
-                        </div>
-                        <MessageHostForm listingId={listing.id} hostId={listing.host_id} listingTitle={listing.title} />
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => navigate(`/listing/${listingId}`)}
-                        className="text-sm font-medium text-primary hover:underline"
-                      >
-                        Back to listing
-                      </button>
-                    </div>
-                  </SaleCheckoutCard>
-                ) : (
-                  <>
-                    {acceptPayPalCheckout && paymentMethod === 'card' ? (
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                        <span>Secure checkout with</span>
-                        <PayPalMonogram className="h-4" />
-                        <PayPalWordmark className="h-3.5 invert" />
-                      </div>
-                    ) : null}
-
-                    <SaleCheckoutCard>
-                      <PurchaseStepPayment
-                        embedded
-                        paymentMethod={paymentMethod}
-                        setPaymentMethod={setPaymentMethod}
-                        acceptPayPalCheckout={acceptPayPalCheckout && !paypalPurchaseBlocked}
-                        acceptCashPayment={acceptCashPayment}
-                        titleStatus={(listing as { title_status?: string | null }).title_status ?? null}
-                        hasLien={(listing as { has_lien?: string | null }).has_lien ?? null}
-                        vin={(listing as { vin?: string | null }).vin ?? null}
-                        totalPrice={totalPrice}
-                        submitting={isPurchasing || termsGate.preparing}
-                        onBack={goBack}
-                        onContinue={advance}
-                      />
-                    </SaleCheckoutCard>
-
-                    {/* Financing is a separate application, never mixed with the PayPal purchase flow above. */}
-                    <FinancingActionPanel listing={listing} host={host} />
-                  </>
-                )}
-
-                {freightDueLater > 0 && paymentMethod !== 'cash' ? (
-                  <SaleCheckoutCard padding="sm">
-                    <div className="flex items-start gap-3">
-                      <Truck className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        Your quoted freight of{' '}
-                        <span className="font-medium text-foreground">
-                          ${freightDueLater.toLocaleString()}
-                        </span>{' '}
-                        is billed separately once the seller confirms this sale — it is not
-                        included in today's payment.
-                      </p>
-                    </div>
-                  </SaleCheckoutCard>
-                ) : null}
-
-
-                <SaleCheckoutCard title="Before you pay" padding="md">
-                  <div className="space-y-4">
-                    <ReferralCodeField
-                      programType="purchase"
-                      value={referralCode}
-                      onChange={(code, valid) => { setReferralCode(code); setReferralValid(valid); }}
-                      autoFillFromCookie
+        {/* 3. Your details */}
+        <CheckoutSection title="Your details">
+          {!buyerVerificationLoading && !buyerVerified && (
+            <div className="v2-checkout-section mb-4">
+              <div className="v2-checkout-section-body">
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  Verification is handled by Plaid — sellers only ever see a pass/fail result,
+                  never your documents. Verified buyers get pickup addresses and scheduling
+                  confirmed faster.
+                </p>
+                <div className="flex flex-wrap items-center gap-3 mt-3">
+                  <button type="button" onClick={() => setIdentityDialogOpen(true)} className="v2-btn">
+                    Verify my identity
+                  </button>
+                  <label className="flex items-center gap-2 text-sm text-muted-foreground cursor-pointer">
+                    <Checkbox
+                      checked={identityAcknowledged}
+                      onCheckedChange={(v) => setIdentityAcknowledged(Boolean(v))}
                     />
-                    <label className="flex items-start gap-3 rounded-xl bg-muted/60 p-3 cursor-pointer">
-                      <Checkbox
-                        checked={agreedToTerms}
-                        onCheckedChange={(v) => setAgreedToTerms(Boolean(v))}
-                        className="mt-0.5"
-                      />
-                      <span className="text-sm text-foreground/90 leading-relaxed">
-                        I understand this purchase is <strong>final</strong> and I've reviewed the
-                        item, fulfillment details and total shown here.
-                      </span>
-                    </label>
-                  </div>
-                </SaleCheckoutCard>
+                    Continue without verifying for now
+                  </label>
+                </div>
+              </div>
+            </div>
+          )}
 
-                <div className="lg:hidden">{orderSummary}</div>
-              </>
-            )}
-          </motion.div>
-        </AnimatePresence>
+          {buyerVerified && (
+            <div className="flex items-center gap-3 mb-4 text-sm text-foreground">
+              <ShieldCheck className="h-5 w-5 text-emerald-500 shrink-0" />
+              <div>
+                <div className="font-semibold">Identity verified</div>
+                <p className="text-xs text-muted-foreground">Your Plaid identity check is active — nothing else to do here.</p>
+              </div>
+            </div>
+          )}
 
-        <SaleCheckoutFooter
-          onBack={stepIndex > 0 ? goBack : () => navigate(`/listing/${listingId}`)}
-          backLabel={stepIndex > 0 ? 'Back' : 'Back to listing'}
-          primaryLabel={primaryLabel}
-          onPrimary={advance}
-          primaryDisabled={primaryDisabled || (effectiveStep === 'payment' && paypalPurchaseBlocked && !acceptCashPayment)}
-          busy={isPurchasing || termsGate.preparing}
-          total={totalPrice}
-          helper={
-            effectiveStep === 'payment'
-              ? "You'll confirm the final total before any money moves."
-              : 'Your progress is saved — you can step back any time.'
-          }
-        />
+          <PurchaseStepInfo
+            embedded
+            buyerInfo={buyerInfo}
+            updateBuyerInfo={updateBuyerInfo}
+            deliveryInstructions={deliveryInstructions}
+            setDeliveryInstructions={setDeliveryInstructions}
+            fulfillmentSelected={fulfillmentSelected}
+            fieldErrors={fieldErrors}
+            touchedFields={touchedFields}
+            setTouchedFields={setTouchedFields}
+            hideAddress={fulfillmentSelected === 'pickup'}
+            onBack={() => undefined}
+            onContinue={() => { prefillFromDeliveryAddress(); }}
+          />
+        </CheckoutSection>
+
+        {/* 4. Payment */}
+        <CheckoutSection title="Payment">
+          {paypalPurchaseBlocked && !acceptCashPayment ? (
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground leading-relaxed">
+                This seller hasn't finished setting up payments yet, so we can't take a
+                secure PayPal payment for this listing right now. You can message the
+                seller directly, or come back once payment setup is complete.
+              </p>
+              {sellerReadiness.reasons.length > 0 ? (
+                <ul className="text-xs text-muted-foreground list-disc pl-4 space-y-1">
+                  {sellerReadiness.reasons.map((r) => (
+                    <li key={r}>{r}</li>
+                  ))}
+                </ul>
+              ) : null}
+              <div className="rounded-xl bg-muted/60 p-4">
+                <div className="flex items-center gap-2 mb-3 text-sm font-semibold text-foreground">
+                  <MessageSquare className="h-4 w-4" /> Message the seller
+                </div>
+                <MessageHostForm listingId={listing.id} hostId={listing.host_id} listingTitle={listing.title} />
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-5">
+              {hasMultiplePaymentOptionsFor(acceptPayPalCheckout, acceptCashPayment) && (
+                <PurchaseStepPayment
+                  embedded
+                  paymentMethod={paymentMethod}
+                  setPaymentMethod={setPaymentMethod}
+                  acceptPayPalCheckout={acceptPayPalCheckout && !paypalPurchaseBlocked}
+                  acceptCashPayment={acceptCashPayment}
+                  titleStatus={(listing as { title_status?: string | null }).title_status ?? null}
+                  hasLien={(listing as { has_lien?: string | null }).has_lien ?? null}
+                  vin={(listing as { vin?: string | null }).vin ?? null}
+                  totalPrice={totalPrice}
+                  submitting={isPurchasing || termsGate.preparing}
+                  onBack={() => undefined}
+                  onContinue={() => undefined}
+                />
+              )}
+
+              {freightDueLater > 0 && paymentMethod !== 'cash' ? (
+                <div className="flex items-start gap-3 rounded-xl bg-muted/40 p-4">
+                  <Truck className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    Your quoted freight of{' '}
+                    <span className="font-medium text-foreground">${freightDueLater.toLocaleString()}</span>{' '}
+                    is billed separately once the seller confirms this sale — it is not
+                    included in today's payment.
+                  </p>
+                </div>
+              ) : null}
+
+              <div className="space-y-4">
+                <ReferralCodeField
+                  programType="purchase"
+                  value={referralCode}
+                  onChange={(code, valid) => { setReferralCode(code); setReferralValid(valid); }}
+                  autoFillFromCookie
+                />
+                <label className="flex items-start gap-3 rounded-xl bg-muted/40 p-3 cursor-pointer">
+                  <Checkbox
+                    checked={agreedToTerms}
+                    onCheckedChange={(v) => setAgreedToTerms(Boolean(v))}
+                    className="mt-0.5"
+                  />
+                  <span className="text-sm text-foreground/90 leading-relaxed">
+                    I understand this purchase is <strong>final</strong> and I've reviewed the
+                    item, fulfillment details and total shown here.
+                  </span>
+                </label>
+              </div>
+
+              {paymentMethod === 'cash' ? (
+                <div className="space-y-4">
+                  {moneyBreakdown}
+                  <button
+                    type="button"
+                    className="v2-btn w-full"
+                    onClick={handlePurchase}
+                    disabled={!canSubmit}
+                  >
+                    {isPurchasing || termsGate.preparing ? 'Working…' : 'Confirm — arrange in person'}
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <PayPalEmbeddedPayment
+                    target={{ kind: 'sale', id: paypalCheckout?.transactionId ?? '' }}
+                    sellerId={listing.host_id}
+                    listingHref={`/listing/${listingId}`}
+                    blocked={!paypalCheckout}
+                    blockedReason="Review and confirm your order to unlock secure payment."
+                    breakdown={moneyBreakdown}
+                    returnUrl={paypalCheckout?.returnUrl}
+                    totalUsd={totalPrice}
+                  />
+                  {!paypalCheckout && (
+                    <button
+                      type="button"
+                      className="v2-btn w-full"
+                      onClick={handlePurchase}
+                      disabled={!canSubmit}
+                    >
+                      {isPurchasing || termsGate.preparing ? 'Working…' : `Review and pay $${totalPrice.toLocaleString()}`}
+                    </button>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+        </CheckoutSection>
+
+        {/* Financing — a separate application, never mixed with the PayPal purchase flow above. */}
+        <FinancingActionPanel listing={listing} host={host} />
 
         <VerifiedSellerDialog
           open={identityDialogOpen}
           onOpenChange={setIdentityDialogOpen}
           onVerified={() => refreshSellerBadgeSurfaces(queryClient)}
         />
-      </SaleCheckoutShell>
+      </TransactionCheckoutShell>
 
-      <CheckoutOverlay isVisible={showCheckoutOverlay} />
-      {paypalCheckout ? (
-        <PayPalPaymentPanel
-          target={{ kind: 'sale', id: paypalCheckout.transactionId }}
-          returnUrl={paypalCheckout.returnUrl}
-          onClose={() => setPaypalCheckout(null)}
-          totalUsd={totalPrice}
-
-          summary={
-            <CheckoutOrderSummary
-              variant="sale"
-              coverImageUrl={listing.cover_image_url || listing.image_urls?.[0]}
-              title={listing.title}
-              subtitle={listing.category ?? undefined}
-              lines={[
-                { label: listing.title, amount: priceSale },
-                ...(currentDeliveryFee > 0
-                  ? [{
-                      label: fulfillmentSelected === 'vendibook_freight' ? 'Freight' : 'Delivery',
-                      amount: currentDeliveryFee,
-                    }]
-                  : []),
-                ...(taxSummaryLine ? [taxSummaryLine] : []),
-              ]}
-              total={totalPrice}
-            />
-          }
-        />
-      ) : null}
       {termsGate.terms ? (
         <FinalReviewSheet
           terms={termsGate.terms}
@@ -1377,5 +1160,8 @@ const SaleCheckout = () => {
     </>
   );
 };
+
+const hasMultiplePaymentOptionsFor = (acceptPayPalCheckout: boolean, acceptCashPayment: boolean) =>
+  acceptPayPalCheckout && acceptCashPayment;
 
 export default SaleCheckout;
