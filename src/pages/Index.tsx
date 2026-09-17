@@ -14,7 +14,7 @@ import SEO, { generateOrganizationSchema, generateWebSiteSchema } from '@/compon
 import JsonLd from '@/components/JsonLd';
 import { supabase } from '@/integrations/supabase/client';
 
-import { EquinoxFundingLogo, PayPalWordmark, PlaidLogo } from '@/components/brand/ProviderLogos';
+import { EquinoxFundingLogo, PayPalWordmark } from '@/components/brand/ProviderLogos';
 import vendibookWordmark from '@/assets/vendibook-wordmark.png';
 
 const ROW_LIMIT = 8;
@@ -179,7 +179,7 @@ const Index = () => {
             <div><p className="v2-home-eyebrow">Connected tools and providers</p><h2>Support for the whole transaction.</h2></div>
             <div className="v2-home-partner-logos">
               <span><PayPalWordmark surface="light" className="text-xl" /><small>Secure checkout</small></span>
-              <span><PlaidLogo surface="light" className="h-7" /><small>Identity signals</small></span>
+              <span><b className="v2-home-plaid-mark">PLAID</b><small>Identity signals</small></span>
               <span><EquinoxFundingLogo className="h-8" /><small>Financing options</small></span>
               <span><img src={vendibookWordmark} alt="Vendibook" /><small>Marketplace records</small></span>
             </div>

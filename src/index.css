@@ -2587,7 +2587,7 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
 .v2-home-rail {
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: minmax(0, 84%);
+  grid-auto-columns: 84%;
   gap: 12px;
   overflow-x: auto;
   scroll-snap-type: x mandatory;
@@ -2659,6 +2659,7 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
 .v2-home-partner-logos > span:nth-child(even) { border-left: 1px solid hsl(var(--v2h-line)); }
 .v2-home-partner-logos > span:nth-child(n+3) { border-top: 1px solid hsl(var(--v2h-line)); }
 .v2-home-partner-logos img { max-width: 130px; max-height: 34px; object-fit: contain; }
+.v2-home-plaid-mark { color: hsl(240 6% 8%); font-family: Arial, sans-serif; font-size: 22px; font-weight: 800; letter-spacing: 0; }
 .v2-home-partner-logos small { color: hsl(var(--v2h-stone)); font-size: 12px; font-weight: 600; }
 .v2-home-final { display: flex; flex-direction: column; gap: 18px; align-items: flex-start; padding: 8px 0 2px; }
 .v2-home-final > div:last-child { display: flex; align-items: center; gap: 16px; }
