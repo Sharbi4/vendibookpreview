@@ -15,7 +15,9 @@ function stubFetch(captured: Captured[]) {
     const url = String(input);
     const headers: Record<string, string> = {};
     for (const [k, v] of Object.entries(init.headers ?? {})) headers[k.toLowerCase()] = String(v);
-    captured.push({ url, headers, body: init.body ? JSON.parse(init.body) : undefined });
+    let body: any = undefined;
+    try { body = init.body ? JSON.parse(init.body) : undefined; } catch { body = init.body; }
+    captured.push({ url, headers, body });
 
     if (url.includes("/v1/oauth2/token")) {
       return new Response(JSON.stringify({ access_token: "tok", expires_in: 3000 }), { status: 200 });
