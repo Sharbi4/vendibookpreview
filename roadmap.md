@@ -44,3 +44,14 @@
 - [x] Add unified `/dashboard-v2` shell and responsive navigation without altering legacy routes.
 - [x] Add V2 Home, Listings, Activity, Messages, Payments, and Account using real existing data.
 - [x] Verify desktop/mobile layouts and confirm legacy dashboard, checkout, booking, and payment routing remain untouched.
+
+## Workspace premium visual refinement (live /dashboard)
+- [ ] Fix PayPal wordmark render on /dashboard/payments
+- [ ] Connect PayPal CTA: PayPal-branded, not Vendibook orange
+- [ ] Needs-your-attention row rhythm
+- [ ] Recompose legacy payments panels (heading scale, shared chrome)
+- [ ] Listing action contrast (View/Edit/Promote/Share)
+- [ ] /welcome document title
+- [ ] Editorial Home, richer Listings, grouped Activity timeline, Account hero
+- [ ] Shell/search/motion/color refinement; checkout+booking visual match
+- [ ] Re-test all routes desktop + 390px
