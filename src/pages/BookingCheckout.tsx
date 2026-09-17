@@ -852,9 +852,8 @@ const BookingCheckout = () => {
             dailyEnabled={listing.daily_enabled !== false}
             onDatesSelected={handleDatesSelected}
           />
-        </div>
-        <Footer />
-      </div>
+        </CheckoutSection>
+      </TransactionCheckoutShell>
     );
   }
 
