@@ -65,6 +65,8 @@ import { detectAvailabilityConflict } from '@/lib/availabilityConflict';
 import { ReferralCodeField } from '@/components/referrals/ReferralCodeField';
 import { useSellerVerifiedBadge } from '@/hooks/useSellerVerifiedBadge';
 import { authPath } from '@/lib/auth/returnTo';
+import { useSellerPaymentReadiness } from '@/hooks/useSellerPaymentReadiness';
+import { PayPalMonogram } from '@/components/brand/ProviderLogos';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'on_site';
 
@@ -81,6 +83,10 @@ const BookingCheckout = () => {
    * accept. Mirrors the server rule in `paypalFinalize`.
    */
   const { verified: hostIdentityVerified } = useSellerVerifiedBadge(listing?.host_id);
+  /** Hides the functional PayPal action if the host hasn't finished payment
+   *  setup. Never blocks bookings when gating isn't active for this host. */
+  const paymentReadiness = useSellerPaymentReadiness(listing?.host_id);
+  const paymentSetupBlocked = paymentReadiness.gatingActive && !paymentReadiness.ready;
   // The widget can downgrade an instant listing to a request (e.g. limited
   // spots left on a selected day) and signals that with ?flow=request.
   const requestedFlow = searchParams.get('flow');
