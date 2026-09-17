@@ -418,7 +418,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
     ['startTime', 'endTime', 'hours', 'hourlyData', 'timeSlots'].forEach((key) => params.delete(key));
     params.set('start', format(start, 'yyyy-MM-dd'));
     params.set('end', format(end, 'yyyy-MM-dd'));
-    navigate(`/book/${listingId}?${params.toString()}`, { replace: true });
+    navigate(`${checkoutBasePath}/${listingId}?${params.toString()}`, { replace: true });
   };
 
   const termsGate = useTermsGate();
@@ -692,20 +692,17 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
 
   if (isLoading) {
     return (
-      <div className="sale-light v2-commerce min-h-screen flex flex-col bg-background">
-        <Header />
-        <div className="flex-1 flex items-center justify-center">
+      <Frame>
+        <div className="flex-1 flex items-center justify-center py-16">
           <Loader2 className="h-8 w-8 animate-spin text-foreground" />
         </div>
-        <Footer />
-      </div>
+      </Frame>
     );
   }
 
   if (error || !listing) {
     return (
-      <div className="sale-light v2-commerce min-h-screen flex flex-col bg-background">
-        <Header />
+      <Frame>
         <div className="flex-1 container py-16 text-center">
           <h1 className="text-2xl font-bold text-foreground mb-4">Listing not found</h1>
           <Button asChild>
@@ -715,8 +712,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
             </Link>
           </Button>
         </div>
-        <Footer />
-      </div>
+      </Frame>
     );
   }
 
