@@ -43,12 +43,23 @@ export function paypalWebhookId(): string | null {
   return Deno.env.get("PAYPAL_WEBHOOK_ID_SANDBOX") ?? Deno.env.get("PAYPAL_WEBHOOK_ID") ?? null;
 }
 
+/** Which env var supplied the webhook id — never the id itself. */
+export function paypalWebhookIdSource(): string | null {
+  if (paypalEnvironment() === "live") {
+    if (Deno.env.get("PAYPAL_WEBHOOK_ID_LIVE")) return "PAYPAL_WEBHOOK_ID_LIVE";
+  } else if (Deno.env.get("PAYPAL_WEBHOOK_ID_SANDBOX")) {
+    return "PAYPAL_WEBHOOK_ID_SANDBOX";
+  }
+  return Deno.env.get("PAYPAL_WEBHOOK_ID") ? "PAYPAL_WEBHOOK_ID" : null;
+}
+
 export function paypalConfigStatus() {
   return {
     environment: paypalEnvironment(),
     client_id_configured: !!Deno.env.get("PAYPAL_CLIENT_ID"),
     client_secret_configured: !!Deno.env.get("PAYPAL_CLIENT_SECRET"),
     webhook_id_configured: !!paypalWebhookId(),
+    webhook_id_source: paypalWebhookIdSource(),
   };
 }
 
