@@ -495,6 +495,68 @@ export default function WorkspaceHome() {
             </div>
           )}
         </section>
+
+        <div className="v2-two-column">
+          <section className="v2-panel">
+            <div className="v2-panel-head">
+              <div>
+                <h2>Notifications</h2>
+                <p>
+                  {notificationUnread
+                    ? `${notificationUnread} unread`
+                    : 'Your latest account updates.'}
+                </p>
+              </div>
+              <Link to="/dashboard/notifications" className="v2-btn-quiet">
+                View all
+              </Link>
+            </div>
+            {notifications.length ? (
+              notifications.slice(0, 4).map((n) => (
+                <Link
+                  className="v2-activity-row"
+                  to={toDashboardTarget(n.link) || '/dashboard/notifications'}
+                  key={n.id}
+                >
+                  <span className="v2-activity-icon">
+                    <Bell />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <strong className="truncate">{n.title}</strong>
+                    <small className="truncate">{n.message}</small>
+                  </span>
+                  {!n.read_at && <span className="v2-status">New</span>}
+                </Link>
+              ))
+            ) : (
+              <div className="v2-empty">
+                <p>No notifications yet.</p>
+              </div>
+            )}
+          </section>
+
+          <section className="v2-panel">
+            <div className="v2-panel-head">
+              <div>
+                <h2>Saved listings</h2>
+                <p>
+                  {favorites.length
+                    ? `${favorites.length} saved ${favorites.length === 1 ? 'listing' : 'listings'}`
+                    : 'Save listings while browsing to compare them later.'}
+                </p>
+              </div>
+              <Link to="/dashboard/saved" className="v2-btn-quiet">
+                Open saved
+              </Link>
+            </div>
+            <div className="v2-empty">
+              <Link to="/search" className="v2-btn-quiet">
+                <Search />
+                Browse the marketplace
+              </Link>
+            </div>
+          </section>
+        </div>
       </div>
     </WorkspaceShell>
   );
