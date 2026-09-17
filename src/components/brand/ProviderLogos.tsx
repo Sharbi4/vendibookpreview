@@ -43,16 +43,17 @@ export function PayPalMonogram({
   );
 }
 
-export function PayPalWordmark({ className }: { className?: string }) {
+export function PayPalWordmark({
+  surface = 'dark',
+  className,
+}: {
+  surface?: 'dark' | 'light';
+  className?: string;
+}) {
   const [failed, setFailed] = useState(false);
-  if (failed) {
-    // Never show a broken image: fall back to the PayPal name in brand type.
-    return (
-      <span className={cn('inline-flex items-center font-bold tracking-tight', className)}>
-        <span style={{ color: '#009cde' }}>Pay</span>
-        <span style={{ color: '#ffffff' }}>Pal</span>
-      </span>
-    );
+  // Never show a broken image: fall back to the PayPal name in brand type.
+  if (failed || surface === 'light') {
+    return <PayPalTextMark surface={surface} className={cn('text-sm', className)} />;
   }
   return (
     <img
