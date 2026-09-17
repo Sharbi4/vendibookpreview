@@ -92,6 +92,32 @@ serve(async (req) => {
     ? "sandbox_credentials_in_use"
     : "oauth_authentication_failed";
 
+  // Partner attribution proof. Sends the BN code on a harmless, read-only
+  // lookup of an order id that cannot exist — no money moves, nothing is
+  // created. PayPal answers 404 with a debug id, which is exactly the evidence
+  // certification asks for: the header went out on a real REST call.
+  let attribution: Record<string, unknown> = {
+    partner_attribution_id: PARTNER_ATTRIBUTION_ID,
+    probe: "skipped",
+  };
+  if (new URL(req.url).searchParams.get("attribution") === "1") {
+    try {
+      await paypalRequest("/v2/checkout/orders/VENDIBOOK-ATTRIBUTION-PROBE", {
+        retries: 0,
+      });
+      attribution = { partner_attribution_id: PARTNER_ATTRIBUTION_ID, probe: "unexpected_ok" };
+    } catch (err) {
+      const e = err as { status?: number; issue?: string; debugId?: string };
+      attribution = {
+        partner_attribution_id: PARTNER_ATTRIBUTION_ID,
+        probe: "sent",
+        http_status: e?.status ?? 0,
+        issue: e?.issue ?? null,
+        paypal_debug_id: e?.debugId ?? null,
+      };
+    }
+  }
+
   return new Response(
     JSON.stringify({
       ...config,
@@ -99,8 +125,10 @@ serve(async (req) => {
       environment_matches_credentials: credentialEnvironment === environment,
       live_oauth: live,
       sandbox_oauth: { ok: sandbox.ok, http_status: sandbox.http_status },
+      attribution,
       diagnostic,
     }),
     { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
   );
 });
+
