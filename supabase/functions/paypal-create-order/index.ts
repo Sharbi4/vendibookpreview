@@ -25,6 +25,7 @@ import {
   type TaxDestination,
   type TaxKind,
 } from "../_shared/tax.ts";
+import { sellerMultipartyReady } from "../_shared/paypalMultiparty.ts";
 
 const NOTARY_FEE_CENTS = 4500;
 
@@ -567,6 +568,18 @@ serve(async (req) => {
     if (recordErr || !record) {
       safeLog("record_insert_failed", { message: recordErr?.message });
       return jsonError(500, "record_failed", "We couldn't start this payment. Please try again.");
+    }
+
+    // Step 2 scaffolding: record when the seller on this transaction is fully
+    // ready to receive PayPal funds. No routing changes here — every order
+    // stays first-party (Vendibook as payee) until Step 3 wires multiparty
+    // routing, server-gated per seller.
+    const sellerRouting = await sellerMultipartyReady(admin, quote.sellerId ?? null);
+    if (sellerRouting.enabled) {
+      safeLog("multiparty_ready_seller", {
+        reference: quote.reference,
+        onBehalfOf: sellerRouting.merchantId,
+      });
     }
 
     // Routed through the provider abstraction — no direct SDK calls here.

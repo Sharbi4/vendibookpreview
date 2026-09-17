@@ -693,3 +693,110 @@ export function centsFromPayPalAmount(value: string | number | undefined): numbe
   if (value === undefined || value === null) return 0;
   return Math.round(Number(value) * 100);
 }
+
+// ---------------------------------------------------------------- onboarding
+// Step 2 — seller onboarding (Partner Referral / merchant-integration status).
+// Sandbox-first: the onboarding flow can run in the sandbox while live
+// checkout keeps using live credentials, because every call here is scoped to
+// the onboarding environment and its own token cache entry.
+
+/**
+ * Environment the seller-onboarding flow runs in. Defaults to the ambient
+ * PAYPAL_ENVIRONMENT so misconfiguration can never silently route live sellers
+ * into a sandbox signup (or vice versa).
+ */
+export function paypalOnboardingEnvironment(): PayPalEnvironment {
+  const raw = (Deno.env.get("PAYPAL_ONBOARDING_ENV") ?? "").toLowerCase();
+  if (raw === "sandbox" || raw === "live") return raw;
+  return paypalEnvironment();
+}
+
+/** Master switch for the seller connection UI/flow. Default OFF. */
+export function sellerOnboardingEnabled(): boolean {
+  return (Deno.env.get("PAYPAL_SELLER_ONBOARDING_ENABLED") ?? "").toLowerCase() === "true";
+}
+
+/** Vendibook's partner merchant id in the given environment. */
+function partnerMerchantIdForEnv(env: PayPalEnvironment): string | null {
+  if (env === "sandbox") {
+    return Deno.env.get("PAYPAL_SANDBOX_PARTNER_MERCHANT_ID") ??
+      Deno.env.get("PAYPAL_PARTNER_MERCHANT_ID") ?? null;
+  }
+  return Deno.env.get("PAYPAL_PARTNER_MERCHANT_ID") ?? null;
+}
+
+/**
+ * Creates a Partner Referral and returns PayPal's action_url (the hosted
+ * signup the seller is redirected to) plus the raw link set for diagnostics.
+ */
+export async function createPartnerReferral(opts: {
+  trackingId: string;
+  returnUrl: string;
+}): Promise<{ actionUrl: string | null; links: { rel: string; href: string }[] }> {
+  const env = paypalOnboardingEnvironment();
+  const result = await paypalRequest<{ links?: { rel: string; href: string }[] }>(
+    "/v2/customer/partner-referrals",
+    {
+      method: "POST",
+      environment: env,
+      reference: opts.trackingId,
+      body: {
+        tracking_id: opts.trackingId,
+        partner_config: {
+          partner_notification_url: opts.returnUrl,
+          return_url: opts.returnUrl,
+        },
+        operations: [{
+          operation: "API_INTEGRATION",
+          api_integration_preference: {
+            rest_api_integration: {
+              integration_method: "PAYPAL",
+              integration_type: "THIRD_PARTY",
+              third_party_details: {
+                features: [
+                  "PAYMENT",
+                  "REFUND",
+                  "ACCESS_MERCHANT_INFORMATION",
+                  "BILLING_AGREEMENT",
+                ],
+              },
+            },
+          },
+        }],
+        products: ["PPCP"],
+        legal_consents: [{ type: "SHARE_DATA_CONSENT", granted: true }],
+      },
+    },
+  );
+  const actionUrl = (result?.links ?? []).find((l) => l.rel === "action_url")?.href ?? null;
+  return { actionUrl, links: result?.links ?? [] };
+}
+
+/**
+ * Fetches PayPal's merchant-integration record for an onboarded seller.
+ * Accepts either the Vendibook tracking id (looked up via tracking_ids) or the
+ * PayPal merchant id (path lookup). Returns PayPal's raw record.
+ */
+export async function getMerchantIntegrationStatus(
+  trackingOrMerchantId: string,
+  opts?: { environment?: PayPalEnvironment },
+): Promise<Record<string, any>> {
+  const env = opts?.environment ?? paypalOnboardingEnvironment();
+  const partnerId = partnerMerchantIdForEnv(env);
+  if (!partnerId) {
+    throw new PayPalError("PayPal partner merchant id is not configured.", 503, "NOT_CONFIGURED");
+  }
+  const encoded = encodeURIComponent(trackingOrMerchantId);
+  if (trackingOrMerchantId.startsWith("vb-")) {
+    const result = await paypalRequest<{ merchant_integrations?: Record<string, any>[] }>(
+      `/v1/customer/partners/${encodeURIComponent(partnerId)}/merchant-integrations` +
+        `?tracking_ids=${encoded}`,
+      { environment: env },
+    );
+    return result?.merchant_integrations?.[0] ?? {};
+  }
+  return await paypalRequest<Record<string, any>>(
+    `/v1/customer/partners/${encodeURIComponent(partnerId)}/merchant-integrations/${encoded}`,
+    { environment: env },
+  );
+}
