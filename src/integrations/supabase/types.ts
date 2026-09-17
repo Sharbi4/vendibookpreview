@@ -10816,6 +10816,14 @@ export type Database = {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]
       }
+      get_video_walkthrough_slots: {
+        Args: { _from: string; _listing_id: string; _to: string }
+        Returns: {
+          ends_at: string
+          seller_timezone: string
+          starts_at: string
+        }[]
+      }
       has_permit_path_plus: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
