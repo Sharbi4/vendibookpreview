@@ -37,7 +37,20 @@ export function paypalWebhookId(): string | null {
   if (paypalEnvironment() === "live") {
     return Deno.env.get("PAYPAL_WEBHOOK_ID_LIVE") ?? Deno.env.get("PAYPAL_WEBHOOK_ID") ?? null;
   }
-  return Deno.env.get("PAYPAL_WEBHOOK_ID") ?? null;
+  // Sandbox: prefer the sandbox-specific id. Without the id that matches the
+  // webhook PayPal is actually calling, every event fails signature
+  // verification and is dropped — the "silent payments" symptom.
+  return Deno.env.get("PAYPAL_WEBHOOK_ID_SANDBOX") ?? Deno.env.get("PAYPAL_WEBHOOK_ID") ?? null;
+}
+
+/** Which env var supplied the webhook id — never the id itself. */
+export function paypalWebhookIdSource(): string | null {
+  if (paypalEnvironment() === "live") {
+    if (Deno.env.get("PAYPAL_WEBHOOK_ID_LIVE")) return "PAYPAL_WEBHOOK_ID_LIVE";
+  } else if (Deno.env.get("PAYPAL_WEBHOOK_ID_SANDBOX")) {
+    return "PAYPAL_WEBHOOK_ID_SANDBOX";
+  }
+  return Deno.env.get("PAYPAL_WEBHOOK_ID") ? "PAYPAL_WEBHOOK_ID" : null;
 }
 
 export function paypalConfigStatus() {
@@ -46,6 +59,7 @@ export function paypalConfigStatus() {
     client_id_configured: !!Deno.env.get("PAYPAL_CLIENT_ID"),
     client_secret_configured: !!Deno.env.get("PAYPAL_CLIENT_SECRET"),
     webhook_id_configured: !!paypalWebhookId(),
+    webhook_id_source: paypalWebhookIdSource(),
   };
 }
 

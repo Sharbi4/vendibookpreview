@@ -47,6 +47,8 @@ interface Payable {
   dispute_status: string | null;
   external_payout_reference: string | null;
   payout_method: string | null;
+  payout_provider: string | null;
+  payout_completed_at: string | null;
   failure_reason: string | null;
   admin_notes: string | null;
   created_at: string;
@@ -202,6 +204,11 @@ export default function AdminPayouts() {
                       </span>
                       <Badge variant="outline" className="text-[10px]">{row.transaction_type}</Badge>
                       <StatusBadge status={row.status} />
+                      {row.payout_provider === 'paypal' && row.status === 'payout_completed' ? (
+                        <Badge className="bg-emerald-500/15 text-emerald-500 border-emerald-500/30 text-[10px]">
+                          Auto-settled by PayPal
+                        </Badge>
+                      ) : null}
                       {row.dispute_status && row.dispute_status !== 'none' ? (
                         <Badge className="bg-destructive/15 text-destructive border-destructive/30 text-[10px]">
                           <AlertTriangle className="h-3 w-3 mr-1" />
@@ -216,7 +223,9 @@ export default function AdminPayouts() {
                     </p>
                     <p className="text-xs text-muted-foreground flex items-center gap-1.5">
                       <Clock className="h-3 w-3" />
-                      Release due {when(row.release_due_at)}
+                      {row.payout_provider === 'paypal' && row.status === 'payout_completed'
+                        ? `Settled by PayPal at capture ${when(row.payout_completed_at)} — no manual payout needed`
+                        : `Release due ${when(row.release_due_at)}`}
                       {row.external_payout_reference ? ` · transfer ${row.external_payout_reference}` : ''}
                     </p>
                     {row.hold_reason ? (

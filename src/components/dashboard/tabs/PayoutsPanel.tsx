@@ -53,7 +53,7 @@ const PayoutsPanel = () => {
       const { data } = await (supabase as any)
         .from('seller_payables')
         .select(
-          'id, status, transaction_type, gross_collected_cents, platform_fee_cents, adjustments_cents, refunded_cents, net_payout_cents, release_due_at, payout_eligible_at, hold_reason, created_at',
+          'id, status, transaction_type, gross_collected_cents, platform_fee_cents, adjustments_cents, refunded_cents, net_payout_cents, release_due_at, payout_eligible_at, payout_completed_at, payout_provider, hold_reason, created_at',
         )
         .eq('seller_id', user!.id)
         .order('created_at', { ascending: false })
@@ -124,7 +124,10 @@ const PayoutsPanel = () => {
           <ul className="divide-y divide-border">
             {payables.map((p: any) => {
               const releaseAt = p.payout_eligible_at ?? p.release_due_at;
-              const showTiming = releaseAt && !NO_TIMING_PROMISE.has(p.status);
+              // Connected PayPal sellers are paid by PayPal at the moment of
+              // capture, so there is no review queue and no release date.
+              const autoPaid = p.payout_provider === 'paypal' && p.status === 'payout_completed';
+              const showTiming = !autoPaid && releaseAt && !NO_TIMING_PROMISE.has(p.status);
               return (
                 <li key={p.id} className="px-6 py-4 space-y-2">
                   <div className="flex items-start justify-between gap-4">
@@ -138,7 +141,7 @@ const PayoutsPanel = () => {
                       </p>
                     </div>
                     <span className="text-xs font-medium text-foreground/80 shrink-0">
-                      {PAYABLE_STATUS_LABEL[p.status] ?? p.status}
+                      {autoPaid ? 'Paid to your PayPal' : PAYABLE_STATUS_LABEL[p.status] ?? p.status}
                     </span>
                   </div>
 
@@ -162,7 +165,9 @@ const PayoutsPanel = () => {
                   </dl>
 
                   <p className="text-[11px] text-muted-foreground">
-                    {showTiming
+                    {autoPaid
+                      ? `Paid straight into your connected PayPal Business account${p.payout_completed_at ? ` on ${new Date(p.payout_completed_at).toLocaleDateString()}` : ''}, with the Vendibook fee already deducted. Nothing further is owed to you for this order.`
+                      : showTiming
                       ? `Eligible for review on ${new Date(releaseAt).toLocaleDateString()}. A Vendibook admin approves and sends the payout after review.`
                       : p.hold_reason
                         ? `On hold: ${p.hold_reason}. Payout timing changes while this is resolved.`
