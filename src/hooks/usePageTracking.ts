@@ -17,7 +17,6 @@ const ROUTE_TITLES: Record<string, string> = {
   '/activation': 'Account Activation',
   '/reset-password': 'Reset Password',
   '/dashboard': 'Dashboard',
-  '/dashboard/bookings': 'Host Bookings',
   '/dashboard/listings': 'Host Listings',
   '/dashboard/reporting': 'Host Reporting',
   '/dashboard/analytics': 'Host Analytics',

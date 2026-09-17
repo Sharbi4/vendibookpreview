@@ -99,7 +99,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
             { title: 'Overview', icon: LayoutGrid, href: '/dashboard?view=host', tab: null },
             { title: 'Listings', icon: Truck, href: '/host/listings', tab: null },
             { title: 'Sales & Transactions', icon: DollarSign, href: '/dashboard?view=host&tab=sales', tab: 'sales' },
-            { title: 'Booking Manager', icon: CalendarDays, href: '/dashboard/bookings', tab: null },
+            { title: 'Booking Manager', icon: CalendarDays, href: '/dashboard/activity?filter=requests', tab: null },
             { title: 'Payments & Disputes', icon: Receipt, href: '/dashboard?view=host&tab=transactions', tab: 'transactions' },
             { title: 'Insights & Reporting', icon: BarChart3, href: '/dashboard?view=host&tab=insights', tab: 'insights' },
             { title: 'Upgrades & Premium Tools', icon: Wrench, href: '/dashboard?view=host&tab=promote', tab: 'promote' },
@@ -416,7 +416,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
             ? [
                 { to: '/dashboard?view=host', match: (p: string, s: string) => p === '/dashboard' && s.includes('view=host') && !s.includes('tab='), icon: LayoutGrid, label: 'Overview' },
                 { to: '/host/listings', match: (p: string) => p === '/host/listings', icon: Truck, label: 'Listings' },
-                { to: '/dashboard/bookings', match: (p: string) => p === '/dashboard/bookings', icon: CalendarDays, label: 'Manager' },
+                { to: '/dashboard/activity?filter=requests', match: (p: string) => p === '/dashboard/activity', icon: CalendarDays, label: 'Manager' },
                 { to: '/messages', match: (p: string) => p === '/messages', icon: MessageSquare, label: 'Inbox', badge: messagesBadge },
                 { to: '/account', match: (p: string) => p === '/account', icon: User, label: 'Profile' },
               ]

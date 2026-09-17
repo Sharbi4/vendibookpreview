@@ -61,7 +61,7 @@ export default function WorkspaceBookingPayments() {
       paymentStatus: b.payment_status || 'pending',
       status: b.status || 'pending',
       amount: money(b.total_price),
-      href: `/dashboard/bookings?id=${b.id}`,
+      href: `/dashboard/bookings/${b.id}`,
     })),
   ];
 
