@@ -89,6 +89,14 @@ export interface CreateOrderRequest {
    * hold that must later be captured or voided explicitly.
    */
   intent?: "CAPTURE" | "AUTHORIZE";
+  /**
+   * Marketplace routing: when set, funds settle into this connected seller's
+   * account and the platform fee below is disbursed to Vendibook. Server-
+   * resolved only — never accepted from a client request.
+   */
+  payeeMerchantId?: string | null;
+  /** Vendibook's cut, in cents, on a routed order. */
+  platformFeeCents?: number;
 }
 
 export interface ProviderOrder {
