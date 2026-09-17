@@ -1,15 +1,13 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { format, parseISO, differenceInDays } from 'date-fns';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  ArrowLeft, 
-  Calendar, 
-  MapPin, 
-  FileCheck, 
+import {
+  ArrowLeft,
+  Calendar,
+  MapPin,
+  FileCheck,
   CreditCard,
-
-  CheckCircle2, 
+  CheckCircle2,
   Zap,
   Shield,
   Truck,
@@ -20,8 +18,8 @@ import {
   Building2,
   ShieldCheck,
   Lock,
+  Pencil,
 } from 'lucide-react';
-import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -51,7 +49,7 @@ import { FinalReviewSheet } from '@/components/transaction/FinalReviewSheet';
 import { useTermsGate } from '@/hooks/useTermsGate';
 import { buildTerms } from '@/lib/transactionTerms';
 import { cn } from '@/lib/utils';
-import { type BookingUserInfo, SlotSelector, BusinessInfoStep, type BusinessInfoData, ContactInfoWizard, TowingHandoffPanel, DisclosureStep, BookingReviewPanel } from '@/components/booking';
+import { type BookingUserInfo, SlotSelector, BusinessInfoStep, type BusinessInfoData, ContactInfoWizard, TowingHandoffPanel, DisclosureStep } from '@/components/booking';
 import { BookingDocumentUpload, type StagedDocument } from '@/components/booking/BookingDocumentUpload';
 import { useDocumentsOnFile } from '@/hooks/useDocumentsOnFile';
 import HourlySelectionSummary from '@/components/booking/HourlySelectionSummary';
@@ -68,6 +66,13 @@ import { useSellerVerifiedBadge } from '@/hooks/useSellerVerifiedBadge';
 import { authPath } from '@/lib/auth/returnTo';
 import { useSellerPaymentReadiness } from '@/hooks/useSellerPaymentReadiness';
 import { PayPalMonogram } from '@/components/brand/ProviderLogos';
+import SEO from '@/components/SEO';
+
+import TransactionCheckoutShell from '@/components/transaction/checkout/TransactionCheckoutShell';
+import CheckoutSection from '@/components/transaction/checkout/CheckoutSection';
+import ListingCheckoutSummary from '@/components/transaction/checkout/ListingCheckoutSummary';
+import MoneyBreakdown, { type MoneyLine } from '@/components/transaction/checkout/MoneyBreakdown';
+import PayPalEmbeddedPayment from '@/components/transaction/checkout/PayPalEmbeddedPayment';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'on_site';
 
@@ -111,7 +116,7 @@ const BookingCheckout = () => {
   // Parse dates from URL params
   const startDateParam = searchParams.get('start');
   const endDateParam = searchParams.get('end');
-  
+
   // Parse hourly booking params
   const hourlyDataParam = searchParams.get('hourlyData');
   const timeSlotsParam = searchParams.get('timeSlots');
@@ -151,13 +156,11 @@ const BookingCheckout = () => {
   const [referralCode, setReferralCode] = useState<string>('');
   const [referralValid, setReferralValid] = useState<boolean>(false);
   const [showDateModal, setShowDateModal] = useState(false);
-  const [activeStep, setActiveStep] = useState<number | null>(1);
-  const [completedSteps, setCompletedSteps] = useState<number[]>([]);
   const [fulfillmentSelected, setFulfillmentSelected] = useState<FulfillmentSelection>('pickup');
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [message, setMessage] = useState('');
   const [userInfo, setUserInfo] = useState<BookingUserInfo | null>(null);
-  const [showInfoModal, setShowInfoModal] = useState(false);
+  const [editingContact, setEditingContact] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paypalCheckout, setPaypalCheckout] = useState<{ bookingId: string; returnUrl: string } | null>(null);
   /** Guards against creating a second booking_request row if the buyer
@@ -171,9 +174,12 @@ const BookingCheckout = () => {
     `${window.location.origin}/booking-confirmation?booking_id=${id}`;
   const [stagedDocuments, setStagedDocuments] = useState<StagedDocument[]>([]);
   const [showAuthModal, setShowAuthModal] = useState(false);
-  
+
   // Business info state for food-related categories
   const [businessInfo, setBusinessInfo] = useState<BusinessInfoData | null>(null);
+  const [businessInfoDone, setBusinessInfoDone] = useState(false);
+  const [docsStepDone, setDocsStepDone] = useState(false);
+  const [disclosureDone, setDisclosureDone] = useState(false);
   /** What the disclosure step recorded server-side, surfaced on review. */
   const [disclosureRecord, setDisclosureRecord] = useState<{
     attestedAt: string | null;
@@ -181,12 +187,10 @@ const BookingCheckout = () => {
     identityStatus: string | null;
     insuranceAnswer: 'yes' | 'no' | 'unsure' | null;
   } | null>(null);
-  
+
   // Slot selection state for vendor spaces
   const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
   const [selectedSlotName, setSelectedSlotName] = useState<string | null>(null);
-
-
 
   const isMobileAsset = listing?.category === 'food_truck' || listing?.category === 'food_trailer';
   /** Host-provided towing/handoff columns (may be absent on older listings). */
@@ -209,6 +213,7 @@ const BookingCheckout = () => {
   // Categories that support multiple slots/spaces
   const supportsMultipleSlots = ['vendor_lot', 'vendor_space', 'ghost_kitchen', 'food_truck', 'food_trailer'].includes(listing?.category || '');
   const hasMultipleSlots = supportsMultipleSlots && ((listing as any)?.total_slots ?? 1) > 1;
+  const supportsFulfillmentChoice = isMobileAsset && listing?.fulfillment_type === 'both';
 
   // Set initial fulfillment based on listing
   useEffect(() => {
@@ -226,7 +231,7 @@ const BookingCheckout = () => {
   // Calculate pricing - supports both hourly and daily
   // Inclusive day counting: same start/end = 1 day
   const rentalDays = startDate && endDate ? differenceInDays(endDate, startDate) + 1 : 0;
-  
+
   /** Shared period quote (weekly/monthly bundling), also used for the summary line. */
   const rentalQuote = useMemo(
     () =>
@@ -245,7 +250,7 @@ const BookingCheckout = () => {
     if (isHourlyBooking && (listing as any)?.price_hourly && durationHours > 0) {
       return durationHours * (listing as any).price_hourly;
     }
-    
+
     // For daily bookings — same shared engine the listing-detail widget uses,
     // so the total never changes between the calendar and this page. Handles
     // weekly/monthly-only listings that have no daily rate at all.
@@ -342,74 +347,46 @@ const BookingCheckout = () => {
     towingFields.return_instructions && { label: 'Return', value: towingFields.return_instructions },
   ].filter(Boolean) as Array<{ label: string; value: string }>;
 
-  // Step definitions — a single-page slide wizard (one screen at a time).
-  // Order: About you (contact) -> Business info (if food) -> Documents (if required)
-  //        -> Fulfillment -> Review
-  const STEP_CONTACT = 1;
-  const STEP_BUSINESS_INFO = requiresBusinessInfo ? 2 : -1;
-  const STEP_DOCUMENTS = hasRequiredDocs ? (requiresBusinessInfo ? 3 : 2) : -1;
-  const STEP_FULFILLMENT = 2 + (requiresBusinessInfo ? 1 : 0) + (hasRequiredDocs ? 1 : 0);
-  // Disclosure + identity always sits immediately before payment.
-  const STEP_DISCLOSURE = STEP_FULFILLMENT + 1;
-  const STEP_REVIEW = STEP_DISCLOSURE + 1;
-
-  const steps = [
-    { id: STEP_CONTACT, label: 'Tell us more about yourself', icon: CheckCircle2 },
-    ...(requiresBusinessInfo ? [{ id: STEP_BUSINESS_INFO, label: 'Tell us about your business', icon: Building2 }] : []),
-    ...(hasRequiredDocs ? [{ id: STEP_DOCUMENTS, label: 'Documents & insurance', icon: FileCheck }] : []),
-    { id: STEP_FULFILLMENT, label: 'Fulfillment & details', icon: Truck },
-    { id: STEP_DISCLOSURE, label: 'Disclosures & verification', icon: ShieldCheck },
-    { id: STEP_REVIEW, label: 'Review & submit', icon: CheckCircle2 },
-  ];
-
-  // Set initial active step
-  useEffect(() => {
-    if (activeStep === null) setActiveStep(STEP_CONTACT);
-  }, []);
-
-  // Check step completion
+  // Completeness — used to gate the review/payment section. No step wizard:
+  // every section is always visible and each tracks its own completion.
   const isStepContactComplete = Boolean(userInfo?.agreedToTerms);
-  // Business info is complete when all required fields are filled
-  const isBusinessInfoComplete = !requiresBusinessInfo || (
+  const isBusinessInfoComplete = !requiresBusinessInfo || Boolean(
     businessInfo?.licenseType &&
     (businessInfo.licenseType !== 'other' || businessInfo.licenseTypeOther) &&
     businessInfo.employeeCount &&
     businessInfo.intendedUse?.trim() &&
     businessInfo.cuisineType?.trim()
   );
-  const isStepBusinessInfoComplete = isBusinessInfoComplete && completedSteps.includes(STEP_BUSINESS_INFO);
+  const isStepBusinessInfoComplete = isBusinessInfoComplete && (!requiresBusinessInfo || businessInfoDone);
   // Documents step is complete when all required docs are staged OR docs are on file
   const allDocsStaged = !hasRequiredDocs || docsOnFile || preBookingBlockers.every(req =>
     stagedDocuments.some(doc => doc.documentType === req.document_type)
   );
-  const isStepDocsComplete = !hasRequiredDocs || (completedSteps.includes(STEP_DOCUMENTS) && allDocsStaged);
+  const isStepDocsComplete = !hasRequiredDocs || (docsStepDone && allDocsStaged);
   const isFulfillmentComplete = Boolean(userInfo?.agreedToTerms) &&
     (fulfillmentSelected !== 'delivery' || Boolean(deliveryAddress.trim()));
   const isStepFulfillmentComplete = isFulfillmentComplete;
   // The server records the attestation; this only tracks that the step was passed.
-  const isStepDisclosureComplete = completedSteps.includes(STEP_DISCLOSURE);
+  const isStepDisclosureComplete = disclosureDone;
 
-  // Determine which step can be accessed (no longer blocked by auth)
-  const canAccessStep = (stepId: number): boolean => {
-    if (stepId === STEP_CONTACT) return true;
-    if (stepId === STEP_BUSINESS_INFO) return isStepContactComplete;
-    if (stepId === STEP_DOCUMENTS) return isStepContactComplete && (!requiresBusinessInfo || isStepBusinessInfoComplete);
-    if (stepId === STEP_FULFILLMENT) return isStepContactComplete && (!requiresBusinessInfo || isStepBusinessInfoComplete) && (!hasRequiredDocs || isStepDocsComplete);
-    if (stepId === STEP_DISCLOSURE) return Boolean(isStepFulfillmentComplete);
-    if (stepId === STEP_REVIEW) return Boolean(isStepFulfillmentComplete) && isStepDisclosureComplete;
-    return true;
-  };
+  const canSubmit =
+    isStepContactComplete &&
+    isStepBusinessInfoComplete &&
+    isStepDocsComplete &&
+    isStepFulfillmentComplete &&
+    isStepDisclosureComplete;
 
-  const goToStep = (stepId: number) => {
-    setActiveStep(stepId);
-    if (typeof window !== 'undefined') window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
-  const goBackStep = () => {
-    const idx = steps.findIndex((s) => s.id === activeStep);
-    if (idx > 0) goToStep(steps[idx - 1].id);
-  };
-
+  const nextIncompleteReason = !isStepContactComplete
+    ? 'Add your contact details above to continue.'
+    : !isStepBusinessInfoComplete
+      ? 'Finish your business details above to continue.'
+      : !isStepDocsComplete
+        ? 'Upload the required documents above to continue.'
+        : !isStepFulfillmentComplete
+          ? 'Complete pickup/delivery details above to continue.'
+          : !isStepDisclosureComplete
+            ? 'Review and accept the terms above to continue.'
+            : null;
 
   const handleDatesSelected = (start: Date, end: Date) => {
     setStartDate(start);
@@ -424,18 +401,6 @@ const BookingCheckout = () => {
     params.set('start', format(start, 'yyyy-MM-dd'));
     params.set('end', format(end, 'yyyy-MM-dd'));
     navigate(`/book/${listingId}?${params.toString()}`, { replace: true });
-  };
-
-  const handleCompleteStep = (stepId: number) => {
-    if (!completedSteps.includes(stepId)) {
-      setCompletedSteps(prev => [...prev, stepId]);
-    }
-    // Move to next step
-    const nextStep = steps.find(s => s.id > stepId);
-    if (nextStep) {
-      goToStep(nextStep.id);
-    }
-
   };
 
   const termsGate = useTermsGate();
@@ -743,10 +708,10 @@ const BookingCheckout = () => {
       <div className="sale-light v2-commerce min-h-screen flex flex-col bg-background">
         <Header />
         <main className="flex-1 container py-8 max-w-2xl">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            asChild 
+          <Button
+            variant="ghost"
+            size="sm"
+            asChild
             className="mb-6 text-muted-foreground hover:text-foreground"
           >
             <Link to={`/listing/${listingId}`}>
@@ -754,12 +719,12 @@ const BookingCheckout = () => {
               Back to listing
             </Link>
           </Button>
-          
+
           <div className="text-center mb-8">
             <h1 className="text-2xl font-bold text-foreground mb-2">Select your space</h1>
             <p className="text-muted-foreground">Choose which space or station you'd like to book, then select your dates</p>
           </div>
-          
+
           {/* Listing preview */}
           <div className="flex gap-4 p-4 bg-card border border-border rounded-xl mb-6">
             <img
@@ -774,7 +739,7 @@ const BookingCheckout = () => {
               </p>
             </div>
           </div>
-          
+
           {/* Slot selector - no dates required yet */}
           <div className="bg-card border border-border rounded-xl p-6">
             <Label className="text-sm font-medium flex items-center gap-2 mb-4">
@@ -787,7 +752,7 @@ const BookingCheckout = () => {
                 const slotNames = (listing as any).slot_names as string[] | null;
                 const slotName = slotNames && slotNames[i] ? slotNames[i] : `Spot ${slotNumber}`;
                 const isSelected = selectedSlot === slotNumber;
-                
+
                 return (
                   <button
                     key={slotNumber}
@@ -827,7 +792,7 @@ const BookingCheckout = () => {
               })}
             </div>
           </div>
-          
+
           {selectedSlot && (
             <div className="mt-6 text-center">
               <Button onClick={() => setShowDateModal(true)} size="lg" className="bg-foreground text-background hover:bg-foreground/90 rounded-xl font-semibold">
@@ -836,7 +801,7 @@ const BookingCheckout = () => {
               </Button>
             </div>
           )}
-          
+
           <DateSelectionModal
             open={showDateModal}
             onOpenChange={setShowDateModal}
@@ -889,630 +854,531 @@ const BookingCheckout = () => {
   }
 
   const coverImage = listing.cover_image_url || listing.image_urls?.[0] || '/placeholder.svg';
-
-  // The old "$500 intro screen" was pure friction — the review step already
-  // shows everything it did, so high-value rentals go straight to the wizard.
+  const listingHref = `/listing/${listingId}`;
+  const listingLocation = [listing.city, listing.state].filter(Boolean).join(', ') || null;
 
   const cancellationPolicyText =
     ((listing as { cancellation_policy?: string | null }).cancellation_policy || '').trim() || null;
 
+  const dateLabel = isHourlyBooking
+    ? `${format(startDate, 'MMM d, yyyy')}${startTime && endTime ? ` · ${startTime}–${endTime}` : ''}`
+    : `${format(startDate, 'MMM d')} – ${format(endDate, 'MMM d, yyyy')}`;
+  const durationLabel = isHourlyBooking
+    ? `${durationHours} hour${durationHours === 1 ? '' : 's'}${
+        selectedHourlyDays > 0 ? ` across ${selectedHourlyDays} day${selectedHourlyDays === 1 ? '' : 's'}` : ''
+      }`
+    : `${rentalDays} day${rentalDays > 1 ? 's' : ''}`;
 
+  // Real money lines only — never invented, always derived from the same
+  // engine that prices the request server-side.
+  const moneyLines: MoneyLine[] = [
+    { label: reviewRateLabel, value: formatCurrency(basePrice) },
+    ...(currentDeliveryFee > 0 ? [{ label: 'Delivery fee', value: formatCurrency(currentDeliveryFee) }] : []),
+    {
+      label: 'Vendibook service fee',
+      value: formatCurrency(fees.renterFee),
+      note: 'Covers payment processing, support and platform costs.',
+    },
+    ...(taxSummaryLine
+      ? [{
+          label: taxSummaryLine.label,
+          value: taxSummaryLine.valueLabel ?? formatCurrency(taxSummaryLine.amount),
+          muted: taxSummaryLine.muted,
+        }]
+      : []),
+    ...(depositAmount
+      ? [{
+          label: 'Security deposit (held)',
+          value: formatCurrency(depositAmount),
+          note: 'Charged today, held by Vendibook, and refunded (minus any damages or fees) after your rental.',
+          muted: true,
+        }]
+      : []),
+  ];
+
+  const summaryMeta = [
+    { label: isHourlyBooking ? 'Scheduled hours' : 'Dates', value: dateLabel },
+    { label: 'Duration', value: durationLabel },
+    ...(hasMultipleSlots && selectedSlotName ? [{ label: 'Space', value: selectedSlotName }] : []),
+    { label: 'Fulfillment', value: fulfillmentSelected === 'delivery' ? 'Delivery' : fulfillmentSelected === 'on_site' ? 'On-site' : 'Pickup' },
+  ];
+
+  const railSummary = (
+    <ListingCheckoutSummary
+      imageUrl={coverImage}
+      title={listing.title}
+      typeLabel={listing.category ? listing.category.replace('_', ' ') : null}
+      location={listingLocation}
+      priceLabel={formatCurrency(totalChargedToday)}
+      priceNote="Total due today"
+      meta={summaryMeta}
+    >
+      <MoneyBreakdown
+        lines={moneyLines}
+        total={formatCurrency(totalChargedToday)}
+        totalLabel="Total due today"
+      />
+    </ListingCheckoutSummary>
+  );
+
+  const mobileSummary = (
+    <ListingCheckoutSummary
+      imageUrl={coverImage}
+      title={listing.title}
+      location={listingLocation}
+      priceLabel={formatCurrency(totalChargedToday)}
+      priceNote="Total due today"
+      meta={[{ label: isHourlyBooking ? 'Hours' : 'Dates', value: dateLabel }]}
+    />
+  );
+
+  const primaryStickyAction = paypalCheckout ? null : (
+    <Button
+      className="h-12 px-6 rounded-xl font-semibold bg-foreground text-background hover:bg-foreground/90"
+      onClick={handleSubmit}
+      disabled={isSubmitting || paymentSetupBlocked}
+      title={!canSubmit ? nextIncompleteReason ?? undefined : undefined}
+    >
+      {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+      {instantConfirm ? 'Confirm & pay' : 'Continue to payment'}
+    </Button>
+  );
 
   return (
-
     <div className="sale-light v2-commerce min-h-screen flex flex-col bg-background">
+      <SEO
+        title={`Book ${listing.title} | Vendibook`}
+        description={`Complete your booking for ${listing.title}.`}
+      />
       <Header />
 
-      <main className="flex-1 container py-8 lg:py-14 pb-28 lg:pb-14">
-        {/* Back Button */}
-        <Button 
-          variant="ghost" 
-          size="sm" 
-          asChild 
-          className="mb-6 text-muted-foreground hover:text-foreground"
-        >
-          <Link to={`/listing/${listingId}`}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to listing
-          </Link>
-        </Button>
+      <TransactionCheckoutShell
+        eyebrow="Vendibook rental"
+        title="Complete your booking"
+        subtitle={listing.title}
+        exitHref={listingHref}
+        exitLabel="Back to listing"
+        summary={railSummary}
+        mobileSummary={mobileSummary}
+        stickyAction={
+          <div className="v2-checkout-sticky-inner">
+            <div className="v2-checkout-sticky-total">
+              <span>Total due today</span>
+              <strong>{formatCurrency(totalChargedToday)}</strong>
+            </div>
+            {primaryStickyAction}
+          </div>
+        }
+      >
+        {!user && (
+          <div className="v2-checkout-section" style={{ padding: '16px 20px' }}>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-foreground">Sign in to complete your booking</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Sign in now so we keep your details when you return — no need to retype anything.
+                </p>
+              </div>
+              <Link
+                to={authPath(bookingReturnPath)}
+                className="v2-btn shrink-0"
+              >
+                Sign in / Create account
+              </Link>
+            </div>
+          </div>
+        )}
 
-        <div className="grid lg:grid-cols-5 gap-8 lg:gap-12">
-          {/* Left Column - Steps */}
-          <div className="lg:col-span-3 space-y-4">
-            {!user && (
-              <div className="border border-primary/40 rounded-2xl overflow-hidden bg-primary/[0.06] p-5">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        {/* 1. Dates & rate */}
+        <CheckoutSection
+          title="Dates & rate"
+          description="Your selected dates, the applicable rate and any refundable deposit."
+          aside={
+            <button type="button" className="v2-btn-quiet" onClick={() => setShowDateModal(true)}>
+              Change dates
+            </button>
+          }
+        >
+          <div className="flex gap-4">
+            <img src={coverImage} alt={listing.title} className="w-24 h-20 object-cover rounded-xl shrink-0" />
+            <div className="min-w-0">
+              <h3 className="font-semibold text-foreground line-clamp-2 text-sm">{listing.title}</h3>
+              {listingLocation && (
+                <p className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
+                  <MapPin className="h-3 w-3" /> {listingLocation}
+                </p>
+              )}
+              {ratingData && (
+                <div className="flex items-center gap-1 mt-1">
+                  <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
+                  <span className="text-xs font-medium">{ratingData.average}</span>
+                  <span className="text-xs text-muted-foreground">({ratingData.count})</span>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="mt-4 pt-4 border-t border-border">
+            {isHourlyBooking ? (
+              <>
+                <p className="text-sm text-muted-foreground mb-2">{durationLabel}</p>
+                <HourlySelectionSummary selections={hourlySelections} variant="compact" />
+              </>
+            ) : (
+              <p className="text-sm text-foreground font-medium">{dateLabel} · {durationLabel}</p>
+            )}
+            {hasMultipleSlots && selectedSlotName && (
+              <p className="text-sm text-muted-foreground mt-2">Space: {selectedSlotName}</p>
+            )}
+          </div>
+
+          <div className="mt-4 pt-4 border-t border-border">
+            <MoneyBreakdown lines={moneyLines} total={formatCurrency(totalChargedToday)} totalNote="Due today" />
+          </div>
+        </CheckoutSection>
+
+        {/* 2. Pickup or delivery */}
+        <CheckoutSection
+          title="Pickup or delivery"
+          description="How you'll get the rental, and where."
+        >
+          <div className="space-y-5">
+            {supportsFulfillmentChoice && (
+              <div>
+                <Label className="text-sm font-medium mb-3 block">Fulfillment method</Label>
+                <RadioGroup
+                  value={fulfillmentSelected}
+                  onValueChange={(val) => setFulfillmentSelected(val as FulfillmentSelection)}
+                  className="space-y-2"
+                >
+                  <div className={cn(
+                    "flex items-center space-x-3 p-4 rounded-xl border-2 transition-all cursor-pointer",
+                    fulfillmentSelected === 'pickup' ? 'border-primary bg-primary/5' : 'border-border'
+                  )}>
+                    <RadioGroupItem value="pickup" id="checkout-pickup" />
+                    <Label htmlFor="checkout-pickup" className="flex-1 cursor-pointer">
+                      <span className="font-medium block">Pickup</span>
+                      <span className="text-xs text-muted-foreground">Collect from host location</span>
+                    </Label>
+                  </div>
+                  <div className={cn(
+                    "flex items-center space-x-3 p-4 rounded-xl border-2 transition-all cursor-pointer",
+                    fulfillmentSelected === 'delivery' ? 'border-primary bg-primary/5' : 'border-border'
+                  )}>
+                    <RadioGroupItem value="delivery" id="checkout-delivery" />
+                    <Label htmlFor="checkout-delivery" className="flex-1 cursor-pointer">
+                      <span className="font-medium block">Delivery</span>
+                      <span className="text-xs text-muted-foreground">Delivered to your location</span>
+                    </Label>
+                    {listing.delivery_fee ? (
+                      <span className="text-sm font-medium text-primary">+${listing.delivery_fee}</span>
+                    ) : null}
+                  </div>
+                </RadioGroup>
+              </div>
+            )}
+
+            {(fulfillmentSelected === 'pickup' || isStaticLocation) && (
+              <div className="p-4 bg-muted/50 rounded-xl">
+                <div className="flex items-start gap-3">
+                  <MapPin className="h-5 w-5 text-primary mt-0.5" />
                   <div>
-                    <p className="text-sm font-semibold text-foreground">Sign in to complete your booking</p>
-                    <p className="text-xs text-muted-foreground mt-0.5">
-                      Sign in now so we keep your details when you return — no need to retype anything.
+                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                      {isStaticLocation ? 'Location' : 'Pickup Location'}
+                    </span>
+                    <p className="text-sm font-medium text-foreground mt-1">
+                      {isStaticLocation
+                        ? 'Exact address will be sent after confirmation'
+                        : listing.pickup_location_text || 'Address will be provided after confirmation'}
                     </p>
                   </div>
-                  <Link
-                    to={authPath(bookingReturnPath)}
-                    className="shrink-0 inline-flex items-center justify-center h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 transition-opacity"
-                  >
-                    Sign in / Create account
-                  </Link>
                 </div>
               </div>
             )}
 
+            {isMobileAsset && fulfillmentSelected === 'pickup' && listingId && (
+              <TowingHandoffPanel
+                listingId={listingId}
+                category={listing.category}
+                hitchBallSize={towingFields.hitch_ball_size}
+                couplerType={towingFields.coupler_type}
+                trailerPlugType={towingFields.trailer_plug_type}
+                renterProvidesTowVehicle={towingFields.renter_provides_tow_vehicle}
+                towVehicleRequirement={towingFields.tow_vehicle_requirement}
+                pickupInstructions={listing.pickup_instructions}
+                returnInstructions={towingFields.return_instructions}
+              />
+            )}
 
-
-            {/* One-page slide wizard — a single screen at a time, Continue advances */}
-            <div className="border border-border/70 rounded-[22px] overflow-hidden bg-card shadow-[0_1px_2px_rgba(24,20,16,0.04),0_28px_64px_-40px_rgba(24,20,16,0.45)]">
-              <div className="flex items-center justify-between gap-3 px-5 pt-5">
-                <div>
-                  <h2 className="text-xl font-semibold tracking-tight text-foreground">
-
-                    {steps.find((s) => s.id === activeStep)?.label ?? 'Tell us more about yourself'}
-                  </h2>
-                </div>
-                {steps.findIndex((s) => s.id === activeStep) > 0 && (
-                  <Button variant="ghost" size="sm" onClick={goBackStep}>
-                    <ArrowLeft className="h-4 w-4 mr-1.5" />
-                    Back
-                  </Button>
-                )}
-              </div>
-
-              <AnimatePresence mode="wait" initial={false}>
-                <motion.div
-                  key={activeStep ?? 'contact'}
-                  initial={{ opacity: 0, x: 24 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  exit={{ opacity: 0, x: -24 }}
-                  transition={{ duration: 0.22, ease: 'easeOut' }}
-                  className="p-5"
-                >
-                  {/* Step: About you (contact + consents) */}
-                  {activeStep === STEP_CONTACT && (
-                    <div className="space-y-4">
-                      {isStepContactComplete && !showInfoModal ? (
-                        <>
-                          <div className="flex items-center justify-between p-4 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl border border-emerald-200 dark:border-emerald-800/50">
-                            <div className="flex items-center gap-3">
-                              <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-                              <div>
-                                <span className="font-medium text-emerald-700 dark:text-emerald-300">
-                                  {userInfo?.firstName} {userInfo?.lastName}
-                                </span>
-                                <span className="text-xs text-emerald-600 dark:text-emerald-400 block">
-                                  Contact details saved
-                                </span>
-                              </div>
-                            </div>
-                            <Button variant="ghost" size="sm" onClick={() => setShowInfoModal(true)}>
-                              Edit
-                            </Button>
-                          </div>
-                          <Button className="w-full h-12 bg-foreground text-background hover:bg-foreground/90 rounded-xl font-semibold" onClick={() => handleCompleteStep(STEP_CONTACT)}>
-                            Continue
-                          </Button>
-                        </>
-                      ) : (
-                        <>
-                          <p className="text-sm text-muted-foreground">
-                            Tell us a little about yourself so the host knows who they're renting to.
-                          </p>
-                          <ContactInfoWizard
-                            listingId={listingId}
-                            initialData={userInfo || undefined}
-                            onPartialChange={(partial) => setUserInfo(partial)}
-                            onComplete={(info) => {
-                              setUserInfo(info);
-                              setShowInfoModal(false);
-                              handleCompleteStep(STEP_CONTACT);
-                            }}
-                          />
-                        </>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Step: Business info (food categories) */}
-                  {requiresBusinessInfo && activeStep === STEP_BUSINESS_INFO && (
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-4">
-                        Help the host understand your business and how you'll use the space.
-                      </p>
-                      <BusinessInfoStep
-                        businessInfo={businessInfo}
-                        onBusinessInfoChange={setBusinessInfo}
-                        onComplete={() => handleCompleteStep(STEP_BUSINESS_INFO)}
-                        disabled={isSubmitting}
-                        category={listing.category}
-                      />
-                    </div>
-                  )}
-
-                  {/* Step: Documents & insurance */}
-                  {hasRequiredDocs && activeStep === STEP_DOCUMENTS && (
-                    <BookingDocumentUpload
-                      requiredDocs={requiredDocs || []}
-                      stagedDocuments={stagedDocuments}
-                      onDocumentsChange={setStagedDocuments}
-                      onComplete={() => handleCompleteStep(STEP_DOCUMENTS)}
-                      disabled={isSubmitting}
-                      docsOnFile={docsOnFile}
-                      onFileExpiresAt={docsOnFileData?.expiresAt}
-                    />
-                  )}
-
-                  {/* Step: Fulfillment & details */}
-                  {activeStep === STEP_FULFILLMENT && (
-                    <div className="space-y-6">
-                      {/* Fulfillment Options - Mobile assets only */}
-                      {isMobileAsset && listing.fulfillment_type === 'both' && (
-                        <div>
-                          <Label className="text-sm font-medium mb-3 block">Fulfillment method</Label>
-                          <RadioGroup
-                            value={fulfillmentSelected}
-                            onValueChange={(val) => setFulfillmentSelected(val as FulfillmentSelection)}
-                            className="space-y-2"
-                          >
-                            <div className={cn(
-                              "flex items-center space-x-3 p-4 rounded-xl border-2 transition-all cursor-pointer",
-                              fulfillmentSelected === 'pickup' ? 'border-primary bg-primary/5' : 'border-border'
-                            )}>
-                              <RadioGroupItem value="pickup" id="checkout-pickup" />
-                              <Label htmlFor="checkout-pickup" className="flex-1 cursor-pointer">
-                                <span className="font-medium block">Pickup</span>
-                                <span className="text-xs text-muted-foreground">Collect from host location</span>
-                              </Label>
-                            </div>
-                            <div className={cn(
-                              "flex items-center space-x-3 p-4 rounded-xl border-2 transition-all cursor-pointer",
-                              fulfillmentSelected === 'delivery' ? 'border-primary bg-primary/5' : 'border-border'
-                            )}>
-                              <RadioGroupItem value="delivery" id="checkout-delivery" />
-                              <Label htmlFor="checkout-delivery" className="flex-1 cursor-pointer">
-                                <span className="font-medium block">Delivery</span>
-                                <span className="text-xs text-muted-foreground">Delivered to your location</span>
-                              </Label>
-                              {listing.delivery_fee && (
-                                <span className="text-sm font-medium text-primary">+${listing.delivery_fee}</span>
-                              )}
-                            </div>
-                          </RadioGroup>
-                        </div>
-                      )}
-
-                      {/* Pickup info */}
-                      {(fulfillmentSelected === 'pickup' || isStaticLocation) && (
-                        <div className="p-4 bg-muted/50 rounded-xl">
-                          <div className="flex items-start gap-3">
-                            <MapPin className="h-5 w-5 text-primary mt-0.5" />
-                            <div>
-                              <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                                {isStaticLocation ? 'Location' : 'Pickup Location'}
-                              </span>
-                              <p className="text-sm font-medium text-foreground mt-1">
-                                {isStaticLocation
-                                  ? 'Exact address will be sent after confirmation'
-                                  : listing.pickup_location_text || 'Address will be provided after confirmation'
-                                }
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Towing & handoff details — mobile assets picked up by the renter */}
-                      {isMobileAsset && fulfillmentSelected === 'pickup' && listingId && (
-                        <TowingHandoffPanel
-                          listingId={listingId}
-                          category={listing.category}
-                          hitchBallSize={towingFields.hitch_ball_size}
-                          couplerType={towingFields.coupler_type}
-                          trailerPlugType={towingFields.trailer_plug_type}
-                          renterProvidesTowVehicle={towingFields.renter_provides_tow_vehicle}
-                          towVehicleRequirement={towingFields.tow_vehicle_requirement}
-                          pickupInstructions={listing.pickup_instructions}
-                          returnInstructions={towingFields.return_instructions}
-                        />
-                      )}
-
-                      {/* Delivery address */}
-                      {fulfillmentSelected === 'delivery' && (
-                        <div>
-                          <Label htmlFor="delivery-addr" className="text-sm font-medium mb-2 block">
-                            Delivery address
-                          </Label>
-                          <Input
-                            id="delivery-addr"
-                            placeholder="Enter your full address"
-                            value={deliveryAddress}
-                            onChange={(e) => setDeliveryAddress(e.target.value)}
-                            className="h-12"
-                          />
-                        </div>
-                      )}
-
-                      {/* Message */}
-                      <div>
-                        <Label htmlFor="msg" className="text-sm font-medium mb-2 block">
-                          Message to host (optional)
-                        </Label>
-                        <Textarea
-                          id="msg"
-                          placeholder="Tell them about your event or how you'll use this rental..."
-                          value={message}
-                          onChange={(e) => setMessage(e.target.value)}
-                          rows={3}
-                        />
-                      </div>
-
-                      <Button
-                        onClick={() => handleCompleteStep(STEP_FULFILLMENT)}
-                        disabled={!isStepFulfillmentComplete}
-                        className="w-full h-12 bg-foreground text-background hover:bg-foreground/90 rounded-xl font-semibold"
-                      >
-                        Continue to review
-                      </Button>
-                    </div>
-                  )}
-
-                  {/* Step: Disclosures & verification (immediately before payment) */}
-                  {activeStep === STEP_DISCLOSURE && listing?.id && (
-                    <DisclosureStep
-                      listingId={listing.id}
-                      onInsuranceAnswer={(answer) =>
-                        setBusinessInfo((prev) =>
-                          prev
-                            ? { ...prev, liabilityInsuranceAnswer: answer, hasLiabilityInsurance: answer === 'yes' }
-                            : prev,
-                        )
-                      }
-                      onComplete={(state) => {
-                        setDisclosureRecord({
-                          attestedAt: state.attestedAt,
-                          documentVersion: state.documentVersion,
-                          identityStatus: state.identityStatus,
-                          insuranceAnswer: state.insuranceAnswer,
-                        });
-                        handleCompleteStep(STEP_DISCLOSURE);
-                      }}
-                    />
-                  )}
-
-                  {/* Step: Review */}
-                  {activeStep === STEP_REVIEW && (
-                    <div className="space-y-4">
-                      <BookingReviewPanel
-                        rateLabel={reviewRateLabel}
-                        subtotal={fees.subtotal}
-                        deliveryFee={currentDeliveryFee}
-                        serviceFee={fees.renterFee}
-                        taxLine={
-                          taxSummaryLine
-                            ? {
-                                label: taxSummaryLine.label,
-                                value: taxSummaryLine.valueLabel ?? formatCurrency(taxSummaryLine.amount),
-                                muted: taxSummaryLine.muted,
-                              }
-                            : null
-                        }
-                        totalToday={totalChargedToday}
-                        depositAmount={depositAmount}
-                        depositChargedToday={true}
-                        bookingMode={instantConfirm ? 'instant' : 'request'}
-                        dateLabel={`${format(startDate, 'MMM d')} – ${format(endDate, 'MMM d, yyyy')}`}
-                        durationLabel={
-                          isHourlyBooking
-                            ? `${durationHours} hour${durationHours === 1 ? '' : 's'}${
-                                selectedHourlyDays > 0
-                                  ? ` across ${selectedHourlyDays} day${selectedHourlyDays === 1 ? '' : 's'}`
-                                  : ''
-                              }`
-                            : `${rentalDays} day${rentalDays > 1 ? 's' : ''}`
-                        }
-                        timeLabel={isHourlyBooking && startTime && endTime ? `${startTime} – ${endTime}` : null}
-                        slotName={hasMultipleSlots ? selectedSlotName : null}
-                        fulfillment={fulfillmentSelected}
-                        fulfillmentDetail={fulfillmentSelected === 'delivery' ? deliveryAddress : null}
-                        handoffFacts={reviewHandoffFacts}
-                        documents={
-                          hasRequiredDocs
-                            ? {
-                                required: preBookingBlockers.length,
-                                satisfied: preBookingBlockers.filter((req) =>
-                                  stagedDocuments.some((doc) => doc.documentType === req.document_type),
-                                ).length,
-                                onFile: docsOnFile,
-                              }
-                            : null
-                        }
-                        disclosures={disclosureRecord}
-                        cancellationPolicy={
-                          cancellationPolicyText ??
-                          "This host hasn't published a custom policy, so Vendibook's standard rental policy applies: cancel before the host accepts for a full refund; after acceptance, refunds follow the terms you accepted before payment."
-                        }
-                        listingId={listingId}
-                        message={message}
-                        onMessageChange={setMessage}
-                      />
-
-                      {/* Referral code */}
-                      <div className="p-3 border border-border rounded-lg">
-                        <ReferralCodeField
-                          programType="rental"
-                          value={referralCode}
-                          onChange={(code, valid) => { setReferralCode(code); setReferralValid(valid); }}
-                          autoFillFromCookie
-                        />
-                      </div>
-
-                      {/* How this payment works — factual, no protection promises */}
-                      <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-1.5">
-                        <div className="flex items-center gap-2">
-                          <Shield className="h-4 w-4 text-foreground" />
-                          <span className="text-sm font-medium text-foreground">How this payment works</span>
-                        </div>
-                        <p className="text-xs text-muted-foreground leading-relaxed">
-                          {instantConfirm
-                            ? 'PayPal processes your payment now. Your booking is confirmed as soon as the payment completes, and the full record is saved to your account.'
-                            : 'PayPal processes your payment now and your dates are held. The host still has to accept the request — if they decline or do not respond, Vendibook refunds the payment to your original payment method.'}
-                        </p>
-                        <p className="text-xs text-muted-foreground leading-relaxed">
-                          Vendibook records the transaction and releases host payouts after the rental begins. Vendibook does not hold funds in escrow.
-                        </p>
-                      </div>
-
-                      {/* Submit button, or an informative state when the host hasn't
-                          finished payment setup — never a functional PayPal action then. */}
-                      {paymentSetupBlocked ? (
-                        <div className="rounded-xl border border-border bg-muted/40 p-4 space-y-2">
-                          <div className="flex items-center gap-2">
-                            <Info className="h-4 w-4 text-muted-foreground" />
-                            <span className="text-sm font-medium text-foreground">Payment setup unavailable</span>
-                          </div>
-                          <p className="text-xs text-muted-foreground leading-relaxed">
-                            This host hasn&apos;t finished setting up payments yet, so checkout can&apos;t be completed
-                            right now. Please check back soon or message the host for an update.
-                          </p>
-                        </div>
-                      ) : (
-                        <>
-                          <Button
-                            className="w-full h-14 text-base bg-foreground text-background hover:bg-foreground/90 rounded-xl font-semibold"
-                            onClick={handleSubmit}
-                            disabled={isSubmitting}
-                          >
-                            {isSubmitting ? (
-                              <>
-                                <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                                Processing...
-                              </>
-                            ) : instantConfirm ? (
-                              <>
-                                <Zap className="h-5 w-5 mr-2" />
-                                Confirm and pay ${totalChargedToday.toLocaleString()}
-                              </>
-                            ) : (
-                              <>
-                                <CreditCard className="h-5 w-5 mr-2" />
-                                Continue to payment · ${totalChargedToday.toLocaleString()}
-                              </>
-                            )}
-                          </Button>
-                          <p className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
-                            <Lock className="h-3 w-3" />
-                            Secure checkout with <PayPalMonogram className="h-3.5 w-auto inline-block" />
-                          </p>
-                        </>
-                      )}
-                    </div>
-                  )}
-                </motion.div>
-              </AnimatePresence>
-            </div>
-
-          </div>
-
-          {/* Right Column - Summary Card */}
-          <div className="lg:col-span-2">
-            <div className="lg:sticky lg:top-24 max-h-[calc(100vh-7rem)] overflow-y-auto border border-border/70 rounded-[22px] p-5 bg-card shadow-[0_1px_2px_rgba(24,20,16,0.04),0_28px_64px_-40px_rgba(24,20,16,0.45)] space-y-4">
-              {/* Listing preview */}
-              <div className="flex gap-4">
-                <img
-                  src={coverImage}
-                  alt={listing.title}
-                  className="w-24 h-20 object-cover rounded-xl"
+            {fulfillmentSelected === 'delivery' && (
+              <div>
+                <Label htmlFor="delivery-addr" className="text-sm font-medium mb-2 block">
+                  Delivery address
+                </Label>
+                <Input
+                  id="delivery-addr"
+                  placeholder="Enter your full address"
+                  value={deliveryAddress}
+                  onChange={(e) => setDeliveryAddress(e.target.value)}
+                  className="h-12"
                 />
-                <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-foreground line-clamp-2 text-sm">
-                    {listing.title}
-                  </h3>
-                  {ratingData && (
-                    <div className="flex items-center gap-1 mt-1">
-                      <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-                      <span className="text-xs font-medium">{ratingData.average}</span>
-                      <span className="text-xs text-muted-foreground">({ratingData.count})</span>
-                    </div>
-                  )}
-                </div>
               </div>
+            )}
 
-              <div className="border-t border-border pt-4">
-                {/* Selected slot for vendor spaces */}
-                {hasMultipleSlots && selectedSlotName && (
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <span className="text-sm font-medium">Space</span>
-                      <p className="text-sm text-muted-foreground">{selectedSlotName}</p>
-                    </div>
-                    <Badge variant="secondary" className="text-xs">
-                      <MapPin className="h-3 w-3 mr-1" />
-                      Selected
-                    </Badge>
-                  </div>
-                )}
-
-                {/* Cancellation policy — listing-specific, never a blanket promise */}
-                <div className="flex items-start gap-2 mb-4">
-                  <Clock className="h-4 w-4 text-muted-foreground mt-0.5" />
-                  <div>
-                    <span className="text-sm font-medium">Cancellation policy</span>
-                    <p className="text-xs text-muted-foreground">
-                      {cancellationPolicyText ?? (
-                        <>
-                          This host hasn't published a custom policy, so Vendibook's standard
-                          rental policy applies: cancel before the host accepts for a full
-                          refund; after acceptance, refunds follow the terms you accept at
-                          payment.{' '}
-                          <Link to={`/listing/${listingId}#terms`} className="underline underline-offset-2">
-                            See rental terms
-                          </Link>
-                        </>
-                      )}
-                    </p>
-                  </div>
-                </div>
-
-
-                {/* Dates / Hours summary */}
-                <div className="mb-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-medium">
-                      {isHourlyBooking ? 'Scheduled Hours' : 'Dates'}
-                    </span>
-                    <Button 
-                      variant="outline" 
-                      size="sm"
-                      onClick={() => setShowDateModal(true)}
-                    >
-                      Change
-                    </Button>
-                  </div>
-
-                  {isHourlyBooking ? (
-                    <>
-                      <p className="text-sm text-muted-foreground mb-2">
-                        {durationHours} hour{durationHours === 1 ? '' : 's'}
-                        {selectedHourlyDays > 0
-                          ? ` across ${selectedHourlyDays} day${selectedHourlyDays === 1 ? '' : 's'}`
-                          : ''}
-                      </p>
-                      <HourlySelectionSummary selections={hourlySelections} variant="compact" />
-                    </>
-                  ) : (
-                    <p className="text-sm text-muted-foreground">
-                      {format(startDate, 'MMM d')} – {format(endDate, 'MMM d, yyyy')}
-                    </p>
-                  )}
-                </div>
-              </div>
-
-              <div className="border-t border-border pt-4 space-y-3">
-                <h4 className="font-medium text-sm">Price details</h4>
-                
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">
-                    {isHourlyBooking ? (
-                      <>
-                        {durationHours} hr × ${listing.price_hourly?.toLocaleString()}
-                      </>
-                    ) : (
-                      <>{rentalQuote?.breakdown || `${rentalDays} day${rentalDays > 1 ? 's' : ''}`}</>
-                    )}
-                  </span>
-                  <span>${basePrice.toLocaleString()}</span>
-                </div>
-
-                {currentDeliveryFee > 0 && (
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Delivery fee</span>
-                    <span>${currentDeliveryFee.toLocaleString()}</span>
-                  </div>
-                )}
-
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-muted-foreground">Service fee</span>
-                  <span>${fees.renterFee.toLocaleString()}</span>
-                </div>
-
-                {taxAmount > 0 ? (
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">{taxEstimate?.label || 'Estimated sales tax'}</span>
-                    <span>${taxAmount.toLocaleString()}</span>
-                  </div>
-                ) : taxState === 'loading' ? (
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Estimated sales tax</span>
-                    <span className="text-muted-foreground">Calculating…</span>
-                  </div>
-                ) : taxState === 'error' ? (
-                  <div className="flex items-center justify-between text-sm">
-                    <span className="text-muted-foreground">Sales tax</span>
-                    <span className="text-muted-foreground">Calculated at payment</span>
-                  </div>
-                ) : null}
-
-                <div className="flex items-center justify-between pt-3 border-t border-border">
-                  <span className="font-semibold">Total charged today</span>
-                  <span className="font-semibold">${totalChargedToday.toLocaleString()}</span>
-                </div>
-
-                {depositAmount ? (
-                  <div className="flex items-start justify-between text-sm pt-2">
-                    <span className="text-muted-foreground flex items-center gap-1">
-                      Security deposit (held)
-                      <InfoTooltip
-                        content="This refundable security deposit is charged today and held by Vendibook. After your rental, any damages, fees, or late-return charges may be deducted and the remaining balance is returned to your payment method."
-                        side="top"
-                      />
-                    </span>
-                    <span className="text-muted-foreground">${depositAmount.toLocaleString()}</span>
-                  </div>
-                ) : null}
-
-              </div>
+            <div>
+              <Label htmlFor="msg" className="text-sm font-medium mb-2 block">
+                Message to host (optional)
+              </Label>
+              <Textarea
+                id="msg"
+                placeholder="Tell them about your event or how you'll use this rental..."
+                value={message}
+                onChange={(e) => setMessage(e.target.value)}
+                rows={3}
+              />
             </div>
           </div>
-        </div>
-      </main>
+        </CheckoutSection>
 
-      {/* Mobile persistent action bar — total + the current step's primary action */}
-      <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-card/95 backdrop-blur px-4 py-3 flex items-center justify-between gap-3 shadow-[0_-8px_24px_-16px_rgba(24,20,16,0.35)]">
-        <div className="min-w-0">
-          <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Total</p>
-          <p className="text-base font-semibold text-foreground tabular-nums">
-            ${totalChargedToday.toLocaleString()}
-          </p>
-        </div>
-        {activeStep === STEP_REVIEW ? (
-          paymentSetupBlocked ? (
-            <Button disabled className="h-12 px-6 rounded-xl font-semibold">
-              Unavailable
-            </Button>
-          ) : (
-            <Button
-              className="h-12 px-6 rounded-xl font-semibold bg-foreground text-background hover:bg-foreground/90"
-              onClick={handleSubmit}
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              {instantConfirm ? 'Confirm & pay' : 'Continue to payment'}
-            </Button>
-          )
-        ) : (
-          <Button
-            className="h-12 px-6 rounded-xl font-semibold bg-foreground text-background hover:bg-foreground/90"
-            onClick={() => {
-              if (activeStep !== null) handleCompleteStep(activeStep);
-            }}
-            disabled={
-              (activeStep === STEP_CONTACT && !isStepContactComplete) ||
-              (activeStep === STEP_FULFILLMENT && !isStepFulfillmentComplete)
+        {/* 3. Your business details */}
+        <CheckoutSection
+          title="Your business details"
+          description="Who the host is renting to, and (for food categories) your business info."
+          aside={isStepContactComplete && !editingContact ? (
+            <button type="button" className="v2-btn-quiet" onClick={() => setEditingContact(true)}>
+              <Pencil aria-hidden /> Edit
+            </button>
+          ) : undefined}
+        >
+          <div className="space-y-6">
+            {isStepContactComplete && !editingContact ? (
+              <div className="flex items-center justify-between p-4 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl border border-emerald-200 dark:border-emerald-800/50">
+                <div className="flex items-center gap-3">
+                  <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                  <div>
+                    <span className="font-medium text-emerald-700 dark:text-emerald-300">
+                      {userInfo?.firstName} {userInfo?.lastName}
+                    </span>
+                    <span className="text-xs text-emerald-600 dark:text-emerald-400 block">
+                      Contact details saved
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <ContactInfoWizard
+                listingId={listingId}
+                initialData={userInfo || undefined}
+                onPartialChange={(partial) => setUserInfo(partial)}
+                onComplete={(info) => {
+                  setUserInfo(info);
+                  setEditingContact(false);
+                }}
+              />
+            )}
+
+            {requiresBusinessInfo && (
+              <div className="pt-2 border-t border-border">
+                <p className="text-sm text-muted-foreground mb-4 mt-4">
+                  Help the host understand your business and how you'll use the space.
+                </p>
+                <BusinessInfoStep
+                  businessInfo={businessInfo}
+                  onBusinessInfoChange={setBusinessInfo}
+                  onComplete={() => setBusinessInfoDone(true)}
+                  disabled={isSubmitting}
+                  category={listing.category}
+                />
+              </div>
+            )}
+          </div>
+        </CheckoutSection>
+
+        {/* 4. Documents & compliance */}
+        {hasRequiredDocs && (
+          <CheckoutSection
+            title="Documents & compliance"
+            description="Documents this host requires before your request can be reviewed."
+            aside={
+              <span className="text-xs">
+                {docsOnFile
+                  ? 'On file'
+                  : `${preBookingBlockers.filter((req) => stagedDocuments.some((doc) => doc.documentType === req.document_type)).length} of ${preBookingBlockers.length} ready`}
+              </span>
             }
           >
-            Continue
-          </Button>
+            <BookingDocumentUpload
+              requiredDocs={requiredDocs || []}
+              stagedDocuments={stagedDocuments}
+              onDocumentsChange={setStagedDocuments}
+              onComplete={() => setDocsStepDone(true)}
+              disabled={isSubmitting}
+              docsOnFile={docsOnFile}
+              onFileExpiresAt={docsOnFileData?.expiresAt}
+            />
+          </CheckoutSection>
         )}
-      </div>
+
+        {/* 5. Terms & cancellation */}
+        <CheckoutSection
+          title="Terms & cancellation"
+          description="Review the policy, agree to the terms, and complete identity verification."
+        >
+          <div className="space-y-4">
+            <div className="rounded-xl border border-border bg-muted/30 p-4">
+              <div className="flex items-center gap-2 mb-1.5">
+                <Clock className="h-4 w-4 text-foreground" />
+                <span className="text-sm font-medium text-foreground">Cancellation policy</span>
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                {cancellationPolicyText ?? (
+                  <>
+                    This host hasn't published a custom policy, so Vendibook's standard rental
+                    policy applies: cancel before the host accepts for a full refund; after
+                    acceptance, refunds follow the terms you accept at payment.{' '}
+                    <Link to={`/listing/${listingId}#terms`} className="underline underline-offset-2">
+                      See rental terms
+                    </Link>
+                  </>
+                )}
+              </p>
+            </div>
+
+            <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-1.5">
+              <div className="flex items-center gap-2">
+                <Shield className="h-4 w-4 text-foreground" />
+                <span className="text-sm font-medium text-foreground">How this payment works</span>
+              </div>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                {instantConfirm
+                  ? 'PayPal processes your payment now. Your booking is confirmed as soon as the payment completes, and the full record is saved to your account.'
+                  : 'PayPal processes your payment now and your dates are held. The host still has to accept the request — if they decline or do not respond, Vendibook refunds the payment to your original payment method.'}
+              </p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                Vendibook records the transaction and releases host payouts after the rental begins. Vendibook does not hold funds in escrow.
+              </p>
+            </div>
+
+            {listing?.id && (
+              <DisclosureStep
+                listingId={listing.id}
+                onInsuranceAnswer={(answer) =>
+                  setBusinessInfo((prev) =>
+                    prev
+                      ? { ...prev, liabilityInsuranceAnswer: answer, hasLiabilityInsurance: answer === 'yes' }
+                      : prev,
+                  )
+                }
+                onComplete={(state) => {
+                  setDisclosureRecord({
+                    attestedAt: state.attestedAt,
+                    documentVersion: state.documentVersion,
+                    identityStatus: state.identityStatus,
+                    insuranceAnswer: state.insuranceAnswer,
+                  });
+                  setDisclosureDone(true);
+                }}
+              />
+            )}
+          </div>
+        </CheckoutSection>
+
+        {/* 6. Review & payment */}
+        <CheckoutSection
+          title="Review & payment"
+          description={
+            instantConfirm
+              ? 'Your booking is confirmed as soon as payment completes.'
+              : 'Your payment is processed now and your dates are held while the host reviews your request.'
+          }
+        >
+          <div className="space-y-5">
+            <div className="p-3 border border-border rounded-lg">
+              <ReferralCodeField
+                programType="rental"
+                value={referralCode}
+                onChange={(code, valid) => { setReferralCode(code); setReferralValid(valid); }}
+                autoFillFromCookie
+              />
+            </div>
+
+            <MoneyBreakdown
+              lines={moneyLines}
+              total={formatCurrency(totalChargedToday)}
+              totalLabel="Total due today"
+            />
+
+            {paypalCheckout ? (
+              <>
+                <PayPalEmbeddedPayment
+                  target={{ kind: 'booking', id: paypalCheckout.bookingId }}
+                  sellerId={listing.host_id}
+                  counterparty="host"
+                  listingHref={listingHref}
+                  returnUrl={paypalCheckout.returnUrl}
+                  totalUsd={totalChargedToday}
+                  heading={instantConfirm ? 'Confirm and pay with PayPal' : 'Secure your booking with PayPal'}
+                  intent={
+                    instantConfirm
+                      ? 'Your booking is confirmed the moment PayPal verifies your payment.'
+                      : 'Your dates are held the moment PayPal verifies your payment; the host still has to accept.'
+                  }
+                />
+                <button
+                  type="button"
+                  className="v2-btn-quiet"
+                  onClick={() => setPaypalCheckout(null)}
+                >
+                  Edit booking details
+                </button>
+              </>
+            ) : paymentSetupBlocked ? (
+              <div className="rounded-xl border border-border bg-muted/40 p-4 space-y-2">
+                <div className="flex items-center gap-2">
+                  <Info className="h-4 w-4 text-muted-foreground" />
+                  <span className="text-sm font-medium text-foreground">Payment setup unavailable</span>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  This host hasn&apos;t finished setting up payments yet, so checkout can&apos;t be completed
+                  right now. Please check back soon or message the host for an update.
+                </p>
+              </div>
+            ) : (
+              <>
+                <Button
+                  className="w-full h-14 text-base bg-foreground text-background hover:bg-foreground/90 rounded-xl font-semibold"
+                  onClick={handleSubmit}
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                      Processing...
+                    </>
+                  ) : instantConfirm ? (
+                    <>
+                      <Zap className="h-5 w-5 mr-2" />
+                      Confirm and pay {formatCurrency(totalChargedToday)}
+                    </>
+                  ) : (
+                    <>
+                      <CreditCard className="h-5 w-5 mr-2" />
+                      Continue to payment · {formatCurrency(totalChargedToday)}
+                    </>
+                  )}
+                </Button>
+                {!canSubmit && nextIncompleteReason && (
+                  <p className="text-xs text-muted-foreground text-center">{nextIncompleteReason}</p>
+                )}
+                <p className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
+                  <Lock className="h-3 w-3" />
+                  Secure checkout with <PayPalMonogram className="h-3.5 w-auto inline-block" />
+                </p>
+              </>
+            )}
+          </div>
+        </CheckoutSection>
+      </TransactionCheckoutShell>
 
       <Footer />
 
@@ -1531,7 +1397,6 @@ const BookingCheckout = () => {
         dailyEnabled={listing.daily_enabled !== false}
         onDatesSelected={handleDatesSelected}
       />
-
 
       {/* Auth Gate Modal - shown when guest tries to submit */}
       <AuthGateOfferModal
@@ -1560,33 +1425,6 @@ const BookingCheckout = () => {
           confirmLabel="Continue to secure payment"
         />
       ) : null}
-      {paypalCheckout ? (
-        <PayPalPaymentPanel
-          target={{ kind: 'booking', id: paypalCheckout.bookingId }}
-          returnUrl={paypalCheckout.returnUrl}
-          onClose={() => setPaypalCheckout(null)}
-          totalUsd={totalChargedToday}
-
-          summary={
-            <CheckoutOrderSummary
-              variant="rental"
-              coverImageUrl={listing?.cover_image_url || listing?.image_urls?.[0]}
-              title={listing?.title || 'Rental booking'}
-              subtitle={listing?.category ?? undefined}
-              lines={[
-                { label: 'Rental subtotal', amount: fees.subtotal - currentDeliveryFee },
-                ...(currentDeliveryFee > 0
-                  ? [{ label: 'Delivery', amount: currentDeliveryFee }]
-                  : []),
-                { label: 'Service fee', amount: fees.renterFee },
-                ...(taxSummaryLine ? [taxSummaryLine] : []),
-              ]}
-              total={totalChargedToday}
-            />
-          }
-        />
-      ) : null}
-
     </div>
   );
 };
