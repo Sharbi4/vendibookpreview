@@ -62,17 +62,23 @@ export class PayPalError extends Error {
   }
 }
 
-/** Redact everything except a small, safe subset before logging. */
+/**
+ * Redact everything except a small, safe subset before logging.
+ * Blocks credentials, auth assertions, card data and payer PII so diagnostics
+ * stay PCI/PII-safe while keeping the PayPal debug id we need for support.
+ */
+const UNSAFE_LOG_KEY =
+  /secret|token|authorization|password|assertion|card|cvv|cvc|pan|number|email|phone|payer_name|address|ssn|dob/i;
+
 export function safeLog(step: string, details?: Record<string, unknown>) {
   const clean = details
     ? Object.fromEntries(
-      Object.entries(details).filter(([k]) =>
-        !/secret|token|authorization|password|client_secret/i.test(k)
-      ),
+      Object.entries(details).filter(([k]) => !UNSAFE_LOG_KEY.test(k)),
     )
     : undefined;
   console.log(`[PAYPAL] ${step}${clean ? ` - ${JSON.stringify(clean)}` : ""}`);
 }
+
 
 // ---------------------------------------------------------------- auth
 let cachedToken: { value: string; expiresAt: number } | null = null;
