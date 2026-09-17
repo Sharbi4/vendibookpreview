@@ -390,8 +390,8 @@ const SaleCheckout = () => {
   };
 
   const currentDeliveryFee = getDeliveryFeeForSelection();
-  /** Buyer-paid freight, invoiced separately once the seller confirms. */
-  const freightDueLater =
+  /** Buyer-paid Vendibook Freight, charged together with the purchase. */
+  const buyerFreightCharge =
     fulfillmentSelected === 'vendibook_freight' && !isFreightSellerPaid ? freightCost : 0;
 
   // Estimated sales tax — server-computed (TaxJar / state table) so the buyer
