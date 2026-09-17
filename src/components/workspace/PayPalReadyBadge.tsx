@@ -15,9 +15,9 @@ export function PayPalReadyBadge({
   tone?: 'light' | 'dark';
   showDetails?: boolean;
 }) {
-  const { connection, status, isReady, isLoading } = useMyPayPalConnection();
+  const { connection, status, isReady, isLoading, isRefreshing } = useMyPayPalConnection();
 
-  if (isLoading) {
+  if (isLoading || (isRefreshing && !connection)) {
     return (
       <span className={`v2-paypal-badge is-loading ${tone === 'dark' ? 'on-dark' : ''}`}>
         <Loader2 className="h-3.5 w-3.5 animate-spin" />
@@ -38,14 +38,14 @@ export function PayPalReadyBadge({
     );
   }
 
-  if (status === 'action_required') {
+  if (status === 'action_required' || status === 'revoked') {
     return (
       <Link
         to="/dashboard/payments"
         className={`v2-paypal-badge is-warn ${tone === 'dark' ? 'on-dark' : ''}`}
       >
         <AlertTriangle className="h-3.5 w-3.5" />
-        PayPal action required
+        {status === 'revoked' ? 'PayPal access revoked' : 'PayPal action required'}
       </Link>
     );
   }
