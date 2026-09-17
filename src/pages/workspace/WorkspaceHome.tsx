@@ -180,6 +180,12 @@ export default function WorkspaceHome() {
   const sellerEarnings = transactions.filter((t) => t.role === 'seller');
   const buyerPayments = transactions.filter((t) => t.role === 'buyer');
 
+  // Older links and emails used /dashboard?view=…&tab=… — keep them working by
+  // handing those deep links to the previous dashboard, query string intact.
+  if (routeParams.get('tab') || routeParams.get('view')) {
+    return <Navigate to={`/dashboard/classic?${routeParams.toString()}`} replace />;
+  }
+
   return (
     <WorkspaceShell>
       <div className="v2-page-stack">
