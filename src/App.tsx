@@ -199,7 +199,6 @@ const DynamicCityPage = lazy(() => import("./pages/DynamicCityPage"));
 const Payments = lazy(() => import("./pages/Payments"));
 const Rentals = lazy(() => import("./pages/Rentals"));
 const EnterpriseOnboarding = lazy(() => import("./pages/EnterpriseOnboarding"));
-const HostListings = lazy(() => import("./pages/HostListings"));
 const HowItWorksHost = lazy(() => import("./pages/HowItWorksHost"));
 const HowItWorksSeller = lazy(() => import("./pages/HowItWorksSeller"));
 const BecomeAHost = lazy(() => import("./pages/BecomeAHost"));
@@ -334,7 +333,7 @@ const AnimatedRoutes = () => {
           <Route path="/host/bookings" element={<PreserveQueryRedirect to="/dashboard/activity?filter=requests" />} />
           {/* Campaign deep-link alias — keeps ?boost= and UTMs intact */}
           <Route path="/host/listings" element={<PreserveQueryRedirect to="/dashboard/listings" />} />
-          <Route path="/host/listings/classic" element={<PageTransition><HostListings /></PageTransition>} />
+          <Route path="/host/listings/classic" element={<PreserveQueryRedirect to="/dashboard/listings" />} />
           <Route path="/host/reporting" element={<PreserveQueryRedirect to="/dashboard/reporting" />} />
           <Route path="/host/analytics" element={<PreserveQueryRedirect to="/dashboard/analytics" />} />
           <Route path="/host/dashboard" element={<PreserveQueryRedirect to="/dashboard" />} />
