@@ -101,8 +101,9 @@ const PayPalPaymentPanel = ({
   stateRef.current = state;
 
 
-  // ESC to close + lock body scroll while open.
+  // ESC to close + lock body scroll while open (modal presentation only).
   useEffect(() => {
+    if (embedded) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape' && stateRef.current !== 'processing') onClose();
     };
