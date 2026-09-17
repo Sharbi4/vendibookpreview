@@ -6,7 +6,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUserTransactions } from '@/hooks/useUserTransactions';
 import { useShopperBookings } from '@/hooks/useShopperBookings';
 import { useHostBookings } from '@/hooks/useHostBookings';
-import { Button } from '@/components/ui/button';
 
 type Filter = 'all' | 'purchases' | 'sales' | 'rentals' | 'requests' | 'disputes';
 
@@ -110,6 +109,20 @@ export default function WorkspaceActivity() {
   );
   const shown = filter === 'all' ? items : items.filter((item) => item.kind === filter);
 
+  // Group real items into time/state buckets so the page reads as a timeline.
+  const groups = useMemo(() => {
+    const monthAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const needsAction = shown.filter((i) => i.nextAction || i.kind === 'disputes');
+    const rest = shown.filter((i) => !needsAction.includes(i));
+    const recent = rest.filter((i) => +new Date(i.date) >= monthAgo);
+    const earlier = rest.filter((i) => +new Date(i.date) < monthAgo);
+    return [
+      { label: 'Needs action', hint: 'Waiting on you or on the other party.', items: needsAction },
+      { label: 'Recent', hint: 'The last 30 days.', items: recent },
+      { label: 'Earlier', hint: 'Completed and older records.', items: earlier },
+    ].filter((g) => g.items.length);
+  }, [shown]);
+
   return (
     <WorkspaceShell>
       <div className="v2-page-stack">
@@ -121,50 +134,78 @@ export default function WorkspaceActivity() {
 
         <div className="v2-filter-row">
           {available.map((f) => (
-            <Button
+            <button
               key={f.key}
-              size="sm"
-              variant={filter === f.key ? 'secondary' : 'outline'}
+              type="button"
+              className={`v2-filter${filter === f.key ? ' is-active' : ''}`}
               onClick={() => setFilter(f.key)}
             >
               {f.label}
-            </Button>
+            </button>
           ))}
         </div>
 
-        <div className="v2-card divide-y">
-          {shown.length ? (
-            shown.map((item) => (
-              <Link className="v2-activity-row" to={item.href} key={item.id}>
-                <span className="v2-activity-icon overflow-hidden">
-                  {item.image ? (
-                    <img src={item.image} alt="" className="h-full w-full object-cover" />
-                  ) : item.kind === 'rentals' || item.kind === 'requests' ? (
-                    <CalendarDays />
-                  ) : (
-                    <Receipt />
-                  )}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <strong className="truncate">{item.title}</strong>
-                  <small className="truncate">
-                    {item.counterparty} · {item.state} ·{' '}
-                    {new Date(item.date).toLocaleDateString()}
-                    {item.reference ? ` · ${item.reference}` : ''}
-                  </small>
-                  {item.nextAction && <small className="font-semibold">{item.nextAction}</small>}
-                </span>
-                {item.amount && <strong>{item.amount}</strong>}
-              </Link>
-            ))
-          ) : (
-            <div className="v2-empty">
-              <ImageIcon className="opacity-40" />
-              <p>No {filter === 'all' ? 'activity' : FILTERS.find((f) => f.key === filter)?.label.toLowerCase()} yet.</p>
-              <Link to="/search">Browse the marketplace</Link>
-            </div>
-          )}
-        </div>
+        {groups.length ? (
+          groups.map((group) => (
+            <section className="v2-panel" key={group.label}>
+              <div className="v2-panel-head">
+                <div>
+                  <h2>{group.label}</h2>
+                  <p>{group.hint}</p>
+                </div>
+              </div>
+              {group.items.map((item) => (
+                <Link className="v2-activity-row" to={item.href} key={item.id}>
+                  <span className="v2-activity-thumb">
+                    {item.image ? (
+                      <img src={item.image} alt="" loading="lazy" />
+                    ) : item.kind === 'rentals' || item.kind === 'requests' ? (
+                      <CalendarDays />
+                    ) : (
+                      <Receipt />
+                    )}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <strong className="truncate">{item.title}</strong>
+                    <small className="truncate">
+                      {item.counterparty} · {new Date(item.date).toLocaleDateString()}
+                      {item.reference ? ` · ${item.reference}` : ''}
+                    </small>
+                    <span className="mt-1.5 flex flex-wrap items-center gap-2">
+                      <span
+                        className={`v2-status${
+                          item.kind === 'disputes'
+                            ? ' is-alert'
+                            : item.nextAction
+                              ? ' is-warn'
+                              : ' is-ok'
+                        }`}
+                      >
+                        {item.state}
+                      </span>
+                      {item.nextAction && <small>{item.nextAction}</small>}
+                    </span>
+                  </span>
+                  {item.amount && <strong>{item.amount}</strong>}
+                </Link>
+              ))}
+            </section>
+          ))
+        ) : (
+          <div className="v2-panel v2-empty">
+            <ImageIcon className="opacity-40" />
+            <p>
+              No{' '}
+              {filter === 'all'
+                ? 'activity'
+                : FILTERS.find((f) => f.key === filter)?.label.toLowerCase()}{' '}
+              yet.
+            </p>
+            <Link to="/search" className="v2-btn-quiet">
+              Browse the marketplace
+            </Link>
+          </div>
+        )}
       </div>
     </WorkspaceShell>
   );
