@@ -3,6 +3,7 @@ import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import {
   AlertTriangle,
   ArrowRight,
+  Bell,
   CalendarDays,
   CreditCard,
   FileText,
