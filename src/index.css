@@ -1972,6 +1972,11 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
 .v2-embedded-section .bg-clip-text, .v2-embedded-section .text-transparent {
   -webkit-text-fill-color: hsl(var(--v2-ink)); color: hsl(var(--v2-ink)); background-image: none;
 }
+.v2-embedded-section .bg-primary { background: hsl(var(--v2-ink)) !important; }
+.v2-embedded-section .bg-primary, .v2-embedded-section .text-primary-foreground {
+  color: hsl(var(--v2-paper)) !important; -webkit-text-fill-color: hsl(var(--v2-paper));
+}
+.v2-embedded-section button, .v2-embedded-section [role="button"] { min-height: 40px; }
 
 /* Account */
 .v2-account-identity { display: flex; align-items: center; gap: 20px; border-bottom: 1px solid hsl(var(--v2-line)); padding-bottom: 30px; }
