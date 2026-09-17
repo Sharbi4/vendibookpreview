@@ -13,12 +13,31 @@ import { cn } from '@/lib/utils';
  * contrasts with the surface it sits on.
  */
 
-export function PayPalMonogram({ className }: { className?: string }) {
+/** Text fallback in official PayPal colours, readable on light or dark. */
+function PayPalTextMark({ surface, className }: { surface: 'dark' | 'light'; className?: string }) {
+  return (
+    <span className={cn('inline-flex items-center font-bold tracking-tight', className)}>
+      <span style={{ color: '#009cde' }}>Pay</span>
+      <span style={{ color: surface === 'dark' ? '#ffffff' : '#012169' }}>Pal</span>
+    </span>
+  );
+}
+
+export function PayPalMonogram({
+  surface = 'light',
+  className,
+}: {
+  surface?: 'dark' | 'light';
+  className?: string;
+}) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return <PayPalTextMark surface={surface} className={cn('text-xs', className)} />;
   return (
     <img
       src={paypalMonogram.url}
       alt="PayPal"
       loading="lazy"
+      onError={() => setFailed(true)}
       className={cn('h-4 w-auto', className)}
     />
   );
