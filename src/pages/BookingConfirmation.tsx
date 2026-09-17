@@ -153,6 +153,75 @@ const BookingConfirmation = ({
     }
   }, [booking]);
 
+  const times = useMemo(() => {
+    if (!booking?.is_hourly_booking) return null;
+    const start = booking.start_time?.slice(0, 5);
+    const end = booking.end_time?.slice(0, 5);
+    if (!start || !end) return null;
+    const hours = booking.duration_hours ? ` (${booking.duration_hours} hrs)` : '';
+    return `${start} – ${end}${hours}`;
+  }, [booking]);
+
+  const locationLine = useMemo(() => {
+    if (!booking) return null;
+    if (booking.fulfillment_selected === 'delivery') {
+      return booking.delivery_address ?? null;
+    }
+    if (booking.address_snapshot) return booking.address_snapshot;
+    const city = booking.listings?.city;
+    const state = booking.listings?.state;
+    return city && state ? `${city}, ${state}` : (city ?? null);
+  }, [booking]);
+
+  const deliveryFee = Number(booking?.delivery_fee_snapshot ?? 0);
+  const taxAmount = Number(booking?.tax_amount ?? 0);
+
+  const depositNote = useMemo(() => {
+    const status = booking?.deposit_status;
+    if (status === 'paid' || status === 'held' || status === 'authorized') {
+      return 'This deposit is held against damage and returned after the rental unless the host reports an issue.';
+    }
+    if (status === 'refunded') {
+      return 'This deposit has been returned to your original payment method.';
+    }
+    return 'This deposit is arranged directly with the host and is not part of the amount charged by Vendibook.';
+  }, [booking]);
+
+  const nextSteps = useMemo(() => {
+    if (!booking) return [] as string[];
+    const pickup = booking.fulfillment_selected === 'delivery' ? 'delivery' : 'pickup';
+    if (view === 'confirmed') {
+      return [
+        'Send the host any documents they require above — they can be uploaded any time before your start date.',
+        `Message the host to agree on ${pickup} timing and the exact meeting point.`,
+        'Add the dates to your calendar so you do not miss the start of the rental.',
+        'Your booking and receipt stay available in your dashboard under Activity.',
+      ];
+    }
+    if (view === 'awaiting_host') {
+      return [
+        'The host reviews your request — most hosts reply within a day.',
+        'Upload any required documents now so approval is not held up.',
+        'You will be emailed as soon as the host accepts or declines.',
+        'If the host declines or does not respond, your payment is refunded to your original payment method.',
+      ];
+    }
+    if (view === 'processing') {
+      return [
+        'We are recording your payment with PayPal — stay on this page for a few seconds.',
+        'Once recorded, your dates are held and the host is notified.',
+      ];
+    }
+    if (view === 'declined') {
+      return [
+        'Your refund has been started to your original payment method.',
+        'Refunds usually post within a few business days, depending on your bank.',
+        'You can browse other rentals for the same dates from search.',
+      ];
+    }
+    return [] as string[];
+  }, [booking, view]);
+
   const headline: Record<View, string> = {
     loading: 'Loading your booking…',
     processing: 'Confirming your payment…',
