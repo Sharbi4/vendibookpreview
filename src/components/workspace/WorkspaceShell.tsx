@@ -91,7 +91,10 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
             <AvatarImage src={profile?.avatar_url || undefined} alt={name} />
             <AvatarFallback>{initials}</AvatarFallback>
           </Avatar>
-          <span className="truncate">{name}</span>
+          <span>
+            <span className="truncate">{name}</span>
+            <small>View account</small>
+          </span>
         </Link>
       </aside>
 
@@ -108,25 +111,23 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
               placeholder="Search trucks, trailers, kitchens…"
             />
           </form>
-          <div className="flex items-center gap-1">
-            <Button asChild variant="ghost" size="icon">
-              <Link className="relative" to="/dashboard/inbox" aria-label="Inbox">
-                <Inbox />
-                {unreadMessages > 0 && <span className="v2-alert-dot" />}
-              </Link>
-            </Button>
-            <Button asChild variant="ghost" size="icon">
-              <Link className="relative" to="/notifications" aria-label="Notifications">
-                <Bell />
-                {unreadCount > 0 && <span className="v2-alert-dot" />}
-              </Link>
-            </Button>
-            <Button asChild variant="secondary" className="hidden sm:inline-flex">
-              <Link to="/list">
-                <Plus />
-                List an asset
-              </Link>
-            </Button>
+          <div className="flex items-center gap-1.5">
+            <Link className="v2-icon-action" to="/dashboard/inbox" aria-label="Inbox">
+              <Inbox />
+              {unreadMessages > 0 && <span className="v2-alert-dot" />}
+            </Link>
+            <Link
+              className="v2-icon-action"
+              to="/notification-preferences"
+              aria-label="Notifications"
+            >
+              <Bell />
+              {unreadCount > 0 && <span className="v2-alert-dot" />}
+            </Link>
+            <Link to="/list" className="v2-btn v2-btn-sm ml-1 hidden sm:inline-flex">
+              <Plus />
+              List an asset
+            </Link>
           </div>
         </header>
         <main className="v2-content">{children}</main>
