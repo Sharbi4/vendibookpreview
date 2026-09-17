@@ -34,7 +34,7 @@ import { useRevenueAnalytics } from '@/hooks/useRevenueAnalytics';
 import { MANUAL_PAYOUT_SETTINGS_PATH } from '@/hooks/useManualPayout';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
-const HostReporting = () => {
+const HostReporting = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const { analytics, isLoading } = useRevenueAnalytics();
 
   const [timeRange, setTimeRange] = useState('30d');
@@ -106,10 +106,10 @@ const HostReporting = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <Header />
-      
-      <main className="flex-1 container max-w-7xl py-8">
+    <div className={embedded ? 'flex flex-col' : 'min-h-screen bg-background flex flex-col'}>
+      {!embedded && <Header />}
+
+      <main className={embedded ? 'flex-1' : 'flex-1 container max-w-7xl py-8'}>
         {/* Header with Dark Shine Design */}
         <div className="p-6 rounded-2xl bg-card border border-border mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
@@ -379,7 +379,7 @@ const HostReporting = () => {
           </>
         )}
       </main>
-      <Footer />
+      {!embedded && <Footer />}
     </div>
   );
 };
