@@ -1785,7 +1785,7 @@ html.hide-support-chat .widget-visible {
 
 /* Parallel V2 workspace: dark structure with warm, tactile content surfaces. */
 /* ── Vendibook workspace (live /dashboard) ───────────────────────────────── */
-.v2-workspace { --v2-shell: 240 6% 7%; --v2-paper: 38 34% 97%; --v2-surface: 40 40% 99%; --v2-ink: 28 10% 12%; --v2-stone: 28 8% 40%; --v2-line: 30 13% 85%; --v2-line-strong: 30 12% 76%; --v2-ok: 152 32% 34%; --v2-warn: 32 55% 40%; min-height: 100svh; background: hsl(var(--v2-paper)); color: hsl(var(--v2-ink)); -webkit-font-smoothing: antialiased; }
+.v2-workspace { --v2-shell: 240 6% 7%; --v2-paper: 38 34% 97%; --v2-surface: 40 40% 99%; --v2-ink: 28 10% 12%; --v2-stone: 28 8% 40%; --v2-line: 30 13% 85%; --v2-line-strong: 30 12% 76%; --v2-ok: 152 32% 34%; --v2-warn: 32 55% 40%; --v2-mobile-nav-height: 70px; min-height: 100svh; background: hsl(var(--v2-paper)); color: hsl(var(--v2-ink)); -webkit-font-smoothing: antialiased; }
 
 /* Shell */
 .v2-sidebar { position: fixed; inset: 0 auto 0 0; z-index: 40; display: none; width: 256px; flex-direction: column; border-right: 1px solid hsl(0 0% 100% / .08); background: hsl(var(--v2-shell)); color: hsl(40 20% 94%); padding: 30px 16px 18px; }
@@ -1828,7 +1828,7 @@ html.hide-support-chat .widget-visible {
 .v2-btn-sm, .v2-btn-outline.v2-btn-sm { min-height: 34px; padding: 0 12px; font-size: 13px; }
 
 /* Page scaffolding */
-.v2-content { padding: 32px 18px 116px; }
+.v2-content { padding: 32px 18px calc(var(--v2-mobile-nav-height) + env(safe-area-inset-bottom, 0px) + 46px); }
 .v2-page-stack { margin: 0 auto; display: flex; max-width: 1140px; flex-direction: column; gap: 44px; }
 .v2-page-stack h1 { color: hsl(var(--v2-ink)); font-size: clamp(1.9rem, 3.4vw, 2.6rem); line-height: 1.06; font-weight: 640; letter-spacing: -.02em; }
 .v2-page-stack h2 { color: hsl(var(--v2-ink)); font-size: 17px; font-weight: 650; letter-spacing: -.01em; }
@@ -1990,9 +1990,15 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
 .v2-account-list .v2-account-row { border-bottom: 1px solid hsl(var(--v2-line)); }
 
 /* Mobile nav */
-.v2-mobile-nav { position: fixed; inset: auto 0 0; z-index: 50; display: grid; height: calc(70px + env(safe-area-inset-bottom)); grid-template-columns: repeat(5, 1fr); border-top: 1px solid hsl(var(--v2-line)); background: hsl(var(--v2-paper) / .97); padding-bottom: env(safe-area-inset-bottom); backdrop-filter: blur(14px); box-shadow: 0 -6px 20px hsl(30 12% 15% / .07); }
-.v2-mobile-link { position: relative; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 4px; color: hsl(var(--v2-stone)); font-size: 10.5px; font-weight: 600; transition: color .15s ease; }
+.v2-mobile-nav { position: fixed; right: 0; bottom: 0; left: 0; z-index: 50; box-sizing: border-box; height: calc(var(--v2-mobile-nav-height) + env(safe-area-inset-bottom, 0px)); border-top: 1px solid hsl(var(--v2-line)); background: hsl(var(--v2-paper) / .97); padding-bottom: env(safe-area-inset-bottom, 0px); backdrop-filter: blur(14px); box-shadow: 0 -6px 20px hsl(30 12% 15% / .07); }
+.v2-mobile-nav-inner { display: grid; width: 100%; height: var(--v2-mobile-nav-height); grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.v2-mobile-link { position: relative; display: flex; min-width: 0; min-height: 48px; touch-action: manipulation; align-items: center; justify-content: center; flex-direction: column; gap: 4px; color: hsl(var(--v2-stone)); font-size: 10.5px; font-weight: 600; transition: color .15s ease, background-color .15s ease; -webkit-tap-highlight-color: transparent; }
+.v2-mobile-link::before { content: ''; position: absolute; top: 0; left: 50%; width: 24px; height: 2px; border-radius: 0 0 2px 2px; background: transparent; transform: translateX(-50%); }
 .v2-mobile-link.is-active { color: hsl(var(--v2-ink)); font-weight: 700; }
+.v2-mobile-link.is-active::before { background: hsl(var(--v2-ink)); }
+.v2-mobile-link:active { background: hsl(var(--v2-ink) / .05); }
+.v2-mobile-icon { position: relative; display: grid; place-items: center; }
+.v2-mobile-alert-dot { position: absolute; top: -3px; right: -5px; width: 7px; height: 7px; border: 1.5px solid hsl(var(--v2-paper)); border-radius: 50%; background: hsl(6 58% 46%); }
 .v2-alert-dot { position: absolute; top: 7px; right: 7px; width: 8px; height: 8px; border: 1.5px solid hsl(var(--v2-paper)); border-radius: 50%; background: hsl(6 58% 46%); }
 
 /* Skeletons */
