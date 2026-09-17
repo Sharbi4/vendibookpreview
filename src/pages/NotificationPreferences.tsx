@@ -171,21 +171,20 @@ const NotificationPreferences = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <Header />
-      <main className="flex-grow container mx-auto px-4 py-8">
+    <WorkspaceShell>
+      <div className="v2-page-stack v2-embedded-section">
         <Button
           variant="ghost"
-          onClick={() => navigate(-1)}
-          className="mb-6"
+          onClick={() => navigate('/dashboard/notifications')}
+          className="self-start -ml-2"
         >
           <ArrowLeft className="h-4 w-4 mr-2" />
-          Back
+          Notifications
         </Button>
 
-        <div className="max-w-2xl mx-auto space-y-6">
+        <div className="max-w-2xl space-y-6">
           <div>
-            <h1 className="text-3xl font-bold text-foreground mb-2">Notification Preferences</h1>
+            <h1 className="text-2xl font-semibold mb-2">Notification preferences</h1>
             <p className="text-muted-foreground">
               Choose how you want to receive notifications. Email notifications are sent to your registered email address.
             </p>
