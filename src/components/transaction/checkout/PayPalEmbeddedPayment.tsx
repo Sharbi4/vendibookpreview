@@ -76,7 +76,7 @@ const PayPalEmbeddedPayment = ({
           <h3>{heading}</h3>
           {intent ? <p>{intent}</p> : null}
         </div>
-        <PayPalWordmark className="v2-pay-mark" />
+        <PayPalWordmark surface="light" className="v2-pay-mark" />
       </div>
 
       {breakdown ? <div className="v2-pay-breakdown">{breakdown}</div> : null}
