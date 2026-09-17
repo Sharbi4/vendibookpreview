@@ -14,6 +14,7 @@ import {
   TERMINAL_PAYMENT_STATES,
 } from "./paypalFinalize.ts";
 import { recordOrderEvent } from "./orders/orderEvents.ts";
+import { notifySellerPaymentOutcome } from "./notifySellerPayment.ts";
 import { getPaymentProvider } from "./payments/index.ts";
 import { supportsAuthorization } from "./payments/types.ts";
 import { isAuthorizationCapturable } from "./payments/paymentStrategy.ts";
@@ -94,6 +95,13 @@ export async function applyAuthorization(
       dedupeKey: `authorization_${normalizedStatus}:${facts.authorizationId}`,
     }).catch(() => {});
 
+    await notifySellerPaymentOutcome(
+      supabase,
+      dead ?? record,
+      "declined",
+      `authorization_${normalizedStatus}:${facts.authorizationId}`,
+    );
+
     safeLog("authorization_not_live", { reference: record.reference, state: normalizedStatus, source });
     return dead ?? record;
   }
@@ -127,6 +135,13 @@ export async function applyAuthorization(
     dedupeKey: `authorized:${facts.authorizationId}`,
     metadata: { expires_at: facts.expiresAt },
   }).catch(() => {});
+
+  await notifySellerPaymentOutcome(
+    supabase,
+    updated ?? record,
+    "approved",
+    `authorized:${facts.authorizationId}`,
+  );
 
   // Reflect the hold on the business record without inventing new statuses.
   if (record.sale_transaction_id) {

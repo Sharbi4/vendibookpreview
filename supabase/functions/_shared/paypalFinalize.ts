@@ -11,6 +11,7 @@ import { appendLedgerEntry, ensureSellerPayable } from "./paypalAccounting.ts";
 import { recordOrderEvent } from "./orders/orderEvents.ts";
 import { deliverOrderReceipt } from "./orders/deliverOrderReceipt.ts";
 import { notifyOrderParties, notifyUser } from "./notify.ts";
+import { notifySellerPaymentOutcome } from "./notifySellerPayment.ts";
 import { fulfillMonetizationPurchase } from "./fulfillMonetizationPurchase.ts";
 import { fulfillConciergeOrder } from "./concierge.ts";
 import { getListingPurchaseState, LISTING_UNAVAILABLE_MESSAGE } from "./listingGuard.ts";
@@ -287,6 +288,7 @@ export async function finalizeCapture(
         },
         dedupeKey: `pending:${facts.captureId}`,
       });
+      await notifySellerPaymentOutcome(supabase, current, "pending", `pending:${facts.captureId}`);
     } else if (paymentStatus === "declined" || paymentStatus === "failed") {
       await notifyOrderParties(supabase, current, {
         type: "payment_failed",
@@ -296,6 +298,7 @@ export async function finalizeCapture(
         },
         dedupeKey: `failed:${facts.captureId}`,
       });
+      await notifySellerPaymentOutcome(supabase, current, "declined", `failed:${facts.captureId}`);
     }
     return current;
   }
