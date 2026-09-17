@@ -12,6 +12,7 @@ import {
   type PayoutPreferenceInput,
 } from '@/lib/payouts/methods';
 import PayoutMethodForm from './PayoutMethodForm';
+import SellerPayPalConnect from './SellerPayPalConnect';
 import { SectionCard } from './RowLink';
 
 /**
@@ -117,6 +118,8 @@ export default function PaymentsPayoutsSection() {
           </div>
         </div>
       </div>
+
+      <SellerPayPalConnect />
 
       {/* How buyers pay */}
       <div className="p-5 flex items-start gap-4">

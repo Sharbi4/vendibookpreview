@@ -86,19 +86,37 @@ export function safeLog(step: string, details?: Record<string, unknown>) {
 
 
 // ---------------------------------------------------------------- auth
-let cachedToken: { value: string; expiresAt: number } | null = null;
+// Tokens are cached and reused until shortly before expiry (PayPal requires
+// access-token reuse). The cache is keyed by environment so a sandbox-scoped
+// onboarding token (PAYPAL_ONBOARDING_ENV=sandbox) never invalidates the live
+// token used by checkout.
+const tokenCache = new Map<PayPalEnvironment, { value: string; expiresAt: number }>();
 
-export async function getPayPalAccessToken(): Promise<string> {
+function clientCredentials(env: PayPalEnvironment): { id: string | null; secret: string | null } {
+  if (env === "sandbox") {
+    return {
+      id: Deno.env.get("PAYPAL_SANDBOX_CLIENT_ID") ?? Deno.env.get("PAYPAL_CLIENT_ID"),
+      secret: Deno.env.get("PAYPAL_SANDBOX_CLIENT_SECRET") ?? Deno.env.get("PAYPAL_CLIENT_SECRET"),
+    };
+  }
+  return {
+    id: Deno.env.get("PAYPAL_CLIENT_ID"),
+    secret: Deno.env.get("PAYPAL_CLIENT_SECRET"),
+  };
+}
+
+export async function getPayPalAccessTokenForEnv(env: PayPalEnvironment): Promise<string> {
   const now = Date.now();
-  if (cachedToken && cachedToken.expiresAt > now + 60_000) return cachedToken.value;
+  const cached = tokenCache.get(env);
+  if (cached && cached.expiresAt > now + 60_000) return cached.value;
 
-  const clientId = Deno.env.get("PAYPAL_CLIENT_ID");
-  const clientSecret = Deno.env.get("PAYPAL_CLIENT_SECRET");
+  const { id: clientId, secret: clientSecret } = clientCredentials(env);
   if (!clientId || !clientSecret) {
     throw new PayPalError("PayPal is not configured on this environment.", 503, "NOT_CONFIGURED");
   }
 
-  const res = await fetch(`${paypalApiBase()}/v1/oauth2/token`, {
+  const base = env === "live" ? LIVE_BASE : SANDBOX_BASE;
+  const res = await fetch(`${base}/v1/oauth2/token`, {
     method: "POST",
     headers: {
       Authorization: `Basic ${btoa(`${clientId}:${clientSecret}`)}`,
@@ -115,7 +133,7 @@ export async function getPayPalAccessToken(): Promise<string> {
       const body = await res.json();
       issue = String(body?.error ?? body?.name ?? issue);
     } catch { /* non-JSON error body */ }
-    safeLog("oauth_failed", { http_status: res.status, issue, environment: paypalEnvironment() });
+    safeLog("oauth_failed", { http_status: res.status, issue, environment: env });
     throw new PayPalError(
       `PayPal rejected the client credentials (HTTP ${res.status}).`,
       res.status >= 500 ? 502 : 401,
@@ -123,11 +141,17 @@ export async function getPayPalAccessToken(): Promise<string> {
     );
   }
   const json = await res.json();
-  cachedToken = {
+  const entry = {
     value: json.access_token,
     expiresAt: now + (Number(json.expires_in ?? 3000) * 1000),
   };
-  return cachedToken.value;
+  tokenCache.set(env, entry);
+  return entry.value;
+}
+
+/** Default-environment token — unchanged behavior for all existing callers. */
+export async function getPayPalAccessToken(): Promise<string> {
+  return getPayPalAccessTokenForEnv(paypalEnvironment());
 }
 
 // ------------------------------------------------- partner attribution
@@ -164,6 +188,11 @@ interface PayPalRequestOptions {
   extraHeaders?: Record<string, string>;
   /** Vendibook payment/order reference, logged for reconciliation. */
   reference?: string | null;
+  /**
+   * Call PayPal in a specific environment (e.g. sandbox onboarding while live
+   * checkout runs). Defaults to the ambient PAYPAL_ENVIRONMENT.
+   */
+  environment?: PayPalEnvironment;
 }
 
 export async function paypalRequest<T = any>(
@@ -179,6 +208,7 @@ export async function paypalRequest<T = any>(
     actAsMerchantId,
     extraHeaders,
     reference,
+    environment,
   } = opts;
   let lastError: unknown;
 
@@ -187,7 +217,8 @@ export async function paypalRequest<T = any>(
     const timer = setTimeout(() => controller.abort(), timeoutMs);
     const startedAt = Date.now();
     try {
-      const token = await getPayPalAccessToken();
+      const env = environment ?? paypalEnvironment();
+      const token = await getPayPalAccessTokenForEnv(env);
       const headers: Record<string, string> = {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
@@ -208,7 +239,7 @@ export async function paypalRequest<T = any>(
 
 
 
-      const res = await fetch(`${paypalApiBase()}${path}`, {
+      const res = await fetch(`${env === "live" ? LIVE_BASE : SANDBOX_BASE}${path}`, {
         method,
         headers,
         body: body === undefined ? undefined : JSON.stringify(body),
@@ -230,7 +261,7 @@ export async function paypalRequest<T = any>(
         status: res.status,
         debugId: json?.debug_id ?? correlationId,
         latencyMs: Date.now() - startedAt,
-        environment: paypalEnvironment(),
+        environment: env,
         attempt,
         ...(reference ? { reference } : {}),
         ...(idempotencyKey ? { requestId: idempotencyKey } : {}),
