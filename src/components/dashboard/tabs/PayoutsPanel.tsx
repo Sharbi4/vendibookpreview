@@ -124,7 +124,10 @@ const PayoutsPanel = () => {
           <ul className="divide-y divide-border">
             {payables.map((p: any) => {
               const releaseAt = p.payout_eligible_at ?? p.release_due_at;
-              const showTiming = releaseAt && !NO_TIMING_PROMISE.has(p.status);
+              // Connected PayPal sellers are paid by PayPal at the moment of
+              // capture, so there is no review queue and no release date.
+              const autoPaid = p.payout_provider === 'paypal' && p.status === 'payout_completed';
+              const showTiming = !autoPaid && releaseAt && !NO_TIMING_PROMISE.has(p.status);
               return (
                 <li key={p.id} className="px-6 py-4 space-y-2">
                   <div className="flex items-start justify-between gap-4">
