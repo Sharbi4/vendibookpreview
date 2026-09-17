@@ -192,11 +192,14 @@ export async function paypalRequest<T = any>(
         ...(extraHeaders ?? {}),
       };
       if (idempotencyKey) headers["PayPal-Request-Id"] = idempotencyKey;
-      if (actAsMerchantId) {
+      // Acting on behalf of an onboarded seller is Connected Path behaviour and
+      // stays unreachable until the server-side switch is explicitly on.
+      if (actAsMerchantId && multipartyEnvEnabled()) {
         const assertion = buildAuthAssertion(actAsMerchantId);
         // The assertion itself is never logged — only the merchant it names.
         if (assertion) headers["PayPal-Auth-Assertion"] = assertion;
       }
+
 
       const res = await fetch(`${paypalApiBase()}${path}`, {
         method,
