@@ -354,10 +354,25 @@ export interface CreateOrderInput {
   items?: OrderLineItem[];
   /** Physical goods: pass the buyer's address and PayPal collects/echoes it. */
   shipping?: OrderShippingAddress | null;
-  // NOTE: Connected Path routing (payee / payment_instruction.platform_fees)
-  // is deliberately absent. Orders are first-party only until Step 3 wires
-  // money routing through the paypalMultiparty flag on purpose.
+  /**
+   * Connected Path routing. When set, the seller's PayPal merchant id becomes
+   * the payee and Vendibook's cut is taken as a platform fee. Resolved ONLY
+   * server-side by `sellerMultipartyReady()`; nothing from the browser can
+   * reach these fields.
+   */
+  payeeMerchantId?: string | null;
+  /** Vendibook's fee in cents, disbursed to the partner account. */
+  platformFeeCents?: number;
+}
 
+/** Vendibook's own merchant id — receives the platform fee on routed orders. */
+export function paypalPartnerMerchantId(): string | null {
+  const env = paypalEnvironment();
+  if (env === "sandbox") {
+    return Deno.env.get("PAYPAL_SANDBOX_PARTNER_MERCHANT_ID") ??
+      Deno.env.get("PAYPAL_PARTNER_MERCHANT_ID") ?? null;
+  }
+  return Deno.env.get("PAYPAL_PARTNER_MERCHANT_ID") ?? null;
 }
 
 
