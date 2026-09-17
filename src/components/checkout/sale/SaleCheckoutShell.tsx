@@ -31,7 +31,7 @@ const SaleCheckoutShell = ({
   aside,
   children,
 }: SaleCheckoutShellProps) => (
-  <div className="sale-light min-h-dvh bg-[radial-gradient(1100px_520px_at_50%_-8%,hsl(var(--primary)/0.06),transparent_70%)]">
+  <div className="sale-light v2-commerce min-h-dvh">
     <header className="sticky top-0 z-30 border-b border-border/70 bg-background/80 backdrop-blur-xl">
       <div className="container max-w-5xl mx-auto px-4 sm:px-6">
         <div className="h-16 flex items-center justify-between gap-4">
@@ -55,7 +55,7 @@ const SaleCheckoutShell = ({
 
     <main className="container max-w-5xl mx-auto px-4 sm:px-6 py-8 sm:py-14">
       <div className="mb-8 sm:mb-10 max-w-2xl">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">
           Vendibook checkout
         </p>
         <h1 className="mt-2 text-3xl sm:text-4xl font-semibold tracking-tight text-foreground">
