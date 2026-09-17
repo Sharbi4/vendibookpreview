@@ -59,6 +59,45 @@ export async function applyAuthorization(
     return record;
   }
 
+  // PayPal can return a hold that is already dead (DENIED / VOIDED / EXPIRED).
+  // That is not an approved payment and must never read as one.
+  const normalizedStatus = String(facts.status ?? "").toLowerCase();
+  if (DEAD_AUTHORIZATION_STATES.has(normalizedStatus)) {
+    const declined = normalizedStatus === "denied";
+    const { data: dead } = await supabase
+      .from("payment_records")
+      .update({
+        paypal_authorization_id: facts.authorizationId,
+        authorization_status: normalizedStatus,
+        authorization_expires_at: facts.expiresAt,
+        payment_status: declined ? "declined" : "cancelled",
+        internal_status: declined ? "authorization_declined" : `authorization_${normalizedStatus}`,
+        last_error: { reason: `authorization_${normalizedStatus}`, source },
+        metadata: {
+          ...(record.metadata ?? {}),
+          authorization_source: source,
+        },
+      })
+      .eq("id", record.id)
+      .select()
+      .single();
+
+    await recordOrderEvent(supabase, {
+      paymentRecordId: record.id,
+      code: declined ? "payment_declined" : "payment_hold_released",
+      title: declined ? "Payment was declined" : "Temporary hold released",
+      description: declined
+        ? "PayPal did not approve this payment. Nothing was charged — you can try another payment method."
+        : "PayPal released the hold. Nothing was charged.",
+      actorRole: "system",
+      visibility: "both",
+      dedupeKey: `authorization_${normalizedStatus}:${facts.authorizationId}`,
+    }).catch(() => {});
+
+    safeLog("authorization_not_live", { reference: record.reference, state: normalizedStatus, source });
+    return dead ?? record;
+  }
+
   const { data: updated } = await supabase
     .from("payment_records")
     .update({
