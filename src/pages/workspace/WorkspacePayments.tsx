@@ -48,13 +48,7 @@ export default function WorkspacePayments() {
         </section>
 
         <section>
-          <div className="v2-section-head">
-            <div>
-              <h2>Earnings &amp; payouts</h2>
-              <p>Proceeds Vendibook has recorded for you, and where they are sent.</p>
-            </div>
-          </div>
-          <div className="v2-card v2-embedded-section">
+          <div className="v2-panel v2-embedded-section">
             <Suspense fallback={<Fallback />}>
               <PayoutsPanel />
             </Suspense>
@@ -62,13 +56,7 @@ export default function WorkspacePayments() {
         </section>
 
         <section>
-          <div className="v2-section-head">
-            <div>
-              <h2>Transactions &amp; disputes</h2>
-              <p>Every payment you&apos;ve made or received, with refunds and dispute status.</p>
-            </div>
-          </div>
-          <div className="v2-card v2-embedded-section">
+          <div className="v2-panel v2-embedded-section">
             <Suspense fallback={<Fallback />}>
               <TransactionsDisputesTab />
             </Suspense>

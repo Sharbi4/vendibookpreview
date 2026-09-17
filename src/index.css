@@ -2012,3 +2012,6 @@ html.hide-support-chat .widget-visible {
 .v2-account-row + .v2-account-row { border-top: 1px solid hsl(var(--v2-line)); }
 .v2-btn.hidden, .v2-btn-outline.hidden, .v2-btn-quiet.hidden { display: none; }
 @media (min-width: 640px) { .v2-btn.sm\:inline-flex, .v2-btn-outline.sm\:inline-flex { display: inline-flex; } }
+.v2-embedded-section .rounded-xl, .v2-embedded-section .rounded-2xl { border-radius: 12px; }
+.v2-embedded-section .shadow-lg, .v2-embedded-section .shadow-xl, .v2-embedded-section .shadow-md { box-shadow: none; }
+.v2-embedded-section > div > .border, .v2-embedded-section [class*="card"] { border-color: hsl(var(--v2-line)); }
