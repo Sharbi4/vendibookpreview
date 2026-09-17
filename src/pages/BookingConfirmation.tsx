@@ -144,6 +144,9 @@ const BookingConfirmation = ({
   const dates = useMemo(() => {
     if (!booking) return null;
     try {
+      if (booking.start_date === booking.end_date) {
+        return format(parseISO(booking.start_date), 'EEE, MMM d, yyyy');
+      }
       return `${format(parseISO(booking.start_date), 'MMM d')} – ${format(parseISO(booking.end_date), 'MMM d, yyyy')}`;
     } catch {
       return null;
