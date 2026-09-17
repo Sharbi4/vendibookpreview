@@ -35,7 +35,7 @@ const TransactionCheckoutShell = ({
   stickyAction,
   children,
 }: TransactionCheckoutShellProps) => (
-  <div className="v2-checkout">
+  <div className="sale-light v2-checkout">
     <header className="v2-checkout-topbar">
       <Link to={exitHref} className="v2-checkout-back">
         <ArrowLeft aria-hidden />
