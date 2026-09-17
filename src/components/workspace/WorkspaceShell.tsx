@@ -99,7 +99,7 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
           </Avatar>
           <span>
             <span className="truncate">{name}</span>
-            <small>View account</small>
+            <small>View profile</small>
           </span>
         </Link>
       </aside>
