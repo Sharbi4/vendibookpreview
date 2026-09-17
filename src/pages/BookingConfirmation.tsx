@@ -34,6 +34,7 @@ import SEO from '@/components/SEO';
 import { supabase } from '@/integrations/supabase/client';
 import { AddToCalendarButton } from '@/components/booking/AddToCalendarButton';
 import { DocumentUploadSection } from '@/components/documents/DocumentUploadSection';
+import { useListingRequiredDocuments } from '@/hooks/useRequiredDocuments';
 
 interface BookingRow {
   id: string;
@@ -63,6 +64,30 @@ type View = 'loading' | 'processing' | 'confirmed' | 'awaiting_host' | 'declined
 
 const money = (n: number) =>
   n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
+
+/** Documents the host requires for this booking — hidden entirely when none are required. */
+const BookingDocumentsPanel = ({
+  listingId,
+  bookingId,
+}: {
+  listingId: string;
+  bookingId: string;
+}) => {
+  const { data: requiredDocs } = useListingRequiredDocuments(listingId);
+  if (!requiredDocs || requiredDocs.length === 0) return null;
+
+  return (
+    <div className="mt-6 rounded-2xl border border-border p-4">
+      <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+        <FileText className="h-4 w-4" />
+        Documents the host needs
+      </h2>
+      <div className="mt-3">
+        <DocumentUploadSection listingId={listingId} bookingId={bookingId} />
+      </div>
+    </div>
+  );
+};
 
 interface BookingConfirmationProps {
   /** Rendered inside the dashboard workspace: no site header/footer chrome. */
@@ -192,7 +217,7 @@ const BookingConfirmation = ({
     const pickup = booking.fulfillment_selected === 'delivery' ? 'delivery' : 'pickup';
     if (view === 'confirmed') {
       return [
-        'Send the host any documents they require above — they can be uploaded any time before your start date.',
+        'If the host requires documents, upload them here any time before your start date.',
         `Message the host to agree on ${pickup} timing and the exact meeting point.`,
         'Add the dates to your calendar so you do not miss the start of the rental.',
         'Your booking and receipt stay available in your dashboard under Activity.',
@@ -201,7 +226,7 @@ const BookingConfirmation = ({
     if (view === 'awaiting_host') {
       return [
         'The host reviews your request — most hosts reply within a day.',
-        'Upload any required documents now so approval is not held up.',
+        'If the host requires documents, upload them now so approval is not held up.',
         'You will be emailed as soon as the host accepts or declines.',
         'If the host declines or does not respond, your payment is refunded to your original payment method.',
       ];
@@ -382,19 +407,7 @@ const BookingConfirmation = ({
             ) : null}
 
             {booking && view !== 'failed' && view !== 'not_found' ? (
-              <div className="mt-6 rounded-2xl border border-border p-4">
-                <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                  <FileText className="h-4 w-4" />
-                  Documents
-                </h2>
-                <div className="mt-3">
-                  <DocumentUploadSection listingId={booking.listing_id} bookingId={booking.id} />
-                </div>
-                <p className="mt-3 text-xs text-muted-foreground">
-                  If the host does not require documents, nothing will appear here and there is
-                  nothing for you to send.
-                </p>
-              </div>
+              <BookingDocumentsPanel listingId={booking.listing_id} bookingId={booking.id} />
             ) : null}
 
             {nextSteps.length > 0 ? (
