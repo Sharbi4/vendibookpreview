@@ -7,11 +7,13 @@ import { useUserTransactions } from '@/hooks/useUserTransactions';
 import { useShopperBookings } from '@/hooks/useShopperBookings';
 import { useHostBookings } from '@/hooks/useHostBookings';
 import WorkspaceHostBookings from '@/components/workspace/WorkspaceHostBookings';
+import WorkspaceListingActivity from '@/components/workspace/WorkspaceListingActivity';
 
-type Filter = 'all' | 'purchases' | 'sales' | 'rentals' | 'requests' | 'disputes';
+type Filter = 'all' | 'purchases' | 'sales' | 'rentals' | 'requests' | 'disputes' | 'listings';
 
 const FILTERS: { key: Filter; label: string }[] = [
   { key: 'all', label: 'All' },
+  { key: 'listings', label: 'Listings' },
   { key: 'purchases', label: 'Purchases' },
   { key: 'sales', label: 'Sales' },
   { key: 'rentals', label: 'Rentals' },
