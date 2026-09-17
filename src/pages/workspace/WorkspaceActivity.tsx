@@ -66,12 +66,22 @@ export default function WorkspaceActivity() {
       };
     });
 
+    const bookingMoney = (value: number | null | undefined) =>
+      value == null
+        ? null
+        : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(
+            Number(value),
+          );
+
     const buyer: Item[] = buyerBookings.map((b) => ({
       id: `buyer-${b.id}`,
       kind: b.status === 'pending' ? 'requests' : 'rentals',
       title: b.listing?.title || 'Rental request',
       counterparty: 'You requested',
-      state: b.status,
+      state:
+        b.payment_status && b.payment_status !== 'paid'
+          ? `${b.status} · payment ${b.payment_status}`
+          : b.status,
       nextAction:
         b.status === 'pending'
           ? 'Waiting on the host'
@@ -79,10 +89,10 @@ export default function WorkspaceActivity() {
             ? 'Confirmed — check your dates'
             : null,
       date: b.created_at,
-      amount: null,
+      amount: bookingMoney(b.total_price),
       reference: null,
       image: b.listing?.cover_image_url ?? null,
-      href: '/dashboard/inbox',
+      href: `/dashboard/bookings/${b.id}`,
     }));
 
     const seller: Item[] = sellerBookings.map((b) => ({
@@ -90,10 +100,13 @@ export default function WorkspaceActivity() {
       kind: b.status === 'pending' ? 'requests' : 'rentals',
       title: b.listing?.title || 'Booking request',
       counterparty: b.shopper?.full_name || 'Renter',
-      state: b.status,
+      state:
+        b.payment_status && b.payment_status !== 'paid'
+          ? `${b.status} · payment ${b.payment_status}`
+          : b.status,
       nextAction: b.status === 'pending' ? 'Approve, decline, or message' : null,
       date: b.created_at,
-      amount: null,
+      amount: bookingMoney(b.total_price),
       reference: null,
       image: b.listing?.cover_image_url ?? null,
       href: `/dashboard/bookings?id=${b.id}`,
