@@ -85,19 +85,36 @@ export function applyTaxToQuote(
 const cents = (n: unknown) => Math.round(Number(n ?? 0) * 100);
 
 /** Quote for a for-sale transaction, using the trusted sale_transactions row. */
-export function quoteSaleTransaction(tx: Record<string, any>, listingTitle: string): QuoteResult {
+export function quoteSaleTransaction(
+  tx: Record<string, any>,
+  listingTitle: string,
+  /** Who pays Vendibook Freight on this listing — resolved server-side. */
+  opts: { freightPayer?: "buyer" | "seller" } = {},
+): QuoteResult {
   const salePriceCents = cents(tx.amount);
   const freightCents = cents(tx.freight_cost);
   const deliveryCents = cents(tx.delivery_fee);
   const discountCents = cents(tx.promo_discount);
 
-  const grossCents = Math.max(0, salePriceCents + deliveryCents - discountCents);
+  // Buyer-paid Vendibook Freight is charged with the purchase, in the same
+  // PayPal order, so the buyer pays one total. Seller-paid freight is netted
+  // out of the seller's proceeds instead and never billed to the buyer.
+  const freightPayer = opts.freightPayer ?? "buyer";
+  const usesFreight = tx.fulfillment_type === "vendibook_freight" && freightCents > 0;
+  const buyerFreightCents = usesFreight && freightPayer === "buyer" &&
+      tx.freight_payment_status !== "paid"
+    ? freightCents
+    : 0;
+  const sellerFreightCents = usesFreight && freightPayer === "seller" ? freightCents : 0;
+
+  const merchandiseCents = Math.max(0, salePriceCents + deliveryCents - discountCents);
+  const grossCents = merchandiseCents + buyerFreightCents;
   const platformFeeCents = tx.platform_fee !== null && tx.platform_fee !== undefined
     ? cents(tx.platform_fee)
     : Math.round(salePriceCents * (SALE_SELLER_FEE_PERCENT / 100));
   const sellerProceedsCents = tx.seller_payout !== null && tx.seller_payout !== undefined
     ? cents(tx.seller_payout)
-    : Math.max(0, salePriceCents - platformFeeCents - freightCents);
+    : Math.max(0, salePriceCents - platformFeeCents - sellerFreightCents);
 
   const releaseAt = new Date(Date.now() + SALE_RELEASE_DAYS * 86_400_000).toISOString();
 
