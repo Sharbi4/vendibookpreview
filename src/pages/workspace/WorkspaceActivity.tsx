@@ -96,7 +96,11 @@ export default function WorkspaceActivity() {
       href: `/dashboard/bookings/${b.id}`,
     }));
 
-    const seller: Item[] = sellerBookings.map((b) => ({
+    // Pending host requests are handled in the booking manager panel above,
+    // so they are not repeated as timeline rows.
+    const seller: Item[] = sellerBookings
+      .filter((b) => b.status !== 'pending')
+      .map((b) => ({
       id: `seller-${b.id}`,
       kind: b.status === 'pending' ? 'requests' : 'rentals',
       title: b.listing?.title || 'Booking request',
