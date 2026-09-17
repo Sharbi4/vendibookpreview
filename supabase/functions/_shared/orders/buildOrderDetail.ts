@@ -247,6 +247,123 @@ async function loadTimeline(supabase: any, paymentRecordId: string, viewerRole: 
   return data ?? [];
 }
 
+type SettlementTone = 'positive' | 'pending' | 'warning' | 'critical' | 'neutral';
+
+const PAYABLE_PRESENTATION: Record<string, { label: string; tone: SettlementTone; description: string }> = {
+  awaiting_payment_confirmation: {
+    label: 'Awaiting payment confirmation',
+    tone: 'pending',
+    description: 'We are confirming the buyer payment with PayPal before settlement figures are final.',
+  },
+  pending_release: {
+    label: 'Pending release',
+    tone: 'pending',
+    description: 'Payment received. Your proceeds are scheduled for release once the release window passes.',
+  },
+  eligible_for_review: {
+    label: 'Eligible for review',
+    tone: 'pending',
+    description: 'Your proceeds are queued for Vendibook review before the payout is sent.',
+  },
+  payout_on_hold: {
+    label: 'On hold',
+    tone: 'warning',
+    description: 'Settlement is paused while an issue on this order is resolved.',
+  },
+  payout_approved: {
+    label: 'Approved',
+    tone: 'pending',
+    description: 'Your payout has been approved and is being prepared.',
+  },
+  payout_processing: {
+    label: 'Processing',
+    tone: 'pending',
+    description: 'Your payout is on its way to your payout account.',
+  },
+  payout_completed: {
+    label: 'Paid',
+    tone: 'positive',
+    description: 'Your proceeds for this order have been paid out in full.',
+  },
+  payout_failed: {
+    label: 'Payout failed',
+    tone: 'critical',
+    description: 'The payout attempt failed. Vendibook support is reviewing it.',
+  },
+  partially_refunded: {
+    label: 'Partially refunded',
+    tone: 'warning',
+    description: 'Part of this order was refunded to the buyer, so your proceeds were reduced.',
+  },
+  fully_refunded: {
+    label: 'Refunded',
+    tone: 'warning',
+    description: 'This order was fully refunded to the buyer, so no proceeds are due.',
+  },
+  disputed: {
+    label: 'Disputed',
+    tone: 'critical',
+    description: 'A dispute is open on this order. Settlement is paused until it is resolved.',
+  },
+  reversed: {
+    label: 'Reversed',
+    tone: 'critical',
+    description: 'The payment for this order was reversed.',
+  },
+  cancelled: {
+    label: 'Cancelled',
+    tone: 'neutral',
+    description: 'This order was cancelled, so no settlement is due.',
+  },
+};
+
+async function loadSettlement(
+  supabase: any,
+  record: Record<string, any>,
+  viewerRole: ViewerRole,
+): Promise<OrderDetail['settlement']> {
+  // Buyers never see the seller's proceeds breakdown.
+  if (viewerRole === 'buyer') return null;
+
+  const { data } = await supabase
+    .from('seller_payables')
+    .select(
+      'currency, gross_collected_cents, platform_fee_cents, adjustments_cents, refunded_cents, net_payout_cents, status, payout_completed_at, paid_at, hold_reason, fee_rate_pct, pro_discount_cents',
+    )
+    .eq('payment_record_id', record.id)
+    .maybeSingle();
+  if (!data) return null;
+
+  const routed = !!(record.metadata as any)?.multiparty?.merchant_id;
+  const presentation = PAYABLE_PRESENTATION[data.status] ?? {
+    label: String(data.status ?? 'Pending'),
+    tone: 'neutral' as SettlementTone,
+    description: 'Settlement status for this order.',
+  };
+
+  const description = routed && data.status === 'payout_completed'
+    ? 'PayPal settled this payment directly into your connected PayPal Business account, with the Vendibook fee already deducted.'
+    : presentation.description;
+
+  return {
+    currency: data.currency ?? record.currency ?? 'USD',
+    routed_to_connected_paypal: routed,
+    gross_collected_cents: data.gross_collected_cents ?? 0,
+    platform_fee_cents: data.platform_fee_cents ?? 0,
+    adjustments_cents: data.adjustments_cents ?? 0,
+    refunded_cents: data.refunded_cents ?? 0,
+    net_to_seller_cents: data.net_payout_cents ?? 0,
+    fee_rate_pct: data.fee_rate_pct ?? null,
+    pro_discount_cents: data.pro_discount_cents ?? 0,
+    status_code: String(data.status ?? ''),
+    status_label: presentation.label,
+    status_tone: presentation.tone,
+    status_description: description,
+    settled_at: data.payout_completed_at ?? data.paid_at ?? null,
+    hold_reason: data.hold_reason ?? null,
+  };
+}
+
 interface DomainSummary {
   fulfillmentRaw: string | null;
   fulfillmentStatus: string | null;
