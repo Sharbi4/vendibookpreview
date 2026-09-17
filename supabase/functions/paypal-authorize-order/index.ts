@@ -128,6 +128,16 @@ serve(async (req) => {
       expiresAt: authorization.expiresAt,
     }, "authorize_endpoint");
 
+    // A hold PayPal already killed is not an approved payment.
+    if (DEAD_AUTHORIZATION_STATES.has(String(authorization.status ?? "").toLowerCase())) {
+      return jsonError(
+        402,
+        "payment_declined",
+        "PayPal couldn't authorize that payment method. Nothing was charged — please try another one.",
+      );
+    }
+
+
     await auditPayment(admin, {
       actorId: user.id,
       actorRole: "user",
