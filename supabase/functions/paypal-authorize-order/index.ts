@@ -4,7 +4,7 @@ import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_
 import { getPayPalOrder, PayPalError, safeLog } from "../_shared/paypal.ts";
 import { getPaymentProvider, PaymentProviderError } from "../_shared/payments/index.ts";
 import { supportsAuthorization } from "../_shared/payments/types.ts";
-import { applyAuthorization } from "../_shared/paypalAuthorization.ts";
+import { applyAuthorization, DEAD_AUTHORIZATION_STATES } from "../_shared/paypalAuthorization.ts";
 import { auditPayment, requestIp } from "../_shared/paymentAudit.ts";
 import { getListingPurchaseState, LISTING_UNAVAILABLE_MESSAGE } from "../_shared/listingGuard.ts";
 
