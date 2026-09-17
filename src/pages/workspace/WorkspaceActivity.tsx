@@ -215,7 +215,7 @@ export default function WorkspaceActivity() {
               ))}
             </section>
           ))
-        ) : (
+        ) : hasHostBookings && (filter === 'all' || filter === 'requests') ? null : (
           <div className="v2-panel v2-empty">
             <ImageIcon className="opacity-40" />
             <p>
