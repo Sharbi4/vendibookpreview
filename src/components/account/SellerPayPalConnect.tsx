@@ -7,6 +7,7 @@ import { toast } from 'sonner';
 import {
   AlertTriangle,
   CheckCircle2,
+  CreditCard,
   ExternalLink,
   RefreshCw,
   Unlink,
@@ -71,21 +72,26 @@ export default function SellerPayPalConnect() {
   useEffect(() => {
     let cancelled = false;
     (async () => {
+      let caps: { enabled?: boolean } | null = null;
       try {
         const res = await fetch(
           `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/paypal-seller-onboarding`,
         );
-        const json = await res.json().catch(() => null);
-        if (!cancelled) setEnabled(json?.enabled === true);
+        caps = await res.json().catch(() => null);
       } catch {
         if (!cancelled) setEnabled(false);
         return;
       }
-      if (!cancelled && json_ok(json)) await loadConnection();
+      if (cancelled) return;
+      const on = caps?.enabled === true;
+      setEnabled(on);
+      if (!on) return;
+
+      await loadConnection();
 
       // Returning from PayPal: refresh status once, then clean the URL.
       const params = new URLSearchParams(window.location.search);
-      if (!cancelled && json_ok(json) && params.get('paypal_return') === '1' && !handledReturn.current) {
+      if (params.get('paypal_return') === '1' && !handledReturn.current) {
         handledReturn.current = true;
         await refreshStatus();
         params.delete('paypal_return');
@@ -157,17 +163,7 @@ export default function SellerPayPalConnect() {
   return (
     <div className="p-5 flex items-start gap-4 border-t border-border">
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-muted/50">
-        <svg viewBox="0 0 24 24" className="h-4 w-4" aria-hidden="true">
-          <path
-            fill="#003087"
-            d="M7.1 21.4h3.3l.8-4.9h2.6c4.4 0 7-2.1 7.7-6.2.3-1.9.1-3.4-.6-4.5C20 4.5 18.3 3.9 16 3.9H8.4c-.5 0-.9.4-1 .9L4.9 20.2c-.1.6.3 1.1.9 1.1h2.9l.8-4.9.5 5z"
-          />
-          <path
-            fill="#009cde"
-            d="M21.6 8.9c-.8 3.9-3.4 5.9-7.7 5.9h-2.6l-1.1 6.6h-3l-.4 2.6c-.1.6.3 1.1.9 1.1h3.2c.5 0 .9-.4 1-.9l1-6h1.9c4.1 0 6.8-2 7.5-5.9.2-1.1.1-2.2-.7-3.5z"
-            opacity=".6"
-          />
-        </svg>
+        <CreditCard className="h-4 w-4" />
       </div>
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 flex-wrap">
@@ -304,8 +300,4 @@ export default function SellerPayPalConnect() {
       </div>
     </div>
   );
-}
-
-function json_ok(json: unknown): boolean {
-  return !!json && typeof json === 'object' && (json as { enabled?: boolean }).enabled === true;
 }
