@@ -42,6 +42,21 @@ const mobileNav = [
   ['Account', '/dashboard/account', Settings],
 ] as const;
 
+const isMobileDestinationActive = (to: string, pathname: string) => {
+  if (to === '/dashboard') return pathname === '/dashboard';
+  if (to === '/search') return pathname.startsWith('/search');
+  if (to === '/dashboard/listings') return pathname.startsWith('/dashboard/listings');
+  if (to === '/dashboard/messages') return pathname.startsWith('/dashboard/messages');
+
+  return [
+    '/dashboard/account',
+    '/dashboard/profile',
+    '/dashboard/notifications',
+    '/dashboard/payments',
+    '/dashboard/seller-setup',
+  ].some((path) => pathname.startsWith(path));
+};
+
 export default function WorkspaceShell({ children }: { children: ReactNode }) {
   const { user, profile, isLoading } = useAuth();
   const navigate = useNavigate();
@@ -140,17 +155,26 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
       </div>
 
       <nav className="v2-mobile-nav" aria-label="Workspace navigation">
-        {mobileNav.map(([label, to, Icon]) => (
-          <NavLink
-            key={to}
-            to={to}
-            end={to === '/dashboard'}
-            className={({ isActive }) => cn('v2-mobile-link', isActive && 'is-active')}
-          >
-            <Icon />
-            <span>{label}</span>
-          </NavLink>
-        ))}
+        <div className="v2-mobile-nav-inner">
+          {mobileNav.map(([label, to, Icon]) => {
+            const isActive = isMobileDestinationActive(to, location.pathname);
+
+            return (
+              <NavLink
+                key={to}
+                to={to}
+                aria-current={isActive ? 'page' : undefined}
+                className={cn('v2-mobile-link', isActive && 'is-active')}
+              >
+                <span className="v2-mobile-icon">
+                  <Icon />
+                  {label === 'Messages' && unreadMessages > 0 && <span className="v2-mobile-alert-dot" />}
+                </span>
+                <span>{label}</span>
+              </NavLink>
+            );
+          })}
+        </div>
       </nav>
     </div>
   );
