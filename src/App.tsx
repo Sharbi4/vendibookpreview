@@ -54,6 +54,8 @@ const Dashboard = lazy(() => import("./pages/Dashboard"));
 const WorkspaceOnboarding = lazy(() => import("./pages/workspace/WorkspaceOnboarding"));
 const WorkspaceHome = lazy(() => import("./pages/workspace/WorkspaceHome"));
 const WorkspaceListings = lazy(() => import("./pages/workspace/WorkspaceListings"));
+const WorkspaceListingNew = lazy(() => import("./pages/workspace/WorkspaceListingNew"));
+const WorkspaceListingEditor = lazy(() => import("./pages/workspace/WorkspaceListingEditor"));
 const WorkspaceActivity = lazy(() => import("./pages/workspace/WorkspaceActivity"));
 const WorkspacePayments = lazy(() => import("./pages/workspace/WorkspacePayments"));
 const WorkspaceAccount = lazy(() => import("./pages/workspace/WorkspaceAccount"));
@@ -295,6 +297,8 @@ const AnimatedRoutes = () => {
           {/* Unified workspace — one Vendibook experience for every signed-in user */}
           <Route path="/dashboard" element={<PageTransition><WorkspaceHome /></PageTransition>} />
           <Route path="/dashboard/listings" element={<PageTransition><WorkspaceListings /></PageTransition>} />
+          <Route path="/dashboard/listings/new" element={<PageTransition><WorkspaceListingNew /></PageTransition>} />
+          <Route path="/dashboard/listings/:listingId/edit" element={<PageTransition><WorkspaceListingEditor /></PageTransition>} />
           <Route path="/dashboard/activity" element={<PageTransition><WorkspaceActivity /></PageTransition>} />
           <Route path="/dashboard/messages" element={<PageTransition><WorkspaceMessages /></PageTransition>} />
           <Route path="/dashboard/messages/:conversationId" element={<PageTransition><WorkspaceMessages /></PageTransition>} />
