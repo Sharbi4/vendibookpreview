@@ -6,6 +6,7 @@ import SellerPayPalConnect from '@/components/account/SellerPayPalConnect';
 import { PayPalWordmark } from '@/components/brand/ProviderLogos';
 import WorkspaceBookingPayments from '@/components/workspace/WorkspaceBookingPayments';
 import PayoutCalendar from '@/components/workspace/PayoutCalendar';
+import SellerPayoutBalance from '@/components/workspace/SellerPayoutBalance';
 
 const PayoutsPanel = lazy(() => import('@/components/dashboard/tabs/PayoutsPanel'));
 const TransactionsDisputesTab = lazy(
@@ -55,6 +56,10 @@ export default function WorkspacePayments() {
             </Link>
           </div>
           <SellerPayPalConnect showWhenDisabled variant="dark" />
+        </section>
+
+        <section className="v2-panel">
+          <SellerPayoutBalance />
         </section>
 
         <section className="v2-panel">
