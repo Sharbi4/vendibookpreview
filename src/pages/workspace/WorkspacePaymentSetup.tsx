@@ -126,10 +126,16 @@ export default function WorkspacePaymentSetup() {
     <WorkspaceShell>
       <div className="v2-page-stack">
         <header className="v2-page-heading">
-          <Link to="/dashboard/payments" className="v2-btn-quiet mb-3 inline-flex w-fit">
-            <ArrowLeft className="h-4 w-4" />
-            Back to Payments
-          </Link>
+          <div className="mb-3 flex flex-wrap gap-2">
+            <Link to="/dashboard/payments" className="v2-btn-quiet inline-flex w-fit">
+              <ArrowLeft className="h-4 w-4" />
+              Back to Payments
+            </Link>
+            <Link to="/dashboard/seller-setup" className="v2-btn-quiet inline-flex w-fit">
+              Full seller setup
+              <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
           <p className="v2-eyebrow">Payment setup</p>
           <h1>Get ready to accept payments</h1>
           <p>

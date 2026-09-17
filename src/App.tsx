@@ -59,6 +59,7 @@ const WorkspaceListingEditor = lazy(() => import("./pages/workspace/WorkspaceLis
 const WorkspaceActivity = lazy(() => import("./pages/workspace/WorkspaceActivity"));
 const WorkspacePayments = lazy(() => import("./pages/workspace/WorkspacePayments"));
 const WorkspacePaymentSetup = lazy(() => import("./pages/workspace/WorkspacePaymentSetup"));
+const WorkspaceSellerOnboarding = lazy(() => import("./pages/workspace/WorkspaceSellerOnboarding"));
 const WorkspaceAccount = lazy(() => import("./pages/workspace/WorkspaceAccount"));
 const WorkspaceMessages = lazy(() => import("./pages/workspace/WorkspaceMessages"));
 const WorkspaceNotifications = lazy(() => import("./pages/workspace/WorkspaceNotifications"));
@@ -309,6 +310,7 @@ const AnimatedRoutes = () => {
           <Route path="/dashboard/saved" element={<PageTransition><WorkspaceSaved /></PageTransition>} />
           <Route path="/dashboard/payments" element={<PageTransition><WorkspacePayments /></PageTransition>} />
           <Route path="/dashboard/payments/setup" element={<PageTransition><WorkspacePaymentSetup /></PageTransition>} />
+          <Route path="/dashboard/seller-setup" element={<PageTransition><WorkspaceSellerOnboarding /></PageTransition>} />
           <Route path="/dashboard/account" element={<PageTransition><WorkspaceAccount /></PageTransition>} />
           <Route path="/dashboard/classic" element={<PageTransition><Dashboard /></PageTransition>} />
           {/* Legacy workspace aliases */}
