@@ -131,13 +131,13 @@ const HostDashboard = () => {
             label="Active listings"
             value={stats.published}
             hint={stats.drafts > 0 ? `${stats.drafts} draft${stats.drafts > 1 ? 's' : ''}` : 'All live'}
-            href="/host/listings"
+            href="/dashboard/listings"
           />
           <KpiCard
             label="Pending requests"
             value={bookingStats.pending}
             hint={bookingStats.pending > 0 ? 'Awaiting reply' : 'All clear'}
-            href="/host/bookings"
+            href="/dashboard/bookings"
           />
           <KpiCard
             label="Open offers"
