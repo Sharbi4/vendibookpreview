@@ -383,6 +383,17 @@ export default function WorkspacePaymentSetup() {
               </p>
             )}
 
+            {needsOnlineCheckout.length > 1 && (
+              <button
+                type="button"
+                className="v2-btn w-fit"
+                onClick={enableAllOnlineCheckout}
+                disabled={bulkSaving}
+              >
+                {bulkSaving ? 'Saving…' : `Turn on for all ${needsOnlineCheckout.length} listings`}
+              </button>
+            )}
+
             {needsOnlineCheckout.map((listing) => (
               <div
                 key={listing.id}
