@@ -169,6 +169,10 @@ export default function WorkspaceActivity() {
 
         {(filter === 'all' || filter === 'requests') && <WorkspaceHostBookings />}
 
+        {(filter === 'all' || filter === 'sales' || filter === 'listings') && (
+          <WorkspaceListingActivity />
+        )}
+
         {groups.length ? (
           groups.map((group) => (
             <section className="v2-panel" key={group.label}>
