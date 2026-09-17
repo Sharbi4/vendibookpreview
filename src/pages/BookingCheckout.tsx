@@ -708,10 +708,10 @@ const BookingCheckout = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
+      <div className="sale-light min-h-screen flex flex-col bg-background">
         <Header />
         <div className="flex-1 flex items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <Loader2 className="h-8 w-8 animate-spin text-foreground" />
         </div>
         <Footer />
       </div>
@@ -720,7 +720,7 @@ const BookingCheckout = () => {
 
   if (error || !listing) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
+      <div className="sale-light min-h-screen flex flex-col bg-background">
         <Header />
         <div className="flex-1 container py-16 text-center">
           <h1 className="text-2xl font-bold text-foreground mb-4">Listing not found</h1>
@@ -739,7 +739,7 @@ const BookingCheckout = () => {
   // For vendor spaces with multiple slots, require slot selection before dates
   if (hasMultipleSlots && !selectedSlot) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
+      <div className="sale-light min-h-screen flex flex-col bg-background">
         <Header />
         <main className="flex-1 container py-8 max-w-2xl">
           <Button 
@@ -829,7 +829,7 @@ const BookingCheckout = () => {
           
           {selectedSlot && (
             <div className="mt-6 text-center">
-              <Button onClick={() => setShowDateModal(true)} variant="cta" size="lg">
+              <Button onClick={() => setShowDateModal(true)} size="lg" className="bg-foreground text-background hover:bg-foreground/90 rounded-xl font-semibold">
                 <Calendar className="h-4 w-4 mr-2" />
                 Continue to Select Dates
               </Button>
@@ -858,7 +858,7 @@ const BookingCheckout = () => {
 
   if (!startDate || !endDate) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
+      <div className="sale-light min-h-screen flex flex-col bg-background">
         <Header />
         <div className="flex-1 container py-16 text-center">
           <h1 className="text-2xl font-bold text-foreground mb-4">Select your dates</h1>
@@ -899,10 +899,10 @@ const BookingCheckout = () => {
 
   return (
 
-    <div className="min-h-screen flex flex-col bg-background bg-[radial-gradient(1100px_520px_at_50%_-6%,hsl(var(--primary)/0.06),transparent_70%)]">
+    <div className="sale-light min-h-screen flex flex-col bg-background">
       <Header />
-      
-      <main className="flex-1 container py-8 lg:py-14">
+
+      <main className="flex-1 container py-8 lg:py-14 pb-28 lg:pb-14">
         {/* Back Button */}
         <Button 
           variant="ghost" 
@@ -987,7 +987,7 @@ const BookingCheckout = () => {
                               Edit
                             </Button>
                           </div>
-                          <Button className="w-full h-12" onClick={() => handleCompleteStep(STEP_CONTACT)}>
+                          <Button className="w-full h-12 bg-foreground text-background hover:bg-foreground/90 rounded-xl font-semibold" onClick={() => handleCompleteStep(STEP_CONTACT)}>
                             Continue
                           </Button>
                         </>
@@ -1147,7 +1147,7 @@ const BookingCheckout = () => {
                       <Button
                         onClick={() => handleCompleteStep(STEP_FULFILLMENT)}
                         disabled={!isStepFulfillmentComplete}
-                        className="w-full h-12"
+                        className="w-full h-12 bg-foreground text-background hover:bg-foreground/90 rounded-xl font-semibold"
                       >
                         Continue to review
                       </Button>
