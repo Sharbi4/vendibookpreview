@@ -295,7 +295,12 @@ const AnimatedRoutes = () => {
           <Route path="/dashboard" element={<PageTransition><WorkspaceHome /></PageTransition>} />
           <Route path="/dashboard/listings" element={<PageTransition><WorkspaceListings /></PageTransition>} />
           <Route path="/dashboard/activity" element={<PageTransition><WorkspaceActivity /></PageTransition>} />
-          <Route path="/dashboard/inbox" element={<PreserveQueryRedirect to="/messages" />} />
+          <Route path="/dashboard/messages" element={<PageTransition><WorkspaceMessages /></PageTransition>} />
+          <Route path="/dashboard/messages/:conversationId" element={<PageTransition><WorkspaceMessages /></PageTransition>} />
+          <Route path="/dashboard/inbox" element={<PreserveQueryRedirect to="/dashboard/messages" />} />
+          <Route path="/dashboard/notifications" element={<PageTransition><WorkspaceNotifications /></PageTransition>} />
+          <Route path="/dashboard/notifications/settings" element={<PageTransition><NotificationPreferences /></PageTransition>} />
+          <Route path="/dashboard/saved" element={<PageTransition><WorkspaceSaved /></PageTransition>} />
           <Route path="/dashboard/payments" element={<PageTransition><WorkspacePayments /></PageTransition>} />
           <Route path="/dashboard/account" element={<PageTransition><WorkspaceAccount /></PageTransition>} />
           <Route path="/dashboard/classic" element={<PageTransition><Dashboard /></PageTransition>} />
@@ -329,14 +334,16 @@ const AnimatedRoutes = () => {
           <Route path="/share/listing/:id" element={<ShareRedirect />} />
           <Route path="/share/:source/:slug" element={<BlogShareRedirect />} />
           {/* Profile routes */}
-          <Route path="/profile" element={<Navigate to="/account" replace />} />
-          <Route path="/profile/edit" element={<Navigate to="/account" replace />} />
-          <Route path="/settings" element={<Navigate to="/account" replace />} />
+          <Route path="/profile" element={<Navigate to="/dashboard/account" replace />} />
+          <Route path="/profile/edit" element={<Navigate to="/dashboard/account" replace />} />
+          <Route path="/settings" element={<Navigate to="/dashboard/account" replace />} />
           <Route path="/profile/:id" element={<Navigate to={`/u/${window.location.pathname.split('/').pop()}`} replace />} />
-          {/* Private account route - owner only */}
-          <Route path="/account" element={<PageTransition><Account /></PageTransition>} />
-          <Route path="/favorites" element={<PageTransition><Favorites /></PageTransition>} />
-          <Route path="/account/profile" element={<Navigate to="/account" replace />} />
+          {/* Private account routes — consolidated into the dashboard workspace */}
+          <Route path="/account" element={<PreserveQueryRedirect to="/dashboard/account" />} />
+          <Route path="/account/classic" element={<PageTransition><Account /></PageTransition>} />
+          <Route path="/favorites" element={<PreserveQueryRedirect to="/dashboard/saved" />} />
+          <Route path="/favorites/classic" element={<PageTransition><Favorites /></PageTransition>} />
+          <Route path="/account/profile" element={<Navigate to="/dashboard/account" replace />} />
           {/* Public profile route - accessible to all */}
           <Route path="/u/:userId" element={<PageTransition><PublicProfile /></PageTransition>} />
           <Route path="/privacy" element={<PageTransition><Privacy /></PageTransition>} />
