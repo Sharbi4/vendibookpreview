@@ -12,7 +12,9 @@
  *   PAYPAL_ENVIRONMENT   'sandbox' | 'live'  (defaults to 'sandbox')
  */
 
-import { multipartyEnvEnabled } from "./paypalMultiparty.ts";
+// NOTE: the Connected Path rollout flag lives in ./paypalMultiparty.ts. It is
+// intentionally NOT imported here — this layer creates first-party orders only.
+
 
 const LIVE_BASE = "https://api-m.paypal.com";
 
