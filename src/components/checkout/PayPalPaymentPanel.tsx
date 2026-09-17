@@ -433,7 +433,7 @@ const PayPalPaymentPanel = ({
             ) : null}
 
 
-            <div className="px-7 py-6 space-y-5">
+            <div className={embedded ? 'space-y-5' : 'px-7 py-6 space-y-5'}>
               {state === 'success' ? (
                 <div className="py-10 flex flex-col items-center justify-center text-center animate-fade-in">
                   <div className="relative">
