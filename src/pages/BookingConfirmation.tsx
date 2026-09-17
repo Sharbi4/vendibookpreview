@@ -171,15 +171,25 @@ const BookingConfirmation = ({
           : Loader2;
 
   return (
-    <div className="min-h-screen flex flex-col bg-background sale-light">
-      <SEO
-        title="Booking confirmation | Vendibook"
-        description="Your Vendibook rental booking status and next steps."
-        noindex
-      />
-      <Header />
-      <main className="flex-1 px-4 py-10 sm:py-16">
-        <div className="mx-auto w-full max-w-2xl space-y-6">
+    <div
+      className={
+        embedded
+          ? 'sale-light flex flex-col'
+          : 'min-h-screen flex flex-col bg-background sale-light'
+      }
+    >
+      {embedded ? null : (
+        <SEO
+          title="Booking confirmation | Vendibook"
+          description="Your Vendibook rental booking status and next steps."
+          noindex
+        />
+      )}
+      {embedded ? null : <Header />}
+      <main className={embedded ? 'flex-1' : 'flex-1 px-4 py-10 sm:py-16'}>
+        <div
+          className={embedded ? 'w-full space-y-6' : 'mx-auto w-full max-w-2xl space-y-6'}
+        >
           <div className="rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-sm">
             <div className="flex items-start gap-4">
               <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
