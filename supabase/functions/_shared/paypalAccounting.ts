@@ -275,6 +275,11 @@ export async function ensureSellerPayable(
 ) {
   if (!record.seller_id || record.seller_proceeds_cents <= 0) return null;
 
+  // Connected Path: PayPal already settled the seller's share straight into
+  // their own account, so this payable is a record of a completed payout —
+  // never something the manual payout queue should pay again.
+  const routed = (record.metadata as any)?.multiparty?.routed === true;
+
   const { data, error } = await supabase
     .from("seller_payables")
     .insert({
