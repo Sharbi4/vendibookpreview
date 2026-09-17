@@ -719,8 +719,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   // For vendor spaces with multiple slots, require slot selection before dates
   if (hasMultipleSlots && !selectedSlot) {
     return (
-      <div className="sale-light v2-commerce min-h-screen flex flex-col bg-background">
-        <Header />
+      <Frame>
         <main className="flex-1 container py-8 max-w-2xl">
           <Button
             variant="ghost"
@@ -831,8 +830,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
             onDatesSelected={handleDatesSelected}
           />
         </main>
-        <Footer />
-      </div>
+      </Frame>
     );
   }
 
@@ -963,7 +961,13 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   );
 
   return (
-    <div className="sale-light v2-commerce min-h-screen flex flex-col bg-background">
+    <div
+      className={
+        embedded
+          ? 'sale-light v2-commerce v2-wizard-embed flex flex-col'
+          : 'sale-light v2-commerce min-h-screen flex flex-col bg-background'
+      }
+    >
       <SEO
         title={`Book ${listing.title} | Vendibook`}
         description={`Complete your booking for ${listing.title}.`}
