@@ -100,7 +100,7 @@ export default function WorkspaceHome() {
         id: 'paypal-action',
         label: 'PayPal needs your attention',
         hint: 'Resolve the issue on your PayPal account so you can receive payments.',
-        to: '/dashboard/payments',
+        to: '/dashboard/payments/setup',
         icon: AlertTriangle,
         tone: 'warn',
       });
@@ -109,7 +109,7 @@ export default function WorkspaceHome() {
         id: 'paypal-connect',
         label: 'Accept secure online payments',
         hint: 'Connect PayPal to let qualified buyers pay through Vendibook.',
-        to: '/dashboard/payments',
+        to: '/dashboard/payments/setup',
         icon: CreditCard,
       });
     if (disputes.length)
@@ -427,7 +427,7 @@ export default function WorkspaceHome() {
                 <span>Payments you made</span>
               </div>
             </div>
-            <Link className="v2-task-row" to="/dashboard/payments">
+            <Link className="v2-task-row" to={paypalReady ? '/dashboard/payments' : '/dashboard/payments/setup'}>
               <span className={`v2-task-marker ${paypalReady ? 'is-ok' : 'is-warn'}`}>
                 <CreditCard />
               </span>
