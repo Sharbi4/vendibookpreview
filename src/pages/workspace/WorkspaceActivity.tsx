@@ -122,8 +122,12 @@ export default function WorkspaceActivity() {
     );
   }, [transactions, buyerBookings, sellerBookings]);
 
+  const hasHostBookings = sellerBookings.length > 0;
   const available = FILTERS.filter(
-    (f) => f.key === 'all' || items.some((item) => item.kind === f.key),
+    (f) =>
+      f.key === 'all' ||
+      (f.key === 'requests' && hasHostBookings) ||
+      items.some((item) => item.kind === f.key),
   );
   const shown = filter === 'all' ? items : items.filter((item) => item.kind === filter);
 
