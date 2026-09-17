@@ -261,6 +261,21 @@ const NotificationCenter = () => {
           )}
         </ScrollArea>
 
+        <Separator />
+        <div className="p-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full text-xs font-medium"
+            onClick={() => {
+              setOpen(false);
+              navigate('/dashboard/notifications');
+            }}
+          >
+            View all notifications
+          </Button>
+        </div>
+
         {notifications.length > 0 && (
           <>
             <Separator />
