@@ -195,13 +195,15 @@ export async function paypalRequest<T = any>(
         ...(extraHeaders ?? {}),
       };
       if (idempotencyKey) headers["PayPal-Request-Id"] = idempotencyKey;
-      // Acting on behalf of an onboarded seller is Connected Path behaviour and
-      // stays unreachable until the server-side switch is explicitly on.
-      if (actAsMerchantId && multipartyEnvEnabled()) {
+      // Identifies an onboarded seller on merchant-scoped calls (Step 2
+      // onboarding/status). It never changes who is paid on an order — orders
+      // stay first-party.
+      if (actAsMerchantId) {
         const assertion = buildAuthAssertion(actAsMerchantId);
         // The assertion itself is never logged — only the merchant it names.
         if (assertion) headers["PayPal-Auth-Assertion"] = assertion;
       }
+
 
 
       const res = await fetch(`${paypalApiBase()}${path}`, {
@@ -430,7 +432,7 @@ export async function createPayPalOrder(input: CreateOrderInput) {
         amount,
         items: buildItems(input, currency, itemTotalCents),
         ...(shipping ? { shipping } : {}),
-        ...buildMultiparty(input, currency),
+        
         ...(input.softDescriptor
           ? { soft_descriptor: input.softDescriptor.slice(0, 22) }
           : {}),
