@@ -22,6 +22,7 @@ import { useToast } from '@/hooks/use-toast';
 import SEO from '@/components/SEO';
 import { ReportIssueButton } from '@/components/support/ReportIssueButton';
 import { GetHelpWithOrder } from '@/components/trust/GetHelpWithOrder';
+import OrderChargesSummary from '@/components/orders/OrderChargesSummary';
 
 
 const SHIPPING_STATUS_CONFIG = {
