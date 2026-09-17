@@ -380,36 +380,15 @@ function buildShipping(address?: OrderShippingAddress | null) {
   };
 }
 
-/**
- * Multiparty routing (Connected Path). DORMANT: it is only reachable when the
- * server-side `PAYPAL_MULTIPARTY_ENABLED` environment switch is explicitly
- * "true", which it is not in any current environment. With the switch off,
- * a payee/platform fee passed by any caller is refused outright rather than
- * silently ignored, so money routing cannot drift by accident.
+/*
+ * Connected Path (multiparty) order routing is intentionally NOT implemented
+ * here. Every order created by Vendibook today is first-party: Vendibook is
+ * the payee and sellers are paid by the existing manual payout process.
+ * `purchase_units[].payee` and `payment_instruction.platform_fees` will be
+ * added deliberately in Step 3, behind the server-side paypalMultiparty flag
+ * and per-seller readiness. Do not reintroduce them earlier.
  */
-function buildMultiparty(input: CreateOrderInput, currency: string) {
-  if (!input.payeeMerchantId && !input.platformFeeCents) return {};
-  if (!multipartyEnvEnabled()) {
-    throw new PayPalError(
-      "Multiparty payouts are not enabled in this environment.",
-      500,
-      "MULTIPARTY_DISABLED",
-    );
-  }
-  if (!input.payeeMerchantId) return {};
-  const fee = Math.max(0, Math.round(input.platformFeeCents ?? 0));
-  return {
-    payee: { merchant_id: input.payeeMerchantId },
-    ...(fee > 0
-      ? {
-        payment_instruction: {
-          disbursement_mode: "INSTANT",
-          platform_fees: [{ amount: money(fee, currency) }],
-        },
-      }
-      : {}),
-  };
-}
+
 
 export async function createPayPalOrder(input: CreateOrderInput) {
   const currency = (input.currency ?? "USD").toUpperCase();
