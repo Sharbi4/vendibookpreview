@@ -26,7 +26,7 @@ export default function WorkspaceProfile() {
   const { data: sold = [], isLoading: soldLoading } = useSellerSoldItems();
   const { status, isReady, isLoading: paypalLoading } = useMyPayPalConnection();
 
-  const name = profile?.full_name || profile?.business_name || user?.email || 'Your profile';
+  const name = profile?.full_name || user?.email || 'Your profile';
   const live = listings.filter((l) => l.status === 'published');
 
   const readinessCopy = paypalLoading
@@ -72,7 +72,7 @@ export default function WorkspaceProfile() {
         <section className="v2-panel p-5">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-base font-semibold">Listings</h2>
-            <Link to="/dashboard/listings" className="v2-link text-sm">
+            <Link to="/dashboard/listings" className="text-sm font-semibold underline underline-offset-4">
               Manage listings
             </Link>
           </div>
@@ -86,7 +86,7 @@ export default function WorkspaceProfile() {
           ) : listings.length === 0 ? (
             <p className="text-sm text-muted-foreground mt-3">
               You don&apos;t have any listings yet.{' '}
-              <Link to="/dashboard/listings/new" className="v2-link">
+              <Link to="/dashboard/listings/new" className="font-semibold underline underline-offset-4">
                 Create your first one
               </Link>
               .
