@@ -83,8 +83,11 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
             >
               <Icon />
               {label}
-              {label === 'Inbox' && unreadMessages > 0 && (
+              {label === 'Messages' && unreadMessages > 0 && (
                 <span className="v2-count">{unreadMessages}</span>
+              )}
+              {label === 'Notifications' && unreadCount > 0 && (
+                <span className="v2-count">{unreadCount}</span>
               )}
             </NavLink>
           ))}
@@ -115,14 +118,14 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
             />
           </form>
           <div className="flex items-center gap-1.5">
-            <Link className="v2-icon-action" to="/dashboard/inbox" aria-label="Inbox">
+            <Link className="v2-icon-action" to="/dashboard/messages" aria-label="Messages">
               <Inbox />
               {unreadMessages > 0 && <span className="v2-alert-dot" />}
             </Link>
             <Link
               className="v2-icon-action"
-              to="/notification-preferences"
-              aria-label="Notifications"
+              to="/dashboard/notifications"
+              aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'}
             >
               <Bell />
               {unreadCount > 0 && <span className="v2-alert-dot" />}
