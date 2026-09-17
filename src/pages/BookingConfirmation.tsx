@@ -23,12 +23,17 @@ import {
   MapPin,
   MessageSquare,
   AlertCircle,
+  FileText,
+  ShieldCheck,
+  Truck,
 } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { Button } from '@/components/ui/button';
 import SEO from '@/components/SEO';
 import { supabase } from '@/integrations/supabase/client';
+import { AddToCalendarButton } from '@/components/booking/AddToCalendarButton';
+import { DocumentUploadSection } from '@/components/documents/DocumentUploadSection';
 
 interface BookingRow {
   id: string;
@@ -36,10 +41,20 @@ interface BookingRow {
   payment_status: string | null;
   start_date: string;
   end_date: string;
+  start_time: string | null;
+  end_time: string | null;
+  is_hourly_booking: boolean | null;
+  duration_hours: number | null;
+  slot_name: string | null;
   total_price: number | null;
+  tax_amount: number | null;
+  delivery_fee_snapshot: number | null;
   deposit_amount: number | null;
+  deposit_status: string | null;
   is_instant_book: boolean | null;
   fulfillment_selected: string | null;
+  delivery_address: string | null;
+  address_snapshot: string | null;
   listing_id: string;
   listings?: { title: string | null; cover_image_url: string | null; city: string | null; state: string | null } | null;
 }
@@ -78,7 +93,7 @@ const BookingConfirmation = ({
       const { data, error } = await supabase
         .from('booking_requests')
         .select(
-          'id, status, payment_status, start_date, end_date, total_price, deposit_amount, is_instant_book, fulfillment_selected, listing_id, listings(title, cover_image_url, city, state)',
+          'id, status, payment_status, start_date, end_date, start_time, end_time, is_hourly_booking, duration_hours, slot_name, total_price, tax_amount, delivery_fee_snapshot, deposit_amount, deposit_status, is_instant_book, fulfillment_selected, delivery_address, address_snapshot, listing_id, listings(title, cover_image_url, city, state)',
         )
         .eq('id', bookingId)
         .maybeSingle();
@@ -129,11 +144,83 @@ const BookingConfirmation = ({
   const dates = useMemo(() => {
     if (!booking) return null;
     try {
+      if (booking.start_date === booking.end_date) {
+        return format(parseISO(booking.start_date), 'EEE, MMM d, yyyy');
+      }
       return `${format(parseISO(booking.start_date), 'MMM d')} – ${format(parseISO(booking.end_date), 'MMM d, yyyy')}`;
     } catch {
       return null;
     }
   }, [booking]);
+
+  const times = useMemo(() => {
+    if (!booking?.is_hourly_booking) return null;
+    const start = booking.start_time?.slice(0, 5);
+    const end = booking.end_time?.slice(0, 5);
+    if (!start || !end) return null;
+    const hours = booking.duration_hours ? ` (${booking.duration_hours} hrs)` : '';
+    return `${start} – ${end}${hours}`;
+  }, [booking]);
+
+  const locationLine = useMemo(() => {
+    if (!booking) return null;
+    if (booking.fulfillment_selected === 'delivery') {
+      return booking.delivery_address ?? null;
+    }
+    if (booking.address_snapshot) return booking.address_snapshot;
+    const city = booking.listings?.city;
+    const state = booking.listings?.state;
+    return city && state ? `${city}, ${state}` : (city ?? null);
+  }, [booking]);
+
+  const deliveryFee = Number(booking?.delivery_fee_snapshot ?? 0);
+  const taxAmount = Number(booking?.tax_amount ?? 0);
+
+  const depositNote = useMemo(() => {
+    const status = booking?.deposit_status;
+    if (status === 'paid' || status === 'held' || status === 'authorized') {
+      return 'This deposit is held against damage and returned after the rental unless the host reports an issue.';
+    }
+    if (status === 'refunded') {
+      return 'This deposit has been returned to your original payment method.';
+    }
+    return 'This deposit is arranged directly with the host and is not part of the amount charged by Vendibook.';
+  }, [booking]);
+
+  const nextSteps = useMemo(() => {
+    if (!booking) return [] as string[];
+    const pickup = booking.fulfillment_selected === 'delivery' ? 'delivery' : 'pickup';
+    if (view === 'confirmed') {
+      return [
+        'Send the host any documents they require above — they can be uploaded any time before your start date.',
+        `Message the host to agree on ${pickup} timing and the exact meeting point.`,
+        'Add the dates to your calendar so you do not miss the start of the rental.',
+        'Your booking and receipt stay available in your dashboard under Activity.',
+      ];
+    }
+    if (view === 'awaiting_host') {
+      return [
+        'The host reviews your request — most hosts reply within a day.',
+        'Upload any required documents now so approval is not held up.',
+        'You will be emailed as soon as the host accepts or declines.',
+        'If the host declines or does not respond, your payment is refunded to your original payment method.',
+      ];
+    }
+    if (view === 'processing') {
+      return [
+        'We are recording your payment with PayPal — stay on this page for a few seconds.',
+        'Once recorded, your dates are held and the host is notified.',
+      ];
+    }
+    if (view === 'declined') {
+      return [
+        'Your refund has been started to your original payment method.',
+        'Refunds usually post within a few business days, depending on your bank.',
+        'You can browse other rentals for the same dates from search.',
+      ];
+    }
+    return [] as string[];
+  }, [booking, view]);
 
   const headline: Record<View, string> = {
     loading: 'Loading your booking…',
@@ -213,29 +300,116 @@ const BookingConfirmation = ({
                   {booking.listings?.title ?? 'Rental booking'}
                 </p>
                 {dates ? (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <CalendarDays className="h-4 w-4" />
-                    <span>{dates}</span>
+                  <div className="flex items-start gap-2 text-sm text-muted-foreground">
+                    <CalendarDays className="h-4 w-4 mt-0.5" />
+                    <div>
+                      <div className="text-foreground">{dates}</div>
+                      {times ? <div className="text-xs">{times}</div> : null}
+                      {booking.slot_name ? <div className="text-xs">Space: {booking.slot_name}</div> : null}
+                    </div>
                   </div>
                 ) : null}
                 {booking.fulfillment_selected ? (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground capitalize">
-                    <MapPin className="h-4 w-4" />
-                    <span>{booking.fulfillment_selected.replace('_', ' ')}</span>
+                  <div className="flex items-start gap-2 text-sm text-muted-foreground">
+                    {booking.fulfillment_selected === 'delivery' ? (
+                      <Truck className="h-4 w-4 mt-0.5" />
+                    ) : (
+                      <MapPin className="h-4 w-4 mt-0.5" />
+                    )}
+                    <div>
+                      <div className="capitalize text-foreground">
+                        {booking.fulfillment_selected.replace('_', ' ')}
+                      </div>
+                      {locationLine ? <div className="text-xs">{locationLine}</div> : null}
+                    </div>
                   </div>
                 ) : null}
-                {booking.total_price ? (
-                  <div className="flex items-center justify-between border-t border-border pt-3 text-sm">
-                    <span className="text-muted-foreground">Charged today</span>
-                    <span className="font-semibold text-foreground">{money(Number(booking.total_price))}</span>
-                  </div>
-                ) : null}
+
+                <div className="border-t border-border pt-3 space-y-1.5 text-sm">
+                  {deliveryFee > 0 ? (
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Delivery</span>
+                      <span className="text-foreground">{money(deliveryFee)}</span>
+                    </div>
+                  ) : null}
+                  {taxAmount > 0 ? (
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Tax</span>
+                      <span className="text-foreground">{money(taxAmount)}</span>
+                    </div>
+                  ) : null}
+                  {booking.total_price ? (
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">
+                        {booking.payment_status === 'paid' ? 'Charged today' : 'Booking total'}
+                      </span>
+                      <span className="font-semibold text-foreground">
+                        {money(Number(booking.total_price))}
+                      </span>
+                    </div>
+                  ) : null}
+                </div>
+
                 {booking.deposit_amount ? (
-                  <p className="text-xs text-muted-foreground">
-                    A {money(Number(booking.deposit_amount))} security deposit is arranged directly with the
-                    host and is not part of the amount charged by Vendibook.
-                  </p>
+                  <div className="rounded-xl border border-border bg-background p-3">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="flex items-center gap-2 text-foreground">
+                        <ShieldCheck className="h-4 w-4" />
+                        Security deposit
+                      </span>
+                      <span className="font-semibold text-foreground">
+                        {money(Number(booking.deposit_amount))}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {depositNote}
+                    </p>
+                  </div>
                 ) : null}
+
+                {dates && view === 'confirmed' ? (
+                  <AddToCalendarButton
+                    title={booking.listings?.title ?? 'Vendibook rental'}
+                    startDate={booking.start_date}
+                    endDate={booking.end_date}
+                    startTime={booking.start_time ?? undefined}
+                    endTime={booking.end_time ?? undefined}
+                    location={locationLine ?? undefined}
+                    description="Your Vendibook rental booking."
+                  />
+                ) : null}
+              </div>
+            ) : null}
+
+            {booking && view !== 'failed' && view !== 'not_found' ? (
+              <div className="mt-6 rounded-2xl border border-border p-4">
+                <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <FileText className="h-4 w-4" />
+                  Documents
+                </h2>
+                <div className="mt-3">
+                  <DocumentUploadSection listingId={booking.listing_id} bookingId={booking.id} />
+                </div>
+                <p className="mt-3 text-xs text-muted-foreground">
+                  If the host does not require documents, nothing will appear here and there is
+                  nothing for you to send.
+                </p>
+              </div>
+            ) : null}
+
+            {nextSteps.length > 0 ? (
+              <div className="mt-6 rounded-2xl border border-border p-4">
+                <h2 className="text-sm font-semibold text-foreground">What happens next</h2>
+                <ol className="mt-3 space-y-3">
+                  {nextSteps.map((step, i) => (
+                    <li key={step} className="flex gap-3 text-sm text-muted-foreground">
+                      <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-semibold text-primary">
+                        {i + 1}
+                      </span>
+                      <span className="leading-relaxed">{step}</span>
+                    </li>
+                  ))}
+                </ol>
               </div>
             ) : null}
 
