@@ -76,7 +76,20 @@ const QUICKSTART_STEPS: QuickStartStep[] = ['category', 'mode', 'location', 'cre
 const isQuickStartStep = (v: string | null): v is QuickStartStep =>
   !!v && (QUICKSTART_STEPS as string[]).includes(v);
 
-export const QuickStartWizard: React.FC = () => {
+export interface QuickStartWizardProps {
+  /** Where the seller lands after the draft exists (defaults to the standalone wizard route). */
+  resumeTo?: (listingId: string) => string;
+  /** Where "Back" from the first question goes. */
+  gatewayTo?: string;
+  /** Where "Save for later" goes. */
+  saveForLaterTo?: string;
+}
+
+export const QuickStartWizard: React.FC<QuickStartWizardProps> = ({
+  resumeTo = (id) => `/create-listing/${id}`,
+  gatewayTo = LIST_GATEWAY,
+  saveForLaterTo = '/dashboard',
+}) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, refreshProfile } = useAuth();
@@ -242,10 +255,10 @@ export const QuickStartWizard: React.FC = () => {
   };
 
   /** Back target that respects skipped (pre-answered) screens. */
-  const backFromMode = () => (intent.category ? navigate(LIST_GATEWAY) : setStep('category'));
+  const backFromMode = () => (intent.category ? navigate(gatewayTo) : setStep('category'));
   const backFromLocation = () => {
     if (intent.mode) {
-      if (intent.category) navigate(LIST_GATEWAY);
+      if (intent.category) navigate(gatewayTo);
       else setStep('category');
       return;
     }
@@ -402,12 +415,12 @@ export const QuickStartWizard: React.FC = () => {
 
   const handleContinueSetup = () => {
     if (createdListingId) {
-      navigate(`/create-listing/${createdListingId}`);
+      navigate(resumeTo(createdListingId));
     }
   };
 
   const handleSaveForLater = () => {
-    navigate('/dashboard');
+    navigate(saveForLaterTo);
   };
 
   // Only count screens the visitor actually sees — deep-linked answers are skipped.
@@ -477,7 +490,7 @@ export const QuickStartWizard: React.FC = () => {
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => navigate(LIST_GATEWAY)}
+            onClick={() => navigate(gatewayTo)}
             className="pl-0 text-xs sm:text-sm text-muted-foreground"
           >
             ← Back
