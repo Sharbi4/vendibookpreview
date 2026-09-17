@@ -31,6 +31,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications, Notification } from '@/hooks/useNotifications';
 import { cn } from '@/lib/utils';
+import { toDashboardTarget } from '@/lib/navigation/dashboardTargets';
 
 const NOTIFICATION_ICONS: Record<string, typeof Bell> = {
   booking_request: Calendar,
@@ -144,8 +145,11 @@ const NotificationCenter = () => {
   const handleNavigate = (link: string | null) => {
     setOpen(false);
     setSearchQuery('');
-    if (link) {
-      navigate(link);
+    const target = toDashboardTarget(link);
+    if (target) {
+      navigate(target);
+    } else {
+      navigate('/dashboard/notifications');
     }
   };
 
