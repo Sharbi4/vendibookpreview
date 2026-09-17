@@ -1,5 +1,4 @@
 import { Suspense, lazy } from 'react';
-import { Loader2 } from 'lucide-react';
 import WorkspaceShell from '@/components/workspace/WorkspaceShell';
 import SellerPayPalConnect from '@/components/account/SellerPayPalConnect';
 import { PayPalWordmark } from '@/components/brand/ProviderLogos';
@@ -9,9 +8,12 @@ const TransactionsDisputesTab = lazy(
   () => import('@/components/dashboard/tabs/TransactionsDisputesTab'),
 );
 
+/** Layout-matched placeholder so the money center doesn't jump while loading. */
 const Fallback = () => (
-  <div className="flex items-center justify-center py-16">
-    <Loader2 className="h-5 w-5 animate-spin opacity-60" />
+  <div className="space-y-3 p-5">
+    <div className="v2-skeleton h-5 w-44" />
+    <div className="v2-skeleton h-24 w-full" />
+    <div className="v2-skeleton h-24 w-full" />
   </div>
 );
 
@@ -29,7 +31,7 @@ export default function WorkspacePayments() {
           <div className="v2-paypal-header">
             <div>
               <p>Payment partner</p>
-              <PayPalWordmark className="h-6" />
+              <PayPalWordmark className="mt-2 h-6" />
             </div>
             <span>Business account connection</span>
           </div>
@@ -42,19 +44,23 @@ export default function WorkspacePayments() {
               flow. You can create and publish listings before connecting.
             </p>
           </div>
-          <SellerPayPalConnect showWhenDisabled />
+          <SellerPayPalConnect showWhenDisabled variant="dark" />
         </section>
 
-        <section className="v2-embedded-section">
-          <Suspense fallback={<Fallback />}>
-            <PayoutsPanel />
-          </Suspense>
+        <section>
+          <div className="v2-panel v2-embedded-section">
+            <Suspense fallback={<Fallback />}>
+              <PayoutsPanel />
+            </Suspense>
+          </div>
         </section>
 
-        <section className="v2-embedded-section">
-          <Suspense fallback={<Fallback />}>
-            <TransactionsDisputesTab />
-          </Suspense>
+        <section>
+          <div className="v2-panel v2-embedded-section">
+            <Suspense fallback={<Fallback />}>
+              <TransactionsDisputesTab />
+            </Suspense>
+          </div>
         </section>
       </div>
     </WorkspaceShell>

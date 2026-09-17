@@ -22,7 +22,6 @@ import { useUserTransactions } from '@/hooks/useUserTransactions';
 import { useConversations } from '@/hooks/useConversations';
 import { useMyPayPalConnection } from '@/hooks/useMyPayPalConnection';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
 
 const money = (cents: number | null | undefined) =>
   cents == null
@@ -39,7 +38,14 @@ const price = (listing: { mode?: string | null; price_sale?: number | null; pric
   return daily ? `${daily}/day` : 'Rate not set';
 };
 
-type Task = { id: string; label: string; hint: string; to: string; icon: typeof AlertTriangle };
+type Task = {
+  id: string;
+  label: string;
+  hint: string;
+  to: string;
+  icon: typeof AlertTriangle;
+  tone?: 'warn' | 'neutral';
+};
 
 export default function WorkspaceHome() {
   const [routeParams] = useSearchParams();
@@ -89,6 +95,7 @@ export default function WorkspaceHome() {
         hint: 'Resolve the issue on your PayPal account so you can receive payments.',
         to: '/dashboard/payments',
         icon: AlertTriangle,
+        tone: 'warn',
       });
     if (isSeller && !paypalReady && paypalStatus !== 'action_required')
       items.push({
@@ -105,6 +112,7 @@ export default function WorkspaceHome() {
         hint: 'Respond with your evidence.',
         to: '/dashboard/payments',
         icon: AlertTriangle,
+        tone: 'warn',
       });
     if (pendingBuyerBookings.length)
       items.push({
@@ -186,6 +194,12 @@ export default function WorkspaceHome() {
     return <Navigate to={`/dashboard/classic?${routeParams.toString()}`} replace />;
   }
 
+  const leadListing = live[0] || listings[0] || null;
+  const otherListings = listings.filter((l) => l.id !== leadListing?.id).slice(0, 3);
+  const leadFeatured =
+    !!leadListing?.featured_enabled &&
+    (!leadListing?.featured_expires_at || new Date(leadListing.featured_expires_at) > new Date());
+
   return (
     <WorkspaceShell>
       <div className="v2-page-stack">
@@ -194,19 +208,15 @@ export default function WorkspaceHome() {
             <p className="v2-eyebrow">Your workspace</p>
             <h1>Good to see you, {firstName}.</h1>
             <p>Everything you buy, rent, list, and sell — in one place.</p>
-            <div className="mt-5 flex flex-wrap gap-2">
-              <Button asChild variant="secondary">
-                <Link to="/list">
-                  <List />
-                  List an asset
-                </Link>
-              </Button>
-              <Button asChild variant="outline">
-                <Link to="/search">
-                  <Search />
-                  Browse the marketplace
-                </Link>
-              </Button>
+            <div className="mt-6 flex flex-wrap gap-2.5">
+              <Link to="/list" className="v2-btn">
+                <List />
+                List an asset
+              </Link>
+              <Link to="/search" className="v2-btn-outline">
+                <Search />
+                Browse the marketplace
+              </Link>
             </div>
           </div>
           <Avatar className="hidden h-16 w-16 sm:flex">
@@ -216,220 +226,272 @@ export default function WorkspaceHome() {
         </header>
 
         {tasks.length > 0 && (
-          <section>
-            <div className="v2-section-head">
+          <section className="v2-panel">
+            <div className="v2-panel-head">
               <div>
                 <h2>Needs your attention</h2>
                 <p>Only real tasks from your account appear here.</p>
               </div>
             </div>
-            <div className="v2-card divide-y">
-              {tasks.map((task) => (
-                <Link className="v2-row" to={task.to} key={task.id}>
+            {tasks.map((task) => (
+              <Link className="v2-task-row" to={task.to} key={task.id}>
+                <span className={`v2-task-marker ${task.tone === 'warn' ? 'is-warn' : ''}`}>
                   <task.icon />
-                  <span>
-                    <strong>{task.label}</strong>
-                    <small>{task.hint}</small>
-                  </span>
+                </span>
+                <span className="v2-task-copy">
+                  <strong>{task.label}</strong>
+                  <small>{task.hint}</small>
+                </span>
+                <span className="v2-task-action">
+                  Open
                   <ArrowRight />
-                </Link>
-              ))}
+                </span>
+              </Link>
+            ))}
+          </section>
+        )}
+
+        {listingsLoading && !listings.length && (
+          <section className="v2-panel">
+            <div className="v2-panel-head">
+              <div className="v2-skeleton h-5 w-40" />
+            </div>
+            <div className="space-y-3 p-5">
+              <div className="v2-skeleton h-44 w-full" />
+              <div className="v2-skeleton h-16 w-full" />
             </div>
           </section>
         )}
 
-        {(isSeller || listings.length > 0) && (
-          <section>
-            <div className="v2-section-head">
+        {leadListing && (
+          <section className="v2-panel">
+            <div className="v2-panel-head">
               <div>
                 <h2>My listings</h2>
                 <p>
                   {live.length} live · {drafts.length} draft{drafts.length === 1 ? '' : 's'}
                 </p>
               </div>
-              <Button asChild variant="ghost" size="sm">
-                <Link to="/dashboard/listings">View all</Link>
-              </Button>
+              <Link to="/dashboard/listings" className="v2-btn-quiet">
+                View all
+              </Link>
             </div>
-            <div className="v2-listing-grid">
-              {listings.slice(0, 3).map((listing) => (
-                <article className="v2-listing-card" key={listing.id}>
-                  <div className="v2-listing-image">
-                    {listing.cover_image_url ? (
-                      <img src={listing.cover_image_url} alt={listing.title} loading="lazy" />
-                    ) : (
-                      <ImageIcon aria-label="No listing image yet" />
-                    )}
-                    <span className="v2-listing-status">{listing.status}</span>
+
+            <article className="v2-lead-listing">
+              <div className="v2-lead-media">
+                {leadListing.cover_image_url ? (
+                  <img src={leadListing.cover_image_url} alt={leadListing.title} loading="lazy" />
+                ) : (
+                  <ImageIcon aria-label="No listing image yet" />
+                )}
+              </div>
+              <div className="v2-lead-body">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className={`v2-status ${leadListing.status === 'published' ? 'is-ok' : ''}`}>
+                    {leadListing.status === 'published' ? 'Live' : leadListing.status}
+                  </span>
+                  {leadFeatured && <span className="v2-status">Featured</span>}
+                  {isSeller && !paypalReady && (
+                    <span className="v2-status is-warn">Online payments not enabled</span>
+                  )}
+                </div>
+                <h3>{leadListing.title}</h3>
+                <p>
+                  {[leadListing.city, leadListing.state].filter(Boolean).join(', ') ||
+                    'Location not set'}
+                  {leadListing.mode ? ` · ${leadListing.mode === 'sale' ? 'For sale' : 'For rent'}` : ''}
+                </p>
+                <strong className="v2-price">{price(leadListing)}</strong>
+                {typeof leadListing.view_count === 'number' && (
+                  <div className="v2-metrics">
+                    <span>
+                      <strong>{leadListing.view_count}</strong> views
+                    </span>
                   </div>
-                  <div className="v2-listing-body">
-                    <div>
-                      <h2>{listing.title}</h2>
-                      <p>
-                        {listing.city}
-                        {listing.state ? `, ${listing.state}` : ''}
-                      </p>
-                    </div>
-                    <strong className="v2-price">{price(listing)}</strong>
-                    <div className="v2-listing-actions">
-                      <Button asChild variant="outline" size="sm">
-                        <Link to={`/listing/${listing.id}`}>View</Link>
-                      </Button>
-                      <Button asChild variant="ghost" size="sm">
-                        <Link to={`/edit-listing/${listing.id}`}>Edit</Link>
-                      </Button>
-                      <Button asChild variant="ghost" size="sm">
-                        <Link to={`/dashboard/listings?boost=${listing.id}`}>Promote</Link>
-                      </Button>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
+                )}
+                <div className="v2-listing-actions">
+                  <Link className="v2-btn v2-btn-sm" to={`/listing/${leadListing.id}`}>
+                    View
+                  </Link>
+                  <Link className="v2-btn-outline v2-btn-sm" to={`/edit-listing/${leadListing.id}`}>
+                    Edit
+                  </Link>
+                  <Link
+                    className="v2-btn-outline v2-btn-sm"
+                    to={`/dashboard/listings?boost=${leadListing.id}`}
+                  >
+                    Promote
+                  </Link>
+                </div>
+              </div>
+            </article>
+
+            {otherListings.map((listing) => (
+              <Link className="v2-activity-row" to={`/edit-listing/${listing.id}`} key={listing.id}>
+                <span className="v2-activity-thumb">
+                  {listing.cover_image_url ? (
+                    <img src={listing.cover_image_url} alt="" loading="lazy" />
+                  ) : (
+                    <ImageIcon />
+                  )}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <strong className="truncate">{listing.title}</strong>
+                  <small>
+                    {[listing.city, listing.state].filter(Boolean).join(', ') || 'Location not set'}{' '}
+                    · {listing.status === 'published' ? 'Live' : listing.status}
+                  </small>
+                </span>
+                <strong>{price(listing)}</strong>
+              </Link>
+            ))}
           </section>
         )}
 
         {!listingsLoading && listings.length === 0 && !isBuyer && (
-          <section className="v2-card v2-empty">
+          <section className="v2-panel v2-empty">
             <h2>Start where it makes sense for you</h2>
             <p>Browse the marketplace, or list a truck, trailer, kitchen, or vendor space.</p>
-            <div className="flex flex-wrap justify-center gap-2">
-              <Button asChild variant="secondary">
-                <Link to="/search">Browse listings</Link>
-              </Button>
-              <Button asChild variant="outline">
-                <Link to="/list">List an asset</Link>
-              </Button>
+            <div className="flex flex-wrap justify-center gap-2.5">
+              <Link to="/search" className="v2-btn">
+                Browse listings
+              </Link>
+              <Link to="/list" className="v2-btn-outline">
+                List an asset
+              </Link>
             </div>
           </section>
         )}
 
         <div className="v2-two-column">
-          <section>
-            <div className="v2-section-head">
+          <section className="v2-panel">
+            <div className="v2-panel-head">
               <div>
                 <h2>Recent activity</h2>
                 <p>Purchases, sales, rentals, and booking requests.</p>
               </div>
-              <Button asChild variant="ghost" size="sm">
-                <Link to="/dashboard/activity">View all</Link>
-              </Button>
+              <Link to="/dashboard/activity" className="v2-btn-quiet">
+                View all
+              </Link>
             </div>
-            <div className="v2-card divide-y">
-              {recentActivity.length ? (
-                recentActivity.map((item) => (
-                  <Link className="v2-activity-row" to="/dashboard/activity" key={item.id}>
-                    <span className="v2-activity-icon">
-                      <item.icon />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <strong className="truncate">{item.title}</strong>
-                      <small>
-                        {item.detail} · {new Date(item.date).toLocaleDateString()}
-                      </small>
-                    </span>
-                    {item.amount && <strong>{item.amount}</strong>}
-                  </Link>
-                ))
-              ) : (
-                <div className="v2-empty">
-                  <p>Nothing here yet.</p>
-                  <Link to="/search">Find something to buy or rent</Link>
-                </div>
-              )}
-            </div>
+            {recentActivity.length ? (
+              recentActivity.map((item) => (
+                <Link className="v2-activity-row" to="/dashboard/activity" key={item.id}>
+                  <span className="v2-activity-icon">
+                    <item.icon />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <strong className="truncate">{item.title}</strong>
+                    <small>
+                      {item.detail} · {new Date(item.date).toLocaleDateString()}
+                    </small>
+                  </span>
+                  {item.amount && <strong>{item.amount}</strong>}
+                </Link>
+              ))
+            ) : (
+              <div className="v2-empty">
+                <p>Nothing here yet.</p>
+                <Link to="/search" className="v2-btn-quiet">
+                  Find something to buy or rent
+                </Link>
+              </div>
+            )}
           </section>
 
-          <section>
-            <div className="v2-section-head">
+          <section className="v2-panel">
+            <div className="v2-panel-head">
               <div>
                 <h2>Money</h2>
                 <p>Recorded marketplace payments and payment setup.</p>
               </div>
-              <Button asChild variant="ghost" size="sm">
-                <Link to="/dashboard/payments">Open payments</Link>
-              </Button>
-            </div>
-            <div className="v2-card">
-              <div className="v2-snapshot">
-                <div>
-                  <strong>{sellerEarnings.length}</strong>
-                  <span>Sales &amp; rental payments received</span>
-                </div>
-                <div>
-                  <strong>{buyerPayments.length}</strong>
-                  <span>Payments you made</span>
-                </div>
-              </div>
-              <Link className="v2-row" to="/dashboard/payments">
-                <CreditCard />
-                <span>
-                  <strong>
-                    {paypalReady
-                      ? 'PayPal connected — ready to receive payments'
-                      : paypalStatus === 'action_required'
-                        ? 'PayPal action required'
-                        : connection
-                          ? 'PayPal setup in progress'
-                          : 'PayPal not connected'}
-                  </strong>
-                  <small>
-                    {paypalReady
-                      ? connection?.paypal_email || 'Your connected PayPal Business account'
-                      : 'Connect PayPal to let qualified buyers pay through Vendibook.'}
-                  </small>
-                </span>
-                <ArrowRight />
+              <Link to="/dashboard/payments" className="v2-btn-quiet">
+                Open payments
               </Link>
             </div>
+            <div className="v2-snapshot">
+              <div>
+                <strong>{sellerEarnings.length}</strong>
+                <span>Sales &amp; rental payments received</span>
+              </div>
+              <div>
+                <strong>{buyerPayments.length}</strong>
+                <span>Payments you made</span>
+              </div>
+            </div>
+            <Link className="v2-task-row" to="/dashboard/payments">
+              <span className={`v2-task-marker ${paypalReady ? 'is-ok' : 'is-warn'}`}>
+                <CreditCard />
+              </span>
+              <span className="v2-task-copy">
+                <strong>
+                  {paypalReady
+                    ? 'PayPal connected — ready to receive payments'
+                    : paypalStatus === 'action_required'
+                      ? 'PayPal action required'
+                      : connection
+                        ? 'PayPal setup in progress'
+                        : 'PayPal not connected'}
+                </strong>
+                <small>
+                  {paypalReady
+                    ? connection?.paypal_email || 'Your connected PayPal Business account'
+                    : 'Connect PayPal to let qualified buyers pay through Vendibook.'}
+                </small>
+              </span>
+              <span className="v2-task-action">
+                Open
+                <ArrowRight />
+              </span>
+            </Link>
           </section>
         </div>
 
-        <section>
-          <div className="v2-section-head">
+        <section className="v2-panel">
+          <div className="v2-panel-head">
             <div>
               <h2>Inbox</h2>
               <p>{unread ? `${unread} unread` : 'Your latest conversations.'}</p>
             </div>
-            <Button asChild variant="ghost" size="sm">
-              <Link to="/dashboard/inbox">Open inbox</Link>
-            </Button>
+            <Link to="/dashboard/inbox" className="v2-btn-quiet">
+              Open inbox
+            </Link>
           </div>
-          <div className="v2-card divide-y">
-            {conversations.length ? (
-              conversations.slice(0, 4).map((conversation) => {
-                const other =
-                  conversation.host_id === user?.id ? conversation.shopper : conversation.host;
-                return (
-                  <Link
-                    className="v2-activity-row"
-                    to={`/messages/${conversation.id}`}
-                    key={conversation.id}
-                  >
-                    <span className="v2-activity-icon">
-                      <Inbox />
-                    </span>
-                    <span className="min-w-0 flex-1">
-                      <strong className="truncate">
-                        {other?.full_name || conversation.listing?.title || 'Conversation'}
-                      </strong>
-                      <small className="truncate">
-                        {conversation.last_message?.message || 'No messages yet'}
-                      </small>
-                    </span>
-                    {(conversation.unread_count ?? 0) > 0 && (
-                      <span className="v2-status">{conversation.unread_count} new</span>
-                    )}
-                  </Link>
-                );
-              })
-            ) : (
-              <div className="v2-empty">
-                <p>No conversations yet.</p>
-                <Link to="/search">Message a host or seller</Link>
-              </div>
-            )}
-          </div>
+          {conversations.length ? (
+            conversations.slice(0, 4).map((conversation) => {
+              const other =
+                conversation.host_id === user?.id ? conversation.shopper : conversation.host;
+              return (
+                <Link
+                  className="v2-activity-row"
+                  to={`/messages/${conversation.id}`}
+                  key={conversation.id}
+                >
+                  <span className="v2-activity-icon">
+                    <Inbox />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <strong className="truncate">
+                      {other?.full_name || conversation.listing?.title || 'Conversation'}
+                    </strong>
+                    <small className="truncate">
+                      {conversation.last_message?.message || 'No messages yet'}
+                    </small>
+                  </span>
+                  {(conversation.unread_count ?? 0) > 0 && (
+                    <span className="v2-status">{conversation.unread_count} new</span>
+                  )}
+                </Link>
+              );
+            })
+          ) : (
+            <div className="v2-empty">
+              <p>No conversations yet.</p>
+              <Link to="/search" className="v2-btn-quiet">
+                Message a host or seller
+              </Link>
+            </div>
+          )}
         </section>
       </div>
     </WorkspaceShell>

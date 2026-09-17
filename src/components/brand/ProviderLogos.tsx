@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import paypalWordmarkWhite from '@/assets/brand/paypal-wordmark-white.png.asset.json';
 import paypalMonogram from '@/assets/brand/paypal-monogram-color.png.asset.json';
 import plaidLogoWhite from '@/assets/brand/plaid-logo-white.png.asset.json';
@@ -24,11 +25,21 @@ export function PayPalMonogram({ className }: { className?: string }) {
 }
 
 export function PayPalWordmark({ className }: { className?: string }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) {
+    // Never show a broken image: fall back to the PayPal name in brand type.
+    return (
+      <span className={cn('inline-flex items-center font-bold tracking-tight', className)}>
+        <span style={{ color: '#009cde' }}>Pay</span>
+        <span style={{ color: '#ffffff' }}>Pal</span>
+      </span>
+    );
+  }
   return (
     <img
       src={paypalWordmarkWhite.url}
       alt="PayPal"
-      loading="lazy"
+      onError={() => setFailed(true)}
       className={cn('h-4 w-auto', className)}
     />
   );
