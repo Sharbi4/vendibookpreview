@@ -167,6 +167,8 @@ export default function WorkspaceActivity() {
           ))}
         </div>
 
+        {(filter === 'all' || filter === 'requests') && <WorkspaceHostBookings />}
+
         {groups.length ? (
           groups.map((group) => (
             <section className="v2-panel" key={group.label}>
