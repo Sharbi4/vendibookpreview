@@ -19,9 +19,18 @@
 
 export const MULTIPARTY_FLAG_KEY = "paypal_multiparty_enabled";
 
-function envEnabled(): boolean {
+/**
+ * Environment-level switch. Synchronous so the PayPal request layer can use it
+ * as a hard guard. Missing/any value other than "true" means OFF.
+ */
+export function multipartyEnvEnabled(): boolean {
   return (Deno.env.get("PAYPAL_MULTIPARTY_ENABLED") ?? "").toLowerCase() === "true";
 }
+
+function envEnabled(): boolean {
+  return multipartyEnvEnabled();
+}
+
 
 /** True when the Connected Path flow is enabled for this environment at all. */
 export async function multipartyEnabled(admin?: any): Promise<boolean> {

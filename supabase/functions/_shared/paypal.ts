@@ -12,7 +12,10 @@
  *   PAYPAL_ENVIRONMENT   'sandbox' | 'live'  (defaults to 'sandbox')
  */
 
+import { multipartyEnvEnabled } from "./paypalMultiparty.ts";
+
 const LIVE_BASE = "https://api-m.paypal.com";
+
 const SANDBOX_BASE = "https://api-m.sandbox.paypal.com";
 
 export type PayPalEnvironment = "sandbox" | "live";
@@ -192,11 +195,14 @@ export async function paypalRequest<T = any>(
         ...(extraHeaders ?? {}),
       };
       if (idempotencyKey) headers["PayPal-Request-Id"] = idempotencyKey;
-      if (actAsMerchantId) {
+      // Acting on behalf of an onboarded seller is Connected Path behaviour and
+      // stays unreachable until the server-side switch is explicitly on.
+      if (actAsMerchantId && multipartyEnvEnabled()) {
         const assertion = buildAuthAssertion(actAsMerchantId);
         // The assertion itself is never logged — only the merchant it names.
         if (assertion) headers["PayPal-Auth-Assertion"] = assertion;
       }
+
 
       const res = await fetch(`${paypalApiBase()}${path}`, {
         method,
@@ -327,14 +333,21 @@ const money = (cents: number, currency: string) => ({
 });
 
 /**
- * PayPal requires `purchase_units[].items` for certification. When a caller
- * does not supply lines we derive a single line from the description so the
- * itemised total always reconciles with `amount.breakdown.item_total`.
+ * PayPal requires `purchase_units[].items` for certification. Callers may pass
+ * lines, but they are only used when they reconcile exactly with the order
+ * total PayPal will charge — otherwise PayPal rejects the order with 422. When
+ * they do not reconcile (or are absent) a single line is derived from the
+ * description, which always reconciles.
  */
 function buildItems(input: CreateOrderInput, currency: string, itemTotalCents: number) {
   const physical = !!input.shipping;
-  const lines = input.items?.length
-    ? input.items
+  const supplied = input.items ?? [];
+  const suppliedTotal = supplied.reduce(
+    (sum, line) => sum + Math.round(line.unitAmountCents) * Math.max(1, Math.round(line.quantity ?? 1)),
+    0,
+  );
+  const lines = supplied.length && suppliedTotal === itemTotalCents
+    ? supplied
     : [{
       name: input.description.slice(0, 127),
       unitAmountCents: itemTotalCents,
@@ -368,12 +381,21 @@ function buildShipping(address?: OrderShippingAddress | null) {
 }
 
 /**
- * Multiparty routing. `payee` sends the funds to the onboarded seller;
- * `payment_instruction.platform_fees` keeps Vendibook's commission as a
- * PayPal Partner Fee. Both are omitted for Vendibook's own products, which
- * stay first-party exactly as they are today.
+ * Multiparty routing (Connected Path). DORMANT: it is only reachable when the
+ * server-side `PAYPAL_MULTIPARTY_ENABLED` environment switch is explicitly
+ * "true", which it is not in any current environment. With the switch off,
+ * a payee/platform fee passed by any caller is refused outright rather than
+ * silently ignored, so money routing cannot drift by accident.
  */
 function buildMultiparty(input: CreateOrderInput, currency: string) {
+  if (!input.payeeMerchantId && !input.platformFeeCents) return {};
+  if (!multipartyEnvEnabled()) {
+    throw new PayPalError(
+      "Multiparty payouts are not enabled in this environment.",
+      500,
+      "MULTIPARTY_DISABLED",
+    );
+  }
   if (!input.payeeMerchantId) return {};
   const fee = Math.max(0, Math.round(input.platformFeeCents ?? 0));
   return {
@@ -395,8 +417,12 @@ export async function createPayPalOrder(input: CreateOrderInput) {
   const taxCents = b?.taxCents ?? 0;
   const shippingCents = b?.shippingCents ?? 0;
   const discountCents = b?.discountCents ?? 0;
-  const itemTotalCents = b?.itemTotalCents ??
-    Math.max(0, input.amountCents - taxCents - shippingCents + discountCents);
+  // Always derive the item total from the charged amount so the breakdown can
+  // never disagree with `amount.value` (PayPal 422 otherwise).
+  const itemTotalCents = Math.max(
+    0,
+    input.amountCents - taxCents - shippingCents + discountCents,
+  );
 
   const amount: Record<string, unknown> = money(input.amountCents, currency);
   amount.breakdown = {
@@ -414,6 +440,7 @@ export async function createPayPalOrder(input: CreateOrderInput) {
   return await paypalRequest("/v2/checkout/orders", {
     method: "POST",
     idempotencyKey: input.idempotencyKey,
+    reference: input.reference,
     body: {
       intent,
       purchase_units: [{
@@ -445,6 +472,7 @@ export async function createPayPalOrder(input: CreateOrderInput) {
 
   });
 }
+
 
 export async function getPayPalOrder(orderId: string) {
   return await paypalRequest(`/v2/checkout/orders/${encodeURIComponent(orderId)}`);
