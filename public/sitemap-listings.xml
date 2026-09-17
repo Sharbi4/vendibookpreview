@@ -816,7 +816,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/f814bc22-d682-4ddf-818e-049472578f49</loc>
-    <lastmod>2026-09-16</lastmod>
+    <lastmod>2026-09-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -1079,17 +1079,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/e65b145b-c462-46d9-9198-ca4761361e17</loc>
-    <lastmod>2026-09-14</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/25a2c170-d11c-4a4a-b1f6-b034d70ba247/e65b145b-c462-46d9-9198-ca4761361e17/1787699425180-itazej.jpeg</image:loc>
-      <image:title>Coffee trailer </image:title>
-      <image:caption>Coffee trailer  in Mesa, AZ on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/9d335dc0-71f2-4e1c-ada1-93a4ee2f9d77</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>weekly</changefreq>
@@ -1219,6 +1208,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/e6e866b2-a0aa-4466-9054-d2f849903108/b6f99adb-53a4-4f02-90f8-cc66c87ad33b/1789316748193-e1b4x.jpg</image:loc>
       <image:title>2009 Workhorse Food Truck — Fully Equipped — Clear Title — $60,000 — SLC, UT</image:title>
       <image:caption>2009 Workhorse Food Truck — Fully Equipped — Clear Title — $60,000 — SLC, UT in Cottonwood Heights, UT on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/e65b145b-c462-46d9-9198-ca4761361e17</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/25a2c170-d11c-4a4a-b1f6-b034d70ba247/e65b145b-c462-46d9-9198-ca4761361e17/1787699425180-itazej.jpeg</image:loc>
+      <image:title>Coffee trailer </image:title>
+      <image:caption>Coffee trailer  in Mesa, AZ on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
