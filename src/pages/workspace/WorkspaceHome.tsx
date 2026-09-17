@@ -22,7 +22,6 @@ import { useUserTransactions } from '@/hooks/useUserTransactions';
 import { useConversations } from '@/hooks/useConversations';
 import { useMyPayPalConnection } from '@/hooks/useMyPayPalConnection';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
 
 const money = (cents: number | null | undefined) =>
   cents == null
@@ -39,7 +38,14 @@ const price = (listing: { mode?: string | null; price_sale?: number | null; pric
   return daily ? `${daily}/day` : 'Rate not set';
 };
 
-type Task = { id: string; label: string; hint: string; to: string; icon: typeof AlertTriangle };
+type Task = {
+  id: string;
+  label: string;
+  hint: string;
+  to: string;
+  icon: typeof AlertTriangle;
+  tone?: 'warn' | 'neutral';
+};
 
 export default function WorkspaceHome() {
   const [routeParams] = useSearchParams();
@@ -89,6 +95,7 @@ export default function WorkspaceHome() {
         hint: 'Resolve the issue on your PayPal account so you can receive payments.',
         to: '/dashboard/payments',
         icon: AlertTriangle,
+        tone: 'warn',
       });
     if (isSeller && !paypalReady && paypalStatus !== 'action_required')
       items.push({
@@ -105,6 +112,7 @@ export default function WorkspaceHome() {
         hint: 'Respond with your evidence.',
         to: '/dashboard/payments',
         icon: AlertTriangle,
+        tone: 'warn',
       });
     if (pendingBuyerBookings.length)
       items.push({
