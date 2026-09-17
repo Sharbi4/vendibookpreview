@@ -1998,3 +1998,10 @@ html.hide-support-chat .widget-visible {
 .v2-btn-light:hover { background: #fff; transform: translateY(-1px); }
 .v2-btn-light:disabled { opacity: .6; transform: none; }
 .v2-btn-light svg { width: 16px; height: 16px; }
+.v2-task-copy { display: flex; min-width: 0; flex-direction: column; gap: 4px; }
+.v2-task-copy small { color: hsl(var(--v2-stone)); font-size: 13px; line-height: 1.5; }
+.v2-task-row .v2-task-action { justify-self: start; }
+@media (min-width: 640px) { .v2-task-row .v2-task-action { justify-self: end; } }
+.v2-activity-thumb { display: grid; height: 44px; width: 60px; flex: none; place-items: center; overflow: hidden; border-radius: 8px; border: 1px solid hsl(var(--v2-line)); background: hsl(38 26% 95%); }
+.v2-activity-thumb img { height: 100%; width: 100%; object-fit: cover; }
+.v2-activity-thumb svg { width: 16px; height: 16px; color: hsl(var(--v2-stone)); }
