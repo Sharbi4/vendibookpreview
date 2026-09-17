@@ -182,6 +182,70 @@ const OrderDetailPage = () => {
         </div>
 
         <div className="space-y-6">
+          {order.settlement && (
+            <Card className="p-4 sm:p-5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  Settlement
+                </h2>
+                <Badge variant="outline" className={toneClass[order.settlement.status_tone]}>
+                  {order.settlement.status_label}
+                </Badge>
+              </div>
+              <dl className="mt-3 space-y-2 text-sm">
+                <Line
+                  label="Buyer paid"
+                  value={money(order.settlement.gross_collected_cents, order.settlement.currency)}
+                />
+                <Line
+                  label={`Vendibook fee${order.settlement.fee_rate_pct ? ` (${order.settlement.fee_rate_pct}%)` : ''}`}
+                  value={`− ${money(order.settlement.platform_fee_cents, order.settlement.currency)}`}
+                />
+                {order.settlement.pro_discount_cents > 0 && (
+                  <Line
+                    label="Vendibook Pro savings"
+                    value={`+ ${money(order.settlement.pro_discount_cents, order.settlement.currency)}`}
+                  />
+                )}
+                {order.settlement.adjustments_cents !== 0 && (
+                  <Line
+                    label="Adjustments"
+                    value={money(order.settlement.adjustments_cents, order.settlement.currency)}
+                  />
+                )}
+                {order.settlement.refunded_cents > 0 && (
+                  <Line
+                    label="Refunded to buyer"
+                    value={`− ${money(order.settlement.refunded_cents, order.settlement.currency)}`}
+                  />
+                )}
+                <Separator className="my-2" />
+                <Line
+                  label="Your proceeds"
+                  value={money(order.settlement.net_to_seller_cents, order.settlement.currency)}
+                  strong
+                />
+                {order.settlement.settled_at && (
+                  <Line
+                    label={order.settlement.status_code === 'payout_completed' ? 'Settled on' : 'Payment received'}
+                    value={new Date(order.settlement.settled_at).toLocaleDateString()}
+                  />
+                )}
+              </dl>
+              <p className="mt-3 text-xs text-muted-foreground">
+                {order.settlement.status_description}
+              </p>
+              {order.settlement.hold_reason && (
+                <p className="mt-2 text-xs text-muted-foreground">{order.settlement.hold_reason}</p>
+              )}
+              {order.settlement.routed_to_connected_paypal && (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Paid through your connected PayPal Business account.
+                </p>
+              )}
+            </Card>
+          )}
+
           <Card className="p-4 sm:p-5">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
               Payment
