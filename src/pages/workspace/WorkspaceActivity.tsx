@@ -125,10 +125,12 @@ export default function WorkspaceActivity() {
   }, [transactions, buyerBookings, sellerBookings]);
 
   const hasHostBookings = sellerBookings.length > 0;
+  const hasPublishedListings = hostListings.some((l) => l.status === 'published');
   const available = FILTERS.filter(
     (f) =>
       f.key === 'all' ||
       (f.key === 'requests' && hasHostBookings) ||
+      (f.key === 'listings' && hasPublishedListings) ||
       items.some((item) => item.kind === f.key),
   );
   const shown = filter === 'all' ? items : items.filter((item) => item.kind === filter);
