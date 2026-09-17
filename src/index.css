@@ -2273,3 +2273,26 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
 .v2-checkout .bg-primary { background-color: hsl(var(--v2-ink)); }
 .v2-checkout .bg-primary, .v2-checkout .text-primary-foreground { color: hsl(var(--v2-paper)); }
 .v2-checkout .border-primary { border-color: hsl(var(--v2-line-strong)); }
+
+
+/* Listing wizard embedded in the workspace shell: the wizard ships its own
+   full-page frame, so neutralise the viewport sizing and let the workspace
+   content column provide the surface. */
+.v2-wizard-embed > .sale-light,
+.v2-wizard-embed.sale-light {
+  min-height: 0;
+}
+.v2-wizard-embed .min-h-screen {
+  min-height: 0;
+}
+.v2-wizard-embed .sticky.top-0 {
+  top: 0;
+  border-radius: 14px;
+}
+.v2-wizard-embed .container {
+  padding-left: 0;
+  padding-right: 0;
+}
+.v2-wizard-embed .container.max-w-4xl > .grid {
+  padding-top: 0;
+}

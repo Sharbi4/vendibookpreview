@@ -125,7 +125,7 @@ export default function WorkspaceListings() {
           </div>
           <div className="flex flex-wrap items-center gap-2.5">
             <PayPalReadyBadge />
-            <Link to="/list" className="v2-btn">
+            <Link to="/dashboard/listings/new" className="v2-btn">
               <Plus />
               List an asset
             </Link>
@@ -161,7 +161,7 @@ export default function WorkspaceListings() {
           <div className="v2-card v2-empty">
             <h2>{listings.length ? 'Nothing in this view' : 'Start your first listing'}</h2>
             <p>List a truck, trailer, mobile kitchen, equipment, or vendor space.</p>
-            <Link to="/list" className="v2-btn">
+            <Link to="/dashboard/listings/new" className="v2-btn">
               Create a listing
             </Link>
           </div>
@@ -209,10 +209,10 @@ export default function WorkspaceListings() {
                       </Link>
                       <Link
                         className="v2-btn-outline v2-btn-sm"
-                        to={`/edit-listing/${listing.id}`}
+                        to={`/dashboard/listings/${listing.id}/edit`}
                       >
                         <Pencil />
-                        Edit
+                        {listing.status === 'draft' ? 'Continue' : 'Edit'}
                       </Link>
                       {listing.status === 'published' && !featured && (
                         <button

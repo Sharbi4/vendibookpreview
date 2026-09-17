@@ -216,7 +216,7 @@ export default function WorkspaceHome() {
             <h1>Good to see you, {firstName}.</h1>
             <p>Everything you buy, rent, list, and sell — in one place.</p>
             <div className="mt-6 flex flex-wrap items-center gap-2.5">
-              <Link to="/list" className="v2-btn">
+              <Link to="/dashboard/listings/new" className="v2-btn">
                 <List />
                 List an asset
               </Link>
@@ -364,7 +364,7 @@ export default function WorkspaceHome() {
               <Link to="/search" className="v2-btn">
                 Browse listings
               </Link>
-              <Link to="/list" className="v2-btn-outline">
+              <Link to="/dashboard/listings/new" className="v2-btn-outline">
                 List an asset
               </Link>
             </div>
