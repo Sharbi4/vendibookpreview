@@ -1967,6 +1967,11 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
 .v2-embedded-section h3 { font-size: 15px !important; font-weight: 640; }
 .v2-embedded-section .rounded-lg, .v2-embedded-section .rounded-xl, .v2-embedded-section .rounded-2xl { border-radius: 12px; }
 .v2-embedded-section .text-primary { color: hsl(var(--v2-ink)); }
+.v2-embedded-section h1, .v2-embedded-section h2, .v2-embedded-section h3,
+.v2-embedded-section [class*="CardTitle"], .v2-embedded-section [data-slot="card-title"] { color: hsl(var(--v2-ink)); opacity: 1; }
+.v2-embedded-section .bg-clip-text, .v2-embedded-section .text-transparent {
+  -webkit-text-fill-color: hsl(var(--v2-ink)); color: hsl(var(--v2-ink)); background-image: none;
+}
 
 /* Account */
 .v2-account-identity { display: flex; align-items: center; gap: 20px; border-bottom: 1px solid hsl(var(--v2-line)); padding-bottom: 30px; }
