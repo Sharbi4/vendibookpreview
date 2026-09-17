@@ -5,7 +5,6 @@ import { toast } from 'sonner';
 import WorkspaceShell from '@/components/workspace/WorkspaceShell';
 import { useHostListings } from '@/hooks/useHostListings';
 import { useMyPayPalConnection } from '@/hooks/useMyPayPalConnection';
-import { Button } from '@/components/ui/button';
 import { PromoteListingModal } from '@/components/dashboard/PromoteListingModal';
 import { isListingFeatured } from '@/lib/featured';
 
@@ -123,36 +122,44 @@ export default function WorkspaceListings() {
               {counts.paused} paused
             </p>
           </div>
-          <Button asChild variant="secondary">
-            <Link to="/list">
-              <Plus />
-              List an asset
-            </Link>
-          </Button>
+          <Link to="/list" className="v2-btn">
+            <Plus />
+            List an asset
+          </Link>
         </header>
 
         <div className="v2-filter-row">
           {FILTERS.filter((f) => f.key === 'all' || counts[f.key] > 0).map((f) => (
-            <Button
+            <button
               key={f.key}
-              size="sm"
-              variant={filter === f.key ? 'secondary' : 'outline'}
+              type="button"
+              className={`v2-filter${filter === f.key ? ' is-active' : ''}`}
               onClick={() => setFilter(f.key)}
             >
               {f.label} ({counts[f.key]})
-            </Button>
+            </button>
           ))}
         </div>
 
         {isLoading ? (
-          <div className="v2-card v2-empty">Loading your listings…</div>
+          <div className="v2-listing-grid">
+            {[0, 1, 2].map((i) => (
+              <div className="v2-listing-card" key={i}>
+                <div className="v2-skeleton h-44 w-full" />
+                <div className="v2-listing-body">
+                  <div className="v2-skeleton h-4 w-3/4" />
+                  <div className="v2-skeleton h-4 w-1/3" />
+                </div>
+              </div>
+            ))}
+          </div>
         ) : shown.length === 0 ? (
           <div className="v2-card v2-empty">
             <h2>{listings.length ? 'Nothing in this view' : 'Start your first listing'}</h2>
             <p>List a truck, trailer, mobile kitchen, equipment, or vendor space.</p>
-            <Button asChild variant="secondary">
-              <Link to="/list">Create a listing</Link>
-            </Button>
+            <Link to="/list" className="v2-btn">
+              Create a listing
+            </Link>
           </div>
         ) : (
           <div className="v2-listing-grid">
@@ -188,47 +195,44 @@ export default function WorkspaceListings() {
                       <span>{listing.view_count ?? 0} views</span>
                       {featured && <span className="v2-status">Featured</span>}
                       {listing.status === 'published' && !paypalReady && (
-                        <span className="v2-status">Online payments not set up</span>
+                        <span className="v2-status is-warn">Online payments not set up</span>
                       )}
                     </div>
                     <div className="v2-listing-actions">
-                      <Button asChild variant="outline" size="sm">
-                        <Link to={`/listing/${listing.id}`}>
-                          <Eye />
-                          View
-                        </Link>
-                      </Button>
-                      <Button asChild variant="ghost" size="sm">
-                        <Link to={`/edit-listing/${listing.id}`}>
-                          <Pencil />
-                          Edit
-                        </Link>
-                      </Button>
+                      <Link className="v2-btn v2-btn-sm" to={`/listing/${listing.id}`}>
+                        <Eye />
+                        View
+                      </Link>
+                      <Link
+                        className="v2-btn-outline v2-btn-sm"
+                        to={`/edit-listing/${listing.id}`}
+                      >
+                        <Pencil />
+                        Edit
+                      </Link>
                       {listing.status === 'published' && !featured && (
-                        <Button
-                          variant="ghost"
-                          size="sm"
+                        <button
+                          type="button"
+                          className="v2-btn-outline v2-btn-sm"
                           onClick={() => setBoostTarget({ id: listing.id, title: listing.title })}
                         >
                           <Megaphone />
                           Promote
-                        </Button>
+                        </button>
                       )}
-                      <Button
-                        variant="ghost"
-                        size="sm"
+                      <button
+                        type="button"
+                        className="v2-btn-quiet"
                         onClick={() => share(listing.id, listing.title)}
                       >
                         <Share2 />
                         Share
-                      </Button>
+                      </button>
                       {!paypalReady && (
-                        <Button asChild variant="ghost" size="sm">
-                          <Link to="/dashboard/payments">
-                            <CreditCard />
-                            Payment setup
-                          </Link>
-                        </Button>
+                        <Link className="v2-btn-quiet" to="/dashboard/payments">
+                          <CreditCard />
+                          Payment setup
+                        </Link>
                       )}
                     </div>
                   </div>
