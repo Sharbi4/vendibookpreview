@@ -2274,6 +2274,56 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
 .v2-checkout .bg-primary, .v2-checkout .text-primary-foreground { color: hsl(var(--v2-paper)); }
 .v2-checkout .border-primary { border-color: hsl(var(--v2-line-strong)); }
 
+/* Legacy step components inside the new checkout: keep the dashboard material
+   system. Selection uses charcoal ink + ivory, never an orange wash — brand
+   colour in checkout is reserved for the PayPal panel. */
+.v2-checkout [class*="bg-primary/"] { background-color: hsl(var(--v2-ink) / .05) !important; }
+.v2-checkout [class*="border-primary"] { border-color: hsl(var(--v2-ink) / .55) !important; }
+.v2-checkout label[class*="border-primary"],
+.v2-checkout div[class*="border-primary"],
+.v2-checkout button[class*="border-primary"] {
+  box-shadow: 0 0 0 1px hsl(var(--v2-ink) / .18) !important;
+}
+.v2-checkout .text-primary { color: hsl(var(--v2-ink)) !important; }
+.v2-checkout .bg-primary:not([class*="bg-primary/"]) {
+  background-color: hsl(var(--v2-ink)) !important;
+  color: hsl(var(--v2-paper)) !important;
+}
+.v2-checkout .bg-primary:not([class*="bg-primary/"]) svg { color: hsl(var(--v2-paper)); }
+
+/* One card depth only: panels nested inside a checkout section read as quiet
+   insets rather than a second raised card. */
+.v2-checkout-section-body .rounded-xl,
+.v2-checkout-section-body .rounded-2xl,
+.v2-checkout-section-body .rounded-lg {
+  box-shadow: none;
+}
+.v2-checkout-section-body .v2-checkout-section {
+  border-radius: 12px;
+  box-shadow: none;
+  background: hsl(var(--v2-paper));
+}
+.v2-checkout-section-body .v2-checkout-section > .v2-checkout-section-body { padding: 16px; }
+
+/* Type scale inside sections stays under the section heading. */
+.v2-checkout-section-body h2 { font-size: 15px; font-weight: 640; letter-spacing: -.01em; }
+.v2-checkout-section-body h3 { font-size: 13.5px; font-weight: 620; letter-spacing: -.005em; }
+.v2-checkout-section-body .text-2xl { font-size: 17px; line-height: 1.25; }
+
+/* Financing panel inside checkout adopts the dashboard button material. */
+.v2-checkout .finance-cta {
+  background: hsl(var(--v2-ink)) !important;
+  color: hsl(var(--v2-paper)) !important;
+  border: 1px solid hsl(var(--v2-ink)) !important;
+  box-shadow: none !important;
+}
+.v2-checkout .finance-cta-outline {
+  background: transparent !important;
+  color: hsl(var(--v2-ink)) !important;
+  border: 1px solid hsl(var(--v2-line-strong)) !important;
+  box-shadow: none !important;
+}
+
 
 /* Listing wizard embedded in the workspace shell: the wizard ships its own
    full-page frame, so neutralise the viewport sizing and let the workspace
@@ -2295,4 +2345,67 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
 }
 .v2-wizard-embed .container.max-w-4xl > .grid {
   padding-top: 0;
+}
+
+
+/* Date picker dialog opened from checkout adopts the ivory checkout surface. */
+.v2-checkout-dialog {
+  --v2-paper: 38 34% 97%; --v2-surface: 40 40% 99%; --v2-ink: 28 10% 12%;
+  --v2-ink-soft: 28 8% 40%; --v2-wash: 36 24% 94%;
+  --v2-line: 30 13% 85%; --v2-line-strong: 30 12% 76%;
+  --background: var(--v2-paper);
+  --foreground: var(--v2-ink);
+  --card: var(--v2-paper);
+  --card-foreground: var(--v2-ink);
+  --popover: var(--v2-paper);
+  --popover-foreground: var(--v2-ink);
+  --muted: var(--v2-wash);
+  --muted-foreground: var(--v2-ink-soft);
+  --border: var(--v2-line);
+  --input: var(--v2-line);
+  --primary: var(--v2-ink);
+  --primary-foreground: var(--v2-paper);
+  --accent: var(--v2-wash);
+  --accent-foreground: var(--v2-ink);
+  background: hsl(var(--v2-paper)) !important;
+  color: hsl(var(--v2-ink)) !important;
+  border: 1px solid hsl(var(--v2-line)) !important;
+  box-shadow: 0 24px 60px hsl(28 12% 10% / .22) !important;
+}
+.v2-checkout-dialog [class*="bg-gradient-to"] {
+  background-image: none !important;
+  background-color: hsl(var(--v2-wash)) !important;
+}
+.v2-checkout-dialog button[class*="bg-primary"],
+.v2-checkout-dialog button[class*="from-"] {
+  background-image: none !important;
+  background-color: hsl(var(--v2-ink)) !important;
+  color: hsl(var(--v2-paper)) !important;
+  box-shadow: none !important;
+}
+
+.v2-checkout-dialog .text-foreground,
+.v2-checkout-dialog h2, .v2-checkout-dialog h3, .v2-checkout-dialog h4 { color: hsl(var(--v2-ink)) !important; }
+.v2-checkout-dialog .text-muted-foreground { color: hsl(var(--v2-ink-soft)) !important; }
+.v2-checkout-dialog .text-primary { color: hsl(var(--v2-ink)) !important; }
+.v2-checkout-dialog [class*="bg-muted"] { background-color: hsl(var(--v2-wash)) !important; }
+.v2-checkout-dialog [class*="border-"] { border-color: hsl(var(--v2-line)) !important; }
+.v2-checkout-dialog button.h-12 {
+  background: hsl(var(--v2-ink)) !important;
+  background-image: none !important;
+  color: hsl(var(--v2-paper)) !important;
+  border: 1px solid hsl(var(--v2-ink)) !important;
+  box-shadow: none !important;
+  border-radius: 12px;
+}
+.v2-checkout-dialog button.h-12:disabled { opacity: .45; }
+/* No gradient CTAs inside the checkout shell — dashboard ink buttons only. */
+.v2-checkout-section-body button[class*="gradient"],
+.v2-checkout-section-body button[class*="from-"],
+.v2-checkout-section-body a[class*="gradient"] {
+  background-image: none !important;
+  background-color: hsl(var(--v2-ink)) !important;
+  color: hsl(var(--v2-paper)) !important;
+  border: 1px solid hsl(var(--v2-ink)) !important;
+  box-shadow: none !important;
 }

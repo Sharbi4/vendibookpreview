@@ -23,6 +23,9 @@ interface FinancingActionPanelProps {
   listing: any;
   host?: any;
   className?: string;
+  /** Hide the "Purchase payment by PayPal" lockup — checkout keeps PayPal
+   *  branding inside the payment step only. */
+  showPaymentLockup?: boolean;
 }
 
 /**
@@ -30,7 +33,11 @@ interface FinancingActionPanelProps {
  * `equinox_financing_enabled` flag is on AND this seller opted this listing in.
  * All sheet data comes from the authoritative server path.
  */
-export const FinancingActionPanel = ({ listing, className }: FinancingActionPanelProps) => {
+export const FinancingActionPanel = ({
+  listing,
+  className,
+  showPaymentLockup = true,
+}: FinancingActionPanelProps) => {
   const [busy, setBusy] = useState(false);
   const { startFinancingApply, financingLeadDialog } = useFinancingHandoff();
   const enabled = useEquinoxFinancingEnabled(listing);
@@ -122,12 +129,14 @@ export const FinancingActionPanel = ({ listing, className }: FinancingActionPane
         </Button>
       </div>
 
-      <div className="mt-4 pt-3 border-t border-border/50 flex items-center gap-2 flex-wrap">
-        <Lock className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
-        <span className="text-xs text-muted-foreground">Purchase payment by</span>
-        <PayPalMonogram className="h-4" />
-        <PayPalWordmark surface="light" className="h-3.5" />
-      </div>
+      {showPaymentLockup && (
+        <div className="mt-4 pt-3 border-t border-border/50 flex items-center gap-2 flex-wrap">
+          <Lock className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
+          <span className="text-xs text-muted-foreground">Purchase payment by</span>
+          <PayPalMonogram className="h-4" />
+          <PayPalWordmark surface="light" className="h-3.5" />
+        </div>
+      )}
 
 
       <p className="text-[11px] text-muted-foreground/80 mt-3 leading-relaxed">

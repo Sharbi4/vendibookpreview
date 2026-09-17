@@ -1137,7 +1137,7 @@ const SaleCheckout = () => {
         </CheckoutSection>
 
         {/* Financing — a separate application, never mixed with the PayPal purchase flow above. */}
-        <FinancingActionPanel listing={listing} host={host} />
+        <FinancingActionPanel listing={listing} host={host} showPaymentLockup={false} />
 
         <VerifiedSellerDialog
           open={identityDialogOpen}
