@@ -28,6 +28,7 @@ import ChangePasswordSheet from '@/components/account/ChangePasswordSheet';
 import PrivacySharingSection from '@/components/account/PrivacySharingSection';
 import MembershipSummaryCard from '@/components/account/MembershipSummaryCard';
 import { getDisplayInitials } from '@/lib/displayName';
+import WalkthroughSettings from '@/components/video/WalkthroughSettings';
 
 interface ProfileRow {
   full_name: string;
@@ -298,6 +299,12 @@ export default function WorkspaceAccount() {
                 </div>
               </div>
             </section>
+
+            {user && (
+              <section className="v2-panel v2-embedded-section">
+                <WalkthroughSettings />
+              </section>
+            )}
 
             {user && (
               <section className="v2-panel v2-embedded-section">

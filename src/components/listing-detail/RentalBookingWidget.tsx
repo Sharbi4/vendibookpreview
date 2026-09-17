@@ -37,6 +37,7 @@ import {
   TooltipProvider,
   TooltipTrigger} from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
+import WalkthroughCta from '@/components/video/WalkthroughCta';
 import { calculateRentalFees } from '@/lib/commissions';
 import { supabase } from '@/integrations/supabase/client';
 import { quoteRentalPeriod, resolveRentalRate, formatAmount } from '@/lib/listings/rentalPricing';
@@ -1487,6 +1488,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
           </motion.div>
         )}
 
+        <WalkthroughCta listingId={listingId} />
         <Button
           variant={isInstant ? 'dark-shine' : 'outline'}
           className={cn(

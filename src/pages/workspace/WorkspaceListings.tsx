@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { CreditCard, Eye, Image as ImageIcon, Megaphone, Pencil, Plus, Share2 } from 'lucide-react';
+import { CreditCard, Eye, Image as ImageIcon, Megaphone, Pencil, Plus, Share2, Video } from 'lucide-react';
 import { toast } from 'sonner';
 import WorkspaceShell from '@/components/workspace/WorkspaceShell';
 import PayPalReadyBadge from '@/components/workspace/PayPalReadyBadge';
@@ -8,6 +8,7 @@ import { useHostListings } from '@/hooks/useHostListings';
 import { useMyPayPalConnection } from '@/hooks/useMyPayPalConnection';
 import { PromoteListingModal } from '@/components/dashboard/PromoteListingModal';
 import { isListingFeatured } from '@/lib/featured';
+import { useVideoWalkthroughs } from '@/hooks/useVideoWalkthroughs';
 
 type StatusFilter = 'all' | 'published' | 'draft' | 'paused' | 'archived';
 
@@ -31,6 +32,7 @@ const money = (value?: number | null) =>
 export default function WorkspaceListings() {
   const { listings, isLoading } = useHostListings();
   const { isReady: paypalReady } = useMyPayPalConnection();
+  const { walkthroughs } = useVideoWalkthroughs();
   const [searchParams, setSearchParams] = useSearchParams();
   const [boostTarget, setBoostTarget] = useState<{ id: string; title: string } | null>(null);
   const boostHandled = useRef(false);
@@ -198,6 +200,7 @@ export default function WorkspaceListings() {
                     <div className="v2-listing-stats flex flex-wrap gap-2">
                       <span>{listing.view_count ?? 0} views</span>
                       {featured && <span className="v2-status">Featured</span>}
+                      {walkthroughs.filter(w=>w.listing_id===listing.id&&['scheduled','rescheduled'].includes(w.status)&&+new Date(w.ends_at)>Date.now()).length>0 && <Link className="v2-status is-ok" to="/dashboard/activity?filter=walkthroughs">{walkthroughs.filter(w=>w.listing_id===listing.id&&['scheduled','rescheduled'].includes(w.status)&&+new Date(w.ends_at)>Date.now()).length} upcoming walkthroughs</Link>}
                       {listing.status === 'published' && !paypalReady && (
                         <span className="v2-status is-warn">Online payments not set up</span>
                       )}
@@ -247,6 +250,7 @@ export default function WorkspaceListings() {
                           Payment setup
                         </Link>
                       )}
+                      <Link className="v2-btn-quiet" to="/dashboard/account"><Video/> Walkthrough availability</Link>
                     </div>
                   </div>
                 </article>

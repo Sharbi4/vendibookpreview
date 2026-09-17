@@ -13,6 +13,7 @@ import {
   MessageCircle,
   Receipt,
   Search,
+  Video,
 } from 'lucide-react';
 import WorkspaceShell from '@/components/workspace/WorkspaceShell';
 import PayPalReadyBadge from '@/components/workspace/PayPalReadyBadge';
@@ -25,6 +26,8 @@ import { useConversations } from '@/hooks/useConversations';
 import { useMyPayPalConnection } from '@/hooks/useMyPayPalConnection';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useFavorites } from '@/hooks/useFavorites';
+import { useVideoWalkthroughs } from '@/hooks/useVideoWalkthroughs';
+import { formatWalkthroughTime } from '@/lib/videoWalkthroughs';
 import { toDashboardTarget } from '@/lib/navigation/dashboardTargets';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
@@ -63,6 +66,7 @@ export default function WorkspaceHome() {
   const { status: paypalStatus, isReady: paypalReady, connection } = useMyPayPalConnection();
   const { notifications, unreadCount: notificationUnread } = useNotifications(user?.id);
   const { favorites } = useFavorites();
+  const { walkthroughs } = useVideoWalkthroughs();
 
   const name = profile?.full_name || user?.email || 'there';
   const firstName = name.split(' ')[0];
@@ -73,12 +77,14 @@ export default function WorkspaceHome() {
   const pendingBuyerBookings = buyerBookings.filter((b) => b.status === 'pending');
   const disputes = transactions.filter((t) => t.dispute_status && t.dispute_status !== 'none');
   const unread = conversations.reduce((sum, c) => sum + (c.unread_count ?? 0), 0);
+  const upcomingWalkthroughs = walkthroughs.filter((w) => ['scheduled','rescheduled'].includes(w.status) && +new Date(w.ends_at) > Date.now());
 
   const isSeller = listings.length > 0 || sellerBookings.length > 0;
   const isBuyer = buyerBookings.length > 0 || transactions.some((t) => t.role === 'buyer');
 
   const tasks = useMemo(() => {
     const items: Task[] = [];
+    upcomingWalkthroughs.slice(0, 3).forEach((w) => items.push({ id:`walkthrough-${w.id}`, label:`Video walkthrough ${formatWalkthroughTime(w.starts_at)}`, hint:w.listing?.title || 'Scheduled walkthrough', to:`/walkthrough/${w.id}`, icon:Video }));
     if (pendingSellerBookings.length)
       items.push({
         id: 'booking-requests',
@@ -157,6 +163,7 @@ export default function WorkspaceHome() {
     unread,
     profile?.full_name,
     profile?.avatar_url,
+    upcomingWalkthroughs.length,
   ]);
 
   const recentActivity = useMemo(
@@ -186,10 +193,11 @@ export default function WorkspaceHome() {
           amount: null,
           icon: CalendarDays,
         })),
+        ...walkthroughs.map((w) => ({ id:`vw-${w.id}`, title:w.listing?.title||'Video walkthrough', detail:`Video walkthrough · ${w.status}`, date:w.created_at, amount:null, icon:Video })),
       ]
         .sort((a, b) => +new Date(b.date) - +new Date(a.date))
         .slice(0, 5),
-    [transactions, buyerBookings, sellerBookings],
+    [transactions, buyerBookings, sellerBookings, walkthroughs],
   );
 
   const sellerEarnings = transactions.filter((t) => t.role === 'seller');

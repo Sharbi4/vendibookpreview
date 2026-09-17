@@ -33,6 +33,7 @@ import { trackFinancingLearnMoreClick, type FinancingSource } from '@/lib/analyt
 import { useFinancingHandoff } from '@/hooks/useFinancingHandoff';
 
 import { SaleCard } from './SaleCard';
+import WalkthroughCta from '@/components/video/WalkthroughCta';
 import { BuyingInfoDialog } from './BuyingInfoDialog';
 import { DeliveryCheckSheet, type DeliveryChoice } from './DeliveryCheckSheet';
 
@@ -343,6 +344,7 @@ export const SalePurchaseCard = ({
               Buy Now
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
+            <WalkthroughCta listingId={listing.id} />
             <div className="grid grid-cols-2 gap-2">
               <Button
                 onClick={handleOffer}

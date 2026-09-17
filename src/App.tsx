@@ -68,6 +68,8 @@ const WorkspaceProfile = lazy(() => import("./pages/workspace/WorkspaceProfile")
 const WorkspaceMessages = lazy(() => import("./pages/workspace/WorkspaceMessages"));
 const WorkspaceNotifications = lazy(() => import("./pages/workspace/WorkspaceNotifications"));
 const WorkspaceSaved = lazy(() => import("./pages/workspace/WorkspaceSaved"));
+const WalkthroughSchedule = lazy(() => import("./pages/WalkthroughSchedule"));
+const WalkthroughDetail = lazy(() => import("./pages/WalkthroughDetail"));
 const EditListing = lazy(() => import("./pages/EditListing"));
 const RentItOut = lazy(() => import("./pages/RentItOut"));
 const ListingPaymentsFinancing = lazy(() => import("./pages/ListingPaymentsFinancing"));
@@ -319,6 +321,8 @@ const AnimatedRoutes = () => {
           <Route path="/dashboard/bookings/:bookingId" element={<PageTransition><WorkspaceBookingDetail /></PageTransition>} />
           <Route path="/dashboard/reporting" element={<PageTransition><WorkspaceReporting /></PageTransition>} />
           <Route path="/dashboard/analytics" element={<PageTransition><WorkspaceAnalytics /></PageTransition>} />
+          <Route path="/walkthrough/schedule/:listingId" element={<PageTransition><WalkthroughSchedule /></PageTransition>} />
+          <Route path="/walkthrough/:walkthroughId" element={<PageTransition><WalkthroughDetail /></PageTransition>} />
           <Route path="/dashboard/classic" element={<PreserveQueryRedirect to="/dashboard" />} />
           {/* Legacy workspace aliases */}
           <Route path="/onboarding-v2" element={<Navigate to="/welcome" replace />} />
