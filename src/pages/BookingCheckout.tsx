@@ -954,8 +954,6 @@ const BookingCheckout = () => {
         title={`Book ${listing.title} | Vendibook`}
         description={`Complete your booking for ${listing.title}.`}
       />
-      <Header />
-
       <TransactionCheckoutShell
         eyebrow="Vendibook rental"
         title="Complete your booking"
