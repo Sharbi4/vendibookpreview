@@ -2089,6 +2089,9 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
    the PayPal panel.
    ───────────────────────────────────────────────────────────── */
 .v2-checkout {
+  --v2-shell: 240 6% 7%; --v2-paper: 38 34% 97%; --v2-surface: 40 40% 99%;
+  --v2-ink: 28 10% 12%; --v2-stone: 28 8% 40%; --v2-line: 30 13% 85%;
+  --v2-line-strong: 30 12% 76%; --v2-ok: 152 32% 34%; --v2-warn: 32 55% 40%;
   min-height: 100dvh;
   background: hsl(var(--v2-paper));
   color: hsl(var(--v2-ink));
@@ -2261,3 +2264,12 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
   .v2-checkout-mobile-summary { display: none; }
   .v2-checkout-sticky { display: none; }
 }
+
+/* Legacy panels embedded inside the new checkout inherit the ivory system. */
+.v2-checkout .bg-card, .v2-checkout .bg-background, .v2-checkout .bg-muted\/25, .v2-checkout .bg-muted\/30 {
+  background-color: hsl(var(--v2-surface));
+}
+.v2-checkout .text-primary { color: hsl(var(--v2-ink)); }
+.v2-checkout .bg-primary { background-color: hsl(var(--v2-ink)); }
+.v2-checkout .bg-primary, .v2-checkout .text-primary-foreground { color: hsl(var(--v2-paper)); }
+.v2-checkout .border-primary { border-color: hsl(var(--v2-line-strong)); }
