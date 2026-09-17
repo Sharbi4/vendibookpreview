@@ -864,6 +864,21 @@ const OrderTracking = () => {
             </CardContent>
           </Card>
 
+          {/* Charges */}
+          <div className="mb-6">
+            <OrderChargesSummary
+              amount={transaction.amount}
+              deliveryFee={transaction.delivery_fee}
+              freightCost={transaction.freight_cost}
+              freightChargedToBuyer={
+                isVendibookFreight &&
+                (transaction.freight_payment_status === 'paid' || !isCashTransaction)
+              }
+              taxAmount={transaction.tax_amount}
+              isCash={isCashTransaction}
+            />
+          </div>
+
           {/* Order Details */}
           <Card>
             <CardHeader>
