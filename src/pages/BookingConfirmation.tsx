@@ -49,9 +49,19 @@ type View = 'loading' | 'processing' | 'confirmed' | 'awaiting_host' | 'declined
 const money = (n: number) =>
   n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
 
-const BookingConfirmation = () => {
+interface BookingConfirmationProps {
+  /** Rendered inside the dashboard workspace: no site header/footer chrome. */
+  embedded?: boolean;
+  /** Dashboard route supplies the booking id from the path instead of ?booking_id. */
+  bookingId?: string;
+}
+
+const BookingConfirmation = ({
+  embedded = false,
+  bookingId: bookingIdProp,
+}: BookingConfirmationProps = {}) => {
   const [params] = useSearchParams();
-  const bookingId = params.get('booking_id');
+  const bookingId = bookingIdProp ?? params.get('booking_id');
   const [booking, setBooking] = useState<BookingRow | null>(null);
   const [view, setView] = useState<View>('loading');
   const attempts = useRef(0);
@@ -161,15 +171,25 @@ const BookingConfirmation = () => {
           : Loader2;
 
   return (
-    <div className="min-h-screen flex flex-col bg-background sale-light">
-      <SEO
-        title="Booking confirmation | Vendibook"
-        description="Your Vendibook rental booking status and next steps."
-        noindex
-      />
-      <Header />
-      <main className="flex-1 px-4 py-10 sm:py-16">
-        <div className="mx-auto w-full max-w-2xl space-y-6">
+    <div
+      className={
+        embedded
+          ? 'sale-light flex flex-col'
+          : 'min-h-screen flex flex-col bg-background sale-light'
+      }
+    >
+      {embedded ? null : (
+        <SEO
+          title="Booking confirmation | Vendibook"
+          description="Your Vendibook rental booking status and next steps."
+          noindex
+        />
+      )}
+      {embedded ? null : <Header />}
+      <main className={embedded ? 'flex-1' : 'flex-1 px-4 py-10 sm:py-16'}>
+        <div
+          className={embedded ? 'w-full space-y-6' : 'mx-auto w-full max-w-2xl space-y-6'}
+        >
           <div className="rounded-3xl border border-border bg-card p-6 sm:p-8 shadow-sm">
             <div className="flex items-start gap-4">
               <div className="h-12 w-12 rounded-2xl bg-primary/10 flex items-center justify-center flex-shrink-0">
@@ -221,11 +241,11 @@ const BookingConfirmation = () => {
 
             <div className="mt-6 flex flex-col sm:flex-row gap-3">
               <Button asChild variant="cta" className="flex-1">
-                <Link to="/dashboard?tab=bookings">View my bookings</Link>
+                <Link to="/dashboard/activity?filter=rentals">View my bookings</Link>
               </Button>
               {booking?.listing_id ? (
                 <Button asChild variant="outline" className="flex-1 rounded-2xl h-14">
-                  <Link to={`/messages?listing=${booking.listing_id}`}>
+                  <Link to={`/dashboard/messages?listing=${booking.listing_id}`}>
                     <MessageSquare className="h-4 w-4 mr-2" />
                     Message the host
                   </Link>
@@ -247,7 +267,7 @@ const BookingConfirmation = () => {
           </p>
         </div>
       </main>
-      <Footer />
+      {embedded ? null : <Footer />}
     </div>
   );
 };

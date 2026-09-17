@@ -76,13 +76,31 @@ import PayPalEmbeddedPayment from '@/components/transaction/checkout/PayPalEmbed
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'on_site';
 
-const BookingCheckout = () => {
+interface BookingCheckoutProps {
+  /** Rendered inside the dashboard workspace: no site header/footer chrome. */
+  embedded?: boolean;
+}
+
+const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   const { listingId } = useParams<{ listingId: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
   const { listing, isLoading, error } = useListing(listingId);
+  /** Keeps date edits on whichever route this flow is mounted on. */
+  const checkoutBasePath = embedded ? '/dashboard/bookings/new' : '/book';
+  /** Page frame: full site chrome publicly, bare column inside the dashboard. */
+  const Frame = ({ children }: { children: React.ReactNode }) =>
+    embedded ? (
+      <div className="sale-light v2-commerce v2-wizard-embed flex flex-col">{children}</div>
+    ) : (
+      <div className="sale-light v2-commerce min-h-screen flex flex-col bg-background">
+        <Header />
+        {children}
+        <Footer />
+      </div>
+    );
   /**
    * Instant Book skips host approval ONLY for identity-verified hosts.
    * Everyone else: payment is taken and the booking waits for the host to
@@ -400,7 +418,7 @@ const BookingCheckout = () => {
     ['startTime', 'endTime', 'hours', 'hourlyData', 'timeSlots'].forEach((key) => params.delete(key));
     params.set('start', format(start, 'yyyy-MM-dd'));
     params.set('end', format(end, 'yyyy-MM-dd'));
-    navigate(`/book/${listingId}?${params.toString()}`, { replace: true });
+    navigate(`${checkoutBasePath}/${listingId}?${params.toString()}`, { replace: true });
   };
 
   const termsGate = useTermsGate();
@@ -674,20 +692,17 @@ const BookingCheckout = () => {
 
   if (isLoading) {
     return (
-      <div className="sale-light v2-commerce min-h-screen flex flex-col bg-background">
-        <Header />
-        <div className="flex-1 flex items-center justify-center">
+      <Frame>
+        <div className="flex-1 flex items-center justify-center py-16">
           <Loader2 className="h-8 w-8 animate-spin text-foreground" />
         </div>
-        <Footer />
-      </div>
+      </Frame>
     );
   }
 
   if (error || !listing) {
     return (
-      <div className="sale-light v2-commerce min-h-screen flex flex-col bg-background">
-        <Header />
+      <Frame>
         <div className="flex-1 container py-16 text-center">
           <h1 className="text-2xl font-bold text-foreground mb-4">Listing not found</h1>
           <Button asChild>
@@ -697,16 +712,14 @@ const BookingCheckout = () => {
             </Link>
           </Button>
         </div>
-        <Footer />
-      </div>
+      </Frame>
     );
   }
 
   // For vendor spaces with multiple slots, require slot selection before dates
   if (hasMultipleSlots && !selectedSlot) {
     return (
-      <div className="sale-light v2-commerce min-h-screen flex flex-col bg-background">
-        <Header />
+      <Frame>
         <main className="flex-1 container py-8 max-w-2xl">
           <Button
             variant="ghost"
@@ -817,8 +830,7 @@ const BookingCheckout = () => {
             onDatesSelected={handleDatesSelected}
           />
         </main>
-        <Footer />
-      </div>
+      </Frame>
     );
   }
 
@@ -949,7 +961,13 @@ const BookingCheckout = () => {
   );
 
   return (
-    <div className="sale-light v2-commerce min-h-screen flex flex-col bg-background">
+    <div
+      className={
+        embedded
+          ? 'sale-light v2-commerce v2-wizard-embed flex flex-col'
+          : 'sale-light v2-commerce min-h-screen flex flex-col bg-background'
+      }
+    >
       <SEO
         title={`Book ${listing.title} | Vendibook`}
         description={`Complete your booking for ${listing.title}.`}
