@@ -65,6 +65,8 @@ export const useOrderTracking = (transactionId: string | undefined) => {
           delivery_instructions,
           delivery_fee,
           freight_cost,
+          tax_amount,
+          payment_status,
           created_at,
           shipping_status,
           tracking_number,
