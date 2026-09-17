@@ -13,27 +13,48 @@ import { cn } from '@/lib/utils';
  * contrasts with the surface it sits on.
  */
 
-export function PayPalMonogram({ className }: { className?: string }) {
+/** Text fallback in official PayPal colours, readable on light or dark. */
+function PayPalTextMark({ surface, className }: { surface: 'dark' | 'light'; className?: string }) {
+  return (
+    <span className={cn('inline-flex items-center font-bold tracking-tight', className)}>
+      <span style={{ color: '#009cde' }}>Pay</span>
+      <span style={{ color: surface === 'dark' ? '#ffffff' : '#012169' }}>Pal</span>
+    </span>
+  );
+}
+
+export function PayPalMonogram({
+  surface = 'light',
+  className,
+}: {
+  surface?: 'dark' | 'light';
+  className?: string;
+}) {
+  const [failed, setFailed] = useState(false);
+  // The wordmark alongside already carries the PayPal name in its fallback.
+  if (failed) return null;
   return (
     <img
       src={paypalMonogram.url}
       alt="PayPal"
       loading="lazy"
+      onError={() => setFailed(true)}
       className={cn('h-4 w-auto', className)}
     />
   );
 }
 
-export function PayPalWordmark({ className }: { className?: string }) {
+export function PayPalWordmark({
+  surface = 'dark',
+  className,
+}: {
+  surface?: 'dark' | 'light';
+  className?: string;
+}) {
   const [failed, setFailed] = useState(false);
-  if (failed) {
-    // Never show a broken image: fall back to the PayPal name in brand type.
-    return (
-      <span className={cn('inline-flex items-center font-bold tracking-tight', className)}>
-        <span style={{ color: '#009cde' }}>Pay</span>
-        <span style={{ color: '#ffffff' }}>Pal</span>
-      </span>
-    );
+  // Never show a broken image: fall back to the PayPal name in brand type.
+  if (failed || surface === 'light') {
+    return <PayPalTextMark surface={surface} className={cn('text-sm', className)} />;
   }
   return (
     <img
@@ -64,12 +85,19 @@ export function PlaidLogo({
 }
 
 export function EquinoxFundingLogo({ className }: { className?: string }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) {
+    return (
+      <span className={cn('text-sm font-semibold tracking-tight', className)}>Equinox Funding</span>
+    );
+  }
   return (
     <img
       src={equinoxLogo.url}
       alt="Equinox Funding"
       loading="eager"
       decoding="async"
+      onError={() => setFailed(true)}
       className={cn('h-6 w-auto', className)}
     />
   );

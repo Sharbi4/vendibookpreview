@@ -126,7 +126,7 @@ export const FinancingActionPanel = ({ listing, className }: FinancingActionPane
         <Lock className="h-3.5 w-3.5 text-muted-foreground" aria-hidden />
         <span className="text-xs text-muted-foreground">Purchase payment by</span>
         <PayPalMonogram className="h-4" />
-        <PayPalWordmark className="h-3.5" />
+        <PayPalWordmark surface="light" className="h-3.5" />
       </div>
 
 
