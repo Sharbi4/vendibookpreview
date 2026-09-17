@@ -49,7 +49,6 @@ const SmsTerms = lazy(() => import("./pages/legal/SmsTerms"));
 const SmsOptInProof = lazy(() => import("./pages/legal/SmsOptInProof"));
 const SmsEnrollment = lazy(() => import("./pages/SmsEnrollment"));
 const SmsOptIn = lazy(() => import("./pages/SmsOptIn"));
-const Dashboard = lazy(() => import("./pages/Dashboard"));
 // Unified Vendibook workspace (primary logged-in experience)
 const WorkspaceOnboarding = lazy(() => import("./pages/workspace/WorkspaceOnboarding"));
 const WorkspaceHome = lazy(() => import("./pages/workspace/WorkspaceHome"));
@@ -321,7 +320,7 @@ const AnimatedRoutes = () => {
           <Route path="/dashboard/bookings/:bookingId" element={<PageTransition><WorkspaceBookingDetail /></PageTransition>} />
           <Route path="/dashboard/reporting" element={<PageTransition><WorkspaceReporting /></PageTransition>} />
           <Route path="/dashboard/analytics" element={<PageTransition><WorkspaceAnalytics /></PageTransition>} />
-          <Route path="/dashboard/classic" element={<PageTransition><Dashboard /></PageTransition>} />
+          <Route path="/dashboard/classic" element={<PreserveQueryRedirect to="/dashboard" />} />
           {/* Legacy workspace aliases */}
           <Route path="/onboarding-v2" element={<Navigate to="/welcome" replace />} />
           <Route path="/dashboard-v2" element={<Navigate to="/dashboard" replace />} />
