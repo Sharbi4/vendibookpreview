@@ -307,6 +307,7 @@ const AnimatedRoutes = () => {
           <Route path="/dashboard/notifications/settings" element={<PageTransition><NotificationPreferences /></PageTransition>} />
           <Route path="/dashboard/saved" element={<PageTransition><WorkspaceSaved /></PageTransition>} />
           <Route path="/dashboard/payments" element={<PageTransition><WorkspacePayments /></PageTransition>} />
+          <Route path="/dashboard/payments/setup" element={<PageTransition><WorkspacePaymentSetup /></PageTransition>} />
           <Route path="/dashboard/account" element={<PageTransition><WorkspaceAccount /></PageTransition>} />
           <Route path="/dashboard/classic" element={<PageTransition><Dashboard /></PageTransition>} />
           {/* Legacy workspace aliases */}
