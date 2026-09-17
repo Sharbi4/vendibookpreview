@@ -6,12 +6,15 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUserTransactions } from '@/hooks/useUserTransactions';
 import { useShopperBookings } from '@/hooks/useShopperBookings';
 import { useHostBookings } from '@/hooks/useHostBookings';
+import { useHostListings } from '@/hooks/useHostListings';
 import WorkspaceHostBookings from '@/components/workspace/WorkspaceHostBookings';
+import WorkspaceListingActivity from '@/components/workspace/WorkspaceListingActivity';
 
-type Filter = 'all' | 'purchases' | 'sales' | 'rentals' | 'requests' | 'disputes';
+type Filter = 'all' | 'purchases' | 'sales' | 'rentals' | 'requests' | 'disputes' | 'listings';
 
 const FILTERS: { key: Filter; label: string }[] = [
   { key: 'all', label: 'All' },
+  { key: 'listings', label: 'Listings' },
   { key: 'purchases', label: 'Purchases' },
   { key: 'sales', label: 'Sales' },
   { key: 'rentals', label: 'Rentals' },
@@ -43,6 +46,7 @@ export default function WorkspaceActivity() {
   const { transactions } = useUserTransactions(user?.id);
   const { bookings: buyerBookings } = useShopperBookings();
   const { bookings: sellerBookings } = useHostBookings();
+  const { listings: hostListings } = useHostListings();
   const [searchParams] = useSearchParams();
   const initial = (searchParams.get('filter') as Filter) || 'all';
   const [filter, setFilter] = useState<Filter>(
@@ -123,10 +127,12 @@ export default function WorkspaceActivity() {
   }, [transactions, buyerBookings, sellerBookings]);
 
   const hasHostBookings = sellerBookings.length > 0;
+  const hasPublishedListings = hostListings.some((l) => l.status === 'published');
   const available = FILTERS.filter(
     (f) =>
       f.key === 'all' ||
       (f.key === 'requests' && hasHostBookings) ||
+      (f.key === 'listings' && hasPublishedListings) ||
       items.some((item) => item.kind === f.key),
   );
   const shown = filter === 'all' ? items : items.filter((item) => item.kind === filter);
@@ -168,6 +174,10 @@ export default function WorkspaceActivity() {
         </div>
 
         {(filter === 'all' || filter === 'requests') && <WorkspaceHostBookings />}
+
+        {(filter === 'all' || filter === 'sales' || filter === 'listings') && (
+          <WorkspaceListingActivity />
+        )}
 
         {groups.length ? (
           groups.map((group) => (
@@ -215,7 +225,8 @@ export default function WorkspaceActivity() {
               ))}
             </section>
           ))
-        ) : hasHostBookings && (filter === 'all' || filter === 'requests') ? null : (
+        ) : (hasHostBookings && (filter === 'all' || filter === 'requests')) ||
+          (hasPublishedListings && (filter === 'all' || filter === 'sales' || filter === 'listings')) ? null : (
           <div className="v2-panel v2-empty">
             <ImageIcon className="opacity-40" />
             <p>
