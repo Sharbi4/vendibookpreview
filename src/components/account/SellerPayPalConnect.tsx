@@ -33,7 +33,14 @@ type Connection = {
  * Inert unless the server has the seller-onboarding switch on — it renders
  * nothing otherwise, so this section never appears before certification.
  */
-export default function SellerPayPalConnect({ showWhenDisabled = false }: { showWhenDisabled?: boolean }) {
+export default function SellerPayPalConnect({
+  showWhenDisabled = false,
+  variant = 'inline',
+}: {
+  showWhenDisabled?: boolean;
+  /** `dark` renders the money-center PayPal Partner module. */
+  variant?: 'inline' | 'dark';
+}) {
   const { user } = useAuth();
   const [enabled, setEnabled] = useState<boolean | null>(null);
   const [connection, setConnection] = useState<Connection | null>(null);
