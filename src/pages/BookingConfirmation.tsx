@@ -382,19 +382,7 @@ const BookingConfirmation = ({
             ) : null}
 
             {booking && view !== 'failed' && view !== 'not_found' ? (
-              <div className="mt-6 rounded-2xl border border-border p-4">
-                <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
-                  <FileText className="h-4 w-4" />
-                  Documents
-                </h2>
-                <div className="mt-3">
-                  <DocumentUploadSection listingId={booking.listing_id} bookingId={booking.id} />
-                </div>
-                <p className="mt-3 text-xs text-muted-foreground">
-                  If the host does not require documents, nothing will appear here and there is
-                  nothing for you to send.
-                </p>
-              </div>
+              <BookingDocumentsPanel listingId={booking.listing_id} bookingId={booking.id} />
             ) : null}
 
             {nextSteps.length > 0 ? (
