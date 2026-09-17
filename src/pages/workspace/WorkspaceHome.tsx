@@ -209,7 +209,7 @@ export default function WorkspaceHome() {
             <p className="v2-eyebrow">Your workspace</p>
             <h1>Good to see you, {firstName}.</h1>
             <p>Everything you buy, rent, list, and sell — in one place.</p>
-            <div className="mt-6 flex flex-wrap gap-2.5">
+            <div className="mt-6 flex flex-wrap items-center gap-2.5">
               <Link to="/list" className="v2-btn">
                 <List />
                 List an asset
@@ -218,6 +218,7 @@ export default function WorkspaceHome() {
                 <Search />
                 Browse the marketplace
               </Link>
+              {isSeller && <PayPalReadyBadge />}
             </div>
           </div>
           <Avatar className="hidden h-16 w-16 sm:flex">
