@@ -302,7 +302,13 @@ export async function ensureSellerPayable(
       payout_eligible_at: releaseAt,
       payout_method: routed ? "paypal" : "dwolla_ach",
       payout_provider: routed ? "paypal" : "dwolla_future",
-      ...(routed ? { paid_out_at: record.captured_at ?? new Date().toISOString() } : {}),
+      ...(routed
+        ? {
+          payout_completed_at: record.captured_at ?? new Date().toISOString(),
+          external_payout_reference: (record.metadata as any)?.multiparty?.merchant_id ?? null,
+          admin_notes: "Paid directly by PayPal at capture (Connected Path).",
+        }
+        : {}),
     })
     .select()
     .maybeSingle();
