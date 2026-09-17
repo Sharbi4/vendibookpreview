@@ -125,7 +125,9 @@ export function quoteSaleTransaction(
     grossCents,
     platformFeeCents,
     taxCents: 0,
-    taxableBaseCents: grossCents,
+    // Freight is a transport service, not merchandise — it stays out of the
+    // taxable base the tax engine quotes on.
+    taxableBaseCents: merchandiseCents,
     depositCents: 0,
     discountCents,
     sellerProceedsCents,
@@ -133,6 +135,9 @@ export function quoteSaleTransaction(
     breakdown: [
       { label: "Item price", amountCents: salePriceCents },
       ...(deliveryCents ? [{ label: "Delivery", amountCents: deliveryCents }] : []),
+      ...(buyerFreightCents
+        ? [{ label: "Vendibook Freight", amountCents: buyerFreightCents }]
+        : []),
       ...(discountCents
         ? [{ label: "Discount", amountCents: -discountCents, kind: "credit" as const }]
         : []),
