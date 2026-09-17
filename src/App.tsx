@@ -314,6 +314,7 @@ const AnimatedRoutes = () => {
           <Route path="/dashboard/payments/setup" element={<PageTransition><WorkspacePaymentSetup /></PageTransition>} />
           <Route path="/dashboard/seller-setup" element={<PageTransition><WorkspaceSellerOnboarding /></PageTransition>} />
           <Route path="/dashboard/account" element={<PageTransition><WorkspaceAccount /></PageTransition>} />
+          <Route path="/dashboard/profile" element={<PageTransition><WorkspaceProfile /></PageTransition>} />
           <Route path="/dashboard/bookings" element={<PageTransition><WorkspaceBookings /></PageTransition>} />
           <Route path="/dashboard/bookings/new" element={<PageTransition><WorkspaceBookingNew /></PageTransition>} />
           <Route path="/dashboard/bookings/new/:listingId" element={<PageTransition><WorkspaceBookingNew /></PageTransition>} />
