@@ -11,10 +11,20 @@ export interface PayPalRuntimeConfig {
   enabled: boolean;
   environment: 'sandbox' | 'live';
   client_id: string | null;
+  /** PayPal-assigned BN code. Required on the SDK script tag. */
+  partner_attribution_id?: string | null;
   currency: string;
   components: string[];
   enable_funding: string[];
 }
+
+/**
+ * PayPal-assigned BN code for Vendibook LC. The server sends the authoritative
+ * value with the runtime config; this is the fallback so the attribute can
+ * never be missing from the SDK tag.
+ */
+export const PARTNER_ATTRIBUTION_ID = 'VENDIBOOK_SP_PPCP';
+
 
 let configPromise: Promise<PayPalRuntimeConfig> | null = null;
 let sdkPromise: Promise<any> | null = null;
