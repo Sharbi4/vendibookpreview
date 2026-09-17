@@ -24,11 +24,21 @@ export function PayPalMonogram({ className }: { className?: string }) {
 }
 
 export function PayPalWordmark({ className }: { className?: string }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) {
+    // Never show a broken image: fall back to the PayPal name in brand type.
+    return (
+      <span className={cn('inline-flex items-center font-bold tracking-tight', className)}>
+        <span style={{ color: '#009cde' }}>Pay</span>
+        <span style={{ color: '#ffffff' }}>Pal</span>
+      </span>
+    );
+  }
   return (
     <img
       src={paypalWordmarkWhite.url}
       alt="PayPal"
-      loading="lazy"
+      onError={() => setFailed(true)}
       className={cn('h-4 w-auto', className)}
     />
   );
