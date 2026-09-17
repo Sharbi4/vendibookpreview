@@ -5,6 +5,7 @@ import PayPalReadyBadge from '@/components/workspace/PayPalReadyBadge';
 import SellerPayPalConnect from '@/components/account/SellerPayPalConnect';
 import { PayPalWordmark } from '@/components/brand/ProviderLogos';
 import WorkspaceBookingPayments from '@/components/workspace/WorkspaceBookingPayments';
+import PayoutCalendar from '@/components/workspace/PayoutCalendar';
 
 const PayoutsPanel = lazy(() => import('@/components/dashboard/tabs/PayoutsPanel'));
 const TransactionsDisputesTab = lazy(
