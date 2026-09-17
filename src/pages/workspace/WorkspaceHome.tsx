@@ -14,6 +14,7 @@ import {
   Search,
 } from 'lucide-react';
 import WorkspaceShell from '@/components/workspace/WorkspaceShell';
+import PayPalReadyBadge from '@/components/workspace/PayPalReadyBadge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useHostListings } from '@/hooks/useHostListings';
 import { useShopperBookings } from '@/hooks/useShopperBookings';
