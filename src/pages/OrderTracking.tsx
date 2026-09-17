@@ -876,7 +876,7 @@ const OrderTracking = () => {
                   (transaction.freight_payment_status === 'paid' || !isCashTransaction),
               )}
               taxAmount={transaction.tax_amount}
-              isCash={isCashTransaction}
+              isCash={Boolean(isCashTransaction)}
             />
           </div>
 
