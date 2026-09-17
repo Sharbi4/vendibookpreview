@@ -1382,7 +1382,6 @@ const BookingCheckout = () => {
         </CheckoutSection>
       </TransactionCheckoutShell>
 
-      <Footer />
 
       {/* Modals */}
       <DateSelectionModal
