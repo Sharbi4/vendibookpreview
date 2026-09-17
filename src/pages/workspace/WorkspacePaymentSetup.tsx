@@ -74,6 +74,68 @@ export default function WorkspacePaymentSetup() {
     [listings],
   );
 
+  /**
+   * Once the seller's PayPal connection is genuinely ready, switch online
+   * payments on for their listings so the gating flag goes green without a
+   * second trip through the wizard. Listings the seller deliberately set to
+   * pay-in-person only are left alone — those need the explicit button below.
+   * No money logic, routing, or payout behaviour changes here.
+   */
+  const autoActivated = useRef(false);
+
+  useEffect(() => {
+    if (!user || !isReady || listingsLoading || autoActivated.current) return;
+    const targets = listings.filter(
+      (l) => l.accept_paypal_checkout !== true && l.accept_cash_payment !== true,
+    );
+    if (targets.length === 0) return;
+    autoActivated.current = true;
+    (async () => {
+      const { error } = await supabase
+        .from('listings')
+        .update({ accept_paypal_checkout: true })
+        .in(
+          'id',
+          targets.map((l) => l.id),
+        )
+        .eq('host_id', user.id);
+      if (error) {
+        autoActivated.current = false;
+        return;
+      }
+      toast.success(
+        targets.length === 1
+          ? 'Your PayPal account is connected — online payments are on for your listing.'
+          : `Your PayPal account is connected — online payments are on for ${targets.length} listings.`,
+      );
+      await loadListings();
+    })();
+  }, [user, isReady, listings, listingsLoading, loadListings]);
+
+  const enableAllOnlineCheckout = async () => {
+    if (!user || needsOnlineCheckout.length === 0) return;
+    setBulkSaving(true);
+    try {
+      const { error } = await supabase
+        .from('listings')
+        .update({ accept_paypal_checkout: true })
+        .in(
+          'id',
+          needsOnlineCheckout.map((l) => l.id),
+        )
+        .eq('host_id', user.id);
+      if (error) throw new Error(error.message);
+      toast.success('Online payments turned on for every listing.');
+      await loadListings();
+    } catch (e) {
+      toast.error(
+        e instanceof Error ? e.message : "Couldn't update your listings. Please try again.",
+      );
+    } finally {
+      setBulkSaving(false);
+    }
+  };
+
   const enableOnlineCheckout = async (listing: SetupListing) => {
     setSavingId(listing.id);
     try {
