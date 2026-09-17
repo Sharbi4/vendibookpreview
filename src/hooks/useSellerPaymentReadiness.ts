@@ -1,21 +1,66 @@
-/**
- * Seller PayPal payment-readiness gate.
- *
- * NOTE: this is a safe placeholder implementation. It intentionally never
- * gates checkout (`gatingActive` is always `false`) so existing purchase
- * flows are unaffected until the real readiness check (owned by another
- * workstream) lands with this exact signature. Once that lands it can
- * fully replace this file without any caller changes.
- */
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+
 export interface SellerPaymentReadiness {
   loading: boolean;
+  /** True only when Vendibook routes marketplace money to connected seller accounts. */
   gatingActive: boolean;
   ready: boolean;
   reasons: string[];
 }
 
-export function useSellerPaymentReadiness(_sellerId?: string | null): SellerPaymentReadiness {
-  return { loading: false, gatingActive: false, ready: true, reasons: [] };
+/**
+ * Buyer-safe seller payment readiness.
+ *
+ * Returns a yes/no answer plus generic reasons via a security-definer RPC — no
+ * seller account details are exposed. `gatingActive` is false while Connected
+ * Path routing is off, and callers MUST NOT block checkout in that case: the
+ * current first-party Vendibook PayPal checkout keeps working exactly as before.
+ */
+export function useSellerPaymentReadiness(sellerId?: string | null): SellerPaymentReadiness {
+  const [state, setState] = useState<SellerPaymentReadiness>({
+    loading: true,
+    gatingActive: false,
+    ready: false,
+    reasons: [],
+  });
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!sellerId) {
+      setState({ loading: false, gatingActive: false, ready: false, reasons: ['not_connected'] });
+      return;
+    }
+    (async () => {
+      try {
+        const { data, error } = await supabase.rpc('seller_payment_readiness' as never, {
+          _seller_id: sellerId,
+        } as never);
+        if (cancelled) return;
+        if (error) throw error;
+        const payload = (data ?? {}) as {
+          gating_active?: boolean;
+          ready?: boolean;
+          reasons?: string[];
+        };
+        setState({
+          loading: false,
+          gatingActive: payload.gating_active === true,
+          ready: payload.ready === true,
+          reasons: Array.isArray(payload.reasons) ? payload.reasons : [],
+        });
+      } catch {
+        if (cancelled) return;
+        // A status lookup failure must never block a working checkout.
+        setState({ loading: false, gatingActive: false, ready: false, reasons: [] });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [sellerId]);
+
+  return state;
 }
 
 export default useSellerPaymentReadiness;
