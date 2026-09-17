@@ -201,6 +201,15 @@ export default function WorkspaceListings() {
                       {listing.status === 'published' && !paypalReady && (
                         <span className="v2-status is-warn">Online payments not set up</span>
                       )}
+                      {paypalReady &&
+                        ((listing as { accept_paypal_checkout?: boolean | null })
+                          .accept_paypal_checkout === true ? (
+                          <span className="v2-status is-ok">Online payments on</span>
+                        ) : (
+                          <Link to="/dashboard/payments/setup" className="v2-status is-warn">
+                            Online payments off
+                          </Link>
+                        ))}
                     </div>
                     <div className="v2-listing-actions">
                       <Link className="v2-btn v2-btn-sm" to={`/listing/${listing.id}`}>
