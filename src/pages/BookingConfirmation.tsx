@@ -93,7 +93,7 @@ const BookingConfirmation = ({
       const { data, error } = await supabase
         .from('booking_requests')
         .select(
-          'id, status, payment_status, start_date, end_date, total_price, deposit_amount, is_instant_book, fulfillment_selected, listing_id, listings(title, cover_image_url, city, state)',
+          'id, status, payment_status, start_date, end_date, start_time, end_time, is_hourly_booking, duration_hours, slot_name, total_price, tax_amount, delivery_fee_snapshot, deposit_amount, deposit_status, is_instant_book, fulfillment_selected, delivery_address, address_snapshot, listing_id, listings(title, cover_image_url, city, state)',
         )
         .eq('id', bookingId)
         .maybeSingle();
