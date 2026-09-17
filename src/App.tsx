@@ -309,7 +309,7 @@ const AnimatedRoutes = () => {
           <Route path="/dashboard-v2" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard-v2/listings" element={<PreserveQueryRedirect to="/dashboard/listings" />} />
           <Route path="/dashboard-v2/activity" element={<PreserveQueryRedirect to="/dashboard/activity" />} />
-          <Route path="/dashboard-v2/messages" element={<PreserveQueryRedirect to="/messages" />} />
+          <Route path="/dashboard-v2/messages" element={<PreserveQueryRedirect to="/dashboard/messages" />} />
           <Route path="/dashboard-v2/payments" element={<Navigate to="/dashboard/payments" replace />} />
           <Route path="/dashboard-v2/account" element={<Navigate to="/dashboard/account" replace />} />
           <Route path="/sale/:transactionId/protection" element={<PageTransition><ProtectedSalePage /></PageTransition>} />
@@ -379,8 +379,9 @@ const AnimatedRoutes = () => {
           <Route path="/order-confirmation/:reference" element={<PageTransition><OrderConfirmation /></PageTransition>} />
           <Route path="/payment-success" element={<PageTransition><PaymentSuccess /></PageTransition>} />
           <Route path="/payment-cancelled" element={<PageTransition><PaymentCancelled /></PageTransition>} />
-          <Route path="/messages" element={<PageTransition><Messages /></PageTransition>} />
-          <Route path="/messages/:conversationId" element={<PageTransition><Messages /></PageTransition>} />
+          <Route path="/messages" element={<PreserveQueryRedirect to="/dashboard/messages" />} />
+          <Route path="/messages/:conversationId" element={<LegacyMessageThreadRedirect />} />
+          <Route path="/messages/classic" element={<PageTransition><Messages /></PageTransition>} />
           <Route path="/admin" element={<PageTransition><AdminDashboard /></PageTransition>} />
           <Route path="/admin/metrics" element={<PageTransition><AdminMetrics /></PageTransition>} />
           <Route path="/admin/listings" element={<PageTransition><AdminListings /></PageTransition>} />
@@ -428,7 +429,8 @@ const AnimatedRoutes = () => {
           <Route path="/admin/campaigns/equinox-partnership" element={<PageTransition><AdminCampaignEquinoxPartnership /></PageTransition>} />
           <Route path="/admin/campaigns/feature-your-listing" element={<PageTransition><AdminCampaignFeatureYourListing /></PageTransition>} />
           <Route path="/email/thanks" element={<PageTransition><EmailFeedbackThanks /></PageTransition>} />
-          <Route path="/notification-preferences" element={<PageTransition><NotificationPreferences /></PageTransition>} />
+          <Route path="/notification-preferences" element={<PreserveQueryRedirect to="/dashboard/notifications/settings" />} />
+          <Route path="/notifications" element={<PreserveQueryRedirect to="/dashboard/notifications" />} />
           <Route path="/account/support" element={<PageTransition><MyTickets /></PageTransition>} />
           <Route path="/help" element={<PageTransition><HelpCenter /></PageTransition>} />
           <Route path="/help/:slug" element={<PageTransition><HelpArticle /></PageTransition>} />
@@ -485,7 +487,8 @@ const AnimatedRoutes = () => {
 
           
           <Route path="/order-tracking/:transactionId" element={<PageTransition><OrderTracking /></PageTransition>} />
-          <Route path="/transactions" element={<PageTransition><Transactions /></PageTransition>} />
+          <Route path="/transactions" element={<PreserveQueryRedirect to="/dashboard/activity" />} />
+          <Route path="/transactions/classic" element={<PageTransition><Transactions /></PageTransition>} />
           
           <Route path="/install" element={<PageTransition><Install /></PageTransition>} />
           <Route path="/vendor-lots" element={<PageTransition><VendorLots /></PageTransition>} />
