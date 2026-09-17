@@ -729,6 +729,17 @@ function partnerMerchantIdForEnv(env: PayPalEnvironment): string | null {
  * Creates a Partner Referral and returns PayPal's action_url (the hosted
  * signup the seller is redirected to) plus the raw link set for diagnostics.
  */
+/**
+ * Vendibook sellers are BUSINESSES ONLY.
+ * - The REST app "Intent" setting must be set to **Business** (PayPal app settings /
+ *   account manager). Intent is not settable per-referral; it governs whether a seller
+ *   is asked to sign up for, log in to, or upgrade to a Business account.
+ * - products: ["PPCP"] is business-only (casual/progressive onboarding is NOT used and
+ *   would not support card payments). Do not add EXPRESS_CHECKOUT casual variants.
+ * - Features requested here must exactly match the REST app's toggled features, or
+ *   onboarding errors. PARTNER_FEE is added only when Platform Fee is toggled on
+ *   (Step 3 / multiparty routing).
+ */
 export async function createPartnerReferral(opts: {
   trackingId: string;
   returnUrl: string;

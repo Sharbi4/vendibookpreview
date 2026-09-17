@@ -185,8 +185,9 @@ export default function SellerPayPalConnect() {
         {!connection && (
           <>
             <p className="text-xs text-muted-foreground mt-0.5">
-              Connect your PayPal business account so Vendibook can pay your earnings through
-              PayPal. You'll be taken to PayPal to sign in and approve the connection.
+              A PayPal <strong>Business</strong> account is required — personal accounts can't be
+              used to sell on Vendibook. You'll be taken to PayPal to sign in to your Business
+              account (or create/upgrade to one) and approve the connection.
             </p>
             <Button
               size="sm"
