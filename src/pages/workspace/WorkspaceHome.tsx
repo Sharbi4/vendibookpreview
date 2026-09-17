@@ -455,8 +455,8 @@ export default function WorkspaceHome() {
               <h2>Inbox</h2>
               <p>{unread ? `${unread} unread` : 'Your latest conversations.'}</p>
             </div>
-            <Link to="/dashboard/inbox" className="v2-btn-quiet">
-              Open inbox
+            <Link to="/dashboard/messages" className="v2-btn-quiet">
+              Open messages
             </Link>
           </div>
           {conversations.length ? (
@@ -466,7 +466,7 @@ export default function WorkspaceHome() {
               return (
                 <Link
                   className="v2-activity-row"
-                  to={`/messages/${conversation.id}`}
+                  to={`/dashboard/messages/${conversation.id}`}
                   key={conversation.id}
                 >
                   <span className="v2-activity-icon">
