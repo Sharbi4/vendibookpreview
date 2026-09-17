@@ -8,7 +8,7 @@ import { useSubscriptionManagement } from '@/hooks/useSubscriptionManagement';
 import { useEntitlements, type Entitlement } from '@/hooks/useEntitlements';
 import { PurchaseHistoryCard } from '@/components/monetization/PurchaseHistoryCard';
 import PackagesIntro from '@/components/monetization/PackagesIntro';
-import Header from '@/components/layout/Header';
+import WorkspaceShell from '@/components/workspace/WorkspaceShell';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -54,10 +54,9 @@ export default function Purchases() {
   const { openBilling, busy } = useSubscriptionManagement();
 
   return (
-    <>
-      <Header />
-      <main className="min-h-screen bg-background">
-        <div className="mx-auto max-w-4xl px-4 py-8 md:py-12 space-y-6">
+    <WorkspaceShell>
+      <div className="v2-page-stack v2-embedded-section">
+        <div className="space-y-6">
           <header className="flex items-center justify-between flex-wrap gap-3">
             <div>
               <h1 className="text-2xl md:text-3xl font-semibold text-foreground">Your purchases</h1>
@@ -254,7 +253,7 @@ export default function Purchases() {
             </CardContent>
           </Card>
         </div>
-      </main>
-    </>
+      </div>
+    </WorkspaceShell>
   );
 }
