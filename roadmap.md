@@ -16,9 +16,14 @@
 - [ ] Step 2.5 — Activate sandbox onboarding (set
       PAYPAL_SELLER_ONBOARDING_ENABLED=true, PAYPAL_ONBOARDING_ENV=sandbox) and
       run a seller end-to-end against PayPal sandbox.
-- [ ] Step 3 — Multiparty routing behind the flag: payee + platform_fees on
-      sale and rental orders, per-kind line items, shipping matrix and address
-      validation.
+- [~] Step 3 — Multiparty routing behind the flag: DONE — payee +
+      payment_instruction/platform_fees on sale and rental orders only (never
+      Vendibook's own products), Vendibook fee = gross - seller proceeds,
+      routing recorded on payment_records.metadata.multiparty, routed payables
+      recorded as already paid so the manual queue can't double-pay, refunds
+      issued with PayPal-Auth-Assertion on the seller's behalf. Inert while
+      PAYPAL_MULTIPARTY_ENABLED is off. Still open: per-kind line items,
+      shipping matrix and address validation.
 - [~] Step 4 — Merchant onboarding webhooks (MERCHANT.ONBOARDING.COMPLETED,
       MERCHANT.PARTNER-CONSENT.REVOKED) handled + persisted. Still open:
       refunds with partner-fee reversal, thank-you

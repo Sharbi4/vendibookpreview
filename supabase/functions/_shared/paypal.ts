@@ -92,16 +92,19 @@ export function safeLog(step: string, details?: Record<string, unknown>) {
 // token used by checkout.
 const tokenCache = new Map<PayPalEnvironment, { value: string; expiresAt: number }>();
 
-function clientCredentials(env: PayPalEnvironment): { id: string | null; secret: string | null } {
+function clientCredentials(
+  env: PayPalEnvironment,
+): { id: string | null; secret: string | null } {
   if (env === "sandbox") {
     return {
-      id: Deno.env.get("PAYPAL_SANDBOX_CLIENT_ID") ?? Deno.env.get("PAYPAL_CLIENT_ID"),
-      secret: Deno.env.get("PAYPAL_SANDBOX_CLIENT_SECRET") ?? Deno.env.get("PAYPAL_CLIENT_SECRET"),
+      id: Deno.env.get("PAYPAL_SANDBOX_CLIENT_ID") ?? Deno.env.get("PAYPAL_CLIENT_ID") ?? null,
+      secret: Deno.env.get("PAYPAL_SANDBOX_CLIENT_SECRET") ??
+        Deno.env.get("PAYPAL_CLIENT_SECRET") ?? null,
     };
   }
   return {
-    id: Deno.env.get("PAYPAL_CLIENT_ID"),
-    secret: Deno.env.get("PAYPAL_CLIENT_SECRET"),
+    id: Deno.env.get("PAYPAL_CLIENT_ID") ?? null,
+    secret: Deno.env.get("PAYPAL_CLIENT_SECRET") ?? null,
   };
 }
 
@@ -354,10 +357,25 @@ export interface CreateOrderInput {
   items?: OrderLineItem[];
   /** Physical goods: pass the buyer's address and PayPal collects/echoes it. */
   shipping?: OrderShippingAddress | null;
-  // NOTE: Connected Path routing (payee / payment_instruction.platform_fees)
-  // is deliberately absent. Orders are first-party only until Step 3 wires
-  // money routing through the paypalMultiparty flag on purpose.
+  /**
+   * Connected Path routing. When set, the seller's PayPal merchant id becomes
+   * the payee and Vendibook's cut is taken as a platform fee. Resolved ONLY
+   * server-side by `sellerMultipartyReady()`; nothing from the browser can
+   * reach these fields.
+   */
+  payeeMerchantId?: string | null;
+  /** Vendibook's fee in cents, disbursed to the partner account. */
+  platformFeeCents?: number;
+}
 
+/** Vendibook's own merchant id — receives the platform fee on routed orders. */
+export function paypalPartnerMerchantId(): string | null {
+  const env = paypalEnvironment();
+  if (env === "sandbox") {
+    return Deno.env.get("PAYPAL_SANDBOX_PARTNER_MERCHANT_ID") ??
+      Deno.env.get("PAYPAL_PARTNER_MERCHANT_ID") ?? null;
+  }
+  return Deno.env.get("PAYPAL_PARTNER_MERCHANT_ID") ?? null;
 }
 
 
@@ -451,10 +469,34 @@ export async function createPayPalOrder(input: CreateOrderInput) {
   const intent = input.intent === "AUTHORIZE" ? "AUTHORIZE" : "CAPTURE";
   const shipping = buildShipping(input.shipping);
 
+  // ---- Connected Path routing (off unless the caller resolved a ready seller)
+  const payeeMerchantId = input.payeeMerchantId?.trim() || null;
+  // The fee can never exceed the order, and a routed order always keeps at
+  // least one cent moving to the seller.
+  const platformFeeCents = payeeMerchantId
+    ? Math.max(0, Math.min(Math.round(input.platformFeeCents ?? 0), input.amountCents - 1))
+    : 0;
+  const partnerMerchantId = paypalPartnerMerchantId();
+  const paymentInstruction = payeeMerchantId
+    ? {
+      disbursement_mode: "INSTANT",
+      ...(platformFeeCents > 0
+        ? {
+          platform_fees: [{
+            amount: money(platformFeeCents, currency),
+            ...(partnerMerchantId ? { payee: { merchant_id: partnerMerchantId } } : {}),
+          }],
+        }
+        : {}),
+    }
+    : null;
+
   return await paypalRequest("/v2/checkout/orders", {
     method: "POST",
     idempotencyKey: input.idempotencyKey,
     reference: input.reference,
+    // Acting on the seller's behalf is required whenever they are the payee.
+    actAsMerchantId: payeeMerchantId,
     body: {
       intent,
       purchase_units: [{
@@ -465,7 +507,8 @@ export async function createPayPalOrder(input: CreateOrderInput) {
         amount,
         items: buildItems(input, currency, itemTotalCents),
         ...(shipping ? { shipping } : {}),
-        
+        ...(payeeMerchantId ? { payee: { merchant_id: payeeMerchantId } } : {}),
+        ...(paymentInstruction ? { payment_instruction: paymentInstruction } : {}),
         ...(input.softDescriptor
           ? { soft_descriptor: input.softDescriptor.slice(0, 22) }
           : {}),
@@ -505,6 +548,11 @@ export async function refundPayPalCapture(opts: {
   currency?: string;
   reason?: string;
   idempotencyKey: string;
+  /**
+   * Seller merchant id when the capture was routed to their account
+   * (Connected Path). PayPal refuses the refund without the assertion.
+   */
+  actAsMerchantId?: string | null;
 }) {
   const body: Record<string, unknown> = {};
   if (opts.amountCents !== undefined) {
@@ -514,7 +562,12 @@ export async function refundPayPalCapture(opts: {
 
   return await paypalRequest(
     `/v2/payments/captures/${encodeURIComponent(opts.captureId)}/refund`,
-    { method: "POST", idempotencyKey: opts.idempotencyKey, body },
+    {
+      method: "POST",
+      idempotencyKey: opts.idempotencyKey,
+      body,
+      actAsMerchantId: opts.actAsMerchantId ?? null,
+    },
   );
 }
 

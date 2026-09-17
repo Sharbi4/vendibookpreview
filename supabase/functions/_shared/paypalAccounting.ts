@@ -275,6 +275,11 @@ export async function ensureSellerPayable(
 ) {
   if (!record.seller_id || record.seller_proceeds_cents <= 0) return null;
 
+  // Connected Path: PayPal already settled the seller's share straight into
+  // their own account, so this payable is a record of a completed payout —
+  // never something the manual payout queue should pay again.
+  const routed = (record.metadata as any)?.multiparty?.routed === true;
+
   const { data, error } = await supabase
     .from("seller_payables")
     .insert({
@@ -291,12 +296,19 @@ export async function ensureSellerPayable(
       pro_fee_applied: !!record.pro_fee_applied,
       refunded_cents: record.refunded_cents ?? 0,
       net_payout_cents: record.seller_proceeds_cents,
-      status: "pending_release",
+      status: routed ? "payout_completed" : "pending_release",
       paid_at: record.captured_at ?? new Date().toISOString(),
       release_due_at: releaseAt,
       payout_eligible_at: releaseAt,
-      payout_method: "dwolla_ach",
-      payout_provider: "dwolla_future",
+      payout_method: routed ? "paypal" : "dwolla_ach",
+      payout_provider: routed ? "paypal" : "dwolla_future",
+      ...(routed
+        ? {
+          payout_completed_at: record.captured_at ?? new Date().toISOString(),
+          external_payout_reference: (record.metadata as any)?.multiparty?.merchant_id ?? null,
+          admin_notes: "Paid directly by PayPal at capture (Connected Path).",
+        }
+        : {}),
     })
     .select()
     .maybeSingle();

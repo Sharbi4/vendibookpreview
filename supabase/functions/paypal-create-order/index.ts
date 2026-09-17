@@ -570,15 +570,32 @@ serve(async (req) => {
       return jsonError(500, "record_failed", "We couldn't start this payment. Please try again.");
     }
 
-    // Step 2 scaffolding: record when the seller on this transaction is fully
-    // ready to receive PayPal funds. No routing changes here — every order
-    // stays first-party (Vendibook as payee) until Step 3 wires multiparty
-    // routing, server-gated per seller.
-    const sellerRouting = await sellerMultipartyReady(admin, quote.sellerId ?? null);
-    if (sellerRouting.enabled) {
-      safeLog("multiparty_ready_seller", {
+    // ---- Connected Path routing decision (Step 3)
+    // Only seller-owned money moves: sales and rentals. Vendibook's own
+    // products and service charges (boosts, freight, notary, verification)
+    // always settle first-party. `sellerMultipartyReady` is itself gated by
+    // the PAYPAL_MULTIPARTY_ENABLED env flag and the runtime kill switch, so
+    // with the flag off this resolves to first-party exactly as today.
+    const sellerOwnedKind = kind === "sale" || kind === "booking";
+    const sellerRouting = sellerOwnedKind && (quote.sellerProceedsCents ?? 0) > 0
+      ? await sellerMultipartyReady(admin, quote.sellerId ?? null)
+      : { enabled: false, merchantId: null as string | null };
+
+    // Vendibook keeps everything that is not the seller's net proceeds:
+    // commission, buyer-side fee and collected sales tax held for remittance.
+    const platformFeeCents = sellerRouting.enabled
+      ? Math.max(0, quote.grossCents - (quote.sellerProceedsCents ?? 0))
+      : 0;
+    const routing = sellerRouting.enabled && sellerRouting.merchantId
+      ? { merchantId: sellerRouting.merchantId, platformFeeCents }
+      : null;
+
+    if (routing) {
+      safeLog("multiparty_routed", {
         reference: quote.reference,
-        onBehalfOf: sellerRouting.merchantId,
+        onBehalfOf: routing.merchantId,
+        platform_fee_cents: routing.platformFeeCents,
+        gross_cents: quote.grossCents,
       });
     }
 
@@ -595,13 +612,29 @@ serve(async (req) => {
       breakdown: quote.taxCents > 0
         ? { itemTotalCents: quote.grossCents - quote.taxCents, taxCents: quote.taxCents }
         : undefined,
+      payeeMerchantId: routing?.merchantId ?? null,
+      platformFeeCents: routing?.platformFeeCents ?? 0,
     });
 
     await admin
       .from("payment_records")
       .update({
         paypal_order_id: order.providerOrderId,
-        metadata: { paypal_status: order.status },
+        metadata: {
+          paypal_status: order.status,
+          // Read back at capture time so the payout ledger knows the seller was
+          // paid directly, and at refund time for the auth assertion.
+          ...(routing
+            ? {
+              multiparty: {
+                routed: true,
+                merchant_id: routing.merchantId,
+                platform_fee_cents: routing.platformFeeCents,
+                disbursement_mode: "INSTANT",
+              },
+            }
+            : {}),
+        },
       })
       .eq("id", record.id);
 

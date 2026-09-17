@@ -151,6 +151,9 @@ export class PayPalProvider implements PaymentProvider, AuthorizationCapableProv
         softDescriptor: req.softDescriptor,
         idempotencyKey: req.idempotencyKey ?? `order:${req.reference}`,
         intent: req.intent,
+        // Connected Path routing — resolved server-side by the caller.
+        payeeMerchantId: req.payeeMerchantId ?? null,
+        platformFeeCents: req.platformFeeCents ?? 0,
       });
       return {
         providerOrderId: order.id,
@@ -333,6 +336,8 @@ export class PayPalProvider implements PaymentProvider, AuthorizationCapableProv
         currency: (req.amount?.currency || "USD").toUpperCase(),
         reason: req.reason,
         idempotencyKey: req.idempotencyKey,
+        // Routed captures must be refunded on the seller's behalf.
+        actAsMerchantId: req.sellerMerchantId ?? null,
       });
       return {
         refundId: refund.id,

@@ -54,6 +54,9 @@ serve(async (req) => {
       currency: record.currency,
       reason,
       idempotencyKey,
+      // Connected Path captures live in the seller's PayPal account, so the
+      // refund must be issued on their behalf.
+      actAsMerchantId: (record.metadata as any)?.multiparty?.merchant_id ?? null,
     });
 
     const refundedNow = centsFromPayPalAmount(refund?.amount?.value) || requested;
