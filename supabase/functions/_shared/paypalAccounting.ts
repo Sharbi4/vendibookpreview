@@ -296,12 +296,13 @@ export async function ensureSellerPayable(
       pro_fee_applied: !!record.pro_fee_applied,
       refunded_cents: record.refunded_cents ?? 0,
       net_payout_cents: record.seller_proceeds_cents,
-      status: "pending_release",
+      status: routed ? "payout_completed" : "pending_release",
       paid_at: record.captured_at ?? new Date().toISOString(),
       release_due_at: releaseAt,
       payout_eligible_at: releaseAt,
-      payout_method: "dwolla_ach",
-      payout_provider: "dwolla_future",
+      payout_method: routed ? "paypal" : "dwolla_ach",
+      payout_provider: routed ? "paypal" : "dwolla_future",
+      ...(routed ? { paid_out_at: record.captured_at ?? new Date().toISOString() } : {}),
     })
     .select()
     .maybeSingle();
