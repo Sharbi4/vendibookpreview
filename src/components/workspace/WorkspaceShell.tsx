@@ -5,6 +5,7 @@ import {
   Bell,
   Compass,
   CreditCard,
+  Heart,
   Home,
   Inbox,
   List,
@@ -26,7 +27,9 @@ const desktopNav = [
   ['Home', '/dashboard', Home],
   ['Listings', '/dashboard/listings', List],
   ['Activity', '/dashboard/activity', ShoppingBag],
-  ['Inbox', '/dashboard/inbox', Inbox],
+  ['Messages', '/dashboard/messages', Inbox],
+  ['Notifications', '/dashboard/notifications', Bell],
+  ['Saved', '/dashboard/saved', Heart],
   ['Payments', '/dashboard/payments', CreditCard],
   ['Account', '/dashboard/account', Settings],
 ] as const;
@@ -35,7 +38,7 @@ const mobileNav = [
   ['Home', '/dashboard', Home],
   ['Explore', '/search', Compass],
   ['Listings', '/dashboard/listings', List],
-  ['Activity', '/dashboard/activity', ShoppingBag],
+  ['Messages', '/dashboard/messages', Inbox],
   ['Account', '/dashboard/account', Settings],
 ] as const;
 
