@@ -64,6 +64,10 @@ export default function WorkspacePayments() {
         </section>
 
         <section className="v2-panel">
+          <SellerEarningsTable />
+        </section>
+
+        <section className="v2-panel">
           <WorkspaceBookingPayments />
         </section>
 
