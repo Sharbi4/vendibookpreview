@@ -86,6 +86,14 @@ serve(async (req) => {
 
     if (payable) {
       if (payable.status === "payout_completed") {
+        // Connected Path: PayPal already settled this into the seller's own
+        // account, so the payout status stays completed — but the refund must
+        // still be visible on the payout record in the Payments UI.
+        await admin.from("seller_payables").update({
+          refunded_cents: totalRefunded,
+          hold_reason:
+            `Refund of ${(totalRefunded / 100).toFixed(2)} issued after this payout settled — under recovery review.`,
+        }).eq("id", payable.id);
         await admin.from("payout_actions").insert({
           payable_id: payable.id,
           action: "recovery_required",

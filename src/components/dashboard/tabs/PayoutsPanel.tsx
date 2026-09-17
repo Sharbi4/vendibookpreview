@@ -166,7 +166,9 @@ const PayoutsPanel = () => {
 
                   <p className="text-[11px] text-muted-foreground">
                     {autoPaid
-                      ? `Paid straight into your connected PayPal Business account${p.payout_completed_at ? ` on ${new Date(p.payout_completed_at).toLocaleDateString()}` : ''}, with the Vendibook fee already deducted. Nothing further is owed to you for this order.`
+                      ? (p.refunded_cents ?? 0) > 0
+                        ? `Paid straight into your connected PayPal Business account${p.payout_completed_at ? ` on ${new Date(p.payout_completed_at).toLocaleDateString()}` : ''}. A refund of ${money(p.refunded_cents)} was later issued from that same PayPal account${p.hold_reason ? ` — ${p.hold_reason}` : '.'}`
+                        : `Paid straight into your connected PayPal Business account${p.payout_completed_at ? ` on ${new Date(p.payout_completed_at).toLocaleDateString()}` : ''}, with the Vendibook fee already deducted. Nothing further is owed to you for this order.`
                       : showTiming
                       ? `Eligible for review on ${new Date(releaseAt).toLocaleDateString()}. A Vendibook admin approves and sends the payout after review.`
                       : p.hold_reason
