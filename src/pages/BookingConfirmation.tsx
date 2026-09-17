@@ -241,11 +241,11 @@ const BookingConfirmation = ({
 
             <div className="mt-6 flex flex-col sm:flex-row gap-3">
               <Button asChild variant="cta" className="flex-1">
-                <Link to="/dashboard?tab=bookings">View my bookings</Link>
+                <Link to="/dashboard/activity?filter=rentals">View my bookings</Link>
               </Button>
               {booking?.listing_id ? (
                 <Button asChild variant="outline" className="flex-1 rounded-2xl h-14">
-                  <Link to={`/messages?listing=${booking.listing_id}`}>
+                  <Link to={`/dashboard/messages?listing=${booking.listing_id}`}>
                     <MessageSquare className="h-4 w-4 mr-2" />
                     Message the host
                   </Link>
