@@ -108,8 +108,8 @@ export default function WorkspaceHome() {
       items.push({
         id: 'paypal-connect',
         label: 'Accept secure online payments',
-        hint: 'Connect PayPal to let qualified buyers pay through Vendibook.',
-        to: '/dashboard/payments/setup',
+        hint: 'Finish seller setup so buyers can pay you through Vendibook.',
+        to: '/dashboard/seller-setup',
         icon: CreditCard,
       });
     if (disputes.length)
