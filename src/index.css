@@ -2417,3 +2417,41 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
   box-shadow: none !important;
   border-radius: 12px !important;
 }
+
+/* ─────────────────────────────────────────────────────────────
+   Order confirmation / tracking — premium ivory-and-ink surface
+   matching the workspace dashboard and the new checkout.
+   ───────────────────────────────────────────────────────────── */
+.v2-order {
+  --background: 38 34% 97%;
+  --foreground: 28 10% 12%;
+  --card: 40 40% 99%;
+  --card-foreground: 28 10% 12%;
+  --popover: 40 40% 99%;
+  --popover-foreground: 28 10% 12%;
+  --muted: 36 20% 94%;
+  --muted-foreground: 28 8% 40%;
+  --border: 30 13% 85%;
+  --input: 30 13% 85%;
+  --secondary: 36 20% 94%;
+  --secondary-foreground: 28 10% 12%;
+  --primary: 240 6% 10%;
+  --primary-foreground: 38 34% 97%;
+  --ring: 28 10% 12%;
+  background: hsl(var(--background));
+  color: hsl(var(--foreground));
+  font-feature-settings: 'ss01';
+}
+.v2-order-eyebrow {
+  font-size: 11px; font-weight: 640; letter-spacing: .16em; text-transform: uppercase;
+  color: hsl(var(--muted-foreground));
+}
+.v2-order-title {
+  font-size: 30px; font-weight: 660; letter-spacing: -.022em; line-height: 1.12;
+  color: hsl(var(--foreground));
+}
+.v2-order .rounded-lg.border.bg-card,
+.v2-order [data-slot='card'] {
+  border-radius: 18px;
+  box-shadow: 0 1px 2px hsl(28 12% 20% / .04), 0 12px 32px -28px hsl(28 12% 20% / .35);
+}
