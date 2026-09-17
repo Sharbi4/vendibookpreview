@@ -466,10 +466,34 @@ export async function createPayPalOrder(input: CreateOrderInput) {
   const intent = input.intent === "AUTHORIZE" ? "AUTHORIZE" : "CAPTURE";
   const shipping = buildShipping(input.shipping);
 
+  // ---- Connected Path routing (off unless the caller resolved a ready seller)
+  const payeeMerchantId = input.payeeMerchantId?.trim() || null;
+  // The fee can never exceed the order, and a routed order always keeps at
+  // least one cent moving to the seller.
+  const platformFeeCents = payeeMerchantId
+    ? Math.max(0, Math.min(Math.round(input.platformFeeCents ?? 0), input.amountCents - 1))
+    : 0;
+  const partnerMerchantId = paypalPartnerMerchantId();
+  const paymentInstruction = payeeMerchantId
+    ? {
+      disbursement_mode: "INSTANT",
+      ...(platformFeeCents > 0
+        ? {
+          platform_fees: [{
+            amount: money(platformFeeCents, currency),
+            ...(partnerMerchantId ? { payee: { merchant_id: partnerMerchantId } } : {}),
+          }],
+        }
+        : {}),
+    }
+    : null;
+
   return await paypalRequest("/v2/checkout/orders", {
     method: "POST",
     idempotencyKey: input.idempotencyKey,
     reference: input.reference,
+    // Acting on the seller's behalf is required whenever they are the payee.
+    actAsMerchantId: payeeMerchantId,
     body: {
       intent,
       purchase_units: [{
@@ -480,7 +504,8 @@ export async function createPayPalOrder(input: CreateOrderInput) {
         amount,
         items: buildItems(input, currency, itemTotalCents),
         ...(shipping ? { shipping } : {}),
-        
+        ...(payeeMerchantId ? { payee: { merchant_id: payeeMerchantId } } : {}),
+        ...(paymentInstruction ? { payment_instruction: paymentInstruction } : {}),
         ...(input.softDescriptor
           ? { soft_descriptor: input.softDescriptor.slice(0, 22) }
           : {}),
