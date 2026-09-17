@@ -437,7 +437,9 @@ const SaleCheckout = () => {
   }, [listing?.id, priceSale, fulfillmentSelected, currentDeliveryFee, deliveryAddress]);
 
   const taxAmount = (taxEstimate?.tax_cents ?? 0) / 100;
-  const totalPrice = priceSale + currentDeliveryFee + taxAmount;
+  // Item + seller delivery + buyer-paid freight + estimated sales tax. Mirrors
+  // `quoteSaleTransaction` on the server, which re-locks the authoritative total.
+  const totalPrice = priceSale + currentDeliveryFee + buyerFreightCharge + taxAmount;
 
   const taxSummaryLabel = taxAmount > 0
     ? taxEstimate?.label || 'Estimated sales tax'
