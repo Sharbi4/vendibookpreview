@@ -1819,11 +1819,13 @@ html.hide-support-chat .widget-visible {
 .v2-btn { display: inline-flex; min-height: 40px; align-items: center; justify-content: center; gap: 7px; border: 1px solid hsl(var(--v2-ink)); border-radius: 8px; background: hsl(var(--v2-ink)); padding: 0 16px; color: hsl(40 30% 97%); font-size: 14px; font-weight: 600; transition: background-color .15s ease, border-color .15s ease, transform .15s ease, color .15s ease; }
 .v2-btn:hover { background: hsl(28 10% 22%); border-color: hsl(28 10% 22%); }
 .v2-btn svg { width: 16px; height: 16px; }
-.v2-btn-outline { border-color: hsl(var(--v2-line-strong)); background: hsl(0 0% 100%); color: hsl(var(--v2-ink)); }
+.v2-btn-outline { display: inline-flex; min-height: 40px; align-items: center; justify-content: center; gap: 7px; border: 1px solid hsl(var(--v2-line-strong)); border-radius: 8px; padding: 0 16px; font-size: 14px; font-weight: 600; transition: background-color .15s ease, border-color .15s ease, color .15s ease; background: hsl(0 0% 100%); color: hsl(var(--v2-ink)); }
+.v2-btn-outline svg { width: 16px; height: 16px; }
 .v2-btn-outline:hover { border-color: hsl(var(--v2-ink) / .55); background: hsl(40 28% 96%); }
-.v2-btn-quiet { border-color: transparent; background: transparent; color: hsl(28 9% 28%); }
+.v2-btn-quiet { display: inline-flex; min-height: 40px; align-items: center; justify-content: center; gap: 7px; border: 1px solid hsl(var(--v2-line-strong)); border-radius: 8px; padding: 0 16px; font-size: 14px; font-weight: 600; transition: background-color .15s ease, border-color .15s ease, color .15s ease; min-height: 34px; padding: 0 12px; font-size: 13px; border-color: transparent; background: transparent; color: hsl(28 9% 28%); }
+.v2-btn-quiet svg { width: 15px; height: 15px; }
 .v2-btn-quiet:hover { background: hsl(30 16% 92%); color: hsl(var(--v2-ink)); border-color: transparent; }
-.v2-btn-sm { min-height: 34px; padding: 0 12px; font-size: 13px; }
+.v2-btn-sm, .v2-btn-outline.v2-btn-sm { min-height: 34px; padding: 0 12px; font-size: 13px; }
 
 /* Page scaffolding */
 .v2-content { padding: 32px 18px 116px; }
@@ -2009,4 +2011,4 @@ html.hide-support-chat .widget-visible {
 .v2-account-grid .v2-panel h2 { font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: hsl(var(--v2-stone)); }
 .v2-account-row + .v2-account-row { border-top: 1px solid hsl(var(--v2-line)); }
 .v2-btn.hidden, .v2-btn-outline.hidden, .v2-btn-quiet.hidden { display: none; }
-@media (min-width: 640px) { .v2-btn.sm\:inline-flex { display: inline-flex; } }
+@media (min-width: 640px) { .v2-btn.sm\:inline-flex, .v2-btn-outline.sm\:inline-flex { display: inline-flex; } }
