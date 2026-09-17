@@ -184,6 +184,7 @@ export async function buildOrderDetail(
     next_action: nextAction,
     seller_next_action: domain.sellerNextAction ?? null,
     timeline,
+    settlement,
     support: {
       email: 'support@vendibook.com',
       phone: '(725) 755-9598',
