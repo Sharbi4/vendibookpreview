@@ -138,7 +138,7 @@ const EnhancedProfileHeader = ({
               {isOwnProfile && (
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 rounded-full" asChild>
-                    <Link to="/account">
+                    <Link to="/dashboard/account">
                       <Edit className="h-3.5 w-3.5" />
                       Edit Profile
                     </Link>

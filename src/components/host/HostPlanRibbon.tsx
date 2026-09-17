@@ -57,7 +57,7 @@ export function HostPlanRibbon({ className = '' }: Props) {
           </Button>
         ) : (
           <Button asChild size="sm" variant="outline" className="rounded-xl">
-            <Link to="/account">Manage subscription</Link>
+            <Link to="/dashboard/account">Manage subscription</Link>
           </Button>
         )}
       </div>

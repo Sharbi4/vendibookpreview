@@ -346,7 +346,7 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
         <h3 className="text-lg font-medium text-foreground mb-2">Not authorized</h3>
         <p className="text-muted-foreground mb-4">You don't have permission to view this conversation.</p>
         <Button asChild variant="outline">
-          <Link to="/messages">
+          <Link to="/dashboard/messages">
             <ArrowLeft className="h-4 w-4 mr-2" />
             Back to messages
           </Link>
@@ -370,7 +370,7 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
       {/* Header */}
       <div className="flex items-center gap-3 p-4 border-b border-border bg-background">
         <Button variant="ghost" size="icon" asChild className="md:hidden">
-          <Link to="/messages">
+          <Link to="/dashboard/messages">
             <ArrowLeft className="h-5 w-5" />
           </Link>
         </Button>

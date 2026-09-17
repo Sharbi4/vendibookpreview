@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import SEO from '@/components/SEO';
+import WorkspaceShell from '@/components/workspace/WorkspaceShell';
 import { PaymentTrustBadge } from '@/components/trust/PaymentTrustBadge';
 import { useMonetizationProducts } from '@/hooks/useMonetizationProducts';
 import { ProductPricingCard } from '@/components/monetization/ProductPricingCard';
@@ -109,7 +110,8 @@ export default function AccountSubscription() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <WorkspaceShell>
+      <div className="v2-page-stack v2-embedded-section">
       <SEO
         title="Manage Subscription | Vendibook"
         description="Upgrade, downgrade, cancel, or resume your Vendibook host subscription. Manage billing securely through PayPal."
@@ -426,6 +428,7 @@ export default function AccountSubscription() {
           </div>
         </section>
       </section>
-    </div>
+      </div>
+    </WorkspaceShell>
   );
 }

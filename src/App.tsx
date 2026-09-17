@@ -538,8 +538,7 @@ const AnimatedRoutes = () => {
           <Route path="/kitchen-earnings-calculator" element={<PageTransition><KitchenEarningsCalculator /></PageTransition>} />
           
           {/* Payments & Protection */}
-          <Route path="/payments" element={<PreserveQueryRedirect to="/dashboard/payments" />} />
-          <Route path="/payments/classic" element={<PageTransition><Payments /></PageTransition>} />
+          <Route path="/payments" element={<PageTransition><Payments /></PageTransition>} />
           <Route path="/identity-verification" element={<PageTransition><IdentityVerificationInfo /></PageTransition>} />
           
           
