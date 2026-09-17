@@ -92,16 +92,19 @@ export function safeLog(step: string, details?: Record<string, unknown>) {
 // token used by checkout.
 const tokenCache = new Map<PayPalEnvironment, { value: string; expiresAt: number }>();
 
-function clientCredentials(env: PayPalEnvironment): { id: string | null; secret: string | null } {
+function clientCredentials(
+  env: PayPalEnvironment,
+): { id: string | null; secret: string | null } {
   if (env === "sandbox") {
     return {
-      id: Deno.env.get("PAYPAL_SANDBOX_CLIENT_ID") ?? Deno.env.get("PAYPAL_CLIENT_ID"),
-      secret: Deno.env.get("PAYPAL_SANDBOX_CLIENT_SECRET") ?? Deno.env.get("PAYPAL_CLIENT_SECRET"),
+      id: Deno.env.get("PAYPAL_SANDBOX_CLIENT_ID") ?? Deno.env.get("PAYPAL_CLIENT_ID") ?? null,
+      secret: Deno.env.get("PAYPAL_SANDBOX_CLIENT_SECRET") ??
+        Deno.env.get("PAYPAL_CLIENT_SECRET") ?? null,
     };
   }
   return {
-    id: Deno.env.get("PAYPAL_CLIENT_ID"),
-    secret: Deno.env.get("PAYPAL_CLIENT_SECRET"),
+    id: Deno.env.get("PAYPAL_CLIENT_ID") ?? null,
+    secret: Deno.env.get("PAYPAL_CLIENT_SECRET") ?? null,
   };
 }
 
