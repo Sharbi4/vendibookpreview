@@ -102,7 +102,9 @@ serve(async (req) => {
       if (!targetId) return jsonError(400, "missing_fields", "Missing transaction id.");
       const { data: tx } = await admin
         .from("sale_transactions")
-        .select("*, listing:listings(title, city, state, address)")
+        .select(
+          "*, listing:listings(title, city, state, address, freight_payer, vendibook_freight_enabled)",
+        )
         .eq("id", targetId)
         .maybeSingle();
       if (!tx) return jsonError(404, "not_found", "We couldn't find that transaction.");
@@ -112,8 +114,20 @@ serve(async (req) => {
       if (tx.seller_id === user.id) {
         return jsonError(403, "self_transaction", "You can't purchase your own listing.");
       }
-      quote = quoteSaleTransaction(tx, (tx as any).listing?.title ?? "Listing");
+      const freightPayer = (tx as any).listing?.freight_payer === "seller" ? "seller" : "buyer";
+      quote = quoteSaleTransaction(tx, (tx as any).listing?.title ?? "Listing", { freightPayer });
       saleTransactionId = tx.id;
+      // Buyer-paid freight now rides along with the purchase. Reuse the freight
+      // fulfillment key so the standalone freight invoice can never be charged
+      // a second time for the same sale.
+      if (
+        tx.fulfillment_type === "vendibook_freight" &&
+        freightPayer === "buyer" &&
+        Number(tx.freight_cost ?? 0) > 0 &&
+        tx.freight_payment_status !== "paid"
+      ) {
+        fulfillment = { kind: "freight", sale_transaction_id: tx.id, key: `freight:${tx.id}` };
+      }
       strategyContext = {
         mode: "sale",
         // Once the seller has confirmed there is nothing left to gate on, so
