@@ -159,6 +159,173 @@ export default function SellerPayPalConnect({ showWhenDisabled = false }: { show
   const emailUnconfirmed = reasons.includes('primary_email_unconfirmed');
   const notReceivable = reasons.includes('payments_receivable_false');
   const needsPermissions = reasons.includes('oauth_not_active') || reasons.includes('vetting_pending');
+  const status = connection?.onboarding_status ?? null;
+  const isReady = status === 'ready';
+
+  /** PayPal's exact remediation copy — meaning must not change. */
+  const emailWarning = (
+    <>
+      Attention: Please confirm your email address on{' '}
+      <a
+        href="https://www.paypal.com/businessprofile/settings"
+        target="_blank"
+        rel="noreferrer noopener"
+      >
+        paypal.com/businessprofile/settings
+      </a>{' '}
+      in order to receive payments! You currently cannot receive payments.
+    </>
+  );
+  const receivableWarning = (
+    <>
+      Attention: You currently cannot receive payments due to restriction on your PayPal account.
+      Please reach out to PayPal Customer Support or connect to{' '}
+      <a href="https://www.paypal.com" target="_blank" rel="noreferrer noopener">
+        www.paypal.com
+      </a>{' '}
+      for more information.
+    </>
+  );
+
+  const statusLabel = !connection
+    ? 'Not connected'
+    : status === 'ready'
+      ? 'Ready to receive payments'
+      : status === 'link_sent'
+        ? 'Connecting — not finished'
+        : status === 'onboarding'
+          ? 'Checking status'
+          : status === 'disconnected'
+            ? 'Disconnected'
+            : 'Action required';
+
+  // Real, backend-derived readiness. Nothing is marked complete on guesswork.
+  const step = (done: boolean, blocked: boolean) =>
+    done ? 'is-done' : blocked ? 'is-blocked' : 'is-pending';
+  const checklist: Array<{ label: string; state: string }> = [
+    {
+      label: 'PayPal Business account connected',
+      state: step(Boolean(connection) && status !== 'disconnected', status === 'disconnected'),
+    },
+    { label: 'Primary email confirmed', state: step(isReady, emailUnconfirmed) },
+    { label: 'Payments receivable', state: step(isReady, notReceivable) },
+    { label: 'Required permissions granted', state: step(isReady, needsPermissions) },
+    { label: 'Online checkout enabled on your listings', state: step(isReady, false) },
+  ];
+
+  if (variant === 'dark') {
+    return (
+      <div className="v2-paypal-panel space-y-4">
+        <div className="flex flex-wrap items-center gap-3">
+          <span className={`v2-status ${isReady ? 'is-ok' : connection ? 'is-warn' : ''}`}>
+            {isReady ? <CheckCircle2 /> : connection ? <AlertTriangle /> : <CreditCard />}
+            {statusLabel}
+          </span>
+          {isReady && connection?.paypal_email && (
+            <span className="v2-paypal-note">{connection.paypal_email}</span>
+          )}
+        </div>
+
+        <ul className="v2-checklist">
+          {checklist.map((item) => (
+            <li key={item.label} className={item.state}>
+              {item.state === 'is-done' ? (
+                <CheckCircle2 />
+              ) : item.state === 'is-blocked' ? (
+                <AlertTriangle />
+              ) : (
+                <Circle />
+              )}
+              {item.label}
+            </li>
+          ))}
+        </ul>
+
+        {!connection && (
+          <p className="v2-paypal-note">
+            A PayPal <strong>Business</strong> account is required — personal accounts can&apos;t be
+            used to sell on Vendibook. You&apos;ll be taken to PayPal to sign in to your Business
+            account (or create/upgrade to one) and approve the connection.
+          </p>
+        )}
+        {emailUnconfirmed && <p className="v2-paypal-warn">{emailWarning}</p>}
+        {notReceivable && <p className="v2-paypal-warn">{receivableWarning}</p>}
+        {needsPermissions && (
+          <p className="v2-paypal-note">
+            Finish connecting your PayPal account so Vendibook has the permissions it needs.
+          </p>
+        )}
+        {status === 'link_sent' && (
+          <p className="v2-paypal-note">
+            You started connecting PayPal but haven&apos;t finished yet. Pick up where you left off
+            on PayPal, then check your status here.
+          </p>
+        )}
+        {status === 'disconnected' && (
+          <p className="v2-paypal-note">
+            Your PayPal account is disconnected. Your past transactions and records are unchanged —
+            reconnect whenever you&apos;re ready to accept online payments again.
+          </p>
+        )}
+
+        <div className="flex flex-wrap items-center gap-2">
+          {(!connection || status === 'disconnected') && (
+            <button
+              type="button"
+              className="v2-paypal-cta"
+              onClick={connect}
+              disabled={busy === 'connect' || enabled === false}
+            >
+              {busy === 'connect'
+                ? 'Opening PayPal…'
+                : status === 'disconnected'
+                  ? 'Reconnect PayPal'
+                  : 'Connect PayPal'}
+            </button>
+          )}
+          {connection?.referral_url && (status === 'link_sent' || needsPermissions) && (
+            <button
+              type="button"
+              className="v2-paypal-cta"
+              onClick={() => window.open(connection.referral_url!, '_blank')}
+            >
+              <ExternalLink />
+              Continue on PayPal
+            </button>
+          )}
+          {connection && (
+            <button
+              type="button"
+              className="v2-paypal-ghost"
+              onClick={refreshStatus}
+              disabled={busy === 'refresh'}
+            >
+              <RefreshCw />
+              {busy === 'refresh' ? 'Checking…' : 'Check status'}
+            </button>
+          )}
+          {connection && status !== 'disconnected' && (
+            <button
+              type="button"
+              className="v2-paypal-ghost"
+              onClick={disconnect}
+              disabled={busy === 'disconnect'}
+            >
+              <Unlink />
+              Disconnect
+            </button>
+          )}
+        </div>
+
+        {enabled === false && (
+          <p className="v2-paypal-note">
+            Sandbox setup required — PayPal seller connection isn&apos;t switched on for this
+            environment yet. You can still create and publish listings.
+          </p>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="p-5 flex items-start gap-4 border-t border-border">
@@ -168,18 +335,18 @@ export default function SellerPayPalConnect({ showWhenDisabled = false }: { show
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-sm font-semibold text-foreground">PayPal seller account</span>
-          {connection?.onboarding_status === 'ready' && (
+          {isReady && (
             <Badge className="bg-emerald-500/15 text-emerald-600 border-emerald-500/30 text-[10px] h-4 px-1.5">
               <CheckCircle2 className="h-2.5 w-2.5 mr-0.5" />
               Ready to receive payments
             </Badge>
           )}
-          {connection && connection.onboarding_status !== 'ready' && (
+          {connection && !isReady && (
             <Badge className="bg-amber-500/15 text-amber-600 border-amber-500/30 text-[10px] h-4 px-1.5">
               <AlertTriangle className="h-2.5 w-2.5 mr-0.5" />
-              {connection.onboarding_status === 'link_sent' || connection.onboarding_status === 'onboarding'
+              {status === 'link_sent' || status === 'onboarding'
                 ? 'Connecting'
-                : connection.onboarding_status === 'disconnected'
+                : status === 'disconnected'
                   ? 'Disconnected'
                   : 'Action required'}
             </Badge>
@@ -212,14 +379,14 @@ export default function SellerPayPalConnect({ showWhenDisabled = false }: { show
           </>
         )}
 
-        {connection?.onboarding_status === 'ready' && (
+        {isReady && (
           <>
             <p className="text-xs text-muted-foreground mt-0.5">
               Your PayPal account is connected and can receive payments.
-              {connection.paypal_email && (
+              {connection?.paypal_email && (
                 <> Account: <span className="text-foreground/85">{connection.paypal_email}</span>.</>
               )}
-              {connection.merchant_id && (
+              {connection?.merchant_id && (
                 <> Merchant ID: <span className="font-mono text-[11px]">{connection.merchant_id}</span>.</>
               )}
             </p>
@@ -236,14 +403,14 @@ export default function SellerPayPalConnect({ showWhenDisabled = false }: { show
           </>
         )}
 
-        {connection?.onboarding_status === 'link_sent' && (
+        {status === 'link_sent' && (
           <>
             <p className="text-xs text-muted-foreground mt-0.5">
               You started connecting PayPal but haven't finished yet. Pick up where you left off on
               PayPal, then check your status here.
             </p>
             <div className="flex flex-wrap gap-2 mt-3">
-              {connection.referral_url && (
+              {connection?.referral_url && (
                 <Button size="sm" onClick={() => window.open(connection.referral_url!, '_blank')}>
                   <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
                   Finish connecting on PayPal
@@ -257,47 +424,28 @@ export default function SellerPayPalConnect({ showWhenDisabled = false }: { show
           </>
         )}
 
-        {connection?.onboarding_status === 'action_required' && (
+        {status === 'action_required' && (
           <>
             <div className="mt-2 space-y-2">
               {emailUnconfirmed && (
-                <p className="text-xs text-amber-700 dark:text-amber-400">
-                  Attention: Please confirm your email address on{' '}
-                  <a
-                    className="underline font-medium"
-                    href="https://www.paypal.com/businessprofile/settings"
-                    target="_blank"
-                    rel="noreferrer noopener"
-                  >
-                    paypal.com/businessprofile/settings
-                  </a>{' '}
-                  in order to receive payments! You currently cannot receive payments.
+                <p className="text-xs text-amber-700 dark:text-amber-400 [&_a]:underline [&_a]:font-medium">
+                  {emailWarning}
                 </p>
               )}
               {notReceivable && (
-                <p className="text-xs text-amber-700 dark:text-amber-400">
-                  Attention: You currently cannot receive payments due to restriction on your PayPal
-                  account. Please reach out to PayPal Customer Support or connect to{' '}
-                  <a
-                    className="underline font-medium"
-                    href="https://www.paypal.com"
-                    target="_blank"
-                    rel="noreferrer noopener"
-                  >
-                    www.paypal.com
-                  </a>{' '}
-                  for more information.
+                <p className="text-xs text-amber-700 dark:text-amber-400 [&_a]:underline [&_a]:font-medium">
+                  {receivableWarning}
                 </p>
               )}
               {needsPermissions && (
                 <p className="text-xs text-muted-foreground">
                   Finish connecting your PayPal account so Vendibook has the permissions it needs.
-                  {connection.referral_url && ' Use the button below to continue on PayPal.'}
+                  {connection?.referral_url && ' Use the button below to continue on PayPal.'}
                 </p>
               )}
             </div>
             <div className="flex flex-wrap gap-2 mt-3">
-              {needsPermissions && connection.referral_url && (
+              {needsPermissions && connection?.referral_url && (
                 <Button size="sm" onClick={() => window.open(connection.referral_url!, '_blank')}>
                   <ExternalLink className="h-3.5 w-3.5 mr-1.5" />
                   Continue on PayPal
