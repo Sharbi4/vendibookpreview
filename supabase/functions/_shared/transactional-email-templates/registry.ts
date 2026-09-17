@@ -24,6 +24,7 @@ import { template as offerCounterBuyer } from './offer-counter-buyer.tsx'
 import { template as offerResolved } from './offer-resolved.tsx'
 import { template as saleCompletedSeller } from './sale-completed-seller.tsx'
 import { template as salePaidSeller } from './sale-paid-seller.tsx'
+import { template as sellerPaymentStatus } from './seller-payment-status.tsx'
 import { template as payoutSent } from './payout-sent.tsx'
 import { template as listingPublished } from './listing-published.tsx'
 import { template as listingDraftNudge } from './listing-draft-nudge.tsx'
@@ -97,6 +98,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'offer-resolved': offerResolved,
   'sale-completed-seller': saleCompletedSeller,
   'sale-paid-seller': salePaidSeller,
+  'seller-payment-status': sellerPaymentStatus,
   'payout-sent': payoutSent,
   'listing-published': listingPublished,
   'listing-draft-nudge': listingDraftNudge,
