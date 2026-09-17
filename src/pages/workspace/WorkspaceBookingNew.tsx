@@ -35,8 +35,8 @@ export default function WorkspaceBookingNew() {
           <CalendarDays className="opacity-40" />
           <p>Choose a listing to book. Bookings you start appear in Activity and Payments.</p>
           <div className="flex flex-wrap items-center justify-center gap-2">
-            <Link to="/search?mode=rent" className="v2-btn">
-              <Search className="mr-2 h-4 w-4" />
+            <Link to="/search?mode=rent" className="v2-btn-outline">
+              <Search className="h-4 w-4" />
               Browse rentals
             </Link>
             <Link to="/dashboard/saved" className="v2-btn-quiet">
