@@ -828,6 +828,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
             hourlyEnabled={(listing.hourly_enabled || false) || (typeof listing.price_hourly === 'number' && listing.price_hourly > 0)}
             dailyEnabled={listing.daily_enabled !== false}
             onDatesSelected={handleDatesSelected}
+            contentClassName="v2-checkout-dialog"
           />
         </main>
       </Frame>
@@ -863,6 +864,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
             hourlyEnabled={(listing.hourly_enabled || false) || (typeof listing.price_hourly === 'number' && listing.price_hourly > 0)}
             dailyEnabled={listing.daily_enabled !== false}
             onDatesSelected={handleDatesSelected}
+            contentClassName="v2-checkout-dialog"
           />
         </CheckoutSection>
       </TransactionCheckoutShell>
@@ -1415,6 +1417,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
         hourlyEnabled={(listing.hourly_enabled || false) || (typeof listing.price_hourly === 'number' && listing.price_hourly > 0)}
         dailyEnabled={listing.daily_enabled !== false}
         onDatesSelected={handleDatesSelected}
+        contentClassName="v2-checkout-dialog"
       />
 
       {/* Auth Gate Modal - shown when guest tries to submit */}

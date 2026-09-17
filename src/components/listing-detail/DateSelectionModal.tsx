@@ -58,6 +58,8 @@ interface DateSelectionModalProps {
   isVendorSpace?: boolean;
   totalSlots?: number;
   slotNames?: string[] | null;
+  /** Extra classes on the dialog surface — checkout passes its ivory theme. */
+  contentClassName?: string;
 }
 
 // Calculate tiered pricing: months → weeks → days
@@ -113,6 +115,7 @@ export const DateSelectionModal: React.FC<DateSelectionModalProps> = ({
   instantBook = false,
   onDatesSelected,
   navigateToBooking = true,
+  contentClassName,
 }) => {
   const navigate = useNavigate();
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -351,7 +354,7 @@ export const DateSelectionModal: React.FC<DateSelectionModalProps> = ({
   if (isLoading) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-md p-4">
+        <DialogContent className={`max-w-md p-4 ${contentClassName ?? ''}`}>
           <div className="h-64 flex items-center justify-center">
             <div className="animate-pulse text-muted-foreground">Loading availability...</div>
           </div>
@@ -362,7 +365,7 @@ export const DateSelectionModal: React.FC<DateSelectionModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-md sm:max-w-lg p-0 gap-0 overflow-hidden max-h-[90vh] overflow-y-auto">
+      <DialogContent className={`max-w-md sm:max-w-lg p-0 gap-0 overflow-hidden max-h-[90vh] overflow-y-auto ${contentClassName ?? ''}`}>
         <DialogHeader className="p-4 pb-0">
           <DialogTitle className="flex items-center gap-2 text-lg">
             <Calendar className="h-5 w-5 text-primary" />

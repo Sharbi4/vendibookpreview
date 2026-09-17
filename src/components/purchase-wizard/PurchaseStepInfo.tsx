@@ -75,10 +75,12 @@ const PurchaseStepInfo = ({
     <div className="space-y-6">
       {/* Step Header */}
       <div>
-        <h2 className="font-display text-2xl font-bold text-foreground">
-          Where should we send everything?
-        </h2>
-        <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
+        {!embedded && (
+          <h2 className="font-display text-2xl font-bold text-foreground">
+            Where should we send everything?
+          </h2>
+        )}
+        <p className={`text-sm text-muted-foreground flex items-center gap-1.5${embedded ? '' : ' mt-1'}`}>
           Receipts, documents, and coordination — nothing extra.
           <InfoPopover title="Why we need this">
             <p>Sellers and Vendibook support use this to coordinate {hideAddress ? 'pickup' : 'delivery'} and resolve issues.</p>

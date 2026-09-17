@@ -401,10 +401,12 @@ const PurchaseStepDelivery = ({
   return (
     <div className="space-y-6">
       <div>
-        <h2 className="text-2xl font-bold text-foreground tracking-tight">
-          {isSingleMethod ? 'How you\'ll get it' : 'Choose how you\'ll get it'}
-        </h2>
-        <p className="text-sm text-muted-foreground mt-1">
+        {!embedded && (
+          <h2 className="text-2xl font-bold text-foreground tracking-tight">
+            {isSingleMethod ? 'How you\'ll get it' : 'Choose how you\'ll get it'}
+          </h2>
+        )}
+        <p className={embedded ? 'text-sm text-muted-foreground' : 'text-sm text-muted-foreground mt-1'}>
           {isSingleMethod
             ? 'Here\'s the fulfillment option the seller offers for this item.'
             : 'Pick the option that works best for you. You can update details below.'}
