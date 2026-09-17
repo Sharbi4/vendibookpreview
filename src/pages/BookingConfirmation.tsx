@@ -228,29 +228,116 @@ const BookingConfirmation = ({
                   {booking.listings?.title ?? 'Rental booking'}
                 </p>
                 {dates ? (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                    <CalendarDays className="h-4 w-4" />
-                    <span>{dates}</span>
+                  <div className="flex items-start gap-2 text-sm text-muted-foreground">
+                    <CalendarDays className="h-4 w-4 mt-0.5" />
+                    <div>
+                      <div className="text-foreground">{dates}</div>
+                      {times ? <div className="text-xs">{times}</div> : null}
+                      {booking.slot_name ? <div className="text-xs">Space: {booking.slot_name}</div> : null}
+                    </div>
                   </div>
                 ) : null}
                 {booking.fulfillment_selected ? (
-                  <div className="flex items-center gap-2 text-sm text-muted-foreground capitalize">
-                    <MapPin className="h-4 w-4" />
-                    <span>{booking.fulfillment_selected.replace('_', ' ')}</span>
+                  <div className="flex items-start gap-2 text-sm text-muted-foreground">
+                    {booking.fulfillment_selected === 'delivery' ? (
+                      <Truck className="h-4 w-4 mt-0.5" />
+                    ) : (
+                      <MapPin className="h-4 w-4 mt-0.5" />
+                    )}
+                    <div>
+                      <div className="capitalize text-foreground">
+                        {booking.fulfillment_selected.replace('_', ' ')}
+                      </div>
+                      {locationLine ? <div className="text-xs">{locationLine}</div> : null}
+                    </div>
                   </div>
                 ) : null}
-                {booking.total_price ? (
-                  <div className="flex items-center justify-between border-t border-border pt-3 text-sm">
-                    <span className="text-muted-foreground">Charged today</span>
-                    <span className="font-semibold text-foreground">{money(Number(booking.total_price))}</span>
-                  </div>
-                ) : null}
+
+                <div className="border-t border-border pt-3 space-y-1.5 text-sm">
+                  {deliveryFee > 0 ? (
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Delivery</span>
+                      <span className="text-foreground">{money(deliveryFee)}</span>
+                    </div>
+                  ) : null}
+                  {taxAmount > 0 ? (
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">Tax</span>
+                      <span className="text-foreground">{money(taxAmount)}</span>
+                    </div>
+                  ) : null}
+                  {booking.total_price ? (
+                    <div className="flex items-center justify-between">
+                      <span className="text-muted-foreground">
+                        {booking.payment_status === 'paid' ? 'Charged today' : 'Booking total'}
+                      </span>
+                      <span className="font-semibold text-foreground">
+                        {money(Number(booking.total_price))}
+                      </span>
+                    </div>
+                  ) : null}
+                </div>
+
                 {booking.deposit_amount ? (
-                  <p className="text-xs text-muted-foreground">
-                    A {money(Number(booking.deposit_amount))} security deposit is arranged directly with the
-                    host and is not part of the amount charged by Vendibook.
-                  </p>
+                  <div className="rounded-xl border border-border bg-background p-3">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="flex items-center gap-2 text-foreground">
+                        <ShieldCheck className="h-4 w-4" />
+                        Security deposit
+                      </span>
+                      <span className="font-semibold text-foreground">
+                        {money(Number(booking.deposit_amount))}
+                      </span>
+                    </div>
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      {depositNote}
+                    </p>
+                  </div>
                 ) : null}
+
+                {dates && view === 'confirmed' ? (
+                  <AddToCalendarButton
+                    title={booking.listings?.title ?? 'Vendibook rental'}
+                    startDate={booking.start_date}
+                    endDate={booking.end_date}
+                    startTime={booking.start_time ?? undefined}
+                    endTime={booking.end_time ?? undefined}
+                    location={locationLine ?? undefined}
+                    description="Your Vendibook rental booking."
+                  />
+                ) : null}
+              </div>
+            ) : null}
+
+            {booking && view !== 'failed' && view !== 'not_found' ? (
+              <div className="mt-6 rounded-2xl border border-border p-4">
+                <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+                  <FileText className="h-4 w-4" />
+                  Documents
+                </h2>
+                <div className="mt-3">
+                  <DocumentUploadSection listingId={booking.listing_id} bookingId={booking.id} />
+                </div>
+                <p className="mt-3 text-xs text-muted-foreground">
+                  If the host does not require documents, nothing will appear here and there is
+                  nothing for you to send.
+                </p>
+              </div>
+            ) : null}
+
+            {nextSteps.length > 0 ? (
+              <div className="mt-6 rounded-2xl border border-border p-4">
+                <h2 className="text-sm font-semibold text-foreground">What happens next</h2>
+                <ol className="mt-3 space-y-3">
+                  {nextSteps.map((step, i) => (
+                    <li key={step} className="flex gap-3 text-sm text-muted-foreground">
+                      <span className="mt-0.5 flex h-5 w-5 flex-shrink-0 items-center justify-center rounded-full bg-primary/10 text-[11px] font-semibold text-primary">
+                        {i + 1}
+                      </span>
+                      <span className="leading-relaxed">{step}</span>
+                    </li>
+                  ))}
+                </ol>
               </div>
             ) : null}
 
