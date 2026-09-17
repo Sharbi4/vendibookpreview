@@ -89,7 +89,13 @@ function loadSdk(intent: 'capture' | 'authorize'): Promise<any> {
       const script = document.createElement('script');
       script.src = `https://www.paypal.com/sdk/js?${params.toString()}`;
       script.async = true;
+      // Mandatory PayPal Partner attribution on the SDK tag itself.
+      script.setAttribute(
+        'data-partner-attribution-id',
+        config.partner_attribution_id || PARTNER_ATTRIBUTION_ID,
+      );
       if (namespace !== 'paypal') script.setAttribute('data-namespace', namespace);
+
       script.onload = () => {
         const ns = (window as any)[namespace];
         if (ns) resolve(ns);
