@@ -329,12 +329,16 @@ const AnimatedRoutes = () => {
           <Route path="/dashboard-v2/account" element={<Navigate to="/dashboard/account" replace />} />
           <Route path="/sale/:transactionId/protection" element={<PageTransition><ProtectedSalePage /></PageTransition>} />
           <Route path="/transaction/:transactionId" element={<PageTransition><TransactionDetail /></PageTransition>} />
-          <Route path="/host/bookings" element={<PageTransition><HostBookings /></PageTransition>} />
+          <Route path="/host/bookings" element={<PreserveQueryRedirect to="/dashboard/bookings" />} />
           {/* Campaign deep-link alias — keeps ?boost= and UTMs intact */}
           <Route path="/host/listings" element={<PreserveQueryRedirect to="/dashboard/listings" />} />
           <Route path="/host/listings/classic" element={<PageTransition><HostListings /></PageTransition>} />
-          <Route path="/host/reporting" element={<PageTransition><HostReporting /></PageTransition>} />
-          <Route path="/host/analytics" element={<PageTransition><HostAnalytics /></PageTransition>} />
+          <Route path="/host/reporting" element={<PreserveQueryRedirect to="/dashboard/reporting" />} />
+          <Route path="/host/analytics" element={<PreserveQueryRedirect to="/dashboard/analytics" />} />
+          <Route path="/host/dashboard" element={<PreserveQueryRedirect to="/dashboard" />} />
+          <Route path="/host/payments" element={<PreserveQueryRedirect to="/dashboard/payments" />} />
+          <Route path="/host/messages" element={<PreserveQueryRedirect to="/dashboard/messages" />} />
+          <Route path="/host/account" element={<PreserveQueryRedirect to="/dashboard/account" />} />
           {/* Legacy listing-creation entries → canonical opening gateway */}
           <Route path="/create-listing" element={<Navigate to="/list" replace />} />
           <Route path="/new-listing" element={<Navigate to="/list" replace />} />
