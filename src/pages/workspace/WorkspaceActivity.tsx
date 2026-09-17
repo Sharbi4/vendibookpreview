@@ -101,21 +101,21 @@ export default function WorkspaceActivity() {
     const seller: Item[] = sellerBookings
       .filter((b) => b.status !== 'pending')
       .map((b) => ({
-      id: `seller-${b.id}`,
-      kind: b.status === 'pending' ? 'requests' : 'rentals',
-      title: b.listing?.title || 'Booking request',
-      counterparty: b.shopper?.full_name || 'Renter',
-      state:
-        b.payment_status && b.payment_status !== 'paid'
-          ? `${b.status} · payment ${b.payment_status}`
-          : b.status,
-      nextAction: b.status === 'pending' ? 'Approve, decline, or message' : null,
-      date: b.created_at,
-      amount: bookingMoney(b.total_price),
-      reference: null,
-      image: b.listing?.cover_image_url ?? null,
-      href: `/dashboard/bookings?id=${b.id}`,
-    }));
+        id: `seller-${b.id}`,
+        kind: 'rentals' as const,
+        title: b.listing?.title || 'Booking',
+        counterparty: b.shopper?.full_name || 'Renter',
+        state:
+          b.payment_status && b.payment_status !== 'paid'
+            ? `${b.status} · payment ${b.payment_status}`
+            : b.status,
+        nextAction: null,
+        date: b.created_at,
+        amount: bookingMoney(b.total_price),
+        reference: null,
+        image: b.listing?.cover_image_url ?? null,
+        href: `/dashboard/bookings/${b.id}`,
+      }));
 
     return [...payments, ...buyer, ...seller].sort(
       (a, b) => +new Date(b.date) - +new Date(a.date),
