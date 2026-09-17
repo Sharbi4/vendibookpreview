@@ -34,7 +34,8 @@ const marker = (state: StepState) =>
  */
 export default function WorkspacePaymentSetup() {
   const { user } = useAuth();
-  const { connection, status, isReady, isLoading, reload } = useMyPayPalConnection();
+  const { connection, status, isReady, isLoading, isRefreshing, refreshFromPayPal, lastCheckedAt } =
+    useMyPayPalConnection();
   const readiness = useSellerPaymentReadiness(user?.id ?? null);
 
   const [listings, setListings] = useState<SetupListing[]>([]);
@@ -175,7 +176,9 @@ export default function WorkspacePaymentSetup() {
               <h2>Clear anything holding up your payments</h2>
             </div>
             <span className={`v2-status ${healthState === 'done' ? 'is-ok' : healthState === 'blocked' ? 'is-alert' : ''}`}>
-              {healthState === 'done'
+              {isRefreshing
+                ? 'Checking with PayPal…'
+                : healthState === 'done'
                 ? 'All clear'
                 : healthState === 'blocked'
                   ? 'Action required'
@@ -234,9 +237,43 @@ export default function WorkspacePaymentSetup() {
             )}
 
             {connection && (
-              <button type="button" className="v2-btn-quiet" onClick={() => reload()}>
-                Refresh my status
-              </button>
+              <div className="flex flex-wrap items-center gap-3">
+                <button
+                  type="button"
+                  className="v2-btn-quiet"
+                  disabled={isRefreshing}
+                  onClick={async () => {
+                    const row = await refreshFromPayPal();
+                    if (!row) {
+                      toast.error("Couldn't check your PayPal status. Please try again.");
+                      return;
+                    }
+                    if (
+                      row.onboarding_status === 'ready' &&
+                      row.primary_email_confirmed &&
+                      row.payments_receivable
+                    ) {
+                      toast.success('PayPal confirmed your account can receive payments.');
+                    } else {
+                      toast.info('We checked with PayPal — some steps are still outstanding.');
+                    }
+                  }}
+                >
+                  {isRefreshing ? (
+                    <>
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                      Checking with PayPal…
+                    </>
+                  ) : (
+                    'Check my status with PayPal'
+                  )}
+                </button>
+                {lastCheckedAt && (
+                  <span className="text-xs text-muted-foreground">
+                    Last checked {new Date(lastCheckedAt).toLocaleString()}
+                  </span>
+                )}
+              </div>
             )}
           </div>
         </section>
