@@ -1,79 +1,90 @@
 import { excludeTestListings } from '@/lib/excludeTestListings';
-import { useEffect, lazy, Suspense } from 'react';
+import { lazy, Suspense } from 'react';
+import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { ArrowRight, ShieldCheck, Truck, Wallet } from 'lucide-react';
 import { filterPubliclyVisible } from '@/lib/listings/publicVisibility';
-import { useQueryClient } from '@tanstack/react-query';
+import { sortNewFirstThenFeatured } from '@/lib/featured';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import NewsletterPopup from '@/components/newsletter/NewsletterPopup';
-import Hero from '@/components/home/Hero';
-import FinancingTopBanner from '@/components/home/FinancingTopBanner';
-
-
-import AnnouncementBanner from '@/components/home/AnnouncementBanner';
-import HeroBelowFold from '@/components/home/HeroBelowFold';
-import ReferralPromoCard from '@/components/home/ReferralPromoCard';
-import ConciergeSection from '@/components/home/ConciergeSection';
-import SellerHomeBlock from '@/components/home/SellerHomeBlock';
-import PremiumDiscoveryBlock from '@/components/home/PremiumDiscoveryBlock';
+import V2HomeHero from '@/components/home/v2/V2HomeHero';
+import V2ListingRow from '@/components/home/v2/V2ListingRow';
 import HowVendibookWorks from '@/components/home/how-it-works/HowVendibookWorks';
-import HomeTrustRail from '@/components/home/HomeTrustRail';
-
 import { usePageTracking } from '@/hooks/usePageTracking';
 import { Skeleton } from '@/components/ui/skeleton';
 import SEO, { generateOrganizationSchema, generateWebSiteSchema } from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
-
-
 import { supabase } from '@/integrations/supabase/client';
 
-// Lazy load below-the-fold components for faster initial load
-const ListingsSections = lazy(() => import('@/components/home/ListingsSections'));
-const HomepageFeaturedRow = lazy(() => import('@/components/home/HomepageFeaturedRow'));
-const TrustInfrastructure = lazy(() => import('@/components/home/TrustInfrastructure'));
+const FinancingTopBanner = lazy(() => import('@/components/home/FinancingTopBanner'));
+const ConciergeSection = lazy(() => import('@/components/home/ConciergeSection'));
 const BecomeHostSection = lazy(() => import('@/components/home/BecomeHostSection'));
 const FinalCTA = lazy(() => import('@/components/home/FinalCTA'));
 
-// Minimal loading fallback for lazy sections
 const SectionSkeleton = () => (
-  <div className="py-12 px-4">
-    <Skeleton className="h-8 w-48 mx-auto mb-8" />
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-6xl mx-auto">
-      <Skeleton className="h-64 rounded-xl" />
-      <Skeleton className="h-64 rounded-xl" />
-      <Skeleton className="h-64 rounded-xl" />
-    </div>
+  <div className="py-10">
+    <Skeleton className="h-40 w-full rounded-2xl" />
   </div>
 );
 
+const ROW_LIMIT = 8;
+
+const fetchListings = async (mode: 'sale' | 'rent', categories?: string[]) => {
+  let query = supabase
+    .from('listings')
+    .select('*')
+    .eq('status', 'published')
+    .not('published_at', 'is', null)
+    .is('deleted_at', null)
+    .eq('moderation_status', 'clear')
+    .eq('mode', mode);
+
+  if (categories?.length) query = query.in('category', categories);
+
+  const { data, error } = await excludeTestListings(query)
+    .order('published_at', { ascending: false })
+    .limit(ROW_LIMIT);
+
+  if (error) throw error;
+  return sortNewFirstThenFeatured(filterPubliclyVisible(data ?? []) as never) as never[];
+};
+
+const TRUST_POINTS = [
+  {
+    icon: Wallet,
+    title: 'Secure PayPal checkout',
+    body: 'Buyers pay through PayPal. Sellers are paid after delivery is confirmed.',
+  },
+  {
+    icon: ShieldCheck,
+    title: 'Reviewed listings',
+    body: 'Every listing is reviewed before it goes live, with optional seller identity checks.',
+  },
+  {
+    icon: Truck,
+    title: 'Delivery and freight',
+    body: 'Arrange pickup, seller delivery, or nationwide freight right inside checkout.',
+  },
+];
+
 const Index = () => {
-  const queryClient = useQueryClient();
-  
-  // Track page views with Google Analytics
   usePageTracking();
 
-  // Prefetch listings data in parallel with lazy component loading
-  useEffect(() => {
-    queryClient.prefetchQuery({
-      queryKey: ['home-listings-v2'],
-      queryFn: async () => {
-        const { data, error } = await excludeTestListings(
-          supabase
-            .from('listings')
-            .select('*')
-            .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
-        )
-          .order('published_at', { ascending: false })
-          .limit(12);
+  const saleQuery = useQuery({
+    queryKey: ['home-v2-sale'],
+    queryFn: () => fetchListings('sale', ['food_truck', 'food_trailer']),
+    staleTime: 60000,
+  });
 
-        if (error) throw error;
-        return filterPubliclyVisible(data ?? []);
-      },
-      staleTime: 60000, // 60 seconds
-    });
-  }, [queryClient]);
+  const rentQuery = useQuery({
+    queryKey: ['home-v2-rent'],
+    queryFn: () => fetchListings('rent'),
+    staleTime: 60000,
+  });
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="min-h-screen flex flex-col v2-home">
       <SEO
         title="Buy & Rent Food Trucks and Food Trailers | Vendibook"
         description="Browse food trucks and food trailers nationwide with detailed listings, secure PayPal checkout, optional seller identity verification, and equipment financing options."
@@ -83,57 +94,75 @@ const Index = () => {
       <Header />
 
       <main className="flex-1">
-        {/* 1. Cohesive marketplace hero: search + real-listing rotator + CTAs */}
-        <Hero />
+        <div className="v2-home-stack">
+          <V2HomeHero />
 
-        {/* 2. Slim financing partnership strip — Vendibook × Equinox Funding */}
-        <FinancingTopBanner />
+          <V2ListingRow
+            title="Food trucks and trailers for sale"
+            subtitle="Recently listed by owners and dealers."
+            listings={saleQuery.data ?? []}
+            isLoading={saleQuery.isLoading}
+            viewAllHref="/search?mode=sale&category=food_truck%2Cfood_trailer"
+            viewAllLabel="Browse all for sale"
+            priority
+          />
 
-        {/* 3. Compact payments & verification strip */}
-        <HomeTrustRail />
+          <V2ListingRow
+            title="Available to rent"
+            subtitle="Trucks, trailers, and commercial kitchens you can book by the day."
+            listings={rentQuery.data ?? []}
+            isLoading={rentQuery.isLoading}
+            viewAllHref="/search?mode=rent"
+            viewAllLabel="Browse rentals"
+          />
 
-        {/* 4. Seller education + Pricing & Pro */}
-        <HeroBelowFold />
+          <section className="v2-home-section">
+            <div className="v2-home-trust">
+              {TRUST_POINTS.map((point) => (
+                <article key={point.title}>
+                  <point.icon aria-hidden="true" />
+                  <h3>{point.title}</h3>
+                  <p>{point.body}</p>
+                </article>
+              ))}
+            </div>
+          </section>
 
-        {/* 5. Primary education funnel — compact How Vendibook Works */}
+          <section className="v2-home-section">
+            <div className="v2-home-sell">
+              <div>
+                <p className="v2-home-eyebrow">Sell or rent out your asset</p>
+                <h2>List your truck, trailer, or kitchen on Vendibook.</h2>
+                <p>
+                  Create a listing in minutes, connect your PayPal Business account, and start
+                  accepting payments from verified buyers and renters.
+                </p>
+              </div>
+              <div className="v2-home-sell-actions">
+                <Link to="/list" className="v2-home-btn">
+                  Create a listing
+                  <ArrowRight aria-hidden="true" />
+                </Link>
+                <Link to="/pricing" className="v2-home-btn is-quiet">
+                  See pricing
+                </Link>
+              </div>
+            </div>
+          </section>
+        </div>
+
         <HowVendibookWorks />
 
-        {/* 6. Announcement + referral */}
-        <AnnouncementBanner />
-        <ReferralPromoCard />
-
         <Suspense fallback={<SectionSkeleton />}>
-          {/* 7. Featured / Pro inventory */}
-          <HomepageFeaturedRow />
-
-          {/* 8. Recently Added Trucks & Trailers */}
-          <ListingsSections />
-        </Suspense>
-
-        <Suspense fallback={<SectionSkeleton />}>
-          <SellerHomeBlock />
-          <PremiumDiscoveryBlock />
-
-          {/* 9. Concierge — primary soft conversion */}
+          <FinancingTopBanner />
           <ConciergeSection />
-
-          {/* 10. Trust Infrastructure */}
-          <TrustInfrastructure />
-
-          {/* 11. Become a Host / Seller */}
           <BecomeHostSection />
-
-          {/* 12. Final CTA */}
           <FinalCTA />
         </Suspense>
       </main>
 
-
       <Footer />
       <NewsletterPopup />
-      
-      
-      
     </div>
   );
 };
