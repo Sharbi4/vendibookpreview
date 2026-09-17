@@ -151,6 +151,8 @@ interface PayPalRequestOptions {
   actAsMerchantId?: string | null;
   /** Additional non-auth headers required by a specific endpoint. */
   extraHeaders?: Record<string, string>;
+  /** Vendibook payment/order reference, logged for reconciliation. */
+  reference?: string | null;
 }
 
 export async function paypalRequest<T = any>(
@@ -165,24 +167,28 @@ export async function paypalRequest<T = any>(
     timeoutMs = 20_000,
     actAsMerchantId,
     extraHeaders,
+    reference,
   } = opts;
   let lastError: unknown;
 
   for (let attempt = 0; attempt <= retries; attempt++) {
     const controller = new AbortController();
     const timer = setTimeout(() => controller.abort(), timeoutMs);
+    const startedAt = Date.now();
     try {
       const token = await getPayPalAccessToken();
       const headers: Record<string, string> = {
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
         Prefer: "return=representation",
+        // Mandatory partner attribution — central, never per-call.
         "PayPal-Partner-Attribution-Id": PARTNER_ATTRIBUTION_ID,
         ...(extraHeaders ?? {}),
       };
       if (idempotencyKey) headers["PayPal-Request-Id"] = idempotencyKey;
       if (actAsMerchantId) {
         const assertion = buildAuthAssertion(actAsMerchantId);
+        // The assertion itself is never logged — only the merchant it names.
         if (assertion) headers["PayPal-Auth-Assertion"] = assertion;
       }
 
@@ -200,14 +206,31 @@ export async function paypalRequest<T = any>(
       const correlationId = res.headers.get("paypal-debug-id") ??
         res.headers.get("correlation-id") ?? undefined;
 
+      // Certification diagnostics. Metadata only — no tokens, no card data,
+      // no payer PII, no request/response bodies.
+      const diagnostics = {
+        path,
+        method,
+        status: res.status,
+        debugId: json?.debug_id ?? correlationId,
+        latencyMs: Date.now() - startedAt,
+        environment: paypalEnvironment(),
+        attempt,
+        ...(reference ? { reference } : {}),
+        ...(idempotencyKey ? { requestId: idempotencyKey } : {}),
+        ...(actAsMerchantId ? { onBehalfOf: actAsMerchantId } : {}),
+      };
+
       if (res.ok) {
-        safeLog("api_ok", { path, status: res.status, debugId: correlationId });
+        safeLog("api_ok", diagnostics);
         return json as T;
       }
 
       const issue = json?.details?.[0]?.issue ?? json?.name;
       const debugId = json?.debug_id ?? correlationId;
-      safeLog("api_error", { path, status: res.status, issue, debugId });
+      safeLog("api_error", { ...diagnostics, issue });
+
+
 
 
       // 4xx is deterministic — do not retry.
