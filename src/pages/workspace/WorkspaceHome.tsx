@@ -22,6 +22,9 @@ import { useHostBookings } from '@/hooks/useHostBookings';
 import { useUserTransactions } from '@/hooks/useUserTransactions';
 import { useConversations } from '@/hooks/useConversations';
 import { useMyPayPalConnection } from '@/hooks/useMyPayPalConnection';
+import { useNotifications } from '@/hooks/useNotifications';
+import { useFavorites } from '@/hooks/useFavorites';
+import { toDashboardTarget } from '@/lib/navigation/dashboardTargets';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const money = (cents: number | null | undefined) =>
@@ -57,6 +60,8 @@ export default function WorkspaceHome() {
   const { transactions } = useUserTransactions(user?.id);
   const { conversations } = useConversations();
   const { status: paypalStatus, isReady: paypalReady, connection } = useMyPayPalConnection();
+  const { notifications, unreadCount: notificationUnread } = useNotifications(user?.id);
+  const { favorites } = useFavorites();
 
   const name = profile?.full_name || user?.email || 'there';
   const firstName = name.split(' ')[0];
