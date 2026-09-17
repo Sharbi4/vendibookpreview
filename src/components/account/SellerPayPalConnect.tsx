@@ -32,7 +32,7 @@ type Connection = {
  * Inert unless the server has the seller-onboarding switch on — it renders
  * nothing otherwise, so this section never appears before certification.
  */
-export default function SellerPayPalConnect() {
+export default function SellerPayPalConnect({ showWhenDisabled = false }: { showWhenDisabled?: boolean }) {
   const { user } = useAuth();
   const [enabled, setEnabled] = useState<boolean | null>(null);
   const [connection, setConnection] = useState<Connection | null>(null);
@@ -153,7 +153,7 @@ export default function SellerPayPalConnect() {
     }
   };
 
-  if (!user || enabled === false || enabled === null) return null;
+  if (!user || enabled === null || (enabled === false && !showWhenDisabled)) return null;
 
   const reasons = connection?.action_reasons ?? [];
   const emailUnconfirmed = reasons.includes('primary_email_unconfirmed');
@@ -171,19 +171,26 @@ export default function SellerPayPalConnect() {
           {connection?.onboarding_status === 'ready' && (
             <Badge className="bg-emerald-500/15 text-emerald-600 border-emerald-500/30 text-[10px] h-4 px-1.5">
               <CheckCircle2 className="h-2.5 w-2.5 mr-0.5" />
-              Connected
+              Ready to receive payments
             </Badge>
           )}
           {connection && connection.onboarding_status !== 'ready' && (
             <Badge className="bg-amber-500/15 text-amber-600 border-amber-500/30 text-[10px] h-4 px-1.5">
               <AlertTriangle className="h-2.5 w-2.5 mr-0.5" />
-              {connection.onboarding_status === 'link_sent' ? 'Finish setup' : 'Action required'}
+              {connection.onboarding_status === 'link_sent' || connection.onboarding_status === 'onboarding'
+                ? 'Connecting'
+                : connection.onboarding_status === 'disconnected'
+                  ? 'Disconnected'
+                  : 'Action required'}
             </Badge>
           )}
         </div>
 
         {!connection && (
           <>
+            <Badge className="mb-2 bg-muted text-muted-foreground border-border text-[10px] h-5 px-2">
+              Not connected
+            </Badge>
             <p className="text-xs text-muted-foreground mt-0.5">
               A PayPal <strong>Business</strong> account is required — personal accounts can't be
               used to sell on Vendibook. You'll be taken to PayPal to sign in to your Business
@@ -193,10 +200,15 @@ export default function SellerPayPalConnect() {
               size="sm"
               className="mt-3"
               onClick={connect}
-              disabled={busy === 'connect'}
+              disabled={busy === 'connect' || enabled === false}
             >
               {busy === 'connect' ? 'Opening PayPal…' : 'Connect PayPal'}
             </Button>
+            {enabled === false && (
+              <p className="mt-2 text-[11px] text-muted-foreground">
+                PayPal seller connection is not available during this preview. You can still create and publish listings.
+              </p>
+            )}
           </>
         )}
 
