@@ -19,6 +19,7 @@ import {
   Star,
   Building2,
   ShieldCheck,
+  Lock,
 } from 'lucide-react';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { Button } from '@/components/ui/button';
@@ -1247,7 +1248,7 @@ const BookingCheckout = () => {
                       {/* How this payment works — factual, no protection promises */}
                       <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-1.5">
                         <div className="flex items-center gap-2">
-                          <Shield className="h-4 w-4 text-primary" />
+                          <Shield className="h-4 w-4 text-foreground" />
                           <span className="text-sm font-medium text-foreground">How this payment works</span>
                         </div>
                         <p className="text-xs text-muted-foreground leading-relaxed">
@@ -1260,30 +1261,49 @@ const BookingCheckout = () => {
                         </p>
                       </div>
 
-                      {/* Submit button */}
-                      <Button
-                        variant="cta"
-                        className="w-full h-14 text-base"
-                        onClick={handleSubmit}
-                        disabled={isSubmitting}
-                      >
-                        {isSubmitting ? (
-                          <>
-                            <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                            Processing...
-                          </>
-                        ) : instantConfirm ? (
-                          <>
-                            <Zap className="h-5 w-5 mr-2" />
-                            Confirm and pay ${totalChargedToday.toLocaleString()}
-                          </>
-                        ) : (
-                          <>
-                            <CreditCard className="h-5 w-5 mr-2" />
-                            Continue to payment · ${totalChargedToday.toLocaleString()}
-                          </>
-                        )}
-                      </Button>
+                      {/* Submit button, or an informative state when the host hasn't
+                          finished payment setup — never a functional PayPal action then. */}
+                      {paymentSetupBlocked ? (
+                        <div className="rounded-xl border border-border bg-muted/40 p-4 space-y-2">
+                          <div className="flex items-center gap-2">
+                            <Info className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-sm font-medium text-foreground">Payment setup unavailable</span>
+                          </div>
+                          <p className="text-xs text-muted-foreground leading-relaxed">
+                            This host hasn&apos;t finished setting up payments yet, so checkout can&apos;t be completed
+                            right now. Please check back soon or message the host for an update.
+                          </p>
+                        </div>
+                      ) : (
+                        <>
+                          <Button
+                            className="w-full h-14 text-base bg-foreground text-background hover:bg-foreground/90 rounded-xl font-semibold"
+                            onClick={handleSubmit}
+                            disabled={isSubmitting}
+                          >
+                            {isSubmitting ? (
+                              <>
+                                <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                                Processing...
+                              </>
+                            ) : instantConfirm ? (
+                              <>
+                                <Zap className="h-5 w-5 mr-2" />
+                                Confirm and pay ${totalChargedToday.toLocaleString()}
+                              </>
+                            ) : (
+                              <>
+                                <CreditCard className="h-5 w-5 mr-2" />
+                                Continue to payment · ${totalChargedToday.toLocaleString()}
+                              </>
+                            )}
+                          </Button>
+                          <p className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
+                            <Lock className="h-3 w-3" />
+                            Secure checkout with <PayPalMonogram className="h-3.5 w-auto inline-block" />
+                          </p>
+                        </>
+                      )}
                     </div>
                   )}
                 </motion.div>
@@ -1455,6 +1475,44 @@ const BookingCheckout = () => {
         </div>
       </main>
 
+      {/* Mobile persistent action bar — total + the current step's primary action */}
+      <div className="lg:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-card/95 backdrop-blur px-4 py-3 flex items-center justify-between gap-3 shadow-[0_-8px_24px_-16px_rgba(24,20,16,0.35)]">
+        <div className="min-w-0">
+          <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Total</p>
+          <p className="text-base font-semibold text-foreground tabular-nums">
+            ${totalChargedToday.toLocaleString()}
+          </p>
+        </div>
+        {activeStep === STEP_REVIEW ? (
+          paymentSetupBlocked ? (
+            <Button disabled className="h-12 px-6 rounded-xl font-semibold">
+              Unavailable
+            </Button>
+          ) : (
+            <Button
+              className="h-12 px-6 rounded-xl font-semibold bg-foreground text-background hover:bg-foreground/90"
+              onClick={handleSubmit}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
+              {instantConfirm ? 'Confirm & pay' : 'Continue to payment'}
+            </Button>
+          )
+        ) : (
+          <Button
+            className="h-12 px-6 rounded-xl font-semibold bg-foreground text-background hover:bg-foreground/90"
+            onClick={() => {
+              if (activeStep !== null) handleCompleteStep(activeStep);
+            }}
+            disabled={
+              (activeStep === STEP_CONTACT && !isStepContactComplete) ||
+              (activeStep === STEP_FULFILLMENT && !isStepFulfillmentComplete)
+            }
+          >
+            Continue
+          </Button>
+        )}
+      </div>
 
       <Footer />
 

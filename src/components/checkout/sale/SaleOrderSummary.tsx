@@ -1,4 +1,4 @@
-import { Lock, Package, Truck, MapPin } from 'lucide-react';
+import { Lock, Package, Truck, MapPin, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 export interface SaleSummaryLine {
@@ -21,6 +21,10 @@ interface SaleOrderSummaryProps {
   className?: string;
   /** Hides the thumbnail — used where the listing card is already on screen. */
   hideItem?: boolean;
+  /** Seller identity + trust indicators shown in the sticky summary rail. */
+  sellerName?: string;
+  sellerVerified?: boolean;
+  locationLabel?: string;
 }
 
 const FULFILLMENT_META = {
@@ -39,6 +43,9 @@ const SaleOrderSummary = ({
   onLearnMore,
   className,
   hideItem,
+  sellerName,
+  sellerVerified,
+  locationLabel,
 }: SaleOrderSummaryProps) => {
   const meta = FULFILLMENT_META[fulfillment];
   const FulfillmentIcon = meta.icon;
@@ -55,7 +62,17 @@ const SaleOrderSummary = ({
           <div className="h-12 w-12 rounded-lg overflow-hidden bg-muted shrink-0">
             {imageUrl ? <img src={imageUrl} alt="" className="h-full w-full object-cover" /> : null}
           </div>
-          <p className="text-sm font-medium text-foreground line-clamp-2">{title}</p>
+          <div className="min-w-0">
+            <p className="text-sm font-medium text-foreground line-clamp-2">{title}</p>
+            {(sellerName || locationLabel) ? (
+              <p className="mt-0.5 flex items-center gap-1 text-[11px] text-muted-foreground truncate">
+                {sellerName ? <span className="truncate">Sold by {sellerName}</span> : null}
+                {sellerVerified ? <ShieldCheck className="h-3 w-3 text-emerald-600 shrink-0" /> : null}
+                {sellerName && locationLabel ? <span aria-hidden>·</span> : null}
+                {locationLabel ? <span className="truncate">{locationLabel}</span> : null}
+              </p>
+            ) : null}
+          </div>
         </div>
       ) : null}
 
