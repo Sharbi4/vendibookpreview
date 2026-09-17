@@ -15,6 +15,8 @@ export interface TrackingTransaction {
   delivery_instructions: string | null;
   delivery_fee: number | null;
   freight_cost: number | null;
+  tax_amount: number | null;
+  payment_status: string | null;
   created_at: string;
   // Tracking fields
   shipping_status: string | null;
