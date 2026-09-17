@@ -19,6 +19,7 @@ import ScrollToTop from "@/components/ScrollToTop";
 
 import PageTransition from "@/components/PageTransition";
 import PreserveQueryRedirect from "@/components/routing/PreserveQueryRedirect";
+import LegacyMessageThreadRedirect from "@/components/routing/LegacyMessageThreadRedirect";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { usePageTracking } from "@/hooks/usePageTracking";
 import { usePendingMessage } from "@/hooks/usePendingMessage";
@@ -380,8 +381,8 @@ const AnimatedRoutes = () => {
           <Route path="/payment-success" element={<PageTransition><PaymentSuccess /></PageTransition>} />
           <Route path="/payment-cancelled" element={<PageTransition><PaymentCancelled /></PageTransition>} />
           <Route path="/messages" element={<PreserveQueryRedirect to="/dashboard/messages" />} />
-          <Route path="/messages/:conversationId" element={<LegacyMessageThreadRedirect />} />
           <Route path="/messages/classic" element={<PageTransition><Messages /></PageTransition>} />
+          <Route path="/messages/:conversationId" element={<LegacyMessageThreadRedirect />} />
           <Route path="/admin" element={<PageTransition><AdminDashboard /></PageTransition>} />
           <Route path="/admin/metrics" element={<PageTransition><AdminMetrics /></PageTransition>} />
           <Route path="/admin/listings" element={<PageTransition><AdminListings /></PageTransition>} />
