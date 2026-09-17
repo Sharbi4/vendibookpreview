@@ -824,15 +824,20 @@ const BookingCheckout = () => {
 
   if (!startDate || !endDate) {
     return (
-      <div className="sale-light v2-commerce min-h-screen flex flex-col bg-background">
-        <Header />
-        <div className="flex-1 container py-16 text-center">
-          <h1 className="text-2xl font-bold text-foreground mb-4">Select your dates</h1>
-          <p className="text-muted-foreground mb-8">Please select your rental dates to continue</p>
-          <Button onClick={() => setShowDateModal(true)}>
+      <TransactionCheckoutShell
+        eyebrow="Vendibook"
+        title="Choose your rental dates"
+        subtitle="Pick the dates you need and we'll show the rate, fees and anything this listing requires."
+        exitHref={`/listing/${listingId}`}
+      >
+        <CheckoutSection
+          title="Dates & rate"
+          description="Availability comes straight from this listing's calendar."
+        >
+          <button type="button" className="v2-btn" onClick={() => setShowDateModal(true)}>
             <Calendar className="h-4 w-4 mr-2" />
-            Select Dates
-          </Button>
+            Select dates
+          </button>
           <DateSelectionModal
             open={showDateModal}
             onOpenChange={setShowDateModal}
