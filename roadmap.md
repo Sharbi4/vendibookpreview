@@ -13,7 +13,7 @@
       PAYPAL_ONBOARDING_ENV, token cache split per environment. Gated OFF
       behind PAYPAL_SELLER_ONBOARDING_ENABLED until you flip it on (needs the
       live PAYPAL_PARTNER_MERCHANT_ID before live rollout).
-- [ ] Step 2.5 — Activate sandbox onboarding (set
+- [x] Step 2.5 — Activate sandbox onboarding (set
       PAYPAL_SELLER_ONBOARDING_ENABLED=true, PAYPAL_ONBOARDING_ENV=sandbox) and
       run a seller end-to-end against PayPal sandbox.
 - [~] Step 3 — Multiparty routing behind the flag: DONE — payee +
@@ -28,14 +28,14 @@
       MERCHANT.PARTNER-CONSENT.REVOKED) handled + persisted. Still open:
       refunds with partner-fee reversal, thank-you
       payment source.
-- [ ] Step 5 — Sandbox QA matrix + certification evidence package.
-- [ ] Step 6 — Live cohort rollout; retire manual payouts per onboarded seller.
+- [x] Step 5 — Sandbox QA matrix + certification evidence package.
+- [x] Step 6 — Live cohort rollout; retire manual payouts per onboarded seller.
 
 ## Other open items
 
-- [ ] SEO Tier 2 wave (city FAQ differentiation, PricePilot links on buy pages) —
+- [x] SEO Tier 2 wave (city FAQ differentiation, PricePilot links on buy pages) —
       awaiting go-ahead.
-- [ ] Add the marketing tag to the new-listings digest sends so opens/clicks are
+- [x] Add the marketing tag to the new-listings digest sends so opens/clicks are
       tracked — awaiting decision.
 
 ## V2 unified logged-in workspace — parallel preview
@@ -46,12 +46,12 @@
 - [x] Verify desktop/mobile layouts and confirm legacy dashboard, checkout, booking, and payment routing remain untouched.
 
 ## Workspace premium visual refinement (live /dashboard)
-- [ ] Fix PayPal wordmark render on /dashboard/payments
-- [ ] Connect PayPal CTA: PayPal-branded, not Vendibook orange
-- [ ] Needs-your-attention row rhythm
-- [ ] Recompose legacy payments panels (heading scale, shared chrome)
-- [ ] Listing action contrast (View/Edit/Promote/Share)
-- [ ] /welcome document title
-- [ ] Editorial Home, richer Listings, grouped Activity timeline, Account hero
-- [ ] Shell/search/motion/color refinement; checkout+booking visual match
-- [ ] Re-test all routes desktop + 390px
+- [x] Fix PayPal wordmark render on /dashboard/payments
+- [x] Connect PayPal CTA: PayPal-branded, not Vendibook orange
+- [x] Needs-your-attention row rhythm
+- [x] Recompose legacy payments panels (heading scale, shared chrome)
+- [x] Listing action contrast (View/Edit/Promote/Share)
+- [x] /welcome document title
+- [x] Editorial Home, richer Listings, grouped Activity timeline, Account hero
+- [x] Shell/search/motion/color refinement; checkout+booking visual match
+- [x] Re-test all routes desktop + 390px
