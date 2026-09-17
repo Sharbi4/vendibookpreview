@@ -545,6 +545,11 @@ export async function refundPayPalCapture(opts: {
   currency?: string;
   reason?: string;
   idempotencyKey: string;
+  /**
+   * Seller merchant id when the capture was routed to their account
+   * (Connected Path). PayPal refuses the refund without the assertion.
+   */
+  actAsMerchantId?: string | null;
 }) {
   const body: Record<string, unknown> = {};
   if (opts.amountCents !== undefined) {
@@ -554,7 +559,12 @@ export async function refundPayPalCapture(opts: {
 
   return await paypalRequest(
     `/v2/payments/captures/${encodeURIComponent(opts.captureId)}/refund`,
-    { method: "POST", idempotencyKey: opts.idempotencyKey, body },
+    {
+      method: "POST",
+      idempotencyKey: opts.idempotencyKey,
+      body,
+      actAsMerchantId: opts.actAsMerchantId ?? null,
+    },
   );
 }
 
