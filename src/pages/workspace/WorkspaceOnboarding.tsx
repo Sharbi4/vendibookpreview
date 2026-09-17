@@ -65,6 +65,11 @@ export default function WorkspaceOnboarding() {
 
   return (
     <main className="v2-onboarding">
+      <Helmet>
+        <title>Welcome to Vendibook | Get started</title>
+        <meta name="description" content="Tell Vendibook what you're here to do and get started." />
+        <meta name="robots" content="noindex" />
+      </Helmet>
       <Link to="/" aria-label="Vendibook home">
         <img src={logo} alt="Vendibook" className="h-8 w-auto" />
       </Link>
@@ -75,31 +80,34 @@ export default function WorkspaceOnboarding() {
           Pick anything that fits — you can do all of it later. This only sets your starting point.
         </p>
         <div className="grid gap-3 sm:grid-cols-2">
-          {OPTIONS.map((option) => (
-            <button
-              key={option.key}
-              type="button"
-              onClick={() => toggle(option.key)}
-              aria-pressed={selected.includes(option.key)}
-              className={cn('v2-intent', selected.includes(option.key) && 'is-selected')}
-            >
-              <option.icon />
-              <span>
-                <strong>{option.label}</strong>
-                <small>{option.hint}</small>
-              </span>
-              <ArrowRight />
-            </button>
-          ))}
+          {OPTIONS.map((option) => {
+            const isSelected = selected.includes(option.key);
+            return (
+              <button
+                key={option.key}
+                type="button"
+                onClick={() => toggle(option.key)}
+                aria-pressed={isSelected}
+                className={cn('v2-intent', isSelected && 'is-selected')}
+              >
+                <option.icon />
+                <span>
+                  <strong>{option.label}</strong>
+                  <small>{option.hint}</small>
+                </span>
+                {isSelected ? <Check /> : <ArrowRight className="opacity-40" />}
+              </button>
+            );
+          })}
         </div>
-        <div className="mt-8 flex flex-wrap items-center gap-3">
-          <Button onClick={proceed} disabled={saving} variant="secondary">
+        <div className="mt-9 flex flex-wrap items-center gap-3">
+          <button type="button" className="v2-btn-light" onClick={proceed} disabled={saving}>
             {saving && <Loader2 className="animate-spin" />}
             Continue
-          </Button>
-          <Button asChild variant="ghost">
-            <Link to="/dashboard">Skip for now</Link>
-          </Button>
+          </button>
+          <Link to="/dashboard" className="v2-paypal-ghost">
+            Skip for now
+          </Link>
         </div>
       </section>
     </main>
