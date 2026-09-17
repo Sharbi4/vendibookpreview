@@ -16,7 +16,6 @@ export interface TrackingTransaction {
   delivery_fee: number | null;
   freight_cost: number | null;
   tax_amount: number | null;
-  payment_status: string | null;
   created_at: string;
   // Tracking fields
   shipping_status: string | null;
@@ -66,7 +65,6 @@ export const useOrderTracking = (transactionId: string | undefined) => {
           delivery_fee,
           freight_cost,
           tax_amount,
-          payment_status,
           created_at,
           shipping_status,
           tracking_number,

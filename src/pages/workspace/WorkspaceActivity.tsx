@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUserTransactions } from '@/hooks/useUserTransactions';
 import { useShopperBookings } from '@/hooks/useShopperBookings';
 import { useHostBookings } from '@/hooks/useHostBookings';
+import WorkspaceHostBookings from '@/components/workspace/WorkspaceHostBookings';
 
 type Filter = 'all' | 'purchases' | 'sales' | 'rentals' | 'requests' | 'disputes';
 
@@ -95,30 +96,38 @@ export default function WorkspaceActivity() {
       href: `/dashboard/bookings/${b.id}`,
     }));
 
-    const seller: Item[] = sellerBookings.map((b) => ({
-      id: `seller-${b.id}`,
-      kind: b.status === 'pending' ? 'requests' : 'rentals',
-      title: b.listing?.title || 'Booking request',
-      counterparty: b.shopper?.full_name || 'Renter',
-      state:
-        b.payment_status && b.payment_status !== 'paid'
-          ? `${b.status} · payment ${b.payment_status}`
-          : b.status,
-      nextAction: b.status === 'pending' ? 'Approve, decline, or message' : null,
-      date: b.created_at,
-      amount: bookingMoney(b.total_price),
-      reference: null,
-      image: b.listing?.cover_image_url ?? null,
-      href: `/dashboard/bookings?id=${b.id}`,
-    }));
+    // Pending host requests are handled in the booking manager panel above,
+    // so they are not repeated as timeline rows.
+    const seller: Item[] = sellerBookings
+      .filter((b) => b.status !== 'pending')
+      .map((b) => ({
+        id: `seller-${b.id}`,
+        kind: 'rentals' as const,
+        title: b.listing?.title || 'Booking',
+        counterparty: b.shopper?.full_name || 'Renter',
+        state:
+          b.payment_status && b.payment_status !== 'paid'
+            ? `${b.status} · payment ${b.payment_status}`
+            : b.status,
+        nextAction: null,
+        date: b.created_at,
+        amount: bookingMoney(b.total_price),
+        reference: null,
+        image: b.listing?.cover_image_url ?? null,
+        href: `/dashboard/bookings/${b.id}`,
+      }));
 
     return [...payments, ...buyer, ...seller].sort(
       (a, b) => +new Date(b.date) - +new Date(a.date),
     );
   }, [transactions, buyerBookings, sellerBookings]);
 
+  const hasHostBookings = sellerBookings.length > 0;
   const available = FILTERS.filter(
-    (f) => f.key === 'all' || items.some((item) => item.kind === f.key),
+    (f) =>
+      f.key === 'all' ||
+      (f.key === 'requests' && hasHostBookings) ||
+      items.some((item) => item.kind === f.key),
   );
   const shown = filter === 'all' ? items : items.filter((item) => item.kind === filter);
 
@@ -157,6 +166,8 @@ export default function WorkspaceActivity() {
             </button>
           ))}
         </div>
+
+        {(filter === 'all' || filter === 'requests') && <WorkspaceHostBookings />}
 
         {groups.length ? (
           groups.map((group) => (
@@ -204,7 +215,7 @@ export default function WorkspaceActivity() {
               ))}
             </section>
           ))
-        ) : (
+        ) : hasHostBookings && (filter === 'all' || filter === 'requests') ? null : (
           <div className="v2-panel v2-empty">
             <ImageIcon className="opacity-40" />
             <p>

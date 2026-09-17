@@ -60,7 +60,6 @@ const WorkspaceActivity = lazy(() => import("./pages/workspace/WorkspaceActivity
 const WorkspacePayments = lazy(() => import("./pages/workspace/WorkspacePayments"));
 const WorkspacePaymentSetup = lazy(() => import("./pages/workspace/WorkspacePaymentSetup"));
 const WorkspaceSellerOnboarding = lazy(() => import("./pages/workspace/WorkspaceSellerOnboarding"));
-const WorkspaceBookings = lazy(() => import("./pages/workspace/WorkspaceBookings"));
 const WorkspaceBookingNew = lazy(() => import("./pages/workspace/WorkspaceBookingNew"));
 const WorkspaceBookingDetail = lazy(() => import("./pages/workspace/WorkspaceBookingDetail"));
 const WorkspaceReporting = lazy(() => import("./pages/workspace/WorkspaceReporting"));
@@ -316,7 +315,7 @@ const AnimatedRoutes = () => {
           <Route path="/dashboard/seller-setup" element={<PageTransition><WorkspaceSellerOnboarding /></PageTransition>} />
           <Route path="/dashboard/account" element={<PageTransition><WorkspaceAccount /></PageTransition>} />
           <Route path="/dashboard/profile" element={<PageTransition><WorkspaceProfile /></PageTransition>} />
-          <Route path="/dashboard/bookings" element={<PageTransition><WorkspaceBookings /></PageTransition>} />
+          <Route path="/dashboard/bookings" element={<PreserveQueryRedirect to="/dashboard/activity?filter=requests" />} />
           <Route path="/dashboard/bookings/new" element={<PageTransition><WorkspaceBookingNew /></PageTransition>} />
           <Route path="/dashboard/bookings/new/:listingId" element={<PageTransition><WorkspaceBookingNew /></PageTransition>} />
           <Route path="/dashboard/bookings/:bookingId" element={<PageTransition><WorkspaceBookingDetail /></PageTransition>} />
@@ -333,7 +332,7 @@ const AnimatedRoutes = () => {
           <Route path="/dashboard-v2/account" element={<Navigate to="/dashboard/account" replace />} />
           <Route path="/sale/:transactionId/protection" element={<PageTransition><ProtectedSalePage /></PageTransition>} />
           <Route path="/transaction/:transactionId" element={<PageTransition><TransactionDetail /></PageTransition>} />
-          <Route path="/host/bookings" element={<PreserveQueryRedirect to="/dashboard/bookings" />} />
+          <Route path="/host/bookings" element={<PreserveQueryRedirect to="/dashboard/activity?filter=requests" />} />
           {/* Campaign deep-link alias — keeps ?boost= and UTMs intact */}
           <Route path="/host/listings" element={<PreserveQueryRedirect to="/dashboard/listings" />} />
           <Route path="/host/listings/classic" element={<PageTransition><HostListings /></PageTransition>} />

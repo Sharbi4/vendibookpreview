@@ -871,12 +871,12 @@ const OrderTracking = () => {
               amount={transaction.amount}
               deliveryFee={transaction.delivery_fee}
               freightCost={transaction.freight_cost}
-              freightChargedToBuyer={
+              freightChargedToBuyer={Boolean(
                 isVendibookFreight &&
-                (transaction.freight_payment_status === 'paid' || !isCashTransaction)
-              }
+                  (transaction.freight_payment_status === 'paid' || !isCashTransaction),
+              )}
               taxAmount={transaction.tax_amount}
-              isCash={isCashTransaction}
+              isCash={Boolean(isCashTransaction)}
             />
           </div>
 
