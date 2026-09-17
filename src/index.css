@@ -1829,6 +1829,9 @@ html.hide-support-chat .widget-visible {
 
 /* Page scaffolding */
 .v2-content { padding: 32px 18px calc(var(--v2-mobile-nav-height) + env(safe-area-inset-bottom, 0px) + 46px); }
+.v2-dashboard-back { display: inline-flex; min-height: 36px; align-items: center; gap: 7px; margin: 0 0 22px; color: hsl(var(--v2-stone)); font-size: 13px; font-weight: 650; transition: color .15s ease; }
+.v2-dashboard-back:hover { color: hsl(var(--v2-ink)); }
+.v2-dashboard-back svg { width: 16px; height: 16px; }
 .v2-page-stack { margin: 0 auto; display: flex; max-width: 1140px; flex-direction: column; gap: 44px; }
 .v2-page-stack h1 { color: hsl(var(--v2-ink)); font-size: clamp(1.9rem, 3.4vw, 2.6rem); line-height: 1.06; font-weight: 640; letter-spacing: -.02em; }
 .v2-page-stack h2 { color: hsl(var(--v2-ink)); font-size: 17px; font-weight: 650; letter-spacing: -.01em; }

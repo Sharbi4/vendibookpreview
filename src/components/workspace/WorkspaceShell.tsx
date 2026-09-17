@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { useEffect } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
+  ArrowLeft,
   Bell,
   Compass,
   CreditCard,
@@ -85,7 +86,7 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
   return (
     <div className="v2-workspace">
       <aside className="v2-sidebar">
-        <Link to="/dashboard" className="v2-logo-link">
+        <Link to="/" className="v2-logo-link" aria-label="Vendibook homepage">
           <img src={logo} alt="Vendibook" className="v2-logo" />
         </Link>
         <nav className="v2-desktop-nav" aria-label="Workspace navigation">
@@ -121,7 +122,7 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
 
       <div className="v2-main-column">
         <header className="v2-topbar">
-          <Link to="/dashboard" className="md:hidden">
+          <Link to="/" className="md:hidden" aria-label="Vendibook homepage">
             <img src={logo} alt="Vendibook" className="h-6 w-auto" />
           </Link>
           <form action="/search" className="v2-search">
@@ -151,7 +152,15 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
             </Link>
           </div>
         </header>
-        <main className="v2-content">{children}</main>
+        <main className="v2-content">
+          {location.pathname !== '/dashboard' && (
+            <Link to="/dashboard" className="v2-dashboard-back">
+              <ArrowLeft />
+              Back to dashboard
+            </Link>
+          )}
+          {children}
+        </main>
       </div>
 
       <nav className="v2-mobile-nav" aria-label="Workspace navigation">
