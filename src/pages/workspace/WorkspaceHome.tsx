@@ -42,6 +42,7 @@ const price = (listing: { mode?: string | null; price_sale?: number | null; pric
 type Task = { id: string; label: string; hint: string; to: string; icon: typeof AlertTriangle };
 
 export default function WorkspaceHome() {
+  const [routeParams] = useSearchParams();
   const { user, profile } = useAuth();
   const { listings, isLoading: listingsLoading } = useHostListings();
   const { bookings: buyerBookings } = useShopperBookings();
