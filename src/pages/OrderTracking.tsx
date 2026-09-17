@@ -659,7 +659,7 @@ const OrderTracking = () => {
   const isSeller = user?.id === transaction.seller_id;
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="v2-order min-h-screen flex flex-col">
       <SEO 
         title="Order Tracking | VendiBook"
         description="Track your order status and delivery"
@@ -680,8 +680,9 @@ const OrderTracking = () => {
 
           {/* Order Header */}
           <div className="mb-8">
-            <div className="flex items-center gap-3 mb-2 flex-wrap">
-              <h1 className="text-2xl font-bold text-foreground">Order Tracking</h1>
+            <p className="v2-order-eyebrow">Order #{String(transaction.id).slice(0, 8).toUpperCase()}</p>
+            <div className="flex items-center gap-3 mb-2 mt-2 flex-wrap">
+              <h1 className="v2-order-title">Order confirmed</h1>
               {isCashTransaction && (
                 <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
                   <Banknote className="h-3 w-3 mr-1" />
