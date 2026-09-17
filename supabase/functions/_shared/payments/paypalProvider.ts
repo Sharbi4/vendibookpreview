@@ -336,6 +336,8 @@ export class PayPalProvider implements PaymentProvider, AuthorizationCapableProv
         currency: (req.amount?.currency || "USD").toUpperCase(),
         reason: req.reason,
         idempotencyKey: req.idempotencyKey,
+        // Routed captures must be refunded on the seller's behalf.
+        actAsMerchantId: req.sellerMerchantId ?? null,
       });
       return {
         refundId: refund.id,
