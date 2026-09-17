@@ -378,12 +378,10 @@ const SaleCheckout = () => {
 
   // Calculate prices
   //
-  // IMPORTANT — "due now" vs "due later":
-  // Vendibook freight is NOT part of the sale PayPal order. The backend
-  // (`quoteSaleTransaction`) charges item price + seller delivery only; freight
-  // is collected in a separate PayPal order *after* the seller confirms the
-  // sale (`kind: "freight"`). So freight must never be folded into the amount
-  // the buyer is told they are paying now, or PayPal would show a lower total.
+  // Buyer-paid Vendibook Freight is charged with the purchase in the same
+  // PayPal order — the backend (`quoteSaleTransaction`) adds it to the sale
+  // total, so the figures here must include it too. Seller-paid freight is
+  // never billed to the buyer.
   const getDeliveryFeeForSelection = (): number => {
     if (fulfillmentSelected === 'delivery' && deliveryRate) {
       return computeDeliveryFee(deliveryRate, deliveryFeeType, deliveryDistanceInfo.distance);
@@ -392,8 +390,8 @@ const SaleCheckout = () => {
   };
 
   const currentDeliveryFee = getDeliveryFeeForSelection();
-  /** Buyer-paid freight, invoiced separately once the seller confirms. */
-  const freightDueLater =
+  /** Buyer-paid Vendibook Freight, charged together with the purchase. */
+  const buyerFreightCharge =
     fulfillmentSelected === 'vendibook_freight' && !isFreightSellerPaid ? freightCost : 0;
 
   // Estimated sales tax — server-computed (TaxJar / state table) so the buyer
@@ -439,7 +437,9 @@ const SaleCheckout = () => {
   }, [listing?.id, priceSale, fulfillmentSelected, currentDeliveryFee, deliveryAddress]);
 
   const taxAmount = (taxEstimate?.tax_cents ?? 0) / 100;
-  const totalPrice = priceSale + currentDeliveryFee + taxAmount;
+  // Item + seller delivery + buyer-paid freight + estimated sales tax. Mirrors
+  // `quoteSaleTransaction` on the server, which re-locks the authoritative total.
+  const totalPrice = priceSale + currentDeliveryFee + buyerFreightCharge + taxAmount;
 
   const taxSummaryLabel = taxAmount > 0
     ? taxEstimate?.label || 'Estimated sales tax'
@@ -540,9 +540,8 @@ const SaleCheckout = () => {
         mode: 'sale',
         paymentMethod: paymentMethod === 'cash' ? 'pay_in_person' : 'paypal_checkout',
         basePriceDollars: priceSale,
-        // Only the amount actually charged today — freight is a separate,
-        // later PayPal order and must not inflate "total due today".
-        deliveryFeeDollars: currentDeliveryFee,
+        // Everything charged today: seller delivery plus buyer-paid freight.
+        deliveryFeeDollars: currentDeliveryFee + buyerFreightCharge,
         isSellerPaidFreight: isFreightSellerPaid,
         isCashSale: paymentMethod === 'cash',
         fulfillmentType: fulfillmentSelected,
@@ -824,10 +823,10 @@ const SaleCheckout = () => {
   const moneyLines: MoneyLine[] = [
     { label: listing.title, value: `$${priceSale.toLocaleString()}` },
     ...(currentDeliveryFee > 0
-      ? [{
-          label: fulfillmentSelected === 'vendibook_freight' ? 'Vendibook freight' : 'Seller delivery',
-          value: `$${currentDeliveryFee.toLocaleString()}`,
-        }]
+      ? [{ label: 'Seller delivery', value: `$${currentDeliveryFee.toLocaleString()}` }]
+      : []),
+    ...(buyerFreightCharge > 0
+      ? [{ label: 'Vendibook Freight', value: `$${buyerFreightCharge.toLocaleString()}` }]
       : []),
     ...(taxSummaryLabel ? [{ label: taxSummaryLabel, value: taxSummaryValue, muted: taxAmount === 0 }] : []),
   ];
@@ -1064,14 +1063,14 @@ const SaleCheckout = () => {
                 />
               )}
 
-              {freightDueLater > 0 && paymentMethod !== 'cash' ? (
+              {buyerFreightCharge > 0 && paymentMethod !== 'cash' ? (
                 <div className="flex items-start gap-3 rounded-xl bg-muted/40 p-4">
                   <Truck className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     Your quoted freight of{' '}
-                    <span className="font-medium text-foreground">${freightDueLater.toLocaleString()}</span>{' '}
-                    is billed separately once the seller confirms this sale — it is not
-                    included in today's payment.
+                    <span className="font-medium text-foreground">${buyerFreightCharge.toLocaleString()}</span>{' '}
+                    is included in the total below — shipping is arranged once the seller
+                    confirms this sale.
                   </p>
                 </div>
               ) : null}
