@@ -151,6 +151,9 @@ export class PayPalProvider implements PaymentProvider, AuthorizationCapableProv
         softDescriptor: req.softDescriptor,
         idempotencyKey: req.idempotencyKey ?? `order:${req.reference}`,
         intent: req.intent,
+        // Connected Path routing — resolved server-side by the caller.
+        payeeMerchantId: req.payeeMerchantId ?? null,
+        platformFeeCents: req.platformFeeCents ?? 0,
       });
       return {
         providerOrderId: order.id,
