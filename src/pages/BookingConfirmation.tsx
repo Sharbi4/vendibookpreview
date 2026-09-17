@@ -49,9 +49,19 @@ type View = 'loading' | 'processing' | 'confirmed' | 'awaiting_host' | 'declined
 const money = (n: number) =>
   n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
 
-const BookingConfirmation = () => {
+interface BookingConfirmationProps {
+  /** Rendered inside the dashboard workspace: no site header/footer chrome. */
+  embedded?: boolean;
+  /** Dashboard route supplies the booking id from the path instead of ?booking_id. */
+  bookingId?: string;
+}
+
+const BookingConfirmation = ({
+  embedded = false,
+  bookingId: bookingIdProp,
+}: BookingConfirmationProps = {}) => {
   const [params] = useSearchParams();
-  const bookingId = params.get('booking_id');
+  const bookingId = bookingIdProp ?? params.get('booking_id');
   const [booking, setBooking] = useState<BookingRow | null>(null);
   const [view, setView] = useState<View>('loading');
   const attempts = useRef(0);
