@@ -180,7 +180,7 @@ const NotificationCenter = () => {
               className="h-7 w-7"
               onClick={() => {
                 setOpen(false);
-                navigate('/notification-preferences');
+                navigate('/dashboard/notifications/settings');
               }}
               title="Notification preferences"
             >

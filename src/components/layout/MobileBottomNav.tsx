@@ -40,10 +40,10 @@ const MobileBottomNav = () => {
 
   const items = [
     { to: '/search', label: 'Search', icon: Search },
-    { to: '/favorites', label: 'Saved', icon: Heart },
-    { to: '/messages', label: 'Inbox', icon: MessageSquare },
+    { to: user ? '/dashboard/saved' : '/favorites', label: 'Saved', icon: Heart },
+    { to: user ? '/dashboard/messages' : '/messages', label: 'Inbox', icon: MessageSquare },
     { to: user ? '/dashboard' : '/list', label: user ? 'Dashboard' : 'List', icon: LayoutGrid },
-    { to: user ? '/account' : '/auth', label: user ? 'Account' : 'Sign in', icon: User },
+    { to: user ? '/dashboard/account' : '/auth', label: user ? 'Account' : 'Sign in', icon: User },
   ];
 
   return (
