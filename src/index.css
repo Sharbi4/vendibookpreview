@@ -2057,3 +2057,6 @@ html.hide-support-chat .widget-visible {
 .v2-commerce button, .v2-commerce a[class*="bg-primary"] { transition: background-color .15s ease, border-color .15s ease, transform .15s ease, opacity .15s ease; }
 /* Sticky order summary gets the only meaningful elevation on the page. */
 .v2-commerce .sticky { box-shadow: 0 1px 2px hsl(28 12% 15% / .04), 0 18px 40px -28px hsl(28 12% 15% / .35); }
+.v2-panel.v2-embedded-section { padding: 22px; }
+@media (max-width: 640px) { .v2-panel.v2-embedded-section { padding: 16px; } }
+.v2-panel.v2-embedded-section > * { margin-top: 0; }
