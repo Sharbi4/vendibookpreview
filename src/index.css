@@ -2643,6 +2643,29 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
 .v2-payout-list .v2-btn:disabled { opacity: .5; cursor: not-allowed; }
 @media (min-width: 768px) { .v2-payout-tiles { grid-template-columns: repeat(4, 1fr); } }
 
+/* Payments: earnings by order */
+.v2-earnings-list { display: flex; flex-direction: column; }
+.v2-earnings-list li { display: flex; flex-direction: column; gap: 12px; padding: 16px 20px; }
+.v2-earnings-list li + li { border-top: 1px solid hsl(var(--v2-line)); }
+.v2-earnings-main { display: flex; min-width: 0; flex-direction: column; gap: 5px; }
+.v2-earnings-title { color: hsl(var(--v2-ink)); font-size: 15px; font-weight: 650; letter-spacing: -.01em; }
+.v2-earnings-title:hover { text-decoration: underline; text-underline-offset: 2px; }
+.v2-earnings-main small { color: hsl(var(--v2-stone)); font-size: 12.5px; text-transform: capitalize; }
+.v2-earnings-chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 2px; }
+.v2-earnings-chip { border: 1px solid hsl(var(--v2-line)); border-radius: 999px; padding: 3px 10px; color: hsl(var(--v2-stone)); font-size: 11.5px; font-weight: 620; }
+.v2-earnings-chip.is-ok { border-color: hsl(142 45% 40% / .35); color: hsl(142 55% 30%); }
+.v2-earnings-chip.is-warn { border-color: hsl(38 85% 45% / .4); color: hsl(32 75% 34%); }
+.v2-earnings-chip.is-alert { border-color: hsl(var(--destructive) / .4); color: hsl(var(--destructive)); }
+.v2-earnings-figures { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 18px; margin: 0; }
+.v2-earnings-figures div { display: flex; flex-direction: column; gap: 2px; }
+.v2-earnings-figures dt { color: hsl(var(--v2-stone)); font-size: 11.5px; font-weight: 600; }
+.v2-earnings-figures dd { margin: 0; color: hsl(var(--v2-ink)); font-size: 14px; font-weight: 640; }
+.v2-earnings-net dd { font-size: 15px; font-weight: 680; }
+@media (min-width: 768px) {
+  .v2-earnings-list li { flex-direction: row; align-items: center; justify-content: space-between; gap: 24px; }
+  .v2-earnings-figures { grid-template-columns: repeat(4, minmax(90px, auto)); text-align: right; }
+}
+
 /* Activity: per-listing timeline */
 .v2-listing-activity { border-top: 1px solid hsl(var(--border) / 0.6); }
 .v2-listing-activity:first-of-type { border-top: 0; }
