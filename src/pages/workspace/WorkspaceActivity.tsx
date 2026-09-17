@@ -45,6 +45,7 @@ export default function WorkspaceActivity() {
   const { transactions } = useUserTransactions(user?.id);
   const { bookings: buyerBookings } = useShopperBookings();
   const { bookings: sellerBookings } = useHostBookings();
+  const { listings: hostListings } = useHostListings();
   const [searchParams] = useSearchParams();
   const initial = (searchParams.get('filter') as Filter) || 'all';
   const [filter, setFilter] = useState<Filter>(
