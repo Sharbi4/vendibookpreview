@@ -90,7 +90,8 @@ export default function WorkspaceSellerOnboarding() {
 
   const steps: Step[] = useMemo(() => {
     const businessDone = Boolean(profile?.business_name && profile?.phone_number);
-    const connected = Boolean(connection) && status !== 'disconnected';
+    const connected =
+      Boolean(connection) && status !== 'disconnected' && status !== 'revoked';
     const published = listings.filter((l) => l.status === 'published');
     const onlineReady =
       listings.length > 0 && listings.every((l) => l.accept_paypal_checkout === true);
