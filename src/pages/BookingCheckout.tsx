@@ -76,13 +76,31 @@ import PayPalEmbeddedPayment from '@/components/transaction/checkout/PayPalEmbed
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'on_site';
 
-const BookingCheckout = () => {
+interface BookingCheckoutProps {
+  /** Rendered inside the dashboard workspace: no site header/footer chrome. */
+  embedded?: boolean;
+}
+
+const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   const { listingId } = useParams<{ listingId: string }>();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { toast } = useToast();
   const { listing, isLoading, error } = useListing(listingId);
+  /** Keeps date edits on whichever route this flow is mounted on. */
+  const checkoutBasePath = embedded ? '/dashboard/bookings/new' : '/book';
+  /** Page frame: full site chrome publicly, bare column inside the dashboard. */
+  const Frame = ({ children }: { children: React.ReactNode }) =>
+    embedded ? (
+      <div className="sale-light v2-commerce v2-wizard-embed flex flex-col">{children}</div>
+    ) : (
+      <div className="sale-light v2-commerce min-h-screen flex flex-col bg-background">
+        <Header />
+        {children}
+        <Footer />
+      </div>
+    );
   /**
    * Instant Book skips host approval ONLY for identity-verified hosts.
    * Everyone else: payment is taken and the booking waits for the host to
