@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useUserTransactions } from '@/hooks/useUserTransactions';
 import { useShopperBookings } from '@/hooks/useShopperBookings';
 import { useHostBookings } from '@/hooks/useHostBookings';
+import WorkspaceHostBookings from '@/components/workspace/WorkspaceHostBookings';
 
 type Filter = 'all' | 'purchases' | 'sales' | 'rentals' | 'requests' | 'disputes';
 
