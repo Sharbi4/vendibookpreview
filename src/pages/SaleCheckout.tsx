@@ -872,7 +872,7 @@ const SaleCheckout = () => {
   // Loading state
   if (isListingLoading || isLoadingOffer) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="v2-commerce min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
@@ -881,7 +881,7 @@ const SaleCheckout = () => {
   // Error state
   if (listingError || !listing) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="v2-commerce min-h-screen flex items-center justify-center bg-background">
         <div className="text-center">
           <h2 className="text-xl font-semibold text-foreground mb-2">Listing not found</h2>
           <button onClick={() => navigate('/browse')} className="text-primary hover:underline">
@@ -1023,7 +1023,7 @@ const SaleCheckout = () => {
     return (
       <>
         <SEO title={`Checkout - ${listing.title}`} description={`Complete your purchase of ${listing.title}`} />
-        <div className="min-h-screen bg-background py-8 sm:py-12 px-4">
+        <div className="v2-commerce min-h-screen bg-background py-8 sm:py-12 px-4">
           <CheckoutIntro
             listingId={listing.id}
             listingTitle={listing.title}

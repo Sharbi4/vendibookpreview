@@ -202,7 +202,7 @@ const CheckoutIntro = ({
       >
         <h2 className="font-display text-2xl sm:text-3xl font-semibold text-foreground leading-tight">
           Let&rsquo;s get your{' '}
-          <span className="text-primary">{heroTitleNoun}</span>
+          <span className="text-foreground">{heroTitleNoun}</span>
         </h2>
         <p className="mt-2 text-sm sm:text-base text-muted-foreground">
           A few quick steps. We&rsquo;ll explain everything before you pay.
@@ -245,14 +245,14 @@ const CheckoutIntro = ({
         initial={{ opacity: 0, y: reduce ? 0 : 6 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: dur, delay: stagger * (2 + beats.length) }}
-        className="mt-6 sm:mt-8 rounded-xl border-[1.5px] border-white/10 bg-[rgba(11,15,18,0.5)] p-4"
+        className="mt-6 sm:mt-8 rounded-xl border border-border bg-card p-4"
       >
         <ul className="grid gap-2.5 sm:grid-cols-2">
           {trustPoints.map((p) => {
             const Icon = p.icon;
             return (
-              <li key={p.label} className="flex items-start gap-2 text-[13px] text-foreground/85">
-                <Icon className="mt-0.5 h-4 w-4 text-primary" strokeWidth={1.75} aria-hidden />
+              <li key={p.label} className="flex items-start gap-2 text-[13px] text-foreground/90">
+                <Icon className="mt-0.5 h-4 w-4 text-muted-foreground" strokeWidth={1.75} aria-hidden />
                 <span className="leading-relaxed">{p.label}</span>
               </li>
             );
@@ -278,7 +278,7 @@ const CheckoutIntro = ({
         </Button>
         <Button
           size="lg"
-          variant="cta"
+          variant="default"
           className="h-12 px-6 gap-2"
           onClick={handleContinue}
         >

@@ -2018,3 +2018,45 @@ html.hide-support-chat .widget-visible {
 .v2-topbar > a img { height: 26px; width: auto; max-width: 104px; object-fit: contain; flex: none; }
 @media (max-width: 767px) { .v2-search { width: auto; flex: 1; } }
 @media (max-width: 767px) { .v2-search { min-width: 0; } .v2-topbar { gap: 8px; padding-inline: 12px; } }
+
+/* =====================================================================
+   Commerce surfaces (sale checkout + rental booking) aligned to the
+   premium workspace system: ivory canvas, charcoal type and CTAs,
+   crisp borders, restrained shadows. Presentation only — no logic.
+   ===================================================================== */
+.v2-commerce {
+  --background: 38 34% 97%;
+  --foreground: 28 10% 12%;
+  --card: 40 40% 99%;
+  --card-foreground: 28 10% 12%;
+  --popover: 40 40% 99%;
+  --popover-foreground: 28 10% 12%;
+  --primary: 28 10% 12%;
+  --primary-foreground: 40 30% 97%;
+  --secondary: 36 20% 95%;
+  --secondary-foreground: 28 10% 16%;
+  --muted: 36 20% 95%;
+  --muted-foreground: 28 8% 40%;
+  --accent: 36 20% 95%;
+  --accent-foreground: 28 10% 16%;
+  --border: 30 13% 84%;
+  --input: 30 13% 84%;
+  --ring: 28 10% 25%;
+  background-image: none;
+  background-color: hsl(var(--background));
+}
+.v2-commerce .bg-sale-card,
+.v2-commerce .bg-sale-card-warm {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border));
+  box-shadow: none;
+}
+.v2-commerce h1 { letter-spacing: -0.02em; }
+.v2-commerce h2, .v2-commerce h3 { letter-spacing: -0.01em; }
+.v2-commerce .rounded-2xl, .v2-commerce .rounded-xl { border-radius: 14px; }
+.v2-commerce button, .v2-commerce a[class*="bg-primary"] { transition: background-color .15s ease, border-color .15s ease, transform .15s ease, opacity .15s ease; }
+/* Sticky order summary gets the only meaningful elevation on the page. */
+.v2-commerce .sticky { box-shadow: 0 1px 2px hsl(28 12% 15% / .04), 0 18px 40px -28px hsl(28 12% 15% / .35); }
+.v2-panel.v2-embedded-section { padding: 22px; }
+@media (max-width: 640px) { .v2-panel.v2-embedded-section { padding: 16px; } }
+.v2-panel.v2-embedded-section > * { margin-top: 0; }

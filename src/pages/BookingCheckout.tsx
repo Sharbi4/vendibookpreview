@@ -709,7 +709,7 @@ const BookingCheckout = () => {
 
   if (isLoading) {
     return (
-      <div className="sale-light min-h-screen flex flex-col bg-background">
+      <div className="sale-light v2-commerce min-h-screen flex flex-col bg-background">
         <Header />
         <div className="flex-1 flex items-center justify-center">
           <Loader2 className="h-8 w-8 animate-spin text-foreground" />
@@ -721,7 +721,7 @@ const BookingCheckout = () => {
 
   if (error || !listing) {
     return (
-      <div className="sale-light min-h-screen flex flex-col bg-background">
+      <div className="sale-light v2-commerce min-h-screen flex flex-col bg-background">
         <Header />
         <div className="flex-1 container py-16 text-center">
           <h1 className="text-2xl font-bold text-foreground mb-4">Listing not found</h1>
@@ -740,7 +740,7 @@ const BookingCheckout = () => {
   // For vendor spaces with multiple slots, require slot selection before dates
   if (hasMultipleSlots && !selectedSlot) {
     return (
-      <div className="sale-light min-h-screen flex flex-col bg-background">
+      <div className="sale-light v2-commerce min-h-screen flex flex-col bg-background">
         <Header />
         <main className="flex-1 container py-8 max-w-2xl">
           <Button 
@@ -859,7 +859,7 @@ const BookingCheckout = () => {
 
   if (!startDate || !endDate) {
     return (
-      <div className="sale-light min-h-screen flex flex-col bg-background">
+      <div className="sale-light v2-commerce min-h-screen flex flex-col bg-background">
         <Header />
         <div className="flex-1 container py-16 text-center">
           <h1 className="text-2xl font-bold text-foreground mb-4">Select your dates</h1>
@@ -900,7 +900,7 @@ const BookingCheckout = () => {
 
   return (
 
-    <div className="sale-light min-h-screen flex flex-col bg-background">
+    <div className="sale-light v2-commerce min-h-screen flex flex-col bg-background">
       <Header />
 
       <main className="flex-1 container py-8 lg:py-14 pb-28 lg:pb-14">
