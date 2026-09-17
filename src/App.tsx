@@ -49,6 +49,12 @@ const SmsOptInProof = lazy(() => import("./pages/legal/SmsOptInProof"));
 const SmsEnrollment = lazy(() => import("./pages/SmsEnrollment"));
 const SmsOptIn = lazy(() => import("./pages/SmsOptIn"));
 const Dashboard = lazy(() => import("./pages/Dashboard"));
+const OnboardingV2 = lazy(() => import("./pages/v2/OnboardingV2"));
+const HomeV2 = lazy(() => import("./pages/v2/HomeV2"));
+const ListingsV2 = lazy(() => import("./pages/v2/ListingsV2"));
+const ActivityV2 = lazy(() => import("./pages/v2/ActivityV2"));
+const PaymentsV2 = lazy(() => import("./pages/v2/PaymentsV2"));
+const AccountV2 = lazy(() => import("./pages/v2/AccountV2"));
 const EditListing = lazy(() => import("./pages/EditListing"));
 const RentItOut = lazy(() => import("./pages/RentItOut"));
 const ListingPaymentsFinancing = lazy(() => import("./pages/ListingPaymentsFinancing"));
@@ -278,6 +284,13 @@ const AnimatedRoutes = () => {
           <Route path="/activation" element={<PageTransition><Activation /></PageTransition>} />
           <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
           <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />
+          <Route path="/onboarding-v2" element={<PageTransition><OnboardingV2 /></PageTransition>} />
+          <Route path="/dashboard-v2" element={<PageTransition><HomeV2 /></PageTransition>} />
+          <Route path="/dashboard-v2/listings" element={<PageTransition><ListingsV2 /></PageTransition>} />
+          <Route path="/dashboard-v2/activity" element={<PageTransition><ActivityV2 /></PageTransition>} />
+          <Route path="/dashboard-v2/messages" element={<PreserveQueryRedirect to="/messages" />} />
+          <Route path="/dashboard-v2/payments" element={<PageTransition><PaymentsV2 /></PageTransition>} />
+          <Route path="/dashboard-v2/account" element={<PageTransition><AccountV2 /></PageTransition>} />
           <Route path="/sale/:transactionId/protection" element={<PageTransition><ProtectedSalePage /></PageTransition>} />
           <Route path="/transaction/:transactionId" element={<PageTransition><TransactionDetail /></PageTransition>} />
           <Route path="/host/bookings" element={<PageTransition><HostBookings /></PageTransition>} />
