@@ -60,6 +60,10 @@ export default function WorkspacePayments() {
           <WorkspaceBookingPayments />
         </section>
 
+        <section className="v2-panel">
+          <PayoutCalendar />
+        </section>
+
         <section>
           <div className="v2-panel v2-embedded-section">
             <Suspense fallback={<Fallback />}>
