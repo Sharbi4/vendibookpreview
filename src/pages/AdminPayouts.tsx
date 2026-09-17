@@ -47,6 +47,8 @@ interface Payable {
   dispute_status: string | null;
   external_payout_reference: string | null;
   payout_method: string | null;
+  payout_provider: string | null;
+  payout_completed_at: string | null;
   failure_reason: string | null;
   admin_notes: string | null;
   created_at: string;
