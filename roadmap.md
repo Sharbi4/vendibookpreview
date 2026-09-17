@@ -19,7 +19,9 @@
 - [ ] Step 3 — Multiparty routing behind the flag: payee + platform_fees on
       sale and rental orders, per-kind line items, shipping matrix and address
       validation.
-- [ ] Step 4 — Refunds with partner-fee reversal, merchant webhooks, thank-you
+- [~] Step 4 — Merchant onboarding webhooks (MERCHANT.ONBOARDING.COMPLETED,
+      MERCHANT.PARTNER-CONSENT.REVOKED) handled + persisted. Still open:
+      refunds with partner-fee reversal, thank-you
       payment source.
 - [ ] Step 5 — Sandbox QA matrix + certification evidence package.
 - [ ] Step 6 — Live cohort rollout; retire manual payouts per onboarded seller.

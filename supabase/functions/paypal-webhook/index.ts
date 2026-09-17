@@ -285,10 +285,80 @@ async function handleEvent(admin: any, event: any) {
       await mirrorHostSubscription(admin, resource.billing_agreement_id, "active");
       return;
     }
+
+    // ---------------- seller onboarding (Connected Path) ----------------
+    case "MERCHANT.ONBOARDING.COMPLETED":
+      await handleMerchantOnboarding(admin, resource, event.id);
+      return;
+    case "MERCHANT.PARTNER-CONSENT.REVOKED":
+      await handleMerchantConsentRevoked(admin, resource, event.id);
+      return;
+
     default:
       safeLog("webhook_unhandled", { type });
   }
 }
+
+/**
+ * MERCHANT.ONBOARDING.COMPLETED — the seller finished signup and granted the
+ * permissions we asked for. PayPal sends merchant_id + tracking_id; we match on
+ * tracking_id (our own id) and fall back to merchant_id. Readiness is still
+ * confirmed by a status refresh, so this only records what PayPal told us.
+ */
+async function handleMerchantOnboarding(admin: any, resource: any, eventId: string) {
+  const trackingId = resource?.tracking_id ?? null;
+  const merchantId = resource?.merchant_id ?? null;
+  if (!trackingId && !merchantId) return;
+
+  let query = admin.from("seller_paypal_accounts").select("id").is("archived_at", null).limit(1);
+  query = trackingId ? query.eq("tracking_id", trackingId) : query.eq("merchant_id", merchantId);
+  const { data } = await query.maybeSingle();
+  if (!data) {
+    safeLog("merchant_onboarding_no_match", { has_tracking: !!trackingId });
+    return;
+  }
+
+  const now = new Date().toISOString();
+  await admin.from("seller_paypal_accounts").update({
+    merchant_id: merchantId,
+    consent_granted: true,
+    onboarding_status: "action_required", // promoted to ready by refresh_status
+    referral_url: null,
+    last_webhook_event_id: eventId,
+    updated_at: now,
+  }).eq("id", data.id);
+  safeLog("merchant_onboarding_completed", { row: data.id });
+}
+
+/**
+ * MERCHANT.PARTNER-CONSENT.REVOKED — the seller removed our permissions in
+ * PayPal. Archive the association (history is never deleted) so checkout can
+ * never route to a merchant who revoked consent.
+ */
+async function handleMerchantConsentRevoked(admin: any, resource: any, eventId: string) {
+  const trackingId = resource?.tracking_id ?? null;
+  const merchantId = resource?.merchant_id ?? null;
+  if (!trackingId && !merchantId) return;
+
+  let query = admin.from("seller_paypal_accounts").select("id").is("archived_at", null).limit(1);
+  query = trackingId ? query.eq("tracking_id", trackingId) : query.eq("merchant_id", merchantId);
+  const { data } = await query.maybeSingle();
+  if (!data) return;
+
+  const now = new Date().toISOString();
+  await admin.from("seller_paypal_accounts").update({
+    consent_granted: false,
+    payments_receivable: false,
+    onboarding_status: "revoked",
+    action_reasons: ["consent_revoked"],
+    referral_url: null,
+    archived_at: now,
+    last_webhook_event_id: eventId,
+    updated_at: now,
+  }).eq("id", data.id);
+  safeLog("merchant_consent_revoked", { row: data.id });
+}
+
 
 async function findRecord(admin: any, reference?: string, captureId?: string, supp?: any) {
   if (reference) {
