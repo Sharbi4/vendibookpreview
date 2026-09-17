@@ -64,6 +64,30 @@ type View = 'loading' | 'processing' | 'confirmed' | 'awaiting_host' | 'declined
 const money = (n: number) =>
   n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
 
+/** Documents the host requires for this booking — hidden entirely when none are required. */
+const BookingDocumentsPanel = ({
+  listingId,
+  bookingId,
+}: {
+  listingId: string;
+  bookingId: string;
+}) => {
+  const { data: requiredDocs } = useListingRequiredDocuments(listingId);
+  if (!requiredDocs || requiredDocs.length === 0) return null;
+
+  return (
+    <div className="mt-6 rounded-2xl border border-border p-4">
+      <h2 className="flex items-center gap-2 text-sm font-semibold text-foreground">
+        <FileText className="h-4 w-4" />
+        Documents the host needs
+      </h2>
+      <div className="mt-3">
+        <DocumentUploadSection listingId={listingId} bookingId={bookingId} />
+      </div>
+    </div>
+  );
+};
+
 interface BookingConfirmationProps {
   /** Rendered inside the dashboard workspace: no site header/footer chrome. */
   embedded?: boolean;
