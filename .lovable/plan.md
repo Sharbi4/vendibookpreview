@@ -1,205 +1,185 @@
-# PayPal Complete Payments — Connected Path multiparty plan (Vendibook LC)
+# PayPal Connected Path — revision 2 (disconnect, status gating, line items, shipping)
 
-Revised against the supplied PayPal Complete Payments Integration Guide. Audit and
-plan only — no production code changes. CONFIRMED = read in this project;
-INFERRED = reasoned.
+Plan only. Supersedes the approved 2026-09-17 plan; everything there still
+stands except where noted below. CONFIRMED = read in this project.
 
-The prior architecture question ("can we keep gross-capture + manual payout?") is
-removed. The approved design is: sellers onboard through PayPal, sellers receive
-transaction funds, Vendibook earns commission as a Partner Fee.
+## 0. Status of work already in flight
 
-## 1. What exists today (CONFIRMED)
+Before the mode switch, part of **Phase 0** was written into
+`supabase/functions/_shared/paypal.ts` (not deployed, no behavior change in
+production until deploy):
 
-- `supabase/functions/_shared/paypal.ts` — the only REST layer. Token cached
-  until expiry, retries, `PayPal-Request-Id` idempotency, `safeLog()` redaction,
-  webhook signature verification.
-- `paypal-create-order` (7 kinds: sale, booking, product, freight, notary,
-  concierge, protected_sale_deposit), `paypal-capture-order`,
-  `paypal-authorize-order`, `paypal-settle-authorization`, `paypal-refund`
-  (Vendibook-admin only), `paypal-webhook`, `paypal-config`,
-  `paypal-subscription-create/activate/cancel`.
-- Browser: `src/lib/paypalClient.ts` loads the official SDK at runtime;
-  `PayPalPaymentPanel.tsx` mounts Buttons, Card Fields, Pay Later Messages.
-- Records: `payment_records`, `payment_ledger_entries`, `payment_audit_log`,
-  `seller_payables`, `payout_preferences` (seller enters a payout *email*; admin
-  pays manually).
-- Gaps confirmed absent everywhere: BN code / `PayPal-Partner-Attribution-Id`,
-  `data-partner-attribution-id`, Partner Referrals, seller status lookup,
-  `purchase_units[].payee`, `platform_fees`, `PayPal-Auth-Assertion`,
-  `items[]`, App Switch. `shipping_preference: NO_SHIPPING` is hardcoded on both
-  order builders for all kinds.
+- `PARTNER_ATTRIBUTION_ID` (`PAYPAL_BN_CODE`, default `VENDIBOOK_SP_PPCP`) sent
+  as `PayPal-Partner-Attribution-Id` on every REST call.
+- `buildAuthAssertion(merchantId)` + `actAsMerchantId` / `extraHeaders` options
+  on `paypalRequest`.
+- `purchase_units[].items[]` now always built (derived single line when a caller
+  passes none), plus `amount.breakdown.item_total` always present.
+- Optional `shipping` address → `SET_PROVIDED_ADDRESS`; `NO_SHIPPING` otherwise.
+- Optional `payeeMerchantId` + `platformFeeCents` → `payee` +
+  `payment_instruction.platform_fees`.
+- PayPal debug id captured from the `paypal-debug-id` response header and logged
+  on success as well as failure.
 
-## 2. Which flows go multiparty vs stay first-party (item C)
+This matches requirements 3, 4 and 5 at the plumbing level. What is still
+missing is the **per-kind data** each caller must supply, covered below.
 
-Route to the onboarded **seller** (payee = seller merchant id, Vendibook takes a
-Partner Fee equal to today's commission):
+## 1. Contradictions / gaps found against the prior plan
 
-| Flow | Intent today | Multiparty notes |
+- Prior plan said disconnect would call PayPal. **Wrong** — PayPal cannot be
+  revoked by us; disconnect is a Vendibook-side forget only. Corrected below.
+- Prior plan said "Disconnect clears merchant_id/email/scopes". That would
+  orphan historical reconciliation. Corrected to archive-then-clear.
+- Prior plan left the shipping decision at "physical goods get an address".
+  Confirmed from the database: `sale_transactions.fulfillment_type` today is
+  `pickup` (only row present), with `delivery_address`, `delivery_fee`,
+  `freight_cost`, `shipping_status` columns available. So most sales are
+  **NO_SHIPPING pickups**, not shipped goods. Matrix below.
+- Prior plan had no shipping-address validation step. Added.
+- Prior plan's evidence list did not prove BN code or line items explicitly.
+  Added.
+
+## 2. Seller connection model — corrected lifecycle (req 1)
+
+`seller_paypal_accounts` (one active row per seller):
+
+`user_id`, `tracking_id`, `merchant_id`, `paypal_email`,
+`primary_email_confirmed`, `payments_receivable`, `oauth_scopes` jsonb,
+`consent_granted`, `products` jsonb, `onboarding_status`
+(`not_started | referral_created | returned | ready | action_required |
+disconnected`), `referral_url`, `last_status_check_at`, `status_payload` jsonb
+(PII-trimmed), `disconnected_at`, timestamps.
+
+Companion `seller_paypal_account_history` — an append-only archive written on
+every disconnect (user_id, merchant_id, paypal_email, tracking_id, connected_at,
+disconnected_at, final status snapshot). Never deleted.
+
+**Disconnect = Vendibook forgets the association.** No PayPal API call. Steps:
+archive the current row into history → clear `merchant_id`, `paypal_email`,
+`oauth_scopes`, `products`, readiness flags → set `onboarding_status =
+disconnected`, `disconnected_at = now()`. The seller can then onboard a
+different PayPal account, which mints a new `tracking_id`.
+
+**Historical integrity:** `payment_records` keep their own captured
+`payee_merchant_id` at order time (new nullable column) so past orders,
+refunds, payables and admin screens still resolve after a disconnect. Nothing
+about a past transaction is rewritten by a disconnect.
+
+Confirmation copy, shown before disconnect proceeds:
+
+> Disconnecting your PayPal account will prevent you from offering PayPal
+> services and products on your website. Do you wish to continue?
+
+## 3. Status messages and gating (req 2)
+
+Exact strings rendered in Payments & Payouts and surfaced in the seller's
+listing dashboard:
+
+- `primary_email_confirmed = false` →
+  "Attention: Please confirm your email address on
+  https://www.paypal.com/businessprofile/settings in order to receive payments!
+  You currently cannot receive payments."
+- `payments_receivable = false` →
+  "Attention: You currently cannot receive payments due to restriction on your
+  PayPal account. Please reach out to PayPal Customer Support or connect to
+  https://www.paypal.com for more information."
+- Missing/insufficient `OAUTH_INTEGRATIONS` scopes → "Vendibook doesn't yet have
+  permission to process payments for you. Reconnect PayPal to grant access."
+
+Gate: `seller_paypal_ready(user_id)` = connected AND
+`primary_email_confirmed` AND `payments_receivable` AND required scopes granted.
+While false, PayPal checkout is disabled for that seller's listings (seller-payee
+kinds only) with an honest buyer message; Vendibook's own products are never
+gated. Re-check on demand, on return from onboarding, nightly, and on
+merchant webhooks.
+
+## 4. Line-item mapping per checkout kind (req 4)
+
+Every order carries: `intent`, `amount` + `currency`, purchase `description`,
+`reference_id` / `invoice_id` / `custom_id` = Vendibook payment reference, and
+`items[]`. Item `sku` is the stable Vendibook id so PayPal rows reconcile back.
+
+| Kind | Items to send | Payee |
 |---|---|---|
-| Vehicle / equipment sale | AUTHORIZE until seller confirms, then capture | Fee applied at capture. Physical goods: real shipping address, `PHYSICAL_GOODS` |
-| Rental booking | Capture or authorize per Instant-Book vs Request-to-Book | Fee = 12.9% host commission; renter fee stays a separate line |
-| Security deposit (rental) | Charge + hold + refund | Stays inside the booking order; deposit excluded from seller proceeds — keep it out of the fee base |
+| Vehicle / equipment sale | 1 line: listing title, `sku = listing:<id>`, category PHYSICAL_GOODS, unit = sale price; separate lines for delivery fee (PHYSICAL_GOODS) and buyer-side charges; tax via `tax_total` | Seller |
+| Rental booking | line per rate component (nightly/weekly/monthly subtotal), `sku = listing:<id>`, category DIGITAL_GOODS (service); cleaning/extras as their own lines | Seller |
+| Security deposit | own line, category DIGITAL_GOODS, `sku = deposit:<booking id>`; excluded from the partner-fee base | Seller (inside booking order) |
+| Freight (Vendibook-arranged) | 1 line "Vendibook freight shipping", PHYSICAL_GOODS, `sku = freight:<tx id>` | Vendibook |
+| Featured listing boost | 1 line "Featured Listing — 30 days", DIGITAL_GOODS, `sku = boost-featured-30` | Vendibook |
+| Verified Seller / IDV | 1 line, DIGITAL_GOODS, `sku = verified-seller` | Vendibook |
+| Concierge / listing services | line per ordered service, DIGITAL_GOODS, `sku = <product slug>` | Vendibook |
+| Notary | 1 line, DIGITAL_GOODS, `sku = notary:<listing id>` | Vendibook |
+| Protected sale deposit | 1 line, DIGITAL_GOODS, `sku = protected-deposit:<sale id>` | Vendibook (Phase 1) |
+| Memberships / subscriptions | PayPal Billing Plans, not Orders v2 — plan name + catalog price carry the detail; no `items[]` | Vendibook |
 
-Stay **first-party to Vendibook** (no payee, no partner fee — these are
-Vendibook's own products):
+Callers to update: `paypal-create-order/index.ts` (per-kind item builder),
+`_shared/payments/types.ts` + `paypalProvider.ts` (items/shipping/payee pass-through).
 
-- Featured Listing boost (`boost-featured-30`, $49)
-- Verified Seller / identity verification ($19.99, authorize-then-capture)
-- Memberships / subscriptions (PayPal Billing Plans)
-- Notary
-- Concierge / listing services and other Vendibook add-ons
-- PermitPath Plus and any tool entitlement
+## 5. Shipping matrix (req 5)
 
-**Freight / delivery** — decide per case: Vendibook-arranged freight (the current
-quote-and-invoice flow) is Vendibook revenue and stays first-party. Seller-arranged
-delivery priced into the sale should ride inside the seller's order. Recommendation:
-keep freight first-party in Phase 1.
+| Transaction | Shipping decision |
+|---|---|
+| Sale, `fulfillment_type = pickup` (the current norm — CONFIRMED) | `NO_SHIPPING` |
+| Sale, seller delivery with a collected `delivery_address` | `SET_PROVIDED_ADDRESS` with the validated address, PHYSICAL_GOODS |
+| Sale, Vendibook freight | `SET_PROVIDED_ADDRESS` on the freight order using the confirmed delivery address |
+| Rental booking | `NO_SHIPPING` — the listing location is a service/pickup location, not a shipping destination; it must not be sent in PayPal shipping fields |
+| Security deposit | follows its parent booking → `NO_SHIPPING` |
+| Boost, IDV, concierge, notary, protected deposit, memberships | `NO_SHIPPING` |
 
-**Protected sale deposit** — Vendibook holds it as part of a Vendibook-mediated
-process. Recommendation: keep first-party in Phase 1, revisit after certification.
+**Address validation before checkout:** an order that will send
+`SET_PROVIDED_ADDRESS` must first pass Vendibook validation — required fields
+present, US state code valid, ZIP format valid, and geocoded via the existing
+Google Maps loader used elsewhere in the app. Failure blocks order creation and
+returns a specific, correctable error the buyer sees inline ("We couldn't verify
+this delivery address — check the street and ZIP"). No silent fallback to
+`NO_SHIPPING` on a physical delivery.
 
-Business rules preserved unchanged: 12.9% / 10.9% Pro commission, $500 Pro cap,
-free cash sales, authorize-vs-capture timing, deposit handling.
+## 6. Revised QA / evidence package (req 6)
 
-## 3. Seller PayPal connection data model (item D)
+Onboarding & connection: disconnect confirmation dialog (exact copy);
+association cleared in Vendibook after disconnect; reconnect with the same PayPal
+account; reconnect with a *different* PayPal account; historical orders,
+refunds and payables still resolve after disconnect.
 
-New table `seller_paypal_accounts`:
+Readiness: `primary_email_confirmed=false` — exact warning shown and checkout
+disabled; `payments_receivable=false` — exact warning shown and checkout
+disabled; scopes missing — warning shown; status restored → checkout re-enabled.
 
-- `user_id` (unique, FK auth.users), `tracking_id` (our stable referral id),
-  `merchant_id` (PayPal payer id), `paypal_email`,
-  `primary_email_confirmed` bool, `payments_receivable` bool,
-  `oauth_scopes` jsonb, `consent_granted` bool,
-  `products` jsonb (PPCP product/capability status),
-  `onboarding_status` enum: `not_started | referral_created | returned |
-  ready | action_required | disconnected`,
-  `referral_url`, `last_status_check_at`, `status_payload` jsonb (raw,
-  PII-trimmed), timestamps.
+Attribution: REST request sample showing `PayPal-Partner-Attribution-Id:
+VENDIBOOK_SP_PPCP` in the headers; browser screenshot/source showing
+`data-partner-attribution-id` on the SDK script tag.
 
-RLS: owner reads own row; only service_role writes. GRANT SELECT to
-`authenticated`, ALL to `service_role`. Derived helper
-`seller_paypal_ready(user_id)` used by checkout gating.
+Orders: create-order request samples per kind showing `items[]` with name, unit
+amount, quantity, description, SKU, category, plus `invoice_id` / `custom_id`
+Vendibook references; physical-goods sample with the shipping address and
+`SET_PROVIDED_ADDRESS`; invalid-address correction path recording; `NO_SHIPPING`
+sample for a non-shipping purchase.
 
-Lifecycle: not_started → referral_created (link generated) → returned (seller
-came back) → poll status → ready or action_required; nightly re-check;
-`MERCHANT.PARTNER-CONSENT.REVOKED` → disconnected. Disconnect clears
-`merchant_id`/email/scopes so a different PayPal account can be linked.
+Payments: success and decline recordings for each in-scope method (PayPal,
+Venmo, Pay Later, card); refund with partner-fee reversal; thank-you screen
+naming the payment source (Venmo shown as Venmo).
 
-## 4. Seller UX in Payments & Payouts (item E)
+## 7. Revised staged rollout
 
-Extend `src/components/account/PaymentsPayoutsSection.tsx`:
-
-- **Not connected** — "Connect PayPal to get paid" + what it enables; single
-  primary button opening PayPal's signup link (mini-browser, `displayMode=minibrowser`),
-  return URL back to this section.
-- **Returned / checking** — brief "Finishing up with PayPal…" with polling.
-- **Ready** — green state showing the PayPal email and merchant ID, granted
-  permissions, "Disconnect" (confirmation dialog warning that listings stop
-  accepting PayPal until reconnected).
-- **Action required** — the exact remediation: confirm your PayPal email, or
-  PayPal needs more information before you can receive payments, with a
-  "Re-check status" button and a link into PayPal.
-- **Disconnected** — reconnect button, prior account forgotten.
-
-Checkout gating: for seller-payee kinds (sale, rental), if the seller is not
-ready, hide/disable PayPal checkout on that listing with an honest buyer message
-("This seller isn't accepting online payments yet — message them"), and notify
-the seller. Vendibook's own products (boost, membership, IDV) are never gated.
-
-## 5. Server-side changes (item F)
-
-- `_shared/paypal.ts`: inject `PayPal-Partner-Attribution-Id: VENDIBOOK_SP_PPCP`
-  on every REST call; add `PayPal-Auth-Assertion` builder (base64 header +
-  `{iss: partner_client_id, payer_id: merchant_id}`); add `payee`,
-  `payment_instruction.platform_fees`, `items[]`, and per-kind
-  `shipping_preference` / shipping address support; add order PATCH.
-- New `paypal-partner-referral` (creates referral with
-  `partner_config_override.return_url`, our `tracking_id`, PPCP products and
-  requested scopes) and `paypal-seller-status` (merchant-integrations lookup,
-  writes readiness fields; also runnable as a scheduled re-check).
-- `paypal-create-order`: per-kind branch — seller kinds add payee + platform fee
-  + items + shipping; Vendibook kinds keep today's behavior. Fee base excludes
-  deposits and taxes.
-- Authorize flow: fee applied at capture (`platform_fees` on capture) for
-  AUTHORIZE orders; capture flow keeps fee at creation.
-- `paypal-refund`: refund with auth assertion for seller orders, reverse the
-  platform fee proportionally, keep admin-only entry plus a seller-initiated path;
-  handle insufficient-balance with a specific message.
-- `paypal-config`: expose the BN code so the SDK tag can set
-  `data-partner-attribution-id`; `paypalClient.ts` sets it.
-- `paypal-webhook`: add `MERCHANT.ONBOARDING.COMPLETED`,
-  `MERCHANT.PARTNER-CONSENT.REVOKED`, and merchant product/capability updates.
-- Logging: persist PayPal `debug_id`, endpoint, status, latency and correlation
-  ids per call (no card data, no full payer PII), 90-day retention.
-
-Phasing of optional capabilities: **required for certification** — onboarding,
-readiness gating, BN code, auth assertion, payee + partner fee, items, shipping,
-refunds, thank-you payment source. **Phaseable** — App Switch, Fastlane, Apple
-Pay / Google Pay, merchant-level vaulting, Advanced Card Fields beyond what we
-already render.
-
-## 6. Security (item G)
-
-Client secrets and partner credentials stay server-side; only the publishable
-client id and BN code reach the browser. Auth assertions are generated
-server-side per request. Idempotency keys stay deterministic per record. New
-table is RLS-protected, service-role-write only. `safeLog()` extended to strip
-payer email/phone and card fields while keeping debug ids.
-
-## 7. Staged rollout (item H)
-
-- **Phase 0** — BN code everywhere, `items[]`, per-kind shipping mapping,
-  PayPal debug-id logging. Zero behavior change, works in live immediately.
-- **Phase 1 (sandbox only, flagged)** — connection table + partner referral +
-  status lookup + seller status UI + disconnect/reconnect. No checkout change.
-- **Phase 2 (sandbox)** — payee + partner fee on sale and rental orders behind
-  `paypal_multiparty_enabled` flag, per-seller opt-in; existing single-merchant
-  path remains the default so live checkout never breaks.
-- **Phase 3** — refunds with fee reversal, webhooks, thank-you payment source.
-- **Phase 4** — sandbox QA matrix, evidence capture, PayPal certification.
-- **Phase 5** — flip live per seller cohort; retire manual payouts once a seller
-  is multiparty (see below).
-
-## 8. Certification evidence checklist (item I)
-
-Plaintext request/response with headers for: OAuth token, partner referral
-create, seller status lookup, create order (each in-scope kind), PATCH, capture,
-authorize + capture-later with fee, refund with fee reversal, webhook verify.
-Recordings: successful seller onboarding; not-ready seller onboarding (email
-unconfirmed / payments not receivable); successful buyer payment per in-scope
-method (PayPal, Venmo, Pay Later, card); declined payment per method.
-Screenshots: connect button, PayPal redirect, Ready state with email + merchant
-id, Action Required state, disconnect confirmation, reconnect, checkout showing
-PayPal parity, cancel/return, thank-you with payment source named (Venmo shown as
-Venmo). Plus questionnaire answers.
-
-## 9. Phase 1 ready-to-build scope (item J)
-
-New: migration for `seller_paypal_accounts` (+ RLS, GRANTs, ready helper);
-`supabase/functions/paypal-partner-referral/index.ts`;
-`supabase/functions/paypal-seller-status/index.ts`.
-Changed: `_shared/paypal.ts` (BN code header, auth assertion helper),
-`paypal-config/index.ts` (expose BN code), `src/lib/paypalClient.ts`
-(`data-partner-attribution-id`),
-`src/components/account/PaymentsPayoutsSection.tsx` (+ new
-`PayPalConnectCard.tsx`), a `useSellerPayPalAccount` hook.
-Secrets needed (names to confirm, values not invented): partner client id /
-secret if different from current, partner merchant id, BN code
-`VENDIBOOK_SP_PPCP`, sandbox webhook id.
-
-## 10. Manual payouts and migration concerns
-
-Manual admin payouts can be retired **per seller** once that seller is multiparty
-and certified — funds then land in their own PayPal account and
-`seller_payables` becomes a reconciliation record rather than a to-do. Keep the
-manual path indefinitely for: cash / pay-in-person sales, freight and other
-Vendibook-invoiced items, and any seller who never onboards.
-
-Backward compatibility: existing `payment_records` and `seller_payables` rows
-stay first-party and must keep resolving in admin screens; do not backfill payee
-or fee fields onto historical rows. Existing listings from non-onboarded sellers
-must not silently stop selling — gate only when the flag is on for that seller,
-and email sellers ahead of any cohort flip. `payout_preferences` stays as the
-fallback record even after a PayPal connection exists.
+- **Phase 0 (in progress, no behavior change)** — BN code, `items[]`, shipping
+  plumbing, debug-id logging. Finish by wiring per-kind items and the shipping
+  matrix in `paypal-create-order`, plus SDK `data-partner-attribution-id`.
+- **Phase 1 (sandbox, flagged)** — `seller_paypal_accounts` +
+  `seller_paypal_account_history` + `payment_records.payee_merchant_id`;
+  `paypal-partner-referral`; `paypal-seller-status`; Payments & Payouts connect /
+  ready / action-required / disconnected UI with the exact PayPal copy and the
+  disconnect confirmation; address validation helper.
+- **Phase 2** — payee + partner fee on sale and rental orders behind
+  `paypal_multiparty_enabled`, per-seller opt-in; live single-merchant path
+  untouched by default.
+- **Phase 3** — refunds with fee reversal, merchant webhooks
+  (`MERCHANT.ONBOARDING.COMPLETED`, `MERCHANT.PARTNER-CONSENT.REVOKED`,
+  product/capability updates), thank-you payment source.
+- **Phase 4** — sandbox QA matrix above, evidence capture, certification.
+- **Phase 5** — live cohort flip; retire manual payouts per onboarded seller,
+  keeping the manual path for cash sales, Vendibook-invoiced items and
+  sellers who never onboard.
 
 ---
-Approve to start Phase 0 + Phase 1 only (no live checkout behavior change).
+Approve to resume Phase 0 and build Phase 1 (sandbox only, no live checkout
+behavior change).

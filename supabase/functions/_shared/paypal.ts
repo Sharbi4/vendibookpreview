@@ -119,6 +119,26 @@ export async function getPayPalAccessToken(): Promise<string> {
   return cachedToken.value;
 }
 
+// ------------------------------------------------- partner attribution
+/**
+ * Mandatory PayPal Partner attribution (BN code) for Vendibook LC.
+ * Sent on every REST call and handed to the browser SDK by `paypal-config`.
+ */
+export const PARTNER_ATTRIBUTION_ID = Deno.env.get("PAYPAL_BN_CODE") ?? "VENDIBOOK_SP_PPCP";
+
+/**
+ * `PayPal-Auth-Assertion` lets Vendibook act on an onboarded seller's behalf.
+ * Unsigned JWT (alg none) — PayPal authenticates the partner via the access
+ * token; the assertion only names the merchant.
+ */
+export function buildAuthAssertion(merchantId: string): string | null {
+  const clientId = Deno.env.get("PAYPAL_CLIENT_ID");
+  if (!clientId || !merchantId) return null;
+  const b64 = (obj: unknown) =>
+    btoa(JSON.stringify(obj)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  return `${b64({ alg: "none" })}.${b64({ iss: clientId, payer_id: merchantId })}.`;
+}
+
 // ---------------------------------------------------------------- request
 interface PayPalRequestOptions {
   method?: "GET" | "POST" | "PATCH" | "DELETE";
@@ -127,13 +147,25 @@ interface PayPalRequestOptions {
   /** number of retries for transient (5xx / network) failures */
   retries?: number;
   timeoutMs?: number;
+  /** Onboarded seller merchant id — adds PayPal-Auth-Assertion. */
+  actAsMerchantId?: string | null;
+  /** Additional non-auth headers required by a specific endpoint. */
+  extraHeaders?: Record<string, string>;
 }
 
 export async function paypalRequest<T = any>(
   path: string,
   opts: PayPalRequestOptions = {},
 ): Promise<T> {
-  const { method = "GET", body, idempotencyKey, retries = 2, timeoutMs = 20_000 } = opts;
+  const {
+    method = "GET",
+    body,
+    idempotencyKey,
+    retries = 2,
+    timeoutMs = 20_000,
+    actAsMerchantId,
+    extraHeaders,
+  } = opts;
   let lastError: unknown;
 
   for (let attempt = 0; attempt <= retries; attempt++) {
@@ -145,8 +177,14 @@ export async function paypalRequest<T = any>(
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
         Prefer: "return=representation",
+        "PayPal-Partner-Attribution-Id": PARTNER_ATTRIBUTION_ID,
+        ...(extraHeaders ?? {}),
       };
       if (idempotencyKey) headers["PayPal-Request-Id"] = idempotencyKey;
+      if (actAsMerchantId) {
+        const assertion = buildAuthAssertion(actAsMerchantId);
+        if (assertion) headers["PayPal-Auth-Assertion"] = assertion;
+      }
 
       const res = await fetch(`${paypalApiBase()}${path}`, {
         method,
@@ -158,12 +196,19 @@ export async function paypalRequest<T = any>(
 
       const text = await res.text();
       const json = text ? JSON.parse(text) : {};
+      // PayPal's correlation id — required for support/certification debugging.
+      const correlationId = res.headers.get("paypal-debug-id") ??
+        res.headers.get("correlation-id") ?? undefined;
 
-      if (res.ok) return json as T;
+      if (res.ok) {
+        safeLog("api_ok", { path, status: res.status, debugId: correlationId });
+        return json as T;
+      }
 
       const issue = json?.details?.[0]?.issue ?? json?.name;
-      const debugId = json?.debug_id;
+      const debugId = json?.debug_id ?? correlationId;
       safeLog("api_error", { path, status: res.status, issue, debugId });
+
 
       // 4xx is deterministic — do not retry.
       if (res.status < 500 && res.status !== 429) {
@@ -193,6 +238,27 @@ export async function paypalRequest<T = any>(
 }
 
 // ---------------------------------------------------------------- orders
+export interface OrderLineItem {
+  name: string;
+  /** Unit price in cents. */
+  unitAmountCents: number;
+  quantity?: number;
+  description?: string;
+  sku?: string;
+  category?: "DIGITAL_GOODS" | "PHYSICAL_GOODS" | "DONATION";
+}
+
+/** Buyer shipping address for physical-goods orders. */
+export interface OrderShippingAddress {
+  fullName?: string;
+  addressLine1: string;
+  addressLine2?: string;
+  adminArea2: string; // city
+  adminArea1: string; // state
+  postalCode: string;
+  countryCode?: string;
+}
+
 export interface CreateOrderInput {
   /** Amount in cents — always computed server-side from trusted DB values. */
   amountCents: number;
@@ -211,32 +277,110 @@ export interface CreateOrderInput {
   softDescriptor?: string;
   /** Defaults to CAPTURE. AUTHORIZE creates a temporary hold instead. */
   intent?: "CAPTURE" | "AUTHORIZE";
+  /**
+   * Line-item detail. When omitted a single line is derived from
+   * `description` so every order still carries `purchase_units[].items`.
+   */
+  items?: OrderLineItem[];
+  /** Physical goods: pass the buyer's address and PayPal collects/echoes it. */
+  shipping?: OrderShippingAddress | null;
+  /** Multiparty: the onboarded seller who receives the funds. */
+  payeeMerchantId?: string | null;
+  /** Multiparty: Vendibook's commission taken as a PayPal Partner Fee. */
+  platformFeeCents?: number | null;
 }
+
+
 
 const money = (cents: number, currency: string) => ({
   currency_code: (currency || "USD").toUpperCase(),
   value: (cents / 100).toFixed(2),
 });
 
+/**
+ * PayPal requires `purchase_units[].items` for certification. When a caller
+ * does not supply lines we derive a single line from the description so the
+ * itemised total always reconciles with `amount.breakdown.item_total`.
+ */
+function buildItems(input: CreateOrderInput, currency: string, itemTotalCents: number) {
+  const physical = !!input.shipping;
+  const lines = input.items?.length
+    ? input.items
+    : [{
+      name: input.description.slice(0, 127),
+      unitAmountCents: itemTotalCents,
+      quantity: 1,
+      category: physical ? "PHYSICAL_GOODS" as const : "DIGITAL_GOODS" as const,
+    }];
+
+  return lines.map((line) => ({
+    name: (line.name || "Vendibook").slice(0, 127),
+    quantity: String(Math.max(1, Math.round(line.quantity ?? 1))),
+    unit_amount: money(line.unitAmountCents, currency),
+    category: line.category ?? (physical ? "PHYSICAL_GOODS" : "DIGITAL_GOODS"),
+    ...(line.description ? { description: line.description.slice(0, 127) } : {}),
+    ...(line.sku ? { sku: line.sku.slice(0, 127) } : {}),
+  }));
+}
+
+function buildShipping(address?: OrderShippingAddress | null) {
+  if (!address) return undefined;
+  return {
+    ...(address.fullName ? { name: { full_name: address.fullName.slice(0, 300) } } : {}),
+    address: {
+      address_line_1: address.addressLine1,
+      ...(address.addressLine2 ? { address_line_2: address.addressLine2 } : {}),
+      admin_area_2: address.adminArea2,
+      admin_area_1: address.adminArea1,
+      postal_code: address.postalCode,
+      country_code: address.countryCode ?? "US",
+    },
+  };
+}
+
+/**
+ * Multiparty routing. `payee` sends the funds to the onboarded seller;
+ * `payment_instruction.platform_fees` keeps Vendibook's commission as a
+ * PayPal Partner Fee. Both are omitted for Vendibook's own products, which
+ * stay first-party exactly as they are today.
+ */
+function buildMultiparty(input: CreateOrderInput, currency: string) {
+  if (!input.payeeMerchantId) return {};
+  const fee = Math.max(0, Math.round(input.platformFeeCents ?? 0));
+  return {
+    payee: { merchant_id: input.payeeMerchantId },
+    ...(fee > 0
+      ? {
+        payment_instruction: {
+          disbursement_mode: "INSTANT",
+          platform_fees: [{ amount: money(fee, currency) }],
+        },
+      }
+      : {}),
+  };
+}
+
 export async function createPayPalOrder(input: CreateOrderInput) {
   const currency = (input.currency ?? "USD").toUpperCase();
   const b = input.breakdown;
+  const taxCents = b?.taxCents ?? 0;
+  const shippingCents = b?.shippingCents ?? 0;
+  const discountCents = b?.discountCents ?? 0;
+  const itemTotalCents = b?.itemTotalCents ??
+    Math.max(0, input.amountCents - taxCents - shippingCents + discountCents);
 
   const amount: Record<string, unknown> = money(input.amountCents, currency);
-  if (b) {
-    amount.breakdown = {
-      ...(b.itemTotalCents !== undefined
-        ? { item_total: money(b.itemTotalCents, currency) }
-        : {}),
-      ...(b.taxCents ? { tax_total: money(b.taxCents, currency) } : {}),
-      ...(b.shippingCents ? { shipping: money(b.shippingCents, currency) } : {}),
-      ...(b.discountCents ? { discount: money(b.discountCents, currency) } : {}),
-    };
-  }
+  amount.breakdown = {
+    item_total: money(itemTotalCents, currency),
+    ...(taxCents ? { tax_total: money(taxCents, currency) } : {}),
+    ...(shippingCents ? { shipping: money(shippingCents, currency) } : {}),
+    ...(discountCents ? { discount: money(discountCents, currency) } : {}),
+  };
 
   // AUTHORIZE places a temporary hold on approval; nothing is charged until
   // an explicit capture. CAPTURE (the default) charges on approval.
   const intent = input.intent === "AUTHORIZE" ? "AUTHORIZE" : "CAPTURE";
+  const shipping = buildShipping(input.shipping);
 
   return await paypalRequest("/v2/checkout/orders", {
     method: "POST",
@@ -249,6 +393,9 @@ export async function createPayPalOrder(input: CreateOrderInput) {
         description: input.description.slice(0, 127),
         custom_id: input.reference,
         amount,
+        items: buildItems(input, currency, itemTotalCents),
+        ...(shipping ? { shipping } : {}),
+        ...buildMultiparty(input, currency),
         ...(input.softDescriptor
           ? { soft_descriptor: input.softDescriptor.slice(0, 22) }
           : {}),
@@ -257,13 +404,16 @@ export async function createPayPalOrder(input: CreateOrderInput) {
         paypal: {
           experience_context: {
             brand_name: "Vendibook",
-            shipping_preference: "NO_SHIPPING",
+            // Physical assets that Vendibook ships need a real address;
+            // everything else is a service/digital line with no shipping.
+            shipping_preference: shipping ? "SET_PROVIDED_ADDRESS" : "NO_SHIPPING",
             user_action: intent === "AUTHORIZE" ? "CONTINUE" : "PAY_NOW",
             landing_page: "LOGIN",
           },
         },
       },
     },
+
   });
 }
 
