@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
 import { ArrowRight, Check, Compass, Loader2, Search, Store, Truck } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/contexts/AuthContext';
@@ -38,6 +37,11 @@ export default function WorkspaceOnboarding() {
     }
   }, [isLoading, user, navigate, location]);
 
+  // Onboarding is a private, non-indexed step — give it its own document title.
+  useEffect(() => {
+    document.title = 'Welcome to Vendibook | Get started';
+  }, []);
+
   const toggle = (intent: Intent) =>
     setSelected((current) =>
       current.includes(intent) ? current.filter((i) => i !== intent) : [...current, intent],
@@ -65,11 +69,6 @@ export default function WorkspaceOnboarding() {
 
   return (
     <main className="v2-onboarding">
-      <Helmet>
-        <title>Welcome to Vendibook | Get started</title>
-        <meta name="description" content="Tell Vendibook what you're here to do and get started." />
-        <meta name="robots" content="noindex" />
-      </Helmet>
       <Link to="/" aria-label="Vendibook home">
         <img src={logo} alt="Vendibook" className="h-8 w-auto" />
       </Link>
