@@ -119,6 +119,26 @@ export async function getPayPalAccessToken(): Promise<string> {
   return cachedToken.value;
 }
 
+// ------------------------------------------------- partner attribution
+/**
+ * Mandatory PayPal Partner attribution (BN code) for Vendibook LC.
+ * Sent on every REST call and handed to the browser SDK by `paypal-config`.
+ */
+export const PARTNER_ATTRIBUTION_ID = Deno.env.get("PAYPAL_BN_CODE") ?? "VENDIBOOK_SP_PPCP";
+
+/**
+ * `PayPal-Auth-Assertion` lets Vendibook act on an onboarded seller's behalf.
+ * Unsigned JWT (alg none) — PayPal authenticates the partner via the access
+ * token; the assertion only names the merchant.
+ */
+export function buildAuthAssertion(merchantId: string): string | null {
+  const clientId = Deno.env.get("PAYPAL_CLIENT_ID");
+  if (!clientId || !merchantId) return null;
+  const b64 = (obj: unknown) =>
+    btoa(JSON.stringify(obj)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+  return `${b64({ alg: "none" })}.${b64({ iss: clientId, payer_id: merchantId })}.`;
+}
+
 // ---------------------------------------------------------------- request
 interface PayPalRequestOptions {
   method?: "GET" | "POST" | "PATCH" | "DELETE";
@@ -127,13 +147,25 @@ interface PayPalRequestOptions {
   /** number of retries for transient (5xx / network) failures */
   retries?: number;
   timeoutMs?: number;
+  /** Onboarded seller merchant id — adds PayPal-Auth-Assertion. */
+  actAsMerchantId?: string | null;
+  /** Additional non-auth headers required by a specific endpoint. */
+  extraHeaders?: Record<string, string>;
 }
 
 export async function paypalRequest<T = any>(
   path: string,
   opts: PayPalRequestOptions = {},
 ): Promise<T> {
-  const { method = "GET", body, idempotencyKey, retries = 2, timeoutMs = 20_000 } = opts;
+  const {
+    method = "GET",
+    body,
+    idempotencyKey,
+    retries = 2,
+    timeoutMs = 20_000,
+    actAsMerchantId,
+    extraHeaders,
+  } = opts;
   let lastError: unknown;
 
   for (let attempt = 0; attempt <= retries; attempt++) {
@@ -145,8 +177,14 @@ export async function paypalRequest<T = any>(
         Authorization: `Bearer ${token}`,
         "Content-Type": "application/json",
         Prefer: "return=representation",
+        "PayPal-Partner-Attribution-Id": PARTNER_ATTRIBUTION_ID,
+        ...(extraHeaders ?? {}),
       };
       if (idempotencyKey) headers["PayPal-Request-Id"] = idempotencyKey;
+      if (actAsMerchantId) {
+        const assertion = buildAuthAssertion(actAsMerchantId);
+        if (assertion) headers["PayPal-Auth-Assertion"] = assertion;
+      }
 
       const res = await fetch(`${paypalApiBase()}${path}`, {
         method,
@@ -158,12 +196,19 @@ export async function paypalRequest<T = any>(
 
       const text = await res.text();
       const json = text ? JSON.parse(text) : {};
+      // PayPal's correlation id — required for support/certification debugging.
+      const correlationId = res.headers.get("paypal-debug-id") ??
+        res.headers.get("correlation-id") ?? undefined;
 
-      if (res.ok) return json as T;
+      if (res.ok) {
+        safeLog("api_ok", { path, status: res.status, debugId: correlationId });
+        return json as T;
+      }
 
       const issue = json?.details?.[0]?.issue ?? json?.name;
-      const debugId = json?.debug_id;
+      const debugId = json?.debug_id ?? correlationId;
       safeLog("api_error", { path, status: res.status, issue, debugId });
+
 
       // 4xx is deterministic — do not retry.
       if (res.status < 500 && res.status !== 429) {
