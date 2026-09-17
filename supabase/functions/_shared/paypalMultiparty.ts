@@ -67,6 +67,10 @@ export async function sellerMultipartyReady(
       .from("seller_paypal_accounts")
       .select("merchant_id, primary_email_confirmed, payments_receivable, onboarding_status")
       .eq("user_id", sellerId)
+      // Disconnected connections are archived, not deleted — only the active
+      // one counts. Without this filter a stale disconnected row could flip
+      // routing back on after a seller disconnects and reconnects elsewhere.
+      .is("archived_at", null)
       .maybeSingle();
     // Table does not exist yet (Step 2) → stay first-party.
     if (error || !data) return { enabled: false, merchantId: null };
