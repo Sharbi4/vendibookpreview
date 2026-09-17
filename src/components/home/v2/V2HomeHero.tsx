@@ -67,7 +67,7 @@ export default function V2HomeHero({ leadListing }: { leadListing?: V2CardListin
             <b>{formatListingPriceLabel(leadListing as never)}</b>
           </span>
         </Link>
-      </div>
+      )}
     </section>
   );
 }
