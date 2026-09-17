@@ -189,6 +189,9 @@ interface SaleSuggestions {
  * Categories where a VIN / serial is meaningful. Used only to decide whether
  * to show the optional VIN control — it never gates publishing.
  */
+/** Where "Save & exit" returns the seller: the start of their listings. */
+const LISTING_EXIT_PATH = '/dashboard/listings';
+
 const TITLED_SALE_CATEGORIES = ['food_truck', 'food_trailer'];
 const isTitledSaleCategory = (l: { mode?: string | null; category?: string | null } | null) =>
   !!l && l.mode === 'sale' && TITLED_SALE_CATEGORIES.includes(String(l.category));
