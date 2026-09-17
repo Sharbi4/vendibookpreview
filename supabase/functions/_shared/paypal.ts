@@ -193,6 +193,27 @@ export async function paypalRequest<T = any>(
 }
 
 // ---------------------------------------------------------------- orders
+export interface OrderLineItem {
+  name: string;
+  /** Unit price in cents. */
+  unitAmountCents: number;
+  quantity?: number;
+  description?: string;
+  sku?: string;
+  category?: "DIGITAL_GOODS" | "PHYSICAL_GOODS" | "DONATION";
+}
+
+/** Buyer shipping address for physical-goods orders. */
+export interface OrderShippingAddress {
+  fullName?: string;
+  addressLine1: string;
+  addressLine2?: string;
+  adminArea2: string; // city
+  adminArea1: string; // state
+  postalCode: string;
+  countryCode?: string;
+}
+
 export interface CreateOrderInput {
   /** Amount in cents — always computed server-side from trusted DB values. */
   amountCents: number;
@@ -211,7 +232,20 @@ export interface CreateOrderInput {
   softDescriptor?: string;
   /** Defaults to CAPTURE. AUTHORIZE creates a temporary hold instead. */
   intent?: "CAPTURE" | "AUTHORIZE";
+  /**
+   * Line-item detail. When omitted a single line is derived from
+   * `description` so every order still carries `purchase_units[].items`.
+   */
+  items?: OrderLineItem[];
+  /** Physical goods: pass the buyer's address and PayPal collects/echoes it. */
+  shipping?: OrderShippingAddress | null;
+  /** Multiparty: the onboarded seller who receives the funds. */
+  payeeMerchantId?: string | null;
+  /** Multiparty: Vendibook's commission taken as a PayPal Partner Fee. */
+  platformFeeCents?: number | null;
 }
+
+
 
 const money = (cents: number, currency: string) => ({
   currency_code: (currency || "USD").toUpperCase(),
