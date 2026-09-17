@@ -28,6 +28,6 @@ export function useVideoWalkthroughs() {
 
 export async function isWalkthroughEnabled(listingId?: string) {
   if (!listingId) return false;
-  const { data } = await (supabase.rpc as any)('listing_video_walkthrough_enabled', { _listing_id: listingId });
-  return Boolean(data);
+  const { data } = await (supabase.from('listings') as any).select('video_walkthroughs_enabled').eq('id', listingId).eq('status', 'published').maybeSingle();
+  return Boolean(data?.video_walkthroughs_enabled);
 }
