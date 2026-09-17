@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, CheckCircle2, AlertTriangle, Circle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
@@ -41,6 +41,7 @@ export default function WorkspacePaymentSetup() {
   const [listings, setListings] = useState<SetupListing[]>([]);
   const [listingsLoading, setListingsLoading] = useState(true);
   const [savingId, setSavingId] = useState<string | null>(null);
+  const [bulkSaving, setBulkSaving] = useState(false);
 
   const loadListings = useCallback(async () => {
     if (!user) {
