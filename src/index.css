@@ -2005,3 +2005,6 @@ html.hide-support-chat .widget-visible {
 .v2-activity-thumb { display: grid; height: 44px; width: 60px; flex: none; place-items: center; overflow: hidden; border-radius: 8px; border: 1px solid hsl(var(--v2-line)); background: hsl(38 26% 95%); }
 .v2-activity-thumb img { height: 100%; width: 100%; object-fit: cover; }
 .v2-activity-thumb svg { width: 16px; height: 16px; color: hsl(var(--v2-stone)); }
+.v2-status svg { width: 13px; height: 13px; margin-right: 4px; }
+.v2-account-grid .v2-panel h2 { font-size: 13px; letter-spacing: .06em; text-transform: uppercase; color: hsl(var(--v2-stone)); }
+.v2-account-row + .v2-account-row { border-top: 1px solid hsl(var(--v2-line)); }

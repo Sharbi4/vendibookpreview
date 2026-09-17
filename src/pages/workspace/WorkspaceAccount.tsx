@@ -85,20 +85,29 @@ export default function WorkspaceAccount() {
           <div>
             <h2>{name}</h2>
             <p>{user?.email}</p>
-            {isVerified && (
-              <span className="v2-verified">
-                <ShieldCheck />
-                Identity verified
-              </span>
-            )}
+            <div className="mt-3 flex flex-wrap items-center gap-2">
+              {isVerified && (
+                <span className="v2-status is-ok">
+                  <ShieldCheck />
+                  Identity verified
+                </span>
+              )}
+              <Link to="/dashboard/payments" className="v2-btn-quiet">
+                Payments &amp; PayPal
+              </Link>
+            </div>
           </div>
         </section>
 
         <div className="v2-account-grid">
           {groups.map((group) => (
-            <section key={group.title}>
-              <h2>{group.title}</h2>
-              <div className="v2-card divide-y">
+            <section className="v2-panel" key={group.title}>
+              <div className="v2-panel-head">
+                <div>
+                  <h2>{group.title}</h2>
+                </div>
+              </div>
+              <div>
                 {group.items.map(([Icon, label, hint, to]) => (
                   <Link to={to} className="v2-account-row" key={label}>
                     <Icon />
