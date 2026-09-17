@@ -165,7 +165,9 @@ const PayoutsPanel = () => {
                   </dl>
 
                   <p className="text-[11px] text-muted-foreground">
-                    {showTiming
+                    {autoPaid
+                      ? `Paid straight into your connected PayPal Business account${p.payout_completed_at ? ` on ${new Date(p.payout_completed_at).toLocaleDateString()}` : ''}, with the Vendibook fee already deducted. Nothing further is owed to you for this order.`
+                      : showTiming
                       ? `Eligible for review on ${new Date(releaseAt).toLocaleDateString()}. A Vendibook admin approves and sends the payout after review.`
                       : p.hold_reason
                         ? `On hold: ${p.hold_reason}. Payout timing changes while this is resolved.`
