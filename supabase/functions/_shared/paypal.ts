@@ -319,10 +319,10 @@ export interface CreateOrderInput {
   items?: OrderLineItem[];
   /** Physical goods: pass the buyer's address and PayPal collects/echoes it. */
   shipping?: OrderShippingAddress | null;
-  /** Multiparty: the onboarded seller who receives the funds. */
-  payeeMerchantId?: string | null;
-  /** Multiparty: Vendibook's commission taken as a PayPal Partner Fee. */
-  platformFeeCents?: number | null;
+  // NOTE: Connected Path routing (payee / payment_instruction.platform_fees)
+  // is deliberately absent. Orders are first-party only until Step 3 wires
+  // money routing through the paypalMultiparty flag on purpose.
+
 }
 
 
