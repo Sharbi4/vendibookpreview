@@ -112,11 +112,12 @@ export async function buildOrderDetail(
 ): Promise<OrderDetail> {
   const transactionType = normalizeTransactionType(record.transaction_type);
 
-  const [listing, counterpartyName, domain, timeline] = await Promise.all([
+  const [listing, counterpartyName, domain, timeline, settlement] = await Promise.all([
     loadListing(supabase, record.listing_id),
     loadCounterpartyName(supabase, viewerRole === 'seller' ? record.buyer_id : record.seller_id),
     loadDomainRecord(supabase, record, transactionType),
     loadTimeline(supabase, record.id, viewerRole),
+    loadSettlement(supabase, record, viewerRole),
   ]);
 
   const fulfillmentType = inferFulfillmentType(transactionType, domain.fulfillmentRaw);
