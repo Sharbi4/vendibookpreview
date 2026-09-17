@@ -23,17 +23,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/a02adafe-ad00-40cb-90c7-2a8ccc55f469</loc>
-    <lastmod>2026-09-16</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/0b669ac2-7bf0-4013-b671-0576eea77e00/a02adafe-ad00-40cb-90c7-2a8ccc55f469/1768963055920-fywcc.jpg</image:loc>
-      <image:title>Coffee Tailer</image:title>
-      <image:caption>Coffee Tailer in San Francisco, CA on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/10ae96b2-12c7-413a-a612-92110bc2050e</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>weekly</changefreq>
@@ -67,6 +56,17 @@
     </image:image>
   </url>
   <url>
+    <loc>https://vendibook.com/listing/a02adafe-ad00-40cb-90c7-2a8ccc55f469</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/0b669ac2-7bf0-4013-b671-0576eea77e00/a02adafe-ad00-40cb-90c7-2a8ccc55f469/1768963055920-fywcc.jpg</image:loc>
+      <image:title>Coffee Tailer</image:title>
+      <image:caption>Coffee Tailer in San Francisco, CA on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://vendibook.com/listing/66edfe50-f200-4560-832c-edc6877ad910</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>weekly</changefreq>
@@ -90,7 +90,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/8dd4955f-d5fe-47ac-b260-ce86d15fd1f4</loc>
-    <lastmod>2026-09-15</lastmod>
+    <lastmod>2026-09-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -112,7 +112,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/0bb809bc-965e-4598-8260-636db1563db7</loc>
-    <lastmod>2026-09-16</lastmod>
+    <lastmod>2026-09-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -188,6 +188,17 @@
     </image:image>
   </url>
   <url>
+    <loc>https://vendibook.com/listing/dc2dd4ff-cc23-41a8-8a4f-4e496fc6ff62</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/0a3a80fa-4189-4c7b-a1cd-f2faf3a4e543/dc2dd4ff-cc23-41a8-8a4f-4e496fc6ff62/1785787420959-cov6i5.jpeg</image:loc>
+      <image:title>2002 workhorse P42 6.5 L diesel</image:title>
+      <image:caption>2002 workhorse P42 6.5 L diesel in Chambersburg, PA on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://vendibook.com/listing/c07375f0-c3c6-4ab4-a353-2deba419773b</loc>
     <lastmod>2026-09-15</lastmod>
     <changefreq>weekly</changefreq>
@@ -196,17 +207,6 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/00f5eddf-153e-451c-998a-f7a2a410b959/c07375f0-c3c6-4ab4-a353-2deba419773b/1770413583980-o76z5.jpg</image:loc>
       <image:title>The Q — Commercial Kitchen &amp; Commissary (Downtown Boaz, AL)</image:title>
       <image:caption>The Q — Commercial Kitchen &amp; Commissary (Downtown Boaz, AL) in Boaz, AL on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://vendibook.com/listing/dc2dd4ff-cc23-41a8-8a4f-4e496fc6ff62</loc>
-    <lastmod>2026-09-16</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/0a3a80fa-4189-4c7b-a1cd-f2faf3a4e543/dc2dd4ff-cc23-41a8-8a4f-4e496fc6ff62/1785787420959-cov6i5.jpeg</image:loc>
-      <image:title>2002 workhorse P42 6.5 L diesel</image:title>
-      <image:caption>2002 workhorse P42 6.5 L diesel in Chambersburg, PA on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -519,7 +519,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/9c92006e-fe3c-4e52-9474-51d4a950eb26</loc>
-    <lastmod>2026-09-16</lastmod>
+    <lastmod>2026-09-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -595,6 +595,17 @@
     </image:image>
   </url>
   <url>
+    <loc>https://vendibook.com/listing/d4e891ae-bbf4-4580-9998-28681e04d2d4</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/a428d36b-4816-4cc3-9c9f-125c57d54e7f/d4e891ae-bbf4-4580-9998-28681e04d2d4/1781025625049-uzgo9z.jpeg</image:loc>
+      <image:title>INVESTMENT OPPORTUNITY IN HOUSTON</image:title>
+      <image:caption>INVESTMENT OPPORTUNITY IN HOUSTON in Cypress, TX on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://vendibook.com/listing/3d4b8b98-aec6-4bdd-9af8-d45470c091c7</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>weekly</changefreq>
@@ -603,17 +614,6 @@
       <image:loc>https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?w=800</image:loc>
       <image:title>Basic Food Prep Trailer</image:title>
       <image:caption>Basic Food Prep Trailer in Tucson, AZ on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://vendibook.com/listing/d4e891ae-bbf4-4580-9998-28681e04d2d4</loc>
-    <lastmod>2026-09-15</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/a428d36b-4816-4cc3-9c9f-125c57d54e7f/d4e891ae-bbf4-4580-9998-28681e04d2d4/1781025625049-uzgo9z.jpeg</image:loc>
-      <image:title>INVESTMENT OPPORTUNITY IN HOUSTON</image:title>
-      <image:caption>INVESTMENT OPPORTUNITY IN HOUSTON in Cypress, TX on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -673,7 +673,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/d93c53cb-f440-4672-ba6c-912c8266cda8</loc>
-    <lastmod>2026-09-15</lastmod>
+    <lastmod>2026-09-17</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -870,17 +870,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/98b799f7-067e-4b11-b912-828ef2878837</loc>
-    <lastmod>2026-09-15</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/77f157af-d5d8-4be4-95d8-a1b755c6c6a1/98b799f7-067e-4b11-b912-828ef2878837/1768891831942-kss0bf.jpg</image:loc>
-      <image:title>2004 Workhorse Food Truck (Fully Functional)</image:title>
-      <image:caption>2004 Workhorse Food Truck (Fully Functional) in Houston, TX on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/0ff66f5f-fae3-4d43-b630-080e56f4baf7</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>weekly</changefreq>
@@ -1013,17 +1002,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/c2a323e2-8b8a-469a-b5e3-d61c3fe305e5</loc>
-    <lastmod>2026-09-16</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/d126f042-e517-46ee-b89d-0bd83483a88d/c2a323e2-8b8a-469a-b5e3-d61c3fe305e5/1787594421955-f3tg1e.webp</image:loc>
-      <image:title>Turnkey 17.5ft LeMontH Classic Food Trailer — Fully Equipped, Ready to Operate |</image:title>
-      <image:caption>Turnkey 17.5ft LeMontH Classic Food Trailer — Fully Equipped, Ready to Operate | in Key West, FL on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/e6efa74a-cdda-4195-9546-b440016346cc</loc>
     <lastmod>2026-09-13</lastmod>
     <changefreq>weekly</changefreq>
@@ -1145,6 +1123,17 @@
     </image:image>
   </url>
   <url>
+    <loc>https://vendibook.com/listing/c2a323e2-8b8a-469a-b5e3-d61c3fe305e5</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/d126f042-e517-46ee-b89d-0bd83483a88d/c2a323e2-8b8a-469a-b5e3-d61c3fe305e5/1787594421955-f3tg1e.webp</image:loc>
+      <image:title>Turnkey 17.5ft LeMontH Classic Food Trailer — Fully Equipped, Ready to Operate |</image:title>
+      <image:caption>Turnkey 17.5ft LeMontH Classic Food Trailer — Fully Equipped, Ready to Operate | in Key West, FL on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://vendibook.com/listing/29db594a-1746-4d42-954a-16673d9ff875</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>weekly</changefreq>
@@ -1153,6 +1142,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/0512c2fe-7f8c-4e29-b7b2-5e48e16e1b11/29db594a-1746-4d42-954a-16673d9ff875/1769467123029-llx81q.jpeg</image:loc>
       <image:title>NEAR NEW TURNKEY Mobile Tap Trailer - Motivated Seller</image:title>
       <image:caption>NEAR NEW TURNKEY Mobile Tap Trailer - Motivated Seller in Bethlehem, GA on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/98b799f7-067e-4b11-b912-828ef2878837</loc>
+    <lastmod>2026-09-17</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/77f157af-d5d8-4be4-95d8-a1b755c6c6a1/98b799f7-067e-4b11-b912-828ef2878837/1768891831942-kss0bf.jpg</image:loc>
+      <image:title>2004 Workhorse Food Truck (Fully Functional)</image:title>
+      <image:caption>2004 Workhorse Food Truck (Fully Functional) in Houston, TX on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
