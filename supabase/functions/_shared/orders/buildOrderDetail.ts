@@ -72,6 +72,28 @@ export interface OrderDetail {
 
   attempts?: Array<Record<string, unknown>>;
   receipt?: Record<string, unknown> | null;
+  /**
+   * Seller/admin only. Server-computed settlement breakdown from the persisted
+   * seller payable — the browser never derives fees, proceeds or payout state.
+   */
+  settlement: {
+    currency: string;
+    routed_to_connected_paypal: boolean;
+    gross_collected_cents: number;
+    platform_fee_cents: number;
+    adjustments_cents: number;
+    refunded_cents: number;
+    net_to_seller_cents: number;
+    fee_rate_pct: number | null;
+    pro_discount_cents: number;
+    status_code: string;
+    status_label: string;
+    status_tone: 'positive' | 'pending' | 'warning' | 'critical' | 'neutral';
+    status_description: string;
+    settled_at: string | null;
+    hold_reason: string | null;
+  } | null;
+
   support: { email: string; phone: string; dispute_url: string };
 }
 
