@@ -281,23 +281,35 @@ const AnimatedRoutes = () => {
           <Route path="/browse" element={<PageTransition><Browse /></PageTransition>} />
           <Route path="/search" element={<PageTransition><Search /></PageTransition>} />
           <Route path="/auth" element={<PageTransition><Auth /></PageTransition>} />
-          <Route path="/welcome" element={<PageTransition><Welcome /></PageTransition>} />
+          {/* Post-signup intent step → unified workspace */}
+          <Route path="/welcome" element={<PageTransition><WorkspaceOnboarding /></PageTransition>} />
+          <Route path="/onboarding" element={<PageTransition><WorkspaceOnboarding /></PageTransition>} />
+          <Route path="/welcome/classic" element={<PageTransition><Welcome /></PageTransition>} />
           <Route path="/activation" element={<PageTransition><Activation /></PageTransition>} />
           <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
-          <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />
-          <Route path="/onboarding-v2" element={<PageTransition><OnboardingV2 /></PageTransition>} />
-          <Route path="/dashboard-v2" element={<PageTransition><HomeV2 /></PageTransition>} />
-          <Route path="/dashboard-v2/listings" element={<PageTransition><ListingsV2 /></PageTransition>} />
-          <Route path="/dashboard-v2/activity" element={<PageTransition><ActivityV2 /></PageTransition>} />
+
+          {/* Unified workspace — one Vendibook experience for every signed-in user */}
+          <Route path="/dashboard" element={<PageTransition><WorkspaceHome /></PageTransition>} />
+          <Route path="/dashboard/listings" element={<PageTransition><WorkspaceListings /></PageTransition>} />
+          <Route path="/dashboard/activity" element={<PageTransition><WorkspaceActivity /></PageTransition>} />
+          <Route path="/dashboard/inbox" element={<PreserveQueryRedirect to="/messages" />} />
+          <Route path="/dashboard/payments" element={<PageTransition><WorkspacePayments /></PageTransition>} />
+          <Route path="/dashboard/account" element={<PageTransition><WorkspaceAccount /></PageTransition>} />
+          <Route path="/dashboard/classic" element={<PageTransition><Dashboard /></PageTransition>} />
+          {/* Legacy workspace aliases */}
+          <Route path="/onboarding-v2" element={<Navigate to="/welcome" replace />} />
+          <Route path="/dashboard-v2" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/dashboard-v2/listings" element={<PreserveQueryRedirect to="/dashboard/listings" />} />
+          <Route path="/dashboard-v2/activity" element={<PreserveQueryRedirect to="/dashboard/activity" />} />
           <Route path="/dashboard-v2/messages" element={<PreserveQueryRedirect to="/messages" />} />
-          <Route path="/dashboard-v2/payments" element={<PageTransition><PaymentsV2 /></PageTransition>} />
-          <Route path="/dashboard-v2/account" element={<PageTransition><AccountV2 /></PageTransition>} />
+          <Route path="/dashboard-v2/payments" element={<Navigate to="/dashboard/payments" replace />} />
+          <Route path="/dashboard-v2/account" element={<Navigate to="/dashboard/account" replace />} />
           <Route path="/sale/:transactionId/protection" element={<PageTransition><ProtectedSalePage /></PageTransition>} />
           <Route path="/transaction/:transactionId" element={<PageTransition><TransactionDetail /></PageTransition>} />
           <Route path="/host/bookings" element={<PageTransition><HostBookings /></PageTransition>} />
-          <Route path="/host/listings" element={<PageTransition><HostListings /></PageTransition>} />
           {/* Campaign deep-link alias — keeps ?boost= and UTMs intact */}
-          <Route path="/dashboard/listings" element={<PreserveQueryRedirect to="/host/listings" />} />
+          <Route path="/host/listings" element={<PreserveQueryRedirect to="/dashboard/listings" />} />
+          <Route path="/host/listings/classic" element={<PageTransition><HostListings /></PageTransition>} />
           <Route path="/host/reporting" element={<PageTransition><HostReporting /></PageTransition>} />
           <Route path="/host/analytics" element={<PageTransition><HostAnalytics /></PageTransition>} />
           {/* Legacy listing-creation entries → canonical opening gateway */}
