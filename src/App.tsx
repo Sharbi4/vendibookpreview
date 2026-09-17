@@ -60,6 +60,9 @@ const WorkspaceActivity = lazy(() => import("./pages/workspace/WorkspaceActivity
 const WorkspacePayments = lazy(() => import("./pages/workspace/WorkspacePayments"));
 const WorkspacePaymentSetup = lazy(() => import("./pages/workspace/WorkspacePaymentSetup"));
 const WorkspaceSellerOnboarding = lazy(() => import("./pages/workspace/WorkspaceSellerOnboarding"));
+const WorkspaceBookings = lazy(() => import("./pages/workspace/WorkspaceBookings"));
+const WorkspaceReporting = lazy(() => import("./pages/workspace/WorkspaceReporting"));
+const WorkspaceAnalytics = lazy(() => import("./pages/workspace/WorkspaceAnalytics"));
 const WorkspaceAccount = lazy(() => import("./pages/workspace/WorkspaceAccount"));
 const WorkspaceMessages = lazy(() => import("./pages/workspace/WorkspaceMessages"));
 const WorkspaceNotifications = lazy(() => import("./pages/workspace/WorkspaceNotifications"));
@@ -195,10 +198,7 @@ const DynamicCityPage = lazy(() => import("./pages/DynamicCityPage"));
 const Payments = lazy(() => import("./pages/Payments"));
 const Rentals = lazy(() => import("./pages/Rentals"));
 const EnterpriseOnboarding = lazy(() => import("./pages/EnterpriseOnboarding"));
-const HostBookings = lazy(() => import("./pages/HostBookings"));
 const HostListings = lazy(() => import("./pages/HostListings"));
-const HostReporting = lazy(() => import("./pages/HostReporting"));
-const HostAnalytics = lazy(() => import("./pages/HostAnalytics"));
 const HowItWorksHost = lazy(() => import("./pages/HowItWorksHost"));
 const HowItWorksSeller = lazy(() => import("./pages/HowItWorksSeller"));
 const BecomeAHost = lazy(() => import("./pages/BecomeAHost"));
@@ -312,6 +312,9 @@ const AnimatedRoutes = () => {
           <Route path="/dashboard/payments/setup" element={<PageTransition><WorkspacePaymentSetup /></PageTransition>} />
           <Route path="/dashboard/seller-setup" element={<PageTransition><WorkspaceSellerOnboarding /></PageTransition>} />
           <Route path="/dashboard/account" element={<PageTransition><WorkspaceAccount /></PageTransition>} />
+          <Route path="/dashboard/bookings" element={<PageTransition><WorkspaceBookings /></PageTransition>} />
+          <Route path="/dashboard/reporting" element={<PageTransition><WorkspaceReporting /></PageTransition>} />
+          <Route path="/dashboard/analytics" element={<PageTransition><WorkspaceAnalytics /></PageTransition>} />
           <Route path="/dashboard/classic" element={<PageTransition><Dashboard /></PageTransition>} />
           {/* Legacy workspace aliases */}
           <Route path="/onboarding-v2" element={<Navigate to="/welcome" replace />} />
@@ -323,12 +326,16 @@ const AnimatedRoutes = () => {
           <Route path="/dashboard-v2/account" element={<Navigate to="/dashboard/account" replace />} />
           <Route path="/sale/:transactionId/protection" element={<PageTransition><ProtectedSalePage /></PageTransition>} />
           <Route path="/transaction/:transactionId" element={<PageTransition><TransactionDetail /></PageTransition>} />
-          <Route path="/host/bookings" element={<PageTransition><HostBookings /></PageTransition>} />
+          <Route path="/host/bookings" element={<PreserveQueryRedirect to="/dashboard/bookings" />} />
           {/* Campaign deep-link alias — keeps ?boost= and UTMs intact */}
           <Route path="/host/listings" element={<PreserveQueryRedirect to="/dashboard/listings" />} />
           <Route path="/host/listings/classic" element={<PageTransition><HostListings /></PageTransition>} />
-          <Route path="/host/reporting" element={<PageTransition><HostReporting /></PageTransition>} />
-          <Route path="/host/analytics" element={<PageTransition><HostAnalytics /></PageTransition>} />
+          <Route path="/host/reporting" element={<PreserveQueryRedirect to="/dashboard/reporting" />} />
+          <Route path="/host/analytics" element={<PreserveQueryRedirect to="/dashboard/analytics" />} />
+          <Route path="/host/dashboard" element={<PreserveQueryRedirect to="/dashboard" />} />
+          <Route path="/host/payments" element={<PreserveQueryRedirect to="/dashboard/payments" />} />
+          <Route path="/host/messages" element={<PreserveQueryRedirect to="/dashboard/messages" />} />
+          <Route path="/host/account" element={<PreserveQueryRedirect to="/dashboard/account" />} />
           {/* Legacy listing-creation entries → canonical opening gateway */}
           <Route path="/create-listing" element={<Navigate to="/list" replace />} />
           <Route path="/new-listing" element={<Navigate to="/list" replace />} />

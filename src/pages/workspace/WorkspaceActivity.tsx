@@ -96,7 +96,7 @@ export default function WorkspaceActivity() {
       amount: null,
       reference: null,
       image: b.listing?.cover_image_url ?? null,
-      href: `/host/bookings?id=${b.id}`,
+      href: `/dashboard/bookings?id=${b.id}`,
     }));
 
     return [...payments, ...buyer, ...seller].sort(

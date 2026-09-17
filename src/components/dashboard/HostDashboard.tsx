@@ -60,7 +60,7 @@ const HostDashboard = () => {
       id: 'pending-bookings', icon: Clock,
       title: `${bookingStats.pending} booking request${bookingStats.pending > 1 ? 's' : ''}`,
       description: 'Review and reply so guests can plan.',
-      href: '/host/bookings', cta: 'Review', tone: 'warning',
+      href: '/dashboard/bookings', cta: 'Review', tone: 'warning',
     });
     if (!payoutLoading && !hasPayoutInstructions) items.push({
       id: 'payout-details', icon: Banknote,
@@ -94,7 +94,7 @@ const HostDashboard = () => {
         : { label: b.status, tone: 'muted' };
       return {
         id: b.id,
-        href: `/host/bookings?id=${b.id}`,
+        href: `/dashboard/bookings?id=${b.id}`,
         title: b.listing?.title || 'Booking',
         imageUrl: b.listing?.cover_image_url,
         meta: `${getCounterpartyName(b.shopper, 'Guest')} · ${new Date(b.created_at).toLocaleDateString()}`,
@@ -131,13 +131,13 @@ const HostDashboard = () => {
             label="Active listings"
             value={stats.published}
             hint={stats.drafts > 0 ? `${stats.drafts} draft${stats.drafts > 1 ? 's' : ''}` : 'All live'}
-            href="/host/listings"
+            href="/dashboard/listings"
           />
           <KpiCard
             label="Pending requests"
             value={bookingStats.pending}
             hint={bookingStats.pending > 0 ? 'Awaiting reply' : 'All clear'}
-            href="/host/bookings"
+            href="/dashboard/bookings"
           />
           <KpiCard
             label="Open offers"
@@ -194,7 +194,7 @@ const HostDashboard = () => {
         </header>
         <RecentActivityStrip
           items={activity}
-          viewAllHref="/host/bookings"
+          viewAllHref="/dashboard/bookings"
           emptyText="No bookings yet. Publish or share a listing to attract renters."
           emptyHref="/host/listings"
           emptyCta="Manage listings"

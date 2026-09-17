@@ -29,14 +29,14 @@ import { useHostBookings } from '@/hooks/useHostBookings';
 import BookingRequestCard from '@/components/dashboard/BookingRequestCard';
 import { getCounterpartyName } from '@/lib/displayName';
 
-const HostBookings = () => {
+const HostBookings = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const { user, isLoading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { bookings, isLoading, approveBooking, declineBooking, cancelBooking, processDepositRefund } = useHostBookings();
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    if (!authLoading && !user) navigate('/auth?redirect=' + encodeURIComponent('/host/bookings'));
+    if (!authLoading && !user) navigate('/auth?redirect=' + encodeURIComponent('/dashboard/bookings'));
   }, [authLoading, user, navigate]);
 
   if (!authLoading && !user) return null;
@@ -52,10 +52,10 @@ const HostBookings = () => {
   const cancelled = filteredBookings.filter(b => ['cancelled', 'declined'].includes(b.status));
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <Header />
-      
-      <main className="flex-1 container max-w-6xl py-8">
+    <div className={embedded ? 'flex flex-col' : 'min-h-screen bg-background flex flex-col'}>
+      {!embedded && <Header />}
+
+      <main className={embedded ? 'flex-1' : 'flex-1 container max-w-6xl py-8'}>
         {/* Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
           <div>
@@ -174,7 +174,7 @@ const HostBookings = () => {
           </TabsContent>
         </Tabs>
       </main>
-      <Footer />
+      {!embedded && <Footer />}
     </div>
   );
 };
