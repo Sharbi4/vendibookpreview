@@ -40,7 +40,7 @@
 
 ## V2 unified logged-in workspace — parallel preview
 
-- [ ] Add `/onboarding-v2` with a single non-exclusive intent choice and preserved deep links.
-- [ ] Add unified `/dashboard-v2` shell and responsive navigation without altering legacy routes.
-- [ ] Add V2 Home, Listings, Activity, Messages, Payments, and Account using real existing data.
-- [ ] Verify desktop/mobile layouts and confirm legacy dashboard, checkout, booking, and payment routing remain untouched.
+- [x] Add `/onboarding-v2` with a single non-exclusive intent choice and preserved deep links.
+- [x] Add unified `/dashboard-v2` shell and responsive navigation without altering legacy routes.
+- [x] Add V2 Home, Listings, Activity, Messages, Payments, and Account using real existing data.
+- [x] Verify desktop/mobile layouts and confirm legacy dashboard, checkout, booking, and payment routing remain untouched.

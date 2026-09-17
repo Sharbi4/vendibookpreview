@@ -10,6 +10,8 @@ import { useAuth } from '@/contexts/AuthContext';
  */
 const HIDDEN_PATTERNS = [
   /^\/auth/,
+  /^\/onboarding-v2/,
+  /^\/dashboard-v2(?:\/|$)/,
   /^\/reset-password/,
   /^\/activation/,
   /^\/checkout\//,
