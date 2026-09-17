@@ -2409,3 +2409,11 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
   border: 1px solid hsl(var(--v2-ink)) !important;
   box-shadow: none !important;
 }
+.v2-checkout-section-body .bg-cta-primary,
+.v2-checkout .bg-cta-primary {
+  background-image: none !important;
+  background-color: hsl(var(--v2-ink)) !important;
+  color: hsl(var(--v2-paper)) !important;
+  box-shadow: none !important;
+  border-radius: 12px !important;
+}
