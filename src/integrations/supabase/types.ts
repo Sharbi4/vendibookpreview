@@ -10728,6 +10728,7 @@ export type Database = {
           verified_at: string
         }[]
       }
+      seller_payment_readiness: { Args: { _seller_id: string }; Returns: Json }
       seller_paypal_ready: { Args: { _user_id: string }; Returns: boolean }
       soft_delete_permit_document: {
         Args: { p_document_id: string }
