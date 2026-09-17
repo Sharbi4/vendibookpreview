@@ -2809,7 +2809,7 @@ export const PublishWizard: React.FC = () => {
           <div className="h-14 flex items-center justify-between gap-4">
             <button
               onClick={handleSaveAndExit}
-              disabled={isSaveExiting || isSaving}
+              disabled={isSaveExiting}
               className="inline-flex items-center gap-2 rounded-lg -ml-1 px-1 py-1 text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-60 disabled:pointer-events-none"
             >
               {isSaveExiting || isSaving ? (
