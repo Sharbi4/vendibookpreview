@@ -824,10 +824,10 @@ const SaleCheckout = () => {
   const moneyLines: MoneyLine[] = [
     { label: listing.title, value: `$${priceSale.toLocaleString()}` },
     ...(currentDeliveryFee > 0
-      ? [{
-          label: fulfillmentSelected === 'vendibook_freight' ? 'Vendibook freight' : 'Seller delivery',
-          value: `$${currentDeliveryFee.toLocaleString()}`,
-        }]
+      ? [{ label: 'Seller delivery', value: `$${currentDeliveryFee.toLocaleString()}` }]
+      : []),
+    ...(buyerFreightCharge > 0
+      ? [{ label: 'Vendibook Freight', value: `$${buyerFreightCharge.toLocaleString()}` }]
       : []),
     ...(taxSummaryLabel ? [{ label: taxSummaryLabel, value: taxSummaryValue, muted: taxAmount === 0 }] : []),
   ];
