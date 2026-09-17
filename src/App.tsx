@@ -395,7 +395,8 @@ const AnimatedRoutes = () => {
           <Route path="/admin/monetization-ops" element={<PageTransition><AdminMonetizationOps /></PageTransition>} />
           <Route path="/admin/billing" element={<PageTransition><AdminBilling /></PageTransition>} />
           <Route path="/services" element={<PageTransition><ServicesHub /></PageTransition>} />
-          <Route path="/buyer" element={<PageTransition><BuyerDashboard /></PageTransition>} />
+          <Route path="/buyer" element={<PreserveQueryRedirect to="/dashboard" />} />
+          <Route path="/buyer/classic" element={<PageTransition><BuyerDashboard /></PageTransition>} />
           <Route path="/buyer/services" element={<PageTransition><BuyerServicesHub /></PageTransition>} />
           <Route path="/buyer/services/review/:listingId" element={<PageTransition><ListingPurchaseReviewIntake /></PageTransition>} />
           <Route path="/host/plans" element={<Navigate to="/pricing" replace />} />
@@ -523,7 +524,8 @@ const AnimatedRoutes = () => {
           <Route path="/kitchen-earnings-calculator" element={<PageTransition><KitchenEarningsCalculator /></PageTransition>} />
           
           {/* Payments & Protection */}
-          <Route path="/payments" element={<PageTransition><Payments /></PageTransition>} />
+          <Route path="/payments" element={<PreserveQueryRedirect to="/dashboard/payments" />} />
+          <Route path="/payments/classic" element={<PageTransition><Payments /></PageTransition>} />
           <Route path="/identity-verification" element={<PageTransition><IdentityVerificationInfo /></PageTransition>} />
           
           
