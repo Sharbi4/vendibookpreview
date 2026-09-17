@@ -84,12 +84,19 @@ export function PlaidLogo({
 }
 
 export function EquinoxFundingLogo({ className }: { className?: string }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) {
+    return (
+      <span className={cn('text-sm font-semibold tracking-tight', className)}>Equinox Funding</span>
+    );
+  }
   return (
     <img
       src={equinoxLogo.url}
       alt="Equinox Funding"
       loading="eager"
       decoding="async"
+      onError={() => setFailed(true)}
       className={cn('h-6 w-auto', className)}
     />
   );
