@@ -1,4 +1,5 @@
 import { Suspense, lazy } from 'react';
+import { Link } from 'react-router-dom';
 import WorkspaceShell from '@/components/workspace/WorkspaceShell';
 import PayPalReadyBadge from '@/components/workspace/PayPalReadyBadge';
 import SellerPayPalConnect from '@/components/account/SellerPayPalConnect';
@@ -47,6 +48,9 @@ export default function WorkspacePayments() {
               Vendibook&apos;s platform fee is handled automatically by the approved PayPal Partner
               flow. You can create and publish listings before connecting.
             </p>
+            <Link to="/dashboard/payments/setup" className="v2-paypal-cta mt-4 inline-flex w-fit">
+              Open payment setup
+            </Link>
           </div>
           <SellerPayPalConnect showWhenDisabled variant="dark" />
         </section>
