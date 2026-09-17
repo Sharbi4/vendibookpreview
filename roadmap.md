@@ -37,6 +37,7 @@
       awaiting go-ahead.
 - [x] Add the marketing tag to the new-listings digest sends so opens/clicks are
       tracked — awaiting decision.
+- [x] Rebuild the public homepage around real Featured, sale, and rental inventory with premium mobile merchandising.
 
 ## V2 unified logged-in workspace — parallel preview
 

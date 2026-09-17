@@ -1,32 +1,21 @@
 import { excludeTestListings } from '@/lib/excludeTestListings';
-import { lazy, Suspense } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, ShieldCheck, Truck, Wallet } from 'lucide-react';
+import { ArrowRight, BadgeCheck, Map, MessageSquare, ShieldCheck, Truck, Wallet, Gauge, Landmark } from 'lucide-react';
 import { filterPubliclyVisible } from '@/lib/listings/publicVisibility';
-import { sortNewFirstThenFeatured } from '@/lib/featured';
+import { isListingFeatured, sortFeaturedFreshFirstThenFair, sortNewFirstThenFeatured } from '@/lib/featured';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import NewsletterPopup from '@/components/newsletter/NewsletterPopup';
 import V2HomeHero from '@/components/home/v2/V2HomeHero';
 import V2ListingRow from '@/components/home/v2/V2ListingRow';
-import HowVendibookWorks from '@/components/home/how-it-works/HowVendibookWorks';
 import { usePageTracking } from '@/hooks/usePageTracking';
-import { Skeleton } from '@/components/ui/skeleton';
 import SEO, { generateOrganizationSchema, generateWebSiteSchema } from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
 import { supabase } from '@/integrations/supabase/client';
 
-const FinancingTopBanner = lazy(() => import('@/components/home/FinancingTopBanner'));
-const ConciergeSection = lazy(() => import('@/components/home/ConciergeSection'));
-const BecomeHostSection = lazy(() => import('@/components/home/BecomeHostSection'));
-const FinalCTA = lazy(() => import('@/components/home/FinalCTA'));
-
-const SectionSkeleton = () => (
-  <div className="py-10">
-    <Skeleton className="h-40 w-full rounded-2xl" />
-  </div>
-);
+import { EquinoxFundingLogo, PayPalWordmark } from '@/components/brand/ProviderLogos';
+import vendibookWordmark from '@/assets/vendibook-wordmark.png';
 
 const ROW_LIMIT = 8;
 
@@ -52,11 +41,21 @@ const fetchListings = async (mode: 'sale' | 'rent', categories?: readonly Listin
   return sortNewFirstThenFeatured(filterPubliclyVisible(data ?? []) as never) as never[];
 };
 
+const fetchFeaturedListings = async () => {
+  const { data, error } = await excludeTestListings(supabase.from('listings').select('*')
+    .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null)
+    .eq('moderation_status', 'clear').eq('featured_enabled', true)
+    .gt('featured_expires_at', new Date().toISOString()))
+    .limit(12);
+  if (error) throw error;
+  return sortFeaturedFreshFirstThenFair(filterPubliclyVisible(data ?? []) as never).filter(isListingFeatured) as never[];
+};
+
 const TRUST_POINTS = [
   {
     icon: Wallet,
     title: 'Secure PayPal checkout',
-    body: 'Buyers pay through PayPal. Sellers are paid after delivery is confirmed.',
+    body: 'Secure payments through PayPal, with transaction records kept in Vendibook.',
   },
   {
     icon: ShieldCheck,
@@ -85,6 +84,9 @@ const Index = () => {
     staleTime: 60000,
   });
 
+  const featuredQuery = useQuery({ queryKey: ['home-v2-featured'], queryFn: fetchFeaturedListings, staleTime: 60000 });
+  const leadListing = featuredQuery.data?.[0] ?? saleQuery.data?.[0] ?? rentQuery.data?.[0] ?? null;
+
   return (
     <div className="min-h-screen flex flex-col v2-home">
       <SEO
@@ -97,7 +99,9 @@ const Index = () => {
 
       <main className="flex-1">
         <div className="v2-home-stack">
-          <V2HomeHero />
+          <V2HomeHero leadListing={leadListing} />
+
+          <V2ListingRow title="Featured on Vendibook" subtitle="Standout trucks and trailers getting extra visibility." listings={featuredQuery.data ?? []} isLoading={featuredQuery.isLoading} viewAllHref="/search" viewAllLabel="Browse marketplace" priority featured />
 
           <V2ListingRow
             title="Food trucks and trailers for sale"
@@ -119,6 +123,7 @@ const Index = () => {
           />
 
           <section className="v2-home-section">
+            <header className="v2-home-section-head"><div><p className="v2-home-eyebrow">Why Vendibook</p><h2>Built for mobile food businesses.</h2></div></header>
             <div className="v2-home-trust">
               {TRUST_POINTS.map((point) => (
                 <article key={point.title}>
@@ -136,8 +141,8 @@ const Index = () => {
                 <p className="v2-home-eyebrow">Sell or rent out your asset</p>
                 <h2>List your truck, trailer, or kitchen on Vendibook.</h2>
                 <p>
-                  Create a listing in minutes, connect your PayPal Business account, and start
-                  accepting payments from verified buyers and renters.
+                  Create a listing in minutes. When you're ready for online payments, connect
+                  PayPal and make your listing transaction-ready.
                 </p>
               </div>
               <div className="v2-home-sell-actions">
@@ -151,16 +156,40 @@ const Index = () => {
               </div>
             </div>
           </section>
+
+          <section className="v2-home-editorial">
+            <div className="v2-home-editorial-intro"><p className="v2-home-eyebrow">A marketplace that knows the category</p><h2>Find the right fit—not just the closest listing.</h2></div>
+            <div className="v2-home-editorial-grid">
+              <article><BadgeCheck /><h3>See serious inventory</h3><p>Real photos, useful specs, price, and location up front.</p></article>
+              <article><Map /><h3>Go beyond your zip code</h3><p>Explore financing, delivery, and freight options where available.</p></article>
+              <article><MessageSquare /><h3>Move with confidence</h3><p>Seller profiles, completed trust signals, messages, offers, and transaction records.</p></article>
+            </div>
+          </section>
+
+          <section className="v2-home-tools">
+            <header className="v2-home-section-head"><div><p className="v2-home-eyebrow">Tools to help you make the move</p><h2>From valuation to delivery.</h2></div></header>
+            <div className="v2-home-tools-grid">
+              <Link to="/tools/pricepilot"><Gauge /><span><strong>Price your equipment</strong><small>Use PricePilot for a market-backed pricing range.</small></span><ArrowRight /></Link>
+              <Link to="/financing"><Landmark /><span><strong>Explore financing</strong><small>See third-party equipment financing options.</small></span><ArrowRight /></Link>
+              <Link to="/vendibook-freight"><Truck /><span><strong>Plan shipping</strong><small>Request help moving eligible equipment.</small></span><ArrowRight /></Link>
+            </div>
+          </section>
+
+          <section className="v2-home-partners" aria-label="Vendibook services and providers">
+            <div><p className="v2-home-eyebrow">Connected tools and providers</p><h2>Support for the whole transaction.</h2></div>
+            <div className="v2-home-partner-logos">
+              <span><PayPalWordmark surface="light" className="text-xl" /><small>Secure checkout</small></span>
+              <span><b className="v2-home-plaid-mark">PLAID</b><small>Identity signals</small></span>
+              <span><EquinoxFundingLogo className="h-8" /><small>Financing options</small></span>
+              <span><img src={vendibookWordmark} alt="Vendibook" /><small>Marketplace records</small></span>
+            </div>
+          </section>
+
+          <section className="v2-home-final">
+            <div><p className="v2-home-eyebrow">Ready when you are</p><h2>Find your next mobile food business asset.</h2></div>
+            <div><Link to="/search" className="v2-home-btn">Browse listings<ArrowRight /></Link><Link to="/list" className="v2-home-link">Create a listing</Link></div>
+          </section>
         </div>
-
-        <HowVendibookWorks />
-
-        <Suspense fallback={<SectionSkeleton />}>
-          <FinancingTopBanner />
-          <ConciergeSection />
-          <BecomeHostSection />
-          <FinalCTA />
-        </Suspense>
       </main>
 
       <Footer />
