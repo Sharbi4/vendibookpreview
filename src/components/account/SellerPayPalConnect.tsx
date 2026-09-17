@@ -124,14 +124,8 @@ export default function SellerPayPalConnect({
         handledReturn.current = true;
         const returnedError = params.get('error_description') || params.get('error');
         const wasCancelled = params.get('cancelled') === '1' || params.get('cancel') === 'true';
-        if (returnedError) {
-          setFlowMessage({ tone: 'error', text: 'PayPal could not finish connecting your account. Please try again.' });
-        } else if (wasCancelled) {
-          setFlowMessage({ tone: 'info', text: 'PayPal setup was not completed. You can continue whenever you are ready.' });
-        } else {
-          setFlowMessage({ tone: 'info', text: 'Welcome back. We are checking your account with PayPal now.' });
-          await refreshStatus();
-        }
+        // Clean the callback marker before awaiting the network check so a
+        // refresh cannot replay the return flow while PayPal is responding.
         params.delete('paypal_return');
         params.delete('error_description');
         params.delete('error');
@@ -143,6 +137,14 @@ export default function SellerPayPalConnect({
           '',
           `${window.location.pathname}${qs ? `?${qs}` : ''}${window.location.hash}`,
         );
+        if (returnedError) {
+          setFlowMessage({ tone: 'error', text: 'PayPal could not finish connecting your account. Please try again.' });
+        } else if (wasCancelled) {
+          setFlowMessage({ tone: 'info', text: 'PayPal setup was not completed. You can continue whenever you are ready.' });
+        } else {
+          setFlowMessage({ tone: 'info', text: 'Welcome back. We are checking your account with PayPal now.' });
+          await refreshStatus();
+        }
       }
     })();
     return () => {
