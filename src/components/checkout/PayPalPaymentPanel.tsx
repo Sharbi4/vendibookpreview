@@ -41,6 +41,11 @@ interface PayPalPaymentPanelProps {
   }) => void;
   /** Total in USD — used for Pay Later messaging. */
   totalUsd?: number;
+  /**
+   * 'modal' (default) keeps the historic dark-glass overlay. 'embedded' renders
+   * the exact same server-verified flow inline inside a checkout page section.
+   */
+  variant?: 'modal' | 'embedded';
 }
 
 type PanelState =
@@ -69,7 +74,9 @@ const PayPalPaymentPanel = ({
   returnUrl,
   onSuccess,
   totalUsd,
+  variant = 'modal',
 }: PayPalPaymentPanelProps) => {
+  const embedded = variant === 'embedded';
   const containerRef = useRef<HTMLDivElement>(null);
   const buttonsRef = useRef<HTMLDivElement>(null);
   const messagesRef = useRef<HTMLDivElement>(null);
