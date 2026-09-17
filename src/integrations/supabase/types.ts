@@ -8118,6 +8118,126 @@ export type Database = {
         }
         Relationships: []
       }
+      seller_video_availability: {
+        Row: {
+          active: boolean
+          created_at: string
+          end_local_time: string
+          id: string
+          seller_id: string
+          start_local_time: string
+          updated_at: string
+          weekday: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          end_local_time: string
+          id?: string
+          seller_id: string
+          start_local_time: string
+          updated_at?: string
+          weekday: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          end_local_time?: string
+          id?: string
+          seller_id?: string
+          start_local_time?: string
+          updated_at?: string
+          weekday?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seller_video_availability_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seller_video_blackouts: {
+        Row: {
+          created_at: string
+          ends_at: string
+          id: string
+          reason: string | null
+          seller_id: string
+          starts_at: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          ends_at: string
+          id?: string
+          reason?: string | null
+          seller_id: string
+          starts_at: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          ends_at?: string
+          id?: string
+          reason?: string | null
+          seller_id?: string
+          starts_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seller_video_blackouts_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seller_video_settings: {
+        Row: {
+          buffer_minutes: number
+          created_at: string
+          default_duration_minutes: number
+          enabled: boolean
+          minimum_notice_minutes: number
+          timezone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          buffer_minutes?: number
+          created_at?: string
+          default_duration_minutes?: number
+          enabled?: boolean
+          minimum_notice_minutes?: number
+          timezone?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          buffer_minutes?: number
+          created_at?: string
+          default_duration_minutes?: number
+          enabled?: boolean
+          minimum_notice_minutes?: number
+          timezone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seller_video_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_partners: {
         Row: {
           admin_notes: string | null
@@ -9506,6 +9626,182 @@ export type Database = {
         }
         Relationships: []
       }
+      video_walkthrough_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json
+          walkthrough_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json
+          walkthrough_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json
+          walkthrough_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_walkthrough_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_walkthrough_events_walkthrough_id_fkey"
+            columns: ["walkthrough_id"]
+            isOneToOne: false
+            referencedRelation: "video_walkthroughs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_walkthrough_provider_rooms: {
+        Row: {
+          created_at: string
+          disabled_at: string | null
+          expires_at: string
+          provider: string
+          room_name: string
+          room_url: string
+          updated_at: string
+          walkthrough_id: string
+        }
+        Insert: {
+          created_at?: string
+          disabled_at?: string | null
+          expires_at: string
+          provider?: string
+          room_name: string
+          room_url: string
+          updated_at?: string
+          walkthrough_id: string
+        }
+        Update: {
+          created_at?: string
+          disabled_at?: string | null
+          expires_at?: string
+          provider?: string
+          room_name?: string
+          room_url?: string
+          updated_at?: string
+          walkthrough_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_walkthrough_provider_rooms_walkthrough_id_fkey"
+            columns: ["walkthrough_id"]
+            isOneToOne: true
+            referencedRelation: "video_walkthroughs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_walkthroughs: {
+        Row: {
+          buyer_id: string
+          buyer_note: string | null
+          cancelled_at: string | null
+          completed_at: string | null
+          conversation_id: string | null
+          created_at: string
+          ends_at: string
+          id: string
+          listing_id: string
+          provider: string
+          requested_topics: string[]
+          seller_id: string
+          starts_at: string
+          status: string
+          timezone_snapshot: string
+          updated_at: string
+        }
+        Insert: {
+          buyer_id: string
+          buyer_note?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          ends_at: string
+          id?: string
+          listing_id: string
+          provider?: string
+          requested_topics?: string[]
+          seller_id: string
+          starts_at: string
+          status?: string
+          timezone_snapshot: string
+          updated_at?: string
+        }
+        Update: {
+          buyer_id?: string
+          buyer_note?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          ends_at?: string
+          id?: string
+          listing_id?: string
+          provider?: string
+          requested_topics?: string[]
+          seller_id?: string
+          starts_at?: string
+          status?: string
+          timezone_snapshot?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_walkthroughs_buyer_id_fkey"
+            columns: ["buyer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_walkthroughs_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_walkthroughs_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_walkthroughs_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_walkthroughs_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       voice_agent_leads: {
         Row: {
           budget: string | null
@@ -10260,6 +10556,33 @@ export type Database = {
         Args: { p_end_date: string; p_hourly_slots: Json }
         Returns: string
       }
+      cancel_video_walkthrough: {
+        Args: { _walkthrough_id: string }
+        Returns: {
+          buyer_id: string
+          buyer_note: string | null
+          cancelled_at: string | null
+          completed_at: string | null
+          conversation_id: string | null
+          created_at: string
+          ends_at: string
+          id: string
+          listing_id: string
+          provider: string
+          requested_topics: string[]
+          seller_id: string
+          starts_at: string
+          status: string
+          timezone_snapshot: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "video_walkthroughs"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       check_booking_availability: {
         Args: {
           p_end_date: string
@@ -10279,6 +10602,39 @@ export type Database = {
       count_purchase_referrals_this_month: {
         Args: { p_referrer_id: string }
         Returns: number
+      }
+      create_video_walkthrough: {
+        Args: {
+          _buyer_note?: string
+          _conversation_id?: string
+          _listing_id: string
+          _requested_topics?: string[]
+          _starts_at: string
+        }
+        Returns: {
+          buyer_id: string
+          buyer_note: string | null
+          cancelled_at: string | null
+          completed_at: string | null
+          conversation_id: string | null
+          created_at: string
+          ends_at: string
+          id: string
+          listing_id: string
+          provider: string
+          requested_topics: string[]
+          seller_id: string
+          starts_at: string
+          status: string
+          timezone_snapshot: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "video_walkthroughs"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       current_legal_document: {
         Args: { _document_type: string }
@@ -10669,6 +11025,33 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "saved_permit_roadmaps"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      reschedule_video_walkthrough: {
+        Args: { _starts_at: string; _walkthrough_id: string }
+        Returns: {
+          buyer_id: string
+          buyer_note: string | null
+          cancelled_at: string | null
+          completed_at: string | null
+          conversation_id: string | null
+          created_at: string
+          ends_at: string
+          id: string
+          listing_id: string
+          provider: string
+          requested_topics: string[]
+          seller_id: string
+          starts_at: string
+          status: string
+          timezone_snapshot: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "video_walkthroughs"
           isOneToOne: true
           isSetofReturn: false
         }
