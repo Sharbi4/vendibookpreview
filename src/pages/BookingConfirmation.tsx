@@ -34,6 +34,7 @@ import SEO from '@/components/SEO';
 import { supabase } from '@/integrations/supabase/client';
 import { AddToCalendarButton } from '@/components/booking/AddToCalendarButton';
 import { DocumentUploadSection } from '@/components/documents/DocumentUploadSection';
+import { useListingRequiredDocuments } from '@/hooks/useRequiredDocuments';
 
 interface BookingRow {
   id: string;
