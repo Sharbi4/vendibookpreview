@@ -42,6 +42,7 @@ export function useMyPayPalConnection() {
   const [connection, setConnection] = useState<MyPayPalConnection | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastRefreshError, setLastRefreshError] = useState<string | null>(null);
   const autoChecked = useRef(false);
 
   const load = useCallback(async () => {
@@ -67,13 +68,19 @@ export function useMyPayPalConnection() {
   const refreshFromPayPal = useCallback(async (): Promise<MyPayPalConnection | null> => {
     if (!user) return null;
     setIsRefreshing(true);
+    setLastRefreshError(null);
     try {
-      await supabase.functions.invoke('paypal-seller-onboarding', {
+      const { error } = await supabase.functions.invoke('paypal-seller-onboarding', {
         body: { action: 'refresh_status' },
       });
-    } catch {
-      // A status lookup failure must never break the dashboard — fall back to
-      // whatever we already have stored.
+      if (error) throw error;
+    } catch (error) {
+      setLastRefreshError(
+        error instanceof Error
+          ? error.message
+          : "We couldn't verify your PayPal status. Please try again.",
+      );
+      return null;
     } finally {
       setIsRefreshing(false);
     }
@@ -117,6 +124,7 @@ export function useMyPayPalConnection() {
     isReady,
     isLoading,
     isRefreshing,
+    lastRefreshError,
     reload: load,
     refreshFromPayPal,
     lastCheckedAt: connection?.last_status_check_at ?? null,

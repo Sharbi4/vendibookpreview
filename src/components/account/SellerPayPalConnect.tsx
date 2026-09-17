@@ -12,11 +12,12 @@ import {
   ExternalLink,
   RefreshCw,
   Unlink,
+  XCircle,
 } from 'lucide-react';
 
 type Connection = {
   id: string;
-  onboarding_status: 'link_sent' | 'onboarding' | 'ready' | 'action_required' | 'disconnected';
+  onboarding_status: 'link_sent' | 'onboarding' | 'ready' | 'action_required' | 'disconnected' | 'revoked';
   action_reasons: string[] | null;
   merchant_id: string | null;
   paypal_email: string | null;
@@ -45,6 +46,10 @@ export default function SellerPayPalConnect({
   const [enabled, setEnabled] = useState<boolean | null>(null);
   const [connection, setConnection] = useState<Connection | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const [capabilityError, setCapabilityError] = useState<string | null>(null);
+  const [flowMessage, setFlowMessage] = useState<
+    { tone: 'success' | 'error' | 'info'; text: string } | null
+  >(null);
   const handledReturn = useRef(false);
 
   const loadConnection = useCallback(async () => {
@@ -61,6 +66,7 @@ export default function SellerPayPalConnect({
 
   const refreshStatus = useCallback(async () => {
     setBusy('refresh');
+    setFlowMessage(null);
     try {
       const { data, error } = await supabase.functions.invoke('paypal-seller-onboarding', {
         body: { action: 'refresh_status' },
@@ -68,10 +74,18 @@ export default function SellerPayPalConnect({
       if (error) throw new Error(error.message);
       await loadConnection();
       if (data?.status === 'ready') {
+        setFlowMessage({ tone: 'success', text: 'PayPal confirmed your account is ready to receive payments.' });
         toast.success('Your PayPal account is connected and ready to receive payments.');
+      } else {
+        setFlowMessage({
+          tone: 'info',
+          text: 'Your PayPal connection is active, but one or more requirements still need attention.',
+        });
       }
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : "Couldn't check your PayPal status. Try again.");
+      const message = e instanceof Error ? e.message : "Couldn't check your PayPal status. Try again.";
+      setFlowMessage({ tone: 'error', text: message });
+      toast.error(message);
     } finally {
       setBusy(null);
     }
@@ -81,17 +95,24 @@ export default function SellerPayPalConnect({
     let cancelled = false;
     (async () => {
       let caps: { enabled?: boolean } | null = null;
-      try {
-        const res = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/paypal-seller-onboarding`,
-        );
-        caps = await res.json().catch(() => null);
-      } catch {
-        if (!cancelled) setEnabled(false);
-        return;
+      for (let attempt = 0; attempt < 2 && !caps; attempt += 1) {
+        try {
+          const res = await fetch(
+            `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/paypal-seller-onboarding`,
+          );
+          if (res.ok) caps = await res.json().catch(() => null);
+        } catch {
+          // Retry once before presenting a recoverable loading error.
+        }
       }
       if (cancelled) return;
+      if (!caps) {
+        setCapabilityError("We couldn't load PayPal setup. Check your connection and try again.");
+        setEnabled(null);
+        return;
+      }
       const on = caps?.enabled === true;
+      setCapabilityError(null);
       setEnabled(on);
       if (!on) return;
 
@@ -101,14 +122,29 @@ export default function SellerPayPalConnect({
       const params = new URLSearchParams(window.location.search);
       if (params.get('paypal_return') === '1' && !handledReturn.current) {
         handledReturn.current = true;
-        await refreshStatus();
+        const returnedError = params.get('error_description') || params.get('error');
+        const wasCancelled = params.get('cancelled') === '1' || params.get('cancel') === 'true';
+        // Clean the callback marker before awaiting the network check so a
+        // refresh cannot replay the return flow while PayPal is responding.
         params.delete('paypal_return');
+        params.delete('error_description');
+        params.delete('error');
+        params.delete('cancelled');
+        params.delete('cancel');
         const qs = params.toString();
         window.history.replaceState(
           {},
           '',
           `${window.location.pathname}${qs ? `?${qs}` : ''}${window.location.hash}`,
         );
+        if (returnedError) {
+          setFlowMessage({ tone: 'error', text: 'PayPal could not finish connecting your account. Please try again.' });
+        } else if (wasCancelled) {
+          setFlowMessage({ tone: 'info', text: 'PayPal setup was not completed. You can continue whenever you are ready.' });
+        } else {
+          setFlowMessage({ tone: 'info', text: 'Welcome back. We are checking your account with PayPal now.' });
+          await refreshStatus();
+        }
       }
     })();
     return () => {
@@ -119,6 +155,7 @@ export default function SellerPayPalConnect({
 
   const connect = async () => {
     setBusy('connect');
+    setFlowMessage(null);
     try {
       const { data, error } = await supabase.functions.invoke('paypal-seller-onboarding', {
         body: { action: 'create_referral' },
@@ -126,6 +163,8 @@ export default function SellerPayPalConnect({
       if (error) throw new Error(error.message);
       if (data?.already_connected) {
         await loadConnection();
+        setFlowMessage({ tone: 'info', text: 'Your PayPal connection already exists. Check its status below.' });
+        setBusy(null);
         return;
       }
       if (data?.onboarding_url) {
@@ -135,7 +174,9 @@ export default function SellerPayPalConnect({
         throw new Error("PayPal didn't return a signup link. Please try again.");
       }
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Could not start PayPal connection.');
+      const message = e instanceof Error ? e.message : 'Could not start PayPal connection.';
+      setFlowMessage({ tone: 'error', text: message });
+      toast.error(message);
       setBusy(null);
     }
   };
@@ -153,15 +194,18 @@ export default function SellerPayPalConnect({
       });
       if (error) throw new Error(error.message);
       await loadConnection();
+      setFlowMessage({ tone: 'success', text: 'Your PayPal account is disconnected. You can reconnect at any time.' });
       toast.success('Your PayPal account has been disconnected.');
     } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Could not disconnect PayPal.');
+      const message = e instanceof Error ? e.message : 'Could not disconnect PayPal.';
+      setFlowMessage({ tone: 'error', text: message });
+      toast.error(message);
     } finally {
       setBusy(null);
     }
   };
 
-  if (!user || enabled === null || (enabled === false && !showWhenDisabled)) return null;
+  if (!user || (enabled === null && !capabilityError) || (enabled === false && !showWhenDisabled)) return null;
 
   const reasons = connection?.action_reasons ?? [];
   const emailUnconfirmed = reasons.includes('primary_email_unconfirmed');
@@ -169,6 +213,7 @@ export default function SellerPayPalConnect({
   const needsPermissions = reasons.includes('oauth_not_active') || reasons.includes('vetting_pending');
   const status = connection?.onboarding_status ?? null;
   const isReady = status === 'ready';
+  const canReconnect = status === 'disconnected' || status === 'revoked';
 
   /** PayPal's exact remediation copy — meaning must not change. */
   const emailWarning = (
@@ -203,8 +248,10 @@ export default function SellerPayPalConnect({
         ? 'Connecting — not finished'
         : status === 'onboarding'
           ? 'Checking status'
-          : status === 'disconnected'
+      : status === 'disconnected'
             ? 'Disconnected'
+            : status === 'revoked'
+              ? 'Access revoked'
             : 'Action required';
 
   // Real, backend-derived readiness. Nothing is marked complete on guesswork.
@@ -213,7 +260,7 @@ export default function SellerPayPalConnect({
   const checklist: Array<{ label: string; state: string }> = [
     {
       label: 'PayPal Business account connected',
-      state: step(Boolean(connection) && status !== 'disconnected', status === 'disconnected'),
+      state: step(Boolean(connection) && !canReconnect, canReconnect),
     },
     { label: 'Primary email confirmed', state: step(isReady, emailUnconfirmed) },
     { label: 'Payments receivable', state: step(isReady, notReceivable) },
@@ -224,6 +271,19 @@ export default function SellerPayPalConnect({
   if (variant === 'dark') {
     return (
       <div className="v2-paypal-panel space-y-4">
+        {capabilityError && (
+          <div className="v2-paypal-message is-error" role="alert">
+            <XCircle />
+            <span>{capabilityError}</span>
+            <button type="button" onClick={() => window.location.reload()}>Retry</button>
+          </div>
+        )}
+        {flowMessage && (
+          <div className={`v2-paypal-message is-${flowMessage.tone}`} role={flowMessage.tone === 'error' ? 'alert' : 'status'}>
+            {flowMessage.tone === 'success' ? <CheckCircle2 /> : flowMessage.tone === 'error' ? <XCircle /> : <Circle />}
+            <span>{flowMessage.text}</span>
+          </div>
+        )}
         <div className="flex flex-wrap items-center gap-3">
           <span className={`v2-status ${isReady ? 'is-ok' : connection ? 'is-warn' : ''}`}>
             {isReady ? <CheckCircle2 /> : connection ? <AlertTriangle /> : <CreditCard />}
@@ -275,9 +335,14 @@ export default function SellerPayPalConnect({
             reconnect whenever you&apos;re ready to accept online payments again.
           </p>
         )}
+        {status === 'revoked' && (
+          <p className="v2-paypal-warn">
+            PayPal access was revoked. Reconnect your Business account to complete payment readiness.
+          </p>
+        )}
 
         <div className="flex flex-wrap items-center gap-2">
-          {(!connection || status === 'disconnected') && (
+          {(!connection || canReconnect) && (
             <button
               type="button"
               className="v2-paypal-cta"
@@ -286,7 +351,7 @@ export default function SellerPayPalConnect({
             >
               {busy === 'connect'
                 ? 'Opening PayPal…'
-                : status === 'disconnected'
+                : canReconnect
                   ? 'Reconnect PayPal'
                   : 'Connect PayPal'}
             </button>

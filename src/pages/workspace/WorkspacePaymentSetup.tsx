@@ -34,7 +34,7 @@ const marker = (state: StepState) =>
  */
 export default function WorkspacePaymentSetup() {
   const { user } = useAuth();
-  const { connection, status, isReady, isLoading, isRefreshing, refreshFromPayPal, lastCheckedAt } =
+  const { connection, status, isReady, isLoading, isRefreshing, refreshFromPayPal, lastCheckedAt, lastRefreshError } =
     useMyPayPalConnection();
   const readiness = useSellerPaymentReadiness(user?.id ?? null);
 
@@ -265,6 +265,11 @@ export default function WorkspacePaymentSetup() {
                   Your PayPal account can receive payments
                 </li>
               </ul>
+            )}
+            {lastRefreshError && (
+              <p className="v2-inline-error" role="alert">
+                We couldn&apos;t verify your PayPal status. Your saved status is still shown above; try again when ready.
+              </p>
             )}
 
             {emailUnconfirmed && (

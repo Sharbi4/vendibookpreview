@@ -15,7 +15,7 @@ export function PayPalReadyBadge({
   tone?: 'light' | 'dark';
   showDetails?: boolean;
 }) {
-  const { connection, status, isReady, isLoading, isRefreshing } = useMyPayPalConnection();
+  const { connection, status, isReady, isLoading, isRefreshing, lastRefreshError } = useMyPayPalConnection();
 
   if (isLoading || (isRefreshing && !connection)) {
     return (
@@ -38,10 +38,22 @@ export function PayPalReadyBadge({
     );
   }
 
+  if (lastRefreshError) {
+    return (
+      <Link
+        to="/dashboard/payments/setup"
+        className={`v2-paypal-badge is-warn ${tone === 'dark' ? 'on-dark' : ''}`}
+      >
+        <AlertTriangle className="h-3.5 w-3.5" />
+        PayPal check failed — retry
+      </Link>
+    );
+  }
+
   if (status === 'action_required' || status === 'revoked') {
     return (
       <Link
-        to="/dashboard/payments"
+        to="/dashboard/payments/setup"
         className={`v2-paypal-badge is-warn ${tone === 'dark' ? 'on-dark' : ''}`}
       >
         <AlertTriangle className="h-3.5 w-3.5" />
@@ -53,7 +65,7 @@ export function PayPalReadyBadge({
   if (status === 'link_sent' || status === 'onboarding') {
     return (
       <Link
-        to="/dashboard/payments"
+        to="/dashboard/payments/setup"
         className={`v2-paypal-badge is-pending ${tone === 'dark' ? 'on-dark' : ''}`}
       >
         <Loader2 className="h-3.5 w-3.5" />
@@ -64,7 +76,7 @@ export function PayPalReadyBadge({
 
   return (
     <Link
-      to="/dashboard/payments"
+      to="/dashboard/payments/setup"
       className={`v2-paypal-badge is-off ${tone === 'dark' ? 'on-dark' : ''}`}
     >
       <Link2 className="h-3.5 w-3.5" />
