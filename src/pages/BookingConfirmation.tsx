@@ -267,7 +267,7 @@ const BookingConfirmation = ({
           </p>
         </div>
       </main>
-      <Footer />
+      {embedded ? null : <Footer />}
     </div>
   );
 };
