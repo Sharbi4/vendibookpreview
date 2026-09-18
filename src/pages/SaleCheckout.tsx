@@ -902,7 +902,10 @@ const SaleCheckout = () => {
   const railExtras = (
     <div className="v2-rail-extras">
       <div className="v2-rail-paypal">
-        <PayPalWordmark surface="light" className="h-4 w-auto shrink-0 whitespace-nowrap" />
+        <span className="v2-rail-paypal-mark">
+          <span style={{ color: '#009cde' }}>Pay</span>
+          <span style={{ color: '#012169' }}>Pal</span>
+        </span>
         {currentStep === 5 ? (
           <p><strong>You're ready to pay</strong></p>
         ) : (
