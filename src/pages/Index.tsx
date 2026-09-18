@@ -22,6 +22,12 @@ import paypalBannerAsset from '@/assets/paypal-banner.png.asset.json';
 
 const ROW_LIMIT = 8;
 
+const SELLER_STEPS = [
+  { title: 'Create your account', body: 'Sign up free in under a minute — no listing fees to get started.' },
+  { title: 'Add your food truck', body: 'Photos, specs, price and location. Our guided wizard walks you through it.' },
+  { title: 'Publish and get paid', body: 'Go live to buyers nationwide, then connect PayPal when you want online checkout.' },
+];
+
 type ListingCategory = 'food_truck' | 'food_trailer' | 'ghost_kitchen' | 'vendor_lot' | 'vendor_space';
 
 const fetchListings = async (mode: 'sale' | 'rent', categories?: readonly ListingCategory[]) => {
