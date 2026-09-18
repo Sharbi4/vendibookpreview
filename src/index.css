@@ -2789,7 +2789,7 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
 .v2-home-hero-slide-dots button.is-active { background: hsl(0 0% 100% / .38); }
 .v2-home-hero-slide-progress {
   position: absolute; inset: 0; width: 0; border-radius: inherit;
-  background: hsl(var(--v2h-cta, 24 95% 53%)); animation: v2-hero-progress linear forwards;
+  background: hsl(14 100% 57%); animation: v2-hero-progress linear forwards;
 }
 @keyframes v2-hero-progress { from { width: 0; } to { width: 100%; } }
 @media (max-width: 720px) {
