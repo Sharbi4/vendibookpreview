@@ -59,12 +59,23 @@ const VideoWalkthroughTerms: React.FC = () => (
         </p>
       </Section>
 
-      <Section title="Recording">
+      <Section title="Monitoring and recording">
         <p>
-          Vendibook does not record or transcribe walkthroughs. If recording is ever offered, it will
-          require a separate, clearly disclosed opt-in before any recording begins. Participants may
-          not record, screen-capture, or redistribute a walkthrough without the express consent of
-          every participant and any applicable legal permission.
+          Walkthroughs may be monitored or recorded by Vendibook for safety, quality, fraud
+          prevention, and dispute resolution. You must consent to this before you can enter a
+          meeting room; if you do not consent, do not join, and arrange the walkthrough another way.
+          Not every walkthrough is monitored or recorded, and Vendibook does not promise that a
+          recording of any particular walkthrough exists or will be available to you.
+        </p>
+        <p>
+          Where a walkthrough is recorded, the recording may be reviewed by authorized Vendibook
+          personnel, used to investigate a report or a transaction dispute, and disclosed where
+          required by law or legal process. Recordings are retained no longer than needed for those
+          purposes.
+        </p>
+        <p>
+          Participants may not record, screen-capture, or redistribute a walkthrough themselves
+          without the express consent of every participant and any applicable legal permission.
         </p>
       </Section>
 
