@@ -22,11 +22,11 @@ class DailyProvider implements VideoProvider {
   }
   async createPrivateRoom(walkthroughId: string, expiresAt: Date): Promise<VideoRoom> {
     const name = `vw-${walkthroughId}`;
-    await this.request('/rooms', { method:'POST', body:JSON.stringify({ name, privacy:'private', properties:{ exp:Math.floor(expiresAt.getTime()/1000), enable_recording:'off', enable_transcription:false, enable_prejoin_ui:false } }) });
+    await this.request('/rooms', { method:'POST', body:JSON.stringify({ name, privacy:'private', properties:{ exp:Math.floor(expiresAt.getTime()/1000), enable_prejoin_ui:false } }) });
     return { roomName:name, expiresAt:expiresAt.toISOString() };
   }
   async createMeetingToken(roomName: string, user: { id:string; name:string }, expiresAt: Date, isOwner:boolean): Promise<VideoJoin> {
-    const data = await this.request('/meeting-tokens', { method:'POST', body:JSON.stringify({ properties:{ room_name:roomName, user_id:user.id, user_name:user.name.slice(0,80), is_owner:isOwner, exp:Math.floor(expiresAt.getTime()/1000), enable_recording:'off' } }) });
+    const data = await this.request('/meeting-tokens', { method:'POST', body:JSON.stringify({ properties:{ room_name:roomName, user_id:user.id, user_name:user.name.slice(0,80), is_owner:isOwner, exp:Math.floor(expiresAt.getTime()/1000) } }) });
     return { roomUrl:`https://${this.domain}/${roomName}`, token:data.token, expiresAt:expiresAt.toISOString() };
   }
   async deleteRoom(roomName:string) { await this.request(`/rooms/${encodeURIComponent(roomName)}`, { method:'DELETE' }); }
