@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
+import { recordLegalAcceptance } from '@/lib/legal/recordAcceptance';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import {
@@ -47,6 +48,7 @@ export default function SellerPayPalConnect({
   const [connection, setConnection] = useState<Connection | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [capabilityError, setCapabilityError] = useState<string | null>(null);
+  const [sellerTermsAccepted, setSellerTermsAccepted] = useState(false);
   const [flowMessage, setFlowMessage] = useState<
     { tone: 'success' | 'error' | 'info'; text: string } | null
   >(null);
@@ -154,9 +156,25 @@ export default function SellerPayPalConnect({
   }, [user]);
 
   const connect = async () => {
+    if (!sellerTermsAccepted) {
+      setFlowMessage({ tone: 'error', text: 'Please accept the Seller Payment Terms and electronic records consent first.' });
+      return;
+    }
     setBusy('connect');
     setFlowMessage(null);
     try {
+      // Record the versioned acceptance before we ask PayPal for a referral
+      // link. `paypal-seller-onboarding` independently verifies it server-side.
+      if (user?.id) {
+        const { error: acceptError } = await recordLegalAcceptance({
+          userId: user.id,
+          slugs: ['seller-payment-terms', 'esign'],
+          surface: 'paypal_onboarding',
+          relatedEntityType: 'account',
+          relatedEntityId: user.id,
+        });
+        if (acceptError) throw new Error("We couldn't record your acceptance. Please try again.");
+      }
       const { data, error } = await supabase.functions.invoke('paypal-seller-onboarding', {
         body: { action: 'create_referral' },
       });
@@ -343,11 +361,26 @@ export default function SellerPayPalConnect({
 
         <div className="flex flex-wrap items-center gap-2">
           {(!connection || canReconnect) && (
+            <>
+            <label className="mb-3 flex items-start gap-2 text-left text-xs text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={sellerTermsAccepted}
+                onChange={(e) => setSellerTermsAccepted(e.target.checked)}
+                className="mt-0.5"
+              />
+              <span>
+                I accept the{' '}
+                <a href="/legal/seller-payment-terms" target="_blank" rel="noreferrer" className="underline">Seller Payment Terms</a>{' '}
+                and consent to{' '}
+                <a href="/legal/esign" target="_blank" rel="noreferrer" className="underline">electronic records and signatures</a>.
+              </span>
+            </label>
             <button
               type="button"
               className="v2-paypal-cta"
               onClick={connect}
-              disabled={busy === 'connect' || enabled === false}
+              disabled={busy === 'connect' || enabled === false || !sellerTermsAccepted}
             >
               {busy === 'connect'
                 ? 'Opening PayPal…'
@@ -436,11 +469,25 @@ export default function SellerPayPalConnect({
               used to sell on Vendibook. You'll be taken to PayPal to sign in to your Business
               account (or create/upgrade to one) and approve the connection.
             </p>
+                        <label className="mb-3 flex items-start gap-2 text-left text-xs text-muted-foreground">
+              <input
+                type="checkbox"
+                checked={sellerTermsAccepted}
+                onChange={(e) => setSellerTermsAccepted(e.target.checked)}
+                className="mt-0.5"
+              />
+              <span>
+                I accept the{' '}
+                <a href="/legal/seller-payment-terms" target="_blank" rel="noreferrer" className="underline">Seller Payment Terms</a>{' '}
+                and consent to{' '}
+                <a href="/legal/esign" target="_blank" rel="noreferrer" className="underline">electronic records and signatures</a>.
+              </span>
+            </label>
             <Button
               size="sm"
               className="mt-3"
               onClick={connect}
-              disabled={busy === 'connect' || enabled === false}
+              disabled={busy === 'connect' || enabled === false || !sellerTermsAccepted}
             >
               {busy === 'connect' ? 'Opening PayPal…' : 'Connect PayPal'}
             </Button>
