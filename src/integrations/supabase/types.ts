@@ -1391,6 +1391,240 @@ export type Database = {
         }
         Relationships: []
       }
+      dispute_case_events: {
+        Row: {
+          actor_id: string | null
+          actor_role: string | null
+          case_id: string
+          created_at: string
+          event_type: string
+          from_state: string | null
+          id: string
+          metadata: Json
+          reason: string | null
+          seller_payable_id: string | null
+          to_state: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_role?: string | null
+          case_id: string
+          created_at?: string
+          event_type: string
+          from_state?: string | null
+          id?: string
+          metadata?: Json
+          reason?: string | null
+          seller_payable_id?: string | null
+          to_state?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          actor_role?: string | null
+          case_id?: string
+          created_at?: string
+          event_type?: string
+          from_state?: string | null
+          id?: string
+          metadata?: Json
+          reason?: string | null
+          seller_payable_id?: string | null
+          to_state?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dispute_case_events_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "dispute_cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dispute_case_events_seller_payable_id_fkey"
+            columns: ["seller_payable_id"]
+            isOneToOne: false
+            referencedRelation: "seller_payables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dispute_case_messages: {
+        Row: {
+          attachments: Json
+          author_id: string | null
+          author_role: string
+          body: string
+          case_id: string
+          created_at: string
+          id: string
+          visible_to_parties: boolean
+        }
+        Insert: {
+          attachments?: Json
+          author_id?: string | null
+          author_role: string
+          body: string
+          case_id: string
+          created_at?: string
+          id?: string
+          visible_to_parties?: boolean
+        }
+        Update: {
+          attachments?: Json
+          author_id?: string | null
+          author_role?: string
+          body?: string
+          case_id?: string
+          created_at?: string
+          id?: string
+          visible_to_parties?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dispute_case_messages_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "dispute_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dispute_cases: {
+        Row: {
+          amount_held_cents: number
+          booking_request_id: string | null
+          buyer_id: string
+          case_number: string
+          created_at: string
+          currency: string
+          description: string
+          disbursement_frozen: boolean
+          evidence_links: Json
+          id: string
+          issue_type: string
+          last_activity_at: string
+          listing_id: string | null
+          listing_snapshot: Json | null
+          opened_by: string
+          opened_by_role: string
+          outcome: string | null
+          payment_record_id: string | null
+          resolution_reason: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          response_deadline_at: string | null
+          sale_transaction_id: string | null
+          seller_id: string
+          seller_payable_id: string | null
+          sla_due_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount_held_cents?: number
+          booking_request_id?: string | null
+          buyer_id: string
+          case_number: string
+          created_at?: string
+          currency?: string
+          description: string
+          disbursement_frozen?: boolean
+          evidence_links?: Json
+          id?: string
+          issue_type: string
+          last_activity_at?: string
+          listing_id?: string | null
+          listing_snapshot?: Json | null
+          opened_by: string
+          opened_by_role: string
+          outcome?: string | null
+          payment_record_id?: string | null
+          resolution_reason?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          response_deadline_at?: string | null
+          sale_transaction_id?: string | null
+          seller_id: string
+          seller_payable_id?: string | null
+          sla_due_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount_held_cents?: number
+          booking_request_id?: string | null
+          buyer_id?: string
+          case_number?: string
+          created_at?: string
+          currency?: string
+          description?: string
+          disbursement_frozen?: boolean
+          evidence_links?: Json
+          id?: string
+          issue_type?: string
+          last_activity_at?: string
+          listing_id?: string | null
+          listing_snapshot?: Json | null
+          opened_by?: string
+          opened_by_role?: string
+          outcome?: string | null
+          payment_record_id?: string | null
+          resolution_reason?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          response_deadline_at?: string | null
+          sale_transaction_id?: string | null
+          seller_id?: string
+          seller_payable_id?: string | null
+          sla_due_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dispute_cases_booking_request_id_fkey"
+            columns: ["booking_request_id"]
+            isOneToOne: false
+            referencedRelation: "booking_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dispute_cases_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dispute_cases_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dispute_cases_payment_record_id_fkey"
+            columns: ["payment_record_id"]
+            isOneToOne: false
+            referencedRelation: "payment_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dispute_cases_sale_transaction_id_fkey"
+            columns: ["sale_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "sale_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dispute_cases_seller_payable_id_fkey"
+            columns: ["seller_payable_id"]
+            isOneToOne: false
+            referencedRelation: "seller_payables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       documents: {
         Row: {
           agreement_version: string | null
@@ -8316,6 +8550,9 @@ export type Database = {
           conditions_deadline_at: string | null
           created_at: string
           currency: string
+          deadline_remaining_seconds: number | null
+          dispute_case_id: string | null
+          dispute_frozen_at: string | null
           dispute_status: string
           dwolla_transfer_id: string | null
           external_payout_reference: string | null
@@ -8359,6 +8596,9 @@ export type Database = {
           conditions_deadline_at?: string | null
           created_at?: string
           currency?: string
+          deadline_remaining_seconds?: number | null
+          dispute_case_id?: string | null
+          dispute_frozen_at?: string | null
           dispute_status?: string
           dwolla_transfer_id?: string | null
           external_payout_reference?: string | null
@@ -8402,6 +8642,9 @@ export type Database = {
           conditions_deadline_at?: string | null
           created_at?: string
           currency?: string
+          deadline_remaining_seconds?: number | null
+          dispute_case_id?: string | null
+          dispute_frozen_at?: string | null
           dispute_status?: string
           dwolla_transfer_id?: string | null
           external_payout_reference?: string | null
@@ -8437,6 +8680,13 @@ export type Database = {
           walkthrough_recorded_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "seller_payables_dispute_case_id_fkey"
+            columns: ["dispute_case_id"]
+            isOneToOne: false
+            referencedRelation: "dispute_cases"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "seller_payables_listing_id_fkey"
             columns: ["listing_id"]
@@ -11574,6 +11824,10 @@ export type Database = {
         Args: { _fallback?: string; _first: string; _last: string }
         Returns: string
       }
+      freeze_payable_for_case: {
+        Args: { _case_id: string; _payable_id: string }
+        Returns: undefined
+      }
       get_all_asset_requests: {
         Args: never
         Returns: {
@@ -12112,6 +12366,10 @@ export type Database = {
         Returns: string
       }
       sweep_non_public_listing_artifacts: { Args: never; Returns: Json }
+      unfreeze_payable_for_case: {
+        Args: { _payable_id: string }
+        Returns: undefined
+      }
       update_asset_request_status: {
         Args: {
           new_admin_notes?: string
