@@ -950,7 +950,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
       : []),
     ...(depositAmount
       ? [{
-          label: 'Security deposit (held)',
+          label: 'Security deposit',
           value: formatCurrency(depositAmount),
           note: 'Charged today and shown in your booking record. Refunds follow the accepted rental terms.',
           muted: true,

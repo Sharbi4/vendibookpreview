@@ -250,7 +250,7 @@ const OrderDetailPage = () => {
                 </div>
               </div>
               <Button asChild size="sm" variant="outline">
-                <Link to={`/guides/meetup-inspection?returnTo=${encodeURIComponent(`/order/${order.id}`)}`}>Open Meetup &amp; Inspection Guide</Link>
+                <Link to={`/guides/meetup-inspection?returnTo=${encodeURIComponent(`/orders/${order.id}`)}`}>Open Meetup &amp; Inspection Guide</Link>
               </Button>
             </Card>
           )}

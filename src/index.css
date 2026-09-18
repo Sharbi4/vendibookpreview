@@ -2331,6 +2331,14 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
   color: hsl(28 7% 38%) !important;
   box-shadow: none !important;
 }
+.sale-wizard-footer .checkout-primary-action:not(:disabled),
+.v2-checkout .checkout-primary-action:not(:disabled) {
+  opacity: 1;
+  border: 1px solid hsl(var(--v2-ink));
+  background: hsl(var(--v2-ink)) !important;
+  color: hsl(var(--v2-paper)) !important;
+  cursor: pointer;
+}
 
 .checkout-story { padding: 18px 2px 4px; }
 .checkout-story-head h3 { font-size: 15px; font-weight: 680; color: hsl(var(--v2-ink, var(--foreground))); }
