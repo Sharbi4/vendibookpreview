@@ -32,6 +32,11 @@ interface Body {
   buyer_name: string;
   buyer_email: string;
   buyer_phone?: string | null;
+  buyer_address1?: string | null;
+  buyer_address2?: string | null;
+  buyer_city?: string | null;
+  buyer_state?: string | null;
+  buyer_zip?: string | null;
   // REQUIRED: id of a pre-created transaction_terms row (draft or active).
   terms_id: string;
   // Optional dedupe key so retries/double-clicks reuse the same row pair.
@@ -164,6 +169,12 @@ Deno.serve(async (req) => {
         buyer_name: body.buyer_name,
         buyer_email: body.buyer_email,
         buyer_phone: body.buyer_phone ?? null,
+        // Buyer's own contact address. Never a delivery destination.
+        buyer_address1: body.buyer_address1 ?? null,
+        buyer_address2: body.buyer_address2 ?? null,
+        buyer_city: body.buyer_city ?? null,
+        buyer_state: body.buyer_state ?? null,
+        buyer_zip: body.buyer_zip ?? null,
         status: 'pending_cash',
         platform_fee: 0, // Pay in person is 100% free — no Pro discount applies
         fee_rate_pct: 0,
