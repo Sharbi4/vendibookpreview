@@ -1030,13 +1030,12 @@ const SaleCheckout = () => {
             </p>
           </>
         ) : null}
-        <p className="text-xs text-muted-foreground">
-          By placing this order you agree to the{' '}
-          <Link to="/terms" target="_blank" rel="noreferrer" className="underline">Terms of Service</Link>, the{' '}
-          <Link to="/legal/payments-terms" target="_blank" rel="noreferrer" className="underline">Payments Terms</Link>{' '}
-          and the{' '}
-          <Link to="/privacy" target="_blank" rel="noreferrer" className="underline">Privacy Policy</Link>.
-        </p>
+        <CheckoutLegalConsent
+          surface="sale_checkout"
+          relatedEntityType="listing"
+          relatedEntityId={listingId ?? null}
+          onChange={setLegalAccepted}
+        />
       </div>
     );
 
