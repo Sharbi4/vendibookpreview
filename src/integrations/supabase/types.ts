@@ -2154,6 +2154,418 @@ export type Database = {
         }
         Relationships: []
       }
+      fulfillment_sessions: {
+        Row: {
+          arrived_at: string | null
+          booking_id: string | null
+          buyer_id: string | null
+          cancelled_at: string | null
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          driver_email: string | null
+          driver_name: string | null
+          driver_phone: string | null
+          id: string
+          listing_id: string | null
+          location_consent: boolean
+          location_consent_at: string | null
+          location_consent_by: string | null
+          mode: string
+          notes: string | null
+          sale_transaction_id: string | null
+          seller_id: string
+          started_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          arrived_at?: string | null
+          booking_id?: string | null
+          buyer_id?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          driver_email?: string | null
+          driver_name?: string | null
+          driver_phone?: string | null
+          id?: string
+          listing_id?: string | null
+          location_consent?: boolean
+          location_consent_at?: string | null
+          location_consent_by?: string | null
+          mode: string
+          notes?: string | null
+          sale_transaction_id?: string | null
+          seller_id: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          arrived_at?: string | null
+          booking_id?: string | null
+          buyer_id?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          driver_email?: string | null
+          driver_name?: string | null
+          driver_phone?: string | null
+          id?: string
+          listing_id?: string | null
+          location_consent?: boolean
+          location_consent_at?: string | null
+          location_consent_by?: string | null
+          mode?: string
+          notes?: string | null
+          sale_transaction_id?: string | null
+          seller_id?: string
+          started_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fulfillment_sessions_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "booking_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fulfillment_sessions_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fulfillment_sessions_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fulfillment_sessions_sale_transaction_id_fkey"
+            columns: ["sale_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "sale_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gps_trip_events: {
+        Row: {
+          accuracy_m: number | null
+          created_at: string
+          fulfillment_session_id: string
+          id: string
+          latitude: number
+          longitude: number
+          recorded_at: string
+          source: string
+        }
+        Insert: {
+          accuracy_m?: number | null
+          created_at?: string
+          fulfillment_session_id: string
+          id?: string
+          latitude: number
+          longitude: number
+          recorded_at?: string
+          source?: string
+        }
+        Update: {
+          accuracy_m?: number | null
+          created_at?: string
+          fulfillment_session_id?: string
+          id?: string
+          latitude?: number
+          longitude?: number
+          recorded_at?: string
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gps_trip_events_fulfillment_session_id_fkey"
+            columns: ["fulfillment_session_id"]
+            isOneToOne: false
+            referencedRelation: "fulfillment_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      handoff_exceptions: {
+        Row: {
+          created_at: string
+          description: string
+          handoff_session_id: string
+          id: string
+          reported_by: string | null
+          reported_by_role: string | null
+          severity: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          handoff_session_id: string
+          id?: string
+          reported_by?: string | null
+          reported_by_role?: string | null
+          severity?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          handoff_session_id?: string
+          id?: string
+          reported_by?: string | null
+          reported_by_role?: string | null
+          severity?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "handoff_exceptions_handoff_session_id_fkey"
+            columns: ["handoff_session_id"]
+            isOneToOne: false
+            referencedRelation: "handoff_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      handoff_media: {
+        Row: {
+          byte_size: number | null
+          created_at: string
+          duration_seconds: number | null
+          handoff_session_id: string
+          id: string
+          kind: string
+          media_type: string
+          storage_bucket: string
+          storage_path: string
+          uploaded_by: string | null
+          uploaded_by_role: string | null
+        }
+        Insert: {
+          byte_size?: number | null
+          created_at?: string
+          duration_seconds?: number | null
+          handoff_session_id: string
+          id?: string
+          kind?: string
+          media_type: string
+          storage_bucket?: string
+          storage_path: string
+          uploaded_by?: string | null
+          uploaded_by_role?: string | null
+        }
+        Update: {
+          byte_size?: number | null
+          created_at?: string
+          duration_seconds?: number | null
+          handoff_session_id?: string
+          id?: string
+          kind?: string
+          media_type?: string
+          storage_bucket?: string
+          storage_path?: string
+          uploaded_by?: string | null
+          uploaded_by_role?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "handoff_media_handoff_session_id_fkey"
+            columns: ["handoff_session_id"]
+            isOneToOne: false
+            referencedRelation: "handoff_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      handoff_sessions: {
+        Row: {
+          booking_id: string | null
+          buyer_decision: string | null
+          buyer_decision_at: string | null
+          buyer_decision_notes: string | null
+          buyer_id: string | null
+          completed_at: string | null
+          created_at: string
+          finalized: boolean
+          fulfillment_session_id: string | null
+          id: string
+          listing_id: string | null
+          location_captured_at: string | null
+          location_lat: number | null
+          location_lng: number | null
+          mode: string
+          pickup_code: string | null
+          pickup_code_verified_at: string | null
+          recording_consent_buyer_at: string | null
+          recording_consent_seller_at: string | null
+          sale_transaction_id: string | null
+          seller_id: string
+          started_at: string
+          status: string
+          updated_at: string
+          walkthrough_completed_at: string | null
+        }
+        Insert: {
+          booking_id?: string | null
+          buyer_decision?: string | null
+          buyer_decision_at?: string | null
+          buyer_decision_notes?: string | null
+          buyer_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          finalized?: boolean
+          fulfillment_session_id?: string | null
+          id?: string
+          listing_id?: string | null
+          location_captured_at?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          mode: string
+          pickup_code?: string | null
+          pickup_code_verified_at?: string | null
+          recording_consent_buyer_at?: string | null
+          recording_consent_seller_at?: string | null
+          sale_transaction_id?: string | null
+          seller_id: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+          walkthrough_completed_at?: string | null
+        }
+        Update: {
+          booking_id?: string | null
+          buyer_decision?: string | null
+          buyer_decision_at?: string | null
+          buyer_decision_notes?: string | null
+          buyer_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          finalized?: boolean
+          fulfillment_session_id?: string | null
+          id?: string
+          listing_id?: string | null
+          location_captured_at?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          mode?: string
+          pickup_code?: string | null
+          pickup_code_verified_at?: string | null
+          recording_consent_buyer_at?: string | null
+          recording_consent_seller_at?: string | null
+          sale_transaction_id?: string | null
+          seller_id?: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+          walkthrough_completed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "handoff_sessions_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "booking_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "handoff_sessions_fulfillment_session_id_fkey"
+            columns: ["fulfillment_session_id"]
+            isOneToOne: false
+            referencedRelation: "fulfillment_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "handoff_sessions_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "handoff_sessions_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "handoff_sessions_sale_transaction_id_fkey"
+            columns: ["sale_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "sale_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      handoff_signatures: {
+        Row: {
+          acknowledgment_type: string | null
+          created_at: string
+          document_id: string | null
+          envelope_id: string | null
+          handoff_session_id: string
+          id: string
+          last_error: string | null
+          provider: string
+          signed_at: string | null
+          signed_document_path: string | null
+          signer_email: string | null
+          signer_role: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          acknowledgment_type?: string | null
+          created_at?: string
+          document_id?: string | null
+          envelope_id?: string | null
+          handoff_session_id: string
+          id?: string
+          last_error?: string | null
+          provider?: string
+          signed_at?: string | null
+          signed_document_path?: string | null
+          signer_email?: string | null
+          signer_role?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          acknowledgment_type?: string | null
+          created_at?: string
+          document_id?: string | null
+          envelope_id?: string | null
+          handoff_session_id?: string
+          id?: string
+          last_error?: string | null
+          provider?: string
+          signed_at?: string | null
+          signed_document_path?: string | null
+          signer_email?: string | null
+          signer_role?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "handoff_signatures_handoff_session_id_fkey"
+            columns: ["handoff_session_id"]
+            isOneToOne: false
+            referencedRelation: "handoff_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       host_payment_eligibility: {
         Row: {
           charges_enabled: boolean
@@ -7667,6 +8079,59 @@ export type Database = {
         }
         Relationships: []
       }
+      secure_driver_links: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          driver_email: string | null
+          driver_name: string | null
+          driver_phone: string | null
+          expires_at: string
+          first_used_at: string | null
+          fulfillment_session_id: string
+          id: string
+          last_used_at: string | null
+          revoked_at: string | null
+          token_hash: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          driver_email?: string | null
+          driver_name?: string | null
+          driver_phone?: string | null
+          expires_at: string
+          first_used_at?: string | null
+          fulfillment_session_id: string
+          id?: string
+          last_used_at?: string | null
+          revoked_at?: string | null
+          token_hash: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          driver_email?: string | null
+          driver_name?: string | null
+          driver_phone?: string | null
+          expires_at?: string
+          first_used_at?: string | null
+          fulfillment_session_id?: string
+          id?: string
+          last_used_at?: string | null
+          revoked_at?: string | null
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "secure_driver_links_fulfillment_session_id_fkey"
+            columns: ["fulfillment_session_id"]
+            isOneToOne: false
+            referencedRelation: "fulfillment_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       seller_payables: {
         Row: {
           adjustments_cents: number
@@ -8393,6 +8858,91 @@ export type Database = {
           variant?: string
         }
         Relationships: []
+      }
+      shipment_tracking_events: {
+        Row: {
+          booking_id: string | null
+          carrier: string | null
+          created_at: string
+          description: string | null
+          estimated_delivery_at: string | null
+          event_at: string
+          fulfillment_session_id: string | null
+          id: string
+          paypal_debug_id: string | null
+          paypal_sync_error: string | null
+          paypal_sync_status: string
+          paypal_synced_at: string | null
+          recorded_by: string | null
+          sale_transaction_id: string | null
+          source: string
+          status: string
+          tracking_number: string | null
+          tracking_url: string | null
+        }
+        Insert: {
+          booking_id?: string | null
+          carrier?: string | null
+          created_at?: string
+          description?: string | null
+          estimated_delivery_at?: string | null
+          event_at?: string
+          fulfillment_session_id?: string | null
+          id?: string
+          paypal_debug_id?: string | null
+          paypal_sync_error?: string | null
+          paypal_sync_status?: string
+          paypal_synced_at?: string | null
+          recorded_by?: string | null
+          sale_transaction_id?: string | null
+          source?: string
+          status?: string
+          tracking_number?: string | null
+          tracking_url?: string | null
+        }
+        Update: {
+          booking_id?: string | null
+          carrier?: string | null
+          created_at?: string
+          description?: string | null
+          estimated_delivery_at?: string | null
+          event_at?: string
+          fulfillment_session_id?: string | null
+          id?: string
+          paypal_debug_id?: string | null
+          paypal_sync_error?: string | null
+          paypal_sync_status?: string
+          paypal_synced_at?: string | null
+          recorded_by?: string | null
+          sale_transaction_id?: string | null
+          source?: string
+          status?: string
+          tracking_number?: string | null
+          tracking_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipment_tracking_events_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "booking_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shipment_tracking_events_fulfillment_session_id_fkey"
+            columns: ["fulfillment_session_id"]
+            isOneToOne: false
+            referencedRelation: "fulfillment_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shipment_tracking_events_sale_transaction_id_fkey"
+            columns: ["sale_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "sale_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       signnow_webhook_events: {
         Row: {
@@ -9371,6 +9921,89 @@ export type Database = {
           scope?: string
         }
         Relationships: []
+      }
+      transaction_evidence_events: {
+        Row: {
+          actor_id: string | null
+          actor_label: string | null
+          actor_role: string | null
+          booking_id: string | null
+          created_at: string
+          detail: string | null
+          event_type: string
+          fulfillment_session_id: string | null
+          handoff_session_id: string | null
+          id: string
+          metadata: Json
+          occurred_at: string
+          sale_transaction_id: string | null
+          status: string | null
+          title: string
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_label?: string | null
+          actor_role?: string | null
+          booking_id?: string | null
+          created_at?: string
+          detail?: string | null
+          event_type: string
+          fulfillment_session_id?: string | null
+          handoff_session_id?: string | null
+          id?: string
+          metadata?: Json
+          occurred_at?: string
+          sale_transaction_id?: string | null
+          status?: string | null
+          title: string
+        }
+        Update: {
+          actor_id?: string | null
+          actor_label?: string | null
+          actor_role?: string | null
+          booking_id?: string | null
+          created_at?: string
+          detail?: string | null
+          event_type?: string
+          fulfillment_session_id?: string | null
+          handoff_session_id?: string | null
+          id?: string
+          metadata?: Json
+          occurred_at?: string
+          sale_transaction_id?: string | null
+          status?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transaction_evidence_events_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "booking_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transaction_evidence_events_fulfillment_session_id_fkey"
+            columns: ["fulfillment_session_id"]
+            isOneToOne: false
+            referencedRelation: "fulfillment_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transaction_evidence_events_handoff_session_id_fkey"
+            columns: ["handoff_session_id"]
+            isOneToOne: false
+            referencedRelation: "handoff_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transaction_evidence_events_sale_transaction_id_fkey"
+            columns: ["sale_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "sale_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       transaction_terms: {
         Row: {
@@ -10846,6 +11479,10 @@ export type Database = {
         Returns: boolean
       }
       is_fast_responder: { Args: { host_user_id: string }; Returns: boolean }
+      is_handoff_participant: {
+        Args: { _booking: string; _sale: string }
+        Returns: boolean
+      }
       is_host_account_active: { Args: { _host_id: string }; Returns: boolean }
       is_listing_publicly_visible: {
         Args: { _listing_id: string }
