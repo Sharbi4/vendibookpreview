@@ -97,3 +97,11 @@
 - [x] Reconcile checkout, success, and order-detail payment/fulfillment copy.
 - [x] Verify desktop, mobile, guide links, typecheck, and build.
 
+
+## SignNow transaction-document system
+- [x] Versioned template registry (7 kinds) + multi-page PDF engine
+- [x] Generation layer with frozen-snapshot prefill, idempotency, immutability
+- [x] Lifecycle gating, amendment flow, neutral emails/webhook copy
+- [x] DocumentsCard status/version surfaces, tests
+- [ ] UI triggers for handoff / check-in / check-out documents (endpoint ready: signnow-ensure-document)
+- [ ] Counsel review of all template text before production reliance
