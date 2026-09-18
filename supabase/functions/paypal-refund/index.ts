@@ -6,7 +6,15 @@ import { appendLedgerEntry, recalculatePayableAfterRefund } from "../_shared/pay
 import { notifyOrderParties } from "../_shared/notify.ts";
 import { auditPayment, requestIp } from "../_shared/paymentAudit.ts";
 
-/** Administrator-only PayPal refund. Always calls PayPal — never a DB-only status flip. */
+/**
+ * PayPal refund, callable by a Vendibook administrator or by the seller on
+ * their own order. Always calls PayPal — never a DB-only status flip.
+ *
+ * Commission on refunds follows the published Payments Terms: the Vendibook
+ * commission is recalculated against the amount the buyer actually kept, so a
+ * full refund returns the full commission and a partial refund keeps
+ * commission only on the retained amount (see recalculatePayableAfterRefund).
+ */
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -24,7 +32,6 @@ serve(async (req) => {
     if (!user) return jsonError(401, "unauthenticated", "Your session expired.");
 
     const { data: isAdmin } = await admin.rpc("has_role", { _user_id: user.id, _role: "admin" });
-    if (!isAdmin) return jsonError(403, "forbidden", "Administrator access required.");
 
     const { payment_record_id, amount_cents, reason } = await req.json().catch(() => ({}));
     if (!payment_record_id) return jsonError(400, "missing_fields", "Missing payment record id.");
@@ -32,6 +39,13 @@ serve(async (req) => {
     const { data: record } = await admin.from("payment_records").select("*")
       .eq("id", payment_record_id).maybeSingle();
     if (!record) return jsonError(404, "not_found", "Payment record not found.");
+
+    // Sellers may refund their own orders; everyone else needs admin rights.
+    const isSeller = !!record.seller_id && record.seller_id === user.id;
+    if (!isAdmin && !isSeller) {
+      return jsonError(403, "forbidden", "You can only refund your own orders.");
+    }
+    const actorRole = isAdmin ? "admin" : "seller";
     if (!record.paypal_capture_id) {
       return jsonError(409, "not_captured", "This payment has no PayPal capture to refund.");
     }
@@ -68,7 +82,9 @@ serve(async (req) => {
       amountCents: refundedNow,
       currency: record.currency,
       direction: "debit",
-      description: reason ? `Admin refund — ${reason}` : "Admin refund",
+      description: reason
+        ? `${isAdmin ? "Admin" : "Seller"} refund — ${reason}`
+        : `${isAdmin ? "Admin" : "Seller"} refund`,
       externalReference: refund?.id,
       dedupeKey: `refund:${refund?.id ?? idempotencyKey}`,
       actorId: user.id,
@@ -125,7 +141,7 @@ serve(async (req) => {
 
     await auditPayment(admin, {
       actorId: user.id,
-      actorRole: "admin",
+      actorRole,
       actorIp: requestIp(req),
       provider: "paypal",
       action: isFull ? "refund.full" : "refund.partial",
@@ -162,7 +178,25 @@ serve(async (req) => {
     });
   } catch (err) {
     if (err instanceof PayPalError) {
-      return jsonError(502, "paypal_error", "PayPal could not process this refund right now.");
+      const issue = String((err as any).issue ?? "").toUpperCase();
+      // The most common real-world failure: the seller's PayPal balance can't
+      // cover the refund. This is recoverable — tell them exactly what to do
+      // instead of a dead end.
+      if (issue.includes("INSUFFICIENT") || issue.includes("SENDER_RESTRICTED")) {
+        return jsonError(
+          409,
+          "insufficient_paypal_balance",
+          "PayPal declined the refund because the account balance can't cover it right now. Add funds to your PayPal balance or link a backup funding source, then try the refund again.",
+        );
+      }
+      if (issue.includes("CANNOT_BE_REFUNDED") || issue.includes("REFUND_TIME_LIMIT")) {
+        return jsonError(
+          409,
+          "refund_not_allowed",
+          "PayPal can no longer refund this payment automatically. Contact support@vendibook.com and we'll help you settle it with the buyer.",
+        );
+      }
+      return jsonError(502, "paypal_error", "PayPal could not process this refund right now. Nothing was charged or changed — please try again in a moment.");
     }
     return unknownErrorResponse(err);
   }
