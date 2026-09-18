@@ -89,6 +89,9 @@ const PayPalPaymentPanel = ({
   const [state, setState] = useState<PanelState>('loading');
   const [error, setError] = useState<{ title: string; detail: string } | null>(null);
   const [walletsAvailable, setWalletsAvailable] = useState(false);
+  /** Funding sources PayPal actually rendered for this buyer/device. */
+  const [eligible, setEligible] = useState<Record<string, boolean>>({});
+  const [reloadKey, setReloadKey] = useState(0);
   /**
    * Set from the server's create-order response. The server alone decides
    * whether this checkout captures now or places a temporary hold.
