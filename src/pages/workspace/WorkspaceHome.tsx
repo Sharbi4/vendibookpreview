@@ -84,6 +84,9 @@ export default function WorkspaceHome() {
 
   const tasks = useMemo(() => {
     const items: Task[] = [];
+    (handoffTasks ?? []).forEach((t) =>
+      items.push({ id: t.id, label: t.label, hint: t.hint, to: t.to, icon: ShieldCheck, tone: t.tone }),
+    );
     upcomingWalkthroughs.slice(0, 3).forEach((w) => items.push({ id:`walkthrough-${w.id}`, label:`Video walkthrough ${formatWalkthroughTime(w.starts_at)}`, hint:w.listing?.title || 'Scheduled walkthrough', to:`/walkthrough/${w.id}`, icon:Video }));
     if (pendingSellerBookings.length)
       items.push({
