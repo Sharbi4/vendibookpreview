@@ -419,7 +419,6 @@ export async function ensurePurchaseSaleAgreement(transactionId: string): Promis
     asset_make: str(listing?.make),
     asset_model: str(listing?.model),
     asset_identifying_number_vin_or_serial_if_recorded: str(ownership?.vin_serial),
-    asset_category_2: str(listing?.category),
     asset_dimensions_if_recorded: describeDimensions(listing, specs),
     asset_mileage_or_hours_if_recorded: listing?.mileage != null ? String(listing.mileage) : '',
     asset_included_equipment: describeInclusions(specs),
