@@ -4,6 +4,8 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
 import { Button } from '@/components/ui/button';
+import HandoffStoryline from '@/components/guides/HandoffStoryline';
+import { useHandoffContext, parsePublicMode, parsePublicFulfillment, type HandoffContext } from '@/hooks/useHandoffContext';
 
 const sections = [
   { id: 'before-you-meet', title: 'Before you meet', items: ['Confirm the time and exact location in Vendibook Messages.', 'Re-read the listing, equipment list, agreed price, and any written seller disclosures.', 'Make a short list of anything you want demonstrated.', 'Bring a charged phone for photos and notes.', 'For high-value or mechanical equipment, consider bringing a qualified independent inspector or mechanic.', 'If title or registration applies, know which documents you expect to review.'] },
