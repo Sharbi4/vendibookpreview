@@ -1,34 +1,17 @@
-import { useEffect, useState } from 'react';
-import { Loader2, FileText, Download, PenLine, CheckCircle2, Clock } from 'lucide-react';
-import { supabase } from '@/integrations/supabase/client';
+import { useState } from 'react';
+import { Loader2, FileText, Download, PenLine, CheckCircle2, Clock, ExternalLink, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
-
-type Scope = { booking_id: string } | { transaction_id: string };
-
-interface Signer {
-  role: 'host' | 'renter' | 'seller' | 'buyer' | 'party_a' | 'party_b' | 'provider' | 'recipient';
-  user_id: string | null;
-  email: string;
-  first_name?: string;
-  last_name?: string;
-  signed_at?: string | null;
-}
-
-interface DocRow {
-  id: string;
-  document_type: string;
-  status: 'draft' | 'sent' | 'partially_signed' | 'completed' | 'voided';
-  signers: Signer[];
-  signed_pdf_path: string | null;
-  created_at: string;
-  template_version: string | null;
-  agreement_version: string | null;
-  superseded_by_document_id: string | null;
-}
+import {
+  createSigningSession,
+  getSignedPdfUrl,
+  useTransactionDocuments,
+  type DocumentRow,
+  type DocumentScope,
+} from '@/hooks/useTransactionDocuments';
 
 const DOC_LABEL: Record<string, string> = {
   // Current package
@@ -46,7 +29,7 @@ const DOC_LABEL: Record<string, string> = {
   handoff_acknowledgment: 'Handoff acknowledgment',
 };
 
-const STATUS_LABEL: Record<DocRow['status'], string> = {
+const STATUS_LABEL: Record<DocumentRow['status'], string> = {
   draft: 'Being prepared',
   sent: 'Awaiting signatures',
   partially_signed: 'Partially signed',
@@ -59,52 +42,36 @@ const ROLE_LABEL: Record<string, string> = {
   party_a: 'First party', party_b: 'Second party', provider: 'Delivering party', recipient: 'Receiving party',
 };
 
-export function DocumentsCard({ scope, title = 'Documents' }: { scope: Scope; title?: string }) {
+export function DocumentsCard({ scope, title = 'Documents' }: { scope: DocumentScope; title?: string }) {
   const { user } = useAuth();
-  const [docs, setDocs] = useState<DocRow[] | null>(null);
-  const [signingUrl, setSigningUrl] = useState<string | null>(null);
+  const { docs, preparing, notice, reload, refreshAfterSigning } = useTransactionDocuments(scope);
+  const [session, setSession] = useState<{ url: string; docId: string } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
 
-  async function load() {
-    const query = supabase
-      .from('documents')
-      .select('id,document_type,status,signers,signed_pdf_path,created_at,template_version,agreement_version,superseded_by_document_id')
-      .order('created_at', { ascending: false });
-    const { data, error } = 'booking_id' in scope
-      ? await query.eq('booking_id', scope.booking_id)
-      : await query.eq('transaction_id', scope.transaction_id);
-    if (error) { console.error(error); return; }
-    setDocs((data ?? []) as unknown as DocRow[]);
-  }
-
-  useEffect(() => { load(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [JSON.stringify(scope)]);
-
-  const openSigning = async (doc: DocRow) => {
+  const openSigning = async (doc: DocumentRow) => {
     setBusy(doc.id);
     try {
-      const { data, error } = await supabase.functions.invoke('signnow-create-embedded-session', {
-        body: { document_id: doc.id },
-      });
-      if (error) throw error;
-      setSigningUrl((data as any)?.url ?? null);
+      const url = await createSigningSession(doc.id);
+      setSession({ url, docId: doc.id });
     } catch (e: any) {
-      toast.error(e?.message ?? 'Could not open signing session');
+      toast.error(e?.message ?? 'Could not open the signing session');
     } finally {
       setBusy(null);
     }
   };
 
-  const downloadSigned = async (doc: DocRow) => {
+  const closeSigning = async () => {
+    setSession(null);
+    // The signature lands through SignNow's webhook, so poll briefly.
+    await refreshAfterSigning();
+  };
+
+  const downloadSigned = async (doc: DocumentRow) => {
     setBusy(doc.id);
     try {
-      const { data, error } = await supabase.functions.invoke('signnow-download-signed', {
-        body: { document_id: doc.id },
-      });
-      if (error) throw error;
-      const url = (data as any)?.url;
-      if (url) window.open(url, '_blank', 'noopener,noreferrer');
+      window.open(await getSignedPdfUrl(doc.id), '_blank', 'noopener,noreferrer');
     } catch (e: any) {
-      toast.error(e?.message ?? 'Could not download PDF');
+      toast.error(e?.message ?? 'Could not open the signed PDF');
     } finally {
       setBusy(null);
     }
@@ -115,18 +82,42 @@ export function DocumentsCard({ scope, title = 'Documents' }: { scope: Scope; ti
       <Card><CardContent className="p-6 flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Loading documents…</CardContent></Card>
     );
   }
-  if (!docs.length) return null;
+
+  // Nothing yet and nothing to say about it — stay out of the way.
+  if (!docs.length && !preparing && !notice) return null;
 
   return (
     <>
       <Card>
         <CardHeader className="pb-3">
-          <CardTitle className="text-base flex items-center gap-2"><FileText className="h-4 w-4" /> {title}</CardTitle>
-          <p className="text-xs text-muted-foreground">
-            Documents are prepared from your transaction details and signed inside Vendibook. Signing records the agreement; it does not move any money.
-          </p>
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <CardTitle className="text-base flex items-center gap-2"><FileText className="h-4 w-4" /> {title}</CardTitle>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Documents are prepared from your transaction details and signed inside Vendibook. Signing records the agreement; it does not move any money.
+              </p>
+            </div>
+            <Button
+              size="sm"
+              variant="ghost"
+              className="shrink-0"
+              onClick={() => reload()}
+              aria-label="Refresh document status"
+            >
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          {preparing && !docs.length && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <Loader2 className="h-4 w-4 animate-spin" /> Preparing your documents…
+            </div>
+          )}
+          {!docs.length && !preparing && notice && (
+            <p className="text-sm text-muted-foreground">{notice}</p>
+          )}
+
           {docs.map((doc) => {
             const me = doc.signers?.find((s) => s.user_id === user?.id || s.email?.toLowerCase() === user?.email?.toLowerCase());
             const mySigned = !!me?.signed_at;
@@ -160,6 +151,9 @@ export function DocumentsCard({ scope, title = 'Documents' }: { scope: Scope; ti
                         {busy === doc.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <><PenLine className="h-4 w-4 mr-1" /> Review & sign</>}
                       </Button>
                     )}
+                    {!complete && me && mySigned && (
+                      <span className="self-center text-xs text-muted-foreground">You have signed</span>
+                    )}
                     {complete && (
                       <Button size="sm" variant="outline" onClick={() => downloadSigned(doc)} disabled={busy === doc.id}>
                         {busy === doc.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Download className="h-4 w-4 mr-1" /> Signed PDF</>}
@@ -178,20 +172,31 @@ export function DocumentsCard({ scope, title = 'Documents' }: { scope: Scope; ti
         </CardContent>
       </Card>
 
-      <Dialog open={!!signingUrl} onOpenChange={(o) => !o && setSigningUrl(null)}>
+      <Dialog open={!!session} onOpenChange={(o) => { if (!o) void closeSigning(); }}>
         <DialogContent className="max-w-4xl w-[calc(100vw-1.5rem)] sm:w-[95vw] h-[90dvh] p-0 gap-0 overflow-hidden flex flex-col">
           <DialogHeader className="shrink-0 p-4 border-b-[1.5px]">
             <DialogTitle className="text-base">Review &amp; sign</DialogTitle>
+            <p className="text-xs text-muted-foreground">
+              This is a live signing session. Your signature is recorded when you finish; close this window afterwards to update the status.
+            </p>
           </DialogHeader>
-          {signingUrl && (
-            <div className="flex-1 min-h-0 w-full overflow-hidden">
-              <iframe
-                title="Vendibook document signing"
-                src={signingUrl}
-                className="block h-full w-full max-w-full border-0"
-                allow="camera; microphone"
-              />
-            </div>
+          {session && (
+            <>
+              <div className="flex-1 min-h-0 w-full overflow-hidden">
+                <iframe
+                  title="Vendibook document signing"
+                  src={session.url}
+                  className="block h-full w-full max-w-full border-0"
+                  allow="camera; microphone"
+                />
+              </div>
+              <div className="shrink-0 border-t-[1.5px] p-3 flex items-center justify-between gap-3">
+                <p className="text-xs text-muted-foreground">Trouble loading? Open the session in a new tab.</p>
+                <Button size="sm" variant="outline" onClick={() => window.open(session.url, '_blank', 'noopener,noreferrer')}>
+                  <ExternalLink className="h-4 w-4 mr-1" /> Open in new tab
+                </Button>
+              </div>
+            </>
           )}
         </DialogContent>
       </Dialog>
