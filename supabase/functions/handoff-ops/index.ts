@@ -797,6 +797,28 @@ serve(async (req) => {
         const t = target!;
         const mode: Mode = FULFILLMENT_MODES.includes(body.mode) ? body.mode : "buyer_pickup";
 
+        // Server-side gate: the Verified Handoff & Condition Evidence Terms must
+        // be accepted at the current version before any capture step can begin.
+        if (userId) {
+          const acceptedHandoff = await hasCurrentLegalAcceptance(db, userId, "handoff-terms");
+          if (!acceptedHandoff) {
+            if (String(body.legal_acceptance_version ?? "") !== LEGAL_VERSIONS["handoff-terms"]) {
+              return jsonError(
+                400,
+                "legal_acceptance_required",
+                "Please accept the current Verified Handoff & Condition Evidence Terms before starting.",
+              );
+            }
+            await recordServerLegalAcceptance(db, {
+              userId,
+              slug: "handoff-terms",
+              surface: "handoff_flow",
+              relatedEntityType: t.sale_transaction_id ? "order" : "booking",
+              relatedEntityId: t.sale_transaction_id ?? t.booking_id ?? null,
+            });
+          }
+        }
+
         const existingQuery = t.sale_transaction_id
           ? db.from("handoff_sessions").select("*").eq("sale_transaction_id", t.sale_transaction_id)
           : db.from("handoff_sessions").select("*").eq("booking_id", t.booking_id);
