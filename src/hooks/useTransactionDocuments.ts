@@ -100,6 +100,28 @@ export function useTransactionDocuments(scope: DocumentScope) {
     }
   }, [kinds, scopeKey, load]);
 
+  /**
+   * Prepare one specific document on demand (handoff, check-in, check-out).
+   * Returns a plain-language reason when the stage is not due yet.
+   */
+  const prepareKind = useCallback(async (kind: DocumentKind): Promise<string | null> => {
+    setPreparing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('signnow-ensure-document', {
+        body: { kind, ...scope },
+      });
+      if (error) return 'We could not prepare that document right now. Please try again.';
+      const skipped = (data as any)?.skipped;
+      await load();
+      if (typeof skipped === 'string') return SKIP_COPY[skipped] ?? 'This document is not due yet.';
+      return null;
+    } catch {
+      return 'We could not prepare that document right now. Please try again.';
+    } finally {
+      setPreparing(false);
+    }
+  }, [scopeKey, load]);
+
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -123,7 +145,7 @@ export function useTransactionDocuments(scope: DocumentScope) {
     }
   }, [load]);
 
-  return { docs, preparing, notice, reload: load, prepare, refreshAfterSigning };
+  return { docs, preparing, notice, kinds, reload: load, prepare, prepareKind, refreshAfterSigning };
 }
 
 /** Short-lived embedded signing URL for the current user on one document. */

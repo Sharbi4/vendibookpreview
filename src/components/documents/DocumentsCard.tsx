@@ -29,6 +29,29 @@ const DOC_LABEL: Record<string, string> = {
   handoff_acknowledgment: 'Handoff acknowledgment',
 };
 
+/**
+ * Documents a participant can ask for later in a transaction. Each entry lists
+ * the stored document types that satisfy it, so the button disappears once the
+ * document exists. The server decides whether the stage is actually due.
+ */
+const ON_DEMAND: Record<string, { label: string; hint: string; types: string[] }> = {
+  sale_handoff: {
+    label: 'Prepare handoff acknowledgment',
+    hint: 'Records the condition of the equipment when it changes hands.',
+    types: ['sale_handoff_condition_acknowledgment', 'delivery_handoff_acknowledgment', 'handoff_acknowledgment'],
+  },
+  rental_checkin: {
+    label: 'Prepare check-in condition report',
+    hint: 'Records the condition at the start of the rental.',
+    types: ['rental_checkin_condition_report'],
+  },
+  rental_checkout: {
+    label: 'Prepare check-out condition report',
+    hint: 'Records the condition at the end of the rental.',
+    types: ['rental_checkout_condition_report'],
+  },
+};
+
 const STATUS_LABEL: Record<DocumentRow['status'], string> = {
   draft: 'Being prepared',
   sent: 'Awaiting signatures',
@@ -49,10 +72,23 @@ export function DocumentsCard({
   whenEmpty = 'show',
 }: { scope: DocumentScope; title?: string; whenEmpty?: 'show' | 'hide' }) {
   const { user } = useAuth();
-  const { docs, preparing, notice, reload, refreshAfterSigning } = useTransactionDocuments(scope);
+  const { docs, preparing, notice, kinds, reload, prepareKind, refreshAfterSigning } = useTransactionDocuments(scope);
   const [session, setSession] = useState<{ url: string; docId: string } | null>(null);
   const [preview, setPreview] = useState<{ url: string; label: string } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const [kindBusy, setKindBusy] = useState<string | null>(null);
+  const [kindNotice, setKindNotice] = useState<string | null>(null);
+
+  const requestKind = async (kind: string) => {
+    setKindBusy(kind);
+    setKindNotice(null);
+    try {
+      const reason = await prepareKind(kind as any);
+      if (reason) setKindNotice(reason);
+    } finally {
+      setKindBusy(null);
+    }
+  };
 
   const openSigning = async (doc: DocumentRow) => {
     setBusy(doc.id);
@@ -195,6 +231,38 @@ export function DocumentsCard({
               </div>
             );
           })}
+
+          {(() => {
+            const existing = new Set(docs.map((d) => d.document_type));
+            const pending = kinds.filter(
+              (k) => ON_DEMAND[k] && !ON_DEMAND[k].types.some((t) => existing.has(t)),
+            );
+            if (!pending.length) return null;
+            return (
+              <div className="rounded-md border-[1.5px] border-dashed border-border/60 p-4 space-y-3">
+                <p className="text-xs text-muted-foreground">
+                  These documents are prepared at a later stage. You can ask for one as soon as that stage is reached.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {pending.map((k) => (
+                    <Button
+                      key={k}
+                      size="sm"
+                      variant="outline"
+                      onClick={() => requestKind(k)}
+                      disabled={!!kindBusy}
+                      title={ON_DEMAND[k].hint}
+                    >
+                      {kindBusy === k
+                        ? <Loader2 className="h-4 w-4 animate-spin" />
+                        : <><FileText className="h-4 w-4 mr-1" /> {ON_DEMAND[k].label}</>}
+                    </Button>
+                  ))}
+                </div>
+                {kindNotice && <p className="text-xs text-muted-foreground">{kindNotice}</p>}
+              </div>
+            );
+          })()}
         </CardContent>
       </Card>
 
