@@ -34,8 +34,7 @@ Deno.serve(async (req) => {
 
   const token = req.headers.get('x-bootstrap-token') ?? '';
   const expected = Deno.env.get('SIGNNOW_BOOTSTRAP_TOKEN');
-  const provision = Deno.env.get('SIGNNOW_TEMPLATE_PROVISION_TOKEN');
-  const tokenOk = (!!expected && token === expected) || (!!provision && token === provision);
+  const tokenOk = !!expected && token === expected;
   const adminOk = tokenOk ? true : await isAdminCaller(req.headers.get('Authorization') ?? '');
   if (!tokenOk && !adminOk) {
     return jsonError(403, 'forbidden', 'bootstrap token or admin access required');
