@@ -24,7 +24,7 @@ const BANNED = [
   '24/7',
   '3x faster',
   '14 days',
-  'fund-custody',
+  'escrow',
   'instant payout',
   'guaranteed payout',
 ];
