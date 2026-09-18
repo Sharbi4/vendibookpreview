@@ -68,11 +68,12 @@ serve(async (req) => {
     if (!accessToken) {
       logStep("ERROR: FB_CONVERSIONS_API_TOKEN not configured");
       return new Response(JSON.stringify({ 
-        error: "Facebook Conversions API token not configured",
-        success: false 
+        success: false,
+        skipped: true,
+        reason: "not_configured",
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 500,
+        status: 200,
       });
     }
 
@@ -169,12 +170,15 @@ serve(async (req) => {
         status: fbResponse.status, 
         error: fbResult 
       });
+      // Never fail the caller: tracking must not break the user-facing page.
       return new Response(JSON.stringify({ 
-        success: false, 
-        error: fbResult 
+        success: false,
+        skipped: true,
+        reason: "provider_rejected",
+        provider_status: fbResponse.status,
       }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: fbResponse.status,
+        status: 200,
       });
     }
 
@@ -196,11 +200,13 @@ serve(async (req) => {
     const errorMessage = error instanceof Error ? error.message : String(error);
     logStep("ERROR", { message: errorMessage });
     return new Response(JSON.stringify({ 
-      success: false, 
-      error: errorMessage 
+      success: false,
+      skipped: true,
+      reason: "unexpected_error",
+      error: errorMessage,
     }), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 500,
+      status: 200,
     });
   }
 });
