@@ -2904,3 +2904,8 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
 .wc-helper{font-size:13px;color:hsl(var(--v2-stone));text-align:center;margin:0}
 .wc-version{font-size:11px;color:hsl(var(--v2-stone));text-align:center;margin:0}
 @media (max-width:520px){.wc-gate-head h1{font-size:22px}.wc-actions{flex-direction:column-reverse}.wc-actions>*{width:100%}}
+/* The gate renders over the dark call canvas; keep it on its own ivory surface */
+.walkthrough-call-page .wc-gate{background:hsl(var(--v2-canvas,40 33% 97%));color:hsl(var(--v2-ink));border-radius:18px;padding:26px 22px;margin-top:22px;box-shadow:0 22px 60px rgba(0,0,0,.35)}
+.walkthrough-call-page .wc-gate h1,.walkthrough-call-page .wc-gate h2,.walkthrough-call-page .wc-gate strong{color:hsl(var(--v2-ink))}
+.walkthrough-call-page .wc-gate .wc-check{color:hsl(var(--v2-ink))}
+@media (max-width:520px){.walkthrough-call-page .wc-gate{padding:20px 16px;border-radius:14px}}
