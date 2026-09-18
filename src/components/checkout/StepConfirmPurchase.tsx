@@ -1,5 +1,6 @@
 import { ShieldCheck, MapPin, BadgeCheck, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { formatCurrency } from '@/lib/commissions';
 
 interface StepConfirmPurchaseProps {
   listing: {
@@ -19,9 +20,6 @@ interface StepConfirmPurchaseProps {
   onContinue: () => void;
   onBack?: () => void;
 }
-
-const money = (n: number) =>
-  `$${n.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 
 const StepConfirmPurchase = ({
   listing,
@@ -76,7 +74,7 @@ const StepConfirmPurchase = ({
                 className="font-display text-2xl font-bold text-primary"
                 style={{ fontVariantNumeric: 'tabular-nums' }}
               >
-                {money(priceSale)}
+                 {formatCurrency(priceSale)}
               </div>
             </div>
           </div>

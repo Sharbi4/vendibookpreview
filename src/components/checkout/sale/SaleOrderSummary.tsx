@@ -1,5 +1,6 @@
 import { Lock, Package, Truck, MapPin, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatCurrency } from '@/lib/commissions';
 
 export interface SaleSummaryLine {
   label: string;
@@ -83,7 +84,7 @@ const SaleOrderSummary = ({
               {l.label}
             </span>
             <span className={cn('shrink-0 tabular-nums', l.valueLabel ? 'text-muted-foreground' : 'text-foreground')}>
-              {l.valueLabel ?? (l.amount > 0 ? `$${l.amount.toLocaleString()}` : 'Free')}
+              {l.valueLabel ?? (l.amount > 0 ? formatCurrency(l.amount) : 'Free')}
             </span>
           </div>
         ))}
@@ -92,7 +93,7 @@ const SaleOrderSummary = ({
       <div className="mt-4 pt-4 border-t border-border/70 flex items-baseline justify-between gap-4">
         <span className="text-sm font-medium text-foreground">Total</span>
         <span className="text-xl font-semibold tracking-tight text-foreground tabular-nums">
-          ${total.toLocaleString()}
+          {formatCurrency(total)}
         </span>
       </div>
 

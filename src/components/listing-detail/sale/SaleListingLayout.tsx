@@ -27,6 +27,7 @@ import { SalePurchaseCard } from './SalePurchaseCard';
 import { SaleStickyActionBar } from './SaleStickyActionBar';
 import { SaleLocationCard } from './SaleSharedSections';
 import TitleWalkthroughCta from '@/components/listing-detail/TitleWalkthroughCta';
+import { formatCurrency } from '@/lib/commissions';
 
 interface SaleListingLayoutProps {
   listing: any;
@@ -116,7 +117,7 @@ export const SaleListingLayout = ({
               <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-muted-foreground">
                 {/* Price shows once per breakpoint: here on desktop, in the purchase card on mobile. */}
                 <span className="hidden lg:inline text-xl md:text-2xl font-bold text-foreground">
-                  {listing.price_sale ? `$${listing.price_sale.toLocaleString()}` : 'Price on request'}
+                   {listing.price_sale ? formatCurrency(listing.price_sale) : 'Price on request'}
                 </span>
                 <span className="hidden lg:inline">·</span>
                 <span>{categoryLabel}</span>

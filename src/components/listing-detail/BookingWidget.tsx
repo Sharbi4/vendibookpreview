@@ -340,14 +340,14 @@ export const BookingWidget = ({
                     initial={{ scale: 1 }}
                     whileHover={{ scale: 1.02 }}
                   >
-                    ${priceHourly?.toLocaleString() || '—'}
+                    {priceHourly ? formatCurrency(priceHourly) : '—'}
                   </motion.span>
                   <span className="text-muted-foreground text-lg">/hour</span>
                 </div>
                 {priceDaily && (
                   <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
                     <Sun className="h-3.5 w-3.5 text-primary" />
-                    Full day from ${priceDaily.toLocaleString()}
+                    Full day from {formatCurrency(priceDaily)}
                   </p>
                 )}
               </>
@@ -359,7 +359,7 @@ export const BookingWidget = ({
                     initial={{ scale: 1 }}
                     whileHover={{ scale: 1.02 }}
                   >
-                    ${priceDaily?.toLocaleString() || '—'}
+                    {priceDaily ? formatCurrency(priceDaily) : '—'}
                   </motion.span>
                   <span className="text-muted-foreground text-lg">/day</span>
                 </div>
@@ -369,19 +369,19 @@ export const BookingWidget = ({
                   {priceHourly && hourlyEnabled && (
                     <p className="text-sm text-muted-foreground flex items-center gap-1.5">
                       <Clock className="h-3.5 w-3.5 text-primary" />
-                      ${priceHourly.toLocaleString()}/hr for hourly bookings
+                      {formatCurrency(priceHourly)}/hr for hourly bookings
                     </p>
                   )}
                   {priceWeekly && (
                     <p className="text-sm text-muted-foreground flex items-center gap-1.5">
                       
-                      ${priceWeekly.toLocaleString()}/week for 7+ days
+                      {formatCurrency(priceWeekly)}/week for 7+ days
                     </p>
                   )}
                   {priceMonthly && (
                     <p className="text-sm text-muted-foreground flex items-center gap-1.5">
                       <CalendarRange className="h-3.5 w-3.5 text-primary" />
-                      ${priceMonthly.toLocaleString()}/month for 30+ days
+                      {formatCurrency(priceMonthly)}/month for 30+ days
                     </p>
                   )}
                 </div>
@@ -488,12 +488,12 @@ export const BookingWidget = ({
                       className="p-4 bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl border border-primary/20 space-y-2"
                     >
                       <div className="flex items-center justify-between text-sm text-muted-foreground">
-                        <span>${priceDaily?.toLocaleString()} × {priceBreakdown.days} day{priceBreakdown.days > 1 ? 's' : ''}</span>
-                        <span>${priceBreakdown.basePrice.toLocaleString()}</span>
+                        <span>{priceDaily ? formatCurrency(priceDaily) : '—'} × {priceBreakdown.days} day{priceBreakdown.days > 1 ? 's' : ''}</span>
+                        <span>{formatCurrency(priceBreakdown.basePrice)}</span>
                       </div>
                       <div className="flex items-center justify-between text-sm text-muted-foreground">
                         <span>Service fee</span>
-                        <span>${priceBreakdown.renterFee.toLocaleString()}</span>
+                        <span>{formatCurrency(priceBreakdown.renterFee)}</span>
                       </div>
                       <Separator className="bg-primary/20" />
                       <div className="flex items-center justify-between pt-1">
@@ -503,7 +503,7 @@ export const BookingWidget = ({
                           initial={{ scale: 1 }}
                           whileHover={{ scale: 1.05 }}
                         >
-                          ${priceBreakdown.customerTotal.toLocaleString()}
+                          {formatCurrency(priceBreakdown.customerTotal)}
                         </motion.span>
                       </div>
                     </motion.div>
@@ -626,12 +626,12 @@ export const BookingWidget = ({
                       className="p-4 bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl border border-primary/20 space-y-2"
                     >
                       <div className="flex items-center justify-between text-sm text-muted-foreground">
-                        <span>${priceHourly?.toLocaleString()} × {hourlyPriceBreakdown.hours} hour{hourlyPriceBreakdown.hours > 1 ? 's' : ''}</span>
-                        <span>${hourlyPriceBreakdown.basePrice.toLocaleString()}</span>
+                        <span>{priceHourly ? formatCurrency(priceHourly) : '—'} × {hourlyPriceBreakdown.hours} hour{hourlyPriceBreakdown.hours > 1 ? 's' : ''}</span>
+                        <span>{formatCurrency(hourlyPriceBreakdown.basePrice)}</span>
                       </div>
                       <div className="flex items-center justify-between text-sm text-muted-foreground">
                         <span>Service fee</span>
-                        <span>${hourlyPriceBreakdown.renterFee.toLocaleString()}</span>
+                        <span>{formatCurrency(hourlyPriceBreakdown.renterFee)}</span>
                       </div>
                       <Separator className="bg-primary/20" />
                       <div className="flex items-center justify-between pt-1">
@@ -641,7 +641,7 @@ export const BookingWidget = ({
                           initial={{ scale: 1 }}
                           whileHover={{ scale: 1.05 }}
                         >
-                          ${hourlyPriceBreakdown.customerTotal.toLocaleString()}
+                          {formatCurrency(hourlyPriceBreakdown.customerTotal)}
                         </motion.span>
                       </div>
                     </motion.div>
@@ -762,7 +762,7 @@ export const BookingWidget = ({
               className="text-3xl font-bold text-foreground"
               whileHover={{ scale: 1.02 }}
             >
-              ${priceSale?.toLocaleString()}
+              {priceSale ? formatCurrency(priceSale) : '—'}
             </motion.span>
           </div>
           

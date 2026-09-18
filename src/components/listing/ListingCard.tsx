@@ -1,5 +1,6 @@
 import { deliveryRateLabel } from '@/lib/fulfillment/delivery';
 import { formatListingPriceLabel, type ListingPriceInput } from '@/lib/listings/rentalPricing';
+import { formatCurrency } from '@/lib/commissions';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Plug, Zap, Droplet, Refrigerator, Flame, Wind, Wifi, Car, Shield, Sun, Truck, Calendar, Clock, ArrowRight, Banknote, Coffee, IceCreamCone } from 'lucide-react';
@@ -596,12 +597,12 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
             </span>
             {showHourlyRate && (
               <span className={cn("font-medium text-xs", textFaint)}>
-                ${listing.price_hourly}/hr
+                {formatCurrency(listing.price_hourly)}/hr
               </span>
             )}
             {!compact && listing.mode === 'rent' && listing.price_weekly && (
               <span className={cn("text-xs font-medium", textFaint)}>
-                ${listing.price_weekly}/week
+                {formatCurrency(listing.price_weekly)}/week
               </span>
             )}
           </div>

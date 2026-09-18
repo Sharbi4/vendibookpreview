@@ -13,13 +13,13 @@ describe('resolveRentalRate', () => {
   it('maps a monthly-only rental instead of falling back to Price TBD', () => {
     const listing = { mode: 'rent', price_monthly: 1000 };
     expect(resolveRentalRate(listing)).toMatchObject({ unit: 'monthly', amount: 1000, suffix: '/mo' });
-    expect(formatListingPriceLabel(listing)).toBe('$1,000/mo');
+    expect(formatListingPriceLabel(listing)).toBe('$1,000.00/mo');
     expect(hasAnyRentalRate(listing)).toBe(true);
   });
 
   it('maps weekly-only and hourly-only rentals', () => {
-    expect(formatListingPriceLabel({ mode: 'rent', price_weekly: 2500 })).toBe('$2,500/week');
-    expect(formatListingPriceLabel({ mode: 'rent', price_hourly: 75 })).toBe('$75/hr');
+    expect(formatListingPriceLabel({ mode: 'rent', price_weekly: 2500 })).toBe('$2,500.00/week');
+    expect(formatListingPriceLabel({ mode: 'rent', price_hourly: 75 })).toBe('$75.00/hr');
   });
 
   it('prefers daily, then hourly, then weekly, then monthly', () => {
@@ -36,17 +36,17 @@ describe('resolveRentalRate', () => {
   });
 
   it('coerces numeric strings coming back from the database', () => {
-    expect(formatListingPriceLabel({ mode: 'rent', price_monthly: '1000.00' })).toBe('$1,000/mo');
+    expect(formatListingPriceLabel({ mode: 'rent', price_monthly: '1000.00' })).toBe('$1,000.00/mo');
   });
 });
 
 describe('formatListingPriceLabel (sale)', () => {
   it('formats a sale price', () => {
-    expect(formatListingPriceLabel({ mode: 'sale', price_sale: 48500 })).toBe('$48,500');
+    expect(formatListingPriceLabel({ mode: 'sale', price_sale: 48500 })).toBe('$48,500.00');
   });
 
   it('falls back to a rental rate when a sale row carries one', () => {
-    expect(formatListingPriceLabel({ mode: 'sale', price_sale: null, price_monthly: 1000 })).toBe('$1,000/mo');
+    expect(formatListingPriceLabel({ mode: 'sale', price_sale: null, price_monthly: 1000 })).toBe('$1,000.00/mo');
   });
 
   it('returns Price TBD only when nothing is priced', () => {
@@ -85,7 +85,7 @@ describe('quoteRentalPeriod', () => {
   it('bills plain days when only a daily rate exists', () => {
     const q = quoteRentalPeriod(3, { price_daily: 300 });
     expect(q?.subtotal).toBe(900);
-    expect(q?.breakdown).toBe('3 days @ $300');
+    expect(q?.breakdown).toBe('3 days @ $300.00');
     expect(q?.roundedUp).toBe(false);
   });
 
@@ -112,7 +112,7 @@ describe('quoteRentalPeriod', () => {
   it('quotes a monthly-only listing instead of returning nothing', () => {
     const q = quoteRentalPeriod(3, { price_monthly: 1000 });
     expect(q?.subtotal).toBe(1000);
-    expect(q?.breakdown).toBe('1 month @ $1,000');
+    expect(q?.breakdown).toBe('1 month @ $1,000.00');
     expect(q?.roundedUp).toBe(true);
   });
 

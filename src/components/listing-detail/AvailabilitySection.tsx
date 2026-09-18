@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import DateSelectionModal from './DateSelectionModal';
 import VendorSpaceBookingModal from './VendorSpaceBookingModal';
 import type { ListingCategory } from '@/types/listing';
+import { formatCurrency } from '@/lib/commissions';
 
 interface AvailabilitySectionProps {
   listingId: string;
@@ -80,12 +81,12 @@ export const AvailabilitySection: React.FC<AvailabilitySectionProps> = ({
 
         {priceDaily && (
           <div className="mt-3 flex items-baseline justify-center gap-1 text-sm text-muted-foreground">
-            <span className="font-semibold text-foreground">${priceDaily.toLocaleString()}</span>
+            <span className="font-semibold text-foreground">{formatCurrency(priceDaily)}</span>
             <span>/day</span>
             {priceWeekly && (
               <>
                 <span className="mx-1">•</span>
-                <span className="font-semibold text-foreground">${priceWeekly.toLocaleString()}</span>
+                <span className="font-semibold text-foreground">{formatCurrency(priceWeekly)}</span>
                 <span>/week</span>
               </>
             )}

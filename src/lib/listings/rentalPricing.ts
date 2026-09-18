@@ -51,7 +51,7 @@ export const toPositiveAmount = (value: number | string | null | undefined): num
 };
 
 export const formatAmount = (amount: number): string =>
-  `$${amount.toLocaleString('en-US', { maximumFractionDigits: 2 })}`;
+  `$${amount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
 /** Every rate present on the listing, in display priority order. */
 export const listRentalRates = (listing: RentalRateInput | null | undefined): ResolvedRate[] => {
