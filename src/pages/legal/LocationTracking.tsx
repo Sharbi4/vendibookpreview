@@ -3,187 +3,117 @@ import { Link } from 'react-router-dom';
 import LegalDocumentLayout, { Section } from '@/components/legal/LegalDocumentLayout';
 
 /**
- * /legal/location-tracking — Location & Delivery Tracking Disclosure
- *
- * Accepted by a driver before live location sharing can begin. The version is
- * read from the registry and written to `legal_acceptances`; the tracking-start
- * edge function refuses to start without a current-version acceptance row.
+ * /legal/location-tracking — operative document for delivery location sharing.
+ * `DevicePermissionsPrivacy` keeps a short summary and links here.
  */
 const LocationTracking: React.FC = () => (
   <LegalDocumentLayout
     slug="location-tracking"
-    heading="Location & Delivery Tracking Disclosure"
-    seoTitle="Location & Delivery Tracking Disclosure | Vendibook"
-    seoDescription="When Vendibook collects location during a delivery, exactly what is collected, who can see it, how long it is kept, and how to stop it."
-    related={['handoff-terms', 'privacy-policy', 'device-permissions-privacy']}
+    heading="Location and Delivery Tracking Disclosure"
+    seoTitle="Location and Delivery Tracking Disclosure | Vendibook"
+    seoDescription="Vendibook does not track you. Location is shared only when someone starts an active delivery, only while it is active, and only with that order's participants."
+    related={['device-permissions-privacy', 'handoff-terms', 'privacy-policy', 'terms-of-service']}
   >
-    <Section title="1. Scope">
+    <Section title="In one sentence">
       <p>
-        This Disclosure explains how Vendibook collects and shares device location in connection with
-        a delivery or an in-person handoff. It applies to the person performing the delivery (a
-        seller, an assigned driver, or a person using a one-time driver link), to the buyer or renter
-        receiving the item, and to anyone confirming a pickup or handoff. It supplements, and does
-        not replace, the{' '}
-        <Link to="/privacy" className="underline">Privacy Policy</Link>.
+        <strong>
+          Vendibook does not track you. Location sharing happens only when a person with an active
+          delivery deliberately starts it, and only for as long as that delivery is active.
+        </strong>
       </p>
     </Section>
 
-    <Section title="2. What triggers location collection">
-      <p>Vendibook collects device location in only two situations:</p>
-      <ul className="list-disc space-y-1 pl-5">
-        <li>
-          <strong>An active delivery.</strong> A driver opens Delivery Mode for a specific order,
-          accepts this Disclosure, grants browser location permission, and explicitly taps
-          <em> Start delivery</em>. Nothing is collected before that tap.
-        </li>
-        <li>
-          <strong>Confirming a pickup or handoff.</strong> Where a handoff step asks a participant to
-          confirm where the item changed hands, a single point may be captured for that step, and
-          only if the participant grants permission for it.
-        </li>
-      </ul>
+    <Section title="1. When location is collected">
       <p>
-        Vendibook does <strong>not</strong> collect device location for browsing, search, saving a
-        listing, messaging, scheduling, checkout, or payment. Declining location does not prevent you
-        from buying, selling, renting, or using the rest of the platform.
+        Location is collected only when an assigned driver starts a specific delivery, or when a
+        participant confirms an in-person pickup or handoff.
+      </p>
+      <p>
+        It is never collected for browsing, searching, messaging, or paying. It is never collected in
+        the background. It is never collected when the app is closed or when the delivery is not
+        active.
       </p>
     </Section>
 
-    <Section title="3. What is collected">
-      <p>During an active delivery, the following may be collected from the driver's device:</p>
-      <ul className="list-disc space-y-1 pl-5">
-        <li>current latitude and longitude;</li>
-        <li>the accuracy radius reported by the device;</li>
-        <li>heading and speed, where the device reports them;</li>
-        <li>the timestamp of the reading; and</li>
-        <li>
-          sparse checkpoints — a small number of widely spaced points retained as transaction
-          evidence rather than a continuous movement trail.
-        </li>
-      </ul>
+    <Section title="2. What is collected">
       <p>
-        Vendibook does not collect contacts, photos, call logs, browsing history, or any location
-        outside an active delivery or a permitted handoff step.
+        While a delivery is active we collect the device's current coordinates, the accuracy reported
+        by the device, and a timestamp. We also keep a sparse set of route checkpoints, which are
+        retained as transaction evidence for that order.
       </p>
     </Section>
 
-    <Section title="4. Accuracy and reliability — important limits">
+    <Section title="3. Who can see it">
       <p>
-        Location is approximate. It depends on the device, its hardware, the operating system, the
-        mobile network, and satellite conditions. Readings may be delayed, coarse, out of order, or
-        unavailable for long stretches — particularly when the driver's phone locks, the browser is
-        put in the background, battery-saving is active, or signal is poor.
-      </p>
-      <p>
-        Vendibook makes no representation that tracking is continuous, real-time, complete, or
-        accurate. <strong>Do not rely on tracking for any safety-critical decision</strong>, and do
-        not treat a displayed position, distance, or arrival estimate as a promise about where a
-        vehicle or a person actually is.
+        That order's buyer, the seller, the assigned driver, and authorised Vendibook LC
+        administrators. Nobody else. It is never shown on a public listing page and never exposed
+        through a shareable public link.
       </p>
     </Section>
 
-    <Section title="5. Who can see it">
-      <p>Live position for an order is visible only to:</p>
-      <ul className="list-disc space-y-1 pl-5">
-        <li>the buyer or renter on that order;</li>
-        <li>the seller or host on that order;</li>
-        <li>the driver assigned to that delivery; and</li>
-        <li>authorized Vendibook administrators, for support, safety, fraud prevention, and disputes.</li>
-      </ul>
+    <Section title="4. When it stops">
       <p>
-        Location is never shown on a public listing page, never included in a public or shareable
-        link, never sold, and never used for advertising or profiling. Access is enforced by
-        server-side authorization rules, not by hiding elements in a browser.
+        Sharing stops automatically when the delivery is marked delivered, cancelled, or ended, and
+        immediately when the driver stops sharing or revokes permission in device settings.
+      </p>
+      <p>
+        Live position is not retained after the delivery closes. The retained checkpoints are kept
+        only as transaction evidence for that order.
       </p>
     </Section>
 
-    <Section title="6. When sharing starts and stops">
+    <Section title="5. Driver consent">
       <p>
-        Sharing begins only when the driver taps <em>Start delivery</em>. It stops automatically —
-        without any further action — when the delivery is marked delivered, marked arrived and then
-        ended, cancelled, or when the session expires or a one-time driver link is revoked. A driver
-        may also pause sharing at any time from Delivery Mode, and stop it entirely with a single tap
-        on the persistent tracking banner.
+        A driver must affirmatively consent before their first tracked delivery. That consent is
+        recorded with a version and a timestamp.
       </p>
-      <p>No location is collected between deliveries, and none is collected after a delivery closes.</p>
-    </Section>
-
-    <Section title="7. Retention">
-      <ul className="list-disc space-y-1 pl-5">
-        <li>
-          <strong>Live position.</strong> Only the most recent point is stored on the delivery
-          record. Each new reading replaces the previous one, and the live point is cleared when
-          tracking ends.
-        </li>
-        <li>
-          <strong>Checkpoint evidence.</strong> Widely spaced checkpoints and delivery status events
-          (started, arrived, delivered, ended) are retained with the transaction record for as long
-          as we keep that transaction record, because they may be needed for a dispute, a chargeback,
-          a tax or accounting requirement, or a legal obligation.
-        </li>
-      </ul>
-    </Section>
-
-    <Section title="8. Revoking permission during a delivery">
       <p>
-        A driver may revoke location permission at any time in the browser or operating system, or
-        by tapping stop in Delivery Mode. When permission is revoked, position updates simply stop;
-        the delivery itself is not cancelled and the order is not changed. The buyer's view will show
-        that live tracking is no longer available rather than a stale position presented as current.
-        The driver remains responsible for completing or cancelling the delivery through the normal
-        order flow.
+        Sharing location is the driver's own choice on the driver's own device. Vendibook LC does not
+        attach a tracking device to any vehicle and does not track a vehicle that is not in an active
+        delivery.
       </p>
     </Section>
 
-    <Section title="9. Buyer choices">
+    <Section title="6. Not an emergency or safety service">
       <p>
-        A buyer or renter is never required to share their own device location to receive a delivery.
-        A buyer who does not want to see live tracking can simply not open the tracking view, and can
-        ask us to stop sending delivery status notifications by writing to
-        support@vendibook.com. Turning off the buyer's view does not change the driver's obligations
-        or the order.
+        Live tracking and estimated arrival times are conveniences, not guarantees. Do not rely on
+        Vendibook for emergency, roadside, dispatch, or safety services.
       </p>
     </Section>
 
-    <Section title="10. Driver obligations">
-      <ul className="list-disc space-y-1 pl-5">
-        <li>
-          Do not interact with a phone or any device while operating a vehicle. Start, pause, and
-          complete steps only when safely stopped.
-        </li>
-        <li>
-          Comply with all traffic laws and, where applicable, all commercial motor vehicle, towing,
-          licensing, weight, permit, and insurance requirements.
-        </li>
-        <li>
-          Share location only for the delivery you are actually performing, and only while you are
-          performing it.
-        </li>
-      </ul>
+    <Section title="7. No sale, no advertising, no profiling">
       <p>
-        Vendibook does not employ, dispatch, supervise, train, route, schedule, or insure any driver,
-        and does not verify any driver's licensing, registration, qualifications, or insurance. A
-        driver is an independent party arranged between the buyer and the seller. Vendibook is not a
-        carrier, broker, freight forwarder, or party to any transport arrangement.
+        Location data is never sold, never used for advertising, and never used to build a profile of
+        a person's movements.
       </p>
     </Section>
 
-    <Section title="11. Access and deletion">
+    <Section title="8. Your controls">
       <p>
-        You may request a copy of the location records associated with your deliveries, or ask us to
-        delete them, by writing to support@vendibook.com from the email on your account. We will
-        respond as described in the{' '}
-        <Link to="/privacy" className="underline">Privacy Policy</Link>. We may retain checkpoint
-        evidence and status events where we need them for an open dispute, a chargeback, fraud
-        prevention, or a legal or tax obligation, and we will tell you when that applies.
+        You can revoke location permission in your device settings at any time. Revoking ends live
+        sharing and may prevent you from completing the delivery confirmation step. Declining
+        location never blocks browsing, messaging, or checkout.
       </p>
     </Section>
 
-    <Section title="12. Changes">
+    <Section title="9. Retention and deletion">
       <p>
-        If we materially change how location is collected, used, or shared, we will publish an
-        updated version of this Disclosure with a new version number and effective date, and drivers
-        will be asked to accept the new version before starting their next delivery.
+        Delivery checkpoints are retained with the transaction record as evidence, and longer where a
+        dispute, claim, or legal hold is open. To ask what we hold for an order, or to request
+        deletion where the law gives you that right, email support@vendibook.com.
+      </p>
+    </Section>
+
+    <Section title="10. Changes to this disclosure">
+      <p>
+        This disclosure is versioned. The version and effective date are shown at the top of this
+        page. If we materially change how location is collected, used, or shared, we will publish a
+        new version and ask affected drivers to accept it again before their next tracked delivery.
+        Related:{' '}
+        <Link to="/legal/device-permissions-privacy" className="underline">
+          Device Permissions &amp; Privacy Notice
+        </Link>
+        .
       </p>
     </Section>
   </LegalDocumentLayout>
