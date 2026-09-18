@@ -1,4 +1,5 @@
 import { useEffect, useState, useRef } from 'react';
+import PayPalPaymentFacts from '@/components/checkout/PayPalPaymentFacts';
 import { useSearchParams, Link, Navigate } from 'react-router-dom';
 import { CheckCircle2, Calendar, ArrowRight, Loader2, Home, ShieldCheck, Clock, PartyPopper, Mail, ChevronDown, ChevronUp, Receipt, Download, FileText, Printer, Wallet, BanknoteIcon, MapPin, AlertCircle, RefreshCw } from 'lucide-react';
 import confetti from 'canvas-confetti';
@@ -499,6 +500,12 @@ const PaymentSuccess = () => {
                     </div>
                   )}
 
+                  {/* Payment facts PayPal requires on the confirmation page */}
+                  <PayPalPaymentFacts
+                    saleTransactionId={saleTransaction?.id ?? null}
+                    className="rounded-xl border border-border bg-muted/30 p-4 text-left mb-6"
+                  />
+
                   {/* Tax Breakdown */}
                   {sessionInfo && sessionInfo.tax_total > 0 && (
                     <Collapsible open={showTaxBreakdown} onOpenChange={setShowTaxBreakdown} className="mb-6">
@@ -916,6 +923,12 @@ const PaymentSuccess = () => {
                       </div>
                     </div>
                   )}
+
+                  {/* Payment facts PayPal requires on the confirmation page */}
+                  <PayPalPaymentFacts
+                    bookingRequestId={booking?.id ?? null}
+                    className="rounded-xl border border-border bg-muted/30 p-4 text-left mb-6"
+                  />
 
                   {/* Tax Breakdown for Rentals */}
                   {sessionInfo && sessionInfo.tax_total > 0 && (
