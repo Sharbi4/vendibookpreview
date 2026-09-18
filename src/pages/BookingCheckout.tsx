@@ -1333,6 +1333,18 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
               fulfillment={fulfillmentSelected}
             />
 
+            <PostPaymentTimeline
+              mode="rental"
+              fulfillment={
+                fulfillmentSelected === 'delivery'
+                  ? 'delivery'
+                  : fulfillmentSelected === 'pickup'
+                    ? 'pickup'
+                    : 'on_site'
+              }
+              title="What happens next"
+            />
+
             <div>
               <h3 className="text-sm font-semibold text-foreground">Agreements</h3>
               <p className="text-xs text-muted-foreground mb-3">
