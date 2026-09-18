@@ -275,7 +275,7 @@ export default function HandoffPage() {
             <div><dt className="text-muted-foreground">Walkthrough recorded</dt><dd>{handoff.walkthrough_completed_at ? 'Yes' : 'No'}</dd></div>
             <div><dt className="text-muted-foreground">Media files</dt><dd>{media.length}</dd></div>
             <div><dt className="text-muted-foreground">Exceptions</dt><dd>{exceptions.length}</dd></div>
-            <div><dt className="text-muted-foreground">Location documented</dt><dd>{handoff.location_captured_at ? 'Yes' : 'No'}</dd></div>
+            <div><dt className="text-muted-foreground">Location documented</dt><dd>{(data?.fulfillment_sessions ?? []).some((s) => s.location_consent) ? 'Yes' : 'No'}</dd></div>
             <div><dt className="text-muted-foreground">Buyer decision</dt><dd>{handoff.buyer_decision.replace(/_/g, ' ')}</dd></div>
             <div><dt className="text-muted-foreground">Transaction reference</dt><dd className="font-mono text-xs">{(saleId ?? bookingId ?? '').slice(0, 8).toUpperCase()}</dd></div>
           </dl>

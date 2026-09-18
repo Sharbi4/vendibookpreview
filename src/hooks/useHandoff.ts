@@ -153,6 +153,8 @@ export function useHandoffContext(saleId?: string | null, bookingId?: string | n
         sale_transaction_id: saleId ?? null,
         booking_id: bookingId ?? null,
       }),
+    retry: false,
+    staleTime: 15_000,
   });
 
   const refresh = useCallback(() => queryClient.invalidateQueries({ queryKey: key }), [queryClient, saleId, bookingId]);
