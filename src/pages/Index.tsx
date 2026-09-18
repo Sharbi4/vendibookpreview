@@ -15,8 +15,9 @@ import SEO, { generateOrganizationSchema, generateWebSiteSchema } from '@/compon
 import JsonLd from '@/components/JsonLd';
 import { supabase } from '@/integrations/supabase/client';
 
-import { EquinoxFundingLogo, PayPalWordmark } from '@/components/brand/ProviderLogos';
 import vendibookWordmark from '@/assets/vendibook-wordmark.png';
+import equinoxLogoAsset from '@/assets/equinox-funding-dark.png.asset.json';
+import paypalMonogramAsset from '@/assets/paypal-monogram-color.png.asset.json';
 
 const ROW_LIMIT = 8;
 
