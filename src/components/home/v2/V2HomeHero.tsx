@@ -8,6 +8,7 @@ import { SmartImage } from '@/components/ui/SmartImage';
 import { formatListingPriceLabel } from '@/lib/listings/rentalPricing';
 import { CATEGORY_LABELS } from '@/types/listing';
 import type { V2CardListing } from './V2ListingCard';
+import vendibookHeroLogo from '@/assets/vendibook-logo-upload.png.asset.json';
 
 const CATEGORY_CHIPS = [
   { label: 'Food trucks', href: '/search?category=food_truck' },
@@ -61,9 +62,13 @@ export default function V2HomeHero({ slides }: { slides: V2CardListing[] }) {
     <section className="v2-home-hero">
       <div className="v2-home-hero-copy">
         <p className="v2-home-eyebrow">The marketplace for mobile food businesses</p>
-        <h1>Buy, sell, and rent food trucks, trailers, and kitchens.</h1>
+        <h1 className="sr-only">Vendibook — buy, sell, and rent food trucks, trailers, and kitchens</h1>
+        <img className="v2-home-hero-logo" src={vendibookHeroLogo.url} alt="Vendibook" />
         <p className="v2-home-lede">
-          Real inventory nationwide, secure checkout, and financing options where available.
+          Real inventory nationwide, secure checkout, and easy financing.*
+        </p>
+        <p className="v2-home-finance-legal">
+          *Financing is offered by third-party lenders and is subject to application, approval, and lender terms. Vendibook is not a lender.
         </p>
 
         <form className="v2-home-search" onSubmit={submit} role="search">
