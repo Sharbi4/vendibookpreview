@@ -111,4 +111,4 @@
 - [x] Remove duplicate review navigation, pickup copy, and Payment financing.
 - [x] Move rental verification into Details while preserving server gates.
 - [x] Add wizard-aware shell and independently scrolling desktop rail.
-- [ ] Validate real sale/rental routes, mobile layout, typecheck, build, and tests.
+- [x] Validate real sale/rental routes, mobile layout, typecheck, build, and checkout tests.
