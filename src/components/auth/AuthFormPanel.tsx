@@ -76,7 +76,11 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
-  const [selectedRole, setSelectedRole] = useState<RoleType>('shopper');
+  const [selectedRole, setSelectedRole] = useState<RoleType>(() => {
+    // Allow deep links (e.g. homepage "Start selling") to preselect a role.
+    const r = new URLSearchParams(window.location.search).get('role');
+    return r === 'host' || r === 'shopper' ? r : 'shopper';
+  });
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);

@@ -84,7 +84,7 @@ const TRUST_POINTS = [
 const Index = () => {
   usePageTracking();
   const { user } = useAuth();
-  const sellerStartHref = user ? '/list' : '/auth?mode=signup&redirect=%2Flist';
+  const sellerStartHref = user ? '/list' : '/auth?mode=signup&role=host&redirect=%2Flist';
 
   const saleQuery = useQuery({
     queryKey: ['home-v2-sale'],
