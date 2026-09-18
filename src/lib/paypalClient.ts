@@ -46,8 +46,18 @@ export function getPayPalConfig(): Promise<PayPalRuntimeConfig> {
 }
 
 /** Loads (once) and resolves the global `window.paypal` namespace. */
-export function loadPayPalSdk(): Promise<any> {
-  return loadSdk('capture');
+export interface PayPalSdkOptions {
+  /**
+   * Seller's PayPal merchant id. Required by PayPal when the order is routed
+   * to a connected seller; omitted for first-party checkout.
+   */
+  merchantId?: string | null;
+  /** PayPal analytics hint: which page the buttons are rendered on. */
+  pageType?: 'checkout' | 'cart' | 'product-details' | 'home' | 'mini-cart' | 'search-results';
+}
+
+export function loadPayPalSdk(options: PayPalSdkOptions = {}): Promise<any> {
+  return loadSdk('capture', options);
 }
 
 /**
@@ -57,14 +67,23 @@ export function loadPayPalSdk(): Promise<any> {
  * PayPal only allows one intent per SDK instance, so this mounts under its own
  * `data-namespace` and never disturbs the standard capture checkout.
  */
-export function loadPayPalAuthorizeSdk(): Promise<any> {
-  return loadSdk('authorize');
+export function loadPayPalAuthorizeSdk(options: PayPalSdkOptions = {}): Promise<any> {
+  return loadSdk('authorize', options);
 }
 
 const sdkPromises: Partial<Record<'capture' | 'authorize', Promise<any>>> = {};
+let loadedKey: string | null = null;
 
-function loadSdk(intent: 'capture' | 'authorize'): Promise<any> {
+function loadSdk(intent: 'capture' | 'authorize', options: PayPalSdkOptions = {}): Promise<any> {
   const namespace = intent === 'authorize' ? 'paypalAuthorize' : 'paypal';
+  // A different payee means a different SDK instance — never reuse a cached
+  // loader across merchants.
+  const cacheKey = `${intent}:${options.merchantId ?? 'first-party'}`;
+  if (loadedKey && loadedKey !== cacheKey) {
+    sdkPromise = null;
+    delete sdkPromises[intent];
+  }
+  loadedKey = cacheKey;
   const cached = intent === 'capture' ? sdkPromise : sdkPromises[intent];
   if (cached) return cached;
 
@@ -80,7 +99,11 @@ function loadSdk(intent: 'capture' | 'authorize'): Promise<any> {
       currency: config.currency || 'USD',
       intent,
       components: (config.components ?? ['buttons']).join(','),
+      // Pay Now: buyers see "Pay Now" in PayPal, never "Continue".
+      commit: intent === 'capture' ? 'true' : 'false',
     });
+    // Seller-routed (Connected Path) checkout must name the payee here.
+    if (options.merchantId) params.set('merchant-id', options.merchantId);
     if (config.enable_funding?.length) {
       params.set('enable-funding', config.enable_funding.join(','));
     }
@@ -94,6 +117,7 @@ function loadSdk(intent: 'capture' | 'authorize'): Promise<any> {
         'data-partner-attribution-id',
         config.partner_attribution_id || PARTNER_ATTRIBUTION_ID,
       );
+      script.setAttribute('data-page-type', options.pageType ?? 'checkout');
       if (namespace !== 'paypal') script.setAttribute('data-namespace', namespace);
 
       script.onload = () => {
