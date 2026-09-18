@@ -464,14 +464,17 @@ const PaymentSuccess = () => {
                     
                   </div>
                   
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">
+                    Payment confirmed
+                  </p>
                   <h1 className="text-2xl font-bold text-foreground mb-2 flex items-center justify-center gap-2">
                     <PartyPopper className="h-6 w-6 text-primary" />
-                    Purchase in Payment Protection!
+                    Your order is in motion.
                     <PartyPopper className="h-6 w-6 text-primary transform scale-x-[-1]" />
                   </h1>
-                  
+
                   <p className="text-muted-foreground mb-6">
-                    Your payment is securely held until both you and the seller confirm the transaction.
+                    PayPal confirmed your payment. Your order, agreement, and fulfillment details stay together on Vendibook.
                   </p>
 
                   {saleTransaction && (
@@ -686,7 +689,16 @@ const PaymentSuccess = () => {
                   </Collapsible>
 
                   <div className="mt-6">
-                    <PostPaymentTimeline />
+                    <PostPaymentTimeline
+                      mode="sale"
+                      fulfillment={
+                        (transaction?.fulfillment_type as
+                          | 'pickup'
+                          | 'delivery'
+                          | 'vendibook_freight'
+                          | undefined) ?? 'pickup'
+                      }
+                    />
                   </div>
 
                   <div className="mt-6">
