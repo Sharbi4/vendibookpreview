@@ -134,7 +134,7 @@ const AdminDisputes = () => {
                   {c.paypal_dispute_id && (
                     <p className="mt-1 text-xs text-muted-foreground">
                       PayPal dispute {c.paypal_dispute_id}
-                      {c.paypal_dispute_reason ? ` · ${c.paypal_dispute_reason.replaceAll('_', ' ').toLowerCase()}` : ''}
+                      {c.paypal_dispute_reason ? ` · ${c.paypal_dispute_reason.split('_').join(' ').toLowerCase()}` : ''}
                       {c.paypal_dispute_status ? ` · PayPal status: ${c.paypal_dispute_status}` : ''}
                     </p>
                   )}
