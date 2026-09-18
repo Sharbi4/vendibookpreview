@@ -105,6 +105,55 @@ const PaymentsTerms: React.FC = () => (
         insure or backstop any transaction.
       </p>
       <p>
+        <strong>Do not assume PayPal purchase protection applies to a Vendibook purchase.</strong> Under
+        PayPal's published rules that program excludes vehicles, which includes food trucks and towed
+        trailers; businesses sold as a going concern; items that are wholly or partly custom-made,
+        which covers most custom build-outs; items bought for resale; and industrial machinery used in
+        manufacturing. It also excludes "item not received" claims where the buyer collected the item
+        in person, which covers every local pickup. Where a surviving claim is decided in a buyer's
+        favour, PayPal may require the buyer to return the item at the buyer's own expense. For most of
+        what is listed on Vendibook, the Vendibook case process described in section 7A is the practical
+        remedy.
+      </p>
+      <p>
+        A buyer who pays by card may have broader chargeback rights through their card issuer. A buyer
+        cannot pursue both a PayPal claim and a card chargeback for the same transaction; choosing one
+        forecloses the other. Vendibook LC does not advise which route to take.
+      </p>
+    </Section>
+
+    <Section title="7A. The Vendibook case process">
+      <p>
+        Either party to an order may open a Vendibook case from the order page, from the time payment is
+        taken until the reporting window for that order closes. A case captures the issue type, a written
+        description, and any photo or video evidence. The other party is notified immediately with a
+        response deadline, and both parties and Vendibook LC share a single case thread. Statements in a
+        case are append-only: once written, neither party can alter or delete them.
+      </p>
+      <p>
+        <strong>While a case is open, no seller payment may be sent on that order.</strong> Opening a case
+        before disbursement freezes the disbursement trigger immediately. If Vendibook LC cannot determine
+        the case status of an order, no payment is released.
+      </p>
+      <p>
+        Freezing also pauses the payment-condition countdown for that order. The time remaining when the
+        case opened is preserved and resumes when the case closes without a refund. Both parties can see
+        that the countdown is paused and why.
+      </p>
+      <p>
+        Only a Vendibook LC administrator may resolve a frozen order. An administrator may request
+        information from either side and records one outcome: resolved between the parties, refunded in
+        full, refunded in part, released to the seller, or closed with no action. Every outcome is recorded
+        with the administrator, the reason, and the time it was made, and every state change on a frozen
+        order is written to an append-only financial audit record.
+      </p>
+      <p>
+        PayPal requires a buyer to attempt resolution with the seller before filing a claim, and opening a
+        Vendibook case satisfies that step. <strong>Opening or continuing a Vendibook case does not extend,
+        pause, or replace any deadline that PayPal or a card issuer sets.</strong> A buyer who wants to
+        preserve a PayPal or issuer remedy must observe those deadlines independently.
+      </p>
+      <p>
         At a seller's request, or where we are required to, Vendibook LC may provide transaction
         records to PayPal. Those records can include walkthrough consent records, handoff photos and
         video, delivery checkpoints, message history, and listing history.
