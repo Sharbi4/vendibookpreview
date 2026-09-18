@@ -89,6 +89,35 @@ export function lines(...parts: (string | null | undefined | false)[]): string {
   return parts.filter((p): p is string => typeof p === 'string' && p.trim().length > 0).join('\n');
 }
 
+/** Only quotes dimensions that are actually recorded. */
+export function describeDimensions(listing: any, specs: any): string {
+  const parts: string[] = [];
+  if (listing?.length_inches) parts.push(`${(Number(listing.length_inches) / 12).toFixed(1)} ft long`);
+  if (listing?.width_inches) parts.push(`${(Number(listing.width_inches) / 12).toFixed(1)} ft wide`);
+  if (!parts.length && typeof specs?.dimensions === 'string') return specs.dimensions;
+  return parts.join(', ');
+}
+
+/** Flattens recorded inclusions/equipment into readable text, or returns ''. */
+export function describeInclusions(specs: any): string {
+  const out: string[] = [];
+  for (const source of [specs?.inclusions, specs?.equipment_inventory]) {
+    if (!source) continue;
+    if (typeof source === 'string') { out.push(source); continue; }
+    if (Array.isArray(source)) {
+      out.push(...source.filter((v) => typeof v === 'string'));
+      continue;
+    }
+    if (typeof source === 'object') {
+      for (const [k, v] of Object.entries(source)) {
+        if (v === true) out.push(k.replace(/_/g, ' '));
+        else if (typeof v === 'string' && v.trim()) out.push(`${k.replace(/_/g, ' ')}: ${v}`);
+      }
+    }
+  }
+  return out.join(', ');
+}
+
 /**
  * Subscribe to document.complete / document.update for this document so the
  * signnow-webhook function can advance status + store the signed PDF.
@@ -300,9 +329,22 @@ async function loadSaleContext(transactionId: string) {
     .from('listings')
     .select(
       'id,title,category,address,city,state,postal_code,make,model,year_built,mileage,condition,title_status,has_lien,' +
-        'vin,serial_number,length_ft,width_ft,description,warranty_details,included_equipment',
+        'length_inches,width_inches,description',
     )
     .eq('id', tx.listing_id)
+    .maybeSingle();
+
+  // Ownership facts live in their own table and are only ever quoted, never invented.
+  const { data: ownership } = await supabase
+    .from('listing_ownership_details')
+    .select('title_status,vin_serial,title_number,title_state,active_lien,lien_holder_name,lien_release_available,ownership_notes,documents_available')
+    .eq('listing_id', tx.listing_id)
+    .maybeSingle();
+
+  const { data: specs } = await supabase
+    .from('listing_specs')
+    .select('inclusions,equipment_inventory,dimensions')
+    .eq('listing_id', tx.listing_id)
     .maybeSingle();
 
   const { data: terms } = await supabase
@@ -323,7 +365,7 @@ async function loadSaleContext(transactionId: string) {
 
   const seller = await loadProfile(tx.seller_id);
   const buyer = await loadProfile(tx.buyer_id);
-  return { tx, listing, terms, payment, seller, buyer };
+  return { tx, listing, ownership, specs, terms, payment, seller, buyer };
 }
 
 function fulfillmentLabel(type: string | null | undefined): string {
@@ -349,7 +391,7 @@ export async function ensurePurchaseSaleAgreement(transactionId: string): Promis
   const legacy = await findLiveDocument(supabase, { transaction_id: transactionId }, 'bill_of_sale');
   if (legacy) return { document_id: legacy.id, created: false };
 
-  const { tx, listing, terms, payment, seller, buyer } = await loadSaleContext(transactionId);
+  const { tx, listing, ownership, specs, terms, payment, seller, buyer } = await loadSaleContext(transactionId);
   if (!SALE_ELIGIBLE_STATUSES.has(String(tx.status))) return { skipped: 'not_payment_authorized' };
   if (!seller?.email || !buyer?.email) return { skipped: 'missing_party_email' };
 
@@ -376,13 +418,11 @@ export async function ensurePurchaseSaleAgreement(transactionId: string): Promis
     asset_year: listing?.year_built != null ? String(listing.year_built) : '',
     asset_make: str(listing?.make),
     asset_model: str(listing?.model),
-    asset_identifying_number_vin_or_serial_if_recorded: str((listing as any)?.vin) || str((listing as any)?.serial_number),
+    asset_identifying_number_vin_or_serial_if_recorded: str(ownership?.vin_serial),
     asset_category_2: str(listing?.category),
-    asset_dimensions_if_recorded: [listing?.length_ft && `${listing.length_ft} ft long`, listing?.width_ft && `${listing.width_ft} ft wide`].filter(Boolean).join(', '),
+    asset_dimensions_if_recorded: describeDimensions(listing, specs),
     asset_mileage_or_hours_if_recorded: listing?.mileage != null ? String(listing.mileage) : '',
-    asset_included_equipment: Array.isArray((listing as any)?.included_equipment)
-      ? (listing as any).included_equipment.join(', ')
-      : str((listing as any)?.included_equipment),
+    asset_included_equipment: describeInclusions(specs),
 
     price_breakdown: lines(
       `Agreed asset price: ${money(price)}`,
@@ -397,20 +437,23 @@ export async function ensurePurchaseSaleAgreement(transactionId: string): Promis
 
     seller_disclosures: lines(
       str(listing?.condition) && `Listed condition: ${listing?.condition}`,
-      str(listing?.title_status) && `Title status: ${listing?.title_status}`,
-      listing?.has_lien == null ? '' : listing.has_lien
-        ? 'Seller has disclosed an existing lien on the asset.'
-        : 'Seller has disclosed no existing lien on the asset.',
+      (str(ownership?.title_status) || str(listing?.title_status)) && `Title status: ${str(ownership?.title_status) || str(listing?.title_status)}`,
+      ownership?.active_lien == null && listing?.has_lien == null
+        ? ''
+        : (ownership?.active_lien ?? listing?.has_lien)
+          ? lines('Seller has disclosed an existing lien on the asset.', str(ownership?.lien_holder_name) && `Lien holder: ${ownership?.lien_holder_name}`)
+          : 'Seller has disclosed no existing lien on the asset.',
+      str(ownership?.ownership_notes),
       str(snap.seller_disclosures),
     ),
     condition_clause: lines(
-      str((listing as any)?.warranty_details) && `Written warranty offered by Seller: ${(listing as any).warranty_details}`,
+      str(snap.written_warranty) && `Written warranty offered by Seller: ${snap.written_warranty}`,
       snap.as_is === true
         ? 'Seller selected an as-is sale. To the extent permitted by applicable law, the asset is sold as-is, where-is, with no warranty other than any written warranty stated in this document. Rights that cannot be waived under applicable law are not waived.'
         : '',
       'Condition is based on the listing snapshot, written disclosures in the transaction record, and the handoff record created by the parties.',
     ),
-    title_status: str(listing?.title_status),
+    title_status: lines(str(ownership?.title_status) || str(listing?.title_status), str(ownership?.title_state) && `Title state: ${ownership?.title_state}`, ownership?.lien_release_available == null ? '' : ownership.lien_release_available ? 'Seller reports a lien release is available.' : ''),
     fulfillment_details: lines(
       `Fulfillment selected: ${fulfillmentLabel(tx.fulfillment_type)}`,
       tx.fulfillment_type === 'pickup' ? `Pickup area: ${area}. The parties coordinate the exact handoff location and time through Vendibook messages.` : '',
@@ -460,7 +503,7 @@ export async function ensureBillOfSale(transactionId: string): Promise<EnsureRes
 
 /** Sale handoff acknowledgment — only at the handoff stage, never at checkout. */
 export async function ensureSaleHandoffAcknowledgment(transactionId: string): Promise<EnsureResult> {
-  const { tx, listing, seller, buyer } = await loadSaleContext(transactionId);
+  const { tx, listing, ownership, seller, buyer } = await loadSaleContext(transactionId);
   if (!SALE_ELIGIBLE_STATUSES.has(String(tx.status))) return { skipped: 'not_payment_authorized' };
   if (!seller?.email || !buyer?.email) return { skipped: 'missing_party_email' };
 
@@ -530,7 +573,7 @@ async function loadBookingContext(bookingId: string) {
     .from('listings')
     .select(
       'id,title,category,mode,address,city,state,postal_code,fulfillment_type,pickup_instructions,delivery_instructions,' +
-        'pickup_location_text,access_instructions,fuel_type,make,model,year_built,house_rules,description',
+        'pickup_location_text,access_instructions,fuel_type,make,model,year_built,description',
     )
     .eq('id', booking.listing_id)
     .maybeSingle();
@@ -606,7 +649,7 @@ export async function ensureRentalAgreement(bookingId: string): Promise<EnsureRe
       `Total: ${money(booking.total_price)}`,
       booking.is_instant_book ? 'Booked with Instant Book' : 'Booked by host-approved request',
     ),
-    host_rules: lines(str((listing as any)?.house_rules), str(t.house_rules), str(t.condition_and_use)),
+    host_rules: lines(str(t.house_rules), str(t.rules), str(t.condition_and_use)),
     cancellation_policy: str(t.cancellation_policy),
     permit_allocation: str(t.licenses_policy),
     insurance_terms: lines(describeInsuranceSection(requirementsSnapshot), describeRequirements(requirementsSnapshot)),
