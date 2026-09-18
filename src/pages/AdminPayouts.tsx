@@ -461,6 +461,35 @@ export default function AdminPayouts() {
         </DialogContent>
       </Dialog>
 
+      <Dialog open={!!cancelTarget} onOpenChange={(open) => !open && setCancelTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cancel this order and refund the buyer?</DialogTitle>
+            <DialogDescription>
+              PayPal refunds the buyer in full first. Only if that succeeds is the sale cancelled and the
+              seller payment closed out. Both parties are emailed the reason you write here.
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={cancelReason}
+            onChange={(event) => setCancelReason(event.target.value)}
+            placeholder="Required reason for the audit record and for both parties"
+            className="text-base"
+          />
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setCancelTarget(null)}>Keep order</Button>
+            <Button
+              variant="destructive"
+              disabled={cancelReason.trim().length < 5 || busyId === cancelTarget?.id}
+              onClick={cancelOrder}
+            >
+              {busyId === cancelTarget?.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Cancel &amp; refund
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <Footer />
     </div>
   );
