@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   DEVICE_PRIVACY_VERSION,
-  WALKTHROUGH_RECORDING_ENABLED,
   WALKTHROUGH_TERMS_VERSION,
   recordWalkthroughConsent,
   requestLocationPermission,
@@ -86,7 +85,9 @@ export default function WalkthroughConsentGate({ walkthroughId, title, requiresL
 
   const mediaReady = camera === 'granted' && microphone === 'granted';
   const locationReady = !requiresLocation || location === 'granted';
-  const termsReady = terms && privacy && (!WALKTHROUGH_RECORDING_ENABLED || recording);
+  // Monitoring/recording acknowledgment is always required — a walkthrough may be
+  // monitored or recorded, so nobody enters the room without consenting to that.
+  const termsReady = terms && privacy && recording;
   const canJoin = mediaReady && locationReady && termsReady;
 
   const helper = !termsReady
@@ -106,7 +107,7 @@ export default function WalkthroughConsentGate({ walkthroughId, title, requiresL
       microphone,
       locationRequired: requiresLocation,
       location,
-      recordingConsent: WALKTHROUGH_RECORDING_ENABLED ? recording : false,
+      recordingConsent: recording,
     });
     setSaving(false);
     if (error) {
@@ -177,19 +178,19 @@ export default function WalkthroughConsentGate({ walkthroughId, title, requiresL
             walkthrough.
           </span>
         </label>
-        {WALKTHROUGH_RECORDING_ENABLED && (
-          <label className="wc-check">
-            <input type="checkbox" checked={recording} onChange={(e) => setRecording(e.target.checked)} />
-            <span>
-              I consent to this walkthrough being recorded and understand how the recording will be
-              used and retained.
-            </span>
-          </label>
-        )}
+        <label className="wc-check">
+          <input type="checkbox" checked={recording} onChange={(e) => setRecording(e.target.checked)} />
+          <span>
+            I understand this walkthrough may be monitored or recorded by Vendibook for safety,
+            quality and dispute resolution, and I consent to that.
+          </span>
+        </label>
         <p className="wc-fineprint">
-          {WALKTHROUGH_RECORDING_ENABLED
-            ? 'Recording is on for this walkthrough.'
-            : 'This walkthrough is not recorded or transcribed. Only you and the other participant can join.'}
+          Only you and the other participant can join this room. Vendibook may monitor or record
+          walkthroughs as described in the{' '}
+          <Link to="/legal/video-walkthrough-terms" target="_blank" rel="noreferrer">walkthrough terms</Link>
+          {' '}and{' '}
+          <Link to="/legal/device-permissions-privacy" target="_blank" rel="noreferrer">privacy notice</Link>.
         </p>
       </section>
 

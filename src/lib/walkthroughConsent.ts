@@ -9,16 +9,21 @@ import { supabase } from '@/integrations/supabase/client';
  */
 
 /** Bump when the legal copy on the linked pages materially changes. */
-export const WALKTHROUGH_TERMS_VERSION = '2026-09-18';
-export const DEVICE_PRIVACY_VERSION = '2026-09-18';
+export const WALKTHROUGH_TERMS_VERSION = '2026-09-18b';
+export const DEVICE_PRIVACY_VERSION = '2026-09-18b';
 
 /**
- * Call recording is NOT implemented. Rooms and tokens are created with
- * recording/transcription disabled. This flag must stay false until recording
- * is actually built, disclosed and approved — flipping it on only surfaces a
- * separate, unchecked recording-consent box; it does not start any recording.
+ * Monitoring / recording disclosure.
+ *
+ * Every participant must explicitly consent, before entering the room, that a
+ * walkthrough MAY be monitored or recorded for safety, quality and dispute
+ * resolution. The consent is stored per participant in
+ * `video_walkthrough_consents.recording_consent_granted`.
+ *
+ * Automatic cloud recording is not switched on in the video provider today, so
+ * copy must always say "may be" — never assert that a given call was recorded.
  */
-export const WALKTHROUGH_RECORDING_ENABLED = false;
+export const WALKTHROUGH_RECORDING_DISCLOSURE = true;
 
 export type PermissionState = 'not-requested' | 'granted' | 'denied' | 'unavailable';
 

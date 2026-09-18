@@ -135,8 +135,10 @@ const E = ({
 
       {!cancelled ? (
         <Small>
-          This walkthrough is not recorded or transcribed. Only you and {other} can enter the room. Need a
-          different time? Open the meeting page to reschedule or cancel.
+          Only you and {other} can enter the room. Walkthroughs may be monitored or recorded for safety and
+          dispute resolution; you’ll accept the Walkthrough Terms of Use and Privacy Notice, and allow camera
+          and microphone, right before you join. Need a different time? Open the meeting page to reschedule
+          or cancel.
         </Small>
       ) : null}
 
