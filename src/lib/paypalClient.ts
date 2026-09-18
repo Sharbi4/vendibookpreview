@@ -29,13 +29,47 @@ export const PARTNER_ATTRIBUTION_ID = 'VENDIBOOK_SP_PPCP';
 let configPromise: Promise<PayPalRuntimeConfig> | null = null;
 let sdkPromise: Promise<any> | null = null;
 
+/**
+ * The runtime config only changes when the environment is switched, so a short
+ * per-tab cache removes a cold-start edge call from every checkout paint. The
+ * client id it carries is publishable; nothing secret is stored.
+ */
+const CONFIG_CACHE_KEY = 'vb:paypal-config';
+const CONFIG_TTL_MS = 5 * 60 * 1000;
+
+function readCachedConfig(): PayPalRuntimeConfig | null {
+  try {
+    const raw = sessionStorage.getItem(CONFIG_CACHE_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { at: number; config: PayPalRuntimeConfig };
+    if (!parsed?.at || Date.now() - parsed.at > CONFIG_TTL_MS) return null;
+    return parsed.config ?? null;
+  } catch {
+    return null;
+  }
+}
+
 export function getPayPalConfig(): Promise<PayPalRuntimeConfig> {
   if (!configPromise) {
+    const cached = readCachedConfig();
+    if (cached?.client_id) {
+      configPromise = Promise.resolve(cached);
+      return configPromise;
+    }
     configPromise = supabase.functions
       .invoke('paypal-config')
       .then(({ data, error }) => {
         if (error) throw error;
-        return data as PayPalRuntimeConfig;
+        const config = data as PayPalRuntimeConfig;
+        try {
+          sessionStorage.setItem(
+            CONFIG_CACHE_KEY,
+            JSON.stringify({ at: Date.now(), config }),
+          );
+        } catch {
+          /* private mode — fall back to a network fetch next time */
+        }
+        return config;
       })
       .catch((err) => {
         configPromise = null;
@@ -44,6 +78,7 @@ export function getPayPalConfig(): Promise<PayPalRuntimeConfig> {
   }
   return configPromise;
 }
+
 
 /** Loads (once) and resolves the global `window.paypal` namespace. */
 export interface PayPalSdkOptions {
