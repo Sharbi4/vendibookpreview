@@ -2994,23 +2994,26 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
 .v2-home-tools-grid strong { font-size: 15px; }
 .v2-home-tools-grid small { color: hsl(var(--v2h-stone)); font-size: 13px; line-height: 1.4; }
 .v2-home-partners {
-  display: grid; gap: 24px; border: 1px solid hsl(32 14% 84%); border-radius: 16px;
-  background: hsl(36 20% 92%); padding: 26px 20px;
+  display: grid; gap: 26px; border: 1px solid hsl(32 14% 84%); border-radius: 16px;
+  background: hsl(36 20% 92%); padding: 28px 20px;
   box-shadow: inset 0 1px 0 hsl(40 40% 99% / .7);
 }
 .v2-home-partners-copy h2 { max-width: 20ch; }
+.v2-home-partners-sub { margin-top: 10px; color: hsl(var(--v2h-stone)); font-size: 14.5px; line-height: 1.55; max-width: 44ch; }
 .v2-home-partner-tiles { display: grid; gap: 12px; }
 .v2-home-partner-tiles article {
-  display: flex; min-height: 132px; flex-direction: column; align-items: center; justify-content: center;
+  display: flex; min-height: 148px; flex-direction: column; align-items: center; justify-content: center;
   gap: 14px; border: 1px solid hsl(var(--v2h-line-strong)); border-radius: 12px;
-  background: hsl(var(--v2h-surface)); padding: 20px 16px; text-align: center;
+  background: hsl(var(--v2h-surface)); padding: 22px 18px; text-align: center;
   box-shadow: 0 1px 2px hsl(28 12% 20% / .07), 0 18px 34px -28px hsl(28 12% 20% / .5);
   transition: border-color .16s ease, transform .16s ease, box-shadow .16s ease;
 }
 .v2-home-partner-tiles article:hover { transform: translateY(-2px); border-color: hsl(var(--v2h-ink) / .35); box-shadow: 0 20px 38px -26px hsl(28 12% 20% / .58); }
 .v2-home-partner-mark { display: flex; height: 62px; width: 100%; align-items: center; justify-content: center; }
 .v2-home-partner-mark img, .v2-home-partner-mark svg { max-width: 220px; max-height: 62px; object-fit: contain; }
-.v2-home-partner-tiles small { color: hsl(var(--v2h-stone)); font-size: 12.5px; font-weight: 640; letter-spacing: .01em; }
+.v2-home-partner-copy { display: grid; gap: 5px; }
+.v2-home-partner-copy h3 { color: hsl(var(--v2h-ink)); font-size: 15px; font-weight: 700; letter-spacing: .01em; }
+.v2-home-partner-copy p { color: hsl(var(--v2h-stone)); font-size: 13px; font-weight: 500; line-height: 1.5; max-width: 30ch; margin-inline: auto; }
 
 .v2-home-final { display: flex; flex-direction: column; gap: 18px; align-items: flex-start; padding: 8px 0 2px; }
 .v2-home-final > div:last-child { display: flex; align-items: center; gap: 16px; }
