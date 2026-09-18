@@ -47,6 +47,8 @@ const LegalDocumentPage = lazy(() => import("./pages/LegalDocumentPage"));
 const LegalCenter = lazy(() => import("./pages/LegalCenter"));
 const SmsTerms = lazy(() => import("./pages/legal/SmsTerms"));
 const SmsOptInProof = lazy(() => import("./pages/legal/SmsOptInProof"));
+const VideoWalkthroughTerms = lazy(() => import("./pages/legal/VideoWalkthroughTerms"));
+const DevicePermissionsPrivacy = lazy(() => import("./pages/legal/DevicePermissionsPrivacy"));
 const SmsEnrollment = lazy(() => import("./pages/SmsEnrollment"));
 const SmsOptIn = lazy(() => import("./pages/SmsOptIn"));
 // Unified Vendibook workspace (primary logged-in experience)
@@ -381,6 +383,8 @@ const AnimatedRoutes = () => {
           {/* Static legal pages take precedence over the /legal/:slug DB catch-all */}
           <Route path="/legal/sms" element={<PageTransition><SmsTerms /></PageTransition>} />
           <Route path="/legal/sms-opt-in-proof" element={<PageTransition><SmsOptInProof /></PageTransition>} />
+          <Route path="/legal/video-walkthrough-terms" element={<PageTransition><VideoWalkthroughTerms /></PageTransition>} />
+          <Route path="/legal/device-permissions-privacy" element={<PageTransition><DevicePermissionsPrivacy /></PageTransition>} />
           <Route path="/sms" element={<PageTransition><SmsEnrollment /></PageTransition>} />
           <Route path="/sms-opt-in" element={<PageTransition><SmsOptIn /></PageTransition>} />
           <Route path="/legal" element={<PageTransition><LegalCenter /></PageTransition>} />

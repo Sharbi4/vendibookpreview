@@ -10259,6 +10259,68 @@ export type Database = {
         }
         Relationships: []
       }
+      video_walkthrough_consents: {
+        Row: {
+          accepted_at: string
+          camera_permission_granted: boolean
+          consent_type: string
+          consent_version: string
+          created_at: string
+          id: string
+          location_permission_granted: boolean
+          location_permission_required: boolean
+          microphone_permission_granted: boolean
+          recording_consent_granted: boolean
+          route: string | null
+          source: string
+          user_agent: string | null
+          user_id: string
+          walkthrough_id: string | null
+        }
+        Insert: {
+          accepted_at?: string
+          camera_permission_granted?: boolean
+          consent_type: string
+          consent_version: string
+          created_at?: string
+          id?: string
+          location_permission_granted?: boolean
+          location_permission_required?: boolean
+          microphone_permission_granted?: boolean
+          recording_consent_granted?: boolean
+          route?: string | null
+          source?: string
+          user_agent?: string | null
+          user_id: string
+          walkthrough_id?: string | null
+        }
+        Update: {
+          accepted_at?: string
+          camera_permission_granted?: boolean
+          consent_type?: string
+          consent_version?: string
+          created_at?: string
+          id?: string
+          location_permission_granted?: boolean
+          location_permission_required?: boolean
+          microphone_permission_granted?: boolean
+          recording_consent_granted?: boolean
+          route?: string | null
+          source?: string
+          user_agent?: string | null
+          user_id?: string
+          walkthrough_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_walkthrough_consents_walkthrough_id_fkey"
+            columns: ["walkthrough_id"]
+            isOneToOne: false
+            referencedRelation: "video_walkthroughs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       video_walkthrough_events: {
         Row: {
           actor_id: string | null
