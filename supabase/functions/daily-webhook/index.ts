@@ -11,25 +11,10 @@
  * under a dedupe key, and recording state only ever moves forward.
  */
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
+import { verifyDailySignature } from '../_shared/dailySignature.ts';
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json' } });
-
-const decodeBase64 = (value: string) => Uint8Array.from(atob(value), (c) => c.charCodeAt(0));
-const encodeBase64 = (bytes: Uint8Array) => btoa(String.fromCharCode(...bytes));
-
-function timingSafeEqual(a: string, b: string) {
-  if (a.length !== b.length) return false;
-  let diff = 0;
-  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
-  return diff === 0;
-}
-
-async function verifySignature(rawBody: string, timestamp: string, signature: string, secret: string) {
-  const key = await crypto.subtle.importKey('raw', decodeBase64(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
-  const mac = await crypto.subtle.sign('HMAC', key, new TextEncoder().encode(`${timestamp}.${rawBody}`));
-  return timingSafeEqual(encodeBase64(new Uint8Array(mac)), signature.trim());
-}
 
 /** Recording states only move forward, so replays and late events are safe. */
 const RANK: Record<string, number> = { requested: 0, recording: 1, processing: 2, ready: 3, error: 3 };
@@ -47,7 +32,7 @@ Deno.serve(async (req) => {
     console.error('[daily-webhook] HMAC secret not configured');
     return json({ error: 'not_configured' }, 401);
   }
-  if (!timestamp || !signature || !(await verifySignature(rawBody, timestamp, signature, secret).catch(() => false))) {
+  if (!timestamp || !signature || !(await verifyDailySignature(rawBody, timestamp, signature, secret))) {
     return json({ error: 'invalid_signature' }, 401);
   }
 
