@@ -12,6 +12,13 @@ import {
 } from '../../../supabase/functions/_shared/signnowTemplateSpecs.ts';
 
 const decode = (bytes: Uint8Array) => new TextDecoder('latin1').decode(bytes);
+
+/** Rejoin the drawn text runs so wrapped sentences can be asserted on. */
+const extractText = (bytes: Uint8Array): string =>
+  Array.from(decode(bytes).matchAll(/\((.*?)\) Tj/g))
+    .map((m) => m[1].replace(/\\([\\()])/g, '$1'))
+    .join(' ')
+    .replace(/\s+/g, ' ');
 const specs = Object.values(TEMPLATE_SPECS) as TemplateSpec[];
 
 describe('PDF engine', () => {
@@ -100,7 +107,7 @@ describe('template package', () => {
 });
 
 describe('document language guardrails', () => {
-  const allText = specs.map((s) => decode(s.build().pdf)).join('\n');
+  const allText = specs.map((s) => extractText(s.build().pdf)).join(' ');
 
   it('never describes the transaction as escrow or promises released funds', () => {
     expect(/\bescrow\b/i.test(allText.replace(/not an escrow agent|not create an escrow/gi, ''))).toBe(false);
@@ -115,7 +122,7 @@ describe('document language guardrails', () => {
 
   it('states the electronic signature consent in every signable document', () => {
     for (const spec of specs) {
-      const text = decode(spec.build().pdf);
+      const text = extractText(spec.build().pdf);
       const hasEsign = /sign this document electronically/i.test(text) || /Acknowledgments/i.test(text);
       expect(hasEsign).toBe(true);
     }
