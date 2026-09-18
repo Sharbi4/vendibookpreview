@@ -902,7 +902,7 @@ const SaleCheckout = () => {
   const railExtras = (
     <div className="v2-rail-extras">
       <div className="v2-rail-paypal">
-        <PayPalWordmark className="h-4 w-auto shrink-0" />
+        <PayPalWordmark surface="light" className="h-4 w-auto shrink-0 whitespace-nowrap" />
         {currentStep === 5 ? (
           <p><strong>You're ready to pay</strong></p>
         ) : (

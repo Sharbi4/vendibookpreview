@@ -2309,7 +2309,8 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
   border: 1px solid #d7dbe0; border-radius: 14px; padding: 13px 14px;
   background: linear-gradient(180deg, #fbfcfd 0%, #eef0f3 100%);
 }
-.v2-rail-paypal > svg, .v2-rail-paypal > img { flex: 0 0 auto; height: 16px; width: auto; }
+.v2-rail-paypal > svg, .v2-rail-paypal > img, .v2-rail-paypal > span { flex: 0 0 auto; white-space: nowrap; }
+.v2-rail-paypal > img { height: 16px; width: auto; }
 .v2-rail-paypal strong { display: block; font-size: 13px; font-weight: 640; color: #1d2024; }
 .v2-rail-paypal span { display: block; margin-top: 2px; font-size: 11.5px; line-height: 1.45; color: #5a6068; }
 .v2-rail-agreement { font-size: 11.5px; color: hsl(var(--v2-stone)); }
