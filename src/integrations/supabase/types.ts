@@ -1505,10 +1505,15 @@ export type Database = {
           last_activity_at: string
           listing_id: string | null
           listing_snapshot: Json | null
-          opened_by: string
+          opened_by: string | null
           opened_by_role: string
           outcome: string | null
           payment_record_id: string | null
+          paypal_dispute_id: string | null
+          paypal_dispute_outcome: string | null
+          paypal_dispute_reason: string | null
+          paypal_dispute_status: string | null
+          paypal_dispute_updated_at: string | null
           resolution_reason: string | null
           resolved_at: string | null
           resolved_by: string | null
@@ -1517,6 +1522,7 @@ export type Database = {
           seller_id: string
           seller_payable_id: string | null
           sla_due_at: string | null
+          source: string
           status: string
           updated_at: string
         }
@@ -1535,10 +1541,15 @@ export type Database = {
           last_activity_at?: string
           listing_id?: string | null
           listing_snapshot?: Json | null
-          opened_by: string
+          opened_by?: string | null
           opened_by_role: string
           outcome?: string | null
           payment_record_id?: string | null
+          paypal_dispute_id?: string | null
+          paypal_dispute_outcome?: string | null
+          paypal_dispute_reason?: string | null
+          paypal_dispute_status?: string | null
+          paypal_dispute_updated_at?: string | null
           resolution_reason?: string | null
           resolved_at?: string | null
           resolved_by?: string | null
@@ -1547,6 +1558,7 @@ export type Database = {
           seller_id: string
           seller_payable_id?: string | null
           sla_due_at?: string | null
+          source?: string
           status?: string
           updated_at?: string
         }
@@ -1565,10 +1577,15 @@ export type Database = {
           last_activity_at?: string
           listing_id?: string | null
           listing_snapshot?: Json | null
-          opened_by?: string
+          opened_by?: string | null
           opened_by_role?: string
           outcome?: string | null
           payment_record_id?: string | null
+          paypal_dispute_id?: string | null
+          paypal_dispute_outcome?: string | null
+          paypal_dispute_reason?: string | null
+          paypal_dispute_status?: string | null
+          paypal_dispute_updated_at?: string | null
           resolution_reason?: string | null
           resolved_at?: string | null
           resolved_by?: string | null
@@ -1577,6 +1594,7 @@ export type Database = {
           seller_id?: string
           seller_payable_id?: string | null
           sla_due_at?: string | null
+          source?: string
           status?: string
           updated_at?: string
         }
