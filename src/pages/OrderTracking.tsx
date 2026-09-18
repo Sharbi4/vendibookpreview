@@ -516,6 +516,7 @@ const OrderTracking = () => {
   const { toast } = useToast();
   const [isConfirming, setIsConfirming] = useState(false);
   const [isPayingFreight, setIsPayingFreight] = useState(false);
+  const [freightPaymentOpen, setFreightPaymentOpen] = useState(false);
 
   // Handle freight payment success/cancel from URL params
   useEffect(() => {
