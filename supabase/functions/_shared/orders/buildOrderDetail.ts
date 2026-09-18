@@ -185,6 +185,10 @@ export async function buildOrderDetail(
     seller_next_action: domain.sellerNextAction ?? null,
     timeline,
     settlement,
+    links: {
+      sale_transaction_id: record.sale_transaction_id ?? null,
+      booking_request_id: record.booking_request_id ?? null,
+    },
     support: {
       email: 'support@vendibook.com',
       phone: '(725) 755-9598',
