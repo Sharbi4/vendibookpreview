@@ -10,6 +10,11 @@ import {
   geocodeAddress,
   isGoogleRoutingConfigured,
 } from "../_shared/googleRouting.ts";
+import {
+  LEGAL_VERSIONS,
+  hasCurrentLegalAcceptance,
+  recordServerLegalAcceptance,
+} from "../_shared/legalVersions.ts";
 
 
 /**
@@ -392,6 +397,43 @@ serve(async (req) => {
         }
         if (!body.location_consent) {
           return jsonError(400, "consent_required", "Please accept the delivery location notice before starting.");
+        }
+
+        // Server-side gate: the Location & Delivery Tracking Disclosure must be
+        // accepted at the CURRENT version before any location sharing starts.
+        // Calling this endpoint directly cannot skip it.
+        {
+          const wanted = LEGAL_VERSIONS["location-tracking"];
+          if (driverSessionId) {
+            // One-time driver link: no account exists, so the current version
+            // must be asserted in the request and is stored on the session.
+            if (String(body.legal_acceptance_version ?? "") !== wanted) {
+              return jsonError(
+                400,
+                "legal_acceptance_required",
+                "Please accept the current Location & Delivery Tracking Disclosure before starting.",
+              );
+            }
+          } else {
+            const accepted = await hasCurrentLegalAcceptance(db, userId!, "location-tracking");
+            if (!accepted) {
+              if (String(body.legal_acceptance_version ?? "") !== wanted) {
+                return jsonError(
+                  400,
+                  "legal_acceptance_required",
+                  "Please accept the current Location & Delivery Tracking Disclosure before starting.",
+                );
+              }
+              await recordServerLegalAcceptance(db, {
+                userId: userId!,
+                slug: "location-tracking",
+                surface: "delivery_mode",
+                relatedEntityType: "delivery",
+                relatedEntityId: sessionId,
+                grantedPermissions: { location: true },
+              });
+            }
+          }
         }
         if (session.mode === "buyer_pickup") {
           return jsonError(400, "not_a_delivery", "Live tracking is only available for deliveries.");
