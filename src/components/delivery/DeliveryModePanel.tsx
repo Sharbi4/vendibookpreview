@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Truck, MapPin, Pause, Play, CheckCircle2, Loader2, Ban, ShieldCheck } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,8 +8,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { handoffOps, type FulfillmentSession } from '@/hooks/useHandoff';
 import { useDeliveryTracking } from '@/hooks/useDeliveryTracking';
+import { useAuth } from '@/contexts/AuthContext';
+import { LOCATION_TRACKING_VERSION } from '@/lib/legal/versions';
+import { recordLegalAcceptance } from '@/lib/legal/recordAcceptance';
 
-export const DELIVERY_LOCATION_CONSENT_VERSION = 'delivery-location:2026-09-18';
+/** Legacy alias retained for the session's stored consent string. */
+export const DELIVERY_LOCATION_CONSENT_VERSION = `location-tracking:${LOCATION_TRACKING_VERSION}`;
 
 interface Props {
   saleTransactionId?: string | null;
@@ -38,6 +43,7 @@ export default function DeliveryModePanel({
   const session = (sessionOverride as FulfillmentSession | null) ?? hookSession;
   const sessionId = sessionIdOverride ?? session?.id ?? null;
   const refresh = onChanged ?? hookRefresh;
+  const { user } = useAuth();
 
 
   const [consent, setConsent] = useState(false);
@@ -146,6 +152,22 @@ export default function DeliveryModePanel({
         )}
       </div>
 
+      {tracking && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-3">
+          <p className="text-sm">
+            <strong>Your location is being shared</strong> with this order&rsquo;s buyer, seller, and Vendibook support
+            while the delivery is active.{' '}
+            <Link to="/legal/location-tracking" target="_blank" rel="noreferrer" className="underline">
+              How this works
+            </Link>
+          </p>
+          <Button size="sm" variant="outline" disabled={!!busy}
+            onClick={() => run('end', { action: 'end_tracking', fulfillment_session_id: sessionId }, 'Location sharing stopped.')}>
+            <Ban className="mr-2 h-4 w-4" /> Stop sharing
+          </Button>
+        </div>
+      )}
+
       {!tracking && !closed && (
         <div className="space-y-3 rounded-lg border border-border p-3">
           <p className="text-sm">
@@ -156,9 +178,17 @@ export default function DeliveryModePanel({
           <label className="flex items-start gap-2 text-sm">
             <Checkbox checked={consent} onCheckedChange={(v) => setConsent(v === true)} className="mt-0.5" />
             <span>
-              I understand my live location will be shared with the buyer for the duration of this delivery.
+              I have read and agree to the{' '}
+              <Link to="/legal/location-tracking" target="_blank" rel="noreferrer" className="underline">
+                Location &amp; Delivery Tracking Disclosure
+              </Link>
+              , and I understand my live location will be shared with this order&rsquo;s participants for the duration
+              of this delivery.
             </span>
           </label>
+          <p className="text-xs text-muted-foreground">
+            Do not interact with your device while driving. Start and complete steps only when safely stopped.
+          </p>
           {permission === 'denied' && (
             <p className="text-sm text-destructive">
               Location is blocked for this site. Allow location in your browser settings, then try again.
@@ -174,12 +204,26 @@ export default function DeliveryModePanel({
             onClick={async () => {
               const ok = await requestPermission();
               if (!ok) return;
+              // Record the acceptance for a signed-in driver. The driver-link
+              // path has no account; the edge function still requires the
+              // current version to be asserted before tracking can start.
+              if (user && !driverToken) {
+                await recordLegalAcceptance({
+                  userId: user.id,
+                  slugs: ['location-tracking'],
+                  surface: 'delivery_mode',
+                  relatedEntityType: 'delivery',
+                  relatedEntityId: sessionId,
+                  grantedPermissions: { location: true },
+                }).catch(() => undefined);
+              }
               await run(
                 'start',
                 {
                   action: 'start_tracking',
                   fulfillment_session_id: sessionId,
                   location_consent: true,
+                  legal_acceptance_version: LOCATION_TRACKING_VERSION,
                   consent_version: DELIVERY_LOCATION_CONSENT_VERSION,
                 },
                 'Delivery started. The buyer can follow you live.',

@@ -10,6 +10,11 @@ import {
   geocodeAddress,
   isGoogleRoutingConfigured,
 } from "../_shared/googleRouting.ts";
+import {
+  LEGAL_VERSIONS,
+  hasCurrentLegalAcceptance,
+  recordServerLegalAcceptance,
+} from "../_shared/legalVersions.ts";
 
 
 /**
@@ -393,6 +398,43 @@ serve(async (req) => {
         if (!body.location_consent) {
           return jsonError(400, "consent_required", "Please accept the delivery location notice before starting.");
         }
+
+        // Server-side gate: the Location & Delivery Tracking Disclosure must be
+        // accepted at the CURRENT version before any location sharing starts.
+        // Calling this endpoint directly cannot skip it.
+        {
+          const wanted = LEGAL_VERSIONS["location-tracking"];
+          if (driverSessionId) {
+            // One-time driver link: no account exists, so the current version
+            // must be asserted in the request and is stored on the session.
+            if (String(body.legal_acceptance_version ?? "") !== wanted) {
+              return jsonError(
+                400,
+                "legal_acceptance_required",
+                "Please accept the current Location & Delivery Tracking Disclosure before starting.",
+              );
+            }
+          } else {
+            const accepted = await hasCurrentLegalAcceptance(db, userId!, "location-tracking");
+            if (!accepted) {
+              if (String(body.legal_acceptance_version ?? "") !== wanted) {
+                return jsonError(
+                  400,
+                  "legal_acceptance_required",
+                  "Please accept the current Location & Delivery Tracking Disclosure before starting.",
+                );
+              }
+              await recordServerLegalAcceptance(db, {
+                userId: userId!,
+                slug: "location-tracking",
+                surface: "delivery_mode",
+                relatedEntityType: "delivery",
+                relatedEntityId: sessionId,
+                grantedPermissions: { location: true },
+              });
+            }
+          }
+        }
         if (session.mode === "buyer_pickup") {
           return jsonError(400, "not_a_delivery", "Live tracking is only available for deliveries.");
         }
@@ -434,7 +476,7 @@ serve(async (req) => {
           location_consent: true,
           location_consent_at: session.location_consent_at ?? nowIso,
           location_consent_by: session.location_consent_by ?? userId,
-          location_consent_version: String(body.consent_version ?? "delivery-location:2026-09-18"),
+          location_consent_version: `location-tracking:${LEGAL_VERSIONS["location-tracking"]}`,
           destination_label: destLabel,
           destination_latitude: destLat,
           destination_longitude: destLng,
@@ -754,6 +796,28 @@ serve(async (req) => {
         if (err) return jsonError(403, "forbidden", err);
         const t = target!;
         const mode: Mode = FULFILLMENT_MODES.includes(body.mode) ? body.mode : "buyer_pickup";
+
+        // Server-side gate: the Verified Handoff & Condition Evidence Terms must
+        // be accepted at the current version before any capture step can begin.
+        if (userId) {
+          const acceptedHandoff = await hasCurrentLegalAcceptance(db, userId, "handoff-terms");
+          if (!acceptedHandoff) {
+            if (String(body.legal_acceptance_version ?? "") !== LEGAL_VERSIONS["handoff-terms"]) {
+              return jsonError(
+                400,
+                "legal_acceptance_required",
+                "Please accept the current Verified Handoff & Condition Evidence Terms before starting.",
+              );
+            }
+            await recordServerLegalAcceptance(db, {
+              userId,
+              slug: "handoff-terms",
+              surface: "handoff_flow",
+              relatedEntityType: t.sale_transaction_id ? "order" : "booking",
+              relatedEntityId: t.sale_transaction_id ?? t.booking_id ?? null,
+            });
+          }
+        }
 
         const existingQuery = t.sale_transaction_id
           ? db.from("handoff_sessions").select("*").eq("sale_transaction_id", t.sale_transaction_id)

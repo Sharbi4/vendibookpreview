@@ -12,6 +12,8 @@ import {
   queryPermission,
   type PermissionState,
 } from '@/lib/walkthroughConsent';
+import { RECORDING_CONSENT_VERSION } from '@/lib/legal/versions';
+import { recordLegalAcceptance } from '@/lib/legal/recordAcceptance';
 
 /**
  * Pre-call gate: "Ready for your walkthrough?"
@@ -109,6 +111,20 @@ export default function WalkthroughConsentGate({ walkthroughId, title, requiresL
       location,
       recordingConsent: recording,
     });
+    // Versioned acceptance rows for the same three documents, so the legal
+    // evidence view shows exactly which version each participant accepted.
+    await recordLegalAcceptance({
+      userId: user.id,
+      slugs: ['video-walkthrough-terms', 'device-permissions-privacy', 'recording-consent'],
+      surface: 'walkthrough_prejoin',
+      relatedEntityType: 'walkthrough',
+      relatedEntityId: walkthroughId,
+      grantedPermissions: {
+        camera: camera === 'granted',
+        microphone: microphone === 'granted',
+        location: requiresLocation && location === 'granted',
+      },
+    }).catch(() => undefined);
     setSaving(false);
     if (error) {
       setMessage('We could not save your consent just now. Please try again.');
@@ -181,8 +197,12 @@ export default function WalkthroughConsentGate({ walkthroughId, title, requiresL
         <label className="wc-check">
           <input type="checkbox" checked={recording} onChange={(e) => setRecording(e.target.checked)} />
           <span>
-            I understand this walkthrough may be monitored or recorded by Vendibook for safety,
-            quality and dispute resolution, and I consent to that.
+            I have read the{' '}
+            <Link to="/legal/recording-consent" target="_blank" rel="noreferrer">
+              Recording &amp; Monitoring Notice
+            </Link>{' '}
+            and understand this walkthrough may be monitored or recorded by Vendibook for safety,
+            quality, fraud prevention and dispute resolution. I consent to that.
           </span>
         </label>
         <p className="wc-fineprint">
@@ -210,7 +230,8 @@ export default function WalkthroughConsentGate({ walkthroughId, title, requiresL
       </div>
       {helper && <p className="wc-helper">{helper}</p>}
       <p className="wc-version">
-        Terms v{WALKTHROUGH_TERMS_VERSION} · Privacy notice v{DEVICE_PRIVACY_VERSION}
+        Terms v{WALKTHROUGH_TERMS_VERSION} · Privacy notice v{DEVICE_PRIVACY_VERSION} · Recording notice v
+        {RECORDING_CONSENT_VERSION}
       </p>
     </div>
   );
