@@ -346,6 +346,7 @@ const ListingDetail = () => {
           isOwner={!!isOwner}
           hostVerified={sellerIdentityVerified}
           paypalBusinessVerified={paypalBusinessVerified}
+          paypalMerchantId={sellerPaymentReadiness.merchantId}
           ratingData={ratingData}
           onShare={handleShare}
         />
@@ -362,6 +363,7 @@ const ListingDetail = () => {
           isOwner={!!isOwner}
           sellerVerified={sellerIdentityVerified}
           paypalBusinessVerified={paypalBusinessVerified}
+          paypalMerchantId={sellerPaymentReadiness.merchantId}
           ratingData={ratingData}
           onShare={handleShare}
         />

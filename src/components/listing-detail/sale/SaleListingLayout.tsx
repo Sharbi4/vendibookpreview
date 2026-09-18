@@ -37,6 +37,7 @@ interface SaleListingLayoutProps {
   isOwner: boolean;
   sellerVerified: boolean;
   paypalBusinessVerified: boolean;
+  paypalMerchantId?: string | null;
   ratingData?: { average: number; count: number } | null;
   onShare: () => void;
 }
@@ -62,6 +63,7 @@ export const SaleListingLayout = ({
   isOwner,
   sellerVerified,
   paypalBusinessVerified,
+  paypalMerchantId,
   ratingData,
   onShare,
 }: SaleListingLayoutProps) => {
@@ -185,6 +187,7 @@ export const SaleListingLayout = ({
             isOwner={isOwner}
             sellerVerified={sellerVerified}
             paypalBusinessVerified={paypalBusinessVerified}
+            paypalMerchantId={paypalMerchantId}
             ratingData={ratingData}
             instanceId="mobile"
           />
@@ -245,6 +248,7 @@ export const SaleListingLayout = ({
                 isOwner={isOwner}
                 sellerVerified={sellerVerified}
                 paypalBusinessVerified={paypalBusinessVerified}
+                paypalMerchantId={paypalMerchantId}
                 ratingData={ratingData}
               />
             </div>

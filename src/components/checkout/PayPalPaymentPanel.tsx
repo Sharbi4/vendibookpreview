@@ -257,7 +257,7 @@ const PayPalPaymentPanel = ({
           if (!source || !container) return Promise.resolve(false);
           const instance = paypal.Buttons({
             fundingSource: source,
-            style: { layout: 'vertical', shape: 'pill', height: 52, label: 'checkout', tagline: false },
+            style: { layout: 'vertical', shape: 'pill', height: 52, tagline: false },
             appSwitchWhenAvailable: true,
             createOrder: () => handlersRef.current.startOrder(),
             onApprove: (data: { orderID: string }) => handlersRef.current.finishOrder(data.orderID),

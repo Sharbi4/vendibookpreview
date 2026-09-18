@@ -14,6 +14,7 @@ interface RentalPriceCardProps {
   deliveryFee?: number | null;
   deliveryFeeType?: string | null;
   instantBook?: boolean;
+  paypalMerchantId?: string | null;
 }
 
 const Row = ({
@@ -48,6 +49,7 @@ export const RentalPriceCard = ({
   deliveryFee,
   deliveryFeeType,
   instantBook,
+  paypalMerchantId,
 }: RentalPriceCardProps) => {
   const hasDelivery = fulfillmentType === 'delivery' || fulfillmentType === 'both';
   const deliveryLabel = hasDelivery ? deliveryRateLabel(deliveryFee, deliveryFeeType as any) : null;
@@ -89,6 +91,7 @@ export const RentalPriceCard = ({
       <PayPalPayLaterMessage
         amount={priceDaily ?? (hourlyEnabled ? priceHourly : null) ?? priceWeekly ?? priceMonthly}
         placement="product"
+        merchantId={paypalMerchantId}
       />
 
       <p className="text-xs text-muted-foreground leading-relaxed">
