@@ -12,6 +12,8 @@ import {
   queryPermission,
   type PermissionState,
 } from '@/lib/walkthroughConsent';
+import { RECORDING_CONSENT_VERSION } from '@/lib/legal/versions';
+import { recordLegalAcceptance } from '@/lib/legal/recordAcceptance';
 
 /**
  * Pre-call gate: "Ready for your walkthrough?"
@@ -109,6 +111,20 @@ export default function WalkthroughConsentGate({ walkthroughId, title, requiresL
       location,
       recordingConsent: recording,
     });
+    // Versioned acceptance rows for the same three documents, so the legal
+    // evidence view shows exactly which version each participant accepted.
+    await recordLegalAcceptance({
+      userId: user.id,
+      slugs: ['video-walkthrough-terms', 'device-permissions-privacy', 'recording-consent'],
+      surface: 'walkthrough_prejoin',
+      relatedEntityType: 'walkthrough',
+      relatedEntityId: walkthroughId,
+      grantedPermissions: {
+        camera: camera === 'granted',
+        microphone: microphone === 'granted',
+        location: requiresLocation && location === 'granted',
+      },
+    }).catch(() => undefined);
     setSaving(false);
     if (error) {
       setMessage('We could not save your consent just now. Please try again.');
