@@ -2157,74 +2157,131 @@ export type Database = {
       fulfillment_sessions: {
         Row: {
           arrived_at: string | null
+          assigned_driver_user_id: string | null
           booking_id: string | null
           buyer_id: string | null
           cancelled_at: string | null
           completed_at: string | null
           created_at: string
           created_by: string | null
+          delivered_at: string | null
+          destination_label: string | null
+          destination_latitude: number | null
+          destination_longitude: number | null
           driver_email: string | null
           driver_name: string | null
           driver_phone: string | null
           id: string
+          last_accuracy_m: number | null
+          last_latitude: number | null
+          last_location_at: string | null
+          last_longitude: number | null
           listing_id: string | null
           location_consent: boolean
           location_consent_at: string | null
           location_consent_by: string | null
+          location_consent_version: string | null
           mode: string
           notes: string | null
+          route_distance_meters: number | null
+          route_duration_seconds: number | null
+          route_polyline: string | null
+          route_provider: string | null
+          route_updated_at: string | null
           sale_transaction_id: string | null
           seller_id: string
           started_at: string | null
           status: string
+          tracking_active: boolean
+          tracking_ended_at: string | null
+          tracking_paused: boolean
+          tracking_started_at: string | null
           updated_at: string
         }
         Insert: {
           arrived_at?: string | null
+          assigned_driver_user_id?: string | null
           booking_id?: string | null
           buyer_id?: string | null
           cancelled_at?: string | null
           completed_at?: string | null
           created_at?: string
           created_by?: string | null
+          delivered_at?: string | null
+          destination_label?: string | null
+          destination_latitude?: number | null
+          destination_longitude?: number | null
           driver_email?: string | null
           driver_name?: string | null
           driver_phone?: string | null
           id?: string
+          last_accuracy_m?: number | null
+          last_latitude?: number | null
+          last_location_at?: string | null
+          last_longitude?: number | null
           listing_id?: string | null
           location_consent?: boolean
           location_consent_at?: string | null
           location_consent_by?: string | null
+          location_consent_version?: string | null
           mode: string
           notes?: string | null
+          route_distance_meters?: number | null
+          route_duration_seconds?: number | null
+          route_polyline?: string | null
+          route_provider?: string | null
+          route_updated_at?: string | null
           sale_transaction_id?: string | null
           seller_id: string
           started_at?: string | null
           status?: string
+          tracking_active?: boolean
+          tracking_ended_at?: string | null
+          tracking_paused?: boolean
+          tracking_started_at?: string | null
           updated_at?: string
         }
         Update: {
           arrived_at?: string | null
+          assigned_driver_user_id?: string | null
           booking_id?: string | null
           buyer_id?: string | null
           cancelled_at?: string | null
           completed_at?: string | null
           created_at?: string
           created_by?: string | null
+          delivered_at?: string | null
+          destination_label?: string | null
+          destination_latitude?: number | null
+          destination_longitude?: number | null
           driver_email?: string | null
           driver_name?: string | null
           driver_phone?: string | null
           id?: string
+          last_accuracy_m?: number | null
+          last_latitude?: number | null
+          last_location_at?: string | null
+          last_longitude?: number | null
           listing_id?: string | null
           location_consent?: boolean
           location_consent_at?: string | null
           location_consent_by?: string | null
+          location_consent_version?: string | null
           mode?: string
           notes?: string | null
+          route_distance_meters?: number | null
+          route_duration_seconds?: number | null
+          route_polyline?: string | null
+          route_provider?: string | null
+          route_updated_at?: string | null
           sale_transaction_id?: string | null
           seller_id?: string
           started_at?: string | null
           status?: string
+          tracking_active?: boolean
+          tracking_ended_at?: string | null
+          tracking_paused?: boolean
+          tracking_started_at?: string | null
           updated_at?: string
         }
         Relationships: [

@@ -35,7 +35,7 @@ export function useHandoffTasks() {
           .limit(20),
         supabase
           .from('fulfillment_sessions')
-          .select('id, sale_transaction_id, booking_id, seller_id, buyer_id, mode, status, driver_name, started_at')
+          .select('id, sale_transaction_id, booking_id, seller_id, buyer_id, mode, status, driver_name, started_at, tracking_active, tracking_paused, assigned_driver_user_id')
           .in('status', ['pending', 'en_route', 'arrived'])
           .order('created_at', { ascending: false })
           .limit(20),
@@ -89,6 +89,23 @@ export function useHandoffTasks() {
       for (const f of fulfillments.data ?? []) {
         const isSeller = f.seller_id === uid;
         const to = hrefFor(f);
+        const orderHref = f.sale_transaction_id ? `/orders/${f.sale_transaction_id}` : `/orders/${f.booking_id}`;
+        const deliveryHref = f.sale_transaction_id ? `/delivery/sale/${f.sale_transaction_id}` : `/delivery/booking/${f.booking_id}`;
+        const isDriver = f.assigned_driver_user_id === uid;
+        const isDelivery = f.mode === 'seller_delivery' || f.mode === 'third_party_driver';
+
+        if (isDelivery && (isSeller || isDriver) && !f.tracking_active && f.status !== 'arrived') {
+          tasks.push({ id: `start-delivery-${f.id}`, label: 'Delivery ready to start', hint: 'Open Delivery mode to share live location with the buyer.', to: deliveryHref });
+          continue;
+        }
+        if (isDelivery && (isSeller || isDriver) && f.tracking_active) {
+          tasks.push({ id: `finish-delivery-${f.id}`, label: 'Mark delivery complete', hint: 'The buyer is expecting delivery — update the status when you arrive.', to: deliveryHref });
+          continue;
+        }
+        if (isDelivery && !isSeller && !isDriver && f.tracking_active) {
+          tasks.push({ id: `live-${f.id}`, label: 'Your delivery is on the way', hint: 'Follow it live on your order page.', to: orderHref });
+          continue;
+        }
         if (f.mode === 'third_party_driver' && f.status === 'pending') {
           tasks.push({ id: `driver-${f.id}`, label: 'Driver hasn’t started', hint: 'Share or re-issue the secure driver link.', to, tone: 'warn' });
         } else if (f.status === 'arrived' && !isSeller) {

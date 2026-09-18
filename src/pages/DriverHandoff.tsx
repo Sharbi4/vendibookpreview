@@ -8,6 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { handoffOps } from '@/hooks/useHandoff';
+import DeliveryModePanel from '@/components/delivery/DeliveryModePanel';
 
 /**
  * Independent driver view. No Vendibook account required.
@@ -40,26 +41,9 @@ export default function DriverHandoff() {
 
   const active = state?.session && !['completed', 'cancelled'].includes(state.session.status);
 
-  useEffect(() => {
-    if (!consent || !active || !navigator.geolocation) return;
-    watchRef.current = navigator.geolocation.watchPosition(
-      (pos) => {
-        handoffOps({
-          action: 'log_gps',
-          driver_token: token,
-          latitude: pos.coords.latitude,
-          longitude: pos.coords.longitude,
-          accuracy_m: pos.coords.accuracy,
-        }).catch(() => undefined);
-      },
-      () => undefined,
-      { enableHighAccuracy: false, maximumAge: 60_000, timeout: 30_000 },
-    );
-    return () => {
-      if (watchRef.current !== null) navigator.geolocation.clearWatch(watchRef.current);
-      watchRef.current = null;
-    };
-  }, [consent, active, token]);
+  // Location streaming lives in DeliveryModePanel, which only shares location
+  // while the driver has explicitly started the delivery.
+
 
   const run = async (name: string, payload: Record<string, unknown>, success?: string) => {
     setBusy(name);
@@ -98,39 +82,20 @@ export default function DriverHandoff() {
       )}
       <Badge variant="outline" className="mt-3">{String(state?.session?.status ?? '').replace(/_/g, ' ')}</Badge>
 
-      <Card className="mt-6 space-y-4 p-4">
-        <label className="flex items-start gap-3 text-sm">
-          <Checkbox
-            checked={consent}
-            className="mt-0.5"
-            onCheckedChange={async (v) => {
-              const next = !!v;
-              setConsent(next);
-              if (next) {
-                navigator.geolocation?.getCurrentPosition(() => undefined, () => {
-                  toast.info('Location access was declined. The delivery is still documented without location.');
-                });
-                await handoffOps({ action: 'driver_consent_location', driver_token: token }).catch(() => undefined);
-              }
-            }}
-          />
-          <span>
-            Share my location while this delivery is active. It is used only to document this delivery and stops
-            when the delivery is completed. Keep this screen open while you drive.
-          </span>
-        </label>
+      <div className="mt-6">
+        <DeliveryModePanel
+          driverToken={token}
+          sessionIdOverride={state?.session?.id ?? null}
+          sessionOverride={state?.session ?? null}
+          onChanged={load}
+        />
+      </div>
 
-        <div className="grid gap-2">
-          <Button disabled={busy === 'arrive'} onClick={() => run('arrive', { action: 'mark_arrived' }, 'Arrival recorded.')}>
-            {busy === 'arrive' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <MapPin className="mr-2 h-4 w-4" />}
-            I've arrived
-          </Button>
-          <p className="text-xs text-muted-foreground">
-            <Truck className="mr-1 inline h-3 w-3" />
-            The buyer and seller complete the condition walkthrough and acknowledgment in their Vendibook accounts.
-          </p>
-        </div>
-      </Card>
+      <p className="mt-4 text-xs text-muted-foreground">
+        <Truck className="mr-1 inline h-3 w-3" />
+        The buyer and seller complete the condition walkthrough and acknowledgment in their Vendibook accounts.
+      </p>
+
 
       {state?.handoff?.status === 'completed' && (
         <p className="mt-6 flex items-center gap-2 text-sm text-emerald-600">

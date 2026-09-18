@@ -5,6 +5,12 @@ import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_
 import { notifyUser } from "../_shared/notify.ts";
 import { paypalRequest } from "../_shared/paypal.ts";
 import { isSignNowConfigured } from "../_shared/signnow.ts";
+import {
+  computeRoute,
+  geocodeAddress,
+  isGoogleRoutingConfigured,
+} from "../_shared/googleRouting.ts";
+
 
 /**
  * Vendibook Verified Handoff — evidence / chain-of-custody operations.
@@ -308,20 +314,249 @@ serve(async (req) => {
         if (["completed", "cancelled"].includes(session.status)) {
           return jsonError(400, "session_closed", "This delivery session is already closed.");
         }
+        if (session.tracking_active === false || session.tracking_paused === true) {
+          return jsonError(400, "tracking_inactive", "Live tracking is not running for this delivery.");
+        }
         const lat = Number(body.latitude);
         const lng = Number(body.longitude);
         if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
           return jsonError(400, "bad_location", "A valid location is required.");
         }
-        await db.from("gps_trip_events").insert({
+        const now = new Date();
+        const accuracy = Number.isFinite(Number(body.accuracy_m)) ? Number(body.accuracy_m) : null;
+
+        const update: Record<string, unknown> = {
+          last_latitude: coarse(lat),
+          last_longitude: coarse(lng),
+          last_accuracy_m: accuracy,
+          last_location_at: now.toISOString(),
+          updated_at: now.toISOString(),
+        };
+
+        // Real route/ETA only — refreshed at most once a minute, never invented.
+        const dLat = session.destination_latitude !== null ? Number(session.destination_latitude) : null;
+        const dLng = session.destination_longitude !== null ? Number(session.destination_longitude) : null;
+        const routeAge = session.route_updated_at
+          ? now.getTime() - new Date(session.route_updated_at).getTime()
+          : Number.MAX_SAFE_INTEGER;
+        if (dLat !== null && dLng !== null && routeAge > 60_000) {
+          const route = await computeRoute({ lat, lng }, { lat: dLat, lng: dLng });
+          if (route) {
+            update.route_distance_meters = route.distance_meters;
+            update.route_duration_seconds = route.duration_seconds;
+            update.route_polyline = route.polyline;
+            update.route_provider = "google_routes";
+            update.route_updated_at = now.toISOString();
+          }
+        }
+
+        await db.from("fulfillment_sessions").update(update).eq("id", sessionId);
+
+        // Minimal retention: the live point lives on the session row. A sparse
+        // breadcrumb is kept only every ~2 minutes as delivery evidence.
+        const { data: recent } = await db
+          .from("gps_trip_events")
+          .select("recorded_at")
+          .eq("fulfillment_session_id", sessionId)
+          .order("recorded_at", { ascending: false })
+          .limit(1);
+        const lastAt = recent?.[0]?.recorded_at ?? null;
+        if (!lastAt || now.getTime() - new Date(lastAt).getTime() > 120_000) {
+          await db.from("gps_trip_events").insert({
+            fulfillment_session_id: sessionId,
+            latitude: coarse(lat),
+            longitude: coarse(lng),
+            accuracy_m: accuracy,
+            source: driverSessionId ? "driver_browser" : "browser",
+          });
+        }
+        return jsonResponse(200, { success: true });
+      }
+
+      // ================= LIVE DELIVERY TRACKING =================
+      case "start_tracking": {
+        const sessionId: string = driverSessionId ?? body.fulfillment_session_id;
+        if (!sessionId) return jsonError(400, "missing_session", "A delivery session is required.");
+        const { data: session } = await db
+          .from("fulfillment_sessions").select("*").eq("id", sessionId).maybeSingle();
+        if (!session) return jsonError(404, "not_found", "That delivery session no longer exists.");
+        if (!driverSessionId) {
+          const errp = assertParticipant(session as unknown as TargetRef);
+          if (errp) return jsonError(403, "forbidden", errp);
+          if (!isAdmin && session.seller_id !== userId && session.assigned_driver_user_id !== userId) {
+            return jsonError(403, "forbidden", "Only the seller or the assigned driver can start tracking.");
+          }
+        }
+        if (["completed", "cancelled"].includes(session.status)) {
+          return jsonError(400, "session_closed", "This delivery is already closed.");
+        }
+        if (!body.location_consent) {
+          return jsonError(400, "consent_required", "Please accept the delivery location notice before starting.");
+        }
+        if (session.mode === "buyer_pickup") {
+          return jsonError(400, "not_a_delivery", "Live tracking is only available for deliveries.");
+        }
+
+        // Resolve the destination once, from the real order address.
+        let destLat = session.destination_latitude;
+        let destLng = session.destination_longitude;
+        let destLabel = session.destination_label;
+        if (destLat === null || destLng === null) {
+          if (!destLabel) {
+            if (session.sale_transaction_id) {
+              const { data: st } = await db.from("sale_transactions")
+                .select("delivery_address").eq("id", session.sale_transaction_id).maybeSingle();
+              destLabel = st?.delivery_address ?? null;
+            } else if (session.booking_id) {
+              const { data: br } = await db.from("booking_requests")
+                .select("delivery_address").eq("id", session.booking_id).maybeSingle();
+              destLabel = br?.delivery_address ?? null;
+            }
+          }
+          if (destLabel) {
+            const point = await geocodeAddress(String(destLabel));
+            if (point) {
+              destLat = coarse(point.lat);
+              destLng = coarse(point.lng);
+            }
+          }
+        }
+
+        const nowIso = new Date().toISOString();
+        const { data: updated } = await db.from("fulfillment_sessions").update({
+          tracking_active: true,
+          tracking_paused: false,
+          tracking_started_at: session.tracking_started_at ?? nowIso,
+          tracking_ended_at: null,
+          started_at: session.started_at ?? nowIso,
+          status: session.status === "pending" ? "en_route" : session.status,
+          assigned_driver_user_id: session.assigned_driver_user_id ?? userId,
+          location_consent: true,
+          location_consent_at: session.location_consent_at ?? nowIso,
+          location_consent_by: session.location_consent_by ?? userId,
+          location_consent_version: String(body.consent_version ?? "delivery-location:2026-09-18"),
+          destination_label: destLabel,
+          destination_latitude: destLat,
+          destination_longitude: destLng,
+          updated_at: nowIso,
+        }).eq("id", sessionId).select().single();
+
+        await logEvidence(db, {
+          sale_transaction_id: session.sale_transaction_id,
+          booking_id: session.booking_id,
           fulfillment_session_id: sessionId,
-          latitude: coarse(lat),
-          longitude: coarse(lng),
-          accuracy_m: Number.isFinite(Number(body.accuracy_m)) ? Number(body.accuracy_m) : null,
-          source: driverSessionId ? "driver_browser" : "browser",
+          event_type: "tracking_started",
+          title: "Live delivery tracking started",
+          detail: "The driver enabled live location sharing for this delivery.",
+          actor_id: userId,
+          actor_role: driverSessionId ? "driver" : "seller",
+          status: "en_route",
+        });
+
+        await notifyUser(db, {
+          userId: session.buyer_id,
+          type: "buyer_action_required",
+          title: "Your delivery is on the way",
+          message: "You can follow the delivery live on your order page.",
+          link: `/orders/${session.sale_transaction_id ?? session.booking_id}`,
+          dedupeKey: `tracking_started:${sessionId}`,
+        });
+
+        return jsonResponse(200, {
+          success: true,
+          session: updated,
+          routing_configured: isGoogleRoutingConfigured(),
+        });
+      }
+
+      case "pause_tracking":
+      case "resume_tracking":
+      case "end_tracking": {
+        const sessionId: string = driverSessionId ?? body.fulfillment_session_id;
+        const { data: session } = await db
+          .from("fulfillment_sessions").select("*").eq("id", sessionId).maybeSingle();
+        if (!session) return jsonError(404, "not_found", "That delivery session no longer exists.");
+        if (!driverSessionId) {
+          const errp = assertParticipant(session as unknown as TargetRef);
+          if (errp) return jsonError(403, "forbidden", errp);
+          if (!isAdmin && session.seller_id !== userId && session.assigned_driver_user_id !== userId) {
+            return jsonError(403, "forbidden", "Only the seller or the assigned driver can change tracking.");
+          }
+        }
+        const nowIso = new Date().toISOString();
+        const patch: Record<string, unknown> = { updated_at: nowIso };
+        if (action === "pause_tracking") patch.tracking_paused = true;
+        if (action === "resume_tracking") { patch.tracking_paused = false; patch.tracking_active = true; }
+        if (action === "end_tracking") {
+          patch.tracking_active = false;
+          patch.tracking_paused = false;
+          patch.tracking_ended_at = nowIso;
+        }
+        await db.from("fulfillment_sessions").update(patch).eq("id", sessionId);
+        await logEvidence(db, {
+          sale_transaction_id: session.sale_transaction_id,
+          booking_id: session.booking_id,
+          fulfillment_session_id: sessionId,
+          event_type: action,
+          title: action === "pause_tracking"
+            ? "Live tracking paused"
+            : action === "resume_tracking" ? "Live tracking resumed" : "Live tracking ended",
+          actor_id: userId,
+          actor_role: driverSessionId ? "driver" : "seller",
+          status: session.status,
         });
         return jsonResponse(200, { success: true });
       }
+
+      case "mark_delivered": {
+        const sessionId: string = driverSessionId ?? body.fulfillment_session_id;
+        const { data: session } = await db
+          .from("fulfillment_sessions").select("*").eq("id", sessionId).maybeSingle();
+        if (!session) return jsonError(404, "not_found", "That delivery session no longer exists.");
+        if (!driverSessionId) {
+          const errp = assertParticipant(session as unknown as TargetRef);
+          if (errp) return jsonError(403, "forbidden", errp);
+          if (!isAdmin && session.seller_id !== userId && session.assigned_driver_user_id !== userId) {
+            return jsonError(403, "forbidden", "Only the seller or the assigned driver can mark delivery complete.");
+          }
+        }
+        const nowIso = new Date().toISOString();
+        // Status/evidence only. This never captures, releases or settles money —
+        // payment and payout continue to follow the existing order rules.
+        await db.from("fulfillment_sessions").update({
+          status: "completed",
+          delivered_at: nowIso,
+          completed_at: session.completed_at ?? nowIso,
+          arrived_at: session.arrived_at ?? nowIso,
+          tracking_active: false,
+          tracking_paused: false,
+          tracking_ended_at: nowIso,
+          updated_at: nowIso,
+        }).eq("id", sessionId);
+        await db.from("secure_driver_links").update({ revoked_at: nowIso })
+          .eq("fulfillment_session_id", sessionId).is("revoked_at", null);
+        await logEvidence(db, {
+          sale_transaction_id: session.sale_transaction_id,
+          booking_id: session.booking_id,
+          fulfillment_session_id: sessionId,
+          event_type: "delivery_completed",
+          title: "Delivery marked delivered",
+          detail: "Location sharing stopped. Payment and payout follow the order's own rules.",
+          actor_id: userId,
+          actor_role: driverSessionId ? "driver" : "seller",
+          status: "completed",
+        });
+        await notifyUser(db, {
+          userId: session.buyer_id,
+          type: "buyer_action_required",
+          title: "Your delivery has been marked delivered",
+          message: "Open your order to confirm the handoff and review the delivery record.",
+          link: `/orders/${session.sale_transaction_id ?? session.booking_id}`,
+          dedupeKey: `delivered:${sessionId}`,
+        });
+        return jsonResponse(200, { success: true });
+      }
+
 
       case "mark_arrived": {
         const sessionId: string = driverSessionId ?? body.fulfillment_session_id;
