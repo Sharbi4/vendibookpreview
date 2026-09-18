@@ -538,16 +538,15 @@ const SaleCheckout = () => {
   };
 
   const validateDetails = (): boolean => {
-    const needsAddress = fulfillmentSelected !== 'pickup';
-
+    // The buyer's own contact address is always required, regardless of fulfillment.
     const firstNameError = fieldValidators.firstName(buyerInfo.firstName);
     const lastNameError = fieldValidators.lastName(buyerInfo.lastName);
     const emailError = fieldValidators.email(buyerInfo.email);
     const phoneError = fieldValidators.phone(buyerInfo.phone);
-    const address1Error = needsAddress ? fieldValidators.address1(buyerInfo.address1) : undefined;
-    const cityError = needsAddress ? fieldValidators.city(buyerInfo.city) : undefined;
-    const stateError = needsAddress ? fieldValidators.state(buyerInfo.state) : undefined;
-    const zipCodeError = needsAddress ? fieldValidators.zipCode(buyerInfo.zipCode) : undefined;
+    const address1Error = fieldValidators.address1(buyerInfo.address1);
+    const cityError = fieldValidators.city(buyerInfo.city);
+    const stateError = fieldValidators.state(buyerInfo.state);
+    const zipCodeError = fieldValidators.zipCode(buyerInfo.zipCode);
 
     setFieldErrors({
       firstName: firstNameError,
@@ -559,9 +558,7 @@ const SaleCheckout = () => {
       state: stateError,
       zipCode: zipCodeError,
     });
-    const touched = ['firstName', 'lastName', 'email', 'phone'];
-    if (needsAddress) touched.push('address1', 'city', 'state', 'zipCode');
-    setTouchedFields(new Set(touched));
+    setTouchedFields(new Set(['firstName', 'lastName', 'email', 'phone', 'address1', 'city', 'state', 'zipCode']));
 
     const firstError = firstNameError || lastNameError || emailError || phoneError || address1Error || cityError || stateError || zipCodeError;
     if (firstError) {
@@ -1047,6 +1044,23 @@ const SaleCheckout = () => {
 
   const continueFromDetails = () => {
     if (!validateDetails()) return;
+    // Persist the buyer's own contact address on their profile (non-money
+    // metadata). Best-effort: never block checkout on a profile write.
+    if (user?.id) {
+      void supabase
+        .from('profiles')
+        .update({
+          address1: buyerInfo.address1.trim(),
+          address2: buyerInfo.address2.trim() || null,
+          city: buyerInfo.city.trim(),
+          state: buyerInfo.state.trim().toUpperCase(),
+          zip_code: buyerInfo.zipCode.trim(),
+        })
+        .eq('id', user.id)
+        .then(({ error }) => {
+          if (error) console.warn('Could not save contact address to profile');
+        });
+    }
     goToStep(4);
   };
 
@@ -1181,7 +1195,6 @@ const SaleCheckout = () => {
                 deliveryInstructions={deliveryInstructions} setDeliveryInstructions={setDeliveryInstructions}
                 fulfillmentSelected={fulfillmentSelected} fieldErrors={fieldErrors}
                 touchedFields={touchedFields} setTouchedFields={setTouchedFields}
-                hideAddress={fulfillmentSelected === 'pickup'}
                 onBack={() => undefined} onContinue={() => undefined}
               />
               <details className="sale-wizard-referral">
