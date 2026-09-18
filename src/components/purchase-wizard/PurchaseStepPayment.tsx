@@ -75,8 +75,8 @@ const TitlePanel = ({
           <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
           <p className="text-xs text-muted-foreground">
             <span className="font-semibold text-foreground">This unit has a lien. </span>
-            Payment protection holds your funds until the seller provides a lien-release letter and a signed
-            bill of sale. Do not accept keys before you see the release.
+            Ask the seller for a lien-release letter and a signed bill of sale. Do not accept keys
+            before you see the release.
           </p>
         </div>
       ) : (
@@ -220,8 +220,8 @@ const PurchaseStepPayment = ({
               <>You'll pay </>
             )}
             {paymentMethod === 'cash'
-              ? 'directly to the seller in person. No Vendibook fees, and no payment protection.'
-              : 'online through PayPal. Funds are held until you confirm you received the item.'}
+              ? 'directly to the seller in person. No Vendibook fees apply to pay-in-person sales.'
+              : 'online through PayPal. PayPal processes the payment and Vendibook keeps the order record.'}
           </p>
         </div>
       )}

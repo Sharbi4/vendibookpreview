@@ -89,6 +89,9 @@ const PayPalPaymentPanel = ({
   const [state, setState] = useState<PanelState>('loading');
   const [error, setError] = useState<{ title: string; detail: string } | null>(null);
   const [walletsAvailable, setWalletsAvailable] = useState(false);
+  /** Funding sources PayPal actually rendered for this buyer/device. */
+  const [eligible, setEligible] = useState<Record<string, boolean>>({});
+  const [reloadKey, setReloadKey] = useState(0);
   /**
    * Set from the server's create-order response. The server alone decides
    * whether this checkout captures now or places a temporary hold.
@@ -247,17 +250,23 @@ const PayPalPaymentPanel = ({
         if (cancelled || !paypalButtonRef.current) return;
 
         const sources = [
-          { source: paypal.FUNDING.PAYPAL, container: paypalButtonRef.current, name: 'PayPal' },
-          { source: paypal.FUNDING.VENMO, container: venmoButtonRef.current, name: 'Venmo' },
-          { source: paypal.FUNDING.PAYLATER, container: payLaterButtonRef.current, name: 'Pay Later' },
-          { source: paypal.FUNDING.CARD, container: cardButtonRef.current, name: 'debit or credit card' },
+          { key: 'paypal', source: paypal.FUNDING.PAYPAL, container: paypalButtonRef.current, name: 'PayPal', color: 'silver' },
+          { key: 'venmo', source: paypal.FUNDING.VENMO, container: venmoButtonRef.current, name: 'Venmo', color: undefined },
+          { key: 'paylater', source: paypal.FUNDING.PAYLATER, container: payLaterButtonRef.current, name: 'Pay Later', color: 'silver' },
+          { key: 'card', source: paypal.FUNDING.CARD, container: cardButtonRef.current, name: 'debit or credit card', color: 'black' },
         ];
 
-        const renders = sources.map(({ source, container, name }) => {
+        const renders = sources.map(({ key, source, container, name, color }) => {
           if (!source || !container) return Promise.resolve(false);
           const instance = paypal.Buttons({
             fundingSource: source,
-            style: { layout: 'vertical', shape: 'pill', height: 52, tagline: false },
+            style: {
+              layout: 'vertical',
+              shape: 'pill',
+              height: 50,
+              tagline: false,
+              ...(color ? { color } : {}),
+            },
             appSwitchWhenAvailable: true,
             createOrder: () => handlersRef.current.startOrder(),
             onApprove: (data: { orderID: string }) => handlersRef.current.finishOrder(data.orderID),
@@ -276,10 +285,15 @@ const PayPalPaymentPanel = ({
             },
           });
           instances.push(instance);
+          // Only genuinely eligible funding sources are ever rendered — no
+          // decorative pills for methods PayPal will not offer this buyer.
           if (!instance.isEligible?.()) return Promise.resolve(false);
           return instance
             .render(container)
-            .then(() => true)
+            .then(() => {
+              if (!cancelled) setEligible((prev) => ({ ...prev, [key]: true }));
+              return true;
+            })
             .catch(() => {
               fail(
                 `${name} could not load`,
@@ -315,7 +329,7 @@ const PayPalPaymentPanel = ({
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [reloadKey]);
 
   return (
     <div
@@ -440,14 +454,17 @@ const PayPalPaymentPanel = ({
                     merchantId={merchantId}
                   />
 
-                  {state === 'loading' ? <PaymentFormSkeleton /> : null}
-
-                  <div className={state === 'loading' || state === 'processing' ? 'hidden' : 'paypal-funding-stack'}>
+                  {/* The funding slots are mounted from first paint so the
+                      surface never jumps: PayPal renders the real controls
+                      straight into these fixed-height containers. */}
+                  <div className="paypal-funding-stack" aria-busy={state === 'loading'}>
                     <div ref={paypalButtonRef} data-funding-source="PayPal" />
                     <div ref={venmoButtonRef} data-funding-source="Venmo" />
                     <div ref={payLaterButtonRef} data-funding-source="Pay Later" />
                     <div ref={cardButtonRef} data-funding-source="Debit or Credit Card" />
                   </div>
+
+                  {state === 'loading' ? <PaymentFormSkeleton /> : null}
 
                   {state !== 'loading' && state !== 'processing' ? (
                     <p className="paypal-powered-by">
@@ -487,17 +504,27 @@ const PayPalPaymentPanel = ({
                   {error ? (
                     <div
                       role="alert"
-                      className="rounded-xl border border-destructive/40 bg-destructive/[0.06] px-4 py-3 text-sm space-y-1"
+                      className="rounded-xl border border-destructive/40 bg-destructive/[0.06] px-4 py-3 text-sm space-y-2"
                     >
                       <p className="font-semibold text-foreground">{error.title}</p>
                       <p className="text-xs text-muted-foreground">{error.detail}</p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setError(null);
+                          setEligible({});
+                          setState('loading');
+                          setReloadKey((k) => k + 1);
+                        }}
+                        className="text-xs font-semibold underline underline-offset-2 text-foreground"
+                      >
+                        Try again
+                      </button>
                     </div>
                   ) : null}
 
-                  <p className="text-[11px] text-muted-foreground text-center inline-flex w-full items-center justify-center gap-1.5">
-                    Payments are processed securely by
-                    <PayPalMonogram className="h-3.5" />
-                    PayPal. Vendibook never sees your card number.
+                  <p className="text-[11px] text-muted-foreground text-center">
+                    PayPal terms and eligibility apply to the payment method you choose.
                   </p>
                 </>
               )}

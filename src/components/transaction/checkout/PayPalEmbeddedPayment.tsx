@@ -63,14 +63,14 @@ const PayPalEmbeddedPayment = ({
   returnUrl,
   onSuccess,
   totalUsd,
-  heading = 'Secure checkout with PayPal',
-  intent,
+  heading = 'Pay securely with PayPal',
+  intent = 'Your payment details are handled by PayPal. Vendibook keeps the order, agreement, and fulfillment details together.',
 }: PayPalEmbeddedPaymentProps) => {
   const readiness = useSellerPaymentReadiness(sellerId);
   const gatedOut = readiness.gatingActive && !readiness.ready;
 
   return (
-    <div className="v2-pay-panel">
+    <div className="v2-pay-panel is-silver">
       <div className="v2-pay-head">
         <div className="min-w-0">
           <h3>{heading}</h3>
@@ -118,7 +118,7 @@ const PayPalEmbeddedPayment = ({
 
       <p className="v2-pay-foot">
         <Lock aria-hidden />
-        Payments are processed securely by PayPal. Vendibook never sees your card number.
+        Payment processed through PayPal. Vendibook does not store your full card number.
       </p>
     </div>
   );

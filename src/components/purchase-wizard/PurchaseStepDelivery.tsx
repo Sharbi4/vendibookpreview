@@ -189,7 +189,7 @@ const METHOD_META: Record<FulfillmentSelection, {
     eta: 'Coordinate within 24h',
     etaSub: 'Message the seller in-app to lock a time',
     explainerTitle: 'How pickup coordination works',
-    explainerBody: 'Once payment is protected, you and the seller exchange messages to agree on an exact pickup time and address. The precise location is revealed to you after checkout.',
+    explainerBody: 'Once payment is confirmed, you and the seller exchange messages to agree on an exact pickup time and address. The precise location is revealed to you after checkout.',
   },
   delivery: {
     icon: Truck,
@@ -433,7 +433,7 @@ const PurchaseStepDelivery = ({
               </p>
               <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1.5">
                 <MessageSquare className="h-3 w-3" />
-                Exact address shared in Messages once payment is protected.
+                Exact address shared in Messages once payment is confirmed.
               </p>
             </div>
           </MethodCard>

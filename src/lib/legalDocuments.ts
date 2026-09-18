@@ -31,6 +31,10 @@ export const DOCUMENT_TYPES = {
   AI_TOOLS_DISCLAIMER: 'ai_tools_disclaimer',
   FINANCING_DISCLOSURE: 'financing_disclosure',
   IP_TAKEDOWN_POLICY: 'ip_takedown_policy',
+  /** Transaction-specific checkout documents (frozen per transaction). */
+  SALE_BUYER_TERMS: 'sale_buyer_terms',
+  RENTAL_TRANSACTION_TERMS: 'rental_transaction_terms',
+  CHECKOUT_PRIVACY_ELECTRONIC_CONSENT: 'checkout_privacy_electronic_consent',
 } as const;
 
 export type DocumentType = (typeof DOCUMENT_TYPES)[keyof typeof DOCUMENT_TYPES];
@@ -61,6 +65,9 @@ export const CURRENT_VERSIONS: Record<DocumentType, string> = {
   [DOCUMENT_TYPES.AI_TOOLS_DISCLAIMER]: 'v1',
   [DOCUMENT_TYPES.FINANCING_DISCLOSURE]: 'v1',
   [DOCUMENT_TYPES.IP_TAKEDOWN_POLICY]: 'v1',
+  [DOCUMENT_TYPES.SALE_BUYER_TERMS]: '2026-09-18',
+  [DOCUMENT_TYPES.RENTAL_TRANSACTION_TERMS]: '2026-09-18',
+  [DOCUMENT_TYPES.CHECKOUT_PRIVACY_ELECTRONIC_CONSENT]: '2026-09-18',
 };
 
 /** Slugs used in `/legal/:slug` URLs — must match `legal_documents.slug`. */
@@ -83,6 +90,9 @@ export const DOCUMENT_SLUGS: Record<DocumentType, string> = {
   [DOCUMENT_TYPES.AI_TOOLS_DISCLAIMER]: 'ai-tools-disclaimer',
   [DOCUMENT_TYPES.FINANCING_DISCLOSURE]: 'financing-disclosure',
   [DOCUMENT_TYPES.IP_TAKEDOWN_POLICY]: 'ip-takedown-policy',
+  [DOCUMENT_TYPES.SALE_BUYER_TERMS]: 'purchase-agreement',
+  [DOCUMENT_TYPES.RENTAL_TRANSACTION_TERMS]: 'rental-agreement',
+  [DOCUMENT_TYPES.CHECKOUT_PRIVACY_ELECTRONIC_CONSENT]: 'checkout-privacy-consent',
 };
 
 /**

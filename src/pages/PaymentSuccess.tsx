@@ -464,14 +464,17 @@ const PaymentSuccess = () => {
                     
                   </div>
                   
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">
+                    Payment confirmed
+                  </p>
                   <h1 className="text-2xl font-bold text-foreground mb-2 flex items-center justify-center gap-2">
                     <PartyPopper className="h-6 w-6 text-primary" />
-                    Purchase in Payment Protection!
+                    Your order is in motion.
                     <PartyPopper className="h-6 w-6 text-primary transform scale-x-[-1]" />
                   </h1>
-                  
+
                   <p className="text-muted-foreground mb-6">
-                    Your payment is securely held until both you and the seller confirm the transaction.
+                    PayPal confirmed your payment. Your order, agreement, and fulfillment details stay together on Vendibook.
                   </p>
 
                   {saleTransaction && (
@@ -562,10 +565,10 @@ const PaymentSuccess = () => {
                     <h4 className="font-semibold text-foreground mb-3 text-sm">What happens next?</h4>
                     <div className="space-y-3">
                       {[
-                        { done: true, title: 'Payment Secured', desc: 'Your funds are safely held in payment protection' },
+                        { done: true, title: 'Payment confirmed', desc: 'PayPal confirmed your payment' },
                         { done: false, step: 2, title: 'Receive Your Item', desc: 'Coordinate with the seller' },
                         { done: false, step: 3, title: 'Confirm Receipt', desc: 'Verify in your dashboard' },
-                        { done: false, step: 4, title: 'Payment Released', desc: 'Funds go to the seller' }].map((item, i) => (
+                        { done: false, step: 4, title: 'Order complete', desc: 'The order record is finalized' }].map((item, i) => (
                         <div key={i} className="flex items-start gap-3">
                           <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${item.done ? 'bg-emerald-100' : 'bg-muted'}`}>
                             {item.done ? (
@@ -686,7 +689,16 @@ const PaymentSuccess = () => {
                   </Collapsible>
 
                   <div className="mt-6">
-                    <PostPaymentTimeline />
+                    <PostPaymentTimeline
+                      mode="sale"
+                      fulfillment={
+                        (saleTransaction?.fulfillment_type as
+                          | 'pickup'
+                          | 'delivery'
+                          | 'vendibook_freight'
+                          | undefined) ?? 'pickup'
+                      }
+                    />
                   </div>
 
                   <div className="mt-6">

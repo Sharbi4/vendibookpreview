@@ -1,5 +1,4 @@
 import FinancingLine from './FinancingLine';
-import PaymentProtectionBlock from './PaymentProtectionBlock';
 import TrustRow from './TrustRow';
 
 export interface OrderSummaryLine {
@@ -74,7 +73,6 @@ const CheckoutOrderSummary = ({
       <FinancingLine totalUsd={total} />
     </div>
 
-    <PaymentProtectionBlock variant={variant} />
     <TrustRow />
   </div>
 );

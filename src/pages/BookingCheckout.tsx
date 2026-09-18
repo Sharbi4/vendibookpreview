@@ -73,7 +73,12 @@ import CheckoutSection from '@/components/transaction/checkout/CheckoutSection';
 import ListingCheckoutSummary from '@/components/transaction/checkout/ListingCheckoutSummary';
 import MoneyBreakdown, { type MoneyLine } from '@/components/transaction/checkout/MoneyBreakdown';
 import PayPalEmbeddedPayment from '@/components/transaction/checkout/PayPalEmbeddedPayment';
-import CheckoutLegalConsent from '@/components/legal/CheckoutLegalConsent';
+import TransactionAgreementStep from '@/components/checkout/TransactionAgreementStep';
+import PostPaymentTimeline from '@/components/checkout/PostPaymentTimeline';
+import { recordCheckoutAgreements } from '@/lib/legal/recordCheckoutAgreements';
+import { useLegalDocument } from '@/hooks/useLegalDocument';
+import { CONSENT_TRIGGERS, DOCUMENT_TYPES } from '@/lib/legalDocuments';
+import { loadPayPalSdk } from '@/lib/paypalClient';
 import ProtectionDisclosure from '@/components/checkout/ProtectionDisclosure';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'on_site';
@@ -182,8 +187,17 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   const [userInfo, setUserInfo] = useState<BookingUserInfo | null>(null);
   const [editingContact, setEditingContact] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  /** Checkout acceptance of Terms + Payments Terms + Privacy. Never pre-ticked. */
-  const [legalAccepted, setLegalAccepted] = useState(false);
+  /** Transaction agreements for this booking. Never pre-ticked. */
+  const rentalAgreement = useLegalDocument(DOCUMENT_TYPES.RENTAL_TRANSACTION_TERMS);
+  const privacyDocument = useLegalDocument(DOCUMENT_TYPES.CHECKOUT_PRIVACY_ELECTRONIC_CONSENT);
+  const [rentalAgreementAccepted, setRentalAgreementAccepted] = useState(false);
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const legalAccepted = rentalAgreementAccepted && privacyAccepted;
+
+  /** Warm the official PayPal SDK early; no order is created by this. */
+  useEffect(() => {
+    loadPayPalSdk({ pageType: 'checkout' }).catch(() => undefined);
+  }, []);
   const [paypalCheckout, setPaypalCheckout] = useState<{ bookingId: string; returnUrl: string } | null>(null);
   /** Guards against creating a second booking_request row if the buyer
    *  closes the PayPal panel and hits the submit button again. */
@@ -481,8 +495,35 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
       toast({ title: 'Cannot book your own listing', description: 'You cannot rent your own listing.', variant: 'destructive' });
       return;
     }
+    if (!rentalAgreementAccepted || !privacyAccepted) {
+      toast({
+        title: 'Agreements required',
+        description: 'Please accept both agreements before continuing.',
+        variant: 'destructive',
+      });
+      return;
+    }
     const t = buildCurrentTerms();
     if (!t) return;
+    // Both consents are persisted server-side before the booking is created.
+    try {
+      await recordCheckoutAgreements({
+        mode: 'rental',
+        trigger: instantConfirm ? CONSENT_TRIGGERS.INSTANT_BOOK : CONSENT_TRIGGERS.RENTAL_REQUEST,
+        relatedIds: { listing_id: listing.id },
+        hashes: {
+          agreement: rentalAgreement.data?.content_hash ?? null,
+          privacy: privacyDocument.data?.content_hash ?? null,
+        },
+      });
+    } catch (error) {
+      toast({
+        title: 'Could not record your acceptance',
+        description: error instanceof Error ? error.message : 'Please try again.',
+        variant: 'destructive',
+      });
+      return;
+    }
     await termsGate.prepare(t);
   };
 
@@ -1292,12 +1333,34 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
               fulfillment={fulfillmentSelected}
             />
 
-            <CheckoutLegalConsent
-              surface="booking_checkout"
-              relatedEntityType="listing"
-              relatedEntityId={listing?.id ?? null}
-              onChange={setLegalAccepted}
+            <PostPaymentTimeline
+              mode="rental"
+              fulfillment={
+                fulfillmentSelected === 'delivery'
+                  ? 'delivery'
+                  : fulfillmentSelected === 'pickup'
+                    ? 'pickup'
+                    : 'on_site'
+              }
+              title="What happens next"
             />
+
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">Agreements</h3>
+              <p className="text-xs text-muted-foreground mb-3">
+                Review the terms for this transaction before continuing.
+              </p>
+              <TransactionAgreementStep
+                mode="rental"
+                agreement={rentalAgreement}
+                privacy={privacyDocument}
+                agreementAccepted={rentalAgreementAccepted}
+                privacyAccepted={privacyAccepted}
+                onAgreementAcceptedChange={setRentalAgreementAccepted}
+                onPrivacyAcceptedChange={setPrivacyAccepted}
+                showHeading={false}
+              />
+            </div>
 
             {listing?.id && (
               <DisclosureStep

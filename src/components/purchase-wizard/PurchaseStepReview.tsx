@@ -332,7 +332,7 @@ const PurchaseStepReview = ({
 
       <p className="text-xs text-center text-muted-foreground">
         <ShieldCheck className="inline h-3 w-3 mr-1 text-emerald-500" />
-        Protected by Vendibook payment protection
+        Payment processed through PayPal
       </p>
     </div>
   );

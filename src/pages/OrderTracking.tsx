@@ -23,6 +23,8 @@ import SEO from '@/components/SEO';
 import { ReportIssueButton } from '@/components/support/ReportIssueButton';
 import { GetHelpWithOrder } from '@/components/trust/GetHelpWithOrder';
 import OrderChargesSummary from '@/components/orders/OrderChargesSummary';
+import PayPalEmbeddedPayment from '@/components/transaction/checkout/PayPalEmbeddedPayment';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 
 const SHIPPING_STATUS_CONFIG = {
@@ -516,6 +518,7 @@ const OrderTracking = () => {
   const { toast } = useToast();
   const [isConfirming, setIsConfirming] = useState(false);
   const [isPayingFreight, setIsPayingFreight] = useState(false);
+  const [freightPaymentOpen, setFreightPaymentOpen] = useState(false);
 
   // Handle freight payment success/cancel from URL params
   useEffect(() => {
@@ -534,33 +537,14 @@ const OrderTracking = () => {
   }, [user, authLoading, transactionId, navigate]);
 
   // Handle freight payment for cash + freight transactions
-  const handlePayFreight = async () => {
+  /**
+   * Freight is paid through the same PayPal lifecycle as the rest of the
+   * order (server-created order, server-verified capture) — no external
+   * hosted checkout and no separate provider.
+   */
+  const handlePayFreight = () => {
     if (!transaction || !user) return;
-    
-    setIsPayingFreight(true);
-    try {
-      const { data, error: fnError } = await supabase.functions.invoke('create-freight-checkout', {
-        body: { transaction_id: transaction.id },
-      });
-
-      if (fnError) throw fnError;
-      if (data.error) throw new Error(data.error);
-
-      // Open Stripe checkout
-      const stripeWindow = window.open(data.url, '_blank');
-      if (!stripeWindow) {
-        window.location.href = data.url;
-      }
-    } catch (err) {
-      console.error('Freight payment error:', err);
-      toast({ 
-        title: 'Error', 
-        description: err instanceof Error ? err.message : 'Failed to start freight payment.',
-        variant: 'destructive'
-      });
-    } finally {
-      setIsPayingFreight(false);
-    }
+    setFreightPaymentOpen(true);
   };
 
   // Handle confirmation for cash transactions.
@@ -706,7 +690,7 @@ const OrderTracking = () => {
                 context={{
                   featureArea: "purchase",
                   transactionStatus: transaction.status,
-                  paymentMethod: isCashTransaction ? "pay_in_person" : "stripe",
+                  paymentMethod: isCashTransaction ? "pay_in_person" : "paypal",
                   related: {
                     sale_transaction_id: transaction.id,
                     listing_id: transaction.listing_id,
@@ -967,7 +951,28 @@ const OrderTracking = () => {
           )}
         </div>
       </main>
-      
+
+      <Dialog open={freightPaymentOpen} onOpenChange={setFreightPaymentOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Pay for freight</DialogTitle>
+          </DialogHeader>
+          {transaction ? (
+            <PayPalEmbeddedPayment
+              target={{ kind: 'freight', id: transaction.id }}
+              listingHref={`/listing/${transaction.listing_id}`}
+              totalUsd={Number(transaction.freight_cost ?? 0)}
+              heading="Pay securely with PayPal"
+              intent="Your payment details are handled by PayPal. Freight details stay with this order."
+              onSuccess={() => {
+                setFreightPaymentOpen(false);
+                toast({ title: 'Freight payment received', description: 'Your order has been updated.' });
+              }}
+            />
+          ) : null}
+        </DialogContent>
+      </Dialog>
+
       <Footer />
     </div>
   );
