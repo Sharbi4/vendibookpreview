@@ -2854,7 +2854,9 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
   .v2-home-trust article { display: block; padding: 24px; }
   .v2-home-trust article + article { border-top: 0; border-left: 1px solid hsl(var(--v2h-line)); }
   .v2-home-trust h3 { margin-top: 12px; }
-  .v2-home-sell { flex-direction: row; align-items: center; justify-content: space-between; padding: 34px 38px; }
+  .v2-home-sell { flex-direction: row; align-items: center; justify-content: space-between; gap: 44px; padding: 34px 38px; }
+  .v2-home-sell > div:first-child { flex: 1 1 0; }
+  .v2-home-steps { flex: 1 1 0; min-width: 320px; }
   .v2-home-editorial { grid-template-columns: minmax(250px, .75fr) 2fr; gap: 50px; padding-block: 42px; }
   .v2-home-editorial-grid { grid-template-columns: repeat(3, 1fr); gap: 28px; }
   .v2-home-editorial-grid article { display: block; }
