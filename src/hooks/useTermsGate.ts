@@ -35,7 +35,7 @@ export interface UseTermsGateResult {
   /** Preparing = draft-terms round-trip in flight. */
   preparing: boolean;
   /** Ask the sheet to open with a freshly-persisted draft. */
-  prepare: (terms: TransactionTerms, opts?: { bookingId?: string | null }) => Promise<boolean>;
+  prepare: (terms: TransactionTerms, opts?: { bookingId?: string | null; openSheet?: boolean }) => Promise<boolean>;
   /** Close + reset (call after the caller's runSubmit resolves/rejects). */
   reset: () => void;
 }
@@ -53,7 +53,7 @@ export function useTermsGate(): UseTermsGateResult {
   }, []);
 
   const prepare = React.useCallback(
-    async (t: TransactionTerms, opts?: { bookingId?: string | null }): Promise<boolean> => {
+    async (t: TransactionTerms, opts?: { bookingId?: string | null; openSheet?: boolean }): Promise<boolean> => {
       if (preparing) return false;
       setPreparing(true);
       try {
@@ -85,7 +85,7 @@ export function useTermsGate(): UseTermsGateResult {
         }
         setTerms(t);
         setTermsId(data.terms_id as string);
-        setOpen(true);
+        setOpen(opts?.openSheet !== false);
         return true;
       } finally {
         setPreparing(false);

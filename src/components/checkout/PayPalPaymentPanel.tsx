@@ -514,15 +514,29 @@ const PayPalPaymentPanel = ({
                       </div>
 
                       {!cardOpen ? (
-                        <button
-                          type="button"
-                          onClick={() => setCardOpen(true)}
-                          className="w-full rounded-2xl border border-border/70 bg-background px-4 py-3.5 text-sm font-semibold text-foreground hover:bg-muted/40 transition-colors"
-                        >
-                          Pay with debit or credit card
-                        </button>
+                        <div className="space-y-3">
+                          <div className="paypal-card-brands" aria-label="Eligible card brands">
+                            <span className="is-visa" aria-label="Visa">VISA</span>
+                            <span className="is-mastercard" aria-label="Mastercard"><i /><i /></span>
+                            <span className="is-amex" aria-label="American Express">AMEX</span>
+                            <span className="is-discover" aria-label="Discover">DISCOVER</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setCardOpen(true)}
+                            className="w-full rounded-2xl border border-border/70 bg-background px-4 py-3.5 text-sm font-semibold text-foreground hover:bg-muted/40 transition-colors"
+                          >
+                            Pay with debit or credit card
+                          </button>
+                        </div>
                       ) : (
                         <div className="space-y-3">
+                          <div className="paypal-card-brands" aria-label="Eligible card brands">
+                            <span className="is-visa" aria-label="Visa">VISA</span>
+                            <span className="is-mastercard" aria-label="Mastercard"><i /><i /></span>
+                            <span className="is-amex" aria-label="American Express">AMEX</span>
+                            <span className="is-discover" aria-label="Discover">DISCOVER</span>
+                          </div>
                           <p className="text-xs text-muted-foreground">
                             No PayPal account needed. Your card is entered directly with PayPal.
                           </p>
