@@ -113,3 +113,31 @@ Latest owner direction: **owner direction, chat, 2026-07-27** — decisions #1�
 ---
 
 Add new rows as they surface during Phase 3. Do not delete rows; mark them `CONFIRMED` with date + source when resolved.
+
+## Shipped legal suite — September 18, 2026
+
+| Document | Route | Version |
+| --- | --- | --- |
+| Terms of Service | /terms | 2026-09-18 |
+| Privacy Policy | /privacy | 2026-09-18 |
+| Payments Terms | /legal/payments-terms | 2026-09-18 |
+| Verified Handoff Terms | /legal/handoff-terms | 2026-09-18 |
+| Financing Disclosure | /legal/financing-disclosure | 2026-09-18 |
+| Video Walkthrough Terms | /legal/video-walkthrough-terms | 2026-09-18b |
+| Recording & Monitoring Notice | /legal/recording-consent | 2026-09-18 |
+| Device Permissions Notice | /legal/device-permissions-privacy | 2026-09-18b |
+| Location Tracking Disclosure | /legal/location-tracking | 2026-09-18 |
+
+Acceptances are stored in `public.legal_acceptances` (user, slug, version, time,
+surface, route, related entity, user agent, granted permissions) and viewable at
+/admin/legal.
+
+### Items still requiring attorney review before activation
+1. Dispute resolution: arbitration and class-action waiver remain drafted-but-inactive.
+2. Arizona governing law and venue wording.
+3. Financing Disclosure: confirm referral-compensation language matches the actual
+   lender agreements.
+4. Payments Terms: confirm the description of PayPal's buyer/seller protection and
+   of Vendibook's manually reviewed payout process.
+5. Recording notice: two-party consent states — confirm the user-responsibility framing.
+6. Handoff Terms: media licence scope and evidence retention period.
