@@ -17,6 +17,8 @@ import {
   isSignNowConfigured,
   registerDocumentWebhook,
 } from './signnow.ts';
+import { ensureTemplateId } from './signnowTemplates.ts';
+import { invokeTransactionalEmail } from './invokeTransactionalEmail.ts';
 import {
   buildRequirementsSnapshot,
   describeRequirements,
@@ -74,6 +76,46 @@ async function safeRegisterWebhook(signnowDocId: string): Promise<void> {
 }
 
 
+
+const SITE_URL = 'https://vendibook.com';
+
+/**
+ * Embedded invites do not send SignNow's own email, so Vendibook tells both
+ * parties itself. Never throws — a mail failure must not lose the document.
+ */
+export async function sendSignatureRequestEmails(
+  transactionId: string,
+  documentId: string,
+  parties: { role: 'buyer' | 'seller'; email: string; name: string }[],
+  listingTitle: string,
+): Promise<void> {
+  const link = `${SITE_URL}/transaction/${transactionId}`;
+  for (const p of parties) {
+    try {
+      await invokeTransactionalEmail({
+        templateName: 'generic-notice',
+        recipientEmail: p.email,
+        idempotencyKey: `bos-sign-request-${documentId}-${p.role}`,
+        templateData: {
+          preview: 'Your purchase agreement is ready to sign',
+          kicker: 'Purchase agreement',
+          heading: 'Your purchase agreement is ready to sign',
+          paragraphs: [
+            `The purchase and sale agreement for ${listingTitle} has been prepared from your order details and is waiting for your signature.`,
+            'Both the buyer and the seller need to sign. Seller payment stays unreleased until both signatures and the walkthrough video are on file, and an administrator then reviews and releases it.',
+            'Keep messages, offers and payments on Vendibook so everything stays on the record.',
+          ],
+          ctaLabel: 'Review and sign',
+          ctaUrl: link,
+        },
+        metadata: { category: 'purchase_agreement' },
+      });
+    } catch (e) {
+      console.error('[signnow] signature request email failed', p.role, (e as Error).message);
+    }
+  }
+}
+
 export interface SignerRecord {
   role: 'host' | 'renter' | 'seller' | 'buyer';
   user_id: string | null;
@@ -109,8 +151,13 @@ async function loadProfile(user_id: string | null): Promise<any | null> {
  */
 export async function ensureRentalAgreement(bookingId: string): Promise<{ document_id: string; created: boolean } | { skipped: string }> {
   if (!isSignNowConfigured()) return { skipped: 'signnow_not_configured' };
-  const templateId = Deno.env.get('SIGNNOW_TEMPLATE_RENTAL_AGREEMENT');
-  if (!templateId) return { skipped: 'template_not_configured' };
+  let templateId: string;
+  try {
+    templateId = await ensureTemplateId('rental_agreement');
+  } catch (e) {
+    console.error('[signnow] rental template unavailable', (e as Error).message);
+    return { skipped: 'template_not_configured' };
+  }
 
   const supabase = svc();
   const { data: existing } = await supabase
@@ -277,6 +324,16 @@ export async function ensureRentalAgreement(bookingId: string): Promise<{ docume
     throw new Error(`documents insert failed: ${insErr.message}`);
   }
 
+  await sendSignatureRequestEmails(
+    transactionId,
+    row.id,
+    [
+      { role: 'buyer', email: buyer.email, name: partyName(buyer) },
+      { role: 'seller', email: seller.email, name: partyName(seller) },
+    ],
+    listing?.title ?? 'your purchase',
+  );
+
   return { document_id: row.id, created: true };
 }
 
@@ -285,8 +342,13 @@ export async function ensureRentalAgreement(bookingId: string): Promise<{ docume
  */
 export async function ensureBillOfSale(transactionId: string): Promise<{ document_id: string; created: boolean } | { skipped: string }> {
   if (!isSignNowConfigured()) return { skipped: 'signnow_not_configured' };
-  const templateId = Deno.env.get('SIGNNOW_TEMPLATE_BILL_OF_SALE');
-  if (!templateId) return { skipped: 'template_not_configured' };
+  let templateId: string;
+  try {
+    templateId = await ensureTemplateId('bill_of_sale');
+  } catch (e) {
+    console.error('[signnow] bill of sale template unavailable', (e as Error).message);
+    return { skipped: 'template_not_configured' };
+  }
 
   const supabase = svc();
   const { data: existing } = await supabase
