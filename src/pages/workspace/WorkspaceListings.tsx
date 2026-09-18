@@ -9,7 +9,6 @@ import { useMyPayPalConnection } from '@/hooks/useMyPayPalConnection';
 import { PromoteListingModal } from '@/components/dashboard/PromoteListingModal';
 import { isListingFeatured } from '@/lib/featured';
 import { useVideoWalkthroughs } from '@/hooks/useVideoWalkthroughs';
-import SellerBusinessAccountHelp from '@/components/payments/SellerBusinessAccountHelp';
 
 type StatusFilter = 'all' | 'published' | 'draft' | 'paused' | 'archived';
 
