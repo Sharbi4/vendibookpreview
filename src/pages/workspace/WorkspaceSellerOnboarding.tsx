@@ -17,6 +17,7 @@ import { PayPalWordmark } from '@/components/brand/ProviderLogos';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useMyPayPalConnection } from '@/hooks/useMyPayPalConnection';
+import SellerBusinessAccountHelp from '@/components/payments/SellerBusinessAccountHelp';
 
 type StepState = 'done' | 'blocked' | 'pending';
 
@@ -116,7 +117,7 @@ export default function WorkspaceSellerOnboarding() {
             : 'Connected and able to receive payments.'
           : connected
             ? 'You started connecting PayPal. Finish on PayPal, then check your status.'
-            : 'A PayPal Business account is required to accept online payments. Personal accounts can’t be used to sell on Vendibook.',
+            : 'Connect a PayPal Business account for online payments. Individual owners can use a Sole Proprietorship account in their own legal name.',
         state: isReady ? 'done' : connected ? 'pending' : 'pending',
         icon: CreditCard,
         action: { label: isReady ? 'Manage connection' : 'Open payment setup', to: '/dashboard/payments/setup' },
@@ -248,6 +249,7 @@ export default function WorkspaceSellerOnboarding() {
               create and publish listings before connecting — buyers just won&apos;t be able to pay
               online until it&apos;s ready.
             </p>
+            <SellerBusinessAccountHelp className="mt-3" compact />
           </div>
           <SellerPayPalConnect showWhenDisabled variant="dark" />
         </section>

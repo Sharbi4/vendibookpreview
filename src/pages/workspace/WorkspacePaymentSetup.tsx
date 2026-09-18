@@ -9,6 +9,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useMyPayPalConnection } from '@/hooks/useMyPayPalConnection';
 import { useSellerPaymentReadiness } from '@/hooks/useSellerPaymentReadiness';
+import SellerBusinessAccountHelp from '@/components/payments/SellerBusinessAccountHelp';
 
 type SetupListing = {
   id: string;
@@ -221,10 +222,9 @@ export default function WorkspacePaymentSetup() {
           <div className="v2-paypal-body">
             <h2>Connect your PayPal Business account</h2>
             <p>
-              A PayPal <strong>Business</strong> account is required — personal accounts can&apos;t
-              be used to sell on Vendibook. You&apos;ll sign in at PayPal and approve the
-              connection, then come back here.
+              You&apos;ll sign in at PayPal and approve the connection, then come back here.
             </p>
+            <SellerBusinessAccountHelp className="mt-3" compact />
           </div>
           <SellerPayPalConnect showWhenDisabled variant="dark" />
         </section>

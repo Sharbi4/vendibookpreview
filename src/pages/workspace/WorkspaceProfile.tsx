@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useHostListings } from '@/hooks/useHostListings';
 import { useMyPayPalConnection } from '@/hooks/useMyPayPalConnection';
 import { useSellerSoldItems } from '@/hooks/useSellerSoldItems';
+import SellerBusinessAccountHelp from '@/components/payments/SellerBusinessAccountHelp';
 
 const money = (value?: number | null) =>
   value == null
@@ -64,6 +65,7 @@ export default function WorkspaceProfile() {
           <p className="text-sm text-muted-foreground mt-2">
             Payouts to you are reviewed and released by Vendibook — they are not automatic.
           </p>
+          {!isReady && <SellerBusinessAccountHelp className="mt-3" compact />}
           <Link to="/dashboard/payments/setup" className="v2-btn-outline v2-btn-sm mt-4 w-fit">
             Open payment setup
           </Link>

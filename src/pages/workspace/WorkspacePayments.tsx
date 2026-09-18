@@ -8,6 +8,7 @@ import WorkspaceBookingPayments from '@/components/workspace/WorkspaceBookingPay
 import PayoutCalendar from '@/components/workspace/PayoutCalendar';
 import SellerPayoutBalance from '@/components/workspace/SellerPayoutBalance';
 import SellerEarningsTable from '@/components/workspace/SellerEarningsTable';
+import SellerBusinessAccountHelp from '@/components/payments/SellerBusinessAccountHelp';
 
 const PayoutsPanel = lazy(() => import('@/components/dashboard/tabs/PayoutsPanel'));
 const TransactionsDisputesTab = lazy(
@@ -52,6 +53,7 @@ export default function WorkspacePayments() {
               Vendibook&apos;s platform fee is handled automatically by the approved PayPal Partner
               flow. You can create and publish listings before connecting.
             </p>
+            <SellerBusinessAccountHelp className="mt-3" compact />
             <Link to="/dashboard/payments/setup" className="v2-paypal-cta mt-4 inline-flex w-fit">
               Open payment setup
             </Link>
