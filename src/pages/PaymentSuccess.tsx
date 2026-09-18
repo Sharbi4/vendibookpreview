@@ -692,7 +692,7 @@ const PaymentSuccess = () => {
                     <PostPaymentTimeline
                       mode="sale"
                       fulfillment={
-                        (transaction?.fulfillment_type as
+                        (saleTransaction?.fulfillment_type as
                           | 'pickup'
                           | 'delivery'
                           | 'vendibook_freight'
