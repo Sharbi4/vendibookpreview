@@ -2539,10 +2539,10 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
   .v2-checkout-wizard .v2-checkout-head h1 { margin-top: 4px; font-size: 27px; }
   .v2-checkout-wizard .v2-checkout-sub { margin-top: 5px; font-size: 13px; }
   .v2-checkout-wizard .v2-checkout-grid { grid-template-columns: minmax(640px, 760px) minmax(300px, 350px); justify-content: center; gap: 28px; }
-  .sale-wizard-layout { height: min(650px, calc(100dvh - 170px)); grid-template-columns: 172px minmax(0, 1fr); }
+  .sale-wizard-layout { height: min(650px, calc(100dvh - 225px)); grid-template-columns: 172px minmax(0, 1fr); }
   .sale-wizard-nav { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
   .sale-wizard-content { overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
-  .v2-checkout-wizard .v2-checkout-rail-inner { max-height: calc(100dvh - 110px); overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; padding-right: 4px; }
+  .v2-checkout-wizard .v2-checkout-rail-inner { max-height: calc(100dvh - 205px); overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; padding-right: 4px; }
 }
 @media (max-width: 699px) { .sale-wizard-layout { min-height: 0; }.sale-wizard-heading { padding: 20px 18px 16px; }.sale-wizard-heading h2 { font-size: 21px; }.sale-wizard-content { padding: 20px 18px; }.sale-wizard-footer { position: sticky; bottom: 0; z-index: 4; background: hsl(var(--v2-surface) / .97); padding: 12px 18px calc(12px + env(safe-area-inset-bottom)); }.sale-wizard-footer button { min-width: 0; flex: 1; }.v2-checkout-main { padding-inline: 12px; }.v2-checkout-head { margin-bottom: 18px; }.v2-checkout-mobile-summary .v2-checkout-summary { box-shadow: none; }.sale-agreement-document { height: 280px; } }
 @media (prefers-reduced-motion: reduce) { .sale-wizard-content { animation: none; }.sale-wizard-mobile-progress i { transition: none; } }
