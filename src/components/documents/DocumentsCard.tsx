@@ -42,7 +42,12 @@ const ROLE_LABEL: Record<string, string> = {
   party_a: 'First party', party_b: 'Second party', provider: 'Delivering party', recipient: 'Receiving party',
 };
 
-export function DocumentsCard({ scope, title = 'Documents' }: { scope: DocumentScope; title?: string }) {
+export function DocumentsCard({
+  scope,
+  title = 'Documents',
+  /** On a Documents tab the card stays visible and explains the empty state. */
+  whenEmpty = 'show',
+}: { scope: DocumentScope; title?: string; whenEmpty?: 'show' | 'hide' }) {
   const { user } = useAuth();
   const { docs, preparing, notice, reload, refreshAfterSigning } = useTransactionDocuments(scope);
   const [session, setSession] = useState<{ url: string; docId: string } | null>(null);
