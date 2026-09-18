@@ -80,7 +80,7 @@ const CostBreakdown = ({
               Balance ({balanceDue.whenLabel})
             </span>
             <span className="font-medium text-foreground" style={num}>
-              {money(balanceDue.amount)}
+              {formatCurrency(balanceDue.amount)}
             </span>
           </div>
         ) : null}
