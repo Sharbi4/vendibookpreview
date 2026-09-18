@@ -32,12 +32,11 @@ async function notify(
 }
 
 /**
- * A completed bill of sale is one of the two release conditions. Refresh the
- * seller payable so the order page and the admin queue reflect it immediately.
- * Never automatic money movement: refresh only moves the payable to
- * 'ready_for_review' once the walkthrough video is also on file.
+ * A completed sale agreement is recorded against the order. Signing never
+ * moves money: seller payouts remain a manual administrator action, and this
+ * handler only refreshes internal review state and notifies both parties.
  */
-async function onBillOfSaleSigned(svc: any, transactionId: string, allSigned: boolean) {
+async function onSaleAgreementSigned(svc: any, transactionId: string, allSigned: boolean) {
   const { data: payment } = await svc
     .from('payment_records')
     .select('id, buyer_id, seller_id, reference')
@@ -69,37 +68,28 @@ async function onBillOfSaleSigned(svc: any, transactionId: string, allSigned: bo
     return;
   }
 
-  const { data: payable } = await svc
-    .from('seller_payables')
-    .select('release_state, hold_reason')
-    .eq('payment_record_id', payment.id)
-    .maybeSingle();
-  const readyForReview = payable?.release_state === 'ready_for_review';
+  const paragraphs = [
+    `The purchase and sale agreement for order ${payment.reference ?? ''} has been signed by both parties. A completed copy is saved with the transaction.`,
+    'Follow the order page for the remaining handoff or transaction steps.',
+  ];
 
-  await notify(buyer?.email, `bos-complete-buyer-${transactionId}`, {
+  await notify(buyer?.email, `sale-agreement-complete-buyer-${transactionId}`, {
     kicker: 'Purchase agreement',
     heading: 'Both parties have signed',
-    paragraphs: [
-      `The purchase and sale agreement for order ${payment.reference ?? ''} is signed by both the buyer and the seller. A copy is saved with your order.`,
-      readyForReview
-        ? 'The walkthrough video is also on file, so this order now goes to Vendibook for release review.'
-        : 'The saved walkthrough video is still outstanding. Seller payment stays unreleased until it is on file.',
-    ],
+    paragraphs,
     ctaLabel: 'View your order', ctaUrl: link,
   });
 
-  await notify(seller?.email, `bos-complete-seller-${transactionId}`, {
+  await notify(seller?.email, `sale-agreement-complete-seller-${transactionId}`, {
     kicker: 'Purchase agreement',
     heading: 'Both parties have signed',
-    paragraphs: [
-      `The purchase and sale agreement for order ${payment.reference ?? ''} is signed by both parties.`,
-      readyForReview
-        ? 'Both release conditions are now met. Vendibook reviews the order and records your payout — payouts are typically released within 24 hours of delivery confirmation, and we always strive for 24–48 hours.'
-        : (payable?.hold_reason ?? 'The saved walkthrough video is still outstanding before your payment can be reviewed for release.'),
-    ],
+    paragraphs,
     ctaLabel: 'View the order', ctaUrl: link,
   });
 }
+
+/** Sale agreement kinds, including the historical bill_of_sale rows. */
+const SALE_AGREEMENT_TYPES = new Set(['bill_of_sale', 'purchase_sale_agreement', 'purchase_agreement']);
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -148,7 +138,7 @@ Deno.serve(async (req) => {
 
     const { data: doc } = await svc
       .from('documents')
-      .select('id,document_type,transaction_id,booking_id,signers,status,signed_pdf_path,renter_signed_at,host_signed_at')
+      .select('id,document_type,transaction_id,booking_id,signers,status,signed_pdf_path,renter_signed_at,host_signed_at,partially_signed_at,completed_at')
       .eq('signnow_document_id', signnowDocId)
       .maybeSingle();
     if (!doc) return jsonResponse(200, { ok: true, note: 'unknown document' });
@@ -179,7 +169,11 @@ Deno.serve(async (req) => {
     else if (anySigned) nextStatus = 'partially_signed';
     if ((rank[nextStatus] ?? 0) < (rank[doc.status] ?? 0)) nextStatus = doc.status;
 
-    const updates: Record<string, unknown> = { signers, status: nextStatus, updated_at: new Date().toISOString() };
+    const nowIso = new Date().toISOString();
+    const updates: Record<string, unknown> = { signers, status: nextStatus, updated_at: nowIso };
+    // Lifecycle stamps are written once and never rewritten by a replay.
+    if (nextStatus === 'partially_signed' && !(doc as any).partially_signed_at) updates.partially_signed_at = nowIso;
+    if (nextStatus === 'completed' && !(doc as any).completed_at) updates.completed_at = nowIso;
 
     // Denormalized per-party timestamps for dashboards + dispute records.
     // Written once and never cleared by a replayed webhook.
@@ -204,7 +198,7 @@ Deno.serve(async (req) => {
         console.error('[signnow-webhook] pdf download/upload failed', e);
       }
 
-      if (doc.document_type === 'bill_of_sale' && doc.transaction_id) {
+      if (SALE_AGREEMENT_TYPES.has(doc.document_type) && doc.transaction_id) {
         await svc
           .from('sale_transactions')
           .update({ bill_of_sale_completed_at: new Date().toISOString() })
@@ -214,8 +208,8 @@ Deno.serve(async (req) => {
 
     await svc.from('documents').update(updates).eq('id', doc.id);
 
-    if (doc.document_type === 'bill_of_sale' && doc.transaction_id && allSigned && doc.status !== 'completed') {
-      await onBillOfSaleSigned(svc, doc.transaction_id, true);
+    if (SALE_AGREEMENT_TYPES.has(doc.document_type) && doc.transaction_id && allSigned && doc.status !== 'completed') {
+      await onSaleAgreementSigned(svc, doc.transaction_id, true);
     }
 
     return jsonResponse(200, { ok: true, status: nextStatus });
