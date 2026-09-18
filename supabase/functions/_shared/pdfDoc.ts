@@ -203,6 +203,36 @@ export class PdfDoc {
     this.y -= 4;
   }
 
+  /**
+   * Label on the left, an empty SignNow text field on the right. Used for
+   * transaction-summary facts that are prefilled per document.
+   */
+  summaryField(label: string): FieldBox {
+    const size = 9.5;
+    const labelW = 168;
+    const height = 16;
+    this.ensureSpace(height + 8);
+    this.text(label, MARGIN_X, this.y - size, size, 'F2', 0.25);
+    const boxBottom = this.y - height + 2;
+    this.line(MARGIN_X + labelW, boxBottom - 1, PAGE_WIDTH - MARGIN_X, boxBottom - 1, 0.4, 0.86);
+    this.y -= height + 6;
+    return { page: this.pageIndex, x: MARGIN_X + labelW, y: boxBottom, w: this.contentWidth - labelW, h: height };
+  }
+
+  /**
+   * A block-sized SignNow text field for generated clause text that varies by
+   * transaction (host rules, cancellation policy, disclosed defects...).
+   */
+  blockField(label: string, height = 70): FieldBox {
+    this.ensureSpace(height + 26);
+    this.text(label, MARGIN_X, this.y - 9, 8, 'F2', 0.35);
+    const boxTop = this.y - 13;
+    const boxBottom = boxTop - height;
+    this.line(MARGIN_X, boxBottom, PAGE_WIDTH - MARGIN_X, boxBottom, 0.5, 0.7);
+    this.y = boxBottom - 14;
+    return { page: this.pageIndex, x: MARGIN_X, y: boxBottom, w: this.contentWidth, h: height };
+  }
+
   spacer(height = 10) {
     this.ensureSpace(height);
     this.y -= height;
