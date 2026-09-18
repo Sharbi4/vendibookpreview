@@ -918,14 +918,17 @@ serve(async (req) => {
         }
 
         try {
-          const res = await paypalRequest<any>("POST", "/v1/shipping/trackers-batch", {
-            trackers: [{
-              transaction_id: captureId,
-              tracking_number: row.tracking_number,
-              status: row.status === "delivered" ? "DELIVERED" : "SHIPPED",
-              carrier: "OTHER",
-              carrier_name_other: row.carrier,
-            }],
+          const res = await paypalRequest<any>("/v1/shipping/trackers-batch", {
+            method: "POST",
+            body: {
+              trackers: [{
+                transaction_id: captureId,
+                tracking_number: row.tracking_number,
+                status: row.status === "delivered" ? "DELIVERED" : "SHIPPED",
+                carrier: "OTHER",
+                carrier_name_other: row.carrier,
+              }],
+            },
           });
           await db.from("shipment_tracking_events").update({
             paypal_sync_status: "synced",
