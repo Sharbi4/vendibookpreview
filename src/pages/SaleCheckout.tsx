@@ -1,7 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
-import { BadgeCheck, Loader2, MapPin, Pencil, ShieldCheck, UserRound } from 'lucide-react';
-import { useQueryClient } from '@tanstack/react-query';
+import { Loader2, MapPin, Pencil, ShieldCheck, UserRound } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useListing } from '@/hooks/useListing';
 import { computeDeliveryFee, deliveryRateLabel, normalizeDeliveryFeeType } from '@/lib/fulfillment/delivery';
@@ -29,8 +28,6 @@ import { ReferralCodeField } from '@/components/referrals/ReferralCodeField';
 import { useTermsGate } from '@/hooks/useTermsGate';
 import { buildTerms } from '@/lib/transactionTerms';
 import { useCheckoutState } from '@/hooks/useCheckoutState';
-import { useSellerVerifiedBadge, refreshSellerBadgeSurfaces } from '@/hooks/useSellerVerifiedBadge';
-import VerifiedSellerDialog from '@/components/verification/VerifiedSellerDialog';
 import { parseFormattedAddress } from '@/lib/fulfillment/parseAddress';
 import { getPublicDisplayName } from '@/lib/displayName';
 import { useSellerPaymentReadiness } from '@/hooks/useSellerPaymentReadiness';
@@ -50,9 +47,8 @@ import { CONSENT_TRIGGERS, CURRENT_VERSIONS, DOCUMENT_TYPES } from '@/lib/legalD
 type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
 
 /**
- * Single-scroll for-sale checkout. Every money, eligibility and edge-function
- * rule below is unchanged from the previous multi-step wizard — only the
- * presentation (continuous sections instead of a stepper) has changed.
+ * Inline for-sale checkout wizard. Money, eligibility, and server payment
+ * rules remain authoritative while each step preserves the buyer's inputs.
  */
 const SaleCheckout = () => {
   const { listingId } = useParams();
@@ -84,7 +80,6 @@ const SaleCheckout = () => {
     preferredDate: string;
     preferredWindow: DeliveryWindow | '';
     onSiteContact: string;
-    identityAcknowledged: boolean;
   }
   const persist = useCheckoutState<PersistedState>(sessionKey, {
     buyerInfo: {
@@ -97,7 +92,6 @@ const SaleCheckout = () => {
     preferredDate: '',
     preferredWindow: '',
     onSiteContact: '',
-    identityAcknowledged: false,
   });
 
   const buyerInfo = persist.state.buyerInfo;
@@ -325,18 +319,12 @@ const SaleCheckout = () => {
 
   const fulfillmentOptions = getAvailableFulfillmentOptions();
 
-  // ── Buyer identity ────────────────────────────────────────────────
-  const { verified: buyerVerified, loading: buyerVerificationLoading } =
-    useSellerVerifiedBadge(user?.id ?? null);
-
   // Seller payment-readiness gate. `gatingActive` is false today so
   // behaviour is unchanged; once the real check ships this blocks the
   // PayPal purchase action without touching any money logic.
   const sellerReadiness = useSellerPaymentReadiness(listing?.host_id ?? null);
   const paypalPurchaseBlocked = sellerReadiness.gatingActive && !sellerReadiness.ready;
-  const [identityDialogOpen, setIdentityDialogOpen] = useState(false);
   const [fulfillmentReady, setFulfillmentReady] = useState(false);
-  const queryClient = useQueryClient();
 
   /**
    * Scheduling is captured as structured fields, then folded into the
@@ -843,7 +831,6 @@ const SaleCheckout = () => {
   const sellerName = host ? getPublicDisplayName(host, 'Seller') : undefined;
   const locationLabel = [listing.city, listing.state].filter(Boolean).join(', ') || undefined;
   const coverImage = listing.cover_image_url || listing.image_urls?.[0] || null;
-  const sellerVerifiedFlag = Boolean((host as { identity_verified?: boolean } | null | undefined)?.identity_verified);
   const financingEligible = priceSale >= 150 && acceptPayPalCheckout;
 
   /** Prefill the details section from the delivery address the buyer already typed. */
@@ -976,7 +963,6 @@ const SaleCheckout = () => {
           <div className="sale-review-seller">
             <UserRound aria-hidden />
             <span>Sold by <strong>{sellerName || 'Seller'}</strong></span>
-            {sellerVerifiedFlag ? <em><BadgeCheck aria-hidden /> Verified</em> : null}
           </div>
           <strong className="sale-review-price">${priceSale.toLocaleString()}</strong>
           {acceptedOfferPrice ? <small>Accepted offer price</small> : null}
@@ -1006,23 +992,13 @@ const SaleCheckout = () => {
     );
 
     if (currentStep === 3) return (
-      <div className="space-y-5">
-        {!buyerVerificationLoading && !buyerVerified ? (
-          <div className="sale-identity-option">
-            <div><ShieldCheck aria-hidden /><p><strong>Optional identity verification</strong><span>Verify with Plaid, or continue without verification.</span></p></div>
-            <Button type="button" variant="outline" onClick={() => setIdentityDialogOpen(true)}>Verify with Plaid</Button>
-          </div>
-        ) : buyerVerified ? (
-          <div className="sale-identity-option is-verified"><ShieldCheck aria-hidden /><strong>Identity verified with Plaid</strong></div>
-        ) : null}
-        <PurchaseStepInfo
-          embedded buyerInfo={buyerInfo} updateBuyerInfo={updateBuyerInfo}
-          deliveryInstructions={deliveryInstructions} setDeliveryInstructions={setDeliveryInstructions}
-          fulfillmentSelected={fulfillmentSelected} fieldErrors={fieldErrors}
-          touchedFields={touchedFields} setTouchedFields={setTouchedFields}
-          hideAddress={fulfillmentSelected === 'pickup'} onBack={() => goToStep(2)} onContinue={proceedFromDetails}
-        />
-      </div>
+      <PurchaseStepInfo
+        embedded buyerInfo={buyerInfo} updateBuyerInfo={updateBuyerInfo}
+        deliveryInstructions={deliveryInstructions} setDeliveryInstructions={setDeliveryInstructions}
+        fulfillmentSelected={fulfillmentSelected} fieldErrors={fieldErrors}
+        touchedFields={touchedFields} setTouchedFields={setTouchedFields}
+        hideAddress={fulfillmentSelected === 'pickup'} onBack={() => goToStep(2)} onContinue={proceedFromDetails}
+      />
     );
 
     if (currentStep === 4) return (
@@ -1109,11 +1085,6 @@ const SaleCheckout = () => {
           {stepBody}
         </SaleCheckoutWizard>
 
-        <VerifiedSellerDialog
-          open={identityDialogOpen}
-          onOpenChange={setIdentityDialogOpen}
-          onVerified={() => refreshSellerBadgeSurfaces(queryClient)}
-        />
       </TransactionCheckoutShell>
 
     </>
