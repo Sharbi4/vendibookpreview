@@ -21,10 +21,11 @@ Deno.serve(async(req)=>{
     const provider=getVideoProvider(w.provider);
     let {data:room}=await admin.from('video_walkthrough_provider_rooms').select('*').eq('walkthrough_id',w.id).maybeSingle();
     const roomExpiry=new Date(end+30*60_000);
-    if(!room || room.scheduled_starts_at!==w.starts_at){
+    const sameSchedule = room?.scheduled_starts_at && +new Date(room.scheduled_starts_at)===+new Date(w.starts_at);
+    if(!room || !sameSchedule){
       if(room?.room_name) await provider.deleteRoom(room.room_name).catch(()=>undefined);
       const created=await provider.createPrivateRoom(w.id,roomExpiry);
-      const {data:saved,error}=await admin.from('video_walkthrough_provider_rooms').upsert({walkthrough_id:w.id,provider:'daily',room_name:created.roomName,scheduled_starts_at:w.starts_at,expires_at:created.expiresAt}).select().single();
+      const {data:saved,error}=await admin.from('video_walkthrough_provider_rooms').upsert({walkthrough_id:w.id,provider:'daily',room_name:created.roomName,room_url:created.roomUrl,scheduled_starts_at:w.starts_at,expires_at:created.expiresAt},{onConflict:'walkthrough_id'}).select().single();
       if(error)throw error; room=saved;
     }
     const {data:p}=await admin.from('profiles').select('full_name,display_name,business_name').eq('id',user.id).maybeSingle();
