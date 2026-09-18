@@ -196,11 +196,11 @@ const Index = () => {
             </div>
             <div className="v2-home-partner-tiles">
               <article>
-                <span className="v2-home-partner-mark"><PayPalWordmark surface="light" className="text-2xl" /></span>
+                <span className="v2-home-partner-mark"><img src={paypalMonogramAsset.url} alt="PayPal" /></span>
                 <small>Secure checkout</small>
               </article>
-              <article>
-                <span className="v2-home-partner-mark"><EquinoxFundingLogo className="h-9" /></span>
+              <article className="v2-home-partner-tile--dark">
+                <span className="v2-home-partner-mark"><img src={equinoxLogoAsset.url} alt="Equinox Funding" /></span>
                 <small>Financing options</small>
               </article>
               <article>
