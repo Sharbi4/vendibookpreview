@@ -8309,11 +8309,16 @@ export type Database = {
         Row: {
           amount: number
           bill_of_sale_completed_at: string | null
+          buyer_address1: string | null
+          buyer_address2: string | null
+          buyer_city: string | null
           buyer_confirmed_at: string | null
           buyer_email: string | null
           buyer_id: string
           buyer_name: string | null
           buyer_phone: string | null
+          buyer_state: string | null
+          buyer_zip: string | null
           carrier: string | null
           checkout_session_id: string | null
           created_at: string
@@ -8365,11 +8370,16 @@ export type Database = {
         Insert: {
           amount: number
           bill_of_sale_completed_at?: string | null
+          buyer_address1?: string | null
+          buyer_address2?: string | null
+          buyer_city?: string | null
           buyer_confirmed_at?: string | null
           buyer_email?: string | null
           buyer_id: string
           buyer_name?: string | null
           buyer_phone?: string | null
+          buyer_state?: string | null
+          buyer_zip?: string | null
           carrier?: string | null
           checkout_session_id?: string | null
           created_at?: string
@@ -8421,11 +8431,16 @@ export type Database = {
         Update: {
           amount?: number
           bill_of_sale_completed_at?: string | null
+          buyer_address1?: string | null
+          buyer_address2?: string | null
+          buyer_city?: string | null
           buyer_confirmed_at?: string | null
           buyer_email?: string | null
           buyer_id?: string
           buyer_name?: string | null
           buyer_phone?: string | null
+          buyer_state?: string | null
+          buyer_zip?: string | null
           carrier?: string | null
           checkout_session_id?: string | null
           created_at?: string
@@ -12798,11 +12813,16 @@ export type Database = {
         Returns: {
           amount: number
           bill_of_sale_completed_at: string | null
+          buyer_address1: string | null
+          buyer_address2: string | null
+          buyer_city: string | null
           buyer_confirmed_at: string | null
           buyer_email: string | null
           buyer_id: string
           buyer_name: string | null
           buyer_phone: string | null
+          buyer_state: string | null
+          buyer_zip: string | null
           carrier: string | null
           checkout_session_id: string | null
           created_at: string
