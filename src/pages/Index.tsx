@@ -140,7 +140,7 @@ const Index = () => {
             <span className="v2-home-financing-copy">
               <span className="v2-home-financing-eyebrow">For sellers</span>
               <strong>Find more buyers by offering financing when you list on Vendibook.</strong>
-              <small>Listings that offer financing reach buyers who need it — at no extra work for you.</small>
+              <small>Listings that offer financing reach buyers who need it — at no extra work for you. Financing is provided by third-party lenders, subject to application and approval. Vendibook is not a lender.</small>
             </span>
             <span className="v2-home-financing-cta">Learn more<ArrowRight aria-hidden="true" /></span>
           </Link>
