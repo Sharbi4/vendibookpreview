@@ -246,6 +246,13 @@ export default function DeliveryTrackingPanel({ saleTransactionId, bookingId, fu
             Delivering to {session.destination_label}
           </p>
         )}
+        <p className="text-xs text-muted-foreground">
+          Location is approximate and shared only while the driver has an active delivery. See the{' '}
+          <a href="/legal/location-tracking" target="_blank" rel="noreferrer" className="underline">
+            Location &amp; Delivery Tracking Disclosure
+          </a>
+          .
+        </p>
       </div>
     </Card>
   );

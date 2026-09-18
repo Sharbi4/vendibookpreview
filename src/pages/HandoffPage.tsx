@@ -162,17 +162,37 @@ export default function HandoffPage() {
             Use this when you and the buyer are together. For a local pickup we generate a 6-digit code the buyer
             enters to confirm you are both present.
           </p>
+          <label className="flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              className="mt-1"
+              checked={handoffTermsAccepted}
+              onChange={(e) => setHandoffTermsAccepted(e.target.checked)}
+            />
+            <span>
+              I have read and agree to the{' '}
+              <Link to="/legal/handoff-terms" target="_blank" rel="noreferrer" className="underline">
+                Verified Handoff &amp; Condition Evidence Terms
+              </Link>
+              . A handoff record documents what we capture — it is not an inspection or a verification by Vendibook.
+            </span>
+          </label>
           <div className="flex flex-wrap gap-2">
-            <Button size="sm" disabled={busy === 'start'}
-              onClick={() => run('start', { action: 'start_handoff', sale_transaction_id: saleId, booking_id: bookingId, mode: 'buyer_pickup' }, 'Pickup handoff started.')}>
+            <Button size="sm" disabled={!handoffTermsAccepted || busy === 'start'}
+              onClick={() => run('start', { action: 'start_handoff', sale_transaction_id: saleId, booking_id: bookingId, mode: 'buyer_pickup', legal_acceptance_version: HANDOFF_TERMS_VERSION }, 'Pickup handoff started.')}>
               {busy === 'start' ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <KeyRound className="mr-2 h-4 w-4" />}
               Start pickup handoff
             </Button>
-            <Button size="sm" variant="outline" disabled={busy === 'start-d'}
-              onClick={() => run('start-d', { action: 'start_handoff', sale_transaction_id: saleId, booking_id: bookingId, mode: 'seller_delivery' }, 'Handoff started.')}>
+            <Button size="sm" variant="outline" disabled={!handoffTermsAccepted || busy === 'start-d'}
+              onClick={() => run('start-d', { action: 'start_handoff', sale_transaction_id: saleId, booking_id: bookingId, mode: 'seller_delivery', legal_acceptance_version: HANDOFF_TERMS_VERSION }, 'Handoff started.')}>
               Start delivery handoff
             </Button>
           </div>
+          {!handoffTermsAccepted && (
+            <p className="text-xs text-muted-foreground">
+              Please review and accept the handoff terms to continue.
+            </p>
+          )}
         </Card>
       )}
 
