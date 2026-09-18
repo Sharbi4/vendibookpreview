@@ -124,7 +124,7 @@ export default function WorkspaceActivity() {
         href: `/dashboard/bookings/${b.id}`,
       }));
 
-    const videos: Item[] = walkthroughs.map((w) => ({ id:`walkthrough-${w.id}`, kind:'walkthroughs', title:w.listing?.title||'Video walkthrough', counterparty:w.seller_id===user?.id?'Meeting with buyer':'Meeting with seller', state:w.status, nextAction:['scheduled','rescheduled'].includes(w.status)?'View meeting details':null, date:w.starts_at, amount:null, reference:null, image:w.listing?.cover_image_url||null, href:`/walkthrough/${w.id}` }));
+    const videos: Item[] = walkthroughs.map((w) => { const done = w.status === 'completed'; return ({ id:`walkthrough-${w.id}`, kind:'walkthroughs', title:done?`Video walkthrough completed — ${w.listing?.title||'Listing'}`:(w.listing?.title||'Video walkthrough'), counterparty:w.seller_id===user?.id?'Meeting with buyer':'Meeting with seller', state:w.status, nextAction:done?'View next steps':(['scheduled','rescheduled'].includes(w.status)?'View meeting details':null), date:w.starts_at, amount:null, reference:null, image:w.listing?.cover_image_url||null, href:done?`/walkthrough/${w.id}/next-steps`:`/walkthrough/${w.id}` }); });
     return [...payments, ...buyer, ...seller, ...videos].sort(
       (a, b) => +new Date(b.date) - +new Date(a.date),
     );
