@@ -264,7 +264,7 @@ const OrderCaseSection = ({
         {messages.map((m) => (
           <div key={m.id} className="rounded-xl border border-border bg-background p-3">
             <div className="flex items-center justify-between text-[11px] uppercase tracking-wide text-muted-foreground">
-              <span>{m.author_role === 'admin' ? 'Vendibook' : m.author_role}</span>
+              <span>{m.author_role === 'admin' ? 'Vendibook' : m.author_role === 'system' ? 'Vendibook (automatic)' : m.author_role}</span>
               <span>{fmt(m.created_at)}</span>
             </div>
             <p className="mt-1.5 whitespace-pre-wrap text-sm">{m.body}</p>
