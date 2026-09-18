@@ -179,19 +179,19 @@ export default function WalkthroughConsentGate({ walkthroughId, title, requiresL
             walkthrough.
           </span>
         </label>
-        {WALKTHROUGH_RECORDING_ENABLED && (
-          <label className="wc-check">
-            <input type="checkbox" checked={recording} onChange={(e) => setRecording(e.target.checked)} />
-            <span>
-              I consent to this walkthrough being recorded and understand how the recording will be
-              used and retained.
-            </span>
-          </label>
-        )}
+        <label className="wc-check">
+          <input type="checkbox" checked={recording} onChange={(e) => setRecording(e.target.checked)} />
+          <span>
+            I understand this walkthrough may be monitored or recorded by Vendibook for safety,
+            quality and dispute resolution, and I consent to that.
+          </span>
+        </label>
         <p className="wc-fineprint">
-          {WALKTHROUGH_RECORDING_ENABLED
-            ? 'Recording is on for this walkthrough.'
-            : 'This walkthrough is not recorded or transcribed. Only you and the other participant can join.'}
+          Only you and the other participant can join this room. Vendibook may monitor or record
+          walkthroughs as described in the{' '}
+          <Link to="/legal/video-walkthrough-terms" target="_blank" rel="noreferrer">walkthrough terms</Link>
+          {' '}and{' '}
+          <Link to="/legal/device-permissions-privacy" target="_blank" rel="noreferrer">privacy notice</Link>.
         </p>
       </section>
 
