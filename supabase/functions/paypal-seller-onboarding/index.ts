@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { hasCurrentLegalAcceptance } from "../_shared/legalVersions.ts";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
 import {
   createPartnerReferral,
@@ -129,6 +130,19 @@ Deno.serve(async (req) => {
     };
 
     if (action === "create_referral") {
+      // Legal gate: the seller accepts the Seller Payment Terms and the E-SIGN
+      // consent before we ask PayPal for a partner referral link.
+      for (const slug of ["seller-payment-terms", "esign"] as const) {
+        const accepted = await hasCurrentLegalAcceptance(admin, user.id, slug);
+        if (!accepted) {
+          return jsonError(
+            403,
+            "legal_acceptance_required",
+            "Please accept the Seller Payment Terms and the electronic records consent before connecting PayPal.",
+          );
+        }
+      }
+
       let existing = await activeRow();
       // A revoked consent cannot be resumed. Archive it and create a fresh
       // referral so the seller always has a working recovery path.

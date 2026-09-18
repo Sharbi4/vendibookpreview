@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
+import { hasCurrentLegalAcceptance } from "../_shared/legalVersions.ts";
 import { PayPalError, safeLog } from "../_shared/paypal.ts";
 import { getPaymentProvider, PaymentProviderError } from "../_shared/payments/index.ts";
 import { auditPayment, requestIp } from "../_shared/paymentAudit.ts";
@@ -61,6 +62,20 @@ serve(async (req) => {
     const user = userData?.user;
     if (userErr || !user) {
       return jsonError(401, "unauthenticated", "Your session expired. Please sign in again.");
+    }
+
+    // Legal gate, enforced here rather than in the UI: no PayPal order is
+    // created for a buyer who has not accepted the current Terms of Service
+    // and Payments Terms. A version bump invalidates an older acceptance.
+    for (const slug of ["terms-of-service", "payments-terms"] as const) {
+      const accepted = await hasCurrentLegalAcceptance(admin, user.id, slug);
+      if (!accepted) {
+        return jsonError(
+          403,
+          "legal_acceptance_required",
+          "Please tick the box agreeing to the Vendibook Terms of Service, Payments Terms, and Privacy Policy before paying.",
+        );
+      }
     }
 
     const body = await req.json().catch(() => ({}));
