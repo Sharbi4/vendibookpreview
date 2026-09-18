@@ -3006,50 +3006,70 @@ export type Database = {
       legal_acceptances: {
         Row: {
           accepted_at: string
+          content_hash: string | null
           created_at: string
+          document_id: string | null
           document_slug: string
           document_version: string
           granted_permissions: Json
           id: string
           ip_address: string | null
+          locale: string | null
           related_entity_id: string | null
           related_entity_type: string | null
           route: string | null
+          security_metadata: Json
           surface: string | null
           user_agent: string | null
           user_id: string
         }
         Insert: {
           accepted_at?: string
+          content_hash?: string | null
           created_at?: string
+          document_id?: string | null
           document_slug: string
           document_version: string
           granted_permissions?: Json
           id?: string
           ip_address?: string | null
+          locale?: string | null
           related_entity_id?: string | null
           related_entity_type?: string | null
           route?: string | null
+          security_metadata?: Json
           surface?: string | null
           user_agent?: string | null
           user_id: string
         }
         Update: {
           accepted_at?: string
+          content_hash?: string | null
           created_at?: string
+          document_id?: string | null
           document_slug?: string
           document_version?: string
           granted_permissions?: Json
           id?: string
           ip_address?: string | null
+          locale?: string | null
           related_entity_id?: string | null
           related_entity_type?: string | null
           route?: string | null
+          security_metadata?: Json
           surface?: string | null
           user_agent?: string | null
           user_id?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "legal_acceptances_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "legal_documents"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       legal_documents: {
         Row: {
