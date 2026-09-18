@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
-import { BadgeCheck, Building2, Loader2, MapPin, Pencil, ShieldCheck, Truck, UserRound } from 'lucide-react';
+import { BadgeCheck, Loader2, MapPin, Pencil, ShieldCheck, UserRound } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { useListing } from '@/hooks/useListing';
@@ -33,10 +33,8 @@ import { useSellerVerifiedBadge, refreshSellerBadgeSurfaces } from '@/hooks/useS
 import VerifiedSellerDialog from '@/components/verification/VerifiedSellerDialog';
 import { parseFormattedAddress } from '@/lib/fulfillment/parseAddress';
 import { getPublicDisplayName } from '@/lib/displayName';
-import { Checkbox } from '@/components/ui/checkbox';
 import { useSellerPaymentReadiness } from '@/hooks/useSellerPaymentReadiness';
 import FinancingActionPanel from '@/components/listing-detail/sale/FinancingActionPanel';
-import MessageHostForm from '@/components/messaging/MessageHostForm';
 
 import TransactionCheckoutShell from '@/components/transaction/checkout/TransactionCheckoutShell';
 import CheckoutSection from '@/components/transaction/checkout/CheckoutSection';
@@ -132,9 +130,6 @@ const SaleCheckout = () => {
   const onSiteContact = persist.state.onSiteContact;
   const setOnSiteContact = (v: string) =>
     persist.setState((prev) => ({ ...prev, onSiteContact: v }));
-  const identityAcknowledged = persist.state.identityAcknowledged;
-  const setIdentityAcknowledged = (v: boolean) =>
-    persist.setState((prev) => ({ ...prev, identityAcknowledged: v }));
   const [isAddressComplete, setIsAddressComplete] = useState(false);
   const [deliveryCoords, setDeliveryCoords] = useState<[number, number] | null>(null);
 
@@ -1052,7 +1047,7 @@ const SaleCheckout = () => {
     );
 
     if (currentStep === 6) return (
-      <SaleAgreementStep document={agreement.data} loading={agreement.isLoading} error={agreement.isError} accepted={agreedToTerms} onAcceptedChange={setAgreedToTerms} acceptanceText={`I have read and agree to ${agreement.data?.title || 'the required agreement'}.`} />
+      <SaleAgreementStep document={agreement.data} loading={agreement.isLoading} error={agreement.isError} accepted={agreedToTerms} onAcceptedChange={setAgreedToTerms} acceptanceText={acceptanceText} />
     );
 
     return (
