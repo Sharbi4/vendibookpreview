@@ -1,9 +1,10 @@
+import { useMemo } from 'react';
 import { excludeTestListings } from '@/lib/excludeTestListings';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, BadgeCheck, Map, MessageSquare, ShieldCheck, Truck, Wallet, Gauge, Landmark } from 'lucide-react';
 import { filterPubliclyVisible } from '@/lib/listings/publicVisibility';
-import { isListingFeatured, sortFeaturedFreshFirstThenFair, sortNewFirstThenFeatured } from '@/lib/featured';
+import { isListingFeatured, sortFeaturedFirstFair, sortNewFirstThenFeatured } from '@/lib/featured';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import NewsletterPopup from '@/components/newsletter/NewsletterPopup';
