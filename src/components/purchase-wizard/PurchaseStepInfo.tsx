@@ -42,7 +42,7 @@ interface PurchaseStepInfoProps {
   // Navigation
   onBack: () => void;
   onContinue: () => void;
-  /** When true (pickup), the address section is hidden — we don't collect it. */
+  /** @deprecated Buyer contact address is always collected. */
   hideAddress?: boolean;
   /** Override for the primary CTA label. */
   continueLabel?: string;
