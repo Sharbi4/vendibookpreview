@@ -329,8 +329,11 @@ export function ContactInfoWizard({
         helperText="The host may use this to coordinate pickup or delivery."
       />
 
-      {/* Address */}
+      {/* Contact address — always collected, separate from any delivery address */}
       <div className="space-y-3">
+        <p className="text-sm text-muted-foreground">
+          Your contact address, used for your receipt and rental documents. This is not a delivery address.
+        </p>
         <ValidatedInput
           label="Street address"
           value={value.address1}
