@@ -8,6 +8,98 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.45.0';
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from '../_shared/jsonError.ts';
 import { downloadDocumentPdf, getDocument, verifyWebhookSignature } from '../_shared/signnow.ts';
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts';
+
+const SITE_URL = 'https://vendibook.com';
+
+async function notify(
+  to: string | null | undefined,
+  idempotencyKey: string,
+  data: Record<string, unknown>,
+) {
+  if (!to) return;
+  try {
+    await invokeTransactionalEmail({
+      templateName: 'generic-notice',
+      recipientEmail: to,
+      idempotencyKey,
+      templateData: { preview: String(data.heading ?? 'Purchase agreement update'), ...data },
+      metadata: { category: 'purchase_agreement' },
+    });
+  } catch (e) {
+    console.error('[signnow-webhook] email failed', (e as Error).message);
+  }
+}
+
+/**
+ * A completed bill of sale is one of the two release conditions. Refresh the
+ * seller payable so the order page and the admin queue reflect it immediately.
+ * Never automatic money movement: refresh only moves the payable to
+ * 'ready_for_review' once the walkthrough video is also on file.
+ */
+async function onBillOfSaleSigned(svc: any, transactionId: string, allSigned: boolean) {
+  const { data: payment } = await svc
+    .from('payment_records')
+    .select('id, buyer_id, seller_id, reference')
+    .eq('sale_transaction_id', transactionId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!payment) return;
+
+  if (allSigned) {
+    try {
+      await svc.rpc('refresh_sale_release_requirements', { _payment_record_id: payment.id });
+    } catch (e) {
+      console.error('[signnow-webhook] release refresh failed', (e as Error).message);
+    }
+  }
+
+  const { data: profiles } = await svc
+    .from('profiles')
+    .select('id, email')
+    .in('id', [payment.buyer_id, payment.seller_id].filter(Boolean));
+  const buyer = (profiles ?? []).find((p: any) => p.id === payment.buyer_id);
+  const seller = (profiles ?? []).find((p: any) => p.id === payment.seller_id);
+  const link = `${SITE_URL}/transaction/${transactionId}`;
+
+  if (!allSigned) {
+    // One party signed — nudge whoever is still outstanding is handled by the
+    // generic reminder below to both, which is safe and idempotent per event.
+    return;
+  }
+
+  const { data: payable } = await svc
+    .from('seller_payables')
+    .select('release_state, hold_reason')
+    .eq('payment_record_id', payment.id)
+    .maybeSingle();
+  const readyForReview = payable?.release_state === 'ready_for_review';
+
+  await notify(buyer?.email, `bos-complete-buyer-${transactionId}`, {
+    kicker: 'Purchase agreement',
+    heading: 'Both parties have signed',
+    paragraphs: [
+      `The purchase and sale agreement for order ${payment.reference ?? ''} is signed by both the buyer and the seller. A copy is saved with your order.`,
+      readyForReview
+        ? 'The walkthrough video is also on file, so this order now goes to Vendibook for release review.'
+        : 'The saved walkthrough video is still outstanding. Seller payment stays unreleased until it is on file.',
+    ],
+    ctaLabel: 'View your order', ctaUrl: link,
+  });
+
+  await notify(seller?.email, `bos-complete-seller-${transactionId}`, {
+    kicker: 'Purchase agreement',
+    heading: 'Both parties have signed',
+    paragraphs: [
+      `The purchase and sale agreement for order ${payment.reference ?? ''} is signed by both parties.`,
+      readyForReview
+        ? 'Both release conditions are now met. Vendibook reviews the order and records your payout — payouts are typically released within 24 hours of delivery confirmation, and we always strive for 24–48 hours.'
+        : (payable?.hold_reason ?? 'The saved walkthrough video is still outstanding before your payment can be reviewed for release.'),
+    ],
+    ctaLabel: 'View the order', ctaUrl: link,
+  });
+}
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -121,6 +213,10 @@ Deno.serve(async (req) => {
     }
 
     await svc.from('documents').update(updates).eq('id', doc.id);
+
+    if (doc.document_type === 'bill_of_sale' && doc.transaction_id && allSigned && doc.status !== 'completed') {
+      await onBillOfSaleSigned(svc, doc.transaction_id, true);
+    }
 
     return jsonResponse(200, { ok: true, status: nextStatus });
   } catch (e) {
