@@ -108,7 +108,7 @@ export default function WalkthroughConsentGate({ walkthroughId, title, requiresL
       microphone,
       locationRequired: requiresLocation,
       location,
-      recordingConsent: WALKTHROUGH_RECORDING_ENABLED ? recording : false,
+      recordingConsent: recording,
     });
     setSaving(false);
     if (error) {
