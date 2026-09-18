@@ -181,8 +181,12 @@ export default function WalkthroughConsentGate({ walkthroughId, title, requiresL
         <label className="wc-check">
           <input type="checkbox" checked={recording} onChange={(e) => setRecording(e.target.checked)} />
           <span>
-            I understand this walkthrough may be monitored or recorded by Vendibook for safety,
-            quality and dispute resolution, and I consent to that.
+            I have read the{' '}
+            <Link to="/legal/recording-consent" target="_blank" rel="noreferrer">
+              Recording &amp; Monitoring Notice
+            </Link>{' '}
+            and understand this walkthrough may be monitored or recorded by Vendibook for safety,
+            quality, fraud prevention and dispute resolution. I consent to that.
           </span>
         </label>
         <p className="wc-fineprint">
