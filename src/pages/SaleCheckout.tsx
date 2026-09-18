@@ -1143,11 +1143,25 @@ const SaleCheckout = () => {
           description={stepConfig[currentStep].description}
           onStepChange={goToStep}
           onBack={currentStep > 1 ? () => goToStep(currentStep - 1) : undefined}
-          onNext={currentStep === 1 ? () => advanceTo(2) : currentStep === 2 ? proceedFromFulfillment : currentStep === 3 ? proceedFromDetails : currentStep === 4 ? () => advanceTo(5) : currentStep === 5 ? proceedToAgreement : currentStep === 6 ? proceedToConfirmation : undefined}
-          nextLabel={currentStep === 4 ? 'Continue to payment' : currentStep === 5 ? 'Review agreement' : currentStep === 6 ? 'Accept and continue' : 'Continue'}
-          nextDisabled={(currentStep === 2 && !fulfillmentReady) || (currentStep === 5 && ((paypalPurchaseBlocked && paymentMethod !== 'cash') || !legalAccepted)) || (currentStep === 6 && (!agreedToTerms || !agreement.data))}
+          onNext={
+            currentStep === 1
+              ? () => advanceTo(2)
+              : currentStep === 2
+                ? proceedFromFulfillment
+                : currentStep === 3
+                  ? proceedToAgreement
+                  : currentStep === 4
+                    ? proceedToPayment
+                    : undefined
+          }
+          nextLabel={currentStep === 3 ? 'Review agreements' : currentStep === 4 ? 'Accept and continue to payment' : 'Continue'}
+          nextDisabled={
+            (currentStep === 2 && !fulfillmentReady) ||
+            (currentStep === 4 &&
+              (!agreedToTerms || !privacyAccepted || !agreement.data || !privacyConsent.data))
+          }
           nextBusy={termsGate.preparing || recordingConsent}
-          hideFooter={currentStep === 7}
+          hideFooter={currentStep === 5}
         >
           {stepBody}
         </SaleCheckoutWizard>
