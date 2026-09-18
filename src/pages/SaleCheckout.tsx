@@ -47,9 +47,8 @@ import { CONSENT_TRIGGERS, CURRENT_VERSIONS, DOCUMENT_TYPES } from '@/lib/legalD
 type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
 
 /**
- * Single-scroll for-sale checkout. Every money, eligibility and edge-function
- * rule below is unchanged from the previous multi-step wizard — only the
- * presentation (continuous sections instead of a stepper) has changed.
+ * Inline for-sale checkout wizard. Money, eligibility, and server payment
+ * rules remain authoritative while each step preserves the buyer's inputs.
  */
 const SaleCheckout = () => {
   const { listingId } = useParams();
