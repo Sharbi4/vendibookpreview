@@ -75,10 +75,22 @@ const DevicePermissionsPrivacy: React.FC = () => (
         </p>
       </Section>
 
-      <Section title="Recording">
+      <Section title="Monitoring and recording">
         <p>
-          Recording is off. If Vendibook ever offers recorded walkthroughs, it will require a
-          separate opt-in with disclosure of how the recording is used and how long it is kept.
+          Video walkthroughs may be monitored or recorded for safety, quality, fraud prevention, and
+          dispute resolution. Before you can enter a meeting room you must tick a box confirming you
+          understand this and consent to it, and that consent is stored with your account, the
+          walkthrough, the document versions you accepted, and the time.
+        </p>
+        <p>
+          Not every walkthrough is monitored or recorded. Where audio or video of a walkthrough is
+          captured, access is limited to authorized Vendibook personnel reviewing a report, a safety
+          concern, or a transaction dispute, and to disclosures required by law. It is kept no longer
+          than needed for those purposes and is never sold or used for advertising.
+        </p>
+        <p>
+          If you do not want to be recorded, do not join the meeting room — you can message the other
+          party and arrange the walkthrough another way.
         </p>
       </Section>
 
