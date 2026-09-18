@@ -106,6 +106,12 @@ function ph(doc: PdfDoc, fc: FieldCollector, role: string, name: string, label: 
   fc.add(name, role, 'text', doc.summaryField(label), label, false);
 }
 
+/** Renders literal checkbox lines without a bullet marker. */
+function checkboxes(doc: PdfDoc, items: string[]) {
+  for (const item of items) doc.paragraph(item);
+  doc.spacer(2);
+}
+
 /** Signature block for the executed contract documents (Buyer / Seller). */
 function contractSignatureBlock(doc: PdfDoc, fc: FieldCollector, roleA: string, roleB: string) {
   for (const role of [roleA, roleB]) {
@@ -512,7 +518,7 @@ function buildSaleHandoff(): { pdf: Uint8Array; fields: SignNowFieldDef[] } {
   ph(doc, fc, S, 'asset_year_make_model', 'Year/make/model, if applicable');
   ph(doc, fc, S, 'asset_identifier_confirm', 'VIN/serial/identifier, if applicable');
   doc.paragraph('Buyer acknowledgment:');
-  doc.bullets([
+  checkboxes(doc, [
     '[ ] The identifying information I reviewed appears consistent with the transaction record.',
     '[ ] A discrepancy is noted below.',
     '[ ] Not applicable / not available for this Asset.',
@@ -523,7 +529,7 @@ function buildSaleHandoff(): { pdf: Uint8Array; fields: SignNowFieldDef[] } {
   doc.paragraph('The following equipment or property was identified as included in the transaction:');
   fc.add('included_equipment_checklist', S, 'text', doc.blockField('Included equipment checklist from the transaction record', 64), 'Included equipment checklist', false);
   doc.paragraph('Buyer acknowledgment:');
-  doc.bullets([
+  checkboxes(doc, [
     '[ ] Included items were reviewed and no material missing item was noted.',
     '[ ] Missing or materially different items are listed below.',
     '[ ] Buyer did not complete a full included-equipment review at Handoff.',
@@ -552,7 +558,7 @@ function buildSaleHandoff(): { pdf: Uint8Array; fields: SignNowFieldDef[] } {
 
   doc.heading('5. DOCUMENTS AND KEYS EXCHANGED');
   doc.paragraph('The parties should identify what was physically or electronically provided at Handoff.');
-  doc.bullets([
+  checkboxes(doc, [
     '[ ] Keys',
     '[ ] Title or ownership document, where applicable',
     '[ ] Bill of sale / purchase agreement copy',
@@ -578,13 +584,13 @@ function buildSaleHandoff(): { pdf: Uint8Array; fields: SignNowFieldDef[] } {
 
   doc.heading('8. HANDOFF STATUS');
   doc.paragraph('Buyer:');
-  doc.bullets([
+  checkboxes(doc, [
     '[ ] I received physical possession of the Asset.',
     '[ ] I did not receive physical possession of the Asset.',
     '[ ] Possession is being transferred through a carrier/freight process and final receipt remains pending.',
   ]);
   doc.paragraph('Seller:');
-  doc.bullets([
+  checkboxes(doc, [
     '[ ] I transferred physical possession of the Asset to Buyer or Buyer\u2019s authorized recipient.',
     '[ ] I did not transfer physical possession of the Asset.',
     '[ ] I transferred the Asset to the agreed carrier/freight provider and final Buyer receipt remains pending.',
