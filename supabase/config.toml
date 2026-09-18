@@ -291,3 +291,9 @@ verify_jwt = false
 
 [functions.dispute-case-ops]
 verify_jwt = false
+
+[functions.release-deadline-sweep]
+verify_jwt = false
+
+[functions.admin-cancel-order]
+verify_jwt = false

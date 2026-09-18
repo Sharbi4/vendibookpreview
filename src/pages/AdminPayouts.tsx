@@ -9,6 +9,7 @@ import {
   RefreshCw,
   RotateCcw,
   Search,
+  XCircle,
 } from 'lucide-react';
 
 import Header from '@/components/layout/Header';
@@ -90,6 +91,8 @@ export default function AdminPayouts() {
   const [note, setNote] = useState('');
   const [refundTarget, setRefundTarget] = useState<Payable | null>(null);
   const [refundReason, setRefundReason] = useState('');
+  const [cancelTarget, setCancelTarget] = useState<Payable | null>(null);
+  const [cancelReason, setCancelReason] = useState('');
 
   const statuses = useMemo(() => TABS.find((t) => t.value === tab)?.statuses ?? [], [tab]);
 
@@ -169,6 +172,26 @@ export default function AdminPayouts() {
       toast.success('Full PayPal refund issued and recorded.');
       setRefundTarget(null);
       setRefundReason('');
+      await load();
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const cancelOrder = async () => {
+    if (!cancelTarget || cancelReason.trim().length < 5) return;
+    setBusyId(cancelTarget.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-cancel-order', {
+        body: { payment_record_id: cancelTarget.payment_record_id, reason: cancelReason.trim() },
+      });
+      if (error || data?.error) {
+        toast.error(data?.error || error?.message || 'The order was not cancelled.');
+        return;
+      }
+      toast.success('Order cancelled, buyer refunded in full, both parties notified.');
+      setCancelTarget(null);
+      setCancelReason('');
       await load();
     } finally {
       setBusyId(null);
@@ -349,6 +372,16 @@ export default function AdminPayouts() {
                           <RotateCcw className="mr-2 h-4 w-4" /> Full refund
                         </Button>
                       ) : null}
+                      {row.release_state && !['payout_recorded', 'auto_refunded', 'cancelled'].includes(row.release_state) ? (
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          disabled={busyId === row.id}
+                          onClick={() => { setCancelTarget(row); setCancelReason(''); }}
+                        >
+                          <XCircle className="mr-2 h-4 w-4" /> Cancel &amp; refund order
+                        </Button>
+                      ) : null}
                     </div>
                   </div>
                 </div>
@@ -423,6 +456,35 @@ export default function AdminPayouts() {
             >
               {busyId === refundTarget?.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
               Refund in full
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!cancelTarget} onOpenChange={(open) => !open && setCancelTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cancel this order and refund the buyer?</DialogTitle>
+            <DialogDescription>
+              PayPal refunds the buyer in full first. Only if that succeeds is the sale cancelled and the
+              seller payment closed out. Both parties are emailed the reason you write here.
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={cancelReason}
+            onChange={(event) => setCancelReason(event.target.value)}
+            placeholder="Required reason for the audit record and for both parties"
+            className="text-base"
+          />
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setCancelTarget(null)}>Keep order</Button>
+            <Button
+              variant="destructive"
+              disabled={cancelReason.trim().length < 5 || busyId === cancelTarget?.id}
+              onClick={cancelOrder}
+            >
+              {busyId === cancelTarget?.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Cancel &amp; refund
             </Button>
           </DialogFooter>
         </DialogContent>
