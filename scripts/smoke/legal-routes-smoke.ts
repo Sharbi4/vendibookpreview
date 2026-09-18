@@ -17,10 +17,10 @@ for (const doc of LEGAL_DOCUMENTS) {
   if (!doc.version || !doc.version.trim()) {
     failures.push(`${doc.slug}: missing version`);
   }
-  if (!appSource.includes(`path="${doc.path}"`)) {
-    failures.push(`${doc.slug}: no route registered for ${doc.path}`);
+  if (!appSource.includes(`path="${doc.route}"`)) {
+    failures.push(`${doc.slug}: no route registered for ${doc.route}`);
   }
-  if (!sitemap.includes(doc.path)) {
+  if (!sitemap.includes(doc.route)) {
     failures.push(`${doc.slug}: missing from public/sitemap-legal.xml`);
   }
 }
