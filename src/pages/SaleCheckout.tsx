@@ -932,6 +932,7 @@ const SaleCheckout = () => {
       meta={summaryMeta}
     >
       {moneyBreakdown}
+      {railExtras}
     </ListingCheckoutSummary>
   );
 
