@@ -123,7 +123,7 @@ const Index = () => {
               <strong>Connect your business with PayPal.</strong>
               <small>Sellers link PayPal in minutes to accept secure payments right on Vendibook.</small>
             </span>
-            <span className="v2-home-paypal-cta">Connect with PayPal<ArrowRight aria-hidden="true" /></span>
+            <span className="v2-home-paypal-cta">Learn more<ArrowRight aria-hidden="true" /></span>
           </Link>
 
 
