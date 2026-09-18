@@ -17,8 +17,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
 import vendibookWordmark from '@/assets/vendibook-wordmark.png';
-import equinoxLogoAsset from '@/assets/equinox-funding-dark.png.asset.json';
-import paypalMonogramAsset from '@/assets/paypal-monogram-color.png.asset.json';
+import { PayPalWordmark, EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
 import paypalBannerAsset from '@/assets/paypal-banner.png.asset.json';
 
 const ROW_LIMIT = 8;
@@ -240,11 +239,11 @@ const Index = () => {
             </div>
             <div className="v2-home-partner-tiles">
               <article>
-                <span className="v2-home-partner-mark"><img src={paypalMonogramAsset.url} alt="PayPal" /></span>
+                <span className="v2-home-partner-mark"><PayPalWordmark surface="light" className="h-7 w-auto" /></span>
                 <div className="v2-home-partner-copy"><h3>Secure checkout</h3><p>Smooth online payment through PayPal</p></div>
               </article>
               <article className="v2-home-partner-tile--dark">
-                <span className="v2-home-partner-mark"><img src={equinoxLogoAsset.url} alt="Equinox Funding" /></span>
+                <span className="v2-home-partner-mark"><EquinoxFundingLogo className="h-7 w-auto" /></span>
                 <div className="v2-home-partner-copy"><h3>Equipment financing</h3><p>Financing options for qualified buyers</p></div>
               </article>
               <article>
