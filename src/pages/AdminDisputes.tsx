@@ -33,6 +33,10 @@ interface FrozenCase {
   days_open: number;
   blocking: string;
   past_sla: boolean;
+  source?: string | null;
+  paypal_dispute_id?: string | null;
+  paypal_dispute_reason?: string | null;
+  paypal_dispute_status?: string | null;
   payable: { status: string; deadline_remaining_seconds: number | null } | null;
 }
 
@@ -111,6 +115,11 @@ const AdminDisputes = () => {
                         <Lock className="h-3 w-3" /> Payout frozen
                       </Badge>
                     )}
+                    {c.paypal_dispute_id && (
+                      <Badge variant="outline" className="gap-1 border-primary/40 text-primary">
+                        PayPal claim
+                      </Badge>
+                    )}
                     {c.past_sla && (
                       <Badge variant="outline" className="gap-1 border-destructive/40 text-destructive">
                         <ShieldAlert className="h-3 w-3" /> Past SLA
@@ -122,6 +131,13 @@ const AdminDisputes = () => {
                     {money(c.amount_held_cents, c.currency)} held · {c.days_open} day{c.days_open === 1 ? '' : 's'} open ·
                     {' '}blocking: {c.blocking}
                   </p>
+                  {c.paypal_dispute_id && (
+                    <p className="mt-1 text-xs text-muted-foreground">
+                      PayPal dispute {c.paypal_dispute_id}
+                      {c.paypal_dispute_reason ? ` · ${c.paypal_dispute_reason.split('_').join(' ').toLowerCase()}` : ''}
+                      {c.paypal_dispute_status ? ` · PayPal status: ${c.paypal_dispute_status}` : ''}
+                    </p>
+                  )}
                   {c.payable?.deadline_remaining_seconds != null && (
                     <p className="mt-1 text-xs text-muted-foreground">
                       Clock paused with {Math.ceil(c.payable.deadline_remaining_seconds / 86400)} day(s) remaining.
