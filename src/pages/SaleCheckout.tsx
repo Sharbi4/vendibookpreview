@@ -558,9 +558,7 @@ const SaleCheckout = () => {
       state: stateError,
       zipCode: zipCodeError,
     });
-    const touched = ['firstName', 'lastName', 'email', 'phone'];
-    if (needsAddress) touched.push('address1', 'city', 'state', 'zipCode');
-    setTouchedFields(new Set(touched));
+    setTouchedFields(new Set(['firstName', 'lastName', 'email', 'phone', 'address1', 'city', 'state', 'zipCode']));
 
     const firstError = firstNameError || lastNameError || emailError || phoneError || address1Error || cityError || stateError || zipCodeError;
     if (firstError) {
