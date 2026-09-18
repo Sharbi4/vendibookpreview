@@ -447,6 +447,7 @@ const AnimatedRoutes = () => {
           <Route path="/delivery/:kind/:id" element={<PageTransition><DeliveryMode /></PageTransition>} />
 
           <Route path="/admin/payouts" element={<PageTransition><AdminPayouts /></PageTransition>} />
+          <Route path="/admin/disputes" element={<PageTransition><AdminDisputes /></PageTransition>} />
           <Route path="/admin/freight" element={<PageTransition><AdminFreightRequests /></PageTransition>} />
           <Route path="/admin/users" element={<PageTransition><AdminUsers /></PageTransition>} />
           <Route path="/admin/messages" element={<PageTransition><AdminMessages /></PageTransition>} />
