@@ -76,6 +76,19 @@ export function DocumentsCard({
   const [session, setSession] = useState<{ url: string; docId: string } | null>(null);
   const [preview, setPreview] = useState<{ url: string; label: string } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
+  const [kindBusy, setKindBusy] = useState<string | null>(null);
+  const [kindNotice, setKindNotice] = useState<string | null>(null);
+
+  const requestKind = async (kind: string) => {
+    setKindBusy(kind);
+    setKindNotice(null);
+    try {
+      const reason = await prepareKind(kind as any);
+      if (reason) setKindNotice(reason);
+    } finally {
+      setKindBusy(null);
+    }
+  };
 
   const openSigning = async (doc: DocumentRow) => {
     setBusy(doc.id);
