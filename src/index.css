@@ -3399,7 +3399,6 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
 
 /* Disabled Continue stays legible inside the contained checkout card. */
 .sale-wizard-footer .checkout-primary-action:disabled { opacity: 1; background: hsl(var(--v2-line) / .7); border: 1px solid hsl(var(--v2-line-strong)); color: hsl(var(--v2-stone)); }
-.sale-wizard-step-note { margin-top: 12px; font-size: 12px; line-height: 1.5; color: hsl(var(--v2-stone)); }
 /* Inside the contained wizard the footer owns Back/Continue. */
 .sale-wizard-content .order-review { gap: 16px; }
 .rental-verification-panel { display: grid; gap: 14px; }
