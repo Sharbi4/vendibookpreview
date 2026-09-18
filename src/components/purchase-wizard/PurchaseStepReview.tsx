@@ -194,12 +194,10 @@ const PurchaseStepReview = ({
             <span className="text-muted-foreground">Phone</span>
             <p className="font-medium text-foreground">{buyerInfo.phone}</p>
           </div>
-          {!hideAddress && (
-            <div className="col-span-2">
-              <span className="text-muted-foreground">Address</span>
-              <p className="font-medium text-foreground">{displayAddress}</p>
-            </div>
-          )}
+          <div className="col-span-2">
+            <span className="text-muted-foreground">Contact address</span>
+            <p className="font-medium text-foreground">{displayAddress}</p>
+          </div>
         </div>
       </div>
 
