@@ -2592,12 +2592,27 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
   line-height: 1.03;
   letter-spacing: 0;
 }
+.v2-home-hero-logo {
+  display: block;
+  width: min(100%, 440px);
+  height: auto;
+  margin-top: 14px;
+  object-fit: contain;
+  object-position: left center;
+}
 .v2-home-lede {
   margin-top: 14px;
   max-width: 56ch;
   color: hsl(var(--v2h-stone));
   font-size: 17px;
   line-height: 1.52;
+}
+.v2-home-finance-legal {
+  max-width: 68ch;
+  margin-top: 6px;
+  color: hsl(var(--v2h-stone) / .72);
+  font-size: 9.5px;
+  line-height: 1.45;
 }
 .v2-home-search {
   margin-top: 26px;
@@ -2911,6 +2926,7 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
   .v2-home-section-head .v2-home-link { font-size: 0; }
   .v2-home-section-head .v2-home-link svg { width: 20px; height: 20px; }
   .v2-home-search { align-items: stretch; width: 100%; }
+  .v2-home-hero-logo { width: min(100%, 330px); margin-top: 12px; }
   .v2-home-modes { width: 100%; }
   .v2-home-modes button { flex: 1; padding: 0 12px; }
   .v2-home-searchbar { flex-direction: column; gap: 10px; padding: 10px; border-radius: 13px; }
