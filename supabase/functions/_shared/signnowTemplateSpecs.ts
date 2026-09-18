@@ -112,7 +112,7 @@ function contractSignatureBlock(doc: PdfDoc, fc: FieldCollector, roleA: string, 
     const key = role.toLowerCase().replace(/\s+/g, '_');
     doc.heading(role.toUpperCase());
     fc.add(`${key}_printed_name`, role, 'text', doc.fieldBox('Printed name', { column: 0 }), `${role} printed name`, true);
-    fc.add(`${key}_business_name`, role, 'text', doc.fieldBox('Business/entity, if applicable', { column: 1 }), `${role} entity`, false);
+    fc.add(`${key}_entity_name`, role, 'text', doc.fieldBox('Business/entity, if applicable', { column: 1 }), `${role} entity`, false);
     fc.add(`${key}_title`, role, 'text', doc.fieldBox('Authorized representative title, if applicable', { column: 0 }), `${role} title`, false);
     fc.add(`${key}_signature`, role, 'signature', doc.fieldBox('Signature', { column: 1, height: 34 }), `${role} signature`, true);
     fc.add(`${key}_signed_date`, role, 'text', doc.fieldBox('Date/time signed', { width: 220 }), `${role} date signed`, true);
