@@ -133,8 +133,10 @@ export function DocumentsCard({
               <Loader2 className="h-4 w-4 animate-spin" /> Preparing your documents…
             </div>
           )}
-          {!docs.length && !preparing && notice && (
-            <p className="text-sm text-muted-foreground">{notice}</p>
+          {!docs.length && !preparing && (
+            <p className="text-sm text-muted-foreground">
+              {notice ?? 'No documents have been prepared for this transaction yet.'}
+            </p>
           )}
 
           {docs.map((doc) => {
