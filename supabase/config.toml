@@ -288,3 +288,6 @@ verify_jwt = false
 
 [functions.paypal-seller-onboarding]
 verify_jwt = false
+
+[functions.dispute-case-ops]
+verify_jwt = false

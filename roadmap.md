@@ -78,3 +78,13 @@
 - [x] Surface conditions and refund controls in admin payout queue.
 - [x] Keep deadline handling manual in the selected workflow; overdue records stay in admin review until refunded.
 - [x] Deploy and run focused tests.
+
+## Disputes Phase 1 (complete)
+- [x] Protection eligibility mapping + honest checkout disclosure (sale + rental)
+- [x] Vendibook case flow: open, thread, admin request info, admin resolve
+- [x] Disbursement freeze + paused 10-day clock (DB trigger + edge gate, fails closed)
+- [x] Admin cases/frozen-orders view at /admin/disputes
+- [x] Case emails (both parties + admin) and in-app notifications
+- [x] /legal/payments-terms section 7A, version 2026-09-18c
+- [ ] SLA-aging and imminent-deadline admin sweep emails (needs scheduled job; UI badge covers it today)
+- [ ] Phase 2: PayPal dispute webhook ingestion + automated evidence package

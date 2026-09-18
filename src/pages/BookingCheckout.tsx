@@ -74,6 +74,7 @@ import ListingCheckoutSummary from '@/components/transaction/checkout/ListingChe
 import MoneyBreakdown, { type MoneyLine } from '@/components/transaction/checkout/MoneyBreakdown';
 import PayPalEmbeddedPayment from '@/components/transaction/checkout/PayPalEmbeddedPayment';
 import CheckoutLegalConsent from '@/components/legal/CheckoutLegalConsent';
+import ProtectionDisclosure from '@/components/checkout/ProtectionDisclosure';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'on_site';
 
@@ -1284,6 +1285,12 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
                 processed by PayPal; Vendibook does not hold or control your funds.
               </p>
             </div>
+
+            <ProtectionDisclosure
+              category={listing?.category ?? null}
+              mode="rent"
+              fulfillment={fulfillmentSelected}
+            />
 
             <CheckoutLegalConsent
               surface="booking_checkout"

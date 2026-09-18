@@ -74,6 +74,29 @@ serve(async (req) => {
 
     const blockers = payoutBlockers(payable, payment);
 
+    // ---- Vendibook case freeze. FAIL CLOSED: if we cannot determine whether a
+    // case is open, we refuse to move money. The database enforces the same rule
+    // through block_payout_while_disputed().
+    const MONEY_ACTIONS = ["mark_eligible", "approve", "start_payout", "record_manual_payout", "mark_completed"];
+    if (MONEY_ACTIONS.includes(action)) {
+      if (payable.dispute_frozen_at) {
+        blockers.unshift("A Vendibook case is open on this order. Resolve the case before releasing payment.");
+      } else if (payment?.id) {
+        const { data: openCase, error: caseErr } = await admin.from("dispute_cases")
+          .select("id, case_number")
+          .eq("payment_record_id", payment.id)
+          .not("status", "in", "(resolved,closed)")
+          .maybeSingle();
+        if (caseErr) {
+          blockers.unshift("Case status could not be verified for this order, so payment is blocked.");
+        } else if (openCase) {
+          blockers.unshift(`Vendibook case ${openCase.case_number} is open on this order. Resolve it before releasing payment.`);
+        }
+      } else {
+        blockers.unshift("This payout has no linked payment record, so case status cannot be verified.");
+      }
+    }
+
     switch (action) {
       case "add_note":
         if (!note) return jsonError(400, "missing_fields", "A note is required.");
