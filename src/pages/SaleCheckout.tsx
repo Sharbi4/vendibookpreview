@@ -154,6 +154,23 @@ const SaleCheckout = () => {
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
 
   /**
+   * Warm the official PayPal SDK as soon as checkout opens so the payment
+   * surface is interactive the moment the buyer reaches the Payment step.
+   * No PayPal order is created here — nothing is charged or reserved.
+   */
+  useEffect(() => {
+    loadPayPalSdk({ pageType: 'checkout' }).catch(() => undefined);
+  }, []);
+
+  /**
+   * Entering the Payment step with online payment selected creates (or
+   * reuses) the pending Vendibook sale transaction the PayPal order will
+   * attach to, so the payment surface is ready without an extra click.
+   */
+  const runPurchaseRef = useRef<(() => Promise<void>) | null>(null);
+  const autoIntentRef = useRef(false);
+
+  /**
    * Fulfillment selected from the listing page's delivery checker. Applied
    * once so the buyer lands here with their method, destination ZIP and the
    * estimate they just saw. Pricing is still recomputed below — nothing is
