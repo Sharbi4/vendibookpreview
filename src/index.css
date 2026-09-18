@@ -2783,8 +2783,23 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
 }
 .v2-home-sell .v2-home-eyebrow { color: hsl(32 9% 74%); }
 .v2-home-sell h2 { margin-top: 12px; max-width: 22ch; color: hsl(40 26% 96%); font-size: clamp(1.4rem, 3vw, 2rem); font-weight: 640; line-height: 1.15; letter-spacing: -.022em; }
-.v2-home-sell p:last-child { margin-top: 10px; max-width: 56ch; color: hsl(32 10% 78%); font-size: 15px; line-height: 1.55; }
-.v2-home-sell-actions { display: flex; flex-wrap: wrap; gap: 10px; }
+.v2-home-sell > div > p { margin-top: 10px; max-width: 56ch; color: hsl(32 10% 78%); font-size: 15px; line-height: 1.55; }
+.v2-home-sell-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
+.v2-home-sell-note { margin-top: 12px; color: hsl(32 9% 68%); font-size: 13px; }
+.v2-home-sell-note a { color: hsl(40 26% 96%); text-decoration: underline; text-underline-offset: 3px; }
+.v2-home-steps { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.v2-home-steps li {
+  display: grid; grid-template-columns: 30px 1fr; gap: 12px; align-items: start;
+  border: 1px solid hsl(0 0% 100% / .12); border-radius: 12px; background: hsl(0 0% 100% / .04); padding: 14px 16px;
+  transition: background 160ms ease, border-color 160ms ease;
+}
+.v2-home-steps li:hover { background: hsl(0 0% 100% / .07); border-color: hsl(0 0% 100% / .2); }
+.v2-home-step-num {
+  display: grid; place-items: center; width: 26px; height: 26px; border-radius: 999px;
+  background: hsl(40 30% 97%); color: hsl(240 6% 10%); font-size: 13px; font-weight: 700;
+}
+.v2-home-steps h3 { color: hsl(40 26% 96%); font-size: 14px; font-weight: 680; }
+.v2-home-steps p { margin-top: 4px; color: hsl(32 10% 76%); font-size: 13.5px; line-height: 1.5; }
 .v2-home-sell-actions .v2-home-btn { background: hsl(40 30% 97%); border-color: hsl(40 30% 97%); color: hsl(240 6% 10%); }
 .v2-home-sell-actions .v2-home-btn:hover { background: hsl(40 22% 92%); border-color: hsl(40 22% 92%); }
 .v2-home-sell-actions .v2-home-btn.is-quiet { background: transparent; border-color: hsl(0 0% 100% / .26); color: hsl(40 26% 96%); }
@@ -2839,7 +2854,9 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
   .v2-home-trust article { display: block; padding: 24px; }
   .v2-home-trust article + article { border-top: 0; border-left: 1px solid hsl(var(--v2h-line)); }
   .v2-home-trust h3 { margin-top: 12px; }
-  .v2-home-sell { flex-direction: row; align-items: center; justify-content: space-between; padding: 34px 38px; }
+  .v2-home-sell { flex-direction: row; align-items: center; justify-content: space-between; gap: 44px; padding: 34px 38px; }
+  .v2-home-sell > div:first-child { flex: 1 1 0; }
+  .v2-home-steps { flex: 1 1 0; min-width: 320px; }
   .v2-home-editorial { grid-template-columns: minmax(250px, .75fr) 2fr; gap: 50px; padding-block: 42px; }
   .v2-home-editorial-grid { grid-template-columns: repeat(3, 1fr); gap: 28px; }
   .v2-home-editorial-grid article { display: block; }

@@ -14,6 +14,7 @@ import { usePageTracking } from '@/hooks/usePageTracking';
 import SEO, { generateOrganizationSchema, generateWebSiteSchema } from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 import vendibookWordmark from '@/assets/vendibook-wordmark.png';
 import equinoxLogoAsset from '@/assets/equinox-funding-dark.png.asset.json';
@@ -21,6 +22,12 @@ import paypalMonogramAsset from '@/assets/paypal-monogram-color.png.asset.json';
 import paypalBannerAsset from '@/assets/paypal-banner.png.asset.json';
 
 const ROW_LIMIT = 8;
+
+const SELLER_STEPS = [
+  { title: 'Create your account', body: 'Sign up free in under a minute — no listing fees to get started.' },
+  { title: 'Add your food truck', body: 'Photos, specs, price and location. Our guided wizard walks you through it.' },
+  { title: 'Publish and get paid', body: 'Go live to buyers nationwide, then connect PayPal when you want online checkout.' },
+];
 
 type ListingCategory = 'food_truck' | 'food_trailer' | 'ghost_kitchen' | 'vendor_lot' | 'vendor_space';
 
@@ -76,6 +83,8 @@ const TRUST_POINTS = [
 
 const Index = () => {
   usePageTracking();
+  const { user } = useAuth();
+  const sellerStartHref = user ? '/list' : '/auth?mode=signup&redirect=%2Flist';
 
   const saleQuery = useQuery({
     queryKey: ['home-v2-sale'],
@@ -170,25 +179,41 @@ const Index = () => {
             </div>
           </section>
 
-          <section className="v2-home-section">
+          <section className="v2-home-section" id="start-selling">
             <div className="v2-home-sell">
               <div>
-                <p className="v2-home-eyebrow">Sell or rent out your asset</p>
-                <h2>List your truck, trailer, or kitchen on Vendibook.</h2>
+                <p className="v2-home-eyebrow">Start selling on Vendibook</p>
+                <h2>List your food truck in three steps.</h2>
                 <p>
-                  Create a listing in minutes. When you're ready for online payments, connect
-                  PayPal and make your listing transaction-ready.
+                  Create your Vendibook account, add your truck, and publish. When you're ready
+                  for online payments, connect PayPal and make your listing transaction-ready.
                 </p>
+                <div className="v2-home-sell-actions">
+                  <Link to={sellerStartHref} className="v2-home-btn">
+                    {user ? 'List your food truck' : 'Create your seller account'}
+                    <ArrowRight aria-hidden="true" />
+                  </Link>
+                  <Link to="/pricing" className="v2-home-btn is-quiet">
+                    See pricing
+                  </Link>
+                </div>
+                {!user && (
+                  <p className="v2-home-sell-note">
+                    Already have an account? <Link to="/auth?redirect=%2Flist">Sign in</Link>
+                  </p>
+                )}
               </div>
-              <div className="v2-home-sell-actions">
-                <Link to="/list" className="v2-home-btn">
-                  Create a listing
-                  <ArrowRight aria-hidden="true" />
-                </Link>
-                <Link to="/pricing" className="v2-home-btn is-quiet">
-                  See pricing
-                </Link>
-              </div>
+              <ol className="v2-home-steps">
+                {SELLER_STEPS.map((step, i) => (
+                  <li key={step.title}>
+                    <span className="v2-home-step-num">{i + 1}</span>
+                    <div>
+                      <h3>{step.title}</h3>
+                      <p>{step.body}</p>
+                    </div>
+                  </li>
+                ))}
+              </ol>
             </div>
           </section>
 
