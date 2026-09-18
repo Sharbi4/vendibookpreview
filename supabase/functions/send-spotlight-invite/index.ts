@@ -24,7 +24,7 @@ const corsHeaders = {
 const FROM = "Vendibook <report@updates.vendibook.com>";
 const REPLY_TO = "support@vendibook.com";
 const CAMPAIGN_ID = SPOTLIGHT_CAMPAIGN_ID;
-const TEST_TITLE_PREFIXES = ["Demo%", "QA %", "QA_%", "QA-%", "Test %", "E2E %", "Smoke %"];
+const TEST_TITLE_PREFIXES = ["Demo%", "QA %", "QA_%", "QA-%", "Test %", "E2E %", "Smoke %", "Sandbox %"];
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {

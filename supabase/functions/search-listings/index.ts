@@ -160,7 +160,8 @@ Deno.serve(async (req) => {
       .from('listings')
       .select('*', { count: 'exact' })
       .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
-      .not('title', 'ilike', 'Demo %');
+      .not('title', 'ilike', 'Demo %')
+      .not('title', 'ilike', 'Sandbox %');
 
 
 

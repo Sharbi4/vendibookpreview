@@ -1,6 +1,6 @@
 // Applies title-prefix exclusions so QA / test / demo listings never surface
 // in customer-facing feeds, even if their status somehow flips back to published.
-export const TEST_TITLE_PREFIXES = ['Demo%', 'QA %', 'QA_%', 'QA-%', 'Test %', 'E2E %', 'Smoke %'];
+export const TEST_TITLE_PREFIXES = ['Demo%', 'QA %', 'QA_%', 'QA-%', 'Test %', 'E2E %', 'Smoke %', 'Sandbox %'];
 
 const TEST_TITLE_REGEXES = TEST_TITLE_PREFIXES.map((pattern) => {
   const source = pattern

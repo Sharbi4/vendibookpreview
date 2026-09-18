@@ -30,7 +30,7 @@ const corsHeaders = {
 
 const CAMPAIGN_ID = FEATURE_CAMPAIGN_ID;
 const BOOST_SLUG = "boost-featured-30";
-const TEST_TITLE_PREFIXES = ["Demo%", "QA %", "QA_%", "QA-%", "Test %", "E2E %", "Smoke %"];
+const TEST_TITLE_PREFIXES = ["Demo%", "QA %", "QA_%", "QA-%", "Test %", "E2E %", "Smoke %", "Sandbox %"];
 const LISTING_COLUMNS =
   "id, host_id, title, cover_image_url, city, state, mode, category, price_sale, price_daily, price_weekly, featured_enabled, featured_expires_at, published_at";
 
