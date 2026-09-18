@@ -30,6 +30,7 @@ import { template as listingPublished } from './listing-published.tsx'
 import { template as listingDraftNudge } from './listing-draft-nudge.tsx'
 import { template as documentStatus } from './document-status.tsx'
 import { template as newMessage } from './new-message.tsx'
+import { template as videoWalkthroughScheduled } from './video-walkthrough-scheduled.tsx'
 import { template as hostWeeklyDigest } from './host-weekly-digest.tsx'
 import { template as hostDailyDigest } from './host-daily-digest.tsx'
 import { template as shopperDailyDigest } from './shopper-daily-digest.tsx'
@@ -107,6 +108,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'checkout-recovery-cs': checkoutRecoveryCs,
   'document-status': documentStatus,
   'new-message': newMessage,
+  'video-walkthrough-scheduled': videoWalkthroughScheduled,
   'host-weekly-digest': hostWeeklyDigest,
   'host-daily-digest': hostDailyDigest,
   'shopper-daily-digest': shopperDailyDigest,
