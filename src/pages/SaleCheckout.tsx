@@ -146,13 +146,10 @@ const SaleCheckout = () => {
   // Payment method
   type PaymentMethod = 'card' | 'cash';
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
-  const agreementType = paymentMethod === 'cash'
-    ? DOCUMENT_TYPES.PAY_IN_PERSON_ACKNOWLEDGMENT
-    : DOCUMENT_TYPES.TERMS_OF_SERVICE;
-  const agreement = useLegalDocument(agreementType);
-  const acceptanceText = paymentMethod === 'cash'
-    ? 'I understand that payment will be made directly to the seller and will not be processed or held by Vendibook, and I reviewed the purchase details above.'
-    : 'I reviewed the listing, price, payment method, and transaction details and agree to the Buyer Terms.';
+  /** Transaction-specific documents shown on the explicit Agreement step. */
+  const agreement = useLegalDocument(DOCUMENT_TYPES.SALE_BUYER_TERMS);
+  const privacyConsent = useLegalDocument(DOCUMENT_TYPES.CHECKOUT_PRIVACY_ELECTRONIC_CONSENT);
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
 
   /**
    * Fulfillment selected from the listing page's delivery checker. Applied
