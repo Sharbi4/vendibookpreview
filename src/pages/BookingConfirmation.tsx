@@ -310,6 +310,11 @@ const BookingConfirmation = ({
                 />
               </div>
               <div className="min-w-0">
+                {view === 'confirmed' || view === 'awaiting_host' ? (
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">
+                    {view === 'confirmed' ? 'Booking confirmed' : 'Booking submitted'}
+                  </p>
+                ) : null}
                 <h1 className="text-2xl font-semibold tracking-tight text-foreground">
                   {headline[view]}
                 </h1>
