@@ -60,7 +60,7 @@ export default function V2HomeHero({ slides }: { slides: V2CardListing[] }) {
         <p className="v2-home-eyebrow">The marketplace for mobile food businesses</p>
         <h1>Buy, sell, and rent food trucks, trailers, and kitchens.</h1>
         <p className="v2-home-lede">
-          Real inventory nationwide, secure PayPal checkout, and financing options where available.
+          Real inventory nationwide, secure checkout, and financing options where available.
         </p>
 
         <form className="v2-home-search" onSubmit={submit} role="search">
@@ -68,16 +68,25 @@ export default function V2HomeHero({ slides }: { slides: V2CardListing[] }) {
             <Button type="button" variant="ghost" className={mode === 'sale' ? 'is-active' : undefined} onClick={() => setMode('sale')} aria-pressed={mode === 'sale'}>Buy</Button>
             <Button type="button" variant="ghost" className={mode === 'rent' ? 'is-active' : undefined} onClick={() => setMode('rent')} aria-pressed={mode === 'rent'}>Rent</Button>
           </div>
-          <div className="v2-home-field">
-            <Search aria-hidden="true" />
-            <input type="search" value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Truck, trailer, kitchen, or city" aria-label="Search listings" />
+          <div className="v2-home-searchbar">
+            <div className="v2-home-field">
+              <Search aria-hidden="true" />
+              <input
+                type="search"
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder={mode === 'rent' ? 'Search rentals, kitchens, vendor spaces, or a city' : 'Search food trucks, trailers, kitchens, or a city'}
+                aria-label="Search listings"
+              />
+            </div>
+            <Button type="submit" className="v2-home-searchgo">Search</Button>
           </div>
-          <Button type="submit" className="v2-home-btn">Search<ArrowRight aria-hidden="true" /></Button>
         </form>
 
         <div className="v2-home-chips">
           {CATEGORY_CHIPS.map((chip) => <Link key={chip.label} to={chip.href}>{chip.label}</Link>)}
         </div>
+
       </div>
 
       {current && (
