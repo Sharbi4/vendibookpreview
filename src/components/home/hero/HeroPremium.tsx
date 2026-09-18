@@ -13,7 +13,14 @@ import { trackLeadEvent } from '@/lib/leadTracking';
  * /how-it-works: soft warm canvas, badge, highlighter headline, pill CTAs,
  * real-listing rotator, plus a compact Google sign-in for signed-out visitors.
  */
-const HeroPremium = () => {
+interface HeroPremiumProps {
+  /** Show the compact Google sign-in beside the CTAs. */
+  showGoogleSignIn?: boolean;
+  /** Show the rotating real-listing strip below the CTAs. */
+  showRotator?: boolean;
+}
+
+const HeroPremium = ({ showGoogleSignIn = true, showRotator = true }: HeroPremiumProps = {}) => {
   const search = useHeroSearch();
   const reduced = useReducedMotion();
 
@@ -112,12 +119,14 @@ const HeroPremium = () => {
               </Link>
             </Button>
 
-            <GoogleSignInButton width={200} className="flex justify-center" />
+            {showGoogleSignIn && <GoogleSignInButton width={200} className="flex justify-center" />}
           </motion.div>
 
-          <motion.div {...rise(0.26)} className="mt-8">
-            <HeroListingRotator />
-          </motion.div>
+          {showRotator && (
+            <motion.div {...rise(0.26)} className="mt-8">
+              <HeroListingRotator />
+            </motion.div>
+          )}
         </div>
       </div>
     </section>

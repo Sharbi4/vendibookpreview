@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { excludeTestListings } from '@/lib/excludeTestListings';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -8,7 +7,7 @@ import { isListingFeatured, sortFeaturedFirstFair, sortNewFirstThenFeatured } fr
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import NewsletterPopup from '@/components/newsletter/NewsletterPopup';
-import V2HomeHero from '@/components/home/v2/V2HomeHero';
+import HeroPremium from '@/components/home/hero/HeroPremium';
 import V2ListingRow from '@/components/home/v2/V2ListingRow';
 import { usePageTracking } from '@/hooks/usePageTracking';
 import SEO, { generateOrganizationSchema, generateWebSiteSchema } from '@/components/SEO';
@@ -98,18 +97,6 @@ const Index = () => {
   });
 
   const featuredQuery = useQuery({ queryKey: ['home-v2-featured'], queryFn: fetchFeaturedListings, staleTime: 60000 });
-  // Hero slideshow: featured listings first (offset so the first slide is not
-  // the same card leading the row below), falling back to the latest inventory.
-  const heroSlides = useMemo(() => {
-    const featured = (featuredQuery.data ?? []) as never[];
-    const fallback = [...((saleQuery.data ?? []) as never[]), ...((rentQuery.data ?? []) as never[])];
-    const pool = featured.length ? featured : fallback;
-    if (featured.length > 1) {
-      const offset = Math.min(2, featured.length - 1);
-      return [...featured.slice(offset), ...featured.slice(0, offset)];
-    }
-    return pool.slice(0, 8);
-  }, [featuredQuery.data, saleQuery.data, rentQuery.data]);
 
   return (
     <div className="min-h-screen flex flex-col v2-home">
@@ -122,8 +109,9 @@ const Index = () => {
       <Header />
 
       <main className="flex-1">
+        <HeroPremium showGoogleSignIn={false} showRotator={false} />
+
         <div className="v2-home-stack">
-          <V2HomeHero slides={heroSlides} />
 
           <Link to="/payments" className="v2-home-paypal">
             <span className="v2-home-paypal-mark"><img src={paypalBannerAsset.url} alt="PayPal" /></span>
