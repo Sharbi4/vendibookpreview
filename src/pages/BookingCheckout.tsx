@@ -220,6 +220,8 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   /** Contained five-step checkout. Only the active step body is rendered. */
   const [step, setStep] = useState(1);
   const [furthestStep, setFurthestStep] = useState(1);
+  /** Drop-off tracking: which step the renter reached / left from. */
+  const checkoutFunnel = useCheckoutFunnel({ flow: 'rental', step, listingId });
   const goToStep = (next: number) => {
     setStep(next);
     setFurthestStep((prev) => Math.max(prev, next));

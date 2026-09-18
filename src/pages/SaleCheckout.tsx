@@ -29,6 +29,7 @@ import { ReferralCodeField } from '@/components/referrals/ReferralCodeField';
 import { useTermsGate } from '@/hooks/useTermsGate';
 import { buildTerms, type TransactionTerms } from '@/lib/transactionTerms';
 import { useCheckoutState } from '@/hooks/useCheckoutState';
+import { useCheckoutFunnel } from '@/hooks/useCheckoutFunnel';
 import { parseFormattedAddress } from '@/lib/fulfillment/parseAddress';
 import { getPublicDisplayName } from '@/lib/displayName';
 import { useSellerPaymentReadiness } from '@/hooks/useSellerPaymentReadiness';
@@ -175,6 +176,8 @@ const SaleCheckout = () => {
   /** Contained five-step checkout. Only the active step body is rendered. */
   const [step, setStep] = useState(1);
   const [furthestStep, setFurthestStep] = useState(1);
+  /** Drop-off tracking: which step the buyer reached / left from. */
+  const checkoutFunnel = useCheckoutFunnel({ flow: 'sale', step, listingId });
   /** True once both required acceptances are recorded server-side. */
   const [agreementsRecorded, setAgreementsRecorded] = useState(false);
   const [recordingConsent, setRecordingConsent] = useState(false);
