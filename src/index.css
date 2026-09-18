@@ -3304,3 +3304,38 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
   .order-review-fulfillment { flex-direction: column; align-items: flex-start; }
 }
 .order-review-paypal > span:first-child { flex: 0 0 auto; white-space: nowrap; }
+
+/* ---- Recorded meeting experience (consent gate, call UI, meeting record) ---- */
+.wc-recording-block{border:1px solid hsl(var(--v2-line));border-radius:14px;padding:16px 16px 14px;background:hsl(var(--v2-paper))}
+.wc-recording-block h2{display:flex;align-items:center;gap:8px}
+.wc-rec-dot{width:15px;color:#c0392b}
+.wc-recording-block p{font-size:13.5px;line-height:1.55;color:hsl(var(--v2-stone));margin:8px 0}
+.wc-check-strong{font-weight:600}
+.wc-decline{margin-top:6px;font-size:12.5px;text-decoration:underline;color:hsl(var(--v2-stone));background:none;border:0;padding:0;cursor:pointer}
+.walkthrough-call-preview,.walkthrough-call-error{width:min(720px,100%);margin:5vh auto;background:#f9f6ef;color:#14151a;border-radius:16px;padding:26px;display:grid;gap:18px;min-height:0}
+.walkthrough-call-preview h1,.walkthrough-call-error h1{font-size:23px;margin:0}
+.walkthrough-call-kicker{font-size:11.5px;font-weight:650;letter-spacing:.07em;text-transform:uppercase;color:#6b6a66}
+.walkthrough-call-recnote{display:flex;align-items:center;gap:7px;font-size:13px;color:#a8322c;margin:6px 0 0}
+.walkthrough-call-recnote svg{width:15px}
+.walkthrough-call-devices{display:grid;gap:12px}
+.walkthrough-call-devices label{display:grid;gap:5px;font-size:13px}
+.walkthrough-call-devices select{font-size:16px;padding:10px;border-radius:10px;border:1px solid #d9d4c8;background:white}
+.walkthrough-call-checklist{display:grid;gap:6px;margin:0;padding-left:18px;font-size:13.5px;color:#4b4a46}
+.walkthrough-call-actions{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap}
+.walkthrough-call-live{position:relative}
+.walkthrough-call-bar{position:absolute;z-index:3;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;gap:10px;padding:16px 18px;background:linear-gradient(#000a,transparent);font-size:13.5px}
+.walkthrough-call-rec{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:999px;background:#a8322c;font-size:12px;font-weight:650}
+.walkthrough-call-rec svg{width:13px}
+.walkthrough-call-stage{position:absolute;inset:0;display:grid;place-items:center;background:#111}
+.walkthrough-call-side{position:absolute;z-index:3;left:18px;bottom:96px;max-width:240px;padding:12px 14px;border-radius:12px;background:#0009;font-size:12.5px}
+.walkthrough-call-side h2{font-size:12px;letter-spacing:.06em;text-transform:uppercase;margin:0 0 6px}
+.walkthrough-call-side ul{display:grid;gap:4px;margin:0;padding-left:16px}
+.walkthrough-record-card .walkthrough-party-list{display:grid;gap:12px;margin:0;padding:0;list-style:none}
+.walkthrough-party-list li{display:grid;gap:2px;font-size:13px;padding:10px 12px;border-radius:12px;background:hsla(0,0%,100%,.04);border:1px solid hsl(var(--v2-line))}
+.walkthrough-duration{display:flex;align-items:center;gap:7px;font-size:13px;margin-top:12px}
+.walkthrough-duration svg,.walkthrough-recording-state svg{width:15px}
+.walkthrough-recording-state{display:grid;gap:9px;margin-top:14px;padding-top:14px;border-top:1px solid hsl(var(--v2-line))}
+.walkthrough-recording-state p{display:flex;align-items:flex-start;gap:8px;font-size:13.5px;margin:0}
+.walkthrough-recording-state small{font-size:12px;opacity:.75}
+.walkthrough-meeting-type{font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;opacity:.7}
+@media(max-width:600px){.walkthrough-call-preview,.walkthrough-call-error{margin:0;border-radius:0;min-height:100svh;padding:20px 16px}.walkthrough-call-side{display:none}}
