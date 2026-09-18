@@ -961,10 +961,12 @@ const SaleCheckout = () => {
     1: { title: 'Review your item', description: 'Confirm the listing, seller and price.' },
     2: { title: 'Choose fulfillment', description: 'Select one of the methods offered by this seller.' },
     3: { title: 'Your details', description: 'Contact information for the receipt and handoff.' },
-    4: { title: 'Review your order', description: 'Check every detail before choosing payment.' },
-    5: { title: 'Choose payment', description: 'Financing remains a separate application path.' },
-    6: { title: agreement.data?.title || 'Buyer agreement', description: 'Read and accept the required document to continue.' },
-    7: { title: 'Confirm and place order', description: 'One final check before secure payment.' },
+    4: { title: 'Agreements', description: 'Review the terms for this transaction before continuing.' },
+    5: {
+      title: 'Payment',
+      description:
+        "Choose how you'd like to pay. Available options are provided through PayPal and may vary by buyer, device, and transaction.",
+    },
   };
 
   const stepBody = (() => {
