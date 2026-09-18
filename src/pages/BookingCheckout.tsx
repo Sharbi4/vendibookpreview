@@ -182,8 +182,12 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   const [userInfo, setUserInfo] = useState<BookingUserInfo | null>(null);
   const [editingContact, setEditingContact] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  /** Checkout acceptance of Terms + Payments Terms + Privacy. Never pre-ticked. */
-  const [legalAccepted, setLegalAccepted] = useState(false);
+  /** Transaction agreements for this booking. Never pre-ticked. */
+  const rentalAgreement = useLegalDocument(DOCUMENT_TYPES.RENTAL_TRANSACTION_TERMS);
+  const privacyDocument = useLegalDocument(DOCUMENT_TYPES.CHECKOUT_PRIVACY_ELECTRONIC_CONSENT);
+  const [rentalAgreementAccepted, setRentalAgreementAccepted] = useState(false);
+  const [privacyAccepted, setPrivacyAccepted] = useState(false);
+  const legalAccepted = rentalAgreementAccepted && privacyAccepted;
   const [paypalCheckout, setPaypalCheckout] = useState<{ bookingId: string; returnUrl: string } | null>(null);
   /** Guards against creating a second booking_request row if the buyer
    *  closes the PayPal panel and hits the submit button again. */
