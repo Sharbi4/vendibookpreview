@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, ArrowRight, MapPin } from 'lucide-react';
+import { Search, ArrowRight, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SmartImage } from '@/components/ui/SmartImage';
 import { formatListingPriceLabel } from '@/lib/listings/rentalPricing';
@@ -14,10 +14,36 @@ const CATEGORY_CHIPS = [
   { label: 'Vendor spaces', href: '/search?mode=rent' },
 ];
 
-export default function V2HomeHero({ leadListing }: { leadListing?: V2CardListing | null }) {
+const SLIDE_INTERVAL_MS = 6500;
+
+export default function V2HomeHero({ slides }: { slides: V2CardListing[] }) {
   const navigate = useNavigate();
   const [mode, setMode] = useState<'sale' | 'rent'>('sale');
   const [query, setQuery] = useState('');
+  const [index, setIndex] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const timer = useRef<number | null>(null);
+
+  const count = slides.length;
+  const safeIndex = count ? index % count : 0;
+
+  const go = useCallback(
+    (next: number) => {
+      if (!count) return;
+      setIndex(((next % count) + count) % count);
+    },
+    [count],
+  );
+
+  useEffect(() => {
+    if (count < 2 || paused) return;
+    timer.current = window.setInterval(() => {
+      setIndex((i) => (i + 1) % count);
+    }, SLIDE_INTERVAL_MS);
+    return () => {
+      if (timer.current) window.clearInterval(timer.current);
+    };
+  }, [count, paused]);
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -25,6 +51,8 @@ export default function V2HomeHero({ leadListing }: { leadListing?: V2CardListin
     if (query.trim()) params.set('q', query.trim());
     navigate(`/search?${params.toString()}`);
   };
+
+  const current = count ? slides[safeIndex] : null;
 
   return (
     <section className="v2-home-hero">
@@ -52,21 +80,60 @@ export default function V2HomeHero({ leadListing }: { leadListing?: V2CardListin
         </div>
       </div>
 
-      {leadListing && (
-        <Link to={`/listing/${leadListing.id}`} className="v2-home-hero-listing">
-          <SmartImage src={leadListing.image_urls?.[0] ?? null} alt={leadListing.title} aspect="4/3" priority radiusClass="rounded-none" sizes="(max-width: 900px) 100vw, 560px" />
-          <span className="v2-home-hero-listing-copy">
-            <span className="v2-home-hero-listing-kicker">Explore the marketplace</span>
-            <strong>{leadListing.title}</strong>
-            <span>
-              <MapPin aria-hidden="true" />
-              {[leadListing.city, leadListing.state].filter(Boolean).join(', ')}
-              <i aria-hidden="true">·</i>
-              {leadListing.category ? CATEGORY_LABELS[leadListing.category as keyof typeof CATEGORY_LABELS] : 'Listing'}
+      {current && (
+        <div
+          className="v2-home-hero-listing v2-home-hero-slides"
+          onMouseEnter={() => setPaused(true)}
+          onMouseLeave={() => setPaused(false)}
+          role="group"
+          aria-roledescription="carousel"
+          aria-label="Featured listings"
+        >
+          <Link to={`/listing/${current.id}`} className="v2-home-hero-slide-link" key={current.id}>
+            <SmartImage src={current.image_urls?.[0] ?? null} alt={current.title} aspect="4/3" priority={safeIndex === 0} radiusClass="rounded-none" sizes="(max-width: 900px) 100vw, 560px" />
+            <span className="v2-home-hero-listing-copy">
+              <span className="v2-home-hero-listing-kicker">Featured on Vendibook</span>
+              <strong>{current.title}</strong>
+              <span>
+                <MapPin aria-hidden="true" />
+                {[current.city, current.state].filter(Boolean).join(', ')}
+                <i aria-hidden="true">·</i>
+                {current.category ? CATEGORY_LABELS[current.category as keyof typeof CATEGORY_LABELS] : 'Listing'}
+              </span>
+              <b>{formatListingPriceLabel(current as never)}</b>
             </span>
-            <b>{formatListingPriceLabel(leadListing as never)}</b>
-          </span>
-        </Link>
+          </Link>
+
+          {count > 1 && (
+            <>
+              <div className="v2-home-hero-slide-nav">
+                <button type="button" onClick={() => go(safeIndex - 1)} aria-label="Previous featured listing">
+                  <ChevronLeft aria-hidden="true" />
+                </button>
+                <button type="button" onClick={() => go(safeIndex + 1)} aria-label="Next featured listing">
+                  <ChevronRight aria-hidden="true" />
+                </button>
+              </div>
+              <div className="v2-home-hero-slide-dots" role="tablist" aria-label="Choose featured listing">
+                {slides.map((s, i) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    role="tab"
+                    aria-selected={i === safeIndex}
+                    aria-label={`Show ${s.title}`}
+                    className={i === safeIndex ? 'is-active' : undefined}
+                    onClick={() => go(i)}
+                  >
+                    {i === safeIndex && !paused && (
+                      <span key={`${s.id}-${safeIndex}`} className="v2-home-hero-slide-progress" style={{ animationDuration: `${SLIDE_INTERVAL_MS}ms` }} />
+                    )}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
       )}
     </section>
   );
