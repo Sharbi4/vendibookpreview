@@ -107,8 +107,8 @@
 - [ ] Counsel review of all template text before production reliance
 
 ## Bounded checkout wizard refactor
-- [ ] Bound desktop sale/rental wizards with internal active-step scrolling.
-- [ ] Remove duplicate review navigation, pickup copy, and Payment financing.
-- [ ] Move rental verification into Details while preserving server gates.
-- [ ] Add wizard-aware shell and independently scrolling desktop rail.
+- [x] Bound desktop sale/rental wizards with internal active-step scrolling.
+- [x] Remove duplicate review navigation, pickup copy, and Payment financing.
+- [x] Move rental verification into Details while preserving server gates.
+- [x] Add wizard-aware shell and independently scrolling desktop rail.
 - [ ] Validate real sale/rental routes, mobile layout, typecheck, build, and tests.

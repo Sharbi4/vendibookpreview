@@ -2539,7 +2539,7 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
   .v2-checkout-wizard .v2-checkout-head h1 { margin-top: 4px; font-size: 27px; }
   .v2-checkout-wizard .v2-checkout-sub { margin-top: 5px; font-size: 13px; }
   .v2-checkout-wizard .v2-checkout-grid { grid-template-columns: minmax(640px, 760px) minmax(300px, 350px); justify-content: center; gap: 28px; }
-  .sale-wizard-layout { height: min(650px, calc(100dvh - 225px)); grid-template-columns: 172px minmax(0, 1fr); }
+  .sale-wizard-layout { height: min(650px, calc(100dvh - 235px)); grid-template-columns: 172px minmax(0, 1fr); }
   .sale-wizard-nav { min-height: 0; overflow-y: auto; overscroll-behavior: contain; }
   .sale-wizard-content { overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; }
   .v2-checkout-wizard .v2-checkout-rail-inner { max-height: calc(100dvh - 205px); overflow-y: auto; overscroll-behavior: contain; scrollbar-gutter: stable; padding-right: 4px; }
