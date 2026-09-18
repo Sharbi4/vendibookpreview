@@ -1319,12 +1319,22 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
               fulfillment={fulfillmentSelected}
             />
 
-            <CheckoutLegalConsent
-              surface="booking_checkout"
-              relatedEntityType="listing"
-              relatedEntityId={listing?.id ?? null}
-              onChange={setLegalAccepted}
-            />
+            <div>
+              <h3 className="text-sm font-semibold text-foreground">Agreements</h3>
+              <p className="text-xs text-muted-foreground mb-3">
+                Review the terms for this transaction before continuing.
+              </p>
+              <TransactionAgreementStep
+                mode="rental"
+                agreement={rentalAgreement}
+                privacy={privacyDocument}
+                agreementAccepted={rentalAgreementAccepted}
+                privacyAccepted={privacyAccepted}
+                onAgreementAcceptedChange={setRentalAgreementAccepted}
+                onPrivacyAcceptedChange={setPrivacyAccepted}
+                showHeading={false}
+              />
+            </div>
 
             {listing?.id && (
               <DisclosureStep
