@@ -596,26 +596,24 @@ const SaleCheckout = () => {
   };
 
   const recordAgreement = async () => {
-    if (!agreedToTerms || !termsGate.terms || recordingConsent) return false;
+    if (!agreedToTerms || !privacyAccepted || !termsGate.terms || recordingConsent) return false;
     setRecordingConsent(true);
     try {
-      const { error } = await supabase.rpc('record_user_consent', {
-        _document_type: agreementType,
-        _document_version: CURRENT_VERSIONS[agreementType],
-        _trigger_action: paymentMethod === 'cash' ? CONSENT_TRIGGERS.PAY_IN_PERSON : CONSENT_TRIGGERS.PURCHASE_REVIEW,
-        _acceptance_text: acceptanceText,
-        _related_ids: {
+      await recordCheckoutAgreements({
+        mode: 'sale',
+        trigger:
+          paymentMethod === 'cash' ? CONSENT_TRIGGERS.PAY_IN_PERSON : CONSENT_TRIGGERS.PURCHASE_REVIEW,
+        relatedIds: {
           listing_id: termsGate.terms.listing.id,
-          ...(termsGate.termsId ? { terms_id: termsGate.termsId } : {}),
+          terms_id: termsGate.termsId,
         },
-        _route: window.location.pathname,
-        _ip: null,
-        _user_agent: navigator.userAgent,
-        _locale: navigator.language,
-        _application_version: null,
+        hashes: {
+          agreement: agreement.data?.content_hash ?? null,
+          privacy: privacyConsent.data?.content_hash ?? null,
+        },
       });
-      if (error) throw error;
-      if (termsGate.termsId) {
+      {
+        if (termsGate.termsId) {
         await supabase.functions.invoke('acknowledge-terms', { body: { terms_id: termsGate.termsId } });
       }
       return true;
