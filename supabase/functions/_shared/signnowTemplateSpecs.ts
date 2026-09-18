@@ -73,7 +73,10 @@ const ESIGN = [
 function signatureBlock(doc: PdfDoc, fc: FieldCollector, roleA: string, roleB: string) {
   doc.heading('Signatures');
   doc.paragraph(
-    `By signing below, each party confirms they have reviewed this document, that the transaction details shown are the details they agreed to, and that they are signing on their own behalf or with authority to bind the entity named.`,
+    'By signing below, each party confirms they have reviewed this document, that the transaction details shown are the details they agreed to, and that they are signing on their own behalf or with authority to bind the entity named.',
+  );
+  doc.paragraph(
+    'Each party consents to review and sign this document electronically, and intends an electronic signature to have the same effect as a handwritten signature to the extent permitted by applicable law.',
   );
   for (const role of [roleA, roleB]) {
     const key = role.toLowerCase().replace(/\s+/g, '_');
@@ -131,7 +134,7 @@ function buildPurchaseSaleAgreement(): { pdf: Uint8Array; fields: SignNowFieldDe
 
   doc.heading('2. Asset description');
   doc.paragraph('The following details come from the listing and transaction record. Fields left blank were not provided and are not represented by either party or by Vendibook.');
-  for (const label of ['Year', 'Make', 'Model', 'Identifying number (VIN or serial), if recorded', 'Category', 'Dimensions, if recorded', 'Mileage or hours, if recorded']) {
+  for (const label of ['Year', 'Make', 'Model', 'Identifying number (VIN or serial), if recorded', 'Dimensions, if recorded', 'Mileage or hours, if recorded']) {
     const name = 'asset_' + label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
     fc.add(name, 'Seller', 'text', doc.summaryField(label), label, false);
   }
