@@ -7,6 +7,7 @@ import { applyAuthorization, markAuthorizationExpired } from "../_shared/paypalA
 import { extractCaptureFacts, finalizeCapture } from "../_shared/paypalFinalize.ts";
 import { appendLedgerEntry, recalculatePayableAfterRefund } from "../_shared/paypalAccounting.ts";
 import { notifyOrderParties, notifyUser } from "../_shared/notify.ts";
+import { ingestPayPalDispute } from "../_shared/paypalDisputeIntake.ts";
 import { resolveSubscriptionPeriod } from "../_shared/subscriptionPeriod.ts";
 import { grantMonthlyBoostCredit } from "../_shared/proBoostCredit.ts";
 import { resolvePaidPeriodKind } from "../_shared/proMembershipEmail.ts";
@@ -231,25 +232,16 @@ async function handleEvent(admin: any, event: any) {
       return;
     }
 
+    // ── Buyer claims and chargebacks PayPal tells us about ─────────────
+    // These land in the same Vendibook case queue an admin already watches and
+    // freeze the seller's money exactly like a case a party opened.
     case "CUSTOMER.DISPUTE.CREATED":
-    case "CUSTOMER.DISPUTE.UPDATED": {
-      const captureId = resource?.disputed_transactions?.[0]?.seller_transaction_id;
-      if (!captureId) return;
-      const { data: record } = await admin.from("payment_records")
-        .select("id, reference").eq("paypal_capture_id", captureId).maybeSingle();
-      if (!record) return;
-      await admin.from("payment_records")
-        .update({ dispute_status: resource.status ?? "open" }).eq("id", record.id);
-      await holdPayables(admin, record.id, "An active PayPal dispute is open.", "disputed");
-      await alertAdmins(admin, "PayPal dispute opened", `Payment ${record.reference} is disputed.`);
-      return;
-    }
-
+    case "CUSTOMER.DISPUTE.UPDATED":
     case "CUSTOMER.DISPUTE.RESOLVED": {
-      const captureId = resource?.disputed_transactions?.[0]?.seller_transaction_id;
-      if (!captureId) return;
-      await admin.from("payment_records")
-        .update({ dispute_status: "resolved" }).eq("paypal_capture_id", captureId);
+      const result = await ingestPayPalDispute(admin, type, resource);
+      if (!result.handled) {
+        safeLog("paypal_dispute_unhandled", { type, reason: result.reason });
+      }
       return;
     }
 
