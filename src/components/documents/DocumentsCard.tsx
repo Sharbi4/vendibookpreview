@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Loader2, FileText, Download, PenLine, CheckCircle2, Clock, ExternalLink, RefreshCw } from 'lucide-react';
+import { Loader2, FileText, Download, PenLine, CheckCircle2, Clock, ExternalLink, RefreshCw, Eye } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
