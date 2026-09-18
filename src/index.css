@@ -2764,8 +2764,8 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
   transition: border-color .16s ease, transform .16s ease, box-shadow .16s ease;
 }
 .v2-home-partner-tiles article:hover { transform: translateY(-2px); border-color: hsl(var(--v2h-ink) / .35); box-shadow: 0 20px 38px -26px hsl(28 12% 20% / .58); }
-.v2-home-partner-mark { display: flex; height: 40px; width: 100%; align-items: center; justify-content: center; }
-.v2-home-partner-mark img, .v2-home-partner-mark svg { max-width: 150px; max-height: 40px; object-fit: contain; }
+.v2-home-partner-mark { display: flex; height: 62px; width: 100%; align-items: center; justify-content: center; }
+.v2-home-partner-mark img, .v2-home-partner-mark svg { max-width: 220px; max-height: 62px; object-fit: contain; }
 .v2-home-partner-tiles small { color: hsl(var(--v2h-stone)); font-size: 12.5px; font-weight: 640; letter-spacing: .01em; }
 
 .v2-home-final { display: flex; flex-direction: column; gap: 18px; align-items: flex-start; padding: 8px 0 2px; }
@@ -2963,4 +2963,4 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
 .wc-gate .wc-actions button[class*="border"]{background:transparent;border:1px solid hsl(var(--v2-line-strong));color:hsl(var(--v2-ink))}
 .v2-home-partner-tile--dark { background: hsl(var(--v2h-ink)) !important; }
 .v2-home-partner-tile--dark small { color: hsl(40 20% 88% / .72); }
-.v2-home-partner-tile--dark .v2-home-partner-mark img { max-width: 170px; }
+.v2-home-partner-tile--dark .v2-home-partner-mark img { max-width: 250px; }
