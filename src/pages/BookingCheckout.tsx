@@ -38,6 +38,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { calculateRentalFees, formatCurrency } from '@/lib/commissions';
 import { quoteRentalPeriod } from '@/lib/listings/rentalPricing';
 import { trackFormSubmitConversion } from '@/lib/gtagConversions';
+import { useCheckoutFunnel } from '@/hooks/useCheckoutFunnel';
 import { trackRequestStarted, trackRequestSubmitted } from '@/lib/analytics';
 import { PayPalPaymentPanel } from '@/components/checkout';
 

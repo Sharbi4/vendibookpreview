@@ -749,6 +749,7 @@ const SaleCheckout = () => {
 
         termsGate.reset();
         toast({ title: 'Purchase request submitted!', description: 'The seller will contact you.' });
+        checkoutFunnel.markCompleted();
         navigate(`/order-tracking/${transactionId}`);
       } catch (error) {
         console.error('Error:', error);
