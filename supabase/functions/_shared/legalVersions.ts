@@ -13,9 +13,9 @@ export const LEGAL_VERSIONS = {
   "esign": "2026-09-18",
   "handoff-terms": "2026-09-18",
   "financing-disclosure": "2026-09-18",
-  "video-walkthrough-terms": "2026-09-18b",
-  "recording-consent": "2026-09-18",
-  "device-permissions-privacy": "2026-09-18b",
+  "video-walkthrough-terms": "2026-09-18c",
+  "recording-consent": "2026-09-18b",
+  "device-permissions-privacy": "2026-09-18c",
   "location-tracking": "2026-09-18",
 } as const;
 

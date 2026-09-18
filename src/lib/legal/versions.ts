@@ -31,15 +31,15 @@ export const ESIGN_VERSION = '2026-09-18';
 export const HANDOFF_TERMS_VERSION = '2026-09-18';
 export const FINANCING_DISCLOSURE_VERSION = '2026-09-18';
 export const LOCATION_TRACKING_VERSION = '2026-09-18';
-export const RECORDING_CONSENT_VERSION = '2026-09-18';
+export const RECORDING_CONSENT_VERSION = '2026-09-18b';
 
 /**
  * Walkthrough documents were rewritten on 2026-09-18 (revision b). Their
  * canonical constants live in `@/lib/walkthroughConsent` for backward
  * compatibility and are re-exported through the registry below.
  */
-export const WALKTHROUGH_TERMS_REGISTRY_VERSION = '2026-09-18b';
-export const DEVICE_PRIVACY_REGISTRY_VERSION = '2026-09-18b';
+export const WALKTHROUGH_TERMS_REGISTRY_VERSION = '2026-09-18c';
+export const DEVICE_PRIVACY_REGISTRY_VERSION = '2026-09-18c';
 
 export type LegalDocumentGroup = 'platform' | 'transactions' | 'video-device';
 

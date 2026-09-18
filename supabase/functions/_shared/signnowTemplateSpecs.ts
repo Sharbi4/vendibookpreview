@@ -315,7 +315,7 @@ function buildPurchaseSaleAgreement(): { pdf: Uint8Array; fields: SignNowFieldDe
   doc.heading('17. PRIVACY AND DEVICE PERMISSIONS');
   doc.paragraph('The Vendibook Privacy Policy and Checkout Privacy & Electronic Consent describe how transaction data is handled.');
   doc.paragraph('Camera and microphone access may be requested when a user chooses to participate in a video walkthrough.');
-  doc.paragraph('A video walkthrough is not recorded by default. If Vendibook later offers call recording, separate disclosure and consent must be obtained before recording begins.');
+  doc.paragraph('A video walkthrough held inside Vendibook is recorded, and each participant must give explicit consent to that recording before entering the meeting room.');
   doc.paragraph('Device location may be requested for features that genuinely require location, such as active delivery tracking. Location sharing does not begin merely because a user enters checkout.');
   doc.paragraph('Marketing email or promotional SMS consent is separate from this Agreement.');
 
@@ -621,7 +621,7 @@ function buildRentalAgreement(variant: AssetVariant = 'general'): { pdf: Uint8Ar
   doc.heading(`${n(24)}. PRIVACY AND DEVICE PERMISSIONS`);
   doc.paragraph("Vendibook's Privacy Policy and Checkout Privacy & Electronic Consent govern transaction data handling.");
   doc.paragraph('Camera and microphone access may be requested for an optional video walkthrough or virtual tour.');
-  doc.paragraph('Video calls are not recorded by default. Any future recording requires separate disclosure and consent before recording begins.');
+  doc.paragraph('A video walkthrough held inside Vendibook is recorded, and each participant must give explicit consent to that recording before entering the meeting room.');
   doc.paragraph('Location may be requested only for features that actually need location, such as active delivery tracking.');
   doc.paragraph('Marketing email and promotional SMS consent are not bundled into this Rental Agreement.');
 

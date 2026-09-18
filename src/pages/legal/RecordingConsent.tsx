@@ -26,12 +26,18 @@ const RecordingConsent: React.FC = () => (
       </p>
     </Section>
 
-    <Section title="2. Sessions may be monitored or recorded">
+    <Section title="2. Walkthroughs are recorded">
       <p>
-        A walkthrough <strong>may be monitored or recorded</strong> by Vendibook for safety, quality,
-        fraud prevention, and dispute resolution. Monitoring means a session may be joined or
-        reviewed by authorized personnel; recording means audio, video, or both may be captured and
-        stored.
+        A Vendibook video walkthrough <strong>is recorded</strong>. Recording is started by
+        Vendibook's servers once every required participant has consented and joined, and it stops
+        when the meeting ends. Audio and video are captured and stored for safety, quality, fraud
+        prevention, and dispute resolution. A red &ldquo;Recording&rdquo; indicator appears in the
+        call while recording is running. Vendibook may also monitor a session, meaning it may be
+        joined or reviewed by authorized personnel.
+      </p>
+      <p>
+        No transcription, AI analysis, biometric processing, or face recognition is applied to a
+        walkthrough recording.
       </p>
     </Section>
 
@@ -44,14 +50,13 @@ const RecordingConsent: React.FC = () => (
       </p>
     </Section>
 
-    <Section title="4. Not every session is captured">
+    <Section title="4. A recording is not automatic proof">
       <p>
-        Vendibook does <strong>not</strong> promise that any particular session was monitored or
-        recorded, that a recording of a given session exists, that it is complete, or that it
-        captured any specific moment, statement, or defect. Capture depends on the feature being
-        enabled, on the provider, and on network and device conditions. Never rely on the existence
-        of a recording as evidence you intend to use later — document what matters to you in writing
-        through Vendibook messages as well.
+        Although walkthroughs are recorded, Vendibook does <strong>not</strong> promise that a
+        recording of a given session is complete, or that it captured any specific moment,
+        statement, or defect: capture depends on the provider and on network and device conditions.
+        A recording does not by itself establish condition, ownership, agreement, or legal
+        liability. Document what matters to you in writing through Vendibook messages as well.
       </p>
     </Section>
 

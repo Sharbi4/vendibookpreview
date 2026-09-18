@@ -10,8 +10,8 @@ import { RECORDING_CONSENT_VERSION } from '@/lib/legal/versions';
  */
 
 /** Bump when the legal copy on the linked pages materially changes. */
-export const WALKTHROUGH_TERMS_VERSION = '2026-09-18b';
-export const DEVICE_PRIVACY_VERSION = '2026-09-18b';
+export const WALKTHROUGH_TERMS_VERSION = '2026-09-18c';
+export const DEVICE_PRIVACY_VERSION = '2026-09-18c';
 
 /**
  * Monitoring / recording disclosure.
