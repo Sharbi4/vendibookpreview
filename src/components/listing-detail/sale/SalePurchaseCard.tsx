@@ -31,6 +31,7 @@ import { deliveryRateLabel } from '@/lib/fulfillment/delivery';
 import { trackCTAClick } from '@/lib/analytics';
 import { trackFinancingLearnMoreClick, type FinancingSource } from '@/lib/analytics';
 import { useFinancingHandoff } from '@/hooks/useFinancingHandoff';
+import { formatCurrency } from '@/lib/commissions';
 
 import { SaleCard } from './SaleCard';
 import WalkthroughCta from '@/components/video/WalkthroughCta';
@@ -173,7 +174,7 @@ export const SalePurchaseCard = ({
     return (
       <SaleCard padding="lg" className="space-y-3">
         <div className="text-3xl font-bold">
-          {priceSale ? `$${priceSale.toLocaleString()}` : 'Price on request'}
+          {priceSale ? formatCurrency(priceSale) : 'Price on request'}
         </div>
         <p className="text-sm text-muted-foreground">
           This is your listing. Buyers see the purchase actions here.
@@ -204,7 +205,7 @@ export const SalePurchaseCard = ({
         <div className="px-5 sm:px-6 pt-5 pb-4">
           <div className="flex items-baseline gap-2 flex-wrap">
             <span className="text-3xl font-bold">
-              {priceSale ? `$${priceSale.toLocaleString()}` : 'Price on request'}
+              {priceSale ? formatCurrency(priceSale) : 'Price on request'}
             </span>
             {listing?.price_negotiable && (
               <span className="text-xs text-muted-foreground">or best offer</span>

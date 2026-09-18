@@ -13,13 +13,13 @@ describe('resolveRentalRate', () => {
   it('maps a monthly-only rental instead of falling back to Price TBD', () => {
     const listing = { mode: 'rent', price_monthly: 1000 };
     expect(resolveRentalRate(listing)).toMatchObject({ unit: 'monthly', amount: 1000, suffix: '/mo' });
-    expect(formatListingPriceLabel(listing)).toBe('$1,000/mo');
+    expect(formatListingPriceLabel(listing)).toBe('$1,000.00/mo');
     expect(hasAnyRentalRate(listing)).toBe(true);
   });
 
   it('maps weekly-only and hourly-only rentals', () => {
-    expect(formatListingPriceLabel({ mode: 'rent', price_weekly: 2500 })).toBe('$2,500/week');
-    expect(formatListingPriceLabel({ mode: 'rent', price_hourly: 75 })).toBe('$75/hr');
+    expect(formatListingPriceLabel({ mode: 'rent', price_weekly: 2500 })).toBe('$2,500.00/week');
+    expect(formatListingPriceLabel({ mode: 'rent', price_hourly: 75 })).toBe('$75.00/hr');
   });
 
   it('prefers daily, then hourly, then weekly, then monthly', () => {
@@ -36,13 +36,13 @@ describe('resolveRentalRate', () => {
   });
 
   it('coerces numeric strings coming back from the database', () => {
-    expect(formatListingPriceLabel({ mode: 'rent', price_monthly: '1000.00' })).toBe('$1,000/mo');
+    expect(formatListingPriceLabel({ mode: 'rent', price_monthly: '1000.00' })).toBe('$1,000.00/mo');
   });
 });
 
 describe('formatListingPriceLabel (sale)', () => {
   it('formats a sale price', () => {
-    expect(formatListingPriceLabel({ mode: 'sale', price_sale: 48500 })).toBe('$48,500');
+    expect(formatListingPriceLabel({ mode: 'sale', price_sale: 48500 })).toBe('$48,500.00');
   });
 
   it('falls back to a rental rate when a sale row carries one', () => {
