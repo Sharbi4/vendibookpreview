@@ -2663,8 +2663,9 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
 .v2-home-paypal-cta svg { width: 15px; height: 15px; }
 @media (max-width: 639px) {
   .v2-home-paypal { flex-wrap: wrap; align-items: flex-start; padding: 15px 16px; }
-  .v2-home-paypal-copy { flex: 1 1 calc(100% - 68px); }
-  .v2-home-paypal-cta { margin-left: 68px; }
+  .v2-home-paypal-mark { width: 132px; height: 44px; }
+  .v2-home-paypal-copy { flex: 1 1 100%; }
+  .v2-home-paypal-cta { margin-left: 0; }
 }
 
 .v2-home-btn {
