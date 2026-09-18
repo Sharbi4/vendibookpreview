@@ -31,7 +31,34 @@ import {
  */
 
 const SITE_URL = "https://vendibook.com";
-const RETURN_URL = `${SITE_URL}/dashboard/payments/setup?paypal_return=1`;
+const DEFAULT_RETURN_URL = `${SITE_URL}/dashboard/payments/setup?paypal_return=1`;
+
+/**
+ * PayPal sends the seller back to whatever return_url we put on the referral.
+ * When the flow was started from a preview/published host, hardcoding the
+ * production domain strands the seller on the wrong site. Use the request's
+ * own origin when it is a known Vendibook host; otherwise the production URL.
+ */
+const ALLOWED_RETURN_ORIGINS = new Set([
+  "https://vendibook.com",
+  "https://www.vendibook.com",
+  "https://vendibookpreview.lovable.app",
+  "https://id-preview--f4d8586e-de66-4307-b052-b071b734f592.lovable.app",
+  "http://localhost:8080",
+]);
+
+function returnUrlFor(req: Request): string {
+  const origin = req.headers.get("origin") ?? "";
+  try {
+    const host = origin ? new URL(origin).origin : "";
+    if (ALLOWED_RETURN_ORIGINS.has(host)) {
+      return `${host}/dashboard/payments/setup?paypal_return=1`;
+    }
+  } catch {
+    // fall through to the production default
+  }
+  return DEFAULT_RETURN_URL;
+}
 
 interface DerivedStatus {
   status: "ready" | "action_required";
@@ -202,7 +229,7 @@ Deno.serve(async (req) => {
       }
 
       const trackingId = `vb-${crypto.randomUUID()}`;
-      const referral = await createPartnerReferral({ trackingId, returnUrl: RETURN_URL });
+      const referral = await createPartnerReferral({ trackingId, returnUrl: returnUrlFor(req) });
       if (!referral.actionUrl) {
         return jsonError(
           502,
@@ -225,7 +252,38 @@ Deno.serve(async (req) => {
       if (!row) {
         return jsonError(404, "not_connected", "Connect your PayPal account first.");
       }
-      const raw = await getMerchantIntegrationStatus(row.tracking_id);
+      let raw: Record<string, any>;
+      try {
+        raw = await getMerchantIntegrationStatus(row.tracking_id);
+      } catch (err) {
+        // PayPal 404s the merchant-integration lookup until the seller
+        // actually finishes the hosted signup. That is a normal "not
+        // finished yet" state, not a failure — keep the link_sent status,
+        // stamp the check time and answer 200 so the UI shows guidance
+        // instead of an error.
+        if (err instanceof PayPalError && err.status === 404) {
+          await admin
+            .from("seller_paypal_accounts")
+            .update({
+              last_status_check_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", row.id);
+          safeLog("seller_status_pending", { user_id: user.id });
+          return jsonResponse(200, {
+            status: "link_sent",
+            pending: true,
+            action_reasons: row.action_reasons ?? [],
+            merchant_id: row.merchant_id,
+            paypal_email: row.paypal_email,
+            oauth_scopes: [],
+            acdc_vetting_status: null,
+            vaulting_status: null,
+            capabilities: [],
+          });
+        }
+        throw err;
+      }
       const derived = deriveStatus(raw);
 
       // Slim, PII-free audit snapshot — no payer PII, no tokens.

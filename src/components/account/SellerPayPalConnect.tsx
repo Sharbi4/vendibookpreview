@@ -79,6 +79,11 @@ export default function SellerPayPalConnect({
       if (data?.status === 'ready') {
         setFlowMessage({ tone: 'success', text: 'PayPal confirmed your account is ready to receive payments.' });
         toast.success('Your PayPal account is connected and ready to receive payments.');
+      } else if (data?.pending || data?.status === 'link_sent') {
+        setFlowMessage({
+          tone: 'info',
+          text: "You haven't finished the PayPal signup yet. Continue on PayPal, then check your status here.",
+        });
       } else {
         setFlowMessage({
           tone: 'info',
