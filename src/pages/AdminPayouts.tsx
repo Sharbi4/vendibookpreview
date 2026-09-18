@@ -7,6 +7,7 @@ import {
   Loader2,
   PauseCircle,
   RefreshCw,
+  RotateCcw,
   Search,
 } from 'lucide-react';
 
@@ -49,6 +50,11 @@ interface Payable {
   payout_method: string | null;
   payout_provider: string | null;
   payout_completed_at: string | null;
+  payment_record_id: string;
+  release_state: string | null;
+  conditions_deadline_at: string | null;
+  walkthrough_recorded_at: string | null;
+  agreement_completed_at: string | null;
   failure_reason: string | null;
   admin_notes: string | null;
   created_at: string;
@@ -82,6 +88,8 @@ export default function AdminPayouts() {
   const [payoutTarget, setPayoutTarget] = useState<Payable | null>(null);
   const [reference, setReference] = useState('');
   const [note, setNote] = useState('');
+  const [refundTarget, setRefundTarget] = useState<Payable | null>(null);
+  const [refundReason, setRefundReason] = useState('');
 
   const statuses = useMemo(() => TABS.find((t) => t.value === tab)?.statuses ?? [], [tab]);
 
@@ -135,6 +143,26 @@ export default function AdminPayouts() {
   });
 
   const totalDue = filtered.reduce((sum, r) => sum + (r.net_payout_cents ?? 0), 0);
+
+  const refund = async () => {
+    if (!refundTarget || !refundReason.trim()) return;
+    setBusyId(refundTarget.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('paypal-refund', {
+        body: { payment_record_id: refundTarget.payment_record_id, reason: refundReason.trim() },
+      });
+      if (error || data?.error) {
+        toast.error(data?.message || error?.message || 'PayPal could not issue this refund.');
+        return;
+      }
+      toast.success('Full PayPal refund issued and recorded.');
+      setRefundTarget(null);
+      setRefundReason('');
+      await load();
+    } finally {
+      setBusyId(null);
+    }
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
@@ -228,6 +256,13 @@ export default function AdminPayouts() {
                         : `Release due ${when(row.release_due_at)}`}
                       {row.external_payout_reference ? ` · transfer ${row.external_payout_reference}` : ''}
                     </p>
+                    {row.release_state && (
+                      <div className="mt-3 grid gap-1 text-xs text-muted-foreground sm:grid-cols-3">
+                        <span>Video: {row.walkthrough_recorded_at ? 'Complete' : 'Waiting'}</span>
+                        <span>Signatures: {row.agreement_completed_at ? 'Complete' : 'Waiting'}</span>
+                        <span>Deadline: {when(row.conditions_deadline_at)}</span>
+                      </div>
+                    )}
                     {row.hold_reason ? (
                       <p className="text-xs text-amber-500">Hold: {row.hold_reason}</p>
                     ) : null}
@@ -293,6 +328,16 @@ export default function AdminPayouts() {
                           Hold
                         </Button>
                       ) : null}
+                      {row.release_state && !['payout_recorded', 'auto_refunded', 'cancelled'].includes(row.release_state) ? (
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          disabled={busyId === row.id}
+                          onClick={() => { setRefundTarget(row); setRefundReason(''); }}
+                        >
+                          <RotateCcw className="mr-2 h-4 w-4" /> Full refund
+                        </Button>
+                      ) : null}
                     </div>
                   </div>
                 </div>
@@ -339,6 +384,34 @@ export default function AdminPayouts() {
               }}
             >
               Save transfer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!refundTarget} onOpenChange={(open) => !open && setRefundTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Issue a full PayPal refund?</DialogTitle>
+            <DialogDescription>
+              This sends the remaining captured amount back through PayPal and stops the seller payout.
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={refundReason}
+            onChange={(event) => setRefundReason(event.target.value)}
+            placeholder="Required reason for the audit record"
+            className="text-base"
+          />
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setRefundTarget(null)}>Keep order</Button>
+            <Button
+              variant="destructive"
+              disabled={!refundReason.trim() || busyId === refundTarget?.id}
+              onClick={refund}
+            >
+              {busyId === refundTarget?.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Refund in full
             </Button>
           </DialogFooter>
         </DialogContent>

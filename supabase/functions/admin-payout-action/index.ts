@@ -50,11 +50,21 @@ serve(async (req) => {
       return jsonError(400, "missing_fields", "Missing action or payable id.");
     }
 
-    const { data: payable } = await admin.from("seller_payables")
+    let { data: payable } = await admin.from("seller_payables")
       .select("*, payment:payment_records(*)")
       .eq("id", payableId)
       .maybeSingle();
     if (!payable) return jsonError(404, "not_found", "Payout record not found.");
+
+    const initialPayment = (payable as any).payment;
+    if (initialPayment?.sale_transaction_id) {
+      await admin.rpc("refresh_sale_release_requirements", { _payment_record_id: initialPayment.id });
+      const refreshed = await admin.from("seller_payables")
+        .select("*, payment:payment_records(*)")
+        .eq("id", payableId)
+        .maybeSingle();
+      payable = refreshed.data ?? payable;
+    }
 
     const payment = (payable as any).payment;
     const from = payable.status;
@@ -104,6 +114,7 @@ serve(async (req) => {
         break;
 
       case "start_payout":
+        if (blockers.length) return jsonError(409, "payout_blocked", blockers[0]);
         if (payable.status !== "payout_approved") {
           return jsonError(409, "invalid_state", "Approve the payout before starting it.");
         }
@@ -114,6 +125,7 @@ serve(async (req) => {
         break;
 
       case "record_manual_payout": {
+        if (blockers.length) return jsonError(409, "payout_blocked", blockers[0]);
         if (!externalReference) {
           return jsonError(
             400,
@@ -139,6 +151,7 @@ serve(async (req) => {
       }
 
       case "mark_completed": {
+        if (blockers.length) return jsonError(409, "payout_blocked", blockers[0]);
         const reference = externalReference ?? payable.external_payout_reference;
         if (!reference && !payable.dwolla_transfer_id) {
           return jsonError(
@@ -221,6 +234,15 @@ function payoutBlockers(payable: any, payment: any): string[] {
   }
   if (payable.hold_reason && payable.status === "payout_on_hold") {
     reasons.push(`A hold is in place: ${payable.hold_reason}`);
+  }
+  if (payment?.sale_transaction_id && payable.release_state !== "ready_for_review") {
+    if (!payable.walkthrough_media_id) {
+      reasons.push("A saved walkthrough video is required before this payout can be approved.");
+    } else if (!payable.agreement_completed_at || !payable.signnow_document_id) {
+      reasons.push("Both buyer and seller must sign the purchase agreement before this payout can be approved.");
+    } else {
+      reasons.push("The sale conditions are not ready for payout review.");
+    }
   }
   return reasons;
 }
