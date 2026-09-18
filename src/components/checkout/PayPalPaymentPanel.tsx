@@ -282,10 +282,15 @@ const PayPalPaymentPanel = ({
             },
           });
           instances.push(instance);
+          // Only genuinely eligible funding sources are ever rendered — no
+          // decorative pills for methods PayPal will not offer this buyer.
           if (!instance.isEligible?.()) return Promise.resolve(false);
           return instance
             .render(container)
-            .then(() => true)
+            .then(() => {
+              if (!cancelled) setEligible((prev) => ({ ...prev, [key]: true }));
+              return true;
+            })
             .catch(() => {
               fail(
                 `${name} could not load`,
