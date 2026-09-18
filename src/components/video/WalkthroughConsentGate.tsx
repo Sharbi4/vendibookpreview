@@ -86,7 +86,9 @@ export default function WalkthroughConsentGate({ walkthroughId, title, requiresL
 
   const mediaReady = camera === 'granted' && microphone === 'granted';
   const locationReady = !requiresLocation || location === 'granted';
-  const termsReady = terms && privacy && (!WALKTHROUGH_RECORDING_ENABLED || recording);
+  // Monitoring/recording acknowledgment is always required — a walkthrough may be
+  // monitored or recorded, so nobody enters the room without consenting to that.
+  const termsReady = terms && privacy && recording;
   const canJoin = mediaReady && locationReady && termsReady;
 
   const helper = !termsReady
