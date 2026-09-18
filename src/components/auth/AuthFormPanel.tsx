@@ -802,22 +802,24 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
                     <span className="text-sm leading-snug text-muted-foreground">
                       I agree to the{' '}
                       <a
-                        href="/legal/terms"
+                        href="/terms"
                         target="_blank"
                         rel="noreferrer"
                         className="text-foreground underline underline-offset-4 hover:text-primary"
                       >
                         Vendibook Terms of Service
                       </a>{' '}
-                      and acknowledge the{' '}
+                      (v{TERMS_OF_SERVICE_VERSION}) and acknowledge the{' '}
                       <a
-                        href="/legal/privacy"
+                        href="/privacy"
                         target="_blank"
                         rel="noreferrer"
                         className="text-foreground underline underline-offset-4 hover:text-primary"
                       >
                         Privacy Policy
-                      </a>.
+                      </a>{' '}
+                      (v{PRIVACY_POLICY_VERSION}). I consent to sign electronically and to receive notices, terms,
+                      and other communications about my account electronically.
                     </span>
                   </label>
                   {errors.terms && (
