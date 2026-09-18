@@ -145,7 +145,7 @@ export function useTransactionDocuments(scope: DocumentScope) {
     }
   }, [load]);
 
-  return { docs, preparing, notice, reload: load, prepare, refreshAfterSigning };
+  return { docs, preparing, notice, kinds, reload: load, prepare, prepareKind, refreshAfterSigning };
 }
 
 /** Short-lived embedded signing URL for the current user on one document. */
