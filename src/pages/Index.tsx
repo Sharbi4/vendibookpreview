@@ -189,15 +189,27 @@ const Index = () => {
             </div>
           </section>
 
-          <section className="v2-home-partners" aria-label="Vendibook services and providers">
-            <div><p className="v2-home-eyebrow">Connected tools and providers</p><h2>Support for the whole transaction.</h2></div>
-            <div className="v2-home-partner-logos">
-              <span><PayPalWordmark surface="light" className="text-xl" /><small>Secure checkout</small></span>
-              <span><b className="v2-home-plaid-mark">PLAID</b><small>Identity signals</small></span>
-              <span><EquinoxFundingLogo className="h-8" /><small>Financing options</small></span>
-              <span><img src={vendibookWordmark} alt="Vendibook" /><small>Marketplace records</small></span>
+          <section className="v2-home-partners" aria-label="Transaction support">
+            <div className="v2-home-partners-copy">
+              <p className="v2-home-eyebrow">Transaction support</p>
+              <h2>Built to help you move from listing to deal.</h2>
+            </div>
+            <div className="v2-home-partner-tiles">
+              <article>
+                <span className="v2-home-partner-mark"><PayPalWordmark surface="light" className="text-2xl" /></span>
+                <small>Secure checkout</small>
+              </article>
+              <article>
+                <span className="v2-home-partner-mark"><EquinoxFundingLogo className="h-9" /></span>
+                <small>Financing options</small>
+              </article>
+              <article>
+                <span className="v2-home-partner-mark"><img src={vendibookWordmark} alt="Vendibook" /></span>
+                <small>Marketplace records &amp; support</small>
+              </article>
             </div>
           </section>
+
 
           <section className="v2-home-final">
             <div><p className="v2-home-eyebrow">Ready when you are</p><h2>Find your next mobile food business asset.</h2></div>
