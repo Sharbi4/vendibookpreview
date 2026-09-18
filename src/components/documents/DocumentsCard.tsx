@@ -29,6 +29,29 @@ const DOC_LABEL: Record<string, string> = {
   handoff_acknowledgment: 'Handoff acknowledgment',
 };
 
+/**
+ * Documents a participant can ask for later in a transaction. Each entry lists
+ * the stored document types that satisfy it, so the button disappears once the
+ * document exists. The server decides whether the stage is actually due.
+ */
+const ON_DEMAND: Record<string, { label: string; hint: string; types: string[] }> = {
+  sale_handoff: {
+    label: 'Prepare handoff acknowledgment',
+    hint: 'Records the condition of the equipment when it changes hands.',
+    types: ['sale_handoff_condition_acknowledgment', 'delivery_handoff_acknowledgment', 'handoff_acknowledgment'],
+  },
+  rental_checkin: {
+    label: 'Prepare check-in condition report',
+    hint: 'Records the condition at the start of the rental.',
+    types: ['rental_checkin_condition_report'],
+  },
+  rental_checkout: {
+    label: 'Prepare check-out condition report',
+    hint: 'Records the condition at the end of the rental.',
+    types: ['rental_checkout_condition_report'],
+  },
+};
+
 const STATUS_LABEL: Record<DocumentRow['status'], string> = {
   draft: 'Being prepared',
   sent: 'Awaiting signatures',
