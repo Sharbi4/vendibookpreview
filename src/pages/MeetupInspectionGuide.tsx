@@ -58,6 +58,10 @@ export default function MeetupInspectionGuide() {
           </div>
         </header>
 
+        <div className="guide-wrap">
+          <HandoffStoryline context={context} safeReturn={safeReturn} />
+        </div>
+
         <div className="guide-layout guide-wrap">
           <aside>
             <div className="guide-contents">
