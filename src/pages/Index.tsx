@@ -98,18 +98,6 @@ const Index = () => {
   });
 
   const featuredQuery = useQuery({ queryKey: ['home-v2-featured'], queryFn: fetchFeaturedListings, staleTime: 60000 });
-  // Hero slideshow: featured listings first (offset so the first slide is not
-  // the same card leading the row below), falling back to the latest inventory.
-  const heroSlides = useMemo(() => {
-    const featured = (featuredQuery.data ?? []) as never[];
-    const fallback = [...((saleQuery.data ?? []) as never[]), ...((rentQuery.data ?? []) as never[])];
-    const pool = featured.length ? featured : fallback;
-    if (featured.length > 1) {
-      const offset = Math.min(2, featured.length - 1);
-      return [...featured.slice(offset), ...featured.slice(0, offset)];
-    }
-    return pool.slice(0, 8);
-  }, [featuredQuery.data, saleQuery.data, rentQuery.data]);
 
   return (
     <div className="min-h-screen flex flex-col v2-home">
