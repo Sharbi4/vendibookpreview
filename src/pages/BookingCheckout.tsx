@@ -49,7 +49,8 @@ import { FinalReviewSheet } from '@/components/transaction/FinalReviewSheet';
 import { useTermsGate } from '@/hooks/useTermsGate';
 import { buildTerms } from '@/lib/transactionTerms';
 import { cn } from '@/lib/utils';
-import { type BookingUserInfo, SlotSelector, BusinessInfoStep, type BusinessInfoData, ContactInfoWizard, TowingHandoffPanel, DisclosureStep } from '@/components/booking';
+import { type BookingUserInfo, SlotSelector, BusinessInfoStep, type BusinessInfoData, ContactInfoWizard, TowingHandoffPanel } from '@/components/booking';
+import RentalVerificationPanel from '@/components/booking/RentalVerificationPanel';
 import { BookingDocumentUpload, type StagedDocument } from '@/components/booking/BookingDocumentUpload';
 import { useDocumentsOnFile } from '@/hooks/useDocumentsOnFile';
 import HourlySelectionSummary from '@/components/booking/HourlySelectionSummary';
@@ -222,7 +223,6 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   const goToStep = (next: number) => {
     setStep(next);
     setFurthestStep((prev) => Math.max(prev, next));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
   const activeStep = RENTAL_STEPS[step - 1];
   const [fulfillmentSelected, setFulfillmentSelected] = useState<FulfillmentSelection>('pickup');
@@ -927,6 +927,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   if (!startDate || !endDate) {
     return (
       <TransactionCheckoutShell
+        mode="wizard"
         eyebrow="Vendibook"
         title="Choose your rental dates"
         subtitle="Pick the dates you need and we'll show the rate, fees and anything this listing requires."
@@ -1120,13 +1121,14 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
           title={activeStep.heading}
           description={activeStep.description}
           onStepChange={goToStep}
+          backHref={step === 1 ? listingHref : undefined}
           onBack={step > 1 ? () => goToStep(step - 1) : undefined}
           onNext={step < 5 ? () => goToStep(step + 1) : undefined}
           nextLabel={step === 4 ? 'Continue to payment' : 'Continue'}
           nextDisabled={
             (step === 2 && fulfillmentSelected === 'delivery' && !deliveryAddress.trim()) ||
-            (step === 3 && !(isStepContactComplete && isStepBusinessInfoComplete && isStepDocsComplete)) ||
-            (step === 4 && !(rentalAgreementAccepted && privacyAccepted && isStepDisclosureComplete))
+            (step === 3 && !(isStepContactComplete && isStepBusinessInfoComplete && isStepDocsComplete && isStepDisclosureComplete)) ||
+            (step === 4 && !(rentalAgreementAccepted && privacyAccepted))
           }
         >
           {step === 1 ? (
@@ -1164,6 +1166,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
               onContinue={() => goToStep(2)}
               continueLabel="Continue"
               backHref={listingHref}
+              hideActions
             >
               <section className="order-review-money">
                 <h3>{isHourlyBooking ? 'Scheduled hours' : 'Dates'}</h3>
@@ -1343,6 +1346,31 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
                   />
                 </div>
               )}
+
+              {listing.id ? (
+                <div className="pt-2 border-t border-border">
+                  <p className="text-sm font-semibold text-foreground mt-4 mb-1">Verification</p>
+                  <p className="text-xs text-muted-foreground mb-4">Confirm insurance information and complete any identity check required for this rental.</p>
+                  <RentalVerificationPanel
+                    listingId={listing.id}
+                    disabled={isSubmitting}
+                    onInsuranceAnswer={(answer) =>
+                      setBusinessInfo((prev) =>
+                        prev ? { ...prev, liabilityInsuranceAnswer: answer, hasLiabilityInsurance: answer === 'yes' } : prev,
+                      )
+                    }
+                    onComplete={(state) => {
+                      setDisclosureRecord({
+                        attestedAt: state.attestedAt,
+                        documentVersion: state.documentVersion,
+                        identityStatus: state.identityStatus,
+                        insuranceAnswer: state.insuranceAnswer,
+                      });
+                      setDisclosureDone(true);
+                    }}
+                  />
+                </div>
+              ) : null}
             </div>
           ) : null}
 
@@ -1376,28 +1404,6 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
                 onAgreementAcceptedChange={setRentalAgreementAccepted}
                 onPrivacyAcceptedChange={setPrivacyAccepted}
               />
-
-              {listing?.id && (
-                <DisclosureStep
-                  listingId={listing.id}
-                  onInsuranceAnswer={(answer) =>
-                    setBusinessInfo((prev) =>
-                      prev
-                        ? { ...prev, liabilityInsuranceAnswer: answer, hasLiabilityInsurance: answer === 'yes' }
-                        : prev,
-                    )
-                  }
-                  onComplete={(state) => {
-                    setDisclosureRecord({
-                      attestedAt: state.attestedAt,
-                      documentVersion: state.documentVersion,
-                      identityStatus: state.identityStatus,
-                      insuranceAnswer: state.insuranceAnswer,
-                    });
-                    setDisclosureDone(true);
-                  }}
-                />
-              )}
             </div>
           ) : null}
 

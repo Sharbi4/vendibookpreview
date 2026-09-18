@@ -75,6 +75,7 @@ interface DisclosureStepProps {
     insuranceAnswer: InsuranceAnswer | null;
   }) => void;
   disabled?: boolean;
+  compact?: boolean;
 }
 
 const DOC_LABELS: Record<string, string> = {
@@ -88,6 +89,7 @@ export function DisclosureStep({
   onInsuranceAnswer,
   onComplete,
   disabled,
+  compact = false,
 }: DisclosureStepProps) {
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState(false);
@@ -225,11 +227,11 @@ export function DisclosureStep({
   }
 
   return (
-    <div className="space-y-6">
-      <p className="text-sm text-muted-foreground">
+    <div className={compact ? 'rental-verification-panel' : 'space-y-6'}>
+      {!compact ? <p className="text-sm text-muted-foreground">
         A quick review before payment. These are the current terms for this booking, plus a free
         identity check that keeps hosts and renters safe.
-      </p>
+      </p> : null}
 
       {error && (
         <Alert variant="destructive">
@@ -239,7 +241,7 @@ export function DisclosureStep({
       )}
 
       {/* Terms */}
-      <div className="space-y-3 rounded-2xl border border-border p-4">
+      {!compact ? <div className="space-y-3 rounded-2xl border border-border p-4">
         <div className="flex items-center gap-2">
           <ScrollText className="h-4 w-4 text-primary" />
           <h3 className="text-base font-semibold">What you're agreeing to</h3>
@@ -274,7 +276,7 @@ export function DisclosureStep({
             <li className="text-sm text-muted-foreground">Terms are being updated — try again shortly.</li>
           )}
         </ul>
-      </div>
+      </div> : null}
 
       {/* Insurance disclosure — moved here so it sits with the other disclosures */}
       <div className="space-y-3 rounded-2xl border border-border p-4">
@@ -321,8 +323,9 @@ export function DisclosureStep({
             onCheckedChange={(checked) => setAgreed(checked === true)}
           />
           <Label htmlFor="disclosure-agree" className="cursor-pointer text-sm leading-relaxed">
-            I have read and agree to the renter terms, refund and cancellation policy, and
-            marketplace rules above, and my answers about insurance and intended use are accurate.
+            {compact
+              ? 'I confirm my insurance answer and intended-use information are accurate, and acknowledge the current rental requirements.'
+              : 'I have read and agree to the renter terms, refund and cancellation policy, and marketplace rules above, and my answers about insurance and intended use are accurate.'}
           </Label>
         </div>
         {attested ? (
@@ -338,7 +341,7 @@ export function DisclosureStep({
             className="w-full sm:w-auto"
           >
             {working && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            Record my agreement
+            {compact ? 'Save verification' : 'Record my agreement'}
           </Button>
         )}
         {attestation?.stale && (
@@ -414,7 +417,7 @@ export function DisclosureStep({
           })
         }
       >
-        Continue to review
+        {compact ? 'Save and continue' : 'Continue to review'}
       </Button>
       {!identityDone && attested && (
         <p className="text-center text-xs text-muted-foreground">

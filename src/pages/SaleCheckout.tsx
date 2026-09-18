@@ -953,6 +953,7 @@ const SaleCheckout = () => {
           </p>
         )}
       </div>
+      {financingEligible ? <CheckoutFinancingBanner listing={listing as any} variant="compact" /> : null}
       <p className="v2-rail-agreement">
         <Link to="/legal/purchase-agreement" target="_blank" rel="noreferrer">
           <FileText aria-hidden /> Review purchase agreement
@@ -1013,7 +1014,6 @@ const SaleCheckout = () => {
     setAgreementsRecorded(true);
     setStep(5);
     setFurthestStep(5);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   /**
@@ -1037,7 +1037,6 @@ const SaleCheckout = () => {
   const goToStep = (next: number) => {
     setStep(next);
     setFurthestStep((prev) => Math.max(prev, next));
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const continueFromFulfillment = () => {
@@ -1090,6 +1089,7 @@ const SaleCheckout = () => {
       <SEO title={`Checkout - ${listing.title}`} description={`Complete your purchase of ${listing.title}`} />
 
       <TransactionCheckoutShell
+        mode="wizard"
         title="Checkout"
         subtitle={listing.title}
         exitHref={`/listing/${listingId}`}
@@ -1125,6 +1125,7 @@ const SaleCheckout = () => {
           title={activeStep.heading}
           description={activeStep.description}
           onStepChange={goToStep}
+          backHref={step === 1 ? `/listing/${listingId}` : undefined}
           {...footer}
         >
           {step === 1 ? (
@@ -1147,6 +1148,7 @@ const SaleCheckout = () => {
                 onContinue={() => goToStep(2)}
                 continueLabel="Continue"
                 backHref={`/listing/${listingId}`}
+                hideActions
               />
               {financingEligible ? <CheckoutFinancingBanner listing={listing as any} /> : null}
             </div>
@@ -1171,26 +1173,15 @@ const SaleCheckout = () => {
                 onSiteContact={onSiteContact} setOnSiteContact={setOnSiteContact}
                 onBack={() => undefined} onContinue={() => undefined}
               />
-              {fulfillmentSelected === 'pickup' ? (
-                <p className="sale-wizard-step-note">
-                  After payment, use Vendibook Messages to agree on a pickup time and receive the exact handoff
-                  location.{' '}
-                  <Link
-                    to={`/guides/meetup-inspection?mode=sale&fulfillment=pickup&returnTo=/checkout/${listingId}`}
-                    className="underline underline-offset-2"
-                  >
-                    How to prepare for pickup &amp; inspection →
-                  </Link>
-                </p>
-              ) : fulfillmentSelected === 'delivery' ? (
+              {fulfillmentSelected === 'delivery' ? (
                 <p className="sale-wizard-step-note">
                   Live location appears only after the seller or assigned driver starts Delivery Mode.
                 </p>
-              ) : (
+              ) : fulfillmentSelected === 'vendibook_freight' ? (
                 <p className="sale-wizard-step-note">
                   Freight is coordinated after checkout. Carrier timing is confirmed by the freight partner.
                 </p>
-              )}
+              ) : null}
             </>
           ) : null}
 
@@ -1276,8 +1267,6 @@ const SaleCheckout = () => {
               <p className="text-xs text-muted-foreground">
                 PayPal terms and eligibility apply to the payment method you choose.
               </p>
-
-              {financingEligible ? <CheckoutFinancingBanner listing={listing as any} /> : null}
             </div>
           ) : null}
         </SaleCheckoutWizard>

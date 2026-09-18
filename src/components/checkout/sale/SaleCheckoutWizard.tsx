@@ -1,4 +1,5 @@
-import type { ReactNode } from 'react';
+import { useEffect, useRef, type ReactNode } from 'react';
+import { Link } from 'react-router-dom';
 import { Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -17,6 +18,8 @@ interface SaleCheckoutWizardProps {
   children: ReactNode;
   onStepChange: (step: number) => void;
   onBack?: () => void;
+  backHref?: string;
+  backLabel?: string;
   onNext?: () => void;
   nextLabel?: string;
   nextDisabled?: boolean;
@@ -34,6 +37,8 @@ const SaleCheckoutWizard = ({
   children,
   onStepChange,
   onBack,
+  backHref,
+  backLabel = 'Back to listing',
   onNext,
   nextLabel = 'Continue',
   nextDisabled = false,
@@ -41,6 +46,11 @@ const SaleCheckoutWizard = ({
   hideFooter = false,
 }: SaleCheckoutWizardProps) => {
   const active = steps[currentStep - 1];
+  const contentRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    contentRef.current?.scrollTo({ top: 0 });
+  }, [currentStep]);
 
   return (
     <section className="sale-wizard" aria-labelledby="sale-wizard-title">
@@ -83,13 +93,17 @@ const SaleCheckoutWizard = ({
             {description ? <span>{description}</span> : null}
           </header>
 
-          <div key={currentStep} className="sale-wizard-content">
+          <div ref={contentRef} key={currentStep} className="sale-wizard-content" tabIndex={0}>
             {children}
           </div>
 
           {!hideFooter ? (
             <footer className="sale-wizard-footer">
-              {onBack ? (
+              {backHref ? (
+                <Button asChild variant="outline" disabled={nextBusy}>
+                  <Link to={backHref}><ChevronLeft aria-hidden /> {backLabel}</Link>
+                </Button>
+              ) : onBack ? (
                 <Button type="button" variant="outline" onClick={onBack} disabled={nextBusy}>
                   <ChevronLeft aria-hidden /> Back
                 </Button>

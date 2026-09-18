@@ -105,3 +105,10 @@
 - [x] DocumentsCard status/version surfaces, tests
 - [ ] UI triggers for handoff / check-in / check-out documents (endpoint ready: signnow-ensure-document)
 - [ ] Counsel review of all template text before production reliance
+
+## Bounded checkout wizard refactor
+- [x] Bound desktop sale/rental wizards with internal active-step scrolling.
+- [x] Remove duplicate review navigation, pickup copy, and Payment financing.
+- [x] Move rental verification into Details while preserving server gates.
+- [x] Add wizard-aware shell and independently scrolling desktop rail.
+- [x] Validate real sale/rental routes, mobile layout, typecheck, build, and checkout tests.
