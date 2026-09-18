@@ -16,6 +16,7 @@ import { trackPurchase, trackInitiateCheckout } from '@/lib/facebookCAPI';
 import { calculateDistance } from '@/lib/geolocation';
 import { formatCurrency } from '@/lib/commissions';
 import SEO from '@/components/SEO';
+import { PayPalWordmark } from '@/components/brand/ProviderLogos';
 
 import {
   PurchaseStepDelivery,
