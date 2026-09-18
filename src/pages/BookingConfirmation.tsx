@@ -250,8 +250,8 @@ const BookingConfirmation = ({
   const headline: Record<View, string> = {
     loading: 'Loading your booking…',
     processing: 'Confirming your payment…',
-    confirmed: 'Your rental is confirmed',
-    awaiting_host: 'Payment received — waiting on the host',
+    confirmed: 'Your booking is moving forward.',
+    awaiting_host: 'Your booking is moving forward.',
     declined: 'This booking was not accepted',
     failed: 'We could not confirm your payment',
     not_found: 'Booking not found',
