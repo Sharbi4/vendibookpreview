@@ -122,8 +122,9 @@ const Index = () => {
       <Header />
 
       <main className="flex-1">
+        <HeroPremium showGoogleSignIn={false} showRotator={false} />
+
         <div className="v2-home-stack">
-          <V2HomeHero slides={heroSlides} />
 
           <Link to="/payments" className="v2-home-paypal">
             <span className="v2-home-paypal-mark"><img src={paypalBannerAsset.url} alt="PayPal" /></span>
