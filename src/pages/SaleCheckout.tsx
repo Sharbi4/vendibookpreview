@@ -538,16 +538,15 @@ const SaleCheckout = () => {
   };
 
   const validateDetails = (): boolean => {
-    const needsAddress = fulfillmentSelected !== 'pickup';
-
+    // The buyer's own contact address is always required, regardless of fulfillment.
     const firstNameError = fieldValidators.firstName(buyerInfo.firstName);
     const lastNameError = fieldValidators.lastName(buyerInfo.lastName);
     const emailError = fieldValidators.email(buyerInfo.email);
     const phoneError = fieldValidators.phone(buyerInfo.phone);
-    const address1Error = needsAddress ? fieldValidators.address1(buyerInfo.address1) : undefined;
-    const cityError = needsAddress ? fieldValidators.city(buyerInfo.city) : undefined;
-    const stateError = needsAddress ? fieldValidators.state(buyerInfo.state) : undefined;
-    const zipCodeError = needsAddress ? fieldValidators.zipCode(buyerInfo.zipCode) : undefined;
+    const address1Error = fieldValidators.address1(buyerInfo.address1);
+    const cityError = fieldValidators.city(buyerInfo.city);
+    const stateError = fieldValidators.state(buyerInfo.state);
+    const zipCodeError = fieldValidators.zipCode(buyerInfo.zipCode);
 
     setFieldErrors({
       firstName: firstNameError,
