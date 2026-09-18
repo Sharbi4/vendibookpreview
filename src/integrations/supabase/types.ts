@@ -8310,7 +8310,10 @@ export type Database = {
         Row: {
           adjustments_cents: number
           admin_notes: string | null
+          agreement_completed_at: string | null
           buyer_id: string | null
+          conditions_completed_at: string | null
+          conditions_deadline_at: string | null
           created_at: string
           currency: string
           dispute_status: string
@@ -8337,16 +8340,23 @@ export type Database = {
           pro_fee_applied: boolean
           refunded_cents: number
           release_due_at: string | null
+          release_state: string | null
           seller_id: string
+          signnow_document_id: string | null
           status: Database["public"]["Enums"]["seller_payout_status"]
           transaction_type: string
           updated_at: string
           verification_status: string
+          walkthrough_media_id: string | null
+          walkthrough_recorded_at: string | null
         }
         Insert: {
           adjustments_cents?: number
           admin_notes?: string | null
+          agreement_completed_at?: string | null
           buyer_id?: string | null
+          conditions_completed_at?: string | null
+          conditions_deadline_at?: string | null
           created_at?: string
           currency?: string
           dispute_status?: string
@@ -8373,16 +8383,23 @@ export type Database = {
           pro_fee_applied?: boolean
           refunded_cents?: number
           release_due_at?: string | null
+          release_state?: string | null
           seller_id: string
+          signnow_document_id?: string | null
           status?: Database["public"]["Enums"]["seller_payout_status"]
           transaction_type: string
           updated_at?: string
           verification_status?: string
+          walkthrough_media_id?: string | null
+          walkthrough_recorded_at?: string | null
         }
         Update: {
           adjustments_cents?: number
           admin_notes?: string | null
+          agreement_completed_at?: string | null
           buyer_id?: string | null
+          conditions_completed_at?: string | null
+          conditions_deadline_at?: string | null
           created_at?: string
           currency?: string
           dispute_status?: string
@@ -8409,11 +8426,15 @@ export type Database = {
           pro_fee_applied?: boolean
           refunded_cents?: number
           release_due_at?: string | null
+          release_state?: string | null
           seller_id?: string
+          signnow_document_id?: string | null
           status?: Database["public"]["Enums"]["seller_payout_status"]
           transaction_type?: string
           updated_at?: string
           verification_status?: string
+          walkthrough_media_id?: string | null
+          walkthrough_recorded_at?: string | null
         }
         Relationships: [
           {
@@ -8435,6 +8456,13 @@ export type Database = {
             columns: ["payment_record_id"]
             isOneToOne: true
             referencedRelation: "payment_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seller_payables_walkthrough_media_id_fkey"
+            columns: ["walkthrough_media_id"]
+            isOneToOne: false
+            referencedRelation: "handoff_media"
             referencedColumns: ["id"]
           },
         ]
@@ -11878,6 +11906,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      refresh_sale_release_requirements: {
+        Args: { _payment_record_id: string }
+        Returns: undefined
       }
       release_seller_verification_retry: {
         Args: { _user_id: string }

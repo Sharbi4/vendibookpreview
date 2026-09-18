@@ -65,6 +65,17 @@ export interface OrderDetail {
   /** Identifiers used to load the Verified Handoff evidence chain. */
   links?: { sale_transaction_id: string | null; booking_request_id: string | null };
 
+  release: {
+    state: string;
+    deadline_at: string | null;
+    walkthrough_complete: boolean;
+    walkthrough_recorded_at: string | null;
+    agreement_complete: boolean;
+    agreement_completed_at: string | null;
+    conditions_completed_at: string | null;
+    payout_recorded_at: string | null;
+  } | null;
+
   timeline: Array<{
     id: string;
     event_code: string;
@@ -115,12 +126,13 @@ export async function buildOrderDetail(
 ): Promise<OrderDetail> {
   const transactionType = normalizeTransactionType(record.transaction_type);
 
-  const [listing, counterpartyName, domain, timeline, settlement] = await Promise.all([
+  const [listing, counterpartyName, domain, timeline, settlement, release] = await Promise.all([
     loadListing(supabase, record.listing_id),
     loadCounterpartyName(supabase, viewerRole === 'seller' ? record.buyer_id : record.seller_id),
     loadDomainRecord(supabase, record, transactionType),
     loadTimeline(supabase, record.id, viewerRole),
     loadSettlement(supabase, record, viewerRole),
+    loadRelease(supabase, record),
   ]);
 
   const fulfillmentType = inferFulfillmentType(transactionType, domain.fulfillmentRaw);
@@ -188,6 +200,7 @@ export async function buildOrderDetail(
     seller_next_action: domain.sellerNextAction ?? null,
     timeline,
     settlement,
+    release,
     links: {
       sale_transaction_id: record.sale_transaction_id ?? null,
       booking_request_id: record.booking_request_id ?? null,
@@ -211,6 +224,26 @@ export async function buildOrderDetail(
   }
 
   return detail;
+}
+
+async function loadRelease(supabase: any, record: Record<string, any>): Promise<OrderDetail['release']> {
+  if (!record.sale_transaction_id) return null;
+  const { data } = await supabase
+    .from('seller_payables')
+    .select('release_state, conditions_deadline_at, walkthrough_media_id, walkthrough_recorded_at, signnow_document_id, agreement_completed_at, conditions_completed_at, payout_completed_at')
+    .eq('payment_record_id', record.id)
+    .maybeSingle();
+  if (!data) return null;
+  return {
+    state: data.release_state ?? 'awaiting_walkthrough',
+    deadline_at: data.conditions_deadline_at ?? null,
+    walkthrough_complete: Boolean(data.walkthrough_media_id && data.walkthrough_recorded_at),
+    walkthrough_recorded_at: data.walkthrough_recorded_at ?? null,
+    agreement_complete: Boolean(data.signnow_document_id && data.agreement_completed_at),
+    agreement_completed_at: data.agreement_completed_at ?? null,
+    conditions_completed_at: data.conditions_completed_at ?? null,
+    payout_recorded_at: data.payout_completed_at ?? null,
+  };
 }
 
 function isPayable(code: string) {
@@ -263,14 +296,14 @@ const PAYABLE_PRESENTATION: Record<string, { label: string; tone: SettlementTone
     description: 'We are confirming the buyer payment with PayPal before settlement figures are final.',
   },
   pending_release: {
-    label: 'Pending release',
+    label: 'Checklist in progress',
     tone: 'pending',
-    description: 'Payment received. Your proceeds are scheduled for release once the release window passes.',
+    description: 'Payment received. Complete the walkthrough video and both agreement signatures before payout review.',
   },
   eligible_for_review: {
     label: 'Eligible for review',
     tone: 'pending',
-    description: 'Your proceeds are queued for Vendibook review before the payout is sent.',
+    description: 'The walkthrough video and both signatures are complete. Your payout is ready for administrator review.',
   },
   payout_on_hold: {
     label: 'On hold',

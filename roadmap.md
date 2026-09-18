@@ -69,3 +69,12 @@
 - [ ] Checkout method recording (PayPal button)
 - [ ] Declined payment recording — needs negative testing enabled on sandbox seller
 - [ ] Seller tools recording (transactions, refunds, unlink)
+
+## Manual delayed-release workflow
+- [x] Add server-owned sale release conditions and 10-day deadline fields.
+- [x] Refresh release readiness from real saved walkthrough video and completed two-party SignNow agreement.
+- [x] Enforce release conditions in admin payout actions and add full PayPal refund action.
+- [x] Surface countdown and outstanding conditions on buyer/seller order pages.
+- [x] Surface conditions and refund controls in admin payout queue.
+- [x] Keep deadline handling manual in the selected workflow; overdue records stay in admin review until refunded.
+- [x] Deploy and run focused tests.

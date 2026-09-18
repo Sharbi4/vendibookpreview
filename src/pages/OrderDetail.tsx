@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowRight, Loader2, LifeBuoy, RefreshCw, Truck } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Circle, Clock3, FileSignature, Loader2, LifeBuoy, RefreshCw, Truck, Video } from 'lucide-react';
 import { useOrderDetail, recoverOrderPayment } from '@/hooks/useOrderDetail';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -67,6 +67,10 @@ const OrderDetailPage = () => {
   }
 
   const a = order.amounts;
+  const deadline = order.release?.deadline_at ? new Date(order.release.deadline_at) : null;
+  const daysRemaining = deadline
+    ? Math.max(0, Math.ceil((deadline.getTime() - Date.now()) / 86_400_000))
+    : null;
 
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-10 sm:py-14">
@@ -121,6 +125,50 @@ const OrderDetailPage = () => {
 
       <div className="mt-8 grid gap-6 md:grid-cols-[1.4fr_1fr]">
         <div className="space-y-6">
+          {order.release && (
+            <Card className="border-primary/25 p-4 sm:p-5">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                    Seller payment checklist
+                  </h2>
+                  <p className="mt-2 text-sm text-foreground">
+                    The seller can be approved for payment after both items below are complete.
+                  </p>
+                </div>
+                {deadline && !order.release.conditions_completed_at && (
+                  <Badge variant="outline" className="gap-1.5">
+                    <Clock3 className="h-3.5 w-3.5" /> {daysRemaining} day{daysRemaining === 1 ? '' : 's'} left
+                  </Badge>
+                )}
+              </div>
+              <div className="mt-5 space-y-4">
+                <ReleaseCondition
+                  complete={order.release.walkthrough_complete}
+                  icon={Video}
+                  title="Walkthrough video saved"
+                  detail={order.release.walkthrough_recorded_at
+                    ? `Completed ${new Date(order.release.walkthrough_recorded_at).toLocaleString()}`
+                    : 'Waiting for a walkthrough video to be saved to the transaction evidence.'}
+                />
+                <ReleaseCondition
+                  complete={order.release.agreement_complete}
+                  icon={FileSignature}
+                  title="Purchase agreement signed by both parties"
+                  detail={order.release.agreement_completed_at
+                    ? `Completed ${new Date(order.release.agreement_completed_at).toLocaleString()}`
+                    : 'Waiting for both buyer and seller signatures through SignNow.'}
+                />
+              </div>
+              {deadline && (
+                <p className="mt-5 border-t border-border pt-4 text-xs text-muted-foreground">
+                  Deadline: {deadline.toLocaleString()}. If the checklist is incomplete at the deadline,
+                  an administrator can issue the full PayPal refund from the payout review page.
+                </p>
+              )}
+            </Card>
+          )}
+
           {order.listing && (
             <Card className="flex items-center gap-4 p-4">
               {order.listing.image_url && (
@@ -345,6 +393,24 @@ const Line = ({ label, value, strong, mono }: {
     <dd className={`text-right ${strong ? 'font-semibold' : ''} ${mono ? 'font-mono text-xs break-all' : ''}`}>
       {value}
     </dd>
+  </div>
+);
+
+const ReleaseCondition = ({ complete, icon: Icon, title, detail }: {
+  complete: boolean;
+  icon: typeof Video;
+  title: string;
+  detail: string;
+}) => (
+  <div className="flex gap-3">
+    <span className="relative mt-0.5 text-primary">
+      {complete ? <CheckCircle2 className="h-5 w-5" /> : <Circle className="h-5 w-5" />}
+      <Icon className="sr-only" aria-hidden="true" />
+    </span>
+    <div>
+      <p className="text-sm font-medium text-foreground">{title}</p>
+      <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{detail}</p>
+    </div>
   </div>
 );
 
