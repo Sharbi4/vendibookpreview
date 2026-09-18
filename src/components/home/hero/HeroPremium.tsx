@@ -13,7 +13,14 @@ import { trackLeadEvent } from '@/lib/leadTracking';
  * /how-it-works: soft warm canvas, badge, highlighter headline, pill CTAs,
  * real-listing rotator, plus a compact Google sign-in for signed-out visitors.
  */
-const HeroPremium = () => {
+interface HeroPremiumProps {
+  /** Show the compact Google sign-in beside the CTAs. */
+  showGoogleSignIn?: boolean;
+  /** Show the rotating real-listing strip below the CTAs. */
+  showRotator?: boolean;
+}
+
+const HeroPremium = ({ showGoogleSignIn = true, showRotator = true }: HeroPremiumProps = {}) => {
   const search = useHeroSearch();
   const reduced = useReducedMotion();
 
