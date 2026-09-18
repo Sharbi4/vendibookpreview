@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Calendar, DollarSign, Loader2, TrendingUp, TrendingDown, Target, Wallet, Info, Zap, CreditCard, Banknote, Check } from 'lucide-react';
 import { ListingFormData, FreightPayer } from '@/types/listing';
 import { Label } from '@/components/ui/label';
+import SellerBusinessAccountHelp from '@/components/payments/SellerBusinessAccountHelp';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -441,6 +442,9 @@ export const StepPricing: React.FC<StepPricingProps> = ({
                       <span className="text-sm">PayPal checkout</span>
                     </div>
                   </label>
+                  {formData.accept_paypal_checkout && (
+                    <SellerBusinessAccountHelp className="border-l border-border pl-3" compact />
+                  )}
                   <label className="flex items-center gap-3 cursor-pointer">
                     <Checkbox
                       checked={formData.accept_cash_payment}

@@ -34,6 +34,7 @@ interface RentalListingLayoutProps {
   videos: string[];
   isOwner: boolean;
   hostVerified: boolean;
+  paypalBusinessVerified: boolean;
   ratingData?: { average: number; count: number } | null;
   onShare: () => void;
 }
@@ -63,6 +64,7 @@ export const RentalListingLayout = ({
   videos,
   isOwner,
   hostVerified,
+  paypalBusinessVerified,
   ratingData,
   onShare,
 }: RentalListingLayoutProps) => {
@@ -320,6 +322,7 @@ export const RentalListingLayout = ({
               hostName={host ? getPublicDisplayName(host) : null}
               hostAvatar={host?.avatar_url}
               isVerified={hostVerified}
+              paypalBusinessVerified={paypalBusinessVerified}
               memberSince={host?.created_at}
               lastActiveAt={host?.last_active_at}
               ratingData={ratingData}

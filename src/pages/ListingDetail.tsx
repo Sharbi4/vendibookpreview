@@ -34,6 +34,7 @@ import JsonLd, { generateProductSchema, generateListingBreadcrumbSchema, generat
 import { getPublicDisplayName } from '@/lib/displayName';
 import { resolveListingBrand } from '@/lib/resolveListingBrand';
 import { isListingFeatured } from '@/lib/featured';
+import { useSellerPaymentReadiness } from '@/hooks/useSellerPaymentReadiness';
 
 const ListingDetail = () => {
   const { id } = useParams<{ id: string }>();
@@ -46,6 +47,10 @@ const ListingDetail = () => {
    */
   const sellerBadges = useSellerIdentityBadgeMap([listing?.host_id]);
   const sellerIdentityVerified = !!(listing?.host_id && sellerBadges[listing.host_id]?.verified);
+  // This is the same backend readiness result used to render or block PayPal
+  // checkout. It includes PayPal email, receivability, merchant and permission checks.
+  const sellerPaymentReadiness = useSellerPaymentReadiness(listing?.host_id);
+  const paypalBusinessVerified = sellerPaymentReadiness.ready;
   
   // Track page views with Google Analytics
   usePageTracking();
@@ -340,6 +345,7 @@ const ListingDetail = () => {
           videos={videos}
           isOwner={!!isOwner}
           hostVerified={sellerIdentityVerified}
+          paypalBusinessVerified={paypalBusinessVerified}
           ratingData={ratingData}
           onShare={handleShare}
         />
@@ -355,6 +361,7 @@ const ListingDetail = () => {
           videos={videos}
           isOwner={!!isOwner}
           sellerVerified={sellerIdentityVerified}
+          paypalBusinessVerified={paypalBusinessVerified}
           ratingData={ratingData}
           onShare={handleShare}
         />

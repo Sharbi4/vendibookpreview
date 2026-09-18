@@ -36,6 +36,7 @@ interface SaleListingLayoutProps {
   videos: string[];
   isOwner: boolean;
   sellerVerified: boolean;
+  paypalBusinessVerified: boolean;
   ratingData?: { average: number; count: number } | null;
   onShare: () => void;
 }
@@ -60,6 +61,7 @@ export const SaleListingLayout = ({
   videos,
   isOwner,
   sellerVerified,
+  paypalBusinessVerified,
   ratingData,
   onShare,
 }: SaleListingLayoutProps) => {
@@ -182,6 +184,7 @@ export const SaleListingLayout = ({
             host={host}
             isOwner={isOwner}
             sellerVerified={sellerVerified}
+            paypalBusinessVerified={paypalBusinessVerified}
             ratingData={ratingData}
             instanceId="mobile"
           />
@@ -241,6 +244,7 @@ export const SaleListingLayout = ({
                 host={host}
                 isOwner={isOwner}
                 sellerVerified={sellerVerified}
+                paypalBusinessVerified={paypalBusinessVerified}
                 ratingData={ratingData}
               />
             </div>
