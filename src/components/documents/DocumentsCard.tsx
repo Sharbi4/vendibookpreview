@@ -169,9 +169,14 @@ export function DocumentsCard({ scope, title = 'Documents' }: { scope: DocumentS
                       <span className="self-center text-xs text-muted-foreground">You have signed</span>
                     )}
                     {complete && (
-                      <Button size="sm" variant="outline" onClick={() => downloadSigned(doc)} disabled={busy === doc.id}>
-                        {busy === doc.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Download className="h-4 w-4 mr-1" /> Signed PDF</>}
-                      </Button>
+                      <>
+                        <Button size="sm" variant="outline" onClick={() => openPreview(doc)} disabled={busy === doc.id}>
+                          {busy === doc.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Eye className="h-4 w-4 mr-1" /> Preview</>}
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => downloadSigned(doc)} disabled={busy === doc.id}>
+                          <Download className="h-4 w-4 mr-1" /> Download
+                        </Button>
+                      </>
                     )}
                   </div>
                 </div>
