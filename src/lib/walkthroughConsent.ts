@@ -83,6 +83,7 @@ export async function requestLocationPermission(): Promise<PermissionState> {
 
 export type ConsentRecord = {
   walkthroughId?: string | null;
+  meetingType?: string | null;
   camera: PermissionState;
   microphone: PermissionState;
   locationRequired: boolean;
@@ -98,8 +99,10 @@ export async function recordWalkthroughConsent(userId: string, record: ConsentRe
   const { error } = await (supabase.from('video_walkthrough_consents') as any).insert({
     user_id: userId,
     walkthrough_id: record.walkthroughId ?? null,
+    meeting_type: record.meetingType ?? 'listing_walkthrough',
     consent_type: 'video_walkthrough_join',
-    consent_version: `terms:${WALKTHROUGH_TERMS_VERSION}|privacy:${DEVICE_PRIVACY_VERSION}`,
+    consent_version: `terms:${WALKTHROUGH_TERMS_VERSION}|privacy:${DEVICE_PRIVACY_VERSION}|recording:${RECORDING_CONSENT_VERSION}`,
+    recording_consent_version: RECORDING_CONSENT_VERSION,
     source: 'web',
     route: typeof window !== 'undefined' ? window.location.pathname : null,
     user_agent: typeof navigator !== 'undefined' ? navigator.userAgent.slice(0, 500) : null,
