@@ -267,7 +267,7 @@ const PurchaseStepInfo = ({
             </div>
           </div>
         </div>
-        )}
+
 
         {/* Delivery Instructions */}
         {showDeliveryInstructions && (
