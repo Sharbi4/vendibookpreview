@@ -11,7 +11,7 @@ import { toast } from 'sonner';
 
 type Slot={starts_at:string;ends_at:string;seller_timezone:string};
 export default function WalkthroughSchedule(){
- const {listingId}=useParams(); const [search]=useSearchParams(); const navigate=useNavigate(); const {user,loading:authLoading}=useAuth(); const rescheduleId=search.get('reschedule');
+ const {listingId}=useParams(); const [search]=useSearchParams(); const navigate=useNavigate(); const {user,isLoading:authLoading}=useAuth(); const rescheduleId=search.get('reschedule');
  const [listing,setListing]=useState<any>(); const [slots,setSlots]=useState<Slot[]>([]); const [selected,setSelected]=useState(''); const [topics,setTopics]=useState<string[]>([]); const [note,setNote]=useState(''); const [loading,setLoading]=useState(true); const [saving,setSaving]=useState(false);
  useEffect(()=>{if(!user||!listingId)return; trackEventToDb('walkthrough_scheduling_started','video_walkthrough',{},listingId); const from=new Date(),to=new Date(Date.now()+31*864e5); Promise.all([(supabase.from('listings') as any).select('id,title,cover_image_url,city,state,host_id,host:profiles!listings_host_id_fkey(full_name,display_name,business_name,identity_verified)').eq('id',listingId).single(),(supabase.rpc as any)('get_video_walkthrough_slots',{_listing_id:listingId,_from:from.toISOString(),_to:to.toISOString()})]).then(([l,s])=>{setListing(l.data);setSlots(s.data||[]);setLoading(false);});},[user,listingId]);
  const days=useMemo(()=>Object.entries(slots.reduce((a:Record<string,Slot[]>,s)=>{const k=new Date(s.starts_at).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'});(a[k]||=[]).push(s);return a;},{})),[slots]);
