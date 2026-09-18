@@ -119,6 +119,8 @@ const AdminVerifiedSellers = lazy(() => import("./pages/AdminVerifiedSellers"));
 const OrderDetail = lazy(() => import("./pages/OrderDetail"));
 const HandoffPage = lazy(() => import("./pages/HandoffPage"));
 const DriverHandoff = lazy(() => import("./pages/DriverHandoff"));
+const DeliveryMode = lazy(() => import("./pages/DeliveryMode"));
+
 
 const AdminDigest = lazy(() => import("./pages/AdminDigest"));
 const AdminOrchestration = lazy(() => import("./pages/AdminOrchestration"));
@@ -424,6 +426,8 @@ const AnimatedRoutes = () => {
           <Route path="/orders/:orderId/payment" element={<PageTransition><OrderDetail /></PageTransition>} />
           <Route path="/handoff/:kind/:id" element={<PageTransition><HandoffPage /></PageTransition>} />
           <Route path="/driver/:token" element={<PageTransition><DriverHandoff /></PageTransition>} />
+          <Route path="/delivery/:kind/:id" element={<PageTransition><DeliveryMode /></PageTransition>} />
+
           <Route path="/admin/payouts" element={<PageTransition><AdminPayouts /></PageTransition>} />
           <Route path="/admin/freight" element={<PageTransition><AdminFreightRequests /></PageTransition>} />
           <Route path="/admin/users" element={<PageTransition><AdminUsers /></PageTransition>} />

@@ -19,7 +19,27 @@ export interface FulfillmentSession {
   started_at: string | null;
   arrived_at: string | null;
   completed_at: string | null;
+  // Live delivery tracking
+  tracking_active?: boolean;
+  tracking_paused?: boolean;
+  assigned_driver_user_id?: string | null;
+  tracking_started_at?: string | null;
+  tracking_ended_at?: string | null;
+  delivered_at?: string | null;
+  last_latitude?: number | string | null;
+  last_longitude?: number | string | null;
+  last_accuracy_m?: number | string | null;
+  last_location_at?: string | null;
+  destination_label?: string | null;
+  destination_latitude?: number | string | null;
+  destination_longitude?: number | string | null;
+  route_distance_meters?: number | null;
+  route_duration_seconds?: number | null;
+  route_polyline?: string | null;
+  route_provider?: string | null;
+  route_updated_at?: string | null;
 }
+
 
 export interface HandoffSession {
   id: string;

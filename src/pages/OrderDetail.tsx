@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowRight, Loader2, LifeBuoy, RefreshCw } from 'lucide-react';
+import { ArrowRight, Loader2, LifeBuoy, RefreshCw, Truck } from 'lucide-react';
 import { useOrderDetail, recoverOrderPayment } from '@/hooks/useOrderDetail';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +9,8 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import SEO from '@/components/SEO';
 import OrderEvidenceSection from '@/components/handoff/OrderEvidenceSection';
+import DeliveryTrackingPanel from '@/components/delivery/DeliveryTrackingPanel';
+
 
 const money = (cents: number, currency = 'USD') =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency }).format((cents ?? 0) / 100);
@@ -155,6 +157,33 @@ const OrderDetailPage = () => {
               )}
             </dl>
           </Card>
+
+          <DeliveryTrackingPanel
+            saleTransactionId={(order as any).links?.sale_transaction_id ?? null}
+            bookingId={(order as any).links?.booking_request_id ?? null}
+            fulfillmentType={order.fulfillment.type}
+          />
+
+          {order.viewer_role !== 'buyer' && ['rental_delivery','equipment_delivery','shipping'].includes(order.fulfillment.type) && (
+            <Card className="flex flex-wrap items-center justify-between gap-3 p-4 sm:p-5">
+              <div>
+                <p className="font-medium">Delivering this order yourself?</p>
+                <p className="text-sm text-muted-foreground">
+                  Open Delivery mode to share live location with the buyer while you're on the road.
+                </p>
+              </div>
+              <Button asChild size="sm" variant="outline">
+                <Link
+                  to={`/delivery/${(order as any).links?.sale_transaction_id ? 'sale' : 'booking'}/${
+                    (order as any).links?.sale_transaction_id ?? (order as any).links?.booking_request_id
+                  }`}
+                >
+                  <Truck className="mr-2 h-4 w-4" /> Open delivery mode
+                </Link>
+              </Button>
+            </Card>
+          )}
+
 
           <Card className="p-4 sm:p-5">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
