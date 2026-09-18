@@ -43,6 +43,7 @@ export default function DeliveryModePanel({
   const session = (sessionOverride as FulfillmentSession | null) ?? hookSession;
   const sessionId = sessionIdOverride ?? session?.id ?? null;
   const refresh = onChanged ?? hookRefresh;
+  const { user } = useAuth();
 
 
   const [consent, setConsent] = useState(false);
