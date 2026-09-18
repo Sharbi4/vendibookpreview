@@ -3373,26 +3373,27 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
 .checkout-agreement-reader-body p, .checkout-agreement-reader-body li { margin: 6px 0; }
 .checkout-agreement-reader-body ul, .checkout-agreement-reader-body ol { padding-left: 18px; list-style: disc; }
 
-.checkout-financing-banner { display: grid; grid-template-columns: auto minmax(180px, 1fr) auto; align-items: center; gap: 9px 16px; border-radius: 12px; background: hsl(240 6% 8%); padding: 14px 16px 11px; color: hsl(36 30% 96%); }
+.checkout-financing-banner { display: grid; grid-template-columns: auto minmax(180px, 1fr) auto; align-items: center; gap: 8px 16px; max-height: 120px; overflow: hidden; border-radius: 12px; background: hsl(240 6% 8%); padding: 13px 16px 10px; color: hsl(36 30% 96%); }
 .checkout-financing-mark { display: grid; place-items: center; flex: 0 0 auto; }
 .checkout-financing-copy { flex: 1 1 220px; min-width: 200px; }
 .checkout-financing-copy span { display: block; font-size: 10.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; opacity: .68; }
-.checkout-financing-copy strong { display: block; margin-top: 4px; font-size: 15.5px; font-weight: 640; }
+.checkout-financing-copy strong { display: block; margin-top: 3px; font-size: 15.5px; font-weight: 640; }
 .checkout-financing-copy p { display: none; }
-.checkout-financing-actions { display: grid; gap: 6px; justify-items: stretch; flex: 0 0 auto; }
+.checkout-financing-actions { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
 .checkout-financing-cta { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 42px; padding: 0 18px; border-radius: 9px; background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); font-size: 13.5px; font-weight: 680; white-space: nowrap; }
 .checkout-financing-cta svg { width: 14px; height: 14px; }
-.checkout-financing-link { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 34px; font-size: 12.5px; font-weight: 560; color: hsl(36 30% 96% / .78); }
+.checkout-financing-link { display: inline-flex; align-items: center; justify-content: center; gap: 5px; min-height: 30px; font-size: 11.5px; font-weight: 560; color: hsl(36 30% 96% / .78); }
 .checkout-financing-link svg { width: 13px; height: 13px; }
 .checkout-financing-link:disabled { opacity: .6; }
-.checkout-financing-note { grid-column: 1 / -1; font-size: 10.5px; line-height: 1.35; opacity: .6; }
-.checkout-financing-compact { display: grid; grid-template-columns: 1fr auto; align-items: center; gap: 5px 10px; border: 1px solid hsl(var(--v2-line-strong)); border-radius: 10px; background: hsl(240 6% 8%); padding: 11px 12px; color: hsl(36 30% 96%); }
-.checkout-financing-compact > svg, .checkout-financing-compact > img { grid-column: 1 / -1; }
+.checkout-financing-note { grid-column: 2 / -1; font-size: 10px; line-height: 1.3; opacity: .6; }
+.checkout-financing-compact { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 8px; border: 1px solid hsl(var(--v2-line-strong)); border-radius: 10px; background: hsl(240 6% 8%); padding: 11px 12px; color: hsl(36 30% 96%); }
+.checkout-financing-compact > svg, .checkout-financing-compact > img { grid-column: auto; }
 .checkout-financing-compact p { font-size: 12px; line-height: 1.3; opacity: .82; }
-.checkout-financing-compact a { justify-self: start; font-size: 12.5px; font-weight: 640; text-decoration: underline; text-underline-offset: 3px; }
+.checkout-financing-compact a { justify-self: end; font-size: 12.5px; font-weight: 640; white-space: nowrap; text-decoration: underline; text-underline-offset: 3px; }
 @media (max-width: 760px) {
   .checkout-financing-banner { grid-template-columns: 1fr; }
-  .checkout-financing-actions { justify-items: start; width: 100%; }
+  .checkout-financing-banner { max-height: none; }
+  .checkout-financing-actions { align-items: stretch; flex-direction: column; width: 100%; }
   .checkout-financing-cta { width: 100%; }
 }
 
