@@ -8,7 +8,9 @@
 export const LEGAL_VERSIONS = {
   "terms-of-service": "2026-09-18",
   "privacy-policy": "2026-09-18",
-  "payments-terms": "2026-09-18",
+  "payments-terms": "2026-09-18b",
+  "seller-payment-terms": "2026-09-18",
+  "esign": "2026-09-18",
   "handoff-terms": "2026-09-18",
   "financing-disclosure": "2026-09-18",
   "video-walkthrough-terms": "2026-09-18b",
