@@ -898,6 +898,28 @@ const SaleCheckout = () => {
   const humanizeCategory = (value?: string | null) =>
     value ? value.replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase()) : null;
 
+  const railExtras = (
+    <div className="v2-rail-extras">
+      <div className="v2-rail-paypal">
+        <PayPalWordmark className="h-4" />
+        {currentStep === 5 ? (
+          <p><strong>You're ready to pay</strong></p>
+        ) : (
+          <p>
+            <strong>Pay securely through PayPal</strong>
+            <span>Available payment methods appear in the final step.</span>
+          </p>
+        )}
+      </div>
+      <p className="v2-rail-agreement">
+        <Link to="/legal/purchase-agreement" target="_blank" rel="noreferrer">
+          Vendibook Purchase Agreement
+        </Link>
+      </p>
+      <PostPaymentTimeline mode="sale" fulfillment={fulfillmentSelected} />
+    </div>
+  );
+
   const summaryContent = (
     <ListingCheckoutSummary
       imageUrl={coverImage}
