@@ -61,11 +61,11 @@ export default function V2HomeHero({ slides }: { slides: V2CardListing[] }) {
   return (
     <section className="v2-home-hero">
       <div className="v2-home-hero-copy">
-        <p className="v2-home-eyebrow">The marketplace for mobile food businesses</p>
+        <p className="v2-home-eyebrow">Buy, rent, and sell in the mobile food market</p>
         <h1 className="sr-only">Vendibook — buy, sell, and rent food trucks, trailers, and kitchens</h1>
         <img className="v2-home-hero-logo" src={vendibookHeroLogo.url} alt="Vendibook" />
         <p className="v2-home-lede">
-          Real inventory nationwide, secure checkout, and easy financing.*
+          Find food trucks, trailers, kitchens, and vendor spaces nationwide—with secure checkout and financing options where available.
         </p>
         <p className="v2-home-finance-legal">
           *Financing is offered by third-party lenders and is subject to application, approval, and lender terms. Vendibook is not a lender.
@@ -97,8 +97,8 @@ export default function V2HomeHero({ slides }: { slides: V2CardListing[] }) {
             className="v2-home-list-free"
           >
             <span>
-              <small>For owners and dealers</small>
-              <strong>List for free</strong>
+              <small>Have equipment to sell or rent?</small>
+              <strong>Create a free listing</strong>
             </span>
             <ArrowUpRight aria-hidden="true" />
           </Link>

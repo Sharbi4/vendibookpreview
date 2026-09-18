@@ -29,9 +29,9 @@ export default function WorkspacePayments() {
     <WorkspaceShell>
       <div className="v2-page-stack">
         <header className="v2-page-heading">
-          <p className="v2-eyebrow">Money center</p>
-          <h1>Payments</h1>
-          <p>Your payment setup, earnings, purchases, receipts, charges, and disputes.</p>
+          <p className="v2-eyebrow">Payments</p>
+          <h1>Money center</h1>
+          <p>Manage PayPal setup, earnings, purchases, receipts, and disputes.</p>
         </header>
 
         <section className="v2-paypal-module">
@@ -48,10 +48,9 @@ export default function WorkspacePayments() {
           <div className="v2-paypal-body">
             <h2>Accept secure online payments</h2>
             <p>
-              Connect PayPal to let qualified buyers pay through Vendibook. Eligible marketplace
-              payments are processed through your connected PayPal Business account, and
-              Vendibook&apos;s platform fee is handled automatically by the approved PayPal Partner
-              flow. You can create and publish listings before connecting.
+              Connect PayPal to accept online checkout on eligible listings. Your connection status,
+              earnings, receipts, and payment activity stay organized here. You can create and
+              publish listings before connecting.
             </p>
             <SellerBusinessAccountHelp className="mt-3" compact />
             <p className="mt-3 text-xs">
@@ -59,7 +58,7 @@ export default function WorkspacePayments() {
               charged by PayPal to you as the seller. See PayPal for current pricing.
             </p>
             <Link to="/dashboard/payments/setup" className="v2-paypal-cta mt-4 inline-flex w-fit">
-              Open payment setup
+              Set up PayPal
             </Link>
           </div>
           <SellerPayPalConnect showWhenDisabled variant="dark" />

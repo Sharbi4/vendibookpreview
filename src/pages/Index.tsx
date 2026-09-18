@@ -15,7 +15,6 @@ import SEO, { generateOrganizationSchema, generateWebSiteSchema } from '@/compon
 import JsonLd from '@/components/JsonLd';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import SellerBusinessAccountHelp from '@/components/payments/SellerBusinessAccountHelp';
 
 import vendibookWordmark from '@/assets/vendibook-wordmark.png';
 import equinoxLogoAsset from '@/assets/equinox-funding-dark.png.asset.json';
@@ -25,9 +24,9 @@ import paypalBannerAsset from '@/assets/paypal-banner.png.asset.json';
 const ROW_LIMIT = 8;
 
 const SELLER_STEPS = [
-  { title: 'Create your account', body: 'Sign up free in under a minute — no listing fees to get started.' },
-  { title: 'Add your food truck', body: 'Photos, specs, price and location. Our guided wizard walks you through it.' },
-  { title: 'Publish and get paid', body: 'Go live to buyers nationwide, then connect PayPal when you want online checkout.' },
+  { title: 'Create your account', body: 'Get started and build your seller profile.' },
+  { title: 'Build your listing', body: 'Add photos, equipment details, price, and location.' },
+  { title: 'Go live', body: 'Publish, respond to buyers, and connect PayPal when you want online checkout.' },
 ];
 
 type ListingCategory = 'food_truck' | 'food_trailer' | 'ghost_kitchen' | 'vendor_lot' | 'vendor_space';
@@ -67,18 +66,18 @@ const fetchFeaturedListings = async () => {
 const TRUST_POINTS = [
   {
     icon: Wallet,
-    title: 'Secure PayPal checkout',
-    body: 'Secure payments through PayPal, with transaction records kept in Vendibook.',
+    title: 'Pay online with PayPal',
+    body: 'Eligible listings can offer secure checkout through PayPal.',
   },
   {
     icon: ShieldCheck,
-    title: 'Reviewed listings',
-    body: 'Every listing is reviewed before it goes live, with optional seller identity checks.',
+    title: 'See the details that matter',
+    body: 'Photos, equipment details, pricing, location, seller profiles, and available trust signals in one place.',
   },
   {
     icon: Truck,
-    title: 'Delivery and freight',
-    body: 'Arrange pickup, seller delivery, or nationwide freight right inside checkout.',
+    title: 'Keep the deal moving',
+    body: 'Message, schedule a video walkthrough, arrange the handoff, and keep transaction details together.',
   },
 ];
 
@@ -117,7 +116,7 @@ const Index = () => {
     <div className="min-h-screen flex flex-col v2-home">
       <SEO
         title="Buy & Rent Food Trucks and Food Trailers | Vendibook"
-        description="Browse food trucks and food trailers nationwide with detailed listings, secure PayPal checkout, optional seller identity verification, and equipment financing options."
+        description="Buy, rent, and sell food trucks, food trailers, commercial kitchens, and vendor spaces nationwide on Vendibook, with PayPal checkout and financing options where available."
         canonical="/"
       />
       <JsonLd schema={[generateOrganizationSchema(), generateWebSiteSchema()]} />
@@ -130,27 +129,27 @@ const Index = () => {
           <Link to="/payments" className="v2-home-paypal">
             <span className="v2-home-paypal-mark"><img src={paypalBannerAsset.url} alt="PayPal" /></span>
             <span className="v2-home-paypal-copy">
-              <strong>Vendibook × PayPal — Payments and Payouts.</strong>
-              <small>We accept PayPal and Venmo for secure checkout on Vendibook.</small>
+              <strong>Pay with PayPal on Vendibook</strong>
+              <small>Secure online checkout is available on eligible listings.</small>
             </span>
-            <span className="v2-home-paypal-cta">Learn more<ArrowRight aria-hidden="true" /></span>
+            <span className="v2-home-paypal-cta">How payments work<ArrowRight aria-hidden="true" /></span>
           </Link>
 
 
           <Link to="/financing" className="v2-home-financing">
             <span className="v2-home-financing-copy">
               <span className="v2-home-financing-eyebrow">For sellers</span>
-              <strong>Find more buyers by offering financing when you list on Vendibook.</strong>
-              <small>Listings that offer financing reach buyers who need it — at no extra work for you. Financing is provided by third-party lenders, subject to application and approval. Vendibook is not a lender.</small>
+              <strong>Help more buyers say yes.</strong>
+              <small>Add financing options to eligible listings through third-party funding partners. Financing is subject to application, approval, and lender terms. Vendibook is not a lender.</small>
             </span>
-            <span className="v2-home-financing-cta">Learn more<ArrowRight aria-hidden="true" /></span>
+            <span className="v2-home-financing-cta">See financing options<ArrowRight aria-hidden="true" /></span>
           </Link>
 
-          <V2ListingRow title="Featured on Vendibook" subtitle="Standout trucks and trailers getting extra visibility." listings={featuredQuery.data ?? []} isLoading={featuredQuery.isLoading} viewAllHref="/search" viewAllLabel="Browse marketplace" priority featured />
+          <V2ListingRow title="Featured on Vendibook" subtitle="Listings getting extra visibility right now." listings={featuredQuery.data ?? []} isLoading={featuredQuery.isLoading} viewAllHref="/search" viewAllLabel="Browse marketplace" priority featured />
 
           <V2ListingRow
             title="Food trucks and trailers for sale"
-            subtitle="Recently listed by owners and dealers."
+            subtitle="Fresh inventory from owners and dealers nationwide."
             listings={saleQuery.data ?? []}
             isLoading={saleQuery.isLoading}
             viewAllHref="/search?mode=sale&category=food_truck%2Cfood_trailer"
@@ -160,7 +159,7 @@ const Index = () => {
 
           <V2ListingRow
             title="Available to rent"
-            subtitle="Trucks, trailers, and commercial kitchens you can book by the day."
+            subtitle="Food trucks, trailers, kitchens, and spaces ready for your next move."
             listings={rentQuery.data ?? []}
             isLoading={rentQuery.isLoading}
             viewAllHref="/search?mode=rent"
@@ -168,7 +167,7 @@ const Index = () => {
           />
 
           <section className="v2-home-section">
-            <header className="v2-home-section-head"><div><p className="v2-home-eyebrow">Why Vendibook</p><h2>Built for mobile food businesses.</h2></div></header>
+            <header className="v2-home-section-head"><div><p className="v2-home-eyebrow">Why Vendibook</p><h2>Built for how mobile food deals actually happen.</h2></div></header>
             <div className="v2-home-trust">
               {TRUST_POINTS.map((point) => (
                 <article key={point.title}>
@@ -183,16 +182,12 @@ const Index = () => {
           <section className="v2-home-section" id="start-selling">
             <div className="v2-home-sell">
               <div>
-                <p className="v2-home-eyebrow">Start selling on Vendibook</p>
-                <h2>List your food truck in three steps.</h2>
-                <p>
-                  Create your Vendibook account, add your truck, and publish. When you're ready
-                  for online payments, connect PayPal and make your listing transaction-ready.
-                </p>
-                <SellerBusinessAccountHelp className="v2-home-sell-note" compact />
+                <p className="v2-home-eyebrow">Sell on Vendibook</p>
+                <h2>Turn your truck or trailer into a live listing.</h2>
+                <p>Create your listing, reach buyers nationwide, and add online checkout when you're ready.</p>
                 <div className="v2-home-sell-actions">
                   <Link to={sellerStartHref} className="v2-home-btn">
-                    {user ? 'List your food truck' : 'Create your seller account'}
+                    {user ? 'Create a listing' : 'Start selling'}
                     <ArrowRight aria-hidden="true" />
                   </Link>
                   <Link to="/pricing" className="v2-home-btn is-quiet">
@@ -220,27 +215,27 @@ const Index = () => {
           </section>
 
           <section className="v2-home-editorial">
-            <div className="v2-home-editorial-intro"><p className="v2-home-eyebrow">A marketplace that knows the category</p><h2>Find the right fit—not just the closest listing.</h2></div>
+            <div className="v2-home-editorial-intro"><p className="v2-home-eyebrow">Built for this market</p><h2>More than a classifieds page.</h2></div>
             <div className="v2-home-editorial-grid">
-              <article><BadgeCheck /><h3>See serious inventory</h3><p>Real photos, useful specs, price, and location up front.</p></article>
-              <article><Map /><h3>Go beyond your zip code</h3><p>Explore financing, delivery, and freight options where available.</p></article>
-              <article><MessageSquare /><h3>Move with confidence</h3><p>Seller profiles, completed trust signals, messages, offers, and transaction records.</p></article>
+              <article><BadgeCheck /><h3>Compare what matters</h3><p>See photos, specs, pricing, location, and seller details before you reach out.</p></article>
+              <article><Map /><h3>Shop beyond your city</h3><p>Explore equipment nationwide, with financing and delivery options where available.</p></article>
+              <article><MessageSquare /><h3>Keep the deal organized</h3><p>Messages, walkthroughs, offers, agreements, and transaction records stay connected.</p></article>
             </div>
           </section>
 
           <section className="v2-home-tools">
-            <header className="v2-home-section-head"><div><p className="v2-home-eyebrow">Tools to help you make the move</p><h2>From valuation to delivery.</h2></div></header>
+            <header className="v2-home-section-head"><div><p className="v2-home-eyebrow">Tools for the next step</p><h2>Price it. Finance it. Move it.</h2></div></header>
             <div className="v2-home-tools-grid">
-              <Link to="/tools/pricepilot"><Gauge /><span><strong>Price your equipment</strong><small>Use PricePilot for a market-backed pricing range.</small></span><ArrowRight /></Link>
+              <Link to="/tools/pricepilot"><Gauge /><span><strong>Price your equipment</strong><small>See a market-backed pricing range.</small></span><ArrowRight /></Link>
               <Link to="/financing"><Landmark /><span><strong>Explore financing</strong><small>See third-party equipment financing options.</small></span><ArrowRight /></Link>
-              <Link to="/vendibook-freight"><Truck /><span><strong>Plan shipping</strong><small>Request help moving eligible equipment.</small></span><ArrowRight /></Link>
+              <Link to="/vendibook-freight"><Truck /><span><strong>Plan delivery</strong><small>Get help moving eligible equipment.</small></span><ArrowRight /></Link>
             </div>
           </section>
 
           <section className="v2-home-partners" aria-label="Transaction support">
             <div className="v2-home-partners-copy">
               <p className="v2-home-eyebrow">Transaction support</p>
-              <h2>Built to help you move from listing to deal.</h2>
+              <h2>The tools behind the deal.</h2>
             </div>
             <div className="v2-home-partner-tiles">
               <article>
@@ -249,19 +244,19 @@ const Index = () => {
               </article>
               <article className="v2-home-partner-tile--dark">
                 <span className="v2-home-partner-mark"><img src={equinoxLogoAsset.url} alt="Equinox Funding" /></span>
-                <small>Financing options</small>
+                <small>Equipment financing</small>
               </article>
               <article>
                 <span className="v2-home-partner-mark"><img src={vendibookWordmark} alt="Vendibook" /></span>
-                <small>Marketplace records &amp; support</small>
+                <small>Marketplace tools &amp; records</small>
               </article>
             </div>
           </section>
 
 
           <section className="v2-home-final">
-            <div><p className="v2-home-eyebrow">Ready when you are</p><h2>Find your next mobile food business asset.</h2></div>
-            <div><Link to="/search" className="v2-home-btn">Browse listings<ArrowRight /></Link><Link to="/list" className="v2-home-link">Create a listing</Link></div>
+            <div><p className="v2-home-eyebrow">Ready when you are</p><h2>Find your next truck, trailer, kitchen, or space.</h2></div>
+            <div><Link to="/search" className="v2-home-btn">Browse marketplace<ArrowRight /></Link><Link to="/list" className="v2-home-link">List an asset</Link></div>
           </section>
         </div>
       </main>
