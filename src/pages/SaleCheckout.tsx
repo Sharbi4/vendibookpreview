@@ -7,7 +7,6 @@ import { computeDeliveryFee, deliveryRateLabel, normalizeDeliveryFeeType } from 
 import { useToast } from '@/hooks/use-toast';
 import { useFreightEstimate } from '@/hooks/useFreightEstimate';
 import { supabase } from '@/integrations/supabase/client';
-import ProtectionDisclosure from '@/components/checkout/ProtectionDisclosure';
 import { parseEdgeError } from '@/lib/edgeErrors';
 import { checkoutErrorCopy } from '@/lib/checkoutErrorCopy';
 import { validators } from '@/components/ui/validated-input';
@@ -1151,14 +1150,6 @@ const SaleCheckout = () => {
           </>
         ) : null}
 
-        <ProtectionDisclosure
-          category={listing?.category ?? null}
-          mode="sale"
-          soldAsBusiness={/turnkey|business (for sale|included|opportunity)/i.test(
-            `${listing?.title ?? ''} ${listing?.description ?? ''}`,
-          )}
-          fulfillment={fulfillmentSelected}
-        />
       </div>
     );
   })();

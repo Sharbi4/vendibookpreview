@@ -79,7 +79,6 @@ import { recordCheckoutAgreements } from '@/lib/legal/recordCheckoutAgreements';
 import { useLegalDocument } from '@/hooks/useLegalDocument';
 import { CONSENT_TRIGGERS, DOCUMENT_TYPES } from '@/lib/legalDocuments';
 import { loadPayPalSdk } from '@/lib/paypalClient';
-import ProtectionDisclosure from '@/components/checkout/ProtectionDisclosure';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'on_site';
 
@@ -953,7 +952,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
       ? [{
           label: 'Security deposit (held)',
           value: formatCurrency(depositAmount),
-          note: 'Charged today, held by Vendibook, and refunded (minus any damages or fees) after your rental.',
+          note: 'Charged today and shown in your booking record. Refunds follow the accepted rental terms.',
           muted: true,
         }]
       : []),
@@ -1334,12 +1333,6 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
                 processed by PayPal; Vendibook does not hold or control your funds.
               </p>
             </div>
-
-            <ProtectionDisclosure
-              category={listing?.category ?? null}
-              mode="rent"
-              fulfillment={fulfillmentSelected}
-            />
 
             <div>
               <h3 className="text-sm font-semibold text-foreground">Agreements</h3>
