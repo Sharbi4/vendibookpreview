@@ -188,7 +188,7 @@ export default function WalkthroughNextSteps() {
             </Link>
           )}
           <Link className="wn-action" to="/dashboard/saved"><Heart /> Saved listings</Link>
-          <Link className="wn-action" to={listing?.mode === 'sale' ? '/buy' : '/rent'}><Search /> Browse similar listings</Link>
+          <Link className="wn-action" to={`/browse?mode=${listing?.mode === 'sale' ? 'sale' : 'rent'}`}><Search /> Browse similar listings</Link>
         </>
       )}
     </div>
