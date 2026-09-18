@@ -10308,7 +10308,8 @@ export type Database = {
           expires_at: string
           provider: string
           room_name: string
-          room_url: string
+          room_url: string | null
+          scheduled_starts_at: string | null
           updated_at: string
           walkthrough_id: string
         }
@@ -10318,7 +10319,8 @@ export type Database = {
           expires_at: string
           provider?: string
           room_name: string
-          room_url: string
+          room_url?: string | null
+          scheduled_starts_at?: string | null
           updated_at?: string
           walkthrough_id: string
         }
@@ -10328,7 +10330,8 @@ export type Database = {
           expires_at?: string
           provider?: string
           room_name?: string
-          room_url?: string
+          room_url?: string | null
+          scheduled_starts_at?: string | null
           updated_at?: string
           walkthrough_id?: string
         }
