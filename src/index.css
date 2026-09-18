@@ -2909,3 +2909,23 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
 .walkthrough-call-page .wc-gate h1,.walkthrough-call-page .wc-gate h2,.walkthrough-call-page .wc-gate strong{color:hsl(var(--v2-ink))}
 .walkthrough-call-page .wc-gate .wc-check{color:hsl(var(--v2-ink))}
 @media (max-width:520px){.walkthrough-call-page .wc-gate{padding:20px 16px;border-radius:14px}}
+/* Meeting room link on the walkthrough confirmation page */
+.walkthrough-roomlink{display:grid;gap:8px;border:1px solid hsl(var(--v2-line));border-radius:12px;padding:13px;background:hsl(var(--v2-surface))}
+.walkthrough-roomlink>span{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:hsl(var(--v2-stone))}
+.walkthrough-roomlink code{font-size:12px;word-break:break-all;color:hsl(var(--v2-ink))}
+.walkthrough-roomlink button{display:inline-flex;align-items:center;justify-content:center;gap:7px;min-height:40px;border:1px solid hsl(var(--v2-line-strong));border-radius:10px;font-size:13px;font-weight:600}
+.walkthrough-roomlink button svg{width:15px}
+.walkthrough-roomlink small{color:hsl(var(--v2-stone));font-size:12px}
+/* Available days and times on the scheduling page */
+.walkthrough-daypicker{display:flex;gap:9px;overflow-x:auto;padding:4px 0 10px;scrollbar-width:none}
+.walkthrough-daypicker::-webkit-scrollbar{display:none}
+.walkthrough-daypicker button{display:grid;gap:2px;flex:0 0 auto;min-width:104px;border:1px solid hsl(var(--v2-line));border-radius:12px;padding:10px 12px;text-align:left;background:hsl(var(--v2-surface))}
+.walkthrough-daypicker button strong{font-size:13px}
+.walkthrough-daypicker button small{font-size:11px;color:hsl(var(--v2-stone))}
+.walkthrough-daypicker button.is-selected{border-color:hsl(var(--v2-ink));background:hsl(var(--v2-ink));color:hsl(var(--v2-paper))}
+.walkthrough-daypicker button.is-selected small{color:hsl(var(--v2-paper)/.75)}
+.walkthrough-timegrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(88px,1fr));gap:8px;max-height:260px;overflow-y:auto}
+.walkthrough-timegrid button{min-height:42px;border:1px solid hsl(var(--v2-line));border-radius:10px;font-size:13px;font-weight:600;background:hsl(var(--v2-surface))}
+.walkthrough-timegrid button.is-selected{border-color:hsl(var(--v2-ink));background:hsl(var(--v2-ink));color:hsl(var(--v2-paper))}
+.walkthrough-schedule-grid>*,.walkthrough-form,.walkthrough-form>div{min-width:0}
+.walkthrough-form textarea{width:100%;max-width:100%}
