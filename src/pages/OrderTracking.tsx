@@ -23,6 +23,8 @@ import SEO from '@/components/SEO';
 import { ReportIssueButton } from '@/components/support/ReportIssueButton';
 import { GetHelpWithOrder } from '@/components/trust/GetHelpWithOrder';
 import OrderChargesSummary from '@/components/orders/OrderChargesSummary';
+import PayPalEmbeddedPayment from '@/components/transaction/checkout/PayPalEmbeddedPayment';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 
 const SHIPPING_STATUS_CONFIG = {
@@ -949,7 +951,28 @@ const OrderTracking = () => {
           )}
         </div>
       </main>
-      
+
+      <Dialog open={freightPaymentOpen} onOpenChange={setFreightPaymentOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Pay for freight</DialogTitle>
+          </DialogHeader>
+          {transaction ? (
+            <PayPalEmbeddedPayment
+              target={{ kind: 'freight', id: transaction.id }}
+              listingHref={`/listing/${transaction.listing_id}`}
+              totalUsd={Number(transaction.freight_cost ?? 0)}
+              heading="Pay securely with PayPal"
+              intent="Your payment details are handled by PayPal. Freight details stay with this order."
+              onSuccess={() => {
+                setFreightPaymentOpen(false);
+                toast({ title: 'Freight payment received', description: 'Your order has been updated.' });
+              }}
+            />
+          ) : null}
+        </DialogContent>
+      </Dialog>
+
       <Footer />
     </div>
   );
