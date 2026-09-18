@@ -27,6 +27,18 @@ serve(async (req) => {
     const user = userData?.user;
     if (!user) return jsonError(401, "unauthenticated", "Your session expired. Please sign in again.");
 
+    // Legal gate at the execution layer: no purchase intent without a current
+    // Terms of Service and Payments Terms acceptance on file for this buyer.
+    for (const slug of ["terms-of-service", "payments-terms"] as const) {
+      if (!(await hasCurrentLegalAcceptance(admin, user.id, slug))) {
+        return jsonError(
+          403,
+          "legal_acceptance_required",
+          "Please tick the box agreeing to the Terms of Service, Payments Terms, and Privacy Policy before paying.",
+        );
+      }
+    }
+
     const body = await req.json().catch(() => ({}));
     const listingId = body?.listing_id ? String(body.listing_id) : null;
     if (!listingId) return jsonError(400, "missing_fields", "Missing listing id.");
