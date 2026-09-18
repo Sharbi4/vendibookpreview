@@ -109,8 +109,28 @@ const VideoWalkthroughTerms: React.FC = () => (
         <p>
           Participants may not record, screen-capture, live-stream, or redistribute a walkthrough
           themselves without the express consent of every participant and any consent required by
-          applicable law. Recording laws vary by state, and in some states every party must consent.
-          You are responsible for your own compliance.
+          applicable law. See section 5A on state recording law.
+        </p>
+      </Section>
+
+      <Section title="5A. State recording law">
+        <p>
+          Recording laws vary by state. Some states require only one party to a conversation to
+          consent. Other states require every participant to consent before audio is recorded.
+        </p>
+        <p>
+          If you record a walkthrough yourself — on your phone, with screen capture, or with any
+          other tool — you are responsible for your own compliance with the law that applies to you
+          and to the other participant. Vendibook LC does not provide legal advice and does not
+          determine which state's law applies to your call. If you are unsure, ask the other
+          participant on the call, out loud, before you record.
+        </p>
+        <p>
+          The same rules apply to photos and video captured at an in-person handoff. See the{' '}
+          <Link to="/legal/handoff-terms" className="underline">
+            Verified Handoff and Condition Evidence Terms
+          </Link>
+          .
         </p>
       </Section>
 
