@@ -178,17 +178,15 @@ const PurchaseStepInfo = ({
           />
         </div>
 
-        {/* Address Section — only when delivery/freight needs it */}
-        {hideAddress ? (
-          <div className="rounded-xl border border-border/70 bg-muted/30 p-4 text-sm text-muted-foreground">
-            Since you're picking up, we don't need a delivery address.
-          </div>
-        ) : (
+        {/* Contact address — always collected, separate from any delivery address */}
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <MapPin className="h-5 w-5 text-primary" />
-            <h3 className="font-semibold text-foreground">Your Address</h3>
+            <h3 className="font-semibold text-foreground">Your Contact Address</h3>
           </div>
+          <p className="text-sm text-muted-foreground -mt-2">
+            Used for your receipt and documents. This is not a delivery address.
+          </p>
 
           <ValidatedInput
             id="address1"
