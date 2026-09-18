@@ -114,6 +114,8 @@ const AdminUsers = lazy(() => import("./pages/AdminUsers"));
 const AdminMessages = lazy(() => import("./pages/AdminMessages"));
 const AdminVerifiedSellers = lazy(() => import("./pages/AdminVerifiedSellers"));
 const OrderDetail = lazy(() => import("./pages/OrderDetail"));
+const HandoffPage = lazy(() => import("./pages/HandoffPage"));
+const DriverHandoff = lazy(() => import("./pages/DriverHandoff"));
 
 const AdminDigest = lazy(() => import("./pages/AdminDigest"));
 const AdminOrchestration = lazy(() => import("./pages/AdminOrchestration"));
