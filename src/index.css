@@ -3247,3 +3247,59 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
 .handoff-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 26px; padding-top: 20px; border-top: 1px solid hsl(30 13% 86%); }
 @media (max-width: 720px) { .handoff-story { padding: 22px 16px; } .handoff-toggle { display: inline-flex; } .handoff-badge { order: -1; } }
 @media print { .handoff-selector, .handoff-toggle, .handoff-actions { display: none !important; } }
+
+/* ── Stage 1: Order review ─────────────────────────────────────── */
+.order-review { display: grid; gap: 16px; }
+.order-review > section {
+  border: 1px solid hsl(var(--v2-line, var(--border)));
+  border-radius: 18px;
+  background: hsl(var(--v2-surface, var(--card)));
+  padding: 18px 20px;
+}
+.order-review-asset { display: grid; grid-template-columns: 176px minmax(0, 1fr); gap: 18px; align-items: start; }
+.order-review-asset > img { width: 100%; height: 132px; object-fit: cover; border-radius: 14px; }
+.order-review-eyebrow {
+  display: inline-block; font-size: 11px; font-weight: 640; letter-spacing: 0.08em;
+  text-transform: uppercase; color: hsl(var(--v2-stone, var(--muted-foreground)));
+}
+.order-review-asset-body h2 { margin-top: 6px; font-size: 20px; line-height: 1.25; font-weight: 680; color: hsl(var(--v2-ink, var(--foreground))); }
+.order-review-seller, .order-review-location {
+  display: flex; align-items: center; gap: 6px; margin-top: 6px;
+  font-size: 13px; color: hsl(var(--v2-stone, var(--muted-foreground)));
+}
+.order-review-seller svg, .order-review-location svg { width: 14px; height: 14px; }
+.order-review-specs { display: flex; flex-wrap: wrap; gap: 8px 22px; margin-top: 12px; }
+.order-review-specs dt { font-size: 11px; letter-spacing: 0.05em; text-transform: uppercase; color: hsl(var(--v2-stone, var(--muted-foreground))); }
+.order-review-specs dd { font-size: 13.5px; font-weight: 600; color: hsl(var(--v2-ink, var(--foreground))); }
+.order-review-price { margin-top: 14px; }
+.order-review-price strong { display: block; font-size: 26px; font-weight: 700; letter-spacing: -0.02em; color: hsl(var(--v2-ink, var(--foreground))); }
+.order-review-price span { display: block; margin-top: 2px; font-size: 12px; color: hsl(var(--v2-stone, var(--muted-foreground))); }
+.order-review-fulfillment { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+.order-review-fulfillment h3, .order-review-money h3 {
+  font-size: 12px; font-weight: 640; letter-spacing: 0.07em; text-transform: uppercase;
+  color: hsl(var(--v2-stone, var(--muted-foreground)));
+}
+.order-review-fulfillment p { margin-top: 6px; }
+.order-review-fulfillment strong { display: block; font-size: 15px; font-weight: 640; color: hsl(var(--v2-ink, var(--foreground))); }
+.order-review-fulfillment span { display: block; margin-top: 2px; font-size: 12.5px; color: hsl(var(--v2-stone, var(--muted-foreground))); }
+.order-review-money .v2-money { margin-top: 12px; }
+.order-review-money .v2-money-total { font-size: 17px; }
+.order-review-money .v2-money-total strong { font-size: 24px; letter-spacing: -0.02em; }
+.order-review-paypal {
+  display: flex; align-items: center; gap: 14px;
+  background: linear-gradient(180deg, #fbfcfd 0%, #eef0f3 100%);
+}
+.order-review-paypal strong { display: block; font-size: 13.5px; font-weight: 640; color: #1d2024; }
+.order-review-paypal span { display: block; margin-top: 2px; font-size: 12px; color: #5a6068; }
+.order-review-actions { display: flex; flex-direction: column; gap: 10px; margin-top: 4px; }
+.order-review-continue {
+  display: inline-flex; align-items: center; justify-content: center;
+  min-height: 52px; padding: 0 24px; border-radius: 14px;
+  font-size: 15px; font-weight: 640;
+}
+.order-review-back { align-self: center; min-height: 44px; display: inline-flex; align-items: center; }
+@media (max-width: 720px) {
+  .order-review-asset { grid-template-columns: minmax(0, 1fr); }
+  .order-review-asset > img { height: 190px; }
+  .order-review-fulfillment { flex-direction: column; align-items: flex-start; }
+}
