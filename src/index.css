@@ -2961,3 +2961,6 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
 .walkthrough-legal-links{margin-top:15px;padding-top:13px;border-top:1px solid hsl(var(--v2-line));font-size:12px;color:hsl(var(--v2-stone))}
 .walkthrough-legal-links a{text-decoration:underline;color:hsl(var(--v2-ink))}
 .wc-gate .wc-actions button[class*="border"]{background:transparent;border:1px solid hsl(var(--v2-line-strong));color:hsl(var(--v2-ink))}
+.v2-home-partner-tile--dark { background: hsl(var(--v2h-ink)) !important; }
+.v2-home-partner-tile--dark small { color: hsl(40 20% 88% / .72); }
+.v2-home-partner-tile--dark .v2-home-partner-mark img { max-width: 170px; }
