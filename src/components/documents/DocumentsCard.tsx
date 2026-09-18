@@ -102,8 +102,8 @@ export function DocumentsCard({
     );
   }
 
-  // Nothing yet and nothing to say about it — stay out of the way.
-  if (!docs.length && !preparing && !notice) return null;
+  // Nothing yet and nothing to say about it — stay out of the way when inline.
+  if (!docs.length && !preparing && !notice && whenEmpty === 'hide') return null;
 
   return (
     <>
