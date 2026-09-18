@@ -495,6 +495,8 @@ async function loadDomainRecord(
       fulfillmentStatus: t.shipping_status ?? t.status ?? null,
       details: {
         method: raw,
+        // Buyer's own contact address captured at checkout. Not a destination.
+        buyer_contact_address: formatBuyerAddress(t),
         delivery_address: t.delivery_address ?? null,
         delivery_instructions: t.delivery_instructions ?? null,
         delivery_fee_cents: t.delivery_fee != null ? Math.round(Number(t.delivery_fee) * 100) : null,
@@ -554,4 +556,12 @@ async function loadDomainRecord(
   }
 
   return empty;
+}
+
+/** Buyer's own contact address, joined for display. Never a delivery destination. */
+function formatBuyerAddress(t: Record<string, any>): string | null {
+  const line = [t.buyer_address1, t.buyer_address2].filter(Boolean).join(', ');
+  const region = [t.buyer_city, t.buyer_state].filter(Boolean).join(', ');
+  const parts = [line, region, t.buyer_zip].filter(Boolean);
+  return parts.length ? parts.join(' · ') : null;
 }

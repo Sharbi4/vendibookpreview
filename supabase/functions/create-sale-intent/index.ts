@@ -91,6 +91,12 @@ serve(async (req) => {
       buyer_name: body?.buyer_name ?? null,
       buyer_email: body?.buyer_email ?? user.email ?? null,
       buyer_phone: body?.buyer_phone ?? null,
+      // Buyer's own contact address. Never a delivery destination.
+      buyer_address1: body?.buyer_address1 ?? null,
+      buyer_address2: body?.buyer_address2 ?? null,
+      buyer_city: body?.buyer_city ?? null,
+      buyer_state: body?.buyer_state ?? null,
+      buyer_zip: body?.buyer_zip ?? null,
       referral_code: body?.referral_code ?? null,
       terms_id: body?.terms_id ?? null,
     };

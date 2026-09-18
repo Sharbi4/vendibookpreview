@@ -712,6 +712,11 @@ const SaleCheckout = () => {
               buyer_name: `${buyerInfo.firstName} ${buyerInfo.lastName}`.trim(),
               buyer_email: buyerInfo.email.trim(),
               buyer_phone: buyerInfo.phone.trim() || null,
+              buyer_address1: buyerInfo.address1.trim() || null,
+              buyer_address2: buyerInfo.address2.trim() || null,
+              buyer_city: buyerInfo.city.trim() || null,
+              buyer_state: buyerInfo.state.trim().toUpperCase() || null,
+              buyer_zip: buyerInfo.zipCode.trim() || null,
               terms_id: termsId,
               // Retry/double-click safety: reuse the terms_id (already
               // acknowledged & scoped to this buyer + listing) as the
@@ -773,6 +778,11 @@ const SaleCheckout = () => {
           buyer_name: `${buyerInfo.firstName} ${buyerInfo.lastName}`.trim(),
           buyer_email: buyerInfo.email.trim(),
           buyer_phone: buyerInfo.phone.trim() || null,
+          buyer_address1: buyerInfo.address1.trim() || null,
+          buyer_address2: buyerInfo.address2.trim() || null,
+          buyer_city: buyerInfo.city.trim() || null,
+          buyer_state: buyerInfo.state.trim().toUpperCase() || null,
+          buyer_zip: buyerInfo.zipCode.trim() || null,
           freight_cost: isVendibookFreight ? freightCost : 0,
           referral_code: referralValid ? referralCode : undefined,
           terms_id: termsId,
