@@ -108,6 +108,7 @@ export const TEMPLATES: Record<string, TemplateEntry> = {
   'checkout-recovery-cs': checkoutRecoveryCs,
   'document-status': documentStatus,
   'new-message': newMessage,
+  'video-walkthrough-scheduled': videoWalkthroughScheduled,
   'host-weekly-digest': hostWeeklyDigest,
   'host-daily-digest': hostDailyDigest,
   'shopper-daily-digest': shopperDailyDigest,
