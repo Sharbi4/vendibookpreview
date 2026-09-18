@@ -2763,3 +2763,36 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
 .v2-timeline-dot.is-ok { background: hsl(142 55% 40%); }
 .v2-timeline-dot.is-warn { background: hsl(38 92% 50%); }
 .v2-timeline-dot.is-alert { background: hsl(var(--destructive)); }
+
+/* Premium hero slideshow */
+.v2-home-hero-slides { display: block; }
+.v2-home-hero-slide-link { display: block; color: inherit; text-decoration: none; animation: v2-hero-fade .7s ease both; }
+.v2-home-hero-slide-link > span:first-child { aspect-ratio: 4 / 3; display: block; }
+.v2-home-hero-slide-link > span:first-child img { transition: transform 6.5s ease; }
+.v2-home-hero-slides:hover .v2-home-hero-slide-link > span:first-child img { transform: scale(1.04); }
+@keyframes v2-hero-fade { from { opacity: 0; transform: scale(1.015); } to { opacity: 1; transform: none; } }
+.v2-home-hero-slide-nav { position: absolute; z-index: 2; top: 12px; right: 12px; display: flex; gap: 6px; opacity: 0; transition: opacity .18s ease; }
+.v2-home-hero-slides:hover .v2-home-hero-slide-nav,
+.v2-home-hero-slides:focus-within .v2-home-hero-slide-nav { opacity: 1; }
+.v2-home-hero-slide-nav button {
+  display: grid; place-items: center; width: 32px; height: 32px; border: 1px solid hsl(0 0% 100% / .25);
+  border-radius: 50%; background: hsl(240 6% 8% / .55); color: hsl(40 30% 97%); cursor: pointer;
+  backdrop-filter: blur(6px); transition: background .15s ease;
+}
+.v2-home-hero-slide-nav button:hover { background: hsl(240 6% 8% / .8); }
+.v2-home-hero-slide-nav svg { width: 15px; height: 15px; }
+.v2-home-hero-slide-dots { position: absolute; z-index: 2; bottom: 12px; right: 14px; display: flex; gap: 5px; }
+.v2-home-hero-slide-dots button {
+  position: relative; width: 22px; height: 4px; overflow: hidden; border: 0; border-radius: 999px;
+  background: hsl(0 0% 100% / .32); cursor: pointer; transition: background .2s ease;
+}
+.v2-home-hero-slide-dots button.is-active { background: hsl(0 0% 100% / .38); }
+.v2-home-hero-slide-progress {
+  position: absolute; inset: 0; width: 0; border-radius: inherit;
+  background: hsl(var(--v2h-cta, 24 95% 53%)); animation: v2-hero-progress linear forwards;
+}
+@keyframes v2-hero-progress { from { width: 0; } to { width: 100%; } }
+@media (max-width: 720px) {
+  .v2-home-hero-slide-nav { opacity: 1; top: 10px; right: 10px; }
+  .v2-home-hero-slide-nav button { width: 30px; height: 30px; }
+}
