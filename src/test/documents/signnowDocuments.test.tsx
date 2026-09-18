@@ -50,10 +50,15 @@ describe('DocumentsCard', () => {
     invokeMock.mockReset();
   });
 
-  it('renders nothing when SignNow is unconfigured (no document rows)', async () => {
-    const { container } = render(<DocumentsCard scope={{ transaction_id: 'tx-1' }} />);
+  it('renders nothing inline when there are no document rows', async () => {
+    const { container } = render(<DocumentsCard scope={{ transaction_id: 'tx-1' }} whenEmpty="hide" />);
     await waitFor(() => expect(container.textContent).not.toContain('Loading documents'));
     expect(container.textContent).toBe('');
+  });
+
+  it('explains the empty state on a Documents tab', async () => {
+    const { container } = render(<DocumentsCard scope={{ transaction_id: 'tx-1' }} />);
+    await waitFor(() => expect(container.textContent).toContain('No documents have been prepared'));
   });
 
   it('shows per-party status and a Review & sign action for the current signer', async () => {
@@ -88,7 +93,8 @@ describe('DocumentsCard', () => {
       ],
     });
     render(<DocumentsCard scope={{ booking_id: 'bk-1' }} />);
-    expect(await screen.findByRole('button', { name: /Signed PDF/i })).toBeTruthy();
+    expect(await screen.findByRole('button', { name: /Preview/i })).toBeTruthy();
+    expect(await screen.findByRole('button', { name: /Download/i })).toBeTruthy();
     expect(screen.queryByRole('button', { name: /Review & sign/i })).toBeNull();
   });
 });
