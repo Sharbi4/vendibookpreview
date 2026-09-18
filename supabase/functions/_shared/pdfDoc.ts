@@ -211,13 +211,19 @@ export class PdfDoc {
     const size = 9.5;
     const labelW = 168;
     const height = 16;
-    this.ensureSpace(height + 8);
+    this.ensureSpace(height + 24);
     this.text(label, MARGIN_X, this.y - size, size, 'F2', 0.25);
+    // A long label would run into the fill line, so drop the box onto its own row.
+    const stacked = widthOf(label, size, 'F2') > labelW - 12;
+    if (stacked) this.y -= size + 6;
+    const x = stacked ? MARGIN_X : MARGIN_X + labelW;
+    const w = stacked ? this.contentWidth : this.contentWidth - labelW;
     const boxBottom = this.y - height + 2;
-    this.line(MARGIN_X + labelW, boxBottom - 1, PAGE_WIDTH - MARGIN_X, boxBottom - 1, 0.4, 0.86);
+    this.line(x, boxBottom - 1, PAGE_WIDTH - MARGIN_X, boxBottom - 1, 0.4, 0.86);
     this.y -= height + 6;
-    return { page: this.pageIndex, x: MARGIN_X + labelW, y: boxBottom, w: this.contentWidth - labelW, h: height };
+    return { page: this.pageIndex, x, y: boxBottom, w, h: height };
   }
+
 
   /**
    * A block-sized SignNow text field for generated clause text that varies by

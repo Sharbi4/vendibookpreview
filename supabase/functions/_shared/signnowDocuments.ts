@@ -290,12 +290,12 @@ export async function sendSignatureRequestEmails(
         recipientEmail: p.email,
         idempotencyKey: `signnow-request-${documentId}-${p.role}`,
         templateData: {
-          preview: `Your ${documentLabel.toLowerCase()} is ready to sign`,
+          preview: 'Your transaction document is ready to review and sign.',
           kicker: documentLabel,
-          heading: `Your ${documentLabel.toLowerCase()} is ready to sign`,
+          heading: 'Your transaction document is ready to review and sign.',
           paragraphs: [
             `The ${documentLabel.toLowerCase()} for ${subjectAsset} was prepared from your Vendibook transaction details and is waiting for your signature.`,
-            'Both parties sign inside Vendibook. When everyone has signed, a completed copy is saved with the transaction.',
+            'Both parties sign inside Vendibook. When everyone has signed, a completed copy is saved with your transaction.',
             'Keep messages, offers and payments on Vendibook so everything stays on the record.',
           ],
           ctaLabel: 'Review and sign',
@@ -402,28 +402,32 @@ export async function ensurePurchaseSaleAgreement(transactionId: string): Promis
   const area = [listing?.city, listing?.state].filter(Boolean).join(', ');
 
   const prefill = {
-    order_reference: reference,
-    effective_date: effectiveDate,
+    transaction_reference: reference,
     listing_title: str(listing?.title),
     asset_category: str(listing?.category),
-    seller_name: partyName(seller),
-    buyer_name: partyName(buyer),
-    purchase_price: money(price),
-    taxes_collected: money(tx.tax_amount),
-    delivery_or_freight_charge: money(tx.delivery_fee ?? tx.freight_cost),
-    total_transaction_amount: money(tx.amount),
-    fulfillment_method: fulfillmentLabel(tx.fulfillment_type),
-    transaction_area: area,
-
     asset_year: listing?.year_built != null ? String(listing.year_built) : '',
     asset_make: str(listing?.make),
     asset_model: str(listing?.model),
-    asset_identifying_number_vin_or_serial_if_recorded: str(ownership?.vin_serial),
-    asset_dimensions_if_recorded: describeDimensions(listing, specs),
-    asset_mileage_or_hours_if_recorded: listing?.mileage != null ? String(listing.mileage) : '',
-    asset_included_equipment: describeInclusions(specs),
+    asset_identifier: str(ownership?.vin_serial),
+    asset_mileage: listing?.mileage != null ? String(listing.mileage) : '',
+    seller_name: partyName(seller),
+    buyer_name: partyName(buyer),
+    seller_business_name: str(snap.seller_business_name),
+    buyer_business_name: str(snap.buyer_business_name),
+    listing_city_state: area,
+    fulfillment_method: fulfillmentLabel(tx.fulfillment_type),
+    asset_price: money(price),
+    selected_addons: str(snap.selected_addons),
+    delivery_or_freight_amount: money(tx.delivery_fee ?? tx.freight_cost),
+    tax_amount: money(tx.tax_amount),
+    other_charges: str(snap.other_charges),
+    transaction_total: money(tx.amount),
 
-    price_breakdown: lines(
+    // Signature block printed names come from the same frozen party records.
+    buyer_printed_name: partyName(buyer),
+    seller_printed_name: partyName(seller),
+
+    payment_and_financing_notes: lines(
       `Agreed asset price: ${money(price)}`,
       snap.accepted_offer_cents ? `Accepted offer applied: ${centsToMoney(snap.accepted_offer_cents)}` : '',
       tx.delivery_fee ? `Seller delivery charge: ${money(tx.delivery_fee)}` : '',
@@ -431,8 +435,8 @@ export async function ensurePurchaseSaleAgreement(transactionId: string): Promis
       tx.tax_amount ? `Tax${tx.tax_jurisdiction ? ` (${tx.tax_jurisdiction})` : ''}: ${money(tx.tax_amount)}` : '',
       `Total transaction amount: ${money(tx.amount)}`,
       payment?.payment_provider ? `Payment processed through: ${String(payment.payment_provider).toUpperCase()}` : '',
+      str(snap.financing_provider) && `Financing provider selected by Buyer: ${snap.financing_provider}`,
     ),
-    financing_note: str(snap.financing_provider),
 
     seller_disclosures: lines(
       str(listing?.condition) && `Listed condition: ${listing?.condition}`,
@@ -452,7 +456,14 @@ export async function ensurePurchaseSaleAgreement(transactionId: string): Promis
         : '',
       'Condition is based on the listing snapshot, written disclosures in the transaction record, and the handoff record created by the parties.',
     ),
-    title_status: lines(str(ownership?.title_status) || str(listing?.title_status), str(ownership?.title_state) && `Title state: ${ownership?.title_state}`, ownership?.lien_release_available == null ? '' : ownership.lien_release_available ? 'Seller reports a lien release is available.' : ''),
+    title_status: lines(
+      str(ownership?.title_status) || str(listing?.title_status),
+      str(ownership?.title_state) && `Title state: ${ownership?.title_state}`,
+      ownership?.lien_release_available == null ? '' : ownership.lien_release_available ? 'Seller reports a lien release is available.' : '',
+    ),
+    included_equipment: describeInclusions(specs),
+    excluded_property: str(snap.excluded_property),
+    cancellation_terms: str(snap.cancellation_policy),
     fulfillment_details: lines(
       `Fulfillment selected: ${fulfillmentLabel(tx.fulfillment_type)}`,
       tx.fulfillment_type === 'pickup' ? `Pickup area: ${area}. The parties coordinate the exact handoff location and time through Vendibook messages.` : '',
@@ -502,7 +513,7 @@ export async function ensureBillOfSale(transactionId: string): Promise<EnsureRes
 
 /** Sale handoff acknowledgment — only at the handoff stage, never at checkout. */
 export async function ensureSaleHandoffAcknowledgment(transactionId: string): Promise<EnsureResult> {
-  const { tx, listing, ownership, seller, buyer } = await loadSaleContext(transactionId);
+  const { tx, listing, ownership, specs, seller, buyer } = await loadSaleContext(transactionId);
   if (!SALE_ELIGIBLE_STATUSES.has(String(tx.status))) return { skipped: 'not_payment_authorized' };
   if (!seller?.email || !buyer?.email) return { skipped: 'missing_party_email' };
 
@@ -512,7 +523,6 @@ export async function ensureSaleHandoffAcknowledgment(transactionId: string): Pr
 
   const common = {
     listing_title: str(listing?.title),
-    identifying_number_vin_or_serial_if_recorded: str((listing as any)?.vin) || str((listing as any)?.serial_number),
     odometer_or_hours_at_handoff_if_applicable: listing?.mileage != null ? String(listing.mileage) : '',
   };
 
@@ -540,12 +550,20 @@ export async function ensureSaleHandoffAcknowledgment(transactionId: string): Pr
           delivery_address_or_area: str(tx.delivery_address) || area,
         }
       : {
-          order_reference: transactionId,
-          ...common,
+          transaction_reference: transactionId,
+          listing_title: common.listing_title,
+          asset_title_description: common.listing_title,
+          asset_year_make_model: [listing?.year_built, listing?.make, listing?.model].filter(Boolean).join(' '),
+          asset_identifier: str(ownership?.vin_serial),
+          asset_identifier_confirm: str(ownership?.vin_serial),
+          handoff_mileage: common.odometer_or_hours_at_handoff_if_applicable,
           buyer_name: partyName(buyer),
           seller_name: partyName(seller),
-          fulfillment_type: fulfillmentLabel(tx.fulfillment_type),
+          buyer_printed_name: partyName(buyer),
+          seller_printed_name: partyName(seller),
+          fulfillment_method: fulfillmentLabel(tx.fulfillment_type),
           handoff_location: area,
+          included_equipment_checklist: describeInclusions(specs),
         },
     snapshot: { source: 'sale_handoff', transaction_id: transactionId, fulfillment_type: tx.fulfillment_type ?? null },
   });
