@@ -802,6 +802,17 @@ const SaleCheckout = () => {
     }
   };
 
+  runPurchaseRef.current = runPurchase;
+
+  useEffect(() => {
+    if (currentStep !== 5 || paymentMethod !== 'card') return;
+    if (paypalCheckout || autoIntentRef.current) return;
+    autoIntentRef.current = true;
+    void runPurchaseRef.current?.().finally(() => {
+      autoIntentRef.current = false;
+    });
+  }, [currentStep, paymentMethod, paypalCheckout]);
+
   // Loading state
   if (isListingLoading || isLoadingOffer) {
     return (
