@@ -1,162 +1,35 @@
 // deno-lint-ignore-file no-explicit-any
 /**
- * SignNow template provisioning.
+ * SignNow template provisioning, versioned.
  *
- * Template IDs come from env first (SIGNNOW_TEMPLATE_*), then from the
- * signnow_templates table, and are otherwise created once on demand and
- * persisted — so agreement generation never silently no-ops because a
- * template ID was never copied into a secret.
+ * For each (kind, version) pair there is exactly one SignNow template. A
+ * template that has already been provisioned is NEVER overwritten or deleted:
+ * bumping a spec version provisions a brand new template and retires the old
+ * row, so documents generated earlier stay tied to the template they were
+ * built from.
+ *
+ * Resolution order for the active template of a kind:
+ *   1. SIGNNOW_TEMPLATE_* env override (operator escape hatch)
+ *   2. signnow_templates row for (kind, current spec version)
+ *   3. provision a new template through the SignNow API and persist it
  */
 import { createClient } from 'npm:@supabase/supabase-js@2.45.0';
 import { getAccessToken, signnowBase } from './signnow.ts';
+import { getTemplateSpec, SPEC_VERSIONS, TEMPLATE_SPECS, type SignNowFieldDef, type TemplateKind } from './signnowTemplateSpecs.ts';
 
-const REQUIRED_ROLES = {
-  rental: ['Host', 'Renter'],
-  billOfSale: ['Buyer', 'Seller'],
+export type { TemplateKind } from './signnowTemplateSpecs.ts';
+export { SPEC_VERSIONS } from './signnowTemplateSpecs.ts';
+
+const ENV_NAME: Partial<Record<TemplateKind, string>> = {
+  rental_agreement: 'SIGNNOW_TEMPLATE_RENTAL_AGREEMENT',
+  purchase_sale_agreement: 'SIGNNOW_TEMPLATE_PURCHASE_SALE_AGREEMENT',
+  bill_of_sale: 'SIGNNOW_TEMPLATE_BILL_OF_SALE',
+  sale_handoff_condition_acknowledgment: 'SIGNNOW_TEMPLATE_SALE_HANDOFF',
+  rental_checkin_condition_report: 'SIGNNOW_TEMPLATE_RENTAL_CHECKIN',
+  rental_checkout_condition_report: 'SIGNNOW_TEMPLATE_RENTAL_CHECKOUT',
+  transaction_amendment: 'SIGNNOW_TEMPLATE_AMENDMENT',
+  delivery_handoff_acknowledgment: 'SIGNNOW_TEMPLATE_DELIVERY_HANDOFF',
 };
-
-interface PdfField {
-  type: 'text' | 'signature';
-  name: string;
-  role: string;
-  x: number;
-  y: number;
-  w: number;
-  h: number;
-  required: boolean;
-  label?: string;
-}
-
-interface PdfSection {
-  label: string;
-  x: number;
-  y: number;
-}
-
-const MARGIN = 60;
-
-function buildRentalPdf(): { pdf: Uint8Array; fields: PdfField[] } {
-  const title = 'Rental Agreement';
-  const sections: PdfSection[] = [
-    { label: 'Host Name:', x: MARGIN, y: 650 },
-    { label: 'Renter Name:', x: MARGIN, y: 620 },
-    { label: 'Listing Title:', x: MARGIN, y: 590 },
-    { label: 'Listing Address:', x: MARGIN, y: 560 },
-    { label: 'Start Date:', x: MARGIN, y: 530 },
-    { label: 'End Date:', x: 300, y: 530 },
-    { label: 'Start Time:', x: MARGIN, y: 500 },
-    { label: 'End Time:', x: 300, y: 500 },
-    { label: 'Total Price:', x: MARGIN, y: 470 },
-    { label: 'Deposit Amount:', x: MARGIN, y: 440 },
-    { label: 'Cancellation Policy:', x: MARGIN, y: 410 },
-    { label: 'Host Signature', x: MARGIN, y: 150 },
-    { label: 'Renter Signature', x: 320, y: 150 },
-  ];
-
-  const fields: PdfField[] = [
-    { type: 'text', name: 'host_name', role: 'Host', x: 160, y: 650, w: 220, h: 20, required: true, label: 'Host Name' },
-    { type: 'text', name: 'renter_name', role: 'Renter', x: 180, y: 620, w: 200, h: 20, required: true, label: 'Renter Name' },
-    { type: 'text', name: 'listing_title', role: 'Host', x: 170, y: 590, w: 300, h: 20, required: true, label: 'Listing Title' },
-    { type: 'text', name: 'listing_address', role: 'Host', x: 190, y: 560, w: 300, h: 20, required: true, label: 'Listing Address' },
-    { type: 'text', name: 'start_date', role: 'Host', x: 150, y: 530, w: 120, h: 20, required: true, label: 'Start Date' },
-    { type: 'text', name: 'end_date', role: 'Host', x: 370, y: 530, w: 120, h: 20, required: true, label: 'End Date' },
-    { type: 'text', name: 'start_time', role: 'Host', x: 150, y: 500, w: 120, h: 20, required: false, label: 'Start Time' },
-    { type: 'text', name: 'end_time', role: 'Host', x: 370, y: 500, w: 120, h: 20, required: false, label: 'End Time' },
-    { type: 'text', name: 'total_price', role: 'Host', x: 160, y: 470, w: 120, h: 20, required: true, label: 'Total Price' },
-    { type: 'text', name: 'deposit_amount', role: 'Host', x: 190, y: 440, w: 120, h: 20, required: false, label: 'Deposit Amount' },
-    { type: 'text', name: 'cancellation_policy', role: 'Host', x: 210, y: 410, w: 300, h: 20, required: false, label: 'Cancellation Policy' },
-    { type: 'signature', name: 'host_signature', role: 'Host', x: MARGIN, y: 100, w: 220, h: 40, required: true, label: 'Host Signature' },
-    { type: 'signature', name: 'renter_signature', role: 'Renter', x: 320, y: 100, w: 220, h: 40, required: true, label: 'Renter Signature' },
-  ];
-
-  return { pdf: makePdfWithSections(title, sections), fields };
-}
-
-function buildBillOfSalePdf(): { pdf: Uint8Array; fields: PdfField[] } {
-  const title = 'Bill of Sale';
-  const sections: PdfSection[] = [
-    { label: 'Seller Name:', x: MARGIN, y: 650 },
-    { label: 'Buyer Name:', x: MARGIN, y: 620 },
-    { label: 'Listing Title:', x: MARGIN, y: 590 },
-    { label: 'Listing Address:', x: MARGIN, y: 560 },
-    { label: 'Category:', x: MARGIN, y: 530 },
-    { label: 'Price:', x: MARGIN, y: 500 },
-    { label: 'Sale Date:', x: MARGIN, y: 470 },
-    { label: 'As-Is Clause:', x: MARGIN, y: 440 },
-    { label: 'Seller Signature', x: MARGIN, y: 150 },
-    { label: 'Buyer Signature', x: 320, y: 150 },
-  ];
-
-  const fields: PdfField[] = [
-    { type: 'text', name: 'seller_name', role: 'Seller', x: 170, y: 650, w: 220, h: 20, required: true, label: 'Seller Name' },
-    { type: 'text', name: 'buyer_name', role: 'Buyer', x: 170, y: 620, w: 220, h: 20, required: true, label: 'Buyer Name' },
-    { type: 'text', name: 'listing_title', role: 'Seller', x: 170, y: 590, w: 300, h: 20, required: true, label: 'Listing Title' },
-    { type: 'text', name: 'listing_address', role: 'Seller', x: 190, y: 560, w: 300, h: 20, required: true, label: 'Listing Address' },
-    { type: 'text', name: 'category', role: 'Seller', x: 140, y: 530, w: 150, h: 20, required: false, label: 'Category' },
-    { type: 'text', name: 'price', role: 'Seller', x: 130, y: 500, w: 120, h: 20, required: true, label: 'Price' },
-    { type: 'text', name: 'sale_date', role: 'Seller', x: 150, y: 470, w: 120, h: 20, required: true, label: 'Sale Date' },
-    { type: 'text', name: 'as_is_clause', role: 'Seller', x: 160, y: 440, w: 300, h: 20, required: false, label: 'As-Is Clause' },
-    { type: 'signature', name: 'seller_signature', role: 'Seller', x: MARGIN, y: 100, w: 220, h: 40, required: true, label: 'Seller Signature' },
-    { type: 'signature', name: 'buyer_signature', role: 'Buyer', x: 320, y: 100, w: 220, h: 40, required: true, label: 'Buyer Signature' },
-  ];
-
-  return { pdf: makePdfWithSections(title, sections), fields };
-}
-
-function makePdfWithSections(title: string, sections: PdfSection[]): Uint8Array {
-  let stream = `BT\n/F1 18 Tf\n${MARGIN} 720 Td\n(${escapePdfString(title)}) Tj\nET\n`;
-
-  for (const s of sections) {
-    stream += `BT\n/F1 12 Tf\n${s.x} ${s.y} Td\n(${escapePdfString(s.label)}) Tj\nET\n`;
-  }
-
-  // Add some static legal boilerplate near the bottom.
-  stream += `BT\n/F1 10 Tf\n${MARGIN} 60 Td\n(${escapePdfString('This document is executed electronically via Vendibook and airSlate SignNow.')}) Tj\nET\n`;
-
-  const obj1 = '1 0 obj\n<<\n/Type /Catalog\n/Pages 2 0 R\n>>\nendobj\n';
-  const obj2 = '2 0 obj\n<<\n/Type /Pages\n/Kids [3 0 R]\n/Count 1\n>>\nendobj\n';
-  const obj3Base = '3 0 obj\n<<\n/Type /Page\n/Parent 2 0 R\n/MediaBox [0 0 612 792]\n/Contents 4 0 R\n/Resources <<\n/Font <<\n/F1 5 0 R\n>>\n>>\n>>\nendobj\n';
-  const obj5 = '5 0 obj\n<<\n/Type /Font\n/Subtype /Type1\n/BaseFont /Helvetica\n>>\nendobj\n';
-
-  const enc = new TextEncoder();
-  const headerBytes = enc.encode('%PDF-1.4\n');
-  const obj1Bytes = enc.encode(obj1);
-  const obj2Bytes = enc.encode(obj2);
-  const obj3Bytes = enc.encode(obj3Base);
-  const obj5Bytes = enc.encode(obj5);
-  const streamBytes = enc.encode(stream);
-  const obj4 = `4 0 obj\n<<\n/Length ${streamBytes.length}\n>>\nstream\n${stream}endstream\nendobj\n`;
-  const obj4Bytes = enc.encode(obj4);
-
-  const off1 = headerBytes.length;
-  const off2 = off1 + obj1Bytes.length;
-  const off3 = off2 + obj2Bytes.length;
-  const off4 = off3 + obj3Bytes.length;
-  const off5 = off4 + obj4Bytes.length;
-
-  const fullBytes = new Uint8Array(headerBytes.length + obj1Bytes.length + obj2Bytes.length + obj3Bytes.length + obj4Bytes.length + obj5Bytes.length);
-  let pos = 0;
-  fullBytes.set(headerBytes, pos); pos += headerBytes.length;
-  fullBytes.set(obj1Bytes, pos); pos += obj1Bytes.length;
-  fullBytes.set(obj2Bytes, pos); pos += obj2Bytes.length;
-  fullBytes.set(obj3Bytes, pos); pos += obj3Bytes.length;
-  fullBytes.set(obj4Bytes, pos); pos += obj4Bytes.length;
-  fullBytes.set(obj5Bytes, pos); pos += obj5Bytes.length;
-
-  const xrefOffset = fullBytes.length;
-  const xref = `xref\n0 6\n0000000000 65535 f \n${String(off1).padStart(10, '0')} 00000 n \n${String(off2).padStart(10, '0')} 00000 n \n${String(off3).padStart(10, '0')} 00000 n \n${String(off4).padStart(10, '0')} 00000 n \n${String(off5).padStart(10, '0')} 00000 n \n`;
-  const trailer = `trailer\n<<\n/Size 6\n/Root 1 0 R\n>>\nstartxref\n${xrefOffset}\n%%EOF\n`;
-
-  const out = new Uint8Array(fullBytes.length + xref.length + trailer.length);
-  out.set(fullBytes, 0);
-  out.set(enc.encode(xref), fullBytes.length);
-  out.set(enc.encode(trailer), fullBytes.length + xref.length);
-  return out;
-}
-
-function escapePdfString(s: string): string {
-  return s.replace(/[\\()]/g, '\\$&');
-}
 
 async function signnowApi(token: string, path: string, init: RequestInit & { json?: unknown } = {}): Promise<any> {
   const headers: Record<string, string> = {
@@ -205,14 +78,14 @@ async function uploadRawDocument(token: string, name: string, pdf: Uint8Array): 
   return JSON.parse(text).id;
 }
 
-async function editDocumentFields(token: string, documentId: string, name: string, fields: PdfField[]): Promise<void> {
+async function editDocumentFields(token: string, documentId: string, name: string, fields: SignNowFieldDef[]): Promise<void> {
   const body = {
     document_name: name,
     fields: fields.map((f) => ({
       type: f.type,
       required: f.required,
       role: f.role,
-      page_number: 0,
+      page_number: f.page,
       x: f.x,
       y: f.y,
       width: f.w,
@@ -243,7 +116,6 @@ async function verifyTemplateRoles(token: string, templateId: string, expected: 
 }
 
 async function ensureBucket(svc: ReturnType<typeof createClient>): Promise<void> {
-
   const { data: buckets } = await svc.storage.listBuckets();
   const exists = buckets?.some((b) => b.name === 'signed-documents');
   if (exists) return;
@@ -254,17 +126,6 @@ async function ensureBucket(svc: ReturnType<typeof createClient>): Promise<void>
   if (error) throw new Error(`create bucket failed: ${error.message}`);
 }
 
-export type TemplateKind = 'rental_agreement' | 'bill_of_sale';
-
-const ENV_NAME: Record<TemplateKind, string> = {
-  rental_agreement: 'SIGNNOW_TEMPLATE_RENTAL_AGREEMENT',
-  bill_of_sale: 'SIGNNOW_TEMPLATE_BILL_OF_SALE',
-};
-const DOC_NAME: Record<TemplateKind, string> = {
-  rental_agreement: 'Vendibook Rental Agreement',
-  bill_of_sale: 'Vendibook Bill of Sale',
-};
-
 function admin() {
   return createClient(
     Deno.env.get('SUPABASE_URL')!,
@@ -273,52 +134,86 @@ function admin() {
   );
 }
 
+/** Current content version for a kind. */
+export function currentTemplateVersion(kind: TemplateKind): string {
+  return SPEC_VERSIONS[kind] ?? '1';
+}
+
 async function createTemplateForKind(kind: TemplateKind): Promise<{ templateId: string; roles: string[] }> {
+  const spec = getTemplateSpec(kind);
   const token = await getAccessToken();
-  const built = kind === 'rental_agreement' ? buildRentalPdf() : buildBillOfSalePdf();
-  const name = DOC_NAME[kind];
+  const built = spec.build();
+  const name = `${spec.documentName} (v${spec.version})`;
   const docId = await uploadRawDocument(token, name, built.pdf);
   await editDocumentFields(token, docId, name, built.fields);
   const templateId = await createTemplate(token, docId, name);
-  const roles = await verifyTemplateRoles(
-    token,
-    templateId,
-    kind === 'rental_agreement' ? REQUIRED_ROLES.rental : REQUIRED_ROLES.billOfSale,
-  );
+  const roles = await verifyTemplateRoles(token, templateId, spec.roles);
   await ensureBucket(admin() as any);
   return { templateId, roles };
 }
 
+export interface ResolvedTemplate {
+  templateId: string;
+  version: string;
+  kind: TemplateKind;
+}
+
 /**
- * Returns the SignNow template ID for a kind, provisioning it once if needed.
- * Concurrent callers converge on a single stored template ID.
+ * Returns the SignNow template for a kind at its current content version,
+ * provisioning it once if needed. Concurrent callers converge on one row.
+ * Older versions are retired, never deleted or overwritten.
  */
-export async function ensureTemplateId(kind: TemplateKind): Promise<string> {
-  const fromEnv = Deno.env.get(ENV_NAME[kind]);
-  if (fromEnv) return fromEnv;
+export async function resolveTemplate(kind: TemplateKind): Promise<ResolvedTemplate> {
+  const version = currentTemplateVersion(kind);
+  const envName = ENV_NAME[kind];
+  const fromEnv = envName ? Deno.env.get(envName) : undefined;
+  if (fromEnv) return { templateId: fromEnv, version, kind };
 
   const svc = admin();
   const { data: existing } = await svc
     .from('signnow_templates')
     .select('signnow_template_id')
     .eq('kind', kind)
+    .eq('version', version)
     .maybeSingle();
-  if (existing?.signnow_template_id) return existing.signnow_template_id;
+  if (existing?.signnow_template_id) return { templateId: existing.signnow_template_id, version, kind };
 
   const { templateId, roles } = await createTemplateForKind(kind);
+
+  // Retire any other active version of this kind before activating the new
+  // one — existing documents keep their own stored template id.
+  await svc.from('signnow_templates').update({ status: 'retired' }).eq('kind', kind).eq('status', 'active');
+
   const { error } = await svc
     .from('signnow_templates')
-    .insert({ kind, signnow_template_id: templateId, roles });
+    .insert({ kind, version, signnow_template_id: templateId, roles, status: 'active' });
   if (error) {
     const { data: raced } = await svc
       .from('signnow_templates')
       .select('signnow_template_id')
       .eq('kind', kind)
+      .eq('version', version)
       .maybeSingle();
-    if (raced?.signnow_template_id) return raced.signnow_template_id;
+    if (raced?.signnow_template_id) return { templateId: raced.signnow_template_id, version, kind };
     throw new Error(`could not persist template id: ${error.message}`);
   }
-  return templateId;
+  return { templateId, version, kind };
+}
+
+/** Backwards-compatible helper used by older call sites. */
+export async function ensureTemplateId(kind: TemplateKind): Promise<string> {
+  const resolved = await resolveTemplate(kind);
+  return resolved.templateId;
+}
+
+/** Provision every missing template version. Returns ids only — never secrets. */
+export async function provisionAllTemplates(): Promise<Record<string, { template_id: string; version: string }>> {
+  const out: Record<string, { template_id: string; version: string }> = {};
+  for (const kind of Object.keys(TEMPLATE_SPECS) as TemplateKind[]) {
+    const resolved = await resolveTemplate(kind);
+    out[kind] = { template_id: resolved.templateId, version: resolved.version };
+  }
+  return out;
 }
 
 export async function ensureSignedDocumentsBucket(): Promise<void> {
