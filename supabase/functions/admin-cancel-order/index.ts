@@ -91,7 +91,7 @@ serve(async (req) => {
 
     if (payment.sale_transaction_id) {
       await admin.from("sale_transactions")
-        .update({ status: "cancelled", cancellation_reason: reason })
+        .update({ status: "cancelled" })
         .eq("id", payment.sale_transaction_id);
     }
 
