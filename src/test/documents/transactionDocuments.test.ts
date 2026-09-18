@@ -123,7 +123,7 @@ describe('document language guardrails', () => {
   it('states the electronic signature consent in every signable document', () => {
     for (const spec of specs) {
       const text = extractText(spec.build().pdf);
-      const hasEsign = /sign this document electronically/i.test(text) || /Acknowledgments/i.test(text);
+      const hasEsign = /electronic signature/i.test(text);
       expect(hasEsign).toBe(true);
     }
   });
