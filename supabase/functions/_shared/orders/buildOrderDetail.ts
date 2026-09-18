@@ -557,3 +557,11 @@ async function loadDomainRecord(
 
   return empty;
 }
+
+/** Buyer's own contact address, joined for display. Never a delivery destination. */
+function formatBuyerAddress(t: Record<string, any>): string | null {
+  const line = [t.buyer_address1, t.buyer_address2].filter(Boolean).join(', ');
+  const region = [t.buyer_city, t.buyer_state].filter(Boolean).join(', ');
+  const parts = [line, region, t.buyer_zip].filter(Boolean);
+  return parts.length ? parts.join(' · ') : null;
+}
