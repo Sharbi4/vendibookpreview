@@ -15,7 +15,6 @@ import SEO, { generateOrganizationSchema, generateWebSiteSchema } from '@/compon
 import JsonLd from '@/components/JsonLd';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import SellerBusinessAccountHelp from '@/components/payments/SellerBusinessAccountHelp';
 
 import vendibookWordmark from '@/assets/vendibook-wordmark.png';
 import equinoxLogoAsset from '@/assets/equinox-funding-dark.png.asset.json';
@@ -186,7 +185,6 @@ const Index = () => {
                 <p className="v2-home-eyebrow">Sell on Vendibook</p>
                 <h2>Turn your truck or trailer into a live listing.</h2>
                 <p>Create your listing, reach buyers nationwide, and add online checkout when you're ready.</p>
-                <SellerBusinessAccountHelp className="v2-home-sell-note" compact />
                 <div className="v2-home-sell-actions">
                   <Link to={sellerStartHref} className="v2-home-btn">
                     {user ? 'Create a listing' : 'Start selling'}

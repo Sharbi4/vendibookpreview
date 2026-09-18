@@ -7,7 +7,6 @@ import {
   CreditCard,
   ExternalLink,
   FileSignature,
-  HelpCircle,
   Landmark,
   MessageSquare,
   Truck,
