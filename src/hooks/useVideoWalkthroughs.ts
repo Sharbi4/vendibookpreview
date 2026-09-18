@@ -28,6 +28,9 @@ export function useVideoWalkthroughs() {
 
 export async function isWalkthroughEnabled(listingId?: string) {
   if (!listingId) return false;
-  const { data } = await (supabase.from('listings') as any).select('video_walkthroughs_enabled').eq('id', listingId).eq('status', 'published').maybeSingle();
-  return Boolean(data?.video_walkthroughs_enabled);
+  // Enablement lives on the seller's video settings, exposed through the
+  // security-definer RPC (the listings table has no walkthrough column).
+  const { data, error } = await (supabase as any).rpc('listing_video_walkthrough_enabled', { _listing_id: listingId });
+  if (error) return false;
+  return Boolean(data);
 }
