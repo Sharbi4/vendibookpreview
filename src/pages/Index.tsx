@@ -117,7 +117,7 @@ const Index = () => {
           <V2HomeHero slides={heroSlides} />
 
           <Link to="/payments" className="v2-home-paypal">
-            <span className="v2-home-paypal-mark"><img src={paypalMonogramAsset.url} alt="PayPal" /></span>
+            <span className="v2-home-paypal-mark"><img src={paypalBannerAsset.url} alt="PayPal" /></span>
             <span className="v2-home-paypal-copy">
               <strong>Connect your business with PayPal.</strong>
               <small>Sellers link PayPal in minutes to accept secure payments right on Vendibook.</small>
