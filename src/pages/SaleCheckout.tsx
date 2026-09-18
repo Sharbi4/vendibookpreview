@@ -1178,7 +1178,6 @@ const SaleCheckout = () => {
                 deliveryInstructions={deliveryInstructions} setDeliveryInstructions={setDeliveryInstructions}
                 fulfillmentSelected={fulfillmentSelected} fieldErrors={fieldErrors}
                 touchedFields={touchedFields} setTouchedFields={setTouchedFields}
-                hideAddress={fulfillmentSelected === 'pickup'}
                 onBack={() => undefined} onContinue={() => undefined}
               />
               <details className="sale-wizard-referral">
