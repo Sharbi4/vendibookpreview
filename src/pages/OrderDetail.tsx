@@ -12,6 +12,8 @@ import OrderEvidenceSection from '@/components/handoff/OrderEvidenceSection';
 import DeliveryTrackingPanel from '@/components/delivery/DeliveryTrackingPanel';
 import PayPalPaymentFacts from '@/components/checkout/PayPalPaymentFacts';
 import OrderCaseSection from '@/components/disputes/OrderCaseSection';
+import { DocumentsCard } from '@/components/documents/DocumentsCard';
+
 
 
 const money = (cents: number, currency = 'USD') =>
