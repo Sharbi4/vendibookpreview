@@ -435,5 +435,16 @@ export async function ensureBillOfSale(transactionId: string): Promise<{ documen
     throw new Error(`documents insert failed: ${insErr.message}`);
   }
 
+  await sendSignatureRequestEmails(
+    transactionId,
+    row.id,
+    [
+      { role: 'buyer', email: buyer.email, name: partyName(buyer) },
+      { role: 'seller', email: seller.email, name: partyName(seller) },
+    ],
+    listing?.title ?? 'your purchase',
+  );
+
   return { document_id: row.id, created: true };
 }
+
