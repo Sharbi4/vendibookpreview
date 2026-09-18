@@ -29,6 +29,7 @@ import {
   registerDocumentWebhook,
 } from './signnow.ts';
 import { resolveTemplate, currentTemplateVersion } from './signnowTemplates.ts';
+import type { AssetVariant } from './signnowTemplateSpecs.ts';
 import type { TemplateKind } from './signnowTemplateSpecs.ts';
 import { invokeTransactionalEmail } from './invokeTransactionalEmail.ts';
 import {
@@ -142,6 +143,8 @@ interface PackageSigner {
 
 interface CreateDocumentInput {
   kind: TemplateKind;
+  /** Conditional-rendering variant; only the rental documents use it. */
+  variant?: AssetVariant;
   documentName: string;
   parent: { transaction_id: string } | { booking_id: string };
   listingId?: string | null;
@@ -190,7 +193,7 @@ export async function createPackageDocument(input: CreateDocumentInput): Promise
 
   let template;
   try {
-    template = await resolveTemplate(input.kind);
+    template = await resolveTemplate(input.kind, input.variant ?? 'general');
   } catch (e) {
     console.error('[signnow] template unavailable', input.kind, (e as Error).message);
     return { skipped: 'template_not_configured' };
@@ -534,8 +537,8 @@ export async function ensureSaleHandoffAcknowledgment(transactionId: string): Pr
     termsId: tx.terms_id ?? null,
     signers: isDelivery
       ? [
-          { role: 'recipient', signnowRole: 'Recipient', order: 1, user_id: tx.buyer_id, profile: buyer },
-          { role: 'provider', signnowRole: 'Provider', order: 2, user_id: tx.seller_id, profile: seller },
+          { role: 'recipient', signnowRole: 'Receiving Party', order: 1, user_id: tx.buyer_id, profile: buyer },
+          { role: 'provider', signnowRole: 'Delivering Party', order: 2, user_id: tx.seller_id, profile: seller },
         ]
       : [
           { role: 'buyer', signnowRole: 'Buyer', order: 1, user_id: tx.buyer_id, profile: buyer },
@@ -543,11 +546,14 @@ export async function ensureSaleHandoffAcknowledgment(transactionId: string): Pr
         ],
     prefill: isDelivery
       ? {
-          order_or_booking_reference: transactionId,
+          transaction_reference: transactionId,
           listing_title: common.listing_title,
-          delivering_party: partyName(seller),
-          receiving_party: partyName(buyer),
-          delivery_address_or_area: str(tx.delivery_address) || area,
+          delivering_party_name: partyName(seller),
+          receiving_party_name: partyName(buyer),
+          delivering_party_printed_name: partyName(seller),
+          receiving_party_printed_name: partyName(buyer),
+          delivery_location: str(tx.delivery_address) || area,
+          delivery_type: fulfillmentLabel(tx.fulfillment_type),
         }
       : {
           transaction_reference: transactionId,
@@ -616,6 +622,19 @@ async function loadBookingContext(bookingId: string) {
 }
 
 const MOBILE_CATEGORIES = new Set(['food_truck', 'food_trailer']);
+const SPACE_CATEGORIES = new Set(['ghost_kitchen', 'vendor_lot', 'vendor_space']);
+
+/**
+ * Chooses which conditional clauses a rental document renders. A food truck or
+ * trailer never shows on-site facility clauses; a kitchen or vendor space never
+ * shows mileage, towing or title clauses. Anything unrecognised keeps both.
+ */
+export function assetVariant(category: unknown): AssetVariant {
+  const c = String(category ?? '');
+  if (MOBILE_CATEGORIES.has(c)) return 'mobile';
+  if (SPACE_CATEGORIES.has(c)) return 'space';
+  return 'general';
+}
 
 /** Idempotently create the Rental Agreement for a binding booking. */
 export async function ensureRentalAgreement(bookingId: string): Promise<EnsureResult> {
@@ -627,77 +646,75 @@ export async function ensureRentalAgreement(bookingId: string): Promise<EnsureRe
 
   const requirementsSnapshot = buildRequirementsSnapshot((requirementRows ?? []) as any);
   const t = (rentalTerms?.terms ?? {}) as Record<string, any>;
-  const isMobile = MOBILE_CATEGORIES.has(String(listing?.category));
+  const variant = assetVariant(listing?.category);
+  const isMobile = variant !== 'space';
   const fulfillment = str(booking.fulfillment_selected) || str(listing?.fulfillment_type);
+  const rentalStart = [booking.start_date, booking.start_time].filter(Boolean).join(' ');
+  const rentalEnd = [booking.end_date, booking.end_time].filter(Boolean).join(' ');
   const durationLabel = booking.is_hourly_booking
     ? (booking.duration_hours != null ? `${booking.duration_hours} hours` : '')
     : (booking.start_date && booking.end_date ? `${booking.start_date} to ${booking.end_date}` : '');
+  const requiredDocs = describeRequirements(requirementsSnapshot);
 
   const prefill = {
+    // Section 2 — booking summary, frozen booking record only.
     booking_reference: bookingId,
+    listing_title: str(listing?.title),
+    asset_category: str(listing?.category),
     host_name: partyName(host),
     renter_name: partyName(renter),
-    listing_title: str(listing?.title),
-    listing_type: str(listing?.category),
-    rental_start: [booking.start_date, booking.start_time].filter(Boolean).join(' '),
-    rental_end: [booking.end_date, booking.end_time].filter(Boolean).join(' '),
-    duration: durationLabel,
-    rate: centsToMoney(terms?.subtotal_cents) || money(booking.total_price),
-    service_fees: centsToMoney(terms?.renter_fee_cents),
+    host_business_name: str(t.host_business_name),
+    renter_business_name: str(t.renter_business_name),
+    rental_start: rentalStart,
+    rental_end: rentalEnd,
+    rental_duration: durationLabel,
+    base_rental_amount: centsToMoney(terms?.subtotal_cents) || money(booking.total_price),
+    service_fee: centsToMoney(terms?.renter_fee_cents),
     delivery_fee: money(booking.delivery_fee_snapshot),
-    security_deposit: money(booking.deposit_amount),
-    total: money(booking.total_price),
-    fulfillment_or_access_mode: fulfillmentLabel(fulfillment),
+    // A deposit line appears only when the frozen booking actually carries one.
+    security_deposit: booking.deposit_amount ? money(booking.deposit_amount) : '',
+    tax_amount: money(booking.tax_amount),
+    other_charges: str(t.other_charges),
+    booking_total: money(booking.total_price),
+    fulfillment_method: fulfillmentLabel(fulfillment),
+    fulfillment_method_detail: fulfillmentLabel(fulfillment),
+    listing_city_state: [listing?.city, listing?.state].filter(Boolean).join(', '),
 
-    asset_details: lines(
-      [listing?.year_built, listing?.make, listing?.model].filter(Boolean).join(' '),
-      str(listing?.category) && `Listing type: ${listing?.category}`,
-      booking.slot_name ? `Reserved space or slot: ${booking.slot_name}` : '',
-    ),
-    asset_location: [listing?.address, listing?.city, listing?.state, listing?.postal_code].filter(Boolean).join(', '),
-    booking_terms: lines(
-      `Rental period: ${[booking.start_date, booking.start_time].filter(Boolean).join(' ')} to ${[booking.end_date, booking.end_time].filter(Boolean).join(' ')}`,
-      booking.is_hourly_booking ? 'Booking cadence: hourly' : 'Booking cadence: daily or multi-day',
-      terms?.subtotal_cents != null ? `Rental subtotal: ${centsToMoney(terms.subtotal_cents)}` : '',
-      terms?.renter_fee_cents != null ? `Vendibook service fee: ${centsToMoney(terms.renter_fee_cents)}` : '',
-      booking.delivery_fee_snapshot ? `Delivery fee: ${money(booking.delivery_fee_snapshot)}` : '',
-      booking.deposit_amount ? `Security deposit: ${money(booking.deposit_amount)}` : '',
-      booking.tax_amount ? `Tax: ${money(booking.tax_amount)}` : '',
-      `Total: ${money(booking.total_price)}`,
-      booking.is_instant_book ? 'Booked with Instant Book' : 'Booked by host-approved request',
-    ),
-    host_rules: lines(str(t.house_rules), str(t.rules), str(t.condition_and_use)),
+    // Signature block printed names.
+    renter_printed_name: partyName(renter),
+    host_printed_name: partyName(host),
+
+    required_documents: requiredDocs || 'No additional booking documents were required by the listing at the time of booking.',
+    insurance_requirement: describeInsuranceSection(requirementsSnapshot),
+    insurance_status: str(t.insurance_status),
+    security_deposit_amount: booking.deposit_amount ? money(booking.deposit_amount) : '',
+
+    // Vehicle/trailer values only exist when the host actually stated them.
+    mileage_limit: isMobile ? str(t.mileage_policy) : '',
+    included_hours: isMobile ? str(t.included_hours) : '',
+    fuel_requirement: isMobile
+      ? (str(t.fuel_policy) || (listing?.fuel_type ? `Fuel type: ${listing.fuel_type}` : ''))
+      : '',
+
+    // On-site facility values only exist for space listings.
+    access_hours: variant === 'mobile' ? '' : str(t.access_hours),
+    access_instructions: variant === 'mobile' ? '' : lines(str((listing as any)?.access_instructions), str(t.access_policy)),
+    included_space_equipment: variant === 'mobile' ? '' : lines(str(t.included_equipment), str(t.utilities)),
+
     cancellation_policy: str(t.cancellation_policy),
-    permit_allocation: str(t.licenses_policy),
-    insurance_terms: lines(describeInsuranceSection(requirementsSnapshot), describeRequirements(requirementsSnapshot)),
-    vehicle_terms: isMobile
-      ? lines(
-          str(t.mileage_policy),
-          str(t.fuel_policy) || (listing?.fuel_type ? `Fuel type: ${listing.fuel_type}.` : ''),
-          str(t.propane_policy),
-          str(t.towing_policy),
-        )
-      : '',
-    space_terms: !isMobile
-      ? lines(str((listing as any)?.access_instructions), str(t.cleaning_policy), str(t.access_hours))
-      : '',
-    fulfillment_details: lines(
-      `Fulfillment or access: ${fulfillmentLabel(fulfillment)}`,
+    return_datetime: rentalEnd,
+    return_instructions: lines(
+      str(t.return_instructions),
       str(listing?.pickup_location_text) || str(listing?.pickup_instructions),
-      booking.delivery_address ? `Delivery address: ${booking.delivery_address}` : '',
-      str(booking.delivery_instructions) || str(listing?.delivery_instructions),
     ),
-    return_terms: lines(
-      `Return by: ${[booking.end_date, booking.end_time].filter(Boolean).join(' ')}`,
-      str(t.late_return_policy),
-      str(t.cleaning_policy),
-    ),
+
     booking_id: bookingId,
     terms_version: str(terms?.terms_version),
   };
 
   const result = await createPackageDocument({
     kind: 'rental_agreement',
+    variant,
     documentName: `Rental Agreement — ${listing?.title ?? 'Listing'} — ${booking.start_date}`,
     parent: { booking_id: bookingId },
     listingId: booking.listing_id,
@@ -730,7 +747,13 @@ export async function ensureRentalAgreement(bookingId: string): Promise<EnsureRe
   return result;
 }
 
-/** Condition report at check-in or check-out. Created at that stage only. */
+/**
+ * Condition report at check-in or check-out.
+ *
+ * Lifecycle: the check-in report is created when the check-in/handoff stage
+ * begins (never during checkout), the check-out report only once the rental
+ * period has actually started, i.e. at the return stage.
+ */
 export async function ensureRentalConditionReport(
   bookingId: string,
   stage: 'checkin' | 'checkout',
@@ -739,33 +762,51 @@ export async function ensureRentalConditionReport(
   if (!host?.email || !renter?.email) return { skipped: 'missing_party_email' };
   if (!BOOKING_BINDING_STATUSES.has(String(booking.status))) return { skipped: 'booking_not_binding' };
 
+  const today = new Date().toISOString().slice(0, 10);
+  const started = !booking.start_date || String(booking.start_date) <= today;
+  if (!started) return { skipped: 'rental_period_not_started' };
+
   const kind: TemplateKind = stage === 'checkin' ? 'rental_checkin_condition_report' : 'rental_checkout_condition_report';
+  const variant = assetVariant(listing?.category);
   const fulfillment = str(booking.fulfillment_selected) || str(listing?.fulfillment_type);
+  const area = [listing?.city, listing?.state].filter(Boolean).join(', ');
   const when = stage === 'checkin'
     ? [booking.start_date, booking.start_time].filter(Boolean).join(' ')
     : [booking.end_date, booking.end_time].filter(Boolean).join(' ');
 
+  const shared = {
+    booking_reference: bookingId,
+    listing_title: str(listing?.title),
+    renter_name: partyName(renter),
+    host_name: partyName(host),
+    renter_printed_name: partyName(renter),
+    host_printed_name: partyName(host),
+  };
+
   return await createPackageDocument({
     kind,
-    documentName: `${stage === 'checkin' ? 'Check-in' : 'Check-out'} Condition Report — ${listing?.title ?? 'Listing'} — ${when}`,
+    variant,
+    documentName: `${stage === 'checkin' ? 'Rental Check-in' : 'Rental Check-out'} Condition Report — ${listing?.title ?? 'Listing'} — ${when}`,
     parent: { booking_id: bookingId },
     listingId: booking.listing_id,
     signers: [
       { role: 'renter', signnowRole: 'Renter', order: 1, user_id: booking.shopper_id, profile: renter },
       { role: 'host', signnowRole: 'Host', order: 2, user_id: booking.host_id, profile: host },
     ],
-    prefill: {
-      booking_reference: bookingId,
-      listing_title: str(listing?.title),
-      renter_name: partyName(renter),
-      host_name: partyName(host),
-      [stage === 'checkin' ? 'check_in_date_and_time' : 'return_date_and_time']: when,
-      [stage === 'checkin' ? 'location_or_access_mode' : 'return_location_or_access_mode']: lines(
-        fulfillmentLabel(fulfillment),
-        [listing?.city, listing?.state].filter(Boolean).join(', '),
-      ),
-    },
-    snapshot: { source: 'booking_request', booking_id: bookingId, stage },
+    prefill: stage === 'checkin'
+      ? {
+          ...shared,
+          checkin_datetime: when,
+          fulfillment_method: fulfillmentLabel(fulfillment),
+          checkin_location: area,
+        }
+      : {
+          ...shared,
+          checkout_datetime: when,
+          return_method: fulfillmentLabel(fulfillment),
+          return_location: area,
+        },
+    snapshot: { source: 'booking_request', booking_id: bookingId, stage, variant },
   });
 }
 
@@ -795,13 +836,19 @@ export async function createTransactionAmendment(input: AmendmentInput): Promise
     .maybeSingle();
   if (!original) return { skipped: 'original_document_not_found' };
 
+  // Two-party integrity: a sale amendment is Buyer/Seller, a booking amendment
+  // is Renter/Host. The SignNow roles stay Party A / Party B; the real role of
+  // each party is written into the document.
   let partyA: any, partyB: any, aId: string | null, bId: string | null;
+  let roleA: string, roleB: string, agreementLabel: string;
   if ('transaction_id' in input.parent) {
     const { tx, buyer, seller } = await loadSaleContext(input.parent.transaction_id);
     partyA = buyer; partyB = seller; aId = tx.buyer_id; bId = tx.seller_id;
+    roleA = 'Buyer'; roleB = 'Seller'; agreementLabel = 'Vendibook Purchase & Sale Agreement';
   } else {
     const { booking, renter, host } = await loadBookingContext(input.parent.booking_id);
     partyA = renter; partyB = host; aId = booking.shopper_id; bId = booking.host_id;
+    roleA = 'Renter'; roleB = 'Host'; agreementLabel = 'Vendibook Rental Agreement';
   }
   if (!partyA?.email || !partyB?.email) return { skipped: 'missing_party_email' };
 
@@ -816,14 +863,19 @@ export async function createTransactionAmendment(input: AmendmentInput): Promise
       { role: 'party_b', signnowRole: 'Party B', order: 2, user_id: bId, profile: partyB },
     ],
     prefill: {
-      order_or_booking_reference: 'transaction_id' in input.parent ? input.parent.transaction_id : input.parent.booking_id,
-      original_agreement_reference: `${original.document_type} (${original.id})`,
+      transaction_reference: 'transaction_id' in input.parent ? input.parent.transaction_id : input.parent.booking_id,
+      original_agreement_type: agreementLabel,
+      original_agreement_version: str(original.agreement_version),
       original_agreement_date: String(original.created_at).slice(0, 10),
-      first_party: partyName(partyA),
-      second_party: partyName(partyB),
-      effective_date_of_this_amendment: input.effectiveDate ?? new Date().toISOString().slice(0, 10),
-      original_term: input.originalTerm,
-      replacement_term: input.replacementTerm,
+      party_a_name: partyName(partyA),
+      party_b_name: partyName(partyB),
+      party_a_role: roleA,
+      party_b_role: roleB,
+      party_a_printed_name: partyName(partyA),
+      party_b_printed_name: partyName(partyB),
+      original_term_text: input.originalTerm,
+      amended_term_text: input.replacementTerm,
+      amendment_effective_at: input.effectiveDate ?? new Date().toISOString().slice(0, 10),
       amendment_reason: input.reason ?? '',
     },
     snapshot: {
