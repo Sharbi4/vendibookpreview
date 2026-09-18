@@ -221,12 +221,6 @@ const OrderDetailPage = () => {
             </Card>
           )}
 
-          {(order as any).links?.sale_transaction_id && (
-            <DocumentsCard
-              scope={{ transaction_id: String((order as any).links.sale_transaction_id) }}
-              title="Purchase agreement"
-            />
-          )}
 
 
 
