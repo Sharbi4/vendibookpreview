@@ -641,7 +641,7 @@ export const BookingWidget = ({
                           initial={{ scale: 1 }}
                           whileHover={{ scale: 1.05 }}
                         >
-                          ${hourlyPriceBreakdown.customerTotal.toLocaleString()}
+                          {formatCurrency(hourlyPriceBreakdown.customerTotal)}
                         </motion.span>
                       </div>
                     </motion.div>
