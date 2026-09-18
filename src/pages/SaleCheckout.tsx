@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams, useLocation, Link } from 'react-router-dom';
-import { FileText, Loader2, MapPin, Pencil, ShieldCheck, UserRound } from 'lucide-react';
+import { FileText, Loader2, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useListing } from '@/hooks/useListing';
 import { computeDeliveryFee, deliveryRateLabel, normalizeDeliveryFeeType } from '@/lib/fulfillment/delivery';
@@ -39,7 +39,7 @@ import CheckoutSection from '@/components/transaction/checkout/CheckoutSection';
 import ListingCheckoutSummary from '@/components/transaction/checkout/ListingCheckoutSummary';
 import MoneyBreakdown, { type MoneyLine } from '@/components/transaction/checkout/MoneyBreakdown';
 import PayPalEmbeddedPayment from '@/components/transaction/checkout/PayPalEmbeddedPayment';
-import SaleCheckoutWizard from '@/components/checkout/sale/SaleCheckoutWizard';
+import OrderReviewStage from '@/components/checkout/OrderReviewStage';
 import TransactionAgreementStep from '@/components/checkout/TransactionAgreementStep';
 import PostPaymentTimeline from '@/components/checkout/PostPaymentTimeline';
 import { recordCheckoutAgreements } from '@/lib/legal/recordCheckoutAgreements';
