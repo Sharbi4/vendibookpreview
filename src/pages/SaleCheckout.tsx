@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams, useLocation, Link } from 'react-router-dom';
-import { Loader2, MapPin, Pencil, ShieldCheck, UserRound } from 'lucide-react';
+import { FileText, Loader2, MapPin, Pencil, ShieldCheck, UserRound } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useListing } from '@/hooks/useListing';
 import { computeDeliveryFee, deliveryRateLabel, normalizeDeliveryFeeType } from '@/lib/fulfillment/delivery';
@@ -916,7 +916,7 @@ const SaleCheckout = () => {
       </div>
       <p className="v2-rail-agreement">
         <Link to="/legal/purchase-agreement" target="_blank" rel="noreferrer">
-          Vendibook Purchase Agreement
+          <FileText aria-hidden /> Review purchase agreement
         </Link>
       </p>
       <PostPaymentTimeline mode="sale" fulfillment={fulfillmentSelected} />
@@ -1221,6 +1221,11 @@ const SaleCheckout = () => {
         >
           {stepBody}
         </SaleCheckoutWizard>
+
+        <details className="checkout-story-mobile">
+          <summary>What happens next</summary>
+          <PostPaymentTimeline mode="sale" fulfillment={fulfillmentSelected} />
+        </details>
 
       </TransactionCheckoutShell>
 

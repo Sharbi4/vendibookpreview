@@ -202,6 +202,7 @@ const ListFoodTruckForSale = lazy(() => import("./pages/seo/ListFoodTruckForSale
 const RentOutMyFoodTruck = lazy(() => import("./pages/seo/RentOutMyFoodTruck"));
 const MobileFoodMarketplaceGlossary = lazy(() => import("./pages/resources/MobileFoodMarketplaceGlossary"));
 const FoodTruckSellingFaq = lazy(() => import("./pages/resources/FoodTruckSellingFaq"));
+const MeetupInspectionGuide = lazy(() => import("./pages/MeetupInspectionGuide"));
 const PricingCalculator = lazy(() => import("./pages/PricingCalculator"));
 const KitchenEarningsCalculator = lazy(() => import("./pages/KitchenEarningsCalculator"));
 const ListingPublished = lazy(() => import("./pages/ListingPublished"));
@@ -416,6 +417,7 @@ const AnimatedRoutes = () => {
           <Route path="/legal/:slug" element={<PageTransition><LegalDocumentPage /></PageTransition>} />
           <Route path="/how-it-works" element={<PageTransition><HowItWorks /></PageTransition>} />
           <Route path="/how-purchasing-works" element={<PageTransition><HowPurchasingWorks /></PageTransition>} />
+          <Route path="/guides/meetup-inspection" element={<PageTransition><MeetupInspectionGuide /></PageTransition>} />
           <Route path="/vendibook-freight" element={<PageTransition><VendibookFreight /></PageTransition>} />
           <Route path="/ship-your-food-truck" element={<PageTransition><ShipYourFoodTruck /></PageTransition>} />
           <Route path="/how-it-works-host" element={<PageTransition><HowItWorksHost /></PageTransition>} />

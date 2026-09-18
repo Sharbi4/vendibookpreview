@@ -966,6 +966,13 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
     { label: 'Fulfillment', value: fulfillmentSelected === 'delivery' ? 'Delivery' : fulfillmentSelected === 'on_site' ? 'On-site' : 'Pickup' },
   ];
 
+  const rentalStory = (
+    <PostPaymentTimeline
+      mode="rental"
+      fulfillment={fulfillmentSelected === 'delivery' ? 'delivery' : fulfillmentSelected === 'pickup' ? 'pickup' : 'on_site'}
+    />
+  );
+
   const railSummary = (
     <ListingCheckoutSummary
       imageUrl={coverImage}
@@ -981,6 +988,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
         total={formatCurrency(totalChargedToday)}
         totalLabel="Total due today"
       />
+      {rentalStory}
     </ListingCheckoutSummary>
   );
 
@@ -997,7 +1005,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
 
   const primaryStickyAction = paypalCheckout ? null : (
     <Button
-      className="h-12 px-6 rounded-xl font-semibold bg-foreground text-background hover:bg-foreground/90"
+      className="checkout-primary-action h-12 px-6 rounded-xl font-semibold bg-foreground text-background hover:bg-foreground/90"
       onClick={handleSubmit}
       disabled={isSubmitting || paymentSetupBlocked || !legalAccepted}
       title={!canSubmit ? nextIncompleteReason ?? undefined : undefined}
@@ -1333,18 +1341,6 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
               fulfillment={fulfillmentSelected}
             />
 
-            <PostPaymentTimeline
-              mode="rental"
-              fulfillment={
-                fulfillmentSelected === 'delivery'
-                  ? 'delivery'
-                  : fulfillmentSelected === 'pickup'
-                    ? 'pickup'
-                    : 'on_site'
-              }
-              title="What happens next"
-            />
-
             <div>
               <h3 className="text-sm font-semibold text-foreground">Agreements</h3>
               <p className="text-xs text-muted-foreground mb-3">
@@ -1449,7 +1445,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
             ) : (
               <>
                 <Button
-                  className="w-full h-14 text-base bg-foreground text-background hover:bg-foreground/90 rounded-xl font-semibold"
+                  className="checkout-primary-action w-full h-14 text-base bg-foreground text-background hover:bg-foreground/90 rounded-xl font-semibold"
                   onClick={handleSubmit}
                   disabled={isSubmitting || !legalAccepted}
                 >
@@ -1481,6 +1477,10 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
             )}
           </div>
         </CheckoutSection>
+        <details className="checkout-story-mobile">
+          <summary>What happens next</summary>
+          {rentalStory}
+        </details>
       </TransactionCheckoutShell>
 
 
