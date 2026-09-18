@@ -1081,6 +1081,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
         description={`Complete your booking for ${listing.title}.`}
       />
       <TransactionCheckoutShell
+        mode="wizard"
         eyebrow="Vendibook rental"
         title="Checkout"
         subtitle={listing.title}

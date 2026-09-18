@@ -1155,7 +1155,6 @@ const SaleCheckout = () => {
           ) : null}
 
           {step === 2 ? (
-            <>
               <PurchaseStepDelivery
                 embedded onCanContinueChange={setFulfillmentReady}
                 fulfillmentOptions={fulfillmentOptions} fulfillmentSelected={fulfillmentSelected}
@@ -1173,16 +1172,6 @@ const SaleCheckout = () => {
                 onSiteContact={onSiteContact} setOnSiteContact={setOnSiteContact}
                 onBack={() => undefined} onContinue={() => undefined}
               />
-              {fulfillmentSelected === 'delivery' ? (
-                <p className="sale-wizard-step-note">
-                  Live location appears only after the seller or assigned driver starts Delivery Mode.
-                </p>
-              ) : fulfillmentSelected === 'vendibook_freight' ? (
-                <p className="sale-wizard-step-note">
-                  Freight is coordinated after checkout. Carrier timing is confirmed by the freight partner.
-                </p>
-              ) : null}
-            </>
           ) : null}
 
           {step === 3 ? (

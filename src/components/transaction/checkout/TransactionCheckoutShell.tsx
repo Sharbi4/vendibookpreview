@@ -17,14 +17,14 @@ interface TransactionCheckoutShellProps {
   mobileSummary?: ReactNode;
   /** Persistent bottom action bar on mobile. */
   stickyAction?: ReactNode;
-  mode?: 'default' | 'wizard';
+  mode?: 'standard' | 'wizard';
   children: ReactNode;
 }
 
 /**
  * Shared premium checkout chrome for both the for-sale purchase flow and the
  * rental booking flow. Wizard mode constrains the active-step surface beside
- * a sticky summary rail; default mode supports continuous checkout content.
+ * a sticky summary rail; standard mode supports continuous checkout content.
  */
 const TransactionCheckoutShell = ({
   eyebrow = 'Vendibook',
@@ -35,10 +35,10 @@ const TransactionCheckoutShell = ({
   summary,
   mobileSummary,
   stickyAction,
-  mode = 'default',
+  mode = 'standard',
   children,
 }: TransactionCheckoutShellProps) => (
-  <div className={cn('sale-light v2-checkout', mode === 'wizard' && 'v2-checkout-wizard')}>
+  <div className={cn('sale-light v2-checkout', mode === 'wizard' && 'is-wizard')}>
     <header className="v2-checkout-topbar">
       <Link to={exitHref} className="v2-checkout-back">
         <ArrowLeft aria-hidden />
