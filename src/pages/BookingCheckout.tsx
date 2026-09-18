@@ -73,7 +73,42 @@ import CheckoutSection from '@/components/transaction/checkout/CheckoutSection';
 import ListingCheckoutSummary from '@/components/transaction/checkout/ListingCheckoutSummary';
 import MoneyBreakdown, { type MoneyLine } from '@/components/transaction/checkout/MoneyBreakdown';
 import PayPalEmbeddedPayment from '@/components/transaction/checkout/PayPalEmbeddedPayment';
-import TransactionAgreementStep from '@/components/checkout/TransactionAgreementStep';
+import CheckoutAgreementCards from '@/components/checkout/CheckoutAgreementCards';
+import SaleCheckoutWizard from '@/components/checkout/sale/SaleCheckoutWizard';
+
+/** The contained rental checkout: one step visible at a time. */
+const RENTAL_STEPS: Array<{ id: string; label: string; heading: string; description: string }> = [
+  {
+    id: 'review',
+    label: 'Review',
+    heading: 'Review your booking',
+    description: 'Confirm the rental, dates, and total before continuing.',
+  },
+  {
+    id: 'use',
+    label: 'Use',
+    heading: 'Pickup, delivery or on-site use',
+    description: "Select how you'll access this rental.",
+  },
+  {
+    id: 'details',
+    label: 'Details',
+    heading: 'Your details & requirements',
+    description: 'Who the host is renting to, plus anything this listing requires.',
+  },
+  {
+    id: 'agreement',
+    label: 'Agreement',
+    heading: 'Agreements',
+    description: 'Review and accept the terms for this booking before continuing to payment.',
+  },
+  {
+    id: 'payment',
+    label: 'Payment',
+    heading: 'Payment',
+    description: "Choose how you'd like to pay.",
+  },
+];
 import OrderReviewStage from '@/components/checkout/OrderReviewStage';
 import PostPaymentTimeline from '@/components/checkout/PostPaymentTimeline';
 import { recordCheckoutAgreements } from '@/lib/legal/recordCheckoutAgreements';
@@ -181,8 +216,15 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   const [referralCode, setReferralCode] = useState<string>('');
   const [referralValid, setReferralValid] = useState<boolean>(false);
   const [showDateModal, setShowDateModal] = useState(false);
-  /** Two-stage checkout: order review, then the checkout stage. */
-  const [stage, setStage] = useState<'review' | 'checkout'>('review');
+  /** Contained five-step checkout. Only the active step body is rendered. */
+  const [step, setStep] = useState(1);
+  const [furthestStep, setFurthestStep] = useState(1);
+  const goToStep = (next: number) => {
+    setStep(next);
+    setFurthestStep((prev) => Math.max(prev, next));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+  const activeStep = RENTAL_STEPS[step - 1];
   const [fulfillmentSelected, setFulfillmentSelected] = useState<FulfillmentSelection>('pickup');
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [message, setMessage] = useState('');
@@ -1039,17 +1081,13 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
       />
       <TransactionCheckoutShell
         eyebrow="Vendibook rental"
-        title={stage === 'review' ? 'Order review' : 'Complete your booking'}
-        subtitle={
-          stage === 'review'
-            ? 'Review the rental, fulfillment, and total before continuing to checkout.'
-            : listing.title
-        }
+        title="Checkout"
+        subtitle={listing.title}
         exitHref={listingHref}
         exitLabel="Back to listing"
         summary={railSummary}
         mobileSummary={mobileSummary}
-        stickyAction={stage === 'review' ? undefined : (
+        stickyAction={step < 5 ? undefined : (
           <div className="v2-checkout-sticky-inner">
             <div className="v2-checkout-sticky-total">
               <span>Total due today</span>
@@ -1068,335 +1106,268 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
                   Sign in now so we keep your details when you return — no need to retype anything.
                 </p>
               </div>
-              <Link
-                to={authPath(bookingReturnPath)}
-                className="v2-btn shrink-0"
-              >
+              <Link to={authPath(bookingReturnPath)} className="v2-btn shrink-0">
                 Sign in / Create account
               </Link>
             </div>
           </div>
         )}
 
-        {stage === 'review' ? (
-          <OrderReviewStage
-            imageUrl={coverImage}
-            title={listing.title}
-            categoryLabel={listing.category ? listing.category.replace(/_/g, ' ') : null}
-            location={listingLocation}
-            specs={[
-              { label: isHourlyBooking ? 'Scheduled hours' : 'Dates', value: dateLabel },
-              { label: 'Duration', value: durationLabel },
-              ...(hasMultipleSlots && selectedSlotName ? [{ label: 'Space', value: selectedSlotName }] : []),
-            ]}
-            priceLabel={formatCurrency(totalChargedToday)}
-            priceNote="Total due today"
-            fulfillmentLabel={
-              fulfillmentSelected === 'delivery'
-                ? 'Host delivery'
-                : fulfillmentSelected === 'on_site'
-                  ? 'On-site access'
-                  : 'Local pickup'
-            }
-            fulfillmentDetail={
-              fulfillmentSelected === 'delivery'
-                ? 'Delivered to the address you confirm in checkout.'
-                : fulfillmentSelected === 'on_site'
-                  ? 'Access details are shared with your booking confirmation.'
-                  : 'Collect from the host location.'
-            }
-            onEditFulfillment={() => {
-              setStage('checkout');
-              window.requestAnimationFrame(() => {
-                document.getElementById('checkout-rental-fulfillment')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-              });
-            }}
-            moneyLines={moneyLines}
-            total={formatCurrency(totalChargedToday)}
-            totalLabel="Total due today"
-            onContinue={() => { setStage('checkout'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
-            backHref={listingHref}
-          />
-        ) : (
-        <>
-        {/* 1. Dates & rate */}
-        <CheckoutSection
-          title="Dates & rate"
-          description="Your selected dates, the applicable rate and any refundable deposit."
-          aside={
-            <button type="button" className="v2-btn-quiet" onClick={() => setShowDateModal(true)}>
-              Change dates
-            </button>
+        <SaleCheckoutWizard
+          steps={RENTAL_STEPS}
+          currentStep={step}
+          furthestStep={furthestStep}
+          title={activeStep.heading}
+          description={activeStep.description}
+          onStepChange={goToStep}
+          onBack={step > 1 ? () => goToStep(step - 1) : undefined}
+          onNext={step < 5 ? () => goToStep(step + 1) : undefined}
+          nextLabel={step === 4 ? 'Continue to payment' : 'Continue'}
+          nextDisabled={
+            (step === 2 && fulfillmentSelected === 'delivery' && !deliveryAddress.trim()) ||
+            (step === 3 && !(isStepContactComplete && isStepBusinessInfoComplete && isStepDocsComplete)) ||
+            (step === 4 && !(rentalAgreementAccepted && privacyAccepted && isStepDisclosureComplete))
           }
         >
-          <div className="flex gap-4">
-            <img src={coverImage} alt={listing.title} className="w-24 h-20 object-cover rounded-xl shrink-0" />
-            <div className="min-w-0">
-              <h3 className="font-semibold text-foreground line-clamp-2 text-sm">{listing.title}</h3>
-              {listingLocation && (
-                <p className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                  <MapPin className="h-3 w-3" /> {listingLocation}
-                </p>
-              )}
-              {ratingData && (
-                <div className="flex items-center gap-1 mt-1">
-                  <Star className="h-3.5 w-3.5 fill-yellow-400 text-yellow-400" />
-                  <span className="text-xs font-medium">{ratingData.average}</span>
-                  <span className="text-xs text-muted-foreground">({ratingData.count})</span>
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="mt-4 pt-4 border-t border-border">
-            {isHourlyBooking ? (
-              <>
-                <p className="text-sm text-muted-foreground mb-2">{durationLabel}</p>
-                <HourlySelectionSummary selections={hourlySelections} variant="compact" />
-              </>
-            ) : (
-              <p className="text-sm text-foreground font-medium">{dateLabel} · {durationLabel}</p>
-            )}
-            {hasMultipleSlots && selectedSlotName && (
-              <p className="text-sm text-muted-foreground mt-2">Space: {selectedSlotName}</p>
-            )}
-          </div>
-
-          <div className="mt-4 pt-4 border-t border-border">
-            <MoneyBreakdown lines={moneyLines} total={formatCurrency(totalChargedToday)} totalNote="Due today" />
-          </div>
-        </CheckoutSection>
-
-        {/* 2. Pickup or delivery */}
-        <CheckoutSection
-          id="checkout-rental-fulfillment"
-          title="Pickup or delivery"
-          description="How you'll get the rental, and where."
-        >
-          <div className="space-y-5">
-            {supportsFulfillmentChoice && (
-              <div>
-                <Label className="text-sm font-medium mb-3 block">Fulfillment method</Label>
-                <RadioGroup
-                  value={fulfillmentSelected}
-                  onValueChange={(val) => setFulfillmentSelected(val as FulfillmentSelection)}
-                  className="space-y-2"
-                >
-                  <div className={cn(
-                    "flex items-center space-x-3 p-4 rounded-xl border-2 transition-all cursor-pointer",
-                    fulfillmentSelected === 'pickup' ? 'border-primary bg-primary/5' : 'border-border'
-                  )}>
-                    <RadioGroupItem value="pickup" id="checkout-pickup" />
-                    <Label htmlFor="checkout-pickup" className="flex-1 cursor-pointer">
-                      <span className="font-medium block">Pickup</span>
-                      <span className="text-xs text-muted-foreground">Collect from host location</span>
-                    </Label>
-                  </div>
-                  <div className={cn(
-                    "flex items-center space-x-3 p-4 rounded-xl border-2 transition-all cursor-pointer",
-                    fulfillmentSelected === 'delivery' ? 'border-primary bg-primary/5' : 'border-border'
-                  )}>
-                    <RadioGroupItem value="delivery" id="checkout-delivery" />
-                    <Label htmlFor="checkout-delivery" className="flex-1 cursor-pointer">
-                      <span className="font-medium block">Delivery</span>
-                      <span className="text-xs text-muted-foreground">Delivered to your location</span>
-                    </Label>
-                    {listing.delivery_fee ? (
-                      <span className="text-sm font-medium text-primary">+${listing.delivery_fee}</span>
-                    ) : null}
-                  </div>
-                </RadioGroup>
-              </div>
-            )}
-
-            {(fulfillmentSelected === 'pickup' || isStaticLocation) && (
-              <div className="p-4 bg-muted/50 rounded-xl">
-                <div className="flex items-start gap-3">
-                  <MapPin className="h-5 w-5 text-primary mt-0.5" />
-                  <div>
-                    <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
-                      {isStaticLocation ? 'Location' : 'Pickup Location'}
-                    </span>
-                    <p className="text-sm font-medium text-foreground mt-1">
-                      {isStaticLocation
-                        ? 'Exact address will be sent after confirmation'
-                        : listing.pickup_location_text || 'Address will be provided after confirmation'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {isMobileAsset && fulfillmentSelected === 'pickup' && listingId && (
-              <TowingHandoffPanel
-                listingId={listingId}
-                category={listing.category}
-                hitchBallSize={towingFields.hitch_ball_size}
-                couplerType={towingFields.coupler_type}
-                trailerPlugType={towingFields.trailer_plug_type}
-                renterProvidesTowVehicle={towingFields.renter_provides_tow_vehicle}
-                towVehicleRequirement={towingFields.tow_vehicle_requirement}
-                pickupInstructions={listing.pickup_instructions}
-                returnInstructions={towingFields.return_instructions}
-              />
-            )}
-
-            {fulfillmentSelected === 'delivery' && (
-              <div>
-                <Label htmlFor="delivery-addr" className="text-sm font-medium mb-2 block">
-                  Delivery address
-                </Label>
-                <Input
-                  id="delivery-addr"
-                  placeholder="Enter your full address"
-                  value={deliveryAddress}
-                  onChange={(e) => setDeliveryAddress(e.target.value)}
-                  className="h-12"
-                />
-              </div>
-            )}
-
-            <div>
-              <Label htmlFor="msg" className="text-sm font-medium mb-2 block">
-                Message to host (optional)
-              </Label>
-              <Textarea
-                id="msg"
-                placeholder="Tell them about your event or how you'll use this rental..."
-                value={message}
-                onChange={(e) => setMessage(e.target.value)}
-                rows={3}
-              />
-            </div>
-          </div>
-        </CheckoutSection>
-
-        {/* 3. Your business details */}
-        <CheckoutSection
-          title="Your business details"
-          description="Who the host is renting to, and (for food categories) your business info."
-          aside={isStepContactComplete && !editingContact ? (
-            <button type="button" className="v2-btn-quiet" onClick={() => setEditingContact(true)}>
-              <Pencil aria-hidden /> Edit
-            </button>
-          ) : undefined}
-        >
-          <div className="space-y-6">
-            {isStepContactComplete && !editingContact ? (
-              <div className="flex items-center justify-between p-4 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl border border-emerald-200 dark:border-emerald-800/50">
-                <div className="flex items-center gap-3">
-                  <CheckCircle2 className="h-5 w-5 text-emerald-600" />
-                  <div>
-                    <span className="font-medium text-emerald-700 dark:text-emerald-300">
-                      {userInfo?.firstName} {userInfo?.lastName}
-                    </span>
-                    <span className="text-xs text-emerald-600 dark:text-emerald-400 block">
-                      Contact details saved
-                    </span>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <ContactInfoWizard
-                listingId={listingId}
-                initialData={userInfo || undefined}
-                onPartialChange={(partial) => setUserInfo(partial)}
-                onComplete={(info) => {
-                  setUserInfo(info);
-                  setEditingContact(false);
-                }}
-              />
-            )}
-
-            {requiresBusinessInfo && (
-              <div className="pt-2 border-t border-border">
-                <p className="text-sm text-muted-foreground mb-4 mt-4">
-                  Help the host understand your business and how you'll use the space.
-                </p>
-                <BusinessInfoStep
-                  businessInfo={businessInfo}
-                  onBusinessInfoChange={setBusinessInfo}
-                  onComplete={() => setBusinessInfoDone(true)}
-                  disabled={isSubmitting}
-                  category={listing.category}
-                />
-              </div>
-            )}
-          </div>
-        </CheckoutSection>
-
-        {/* 4. Documents & compliance */}
-        {hasRequiredDocs && (
-          <CheckoutSection
-            title="Documents & compliance"
-            description="Documents this host requires before your request can be reviewed."
-            aside={
-              <span className="text-xs">
-                {docsOnFile
-                  ? 'On file'
-                  : `${preBookingBlockers.filter((req) => stagedDocuments.some((doc) => doc.documentType === req.document_type)).length} of ${preBookingBlockers.length} ready`}
-              </span>
-            }
-          >
-            <BookingDocumentUpload
-              requiredDocs={requiredDocs || []}
-              stagedDocuments={stagedDocuments}
-              onDocumentsChange={setStagedDocuments}
-              onComplete={() => setDocsStepDone(true)}
-              disabled={isSubmitting}
-              docsOnFile={docsOnFile}
-              onFileExpiresAt={docsOnFileData?.expiresAt}
-            />
-          </CheckoutSection>
-        )}
-
-        {/* 5. Terms & cancellation */}
-        <CheckoutSection
-          title="Terms & cancellation"
-          description="Review the policy, agree to the terms, and complete identity verification."
-        >
-          <div className="space-y-4">
-            <div className="rounded-xl border border-border bg-muted/30 p-4">
-              <div className="flex items-center gap-2 mb-1.5">
-                <Clock className="h-4 w-4 text-foreground" />
-                <span className="text-sm font-medium text-foreground">Cancellation policy</span>
-              </div>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                {cancellationPolicyText ?? (
-                  <>
-                    This host hasn't published a custom policy, so Vendibook's standard rental
-                    policy applies: cancel before the host accepts for a full refund; after
-                    acceptance, refunds follow the terms you accept at payment.{' '}
-                    <Link to={`/listing/${listingId}#terms`} className="underline underline-offset-2">
-                      See rental terms
-                    </Link>
-                  </>
+          {step === 1 ? (
+            <OrderReviewStage
+              imageUrl={coverImage}
+              title={listing.title}
+              categoryLabel={listing.category ? listing.category.replace(/_/g, ' ') : null}
+              
+              location={listingLocation}
+              specs={[
+                { label: isHourlyBooking ? 'Scheduled hours' : 'Dates', value: dateLabel },
+                { label: 'Duration', value: durationLabel },
+                ...(hasMultipleSlots && selectedSlotName ? [{ label: 'Space', value: selectedSlotName }] : []),
+              ]}
+              priceLabel={formatCurrency(totalChargedToday)}
+              priceNote="Total due today"
+              fulfillmentLabel={
+                fulfillmentSelected === 'delivery'
+                  ? 'Host delivery'
+                  : fulfillmentSelected === 'on_site'
+                    ? 'On-site access'
+                    : 'Local pickup'
+              }
+              fulfillmentDetail={
+                fulfillmentSelected === 'delivery'
+                  ? 'Delivered to the address you confirm in checkout.'
+                  : fulfillmentSelected === 'on_site'
+                    ? 'Access details are shared with your booking confirmation.'
+                    : 'Collect from the host location.'
+              }
+              onEditFulfillment={() => goToStep(2)}
+              moneyLines={moneyLines}
+              total={formatCurrency(totalChargedToday)}
+              totalLabel="Total due today"
+              onContinue={() => goToStep(2)}
+              continueLabel="Continue"
+              backHref={listingHref}
+            >
+              <section className="order-review-money">
+                <h3>{isHourlyBooking ? 'Scheduled hours' : 'Dates'}</h3>
+                {isHourlyBooking ? (
+                  <HourlySelectionSummary selections={hourlySelections} variant="compact" />
+                ) : (
+                  <p className="text-sm text-foreground">{dateLabel} · {durationLabel}</p>
                 )}
-              </p>
-            </div>
+                <button type="button" className="v2-btn-quiet mt-3" onClick={() => setShowDateModal(true)}>
+                  Change dates
+                </button>
+              </section>
+            </OrderReviewStage>
+          ) : null}
 
-            <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-1.5">
-              <div className="flex items-center gap-2">
-                <Shield className="h-4 w-4 text-foreground" />
-                <span className="text-sm font-medium text-foreground">How this payment works</span>
+          {step === 2 ? (
+            <div className="space-y-5">
+              {supportsFulfillmentChoice && (
+                <div>
+                  <Label className="text-sm font-medium mb-3 block">Fulfillment method</Label>
+                  <RadioGroup
+                    value={fulfillmentSelected}
+                    onValueChange={(val) => setFulfillmentSelected(val as FulfillmentSelection)}
+                    className="space-y-2"
+                  >
+                    <div className={cn(
+                      "flex items-center space-x-3 p-4 rounded-xl border-2 transition-all cursor-pointer",
+                      fulfillmentSelected === 'pickup' ? 'border-primary bg-primary/5' : 'border-border'
+                    )}>
+                      <RadioGroupItem value="pickup" id="checkout-pickup" />
+                      <Label htmlFor="checkout-pickup" className="flex-1 cursor-pointer">
+                        <span className="font-medium block">Pickup</span>
+                        <span className="text-xs text-muted-foreground">Collect from host location</span>
+                      </Label>
+                    </div>
+                    <div className={cn(
+                      "flex items-center space-x-3 p-4 rounded-xl border-2 transition-all cursor-pointer",
+                      fulfillmentSelected === 'delivery' ? 'border-primary bg-primary/5' : 'border-border'
+                    )}>
+                      <RadioGroupItem value="delivery" id="checkout-delivery" />
+                      <Label htmlFor="checkout-delivery" className="flex-1 cursor-pointer">
+                        <span className="font-medium block">Delivery</span>
+                        <span className="text-xs text-muted-foreground">Delivered to your location</span>
+                      </Label>
+                      {listing.delivery_fee ? (
+                        <span className="text-sm font-medium text-primary">+${listing.delivery_fee}</span>
+                      ) : null}
+                    </div>
+                  </RadioGroup>
+                </div>
+              )}
+
+              {(fulfillmentSelected === 'pickup' || isStaticLocation) && (
+                <div className="p-4 bg-muted/50 rounded-xl">
+                  <div className="flex items-start gap-3">
+                    <MapPin className="h-5 w-5 text-primary mt-0.5" />
+                    <div>
+                      <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                        {isStaticLocation ? 'Location' : 'Pickup Location'}
+                      </span>
+                      <p className="text-sm font-medium text-foreground mt-1">
+                        {isStaticLocation
+                          ? 'Exact address will be sent after confirmation'
+                          : listing.pickup_location_text || 'Address will be provided after confirmation'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {isMobileAsset && fulfillmentSelected === 'pickup' && listingId && (
+                <TowingHandoffPanel
+                  listingId={listingId}
+                  category={listing.category}
+                  hitchBallSize={towingFields.hitch_ball_size}
+                  couplerType={towingFields.coupler_type}
+                  trailerPlugType={towingFields.trailer_plug_type}
+                  renterProvidesTowVehicle={towingFields.renter_provides_tow_vehicle}
+                  towVehicleRequirement={towingFields.tow_vehicle_requirement}
+                  pickupInstructions={listing.pickup_instructions}
+                  returnInstructions={towingFields.return_instructions}
+                />
+              )}
+
+              {fulfillmentSelected === 'delivery' && (
+                <div>
+                  <Label htmlFor="delivery-addr" className="text-sm font-medium mb-2 block">
+                    Delivery address
+                  </Label>
+                  <Input
+                    id="delivery-addr"
+                    placeholder="Enter your full address"
+                    value={deliveryAddress}
+                    onChange={(e) => setDeliveryAddress(e.target.value)}
+                    className="h-12"
+                  />
+                </div>
+              )}
+
+              <div>
+                <Label htmlFor="msg" className="text-sm font-medium mb-2 block">
+                  Message to host (optional)
+                </Label>
+                <Textarea
+                  id="msg"
+                  placeholder="Tell them about your event or how you'll use this rental..."
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  rows={3}
+                />
               </div>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                {instantConfirm
-                  ? 'PayPal processes your payment now. Your booking is confirmed as soon as the payment completes, and the full record is saved to your account.'
-                  : 'PayPal processes your payment now and your request is sent to the host. If they decline or do not respond, Vendibook refunds the payment to your original payment method.'}
-              </p>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Vendibook records the transaction and reviews host payouts after the rental begins. Payments are
-                processed by PayPal; Vendibook does not hold or control your funds.
-              </p>
             </div>
+          ) : null}
 
-            <div>
-              <h3 className="text-sm font-semibold text-foreground">Agreements</h3>
-              <p className="text-xs text-muted-foreground mb-3">
-                Review the terms for this transaction before continuing.
-              </p>
-              <TransactionAgreementStep
+          {step === 3 ? (
+            <div className="space-y-6">
+              {isStepContactComplete && !editingContact ? (
+                <div className="flex items-center justify-between p-4 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl border border-emerald-200 dark:border-emerald-800/50">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                    <div>
+                      <span className="font-medium text-emerald-700 dark:text-emerald-300">
+                        {userInfo?.firstName} {userInfo?.lastName}
+                      </span>
+                      <span className="text-xs text-emerald-600 dark:text-emerald-400 block">
+                        Contact details saved
+                      </span>
+                    </div>
+                  </div>
+                  <button type="button" className="v2-btn-quiet" onClick={() => setEditingContact(true)}>
+                    <Pencil aria-hidden /> Edit
+                  </button>
+                </div>
+              ) : (
+                <ContactInfoWizard
+                  listingId={listingId}
+                  initialData={userInfo || undefined}
+                  onPartialChange={(partial) => setUserInfo(partial)}
+                  onComplete={(info) => {
+                    setUserInfo(info);
+                    setEditingContact(false);
+                  }}
+                />
+              )}
+
+              {requiresBusinessInfo && (
+                <div className="pt-2 border-t border-border">
+                  <p className="text-sm text-muted-foreground mb-4 mt-4">
+                    Help the host understand your business and how you'll use the space.
+                  </p>
+                  <BusinessInfoStep
+                    businessInfo={businessInfo}
+                    onBusinessInfoChange={setBusinessInfo}
+                    onComplete={() => setBusinessInfoDone(true)}
+                    disabled={isSubmitting}
+                    category={listing.category}
+                  />
+                </div>
+              )}
+
+              {hasRequiredDocs && (
+                <div className="pt-2 border-t border-border">
+                  <p className="text-sm font-semibold text-foreground mt-4">Documents this host requires</p>
+                  <p className="text-xs text-muted-foreground mb-4">
+                    {docsOnFile
+                      ? 'On file'
+                      : `${preBookingBlockers.filter((req) => stagedDocuments.some((doc) => doc.documentType === req.document_type)).length} of ${preBookingBlockers.length} ready`}
+                  </p>
+                  <BookingDocumentUpload
+                    requiredDocs={requiredDocs || []}
+                    stagedDocuments={stagedDocuments}
+                    onDocumentsChange={setStagedDocuments}
+                    onComplete={() => setDocsStepDone(true)}
+                    disabled={isSubmitting}
+                    docsOnFile={docsOnFile}
+                    onFileExpiresAt={docsOnFileData?.expiresAt}
+                  />
+                </div>
+              )}
+            </div>
+          ) : null}
+
+          {step === 4 ? (
+            <div className="space-y-4">
+              <div className="rounded-xl border border-border bg-muted/30 p-4">
+                <div className="flex items-center gap-2 mb-1.5">
+                  <Clock className="h-4 w-4 text-foreground" />
+                  <span className="text-sm font-medium text-foreground">Cancellation policy</span>
+                </div>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  {cancellationPolicyText ?? (
+                    <>
+                      This host hasn't published a custom policy, so Vendibook's standard rental
+                      policy applies: cancel before the host accepts for a full refund; after
+                      acceptance, refunds follow the terms you accept at payment.{' '}
+                      <Link to={`/listing/${listingId}#terms`} className="underline underline-offset-2">
+                        See rental terms
+                      </Link>
+                    </>
+                  )}
+                </p>
+              </div>
+
+              <CheckoutAgreementCards
                 mode="rental"
                 agreement={rentalAgreement}
                 privacy={privacyDocument}
@@ -1404,136 +1375,144 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
                 privacyAccepted={privacyAccepted}
                 onAgreementAcceptedChange={setRentalAgreementAccepted}
                 onPrivacyAcceptedChange={setPrivacyAccepted}
-                showHeading={false}
               />
-            </div>
 
-            {listing?.id && (
-              <DisclosureStep
-                listingId={listing.id}
-                onInsuranceAnswer={(answer) =>
-                  setBusinessInfo((prev) =>
-                    prev
-                      ? { ...prev, liabilityInsuranceAnswer: answer, hasLiabilityInsurance: answer === 'yes' }
-                      : prev,
-                  )
-                }
-                onComplete={(state) => {
-                  setDisclosureRecord({
-                    attestedAt: state.attestedAt,
-                    documentVersion: state.documentVersion,
-                    identityStatus: state.identityStatus,
-                    insuranceAnswer: state.insuranceAnswer,
-                  });
-                  setDisclosureDone(true);
-                }}
-              />
-            )}
-          </div>
-        </CheckoutSection>
-
-        {/* 6. Review & payment */}
-        <CheckoutSection
-          title="Review & payment"
-          description={
-            instantConfirm
-              ? 'Your booking is confirmed as soon as payment completes.'
-              : 'Your payment is processed now while the host reviews your request.'
-          }
-        >
-          <div className="space-y-5">
-            <div className="p-3 border border-border rounded-lg">
-              <ReferralCodeField
-                programType="rental"
-                value={referralCode}
-                onChange={(code, valid) => { setReferralCode(code); setReferralValid(valid); }}
-                autoFillFromCookie
-              />
-            </div>
-
-            <MoneyBreakdown
-              lines={moneyLines}
-              total={formatCurrency(totalChargedToday)}
-              totalLabel="Total due today"
-            />
-
-            {paypalCheckout ? (
-              <>
-                <PayPalEmbeddedPayment
-                  target={{ kind: 'booking', id: paypalCheckout.bookingId }}
-                  sellerId={listing.host_id}
-                  counterparty="host"
-                  listingHref={listingHref}
-                  returnUrl={paypalCheckout.returnUrl}
-                  totalUsd={totalChargedToday}
-                  heading={instantConfirm ? 'Confirm and pay with PayPal' : 'Secure your booking with PayPal'}
-                  intent={
-                    instantConfirm
-                      ? 'Your booking is confirmed the moment PayPal verifies your payment.'
-                      : 'Your dates are held the moment PayPal verifies your payment; the host still has to accept.'
+              {listing?.id && (
+                <DisclosureStep
+                  listingId={listing.id}
+                  onInsuranceAnswer={(answer) =>
+                    setBusinessInfo((prev) =>
+                      prev
+                        ? { ...prev, liabilityInsuranceAnswer: answer, hasLiabilityInsurance: answer === 'yes' }
+                        : prev,
+                    )
                   }
+                  onComplete={(state) => {
+                    setDisclosureRecord({
+                      attestedAt: state.attestedAt,
+                      documentVersion: state.documentVersion,
+                      identityStatus: state.identityStatus,
+                      insuranceAnswer: state.insuranceAnswer,
+                    });
+                    setDisclosureDone(true);
+                  }}
                 />
-                <button
-                  type="button"
-                  className="v2-btn-quiet"
-                  onClick={() => setPaypalCheckout(null)}
-                >
-                  Edit booking details
-                </button>
-              </>
-            ) : paymentSetupBlocked ? (
-              <div className="rounded-xl border border-border bg-muted/40 p-4 space-y-2">
+              )}
+            </div>
+          ) : null}
+
+          {step === 5 ? (
+            <div className="space-y-5">
+              <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-1.5">
                 <div className="flex items-center gap-2">
-                  <Info className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-sm font-medium text-foreground">Payment setup unavailable</span>
+                  <Shield className="h-4 w-4 text-foreground" />
+                  <span className="text-sm font-medium text-foreground">How this payment works</span>
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  This host hasn&apos;t finished setting up payments yet, so checkout can&apos;t be completed
-                  right now. Please check back soon or message the host for an update.
+                  {instantConfirm
+                    ? 'PayPal processes your payment now. Your booking is confirmed as soon as the payment completes, and the full record is saved to your account.'
+                    : 'PayPal processes your payment now and your request is sent to the host. If they decline or do not respond, Vendibook refunds the payment to your original payment method.'}
+                </p>
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  Vendibook records the transaction and reviews host payouts after the rental begins. Payments are
+                  processed by PayPal; Vendibook does not hold or control your funds.
                 </p>
               </div>
-            ) : (
-              <>
-                <Button
-                  className="checkout-primary-action w-full h-14 text-base bg-foreground text-background hover:bg-foreground/90 rounded-xl font-semibold"
-                  onClick={handleSubmit}
-                  disabled={isSubmitting || !legalAccepted}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="h-5 w-5 animate-spin mr-2" />
-                      Processing...
-                    </>
-                  ) : instantConfirm ? (
-                    <>
-                      <Zap className="h-5 w-5 mr-2" />
-                      Confirm and pay {formatCurrency(totalChargedToday)}
-                    </>
-                  ) : (
-                    <>
-                      <CreditCard className="h-5 w-5 mr-2" />
-                      Continue to payment · {formatCurrency(totalChargedToday)}
-                    </>
+
+              <MoneyBreakdown
+                lines={moneyLines}
+                total={formatCurrency(totalChargedToday)}
+                totalLabel="Total due today"
+              />
+
+              {paypalCheckout ? (
+                <>
+                  <PayPalEmbeddedPayment
+                    target={{ kind: 'booking', id: paypalCheckout.bookingId }}
+                    sellerId={listing.host_id}
+                    counterparty="host"
+                    listingHref={listingHref}
+                    returnUrl={paypalCheckout.returnUrl}
+                    totalUsd={totalChargedToday}
+                    heading={instantConfirm ? 'Confirm and pay with PayPal' : 'Secure your booking with PayPal'}
+                    intent={
+                      instantConfirm
+                        ? 'Your booking is confirmed the moment PayPal verifies your payment.'
+                        : 'Your dates are held the moment PayPal verifies your payment; the host still has to accept.'
+                    }
+                  />
+                  <button type="button" className="v2-btn-quiet" onClick={() => setPaypalCheckout(null)}>
+                    Edit booking details
+                  </button>
+                </>
+              ) : paymentSetupBlocked ? (
+                <div className="rounded-xl border border-border bg-muted/40 p-4 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <Info className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium text-foreground">Payment setup unavailable</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground leading-relaxed">
+                    This host hasn&apos;t finished setting up payments yet, so checkout can&apos;t be completed
+                    right now. Please check back soon or message the host for an update.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <Button
+                    className="checkout-primary-action w-full h-14 text-base bg-foreground text-background hover:bg-foreground/90 rounded-xl font-semibold"
+                    onClick={handleSubmit}
+                    disabled={isSubmitting || !legalAccepted}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <Loader2 className="h-5 w-5 animate-spin mr-2" />
+                        Processing...
+                      </>
+                    ) : instantConfirm ? (
+                      <>
+                        <Zap className="h-5 w-5 mr-2" />
+                        Confirm and pay {formatCurrency(totalChargedToday)}
+                      </>
+                    ) : (
+                      <>
+                        <CreditCard className="h-5 w-5 mr-2" />
+                        Continue to payment · {formatCurrency(totalChargedToday)}
+                      </>
+                    )}
+                  </Button>
+                  {!canSubmit && nextIncompleteReason && (
+                    <p className="text-xs text-muted-foreground text-center">{nextIncompleteReason}</p>
                   )}
-                </Button>
-                {!canSubmit && nextIncompleteReason && (
-                  <p className="text-xs text-muted-foreground text-center">{nextIncompleteReason}</p>
-                )}
-                <p className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
-                  <Lock className="h-3 w-3" />
-                  Secure checkout with <PayPalMonogram className="h-3.5 w-auto inline-block" />
-                </p>
-              </>
-            )}
-          </div>
-        </CheckoutSection>
+                  <p className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
+                    <Lock className="h-3 w-3" />
+                    Secure checkout with <PayPalMonogram className="h-3.5 w-auto inline-block" />
+                  </p>
+                </>
+              )}
+
+              <details className="sale-wizard-referral">
+                <summary>Have a referral code?</summary>
+                <ReferralCodeField
+                  programType="rental"
+                  value={referralCode}
+                  onChange={(code, valid) => { setReferralCode(code); setReferralValid(valid); }}
+                  autoFillFromCookie
+                />
+              </details>
+
+              <p className="text-xs text-muted-foreground">
+                PayPal terms and eligibility apply to the payment method you choose.
+              </p>
+            </div>
+          ) : null}
+        </SaleCheckoutWizard>
+
         <details className="checkout-story-mobile">
           <summary>What happens next</summary>
           {rentalStory}
         </details>
-        </>
-        )}
       </TransactionCheckoutShell>
+
 
 
       {/* Modals */}

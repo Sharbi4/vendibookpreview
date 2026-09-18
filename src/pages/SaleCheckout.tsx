@@ -27,12 +27,14 @@ import {
 
 import { ReferralCodeField } from '@/components/referrals/ReferralCodeField';
 import { useTermsGate } from '@/hooks/useTermsGate';
-import { buildTerms } from '@/lib/transactionTerms';
+import { buildTerms, type TransactionTerms } from '@/lib/transactionTerms';
 import { useCheckoutState } from '@/hooks/useCheckoutState';
 import { parseFormattedAddress } from '@/lib/fulfillment/parseAddress';
 import { getPublicDisplayName } from '@/lib/displayName';
 import { useSellerPaymentReadiness } from '@/hooks/useSellerPaymentReadiness';
-import FinancingActionPanel from '@/components/listing-detail/sale/FinancingActionPanel';
+import SaleCheckoutWizard from '@/components/checkout/sale/SaleCheckoutWizard';
+import CheckoutAgreementCards from '@/components/checkout/CheckoutAgreementCards';
+import CheckoutFinancingBanner from '@/components/checkout/CheckoutFinancingBanner';
 
 import TransactionCheckoutShell from '@/components/transaction/checkout/TransactionCheckoutShell';
 import CheckoutSection from '@/components/transaction/checkout/CheckoutSection';
@@ -49,6 +51,40 @@ import { useLegalDocument } from '@/hooks/useLegalDocument';
 import { CONSENT_TRIGGERS, DOCUMENT_TYPES } from '@/lib/legalDocuments';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
+
+/** The contained sale checkout: one step visible at a time. */
+const SALE_STEPS: Array<{ id: string; label: string; heading: string; description: string }> = [
+  {
+    id: 'review',
+    label: 'Review',
+    heading: 'Review your purchase',
+    description: 'Confirm the equipment, price, and order details before continuing.',
+  },
+  {
+    id: 'fulfillment',
+    label: 'Fulfillment',
+    heading: 'Choose fulfillment',
+    description: "Select how you'll receive this equipment.",
+  },
+  {
+    id: 'details',
+    label: 'Details',
+    heading: 'Your details',
+    description: 'Where your receipt, documents, and handoff updates should go.',
+  },
+  {
+    id: 'agreement',
+    label: 'Agreement',
+    heading: 'Agreements',
+    description: 'Review and accept the terms for this transaction before continuing to payment.',
+  },
+  {
+    id: 'payment',
+    label: 'Payment',
+    heading: 'Payment',
+    description: "Choose how you'd like to pay.",
+  },
+];
 
 /**
  * Inline for-sale checkout wizard. Money, eligibility, and server payment
@@ -136,8 +172,9 @@ const SaleCheckout = () => {
   const [legalAccepted, setLegalAccepted] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [paypalCheckout, setPaypalCheckout] = useState<{ transactionId: string; returnUrl: string } | null>(null);
-  /** Two-stage checkout: order review, then the checkout stage. */
-  const [stage, setStage] = useState<'review' | 'checkout'>('review');
+  /** Contained five-step checkout. Only the active step body is rendered. */
+  const [step, setStep] = useState(1);
+  const [furthestStep, setFurthestStep] = useState(1);
   /** True once both required acceptances are recorded server-side. */
   const [agreementsRecorded, setAgreementsRecorded] = useState(false);
   const [recordingConsent, setRecordingConsent] = useState(false);
@@ -581,21 +618,21 @@ const SaleCheckout = () => {
    */
   const submitLockRef = useRef(false);
 
-  const prepareAgreement = async () => {
-    if (submitLockRef.current || isPurchasing || termsGate.preparing) return;
-    if (!validateFulfillment()) return;
-    if (!validateDetails()) return;
+  const prepareAgreement = async (): Promise<{ terms: TransactionTerms; termsId: string } | null> => {
+    if (submitLockRef.current || isPurchasing || termsGate.preparing) return null;
+    if (!validateFulfillment()) return null;
+    if (!validateDetails()) return null;
     if (paypalPurchaseBlocked && paymentMethod !== 'cash') {
       toast({
         title: 'Seller setup incomplete',
         description: "This seller hasn't finished payment setup yet. Message them or choose pay-in-person if available.",
         variant: 'destructive',
       });
-      return;
+      return null;
     }
     if (!user) {
       navigate(`/auth?redirect=/checkout/${listingId}`);
-      return;
+      return null;
     }
     if (isOwner) {
       toast({
@@ -603,11 +640,11 @@ const SaleCheckout = () => {
         description: 'You cannot buy your own listing.',
         variant: 'destructive',
       });
-      return;
+      return null;
     }
-    if (!priceSale || !listingId || !listing?.host_id) return;
+    if (!priceSale || !listingId || !listing?.host_id) return null;
     const t = buildCurrentTerms();
-    if (!t) return false;
+    if (!t) return null;
     submitLockRef.current = true;
     try {
       return await termsGate.prepare(t, { openSheet: false });
@@ -616,8 +653,8 @@ const SaleCheckout = () => {
     }
   };
 
-  const recordAgreement = async () => {
-    if (!agreedToTerms || !privacyAccepted || !termsGate.terms || recordingConsent) return false;
+  const recordAgreement = async (prepared: { terms: TransactionTerms; termsId: string }) => {
+    if (!agreedToTerms || !privacyAccepted || recordingConsent) return false;
     setRecordingConsent(true);
     try {
       await recordCheckoutAgreements({
@@ -625,17 +662,15 @@ const SaleCheckout = () => {
         trigger:
           paymentMethod === 'cash' ? CONSENT_TRIGGERS.PAY_IN_PERSON : CONSENT_TRIGGERS.PURCHASE_REVIEW,
         relatedIds: {
-          listing_id: termsGate.terms.listing.id,
-          terms_id: termsGate.termsId,
+          listing_id: prepared.terms.listing.id,
+          terms_id: prepared.termsId,
         },
         hashes: {
           agreement: agreement.data?.content_hash ?? null,
           privacy: privacyConsent.data?.content_hash ?? null,
         },
       });
-      if (termsGate.termsId) {
-        await supabase.functions.invoke('acknowledge-terms', { body: { terms_id: termsGate.termsId } });
-      }
+      await supabase.functions.invoke('acknowledge-terms', { body: { terms_id: prepared.termsId } });
       return true;
     } catch (error) {
       toast({
@@ -959,18 +994,6 @@ const SaleCheckout = () => {
     .filter((spec) => spec.value !== null && spec.value !== undefined && String(spec.value).trim() !== '')
     .map((spec) => ({ label: spec.label, value: String(spec.value) }));
 
-  const scrollToSection = (id: string) => {
-    window.requestAnimationFrame(() => {
-      document.getElementById(id)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    });
-  };
-
-  const goToCheckout = (anchor?: string) => {
-    setStage('checkout');
-    if (anchor) scrollToSection(anchor);
-    else window.scrollTo({ top: 0, behavior: 'smooth' });
-  };
-
   /** Agreements → payment. Both acceptances are recorded server-side first. */
   const acceptAgreementsAndContinue = async () => {
     if (!validateFulfillment()) return;
@@ -985,10 +1008,12 @@ const SaleCheckout = () => {
     }
     const prepared = await prepareAgreement();
     if (!prepared) return;
-    const recorded = await recordAgreement();
+    const recorded = await recordAgreement(prepared);
     if (!recorded) return;
     setAgreementsRecorded(true);
-    scrollToSection('checkout-payment');
+    setStep(5);
+    setFurthestStep(5);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   /**
@@ -1005,24 +1030,68 @@ const SaleCheckout = () => {
     termsGate.reset();
   };
 
-  const fulfillmentSectionTitle =
-    fulfillmentSelected === 'vendibook_freight'
-      ? 'Freight details'
-      : fulfillmentSelected === 'delivery'
-        ? 'Delivery details'
-        : 'Pickup details';
+  const stepDefs = SALE_STEPS;
+  const activeStep = stepDefs[step - 1];
+
+
+  const goToStep = (next: number) => {
+    setStep(next);
+    setFurthestStep((prev) => Math.max(prev, next));
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const continueFromFulfillment = () => {
+    if (!validateFulfillment()) return;
+    prefillFromDeliveryAddress();
+    goToStep(3);
+  };
+
+  const continueFromDetails = () => {
+    if (!validateDetails()) return;
+    goToStep(4);
+  };
+
+  const continueFromAgreements = async () => {
+    await acceptAgreementsAndContinue();
+  };
+
+  /** Footer wiring for the active step. Payment has no Continue: the
+   *  official PayPal components own the final action. */
+  const footer = (() => {
+    switch (step) {
+      case 1:
+        return { onNext: () => goToStep(2), nextLabel: 'Continue', nextDisabled: false, nextBusy: false };
+      case 2:
+        return {
+          onBack: () => goToStep(1),
+          onNext: continueFromFulfillment,
+          nextLabel: 'Continue',
+          nextDisabled: !fulfillmentReady,
+          nextBusy: false,
+        };
+      case 3:
+        return { onBack: () => goToStep(2), onNext: continueFromDetails, nextLabel: 'Continue', nextDisabled: false, nextBusy: false };
+      case 4:
+        return {
+          onBack: () => goToStep(3),
+          onNext: () => void continueFromAgreements(),
+          nextLabel: 'Continue to payment',
+          nextDisabled:
+            !agreedToTerms || !privacyAccepted || !agreement.data || !privacyConsent.data || !fulfillmentReady,
+          nextBusy: termsGate.preparing || recordingConsent,
+        };
+      default:
+        return { onBack: () => goToStep(4), onNext: undefined, nextLabel: 'Continue', nextDisabled: false, nextBusy: false };
+    }
+  })();
 
   return (
     <>
       <SEO title={`Checkout - ${listing.title}`} description={`Complete your purchase of ${listing.title}`} />
 
       <TransactionCheckoutShell
-        title={stage === 'review' ? 'Order review' : 'Checkout'}
-        subtitle={
-          stage === 'review'
-            ? 'Review the equipment, fulfillment, and total before continuing to checkout.'
-            : listing.title
-        }
+        title="Checkout"
+        subtitle={listing.title}
         exitHref={`/listing/${listingId}`}
         summary={summaryContent}
         mobileSummary={
@@ -1049,53 +1118,42 @@ const SaleCheckout = () => {
           </div>
         )}
 
-        {stage === 'review' ? (
-          <OrderReviewStage
-            imageUrl={coverImage}
-            title={listing.title}
-            categoryLabel={humanizeCategory(listing.category)}
-            counterpartyLabel={sellerName ? `Sold by ${sellerName}` : undefined}
-            location={locationLabel}
-            specs={assetSpecs}
-            priceLabel={formatCurrency(priceSale)}
-            priceNote={acceptedOfferPrice ? 'Accepted offer price' : 'Listing sale price'}
-            fulfillmentLabel={fulfillmentLabel}
-            fulfillmentDetail={fulfillmentDetail}
-            onEditFulfillment={() => goToCheckout('checkout-fulfillment')}
-            moneyLines={moneyLines}
-            total={formatCurrency(totalPrice)}
-            totalNote="Due today"
-            onContinue={() => goToCheckout()}
-            backHref={`/listing/${listingId}`}
-          />
-        ) : (
-          <>
-            <CheckoutSection
-              id="checkout-contact"
-              title="Contact"
-              description="Where the receipt and handoff updates go."
-            >
-              <PurchaseStepInfo
-                embedded buyerInfo={buyerInfo} updateBuyerInfo={updateBuyerInfo}
-                deliveryInstructions={deliveryInstructions} setDeliveryInstructions={setDeliveryInstructions}
-                fulfillmentSelected={fulfillmentSelected} fieldErrors={fieldErrors}
-                touchedFields={touchedFields} setTouchedFields={setTouchedFields}
-                hideAddress={fulfillmentSelected === 'pickup'}
-                onBack={() => undefined} onContinue={() => undefined}
+        <SaleCheckoutWizard
+          steps={stepDefs}
+          currentStep={step}
+          furthestStep={furthestStep}
+          title={activeStep.heading}
+          description={activeStep.description}
+          onStepChange={goToStep}
+          {...footer}
+        >
+          {step === 1 ? (
+            <div className="space-y-5">
+              <OrderReviewStage
+                imageUrl={coverImage}
+                title={listing.title}
+                categoryLabel={humanizeCategory(listing.category)}
+                counterpartyLabel={sellerName ? `Sold by ${sellerName}` : undefined}
+                location={locationLabel}
+                specs={assetSpecs}
+                priceLabel={formatCurrency(priceSale)}
+                priceNote={acceptedOfferPrice ? 'Accepted offer price' : 'Listing sale price'}
+                fulfillmentLabel={fulfillmentLabel}
+                fulfillmentDetail={fulfillmentDetail}
+                onEditFulfillment={() => goToStep(2)}
+                moneyLines={moneyLines}
+                total={formatCurrency(totalPrice)}
+                totalNote="Due today"
+                onContinue={() => goToStep(2)}
+                continueLabel="Continue"
+                backHref={`/listing/${listingId}`}
               />
-            </CheckoutSection>
+              {financingEligible ? <CheckoutFinancingBanner listing={listing as any} /> : null}
+            </div>
+          ) : null}
 
-            <CheckoutSection
-              id="checkout-fulfillment"
-              title={fulfillmentSectionTitle}
-              description={
-                fulfillmentSelected === 'pickup'
-                  ? 'After payment, use Vendibook Messages to agree on a pickup time and receive the exact handoff location.'
-                  : fulfillmentSelected === 'delivery'
-                    ? 'Live delivery tracking appears only after the seller or assigned driver starts Delivery Mode.'
-                    : 'Freight is coordinated after checkout. Carrier timing is confirmed by the freight partner.'
-              }
-            >
+          {step === 2 ? (
+            <>
               <PurchaseStepDelivery
                 embedded onCanContinueChange={setFulfillmentReady}
                 fulfillmentOptions={fulfillmentOptions} fulfillmentSelected={fulfillmentSelected}
@@ -1114,136 +1172,125 @@ const SaleCheckout = () => {
                 onBack={() => undefined} onContinue={() => undefined}
               />
               {fulfillmentSelected === 'pickup' ? (
-                <p className="mt-4 text-xs">
+                <p className="sale-wizard-step-note">
+                  After payment, use Vendibook Messages to agree on a pickup time and receive the exact handoff
+                  location.{' '}
                   <Link
                     to={`/guides/meetup-inspection?mode=sale&fulfillment=pickup&returnTo=/checkout/${listingId}`}
                     className="underline underline-offset-2"
                   >
-                    How pickup &amp; inspection works
+                    How to prepare for pickup &amp; inspection →
                   </Link>
                 </p>
-              ) : null}
-            </CheckoutSection>
-
-            <CheckoutSection
-              id="checkout-agreements"
-              title="Agreements"
-              description="Review the terms for this transaction before continuing to payment."
-              aside={agreementsRecorded ? <span className="text-xs">Accepted</span> : undefined}
-            >
-              <div className="space-y-5">
-                <TransactionAgreementStep
-                  mode="sale"
-                  agreement={agreement}
-                  privacy={privacyConsent}
-                  agreementAccepted={agreedToTerms}
-                  privacyAccepted={privacyAccepted}
-                  onAgreementAcceptedChange={(value) => { setAgreedToTerms(value); setAgreementsRecorded(false); }}
-                  onPrivacyAcceptedChange={(value) => { setPrivacyAccepted(value); setAgreementsRecorded(false); }}
-                  showHeading={false}
-                />
-
-                <p className="text-xs text-muted-foreground">
-                  After checkout, the buyer and seller may be asked to review and sign the transaction document
-                  electronically through Vendibook.
+              ) : fulfillmentSelected === 'delivery' ? (
+                <p className="sale-wizard-step-note">
+                  Live location appears only after the seller or assigned driver starts Delivery Mode.
                 </p>
+              ) : (
+                <p className="sale-wizard-step-note">
+                  Freight is coordinated after checkout. Carrier timing is confirmed by the freight partner.
+                </p>
+              )}
+            </>
+          ) : null}
 
+          {step === 3 ? (
+            <>
+              <PurchaseStepInfo
+                embedded buyerInfo={buyerInfo} updateBuyerInfo={updateBuyerInfo}
+                deliveryInstructions={deliveryInstructions} setDeliveryInstructions={setDeliveryInstructions}
+                fulfillmentSelected={fulfillmentSelected} fieldErrors={fieldErrors}
+                touchedFields={touchedFields} setTouchedFields={setTouchedFields}
+                hideAddress={fulfillmentSelected === 'pickup'}
+                onBack={() => undefined} onContinue={() => undefined}
+              />
+              <details className="sale-wizard-referral">
+                <summary>Have a referral code?</summary>
                 <ReferralCodeField
                   programType="purchase"
                   value={referralCode}
                   onChange={(code, valid) => { setReferralCode(code); setReferralValid(valid); }}
                   autoFillFromCookie
                 />
+              </details>
+            </>
+          ) : null}
 
-                {!agreementsRecorded ? (
-                  <Button
-                    className="checkout-primary-action w-full h-12 rounded-xl font-semibold"
-                    onClick={acceptAgreementsAndContinue}
-                    disabled={
-                      !agreedToTerms || !privacyAccepted || !agreement.data || !privacyConsent.data ||
-                      !fulfillmentReady || termsGate.preparing || recordingConsent
-                    }
-                  >
-                    {termsGate.preparing || recordingConsent ? 'Recording your acceptance…' : 'Accept and continue to payment'}
+          {step === 4 ? (
+            <CheckoutAgreementCards
+              mode="sale"
+              agreement={agreement}
+              privacy={privacyConsent}
+              agreementAccepted={agreedToTerms}
+              privacyAccepted={privacyAccepted}
+              onAgreementAcceptedChange={(value) => { setAgreedToTerms(value); setAgreementsRecorded(false); }}
+              onPrivacyAcceptedChange={(value) => { setPrivacyAccepted(value); setAgreementsRecorded(false); }}
+            />
+          ) : null}
+
+          {step === 5 ? (
+            <div className="space-y-5">
+              {hasMultiplePaymentOptionsFor(acceptPayPalCheckout && !paypalPurchaseBlocked, acceptCashPayment) ? (
+                <PurchaseStepPayment
+                  embedded
+                  paymentMethod={paymentMethod}
+                  setPaymentMethod={changePaymentMethod}
+                  acceptPayPalCheckout={acceptPayPalCheckout && !paypalPurchaseBlocked}
+                  acceptCashPayment={acceptCashPayment}
+                  titleStatus={(listing as { title_status?: string | null }).title_status ?? null}
+                  hasLien={(listing as { has_lien?: string | null }).has_lien ?? null}
+                  vin={(listing as { vin?: string | null }).vin ?? null}
+                  totalPrice={totalPrice}
+                  submitting={termsGate.preparing}
+                  onBack={() => undefined}
+                  onContinue={() => undefined}
+                />
+              ) : null}
+
+              {paypalPurchaseBlocked && !acceptCashPayment ? (
+                <div className="v2-checkout-unavailable"><ShieldCheck /><div><p className="v2-checkout-unavailable-title">Online payment is not available yet</p><p className="v2-checkout-unavailable-detail">This seller must finish payment setup before checkout can continue.</p></div></div>
+              ) : !agreementsRecorded ? (
+                <p className="text-sm text-muted-foreground">
+                  Go back to Agreements and accept the terms to unlock payment.
+                </p>
+              ) : paymentMethod === 'cash' ? (
+                <div className="sale-final-confirm">
+                  <div className="sale-final-facts"><p><span>Total due</span><strong>{formatCurrency(totalPrice)}</strong></p><p><span>Payment</span><strong>Pay in person</strong></p><p><span>Fulfillment</span><strong>{fulfillmentLabel}</strong></p></div>
+                  <Button className="checkout-primary-action w-full" size="lg" onClick={runPurchase} disabled={isPurchasing}>
+                    {isPurchasing ? 'Placing order…' : 'Place order'}
                   </Button>
-                ) : null}
-              </div>
-            </CheckoutSection>
+                </div>
+              ) : (
+                <PayPalEmbeddedPayment
+                  target={{ kind: 'sale', id: paypalCheckout?.transactionId ?? '' }}
+                  key={paypalCheckout?.transactionId ?? 'pending'}
+                  sellerId={listing.host_id}
+                  listingHref={`/listing/${listingId}`}
+                  returnUrl={paypalCheckout?.returnUrl}
+                  totalUsd={totalPrice}
+                  blocked={!paypalCheckout}
+                  blockedReason="Preparing your payment…"
+                />
+              )}
 
-            <CheckoutSection
-              id="checkout-payment"
-              title="Payment"
-              description="Choose how you'd like to pay. Available options are provided through PayPal and may vary by buyer, device, and transaction."
-            >
-              <div className="space-y-5">
-                {hasMultiplePaymentOptionsFor(acceptPayPalCheckout && !paypalPurchaseBlocked, acceptCashPayment) ? (
-                  <PurchaseStepPayment
-                    embedded
-                    paymentMethod={paymentMethod}
-                    setPaymentMethod={changePaymentMethod}
-                    acceptPayPalCheckout={acceptPayPalCheckout && !paypalPurchaseBlocked}
-                    acceptCashPayment={acceptCashPayment}
-                    titleStatus={(listing as { title_status?: string | null }).title_status ?? null}
-                    hasLien={(listing as { has_lien?: string | null }).has_lien ?? null}
-                    vin={(listing as { vin?: string | null }).vin ?? null}
-                    totalPrice={totalPrice}
-                    submitting={termsGate.preparing}
-                    onBack={() => undefined}
-                    onContinue={() => undefined}
-                  />
-                ) : null}
+              <p className="text-xs text-muted-foreground">
+                PayPal terms and eligibility apply to the payment method you choose.
+              </p>
 
-                {paypalPurchaseBlocked && !acceptCashPayment ? (
-                  <div className="v2-checkout-unavailable"><ShieldCheck /><div><p className="v2-checkout-unavailable-title">Online payment is not available yet</p><p className="v2-checkout-unavailable-detail">This seller must finish payment setup before checkout can continue.</p></div></div>
-                ) : !agreementsRecorded ? (
-                  <p className="text-sm text-muted-foreground">
-                    Accept the agreements above to unlock payment.
-                  </p>
-                ) : paymentMethod === 'cash' ? (
-                  <div className="sale-final-confirm">
-                    <div className="sale-final-facts"><p><span>Total due</span><strong>{formatCurrency(totalPrice)}</strong></p><p><span>Payment</span><strong>Pay in person</strong></p><p><span>Fulfillment</span><strong>{fulfillmentLabel}</strong></p></div>
-                    <Button className="checkout-primary-action w-full" size="lg" onClick={runPurchase} disabled={isPurchasing}>
-                      {isPurchasing ? 'Placing order…' : 'Place order'}
-                    </Button>
-                  </div>
-                ) : (
-                  <PayPalEmbeddedPayment
-                    target={{ kind: 'sale', id: paypalCheckout?.transactionId ?? '' }}
-                    key={paypalCheckout?.transactionId ?? 'pending'}
-                    sellerId={listing.host_id}
-                    listingHref={`/listing/${listingId}`}
-                    returnUrl={paypalCheckout?.returnUrl}
-                    totalUsd={totalPrice}
-                    blocked={!paypalCheckout}
-                    blockedReason="Preparing your payment…"
-                  />
-                )}
+              {financingEligible ? <CheckoutFinancingBanner listing={listing as any} /> : null}
+            </div>
+          ) : null}
+        </SaleCheckoutWizard>
 
-                {financingEligible ? (
-                  <>
-                    <FinancingActionPanel listing={listing} host={host} showPaymentLockup={false} />
-                    <p className="text-xs text-muted-foreground">
-                      Financing is offered by independent third-party providers and is subject to their approval. Vendibook is
-                      not the lender.{' '}
-                      <Link to="/legal/financing-disclosure" target="_blank" rel="noreferrer" className="underline">
-                        Financing Disclosure
-                      </Link>
-                    </p>
-                  </>
-                ) : null}
-              </div>
-            </CheckoutSection>
-
-            <details className="checkout-story-mobile">
-              <summary>What happens next</summary>
-              <PostPaymentTimeline mode="sale" fulfillment={fulfillmentSelected} />
-            </details>
-          </>
-        )}
+        <details className="checkout-story-mobile">
+          <summary>What happens next</summary>
+          <PostPaymentTimeline mode="sale" fulfillment={fulfillmentSelected} />
+        </details>
       </TransactionCheckoutShell>
     </>
   );
 };
+
 
 
 const hasMultiplePaymentOptionsFor = (acceptPayPalCheckout: boolean, acceptCashPayment: boolean) =>

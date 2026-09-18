@@ -837,6 +837,7 @@ export type FinancingSource =
   | 'financing_page_sticky'
   | 'listing_panel'
   | 'listing_price_line'
+  | 'checkout_banner'
   | 'listing_card';
 
 
