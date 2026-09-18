@@ -9,6 +9,7 @@ import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import SEO from '@/components/SEO';
 import OrderEvidenceSection from '@/components/handoff/OrderEvidenceSection';
+import OrderMeetupCard from '@/components/handoff/OrderMeetupCard';
 import DeliveryTrackingPanel from '@/components/delivery/DeliveryTrackingPanel';
 import PayPalPaymentFacts from '@/components/checkout/PayPalPaymentFacts';
 import OrderCaseSection from '@/components/disputes/OrderCaseSection';
@@ -253,6 +254,10 @@ const OrderDetailPage = () => {
                 <Link to={`/guides/meetup-inspection?returnTo=${encodeURIComponent(`/orders/${order.id}`)}`}>Open Meetup &amp; Inspection Guide</Link>
               </Button>
             </Card>
+          )}
+
+          {['equipment_pickup', 'rental_pickup'].includes(order.fulfillment.type) && (
+            <OrderMeetupCard listingId={order.listing?.id ?? null} viewerRole={order.viewer_role} />
           )}
 
           <DeliveryTrackingPanel
