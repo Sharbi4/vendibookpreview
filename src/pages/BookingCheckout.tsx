@@ -481,8 +481,35 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
       toast({ title: 'Cannot book your own listing', description: 'You cannot rent your own listing.', variant: 'destructive' });
       return;
     }
+    if (!rentalAgreementAccepted || !privacyAccepted) {
+      toast({
+        title: 'Agreements required',
+        description: 'Please accept both agreements before continuing.',
+        variant: 'destructive',
+      });
+      return;
+    }
     const t = buildCurrentTerms();
     if (!t) return;
+    // Both consents are persisted server-side before the booking is created.
+    try {
+      await recordCheckoutAgreements({
+        mode: 'rental',
+        trigger: instantConfirm ? CONSENT_TRIGGERS.INSTANT_BOOK : CONSENT_TRIGGERS.RENTAL_REQUEST,
+        relatedIds: { listing_id: listing.id },
+        hashes: {
+          agreement: rentalAgreement.data?.content_hash ?? null,
+          privacy: privacyDocument.data?.content_hash ?? null,
+        },
+      });
+    } catch (error) {
+      toast({
+        title: 'Could not record your acceptance',
+        description: error instanceof Error ? error.message : 'Please try again.',
+        variant: 'destructive',
+      });
+      return;
+    }
     await termsGate.prepare(t);
   };
 
