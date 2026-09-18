@@ -1899,7 +1899,7 @@ html.hide-support-chat .widget-visible {
 .v2-snapshot span { color: hsl(var(--v2-stone)); font-size: 12.5px; }
 .v2-empty { display: flex; min-height: 170px; flex-direction: column; align-items: center; justify-content: center; gap: 10px; padding: 34px 24px; color: hsl(var(--v2-stone)); text-align: center; }
 .v2-empty h2 { font-size: 17px; }
-.v2-empty a { color: hsl(var(--v2-ink)); text-decoration: underline; text-underline-offset: 3px; }
+.v2-empty a:not(.v2-btn):not(.v2-btn-outline):not(.v2-btn-quiet):not(.v2-btn-light) { color: hsl(var(--v2-ink)); text-decoration: underline; text-underline-offset: 3px; }
 .v2-paypal-setup { padding: 18px; }.v2-paypal-setup > div:first-child { display: flex; flex-direction: column; }.v2-paypal-setup small { color: hsl(var(--v2-stone)); }
 
 /* Listings */
