@@ -1294,6 +1294,90 @@ export type Database = {
           },
         ]
       }
+      daily_webhook_config: {
+        Row: {
+          created_at: string
+          id: string
+          last_error: string | null
+          last_verified_at: string | null
+          provider: string
+          state: string
+          subscribed_events: string[]
+          updated_at: string
+          webhook_url: string | null
+          webhook_uuid: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          last_verified_at?: string | null
+          provider?: string
+          state?: string
+          subscribed_events?: string[]
+          updated_at?: string
+          webhook_url?: string | null
+          webhook_uuid?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          last_verified_at?: string | null
+          provider?: string
+          state?: string
+          subscribed_events?: string[]
+          updated_at?: string
+          webhook_url?: string | null
+          webhook_uuid?: string | null
+        }
+        Relationships: []
+      }
+      daily_webhook_events: {
+        Row: {
+          created_at: string
+          dedupe_key: string
+          event_ts: string | null
+          event_type: string
+          id: string
+          payload: Json
+          process_error: string | null
+          processed_at: string | null
+          provider_event_id: string | null
+          room_name: string | null
+          session_id: string | null
+          walkthrough_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          dedupe_key: string
+          event_ts?: string | null
+          event_type: string
+          id?: string
+          payload?: Json
+          process_error?: string | null
+          processed_at?: string | null
+          provider_event_id?: string | null
+          room_name?: string | null
+          session_id?: string | null
+          walkthrough_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          dedupe_key?: string
+          event_ts?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json
+          process_error?: string | null
+          processed_at?: string | null
+          provider_event_id?: string | null
+          room_name?: string | null
+          session_id?: string | null
+          walkthrough_id?: string | null
+        }
+        Relationships: []
+      }
       discount_code_redemptions: {
         Row: {
           code_id: string
@@ -10847,8 +10931,10 @@ export type Database = {
           id: string
           location_permission_granted: boolean
           location_permission_required: boolean
+          meeting_type: string | null
           microphone_permission_granted: boolean
           recording_consent_granted: boolean
+          recording_consent_version: string | null
           route: string | null
           source: string
           user_agent: string | null
@@ -10864,8 +10950,10 @@ export type Database = {
           id?: string
           location_permission_granted?: boolean
           location_permission_required?: boolean
+          meeting_type?: string | null
           microphone_permission_granted?: boolean
           recording_consent_granted?: boolean
+          recording_consent_version?: string | null
           route?: string | null
           source?: string
           user_agent?: string | null
@@ -10881,8 +10969,10 @@ export type Database = {
           id?: string
           location_permission_granted?: boolean
           location_permission_required?: boolean
+          meeting_type?: string | null
           microphone_permission_granted?: boolean
           recording_consent_granted?: boolean
+          recording_consent_version?: string | null
           route?: string | null
           source?: string
           user_agent?: string | null
@@ -10941,14 +11031,78 @@ export type Database = {
           },
         ]
       }
+      video_walkthrough_participants: {
+        Row: {
+          created_at: string
+          first_joined_at: string
+          id: string
+          is_present: boolean
+          last_joined_at: string
+          last_left_at: string | null
+          last_participant_id: string | null
+          meeting_session_id: string | null
+          role: string
+          room_name: string | null
+          total_join_count: number
+          updated_at: string
+          user_id: string
+          walkthrough_id: string
+        }
+        Insert: {
+          created_at?: string
+          first_joined_at?: string
+          id?: string
+          is_present?: boolean
+          last_joined_at?: string
+          last_left_at?: string | null
+          last_participant_id?: string | null
+          meeting_session_id?: string | null
+          role: string
+          room_name?: string | null
+          total_join_count?: number
+          updated_at?: string
+          user_id: string
+          walkthrough_id: string
+        }
+        Update: {
+          created_at?: string
+          first_joined_at?: string
+          id?: string
+          is_present?: boolean
+          last_joined_at?: string
+          last_left_at?: string | null
+          last_participant_id?: string | null
+          meeting_session_id?: string | null
+          role?: string
+          room_name?: string | null
+          total_join_count?: number
+          updated_at?: string
+          user_id?: string
+          walkthrough_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_walkthrough_participants_walkthrough_id_fkey"
+            columns: ["walkthrough_id"]
+            isOneToOne: false
+            referencedRelation: "video_walkthroughs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       video_walkthrough_provider_rooms: {
         Row: {
           created_at: string
           disabled_at: string | null
           expires_at: string
+          join_hook_configured: boolean
+          meeting_type: string
+          nbf_at: string | null
           provider: string
           room_name: string
+          room_profile_version: string | null
           room_url: string | null
+          scheduled_ends_at: string | null
           scheduled_starts_at: string | null
           updated_at: string
           walkthrough_id: string
@@ -10957,9 +11111,14 @@ export type Database = {
           created_at?: string
           disabled_at?: string | null
           expires_at: string
+          join_hook_configured?: boolean
+          meeting_type?: string
+          nbf_at?: string | null
           provider?: string
           room_name: string
+          room_profile_version?: string | null
           room_url?: string | null
+          scheduled_ends_at?: string | null
           scheduled_starts_at?: string | null
           updated_at?: string
           walkthrough_id: string
@@ -10968,9 +11127,14 @@ export type Database = {
           created_at?: string
           disabled_at?: string | null
           expires_at?: string
+          join_hook_configured?: boolean
+          meeting_type?: string
+          nbf_at?: string | null
           provider?: string
           room_name?: string
+          room_profile_version?: string | null
           room_url?: string | null
+          scheduled_ends_at?: string | null
           scheduled_starts_at?: string | null
           updated_at?: string
           walkthrough_id?: string
@@ -10980,6 +11144,77 @@ export type Database = {
             foreignKeyName: "video_walkthrough_provider_rooms_walkthrough_id_fkey"
             columns: ["walkthrough_id"]
             isOneToOne: true
+            referencedRelation: "video_walkthroughs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_walkthrough_recordings: {
+        Row: {
+          created_at: string
+          duration_seconds: number | null
+          error_code: string | null
+          error_message: string | null
+          id: string
+          instance_id: string | null
+          max_duration_seconds: number | null
+          meeting_type: string
+          provider: string
+          provider_metadata: Json
+          provider_recording_id: string | null
+          ready_at: string | null
+          room_name: string
+          started_at: string | null
+          status: string
+          stopped_at: string | null
+          updated_at: string
+          walkthrough_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_seconds?: number | null
+          error_code?: string | null
+          error_message?: string | null
+          id?: string
+          instance_id?: string | null
+          max_duration_seconds?: number | null
+          meeting_type?: string
+          provider?: string
+          provider_metadata?: Json
+          provider_recording_id?: string | null
+          ready_at?: string | null
+          room_name: string
+          started_at?: string | null
+          status?: string
+          stopped_at?: string | null
+          updated_at?: string
+          walkthrough_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_seconds?: number | null
+          error_code?: string | null
+          error_message?: string | null
+          id?: string
+          instance_id?: string | null
+          max_duration_seconds?: number | null
+          meeting_type?: string
+          provider?: string
+          provider_metadata?: Json
+          provider_recording_id?: string | null
+          ready_at?: string | null
+          room_name?: string
+          started_at?: string | null
+          status?: string
+          stopped_at?: string | null
+          updated_at?: string
+          walkthrough_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_walkthrough_recordings_walkthrough_id_fkey"
+            columns: ["walkthrough_id"]
+            isOneToOne: false
             referencedRelation: "video_walkthroughs"
             referencedColumns: ["id"]
           },
@@ -10996,6 +11231,9 @@ export type Database = {
           ends_at: string
           id: string
           listing_id: string
+          meeting_ended_at: string | null
+          meeting_started_at: string | null
+          meeting_type: string
           provider: string
           requested_topics: string[]
           seller_id: string
@@ -11014,6 +11252,9 @@ export type Database = {
           ends_at: string
           id?: string
           listing_id: string
+          meeting_ended_at?: string | null
+          meeting_started_at?: string | null
+          meeting_type?: string
           provider?: string
           requested_topics?: string[]
           seller_id: string
@@ -11032,6 +11273,9 @@ export type Database = {
           ends_at?: string
           id?: string
           listing_id?: string
+          meeting_ended_at?: string | null
+          meeting_started_at?: string | null
+          meeting_type?: string
           provider?: string
           requested_topics?: string[]
           seller_id?: string
@@ -11844,6 +12088,9 @@ export type Database = {
           ends_at: string
           id: string
           listing_id: string
+          meeting_ended_at: string | null
+          meeting_started_at: string | null
+          meeting_type: string
           provider: string
           requested_topics: string[]
           seller_id: string
@@ -11897,6 +12144,9 @@ export type Database = {
           ends_at: string
           id: string
           listing_id: string
+          meeting_ended_at: string | null
+          meeting_started_at: string | null
+          meeting_type: string
           provider: string
           requested_topics: string[]
           seller_id: string
@@ -12346,6 +12596,9 @@ export type Database = {
           ends_at: string
           id: string
           listing_id: string
+          meeting_ended_at: string | null
+          meeting_started_at: string | null
+          meeting_type: string
           provider: string
           requested_topics: string[]
           seller_id: string

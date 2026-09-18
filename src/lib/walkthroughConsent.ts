@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { RECORDING_CONSENT_VERSION } from '@/lib/legal/versions';
 
 /**
  * Consent + device-permission rules for native Vendibook video walkthroughs.
@@ -9,19 +10,20 @@ import { supabase } from '@/integrations/supabase/client';
  */
 
 /** Bump when the legal copy on the linked pages materially changes. */
-export const WALKTHROUGH_TERMS_VERSION = '2026-09-18b';
-export const DEVICE_PRIVACY_VERSION = '2026-09-18b';
+export const WALKTHROUGH_TERMS_VERSION = '2026-09-18c';
+export const DEVICE_PRIVACY_VERSION = '2026-09-18c';
 
 /**
  * Monitoring / recording disclosure.
  *
- * Every participant must explicitly consent, before entering the room, that a
- * walkthrough MAY be monitored or recorded for safety, quality and dispute
- * resolution. The consent is stored per participant in
- * `video_walkthrough_consents.recording_consent_granted`.
+ * Every participant must explicitly consent, before entering the room, that
+ * this walkthrough is recorded. The consent is stored per participant in
+ * `video_walkthrough_consents.recording_consent_granted`, and the room token is
+ * refused without it.
  *
- * Automatic cloud recording is not switched on in the video provider today, so
- * copy must always say "may be" — never assert that a given call was recorded.
+ * Cloud recording is started by Vendibook's server once every required
+ * participant has consented AND joined. Copy may say a walkthrough is recorded,
+ * but must never assert that a given recording is complete or exists as proof.
  */
 export const WALKTHROUGH_RECORDING_DISCLOSURE = true;
 
@@ -83,6 +85,7 @@ export async function requestLocationPermission(): Promise<PermissionState> {
 
 export type ConsentRecord = {
   walkthroughId?: string | null;
+  meetingType?: string | null;
   camera: PermissionState;
   microphone: PermissionState;
   locationRequired: boolean;
@@ -98,8 +101,10 @@ export async function recordWalkthroughConsent(userId: string, record: ConsentRe
   const { error } = await (supabase.from('video_walkthrough_consents') as any).insert({
     user_id: userId,
     walkthrough_id: record.walkthroughId ?? null,
+    meeting_type: record.meetingType ?? 'listing_walkthrough',
     consent_type: 'video_walkthrough_join',
-    consent_version: `terms:${WALKTHROUGH_TERMS_VERSION}|privacy:${DEVICE_PRIVACY_VERSION}`,
+    consent_version: `terms:${WALKTHROUGH_TERMS_VERSION}|privacy:${DEVICE_PRIVACY_VERSION}|recording:${RECORDING_CONSENT_VERSION}`,
+    recording_consent_version: RECORDING_CONSENT_VERSION,
     source: 'web',
     route: typeof window !== 'undefined' ? window.location.pathname : null,
     user_agent: typeof navigator !== 'undefined' ? navigator.userAgent.slice(0, 500) : null,

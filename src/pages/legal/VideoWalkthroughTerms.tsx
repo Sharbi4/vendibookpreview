@@ -92,15 +92,15 @@ const VideoWalkthroughTerms: React.FC = () => (
 
       <Section title="5. Monitoring and recording">
         <p>
-          Walkthroughs may be monitored or recorded by Vendibook for safety, quality, fraud
-          prevention, and dispute resolution. Consent to this is required before you can enter a
-          meeting room. If you do not consent, do not join; you may message the other party and
-          arrange the walkthrough another way.
+          Walkthroughs are recorded by Vendibook, and may also be monitored, for safety, quality,
+          fraud prevention, and dispute resolution. Explicit consent to the recording is required
+          before you can enter a meeting room, and there is no way to join without it. If you do not
+          consent, do not join; you may message the other party and arrange the walkthrough another
+          way.
         </p>
         <p>
-          Not every walkthrough is monitored or recorded, and Vendibook does not promise that a
-          recording of any particular walkthrough exists, was captured completely, or will be made
-          available to you. Where a recording exists, access is limited to authorized Vendibook
+          Vendibook does not promise that a recording of any particular walkthrough was captured
+          completely, or that it will remain available to you indefinitely. Where a recording exists, access is limited to authorized Vendibook
           personnel investigating a report, safety concern, or transaction dispute, to our service
           providers acting under contract, and to disclosures required by law or legal process.
           Recordings are retained no longer than needed for those purposes and are never sold or
