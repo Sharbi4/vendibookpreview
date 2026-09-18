@@ -136,9 +136,12 @@ const SaleCheckout = () => {
   const [legalAccepted, setLegalAccepted] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [paypalCheckout, setPaypalCheckout] = useState<{ transactionId: string; returnUrl: string } | null>(null);
-  const [currentStep, setCurrentStep] = useState(1);
-  const [furthestStep, setFurthestStep] = useState(1);
+  /** Two-stage checkout: order review, then the checkout stage. */
+  const [stage, setStage] = useState<'review' | 'checkout'>('review');
+  /** True once both required acceptances are recorded server-side. */
+  const [agreementsRecorded, setAgreementsRecorded] = useState(false);
   const [recordingConsent, setRecordingConsent] = useState(false);
+
 
   // Validation
   const [fieldErrors, setFieldErrors] = useState<Record<string, string | undefined>>({});
