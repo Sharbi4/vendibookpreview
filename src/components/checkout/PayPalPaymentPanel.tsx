@@ -329,7 +329,7 @@ const PayPalPaymentPanel = ({
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [reloadKey]);
 
   return (
     <div
@@ -454,14 +454,17 @@ const PayPalPaymentPanel = ({
                     merchantId={merchantId}
                   />
 
-                  {state === 'loading' ? <PaymentFormSkeleton /> : null}
-
-                  <div className={state === 'loading' || state === 'processing' ? 'hidden' : 'paypal-funding-stack'}>
+                  {/* The funding slots are mounted from first paint so the
+                      surface never jumps: PayPal renders the real controls
+                      straight into these fixed-height containers. */}
+                  <div className="paypal-funding-stack" aria-busy={state === 'loading'}>
                     <div ref={paypalButtonRef} data-funding-source="PayPal" />
                     <div ref={venmoButtonRef} data-funding-source="Venmo" />
                     <div ref={payLaterButtonRef} data-funding-source="Pay Later" />
                     <div ref={cardButtonRef} data-funding-source="Debit or Credit Card" />
                   </div>
+
+                  {state === 'loading' ? <PaymentFormSkeleton /> : null}
 
                   {state !== 'loading' && state !== 'processing' ? (
                     <p className="paypal-powered-by">
