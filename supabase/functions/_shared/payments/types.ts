@@ -97,6 +97,31 @@ export interface CreateOrderRequest {
   payeeMerchantId?: string | null;
   /** Vendibook's cut, in cents, on a routed order. */
   platformFeeCents?: number;
+  /** Line items sent to the provider. Required by PayPal certification. */
+  items?: {
+    name: string;
+    unitAmountCents: number;
+    quantity?: number;
+    description?: string;
+    sku?: string;
+    category?: "DIGITAL_GOODS" | "PHYSICAL_GOODS" | "DONATION";
+  }[];
+  /** Buyer shipping address for orders that ship. */
+  shipping?: {
+    fullName?: string;
+    addressLine1: string;
+    addressLine2?: string;
+    adminArea2: string;
+    adminArea1: string;
+    postalCode: string;
+    countryCode?: string;
+  } | null;
+  /** Buyer contact PayPal uses to prefill login / Contact Module. */
+  buyerEmail?: string | null;
+  buyerPhone?: string | null;
+  returnUrl?: string | null;
+  cancelUrl?: string | null;
+  sellerId?: string | null;
 }
 
 export interface ProviderOrder {

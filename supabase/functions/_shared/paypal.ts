@@ -16,6 +16,8 @@
 // intentionally NOT imported here — this layer creates first-party orders only.
 
 
+import { logPayPalApiCall } from "./paypalApiLog.ts";
+
 const LIVE_BASE = "https://api-m.paypal.com";
 
 const SANDBOX_BASE = "https://api-m.sandbox.paypal.com";
@@ -205,6 +207,8 @@ interface PayPalRequestOptions {
   extraHeaders?: Record<string, string>;
   /** Vendibook payment/order reference, logged for reconciliation. */
   reference?: string | null;
+  /** Seller this call is about — stored on the API log row. */
+  sellerId?: string | null;
   /**
    * Call PayPal in a specific environment (e.g. sandbox onboarding while live
    * checkout runs). Defaults to the ambient PAYPAL_ENVIRONMENT.
@@ -225,6 +229,7 @@ export async function paypalRequest<T = any>(
     actAsMerchantId,
     extraHeaders,
     reference,
+    sellerId,
     environment,
   } = opts;
   let lastError: unknown;
@@ -284,6 +289,21 @@ export async function paypalRequest<T = any>(
         ...(idempotencyKey ? { requestId: idempotencyKey } : {}),
         ...(actAsMerchantId ? { onBehalfOf: actAsMerchantId } : {}),
       };
+
+      logPayPalApiCall({
+        path,
+        method,
+        environment: env,
+        requestHeaders: headers,
+        requestBody: body,
+        responseStatus: res.status,
+        responseBody: json,
+        debugId: json?.debug_id ?? correlationId ?? null,
+        latencyMs: Date.now() - startedAt,
+        sellerId: sellerId ?? actAsMerchantId ?? null,
+        orderId: (json?.id as string | undefined) ?? null,
+        reference: reference ?? null,
+      });
 
       if (res.ok) {
         safeLog("api_ok", diagnostics);
@@ -372,6 +392,18 @@ export interface CreateOrderInput {
   /** Physical goods: pass the buyer's address and PayPal collects/echoes it. */
   shipping?: OrderShippingAddress | null;
   /**
+   * Buyer contact passed in `purchase_units[].shipping`. PayPal uses it to
+   * prefill login and to drive the Contact Module, so the buyer is never asked
+   * twice for something we already hold.
+   */
+  buyerEmail?: string | null;
+  buyerPhone?: string | null;
+  /** Where PayPal returns the buyer after approval / cancellation. */
+  returnUrl?: string | null;
+  cancelUrl?: string | null;
+  /** Seller id recorded on the API log row. */
+  sellerId?: string | null;
+  /**
    * Connected Path routing. When set, the seller's PayPal merchant id becomes
    * the payee and Vendibook's cut is taken as a platform fee. Resolved ONLY
    * server-side by `sellerMultipartyReady()`; nothing from the browser can
@@ -406,6 +438,22 @@ const money = (cents: number, currency: string) => ({
  * they do not reconcile (or are absent) a single line is derived from the
  * description, which always reconciles.
  */
+/**
+ * `purchase_units[].items` is mandatory for Vendibook: item-level disputes and
+ * the Tracking API both depend on it, and the Tracking API rejects any SKU that
+ * was not present on the original order.
+ *
+ * The supplied lines must reconcile exactly with the item total PayPal will
+ * charge. A mismatch is a bug in the caller's arithmetic, so it throws here
+ * rather than letting PayPal answer 422 in front of a buyer.
+ */
+export class OrderArithmeticError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "OrderArithmeticError";
+  }
+}
+
 function buildItems(input: CreateOrderInput, currency: string, itemTotalCents: number) {
   const physical = !!input.shipping;
   const supplied = input.items ?? [];
@@ -413,22 +461,30 @@ function buildItems(input: CreateOrderInput, currency: string, itemTotalCents: n
     (sum, line) => sum + Math.round(line.unitAmountCents) * Math.max(1, Math.round(line.quantity ?? 1)),
     0,
   );
-  const lines = supplied.length && suppliedTotal === itemTotalCents
-    ? supplied
-    : [{
-      name: input.description.slice(0, 127),
-      unitAmountCents: itemTotalCents,
-      quantity: 1,
-      category: physical ? "PHYSICAL_GOODS" as const : "DIGITAL_GOODS" as const,
-    }];
 
-  return lines.map((line) => ({
+  if (supplied.length && suppliedTotal !== itemTotalCents) {
+    throw new OrderArithmeticError(
+      `Order line items (${suppliedTotal}) do not sum to the item total (${itemTotalCents}) for ${input.reference}.`,
+    );
+  }
+
+  const lines = supplied.length ? supplied : [{
+    name: input.description.slice(0, 127),
+    unitAmountCents: itemTotalCents,
+    quantity: 1,
+    sku: `${input.reference}-1`,
+    category: physical ? "PHYSICAL_GOODS" as const : "DIGITAL_GOODS" as const,
+  }];
+
+  return lines.map((line, index) => ({
     name: (line.name || "Vendibook").slice(0, 127),
     quantity: String(Math.max(1, Math.round(line.quantity ?? 1))),
     unit_amount: money(line.unitAmountCents, currency),
     category: line.category ?? (physical ? "PHYSICAL_GOODS" : "DIGITAL_GOODS"),
-    ...(line.description ? { description: line.description.slice(0, 127) } : {}),
-    ...(line.sku ? { sku: line.sku.slice(0, 127) } : {}),
+    description: (line.description ?? line.name ?? "Vendibook order item").slice(0, 127),
+    // A stable SKU is required: the Tracking API only accepts SKUs that were
+    // present at order creation.
+    sku: (line.sku ?? `${input.reference}-${index + 1}`).slice(0, 127),
   }));
 }
 
@@ -470,6 +526,16 @@ export async function createPayPalOrder(input: CreateOrderInput) {
     input.amountCents - taxCents - shippingCents + discountCents,
   );
 
+  // Fail loudly here rather than letting PayPal reject the order in front of a
+  // buyer: item_total + tax_total + shipping - discount must equal the total.
+  const reconciled = itemTotalCents + taxCents + shippingCents - discountCents;
+  if (reconciled !== input.amountCents) {
+    throw new OrderArithmeticError(
+      `Order breakdown does not sum to the total for ${input.reference}: ` +
+        `${reconciled} != ${input.amountCents}.`,
+    );
+  }
+
   const amount: Record<string, unknown> = money(input.amountCents, currency);
   amount.breakdown = {
     item_total: money(itemTotalCents, currency),
@@ -482,6 +548,22 @@ export async function createPayPalOrder(input: CreateOrderInput) {
   // an explicit capture. CAPTURE (the default) charges on approval.
   const intent = input.intent === "AUTHORIZE" ? "AUTHORIZE" : "CAPTURE";
   const shipping = buildShipping(input.shipping);
+  // Buyer contact rides on the shipping object so PayPal can prefill login and
+  // run the Contact Module. It is sent even on NO_SHIPPING orders.
+  const shippingBlock = (shipping || input.buyerEmail || input.buyerPhone)
+    ? {
+      ...(shipping ?? {}),
+      ...(input.buyerEmail ? { email_address: input.buyerEmail } : {}),
+      ...(input.buyerPhone
+        ? {
+          phone_number: {
+            country_code: "1",
+            national_number: input.buyerPhone.replace(/\D/g, "").slice(-10),
+          },
+        }
+        : {}),
+    }
+    : undefined;
 
   // ---- Connected Path routing (off unless the caller resolved a ready seller)
   const payeeMerchantId = input.payeeMerchantId?.trim() || null;
@@ -509,6 +591,7 @@ export async function createPayPalOrder(input: CreateOrderInput) {
     method: "POST",
     idempotencyKey: input.idempotencyKey,
     reference: input.reference,
+    sellerId: input.sellerId ?? null,
     // Acting on the seller's behalf is required whenever they are the payee.
     actAsMerchantId: payeeMerchantId,
     body: {
@@ -520,7 +603,7 @@ export async function createPayPalOrder(input: CreateOrderInput) {
         custom_id: input.reference,
         amount,
         items: buildItems(input, currency, itemTotalCents),
-        ...(shipping ? { shipping } : {}),
+        ...(shippingBlock ? { shipping: shippingBlock } : {}),
         ...(payeeMerchantId ? { payee: { merchant_id: payeeMerchantId } } : {}),
         ...(paymentInstruction ? { payment_instruction: paymentInstruction } : {}),
         ...(input.softDescriptor
@@ -534,8 +617,13 @@ export async function createPayPalOrder(input: CreateOrderInput) {
             // Physical assets that Vendibook ships need a real address;
             // everything else is a service/digital line with no shipping.
             shipping_preference: shipping ? "SET_PROVIDED_ADDRESS" : "NO_SHIPPING",
+            // Pay Now: the buyer never sees "Continue" on a capture order.
             user_action: intent === "AUTHORIZE" ? "CONTINUE" : "PAY_NOW",
             landing_page: "LOGIN",
+            // Server half of App Switch. The SDK sets appSwitchWhenAvailable.
+            app_switch_preference: true,
+            ...(input.returnUrl ? { return_url: input.returnUrl } : {}),
+            ...(input.cancelUrl ? { cancel_url: input.cancelUrl } : {}),
           },
         },
       },
@@ -544,6 +632,77 @@ export async function createPayPalOrder(input: CreateOrderInput) {
   });
 }
 
+
+/**
+ * Updates an existing order when the buyer changes the purchase (amount,
+ * shipping, items). PayPal requires a PATCH — creating a second order for the
+ * same checkout is a certification failure.
+ */
+export async function patchPayPalOrder(
+  orderId: string,
+  patch: { amountCents: number; currency?: string; breakdown?: CreateOrderInput["breakdown"]; referenceId: string },
+) {
+  const currency = (patch.currency ?? "USD").toUpperCase();
+  const taxCents = patch.breakdown?.taxCents ?? 0;
+  const shippingCents = patch.breakdown?.shippingCents ?? 0;
+  const discountCents = patch.breakdown?.discountCents ?? 0;
+  const itemTotalCents = Math.max(0, patch.amountCents - taxCents - shippingCents + discountCents);
+  const value: Record<string, unknown> = money(patch.amountCents, currency);
+  value.breakdown = {
+    item_total: money(itemTotalCents, currency),
+    ...(taxCents ? { tax_total: money(taxCents, currency) } : {}),
+    ...(shippingCents ? { shipping: money(shippingCents, currency) } : {}),
+    ...(discountCents ? { discount: money(discountCents, currency) } : {}),
+  };
+  return await paypalRequest(`/v2/checkout/orders/${encodeURIComponent(orderId)}`, {
+    method: "PATCH",
+    retries: 1,
+    body: [{
+      op: "replace",
+      path: `/purchase_units/@reference_id=='${patch.referenceId}'/amount`,
+      value,
+    }],
+  });
+}
+
+/**
+ * Adds parcel tracking to a captured order. PayPal rejects any SKU that was
+ * not present on the original order, so callers must pass the SKUs persisted
+ * on the payment record at creation time.
+ */
+export async function addPayPalTracking(opts: {
+  orderId: string;
+  captureId: string;
+  trackingNumber: string;
+  carrier: string;
+  items?: { name: string; sku: string; quantity?: number }[];
+  notifyPayer?: boolean;
+  actAsMerchantId?: string | null;
+}) {
+  return await paypalRequest(
+    `/v2/checkout/orders/${encodeURIComponent(opts.orderId)}/track`,
+    {
+      method: "POST",
+      retries: 1,
+      actAsMerchantId: opts.actAsMerchantId ?? null,
+      body: {
+        capture_id: opts.captureId,
+        tracking_number: opts.trackingNumber,
+        carrier: opts.carrier,
+        notify_payer: opts.notifyPayer ?? true,
+        ...(opts.items?.length
+          ? {
+            items: opts.items.map((i) => ({
+              name: i.name.slice(0, 127),
+              sku: i.sku.slice(0, 127),
+              quantity: String(Math.max(1, Math.round(i.quantity ?? 1))),
+            })),
+          }
+          : {}),
+      },
+    },
+  );
+}
 
 export async function getPayPalOrder(orderId: string) {
   return await paypalRequest(`/v2/checkout/orders/${encodeURIComponent(orderId)}`);
