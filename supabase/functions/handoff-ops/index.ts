@@ -3,7 +3,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
 import { notifyUser } from "../_shared/notify.ts";
-import { paypalRequest } from "../_shared/paypal.ts";
+import { addPayPalTracking, paypalRequest } from "../_shared/paypal.ts";
 import { isSignNowConfigured } from "../_shared/signnow.ts";
 import {
   computeRoute,
@@ -1212,7 +1212,7 @@ serve(async (req) => {
         // Find the PayPal capture id for this transaction. No capture → no sync.
         const { data: payment } = row.sale_transaction_id
           ? await db.from("payment_records")
-              .select("paypal_capture_id")
+              .select("paypal_capture_id, paypal_order_id, order_items, currency")
               .eq("sale_transaction_id", row.sale_transaction_id)
               .not("paypal_capture_id", "is", null)
               .order("created_at", { ascending: false })
@@ -1235,7 +1235,46 @@ serve(async (req) => {
           });
         }
 
+        const orderId = (payment as any)?.paypal_order_id ?? null;
+        const orderItems = Array.isArray((payment as any)?.order_items)
+          ? (payment as any).order_items
+          : [];
+
         try {
+          // Preferred: order-level tracking, which carries the same SKUs we
+          // sent when the order was created so PayPal can match line items.
+          if (orderId) {
+            const res = await addPayPalTracking({
+              orderId,
+              captureId,
+              trackingNumber: row.tracking_number,
+              carrier: "OTHER",
+              notifyPayer: true,
+              items: orderItems
+                .filter((i: any) => i?.sku && i?.name)
+                .map((i: any) => ({
+                  name: String(i.name),
+                  sku: String(i.sku),
+                  quantity: Number(i.quantity ?? 1),
+                })),
+            });
+            await db.from("shipment_tracking_events").update({
+              paypal_sync_status: "synced",
+              paypal_synced_at: new Date().toISOString(),
+              paypal_debug_id: (res as any)?.debug_id ?? null,
+              paypal_sync_error: null,
+            }).eq("id", row.id);
+            await db.from("payment_records").update({
+              paypal_tracking: {
+                tracking_number: row.tracking_number,
+                carrier: row.carrier,
+                status: row.status,
+                synced_at: new Date().toISOString(),
+              },
+            }).eq("paypal_order_id", orderId);
+            return jsonResponse(200, { success: true, method: "order_track" });
+          }
+
           const res = await paypalRequest<any>("/v1/shipping/trackers-batch", {
             method: "POST",
             body: {
