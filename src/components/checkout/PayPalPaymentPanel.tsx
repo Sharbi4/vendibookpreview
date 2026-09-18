@@ -247,17 +247,23 @@ const PayPalPaymentPanel = ({
         if (cancelled || !paypalButtonRef.current) return;
 
         const sources = [
-          { source: paypal.FUNDING.PAYPAL, container: paypalButtonRef.current, name: 'PayPal' },
-          { source: paypal.FUNDING.VENMO, container: venmoButtonRef.current, name: 'Venmo' },
-          { source: paypal.FUNDING.PAYLATER, container: payLaterButtonRef.current, name: 'Pay Later' },
-          { source: paypal.FUNDING.CARD, container: cardButtonRef.current, name: 'debit or credit card' },
+          { key: 'paypal', source: paypal.FUNDING.PAYPAL, container: paypalButtonRef.current, name: 'PayPal', color: 'silver' },
+          { key: 'venmo', source: paypal.FUNDING.VENMO, container: venmoButtonRef.current, name: 'Venmo', color: undefined },
+          { key: 'paylater', source: paypal.FUNDING.PAYLATER, container: payLaterButtonRef.current, name: 'Pay Later', color: 'silver' },
+          { key: 'card', source: paypal.FUNDING.CARD, container: cardButtonRef.current, name: 'debit or credit card', color: 'black' },
         ];
 
-        const renders = sources.map(({ source, container, name }) => {
+        const renders = sources.map(({ key, source, container, name, color }) => {
           if (!source || !container) return Promise.resolve(false);
           const instance = paypal.Buttons({
             fundingSource: source,
-            style: { layout: 'vertical', shape: 'pill', height: 52, tagline: false },
+            style: {
+              layout: 'vertical',
+              shape: 'pill',
+              height: 50,
+              tagline: false,
+              ...(color ? { color } : {}),
+            },
             appSwitchWhenAvailable: true,
             createOrder: () => handlersRef.current.startOrder(),
             onApprove: (data: { orderID: string }) => handlersRef.current.finishOrder(data.orderID),
