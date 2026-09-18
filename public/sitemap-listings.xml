@@ -1046,17 +1046,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/5534f230-99a7-4ff6-a2b4-f495cdac1946</loc>
-    <lastmod>2026-09-17</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/d8046cdd-aa84-42b4-b739-938de47c7c04/5534f230-99a7-4ff6-a2b4-f495cdac1946/1782332644864-g1ujpc.jpeg</image:loc>
-      <image:title>Food trailer 8x15</image:title>
-      <image:caption>Food trailer 8x15 in Missouri City, TX on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/109f57be-b1c6-41bb-a2a1-bc8c3efa8e51</loc>
     <lastmod>2026-09-16</lastmod>
     <changefreq>weekly</changefreq>
@@ -1076,6 +1065,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/d9713d50-f42b-4702-8589-bcaf5b5fb6d3/acb2ab5c-afc8-45e1-96d0-45b9d6ca001a/1788249750243-0uykg5x6hnwq.jpg</image:loc>
       <image:title>Food Trailer for sale in Frostproof, FL</image:title>
       <image:caption>Food Trailer for sale in Frostproof, FL in Frostproof, FL on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/5534f230-99a7-4ff6-a2b4-f495cdac1946</loc>
+    <lastmod>2026-09-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/d8046cdd-aa84-42b4-b739-938de47c7c04/5534f230-99a7-4ff6-a2b4-f495cdac1946/1782332644864-g1ujpc.jpeg</image:loc>
+      <image:title>Food trailer 8x15</image:title>
+      <image:caption>Food trailer 8x15 in Missouri City, TX on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
