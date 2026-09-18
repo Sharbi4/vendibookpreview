@@ -495,6 +495,8 @@ async function loadDomainRecord(
       fulfillmentStatus: t.shipping_status ?? t.status ?? null,
       details: {
         method: raw,
+        // Buyer's own contact address captured at checkout. Not a destination.
+        buyer_contact_address: formatBuyerAddress(t),
         delivery_address: t.delivery_address ?? null,
         delivery_instructions: t.delivery_instructions ?? null,
         delivery_fee_cents: t.delivery_fee != null ? Math.round(Number(t.delivery_fee) * 100) : null,
