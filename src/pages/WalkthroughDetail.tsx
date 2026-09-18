@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, Navigate, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { CalendarPlus, Clock, MessageCircle, Video, XCircle } from 'lucide-react';
+import { CalendarPlus, Clock, Link2 as LinkIcon, MessageCircle, Video, XCircle } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
