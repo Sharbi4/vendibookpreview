@@ -1014,27 +1014,74 @@ const SaleCheckout = () => {
         deliveryInstructions={deliveryInstructions} setDeliveryInstructions={setDeliveryInstructions}
         fulfillmentSelected={fulfillmentSelected} fieldErrors={fieldErrors}
         touchedFields={touchedFields} setTouchedFields={setTouchedFields}
-        hideAddress={fulfillmentSelected === 'pickup'} onBack={() => goToStep(2)} onContinue={proceedFromDetails}
+        hideAddress={fulfillmentSelected === 'pickup'} onBack={() => goToStep(2)} onContinue={proceedToAgreement}
       />
     );
 
     if (currentStep === 4) return (
-      <div className="sale-order-review">
-        <section><header><h3>Listing</h3><Button variant="ghost" size="sm" onClick={() => goToStep(1)}><Pencil /> Edit</Button></header><p><strong>{listing.title}</strong><span>{sellerName ? `Sold by ${sellerName}` : 'Vendibook seller'}</span></p></section>
-        <section><header><h3>Fulfillment</h3><Button variant="ghost" size="sm" onClick={() => goToStep(2)}><Pencil /> Edit</Button></header><p><strong>{summaryMeta[0].value}</strong><span>{fulfillmentDetail}</span></p></section>
-        <section><header><h3>Buyer</h3><Button variant="ghost" size="sm" onClick={() => goToStep(3)}><Pencil /> Edit</Button></header><p><strong>{displayBuyerName}</strong><span>{buyerInfo.email} · {buyerInfo.phone}</span><span>{displayBuyerAddress}</span></p></section>
-        <section className="sale-order-review-money"><header><h3>Total</h3></header>{moneyBreakdown}</section>
-        <ReferralCodeField programType="purchase" value={referralCode} onChange={(code, valid) => { setReferralCode(code); setReferralValid(valid); }} autoFillFromCookie />
+      <div className="space-y-6">
+        <div className="sale-order-review">
+          <section><header><h3>Listing</h3><Button variant="ghost" size="sm" onClick={() => goToStep(1)}><Pencil /> Edit</Button></header><p><strong>{listing.title}</strong><span>{sellerName ? `Sold by ${sellerName}` : 'Vendibook seller'}</span></p></section>
+          <section><header><h3>Fulfillment</h3><Button variant="ghost" size="sm" onClick={() => goToStep(2)}><Pencil /> Edit</Button></header><p><strong>{summaryMeta[0].value}</strong><span>{fulfillmentDetail}</span></p></section>
+          <section><header><h3>Buyer</h3><Button variant="ghost" size="sm" onClick={() => goToStep(3)}><Pencil /> Edit</Button></header><p><strong>{displayBuyerName}</strong><span>{buyerInfo.email} · {buyerInfo.phone}</span><span>{displayBuyerAddress}</span></p></section>
+          <section className="sale-order-review-money"><header><h3>Total</h3></header>{moneyBreakdown}</section>
+          <ReferralCodeField programType="purchase" value={referralCode} onChange={(code, valid) => { setReferralCode(code); setReferralValid(valid); }} autoFillFromCookie />
+        </div>
+
+        <TransactionAgreementStep
+          mode="sale"
+          agreement={agreement}
+          privacy={privacyConsent}
+          agreementAccepted={agreedToTerms}
+          privacyAccepted={privacyAccepted}
+          onAgreementAcceptedChange={setAgreedToTerms}
+          onPrivacyAcceptedChange={setPrivacyAccepted}
+          showHeading={false}
+        />
       </div>
     );
 
-    if (currentStep === 5) return (
+    return (
       <div className="space-y-5">
+        {hasMultiplePaymentOptionsFor(acceptPayPalCheckout && !paypalPurchaseBlocked, acceptCashPayment) ? (
+          <PurchaseStepPayment
+            embedded
+            paymentMethod={paymentMethod}
+            setPaymentMethod={changePaymentMethod}
+            acceptPayPalCheckout={acceptPayPalCheckout && !paypalPurchaseBlocked}
+            acceptCashPayment={acceptCashPayment}
+            titleStatus={(listing as { title_status?: string | null }).title_status ?? null}
+            hasLien={(listing as { has_lien?: string | null }).has_lien ?? null}
+            vin={(listing as { vin?: string | null }).vin ?? null}
+            totalPrice={totalPrice}
+            submitting={termsGate.preparing}
+            onBack={() => goToStep(4)}
+            onContinue={() => undefined}
+          />
+        ) : null}
+
         {paypalPurchaseBlocked && !acceptCashPayment ? (
           <div className="v2-checkout-unavailable"><ShieldCheck /><div><p className="v2-checkout-unavailable-title">Online payment is not available yet</p><p className="v2-checkout-unavailable-detail">This seller must finish payment setup before checkout can continue.</p></div></div>
+        ) : paymentMethod === 'cash' ? (
+          <div className="sale-final-confirm">
+            <div className="sale-final-facts"><p><span>Total due</span><strong>{formatCurrency(totalPrice)}</strong></p><p><span>Payment</span><strong>Pay in person</strong></p><p><span>Fulfillment</span><strong>{summaryMeta[0].value}</strong></p></div>
+            <Button className="w-full" size="lg" onClick={runPurchase} disabled={isPurchasing}>
+              {isPurchasing ? 'Placing order…' : 'Place order'}
+            </Button>
+          </div>
         ) : (
-          <PurchaseStepPayment embedded paymentMethod={paymentMethod} setPaymentMethod={(method) => { setPaymentMethod(method); setAgreedToTerms(false); termsGate.reset(); }} acceptPayPalCheckout={acceptPayPalCheckout && !paypalPurchaseBlocked} acceptCashPayment={acceptCashPayment} titleStatus={(listing as { title_status?: string | null }).title_status ?? null} hasLien={(listing as { has_lien?: string | null }).has_lien ?? null} vin={(listing as { vin?: string | null }).vin ?? null} totalPrice={totalPrice} submitting={termsGate.preparing} onBack={() => goToStep(4)} onContinue={() => undefined} />
+          <PayPalEmbeddedPayment
+            target={{ kind: 'sale', id: paypalCheckout?.transactionId ?? '' }}
+            key={paypalCheckout?.transactionId ?? 'pending'}
+            sellerId={listing.host_id}
+            listingHref={`/listing/${listingId}`}
+            returnUrl={paypalCheckout?.returnUrl}
+            totalUsd={totalPrice}
+            blocked={!paypalCheckout}
+            blockedReason={isPurchasing ? 'Preparing your payment…' : 'Preparing your payment…'}
+          />
         )}
+
         {financingEligible ? (
           <>
             <FinancingActionPanel listing={listing} host={host} showPaymentLockup={false} />
@@ -1047,6 +1094,7 @@ const SaleCheckout = () => {
             </p>
           </>
         ) : null}
+
         <ProtectionDisclosure
           category={listing?.category ?? null}
           mode="sale"
@@ -1055,30 +1103,6 @@ const SaleCheckout = () => {
           )}
           fulfillment={fulfillmentSelected}
         />
-
-        <CheckoutLegalConsent
-          surface="sale_checkout"
-          relatedEntityType="listing"
-          relatedEntityId={listingId ?? null}
-          onChange={setLegalAccepted}
-        />
-      </div>
-    );
-
-    if (currentStep === 6) return (
-      <SaleAgreementStep document={agreement.data} loading={agreement.isLoading} error={agreement.isError} accepted={agreedToTerms} onAcceptedChange={setAgreedToTerms} acceptanceText={acceptanceText} />
-    );
-
-    return (
-      <div className="sale-final-confirm">
-        <div className="sale-final-facts"><p><span>Total due today</span><strong>{formatCurrency(totalPrice)}</strong></p><p><span>Payment</span><strong>{paymentMethod === 'cash' ? 'Pay in person' : 'PayPal secure checkout'}</strong></p><p><span>Fulfillment</span><strong>{summaryMeta[0].value}</strong></p></div>
-        {paymentMethod === 'cash' ? (
-          <Button className="w-full" size="lg" onClick={runPurchase} disabled={isPurchasing}>{isPurchasing ? 'Placing order…' : 'Place order'}</Button>
-        ) : paypalCheckout ? (
-          <PayPalEmbeddedPayment target={{ kind: 'sale', id: paypalCheckout.transactionId }} sellerId={listing.host_id} listingHref={`/listing/${listingId}`} returnUrl={paypalCheckout.returnUrl} totalUsd={totalPrice} heading="Secure checkout with PayPal" />
-        ) : (
-          <Button className="w-full" size="lg" onClick={runPurchase} disabled={isPurchasing}>{isPurchasing ? 'Preparing secure payment…' : 'Place order and continue to PayPal'}</Button>
-        )}
       </div>
     );
   })();
