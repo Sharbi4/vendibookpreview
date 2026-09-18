@@ -386,7 +386,7 @@ const PurchaseStepDelivery = ({
               <p className="text-xs text-muted-foreground mt-1">
                 After payment, use Vendibook Messages to agree on a pickup time and receive the exact handoff location.
               </p>
-              <Link to="/guides/meetup-inspection" className="mt-2 inline-flex text-xs font-semibold text-foreground underline underline-offset-4">
+              <Link to="/guides/meetup-inspection?mode=sale&fulfillment=pickup" className="mt-2 inline-flex text-xs font-semibold text-foreground underline underline-offset-4">
                 How to prepare for pickup &amp; inspection →
               </Link>
             </div>

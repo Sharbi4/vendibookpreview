@@ -93,6 +93,11 @@ const PostPaymentTimeline = ({
   className,
 }: PostPaymentTimelineProps) => {
   const steps = (mode === 'rental' ? RENTAL : SALE)[fulfillment] ?? SALE.pickup;
+  const guideContext = `mode=${mode}&fulfillment=${fulfillment === 'vendibook_freight' ? 'freight' : fulfillment}`;
+  const withContext = (href: string) => {
+    const [path, hash] = href.split('#');
+    return `${path}${path.includes('?') ? '&' : '?'}${guideContext}${hash ? `#${hash}` : ''}`;
+  };
 
   return (
     <section
@@ -118,7 +123,7 @@ const PostPaymentTimeline = ({
               <div className="checkout-story-copy">
                 <h4>{s.title}</h4>
                 <p>{s.body}</p>
-                {s.guide ? <Link to={s.guide.href}>{s.guide.label} →</Link> : null}
+                {s.guide ? <Link to={s.guide.href.startsWith('/guides/meetup-inspection') ? withContext(s.guide.href) : s.guide.href}>{s.guide.label} →</Link> : null}
               </div>
             </li>
           );

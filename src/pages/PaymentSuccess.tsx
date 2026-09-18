@@ -704,7 +704,7 @@ const PaymentSuccess = () => {
                     <div className="mt-4 rounded-lg border border-border p-4 text-left">
                       <p className="text-sm font-semibold text-foreground">Prepare for your meetup</p>
                       <p className="mt-1 text-xs text-muted-foreground">Review the inspection guide before pickup.</p>
-                      <Link to="/guides/meetup-inspection" className="mt-2 inline-flex text-sm font-medium underline underline-offset-4">Open Meetup &amp; Inspection Guide →</Link>
+                      <Link to={`/guides/meetup-inspection?${saleTransaction?.id ? `transactionId=${saleTransaction.id}&returnTo=${encodeURIComponent(`/transaction/${saleTransaction.id}`)}` : 'mode=sale&fulfillment=pickup'}`} className="mt-2 inline-flex text-sm font-medium underline underline-offset-4">Open Meetup &amp; Inspection Guide →</Link>
                     </div>
                   ) : null}
 
