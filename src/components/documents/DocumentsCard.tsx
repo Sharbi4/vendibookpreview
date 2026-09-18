@@ -231,6 +231,38 @@ export function DocumentsCard({
               </div>
             );
           })}
+
+          {(() => {
+            const existing = new Set(docs.map((d) => d.document_type));
+            const pending = kinds.filter(
+              (k) => ON_DEMAND[k] && !ON_DEMAND[k].types.some((t) => existing.has(t)),
+            );
+            if (!pending.length) return null;
+            return (
+              <div className="rounded-md border-[1.5px] border-dashed border-border/60 p-4 space-y-3">
+                <p className="text-xs text-muted-foreground">
+                  These documents are prepared at a later stage. You can ask for one as soon as that stage is reached.
+                </p>
+                <div className="flex flex-wrap gap-2">
+                  {pending.map((k) => (
+                    <Button
+                      key={k}
+                      size="sm"
+                      variant="outline"
+                      onClick={() => requestKind(k)}
+                      disabled={!!kindBusy}
+                      title={ON_DEMAND[k].hint}
+                    >
+                      {kindBusy === k
+                        ? <Loader2 className="h-4 w-4 animate-spin" />
+                        : <><FileText className="h-4 w-4 mr-1" /> {ON_DEMAND[k].label}</>}
+                    </Button>
+                  ))}
+                </div>
+                {kindNotice && <p className="text-xs text-muted-foreground">{kindNotice}</p>}
+              </div>
+            );
+          })()}
         </CardContent>
       </Card>
 
