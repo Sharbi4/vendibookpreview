@@ -25,7 +25,9 @@ export const LEGAL_EFFECTIVE_DATE = 'September 18, 2026';
 /** Individual document versions. Referenced everywhere; never inlined. */
 export const TERMS_OF_SERVICE_VERSION = '2026-09-18';
 export const PRIVACY_POLICY_VERSION = '2026-09-18';
-export const PAYMENTS_TERMS_VERSION = '2026-09-18';
+export const PAYMENTS_TERMS_VERSION = '2026-09-18b';
+export const SELLER_PAYMENT_TERMS_VERSION = '2026-09-18';
+export const ESIGN_VERSION = '2026-09-18';
 export const HANDOFF_TERMS_VERSION = '2026-09-18';
 export const FINANCING_DISCLOSURE_VERSION = '2026-09-18';
 export const LOCATION_TRACKING_VERSION = '2026-09-18';
@@ -45,6 +47,8 @@ export type LegalDocumentSlug =
   | 'terms-of-service'
   | 'privacy-policy'
   | 'payments-terms'
+  | 'seller-payment-terms'
+  | 'esign'
   | 'handoff-terms'
   | 'financing-disclosure'
   | 'video-walkthrough-terms'
@@ -89,6 +93,24 @@ export const LEGAL_DOCUMENTS: LegalDocument[] = [
     effectiveDate: LEGAL_EFFECTIVE_DATE,
     summary: 'How checkout, platform fees, payment protection, refunds, and payouts work.',
     group: 'transactions',
+  },
+  {
+    slug: 'seller-payment-terms',
+    title: 'Seller Payment Terms',
+    route: '/legal/seller-payment-terms',
+    version: SELLER_PAYMENT_TERMS_VERSION,
+    effectiveDate: LEGAL_EFFECTIVE_DATE,
+    summary: 'The addendum a seller accepts before onboarding with PayPal through Vendibook.',
+    group: 'transactions',
+  },
+  {
+    slug: 'esign',
+    title: 'Electronic Records & Signatures Consent',
+    route: '/legal/esign',
+    version: ESIGN_VERSION,
+    effectiveDate: LEGAL_EFFECTIVE_DATE,
+    summary: 'Your consent to receive agreements and records electronically, and how to withdraw it.',
+    group: 'platform',
   },
   {
     slug: 'handoff-terms',

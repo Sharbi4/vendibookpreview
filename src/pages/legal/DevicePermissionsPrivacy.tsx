@@ -76,12 +76,17 @@ const DevicePermissionsPrivacy: React.FC = () => (
           delivery is active, and in-person pickup or handoff confirmation.
         </p>
         <p>
-          For delivery tracking we store the current position, accuracy, and timestamp for the active
-          delivery, plus a sparse set of checkpoints kept as transaction evidence. Sharing stops
-          automatically when the delivery is marked delivered, cancelled, or ended, and we do not
-          collect or show a driver’s location outside an active delivery. Where a step requires
+          In short: location is shared only while a delivery is active, only with that order's
+          participants, and it stops automatically when the delivery ends. Where a step requires
           location, you cannot complete that step without granting permission or using an approved
           alternative such as a pickup code.
+        </p>
+        <p>
+          The <Link to="/legal/location-tracking" className="underline">Location and Delivery
+          Tracking Disclosure</Link> is the operative document for delivery location. It is the single
+          source of truth for what is collected, who can see it, when it stops, and how long
+          checkpoints are kept. If anything in this summary differs from that disclosure, that
+          disclosure controls.
         </p>
         <p>
           For everything else — shipping, delivery quotes, taxes — we use the address you enter and

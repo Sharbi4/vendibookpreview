@@ -4,7 +4,7 @@ import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_
 import { assertListingPurchasable } from "../_shared/listingGuard.ts";
 import { resolveProStatus } from "../_shared/proEligibility.ts";
 import { computeProSellerFee } from "../_shared/proFee.ts";
-import { recordServerLegalAcceptance } from "../_shared/legalVersions.ts";
+import { hasCurrentLegalAcceptance } from "../_shared/legalVersions.ts";
 
 /**
  * Creates (or reuses) the PENDING sale_transactions row a PayPal order is
@@ -26,6 +26,18 @@ serve(async (req) => {
     const { data: userData } = await admin.auth.getUser(authHeader.replace("Bearer ", ""));
     const user = userData?.user;
     if (!user) return jsonError(401, "unauthenticated", "Your session expired. Please sign in again.");
+
+    // Legal gate at the execution layer: no purchase intent without a current
+    // Terms of Service and Payments Terms acceptance on file for this buyer.
+    for (const slug of ["terms-of-service", "payments-terms"] as const) {
+      if (!(await hasCurrentLegalAcceptance(admin, user.id, slug))) {
+        return jsonError(
+          403,
+          "legal_acceptance_required",
+          "Please tick the box agreeing to the Terms of Service, Payments Terms, and Privacy Policy before paying.",
+        );
+      }
+    }
 
     const body = await req.json().catch(() => ({}));
     const listingId = body?.listing_id ? String(body.listing_id) : null;
@@ -151,19 +163,6 @@ serve(async (req) => {
 
     if (insertErr || !created) {
       return jsonError(500, "intent_failed", "We couldn't start this purchase. Please try again.");
-    }
-
-    // Linked-acceptance-on-action: placing the order is the acceptance of the
-    // Terms of Service, Payments Terms, and Privacy Policy shown above the pay
-    // button. Written server-side so it cannot be skipped by calling the API.
-    for (const slug of ["terms-of-service", "payments-terms", "privacy-policy"] as const) {
-      await recordServerLegalAcceptance(admin, {
-        userId: user.id,
-        slug,
-        surface: "sale_checkout",
-        relatedEntityType: "order",
-        relatedEntityId: created.id,
-      }).catch(() => undefined);
     }
 
     return jsonResponse(200, { transaction_id: created.id, amount });

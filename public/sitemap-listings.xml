@@ -727,17 +727,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/0127af0e-0787-42eb-8fa8-256cdc6ae88d</loc>
-    <lastmod>2026-09-14</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://images.unsplash.com/photo-1567306226416-28f0efdc88ce?w=800</image:loc>
-      <image:title>Starter Food Cart Business</image:title>
-      <image:caption>Starter Food Cart Business in Denver, CO on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/33ee8fd3-f9fd-44b3-af28-64d94eb7f9e9</loc>
     <lastmod>2026-09-13</lastmod>
     <changefreq>weekly</changefreq>
@@ -757,6 +746,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/c3c37490-0237-4054-b82a-59c5ee287a5d/1683c9f9-246e-40de-a1dd-987748bd1673/1789596664328-11mu30nhcz4.jpeg</image:loc>
       <image:title>Food Trailer for sale in Columbia Falls, MT</image:title>
       <image:caption>Food Trailer for sale in Columbia Falls, MT in Columbia Falls, MT on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/0127af0e-0787-42eb-8fa8-256cdc6ae88d</loc>
+    <lastmod>2026-09-18</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://images.unsplash.com/photo-1567306226416-28f0efdc88ce?w=800</image:loc>
+      <image:title>Starter Food Cart Business</image:title>
+      <image:caption>Starter Food Cart Business in Denver, CO on Vendibook</image:caption>
     </image:image>
   </url>
   <url>

@@ -1,6 +1,8 @@
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
+import { Link } from 'react-router-dom';
+import { LEGAL_DOCUMENTS } from '@/lib/legal/versions';
 
 const Terms = () => {
   return (
@@ -21,7 +23,7 @@ const Terms = () => {
             <section>
               <h2 className="text-2xl font-semibold mb-4">1. Acceptance of Terms</h2>
               <p className="text-muted-foreground leading-relaxed">
-                By accessing or using Vendibook ("the Platform"), you agree to be bound by these Terms of Service ("Terms"). 
+                Vendibook is operated by Vendibook LC ("Vendibook LC", "we", "us"). By accessing or using Vendibook ("the Platform"), you agree to be bound by these Terms of Service ("Terms"). 
                 If you do not agree to these Terms, you may not access or use the Platform. These Terms apply to all users, 
                 including hosts who list assets and shoppers who book them.
               </p>
@@ -151,7 +153,7 @@ const Terms = () => {
               <h2 className="text-2xl font-semibold mb-4">9. Disclaimer of Warranties</h2>
               <p className="text-muted-foreground leading-relaxed">
                 THE PLATFORM IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED. 
-                VENDIBOOK DOES NOT GUARANTEE THE ACCURACY, COMPLETENESS, OR RELIABILITY OF ANY CONTENT ON THE PLATFORM. 
+                VENDIBOOK LC DOES NOT GUARANTEE THE ACCURACY, COMPLETENESS, OR RELIABILITY OF ANY CONTENT ON THE PLATFORM. 
                 WE DO NOT WARRANT THAT THE PLATFORM WILL BE UNINTERRUPTED, SECURE, OR ERROR-FREE.
               </p>
             </section>
@@ -159,16 +161,16 @@ const Terms = () => {
             <section>
               <h2 className="text-2xl font-semibold mb-4">10. Limitation of Liability</h2>
               <p className="text-muted-foreground leading-relaxed">
-                TO THE MAXIMUM EXTENT PERMITTED BY LAW, VENDIBOOK SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, 
+                TO THE MAXIMUM EXTENT PERMITTED BY LAW, VENDIBOOK LC SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, 
                 CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING FROM YOUR USE OF THE PLATFORM OR ANY TRANSACTIONS FACILITATED THROUGH IT. 
-                VENDIBOOK IS NOT RESPONSIBLE FOR THE ACTIONS, CONTENT, OR CONDITION OF ASSETS PROVIDED BY HOSTS.
+                VENDIBOOK LC IS NOT RESPONSIBLE FOR THE ACTIONS, CONTENT, OR CONDITION OF ASSETS PROVIDED BY HOSTS.
               </p>
             </section>
 
             <section>
               <h2 className="text-2xl font-semibold mb-4">11. Indemnification</h2>
               <p className="text-muted-foreground leading-relaxed">
-                You agree to indemnify and hold harmless Vendibook, its officers, directors, employees, and agents from any claims, 
+                You agree to indemnify and hold harmless Vendibook LC, its officers, directors, employees, and agents from any claims, 
                 damages, losses, or expenses arising from your use of the Platform, your violation of these Terms, or your violation 
                 of any rights of a third party.
               </p>
@@ -203,6 +205,72 @@ const Terms = () => {
                 These Terms shall be governed by and construed in accordance with the laws of the jurisdiction in which 
                 Vendibook operates, without regard to its conflict of law provisions.
               </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold mb-4">14A. No agency; no endorsement; listings are as is</h2>
+              <div className="space-y-4 text-muted-foreground leading-relaxed">
+                <p>
+                  Vendibook LC is a marketplace. We are not the agent, broker, dealer, partner, or representative of any
+                  buyer, renter, seller, or host, and we are not a party to any transaction between them. Showing a listing,
+                  a badge, or a search ranking is not an endorsement, a recommendation, or a certification.
+                </p>
+                <p>
+                  Listings, including used trucks, trailers, and equipment, are offered by their sellers as is, with all
+                  faults, unless the seller gives you a written warranty. Vendibook LC does not inspect, test, certify, or
+                  warrant any unit, its title, its lien status, its permitting, or its compliance with any code.
+                </p>
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold mb-4">14B. Eligibility</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                You must be at least 18 years old and able to enter into a binding contract to use Vendibook. The Platform is
+                intended for business use. If you use it for a company, you confirm you are authorised to bind that company.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold mb-4">14C. Your content</h2>
+              <div className="space-y-4 text-muted-foreground leading-relaxed">
+                <p>
+                  You keep ownership of the photos, video, text, and other content you upload. You grant Vendibook LC a
+                  worldwide, non-exclusive, royalty-free licence to host, store, reproduce, resize, and display that content
+                  to operate and promote the marketplace, and to use it as transaction evidence in a dispute. The licence ends
+                  for new uses when you delete the content, except where we must keep it as a transaction record.
+                </p>
+                <p>
+                  You confirm you have the right to upload what you upload. If you believe content on Vendibook infringes your
+                  rights, email legal@vendibook.com with the listing link and details, and we will review and remove it where
+                  appropriate.
+                </p>
+              </div>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold mb-4">14D. Suspension and termination</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                We may suspend or close an account, remove a listing, or cancel a transaction where we reasonably believe there
+                has been fraud, misrepresentation, payment abuse, a safety risk, or a breach of these Terms or any document
+                below. You may close your account at any time. Closing an account does not release you from obligations to a
+                party who has already paid you or whom you have already paid.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-2xl font-semibold mb-4">14E. Documents that form part of these Terms</h2>
+              <p className="text-muted-foreground leading-relaxed">
+                The following documents are part of these Terms. Each is versioned, and where a document is accepted at a
+                specific step, a new version must be accepted again before you can continue past that step.
+              </p>
+              <ul className="mt-3 list-disc pl-5 space-y-1 text-muted-foreground">
+                {LEGAL_DOCUMENTS.filter((d) => d.slug !== 'terms-of-service').map((d) => (
+                  <li key={d.slug}>
+                    <Link to={d.route} className="underline">{d.title}</Link> — {d.summary} (v{d.version})
+                  </li>
+                ))}
+              </ul>
             </section>
 
             <section>

@@ -2,112 +2,60 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import LegalDocumentLayout, { Section } from '@/components/legal/LegalDocumentLayout';
 
-/**
- * /legal/financing-disclosure — Financing & Pay-Over-Time Disclosure
- *
- * Linked from every financing banner and CTA. Vendibook is never described as
- * a lender, broker, or credit intermediary, and no rate or term is advertised.
- */
+/** /legal/financing-disclosure — third-party financing and pay-over-time. */
 const FinancingDisclosure: React.FC = () => (
   <LegalDocumentLayout
     slug="financing-disclosure"
-    heading="Financing & Pay-Over-Time Disclosure"
-    seoTitle="Financing & Pay-Over-Time Disclosure | Vendibook"
-    seoDescription="Financing shown on Vendibook is offered by independent third-party providers, subject to their approval. Vendibook is not a lender or broker."
-    related={['payments-terms', 'terms-of-service']}
+    heading="Financing and Pay-Over-Time Disclosure"
+    seoTitle="Financing and Pay-Over-Time Disclosure | Vendibook"
+    seoDescription="Financing and pay-over-time options shown on Vendibook are offered by third-party providers under their own terms. Vendibook LC is not a lender and approval is not guaranteed."
+    related={['payments-terms', 'terms-of-service', 'privacy-policy']}
   >
-    <Section title="1. Vendibook is not a lender">
+    <Section title="1. Vendibook LC is not a lender">
       <p>
-        Vendibook is not a bank, lender, credit union, finance company, loan broker, credit
-        intermediary, or credit services organisation. Vendibook does not originate, underwrite,
-        approve, decline, fund, purchase, or service any loan, lease, line of credit, or
-        pay-over-time plan, and does not make any credit decision about you.
+        Vendibook LC is not a lender, a credit broker, or a credit repair organization, and does not
+        originate, underwrite, approve, service, or guarantee any loan or payment plan. Financing and
+        pay-over-time options shown on Vendibook are offered by third-party providers under their own
+        terms, rates, and eligibility requirements. Approval is not guaranteed. Any rate, term, or
+        monthly amount shown on Vendibook is an illustration only and is not an offer of credit. Your
+        agreement for financing is with the provider, not with Vendibook LC, and your obligation to
+        the seller for the purchase is separate from your obligation to the provider.
       </p>
     </Section>
 
-    <Section title="2. Who provides the financing">
+    <Section title="2. Read the provider's terms">
       <p>
-        Any financing or pay-over-time option shown on Vendibook — including options presented under
-        a provider's name and logo — is offered by an <strong>independent third-party provider</strong>{' '}
-        under that provider's own application, agreement, terms, and privacy policy. Your credit
-        relationship, if one is formed, is with that provider and not with Vendibook.
-      </p>
-      <p>
-        Following a financing link may take you to the provider's own site or application flow. What
-        you submit there is handled by the provider under its terms and privacy policy, not ours.
+        Before you accept any financing or pay-over-time offer, read the provider's terms, including
+        the rate, the total amount payable, the payment schedule, late fees, and what happens if you
+        miss a payment. Those terms control, not anything shown on a Vendibook page.
       </p>
     </Section>
 
-    <Section title="3. Approval is not guaranteed">
+    <Section title="3. Compensation">
       <p>
-        All financing is subject to the provider's approval and eligibility criteria. Rates, fees,
-        amounts, terms, down payment, collateral requirements, and availability are set by the
-        provider, vary by applicant and by state, and may not be available for every item, every
-        business, or every transaction on Vendibook.
-      </p>
-      <p>
-        Approval is not guaranteed. Applying may involve a credit inquiry, which can affect your
-        credit. Estimated payment figures shown anywhere on Vendibook, if any, are illustrative only
-        and are not an offer, a quote, or a prediction of what a provider will offer you.
+        Vendibook LC may receive compensation from a financing partner when a buyer applies for or
+        completes financing through a link on Vendibook. That compensation does not change the terms
+        you are offered by the provider, and it does not make Vendibook LC a party to your financing
+        agreement.
       </p>
     </Section>
 
-    <Section title="4. Not an offer of credit">
+    <Section title="4. Availability">
       <p>
-        Nothing on Vendibook is an offer or a commitment to lend, an advertisement of specific credit
-        terms, or an invitation to apply on particular terms. Vendibook does not state an annual
-        percentage rate, finance charge, payment amount, term, or down payment for any credit
-        product, and nothing on the platform should be read as triggering or satisfying disclosure
-        requirements that apply to a creditor or a credit advertisement.
+        Financing options depend on the provider, the buyer, the amount, and the item. An option
+        shown on one listing may not be available on another, and an option may disappear before you
+        complete checkout. Vendibook LC does not control provider availability or decisions.
       </p>
     </Section>
 
-    <Section title="5. How Vendibook is compensated">
+    <Section title="5. Disputes with a provider">
       <p>
-        Vendibook does not receive interest, finance charges, or any share of the cost of credit you
-        pay to a provider. Vendibook may receive a referral, marketing, or partnership fee from a
-        financing provider for introductions made through the platform. Such a fee is paid by the
-        provider, is not added to your cost of credit by Vendibook, and does not influence whether a
-        provider approves you. Where a specific arrangement exists with a named provider, we will
-        disclose it on the surface where that provider appears.
-      </p>
-    </Section>
-
-    <Section title="6. Equal credit opportunity">
-      <p>
-        Financing providers on Vendibook are expected to comply with the Equal Credit Opportunity Act
-        and Regulation B, which prohibit creditors from discriminating against an applicant on the
-        basis of race, colour, religion, national origin, sex, marital status, age (provided the
-        applicant has the capacity to contract), because all or part of the applicant's income
-        derives from a public assistance programme, or because the applicant has in good faith
-        exercised a right under the Consumer Credit Protection Act.
-      </p>
-      <p>
-        If you believe a provider has discriminated against you, raise it with that provider and with
-        the relevant regulator. Vendibook is not the creditor and cannot review a credit decision.
-      </p>
-    </Section>
-
-    <Section title="7. Where to take questions">
-      <p>
-        All questions about an application, an approval or decline, the terms of an agreement,
-        payments, payoff, hardship, collections, credit reporting, or a dispute about a financing
-        account must go directly to the provider. Vendibook cannot access, change, pause, or resolve
-        anything on a provider's account, and cannot speak for a provider.
-      </p>
-      <p>
-        Questions about a Vendibook listing, order, fee, or payout — as distinct from the financing
-        itself — go to support@vendibook.com or (725) 755-9598, Monday–Friday, 9am–5pm Arizona time.
-        See also the{' '}
-        <Link to="/legal/payments-terms" className="underline">Payments, Fees, Refunds &amp; Payouts Terms</Link>.
-      </p>
-    </Section>
-
-    <Section title="8. Nothing here is advice">
-      <p>
-        This Disclosure is information about Vendibook's role. It is not legal, tax, credit, or
-        financial advice. Consider your own circumstances and seek professional advice before taking
-        on credit for a business purchase.
+        A dispute about your financing agreement is between you and the provider. A dispute about the
+        item you bought is between you and the seller, and is covered by the{' '}
+        <Link to="/legal/payments-terms" className="underline">
+          Payments, Fees, Refunds and Disputes
+        </Link>{' '}
+        terms.
       </p>
     </Section>
   </LegalDocumentLayout>

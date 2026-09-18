@@ -94,6 +94,8 @@ const footerSections: FooterSection[] = [
       { label: 'Terms of Service', href: '/terms' },
       { label: 'Privacy Policy', href: '/privacy' },
       { label: 'Payments Terms', href: '/legal/payments-terms' },
+      { label: 'Seller Payment Terms', href: '/legal/seller-payment-terms' },
+      { label: 'Electronic Records Consent', href: '/legal/esign' },
       { label: 'Handoff Terms', href: '/legal/handoff-terms' },
       { label: 'Financing Disclosure', href: '/legal/financing-disclosure' },
       { label: 'Recording Notice', href: '/legal/recording-consent' },

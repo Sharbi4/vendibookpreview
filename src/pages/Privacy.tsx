@@ -206,6 +206,75 @@ const Privacy = () => {
             </ul>
           </section>
 
+          {/* Service providers */}
+          <section>
+            <h2 className="text-xl font-semibold text-foreground mb-4">Service Providers We Share Data With</h2>
+            <ul className="list-disc list-inside text-muted-foreground space-y-2 ml-4">
+              <li>
+                <strong>PayPal</strong> — payment processing, fraud prevention, and dispute resolution. To process a
+                payment and defend a dispute we pass buyer contact details and item-level order data to PayPal. PayPal
+                handles that data under its own privacy statement.
+              </li>
+              <li>
+                <strong>Our real-time video infrastructure provider</strong> — hosts the live walkthrough room. Audio and
+                video pass through that provider while a call is running.
+              </li>
+              <li><strong>Cloud hosting and database provider</strong> — stores the platform and its data.</li>
+              <li><strong>Email delivery provider</strong> — sends account, transaction, and notification email.</li>
+              <li><strong>Analytics providers</strong> — measure how pages and features are used.</li>
+            </ul>
+          </section>
+
+          {/* Feature-specific data categories */}
+          <section>
+            <h2 className="text-xl font-semibold text-foreground mb-4">Location, Media, and Consent Records</h2>
+            <ul className="list-disc list-inside text-muted-foreground space-y-2 ml-4">
+              <li>
+                <strong>Location data</strong> — collected only when someone starts an active delivery or confirms an
+                in-person pickup or handoff. Purpose: showing the buyer where their delivery is and recording delivery
+                evidence. Seen by: that order's buyer, seller, assigned driver, and authorised administrators. Retention:
+                live position is not kept after the delivery closes; sparse checkpoints are kept with the transaction
+                record. See the <Link to="/legal/location-tracking" className="underline">Location and Delivery Tracking
+                Disclosure</Link>.
+              </li>
+              <li>
+                <strong>Walkthrough and handoff media</strong> — photos and video captured in a walkthrough or at a
+                handoff. Purpose: transaction evidence, dispute support, and fraud investigation. Seen by: the
+                participants, authorised support, and where a dispute is opened, PayPal and any party legally entitled to
+                it. Retention: kept with the transaction, and longer where a dispute, claim, or legal hold is open. See the{' '}
+                <Link to="/legal/handoff-terms" className="underline">Verified Handoff Terms</Link>.
+              </li>
+              <li>
+                <strong>Consent records</strong> — which document you accepted, its version, when, from what page, and
+                which device permissions were granted at that moment. Purpose: proving what you agreed to. Retention: kept
+                for as long as the account exists, and as required by law. These records are append-only.
+              </li>
+            </ul>
+          </section>
+
+          {/* Payment logging */}
+          <section>
+            <h2 className="text-xl font-semibold text-foreground mb-4">Payment API Logging</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              We log payment API requests and responses for a limited period so we can debug failures and support
+              disputes. We do not log card numbers or full payment credentials. Card fields at checkout are rendered and
+              processed by PayPal and never reach Vendibook LC's systems.
+            </p>
+          </section>
+
+          {/* Data rights */}
+          <section>
+            <h2 className="text-xl font-semibold text-foreground mb-4">Exercising Your Data Rights</h2>
+            <p className="text-muted-foreground leading-relaxed">
+              To access, correct, delete, or receive a copy of your data, email support@vendibook.com from the address on
+              your account, or call (725) 755-9598, Monday to Friday, 9am to 5pm Arizona time. We verify that the request
+              comes from you before we act on it, and we respond within the period required by the law that applies to
+              you. Vendibook does not sell or share personal information for cross-context behavioural advertising. Some
+              data must be retained after a deletion request where we need it for a transaction record, a tax obligation,
+              a dispute, or a legal hold.
+            </p>
+          </section>
+
           {/* Contact */}
           <section className="bg-primary/5 rounded-xl p-6 border border-primary/20">
             <h2 className="text-xl font-semibold text-foreground flex items-center gap-2 mb-4">

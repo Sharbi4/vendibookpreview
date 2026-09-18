@@ -2759,6 +2759,7 @@ export type Database = {
           document_version: string
           granted_permissions: Json
           id: string
+          ip_address: string | null
           related_entity_id: string | null
           related_entity_type: string | null
           route: string | null
@@ -2773,6 +2774,7 @@ export type Database = {
           document_version: string
           granted_permissions?: Json
           id?: string
+          ip_address?: string | null
           related_entity_id?: string | null
           related_entity_type?: string | null
           route?: string | null
@@ -2787,6 +2789,7 @@ export type Database = {
           document_version?: string
           granted_permissions?: Json
           id?: string
+          ip_address?: string | null
           related_entity_id?: string | null
           related_entity_type?: string | null
           route?: string | null

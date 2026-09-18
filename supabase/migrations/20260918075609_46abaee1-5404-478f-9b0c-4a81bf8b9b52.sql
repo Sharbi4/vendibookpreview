@@ -1,0 +1,2 @@
+ALTER TABLE public.legal_acceptances ADD COLUMN IF NOT EXISTS ip_address text;
+CREATE INDEX IF NOT EXISTS legal_acceptances_user_doc_version_idx ON public.legal_acceptances (user_id, document_slug, document_version);
