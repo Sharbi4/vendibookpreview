@@ -251,7 +251,7 @@ const OrderDetailPage = () => {
                 </div>
               </div>
               <Button asChild size="sm" variant="outline">
-                <Link to={`/guides/meetup-inspection?returnTo=${encodeURIComponent(`/orders/${order.id}`)}`}>Open Meetup &amp; Inspection Guide</Link>
+                <Link to={`/guides/meetup-inspection?${(order as any).links?.sale_transaction_id ? `transactionId=${(order as any).links.sale_transaction_id}&` : (order as any).links?.booking_request_id ? `bookingId=${(order as any).links.booking_request_id}&` : ''}returnTo=${encodeURIComponent(`/orders/${order.id}`)}`}>Open Meetup &amp; Inspection Guide</Link>
               </Button>
             </Card>
           )}

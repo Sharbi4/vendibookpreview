@@ -4,6 +4,8 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
 import { Button } from '@/components/ui/button';
+import HandoffStoryline from '@/components/guides/HandoffStoryline';
+import { useHandoffContext, parsePublicMode, parsePublicFulfillment, type HandoffContext } from '@/hooks/useHandoffContext';
 
 const sections = [
   { id: 'before-you-meet', title: 'Before you meet', items: ['Confirm the time and exact location in Vendibook Messages.', 'Re-read the listing, equipment list, agreed price, and any written seller disclosures.', 'Make a short list of anything you want demonstrated.', 'Bring a charged phone for photos and notes.', 'For high-value or mechanical equipment, consider bringing a qualified independent inspector or mechanic.', 'If title or registration applies, know which documents you expect to review.'] },
@@ -22,6 +24,22 @@ export default function MeetupInspectionGuide() {
   const [params] = useSearchParams();
   const returnTo = params.get('returnTo');
   const safeReturn = returnTo?.startsWith('/') && !returnTo.startsWith('//') ? returnTo : null;
+  const transactionId = params.get('transactionId');
+  const bookingId = params.get('bookingId');
+  const { data: loadedContext } = useHandoffContext({ transactionId, bookingId });
+
+  const publicMode = parsePublicMode(params.get('mode'));
+  const publicFulfillment = parsePublicFulfillment(params.get('fulfillment'));
+  const context: HandoffContext | null =
+    loadedContext ??
+    (publicMode || publicFulfillment
+      ? {
+          mode: publicMode ?? 'sale',
+          fulfillment: publicFulfillment ?? 'pickup',
+          real: false,
+        }
+      : null);
+
 
   return (
     <div className="guide-page min-h-dvh">
@@ -39,6 +57,10 @@ export default function MeetupInspectionGuide() {
             </div>
           </div>
         </header>
+
+        <div className="guide-wrap">
+          <HandoffStoryline context={context} safeReturn={safeReturn} />
+        </div>
 
         <div className="guide-layout guide-wrap">
           <aside>
