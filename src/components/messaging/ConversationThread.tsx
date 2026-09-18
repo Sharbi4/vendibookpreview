@@ -32,6 +32,7 @@ import { MessageReactionPicker, MessageReactionBadges } from './MessageReactions
 import type { ReactionSummary } from '@/hooks/useMessageReactions';
 import { getCounterpartyName } from '@/lib/displayName';
 import WalkthroughCta from '@/components/video/WalkthroughCta';
+import MeetupRequestButton from './MeetupRequestButton';
 
 interface ConversationThreadProps {
   conversationId: string;
@@ -387,6 +388,16 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
             <p className="text-xs text-primary truncate">{conversation.listing.title}</p>
           )}
         </div>
+        {!isHost && (
+          <MeetupRequestButton
+            compact
+            disabled={isSending}
+            onSubmit={async (text) => {
+              const result = await sendMessage(text);
+              return result;
+            }}
+          />
+        )}
         <WalkthroughCta listingId={conversation?.listing_id} conversationId={conversationId} compact />
       </div>
 
