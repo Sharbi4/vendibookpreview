@@ -70,6 +70,7 @@ const WorkspaceNotifications = lazy(() => import("./pages/workspace/WorkspaceNot
 const WorkspaceSaved = lazy(() => import("./pages/workspace/WorkspaceSaved"));
 const WalkthroughSchedule = lazy(() => import("./pages/WalkthroughSchedule"));
 const WalkthroughDetail = lazy(() => import("./pages/WalkthroughDetail"));
+const WalkthroughNextSteps = lazy(() => import("./pages/WalkthroughNextSteps"));
 const EditListing = lazy(() => import("./pages/EditListing"));
 const RentItOut = lazy(() => import("./pages/RentItOut"));
 const ListingPaymentsFinancing = lazy(() => import("./pages/ListingPaymentsFinancing"));
@@ -324,6 +325,8 @@ const AnimatedRoutes = () => {
           <Route path="/dashboard/reporting" element={<PageTransition><WorkspaceReporting /></PageTransition>} />
           <Route path="/dashboard/analytics" element={<PageTransition><WorkspaceAnalytics /></PageTransition>} />
           <Route path="/walkthrough/schedule/:listingId" element={<PageTransition><WalkthroughSchedule /></PageTransition>} />
+          <Route path="/walkthrough/next-steps" element={<PageTransition><WalkthroughNextSteps /></PageTransition>} />
+          <Route path="/walkthrough/:walkthroughId/next-steps" element={<PageTransition><WalkthroughNextSteps /></PageTransition>} />
           <Route path="/walkthrough/:walkthroughId" element={<PageTransition><WalkthroughDetail /></PageTransition>} />
           <Route path="/dashboard/classic" element={<PreserveQueryRedirect to="/dashboard" />} />
           {/* Legacy workspace aliases */}
