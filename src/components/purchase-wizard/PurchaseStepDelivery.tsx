@@ -250,29 +250,20 @@ const MethodCard = ({ selection, selected, onSelect, priceNode, showRadio, child
         </div>
       </button>
 
-      {/* Explainer strip */}
-      <div className="px-4 pb-4 -mt-1">
-        <div className="rounded-lg bg-muted/40 border border-border px-3 py-2.5 flex gap-2">
-          <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
-          <div className="text-xs">
-            <span className="font-semibold text-foreground">{linkifyFreight(meta.explainerTitle)}. </span>
-            <span className="text-muted-foreground">{linkifyFreight(meta.explainerBody)}</span>
-            {selection === 'vendibook_freight' && (
-              <>
-                {' '}
-                <Link
-                  to="/vendibook-freight"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="font-medium text-primary underline underline-offset-2 hover:text-primary/80"
-                >
-                  Learn about Vendibook Freight
-                </Link>
-              </>
-            )}
+      {selection !== 'pickup' ? (
+        <div className="px-4 pb-4 -mt-1">
+          <div className="rounded-lg bg-muted/40 border border-border px-3 py-2.5 flex gap-2">
+            <Info className="h-4 w-4 text-primary shrink-0 mt-0.5" />
+            <div className="text-xs">
+              <span className="font-semibold text-foreground">{linkifyFreight(meta.explainerTitle)}. </span>
+              <span className="text-muted-foreground">{linkifyFreight(meta.explainerBody)}</span>
+              {selection === 'vendibook_freight' ? (
+                <> {' '}<Link to="/vendibook-freight" target="_blank" rel="noopener noreferrer" className="font-medium text-primary underline underline-offset-2 hover:text-primary/80">Learn about Vendibook Freight</Link></>
+              ) : null}
+            </div>
           </div>
         </div>
-      </div>
+      ) : null}
 
       {selected && children ? (
         <div className="px-4 pb-4 space-y-3 border-t border-border pt-4 bg-muted/[0.15]">
@@ -387,7 +378,7 @@ const PurchaseStepDelivery = ({
                 After payment, use Vendibook Messages to agree on a pickup time and receive the exact handoff location.
               </p>
               <Link to="/guides/meetup-inspection?mode=sale&fulfillment=pickup" className="mt-2 inline-flex text-xs font-semibold text-foreground underline underline-offset-4">
-                How to prepare for pickup &amp; inspection →
+                Meetup &amp; inspection guide →
               </Link>
             </div>
           </MethodCard>

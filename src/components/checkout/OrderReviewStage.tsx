@@ -35,6 +35,7 @@ interface OrderReviewStageProps {
   continueDisabled?: boolean;
   backHref: string;
   backLabel?: string;
+  hideActions?: boolean;
 }
 
 /**
@@ -65,6 +66,7 @@ const OrderReviewStage = ({
   continueDisabled = false,
   backHref,
   backLabel = 'Back to listing',
+  hideActions = false,
 }: OrderReviewStageProps) => (
   <div className="order-review">
     <section className="order-review-asset">
@@ -127,19 +129,21 @@ const OrderReviewStage = ({
       </div>
     </section>
 
-    <div className="order-review-actions">
-      <button
-        type="button"
-        className="checkout-primary-action order-review-continue"
-        onClick={onContinue}
-        disabled={continueDisabled}
-      >
-        {continueLabel}
-      </button>
-      <Link to={backHref} className="v2-btn-quiet order-review-back">
-        {backLabel}
-      </Link>
-    </div>
+    {!hideActions ? (
+      <div className="order-review-actions">
+        <button
+          type="button"
+          className="checkout-primary-action order-review-continue"
+          onClick={onContinue}
+          disabled={continueDisabled}
+        >
+          {continueLabel}
+        </button>
+        <Link to={backHref} className="v2-btn-quiet order-review-back">
+          {backLabel}
+        </Link>
+      </div>
+    ) : null}
   </div>
 );
 

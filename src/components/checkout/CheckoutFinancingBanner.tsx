@@ -54,12 +54,12 @@ const CheckoutFinancingBanner = ({
     return (
       <div className={cn('checkout-financing-compact', className)}>
         <EquinoxFundingLogo className="h-4" />
-        <p>Equipment financing is available for this listing through Equinox Funding.</p>
+        <p>Equipment financing available</p>
         <Link
           to={`/financing?listing_id=${listing.id}`}
           onClick={() => trackFinancingLearnMoreClick('listing_panel', listing.id)}
         >
-          Explore financing
+          Explore →
         </Link>
         {financingLeadDialog}
       </div>
