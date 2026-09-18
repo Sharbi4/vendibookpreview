@@ -2646,10 +2646,10 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
 }
 .v2-home-paypal:hover { border-color: hsl(240 6% 27%); background: hsl(240 6% 10%); }
 .v2-home-paypal-mark {
-  display: grid; place-items: center; flex: none; width: 52px; height: 52px;
-  border-radius: 12px; background: hsl(40 30% 97%);
+  display: grid; place-items: center; flex: none; width: 168px; height: 56px;
+  border-radius: 10px; overflow: hidden;
 }
-.v2-home-paypal-mark img { width: 34px; height: 34px; object-fit: contain; }
+.v2-home-paypal-mark img { width: 100%; height: 100%; object-fit: cover; }
 .v2-home-paypal-copy { display: grid; gap: 3px; min-width: 0; }
 .v2-home-paypal-copy strong { color: hsl(40 26% 96%); font-size: 15.5px; font-weight: 660; letter-spacing: .002em; }
 .v2-home-paypal-copy small { color: hsl(40 12% 66%); font-size: 13px; line-height: 1.45; }
