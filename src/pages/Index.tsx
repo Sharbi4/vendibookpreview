@@ -17,8 +17,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 
 import vendibookWordmark from '@/assets/vendibook-wordmark.png';
-import equinoxLogoAsset from '@/assets/equinox-funding-dark.png.asset.json';
-import paypalMonogramAsset from '@/assets/paypal-monogram-color.png.asset.json';
+import { PayPalWordmark, EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
 import paypalBannerAsset from '@/assets/paypal-banner.png.asset.json';
 
 const ROW_LIMIT = 8;
@@ -226,29 +225,30 @@ const Index = () => {
           <section className="v2-home-tools">
             <header className="v2-home-section-head"><div><p className="v2-home-eyebrow">Tools for the next step</p><h2>Price it. Finance it. Move it.</h2></div></header>
             <div className="v2-home-tools-grid">
-              <Link to="/tools/pricepilot"><Gauge /><span><strong>Price your equipment</strong><small>See a market-backed pricing range.</small></span><ArrowRight /></Link>
-              <Link to="/financing"><Landmark /><span><strong>Explore financing</strong><small>See third-party equipment financing options.</small></span><ArrowRight /></Link>
-              <Link to="/vendibook-freight"><Truck /><span><strong>Plan delivery</strong><small>Get help moving eligible equipment.</small></span><ArrowRight /></Link>
+              <Link to="/tools/pricepilot"><Gauge /><span><strong>Price your equipment</strong><small>See a market-backed pricing range</small></span><ArrowRight /></Link>
+              <Link to="/financing"><Landmark /><span><strong>Explore financing</strong><small>See financing options from third-party equipment partners</small></span><ArrowRight /></Link>
+              <Link to="/vendibook-freight"><Truck /><span><strong>Plan delivery</strong><small>Arrange delivery support for eligible equipment</small></span><ArrowRight /></Link>
             </div>
           </section>
 
           <section className="v2-home-partners" aria-label="Transaction support">
             <div className="v2-home-partners-copy">
               <p className="v2-home-eyebrow">Transaction support</p>
-              <h2>The tools behind the deal.</h2>
+              <h2>The infrastructure behind the deal.</h2>
+              <p className="v2-home-partners-sub">Everything you need to move from interest to handoff in one connected flow.</p>
             </div>
             <div className="v2-home-partner-tiles">
               <article>
-                <span className="v2-home-partner-mark"><img src={paypalMonogramAsset.url} alt="PayPal" /></span>
-                <small>Secure checkout</small>
+                <span className="v2-home-partner-mark"><PayPalWordmark surface="light" className="h-7 w-auto" /></span>
+                <div className="v2-home-partner-copy"><h3>Secure checkout</h3><p>Smooth online payment through PayPal</p></div>
               </article>
               <article className="v2-home-partner-tile--dark">
-                <span className="v2-home-partner-mark"><img src={equinoxLogoAsset.url} alt="Equinox Funding" /></span>
-                <small>Equipment financing</small>
+                <span className="v2-home-partner-mark"><EquinoxFundingLogo className="h-7 w-auto" /></span>
+                <div className="v2-home-partner-copy"><h3>Equipment financing</h3><p>Financing options for qualified buyers</p></div>
               </article>
               <article>
                 <span className="v2-home-partner-mark"><img src={vendibookWordmark} alt="Vendibook" /></span>
-                <small>Marketplace tools &amp; records</small>
+                <div className="v2-home-partner-copy"><h3>Deal workflow &amp; records</h3><p>Messages, agreements, tracking, and order details in one place</p></div>
               </article>
             </div>
           </section>
