@@ -53,7 +53,7 @@ Deno.serve(async (req) => {
 
     const { data: w } = await admin
       .from('video_walkthroughs')
-      .select('id, buyer_id, seller_id, status, meeting_type, starts_at, ends_at, listing:listings(title)')
+      .select('id, buyer_id, seller_id, status, meeting_type, starts_at, ends_at, meeting_started_at, listing:listings(title)')
       .eq('id', room.walkthrough_id)
       .maybeSingle();
     if (!w) return json({ received: true }, 200);
