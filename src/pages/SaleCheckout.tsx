@@ -612,8 +612,7 @@ const SaleCheckout = () => {
           privacy: privacyConsent.data?.content_hash ?? null,
         },
       });
-      {
-        if (termsGate.termsId) {
+      if (termsGate.termsId) {
         await supabase.functions.invoke('acknowledge-terms', { body: { terms_id: termsGate.termsId } });
       }
       return true;
