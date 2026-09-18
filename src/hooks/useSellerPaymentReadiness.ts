@@ -23,8 +23,12 @@ export function useSellerPaymentReadiness(sellerId?: string | null): SellerPayme
   const query = useQuery({
     queryKey: ['seller-payment-readiness', sellerId],
     enabled: Boolean(sellerId),
-    staleTime: 60_000,
+    staleTime: 5 * 60_000,
+    // A readiness lookup must never stall the payment step behind retry
+    // backoff: one attempt, then fall through to the unblocked default.
+    retry: false,
     queryFn: async () => {
+
       const { data, error } = await supabase.rpc('seller_payment_readiness' as never, {
         _seller_id: sellerId,
       } as never);
