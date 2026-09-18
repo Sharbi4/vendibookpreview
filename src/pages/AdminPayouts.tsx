@@ -9,6 +9,7 @@ import {
   RefreshCw,
   RotateCcw,
   Search,
+  XCircle,
 } from 'lucide-react';
 
 import Header from '@/components/layout/Header';
@@ -347,6 +348,16 @@ export default function AdminPayouts() {
                           onClick={() => { setRefundTarget(row); setRefundReason(''); }}
                         >
                           <RotateCcw className="mr-2 h-4 w-4" /> Full refund
+                        </Button>
+                      ) : null}
+                      {row.release_state && !['payout_recorded', 'auto_refunded', 'cancelled'].includes(row.release_state) ? (
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          disabled={busyId === row.id}
+                          onClick={() => { setCancelTarget(row); setCancelReason(''); }}
+                        >
+                          <XCircle className="mr-2 h-4 w-4" /> Cancel &amp; refund order
                         </Button>
                       ) : null}
                     </div>
