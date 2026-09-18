@@ -10,7 +10,7 @@
  *   - declined / cancelled  → host said no; refund is on its way
  *   - failed                → payment never completed, nothing was charged
  *
- * No escrow claims, no payout-timing promises to the renter.
+ * No fund-custody claims, no payout-timing promises to the renter.
  */
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';

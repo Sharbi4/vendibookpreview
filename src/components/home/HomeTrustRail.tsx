@@ -7,7 +7,7 @@ import { usePublicFeatureFlag } from '@/hooks/usePublicFeatureFlag';
  * Single consolidated trust / payments rail for the homepage.
  * Factual only — describes what is actually implemented: PayPal-processed
  * online checkout, optional Plaid identity verification, and pay-in-person
- * where the seller supports it. No escrow, guarantee, or protection claims.
+ * where the seller supports it. No fund-custody, guarantee, or protection claims.
  */
 const HomeTrustRail = () => {
   const verifiedSellerEnabled = usePublicFeatureFlag('verified_seller_enabled');

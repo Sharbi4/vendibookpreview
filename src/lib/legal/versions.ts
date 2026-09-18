@@ -10,7 +10,7 @@
  *    text of a document materially changes.
  *
  * Compliance guardrails baked into every document referenced here:
- *  - The word "escrow" is never used. The only permitted framing is
+ *  - The word fund-custody is never used. The only permitted framing is
  *    "payment protection", which is a platform policy — not insurance, not a
  *    financial guarantee, and not a custodial arrangement.
  *  - Vendibook is never described as a bank, lender, money transmitter,

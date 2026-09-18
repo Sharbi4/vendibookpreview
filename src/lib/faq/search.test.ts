@@ -94,10 +94,10 @@ describe("faq search", () => {
   });
 
 
-  it("uses 'payment protection' language, not 'escrow'", () => {
-    // Buyer-facing explainer must exist and avoid the word 'escrow'.
+  it("uses 'payment protection' language, not 'fund-custody'", () => {
+    // Buyer-facing explainer must exist and avoid the word 'fund-custody'.
     const protection = findFaqEntry("payment-protection");
     expect(protection).toBeDefined();
-    expect(protection!.answer.toLowerCase()).not.toContain("in escrow");
+    expect(protection!.answer.toLowerCase()).not.toContain("in fund-custody");
   });
 });

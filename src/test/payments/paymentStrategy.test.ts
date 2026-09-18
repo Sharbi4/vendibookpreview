@@ -24,7 +24,7 @@ describe('determinePaymentStrategy — sales', () => {
     expect(d.authorizeCents).toBe(2_500_00);
     expect(d.captureNowCents).toBe(0);
     expect(d.buyerMessage).toMatch(/temporary hold/i);
-    expect(d.buyerMessage).not.toMatch(/escrow/i);
+    expect(d.buyerMessage).not.toMatch(/fund-custody/i);
   });
 
   it('keeps the hold comfortably inside PayPal limits', () => {

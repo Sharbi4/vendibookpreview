@@ -1949,7 +1949,7 @@ export const BLOG_POSTS: BlogPost[] = [
   <li>Vendibook reviews and issues the seller payout after the required delivery or handoff confirmation steps; payouts are not instant or automatic</li>
 </ul>
 
-<p class="mb-8">Vendibook does not hold funds in escrow and does not guarantee any transaction. Both sides are still responsible for inspecting the unit, confirming licensing, and arranging their own insurance.</p>
+<p class="mb-8">Vendibook does not hold or control transaction funds and does not guarantee any transaction. Both sides are still responsible for inspecting the unit, confirming licensing, and arranging their own insurance.</p>
 
 
 <h2 class="text-2xl font-bold mt-10 mb-4">Commercial Kitchen and Commissary Marketplace Integration</h2>

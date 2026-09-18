@@ -79,7 +79,7 @@ interface CheckoutSessionInfo {
 const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get('session_id');
-  const isPaymentProtected = searchParams.get('escrow') === 'true';
+  const isPaymentProtected = (searchParams.get('protected') ?? searchParams.get('fund-custody')) === 'true';
   const isHold = searchParams.get('hold') === 'true';
   const isMonetization = searchParams.get('monetization') === 'true';
   // Rentals now have a dedicated confirmation surface; keep old links working.
