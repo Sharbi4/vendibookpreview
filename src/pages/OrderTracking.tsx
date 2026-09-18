@@ -534,33 +534,14 @@ const OrderTracking = () => {
   }, [user, authLoading, transactionId, navigate]);
 
   // Handle freight payment for cash + freight transactions
-  const handlePayFreight = async () => {
+  /**
+   * Freight is paid through the same PayPal lifecycle as the rest of the
+   * order (server-created order, server-verified capture) — no external
+   * hosted checkout and no separate provider.
+   */
+  const handlePayFreight = () => {
     if (!transaction || !user) return;
-    
-    setIsPayingFreight(true);
-    try {
-      const { data, error: fnError } = await supabase.functions.invoke('create-freight-checkout', {
-        body: { transaction_id: transaction.id },
-      });
-
-      if (fnError) throw fnError;
-      if (data.error) throw new Error(data.error);
-
-      // Open Stripe checkout
-      const stripeWindow = window.open(data.url, '_blank');
-      if (!stripeWindow) {
-        window.location.href = data.url;
-      }
-    } catch (err) {
-      console.error('Freight payment error:', err);
-      toast({ 
-        title: 'Error', 
-        description: err instanceof Error ? err.message : 'Failed to start freight payment.',
-        variant: 'destructive'
-      });
-    } finally {
-      setIsPayingFreight(false);
-    }
+    setFreightPaymentOpen(true);
   };
 
   // Handle confirmation for cash transactions.
