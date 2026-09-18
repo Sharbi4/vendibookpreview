@@ -231,6 +231,11 @@ export default function HandoffPage() {
             <Checkbox checked={consent} onCheckedChange={(v) => setConsent(!!v)} className="mt-0.5" />
             <span>{CONSENT_COPY}</span>
           </label>
+          <p className="text-xs text-muted-foreground">
+            Capture the item only. Do not film other people, children, or the inside of a private home beyond what this
+            transaction needs — see the{' '}
+            <Link to="/legal/handoff-terms" target="_blank" rel="noreferrer" className="underline">handoff terms</Link>.
+          </p>
           {consent ? (
             <WalkthroughRecorder
               handoffId={handoff.id}
