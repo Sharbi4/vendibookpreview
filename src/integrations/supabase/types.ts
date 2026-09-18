@@ -1647,18 +1647,26 @@ export type Database = {
         Row: {
           agreement_version: string | null
           booking_id: string | null
+          completed_at: string | null
           created_at: string
           document_type: string
           host_signed_at: string | null
           id: string
+          listing_id: string | null
           metadata: Json
+          partially_signed_at: string | null
           renter_signed_at: string | null
           requirements_snapshot: Json
+          sent_at: string | null
           signed_pdf_path: string | null
           signers: Json
           signnow_document_id: string | null
           signnow_template_id: string | null
+          snapshot: Json
           status: string
+          superseded_by_document_id: string | null
+          supersedes_document_id: string | null
+          template_version: string | null
           terms_id: string | null
           transaction_id: string | null
           updated_at: string
@@ -1666,18 +1674,26 @@ export type Database = {
         Insert: {
           agreement_version?: string | null
           booking_id?: string | null
+          completed_at?: string | null
           created_at?: string
           document_type: string
           host_signed_at?: string | null
           id?: string
+          listing_id?: string | null
           metadata?: Json
+          partially_signed_at?: string | null
           renter_signed_at?: string | null
           requirements_snapshot?: Json
+          sent_at?: string | null
           signed_pdf_path?: string | null
           signers?: Json
           signnow_document_id?: string | null
           signnow_template_id?: string | null
+          snapshot?: Json
           status?: string
+          superseded_by_document_id?: string | null
+          supersedes_document_id?: string | null
+          template_version?: string | null
           terms_id?: string | null
           transaction_id?: string | null
           updated_at?: string
@@ -1685,18 +1701,26 @@ export type Database = {
         Update: {
           agreement_version?: string | null
           booking_id?: string | null
+          completed_at?: string | null
           created_at?: string
           document_type?: string
           host_signed_at?: string | null
           id?: string
+          listing_id?: string | null
           metadata?: Json
+          partially_signed_at?: string | null
           renter_signed_at?: string | null
           requirements_snapshot?: Json
+          sent_at?: string | null
           signed_pdf_path?: string | null
           signers?: Json
           signnow_document_id?: string | null
           signnow_template_id?: string | null
+          snapshot?: Json
           status?: string
+          superseded_by_document_id?: string | null
+          supersedes_document_id?: string | null
+          template_version?: string | null
           terms_id?: string | null
           transaction_id?: string | null
           updated_at?: string
@@ -1707,6 +1731,34 @@ export type Database = {
             columns: ["booking_id"]
             isOneToOne: false
             referencedRelation: "booking_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_superseded_by_document_id_fkey"
+            columns: ["superseded_by_document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_supersedes_document_id_fkey"
+            columns: ["supersedes_document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
             referencedColumns: ["id"]
           },
           {
@@ -9449,18 +9501,24 @@ export type Database = {
           kind: string
           roles: Json
           signnow_template_id: string
+          status: string
+          version: string
         }
         Insert: {
           created_at?: string
           kind: string
           roles?: Json
           signnow_template_id: string
+          status?: string
+          version?: string
         }
         Update: {
           created_at?: string
           kind?: string
           roles?: Json
           signnow_template_id?: string
+          status?: string
+          version?: string
         }
         Relationships: []
       }
