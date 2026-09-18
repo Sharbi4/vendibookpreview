@@ -504,17 +504,27 @@ const PayPalPaymentPanel = ({
                   {error ? (
                     <div
                       role="alert"
-                      className="rounded-xl border border-destructive/40 bg-destructive/[0.06] px-4 py-3 text-sm space-y-1"
+                      className="rounded-xl border border-destructive/40 bg-destructive/[0.06] px-4 py-3 text-sm space-y-2"
                     >
                       <p className="font-semibold text-foreground">{error.title}</p>
                       <p className="text-xs text-muted-foreground">{error.detail}</p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setError(null);
+                          setEligible({});
+                          setState('loading');
+                          setReloadKey((k) => k + 1);
+                        }}
+                        className="text-xs font-semibold underline underline-offset-2 text-foreground"
+                      >
+                        Try again
+                      </button>
                     </div>
                   ) : null}
 
-                  <p className="text-[11px] text-muted-foreground text-center inline-flex w-full items-center justify-center gap-1.5">
-                    Payments are processed securely by
-                    <PayPalMonogram className="h-3.5" />
-                    PayPal. Vendibook never sees your card number.
+                  <p className="text-[11px] text-muted-foreground text-center">
+                    PayPal terms and eligibility apply to the payment method you choose.
                   </p>
                 </>
               )}
