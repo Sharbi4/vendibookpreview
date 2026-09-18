@@ -1075,7 +1075,6 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
             imageUrl={coverImage}
             title={listing.title}
             categoryLabel={listing.category ? listing.category.replace(/_/g, ' ') : null}
-            counterpartyLabel={hostDisplayName ? `Hosted by ${hostDisplayName}` : undefined}
             location={listingLocation}
             specs={[
               { label: isHourlyBooking ? 'Scheduled hours' : 'Dates', value: dateLabel },
