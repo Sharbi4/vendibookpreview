@@ -31,7 +31,9 @@ Deno.serve(async(req)=>{
     const {data:p}=await admin.from('profiles').select('full_name,display_name,business_name').eq('id',user.id).maybeSingle();
     const joinExpiry=new Date(Math.min(roomExpiry.getTime(),Date.now()+45*60_000));
     const join=await provider.createMeetingToken(room.room_name,{id:user.id,name:p?.display_name||p?.business_name||p?.full_name||'Vendibook member'},joinExpiry,user.id===w.seller_id);
-    await admin.from('video_walkthrough_events').insert({walkthrough_id:w.id,actor_id:user.id,event_type:user.id===w.seller_id?'seller_joined':'buyer_joined'});
+    // A join token is NOT a meeting join. The truthful event here is that
+    // access was granted; real joins arrive from the Daily join hook.
+    await admin.from('video_walkthrough_events').insert({walkthrough_id:w.id,actor_id:user.id,event_type:'access_granted',metadata:{role:user.id===w.seller_id?'seller':'buyer',source:'join_token_issued'}});
     return json({ ...join, role:user.id===w.seller_id?'seller':'buyer' });
   } catch(e) {
     if(e instanceof VideoProviderUnavailableError)return json({error:'provider_unavailable',message:e.message},503);
