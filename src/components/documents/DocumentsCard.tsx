@@ -49,7 +49,7 @@ export function DocumentsCard({
   whenEmpty = 'show',
 }: { scope: DocumentScope; title?: string; whenEmpty?: 'show' | 'hide' }) {
   const { user } = useAuth();
-  const { docs, preparing, notice, reload, refreshAfterSigning } = useTransactionDocuments(scope);
+  const { docs, preparing, notice, kinds, reload, prepareKind, refreshAfterSigning } = useTransactionDocuments(scope);
   const [session, setSession] = useState<{ url: string; docId: string } | null>(null);
   const [preview, setPreview] = useState<{ url: string; label: string } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
