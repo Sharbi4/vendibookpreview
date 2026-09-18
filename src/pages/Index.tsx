@@ -120,8 +120,8 @@ const Index = () => {
           <Link to="/payments" className="v2-home-paypal">
             <span className="v2-home-paypal-mark"><img src={paypalBannerAsset.url} alt="PayPal" /></span>
             <span className="v2-home-paypal-copy">
-              <strong>Connect your business with PayPal.</strong>
-              <small>Sellers link PayPal in minutes to accept secure payments right on Vendibook.</small>
+              <strong>Vendibook × PayPal — Payments and Payouts.</strong>
+              <small>We accept PayPal and Venmo for secure checkout on Vendibook.</small>
             </span>
             <span className="v2-home-paypal-cta">Learn more<ArrowRight aria-hidden="true" /></span>
           </Link>
