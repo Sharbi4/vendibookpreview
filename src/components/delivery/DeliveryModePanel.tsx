@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
 import { Truck, MapPin, Pause, Play, CheckCircle2, Loader2, Ban, ShieldCheck } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,8 +8,12 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { handoffOps, type FulfillmentSession } from '@/hooks/useHandoff';
 import { useDeliveryTracking } from '@/hooks/useDeliveryTracking';
+import { useAuth } from '@/contexts/AuthContext';
+import { LOCATION_TRACKING_VERSION } from '@/lib/legal/versions';
+import { recordLegalAcceptance } from '@/lib/legal/recordAcceptance';
 
-export const DELIVERY_LOCATION_CONSENT_VERSION = 'delivery-location:2026-09-18';
+/** Legacy alias retained for the session's stored consent string. */
+export const DELIVERY_LOCATION_CONSENT_VERSION = `location-tracking:${LOCATION_TRACKING_VERSION}`;
 
 interface Props {
   saleTransactionId?: string | null;
