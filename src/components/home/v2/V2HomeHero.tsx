@@ -1,7 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, MapPin, ChevronLeft, ChevronRight, ArrowUpRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import GoogleContinueButton from '@/components/auth/GoogleContinueButton';
+import { useAuth } from '@/contexts/AuthContext';
 import { SmartImage } from '@/components/ui/SmartImage';
 import { formatListingPriceLabel } from '@/lib/listings/rentalPricing';
 import { CATEGORY_LABELS } from '@/types/listing';
@@ -18,6 +20,7 @@ const SLIDE_INTERVAL_MS = 6500;
 
 export default function V2HomeHero({ slides }: { slides: V2CardListing[] }) {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [mode, setMode] = useState<'sale' | 'rent'>('sale');
   const [query, setQuery] = useState('');
   const [index, setIndex] = useState(0);
@@ -82,6 +85,26 @@ export default function V2HomeHero({ slides }: { slides: V2CardListing[] }) {
             <Button type="submit" className="v2-home-searchgo">Search</Button>
           </div>
         </form>
+
+        <div className="v2-home-entry-actions" aria-label="Sell or sign in">
+          <Link
+            to={user ? '/list' : '/auth?mode=signup&role=host&redirect=%2Flist'}
+            className="v2-home-list-free"
+          >
+            <span>
+              <small>For owners and dealers</small>
+              <strong>List for free</strong>
+            </span>
+            <ArrowUpRight aria-hidden="true" />
+          </Link>
+          {!user && (
+            <GoogleContinueButton
+              returnPath="/"
+              label="Sign in with Google"
+              className="v2-home-google-login"
+            />
+          )}
+        </div>
 
         <div className="v2-home-chips">
           {CATEGORY_CHIPS.map((chip) => <Link key={chip.label} to={chip.href}>{chip.label}</Link>)}
