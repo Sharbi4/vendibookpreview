@@ -15,6 +15,7 @@ import { handoffOps, useHandoffContext, type HandoffSession } from '@/hooks/useH
 import EvidenceTimeline from '@/components/handoff/EvidenceTimeline';
 import WalkthroughRecorder from '@/components/handoff/WalkthroughRecorder';
 import DeliveryOps from '@/components/handoff/DeliveryOps';
+import { HANDOFF_TERMS_VERSION } from '@/lib/legal/versions';
 
 const CONSENT_COPY =
   'This walkthrough will be recorded and stored with the Vendibook transaction to document the condition and handoff of the asset.';
@@ -39,6 +40,7 @@ export default function HandoffPage() {
   const [busy, setBusy] = useState<string | null>(null);
   const [code, setCode] = useState('');
   const [consent, setConsent] = useState(false);
+  const [handoffTermsAccepted, setHandoffTermsAccepted] = useState(false);
   const [decision, setDecision] = useState<'accepted' | 'accepted_with_exceptions' | 'issue_reported' | null>(null);
   const [notes, setNotes] = useState('');
 
