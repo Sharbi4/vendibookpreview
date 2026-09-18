@@ -86,6 +86,10 @@ export const PhoneVerificationPrompt = () => {
       p.startsWith('/checkout') ||
       p.includes('checkout') ||
       p.startsWith('/payment') ||
+      p.startsWith('/walkthrough') ||
+      p.startsWith('/handoff') ||
+      p.startsWith('/book') ||
+      p.startsWith('/driver') ||
       p.startsWith('/auth')
     );
   }, [path]);
