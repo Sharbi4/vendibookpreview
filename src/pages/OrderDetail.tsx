@@ -12,6 +12,8 @@ import OrderEvidenceSection from '@/components/handoff/OrderEvidenceSection';
 import DeliveryTrackingPanel from '@/components/delivery/DeliveryTrackingPanel';
 import PayPalPaymentFacts from '@/components/checkout/PayPalPaymentFacts';
 import OrderCaseSection from '@/components/disputes/OrderCaseSection';
+import { DocumentsCard } from '@/components/documents/DocumentsCard';
+
 
 
 const money = (cents: number, currency = 'USD') =>
@@ -190,6 +192,15 @@ const OrderDetailPage = () => {
               )}
             </Card>
           )}
+
+          {(order as any).links?.sale_transaction_id && (
+            <DocumentsCard
+              scope={{ transaction_id: String((order as any).links.sale_transaction_id) }}
+              title="Purchase agreement"
+            />
+          )}
+
+
 
           {order.listing && (
             <Card className="flex items-center gap-4 p-4">
