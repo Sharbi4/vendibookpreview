@@ -8,7 +8,7 @@ import { isListingFeatured, sortFeaturedFirstFair, sortNewFirstThenFeatured } fr
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import NewsletterPopup from '@/components/newsletter/NewsletterPopup';
-import V2HomeHero from '@/components/home/v2/V2HomeHero';
+import HeroPremium from '@/components/home/hero/HeroPremium';
 import V2ListingRow from '@/components/home/v2/V2ListingRow';
 import { usePageTracking } from '@/hooks/usePageTracking';
 import SEO, { generateOrganizationSchema, generateWebSiteSchema } from '@/components/SEO';
