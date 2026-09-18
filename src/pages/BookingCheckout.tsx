@@ -74,6 +74,7 @@ import ListingCheckoutSummary from '@/components/transaction/checkout/ListingChe
 import MoneyBreakdown, { type MoneyLine } from '@/components/transaction/checkout/MoneyBreakdown';
 import PayPalEmbeddedPayment from '@/components/transaction/checkout/PayPalEmbeddedPayment';
 import TransactionAgreementStep from '@/components/checkout/TransactionAgreementStep';
+import OrderReviewStage from '@/components/checkout/OrderReviewStage';
 import PostPaymentTimeline from '@/components/checkout/PostPaymentTimeline';
 import { recordCheckoutAgreements } from '@/lib/legal/recordCheckoutAgreements';
 import { useLegalDocument } from '@/hooks/useLegalDocument';
@@ -180,6 +181,8 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   const [referralCode, setReferralCode] = useState<string>('');
   const [referralValid, setReferralValid] = useState<boolean>(false);
   const [showDateModal, setShowDateModal] = useState(false);
+  /** Two-stage checkout: order review, then the checkout stage. */
+  const [stage, setStage] = useState<'review' | 'checkout'>('review');
   const [fulfillmentSelected, setFulfillmentSelected] = useState<FulfillmentSelection>('pickup');
   const [deliveryAddress, setDeliveryAddress] = useState('');
   const [message, setMessage] = useState('');
@@ -991,7 +994,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
     </ListingCheckoutSummary>
   );
 
-  const mobileSummary = (
+  const mobileSummaryCard = (
     <ListingCheckoutSummary
       imageUrl={coverImage}
       title={listing.title}
@@ -1000,6 +1003,14 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
       priceNote="Total due today"
       meta={[{ label: isHourlyBooking ? 'Hours' : 'Dates', value: dateLabel }]}
     />
+  );
+
+  const mobileSummary = (
+    <details className="sale-mobile-summary">
+      <summary>Show order summary <strong>{formatCurrency(totalChargedToday)}</strong></summary>
+      {mobileSummaryCard}
+      <MoneyBreakdown lines={moneyLines} total={formatCurrency(totalChargedToday)} totalLabel="Total due today" />
+    </details>
   );
 
   const primaryStickyAction = paypalCheckout ? null : (
@@ -1028,13 +1039,17 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
       />
       <TransactionCheckoutShell
         eyebrow="Vendibook rental"
-        title="Complete your booking"
-        subtitle={listing.title}
+        title={stage === 'review' ? 'Order review' : 'Complete your booking'}
+        subtitle={
+          stage === 'review'
+            ? 'Review the rental, fulfillment, and total before continuing to checkout.'
+            : listing.title
+        }
         exitHref={listingHref}
         exitLabel="Back to listing"
         summary={railSummary}
         mobileSummary={mobileSummary}
-        stickyAction={
+        stickyAction={stage === 'review' ? undefined : (
           <div className="v2-checkout-sticky-inner">
             <div className="v2-checkout-sticky-total">
               <span>Total due today</span>
@@ -1042,7 +1057,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
             </div>
             {primaryStickyAction}
           </div>
-        }
+        )}
       >
         {!user && (
           <div className="v2-checkout-section" style={{ padding: '16px 20px' }}>
@@ -1063,6 +1078,47 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
           </div>
         )}
 
+        {stage === 'review' ? (
+          <OrderReviewStage
+            imageUrl={coverImage}
+            title={listing.title}
+            categoryLabel={listing.category ? listing.category.replace(/_/g, ' ') : null}
+            location={listingLocation}
+            specs={[
+              { label: isHourlyBooking ? 'Scheduled hours' : 'Dates', value: dateLabel },
+              { label: 'Duration', value: durationLabel },
+              ...(hasMultipleSlots && selectedSlotName ? [{ label: 'Space', value: selectedSlotName }] : []),
+            ]}
+            priceLabel={formatCurrency(totalChargedToday)}
+            priceNote="Total due today"
+            fulfillmentLabel={
+              fulfillmentSelected === 'delivery'
+                ? 'Host delivery'
+                : fulfillmentSelected === 'on_site'
+                  ? 'On-site access'
+                  : 'Local pickup'
+            }
+            fulfillmentDetail={
+              fulfillmentSelected === 'delivery'
+                ? 'Delivered to the address you confirm in checkout.'
+                : fulfillmentSelected === 'on_site'
+                  ? 'Access details are shared with your booking confirmation.'
+                  : 'Collect from the host location.'
+            }
+            onEditFulfillment={() => {
+              setStage('checkout');
+              window.requestAnimationFrame(() => {
+                document.getElementById('checkout-rental-fulfillment')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              });
+            }}
+            moneyLines={moneyLines}
+            total={formatCurrency(totalChargedToday)}
+            totalLabel="Total due today"
+            onContinue={() => { setStage('checkout'); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+            backHref={listingHref}
+          />
+        ) : (
+        <>
         {/* 1. Dates & rate */}
         <CheckoutSection
           title="Dates & rate"
@@ -1113,6 +1169,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
 
         {/* 2. Pickup or delivery */}
         <CheckoutSection
+          id="checkout-rental-fulfillment"
           title="Pickup or delivery"
           description="How you'll get the rental, and where."
         >
@@ -1474,6 +1531,8 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
           <summary>What happens next</summary>
           {rentalStory}
         </details>
+        </>
+        )}
       </TransactionCheckoutShell>
 
 
