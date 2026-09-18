@@ -34,8 +34,15 @@ export interface UseTermsGateResult {
   termsId: string | null;
   /** Preparing = draft-terms round-trip in flight. */
   preparing: boolean;
-  /** Ask the sheet to open with a freshly-persisted draft. */
-  prepare: (terms: TransactionTerms, opts?: { bookingId?: string | null; openSheet?: boolean }) => Promise<boolean>;
+  /**
+   * Ask the sheet to open with a freshly-persisted draft. Resolves with the
+   * prepared snapshot so callers can act on it immediately — React state is
+   * still stale inside the same handler.
+   */
+  prepare: (
+    terms: TransactionTerms,
+    opts?: { bookingId?: string | null; openSheet?: boolean },
+  ) => Promise<{ terms: TransactionTerms; termsId: string } | null>;
   /** Close + reset (call after the caller's runSubmit resolves/rejects). */
   reset: () => void;
 }
@@ -53,8 +60,11 @@ export function useTermsGate(): UseTermsGateResult {
   }, []);
 
   const prepare = React.useCallback(
-    async (t: TransactionTerms, opts?: { bookingId?: string | null; openSheet?: boolean }): Promise<boolean> => {
-      if (preparing) return false;
+    async (
+      t: TransactionTerms,
+      opts?: { bookingId?: string | null; openSheet?: boolean },
+    ): Promise<{ terms: TransactionTerms; termsId: string } | null> => {
+      if (preparing) return null;
       setPreparing(true);
       try {
         const { data, error } = await supabase.functions.invoke(
@@ -81,12 +91,13 @@ export function useTermsGate(): UseTermsGateResult {
             (data as { error?: string } | null)?.error ||
             'Could not prepare terms for review';
           toast({ title: 'Please try again', description: msg, variant: 'destructive' });
-          return false;
+          return null;
         }
+        const preparedId = data.terms_id as string;
         setTerms(t);
-        setTermsId(data.terms_id as string);
+        setTermsId(preparedId);
         setOpen(opts?.openSheet !== false);
-        return true;
+        return { terms: t, termsId: preparedId };
       } finally {
         setPreparing(false);
       }

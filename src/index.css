@@ -3339,3 +3339,56 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
 .walkthrough-recording-state small{font-size:12px;opacity:.75}
 .walkthrough-meeting-type{font-size:12.5px;text-transform:uppercase;letter-spacing:.05em;opacity:.7}
 @media(max-width:600px){.walkthrough-call-preview,.walkthrough-call-error{margin:0;border-radius:0;min-height:100svh;padding:20px 16px}.walkthrough-call-side{display:none}}
+
+/* ── Contained checkout: agreement cards + financing banner ─────────── */
+.checkout-agreements { display: grid; gap: 16px; }
+.checkout-agreement-card { display: grid; gap: 12px; border: 1px solid hsl(var(--v2-line-strong)); border-radius: 14px; background: hsl(var(--v2-surface)); padding: 18px; }
+.checkout-agreement-card.is-state { display: flex; align-items: center; gap: 10px; color: hsl(var(--v2-stone)); font-size: 13px; }
+.checkout-agreement-card.is-state svg { width: 16px; height: 16px; flex: none; }
+.checkout-agreement-card.is-error { border-color: hsl(0 60% 55% / .35); }
+.checkout-agreement-head { display: flex; align-items: flex-start; gap: 10px; }
+.checkout-agreement-head svg { width: 18px; height: 18px; flex: none; margin-top: 2px; color: hsl(var(--v2-stone)); }
+.checkout-agreement-head h3 { font-size: 15px; font-weight: 640; color: hsl(var(--v2-ink)); }
+.checkout-agreement-head p { margin-top: 2px; font-size: 12px; color: hsl(var(--v2-stone)); }
+.checkout-agreement-summary { font-size: 13px; line-height: 1.55; color: hsl(var(--v2-stone)); }
+.checkout-agreement-read { justify-self: start; min-height: 40px; padding: 0 14px; border: 1px solid hsl(var(--v2-line-strong)); border-radius: 9px; background: hsl(var(--v2-paper)); font-size: 13px; font-weight: 600; color: hsl(var(--v2-ink)); }
+.checkout-agreement-read:hover { background: hsl(var(--v2-line) / .5); }
+.checkout-agreement-check { display: flex; align-items: flex-start; gap: 10px; border-top: 1px solid hsl(var(--v2-line)); padding-top: 12px; font-size: 13px; line-height: 1.5; color: hsl(var(--v2-ink)); cursor: pointer; }
+.checkout-agreement-note { font-size: 12px; line-height: 1.55; color: hsl(var(--v2-stone)); }
+.checkout-agreement-reader { max-width: 760px; }
+.checkout-agreement-reader-version { font-size: 12px; color: hsl(var(--v2-stone)); }
+.checkout-agreement-reader-body { max-height: min(62vh, 560px); overflow: auto; margin-top: 10px; padding-right: 8px; font-size: 13.5px; line-height: 1.6; }
+.checkout-agreement-reader-body h1, .checkout-agreement-reader-body h2, .checkout-agreement-reader-body h3 { margin: 16px 0 6px; font-weight: 650; }
+.checkout-agreement-reader-body p, .checkout-agreement-reader-body li { margin: 6px 0; }
+.checkout-agreement-reader-body ul, .checkout-agreement-reader-body ol { padding-left: 18px; list-style: disc; }
+
+.checkout-financing-banner { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 18px; border-radius: 14px; background: hsl(240 6% 8%); padding: 18px 20px; color: hsl(36 30% 96%); }
+.checkout-financing-mark { display: grid; place-items: center; flex: 0 0 auto; }
+.checkout-financing-copy { flex: 1 1 220px; min-width: 200px; }
+.checkout-financing-copy span { display: block; font-size: 10.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; opacity: .68; }
+.checkout-financing-copy strong { display: block; margin-top: 4px; font-size: 15.5px; font-weight: 640; }
+.checkout-financing-copy p { margin-top: 3px; font-size: 12.5px; line-height: 1.5; opacity: .76; }
+.checkout-financing-actions { display: grid; gap: 6px; justify-items: stretch; flex: 0 0 auto; }
+.checkout-financing-cta { display: inline-flex; align-items: center; justify-content: center; gap: 7px; min-height: 42px; padding: 0 18px; border-radius: 9px; background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); font-size: 13.5px; font-weight: 680; white-space: nowrap; }
+.checkout-financing-cta svg { width: 14px; height: 14px; }
+.checkout-financing-link { display: inline-flex; align-items: center; justify-content: center; gap: 6px; min-height: 34px; font-size: 12.5px; font-weight: 560; color: hsl(36 30% 96% / .78); }
+.checkout-financing-link svg { width: 13px; height: 13px; }
+.checkout-financing-link:disabled { opacity: .6; }
+.checkout-financing-note { flex: 1 1 100%; font-size: 11px; line-height: 1.5; opacity: .6; }
+.checkout-financing-compact { display: grid; gap: 7px; border: 1px solid hsl(var(--v2-line-strong)); border-radius: 12px; background: hsl(240 6% 8%); padding: 14px; color: hsl(36 30% 96%); }
+.checkout-financing-compact p { font-size: 12px; line-height: 1.5; opacity: .78; }
+.checkout-financing-compact a { justify-self: start; font-size: 12.5px; font-weight: 640; text-decoration: underline; text-underline-offset: 3px; }
+@media (max-width: 760px) {
+  .checkout-financing-actions { justify-items: start; width: 100%; }
+  .checkout-financing-cta { width: 100%; }
+}
+
+/* Disabled Continue stays legible inside the contained checkout card. */
+.sale-wizard-footer .checkout-primary-action:disabled { opacity: 1; background: hsl(var(--v2-line) / .7); border: 1px solid hsl(var(--v2-line-strong)); color: hsl(var(--v2-stone)); }
+.sale-wizard-step-note { margin-top: 12px; font-size: 12px; line-height: 1.5; color: hsl(var(--v2-stone)); }
+/* Inside the contained wizard the footer owns Back/Continue. */
+.sale-wizard-content .order-review-actions { display: none; }
+.sale-wizard-content .order-review { gap: 16px; }
+.sale-wizard-referral { margin-top: 16px; border-top: 1px solid hsl(var(--v2-line)); padding-top: 12px; }
+.sale-wizard-referral > summary { cursor: pointer; font-size: 13px; font-weight: 560; color: hsl(var(--v2-stone)); }
+.sale-wizard-referral > div, .sale-wizard-referral > * + * { margin-top: 10px; }
