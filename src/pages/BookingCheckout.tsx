@@ -994,7 +994,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
     </ListingCheckoutSummary>
   );
 
-  const mobileSummary = (
+  const mobileSummaryCard = (
     <ListingCheckoutSummary
       imageUrl={coverImage}
       title={listing.title}
@@ -1003,6 +1003,14 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
       priceNote="Total due today"
       meta={[{ label: isHourlyBooking ? 'Hours' : 'Dates', value: dateLabel }]}
     />
+  );
+
+  const mobileSummary = (
+    <details className="sale-mobile-summary">
+      <summary>Show order summary <strong>{formatCurrency(totalChargedToday)}</strong></summary>
+      {mobileSummaryCard}
+      <MoneyBreakdown lines={moneyLines} total={formatCurrency(totalChargedToday)} totalLabel="Total due today" />
+    </details>
   );
 
   const primaryStickyAction = paypalCheckout ? null : (
