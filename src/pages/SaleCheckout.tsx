@@ -1038,7 +1038,9 @@ const SaleCheckout = () => {
         <ProtectionDisclosure
           category={listing?.category ?? null}
           mode="sale"
-          soldAsBusiness={Boolean((listing as any)?.business_included ?? (listing as any)?.sold_as_business)}
+          soldAsBusiness={/turnkey|business (for sale|included|opportunity)/i.test(
+            `${listing?.title ?? ''} ${listing?.description ?? ''}`,
+          )}
           fulfillment={fulfillmentSelected}
         />
 
