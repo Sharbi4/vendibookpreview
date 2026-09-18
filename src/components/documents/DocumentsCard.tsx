@@ -46,6 +46,7 @@ export function DocumentsCard({ scope, title = 'Documents' }: { scope: DocumentS
   const { user } = useAuth();
   const { docs, preparing, notice, reload, refreshAfterSigning } = useTransactionDocuments(scope);
   const [session, setSession] = useState<{ url: string; docId: string } | null>(null);
+  const [preview, setPreview] = useState<{ url: string; label: string } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
 
   const openSigning = async (doc: DocumentRow) => {
@@ -70,6 +71,19 @@ export function DocumentsCard({ scope, title = 'Documents' }: { scope: DocumentS
     setBusy(doc.id);
     try {
       window.open(await getSignedPdfUrl(doc.id), '_blank', 'noopener,noreferrer');
+    } catch (e: any) {
+      toast.error(e?.message ?? 'Could not open the signed PDF');
+    } finally {
+      setBusy(null);
+    }
+  };
+
+  /** Read the signed PDF in place. The link is short-lived and never stored. */
+  const openPreview = async (doc: DocumentRow) => {
+    setBusy(doc.id);
+    try {
+      const url = await getSignedPdfUrl(doc.id);
+      setPreview({ url, label: DOC_LABEL[doc.document_type] ?? doc.document_type });
     } catch (e: any) {
       toast.error(e?.message ?? 'Could not open the signed PDF');
     } finally {
