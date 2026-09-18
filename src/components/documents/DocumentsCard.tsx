@@ -219,6 +219,33 @@ export function DocumentsCard({ scope, title = 'Documents' }: { scope: DocumentS
           )}
         </DialogContent>
       </Dialog>
+
+      <Dialog open={!!preview} onOpenChange={(o) => { if (!o) setPreview(null); }}>
+        <DialogContent className="max-w-4xl w-[calc(100vw-1.5rem)] sm:w-[95vw] h-[90dvh] p-0 gap-0 overflow-hidden flex flex-col">
+          <DialogHeader className="shrink-0 p-4 border-b-[1.5px]">
+            <DialogTitle className="text-base">{preview?.label ?? 'Signed document'}</DialogTitle>
+            <p className="text-xs text-muted-foreground">
+              Signed copy. This preview link is private to you and expires after a few minutes.
+            </p>
+          </DialogHeader>
+          {preview && (
+            <>
+              <div className="flex-1 min-h-0 w-full overflow-hidden bg-muted/30">
+                <iframe
+                  title={`${preview.label} preview`}
+                  src={preview.url}
+                  className="block h-full w-full max-w-full border-0"
+                />
+              </div>
+              <div className="shrink-0 border-t-[1.5px] p-3 flex items-center justify-end">
+                <Button size="sm" variant="outline" onClick={() => window.open(preview.url, '_blank', 'noopener,noreferrer')}>
+                  <ExternalLink className="h-4 w-4 mr-1" /> Open in new tab
+                </Button>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
     </>
   );
 }
