@@ -883,14 +883,13 @@ const SaleCheckout = () => {
     </ListingCheckoutSummary>
   );
 
+  /** Review → Fulfillment → Details → Agreement → Payment. */
   const wizardSteps = [
     { id: 'review', label: 'Review' },
     { id: 'fulfillment', label: 'Fulfillment' },
     { id: 'details', label: 'Details' },
-    { id: 'order-review', label: 'Order review' },
+    { id: 'agreement', label: 'Agreement' },
     { id: 'payment', label: 'Payment' },
-    { id: 'agreements', label: 'Agreements' },
-    { id: 'confirm', label: 'Confirm' },
   ];
 
   const goToStep = (step: number) => {
