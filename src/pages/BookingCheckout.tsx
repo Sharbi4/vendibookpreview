@@ -73,6 +73,7 @@ import CheckoutSection from '@/components/transaction/checkout/CheckoutSection';
 import ListingCheckoutSummary from '@/components/transaction/checkout/ListingCheckoutSummary';
 import MoneyBreakdown, { type MoneyLine } from '@/components/transaction/checkout/MoneyBreakdown';
 import PayPalEmbeddedPayment from '@/components/transaction/checkout/PayPalEmbeddedPayment';
+import CheckoutLegalConsent from '@/components/legal/CheckoutLegalConsent';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'on_site';
 
@@ -954,7 +955,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
     <Button
       className="h-12 px-6 rounded-xl font-semibold bg-foreground text-background hover:bg-foreground/90"
       onClick={handleSubmit}
-      disabled={isSubmitting || paymentSetupBlocked}
+      disabled={isSubmitting || paymentSetupBlocked || !legalAccepted}
       title={!canSubmit ? nextIncompleteReason ?? undefined : undefined}
     >
       {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
@@ -1280,14 +1281,14 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
                 Vendibook records the transaction and reviews host payouts after the rental begins. Payments are
                 processed by PayPal; Vendibook does not hold or control your funds.
               </p>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                By placing this booking you agree to the{' '}
-                <a href="/terms" target="_blank" rel="noreferrer" className="underline">Terms of Service</a>, the{' '}
-                <a href="/legal/payments-terms" target="_blank" rel="noreferrer" className="underline">Payments Terms</a>{' '}
-                and the{' '}
-                <a href="/privacy" target="_blank" rel="noreferrer" className="underline">Privacy Policy</a>.
-              </p>
             </div>
+
+            <CheckoutLegalConsent
+              surface="booking_checkout"
+              relatedEntityType="listing"
+              relatedEntityId={listing?.id ?? null}
+              onChange={setLegalAccepted}
+            />
 
             {listing?.id && (
               <DisclosureStep
