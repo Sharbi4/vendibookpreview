@@ -86,5 +86,6 @@
 - [x] Admin cases/frozen-orders view at /admin/disputes
 - [x] Case emails (both parties + admin) and in-app notifications
 - [x] /legal/payments-terms section 7A, version 2026-09-18c
-- [ ] SLA-aging and imminent-deadline admin sweep emails (needs scheduled job; UI badge covers it today)
+- [x] Daily deadline reminders to buyer + seller and admin digest (scheduled job, 8:10am Phoenix)
+- [x] Admin cancel-and-refund tool (refund must succeed before anything is cancelled)
 - [ ] Phase 2: PayPal dispute webhook ingestion + automated evidence package
