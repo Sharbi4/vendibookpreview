@@ -193,6 +193,11 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   const [rentalAgreementAccepted, setRentalAgreementAccepted] = useState(false);
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const legalAccepted = rentalAgreementAccepted && privacyAccepted;
+
+  /** Warm the official PayPal SDK early; no order is created by this. */
+  useEffect(() => {
+    loadPayPalSdk({ pageType: 'checkout' }).catch(() => undefined);
+  }, []);
   const [paypalCheckout, setPaypalCheckout] = useState<{ bookingId: string; returnUrl: string } | null>(null);
   /** Guards against creating a second booking_request row if the buyer
    *  closes the PayPal panel and hits the submit button again. */
