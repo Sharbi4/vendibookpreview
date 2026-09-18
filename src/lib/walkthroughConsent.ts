@@ -1,4 +1,5 @@
 import { supabase } from '@/integrations/supabase/client';
+import { RECORDING_CONSENT_VERSION } from '@/lib/legal/versions';
 
 /**
  * Consent + device-permission rules for native Vendibook video walkthroughs.
