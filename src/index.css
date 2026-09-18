@@ -3303,3 +3303,4 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
   .order-review-asset > img { height: 190px; }
   .order-review-fulfillment { flex-direction: column; align-items: flex-start; }
 }
+.order-review-paypal > span:first-child { flex: 0 0 auto; white-space: nowrap; }
