@@ -128,3 +128,66 @@ describe('document language guardrails', () => {
     }
   });
 });
+
+describe('contract documents carry the supplied legal language', () => {
+  const psa = extractText(TEMPLATE_SPECS.purchase_sale_agreement.build().pdf);
+  const handoff = extractText(TEMPLATE_SPECS.sale_handoff_condition_acknowledgment.build().pdf);
+
+  it('versions both contracts as 2026-09-18-A', () => {
+    expect(SPEC_VERSIONS.purchase_sale_agreement).toBe('2026-09-18-A');
+    expect(SPEC_VERSIONS.sale_handoff_condition_acknowledgment).toBe('2026-09-18-A');
+  });
+
+  it('keeps every numbered clause of the purchase & sale agreement', () => {
+    for (const heading of [
+      '1. DEFINITIONS', '2. ASSET AND TRANSACTION IDENTIFICATION', '3. AGREEMENT TO BUY AND SELL',
+      '4. PURCHASE PRICE AND PAYMENT TERMS', '5. SELLER REPRESENTATIONS', '6. BUYER DUE DILIGENCE',
+      '7. CONDITION OF ASSET; WARRANTIES', '8. TITLE, OWNERSHIP, LIENS, AND TRANSFER DOCUMENTS',
+      '9. INCLUDED EQUIPMENT AND EXCLUDED PROPERTY', '10. FULFILLMENT AND HANDOFF', '11. INSPECTION AT HANDOFF',
+      '12. RISK OF LOSS AND LEGAL TITLE', '13. CANCELLATION, REFUNDS, PAYMENT DISPUTES, AND CHARGEBACKS',
+      '14. TAXES, REGISTRATION, LICENSES, AND REGULATORY COMPLIANCE',
+      '15. ELECTRONIC RECORDS AND ELECTRONIC SIGNATURES', '16. COMMUNICATIONS AND TRANSACTION RECORDS',
+      '17. PRIVACY AND DEVICE PERMISSIONS', '18. PLATFORM ROLE AND LIMITATIONS', '19. AMENDMENTS',
+      '20. ENTIRE TRANSACTION RECORD', '21. SUPPORT', '22. ACKNOWLEDGMENT AND SIGNATURES',
+    ]) expect(psa).toContain(heading);
+    expect(psa).toContain('Vendibook LC');
+    expect(psa).toContain('END OF VENDIBOOK PURCHASE & SALE AGREEMENT');
+  });
+
+  it('keeps every numbered clause of the handoff acknowledgment with its checkbox lines', () => {
+    for (const heading of [
+      '1. PURPOSE OF THIS ACKNOWLEDGMENT', '2. ASSET IDENTITY CONFIRMATION', '3. INCLUDED EQUIPMENT',
+      '4. CONDITION REVIEW', '5. DOCUMENTS AND KEYS EXCHANGED', '6. PHOTOS AND OTHER CONDITION EVIDENCE',
+      '7. MATERIAL DISCREPANCIES OR UNRESOLVED ISSUES', '8. HANDOFF STATUS', '9. IMPORTANT LEGAL LIMITATIONS',
+      '10. ACKNOWLEDGMENT',
+    ]) expect(handoff).toContain(heading);
+    expect(handoff).toContain('[ ] I received physical possession of the Asset.');
+    expect(handoff).toContain('END OF SALE HANDOFF & CONDITION ACKNOWLEDGMENT');
+  });
+
+  it('never carries payout, release, or held-funds language', () => {
+    for (const text of [psa, handoff]) {
+      expect(/funds (are|will be|being) (held|released)/i.test(text)).toBe(false);
+      expect(/release condition/i.test(text)).toBe(false);
+      expect(/payout/i.test(text)).toBe(false);
+      expect(/\bescrow\b/i.test(text)).toBe(false);
+    }
+  });
+
+  it('maps both contracts to Buyer and Seller signer roles only', () => {
+    for (const kind of ['purchase_sale_agreement', 'sale_handoff_condition_acknowledgment'] as const) {
+      const spec = TEMPLATE_SPECS[kind];
+      expect(spec.roles).toEqual(['Buyer', 'Seller']);
+      const { fields } = spec.build();
+      expect(fields.filter((f) => f.type === 'signature').map((f) => f.role).sort()).toEqual(['Buyer', 'Seller']);
+    }
+  });
+
+  it('leaves optional identity fields empty rather than inventing a VIN', () => {
+    const { fields } = TEMPLATE_SPECS.purchase_sale_agreement.build();
+    const vin = fields.find((f) => f.name === 'asset_identifier')!;
+    expect(vin.required).toBe(false);
+    expect(psa).toContain('VIN / serial / identifying number, if captured');
+    expect(psa).toContain('rather than populated with estimated or invented information');
+  });
+});
