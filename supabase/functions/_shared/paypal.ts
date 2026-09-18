@@ -621,7 +621,10 @@ export async function createPayPalOrder(input: CreateOrderInput) {
             user_action: intent === "AUTHORIZE" ? "CONTINUE" : "PAY_NOW",
             landing_page: "LOGIN",
             // Server half of App Switch. The SDK sets appSwitchWhenAvailable.
-            app_switch_preference: true,
+            // PayPal expects an object here — a bare boolean is rejected as
+            // MALFORMED_REQUEST_JSON before the order is ever created.
+            app_switch_preference: { launch_paypal_app: true },
+
             ...(input.returnUrl ? { return_url: input.returnUrl } : {}),
             ...(input.cancelUrl ? { cancel_url: input.cancelUrl } : {}),
           },
