@@ -57,6 +57,7 @@ const RecordingConsent = lazy(() => import("./pages/legal/RecordingConsent"));
 const SellerPaymentTerms = lazy(() => import("./pages/legal/SellerPaymentTerms"));
 const EsignConsent = lazy(() => import("./pages/legal/EsignConsent"));
 const AdminLegalAcceptances = lazy(() => import("./pages/AdminLegalAcceptances"));
+const AdminPayPalApiSamples = lazy(() => import("./pages/AdminPayPalApiSamples"));
 const SmsEnrollment = lazy(() => import("./pages/SmsEnrollment"));
 const SmsOptIn = lazy(() => import("./pages/SmsOptIn"));
 // Unified Vendibook workspace (primary logged-in experience)
@@ -403,6 +404,7 @@ const AnimatedRoutes = () => {
           <Route path="/legal/esign" element={<PageTransition><EsignConsent /></PageTransition>} />
           <Route path="/legal/recording-consent" element={<PageTransition><RecordingConsent /></PageTransition>} />
           <Route path="/admin/legal" element={<PageTransition><AdminLegalAcceptances /></PageTransition>} />
+          <Route path="/admin/paypal/api-samples" element={<PageTransition><AdminPayPalApiSamples /></PageTransition>} />
           <Route path="/sms" element={<PageTransition><SmsEnrollment /></PageTransition>} />
           <Route path="/sms-opt-in" element={<PageTransition><SmsOptIn /></PageTransition>} />
           <Route path="/legal" element={<PageTransition><LegalCenter /></PageTransition>} />

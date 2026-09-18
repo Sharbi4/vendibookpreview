@@ -10,6 +10,7 @@ import { toast } from 'sonner';
 import SEO from '@/components/SEO';
 import OrderEvidenceSection from '@/components/handoff/OrderEvidenceSection';
 import DeliveryTrackingPanel from '@/components/delivery/DeliveryTrackingPanel';
+import PayPalPaymentFacts from '@/components/checkout/PayPalPaymentFacts';
 
 
 const money = (cents: number, currency = 'USD') =>
@@ -300,6 +301,11 @@ const OrderDetailPage = () => {
               )}
               <Line label="Transaction ID" value={order.id} mono />
             </dl>
+            <PayPalPaymentFacts
+              saleTransactionId={(order as any).links?.sale_transaction_id ?? null}
+              bookingRequestId={(order as any).links?.booking_request_id ?? null}
+              className="mt-4 rounded-xl border border-border bg-muted/20 p-4 text-left"
+            />
           </Card>
 
           <OrderEvidenceSection

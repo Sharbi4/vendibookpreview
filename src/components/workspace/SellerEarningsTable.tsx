@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import SellerRefundDialog from '@/components/workspace/SellerRefundDialog';
 
 /**
  * Per-order seller earnings.
@@ -108,7 +109,7 @@ const shortDate = (raw?: string | null) => {
 export default function SellerEarningsTable() {
   const { user } = useAuth();
 
-  const { data: rows = [], isLoading } = useQuery({
+  const { data: rows = [], isLoading, refetch } = useQuery({
     queryKey: ['seller-order-earnings', user?.id],
     enabled: !!user?.id,
     queryFn: async () => {
@@ -251,6 +252,16 @@ export default function SellerEarningsTable() {
                     <dd>{money(r.seller_proceeds_cents ?? payable?.net_payout_cents ?? 0)}</dd>
                   </div>
                 </dl>
+                {['completed', 'partially_refunded', 'partially_captured'].includes(status) ? (
+                  <div className="v2-earnings-actions">
+                    <SellerRefundDialog
+                      paymentRecordId={r.id}
+                      reference={r.reference}
+                      refundableCents={(r.gross_amount_cents ?? 0) - (r.refunded_cents ?? 0)}
+                      onRefunded={() => refetch()}
+                    />
+                  </div>
+                ) : null}
               </li>
             );
           })}

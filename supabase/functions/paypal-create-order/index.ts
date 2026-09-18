@@ -27,8 +27,15 @@ import {
   type TaxKind,
 } from "../_shared/tax.ts";
 import { sellerMultipartyReady } from "../_shared/paypalMultiparty.ts";
+import {
+  buildOrderDetail,
+  buildSoftDescriptor,
+  parseShippingAddress,
+} from "../_shared/paypalOrderDetail.ts";
+import { OrderArithmeticError } from "../_shared/paypal.ts";
 
 const NOTARY_FEE_CENTS = 4500;
+const SITE_URL = "https://vendibook.com";
 
 /** Serializable tax snapshot included in every create-order response. */
 const taxPayload = (quote: QuoteResult) => ({
@@ -93,6 +100,13 @@ serve(async (req) => {
     let taxKind: TaxKind = "service";
     /** Deposits toward a future sale are taxed on the sale itself, not here. */
     let skipTax = false;
+    /**
+     * Buyer shipping address. Set only for orders that actually ship
+     * (delivery / Vendibook Freight). Everything else sends NO_SHIPPING.
+     */
+    let shippingAddress: ReturnType<typeof parseShippingAddress> = null;
+    /** Buyer contact PayPal uses to prefill login and the Contact Module. */
+    let buyerPhone: string | null = null;
     /**
      * Rental/sale context for the deterministic payment policy. Left null for
      * Vendibook-owned products and service charges, which always capture now.
@@ -162,6 +176,14 @@ serve(async (req) => {
         zip: parsed.zip ?? listingLocParsed.zip ?? null,
         city: listingLoc.city ?? null,
       };
+      // Physical goods that move: PayPal and Venmo need the destination.
+      if (delivers) {
+        shippingAddress = parseShippingAddress(tx.delivery_address, {
+          city: listingLoc.city,
+          state: listingLoc.state,
+        });
+      }
+      buyerPhone = tx.buyer_phone ?? null;
     } else if (kind === "booking") {
       if (!targetId) return jsonError(400, "missing_fields", "Missing booking id.");
       const { data: booking } = await admin
@@ -302,6 +324,11 @@ serve(async (req) => {
         sellerId: tx.seller_id ?? null,
       });
       fulfillment = { kind: "freight", sale_transaction_id: tx.id, key: `freight:${tx.id}` };
+      shippingAddress = parseShippingAddress(tx.delivery_address, {
+        city: (tx as any).listing?.city,
+        state: (tx as any).listing?.state,
+      });
+      buyerPhone = tx.buyer_phone ?? null;
     } else if (kind === "notary") {
       if (!targetId) return jsonError(400, "missing_fields", "Missing listing id.");
       const { data: listing } = await admin
@@ -628,6 +655,24 @@ serve(async (req) => {
       });
     }
 
+    // ── Item-level detail (PayPal certification requirement) ─────────────
+    // Every order carries real lines with stable SKUs, and the breakdown is
+    // validated here so a mismatch surfaces as our error, not a PayPal 422.
+    const detail = buildOrderDetail(quote, { physical: !!shippingAddress });
+
+    // Soft descriptor: the seller's business name so the buyer recognises the
+    // charge on their statement. Falls back to VENDIBOOK.
+    let sellerDisplayName: string | null = null;
+    if (quote.sellerId) {
+      const { data: sellerProfile } = await admin
+        .from("profiles")
+        .select("business_name, display_name, full_name")
+        .eq("id", quote.sellerId)
+        .maybeSingle();
+      sellerDisplayName = sellerProfile?.business_name ?? sellerProfile?.display_name ??
+        sellerProfile?.full_name ?? null;
+    }
+
     // Routed through the provider abstraction — no direct SDK calls here.
     const provider = getPaymentProvider();
     const order = await provider.createOrder({
@@ -635,12 +680,22 @@ serve(async (req) => {
       reference: quote.reference,
       description: quote.description,
       idempotencyKey: quote.reference,
-      softDescriptor: "VENDIBOOK",
+      softDescriptor: buildSoftDescriptor(sellerDisplayName),
       intent: decision.intent === "AUTHORIZE" ? "AUTHORIZE" : "CAPTURE",
       // Itemized amounts must reconcile exactly with the order total.
-      breakdown: quote.taxCents > 0
-        ? { itemTotalCents: quote.grossCents - quote.taxCents, taxCents: quote.taxCents }
-        : undefined,
+      breakdown: {
+        itemTotalCents: detail.itemTotalCents,
+        taxCents: detail.taxCents,
+        shippingCents: detail.shippingCents,
+        discountCents: detail.discountCents,
+      },
+      items: detail.items,
+      shipping: shippingAddress,
+      buyerEmail: user.email ?? null,
+      buyerPhone,
+      returnUrl: `${SITE_URL}/orders?paypal_return=1`,
+      cancelUrl: `${SITE_URL}/orders?paypal_cancel=1`,
+      sellerId: quote.sellerId ?? null,
       payeeMerchantId: routing?.merchantId ?? null,
       platformFeeCents: routing?.platformFeeCents ?? 0,
     });
@@ -649,6 +704,10 @@ serve(async (req) => {
       .from("payment_records")
       .update({
         paypal_order_id: order.providerOrderId,
+        // SKUs must be persisted: the Tracking API only accepts SKUs that were
+        // present on the original order.
+        order_items: detail.items,
+        shipping_address: shippingAddress,
         metadata: {
           paypal_status: order.status,
           // Read back at capture time so the payout ledger knows the seller was
@@ -700,6 +759,16 @@ serve(async (req) => {
       balance_due_at: decision.balanceDueAt,
     });
   } catch (err) {
+    if (err instanceof OrderArithmeticError) {
+      // Our own arithmetic is wrong — never hand PayPal an order that cannot
+      // reconcile. Loud in the logs, recoverable for the buyer.
+      safeLog("order_breakdown_mismatch", { message: err.message });
+      return jsonError(
+        500,
+        "order_breakdown_mismatch",
+        "We couldn't total this order correctly. Nothing has been charged — please try again or contact support.",
+      );
+    }
     if (err instanceof PaymentProviderError || err instanceof PayPalError) {
       const status = (err as { status?: number }).status ?? 502;
       return jsonError(

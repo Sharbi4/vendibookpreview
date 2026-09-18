@@ -24,19 +24,44 @@ export interface CaptureFacts {
   currency: string;
   payerId?: string | null;
   paymentSource?: string | null;
+  /** Buyer's PayPal/wallet email — shown on the confirmation page. */
+  payerEmail?: string | null;
+  /** Address PayPal shipped to, when the order used shipping. */
+  shippingAddress?: Record<string, unknown> | null;
+  /** Billing address PayPal returned, when the payment source carried one. */
+  billingAddress?: Record<string, unknown> | null;
 }
 
 /** Pulls the capture facts out of an Orders v2 capture/get response. */
 export function extractCaptureFacts(order: any): CaptureFacts | null {
   const capture = order?.purchase_units?.[0]?.payments?.captures?.[0];
   if (!capture) return null;
+  const unit = order?.purchase_units?.[0];
+  const source = order?.payment_source ?? {};
+  const sourceKey = Object.keys(source)[0] ?? null;
+  const sourceDetail = sourceKey ? source[sourceKey] : null;
+  const shipping = unit?.shipping ?? null;
+  // PayPal returns the billing address on card/wallet sources; PayPal-account
+  // payments usually do not carry one, so null is a legitimate answer.
+  const billing = sourceDetail?.billing_address ??
+    sourceDetail?.card?.billing_address ??
+    order?.payer?.address ?? null;
+
   return {
     captureId: capture.id,
     status: capture.status,
     amountCents: centsFromPayPalAmount(capture.amount?.value),
     currency: capture.amount?.currency_code ?? "USD",
     payerId: order?.payer?.payer_id ?? order?.payment_source?.paypal?.account_id ?? null,
-    paymentSource: order?.payment_source ? Object.keys(order.payment_source)[0] : null,
+    paymentSource: sourceKey,
+    payerEmail: sourceDetail?.email_address ?? order?.payer?.email_address ?? null,
+    shippingAddress: shipping
+      ? {
+        name: shipping?.name?.full_name ?? null,
+        ...(shipping?.address ?? {}),
+      }
+      : null,
+    billingAddress: billing ?? null,
   };
 }
 
@@ -242,6 +267,10 @@ export async function finalizeCapture(
       paypal_capture_id: facts.captureId,
       paypal_payer_id: facts.payerId ?? record.paypal_payer_id,
       payment_source: facts.paymentSource ?? record.payment_source,
+      // Confirmation-page facts, taken from the capture response — never assumed.
+      payer_email: facts.payerEmail ?? record.payer_email,
+      shipping_address: facts.shippingAddress ?? record.shipping_address,
+      billing_address: facts.billingAddress ?? record.billing_address,
       payment_status: paymentStatus,
       internal_status: isPaid ? "paid" : paymentStatus,
       captured_at: isPaid ? (record.captured_at ?? new Date().toISOString()) : record.captured_at,

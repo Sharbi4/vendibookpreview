@@ -293,6 +293,10 @@ async function handleEvent(admin: any, event: any) {
     case "MERCHANT.PARTNER-CONSENT.REVOKED":
       await handleMerchantConsentRevoked(admin, resource, event.id);
       return;
+    case "CUSTOMER.MERCHANT-INTEGRATION.CAPABILITY-UPDATED":
+    case "CUSTOMER.MERCHANT-INTEGRATION.PRODUCT-SUBSCRIPTION-UPDATED":
+      await handleMerchantIntegrationUpdated(admin, resource, event.id);
+      return;
 
     default:
       safeLog("webhook_unhandled", { type });
@@ -340,7 +344,8 @@ async function handleMerchantConsentRevoked(admin: any, resource: any, eventId: 
   const merchantId = resource?.merchant_id ?? null;
   if (!trackingId && !merchantId) return;
 
-  let query = admin.from("seller_paypal_accounts").select("id").is("archived_at", null).limit(1);
+  let query = admin.from("seller_paypal_accounts")
+    .select("id, user_id").is("archived_at", null).limit(1);
   query = trackingId ? query.eq("tracking_id", trackingId) : query.eq("merchant_id", merchantId);
   const { data } = await query.maybeSingle();
   if (!data) return;
@@ -356,7 +361,58 @@ async function handleMerchantConsentRevoked(admin: any, resource: any, eventId: 
     last_webhook_event_id: eventId,
     updated_at: now,
   }).eq("id", data.id);
+
+  // Tell the seller their checkout is off so they can relink — silence here
+  // would look like listings quietly failing to sell.
+  await notifyUser(admin, {
+    userId: data.user_id,
+    type: "paypal_consent_revoked",
+    title: "PayPal disconnected",
+    message:
+      "PayPal permissions for your Vendibook account were removed, so new orders can't be accepted. Reconnect PayPal to start selling again.",
+    link: "/dashboard/payments/setup",
+    dedupeKey: `${eventId}`,
+  });
   safeLog("merchant_consent_revoked", { row: data.id });
+}
+
+/**
+ * CUSTOMER.MERCHANT-INTEGRATION.PRODUCT-SUBSCRIPTION-UPDATED / CAPABILITY-UPDATED
+ * — PayPal changed what this seller is approved for. We record the change and
+ * let the next status refresh confirm readiness; we never grant a capability
+ * from a webhook alone.
+ */
+async function handleMerchantIntegrationUpdated(admin: any, resource: any, eventId: string) {
+  const trackingId = resource?.tracking_id ?? null;
+  const merchantId = resource?.merchant_id ?? null;
+  if (!trackingId && !merchantId) return;
+
+  let query = admin.from("seller_paypal_accounts")
+    .select("id, user_id").is("archived_at", null).limit(1);
+  query = trackingId ? query.eq("tracking_id", trackingId) : query.eq("merchant_id", merchantId);
+  const { data } = await query.maybeSingle();
+  if (!data) {
+    safeLog("merchant_integration_update_no_match", { has_tracking: !!trackingId });
+    return;
+  }
+
+  const products = Array.isArray(resource?.products) ? resource.products : [];
+  const acdc = products.find(
+    (p: any) => String(p?.name ?? "").toUpperCase() === "PPCP_CUSTOM",
+  );
+  const capabilities = (Array.isArray(resource?.capabilities) ? resource.capabilities : [])
+    .map((c: any) => (typeof c === "string" ? c : c?.name))
+    .filter((c: any): c is string => typeof c === "string");
+
+  const patch: Record<string, unknown> = {
+    last_webhook_event_id: eventId,
+    updated_at: new Date().toISOString(),
+  };
+  if (acdc) patch.acdc_vetting_status = String(acdc?.vetting_status ?? "PENDING").toUpperCase();
+  if (capabilities.length) patch.capabilities = capabilities;
+
+  await admin.from("seller_paypal_accounts").update(patch).eq("id", data.id);
+  safeLog("merchant_integration_updated", { row: data.id, capabilities: capabilities.length });
 }
 
 

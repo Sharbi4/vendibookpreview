@@ -7,6 +7,8 @@ export interface SellerPaymentReadiness {
   gatingActive: boolean;
   ready: boolean;
   reasons: string[];
+  /** Seller's PayPal merchant id — only present when routing is live and ready. */
+  merchantId: string | null;
 }
 
 /**
@@ -23,12 +25,13 @@ export function useSellerPaymentReadiness(sellerId?: string | null): SellerPayme
     gatingActive: false,
     ready: false,
     reasons: [],
+    merchantId: null,
   });
 
   useEffect(() => {
     let cancelled = false;
     if (!sellerId) {
-      setState({ loading: false, gatingActive: false, ready: false, reasons: ['not_connected'] });
+      setState({ loading: false, gatingActive: false, ready: false, reasons: ['not_connected'], merchantId: null });
       return;
     }
     (async () => {
@@ -42,17 +45,19 @@ export function useSellerPaymentReadiness(sellerId?: string | null): SellerPayme
           gating_active?: boolean;
           ready?: boolean;
           reasons?: string[];
+          merchant_id?: string | null;
         };
         setState({
           loading: false,
           gatingActive: payload.gating_active === true,
           ready: payload.ready === true,
           reasons: Array.isArray(payload.reasons) ? payload.reasons : [],
+          merchantId: payload.merchant_id ?? null,
         });
       } catch {
         if (cancelled) return;
         // A status lookup failure must never block a working checkout.
-        setState({ loading: false, gatingActive: false, ready: false, reasons: [] });
+        setState({ loading: false, gatingActive: false, ready: false, reasons: [], merchantId: null });
       }
     })();
     return () => {

@@ -5670,6 +5670,7 @@ export type Database = {
           authorized_at: string | null
           balance_due_at: string | null
           balance_due_cents: number
+          billing_address: Json | null
           booking_request_id: string | null
           buyer_email: string | null
           buyer_id: string | null
@@ -5691,6 +5692,8 @@ export type Database = {
           listing_id: string | null
           metadata: Json
           monetization_purchase_id: string | null
+          order_items: Json | null
+          payer_email: string | null
           payment_intent: string
           payment_source: string | null
           payment_status: Database["public"]["Enums"]["paypal_payment_status"]
@@ -5699,6 +5702,7 @@ export type Database = {
           paypal_capture_id: string | null
           paypal_order_id: string | null
           paypal_payer_id: string | null
+          paypal_tracking: Json | null
           platform_fee_cents: number
           pro_discount_cents: number
           pro_fee_applied: boolean
@@ -5709,6 +5713,7 @@ export type Database = {
           sale_transaction_id: string | null
           seller_id: string | null
           seller_proceeds_cents: number
+          shipping_address: Json | null
           tax_cents: number
           transaction_type: string
           updated_at: string
@@ -5721,6 +5726,7 @@ export type Database = {
           authorized_at?: string | null
           balance_due_at?: string | null
           balance_due_cents?: number
+          billing_address?: Json | null
           booking_request_id?: string | null
           buyer_email?: string | null
           buyer_id?: string | null
@@ -5742,6 +5748,8 @@ export type Database = {
           listing_id?: string | null
           metadata?: Json
           monetization_purchase_id?: string | null
+          order_items?: Json | null
+          payer_email?: string | null
           payment_intent?: string
           payment_source?: string | null
           payment_status?: Database["public"]["Enums"]["paypal_payment_status"]
@@ -5750,6 +5758,7 @@ export type Database = {
           paypal_capture_id?: string | null
           paypal_order_id?: string | null
           paypal_payer_id?: string | null
+          paypal_tracking?: Json | null
           platform_fee_cents?: number
           pro_discount_cents?: number
           pro_fee_applied?: boolean
@@ -5760,6 +5769,7 @@ export type Database = {
           sale_transaction_id?: string | null
           seller_id?: string | null
           seller_proceeds_cents?: number
+          shipping_address?: Json | null
           tax_cents?: number
           transaction_type: string
           updated_at?: string
@@ -5772,6 +5782,7 @@ export type Database = {
           authorized_at?: string | null
           balance_due_at?: string | null
           balance_due_cents?: number
+          billing_address?: Json | null
           booking_request_id?: string | null
           buyer_email?: string | null
           buyer_id?: string | null
@@ -5793,6 +5804,8 @@ export type Database = {
           listing_id?: string | null
           metadata?: Json
           monetization_purchase_id?: string | null
+          order_items?: Json | null
+          payer_email?: string | null
           payment_intent?: string
           payment_source?: string | null
           payment_status?: Database["public"]["Enums"]["paypal_payment_status"]
@@ -5801,6 +5814,7 @@ export type Database = {
           paypal_capture_id?: string | null
           paypal_order_id?: string | null
           paypal_payer_id?: string | null
+          paypal_tracking?: Json | null
           platform_fee_cents?: number
           pro_discount_cents?: number
           pro_fee_applied?: boolean
@@ -5811,6 +5825,7 @@ export type Database = {
           sale_transaction_id?: string | null
           seller_id?: string | null
           seller_proceeds_cents?: number
+          shipping_address?: Json | null
           tax_cents?: number
           transaction_type?: string
           updated_at?: string
@@ -6050,6 +6065,60 @@ export type Database = {
           venmo_identifier_type?: string | null
           venmo_masked_identifier?: string | null
           verified_at?: string | null
+        }
+        Relationships: []
+      }
+      paypal_api_logs: {
+        Row: {
+          call_name: string
+          created_at: string
+          endpoint: string
+          environment: string
+          id: string
+          latency_ms: number | null
+          method: string
+          order_id: string | null
+          paypal_debug_id: string | null
+          reference: string | null
+          request_body: Json | null
+          request_headers: Json
+          response_body: Json | null
+          response_status: number | null
+          seller_id: string | null
+        }
+        Insert: {
+          call_name: string
+          created_at?: string
+          endpoint: string
+          environment?: string
+          id?: string
+          latency_ms?: number | null
+          method: string
+          order_id?: string | null
+          paypal_debug_id?: string | null
+          reference?: string | null
+          request_body?: Json | null
+          request_headers?: Json
+          response_body?: Json | null
+          response_status?: number | null
+          seller_id?: string | null
+        }
+        Update: {
+          call_name?: string
+          created_at?: string
+          endpoint?: string
+          environment?: string
+          id?: string
+          latency_ms?: number | null
+          method?: string
+          order_id?: string | null
+          paypal_debug_id?: string | null
+          reference?: string | null
+          request_body?: Json | null
+          request_headers?: Json
+          response_body?: Json | null
+          response_status?: number | null
+          seller_id?: string | null
         }
         Relationships: []
       }
@@ -8372,8 +8441,10 @@ export type Database = {
       }
       seller_paypal_accounts: {
         Row: {
+          acdc_vetting_status: string | null
           action_reasons: string[]
           archived_at: string | null
+          capabilities: Json | null
           consent_granted: boolean
           created_at: string
           id: string
@@ -8391,10 +8462,13 @@ export type Database = {
           tracking_id: string
           updated_at: string
           user_id: string
+          vaulting_status: string | null
         }
         Insert: {
+          acdc_vetting_status?: string | null
           action_reasons?: string[]
           archived_at?: string | null
+          capabilities?: Json | null
           consent_granted?: boolean
           created_at?: string
           id?: string
@@ -8412,10 +8486,13 @@ export type Database = {
           tracking_id: string
           updated_at?: string
           user_id: string
+          vaulting_status?: string | null
         }
         Update: {
+          acdc_vetting_status?: string | null
           action_reasons?: string[]
           archived_at?: string | null
+          capabilities?: Json | null
           consent_granted?: boolean
           created_at?: string
           id?: string
@@ -8433,6 +8510,7 @@ export type Database = {
           tracking_id?: string
           updated_at?: string
           user_id?: string
+          vaulting_status?: string | null
         }
         Relationships: []
       }
@@ -11758,6 +11836,7 @@ export type Database = {
         Returns: string
       }
       purge_expired_permit_soft_deletes: { Args: never; Returns: undefined }
+      purge_paypal_api_logs: { Args: never; Returns: number }
       record_user_consent: {
         Args: {
           _acceptance_text: string

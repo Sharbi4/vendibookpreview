@@ -42,6 +42,12 @@ interface DerivedStatus {
   emailConfirmed: boolean;
   receivable: boolean;
   merchantId: string | null;
+  /** PPCP_CUSTOM (advanced card) vetting status, when PayPal reports it. */
+  acdcVetting: string | null;
+  /** Whether the merchant's integration reports vaulting capability. */
+  vaulting: string | null;
+  /** Capability names PayPal returned for this merchant. */
+  capabilities: string[];
 }
 
 function deriveStatus(raw: any): DerivedStatus {
@@ -60,6 +66,25 @@ function deriveStatus(raw: any): DerivedStatus {
   const receivable = raw?.payments_receivable === true;
   const merchantId = typeof raw?.merchant_id === "string" ? raw.merchant_id : null;
 
+  // Advanced card processing (ACDC) and vaulting are reported per product /
+  // capability. We record what PayPal says; we never assume a capability.
+  const acdcProduct = products.find(
+    (p: any) => String(p?.name ?? "").toUpperCase() === "PPCP_CUSTOM",
+  );
+  const acdcVetting = acdcProduct
+    ? String(acdcProduct?.vetting_status ?? "PENDING").toUpperCase()
+    : null;
+  const capabilityList = Array.isArray(raw?.capabilities) ? raw.capabilities : [];
+  const capabilities = capabilityList
+    .map((c: any) => (typeof c === "string" ? c : c?.name))
+    .filter((c: any): c is string => typeof c === "string");
+  const vaultingCapability = capabilityList.find(
+    (c: any) => String(c?.name ?? c ?? "").toUpperCase().includes("VAULT"),
+  );
+  const vaulting = vaultingCapability
+    ? String(vaultingCapability?.status ?? "ACTIVE").toUpperCase()
+    : null;
+
   const reasons: string[] = [];
   if (!activeOauth) reasons.push("oauth_not_active");
   if (!ppcpApproved) reasons.push("vetting_pending");
@@ -76,6 +101,9 @@ function deriveStatus(raw: any): DerivedStatus {
     emailConfirmed,
     receivable,
     merchantId,
+    acdcVetting,
+    vaulting,
+    capabilities,
   };
 }
 
@@ -209,6 +237,9 @@ Deno.serve(async (req) => {
           vetting_status: p?.vetting_status ?? null,
         })),
         reasons: derived.reasons,
+        acdc_vetting_status: derived.acdcVetting,
+        vaulting_status: derived.vaulting,
+        capabilities: derived.capabilities,
       };
 
       await admin
@@ -223,6 +254,9 @@ Deno.serve(async (req) => {
           products: slim.products,
           onboarding_status: derived.status,
           action_reasons: derived.reasons,
+          acdc_vetting_status: derived.acdcVetting,
+          vaulting_status: derived.vaulting,
+          capabilities: derived.capabilities,
           status_payload: slim,
           last_status_check_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
@@ -238,6 +272,11 @@ Deno.serve(async (req) => {
         status: derived.status,
         action_reasons: derived.reasons,
         merchant_id: derived.merchantId,
+        paypal_email: typeof raw?.primary_email === "string" ? raw.primary_email : null,
+        oauth_scopes: derived.scopes,
+        acdc_vetting_status: derived.acdcVetting,
+        vaulting_status: derived.vaulting,
+        capabilities: derived.capabilities,
       });
     }
 

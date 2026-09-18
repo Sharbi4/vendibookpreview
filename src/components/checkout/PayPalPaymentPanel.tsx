@@ -46,6 +46,8 @@ interface PayPalPaymentPanelProps {
    * the exact same server-verified flow inline inside a checkout page section.
    */
   variant?: 'modal' | 'embedded';
+  /** Connected seller's PayPal merchant id, when the order is routed to them. */
+  merchantId?: string | null;
 }
 
 type PanelState =
@@ -75,6 +77,7 @@ const PayPalPaymentPanel = ({
   onSuccess,
   totalUsd,
   variant = 'modal',
+  merchantId,
 }: PayPalPaymentPanelProps) => {
   const embedded = variant === 'embedded';
   const containerRef = useRef<HTMLDivElement>(null);
@@ -241,7 +244,7 @@ const PayPalPaymentPanel = ({
           setState('signin');
           return null;
         }
-        return loadPayPalSdk();
+        return loadPayPalSdk({ merchantId, pageType: 'checkout' });
       })
       .then((paypal) => {
         if (!paypal) return;
@@ -284,6 +287,11 @@ const PayPalPaymentPanel = ({
 
         instance = paypal.Buttons({
           style: { layout: 'vertical', shape: 'rect', height: 48, label: 'pay' },
+
+          // Browser half of App Switch: on mobile the buyer is handed to the
+          // PayPal app and returned here. The server sets
+          // app_switch_preference on the order itself.
+          appSwitchWhenAvailable: true,
 
           createOrder: () => handlersRef.current.startOrder(),
 
