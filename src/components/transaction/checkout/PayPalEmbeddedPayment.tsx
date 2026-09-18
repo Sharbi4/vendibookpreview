@@ -111,6 +111,7 @@ const PayPalEmbeddedPayment = ({
             returnUrl={returnUrl}
             onSuccess={onSuccess}
             totalUsd={totalUsd}
+            merchantId={readiness.merchantId}
           />
         </div>
       )}
