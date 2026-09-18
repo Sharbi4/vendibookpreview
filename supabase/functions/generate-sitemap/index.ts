@@ -63,6 +63,7 @@ Deno.serve(async (req) => {
         .from("listings")
         .select("id, updated_at")
         .eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear")
+        .not("title", "ilike", "Demo %").not("title", "ilike", "Sandbox %")
         .order("updated_at", { ascending: false })
         .limit(1000);
 
