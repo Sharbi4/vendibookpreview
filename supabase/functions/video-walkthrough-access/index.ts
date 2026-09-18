@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
+import { hasCurrentLegalAcceptance } from '../_shared/legalVersions.ts';
 import { getVideoProvider, VideoProviderUnavailableError } from '../_shared/videoProvider.ts';
 import { checkRateLimit } from '../_shared/rateLimit.ts';
 
@@ -13,6 +14,14 @@ Deno.serve(async(req)=>{
     const {data:{user}}=await admin.auth.getUser(token); if(!user)return json({error:'authentication_required'},401);
     const {walkthrough_id}=await req.json(); if(!walkthrough_id)return json({error:'walkthrough_id_required'},400);
     if(!await checkRateLimit('video_walkthrough_access',user.id,12,10))return json({error:'rate_limited'},429);
+    // Legal gate at the execution layer: a room token is only minted for a
+    // participant who has accepted the CURRENT walkthrough terms, device
+    // permissions notice, and recording/monitoring notice.
+    for(const slug of ['video-walkthrough-terms','device-permissions-privacy','recording-consent'] as const){
+      if(!await hasCurrentLegalAcceptance(admin,user.id,slug)){
+        return json({error:'legal_acceptance_required',message:'Please accept the walkthrough terms, device permissions notice, and recording notice before joining.'},403);
+      }
+    }
     const {data:w}=await admin.from('video_walkthroughs').select('*,listing:listings(title)').eq('id',walkthrough_id).maybeSingle();
     if(!w || (w.buyer_id!==user.id && w.seller_id!==user.id))return json({error:'not_authorized'},403);
     if(!['scheduled','rescheduled'].includes(w.status))return json({error:'walkthrough_not_active'},409);

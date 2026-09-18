@@ -299,6 +299,15 @@ serve(async (req) => {
       case "log_gps": {
         const sessionId: string = driverSessionId ?? body.fulfillment_session_id;
         if (!sessionId) return jsonError(400, "missing_session", "A delivery session is required.");
+        // Reject location writes from a signed-in sharer who has not accepted
+        // the current Location & Delivery Tracking Disclosure. Driver links
+        // carry their acceptance in the one-time token flow.
+        if (userId && !driverSessionId) {
+          const acceptedLocation = await hasCurrentLegalAcceptance(db, userId, "location-tracking");
+          if (!acceptedLocation) {
+            return jsonError(403, "location_disclosure_required", "Please accept the Location & Delivery Tracking Disclosure before sharing location.");
+          }
+        }
         const { data: session } = await db
           .from("fulfillment_sessions")
           .select("*")
