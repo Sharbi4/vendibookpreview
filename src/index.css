@@ -2534,8 +2534,11 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
 .paypal-card-brands { display: flex; align-items: center; justify-content: center; gap: 7px; }.paypal-card-brands > span { display: grid; min-width: 43px; height: 27px; place-items: center; border: 1px solid hsl(var(--border)); border-radius: 4px; background: hsl(var(--background)); font-family: Arial, sans-serif; font-size: 9px; font-weight: 800; letter-spacing: 0; }.paypal-card-brands .is-visa { color: #1434cb; font-size: 13px; font-style: italic; }.paypal-card-brands .is-amex { background: #2e77bc; color: #fff; }.paypal-card-brands .is-discover { color: #111; }.paypal-card-brands .is-mastercard { position: relative; display: block; }.paypal-card-brands .is-mastercard i { position: absolute; top: 6px; width: 15px; height: 15px; border-radius: 50%; }.paypal-card-brands .is-mastercard i:first-child { left: 9px; background: #eb001b; }.paypal-card-brands .is-mastercard i:last-child { right: 9px; background: #f79e1b; opacity: .9; }
 @media (min-width: 700px) { .sale-wizard-layout { grid-template-columns: 180px minmax(0, 1fr); }.sale-wizard-nav { display: block; }.sale-wizard-mobile-progress { display: none; }.sale-review-item { grid-template-columns: minmax(220px, .9fr) minmax(0, 1.1fr); } }
 @media (min-width: 1024px) {
+  .v2-checkout.is-wizard .v2-checkout-topbar { padding-block: 3px; }
   .v2-checkout.is-wizard .v2-checkout-main { max-width: 1180px; padding-top: 20px; }
   .v2-checkout.is-wizard .v2-checkout-head { margin-bottom: 14px; }
+  .v2-checkout.is-wizard .v2-checkout-head h1 { margin-top: 4px; font-size: 27px; }
+  .v2-checkout.is-wizard .v2-checkout-sub { margin-top: 5px; font-size: 13px; line-height: 1.4; }
   .v2-checkout.is-wizard .v2-checkout-grid { grid-template-columns: minmax(640px, 760px) minmax(300px, 350px); justify-content: center; gap: 24px; }
   .sale-wizard { max-height: calc(100dvh - 150px); }
   .sale-wizard-layout { height: min(650px, calc(100dvh - 170px)); min-height: 0; grid-template-columns: 180px minmax(0, 1fr); }
