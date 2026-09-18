@@ -388,6 +388,7 @@ export default function SellerPayPalConnect({
                   ? 'Reconnect PayPal'
                   : 'Connect PayPal'}
             </button>
+            </>
           )}
           {connection?.referral_url && (status === 'link_sent' || needsPermissions) && (
             <button
