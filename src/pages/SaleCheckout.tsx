@@ -915,7 +915,9 @@ const SaleCheckout = () => {
     advanceTo(4);
   };
 
+  /** Details → Agreement. Freezes the transaction snapshot first. */
   const proceedToAgreement = async () => {
+    if (!validateDetails()) return;
     if (!user) {
       navigate(`/auth?redirect=/checkout/${listingId}`);
       return;
@@ -925,12 +927,27 @@ const SaleCheckout = () => {
       return;
     }
     const prepared = await prepareAgreement();
-    if (prepared) advanceTo(6);
+    if (prepared) advanceTo(4);
   };
 
-  const proceedToConfirmation = async () => {
+  /** Agreement → Payment. Both consents must be recorded server-side first. */
+  const proceedToPayment = async () => {
     const recorded = await recordAgreement();
-    if (recorded) advanceTo(7);
+    if (recorded) advanceTo(5);
+  };
+
+  /**
+   * Switching the payment method after acceptance changes the frozen
+   * transaction snapshot, so the buyer re-accepts on the Agreement step.
+   */
+  const changePaymentMethod = (method: PaymentMethod) => {
+    if (method === paymentMethod) return;
+    setPaymentMethod(method);
+    setAgreedToTerms(false);
+    setPrivacyAccepted(false);
+    setPaypalCheckout(null);
+    termsGate.reset();
+    setCurrentStep(4);
   };
 
   const displayBuyerName = buyerInfo.businessName
