@@ -22,6 +22,8 @@ export type GrantedPermissions = {
   camera?: boolean;
   microphone?: boolean;
   location?: boolean;
+  /** Explicit agreement to participate in a recorded meeting. */
+  recording?: boolean;
 };
 
 export type RecordLegalAcceptanceInput = {

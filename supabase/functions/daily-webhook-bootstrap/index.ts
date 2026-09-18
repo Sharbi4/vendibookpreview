@@ -6,6 +6,7 @@
  * The Daily API key and the HMAC secret are never returned or logged.
  */
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
+import { toBase64Secret } from '../_shared/dailySignature.ts';
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -55,7 +56,8 @@ Deno.serve(async (req) => {
     const list: any[] = Array.isArray(existing.body?.data) ? existing.body.data : Array.isArray(existing.body) ? existing.body : [];
     const mine = list.find((w) => w?.url === url);
 
-    const body = JSON.stringify({ url, eventTypes: EVENTS, hmac });
+    // Daily expects the signing secret base64-encoded; verification uses the same form.
+    const body = JSON.stringify({ url, eventTypes: EVENTS, hmac: toBase64Secret(hmac) });
     const result = mine?.uuid
       ? await call(`/webhooks/${encodeURIComponent(mine.uuid)}`, { method: 'POST', body })
       : await call('/webhooks', { method: 'POST', body });
