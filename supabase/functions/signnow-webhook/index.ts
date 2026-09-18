@@ -69,8 +69,7 @@ async function onSaleAgreementSigned(svc: any, transactionId: string, allSigned:
   }
 
   const paragraphs = [
-    `The purchase and sale agreement for order ${payment.reference ?? ''} has been signed by both parties. A completed copy is saved with the transaction.`,
-    'Follow the order page for the remaining handoff or transaction steps.',
+    'Both parties have signed. A completed copy is saved with your transaction. Follow the order page for the remaining handoff or transaction steps.',
   ];
 
   await notify(buyer?.email, `sale-agreement-complete-buyer-${transactionId}`, {
