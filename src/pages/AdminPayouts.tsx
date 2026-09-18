@@ -292,14 +292,14 @@ export default function AdminPayouts() {
 
                     <div className="flex flex-wrap gap-2">
                       {row.status === 'pending_release' ? (
-                        <Button size="sm" variant="outline" disabled={busyId === row.id}
+                        <Button size="sm" variant="outline" disabled={busyId === row.id || row.release_state !== 'ready_for_review'}
                           onClick={() => act(row, 'mark_eligible')}>
                           Move to review
                         </Button>
                       ) : null}
 
                       {['eligible_for_review', 'pending_release'].includes(row.status) ? (
-                        <Button size="sm" disabled={busyId === row.id} onClick={() => act(row, 'approve')}>
+                        <Button size="sm" disabled={busyId === row.id || row.release_state !== 'ready_for_review'} onClick={() => act(row, 'approve')}>
                           {busyId === row.id ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
                           Approve payout
                         </Button>
