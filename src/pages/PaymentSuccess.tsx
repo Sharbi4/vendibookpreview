@@ -79,7 +79,7 @@ interface CheckoutSessionInfo {
 const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get('session_id');
-  const isEscrow = searchParams.get('escrow') === 'true';
+  const isPaymentProtected = searchParams.get('protected') === 'true';
   const isHold = searchParams.get('hold') === 'true';
   const isMonetization = searchParams.get('monetization') === 'true';
   // Rentals now have a dedicated confirmation surface; keep old links working.
@@ -178,7 +178,7 @@ const PaymentSuccess = () => {
 
 
       try {
-        if (isEscrow) {
+        if (isPaymentProtected) {
           // The PayPal order finalizer writes the protected-sale transaction, so
           // we simply poll until it lands instead of creating it from the client.
 
@@ -312,7 +312,7 @@ const PaymentSuccess = () => {
     };
 
     processPayment();
-  }, [sessionId, isEscrow, isMonetization, user]);
+  }, [sessionId, isPaymentProtected, isMonetization, user]);
 
   if (legacyBookingId && !sessionId) {
     return <Navigate to={`/booking-confirmation?booking_id=${legacyBookingId}`} replace />;
@@ -343,7 +343,7 @@ const PaymentSuccess = () => {
                     </div>
                   </div>
                   <p className="text-muted-foreground font-medium">
-                    {isEscrow ? 'Setting up your payment protection purchase...' : 'Confirming your payment...'}
+                    {isPaymentProtected ? 'Setting up your payment protection purchase...' : 'Confirming your payment...'}
                   </p>
                 </div>
               ) : error ? (
@@ -451,7 +451,7 @@ const PaymentSuccess = () => {
                   )}
                 </div>
 
-              ) : isEscrow ? (
+              ) : isPaymentProtected ? (
                 // Payment Protection Sale Success
                 <div className={`transition-all duration-700 ${showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
                   <div className="relative w-24 h-24 mx-auto mb-6">
@@ -608,7 +608,7 @@ const PaymentSuccess = () => {
                             platformFee: saleTransaction.platform_fee,
                             deliveryFee: saleTransaction.delivery_fee,
                             isRental: false,
-                            isEscrow: true,
+                            isPaymentProtected: true,
                             fulfillmentType: saleTransaction.fulfillment_type,
                             address: saleTransaction.delivery_address,
                             paymentDate: new Date().toISOString(),
@@ -668,7 +668,7 @@ const PaymentSuccess = () => {
                           isRental={false}
                           address={saleTransaction.delivery_address}
                           fulfillmentType={saleTransaction.fulfillment_type}
-                          isEscrow={true}
+                          isPaymentProtected={true}
                           paymentMethod="Card ending in ****"
                           paymentDate={new Date().toISOString()}
                           recipientName={userProfile?.full_name || 'Valued Customer'}
@@ -1088,7 +1088,7 @@ const PaymentSuccess = () => {
                               endDate={booking.end_date}
                               address={booking.address_snapshot}
                               fulfillmentType={booking.fulfillment_selected}
-                              isEscrow={false}
+                              isPaymentProtected={false}
                               paymentMethod="Card ending in ****"
                               paymentDate={new Date().toISOString()}
                               recipientName={userProfile?.full_name || 'Valued Customer'}

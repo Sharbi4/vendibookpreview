@@ -13,7 +13,7 @@
  *      24-hour. The only 24-hour claim allowed is for a successfully completed
  *      FINANCED purchase (released within 24h after delivery + confirmation).
  *    Support: (725) 755-9598 · support@vendibook.com · Mon–Fri 9a–5p AZ.
- *  - Never say "escrow" — say "payment protection" or "funds are held".
+ *  - Never imply Vendibook holds funds — say "payment protection" or "funds are held".
  *  - Payments run on PayPal. No Stripe / Affirm / Klarna / Afterpay language.
  *  - Identity verification is optional; never imply everyone is verified.
  *  - Anything not shipped is marked "coming soon".

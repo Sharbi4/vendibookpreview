@@ -12,7 +12,7 @@ interface ReceiptData {
   endDate?: string;
   address?: string;
   fulfillmentType?: string;
-  isEscrow?: boolean;
+  isPaymentProtected?: boolean;
   paymentMethod?: string;
   paymentDate?: string;
   recipientName?: string;
@@ -166,7 +166,7 @@ export function generateReceiptPdf(data: ReceiptData): void {
   }
   
   // Payment Protection notice
-  if (data.isEscrow) {
+  if (data.isPaymentProtected) {
     doc.setTextColor(245, 158, 11); // amber
     doc.setFontSize(9);
     doc.text('🔒 Payment Protection Protected - Funds released after confirmation', 28, yPos);

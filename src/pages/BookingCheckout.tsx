@@ -1277,7 +1277,15 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
                   : 'PayPal processes your payment now and your dates are held. The host still has to accept the request — if they decline or do not respond, Vendibook refunds the payment to your original payment method.'}
               </p>
               <p className="text-xs text-muted-foreground leading-relaxed">
-                Vendibook records the transaction and releases host payouts after the rental begins. Vendibook does not hold funds in escrow.
+                Vendibook records the transaction and reviews host payouts after the rental begins. Payments are
+                processed by PayPal; Vendibook does not hold or control your funds.
+              </p>
+              <p className="text-xs text-muted-foreground leading-relaxed">
+                By placing this booking you agree to the{' '}
+                <a href="/terms" target="_blank" rel="noreferrer" className="underline">Terms of Service</a>, the{' '}
+                <a href="/legal/payments-terms" target="_blank" rel="noreferrer" className="underline">Payments Terms</a>{' '}
+                and the{' '}
+                <a href="/privacy" target="_blank" rel="noreferrer" className="underline">Privacy Policy</a>.
               </p>
             </div>
 

@@ -6,7 +6,7 @@
  * `shipping_status` column carries the fulfillment milestone the seller sets
  * (`ready_for_pickup` | `shipped` | `in_transit` | `delivered`).
  *
- * Copy rules: never say escrow / payment protection, and never promise an
+ * Copy rules: never imply custody of funds or payment protection, and never promise an
  * automatic or timed payout for ordinary online sales.
  */
 

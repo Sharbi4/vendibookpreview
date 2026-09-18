@@ -10,6 +10,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { triggerOrchestrator } from '@/lib/orchestrator';
 import { z } from 'zod';
 import vendibookLogo from '@/assets/vendibook-logo.png';
+import { TERMS_OF_SERVICE_VERSION, PRIVACY_POLICY_VERSION } from '@/lib/legal/versions';
+import { recordLegalAcceptance } from '@/lib/legal/recordAcceptance';
 import { trackSignupCompleted, trackLoginAttempt, trackLoginSuccess, trackLoginError, trackSignupAttempt, trackSignupError, trackPasswordResetRequest } from '@/lib/analytics';
 import { trackSignupConversion } from '@/lib/gtagConversions';
 import { trackGA4SignUp, trackGA4Login } from '@/lib/ga4Conversions';
@@ -387,6 +389,15 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
                   _locale: navigator.language,
                   _application_version: null,
                 });
+                // Registry-versioned acceptance rows (E-SIGN + terms) for the
+                // /admin/legal evidence view.
+                await recordLegalAcceptance({
+                  userId: newSession.user.id,
+                  slugs: ['terms-of-service', 'privacy-policy'],
+                  surface: 'signup',
+                  relatedEntityType: 'account',
+                  relatedEntityId: newSession.user.id,
+                }).catch(() => undefined);
                 if (marketingOptIn) {
                   // Marketing opt-in is a separate, revocable consent —
                   // never bundled into the required platform acceptance.

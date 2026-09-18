@@ -926,6 +926,16 @@ serve(async (req) => {
         const g = await handoffGuard(handoff, true);
         if (g) return jsonError(403, "forbidden", g);
         if (handoff.finalized) return jsonError(400, "finalized", "This handoff record is finalized.");
+        // Capture is gated on the current Handoff Terms, not only on starting
+        // the session. Driver links have no account, so their acceptance is
+        // carried by the one-time token issued after the driver acknowledges
+        // the terms in the link flow.
+        if (userId && !driverSessionId) {
+          const acceptedHandoffTerms = await hasCurrentLegalAcceptance(db, userId, "handoff-terms");
+          if (!acceptedHandoffTerms) {
+            return jsonError(403, "handoff_terms_required", "Please accept the Verified Handoff Terms before capturing evidence.");
+          }
+        }
         const { data: media, error } = await db.from("handoff_media").insert({
           handoff_session_id: handoff.id,
           storage_path: String(body.storage_path),

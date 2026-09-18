@@ -40,7 +40,7 @@ import signArt from '@/assets/education/sign.svg';
  * transaction live in one place — discover, evaluate, connect, finance,
  * transport, complete.
  *
- * Copy guardrails (do not regress): no escrow or "payment protection" claims,
+ * Copy guardrails (do not regress): no custodial or "payment protection" claims,
  * no guaranteed/instant payout timing, no universal identity-verification
  * claims (verification is "where completed"), no fabricated social-proof
  * metrics, financing stays third-party and never guaranteed, freight stays a

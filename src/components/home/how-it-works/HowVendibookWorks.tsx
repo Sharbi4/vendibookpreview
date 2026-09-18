@@ -22,7 +22,7 @@ import { FreightLink } from '@/components/shared/FreightLink';
  * composition — NOT three equal workflow cards. A small discovery-style tools
  * strip sits underneath.
  *
- * Copy guardrails: PayPal online checkout or Pay in Person only, no escrow,
+ * Copy guardrails: PayPal online checkout or Pay in Person only, no custodial-funds claims,
  * no payout-timing promises, verification stays "where completed", financing
  * is third-party, no fabricated metrics.
  */

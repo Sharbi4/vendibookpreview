@@ -5,7 +5,7 @@ import LegalDocumentLayout, { Section } from '@/components/legal/LegalDocumentLa
 /**
  * /legal/payments-terms — Payments, Fees, Refunds & Payouts Terms
  *
- * Copy guardrails: never "escrow"; "payment protection" is a platform policy,
+ * Copy guardrails: never imply custody of funds; "payment protection" is a platform policy,
  * not insurance and not a financial guarantee. Vendibook is not a bank, lender,
  * money transmitter, broker, dealer, agent, insurer, or a party to the sale.
  */

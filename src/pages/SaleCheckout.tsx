@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, useLocation, Link } from 'react-router-dom';
 import { Loader2, MapPin, Pencil, ShieldCheck, UserRound } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useListing } from '@/hooks/useListing';
@@ -1018,7 +1018,25 @@ const SaleCheckout = () => {
         ) : (
           <PurchaseStepPayment embedded paymentMethod={paymentMethod} setPaymentMethod={(method) => { setPaymentMethod(method); setAgreedToTerms(false); termsGate.reset(); }} acceptPayPalCheckout={acceptPayPalCheckout && !paypalPurchaseBlocked} acceptCashPayment={acceptCashPayment} titleStatus={(listing as { title_status?: string | null }).title_status ?? null} hasLien={(listing as { has_lien?: string | null }).has_lien ?? null} vin={(listing as { vin?: string | null }).vin ?? null} totalPrice={totalPrice} submitting={termsGate.preparing} onBack={() => goToStep(4)} onContinue={() => undefined} />
         )}
-        {financingEligible ? <FinancingActionPanel listing={listing} host={host} showPaymentLockup={false} /> : null}
+        {financingEligible ? (
+          <>
+            <FinancingActionPanel listing={listing} host={host} showPaymentLockup={false} />
+            <p className="text-xs text-muted-foreground">
+              Financing is offered by independent third-party providers and is subject to their approval. Vendibook is
+              not the lender.{' '}
+              <Link to="/legal/financing-disclosure" target="_blank" rel="noreferrer" className="underline">
+                Financing Disclosure
+              </Link>
+            </p>
+          </>
+        ) : null}
+        <p className="text-xs text-muted-foreground">
+          By placing this order you agree to the{' '}
+          <Link to="/terms" target="_blank" rel="noreferrer" className="underline">Terms of Service</Link>, the{' '}
+          <Link to="/legal/payments-terms" target="_blank" rel="noreferrer" className="underline">Payments Terms</Link>{' '}
+          and the{' '}
+          <Link to="/privacy" target="_blank" rel="noreferrer" className="underline">Privacy Policy</Link>.
+        </p>
       </div>
     );
 
