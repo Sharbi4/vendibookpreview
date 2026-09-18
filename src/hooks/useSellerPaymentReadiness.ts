@@ -55,7 +55,8 @@ export function useSellerPaymentReadiness(sellerId?: string | null): SellerPayme
   // Lookup failures never block the established checkout and never display
   // the buyer-facing PayPal verification claim.
   return {
-    loading: query.isLoading,
+    loading: query.isLoading && !query.isError,
+
     gatingActive: query.data?.gatingActive ?? false,
     ready: query.data?.ready ?? false,
     reasons: query.data?.reasons ?? [],
