@@ -7,6 +7,7 @@ import { computeDeliveryFee, deliveryRateLabel, normalizeDeliveryFeeType } from 
 import { useToast } from '@/hooks/use-toast';
 import { useFreightEstimate } from '@/hooks/useFreightEstimate';
 import { supabase } from '@/integrations/supabase/client';
+import CheckoutLegalConsent from '@/components/legal/CheckoutLegalConsent';
 import { parseEdgeError } from '@/lib/edgeErrors';
 import { checkoutErrorCopy } from '@/lib/checkoutErrorCopy';
 import { validators } from '@/components/ui/validated-input';
@@ -128,6 +129,8 @@ const SaleCheckout = () => {
   const [deliveryCoords, setDeliveryCoords] = useState<[number, number] | null>(null);
 
   const [agreedToTerms, setAgreedToTerms] = useState(false);
+  /** Checkout acceptance of Terms + Payments Terms + Privacy. Never pre-ticked. */
+  const [legalAccepted, setLegalAccepted] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [paypalCheckout, setPaypalCheckout] = useState<{ transactionId: string; returnUrl: string } | null>(null);
   const [currentStep, setCurrentStep] = useState(1);
@@ -1095,7 +1098,7 @@ const SaleCheckout = () => {
           onBack={currentStep > 1 ? () => goToStep(currentStep - 1) : undefined}
           onNext={currentStep === 1 ? () => advanceTo(2) : currentStep === 2 ? proceedFromFulfillment : currentStep === 3 ? proceedFromDetails : currentStep === 4 ? () => advanceTo(5) : currentStep === 5 ? proceedToAgreement : currentStep === 6 ? proceedToConfirmation : undefined}
           nextLabel={currentStep === 4 ? 'Continue to payment' : currentStep === 5 ? 'Review agreement' : currentStep === 6 ? 'Accept and continue' : 'Continue'}
-          nextDisabled={(currentStep === 2 && !fulfillmentReady) || (currentStep === 5 && paypalPurchaseBlocked && paymentMethod !== 'cash') || (currentStep === 6 && (!agreedToTerms || !agreement.data))}
+          nextDisabled={(currentStep === 2 && !fulfillmentReady) || (currentStep === 5 && ((paypalPurchaseBlocked && paymentMethod !== 'cash') || !legalAccepted)) || (currentStep === 6 && (!agreedToTerms || !agreement.data))}
           nextBusy={termsGate.preparing || recordingConsent}
           hideFooter={currentStep === 7}
         >
