@@ -12001,6 +12001,10 @@ export type Database = {
         Returns: undefined
       }
       is_admin: { Args: { user_id: string }; Returns: boolean }
+      is_dispute_case_participant: {
+        Args: { _case_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_document_participant: {
         Args: {
           _doc: Database["public"]["Tables"]["documents"]["Row"]
