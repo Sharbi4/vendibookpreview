@@ -7,7 +7,6 @@ import { computeDeliveryFee, deliveryRateLabel, normalizeDeliveryFeeType } from 
 import { useToast } from '@/hooks/use-toast';
 import { useFreightEstimate } from '@/hooks/useFreightEstimate';
 import { supabase } from '@/integrations/supabase/client';
-import CheckoutLegalConsent from '@/components/legal/CheckoutLegalConsent';
 import ProtectionDisclosure from '@/components/checkout/ProtectionDisclosure';
 import { parseEdgeError } from '@/lib/edgeErrors';
 import { checkoutErrorCopy } from '@/lib/checkoutErrorCopy';
@@ -42,10 +41,13 @@ import ListingCheckoutSummary from '@/components/transaction/checkout/ListingChe
 import MoneyBreakdown, { type MoneyLine } from '@/components/transaction/checkout/MoneyBreakdown';
 import PayPalEmbeddedPayment from '@/components/transaction/checkout/PayPalEmbeddedPayment';
 import SaleCheckoutWizard from '@/components/checkout/sale/SaleCheckoutWizard';
-import SaleAgreementStep from '@/components/checkout/sale/SaleAgreementStep';
+import TransactionAgreementStep from '@/components/checkout/TransactionAgreementStep';
+import PostPaymentTimeline from '@/components/checkout/PostPaymentTimeline';
+import { recordCheckoutAgreements } from '@/lib/legal/recordCheckoutAgreements';
+import { loadPayPalSdk } from '@/lib/paypalClient';
 import { Button } from '@/components/ui/button';
 import { useLegalDocument } from '@/hooks/useLegalDocument';
-import { CONSENT_TRIGGERS, CURRENT_VERSIONS, DOCUMENT_TYPES } from '@/lib/legalDocuments';
+import { CONSENT_TRIGGERS, DOCUMENT_TYPES } from '@/lib/legalDocuments';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
 
