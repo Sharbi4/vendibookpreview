@@ -1044,6 +1044,23 @@ const SaleCheckout = () => {
 
   const continueFromDetails = () => {
     if (!validateDetails()) return;
+    // Persist the buyer's own contact address on their profile (non-money
+    // metadata). Best-effort: never block checkout on a profile write.
+    if (user?.id) {
+      void supabase
+        .from('profiles')
+        .update({
+          address1: buyerInfo.address1.trim(),
+          address2: buyerInfo.address2.trim() || null,
+          city: buyerInfo.city.trim(),
+          state: buyerInfo.state.trim().toUpperCase(),
+          zip_code: buyerInfo.zipCode.trim(),
+        })
+        .eq('id', user.id)
+        .then(({ error }) => {
+          if (error) console.warn('Could not save contact address to profile');
+        });
+    }
     goToStep(4);
   };
 
