@@ -141,3 +141,11 @@ surface, route, related entity, user agent, granted permissions) and viewable at
    of Vendibook's manually reviewed payout process.
 5. Recording notice: two-party consent states — confirm the user-responsibility framing.
 6. Handoff Terms: media licence scope and evidence retention period.
+
+## Business-policy defaults chosen (2026-09-18 suite, owner to confirm)
+1. Commission on refunds: refunded in full **before** delivery/pickup/rental start -> commission refunded; after that point, or partial refunds -> commission retained. Drafted as the default in /legal/payments-terms s6.
+2. Statement descriptor described as "PAYPAL *" + seller business name. Confirm this matches live descriptors.
+3. Evidence retention stated as "a defined period" (not a number) for handoff media and delivery checkpoints. Pick a number before an attorney signs off.
+4. Financing partner compensation disclosed as "may receive compensation". Confirm whether compensation actually exists.
+5. Seller Payment Terms + E-SIGN are now REQUIRED before a PayPal partner referral link is generated (server-enforced). Existing connected sellers are not retro-prompted; they will be prompted only on reconnect.
+6. Document versions: payments-terms bumped to 2026-09-18b (forces re-acceptance at checkout). All others unchanged.
