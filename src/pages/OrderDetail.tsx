@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import SEO from '@/components/SEO';
 import OrderEvidenceSection from '@/components/handoff/OrderEvidenceSection';
@@ -132,7 +133,34 @@ const OrderDetailPage = () => {
 
       <p className="mt-3 text-sm text-muted-foreground">{order.payment.description}</p>
 
-      <div className="mt-8 grid gap-6 md:grid-cols-[1.4fr_1fr]">
+      <Tabs defaultValue="overview" className="mt-8">
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="documents">Documents</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="documents" className="mt-6 space-y-6">
+          {(order as any).links?.sale_transaction_id && (
+            <DocumentsCard
+              scope={{ transaction_id: String((order as any).links.sale_transaction_id) }}
+              title="Transaction documents"
+            />
+          )}
+          {(order as any).links?.booking_request_id && (
+            <DocumentsCard
+              scope={{ booking_id: String((order as any).links.booking_request_id) }}
+              title="Rental documents"
+            />
+          )}
+          {!(order as any).links?.sale_transaction_id && !(order as any).links?.booking_request_id && (
+            <Card className="p-4 sm:p-5 text-sm text-muted-foreground">
+              No documents are attached to this order.
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="overview" className="mt-6">
+      <div className="grid gap-6 md:grid-cols-[1.4fr_1fr]">
         <div className="space-y-6">
           {order.release && (
             <Card className="border-primary/25 p-4 sm:p-5">
@@ -194,12 +222,6 @@ const OrderDetailPage = () => {
             </Card>
           )}
 
-          {(order as any).links?.sale_transaction_id && (
-            <DocumentsCard
-              scope={{ transaction_id: String((order as any).links.sale_transaction_id) }}
-              title="Purchase agreement"
-            />
-          )}
 
 
 
@@ -440,6 +462,8 @@ const OrderDetailPage = () => {
           </Card>
         </div>
       </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

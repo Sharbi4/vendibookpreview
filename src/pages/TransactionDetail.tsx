@@ -336,7 +336,7 @@ export default function TransactionDetail() {
         />
 
         <div className="mt-4">
-          <DocumentsCard scope={{ transaction_id: String(tx.id) }} title="Bill of sale" />
+          <DocumentsCard scope={{ transaction_id: String(tx.id) }} title="Transaction documents" whenEmpty="hide" />
         </div>
       </main>
       <Footer />

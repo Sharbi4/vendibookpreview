@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Loader2, FileText, Download, PenLine, CheckCircle2, Clock, ExternalLink, RefreshCw } from 'lucide-react';
+import { Loader2, FileText, Download, PenLine, CheckCircle2, Clock, ExternalLink, RefreshCw, Eye } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -42,10 +42,16 @@ const ROLE_LABEL: Record<string, string> = {
   party_a: 'First party', party_b: 'Second party', provider: 'Delivering party', recipient: 'Receiving party',
 };
 
-export function DocumentsCard({ scope, title = 'Documents' }: { scope: DocumentScope; title?: string }) {
+export function DocumentsCard({
+  scope,
+  title = 'Documents',
+  /** On a Documents tab the card stays visible and explains the empty state. */
+  whenEmpty = 'show',
+}: { scope: DocumentScope; title?: string; whenEmpty?: 'show' | 'hide' }) {
   const { user } = useAuth();
   const { docs, preparing, notice, reload, refreshAfterSigning } = useTransactionDocuments(scope);
   const [session, setSession] = useState<{ url: string; docId: string } | null>(null);
+  const [preview, setPreview] = useState<{ url: string; label: string } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
 
   const openSigning = async (doc: DocumentRow) => {
@@ -77,14 +83,27 @@ export function DocumentsCard({ scope, title = 'Documents' }: { scope: DocumentS
     }
   };
 
+  /** Read the signed PDF in place. The link is short-lived and never stored. */
+  const openPreview = async (doc: DocumentRow) => {
+    setBusy(doc.id);
+    try {
+      const url = await getSignedPdfUrl(doc.id);
+      setPreview({ url, label: DOC_LABEL[doc.document_type] ?? doc.document_type });
+    } catch (e: any) {
+      toast.error(e?.message ?? 'Could not open the signed PDF');
+    } finally {
+      setBusy(null);
+    }
+  };
+
   if (docs === null) {
     return (
       <Card><CardContent className="p-6 flex items-center gap-2 text-sm text-muted-foreground"><Loader2 className="h-4 w-4 animate-spin" /> Loading documents…</CardContent></Card>
     );
   }
 
-  // Nothing yet and nothing to say about it — stay out of the way.
-  if (!docs.length && !preparing && !notice) return null;
+  // Nothing yet and nothing to say about it — stay out of the way when inline.
+  if (!docs.length && !preparing && !notice && whenEmpty === 'hide') return null;
 
   return (
     <>
@@ -114,8 +133,10 @@ export function DocumentsCard({ scope, title = 'Documents' }: { scope: DocumentS
               <Loader2 className="h-4 w-4 animate-spin" /> Preparing your documents…
             </div>
           )}
-          {!docs.length && !preparing && notice && (
-            <p className="text-sm text-muted-foreground">{notice}</p>
+          {!docs.length && !preparing && (
+            <p className="text-sm text-muted-foreground">
+              {notice ?? 'No documents have been prepared for this transaction yet.'}
+            </p>
           )}
 
           {docs.map((doc) => {
@@ -155,9 +176,14 @@ export function DocumentsCard({ scope, title = 'Documents' }: { scope: DocumentS
                       <span className="self-center text-xs text-muted-foreground">You have signed</span>
                     )}
                     {complete && (
-                      <Button size="sm" variant="outline" onClick={() => downloadSigned(doc)} disabled={busy === doc.id}>
-                        {busy === doc.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Download className="h-4 w-4 mr-1" /> Signed PDF</>}
-                      </Button>
+                      <>
+                        <Button size="sm" variant="outline" onClick={() => openPreview(doc)} disabled={busy === doc.id}>
+                          {busy === doc.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Eye className="h-4 w-4 mr-1" /> Preview</>}
+                        </Button>
+                        <Button size="sm" variant="ghost" onClick={() => downloadSigned(doc)} disabled={busy === doc.id}>
+                          <Download className="h-4 w-4 mr-1" /> Download
+                        </Button>
+                      </>
                     )}
                   </div>
                 </div>
@@ -193,6 +219,33 @@ export function DocumentsCard({ scope, title = 'Documents' }: { scope: DocumentS
               <div className="shrink-0 border-t-[1.5px] p-3 flex items-center justify-between gap-3">
                 <p className="text-xs text-muted-foreground">Trouble loading? Open the session in a new tab.</p>
                 <Button size="sm" variant="outline" onClick={() => window.open(session.url, '_blank', 'noopener,noreferrer')}>
+                  <ExternalLink className="h-4 w-4 mr-1" /> Open in new tab
+                </Button>
+              </div>
+            </>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!preview} onOpenChange={(o) => { if (!o) setPreview(null); }}>
+        <DialogContent className="max-w-4xl w-[calc(100vw-1.5rem)] sm:w-[95vw] h-[90dvh] p-0 gap-0 overflow-hidden flex flex-col">
+          <DialogHeader className="shrink-0 p-4 border-b-[1.5px]">
+            <DialogTitle className="text-base">{preview?.label ?? 'Signed document'}</DialogTitle>
+            <p className="text-xs text-muted-foreground">
+              Signed copy. This preview link is private to you and expires after a few minutes.
+            </p>
+          </DialogHeader>
+          {preview && (
+            <>
+              <div className="flex-1 min-h-0 w-full overflow-hidden bg-muted/30">
+                <iframe
+                  title={`${preview.label} preview`}
+                  src={preview.url}
+                  className="block h-full w-full max-w-full border-0"
+                />
+              </div>
+              <div className="shrink-0 border-t-[1.5px] p-3 flex items-center justify-end">
+                <Button size="sm" variant="outline" onClick={() => window.open(preview.url, '_blank', 'noopener,noreferrer')}>
                   <ExternalLink className="h-4 w-4 mr-1" /> Open in new tab
                 </Button>
               </div>

@@ -9,6 +9,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { triggerOrchestrator } from '@/lib/orchestrator';
@@ -246,7 +247,17 @@ END:VCALENDAR`;
           </div>
         </SheetHeader>
 
-        <div className="mt-6 space-y-6">
+        <Tabs defaultValue="details" className="mt-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="details">Details</TabsTrigger>
+            <TabsTrigger value="documents">Documents</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="documents" className="mt-6 space-y-6">
+            <DocumentsCard scope={{ booking_id: booking.id }} title="Rental documents" />
+          </TabsContent>
+
+          <TabsContent value="details" className="mt-6 space-y-6">
           {/* Customer Section */}
           <div>
             <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
@@ -423,11 +434,9 @@ END:VCALENDAR`;
 
             {/* C. Documents & insurance — only rendered when the host asked for any. */}
             <DocumentsInsurancePanel evaluation={requirementEvaluation} />
-
-            {/* D. Rental agreement */}
-            <DocumentsCard scope={{ booking_id: booking.id }} title="Rental agreement" />
           </div>
-        </div>
+          </TabsContent>
+        </Tabs>
       </SheetContent>
     </Sheet>
   );
