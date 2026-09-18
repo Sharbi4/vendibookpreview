@@ -18,6 +18,7 @@ import { supabase } from '@/integrations/supabase/client';
 import vendibookWordmark from '@/assets/vendibook-wordmark.png';
 import equinoxLogoAsset from '@/assets/equinox-funding-dark.png.asset.json';
 import paypalMonogramAsset from '@/assets/paypal-monogram-color.png.asset.json';
+import paypalBannerAsset from '@/assets/paypal-banner.png.asset.json';
 
 const ROW_LIMIT = 8;
 
