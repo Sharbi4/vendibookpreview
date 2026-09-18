@@ -433,11 +433,9 @@ END:VCALENDAR`;
 
             {/* C. Documents & insurance — only rendered when the host asked for any. */}
             <DocumentsInsurancePanel evaluation={requirementEvaluation} />
-
-            {/* D. Rental agreement */}
-            <DocumentsCard scope={{ booking_id: booking.id }} title="Rental agreement" />
           </div>
-        </div>
+          </TabsContent>
+        </Tabs>
       </SheetContent>
     </Sheet>
   );
