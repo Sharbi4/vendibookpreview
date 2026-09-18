@@ -403,8 +403,9 @@ const ReleaseCondition = ({ complete, icon: Icon, title, detail }: {
   detail: string;
 }) => (
   <div className="flex gap-3">
-    <span className="mt-0.5 text-primary">
+    <span className="relative mt-0.5 text-primary">
       {complete ? <CheckCircle2 className="h-5 w-5" /> : <Circle className="h-5 w-5" />}
+      <Icon className="sr-only" aria-hidden="true" />
     </span>
     <div>
       <p className="text-sm font-medium text-foreground">{title}</p>
