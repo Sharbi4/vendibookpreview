@@ -523,7 +523,7 @@ const SaleCheckout = () => {
     return true;
   };
 
-  // ── FinalReviewSheet interception ───────────────────────────────
+  // ── Inline agreement and final-payment preparation ─────────────
   // handlePurchase now validates + opens the sheet; runPurchase runs
   // the actual sale/checkout after consent + acknowledge-terms land.
   const termsGate = useTermsGate();
