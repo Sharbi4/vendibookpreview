@@ -16,7 +16,6 @@ import { trackPurchase, trackInitiateCheckout } from '@/lib/facebookCAPI';
 import { calculateDistance } from '@/lib/geolocation';
 import { formatCurrency } from '@/lib/commissions';
 import SEO from '@/components/SEO';
-import { PayPalWordmark } from '@/components/brand/ProviderLogos';
 
 import {
   PurchaseStepDelivery,
@@ -902,7 +901,10 @@ const SaleCheckout = () => {
   const railExtras = (
     <div className="v2-rail-extras">
       <div className="v2-rail-paypal">
-        <PayPalWordmark className="h-4 w-auto shrink-0" />
+        <span className="v2-rail-paypal-mark">
+          <span style={{ color: '#009cde' }}>Pay</span>
+          <span style={{ color: '#012169' }}>Pal</span>
+        </span>
         {currentStep === 5 ? (
           <p><strong>You're ready to pay</strong></p>
         ) : (
