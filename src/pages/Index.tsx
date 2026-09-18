@@ -18,6 +18,7 @@ import { supabase } from '@/integrations/supabase/client';
 import vendibookWordmark from '@/assets/vendibook-wordmark.png';
 import equinoxLogoAsset from '@/assets/equinox-funding-dark.png.asset.json';
 import paypalMonogramAsset from '@/assets/paypal-monogram-color.png.asset.json';
+import paypalBannerAsset from '@/assets/paypal-banner.png.asset.json';
 
 const ROW_LIMIT = 8;
 
@@ -117,7 +118,7 @@ const Index = () => {
           <V2HomeHero slides={heroSlides} />
 
           <Link to="/payments" className="v2-home-paypal">
-            <span className="v2-home-paypal-mark"><img src={paypalMonogramAsset.url} alt="PayPal" /></span>
+            <span className="v2-home-paypal-mark"><img src={paypalBannerAsset.url} alt="PayPal" /></span>
             <span className="v2-home-paypal-copy">
               <strong>Connect your business with PayPal.</strong>
               <small>Sellers link PayPal in minutes to accept secure payments right on Vendibook.</small>
