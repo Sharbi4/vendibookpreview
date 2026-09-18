@@ -2,6 +2,7 @@ import { Clock, CalendarDays, Truck, Info } from 'lucide-react';
 import { SaleCard } from '@/components/listing-detail/sale/SaleCard';
 import { RENTAL_RENTER_FEE_PERCENT } from '@/lib/commissions';
 import { deliveryRateLabel } from '@/lib/fulfillment/delivery';
+import PayPalPayLaterMessage from '@/components/payments/PayPalPayLaterMessage';
 
 interface RentalPriceCardProps {
   priceHourly?: number | null;
@@ -13,6 +14,7 @@ interface RentalPriceCardProps {
   deliveryFee?: number | null;
   deliveryFeeType?: string | null;
   instantBook?: boolean;
+  paypalMerchantId?: string | null;
 }
 
 const Row = ({
@@ -47,6 +49,7 @@ export const RentalPriceCard = ({
   deliveryFee,
   deliveryFeeType,
   instantBook,
+  paypalMerchantId,
 }: RentalPriceCardProps) => {
   const hasDelivery = fulfillmentType === 'delivery' || fulfillmentType === 'both';
   const deliveryLabel = hasDelivery ? deliveryRateLabel(deliveryFee, deliveryFeeType as any) : null;
@@ -84,6 +87,12 @@ export const RentalPriceCard = ({
           The host hasn&rsquo;t published rates yet — send a message to ask.
         </p>
       )}
+
+      <PayPalPayLaterMessage
+        amount={priceDaily ?? (hourlyEnabled ? priceHourly : null) ?? priceWeekly ?? priceMonthly}
+        placement="product"
+        merchantId={paypalMerchantId}
+      />
 
       <p className="text-xs text-muted-foreground leading-relaxed">
         Pick your dates in the booking panel to see the exact total. Longer bookings automatically

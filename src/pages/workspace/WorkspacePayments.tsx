@@ -54,6 +54,10 @@ export default function WorkspacePayments() {
               flow. You can create and publish listings before connecting.
             </p>
             <SellerBusinessAccountHelp className="mt-3" compact />
+            <p className="mt-3 text-xs">
+              Pay Later and other funding sources may have different processing rates set and
+              charged by PayPal to you as the seller. See PayPal for current pricing.
+            </p>
             <Link to="/dashboard/payments/setup" className="v2-paypal-cta mt-4 inline-flex w-fit">
               Open payment setup
             </Link>

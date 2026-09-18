@@ -8,6 +8,7 @@ import { authPath } from '@/lib/auth/returnTo';
 import { TRUST_COPY } from '@/lib/transactionVocabulary';
 
 import { PayPalMonogram } from '@/components/brand/ProviderLogos';
+import PayPalPayLaterMessage from '@/components/payments/PayPalPayLaterMessage';
 import PaymentFormSkeleton from './PaymentFormSkeleton';
 import WalletPayButtons from './WalletPayButtons';
 import TrustRow from './TrustRow';
@@ -81,19 +82,13 @@ const PayPalPaymentPanel = ({
 }: PayPalPaymentPanelProps) => {
   const embedded = variant === 'embedded';
   const containerRef = useRef<HTMLDivElement>(null);
-  const buttonsRef = useRef<HTMLDivElement>(null);
-  const messagesRef = useRef<HTMLDivElement>(null);
-  const cardNameRef = useRef<HTMLDivElement>(null);
-  const cardNumberRef = useRef<HTMLDivElement>(null);
-  const cardExpiryRef = useRef<HTMLDivElement>(null);
-  const cardCvvRef = useRef<HTMLDivElement>(null);
-  const cardFieldsRef = useRef<any>(null);
+  const paypalButtonRef = useRef<HTMLDivElement>(null);
+  const venmoButtonRef = useRef<HTMLDivElement>(null);
+  const payLaterButtonRef = useRef<HTMLDivElement>(null);
+  const cardButtonRef = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<PanelState>('loading');
   const [error, setError] = useState<{ title: string; detail: string } | null>(null);
-  /** Card entry (no PayPal account needed) — mounted lazily when opened. */
-  const [cardEligible, setCardEligible] = useState(false);
-  const [cardOpen, setCardOpen] = useState(false);
-  const [cardSubmitting, setCardSubmitting] = useState(false);
+  const [walletsAvailable, setWalletsAvailable] = useState(false);
   /**
    * Set from the server's create-order response. The server alone decides
    * whether this checkout captures now or places a temporary hold.
@@ -227,7 +222,7 @@ const PayPalPaymentPanel = ({
   // a signed-out visitor would open PayPal and then fail after the fact.
   useEffect(() => {
     let cancelled = false;
-    let instance: any = null;
+    const instances: any[] = [];
 
     const fail = (title: string, detail: string) => {
       if (cancelled) return;
@@ -249,77 +244,58 @@ const PayPalPaymentPanel = ({
       .then((paypal) => {
         if (!paypal) return;
 
-        if (cancelled || !buttonsRef.current) return;
+        if (cancelled || !paypalButtonRef.current) return;
 
-        if (paypal.Messages && messagesRef.current && (totalUsd ?? 0) >= 50) {
-          try {
-            paypal
-              .Messages({ amount: totalUsd, placement: 'payment', style: { layout: 'text' } })
-              .render(messagesRef.current);
-          } catch {
-            /* Pay Later messaging is non-critical. */
-          }
-        }
+        const sources = [
+          { source: paypal.FUNDING.PAYPAL, container: paypalButtonRef.current, name: 'PayPal' },
+          { source: paypal.FUNDING.VENMO, container: venmoButtonRef.current, name: 'Venmo' },
+          { source: paypal.FUNDING.PAYLATER, container: payLaterButtonRef.current, name: 'Pay Later' },
+          { source: paypal.FUNDING.CARD, container: cardButtonRef.current, name: 'debit or credit card' },
+        ];
 
-        if (paypal.CardFields) {
-          try {
-            const cf = paypal.CardFields({
-              style: {
-                input: { 'font-size': '16px', color: '#111111' },
-                '.invalid': { color: '#b3261e' },
-              },
-              createOrder: () => handlersRef.current.startOrder(),
-              onApprove: (d: { orderID: string }) => handlersRef.current.finishOrder(d.orderID),
-              onError: () =>
-                handlersRef.current.fail(
-                  'Card payment failed',
-                  'That card could not be charged. No money was taken — check the details or try another card.',
-                ),
+        const renders = sources.map(({ source, container, name }) => {
+          if (!source || !container) return Promise.resolve(false);
+          const instance = paypal.Buttons({
+            fundingSource: source,
+            style: { layout: 'vertical', shape: 'pill', height: 52, tagline: false },
+            appSwitchWhenAvailable: true,
+            createOrder: () => handlersRef.current.startOrder(),
+            onApprove: (data: { orderID: string }) => handlersRef.current.finishOrder(data.orderID),
+            onCancel: () => {
+              setState('ready');
+              setError({
+                title: 'Payment cancelled',
+                detail: `You closed ${name} checkout. Nothing has been charged or confirmed.`,
+              });
+            },
+            onError: () => {
+              fail(
+                `${name} had a problem`,
+                `${name} could not complete this payment right now. No charge was made — please try again or use another option.`,
+              );
+            },
+          });
+          instances.push(instance);
+          if (!instance.isEligible?.()) return Promise.resolve(false);
+          return instance
+            .render(container)
+            .then(() => true)
+            .catch(() => {
+              fail(
+                `${name} could not load`,
+                `${name} is unavailable right now. No charge was made — please try another option.`,
+              );
+              return false;
             });
-            if (cf.isEligible?.()) {
-              cardFieldsRef.current = cf;
-              if (!cancelled) setCardEligible(true);
-            }
-          } catch {
-            /* Card fields are an enhancement; PayPal buttons still work. */
-          }
-        }
-
-        instance = paypal.Buttons({
-          style: { layout: 'vertical', shape: 'rect', height: 48, label: 'pay' },
-
-          // Browser half of App Switch: on mobile the buyer is handed to the
-          // PayPal app and returned here. The server sets
-          // app_switch_preference on the order itself.
-          appSwitchWhenAvailable: true,
-
-          createOrder: () => handlersRef.current.startOrder(),
-
-          onApprove: (data: { orderID: string }) => handlersRef.current.finishOrder(data.orderID),
-
-          onCancel: () => {
-            setState('ready');
-            setError({
-              title: 'Payment cancelled',
-              detail: 'You closed the PayPal window. Nothing has been charged or confirmed.',
-            });
-          },
-
-          onError: () => {
-            fail(
-              'PayPal had a problem',
-              'PayPal could not complete this payment right now. No charge was made — please try again in a moment.',
-            );
-          },
         });
 
-        if (!instance.isEligible?.()) {
-          fail('PayPal unavailable', 'PayPal checkout is not available in this browser.');
-          return;
-        }
-
-        return instance.render(buttonsRef.current).then(() => {
-          if (!cancelled) setState('ready');
+        return Promise.all(renders).then((rendered) => {
+          if (cancelled) return;
+          if (!rendered[0]) {
+            fail('PayPal unavailable', 'PayPal checkout is not available in this browser.');
+            return;
+          }
+          setState('ready');
         });
 
       })
@@ -333,48 +309,13 @@ const PayPalPaymentPanel = ({
     return () => {
       cancelled = true;
       try {
-        instance?.close?.();
+        instances.forEach((instance) => instance?.close?.());
       } catch {
         /* already unmounted */
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-
-  // Render the hosted card inputs only once the payer opens the card option.
-  useEffect(() => {
-    if (!cardOpen || !cardFieldsRef.current) return;
-    const cf = cardFieldsRef.current;
-    if (cf.__mounted) return;
-    cf.__mounted = true;
-    try {
-      cf.NameField().render(cardNameRef.current);
-      cf.NumberField().render(cardNumberRef.current);
-      cf.ExpiryField().render(cardExpiryRef.current);
-      cf.CVVField().render(cardCvvRef.current);
-    } catch {
-      cf.__mounted = false;
-      setCardEligible(false);
-    }
-  }, [cardOpen]);
-
-  const submitCard = async () => {
-    if (!cardFieldsRef.current) return;
-    setCardSubmitting(true);
-    setError(null);
-    try {
-      await cardFieldsRef.current.submit();
-    } catch {
-      fail(
-        'Card details could not be submitted',
-        'Please double-check the card number, expiry and security code, then try again.',
-      );
-    } finally {
-      setCardSubmitting(false);
-    }
-  };
-
-
 
   return (
     <div
@@ -493,78 +434,42 @@ const PayPalPaymentPanel = ({
               ) : (
 
                 <>
-                  {state !== 'processing' ? (
-                    <WalletPayButtons
-                      totalUsd={totalUsd}
-                      startOrder={() => handlersRef.current.startOrder()}
-                      finishOrder={(orderId) => handlersRef.current.finishOrder(orderId)}
-                      onFailure={(title, detail) => handlersRef.current.fail(title, detail)}
-                    />
-                  ) : null}
-
-                  <div ref={messagesRef} />
+                  <PayPalPayLaterMessage
+                    amount={totalUsd}
+                    placement="checkout"
+                    merchantId={merchantId}
+                  />
 
                   {state === 'loading' ? <PaymentFormSkeleton /> : null}
 
-                  <div
-                    ref={buttonsRef}
-                    className={state === 'loading' || state === 'processing' ? 'hidden' : ''}
-                  />
+                  <div className={state === 'loading' || state === 'processing' ? 'hidden' : 'paypal-funding-stack'}>
+                    <div ref={paypalButtonRef} data-funding-source="PayPal" />
+                    <div ref={venmoButtonRef} data-funding-source="Venmo" />
+                    <div ref={payLaterButtonRef} data-funding-source="Pay Later" />
+                    <div ref={cardButtonRef} data-funding-source="Debit or Credit Card" />
+                  </div>
 
-                  {cardEligible && state !== 'loading' && state !== 'processing' ? (
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-3">
-                        <span className="h-px flex-1 bg-border/60" />
-                        <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
-                          or
-                        </span>
-                        <span className="h-px flex-1 bg-border/60" />
-                      </div>
+                  {state !== 'loading' && state !== 'processing' ? (
+                    <p className="paypal-powered-by">
+                      Powered by <PayPalMonogram className="h-3.5" /> PayPal
+                    </p>
+                  ) : null}
 
-                      {!cardOpen ? (
-                        <div className="space-y-3">
-                          <div className="paypal-card-brands" aria-label="Eligible card brands">
-                            <span className="is-visa" aria-label="Visa">VISA</span>
-                            <span className="is-mastercard" aria-label="Mastercard"><i /><i /></span>
-                            <span className="is-amex" aria-label="American Express">AMEX</span>
-                            <span className="is-discover" aria-label="Discover">DISCOVER</span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => setCardOpen(true)}
-                            className="w-full rounded-2xl border border-border/70 bg-background px-4 py-3.5 text-sm font-semibold text-foreground hover:bg-muted/40 transition-colors"
-                          >
-                            Pay with debit or credit card
-                          </button>
+                  {state !== 'processing' ? (
+                    <>
+                      {walletsAvailable ? (
+                        <div className="paypal-alternate-divider" aria-hidden="true">
+                          <span /> <small>or</small> <span />
                         </div>
-                      ) : (
-                        <div className="space-y-3">
-                          <div className="paypal-card-brands" aria-label="Eligible card brands">
-                            <span className="is-visa" aria-label="Visa">VISA</span>
-                            <span className="is-mastercard" aria-label="Mastercard"><i /><i /></span>
-                            <span className="is-amex" aria-label="American Express">AMEX</span>
-                            <span className="is-discover" aria-label="Discover">DISCOVER</span>
-                          </div>
-                          <p className="text-xs text-muted-foreground">
-                            No PayPal account needed. Your card is entered directly with PayPal.
-                          </p>
-                          <div ref={cardNameRef} className="paypal-card-field" />
-                          <div ref={cardNumberRef} className="paypal-card-field" />
-                          <div className="grid grid-cols-2 gap-3">
-                            <div ref={cardExpiryRef} className="paypal-card-field" />
-                            <div ref={cardCvvRef} className="paypal-card-field" />
-                          </div>
-                          <button
-                            type="button"
-                            onClick={submitCard}
-                            disabled={cardSubmitting}
-                            className="w-full rounded-2xl bg-primary px-4 py-3.5 text-sm font-semibold text-primary-foreground shadow-[0_16px_36px_-20px_hsl(var(--primary)/0.8)] disabled:opacity-60 transition-opacity hover:opacity-95"
-                          >
-                            {cardSubmitting ? 'Processing…' : 'Pay with card'}
-                          </button>
-                        </div>
-                      )}
-                    </div>
+                      ) : null}
+                      <WalletPayButtons
+                        totalUsd={totalUsd}
+                        startOrder={() => handlersRef.current.startOrder()}
+                        finishOrder={(orderId) => handlersRef.current.finishOrder(orderId)}
+                        onFailure={(title, detail) => handlersRef.current.fail(title, detail)}
+                        onAvailable={setWalletsAvailable}
+                      />
+                    </>
                   ) : null}
 
 

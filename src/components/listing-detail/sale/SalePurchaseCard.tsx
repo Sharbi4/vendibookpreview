@@ -33,6 +33,7 @@ import { trackFinancingLearnMoreClick, type FinancingSource } from '@/lib/analyt
 import { useFinancingHandoff } from '@/hooks/useFinancingHandoff';
 import { formatCurrency } from '@/lib/commissions';
 import PayPalVerifiedSellerTrust from '@/components/payments/PayPalVerifiedSellerTrust';
+import PayPalPayLaterMessage from '@/components/payments/PayPalPayLaterMessage';
 
 import { SaleCard } from './SaleCard';
 import WalkthroughCta from '@/components/video/WalkthroughCta';
@@ -46,6 +47,7 @@ interface SalePurchaseCardProps {
   isOwner: boolean;
   sellerVerified: boolean;
   paypalBusinessVerified: boolean;
+  paypalMerchantId?: string | null;
   ratingData?: { average: number; count: number } | null;
   /** Distinguishes the mobile and desktop instances so DOM ids stay unique. */
   instanceId?: string;
@@ -90,6 +92,7 @@ export const SalePurchaseCard = ({
   isOwner,
   sellerVerified,
   paypalBusinessVerified,
+  paypalMerchantId,
   ratingData,
   instanceId = 'desktop',
 }: SalePurchaseCardProps) => {
@@ -221,6 +224,12 @@ export const SalePurchaseCard = ({
             <PayPalMonogram className="h-3.5" />
             <span className="font-medium text-foreground">PayPal</span>
           </div>
+          <PayPalPayLaterMessage
+            amount={priceSale}
+            placement="product"
+            merchantId={paypalMerchantId}
+            className="mt-3"
+          />
 
           {/* Primary financing entry point: in the buyer's eyeline, directly
               under the price. No payment amounts, rates, or down payments. */}

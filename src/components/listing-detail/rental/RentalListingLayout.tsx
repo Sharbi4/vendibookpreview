@@ -35,6 +35,7 @@ interface RentalListingLayoutProps {
   isOwner: boolean;
   hostVerified: boolean;
   paypalBusinessVerified: boolean;
+  paypalMerchantId?: string | null;
   ratingData?: { average: number; count: number } | null;
   onShare: () => void;
 }
@@ -65,6 +66,7 @@ export const RentalListingLayout = ({
   isOwner,
   hostVerified,
   paypalBusinessVerified,
+  paypalMerchantId,
   ratingData,
   onShare,
 }: RentalListingLayoutProps) => {
@@ -305,6 +307,7 @@ export const RentalListingLayout = ({
               deliveryFee={listing.delivery_fee}
               deliveryFeeType={listing.delivery_fee_type}
               instantBook={instantBook}
+              paypalMerchantId={paypalMerchantId}
             />
 
             <SaleLocationCard
