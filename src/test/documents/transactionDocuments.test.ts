@@ -96,7 +96,7 @@ describe('template package', () => {
   it('carries an explicit content version for every kind', () => {
     for (const spec of specs) {
       expect(SPEC_VERSIONS[spec.kind]).toBe(spec.version);
-      expect(spec.version).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+      expect(spec.version).toMatch(/^\d{4}-\d{2}-\d{2}(-[A-Z])?$/);
     }
   });
 

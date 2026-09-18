@@ -102,146 +102,228 @@ function header(doc: PdfDoc, fc: FieldCollector, title: string, subtitle: string
 /* A. Purchase & Sale Agreement                                        */
 /* ------------------------------------------------------------------ */
 
+function ph(doc: PdfDoc, fc: FieldCollector, role: string, name: string, label: string) {
+  fc.add(name, role, 'text', doc.summaryField(label), label, false);
+}
+
+/** Signature block for the executed contract documents (Buyer / Seller). */
+function contractSignatureBlock(doc: PdfDoc, fc: FieldCollector, roleA: string, roleB: string) {
+  for (const role of [roleA, roleB]) {
+    const key = role.toLowerCase().replace(/\s+/g, '_');
+    doc.heading(role.toUpperCase());
+    fc.add(`${key}_printed_name`, role, 'text', doc.fieldBox('Printed name', { column: 0 }), `${role} printed name`, true);
+    fc.add(`${key}_business_name`, role, 'text', doc.fieldBox('Business/entity, if applicable', { column: 1 }), `${role} entity`, false);
+    fc.add(`${key}_title`, role, 'text', doc.fieldBox('Authorized representative title, if applicable', { column: 0 }), `${role} title`, false);
+    fc.add(`${key}_signature`, role, 'signature', doc.fieldBox('Signature', { column: 1, height: 34 }), `${role} signature`, true);
+    fc.add(`${key}_signed_date`, role, 'text', doc.fieldBox('Date/time signed', { width: 220 }), `${role} date signed`, true);
+  }
+}
+
 function buildPurchaseSaleAgreement(): { pdf: Uint8Array; fields: SignNowFieldDef[] } {
   const doc = new PdfDoc({ title: 'Purchase & Sale Agreement', version: SPEC_VERSIONS.purchase_sale_agreement });
   const fc = new FieldCollector();
+  const S = 'Seller';
 
-  header(doc, fc, 'Vendibook Purchase & Sale Agreement', 'Prepared from the Vendibook order record. Not attorney-approved; parties should obtain independent advice.', 'Seller', [
-    'Agreement version',
-    'Order reference',
-    'Effective date',
-    'Listing title',
-    'Asset category',
-    'Seller name',
-    'Buyer name',
-    'Purchase price',
-    'Taxes collected',
-    'Delivery or freight charge',
-    'Total transaction amount',
-    'Fulfillment method',
-    'Transaction area',
-  ]);
+  doc.documentTitle(
+    'Vendibook Purchase & Sale Agreement',
+    `Version ${SPEC_VERSIONS.purchase_sale_agreement}. Production-intended draft; requires qualified legal counsel review before final legal reliance.`,
+  );
 
-  doc.heading('1. Parties and definitions');
+  doc.paragraph('This Vendibook Purchase & Sale Agreement ("Agreement") is entered into by the buyer identified in the Transaction Record ("Buyer") and the seller identified in the Transaction Record ("Seller") in connection with the sale of the food truck, food trailer, concession trailer, mobile food unit, equipment package, or other asset identified in the Transaction Record ("Asset").');
+  doc.paragraph('This Agreement is generated through Vendibook LC ("Vendibook"), an online marketplace and transaction-workflow platform. Vendibook provides technology and marketplace services that may include listings, communications, electronic agreements, payment integrations, video walkthrough scheduling, transaction records, delivery-status tools, and other marketplace features. Unless Vendibook expressly agrees otherwise in a separate written agreement for a specific service, Vendibook is not the Buyer, Seller, manufacturer, dealer, broker, lender, insurer, appraiser, mechanic, inspector, title agency, motor carrier, legal representative, fiduciary, or guarantor of either party.');
+  doc.paragraph('This Agreement supplements the Vendibook Terms of Service, Payments Terms, Privacy Policy, Marketplace Rules, the frozen transaction-specific order record, and any written amendment or handoff acknowledgment later signed by the parties. The transaction-specific terms shown in the frozen Transaction Record control over conflicting general marketplace language to the extent permitted by applicable law.');
+
+  doc.heading('1. DEFINITIONS');
+  doc.paragraph('For purposes of this Agreement:');
   doc.bullets([
-    '"Seller" is the party offering the Asset for sale through the Vendibook listing identified above.',
-    '"Buyer" is the party purchasing the Asset through the Vendibook order identified above.',
-    '"Asset" is the equipment, vehicle, trailer, or other property described in Section 2 and in the listing snapshot attached to the order.',
-    '"Listing" is the Vendibook listing as it existed when the order was created.',
-    '"Transaction Record" is the frozen order record stored by Vendibook, including agreed price, fees, taxes, fulfillment selection, and accepted offer where one applies.',
-    '"Handoff" is the pickup, delivery, or freight release event through which possession of the Asset passes to Buyer.',
+    '"Asset" means the food truck, trailer, mobile unit, equipment, or other property identified in the Transaction Record.',
+    '"Buyer" means the person or legal entity identified as the buyer in the Transaction Record.',
+    '"Seller" means the person or legal entity identified as the seller in the Transaction Record.',
+    '"Listing Snapshot" means the stored version of the listing information associated with this transaction, including the description, photos, equipment information, condition disclosures, price information, and other listing content preserved by Vendibook for the transaction.',
+    '"Transaction Record" means the stored Vendibook record associated with this purchase, which may include the Listing Snapshot, accepted offer or agreed price, fees, taxes if any, fulfillment method, payment information, messages, agreements, amendments, delivery or pickup events, condition documentation, and transaction-status history.',
+    '"Handoff" means the physical transfer of possession of the Asset from Seller to Buyer, whether through pickup, seller delivery, freight delivery, or another agreed method.',
+    '"Written Transaction Term" means a transaction-specific term preserved in the Vendibook order record, signed agreement, signed amendment, or other written record expressly accepted by both parties.',
   ]);
 
-  doc.heading('2. Asset description');
-  doc.paragraph('The following details come from the listing and transaction record. Fields left blank were not provided and are not represented by either party or by Vendibook.');
-  for (const label of ['Year', 'Make', 'Model', 'Identifying number (VIN or serial), if recorded', 'Dimensions, if recorded', 'Mileage or hours, if recorded']) {
-    const name = 'asset_' + label.toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_|_$/g, '');
-    fc.add(name, 'Seller', 'text', doc.summaryField(label), label, false);
-  }
-  fc.add('asset_included_equipment', 'Seller', 'text', doc.blockField('Included equipment and add-ons recorded for this transaction', 64), 'Included equipment', false);
+  doc.heading('2. ASSET AND TRANSACTION IDENTIFICATION');
+  doc.paragraph('The Asset and transaction are identified by the following transaction-specific information, prefilled from the frozen Transaction Record when available:');
+  ph(doc, fc, S, 'transaction_reference', 'Transaction reference');
+  ph(doc, fc, S, 'listing_title', 'Listing title');
+  ph(doc, fc, S, 'asset_category', 'Asset category');
+  ph(doc, fc, S, 'asset_year', 'Year');
+  ph(doc, fc, S, 'asset_make', 'Make');
+  ph(doc, fc, S, 'asset_model', 'Model');
+  ph(doc, fc, S, 'asset_identifier', 'VIN / serial / identifying number, if captured');
+  ph(doc, fc, S, 'asset_mileage', 'Mileage or odometer, if captured');
+  ph(doc, fc, S, 'seller_name', 'Seller');
+  ph(doc, fc, S, 'buyer_name', 'Buyer');
+  ph(doc, fc, S, 'seller_business_name', 'Seller business/entity, if applicable');
+  ph(doc, fc, S, 'buyer_business_name', 'Buyer business/entity, if applicable');
+  ph(doc, fc, S, 'listing_city_state', 'Listing city/state');
+  ph(doc, fc, S, 'fulfillment_method', 'Fulfillment method');
+  ph(doc, fc, S, 'asset_price', 'Agreed asset price');
+  ph(doc, fc, S, 'selected_addons', 'Selected add-ons, if any');
+  ph(doc, fc, S, 'delivery_or_freight_amount', 'Delivery or freight charge included, if any');
+  ph(doc, fc, S, 'tax_amount', 'Taxes collected through the transaction, if any');
+  ph(doc, fc, S, 'other_charges', 'Other disclosed transaction charges, if any');
+  ph(doc, fc, S, 'transaction_total', 'Total transaction amount');
+  doc.paragraph('A field that is not applicable or was not captured is omitted or identified as "Not provided" rather than populated with estimated or invented information.');
 
-  doc.heading('3. Purchase price and transaction terms');
-  doc.paragraph('The amounts below are taken from the frozen transaction record at the time this document was generated. Where Buyer and Seller agreed a negotiated offer, the accepted offer amount is the agreed asset price.');
-  fc.add('price_breakdown', 'Seller', 'text', doc.blockField('Agreed price, accepted offer, add-ons, delivery or freight, tax, and total', 78), 'Price breakdown', false);
-  doc.paragraph('Where payment is processed online, PayPal processes the payment. PayPal is a payment processor. PayPal is not an escrow agent for this transaction, and this agreement does not create an escrow arrangement.');
-  fc.add('financing_note', 'Seller', 'text', doc.summaryField('Financing provider, if Buyer applied through one'), 'Financing', false);
+  doc.heading('3. AGREEMENT TO BUY AND SELL');
+  doc.paragraph('Subject to the terms of this Agreement, Seller agrees to sell and transfer the Asset to Buyer, and Buyer agrees to purchase the Asset from Seller, for the price and on the terms reflected in the Transaction Record.');
+  doc.paragraph('The parties acknowledge that the transaction may involve separate legal or administrative steps outside Vendibook, including title reassignment, registration, lien-release documentation, governmental forms, permit transfers, tax filings, notarization, or other state or local requirements. This Agreement documents the commercial transaction between Buyer and Seller but does not replace any government-issued title certificate, registration document, lien release, notarized form, agency filing, or other document required by applicable law.');
 
-  doc.heading('4. Seller representations');
-  doc.paragraph('Seller represents, to the best of Seller\u2019s knowledge and subject to applicable law, that:');
+  doc.heading('4. PURCHASE PRICE AND PAYMENT TERMS');
+  doc.paragraph('The agreed purchase price and transaction total are the amounts shown in the frozen Transaction Record.');
+  doc.paragraph('Where online payment is offered, payment may be processed through PayPal. Buyer authorizes the payment amount presented in final checkout and acknowledges that PayPal controls the payment credentials, eligible funding methods, authorization process, Pay Later eligibility, and other PayPal-specific payment terms.');
+  doc.paragraph('Vendibook does not store Buyer\u2019s full payment-card number.');
+  doc.paragraph('PayPal Purchase Protection applies only to eligible transactions. PayPal\u2019s current U.S. terms exclude vehicles. Buyer should review PayPal\u2019s current terms before purchasing a food truck, motor vehicle, or trailer that may fall within PayPal\u2019s vehicle exclusions.');
+  doc.paragraph('If Buyer uses third-party financing, financing is provided by the third-party financing provider under that provider\u2019s own underwriting, approval, rates, fees, repayment terms, security-interest requirements, and other conditions. Vendibook is not a lender and does not determine financing approval, interest rates, repayment terms, or lender requirements. Financing approval does not constitute a mechanical inspection, title verification, valuation, appraisal, or endorsement of the Asset.');
+  ph(doc, fc, S, 'payment_and_financing_notes', 'Payment and financing details recorded for this transaction');
+
+  doc.heading('5. SELLER REPRESENTATIONS');
+  doc.paragraph('Seller represents to Buyer, to the best of Seller\u2019s knowledge and subject to applicable law, that:');
   doc.bullets([
-    'Seller has the authority to sell and transfer the Asset.',
-    'The listing information is materially accurate and is not intentionally misleading.',
-    'Material defects or damage known to Seller have been disclosed in the listing, in messages, or in the disclosure field below.',
-    'Material liens or encumbrances known to Seller that would prevent lawful transfer have been disclosed.',
-    'The Asset is not, to Seller\u2019s knowledge, stolen, counterfeit, or otherwise prohibited property.',
-    'Seller will provide the transfer documents Seller is legally obligated to provide or has agreed in the transaction record to provide.',
+    '(a) Seller has the legal authority to offer the Asset for sale and enter into this Agreement;',
+    '(b) Seller has not knowingly provided materially false or intentionally misleading information in the Listing Snapshot or transaction communications;',
+    '(c) Seller has disclosed known material defects, damage, operational limitations, or other material condition issues that Seller knows would be important to a reasonable buyer\u2019s decision, to the extent such disclosure is required by law or promised in the Listing Snapshot;',
+    '(d) Seller has disclosed any known material lien, security interest, ownership dispute, or other encumbrance that Seller knows would prevent or materially interfere with lawful transfer of the Asset;',
+    '(e) Seller is not knowingly selling stolen, counterfeit, unlawfully possessed, or prohibited property;',
+    '(f) Seller will provide the ownership, transfer, keys, manuals, lien-release, bill-of-sale, title, registration, or other documents that Seller expressly agreed to provide in the Transaction Record or that Seller is legally required to provide; and',
+    '(g) any express written warranty offered by Seller is limited to the exact warranty language preserved in the Transaction Record or a signed amendment.',
   ]);
-  doc.paragraph('Vendibook does not independently verify these representations.');
-  fc.add('seller_disclosures', 'Seller', 'text', doc.blockField('Seller disclosures for this transaction', 64), 'Seller disclosures', false);
+  doc.paragraph('Vendibook does not independently verify Seller\u2019s ownership, authority, representations, lien status, title status, condition disclosures, or warranty statements merely because the Asset is listed on Vendibook or because Seller has a profile, payment connection, badge, or other marketplace status.');
+  fc.add('seller_disclosures', S, 'text', doc.blockField('Seller disclosures recorded for this transaction', 64), 'Seller disclosures', false);
 
-  doc.heading('5. Buyer due diligence');
-  doc.paragraph('Buyer acknowledges having had the opportunity to:');
+  doc.heading('6. BUYER DUE DILIGENCE');
+  doc.paragraph('Buyer acknowledges that purchasing a food truck, trailer, mobile kitchen, concession unit, or related equipment may involve substantial financial, mechanical, title, regulatory, and operational considerations.');
+  doc.paragraph('Before completing the Handoff, Buyer should use reasonable diligence appropriate to the Asset and the purchase price. Depending on the Asset, that diligence may include:');
   doc.bullets([
-    'review the listing, photos, and specifications;',
-    'ask Seller questions through Vendibook messages;',
-    'schedule an optional live video walkthrough where the Seller offers one;',
-    'obtain an independent mechanical or professional inspection at Buyer\u2019s expense;',
-    'inspect identifying numbers and ownership or title documentation where applicable;',
-    'research permit, licensing, and registration requirements for Buyer\u2019s intended use.',
+    '(a) reviewing the Listing Snapshot and transaction-specific disclosures;',
+    '(b) asking Seller material questions through Vendibook Messages;',
+    '(c) requesting photographs, service records, ownership documents, title information, VIN or serial-number information, or other relevant documentation;',
+    '(d) scheduling an optional live video walkthrough where available;',
+    '(e) asking Seller to demonstrate equipment or systems when practical and safe;',
+    '(f) arranging an independent inspection by a qualified mechanic, mobile-food-equipment professional, trailer inspector, electrician, plumber, fire-suppression professional, or other qualified professional where appropriate;',
+    '(g) independently reviewing title, VIN, serial number, lien-release, ownership, or registration information where applicable;',
+    '(h) investigating local health, fire, zoning, commissary, business-license, vehicle-registration, food-safety, or other regulatory requirements applicable to Buyer\u2019s intended use; and',
+    '(i) obtaining legal, tax, title, mechanical, or regulatory advice where appropriate.',
   ]);
-  doc.paragraph('A Vendibook video walkthrough, a profile badge, a connected PayPal account, or a Vendibook listing review is not a professional inspection, appraisal, title opinion, or guarantee of condition or ownership.');
+  doc.paragraph('Buyer understands that a Vendibook video walkthrough, listing review, seller profile, payment connection, identity-related signal, marketplace badge, transaction record, or other Vendibook feature is not a substitute for Buyer\u2019s own due diligence and does not constitute a professional inspection, mechanical certification, appraisal, title opinion, legal opinion, or guarantee.');
 
-  doc.heading('6. Condition and warranties');
-  doc.paragraph('Condition is established by the listing snapshot, any written disclosures in the transaction record, and the handoff record created by the parties. The clause below reflects what the parties actually selected in this transaction. Where a written warranty was offered by Seller, its actual terms appear below. Rights that cannot be waived under applicable law are not waived by this document.');
-  fc.add('condition_clause', 'Seller', 'text', doc.blockField('Condition and warranty terms for this transaction', 78), 'Condition clause', false);
+  doc.heading('7. CONDITION OF ASSET; WARRANTIES');
+  doc.paragraph('The parties agree that the condition of the Asset is reflected by the Listing Snapshot, written Seller disclosures, transaction communications, any independent inspection obtained by Buyer, and any handoff or condition record created for the transaction.');
+  doc.paragraph('If Seller has expressly stated in the Transaction Record that the Asset is sold "as is," that term applies only to the extent permitted by law and only as reflected in the frozen transaction documents.');
+  doc.paragraph('If Seller has expressly provided a written warranty, the warranty applies only according to its written terms.');
+  doc.paragraph('Vendibook does not provide a warranty regarding the Asset and does not guarantee that the Asset is merchantable, fit for a particular purpose, mechanically sound, code-compliant, roadworthy, towable, financeable, insurable, licensable, or suitable for Buyer\u2019s intended business.');
+  doc.paragraph('Nothing in this Agreement is intended to waive a right or remedy that applicable law does not permit the parties to waive.');
+  fc.add('condition_clause', S, 'text', doc.blockField('Condition and warranty terms recorded for this transaction', 70), 'Condition clause', false);
 
-  doc.heading('7. Title, ownership, and liens');
-  fc.add('title_status', 'Seller', 'text', doc.summaryField('Recorded title or ownership status, if stored'), 'Title status', false);
+  doc.heading('8. TITLE, OWNERSHIP, LIENS, AND TRANSFER DOCUMENTS');
+  doc.paragraph('Where the Asset is a titled vehicle, trailer, or other titled property, Seller remains responsible for providing the title or transfer documentation Seller is legally required or has agreed to provide.');
+  doc.paragraph('Buyer remains responsible for completing registration, title-transfer, tax, inspection, licensing, or agency filing requirements assigned to Buyer by applicable law.');
+  doc.paragraph('If a lien or security interest exists, the parties must follow the applicable payoff, release, or transfer process required by the lienholder and applicable law.');
+  doc.paragraph('Vendibook is not a title company, lien-search provider, DMV, registration agency, legal advisor, or governmental authority. Vendibook does not guarantee that title is valid, marketable, free of liens, or transferable.');
+  doc.paragraph('A signed Vendibook Purchase & Sale Agreement or Handoff Acknowledgment does not by itself constitute a state-issued certificate of title, lien release, registration, notarized title assignment, or governmental transfer filing.');
+  ph(doc, fc, S, 'title_status', 'Recorded title or ownership status, if captured');
+
+  doc.heading('9. INCLUDED EQUIPMENT AND EXCLUDED PROPERTY');
+  doc.paragraph('The Asset includes only the equipment, fixtures, accessories, documents, keys, parts, and other property identified as included in the Listing Snapshot, Transaction Record, or a signed amendment.');
+  fc.add('included_equipment', S, 'text', doc.blockField('Included equipment, if captured', 64), 'Included equipment', false);
+  fc.add('excluded_property', S, 'text', doc.blockField('Excluded property, if captured', 48), 'Excluded property', false);
+  doc.paragraph('If the parties agree after checkout to add or remove material equipment or other property, the change should be documented in a signed Transaction Amendment rather than relying solely on an informal verbal understanding.');
+
+  doc.heading('10. FULFILLMENT AND HANDOFF');
+  doc.paragraph('The selected fulfillment method for this transaction is recorded in the transaction summary above and detailed below.');
+  fc.add('fulfillment_details', S, 'text', doc.blockField('Fulfillment details recorded for this transaction', 70), 'Fulfillment details', false);
+  doc.heading('10.1 Pickup');
+  doc.paragraph('If the transaction uses pickup, Buyer and Seller will coordinate the pickup date, time, and exact Handoff location through Vendibook or another written transaction record. Buyer should inspect the Asset at or before Handoff when reasonably possible.');
+  doc.heading('10.2 Seller Delivery');
+  doc.paragraph('If Seller or an assigned delivery person delivers the Asset, Buyer must provide an accurate delivery address and reasonable access instructions.');
+  doc.paragraph('If Vendibook live location tracking is available for the transaction, the Buyer may see location updates only after the authorized seller or delivery person starts Delivery Mode and grants the required device location permission. GPS information is informational and does not by itself prove legal delivery, legal acceptance, title transfer, condition, or authorization for money movement.');
+  doc.heading('10.3 Freight');
+  doc.paragraph('If freight is used, freight terms depend on the actual transaction record, carrier arrangement, and any separate carrier or freight-provider agreement.');
+  doc.paragraph('Vendibook does not become the motor carrier merely because freight options, freight coordination, quotes, records, or tracking information appear in the platform, unless Vendibook expressly agrees otherwise in a separate written contract.');
+  doc.paragraph('Carrier pickup, transport, tracking, liability, claims, delivery windows, and other freight terms may be governed by the carrier\u2019s own terms.');
+  doc.paragraph('The transaction record indicates whether a freight amount is included in this purchase or is separately payable. No freight cost, carrier, delivery date, route, or ETA should be assumed unless actually recorded.');
+
+  doc.heading('11. INSPECTION AT HANDOFF');
+  doc.paragraph('Buyer should inspect the Asset at Handoff to the extent reasonably practical.');
+  doc.paragraph('Buyer should compare the Asset to the Listing Snapshot and agreed included equipment, and should review any documents, keys, identifying numbers, or other transaction items that are part of the Handoff.');
+  doc.paragraph('If Buyer discovers a material discrepancy, damage, missing item, or other issue, Buyer should document the issue promptly with photographs, video where appropriate, and written messages in the transaction record before marking the Handoff complete.');
+  doc.paragraph('A Handoff acknowledgment or in-app delivery status is evidence of transaction events but does not automatically waive a party\u2019s non-waivable rights or independently determine the legal outcome of a later dispute.');
+
+  doc.heading('12. RISK OF LOSS AND LEGAL TITLE');
+  doc.paragraph('The time at which risk of loss or legal title transfers may depend on applicable law, the type of Asset, delivery method, title documentation, carrier terms, and written transaction terms.');
+  doc.paragraph('This Agreement does not attempt to override a mandatory legal rule governing risk of loss, certificate-of-title transfer, secured liens, or registration.');
+  doc.paragraph('The parties should obtain legal advice if they require certainty regarding the precise legal moment of title or risk-of-loss transfer.');
+
+  doc.heading('13. CANCELLATION, REFUNDS, PAYMENT DISPUTES, AND CHARGEBACKS');
+  doc.paragraph('Cancellation and refund rights depend on the transaction status, the frozen transaction-specific cancellation terms, the Vendibook Payments Terms, the payment provider\u2019s rules, signed amendments if any, and applicable law.');
+  doc.paragraph('A request to cancel does not automatically entitle either party to a refund.');
+  doc.paragraph('A refund, if authorized, must be processed through the applicable authorized payment workflow.');
+  doc.paragraph('PayPal claims, disputes, funding-source disputes, and chargebacks are governed by PayPal and, where applicable, the buyer\u2019s bank or card issuer.');
+  doc.paragraph('The existence of a Vendibook support case does not extend an external payment-provider deadline unless the payment provider itself provides otherwise.');
+  doc.paragraph('The parties should not attempt to pursue duplicative remedies where the applicable payment-provider rules prohibit doing so.');
+  fc.add('cancellation_terms', S, 'text', doc.blockField('Cancellation terms frozen with this transaction', 56), 'Cancellation terms', false);
+
+  doc.heading('14. TAXES, REGISTRATION, LICENSES, AND REGULATORY COMPLIANCE');
+  doc.paragraph('Buyer and Seller are responsible for taxes, registration, title fees, permit requirements, inspections, licenses, health requirements, fire requirements, zoning obligations, food-safety rules, commissary requirements, and other legal or regulatory obligations allocated to them by applicable law or expressly allocated in the Transaction Record.');
+  doc.paragraph('Vendibook may provide general marketplace information but does not provide legal, tax, title, permitting, or regulatory advice.');
+
+  doc.heading('15. ELECTRONIC RECORDS AND ELECTRONIC SIGNATURES');
+  doc.paragraph('Buyer and Seller consent to use electronic records and electronic signatures for this transaction.');
+  doc.paragraph('The parties intend an electronic signature executed through Vendibook\u2019s SignNow integration to have the same legal effect as a handwritten signature to the extent permitted by applicable law.');
+  doc.paragraph('Each party may access or request a copy of the completed signed document.');
+  doc.paragraph('The parties understand that additional paper or electronic documents may still be required by a government agency, lienholder, title office, lender, insurer, carrier, or other third party.');
+
+  doc.heading('16. COMMUNICATIONS AND TRANSACTION RECORDS');
+  doc.paragraph('The parties should keep material transaction communications, agreed changes, disclosures, pickup or delivery details, and material condition issues in Vendibook Messages or another written record linked to the transaction.');
+  doc.paragraph('Vendibook may retain transaction records, agreement versions, acceptance records, payment metadata, communication records, support records, fulfillment events, and signed documents as reasonably necessary to operate the marketplace, maintain accounting and legal records, address fraud and security, resolve disputes, and comply with applicable obligations, consistent with the Vendibook Privacy Policy.');
+
+  doc.heading('17. PRIVACY AND DEVICE PERMISSIONS');
+  doc.paragraph('The Vendibook Privacy Policy and Checkout Privacy & Electronic Consent describe how transaction data is handled.');
+  doc.paragraph('Camera and microphone access may be requested when a user chooses to participate in a video walkthrough.');
+  doc.paragraph('A video walkthrough is not recorded by default. If Vendibook later offers call recording, separate disclosure and consent must be obtained before recording begins.');
+  doc.paragraph('Device location may be requested for features that genuinely require location, such as active delivery tracking. Location sharing does not begin merely because a user enters checkout.');
+  doc.paragraph('Marketing email or promotional SMS consent is separate from this Agreement.');
+
+  doc.heading('18. PLATFORM ROLE AND LIMITATIONS');
+  doc.paragraph('Vendibook provides marketplace and transaction-workflow technology.');
+  doc.paragraph('Vendibook is not the owner, seller, dealer, manufacturer, lender, insurer, appraiser, inspector, title agency, freight carrier, or legal advisor for this transaction unless a specific Vendibook service is separately and expressly documented.');
+  doc.paragraph('Vendibook does not independently guarantee or warrant:');
   doc.bullets([
-    'Seller will provide the ownership transfer documentation Seller is legally obligated or has agreed to provide.',
-    'Buyer is responsible for completing any government registration or titling steps that apply to Buyer.',
-    'Vendibook is not a title company, department of motor vehicles, or legal advisor.',
-    'A signed Vendibook agreement does not replace a state title certificate, lien release, notarized form, or government filing where one is separately required.',
+    '(a) the identity, honesty, financial condition, authority, or performance of Buyer or Seller;',
+    '(b) the accuracy or completeness of a listing;',
+    '(c) ownership or title;',
+    '(d) absence of liens;',
+    '(e) mechanical, structural, electrical, plumbing, fire-safety, food-safety, or regulatory condition;',
+    '(f) the Asset\u2019s value;',
+    '(g) suitability for Buyer\u2019s intended use;',
+    '(h) financing approval;',
+    '(i) insurance eligibility;',
+    '(j) delivery or freight performance; or',
+    '(k) the outcome of a dispute.',
   ]);
+  doc.paragraph('The general limitations of liability, indemnity provisions, and other platform provisions in the Vendibook Terms of Service remain applicable to the extent enforceable.');
+  doc.paragraph('Nothing in this Agreement limits a legal right that applicable law does not permit to be limited.');
 
-  doc.heading('8. Payment');
-  doc.bullets([
-    'Eligible online payments are processed by PayPal under PayPal\u2019s own terms.',
-    'PayPal controls the payment credentials and the funding sources shown at checkout.',
-    'Vendibook does not store full card numbers.',
-    'Payment disputes and chargebacks raised with PayPal are handled under PayPal\u2019s rules.',
-    'PayPal Purchase Protection applies only to eligible transactions. PayPal\u2019s current U.S. terms exclude vehicles. Buyers should review PayPal\u2019s current terms before purchasing a food truck or trailer.',
-  ]);
+  doc.heading('19. AMENDMENTS');
+  doc.paragraph('A material change to the agreed purchase price, included Asset, included equipment, Seller warranty, fulfillment obligation, or another material transaction term after this Agreement is signed should be documented in a separate written Transaction Amendment signed by both Buyer and Seller.');
+  doc.paragraph('A later Transaction Amendment changes only the terms expressly identified in the amendment. All other terms of this Agreement remain in effect unless the amendment expressly states otherwise.');
 
-  doc.heading('9. Financing');
-  doc.bullets([
-    'Any financing is provided by a third-party provider, not by Vendibook.',
-    'Approval, rates, fees, and terms are controlled by that provider.',
-    'A financing approval is not a verification of the Asset\u2019s condition, ownership, title, or value.',
-  ]);
+  doc.heading('20. ENTIRE TRANSACTION RECORD');
+  doc.paragraph('This Agreement, together with the frozen Transaction Record, incorporated Vendibook terms, written Seller warranty if any, and any later signed Transaction Amendment or Handoff Acknowledgment, represents the written marketplace transaction record between Buyer and Seller concerning the subject matter reflected in those records.');
+  doc.paragraph('This clause does not prevent a party from relying on a legal right or obligation that cannot lawfully be excluded.');
 
-  doc.heading('10. Fulfillment and handoff');
-  doc.paragraph('The fulfillment terms actually selected for this order appear below.');
-  fc.add('fulfillment_details', 'Seller', 'text', doc.blockField('Fulfillment details for this order', 78), 'Fulfillment details', false);
-  doc.bullets([
-    'For pickup, the parties coordinate the exact handoff location and timing through Vendibook, and Buyer should inspect the Asset at handoff.',
-    'For seller delivery, live location may be available only while Delivery Mode is active and permitted by the driver. Location data does not by itself prove legal acceptance or transfer of ownership.',
-    'For freight, any carrier arrangement is described in the transaction record and the carrier\u2019s own terms may apply. Vendibook is not the carrier unless a specific Vendibook freight service is expressly documented for this order.',
-  ]);
+  doc.heading('21. SUPPORT');
+  doc.paragraph('Vendibook support may be contacted at support@vendibook.com.');
+  doc.paragraph('Support can assist with platform records and marketplace workflows but cannot provide legal advice, mechanical inspection services, title opinions, or tax advice.');
 
-  doc.heading('11. Inspection and handoff record');
-  doc.bullets([
-    'Buyer should inspect the Asset at handoff where reasonably possible.',
-    'Material discrepancies should be documented promptly, in writing, through Vendibook.',
-    'Photos, messages, and condition records may be used as transaction evidence.',
-    'Signing a handoff acknowledgment does not waive rights that cannot be waived under applicable law.',
-  ]);
-
-  doc.heading('12. Cancellation, refunds, and disputes');
-  doc.paragraph('Cancellation and refund handling follows the policy frozen with this order and the Vendibook Payments Terms. This agreement does not promise an automatic refund. Disputes or chargebacks raised with PayPal are decided by PayPal under PayPal\u2019s rules.');
-
-  doc.heading('13. Taxes, registration, permits, and compliance');
-  doc.paragraph('Taxes, registration obligations, permits, and operating compliance are allocated according to applicable law and the actual terms of this transaction. Vendibook does not provide tax, legal, or regulatory advice.');
-
-  doc.heading('14. Electronic records and signatures');
-  doc.bullets(ESIGN);
-
-  doc.heading('15. Communications and records');
-  doc.paragraph('The parties should keep material messages and changes inside Vendibook. Transaction records may be retained for operations, dispute handling, fraud prevention, and legal or accounting requirements.');
-
-  doc.heading('16. Platform role and limitations');
-  doc.bullets(PLATFORM_ROLE);
-
-  doc.heading('17. Incorporated documents');
-  doc.bullets([
-    'The frozen order and transaction record for this purchase.',
-    'The Vendibook Terms of Service, Payments Terms, Privacy Policy, and Marketplace Rules in effect for this order.',
-    'Any signed Vendibook transaction amendment for this order.',
-    'Any signed handoff or condition acknowledgment for this order.',
-  ]);
-
-  doc.heading('18. Signatures');
-  signatureBlock(doc, fc, 'Buyer', 'Seller');
+  doc.heading('22. ACKNOWLEDGMENT AND SIGNATURES');
+  doc.paragraph('By signing below, Buyer and Seller acknowledge that they have had the opportunity to review this Agreement and the transaction-specific information incorporated into it.');
+  contractSignatureBlock(doc, fc, 'Buyer', 'Seller');
+  doc.paragraph('END OF VENDIBOOK PURCHASE & SALE AGREEMENT');
 
   return { pdf: doc.build(), fields: fc.fields };
 }
@@ -392,41 +474,139 @@ function buildRentalAgreement(): { pdf: Uint8Array; fields: SignNowFieldDef[] } 
 function buildSaleHandoff(): { pdf: Uint8Array; fields: SignNowFieldDef[] } {
   const doc = new PdfDoc({ title: 'Sale Handoff & Condition Acknowledgment', version: SPEC_VERSIONS.sale_handoff_condition_acknowledgment });
   const fc = new FieldCollector();
+  const S = 'Seller';
+  const B = 'Buyer';
 
-  header(doc, fc, 'Sale Handoff & Condition Acknowledgment', 'Signed by Buyer and Seller at or near handoff. Not attorney-approved.', 'Seller', [
-    'Order reference',
-    'Listing title',
-    'Buyer name',
-    'Seller name',
-    'Handoff date and time',
-    'Fulfillment type',
-    'Handoff location',
-    'Identifying number (VIN or serial), if recorded',
-    'Odometer or hours at handoff, if applicable',
-  ]);
+  doc.documentTitle(
+    'Sale Handoff & Condition Acknowledgment',
+    `Version ${SPEC_VERSIONS.sale_handoff_condition_acknowledgment}. Production-intended draft; requires qualified legal counsel review before final legal reliance.`,
+  );
 
-  doc.heading('1. Items transferred');
-  fc.add('keys_and_documents', 'Seller', 'text', doc.blockField('Keys, remotes, manuals, and documents transferred', 56), 'Keys and documents', false);
-  fc.add('title_documents', 'Seller', 'text', doc.blockField('Ownership or title documents presented or transferred', 56), 'Title documents', false);
-  fc.add('included_equipment', 'Seller', 'text', doc.blockField('Included equipment checklist from the order record', 64), 'Included equipment', false);
+  doc.paragraph('This Sale Handoff & Condition Acknowledgment ("Handoff Acknowledgment") documents the physical Handoff of the Asset identified below between the Buyer and Seller.');
+  doc.paragraph('This document supplements, but does not replace, the Vendibook Purchase & Sale Agreement, any applicable title or registration documents, lien-release documents, governmental forms, carrier records, or other legally required transfer documentation.');
 
-  doc.heading('2. Condition review');
-  doc.paragraph('This is a record of what the parties observed at handoff. It is not a professional mechanical, structural, or safety inspection, and it is not an appraisal or a title opinion.');
-  fc.add('buyer_discrepancies', 'Buyer', 'text', doc.blockField('Discrepancies or concerns reported by Buyer', 70), 'Buyer discrepancies', false);
-  fc.add('seller_comments', 'Seller', 'text', doc.blockField('Seller comments', 56), 'Seller comments', false);
-  fc.add('photo_references', 'Seller', 'text', doc.blockField('Photo or condition-record references', 44), 'Photo references', false);
+  ph(doc, fc, S, 'transaction_reference', 'Transaction reference');
+  ph(doc, fc, S, 'listing_title', 'Asset');
+  ph(doc, fc, S, 'buyer_name', 'Buyer');
+  ph(doc, fc, S, 'seller_name', 'Seller');
+  ph(doc, fc, S, 'handoff_datetime', 'Handoff date/time');
+  ph(doc, fc, S, 'fulfillment_method', 'Fulfillment method');
+  ph(doc, fc, S, 'handoff_location', 'Handoff location/area');
+  ph(doc, fc, S, 'asset_identifier', 'VIN / serial / identifying number, if captured');
+  ph(doc, fc, S, 'handoff_mileage', 'Odometer/mileage at Handoff, if applicable and captured');
 
-  doc.heading('3. Acknowledgments');
+  doc.heading('1. PURPOSE OF THIS ACKNOWLEDGMENT');
+  doc.paragraph('The purpose of this Handoff Acknowledgment is to create a written record of:');
   doc.bullets([
-    'The parties met, or the delivery described above occurred.',
-    'The Asset was reviewed to the extent indicated in this document.',
-    'Any discrepancies listed above remain part of the transaction record.',
-    'This acknowledgment does not by itself transfer legal title or ownership registration.',
-    'This acknowledgment does not waive rights that cannot be waived under applicable law.',
-    'Status updates or location data alone are not a substitute for this signed record.',
+    '(a) the physical Handoff event;',
+    '(b) the condition observations documented at Handoff;',
+    '(c) the keys, records, equipment, and documents exchanged;',
+    '(d) any discrepancy, damage, missing item, or unresolved issue identified by either party; and',
+    '(e) any follow-up item the parties agree to complete after Handoff.',
+  ]);
+  doc.paragraph('This is a transaction record. It is not a professional mechanical inspection, title opinion, appraisal, governmental transfer form, or warranty.');
+
+  doc.heading('2. ASSET IDENTITY CONFIRMATION');
+  doc.paragraph('The parties should compare identifying information available at Handoff with the Transaction Record.');
+  ph(doc, fc, S, 'asset_title_description', 'Asset title/description');
+  ph(doc, fc, S, 'asset_year_make_model', 'Year/make/model, if applicable');
+  ph(doc, fc, S, 'asset_identifier_confirm', 'VIN/serial/identifier, if applicable');
+  doc.paragraph('Buyer acknowledgment:');
+  doc.bullets([
+    '[ ] The identifying information I reviewed appears consistent with the transaction record.',
+    '[ ] A discrepancy is noted below.',
+    '[ ] Not applicable / not available for this Asset.',
+  ]);
+  fc.add('identifier_discrepancy_notes', B, 'text', doc.blockField('Discrepancy notes', 48), 'Identifier discrepancy notes', false);
+
+  doc.heading('3. INCLUDED EQUIPMENT');
+  doc.paragraph('The following equipment or property was identified as included in the transaction:');
+  fc.add('included_equipment_checklist', S, 'text', doc.blockField('Included equipment checklist from the transaction record', 64), 'Included equipment checklist', false);
+  doc.paragraph('Buyer acknowledgment:');
+  doc.bullets([
+    '[ ] Included items were reviewed and no material missing item was noted.',
+    '[ ] Missing or materially different items are listed below.',
+    '[ ] Buyer did not complete a full included-equipment review at Handoff.',
+  ]);
+  fc.add('equipment_discrepancy_notes', B, 'text', doc.blockField('Missing/different equipment notes', 48), 'Equipment discrepancy notes', false);
+
+  doc.heading('4. CONDITION REVIEW');
+  doc.paragraph('Buyer had the opportunity to conduct a visual inspection at Handoff to the extent reasonably practical.');
+  doc.paragraph('Condition areas may include, where applicable:');
+  const conditionRows: [string, string][] = [
+    ['condition_exterior', 'Exterior/body/frame'],
+    ['condition_tires', 'Tires/wheels/axles'],
+    ['condition_cab', 'Cab/driver controls'],
+    ['condition_interior', 'Interior walls/floors/ceiling'],
+    ['condition_cooking', 'Cooking equipment'],
+    ['condition_refrigeration', 'Refrigeration/freezers'],
+    ['condition_electrical', 'Electrical/shore power'],
+    ['condition_generator', 'Generator'],
+    ['condition_plumbing', 'Plumbing/water system'],
+    ['condition_fuel', 'Propane/fuel system'],
+    ['condition_hood_fire', 'Hood/ventilation/fire-suppression visible condition'],
+    ['condition_other', 'Other observed condition'],
+  ];
+  for (const [name, label] of conditionRows) ph(doc, fc, B, name, label);
+  doc.paragraph('This condition record reflects only what the parties actually observed or documented. It does not certify roadworthiness, mechanical condition, code compliance, title status, or fitness for a particular purpose.');
+
+  doc.heading('5. DOCUMENTS AND KEYS EXCHANGED');
+  doc.paragraph('The parties should identify what was physically or electronically provided at Handoff.');
+  doc.bullets([
+    '[ ] Keys',
+    '[ ] Title or ownership document, where applicable',
+    '[ ] Bill of sale / purchase agreement copy',
+    '[ ] Lien release, if applicable and provided',
+    '[ ] Registration record, if applicable and provided',
+    '[ ] Equipment manuals',
+    '[ ] Service records',
+    '[ ] Warranty documentation, if any',
+  ]);
+  fc.add('other_documents_transferred', S, 'text', doc.blockField('Other documents or items exchanged', 44), 'Other documents transferred', false);
+  fc.add('documents_followup', S, 'text', doc.blockField('Documents not yet provided / follow-up required', 48), 'Documents follow-up', false);
+  doc.paragraph('Checking a box confirms only that a document or item was presented or exchanged. Vendibook does not independently determine whether a title, lien release, registration, identification document, or other record is legally valid or sufficient.');
+
+  doc.heading('6. PHOTOS AND OTHER CONDITION EVIDENCE');
+  fc.add('handoff_media_reference', S, 'text', doc.blockField('Photos/video associated with the Handoff record', 44), 'Handoff media reference', false);
+  doc.paragraph('Buyer and Seller understand that photos, video, messages, GPS events, and other records may help document the transaction but no single item automatically determines legal ownership, liability, condition, or the outcome of a dispute.');
+
+  doc.heading('7. MATERIAL DISCREPANCIES OR UNRESOLVED ISSUES');
+  fc.add('buyer_handoff_notes', B, 'text', doc.blockField('Buyer notes', 56), 'Buyer notes', false);
+  fc.add('seller_handoff_notes', S, 'text', doc.blockField('Seller notes', 56), 'Seller notes', false);
+  fc.add('handoff_followup_items', S, 'text', doc.blockField('Agreed follow-up items, if any', 48), 'Follow-up items', false);
+  doc.paragraph('Nothing in this section requires a party to mark the transaction complete if the party believes a material issue remains unresolved.');
+
+  doc.heading('8. HANDOFF STATUS');
+  doc.paragraph('Buyer:');
+  doc.bullets([
+    '[ ] I received physical possession of the Asset.',
+    '[ ] I did not receive physical possession of the Asset.',
+    '[ ] Possession is being transferred through a carrier/freight process and final receipt remains pending.',
+  ]);
+  doc.paragraph('Seller:');
+  doc.bullets([
+    '[ ] I transferred physical possession of the Asset to Buyer or Buyer\u2019s authorized recipient.',
+    '[ ] I did not transfer physical possession of the Asset.',
+    '[ ] I transferred the Asset to the agreed carrier/freight provider and final Buyer receipt remains pending.',
   ]);
 
-  signatureBlock(doc, fc, 'Buyer', 'Seller');
+  doc.heading('9. IMPORTANT LEGAL LIMITATIONS');
+  doc.paragraph('This Handoff Acknowledgment:');
+  doc.bullets([
+    '(a) does not itself transfer a government-issued certificate of title;',
+    '(b) does not replace a lien release, registration filing, notarized title assignment, DMV form, or other legally required transfer document;',
+    '(c) does not establish that the Asset has passed a professional inspection;',
+    '(d) does not automatically waive a claim or right that applicable law does not permit a party to waive;',
+    '(e) does not cause or authorize payment movement merely because the document is signed; and',
+    '(f) does not make Vendibook the owner, seller, dealer, title agency, insurer, carrier, appraiser, inspector, or guarantor of the Asset.',
+  ]);
+
+  doc.heading('10. ACKNOWLEDGMENT');
+  doc.paragraph('By signing below, Buyer and Seller confirm that this Handoff Acknowledgment accurately reflects the Handoff observations and items they chose to record at the time of signing, subject to any written discrepancies and follow-up items stated above.');
+  doc.paragraph('The parties consent to review and sign this document electronically, and intend an electronic signature to have the same legal effect as a handwritten signature to the extent permitted by applicable law.');
+  contractSignatureBlock(doc, fc, 'Buyer', 'Seller');
+  doc.paragraph('END OF SALE HANDOFF & CONDITION ACKNOWLEDGMENT');
+
   return { pdf: doc.build(), fields: fc.fields };
 }
 
@@ -586,9 +766,9 @@ function buildDeliveryHandoff(): { pdf: Uint8Array; fields: SignNowFieldDef[] } 
  * previously generated document pointing at the template it was built from.
  */
 export const SPEC_VERSIONS: Record<TemplateKind, string> = {
-  purchase_sale_agreement: '2026-09-18',
+  purchase_sale_agreement: '2026-09-18-A',
   rental_agreement: '2026-09-18',
-  sale_handoff_condition_acknowledgment: '2026-09-18',
+  sale_handoff_condition_acknowledgment: '2026-09-18-A',
   rental_checkin_condition_report: '2026-09-18',
   rental_checkout_condition_report: '2026-09-18',
   transaction_amendment: '2026-09-18',
