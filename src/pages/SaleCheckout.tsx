@@ -1213,10 +1213,12 @@ const SaleCheckout = () => {
           {stepBody}
         </SaleCheckoutWizard>
 
-        <details className="checkout-story-mobile">
-          <summary>What happens next</summary>
-          <PostPaymentTimeline mode="sale" fulfillment={fulfillmentSelected} />
-        </details>
+        {currentStep === 5 ? (
+          <details className="checkout-story-mobile">
+            <summary>What happens next</summary>
+            <PostPaymentTimeline mode="sale" fulfillment={fulfillmentSelected} />
+          </details>
+        ) : null}
 
       </TransactionCheckoutShell>
 

@@ -1326,7 +1326,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
               <p className="text-xs text-muted-foreground leading-relaxed">
                 {instantConfirm
                   ? 'PayPal processes your payment now. Your booking is confirmed as soon as the payment completes, and the full record is saved to your account.'
-                  : 'PayPal processes your payment now and your dates are held. The host still has to accept the request — if they decline or do not respond, Vendibook refunds the payment to your original payment method.'}
+                  : 'PayPal processes your payment now and your request is sent to the host. If they decline or do not respond, Vendibook refunds the payment to your original payment method.'}
               </p>
               <p className="text-xs text-muted-foreground leading-relaxed">
                 Vendibook records the transaction and reviews host payouts after the rental begins. Payments are
@@ -1381,7 +1381,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
           description={
             instantConfirm
               ? 'Your booking is confirmed as soon as payment completes.'
-              : 'Your payment is processed now and your dates are held while the host reviews your request.'
+              : 'Your payment is processed now while the host reviews your request.'
           }
         >
           <div className="space-y-5">
