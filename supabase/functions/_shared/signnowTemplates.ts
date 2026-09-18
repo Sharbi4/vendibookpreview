@@ -15,10 +15,11 @@
  */
 import { createClient } from 'npm:@supabase/supabase-js@2.45.0';
 import { getAccessToken, signnowBase } from './signnow.ts';
-import { getTemplateSpec, SPEC_VERSIONS, TEMPLATE_SPECS, type SignNowFieldDef, type TemplateKind } from './signnowTemplateSpecs.ts';
+import { getTemplateSpec, SPEC_VERSIONS, TEMPLATE_SPECS, variantVersion, supportsVariants, type AssetVariant, type SignNowFieldDef, type TemplateKind } from './signnowTemplateSpecs.ts';
 
 export type { TemplateKind } from './signnowTemplateSpecs.ts';
-export { SPEC_VERSIONS } from './signnowTemplateSpecs.ts';
+export { SPEC_VERSIONS, variantVersion } from './signnowTemplateSpecs.ts';
+export type { AssetVariant } from './signnowTemplateSpecs.ts';
 
 const ENV_NAME: Partial<Record<TemplateKind, string>> = {
   rental_agreement: 'SIGNNOW_TEMPLATE_RENTAL_AGREEMENT',
@@ -134,16 +135,17 @@ function admin() {
   );
 }
 
-/** Current content version for a kind. */
-export function currentTemplateVersion(kind: TemplateKind): string {
-  return SPEC_VERSIONS[kind] ?? '1';
+/** Current content version for a kind (and asset variant where one applies). */
+export function currentTemplateVersion(kind: TemplateKind, variant: AssetVariant = 'general'): string {
+  return variantVersion(kind, variant) ?? SPEC_VERSIONS[kind] ?? '1';
 }
 
-async function createTemplateForKind(kind: TemplateKind): Promise<{ templateId: string; roles: string[] }> {
+async function createTemplateForKind(kind: TemplateKind, variant: AssetVariant): Promise<{ templateId: string; roles: string[] }> {
   const spec = getTemplateSpec(kind);
   const token = await getAccessToken();
-  const built = spec.build();
-  const name = `${spec.documentName} (v${spec.version})`;
+  const built = spec.build(variant);
+  const version = currentTemplateVersion(kind, variant);
+  const name = `${spec.documentName} (v${version})`;
   const docId = await uploadRawDocument(token, name, built.pdf);
   await editDocumentFields(token, docId, name, built.fields);
   const templateId = await createTemplate(token, docId, name);
@@ -156,6 +158,7 @@ export interface ResolvedTemplate {
   templateId: string;
   version: string;
   kind: TemplateKind;
+  variant: AssetVariant;
 }
 
 /**
@@ -163,11 +166,12 @@ export interface ResolvedTemplate {
  * provisioning it once if needed. Concurrent callers converge on one row.
  * Older versions are retired, never deleted or overwritten.
  */
-export async function resolveTemplate(kind: TemplateKind): Promise<ResolvedTemplate> {
-  const version = currentTemplateVersion(kind);
+export async function resolveTemplate(kind: TemplateKind, variant: AssetVariant = 'general'): Promise<ResolvedTemplate> {
+  const v: AssetVariant = supportsVariants(kind) ? variant : 'general';
+  const version = currentTemplateVersion(kind, v);
   const envName = ENV_NAME[kind];
   const fromEnv = envName ? Deno.env.get(envName) : undefined;
-  if (fromEnv) return { templateId: fromEnv, version, kind };
+  if (fromEnv) return { templateId: fromEnv, version, kind, variant: v };
 
   const svc = admin();
   const { data: existing } = await svc
@@ -176,13 +180,22 @@ export async function resolveTemplate(kind: TemplateKind): Promise<ResolvedTempl
     .eq('kind', kind)
     .eq('version', version)
     .maybeSingle();
-  if (existing?.signnow_template_id) return { templateId: existing.signnow_template_id, version, kind };
+  if (existing?.signnow_template_id) return { templateId: existing.signnow_template_id, version, kind, variant: v };
 
-  const { templateId, roles } = await createTemplateForKind(kind);
+  const { templateId, roles } = await createTemplateForKind(kind, v);
 
-  // Retire any other active version of this kind before activating the new
-  // one — existing documents keep their own stored template id.
-  await svc.from('signnow_templates').update({ status: 'retired' }).eq('kind', kind).eq('status', 'active');
+  // Retire any other active version of this kind/variant before activating the
+  // new one — existing documents keep their own stored template id. Variant
+  // rows are retired only against their own variant suffix.
+  const suffix = supportsVariants(kind) && v !== 'general' ? `-${v}` : '';
+  const { data: activeRows } = await svc
+    .from('signnow_templates').select('version').eq('kind', kind).eq('status', 'active');
+  for (const row of activeRows ?? []) {
+    const rv = String((row as any).version ?? '');
+    const rowSuffix = rv.endsWith('-mobile') ? '-mobile' : rv.endsWith('-space') ? '-space' : '';
+    if (rowSuffix !== suffix || rv === version) continue;
+    await svc.from('signnow_templates').update({ status: 'retired' }).eq('kind', kind).eq('version', rv);
+  }
 
   const { error } = await svc
     .from('signnow_templates')
@@ -194,10 +207,10 @@ export async function resolveTemplate(kind: TemplateKind): Promise<ResolvedTempl
       .eq('kind', kind)
       .eq('version', version)
       .maybeSingle();
-    if (raced?.signnow_template_id) return { templateId: raced.signnow_template_id, version, kind };
+    if (raced?.signnow_template_id) return { templateId: raced.signnow_template_id, version, kind, variant: v };
     throw new Error(`could not persist template id: ${error.message}`);
   }
-  return { templateId, version, kind };
+  return { templateId, version, kind, variant: v };
 }
 
 /** Backwards-compatible helper used by older call sites. */
@@ -210,8 +223,11 @@ export async function ensureTemplateId(kind: TemplateKind): Promise<string> {
 export async function provisionAllTemplates(): Promise<Record<string, { template_id: string; version: string }>> {
   const out: Record<string, { template_id: string; version: string }> = {};
   for (const kind of Object.keys(TEMPLATE_SPECS) as TemplateKind[]) {
-    const resolved = await resolveTemplate(kind);
-    out[kind] = { template_id: resolved.templateId, version: resolved.version };
+    const variants: AssetVariant[] = supportsVariants(kind) ? ['general', 'mobile', 'space'] : ['general'];
+    for (const variant of variants) {
+      const resolved = await resolveTemplate(kind, variant);
+      out[variant === 'general' ? kind : `${kind}:${variant}`] = { template_id: resolved.templateId, version: resolved.version };
+    }
   }
   return out;
 }

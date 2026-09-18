@@ -8,6 +8,7 @@ import {
   TEMPLATE_SPECS,
   SPEC_VERSIONS,
   getTemplateSpec,
+  variantVersion,
   type TemplateSpec,
 } from '../../../supabase/functions/_shared/signnowTemplateSpecs.ts';
 
@@ -101,7 +102,7 @@ describe('template package', () => {
   });
 
   it('resolves specs by kind and rejects unknown kinds', () => {
-    expect(getTemplateSpec('rental_agreement').roles).toEqual(['Host', 'Renter']);
+    expect(getTemplateSpec('rental_agreement').roles).toEqual(['Renter', 'Host']);
     expect(() => getTemplateSpec('bill_of_sale')).toThrow(/no template spec/);
   });
 });
@@ -110,7 +111,7 @@ describe('document language guardrails', () => {
   const allText = specs.map((s) => extractText(s.build().pdf)).join(' ');
 
   it('never describes the transaction as escrow or promises released funds', () => {
-    expect(/\bescrow\b/i.test(allText.replace(/not an escrow agent|not create an escrow/gi, ''))).toBe(false);
+    expect(/\bescrow\b/i.test(allText.replace(/not an escrow (agent|company)|not create an escrow/gi, ''))).toBe(false);
     expect(/funds will be released/i.test(allText)).toBe(false);
     expect(/guaranteed refund/i.test(allText)).toBe(false);
   });
@@ -189,5 +190,77 @@ describe('contract documents carry the supplied legal language', () => {
     expect(vin.required).toBe(false);
     expect(psa).toContain('VIN / serial / identifying number, if captured');
     expect(psa).toContain('rather than populated with estimated or invented information');
+  });
+});
+
+describe('rental, condition, amendment and delivery documents', () => {
+  const build = (kind: string, variant?: 'mobile' | 'space' | 'general') =>
+    extractText((TEMPLATE_SPECS as any)[kind].build(variant).pdf);
+
+  it('versions the five documents as 2026-09-18-A with variant suffixes', () => {
+    for (const kind of [
+      'rental_agreement',
+      'rental_checkin_condition_report',
+      'rental_checkout_condition_report',
+      'transaction_amendment',
+      'delivery_handoff_acknowledgment',
+    ]) {
+      expect(SPEC_VERSIONS[kind as keyof typeof SPEC_VERSIONS]).toBe('2026-09-18-A');
+    }
+    expect(variantVersion('rental_agreement', 'mobile')).toBe('2026-09-18-A-mobile');
+    expect(variantVersion('rental_agreement', 'general')).toBe('2026-09-18-A');
+    // Amendments and delivery receipts are asset-agnostic.
+    expect(variantVersion('transaction_amendment', 'mobile')).toBe('2026-09-18-A');
+  });
+
+  it('keeps the rental agreement clause structure', () => {
+    const text = build('rental_agreement');
+    for (const heading of [
+      '1. DEFINITIONS',
+      '2. BOOKING SUMMARY',
+      'CANCELLATION, REFUNDS, AND NO-SHOWS',
+      'ELECTRONIC RECORDS AND SIGNATURES',
+    ]) {
+      expect(text).toContain(heading);
+    }
+    expect(text).toContain('END OF VENDIBOOK RENTAL AGREEMENT');
+  });
+
+  it('omits inapplicable asset sections per variant', () => {
+    const mobile = build('rental_agreement', 'mobile');
+    const space = build('rental_agreement', 'space');
+    expect(mobile).toContain('VEHICLE AND TRAILER TERMS');
+    expect(mobile).not.toContain('COMMERCIAL KITCHEN / VENDOR SPACE TERMS');
+    expect(space).toContain('COMMERCIAL KITCHEN / VENDOR SPACE TERMS');
+    expect(space).not.toContain('VEHICLE AND TRAILER TERMS');
+  });
+
+  it('uses the correct signer roles for each document', () => {
+    expect(getTemplateSpec('rental_agreement').roles).toEqual(['Renter', 'Host']);
+    expect(getTemplateSpec('rental_checkin_condition_report').roles).toEqual(['Renter', 'Host']);
+    expect(getTemplateSpec('rental_checkout_condition_report').roles).toEqual(['Renter', 'Host']);
+    expect(getTemplateSpec('delivery_handoff_acknowledgment').roles).toEqual([
+      'Receiving Party',
+      'Delivering Party',
+    ]);
+  });
+
+  it('never promises payouts, escrow, insurance, or fixed fees', () => {
+    const all = [
+      build('rental_agreement', 'mobile'),
+      build('rental_agreement', 'space'),
+      build('rental_checkin_condition_report', 'mobile'),
+      build('rental_checkout_condition_report', 'space'),
+      build('transaction_amendment'),
+      build('delivery_handoff_acknowledgment'),
+    ].join(' ');
+    expect(/funds will be released|holds your funds|payout will be/i.test(all)).toBe(false);
+    expect(/Vendibook (insures|guarantees|determines liability)/i.test(all)).toBe(false);
+    // No invented money amounts anywhere in the blank template.
+    expect(/\$\d/.test(all)).toBe(false);
+  });
+
+  it('states that signing does not move money', () => {
+    expect(build('transaction_amendment')).toMatch(/does not itself process, refund, capture, authorize, or move payment/i);
   });
 });
