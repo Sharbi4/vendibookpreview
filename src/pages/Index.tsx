@@ -116,6 +116,16 @@ const Index = () => {
         <div className="v2-home-stack">
           <V2HomeHero slides={heroSlides} />
 
+          <Link to="/payments" className="v2-home-paypal">
+            <span className="v2-home-paypal-mark"><img src={paypalMonogramAsset.url} alt="PayPal" /></span>
+            <span className="v2-home-paypal-copy">
+              <strong>Connect your business with PayPal.</strong>
+              <small>Sellers link PayPal in minutes to accept secure payments right on Vendibook.</small>
+            </span>
+            <span className="v2-home-paypal-cta">Connect with PayPal<ArrowRight aria-hidden="true" /></span>
+          </Link>
+
+
           <V2ListingRow title="Featured on Vendibook" subtitle="Standout trucks and trailers getting extra visibility." listings={featuredQuery.data ?? []} isLoading={featuredQuery.isLoading} viewAllHref="/search" viewAllLabel="Browse marketplace" priority featured />
 
           <V2ListingRow
