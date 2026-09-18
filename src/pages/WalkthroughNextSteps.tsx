@@ -114,7 +114,12 @@ export default function WalkthroughNextSteps() {
     { walkthrough_id: walkthrough?.id, role: isSeller ? 'seller' : 'buyer' }, listing?.id);
 
   if (!authLoading && !user) {
-    const target = routeId ? `/walkthrough/${routeId}/next-steps` : `/walkthrough/next-steps${window.location.search}`;
+    // Build a stable target from known params only — never reuse the full
+    // query string, which would nest an ever-growing redirect value.
+    const recent = search.get('recent-call');
+    const target = routeId
+      ? `/walkthrough/${routeId}/next-steps`
+      : `/walkthrough/next-steps${recent ? `?recent-call=${encodeURIComponent(recent)}` : ''}`;
     return <Navigate to={`/auth?redirect=${encodeURIComponent(target)}`} replace />;
   }
   if (!walkthroughId) {
