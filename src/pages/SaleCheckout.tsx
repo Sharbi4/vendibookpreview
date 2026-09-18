@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
-import { Loader2, ShieldCheck, Truck, MessageSquare } from 'lucide-react';
+import { BadgeCheck, Building2, Loader2, MapPin, Pencil, ShieldCheck, Truck, UserRound } from 'lucide-react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { useListing } from '@/hooks/useListing';
@@ -26,7 +26,6 @@ import {
 } from '@/components/purchase-wizard';
 
 import { ReferralCodeField } from '@/components/referrals/ReferralCodeField';
-import { FinalReviewSheet } from '@/components/transaction/FinalReviewSheet';
 import { useTermsGate } from '@/hooks/useTermsGate';
 import { buildTerms } from '@/lib/transactionTerms';
 import { useCheckoutState } from '@/hooks/useCheckoutState';
@@ -44,6 +43,11 @@ import CheckoutSection from '@/components/transaction/checkout/CheckoutSection';
 import ListingCheckoutSummary from '@/components/transaction/checkout/ListingCheckoutSummary';
 import MoneyBreakdown, { type MoneyLine } from '@/components/transaction/checkout/MoneyBreakdown';
 import PayPalEmbeddedPayment from '@/components/transaction/checkout/PayPalEmbeddedPayment';
+import SaleCheckoutWizard from '@/components/checkout/sale/SaleCheckoutWizard';
+import SaleAgreementStep from '@/components/checkout/sale/SaleAgreementStep';
+import { Button } from '@/components/ui/button';
+import { useLegalDocument } from '@/hooks/useLegalDocument';
+import { CONSENT_TRIGGERS, CURRENT_VERSIONS, DOCUMENT_TYPES } from '@/lib/legalDocuments';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
 
@@ -137,6 +141,9 @@ const SaleCheckout = () => {
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [paypalCheckout, setPaypalCheckout] = useState<{ transactionId: string; returnUrl: string } | null>(null);
+  const [currentStep, setCurrentStep] = useState(1);
+  const [furthestStep, setFurthestStep] = useState(1);
+  const [recordingConsent, setRecordingConsent] = useState(false);
 
   // Validation
   const [fieldErrors, setFieldErrors] = useState<Record<string, string | undefined>>({});
@@ -145,6 +152,13 @@ const SaleCheckout = () => {
   // Payment method
   type PaymentMethod = 'card' | 'cash';
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('card');
+  const agreementType = paymentMethod === 'cash'
+    ? DOCUMENT_TYPES.PAY_IN_PERSON_ACKNOWLEDGMENT
+    : DOCUMENT_TYPES.TERMS_OF_SERVICE;
+  const agreement = useLegalDocument(agreementType);
+  const acceptanceText = paymentMethod === 'cash'
+    ? 'I understand that payment will be made directly to the seller and will not be processed or held by Vendibook, and I reviewed the purchase details above.'
+    : 'I reviewed the listing, price, payment method, and transaction details and agree to the Buyer Terms.';
 
   /**
    * Fulfillment selected from the listing page's delivery checker. Applied
@@ -561,7 +575,7 @@ const SaleCheckout = () => {
    */
   const submitLockRef = useRef(false);
 
-  const handlePurchase = async () => {
+  const prepareAgreement = async () => {
     if (submitLockRef.current || isPurchasing || termsGate.preparing) return;
     if (!validateFulfillment()) return;
     if (!validateDetails()) return;
@@ -586,19 +600,49 @@ const SaleCheckout = () => {
       return;
     }
     if (!priceSale || !listingId || !listing?.host_id) return;
-    if (!agreedToTerms) {
-      toast({ title: 'Terms required', description: 'Please agree to the Terms of Service.', variant: 'destructive' });
-      return;
-    }
     const t = buildCurrentTerms();
-    if (!t) return;
+    if (!t) return false;
     submitLockRef.current = true;
     try {
-      await termsGate.prepare(t);
+      return await termsGate.prepare(t, { openSheet: false });
     } finally {
-      // Preparing only opens the review sheet — release so the buyer can
-      // still cancel and re-open it. runPurchase re-locks on real submit.
       submitLockRef.current = false;
+    }
+  };
+
+  const recordAgreement = async () => {
+    if (!agreedToTerms || !termsGate.terms || recordingConsent) return false;
+    setRecordingConsent(true);
+    try {
+      const { error } = await supabase.rpc('record_user_consent', {
+        _document_type: agreementType,
+        _document_version: CURRENT_VERSIONS[agreementType],
+        _trigger_action: paymentMethod === 'cash' ? CONSENT_TRIGGERS.PAY_IN_PERSON : CONSENT_TRIGGERS.PURCHASE_REVIEW,
+        _acceptance_text: acceptanceText,
+        _related_ids: {
+          listing_id: termsGate.terms.listing.id,
+          ...(termsGate.termsId ? { terms_id: termsGate.termsId } : {}),
+        },
+        _route: window.location.pathname,
+        _ip: null,
+        _user_agent: navigator.userAgent,
+        _locale: navigator.language,
+        _application_version: null,
+      });
+      if (error) throw error;
+      if (termsGate.termsId) {
+        await supabase.functions.invoke('acknowledge-terms', { body: { terms_id: termsGate.termsId } });
+      }
+      return true;
+    } catch (error) {
+      toast({
+        title: 'Could not record your acceptance',
+        description: error instanceof Error ? error.message : 'Please try again.',
+        variant: 'destructive',
+      });
+      return false;
+    } finally {
+      setRecordingConsent(false);
     }
   };
 
