@@ -2789,21 +2789,23 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
   .v2-home-editorial-grid { grid-template-columns: repeat(3, 1fr); gap: 28px; }
   .v2-home-editorial-grid article { display: block; }
   .v2-home-editorial-grid h3 { margin-top: 12px; }
-  .v2-home-partners { grid-template-columns: .65fr 1.35fr; align-items: center; padding: 30px; }
-  .v2-home-partner-logos { grid-template-columns: repeat(4, 1fr); }
-  .v2-home-partner-logos > span:nth-child(n+2) { border-left: 1px solid hsl(var(--v2h-line)); }
-  .v2-home-partner-logos > span:nth-child(n+3) { border-top: 0; }
+  .v2-home-partners { grid-template-columns: .8fr 1.2fr; align-items: center; gap: 40px; padding: 34px 36px; }
+  .v2-home-partner-tiles { grid-template-columns: repeat(3, 1fr); gap: 14px; }
 }
 @media (max-width: 639px) {
   .v2-home-section-head { align-items: flex-start; }
   .v2-home-section-head .v2-home-link { font-size: 0; }
   .v2-home-section-head .v2-home-link svg { width: 20px; height: 20px; }
-  .v2-home-search { align-items: stretch; }
+  .v2-home-search { align-items: stretch; width: 100%; }
   .v2-home-modes { width: 100%; }
-  .v2-home-modes button { flex: 1; }
-  .v2-home-field { min-height: 48px; min-width: 0; }
-  .v2-home-search > .v2-home-btn { width: 100%; }
+  .v2-home-modes button { flex: 1; padding: 0 12px; }
+  .v2-home-searchbar { flex-direction: column; gap: 10px; padding: 10px; border-radius: 13px; }
+  .v2-home-field { min-height: 46px; min-width: 0; padding: 0 4px 0 10px; }
+  .v2-home-searchgo { width: 100%; min-height: 50px; height: 50px; }
+  .v2-home-chips a { min-height: 38px; }
+  .v2-home-partner-tiles article { min-height: 118px; }
 }
+
 
 /* Seller payout balance (dashboard → Payments) */
 .v2-payout-tiles { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1px; background: hsl(var(--v2-line)); border-bottom: 1px solid hsl(var(--v2-line)); }
