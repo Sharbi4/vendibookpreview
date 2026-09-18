@@ -688,7 +688,7 @@ const OrderTracking = () => {
                 context={{
                   featureArea: "purchase",
                   transactionStatus: transaction.status,
-                  paymentMethod: isCashTransaction ? "pay_in_person" : "stripe",
+                  paymentMethod: isCashTransaction ? "pay_in_person" : "paypal",
                   related: {
                     sale_transaction_id: transaction.id,
                     listing_id: transaction.listing_id,
