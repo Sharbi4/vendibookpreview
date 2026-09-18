@@ -230,7 +230,8 @@ export default function WalkthroughConsentGate({ walkthroughId, title, requiresL
       </div>
       {helper && <p className="wc-helper">{helper}</p>}
       <p className="wc-version">
-        Terms v{WALKTHROUGH_TERMS_VERSION} · Privacy notice v{DEVICE_PRIVACY_VERSION}
+        Terms v{WALKTHROUGH_TERMS_VERSION} · Privacy notice v{DEVICE_PRIVACY_VERSION} · Recording notice v
+        {RECORDING_CONSENT_VERSION}
       </p>
     </div>
   );
