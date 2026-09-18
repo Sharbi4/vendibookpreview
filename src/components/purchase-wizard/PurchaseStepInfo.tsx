@@ -83,7 +83,7 @@ const PurchaseStepInfo = ({
         <p className={`text-sm text-muted-foreground flex items-center gap-1.5${embedded ? '' : ' mt-1'}`}>
           Receipts, documents, and coordination — nothing extra.
           <InfoPopover title="Why we need this">
-            <p>Sellers and Vendibook support use this to coordinate {hideAddress ? 'pickup' : 'delivery'} and resolve issues.</p>
+            <p>Sellers and Vendibook support use this to coordinate the handoff, prepare documents, and resolve issues.</p>
             <p className="mt-2">Your information is kept private and only shared with parties involved in this transaction.</p>
           </InfoPopover>
         </p>
