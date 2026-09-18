@@ -1,13 +1,12 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, useNavigate, useSearchParams, useLocation, Link } from 'react-router-dom';
-import { Loader2, MapPin, Pencil, ShieldCheck, UserRound } from 'lucide-react';
+import { FileText, Loader2, MapPin, Pencil, ShieldCheck, UserRound } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { useListing } from '@/hooks/useListing';
 import { computeDeliveryFee, deliveryRateLabel, normalizeDeliveryFeeType } from '@/lib/fulfillment/delivery';
 import { useToast } from '@/hooks/use-toast';
 import { useFreightEstimate } from '@/hooks/useFreightEstimate';
 import { supabase } from '@/integrations/supabase/client';
-import ProtectionDisclosure from '@/components/checkout/ProtectionDisclosure';
 import { parseEdgeError } from '@/lib/edgeErrors';
 import { checkoutErrorCopy } from '@/lib/checkoutErrorCopy';
 import { validators } from '@/components/ui/validated-input';
@@ -916,7 +915,7 @@ const SaleCheckout = () => {
       </div>
       <p className="v2-rail-agreement">
         <Link to="/legal/purchase-agreement" target="_blank" rel="noreferrer">
-          Vendibook Purchase Agreement
+          <FileText aria-hidden /> Review purchase agreement
         </Link>
       </p>
       <PostPaymentTimeline mode="sale" fulfillment={fulfillmentSelected} />
@@ -1151,14 +1150,6 @@ const SaleCheckout = () => {
           </>
         ) : null}
 
-        <ProtectionDisclosure
-          category={listing?.category ?? null}
-          mode="sale"
-          soldAsBusiness={/turnkey|business (for sale|included|opportunity)/i.test(
-            `${listing?.title ?? ''} ${listing?.description ?? ''}`,
-          )}
-          fulfillment={fulfillmentSelected}
-        />
       </div>
     );
   })();
@@ -1221,6 +1212,13 @@ const SaleCheckout = () => {
         >
           {stepBody}
         </SaleCheckoutWizard>
+
+        {currentStep === 5 ? (
+          <details className="checkout-story-mobile">
+            <summary>What happens next</summary>
+            <PostPaymentTimeline mode="sale" fulfillment={fulfillmentSelected} />
+          </details>
+        ) : null}
 
       </TransactionCheckoutShell>
 

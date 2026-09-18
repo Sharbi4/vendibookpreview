@@ -79,7 +79,6 @@ import { recordCheckoutAgreements } from '@/lib/legal/recordCheckoutAgreements';
 import { useLegalDocument } from '@/hooks/useLegalDocument';
 import { CONSENT_TRIGGERS, DOCUMENT_TYPES } from '@/lib/legalDocuments';
 import { loadPayPalSdk } from '@/lib/paypalClient';
-import ProtectionDisclosure from '@/components/checkout/ProtectionDisclosure';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'on_site';
 
@@ -951,9 +950,9 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
       : []),
     ...(depositAmount
       ? [{
-          label: 'Security deposit (held)',
+          label: 'Security deposit',
           value: formatCurrency(depositAmount),
-          note: 'Charged today, held by Vendibook, and refunded (minus any damages or fees) after your rental.',
+          note: 'Charged today and shown in your booking record. Refunds follow the accepted rental terms.',
           muted: true,
         }]
       : []),
@@ -965,6 +964,13 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
     ...(hasMultipleSlots && selectedSlotName ? [{ label: 'Space', value: selectedSlotName }] : []),
     { label: 'Fulfillment', value: fulfillmentSelected === 'delivery' ? 'Delivery' : fulfillmentSelected === 'on_site' ? 'On-site' : 'Pickup' },
   ];
+
+  const rentalStory = (
+    <PostPaymentTimeline
+      mode="rental"
+      fulfillment={fulfillmentSelected === 'delivery' ? 'delivery' : fulfillmentSelected === 'pickup' ? 'pickup' : 'on_site'}
+    />
+  );
 
   const railSummary = (
     <ListingCheckoutSummary
@@ -981,6 +987,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
         total={formatCurrency(totalChargedToday)}
         totalLabel="Total due today"
       />
+      {rentalStory}
     </ListingCheckoutSummary>
   );
 
@@ -997,7 +1004,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
 
   const primaryStickyAction = paypalCheckout ? null : (
     <Button
-      className="h-12 px-6 rounded-xl font-semibold bg-foreground text-background hover:bg-foreground/90"
+      className="checkout-primary-action h-12 px-6 rounded-xl font-semibold bg-foreground text-background hover:bg-foreground/90"
       onClick={handleSubmit}
       disabled={isSubmitting || paymentSetupBlocked || !legalAccepted}
       title={!canSubmit ? nextIncompleteReason ?? undefined : undefined}
@@ -1319,31 +1326,13 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
               <p className="text-xs text-muted-foreground leading-relaxed">
                 {instantConfirm
                   ? 'PayPal processes your payment now. Your booking is confirmed as soon as the payment completes, and the full record is saved to your account.'
-                  : 'PayPal processes your payment now and your dates are held. The host still has to accept the request — if they decline or do not respond, Vendibook refunds the payment to your original payment method.'}
+                  : 'PayPal processes your payment now and your request is sent to the host. If they decline or do not respond, Vendibook refunds the payment to your original payment method.'}
               </p>
               <p className="text-xs text-muted-foreground leading-relaxed">
                 Vendibook records the transaction and reviews host payouts after the rental begins. Payments are
                 processed by PayPal; Vendibook does not hold or control your funds.
               </p>
             </div>
-
-            <ProtectionDisclosure
-              category={listing?.category ?? null}
-              mode="rent"
-              fulfillment={fulfillmentSelected}
-            />
-
-            <PostPaymentTimeline
-              mode="rental"
-              fulfillment={
-                fulfillmentSelected === 'delivery'
-                  ? 'delivery'
-                  : fulfillmentSelected === 'pickup'
-                    ? 'pickup'
-                    : 'on_site'
-              }
-              title="What happens next"
-            />
 
             <div>
               <h3 className="text-sm font-semibold text-foreground">Agreements</h3>
@@ -1392,7 +1381,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
           description={
             instantConfirm
               ? 'Your booking is confirmed as soon as payment completes.'
-              : 'Your payment is processed now and your dates are held while the host reviews your request.'
+              : 'Your payment is processed now while the host reviews your request.'
           }
         >
           <div className="space-y-5">
@@ -1449,7 +1438,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
             ) : (
               <>
                 <Button
-                  className="w-full h-14 text-base bg-foreground text-background hover:bg-foreground/90 rounded-xl font-semibold"
+                  className="checkout-primary-action w-full h-14 text-base bg-foreground text-background hover:bg-foreground/90 rounded-xl font-semibold"
                   onClick={handleSubmit}
                   disabled={isSubmitting || !legalAccepted}
                 >
@@ -1481,6 +1470,10 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
             )}
           </div>
         </CheckoutSection>
+        <details className="checkout-story-mobile">
+          <summary>What happens next</summary>
+          {rentalStory}
+        </details>
       </TransactionCheckoutShell>
 
 

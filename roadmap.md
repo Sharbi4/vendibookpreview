@@ -90,3 +90,10 @@
 - [x] Daily deadline reminders to buyer + seller and admin digest (scheduled job, 8:10am Phoenix)
 - [x] Admin cancel-and-refund tool (refund must succeed before anything is cancelled)
 - [ ] Phase 2: PayPal dispute webhook ingestion + automated evidence package
+## Checkout UI continuation
+- [x] Make disabled sale/rental checkout actions clearly legible.
+- [x] Replace duplicate numbered guidance with one adaptive storyline.
+- [x] Add and link the public Meetup & Inspection Guide.
+- [x] Reconcile checkout, success, and order-detail payment/fulfillment copy.
+- [x] Verify desktop, mobile, guide links, typecheck, and build.
+

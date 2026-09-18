@@ -1,6 +1,6 @@
-import { useEffect, type ReactNode } from 'react';
+import { useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Truck, Package, Check, Loader2, AlertCircle, CheckCircle2, AlertTriangle, Clock, MessageSquare, Info, CalendarClock } from 'lucide-react';
+import { MapPin, Truck, Package, Check, Loader2, AlertCircle, CheckCircle2, AlertTriangle, Info, CalendarClock } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -155,24 +155,6 @@ const SchedulingFields = ({
   </div>
 );
 
-const NEXT_STEPS: Record<FulfillmentSelection, { title: string; body: ReactNode }[]> = {
-  pickup: [
-    { title: 'Message the seller', body: 'After checkout, use in-app Messages to schedule an exact pickup time.' },
-    { title: 'Meet & inspect', body: 'Meet at the seller\'s pickup location. Inspect the item before you leave.' },
-    { title: 'Confirm receipt', body: 'Mark the item as received in your dashboard — payment releases to the seller.' },
-  ],
-  delivery: [
-    { title: 'Seller coordinates delivery', body: 'The seller will contact you within 24h to schedule a delivery window.' },
-    { title: 'Delivery to your address', body: 'Have someone available to receive and inspect the item at drop-off.' },
-    { title: 'Confirm receipt', body: 'Confirm in your dashboard — funds release to the seller after the protection window.' },
-  ],
-  vendibook_freight: [
-    { title: 'Freight scheduling', body: <><FreightLink /> contacts you within 2 business days to schedule pickup and delivery.</> },
-    { title: 'Transit', body: '7–10 business days is the typical transit estimate; actual pickup and transit times can vary.' },
-    { title: 'Inspect on delivery', body: 'Inspect the item before signing. Note any damage on the driver\'s BOL immediately.' },
-  ],
-};
-
 const METHOD_META: Record<FulfillmentSelection, {
   icon: typeof MapPin;
   name: string;
@@ -185,18 +167,18 @@ const METHOD_META: Record<FulfillmentSelection, {
   pickup: {
     icon: MapPin,
     name: 'Local Pickup',
-    tagline: 'You pick up from the seller\'s location.',
-    eta: 'Coordinate within 24h',
-    etaSub: 'Message the seller in-app to lock a time',
-    explainerTitle: 'How pickup coordination works',
-    explainerBody: 'Once payment is confirmed, you and the seller exchange messages to agree on an exact pickup time and address. The precise location is revealed to you after checkout.',
+    tagline: 'Pick up directly from the seller.',
+    eta: '',
+    etaSub: '',
+    explainerTitle: 'Pickup details',
+    explainerBody: 'After payment, use Vendibook Messages to agree on a pickup time and receive the exact handoff location.',
   },
   delivery: {
     icon: Truck,
     name: 'Local Delivery',
     tagline: 'The seller brings the item to your address.',
-    eta: 'Typically within 3–7 days',
-    etaSub: 'The seller will confirm an exact delivery window',
+    eta: '',
+    etaSub: '',
     explainerTitle: 'What affects the delivery fee',
     explainerBody: 'The delivery fee is set by the seller and reflects distance, item size, and any special handling. Some sellers include delivery inside a radius at no charge.',
   },
@@ -204,36 +186,11 @@ const METHOD_META: Record<FulfillmentSelection, {
     icon: Package,
     name: 'Vendibook Freight',
     tagline: 'Long-distance freight, scheduling included.',
-    eta: '7–10 business days',
-    etaSub: 'Estimated transit — actual pickup and delivery timing can vary',
+    eta: '',
+    etaSub: '',
     explainerTitle: 'How Vendibook Freight works',
-    explainerBody: 'We coordinate carrier pickup at the seller and delivery to you. The estimate is calculated from the route distance using a per-mile rate plus a fuel surcharge and handling fee. Freight is finalized as a separate step after the seller confirms the sale.',
+    explainerBody: 'We coordinate carrier pickup at the seller and delivery to you. The current freight amount is shown in checkout when a valid estimate is available; confirmed scheduling and carrier details appear on the order.',
   },
-};
-
-const NextStepsPanel = ({ selection }: { selection: FulfillmentSelection }) => {
-  const steps = NEXT_STEPS[selection];
-  return (
-    <div className="rounded-md border border-border bg-card/60 backdrop-blur-sm p-4">
-      <div className="flex items-center gap-2 mb-3">
-        <Clock className="h-4 w-4 text-primary" />
-        <h4 className="text-sm font-semibold text-foreground">What to expect after checkout</h4>
-      </div>
-      <ol className="space-y-2.5">
-        {steps.map((s, i) => (
-          <li key={s.title} className="flex gap-3 text-xs">
-            <span className="flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 border border-primary/30 text-[10px] font-semibold text-primary shrink-0">
-              {i + 1}
-            </span>
-            <div>
-              <p className="font-medium text-foreground">{s.title}</p>
-              <p className="text-muted-foreground mt-0.5">{s.body}</p>
-            </div>
-          </li>
-        ))}
-      </ol>
-    </div>
-  );
 };
 
 interface MethodCardProps {
@@ -281,12 +238,7 @@ const MethodCard = ({ selection, selected, onSelect, priceNode, showRadio, child
             {selection === 'vendibook_freight' && <FreightInfoPopover />}
           </div>
           <p className="text-sm text-muted-foreground mt-0.5">{meta.tagline}</p>
-          <div className="flex items-center gap-1.5 mt-2 text-xs text-muted-foreground">
-            <Clock className="h-3.5 w-3.5 shrink-0" />
-            <span className="font-medium text-foreground">{meta.eta}</span>
-            <span className="opacity-60">·</span>
-            <span>{meta.etaSub}</span>
-          </div>
+          {meta.eta ? <p className="mt-2 text-xs text-muted-foreground"><span className="font-medium text-foreground">{meta.eta}</span> · {meta.etaSub}</p> : null}
         </div>
         <div className="flex flex-col items-end gap-2 shrink-0">
           <div className="text-sm font-semibold">{priceNode}</div>
@@ -431,10 +383,12 @@ const PurchaseStepDelivery = ({
               <p className="text-sm text-foreground">
                 {listingCity && listingState ? `${listingCity}, ${listingState}` : 'Location shared after checkout'}
               </p>
-              <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1.5">
-                <MessageSquare className="h-3 w-3" />
-                Exact address shared in Messages once payment is confirmed.
+              <p className="text-xs text-muted-foreground mt-1">
+                After payment, use Vendibook Messages to agree on a pickup time and receive the exact handoff location.
               </p>
+              <Link to="/guides/meetup-inspection" className="mt-2 inline-flex text-xs font-semibold text-foreground underline underline-offset-4">
+                How to prepare for pickup &amp; inspection →
+              </Link>
             </div>
           </MethodCard>
         )}
@@ -590,9 +544,6 @@ const PurchaseStepDelivery = ({
           </MethodCard>
         )}
       </div>
-
-      {/* Always show next-steps for the selected method — never leave an empty step */}
-      <NextStepsPanel selection={fulfillmentSelected} />
 
       {!embedded && (
         <>

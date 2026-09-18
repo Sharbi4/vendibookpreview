@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowRight, CheckCircle2, Circle, Clock3, FileSignature, Loader2, LifeBuoy, RefreshCw, Truck, Video } from 'lucide-react';
+import { ArrowRight, CheckCircle2, Circle, Clock3, FileSignature, Loader2, LifeBuoy, RefreshCw, SearchCheck, Truck, Video } from 'lucide-react';
 import { useOrderDetail, recoverOrderPayment } from '@/hooks/useOrderDetail';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -239,6 +239,21 @@ const OrderDetailPage = () => {
               )}
             </dl>
           </Card>
+
+          {order.viewer_role === 'buyer' && order.transaction_type === 'equipment_sale' && order.fulfillment.type === 'equipment_pickup' && (
+            <Card className="flex flex-wrap items-center justify-between gap-3 p-4 sm:p-5">
+              <div className="flex items-start gap-3">
+                <SearchCheck className="mt-0.5 h-5 w-5 text-primary" aria-hidden />
+                <div>
+                  <p className="font-medium">Prepare for your meetup</p>
+                  <p className="text-sm text-muted-foreground">Review the equipment and document its condition before completing the handoff.</p>
+                </div>
+              </div>
+              <Button asChild size="sm" variant="outline">
+                <Link to={`/guides/meetup-inspection?returnTo=${encodeURIComponent(`/orders/${order.id}`)}`}>Open Meetup &amp; Inspection Guide</Link>
+              </Button>
+            </Card>
+          )}
 
           <DeliveryTrackingPanel
             saleTransactionId={(order as any).links?.sale_transaction_id ?? null}

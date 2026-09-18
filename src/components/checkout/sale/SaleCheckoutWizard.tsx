@@ -95,7 +95,7 @@ const SaleCheckoutWizard = ({
                 </Button>
               ) : <span />}
               {onNext ? (
-                <Button type="button" onClick={onNext} disabled={nextDisabled || nextBusy}>
+                <Button type="button" className="checkout-primary-action" onClick={onNext} disabled={nextDisabled || nextBusy}>
                   {nextBusy ? 'Working…' : nextLabel}
                   {!nextBusy ? <ChevronRight aria-hidden /> : null}
                 </Button>
