@@ -191,6 +191,15 @@ const OrderDetailPage = () => {
             </Card>
           )}
 
+          {(order as any).links?.sale_transaction_id && (
+            <DocumentsCard
+              scope={{ transaction_id: String((order as any).links.sale_transaction_id) }}
+              title="Purchase agreement"
+            />
+          )}
+
+
+
           {order.listing && (
             <Card className="flex items-center gap-4 p-4">
               {order.listing.image_url && (
