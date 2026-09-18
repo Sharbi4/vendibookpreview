@@ -108,6 +108,7 @@ import {
 } from './stages/PublishAttestations';
 
 import { PayPalMonogram, EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
+import SellerBusinessAccountHelp from '@/components/payments/SellerBusinessAccountHelp';
 import {
   EQUINOX_DISCLOSURE_TEXT,
   EQUINOX_DISCLOSURE_VERSION,
@@ -3689,9 +3690,12 @@ export const PublishWizard: React.FC = () => {
                                 your account and paid out to your payout details after the sale is confirmed.
                               </p>
                               {acceptPayPalCheckout && (
-                                <div className="mt-2 p-2 bg-primary/5 rounded-lg text-xs text-muted-foreground">
-                                  <Info className="w-3 h-3 inline mr-1" />
-                                  Add your payout details in Settings so we know where to send your proceeds.
+                                <div className="mt-2 space-y-2 rounded-lg bg-primary/5 p-3">
+                                  <p className="text-xs text-muted-foreground">
+                                    <Info className="mr-1 inline h-3 w-3" />
+                                    Connect PayPal in Payment setup before buyers can check out online.
+                                  </p>
+                                  <SellerBusinessAccountHelp compact />
                                 </div>
                               )}
                             </div>

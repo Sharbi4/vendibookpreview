@@ -30,6 +30,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
+import SellerBusinessAccountHelp from '@/components/payments/SellerBusinessAccountHelp';
 import imgSelling from '@/assets/how-selling-hero.jpg';
 import imgGrilledCheese from '@/assets/food-truck-grilled-cheese.jpg';
 import documentsOkArt from '@/assets/education/documents-ok.svg.asset.json';
@@ -297,6 +298,7 @@ const HowItWorksSeller = () => {
                   food trucks and trailers, answer questions, review offers where
                   available, and choose how you want to complete the sale.
                 </p>
+                <SellerBusinessAccountHelp className="mb-5 max-w-xl" compact />
                 <div className="flex flex-wrap gap-3">
                   <Button variant="cta" size="lg" className="rounded-full" asChild>
                     <Link to="/list/start?mode=sale">

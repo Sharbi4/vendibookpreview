@@ -7,6 +7,7 @@ import { SaleCard } from '@/components/listing-detail/sale/SaleCard';
 import MessageHostForm from '@/components/messaging/MessageHostForm';
 import { useHostResponseTime } from '@/hooks/useHostResponseTime';
 import { formatLastActive } from '@/hooks/useActivityTracker';
+import PayPalVerifiedSellerTrust from '@/components/payments/PayPalVerifiedSellerTrust';
 
 interface RentalHostCardProps {
   hostId: string;
@@ -15,6 +16,7 @@ interface RentalHostCardProps {
   hostName: string | null;
   hostAvatar?: string | null;
   isVerified?: boolean;
+  paypalBusinessVerified?: boolean;
   memberSince?: string | null;
   lastActiveAt?: string | null;
   ratingData?: { average: number; count: number } | null;
@@ -32,6 +34,7 @@ export const RentalHostCard = ({
   hostName,
   hostAvatar,
   isVerified = false,
+  paypalBusinessVerified = false,
   memberSince,
   lastActiveAt,
   ratingData,
@@ -89,6 +92,9 @@ export const RentalHostCard = ({
               </span>
             ))}
           </div>
+          {paypalBusinessVerified && (
+            <PayPalVerifiedSellerTrust className="mt-1.5" compact />
+          )}
         </div>
       </div>
 

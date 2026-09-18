@@ -47,25 +47,24 @@ export const trustTiles: TrustTile[] = [
   {
     id: 'identity-verified',
     icon: ShieldCheck,
-    title: 'Identity Verified',
-    explainer: 'Sellers confirm their identity and business details before transacting.',
+    title: 'PayPal-verified sellers',
+    explainer: 'Sellers who accept online payment complete PayPal’s business identity checks.',
     modal: {
-      title: 'Identity Verified',
+      title: 'PayPal-verified sellers',
       description: [
-        'Vendibook hosts confirm their identity and contact details before they can transact. This prevents impersonation, builds buyer confidence, and ensures accountability.',
-        'Verified sellers earn trust badges that appear on their profile and every listing. For high-value transactions (over $5,000), buyers may also be prompted to verify their identity to protect both parties.',
-        'Verification data is handled securely and is never shared with other users. Vendibook stores only your verification status.'
+        'Before a seller can accept PayPal payment on Vendibook, PayPal must confirm the seller’s primary email, ability to receive payments, and required account permissions.',
+        'PayPal performs the identity verification and decides whether the seller is eligible to transact. Vendibook displays this indicator only while those payment-readiness checks are complete.',
+        'This confirms PayPal’s business identity and payment checks only. It does not mean Vendibook LC inspected the item, verified title or ownership, or endorses the seller.'
       ],
       steps: [
-        { step: 1, title: 'Add payout details', description: 'Host saves a payout destination so Vendibook can release proceeds.' },
-        { step: 2, title: 'Complete verification', description: 'Confirm identity and contact details with Vendibook.' },
-        { step: 3, title: 'Earn Your Badge', description: 'Identity Verified badge appears on your profile and listings.' },
-        { step: 4, title: 'High-Value Protection', description: 'Some transactions require buyer verification for added security.' }
+        { step: 1, title: 'Connect PayPal', description: 'Seller connects a PayPal Business account, including a sole proprietorship.' },
+        { step: 2, title: 'Complete PayPal checks', description: 'PayPal confirms the seller’s identity, email, account eligibility, and permissions.' },
+        { step: 3, title: 'Accept payment', description: 'The trust indicator appears only while the seller remains eligible for PayPal checkout.' }
       ],
       faqs: [
-        { question: 'What data is collected during verification?', answer: 'Verification confirms your identity and contact details. Vendibook stores only the verification status, never a copy of your ID.' },
-        { question: 'How long does verification take?', answer: 'Most verifications are quick. In some cases manual review may take up to 24 hours.' },
-        { question: 'What if my verification fails?', answer: 'You can retry with a different ID or contact support. Common issues include blurry photos, expired IDs, or mismatched names.' }
+        { question: 'Who performs the verification?', answer: 'PayPal performs the business identity and account checks and decides eligibility.' },
+        { question: 'Does this verify the listing itself?', answer: 'No. It does not verify the item, condition, value, title, ownership, or seller claims.' },
+        { question: 'Can an individual owner qualify?', answer: 'Yes. An individual owner can use a PayPal Business account as a sole proprietor in their own legal name.' }
       ],
       primaryCta: { label: 'Learn how Vendibook works', href: '/how-it-works', requiresAuth: true, authLabel: 'Start Listing', authHref: '/list' },
       secondaryCta: { label: 'Contact Support', href: '/contact' }

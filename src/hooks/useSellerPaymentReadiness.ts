@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface SellerPaymentReadiness {
@@ -20,52 +20,43 @@ export interface SellerPaymentReadiness {
  * current first-party Vendibook PayPal checkout keeps working exactly as before.
  */
 export function useSellerPaymentReadiness(sellerId?: string | null): SellerPaymentReadiness {
-  const [state, setState] = useState<SellerPaymentReadiness>({
-    loading: true,
-    gatingActive: false,
-    ready: false,
-    reasons: [],
-    merchantId: null,
+  const query = useQuery({
+    queryKey: ['seller-payment-readiness', sellerId],
+    enabled: Boolean(sellerId),
+    staleTime: 60_000,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('seller_payment_readiness' as never, {
+        _seller_id: sellerId,
+      } as never);
+      if (error) throw error;
+      const payload = (data ?? {}) as {
+        gating_active?: boolean;
+        ready?: boolean;
+        reasons?: string[];
+        merchant_id?: string | null;
+      };
+      return {
+        gatingActive: payload.gating_active === true,
+        ready: payload.ready === true,
+        reasons: Array.isArray(payload.reasons) ? payload.reasons : [],
+        merchantId: payload.merchant_id ?? null,
+      };
+    },
   });
 
-  useEffect(() => {
-    let cancelled = false;
-    if (!sellerId) {
-      setState({ loading: false, gatingActive: false, ready: false, reasons: ['not_connected'], merchantId: null });
-      return;
-    }
-    (async () => {
-      try {
-        const { data, error } = await supabase.rpc('seller_payment_readiness' as never, {
-          _seller_id: sellerId,
-        } as never);
-        if (cancelled) return;
-        if (error) throw error;
-        const payload = (data ?? {}) as {
-          gating_active?: boolean;
-          ready?: boolean;
-          reasons?: string[];
-          merchant_id?: string | null;
-        };
-        setState({
-          loading: false,
-          gatingActive: payload.gating_active === true,
-          ready: payload.ready === true,
-          reasons: Array.isArray(payload.reasons) ? payload.reasons : [],
-          merchantId: payload.merchant_id ?? null,
-        });
-      } catch {
-        if (cancelled) return;
-        // A status lookup failure must never block a working checkout.
-        setState({ loading: false, gatingActive: false, ready: false, reasons: [], merchantId: null });
-      }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [sellerId]);
+  if (!sellerId) {
+    return { loading: false, gatingActive: false, ready: false, reasons: ['not_connected'], merchantId: null };
+  }
 
-  return state;
+  // Lookup failures never block the established checkout and never display
+  // the buyer-facing PayPal verification claim.
+  return {
+    loading: query.isLoading,
+    gatingActive: query.data?.gatingActive ?? false,
+    ready: query.data?.ready ?? false,
+    reasons: query.data?.reasons ?? [],
+    merchantId: query.data?.merchantId ?? null,
+  };
 }
 
 export default useSellerPaymentReadiness;

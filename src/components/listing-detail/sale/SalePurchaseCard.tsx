@@ -32,6 +32,7 @@ import { trackCTAClick } from '@/lib/analytics';
 import { trackFinancingLearnMoreClick, type FinancingSource } from '@/lib/analytics';
 import { useFinancingHandoff } from '@/hooks/useFinancingHandoff';
 import { formatCurrency } from '@/lib/commissions';
+import PayPalVerifiedSellerTrust from '@/components/payments/PayPalVerifiedSellerTrust';
 
 import { SaleCard } from './SaleCard';
 import WalkthroughCta from '@/components/video/WalkthroughCta';
@@ -44,6 +45,7 @@ interface SalePurchaseCardProps {
   host: any;
   isOwner: boolean;
   sellerVerified: boolean;
+  paypalBusinessVerified: boolean;
   ratingData?: { average: number; count: number } | null;
   /** Distinguishes the mobile and desktop instances so DOM ids stay unique. */
   instanceId?: string;
@@ -87,6 +89,7 @@ export const SalePurchaseCard = ({
   host,
   isOwner,
   sellerVerified,
+  paypalBusinessVerified,
   ratingData,
   instanceId = 'desktop',
 }: SalePurchaseCardProps) => {
@@ -406,6 +409,9 @@ export const SalePurchaseCard = ({
                   'Vendibook seller'
                 )}
               </div>
+              {paypalBusinessVerified && (
+                <PayPalVerifiedSellerTrust className="mt-1" compact />
+              )}
             </div>
             <Button variant="ghost" size="sm" asChild>
               <Link to={`/u/${listing.host_id}`}>Profile</Link>

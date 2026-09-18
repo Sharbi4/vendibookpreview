@@ -28,8 +28,11 @@ const SellerPaymentTerms: React.FC = () => (
     <Section title="2. You must onboard with PayPal">
       <p>
         To accept payments you must onboard with PayPal through Vendibook and maintain a PayPal
-        Business account in good standing. PayPal, not Vendibook LC, decides whether to approve you,
-        what your limits are, and when your funds are available.
+        Business account in good standing. A PayPal Business account includes a sole proprietorship
+        in your own legal name; Vendibook LC does not require you to form an LLC or registered
+        company. PayPal performs the identity verification, may request a tax ID such as a sole
+        proprietor&apos;s Social Security number, and decides whether you are eligible, what your limits
+        are, and when your funds are available.
       </p>
     </Section>
 

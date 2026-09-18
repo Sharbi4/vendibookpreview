@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import { Loader2 } from 'lucide-react';
+import SellerBusinessAccountHelp from '@/components/payments/SellerBusinessAccountHelp';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { usePayoutPreference } from '@/hooks/usePayoutPreference';
@@ -190,10 +191,13 @@ export default function SellerPayoutBalance() {
           </p>
         )}
         {!paypalReady ? (
-          <p>
-            Connect your PayPal Business account to accept online payments.{' '}
-            <Link to="/dashboard/payments/setup">Open payment setup</Link>
-          </p>
+          <div>
+            <p>
+              Connect your PayPal Business account to accept online payments.{' '}
+              <Link to="/dashboard/payments/setup">Open payment setup</Link>
+            </p>
+            <SellerBusinessAccountHelp className="mt-2" compact />
+          </div>
         ) : null}
       </div>
 

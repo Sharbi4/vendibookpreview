@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { recordLegalAcceptance } from '@/lib/legal/recordAcceptance';
+import SellerBusinessAccountHelp from '@/components/payments/SellerBusinessAccountHelp';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import {
@@ -328,11 +329,7 @@ export default function SellerPayPalConnect({
         </ul>
 
         {!connection && (
-          <p className="v2-paypal-note">
-            A PayPal <strong>Business</strong> account is required — personal accounts can&apos;t be
-            used to sell on Vendibook. You&apos;ll be taken to PayPal to sign in to your Business
-            account (or create/upgrade to one) and approve the connection.
-          </p>
+          <SellerBusinessAccountHelp className="v2-paypal-note" compact />
         )}
         {emailUnconfirmed && <p className="v2-paypal-warn">{emailWarning}</p>}
         {notReceivable && <p className="v2-paypal-warn">{receivableWarning}</p>}
@@ -466,10 +463,9 @@ export default function SellerPayPalConnect({
               Not connected
             </Badge>
             <p className="text-xs text-muted-foreground mt-0.5">
-              A PayPal <strong>Business</strong> account is required — personal accounts can't be
-              used to sell on Vendibook. You'll be taken to PayPal to sign in to your Business
-              account (or create/upgrade to one) and approve the connection.
+              You&apos;ll be taken to PayPal to connect or create your account and approve the connection.
             </p>
+            <SellerBusinessAccountHelp className="mt-2" compact />
                         <label className="mb-3 flex items-start gap-2 text-left text-xs text-muted-foreground">
               <input
                 type="checkbox"

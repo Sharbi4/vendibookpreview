@@ -15,6 +15,7 @@ import SEO, { generateOrganizationSchema, generateWebSiteSchema } from '@/compon
 import JsonLd from '@/components/JsonLd';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import SellerBusinessAccountHelp from '@/components/payments/SellerBusinessAccountHelp';
 
 import vendibookWordmark from '@/assets/vendibook-wordmark.png';
 import equinoxLogoAsset from '@/assets/equinox-funding-dark.png.asset.json';
@@ -188,6 +189,7 @@ const Index = () => {
                   Create your Vendibook account, add your truck, and publish. When you're ready
                   for online payments, connect PayPal and make your listing transaction-ready.
                 </p>
+                <SellerBusinessAccountHelp className="v2-home-sell-note" compact />
                 <div className="v2-home-sell-actions">
                   <Link to={sellerStartHref} className="v2-home-btn">
                     {user ? 'List your food truck' : 'Create your seller account'}
