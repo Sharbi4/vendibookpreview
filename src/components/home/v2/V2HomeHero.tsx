@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, ArrowRight, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, MapPin, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { SmartImage } from '@/components/ui/SmartImage';
 import { formatListingPriceLabel } from '@/lib/listings/rentalPricing';
