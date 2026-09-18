@@ -9405,6 +9405,27 @@ export type Database = {
           },
         ]
       }
+      signnow_templates: {
+        Row: {
+          created_at: string
+          kind: string
+          roles: Json
+          signnow_template_id: string
+        }
+        Insert: {
+          created_at?: string
+          kind: string
+          roles?: Json
+          signnow_template_id: string
+        }
+        Update: {
+          created_at?: string
+          kind?: string
+          roles?: Json
+          signnow_template_id?: string
+        }
+        Relationships: []
+      }
       signnow_webhook_events: {
         Row: {
           created_at: string
