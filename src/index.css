@@ -2335,10 +2335,10 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
 }
 .v2-checkout .text-primary { color: hsl(var(--v2-ink)) !important; }
 .v2-checkout .bg-primary:not([class*="bg-primary/"]) {
-  background-color: hsl(var(--v2-ink)) !important;
-  color: hsl(var(--v2-paper)) !important;
+  background-color: hsl(var(--vendibook-orange)) !important;
+  color: hsl(var(--v2-ink)) !important;
 }
-.v2-checkout .bg-primary:not([class*="bg-primary/"]) svg { color: hsl(var(--v2-paper)); }
+.v2-checkout .bg-primary:not([class*="bg-primary/"]) svg { color: hsl(var(--v2-ink)); }
 
 /* One card depth only: panels nested inside a checkout section read as quiet
    insets rather than a second raised card. */
@@ -2474,8 +2474,8 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
 .v2-checkout-dialog button[class*="bg-primary"],
 .v2-checkout-dialog button[class*="from-"] {
   background-image: none !important;
-  background-color: hsl(var(--v2-ink)) !important;
-  color: hsl(var(--v2-paper)) !important;
+  background-color: hsl(var(--vendibook-orange)) !important;
+  color: hsl(var(--v2-ink)) !important;
   box-shadow: none !important;
 }
 
@@ -2486,10 +2486,10 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
 .v2-checkout-dialog [class*="bg-muted"] { background-color: hsl(var(--v2-wash)) !important; }
 .v2-checkout-dialog [class*="border-"] { border-color: hsl(var(--v2-line)) !important; }
 .v2-checkout-dialog button.h-12 {
-  background: hsl(var(--v2-ink)) !important;
+  background: hsl(var(--vendibook-orange)) !important;
   background-image: none !important;
-  color: hsl(var(--v2-paper)) !important;
-  border: 1px solid hsl(var(--v2-ink)) !important;
+  color: hsl(var(--v2-ink)) !important;
+  border: 1px solid hsl(var(--vendibook-orange)) !important;
   box-shadow: none !important;
   border-radius: 12px;
 }
@@ -2499,16 +2499,16 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
 .v2-checkout-section-body button[class*="from-"],
 .v2-checkout-section-body a[class*="gradient"] {
   background-image: none !important;
-  background-color: hsl(var(--v2-ink)) !important;
-  color: hsl(var(--v2-paper)) !important;
-  border: 1px solid hsl(var(--v2-ink)) !important;
+  background-color: hsl(var(--vendibook-orange)) !important;
+  color: hsl(var(--v2-ink)) !important;
+  border: 1px solid hsl(var(--vendibook-orange)) !important;
   box-shadow: none !important;
 }
 .v2-checkout-section-body .bg-cta-primary,
 .v2-checkout .bg-cta-primary {
   background-image: none !important;
-  background-color: hsl(var(--v2-ink)) !important;
-  color: hsl(var(--v2-paper)) !important;
+  background-color: hsl(var(--vendibook-orange)) !important;
+  color: hsl(var(--v2-ink)) !important;
   box-shadow: none !important;
   border-radius: 12px !important;
 }

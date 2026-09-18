@@ -1,5 +1,6 @@
 import { MapPin, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { formatCurrency } from '@/lib/commissions';
 
 interface SaleListingSummaryProps {
   listingId: string;
@@ -62,7 +63,7 @@ const SaleListingSummary = ({
 
       <div className="mt-2 flex items-baseline gap-2">
         <span className="text-xl sm:text-2xl font-semibold tracking-tight text-foreground">
-          ${price.toLocaleString()}
+          {formatCurrency(price)}
         </span>
         {isAgreedPrice ? (
           <span className="text-xs font-medium text-primary">Agreed offer price</span>

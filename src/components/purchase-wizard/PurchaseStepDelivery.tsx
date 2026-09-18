@@ -9,6 +9,7 @@ import NextStepHint from '@/components/shared/NextStepHint';
 import { FreightLink, linkifyFreight } from '@/components/shared/FreightLink';
 import { FreightInfoPopover } from '@/components/shared/InfoPopover';
 import InfoPopover from '@/components/shared/InfoPopover';
+import { formatCurrency } from '@/lib/commissions';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
 
@@ -388,14 +389,14 @@ const PurchaseStepDelivery = ({
 
   const pickupPriceNode = <span className="text-emerald-500">FREE</span>;
   const deliveryPriceNode = deliveryFee
-    ? <span className="text-foreground">+${deliveryFee.toLocaleString()}</span>
+    ? <span className="text-foreground">+{formatCurrency(deliveryFee)}</span>
     : deliveryFeeType === 'per_mile' && deliveryRateText
       ? <span className="text-xs font-normal text-muted-foreground">{deliveryRateText}</span>
       : <span className="text-emerald-500">FREE</span>;
   const freightPriceNode = isFreightSellerPaid
     ? <span className="text-emerald-500">FREE</span>
     : hasValidEstimate && freightCost > 0
-      ? <span className="text-foreground">+${freightCost.toLocaleString()}</span>
+      ? <span className="text-foreground">+{formatCurrency(freightCost)}</span>
       : <span className="text-xs font-normal text-muted-foreground">Quote below</span>;
 
   return (
@@ -562,7 +563,7 @@ const PurchaseStepDelivery = ({
                 </div>
                 {!isFreightSellerPaid && freightCost > 0 && (
                   <span className="text-sm font-semibold text-foreground">
-                    ${freightCost.toLocaleString()}
+                    {formatCurrency(freightCost)}
                   </span>
                 )}
               </div>

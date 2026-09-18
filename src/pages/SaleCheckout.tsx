@@ -14,6 +14,7 @@ import { validators } from '@/components/ui/validated-input';
 import { trackFormSubmitConversion } from '@/lib/gtagConversions';
 import { trackPurchase, trackInitiateCheckout } from '@/lib/facebookCAPI';
 import { calculateDistance } from '@/lib/geolocation';
+import { formatCurrency } from '@/lib/commissions';
 import SEO from '@/components/SEO';
 
 import {
@@ -449,7 +450,7 @@ const SaleCheckout = () => {
         ? 'Sales tax'
         : null;
   const taxSummaryValue = taxAmount > 0
-    ? `$${taxAmount.toLocaleString()}`
+    ? formatCurrency(taxAmount)
     : taxState === 'loading'
       ? 'Calculating…'
       : 'Calculated at payment';
@@ -850,18 +851,18 @@ const SaleCheckout = () => {
       : deliveryAddress || 'Address confirmed below';
 
   const moneyLines: MoneyLine[] = [
-    { label: listing.title, value: `$${priceSale.toLocaleString()}` },
+    { label: listing.title, value: formatCurrency(priceSale) },
     ...(currentDeliveryFee > 0
-      ? [{ label: 'Seller delivery', value: `$${currentDeliveryFee.toLocaleString()}` }]
+      ? [{ label: 'Seller delivery', value: formatCurrency(currentDeliveryFee) }]
       : []),
     ...(buyerFreightCharge > 0
-      ? [{ label: 'Vendibook Freight', value: `$${buyerFreightCharge.toLocaleString()}` }]
+      ? [{ label: 'Vendibook Freight', value: formatCurrency(buyerFreightCharge) }]
       : []),
     ...(taxSummaryLabel ? [{ label: taxSummaryLabel, value: taxSummaryValue, muted: taxAmount === 0 }] : []),
   ];
 
   const moneyBreakdown = (
-    <MoneyBreakdown lines={moneyLines} total={`$${totalPrice.toLocaleString()}`} totalNote="Due today" />
+    <MoneyBreakdown lines={moneyLines} total={formatCurrency(totalPrice)} totalNote="Due today" />
   );
 
   const summaryMeta = [
@@ -879,7 +880,7 @@ const SaleCheckout = () => {
       typeLabel={humanizeCategory(listing.category)}
       location={locationLabel}
       counterpartyLabel={sellerName ? `Sold by ${sellerName}` : undefined}
-      priceLabel={`$${priceSale.toLocaleString()}`}
+      priceLabel={formatCurrency(priceSale)}
       priceNote={acceptedOfferPrice ? 'Accepted offer price' : undefined}
       meta={summaryMeta}
     >
@@ -967,7 +968,7 @@ const SaleCheckout = () => {
             <UserRound aria-hidden />
             <span>Sold by <strong>{sellerName || 'Seller'}</strong></span>
           </div>
-          <strong className="sale-review-price">${priceSale.toLocaleString()}</strong>
+          <strong className="sale-review-price">{formatCurrency(priceSale)}</strong>
           {acceptedOfferPrice ? <small>Accepted offer price</small> : null}
           {financingEligible ? <p className="sale-review-finance">Financing may be available through Equinox Funding.</p> : null}
         </div>
@@ -1048,7 +1049,7 @@ const SaleCheckout = () => {
 
     return (
       <div className="sale-final-confirm">
-        <div className="sale-final-facts"><p><span>Total due today</span><strong>${totalPrice.toLocaleString()}</strong></p><p><span>Payment</span><strong>{paymentMethod === 'cash' ? 'Pay in person' : 'PayPal secure checkout'}</strong></p><p><span>Fulfillment</span><strong>{summaryMeta[0].value}</strong></p></div>
+        <div className="sale-final-facts"><p><span>Total due today</span><strong>{formatCurrency(totalPrice)}</strong></p><p><span>Payment</span><strong>{paymentMethod === 'cash' ? 'Pay in person' : 'PayPal secure checkout'}</strong></p><p><span>Fulfillment</span><strong>{summaryMeta[0].value}</strong></p></div>
         {paymentMethod === 'cash' ? (
           <Button className="w-full" size="lg" onClick={runPurchase} disabled={isPurchasing}>{isPurchasing ? 'Placing order…' : 'Place order'}</Button>
         ) : paypalCheckout ? (
@@ -1069,7 +1070,7 @@ const SaleCheckout = () => {
         subtitle={listing.title}
         exitHref={`/listing/${listingId}`}
         summary={summaryContent}
-        mobileSummary={<details className="sale-mobile-summary"><summary>Order summary <strong>${totalPrice.toLocaleString()}</strong></summary>{summaryContent}</details>}
+        mobileSummary={<details className="sale-mobile-summary"><summary>Order summary <strong>{formatCurrency(totalPrice)}</strong></summary>{summaryContent}</details>}
       >
         {!user && (
           <div className="v2-checkout-section" role="status">

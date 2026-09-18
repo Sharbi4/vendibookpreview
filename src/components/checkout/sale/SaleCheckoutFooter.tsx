@@ -1,5 +1,6 @@
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatCurrency } from '@/lib/commissions';
 
 interface SaleCheckoutFooterProps {
   backLabel?: string;
@@ -87,7 +88,7 @@ const SaleCheckoutFooter = ({
             <div className="flex items-baseline gap-1.5 mb-1">
               <span className="text-[11px] text-muted-foreground">Total</span>
               <span className="text-base font-semibold tabular-nums text-foreground">
-                ${total.toLocaleString()}
+                {formatCurrency(total)}
               </span>
             </div>
           ) : null}

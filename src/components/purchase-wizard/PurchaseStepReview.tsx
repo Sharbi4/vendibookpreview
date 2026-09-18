@@ -12,6 +12,7 @@ import { FeesInfoPopover } from '@/components/shared/InfoPopover';
 import { TrustModule, PAYMENT_TRUST_POINTS, PAYMENT_DISCLAIMER } from '@/components/journey';
 import PostPaymentTimeline from '@/components/checkout/PostPaymentTimeline';
 import type { BuyerInfo } from './PurchaseStepInfo';
+import { formatCurrency } from '@/lib/commissions';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'vendibook_freight';
 
@@ -116,7 +117,7 @@ const PurchaseStepReview = ({
               </span>
               <span className="text-xs text-muted-foreground capitalize">{listing.category?.replace('_', ' ')}</span>
             </div>
-            <p className="text-lg font-bold text-primary mt-2">${priceSale.toLocaleString()}</p>
+            <p className="text-lg font-bold text-primary mt-2">{formatCurrency(priceSale)}</p>
           </div>
         </div>
       </div>
@@ -156,10 +157,10 @@ const PurchaseStepReview = ({
               isFreightSellerPaid ? (
                 <span className="text-sm font-semibold text-emerald-600">Free Shipping</span>
               ) : currentDeliveryFee > 0 ? (
-                <span className="font-medium">+${currentDeliveryFee.toLocaleString()}</span>
+                <span className="font-medium">+{formatCurrency(currentDeliveryFee)}</span>
               ) : null
             ) : currentDeliveryFee > 0 ? (
-              <span className="font-medium">+${currentDeliveryFee.toLocaleString()}</span>
+              <span className="font-medium">+{formatCurrency(currentDeliveryFee)}</span>
             ) : fulfillmentSelected === 'pickup' ? (
               <span className="text-sm font-semibold text-emerald-600">FREE</span>
             ) : null}
@@ -214,7 +215,7 @@ const PurchaseStepReview = ({
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
             <span className="text-muted-foreground">Item price</span>
-            <span className="text-foreground font-medium">${priceSale.toLocaleString()}</span>
+            <span className="text-foreground font-medium">{formatCurrency(priceSale)}</span>
           </div>
           {/* Show freight line - either with cost or as free shipping */}
           {fulfillmentSelected === 'vendibook_freight' && (
@@ -226,7 +227,7 @@ const PurchaseStepReview = ({
               {isFreightSellerPaid ? (
                 <span className="text-emerald-600 font-medium">FREE</span>
               ) : (
-                <span className="text-foreground font-medium">+${currentDeliveryFee.toLocaleString()}</span>
+                <span className="text-foreground font-medium">+{formatCurrency(currentDeliveryFee)}</span>
               )}
             </div>
           )}
@@ -237,7 +238,7 @@ const PurchaseStepReview = ({
                 <Truck className="h-3.5 w-3.5" />
                 Delivery
               </span>
-              <span className="text-foreground font-medium">+${currentDeliveryFee.toLocaleString()}</span>
+              <span className="text-foreground font-medium">+{formatCurrency(currentDeliveryFee)}</span>
             </div>
           )}
           <div className="flex justify-between pt-3 border-t border-primary/20">
@@ -245,7 +246,7 @@ const PurchaseStepReview = ({
               Total due now
               <FeesInfoPopover />
             </span>
-            <span className="font-bold text-lg text-primary" style={{ fontVariantNumeric: 'tabular-nums' }}>${totalPrice.toLocaleString()}</span>
+            <span className="font-bold text-lg text-primary" style={{ fontVariantNumeric: 'tabular-nums' }}>{formatCurrency(totalPrice)}</span>
           </div>
         </div>
       </div>
@@ -324,8 +325,8 @@ const PurchaseStepReview = ({
           <ShieldCheck className="h-4 w-4 mr-2" />
         )}
         {paymentMethod === 'cash'
-          ? `Confirm — arrange in person · $${totalPrice.toLocaleString()}`
-          : `Pay $${totalPrice.toLocaleString()} now`
+          ? `Confirm — arrange in person · ${formatCurrency(totalPrice)}`
+          : `Pay ${formatCurrency(totalPrice)} now`
         }
       </Button>
 
