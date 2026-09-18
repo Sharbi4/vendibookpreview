@@ -11,6 +11,7 @@ import SEO from '@/components/SEO';
 import OrderEvidenceSection from '@/components/handoff/OrderEvidenceSection';
 import DeliveryTrackingPanel from '@/components/delivery/DeliveryTrackingPanel';
 import PayPalPaymentFacts from '@/components/checkout/PayPalPaymentFacts';
+import OrderCaseSection from '@/components/disputes/OrderCaseSection';
 
 
 const money = (cents: number, currency = 'USD') =>
@@ -355,6 +356,12 @@ const OrderDetailPage = () => {
               className="mt-4 rounded-xl border border-border bg-muted/20 p-4 text-left"
             />
           </Card>
+
+          <OrderCaseSection
+            orderId={order.id}
+            viewerRole={order.viewer_role}
+            canReport={order.viewer_role !== 'admin'}
+          />
 
           <OrderEvidenceSection
             saleTransactionId={(order as any).links?.sale_transaction_id ?? null}

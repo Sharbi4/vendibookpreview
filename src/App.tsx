@@ -58,6 +58,7 @@ const SellerPaymentTerms = lazy(() => import("./pages/legal/SellerPaymentTerms")
 const EsignConsent = lazy(() => import("./pages/legal/EsignConsent"));
 const AdminLegalAcceptances = lazy(() => import("./pages/AdminLegalAcceptances"));
 const AdminPayPalApiSamples = lazy(() => import("./pages/AdminPayPalApiSamples"));
+const AdminDisputes = lazy(() => import("./pages/AdminDisputes"));
 const SmsEnrollment = lazy(() => import("./pages/SmsEnrollment"));
 const SmsOptIn = lazy(() => import("./pages/SmsOptIn"));
 // Unified Vendibook workspace (primary logged-in experience)
