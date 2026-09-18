@@ -100,14 +100,22 @@ const SellerPaymentTerms: React.FC = () => (
       </p>
     </Section>
 
-    <Section title="9. Payment logging">
+    <Section title="9. PayPal processing rates">
+      <p>
+        Pay Later and other funding sources may carry different processing rates set by PayPal.
+        PayPal charges those processing costs to you as the seller and merchant of record, not to
+        Vendibook LC. Review PayPal&apos;s current merchant pricing before accepting payments.
+      </p>
+    </Section>
+
+    <Section title="10. Payment logging">
       <p>
         We log payment API requests and responses for debugging and dispute support for a limited
         retention period. We do not log card numbers or full payment credentials.
       </p>
     </Section>
 
-    <Section title="10. Suspension">
+    <Section title="11. Suspension">
       <p>
         We may pause payment acceptance on your listings if PayPal reports that your account can no
         longer receive payments, if your permissions are revoked, or if we are investigating a report

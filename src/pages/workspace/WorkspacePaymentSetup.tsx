@@ -225,6 +225,10 @@ export default function WorkspacePaymentSetup() {
               You&apos;ll sign in at PayPal and approve the connection, then come back here.
             </p>
             <SellerBusinessAccountHelp className="mt-3" compact />
+            <p className="mt-3 text-xs text-muted-foreground">
+              Pay Later and other funding sources may have different processing rates set and
+              charged by PayPal to you as the seller. See PayPal for current pricing.
+            </p>
           </div>
           <SellerPayPalConnect showWhenDisabled variant="dark" />
         </section>

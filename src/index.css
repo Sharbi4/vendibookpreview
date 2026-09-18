@@ -1748,6 +1748,16 @@
   background: hsl(var(--background));
 }
 
+/* Official PayPal SDK funding controls. Empty/ineligible sources collapse. */
+.paypal-funding-stack { display: grid; gap: 12px; width: 100%; }
+.paypal-funding-stack > div:empty { display: none; }
+.paypal-powered-by { display: flex; align-items: center; justify-content: center; gap: 5px; margin-top: -4px; color: hsl(var(--muted-foreground)); font-size: 11px; }
+.paypal-alternate-divider { display: flex; align-items: center; gap: 12px; }
+.paypal-alternate-divider span { height: 1px; flex: 1; background: hsl(var(--border)); }
+.paypal-alternate-divider small { color: hsl(var(--muted-foreground)); font-size: 11px; text-transform: uppercase; }
+.paypal-pay-later-message:empty { display: none; }
+.paypal-pay-later-message:not(:empty) { margin-block: 4px; }
+
 /* ---------------------------------------------------------------
    Global reduced-motion safety net.
    Users who ask for reduced motion get near-instant transitions,

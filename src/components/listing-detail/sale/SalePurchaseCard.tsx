@@ -33,6 +33,7 @@ import { trackFinancingLearnMoreClick, type FinancingSource } from '@/lib/analyt
 import { useFinancingHandoff } from '@/hooks/useFinancingHandoff';
 import { formatCurrency } from '@/lib/commissions';
 import PayPalVerifiedSellerTrust from '@/components/payments/PayPalVerifiedSellerTrust';
+import PayPalPayLaterMessage from '@/components/payments/PayPalPayLaterMessage';
 
 import { SaleCard } from './SaleCard';
 import WalkthroughCta from '@/components/video/WalkthroughCta';
