@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://vendibook.com/legal</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://vendibook.com/terms</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://vendibook.com/privacy</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://vendibook.com/legal/payments-terms</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://vendibook.com/legal/handoff-terms</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://vendibook.com/legal/financing-disclosure</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://vendibook.com/legal/video-walkthrough-terms</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://vendibook.com/legal/recording-consent</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://vendibook.com/legal/device-permissions-privacy</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+  <url><loc>https://vendibook.com/legal/location-tracking</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>
+</urlset>

@@ -8,6 +8,7 @@
  */
 import { writeFileSync, mkdirSync } from "fs";
 import { resolve } from "path";
+import { LEGAL_DOCUMENTS } from "../src/lib/legal/versions";
 
 const BASE_URL = "https://vendibook.com";
 const SUPABASE_URL = "https://nbrehbwfsmedbelzntqs.supabase.co";
@@ -140,8 +141,29 @@ function buildLocationsSitemap(listings: Listing[]): string {
   ].join("\n");
 }
 
+/**
+ * public/sitemap-legal.xml — one <url> per versioned legal document, derived
+ * from the LEGAL_DOCUMENTS registry so a new document is never forgotten.
+ */
+function buildLegalSitemap(): string {
+  const routes = Array.from(new Set(["/legal", ...LEGAL_DOCUMENTS.map((d) => d.route)]));
+  const entries = routes.map(
+    (route) =>
+      `  <url><loc>${BASE_URL}${route}</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>`,
+  );
+  return [
+    `<?xml version="1.0" encoding="UTF-8"?>`,
+    `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`,
+    ...entries,
+    `</urlset>`,
+    "",
+  ].join("\n");
+}
+
 async function main() {
   try {
+    mkdirSync(resolve("public"), { recursive: true });
+    writeFileSync(resolve("public/sitemap-legal.xml"), buildLegalSitemap());
     const listings = await fetchListings();
     const listingsXml = buildListingsSitemap(listings);
     const locationsXml = buildLocationsSitemap(listings);
