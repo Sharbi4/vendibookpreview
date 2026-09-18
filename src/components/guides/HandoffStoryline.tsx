@@ -153,7 +153,11 @@ export default function HandoffStoryline({ context, safeReturn }: Props) {
   const fulfillment = context?.fulfillment ?? choice.fulfillment;
   const milestones = buildStoryline(mode, fulfillment, context);
   const modeLabel = mode === 'sale' ? 'Sale' : 'Rental';
-  const badge = context ? `${modeLabel} · ${FULFILLMENT_LABEL[fulfillment]}` : 'Typical Vendibook handoff';
+  const fulfillmentLabel =
+    fulfillment === 'delivery' ? (mode === 'sale' ? 'Seller delivery' : 'Host delivery')
+      : fulfillment === 'on_site' ? 'On-site space'
+        : FULFILLMENT_LABEL[fulfillment];
+  const badge = context ? `${modeLabel} · ${fulfillmentLabel}` : 'Typical Vendibook handoff';
   const currentKey = context?.real ? context.currentStage : undefined;
   const currentIndex = currentKey ? milestones.findIndex((m) => m.key === currentKey) : -1;
 
