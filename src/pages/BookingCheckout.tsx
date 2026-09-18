@@ -73,7 +73,12 @@ import CheckoutSection from '@/components/transaction/checkout/CheckoutSection';
 import ListingCheckoutSummary from '@/components/transaction/checkout/ListingCheckoutSummary';
 import MoneyBreakdown, { type MoneyLine } from '@/components/transaction/checkout/MoneyBreakdown';
 import PayPalEmbeddedPayment from '@/components/transaction/checkout/PayPalEmbeddedPayment';
-import CheckoutLegalConsent from '@/components/legal/CheckoutLegalConsent';
+import TransactionAgreementStep from '@/components/checkout/TransactionAgreementStep';
+import PostPaymentTimeline from '@/components/checkout/PostPaymentTimeline';
+import { recordCheckoutAgreements } from '@/lib/legal/recordCheckoutAgreements';
+import { useLegalDocument } from '@/hooks/useLegalDocument';
+import { CONSENT_TRIGGERS, DOCUMENT_TYPES } from '@/lib/legalDocuments';
+import { loadPayPalSdk } from '@/lib/paypalClient';
 import ProtectionDisclosure from '@/components/checkout/ProtectionDisclosure';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'on_site';
