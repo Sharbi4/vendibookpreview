@@ -14,6 +14,7 @@ import { usePageTracking } from '@/hooks/usePageTracking';
 import SEO, { generateOrganizationSchema, generateWebSiteSchema } from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 import vendibookWordmark from '@/assets/vendibook-wordmark.png';
 import equinoxLogoAsset from '@/assets/equinox-funding-dark.png.asset.json';
