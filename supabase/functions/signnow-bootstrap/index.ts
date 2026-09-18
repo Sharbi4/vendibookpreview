@@ -1,5 +1,5 @@
 // One-time SignNow bootstrap.
-// Creates the two master templates (rental agreement + bill of sale) and the
+// Creates every master template in the Vendibook document package and the
 // private signed-documents bucket. Safe to re-run: template IDs are persisted
 // in public.signnow_templates and reused, so this returns existing IDs.
 //
@@ -8,7 +8,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.45.0';
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from '../_shared/jsonError.ts';
 import { signnowBase } from '../_shared/signnow.ts';
-import { ensureSignedDocumentsBucket, ensureTemplateId } from '../_shared/signnowTemplates.ts';
+import { ensureSignedDocumentsBucket, provisionAllTemplates } from '../_shared/signnowTemplates.ts';
 
 async function isAdminCaller(authHeader: string): Promise<boolean> {
   if (!authHeader.startsWith('Bearer ')) return false;
@@ -42,17 +42,15 @@ Deno.serve(async (req) => {
 
   try {
     await ensureSignedDocumentsBucket();
-    const rentalTemplateId = await ensureTemplateId('rental_agreement');
-    const billTemplateId = await ensureTemplateId('bill_of_sale');
+    // Provisions any missing (kind, version) template. Existing templates are
+    // returned as-is and never overwritten or deleted.
+    const templates = await provisionAllTemplates();
 
     return jsonResponse(200, {
       ok: true,
       api_base: signnowBase(),
-      templates: {
-        rental_agreement: rentalTemplateId,
-        bill_of_sale: billTemplateId,
-      },
-      note: 'Template IDs are stored in public.signnow_templates and reused automatically.',
+      templates,
+      note: 'Template IDs and versions are stored in public.signnow_templates and reused automatically. No credentials are returned.',
     });
   } catch (e) {
     console.error('[signnow-bootstrap]', e);
