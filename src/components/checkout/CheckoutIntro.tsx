@@ -111,8 +111,8 @@ const CheckoutIntro = ({
         icon: ShieldCheck,
         label:
           flow === 'sale'
-            ? 'Your payment is protected until you confirm delivery'
-            : 'Your payment is protected until check-in is confirmed',
+            ? 'Payment processed through PayPal'
+            : 'Payment processed through PayPal',
       },
       { icon: Lock, label: 'Secure checkout powered by PayPal', kind: 'paypal' },
       { icon: FileSignature, label: 'Bill of sale e-signed free' },
