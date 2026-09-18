@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import {
   DEVICE_PRIVACY_VERSION,
-  WALKTHROUGH_RECORDING_ENABLED,
   WALKTHROUGH_TERMS_VERSION,
   recordWalkthroughConsent,
   requestLocationPermission,
