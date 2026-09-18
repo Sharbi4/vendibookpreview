@@ -29,6 +29,7 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useHandoffTasks } from '@/hooks/useHandoffTasks';
 import { useVideoWalkthroughs } from '@/hooks/useVideoWalkthroughs';
+import SellerBusinessAccountHelp from '@/components/payments/SellerBusinessAccountHelp';
 import { formatWalkthroughTime } from '@/lib/videoWalkthroughs';
 import { toDashboardTarget } from '@/lib/navigation/dashboardTargets';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -467,6 +468,7 @@ export default function WorkspaceHome() {
                 <ArrowRight />
               </span>
             </Link>
+            {!paypalReady && <SellerBusinessAccountHelp className="mt-3 px-1" compact />}
           </section>
         </div>
 
