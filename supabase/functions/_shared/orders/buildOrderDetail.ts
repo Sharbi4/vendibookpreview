@@ -62,6 +62,9 @@ export interface OrderDetail {
   next_action: NextAction;
   seller_next_action: NextAction | null;
 
+  /** Identifiers used to load the Verified Handoff evidence chain. */
+  links?: { sale_transaction_id: string | null; booking_request_id: string | null };
+
   timeline: Array<{
     id: string;
     event_code: string;
@@ -185,6 +188,10 @@ export async function buildOrderDetail(
     seller_next_action: domain.sellerNextAction ?? null,
     timeline,
     settlement,
+    links: {
+      sale_transaction_id: record.sale_transaction_id ?? null,
+      booking_request_id: record.booking_request_id ?? null,
+    },
     support: {
       email: 'support@vendibook.com',
       phone: '(725) 755-9598',

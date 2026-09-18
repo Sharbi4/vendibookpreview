@@ -8,6 +8,7 @@ import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
 import { toast } from 'sonner';
 import SEO from '@/components/SEO';
+import OrderEvidenceSection from '@/components/handoff/OrderEvidenceSection';
 
 const money = (cents: number, currency = 'USD') =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency }).format((cents ?? 0) / 100);
@@ -271,6 +272,11 @@ const OrderDetailPage = () => {
               <Line label="Transaction ID" value={order.id} mono />
             </dl>
           </Card>
+
+          <OrderEvidenceSection
+            saleTransactionId={(order as any).links?.sale_transaction_id ?? null}
+            bookingId={(order as any).links?.booking_request_id ?? null}
+          />
 
           <Card className="p-4 sm:p-5">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">

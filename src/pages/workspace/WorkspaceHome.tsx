@@ -13,6 +13,7 @@ import {
   MessageCircle,
   Receipt,
   Search,
+  ShieldCheck,
   Video,
 } from 'lucide-react';
 import WorkspaceShell from '@/components/workspace/WorkspaceShell';
@@ -26,6 +27,7 @@ import { useConversations } from '@/hooks/useConversations';
 import { useMyPayPalConnection } from '@/hooks/useMyPayPalConnection';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useFavorites } from '@/hooks/useFavorites';
+import { useHandoffTasks } from '@/hooks/useHandoffTasks';
 import { useVideoWalkthroughs } from '@/hooks/useVideoWalkthroughs';
 import { formatWalkthroughTime } from '@/lib/videoWalkthroughs';
 import { toDashboardTarget } from '@/lib/navigation/dashboardTargets';
@@ -67,6 +69,7 @@ export default function WorkspaceHome() {
   const { notifications, unreadCount: notificationUnread } = useNotifications(user?.id);
   const { favorites } = useFavorites();
   const { walkthroughs } = useVideoWalkthroughs();
+  const { data: handoffTasks } = useHandoffTasks();
 
   const name = profile?.full_name || user?.email || 'there';
   const firstName = name.split(' ')[0];
@@ -84,6 +87,9 @@ export default function WorkspaceHome() {
 
   const tasks = useMemo(() => {
     const items: Task[] = [];
+    (handoffTasks ?? []).forEach((t) =>
+      items.push({ id: t.id, label: t.label, hint: t.hint, to: t.to, icon: ShieldCheck, tone: t.tone }),
+    );
     upcomingWalkthroughs.slice(0, 3).forEach((w) => items.push({ id:`walkthrough-${w.id}`, label:`Video walkthrough ${formatWalkthroughTime(w.starts_at)}`, hint:w.listing?.title || 'Scheduled walkthrough', to:`/walkthrough/${w.id}`, icon:Video }));
     if (pendingSellerBookings.length)
       items.push({
@@ -153,6 +159,7 @@ export default function WorkspaceHome() {
       });
     return items;
   }, [
+    handoffTasks,
     pendingSellerBookings.length,
     drafts.length,
     isSeller,

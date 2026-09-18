@@ -114,6 +114,8 @@ const AdminUsers = lazy(() => import("./pages/AdminUsers"));
 const AdminMessages = lazy(() => import("./pages/AdminMessages"));
 const AdminVerifiedSellers = lazy(() => import("./pages/AdminVerifiedSellers"));
 const OrderDetail = lazy(() => import("./pages/OrderDetail"));
+const HandoffPage = lazy(() => import("./pages/HandoffPage"));
+const DriverHandoff = lazy(() => import("./pages/DriverHandoff"));
 
 const AdminDigest = lazy(() => import("./pages/AdminDigest"));
 const AdminOrchestration = lazy(() => import("./pages/AdminOrchestration"));
@@ -413,6 +415,8 @@ const AnimatedRoutes = () => {
           <Route path="/admin/finance" element={<PageTransition><AdminFinance /></PageTransition>} />
           <Route path="/orders/:orderId" element={<PageTransition><OrderDetail /></PageTransition>} />
           <Route path="/orders/:orderId/payment" element={<PageTransition><OrderDetail /></PageTransition>} />
+          <Route path="/handoff/:kind/:id" element={<PageTransition><HandoffPage /></PageTransition>} />
+          <Route path="/driver/:token" element={<PageTransition><DriverHandoff /></PageTransition>} />
           <Route path="/admin/payouts" element={<PageTransition><AdminPayouts /></PageTransition>} />
           <Route path="/admin/freight" element={<PageTransition><AdminFreightRequests /></PageTransition>} />
           <Route path="/admin/users" element={<PageTransition><AdminUsers /></PageTransition>} />
