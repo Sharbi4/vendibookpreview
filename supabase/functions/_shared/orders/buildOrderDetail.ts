@@ -62,6 +62,9 @@ export interface OrderDetail {
   next_action: NextAction;
   seller_next_action: NextAction | null;
 
+  /** Identifiers used to load the Verified Handoff evidence chain. */
+  links?: { sale_transaction_id: string | null; booking_request_id: string | null };
+
   timeline: Array<{
     id: string;
     event_code: string;
