@@ -98,14 +98,25 @@ export default function AdminPayouts() {
     const { data, error } = await supabase
       .from('seller_payables')
       .select(
-        '*, payment:payment_records(reference, payment_status, buyer_email), seller:profiles!seller_payables_seller_id_fkey(full_name, email)',
+        '*, payment:payment_records(reference, payment_status, buyer_email)',
       )
       .in('status', statuses)
       .order('release_due_at', { ascending: true })
       .limit(200);
 
-    if (error) toast.error('Could not load the payout queue.');
-    setRows((data as unknown as Payable[]) ?? []);
+    if (error) {
+      toast.error('Could not load the payout queue.');
+      setRows([]);
+      setLoading(false);
+      return;
+    }
+    const rawRows = (data as unknown as Payable[]) ?? [];
+    const sellerIds = [...new Set(rawRows.map((row) => row.seller_id).filter(Boolean))];
+    const sellers = sellerIds.length
+      ? await supabase.from('profiles').select('id, full_name, email').in('id', sellerIds)
+      : { data: [] };
+    const byId = new Map((sellers.data ?? []).map((seller) => [seller.id, seller]));
+    setRows(rawRows.map((row) => ({ ...row, seller: byId.get(row.seller_id) ?? null })));
     setLoading(false);
   }, [statuses]);
 
