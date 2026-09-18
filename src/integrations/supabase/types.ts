@@ -2751,6 +2751,51 @@ export type Database = {
           },
         ]
       }
+      legal_acceptances: {
+        Row: {
+          accepted_at: string
+          created_at: string
+          document_slug: string
+          document_version: string
+          granted_permissions: Json
+          id: string
+          related_entity_id: string | null
+          related_entity_type: string | null
+          route: string | null
+          surface: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string
+          created_at?: string
+          document_slug: string
+          document_version: string
+          granted_permissions?: Json
+          id?: string
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+          route?: string | null
+          surface?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string
+          created_at?: string
+          document_slug?: string
+          document_version?: string
+          granted_permissions?: Json
+          id?: string
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+          route?: string | null
+          surface?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       legal_documents: {
         Row: {
           body_markdown: string
