@@ -77,4 +77,4 @@
 - [x] Surface countdown and outstanding conditions on buyer/seller order pages.
 - [x] Surface conditions and refund controls in admin payout queue.
 - [x] Keep deadline handling manual in the selected workflow; overdue records stay in admin review until refunded.
-- [ ] Deploy and run focused tests.
+- [x] Deploy and run focused tests.

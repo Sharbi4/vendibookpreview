@@ -177,7 +177,7 @@ export default function AdminPayouts() {
               Payout queue
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Seller proceeds collected through PayPal, released manually. Approve, then record the
+              Seller proceeds collected through PayPal and paid manually. Approve, then record the
               external transfer reference once the money is sent.
             </p>
           </div>
@@ -253,7 +253,7 @@ export default function AdminPayouts() {
                       <Clock className="h-3 w-3" />
                       {row.payout_provider === 'paypal' && row.status === 'payout_completed'
                         ? `Settled by PayPal at capture ${when(row.payout_completed_at)} — no manual payout needed`
-                        : `Release due ${when(row.release_due_at)}`}
+                        : `Review date ${when(row.conditions_deadline_at ?? row.release_due_at)}`}
                       {row.external_payout_reference ? ` · transfer ${row.external_payout_reference}` : ''}
                     </p>
                     {row.release_state && (
@@ -316,7 +316,7 @@ export default function AdminPayouts() {
                       {row.status === 'payout_on_hold' ? (
                         <Button size="sm" variant="outline" disabled={busyId === row.id}
                           onClick={() => act(row, 'release_hold')}>
-                          Release hold
+                          Resume review
                         </Button>
                       ) : row.status !== 'payout_completed' ? (
                         <Button size="sm" variant="outline" disabled={busyId === row.id}

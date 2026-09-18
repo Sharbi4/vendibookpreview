@@ -296,14 +296,14 @@ const PAYABLE_PRESENTATION: Record<string, { label: string; tone: SettlementTone
     description: 'We are confirming the buyer payment with PayPal before settlement figures are final.',
   },
   pending_release: {
-    label: 'Pending release',
+    label: 'Checklist in progress',
     tone: 'pending',
-    description: 'Payment received. Your proceeds are scheduled for release once the release window passes.',
+    description: 'Payment received. Complete the walkthrough video and both agreement signatures before payout review.',
   },
   eligible_for_review: {
     label: 'Eligible for review',
     tone: 'pending',
-    description: 'Your proceeds are queued for Vendibook review before the payout is sent.',
+    description: 'The walkthrough video and both signatures are complete. Your payout is ready for administrator review.',
   },
   payout_on_hold: {
     label: 'On hold',
