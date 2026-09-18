@@ -119,12 +119,14 @@ const HeroPremium = ({ showGoogleSignIn = true, showRotator = true }: HeroPremiu
               </Link>
             </Button>
 
-            <GoogleSignInButton width={200} className="flex justify-center" />
+            {showGoogleSignIn && <GoogleSignInButton width={200} className="flex justify-center" />}
           </motion.div>
 
-          <motion.div {...rise(0.26)} className="mt-8">
-            <HeroListingRotator />
-          </motion.div>
+          {showRotator && (
+            <motion.div {...rise(0.26)} className="mt-8">
+              <HeroListingRotator />
+            </motion.div>
+          )}
         </div>
       </div>
     </section>
