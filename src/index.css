@@ -1655,6 +1655,10 @@
    soft gray hairlines, restrained shadows. Orange stays for actions only.
    ===================================================================== */
 .sale-light {
+  /* Shared v2 premium tokens so v2 buttons/labels render on listing pages. */
+  --v2-shell: 240 6% 7%; --v2-paper: 38 34% 97%; --v2-surface: 40 40% 99%;
+  --v2-ink: 28 10% 12%; --v2-stone: 28 8% 40%; --v2-line: 30 13% 85%;
+  --v2-line-strong: 30 12% 76%; --v2-ok: 152 32% 34%; --v2-warn: 32 55% 40%;
   --background: 36 30% 97%;
   --foreground: 24 12% 12%;
 

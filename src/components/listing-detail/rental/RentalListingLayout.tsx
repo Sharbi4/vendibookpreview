@@ -25,6 +25,7 @@ import { CATEGORY_LABELS, type ListingCategory } from '@/types/listing';
 import { RentalPriceCard } from './RentalPriceCard';
 import { RentalTermsCard } from './RentalTermsCard';
 import { RentalHostCard } from './RentalHostCard';
+import TitleWalkthroughCta from '@/components/listing-detail/TitleWalkthroughCta';
 
 interface RentalListingLayoutProps {
   listing: any;
@@ -164,7 +165,7 @@ export const RentalListingLayout = ({
 
         {/* Title block */}
         <header className="mb-7">
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="min-w-0">
               <h1 className="text-[26px] md:text-[34px] font-semibold leading-[1.15] tracking-tight">
                 {listing.title}
@@ -206,13 +207,15 @@ export const RentalListingLayout = ({
                 </div>
               )}
             </div>
-            {isOwner && (
+            {isOwner ? (
               <Button asChild size="sm" variant="outline" className="shrink-0">
                 <Link to={`/edit-listing/${listing.id}`}>
                   <Edit className="h-4 w-4 mr-1.5" />
                   Edit
                 </Link>
               </Button>
+            ) : (
+              <TitleWalkthroughCta listingId={listing.id} />
             )}
           </div>
         </header>
