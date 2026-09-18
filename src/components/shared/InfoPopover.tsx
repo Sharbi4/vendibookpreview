@@ -55,7 +55,7 @@ const InfoPopover = ({
 export default InfoPopover;
 
 // Pre-built info popovers for common use cases
-export const EscrowInfoPopover = () => (
+export const PaymentProtectionInfoPopover = () => (
   <InfoPopover title="How Payment Protection Works">
     <p>Your payment is held securely until the transaction is complete.</p>
     <ul className="list-disc list-inside space-y-1 mt-2">

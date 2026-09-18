@@ -17,7 +17,7 @@ interface EmailReceiptPreviewProps {
   endDate?: string;
   address?: string;
   fulfillmentType?: string;
-  isEscrow?: boolean;
+  isPaymentProtected?: boolean;
   paymentMethod?: string;
   paymentDate?: string;
   recipientName?: string;
@@ -35,7 +35,7 @@ export function EmailReceiptPreview({
   endDate,
   address,
   fulfillmentType = "pickup",
-  isEscrow = false,
+  isPaymentProtected = false,
   paymentMethod = "Card",
   paymentDate,
   recipientName = "Valued Customer",
@@ -74,7 +74,7 @@ export function EmailReceiptPreview({
       endDate,
       address,
       fulfillmentType,
-      isEscrow,
+      isPaymentProtected,
       paymentMethod,
       paymentDate,
       recipientName,
@@ -191,7 +191,7 @@ export function EmailReceiptPreview({
                 </p>
               )}
               
-              {isEscrow && (
+              {isPaymentProtected && (
                 <p className="text-xs text-amber-600 dark:text-amber-400 flex items-center gap-1.5 mt-2 font-medium">
                   <Shield className="h-3.5 w-3.5" />
                   Payment Protection Protected - Funds released after confirmation
