@@ -54,6 +54,8 @@ const HandoffTerms = lazy(() => import("./pages/legal/HandoffTerms"));
 const PaymentsTermsPage = lazy(() => import("./pages/legal/PaymentsTerms"));
 const FinancingDisclosure = lazy(() => import("./pages/legal/FinancingDisclosure"));
 const RecordingConsent = lazy(() => import("./pages/legal/RecordingConsent"));
+const SellerPaymentTerms = lazy(() => import("./pages/legal/SellerPaymentTerms"));
+const EsignConsent = lazy(() => import("./pages/legal/EsignConsent"));
 const AdminLegalAcceptances = lazy(() => import("./pages/AdminLegalAcceptances"));
 const SmsEnrollment = lazy(() => import("./pages/SmsEnrollment"));
 const SmsOptIn = lazy(() => import("./pages/SmsOptIn"));
