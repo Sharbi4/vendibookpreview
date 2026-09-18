@@ -186,12 +186,17 @@ export default function WalkthroughConsentGate({ walkthroughId, title, requiresL
           </span>
         </label>
         <p className="wc-fineprint">
+          Keep messages, offers and payments on Vendibook — off-platform deals can’t be verified or
+          protected if something goes wrong.
+        </p>
+        <p className="wc-fineprint">
           Only you and the other participant can join this room. Vendibook may monitor or record
           walkthroughs as described in the{' '}
           <Link to="/legal/video-walkthrough-terms" target="_blank" rel="noreferrer">walkthrough terms</Link>
           {' '}and{' '}
           <Link to="/legal/device-permissions-privacy" target="_blank" rel="noreferrer">privacy notice</Link>.
         </p>
+
       </section>
 
       {message && <p className="wc-note">{message}</p>}
