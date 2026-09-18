@@ -1,4 +1,3 @@
-import { useMemo } from 'react';
 import { excludeTestListings } from '@/lib/excludeTestListings';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
