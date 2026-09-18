@@ -40,7 +40,7 @@ import documentsOkArt from '@/assets/education/documents-ok.svg.asset.json';
 /**
  * /how-purchasing-works — buyer education page for for-sale equipment.
  *
- * Copy guardrails (do not regress): no fund-custody language, no guaranteed
+ * Copy guardrails (do not regress): no custodial-funds language, no guaranteed
  * approvals or payout timing, no 72h/7-day processing claims, no automatic
  * tax-calculation claims, and Plaid identity verification stays optional.
  * Everything below reflects the current live PayPal + Pay in Person model.

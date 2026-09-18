@@ -32,7 +32,7 @@ import paypalWordmarkWhite from '@/assets/paypal-logo-white.png.asset.json';
  *
  * Copy guardrails (do not regress):
  *  - No Stripe / Affirm / Afterpay / Klarna references.
- *  - No fund-custody, "protected hold", or guarantee language.
+ *  - No custodial-funds, "protected hold", or guarantee language.
  *  - Never promise Pay Later approval; PayPal decides eligibility per buyer,
  *    merchant, item, state, and transaction.
  *  - No hardcoded Pay in 4 dollar range (PayPal's own pages conflict).

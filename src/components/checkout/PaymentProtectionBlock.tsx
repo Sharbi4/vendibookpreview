@@ -7,7 +7,7 @@ interface PaymentProtectionBlockProps {
 /**
  * Compact assurance block shown inside the checkout modal.
  * Rental copy states what actually happens — PayPal processes the payment,
- * Vendibook records it and refunds if the host declines. No fund-custody claims.
+ * Vendibook records it and refunds if the host declines. No custodial-funds claims.
  */
 const PaymentProtectionBlock = ({ variant = 'sale' }: PaymentProtectionBlockProps) => {
   const body =
