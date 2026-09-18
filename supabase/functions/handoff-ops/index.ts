@@ -476,7 +476,7 @@ serve(async (req) => {
           location_consent: true,
           location_consent_at: session.location_consent_at ?? nowIso,
           location_consent_by: session.location_consent_by ?? userId,
-          location_consent_version: String(body.consent_version ?? "delivery-location:2026-09-18"),
+          location_consent_version: `location-tracking:${LEGAL_VERSIONS["location-tracking"]}`,
           destination_label: destLabel,
           destination_latitude: destLat,
           destination_longitude: destLng,
