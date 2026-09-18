@@ -16,13 +16,14 @@ export const DEVICE_PRIVACY_VERSION = '2026-09-18c';
 /**
  * Monitoring / recording disclosure.
  *
- * Every participant must explicitly consent, before entering the room, that a
- * walkthrough MAY be monitored or recorded for safety, quality and dispute
- * resolution. The consent is stored per participant in
- * `video_walkthrough_consents.recording_consent_granted`.
+ * Every participant must explicitly consent, before entering the room, that
+ * this walkthrough is recorded. The consent is stored per participant in
+ * `video_walkthrough_consents.recording_consent_granted`, and the room token is
+ * refused without it.
  *
- * Automatic cloud recording is not switched on in the video provider today, so
- * copy must always say "may be" — never assert that a given call was recorded.
+ * Cloud recording is started by Vendibook's server once every required
+ * participant has consented AND joined. Copy may say a walkthrough is recorded,
+ * but must never assert that a given recording is complete or exists as proof.
  */
 export const WALKTHROUGH_RECORDING_DISCLOSURE = true;
 
