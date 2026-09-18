@@ -22,6 +22,22 @@ export default function MeetupInspectionGuide() {
   const [params] = useSearchParams();
   const returnTo = params.get('returnTo');
   const safeReturn = returnTo?.startsWith('/') && !returnTo.startsWith('//') ? returnTo : null;
+  const transactionId = params.get('transactionId');
+  const bookingId = params.get('bookingId');
+  const { data: loadedContext } = useHandoffContext({ transactionId, bookingId });
+
+  const publicMode = parsePublicMode(params.get('mode'));
+  const publicFulfillment = parsePublicFulfillment(params.get('fulfillment'));
+  const context: HandoffContext | null =
+    loadedContext ??
+    (publicMode || publicFulfillment
+      ? {
+          mode: publicMode ?? 'sale',
+          fulfillment: publicFulfillment ?? 'pickup',
+          real: false,
+        }
+      : null);
+
 
   return (
     <div className="guide-page min-h-dvh">
