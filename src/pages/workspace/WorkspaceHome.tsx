@@ -13,6 +13,7 @@ import {
   MessageCircle,
   Receipt,
   Search,
+  ShieldCheck,
   Video,
 } from 'lucide-react';
 import WorkspaceShell from '@/components/workspace/WorkspaceShell';
@@ -26,6 +27,7 @@ import { useConversations } from '@/hooks/useConversations';
 import { useMyPayPalConnection } from '@/hooks/useMyPayPalConnection';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useFavorites } from '@/hooks/useFavorites';
+import { useHandoffTasks } from '@/hooks/useHandoffTasks';
 import { useVideoWalkthroughs } from '@/hooks/useVideoWalkthroughs';
 import { formatWalkthroughTime } from '@/lib/videoWalkthroughs';
 import { toDashboardTarget } from '@/lib/navigation/dashboardTargets';
@@ -67,6 +69,7 @@ export default function WorkspaceHome() {
   const { notifications, unreadCount: notificationUnread } = useNotifications(user?.id);
   const { favorites } = useFavorites();
   const { walkthroughs } = useVideoWalkthroughs();
+  const { data: handoffTasks } = useHandoffTasks();
 
   const name = profile?.full_name || user?.email || 'there';
   const firstName = name.split(' ')[0];
@@ -156,6 +159,7 @@ export default function WorkspaceHome() {
       });
     return items;
   }, [
+    handoffTasks,
     pendingSellerBookings.length,
     drafts.length,
     isSeller,
