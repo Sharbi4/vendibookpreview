@@ -58,17 +58,29 @@ export function paypalWebhookIdSource(): string | null {
 export function paypalConfigStatus() {
   return {
     environment: paypalEnvironment(),
-    client_id_configured: !!Deno.env.get("PAYPAL_CLIENT_ID"),
-    client_secret_configured: !!Deno.env.get("PAYPAL_CLIENT_SECRET"),
+    client_id_configured: !!paypalPublicClientId(),
+    client_secret_configured: !!(paypalEnvironment() === "sandbox"
+      ? Deno.env.get("PAYPAL_SANDBOX_CLIENT_SECRET") ?? Deno.env.get("PAYPAL_CLIENT_SECRET")
+      : Deno.env.get("PAYPAL_CLIENT_SECRET")),
     webhook_id_configured: !!paypalWebhookId(),
     webhook_id_source: paypalWebhookIdSource(),
   };
 }
 
-/** Public client id is safe to hand to the browser SDK. */
+/**
+ * Public client id is safe to hand to the browser SDK.
+ *
+ * MUST match the environment the server creates orders in: a live client id
+ * in the browser while the server talks to sandbox opens PayPal against
+ * production, where the order token does not exist and checkout fails.
+ */
 export function paypalPublicClientId(): string | null {
+  if (paypalEnvironment() === "sandbox") {
+    return Deno.env.get("PAYPAL_SANDBOX_CLIENT_ID") ?? Deno.env.get("PAYPAL_CLIENT_ID") ?? null;
+  }
   return Deno.env.get("PAYPAL_CLIENT_ID") ?? null;
 }
+
 
 export class PayPalError extends Error {
   status: number;
