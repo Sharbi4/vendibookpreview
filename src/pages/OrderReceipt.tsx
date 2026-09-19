@@ -21,7 +21,7 @@ interface OrderRecord {
   payment_intent: string;
   payment_source: string | null;
   paypal_capture_id: string | null;
-  payment_source_detail: Record<string, unknown> | null;
+  metadata: Record<string, unknown> | null;
   transaction_type: string;
   listing_id: string | null;
   seller_id: string | null;
@@ -154,7 +154,7 @@ const OrderReceipt = () => {
       const { data, error: err } = await supabase
         .from('payment_records')
         .select(
-          'reference, created_at, captured_at, currency, paypal_capture_id, payment_source_detail, gross_amount_cents, tax_cents, discount_cents, captured_amount_cents, refunded_cents, payment_status, payment_intent, payment_source, transaction_type, listing_id, seller_id, sale_transaction_id, booking_request_id, buyer_email, order_items, shipping_address',
+          'reference, created_at, captured_at, currency, paypal_capture_id, metadata, gross_amount_cents, tax_cents, discount_cents, captured_amount_cents, refunded_cents, payment_status, payment_intent, payment_source, transaction_type, listing_id, seller_id, sale_transaction_id, booking_request_id, buyer_email, order_items, shipping_address',
         )
         .eq('reference', reference)
         .maybeSingle();
@@ -233,8 +233,8 @@ const OrderReceipt = () => {
   const isPending = order?.payment_status === 'pending';
   /** "Visa ending 4242 (via PayPal)" when PayPal told us the card details. */
   const paymentMethodLabel = (() => {
-    const detail = (order?.payment_source_detail ?? {}) as any;
-    const card = detail?.card ?? detail?.payment_source?.card;
+    const detail = (order?.metadata ?? {}) as any;
+    const card = detail?.card ?? detail?.payment_source?.card ?? detail?.paypal?.card;
     const brand = card?.brand ?? card?.card_type;
     const last4 = card?.last_digits ?? card?.last4;
     if (brand || last4) {
