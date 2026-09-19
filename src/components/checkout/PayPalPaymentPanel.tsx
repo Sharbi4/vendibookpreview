@@ -100,6 +100,24 @@ const PayPalPaymentPanel = ({
   const stateRef = useRef<PanelState>('loading');
   stateRef.current = state;
 
+  // A payer sent back here after PayPal declined or abandoned the payment
+  // arrives with the reason stashed by the return page. Surface it in red on
+  // the payment step, then clear it so a reload doesn't repeat a stale notice.
+  useEffect(() => {
+    let stashed: string | null = null;
+    try {
+      stashed = sessionStorage.getItem('pp-decline');
+      if (stashed) sessionStorage.removeItem('pp-decline');
+    } catch {
+      stashed = null;
+    }
+    if (stashed) {
+      setError({ title: 'Payment declined', detail: stashed });
+    }
+  }, []);
+
+
+
 
   // ESC to close + lock body scroll while open (modal presentation only).
   useEffect(() => {
@@ -126,6 +144,17 @@ const PayPalPaymentPanel = ({
 
   const startOrder = async (): Promise<string> => {
     setError(null);
+    // Remember where the payer left so a declined/abandoned PayPal return can
+    // put them straight back on this payment step instead of a dead end.
+    try {
+      sessionStorage.setItem(
+        'pp-checkout-return',
+        `${window.location.pathname}${window.location.search}`,
+      );
+    } catch {
+      /* storage unavailable — the return page falls back to its own screen */
+    }
+
     // Re-check the session right before creating the order: a token that
     // expired while the panel sat open would otherwise surface as a generic
     // PayPal failure after the payer already opened the window.
@@ -576,8 +605,9 @@ const PayPalPaymentPanel = ({
                       role="alert"
                       className="rounded-xl border border-destructive/40 bg-destructive/[0.06] px-4 py-3 text-sm space-y-2"
                     >
-                      <p className="font-semibold text-foreground">{error.title}</p>
-                      <p className="text-xs text-muted-foreground">{error.detail}</p>
+                      <p className="font-semibold text-destructive">{error.title}</p>
+                      <p className="text-xs text-destructive/90">{error.detail}</p>
+
                       <button
                         type="button"
                         onClick={() => {
