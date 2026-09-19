@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { CheckCircle2, Loader2, Lock, ShieldCheck, X } from 'lucide-react';
 
 import { supabase } from '@/integrations/supabase/client';
-import { getPayPalConfig, loadPayPalAuthorizeSdk, loadPayPalSdk } from '@/lib/paypalClient';
+import { getPayPalConfig, isPayPalSdkWarm, loadPayPalAuthorizeSdk, loadPayPalSdk } from '@/lib/paypalClient';
 import { parseEdgeError } from '@/lib/edgeErrors';
 import { authPath } from '@/lib/auth/returnTo';
 import { TRUST_COPY } from '@/lib/transactionVocabulary';
@@ -126,9 +126,17 @@ const PayPalPaymentPanel = ({
       setShowColdSkeleton(false);
       return;
     }
+    if (sdkIntent && isPayPalSdkWarm(sdkIntent, {
+      merchantId,
+      pageType: 'checkout',
+      wallets: sdkIntent === 'CAPTURE',
+    })) {
+      setShowColdSkeleton(false);
+      return;
+    }
     const timer = window.setTimeout(() => setShowColdSkeleton(true), 140);
     return () => window.clearTimeout(timer);
-  }, [state, reloadKey]);
+  }, [state, reloadKey, sdkIntent, merchantId]);
 
   // A payer sent back here after PayPal declined or abandoned the payment
   // arrives with the reason stashed by the return page. Surface it in red on
@@ -450,7 +458,7 @@ const PayPalPaymentPanel = ({
             style: {
               layout: 'vertical',
               shape: 'pill',
-              height: 50,
+              height: 48,
               tagline: false,
               ...(color ? { color } : {}),
             },

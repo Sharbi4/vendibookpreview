@@ -145,6 +145,19 @@ export function loadPayPalAuthorizeSdk(options: PayPalSdkOptions = {}): Promise<
  * AUTHORIZE order makes PayPal reject the approval.
  */
 const sdkPromises = new Map<string, Promise<any>>();
+const warmSdkSignatures = new Set<string>();
+
+function sdkSignature(intent: 'capture' | 'authorize', options: PayPalSdkOptions): string {
+  return `${intent}|${options.merchantId || 'first-party'}|${options.wallets === true}`;
+}
+
+/** Synchronous hint used only to avoid flashing a skeleton after preloading. */
+export function isPayPalSdkWarm(
+  intent: 'CAPTURE' | 'AUTHORIZE',
+  options: PayPalSdkOptions = {},
+): boolean {
+  return warmSdkSignatures.has(sdkSignature(intent.toLowerCase() as 'capture' | 'authorize', options));
+}
 
 /** Stable, DOM-safe namespace suffix derived from the full cache key. */
 function namespaceFor(key: string): string {
@@ -259,10 +272,14 @@ function loadSdk(intent: 'capture' | 'authorize', options: PayPalSdkOptions = {}
     return loader;
   });
 
-  return promise;
+  return promise.then((paypal) => {
+    warmSdkSignatures.add(sdkSignature(intent, options));
+    return paypal;
+  });
 }
 
 /** Test-only: forget every cached SDK instance. */
 export function __resetPayPalSdkCache(): void {
   sdkPromises.clear();
+  warmSdkSignatures.clear();
 }

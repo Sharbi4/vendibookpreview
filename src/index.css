@@ -1757,6 +1757,7 @@
 .paypal-funding-real.is-loading { opacity: 0; }
 .paypal-funding-skeleton-layer { position: absolute; inset: 0; }
 .paypal-form-skeleton { display: grid; gap: 12px; width: 100%; }
+.v2-pay-panel > .paypal-form-skeleton { margin-top: 16px; }
 .paypal-form-skeleton-message {
   width: min(78%, 330px);
   height: 18px;
