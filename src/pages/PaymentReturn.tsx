@@ -179,7 +179,27 @@ const PaymentReturn = () => {
                 </Link>
               </Button>
             </>
+          ) : outcome.kind === 'review' ? (
+            <div className="text-left">
+              <PayPalReviewAuthorize
+                orderId={outcome.data.order_id ?? orderId}
+                initialData={outcome.data}
+                onAuthorized={(result) => {
+                  try {
+                    sessionStorage.removeItem('pp-checkout-return');
+                  } catch {
+                    /* ignore */
+                  }
+                  navigate(`/receipt/${result.reference ?? outcome.data.reference}`, { replace: true });
+                }}
+                onChangeMethod={() => {
+                  if (retryTo) navigate(retryTo);
+                  else navigate('/dashboard');
+                }}
+              />
+            </div>
           ) : outcome.kind === 'authorized' ? (
+
             <>
               <ShieldCheck className="mx-auto h-9 w-9 text-primary" />
               <h1 className="mt-4 text-xl font-semibold tracking-tight text-foreground">
