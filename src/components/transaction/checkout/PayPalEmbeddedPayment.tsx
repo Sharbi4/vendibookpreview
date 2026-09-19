@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react';
+import { Link } from 'react-router-dom';
+import { AlertCircle } from 'lucide-react';
 
 import PayPalPaymentPanel, {
   type PayPalCheckoutTarget,
@@ -21,6 +23,18 @@ interface PayPalEmbeddedPaymentProps {
   counterparty?: 'seller' | 'host';
   /** Blocks the payment control until required inputs are valid. */
   blocked?: boolean;
+  /**
+   * A terminal checkout failure (e.g. the server refused to create the order).
+   * Rendered inline in place of the PayPal buttons — never behind a skeleton
+   * and never as a toast alone.
+   */
+  error?: {
+    title: string;
+    detail: string;
+    actionLabel?: string;
+    actionHref?: string;
+    onRetry?: () => void;
+  } | null;
   blockedReason?: string;
   /** Final money breakdown rendered above the PayPal action. */
   breakdown?: ReactNode;
@@ -59,6 +73,7 @@ const PayPalEmbeddedPayment = ({
   counterparty = 'seller',
   blocked = false,
   blockedReason,
+  error = null,
   breakdown,
   returnUrl,
   onSuccess,
@@ -81,7 +96,32 @@ const PayPalEmbeddedPayment = ({
 
       {breakdown ? <div className="v2-pay-breakdown">{breakdown}</div> : null}
 
-      {readiness.loading ? (
+      {error ? (
+        <div className="v2-checkout-unavailable" role="alert">
+          <span className="v2-checkout-unavailable-icon">
+            <AlertCircle aria-hidden />
+          </span>
+          <div className="min-w-0">
+            <p className="v2-checkout-unavailable-title">{error.title}</p>
+            <p className="v2-checkout-unavailable-detail">{error.detail}</p>
+            <div className="v2-checkout-unavailable-actions">
+              {error.actionHref ? (
+                <Link to={error.actionHref} className="v2-btn-outline">
+                  {error.actionLabel ?? 'Continue'}
+                </Link>
+              ) : null}
+              {error.onRetry ? (
+                <button type="button" className="v2-btn-quiet" onClick={error.onRetry}>
+                  Try again
+                </button>
+              ) : null}
+              <Link to={listingHref} className="v2-btn-quiet">
+                Back to listing
+              </Link>
+            </div>
+          </div>
+        </div>
+      ) : readiness.loading ? (
         <PaymentFormSkeleton />
       ) : gatedOut ? (
         <PaymentUnavailableState
