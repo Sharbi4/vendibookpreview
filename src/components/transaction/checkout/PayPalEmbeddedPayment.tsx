@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react';
-import { Loader2, Lock } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 
 import PayPalPaymentPanel, {
   type PayPalCheckoutTarget,
 } from '@/components/checkout/PayPalPaymentPanel';
-import { PayPalWordmark } from '@/components/brand/ProviderLogos';
+import { PayPalMonogram, PayPalWordmark } from '@/components/brand/ProviderLogos';
 import { useSellerPaymentReadiness } from '@/hooks/useSellerPaymentReadiness';
 import PaymentUnavailableState from './PaymentUnavailableState';
 

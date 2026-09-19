@@ -1278,12 +1278,7 @@ const SaleCheckout = () => {
                   blocked={!paypalCheckout}
                   blockedReason="Preparing your payment…"
                 />
-              )}
-
-              <p className="text-xs text-muted-foreground">
-                PayPal terms and eligibility apply to the payment method you choose.
-              </p>
-            </div>
+              )}            </div>
           ) : null}
         </SaleCheckoutWizard>
 
