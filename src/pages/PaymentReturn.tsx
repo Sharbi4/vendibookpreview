@@ -10,13 +10,18 @@ import { supabase } from '@/integrations/supabase/client';
 import { parseEdgeError } from '@/lib/edgeErrors';
 import { isSafeInternalPath } from '@/lib/originNav';
 import { authPath } from '@/lib/auth/returnTo';
+import PayPalReviewAuthorize, { type ReviewData } from '@/components/checkout/PayPalReviewAuthorize';
+
 
 type Outcome =
   | { kind: 'working' }
   | { kind: 'signin' }
+  /** Approved at PayPal, nothing captured — final authorize step. */
+  | { kind: 'review'; data: ReviewData }
   | { kind: 'authorized'; reference: string; message?: string | null }
   | { kind: 'pending'; reference: string; message?: string | null }
   | { kind: 'failed'; title: string; detail: string };
+
 
 /**
  * Where PayPal sends the payer back after a redirect or app-switch approval.
@@ -85,14 +90,17 @@ const PaymentReturn = () => {
         return;
       }
 
-      const { data, error } = await supabase.functions.invoke('paypal-finalize-order', {
+      // Read-only: approval alone never captures. We look at where the order
+      // stands and either resolve an already-finished payment to its receipt
+      // or present the final Review & authorize step.
+      const { data, error } = await supabase.functions.invoke('paypal-order-review', {
         body: { order_id: orderId || undefined, reference: reference || undefined },
       });
 
       if (cancelled) return;
       running.current = false;
 
-      if (error || !data?.status) {
+      if (error || !data?.reference) {
         const parsed = await parseEdgeError(error, data?.error ? data : null);
         failWith(
           'We could not confirm this payment',
@@ -102,8 +110,10 @@ const PaymentReturn = () => {
         return;
       }
 
-      const ref = data.reference as string | undefined;
-      if (data.status === 'completed' && ref) {
+      const review = data as ReviewData;
+      const ref = review.reference;
+      const done = ['completed', 'authorized', 'pending'].includes(review.record_status);
+      if (done) {
         try {
           sessionStorage.removeItem('pp-checkout-return');
         } catch {
@@ -112,30 +122,22 @@ const PaymentReturn = () => {
         navigate(`/receipt/${ref}`, { replace: true });
         return;
       }
-      // Authorized and pending are real, verified outcomes with a record —
-      // they resolve straight to the receipt, which states the true status.
-      // No intermediate "payment approved" confirmation screen.
-      if ((data.status === 'authorized' || data.status === 'pending') && ref) {
-        try {
-          sessionStorage.removeItem('pp-checkout-return');
-        } catch {
-          /* ignore */
-        }
-        navigate(`/receipt/${ref}`, { replace: true });
-        return;
-      }
-      if (data.status === 'cancelled') {
+      if (review.record_status === 'cancelled' || review.order_status === 'VOIDED') {
         navigate(`/payment-cancelled${retryTo ? `?returnTo=${encodeURIComponent(retryTo)}` : ''}`, {
           replace: true,
         });
         return;
       }
+      if (review.order_status === 'APPROVED' || review.order_status === 'SAVED') {
+        setOutcome({ kind: 'review', data: review });
+        return;
+      }
 
       failWith(
         'This payment was not completed',
-        (data.message as string) ||
-          'Your payment was not completed and nothing has been charged. You can go back and try again or use another method.',
+        'Your payment was not approved and nothing has been charged. You can go back and try again or use another method.',
       );
+
     })();
 
 
@@ -177,7 +179,27 @@ const PaymentReturn = () => {
                 </Link>
               </Button>
             </>
+          ) : outcome.kind === 'review' ? (
+            <div className="text-left">
+              <PayPalReviewAuthorize
+                orderId={outcome.data.order_id ?? orderId}
+                initialData={outcome.data}
+                onAuthorized={(result) => {
+                  try {
+                    sessionStorage.removeItem('pp-checkout-return');
+                  } catch {
+                    /* ignore */
+                  }
+                  navigate(`/receipt/${result.reference ?? outcome.data.reference}`, { replace: true });
+                }}
+                onChangeMethod={() => {
+                  if (retryTo) navigate(retryTo);
+                  else navigate('/dashboard');
+                }}
+              />
+            </div>
           ) : outcome.kind === 'authorized' ? (
+
             <>
               <ShieldCheck className="mx-auto h-9 w-9 text-primary" />
               <h1 className="mt-4 text-xl font-semibold tracking-tight text-foreground">

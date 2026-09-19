@@ -8,7 +8,9 @@ import { authPath } from '@/lib/auth/returnTo';
 import { TRUST_COPY } from '@/lib/transactionVocabulary';
 
 import PayPalPayLaterMessage from '@/components/payments/PayPalPayLaterMessage';
+import PayPalReviewAuthorize from './PayPalReviewAuthorize';
 import WalletPayButtons from './WalletPayButtons';
+
 
 export type PayPalCheckoutTarget =
   | { kind: 'sale'; id: string }
@@ -54,12 +56,15 @@ type PanelState =
   | 'signin'
 
   | 'ready'
+  /** Approved at PayPal, nothing captured — final authorize step. */
+  | 'review'
   | 'processing'
   | 'success'
   | 'pending'
   /** PayPal is holding the funds; nothing has been charged yet. */
   | 'authorized'
   | 'error';
+
 
 /**
  * Vendibook-branded PayPal checkout in a dark-glass modal. Buyers pay with
@@ -99,9 +104,16 @@ const PayPalPaymentPanel = ({
    */
   const intentRef = useRef<'CAPTURE' | 'AUTHORIZE'>('CAPTURE');
   const [holdMessage, setHoldMessage] = useState<string | null>(null);
+  /**
+   * Set once the payer approves at PayPal. Nothing is captured at that point:
+   * the panel shows the Review & authorize step and only the payer's explicit
+   * Submit payment triggers `paypal-capture-order`.
+   */
+  const [approved, setApproved] = useState<{ orderId: string; source?: string | null } | null>(null);
   /** Sandbox-only testing notice. Never shown in live. */
   const [isSandbox, setIsSandbox] = useState(false);
   const [sandboxNoteDismissed, setSandboxNoteDismissed] = useState(false);
+
   const stateRef = useRef<PanelState>('loading');
   stateRef.current = state;
 
@@ -437,15 +449,15 @@ const PayPalPaymentPanel = ({
             // TODO(paypal-app-switch): implement same-URL return + resume()
             // end-to-end as its own change before re-enabling.
             createOrder: () => handlersRef.current.startOrder(),
-            onApprove: async (
-              data: { orderID: string },
-              actions?: { restart?: () => void },
-            ) => {
-              const outcome = await handlersRef.current.finishOrder(data.orderID);
-              // Recoverable funding failure — let the payer pick another
-              // funding source inside the PayPal window, per PayPal docs.
-              if (outcome === 'restart') actions?.restart?.();
+            // Approval is NOT payment. PayPal hands the payer back here and
+            // the panel shows a final Review & authorize step; capture only
+            // runs when the payer submits it themselves.
+            onApprove: async (data: { orderID: string; paymentSource?: string }) => {
+              setError(null);
+              setApproved({ orderId: data.orderID, source: data.paymentSource ?? key });
+              setState('review');
             },
+
             onCancel: () => {
               setState('ready');
               setError({
@@ -573,7 +585,40 @@ const PayPalPaymentPanel = ({
 
 
             <div className={embedded ? 'space-y-5' : 'px-7 py-6 space-y-5'}>
-              {state === 'success' ? (
+              {state === 'review' && approved ? (
+                <PayPalReviewAuthorize
+                  orderId={approved.orderId}
+                  sourceHint={approved.source}
+                  onAuthorized={(result) => {
+                    if (result.status === 'authorized') {
+                      setHoldMessage(result.message ?? null);
+                      setState('authorized');
+                      onSuccess?.({ reference: result.reference, authorized: true, message: result.message ?? undefined });
+                      setTimeout(() => goToResult(result.reference), 1400);
+                      return;
+                    }
+                    if (result.status === 'pending') {
+                      setState('pending');
+                      onSuccess?.({ reference: result.reference, pending: true, message: result.message ?? undefined });
+                      setTimeout(() => goToResult(result.reference), 1400);
+                      return;
+                    }
+                    setState('success');
+                    onSuccess?.({ reference: result.reference });
+                    setTimeout(() => goToResult(result.reference), 900);
+                  }}
+                  onChangeMethod={() => {
+                    // Back to the funding buttons. The in-flight order is kept
+                    // and reused by `paypal-create-order`.
+                    setApproved(null);
+                    setError(null);
+                    setEligible({});
+                    setState('loading');
+                    setReloadKey((k) => k + 1);
+                  }}
+                />
+              ) : state === 'success' ? (
+
                 <div className="py-10 flex flex-col items-center justify-center text-center animate-fade-in">
                   <div className="relative">
                     <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping" />
