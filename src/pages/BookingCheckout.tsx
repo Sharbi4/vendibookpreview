@@ -67,6 +67,7 @@ import { ReferralCodeField } from '@/components/referrals/ReferralCodeField';
 import { useSellerVerifiedBadge } from '@/hooks/useSellerVerifiedBadge';
 import { authPath } from '@/lib/auth/returnTo';
 import { useSellerPaymentReadiness } from '@/hooks/useSellerPaymentReadiness';
+import { useWarmPayPalCheckout } from '@/hooks/useWarmPayPalCheckout';
 import { PayPalMonogram } from '@/components/brand/ProviderLogos';
 import SEO from '@/components/SEO';
 
