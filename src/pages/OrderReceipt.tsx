@@ -244,6 +244,32 @@ const OrderReceipt = () => {
     }
     return order?.payment_source === 'card' ? 'Card via PayPal' : 'PayPal';
   })();
+  const [emailing, setEmailing] = useState(false);
+  const emailReceipt = async () => {
+    if (!order) return;
+    setEmailing(true);
+    try {
+      await supabase.functions.invoke('send-payment-receipt', {
+        body: {
+          email: order.buyer_email,
+          transactionId: order.sale_transaction_id ?? order.reference,
+          amount: (order.captured_amount_cents || order.gross_amount_cents) / 100,
+          paymentMethod: paymentMethodLabel,
+          listingTitle: listing?.title,
+          transactionType: order.booking_request_id ? 'rental' : 'sale',
+        },
+      });
+      toast({ title: 'Receipt sent', description: `We emailed this receipt to ${order.buyer_email ?? 'you'}.` });
+    } catch {
+      toast({
+        title: "We couldn't email that receipt",
+        description: 'You can still print or save it from this page.',
+        variant: 'destructive',
+      });
+    } finally {
+      setEmailing(false);
+    }
+  };
   const totalLabel = isPending ? 'Total pending' : isHold ? 'Authorized total' : 'Total paid';
 
   const issuedAt = order ? new Date(order.captured_at ?? order.created_at) : null;
@@ -533,6 +559,17 @@ const OrderReceipt = () => {
             </section>
 
             <footer className="mt-8 flex flex-wrap items-center gap-3 border-t border-border/70 pt-6">
+              {/* Emailed copy of this receipt, only ever for a settled payment. */}
+              {!isPending && !isHold ? (
+                <button
+                  type="button"
+                  disabled={emailing}
+                  onClick={emailReceipt}
+                  className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background px-5 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted/40 disabled:opacity-60"
+                >
+                  {emailing ? 'Sending…' : 'Email me this receipt'}
+                </button>
+              ) : null}
               <button
                 type="button"
                 onClick={() => window.print()}
