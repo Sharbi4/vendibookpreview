@@ -585,7 +585,40 @@ const PayPalPaymentPanel = ({
 
 
             <div className={embedded ? 'space-y-5' : 'px-7 py-6 space-y-5'}>
-              {state === 'success' ? (
+              {state === 'review' && approved ? (
+                <PayPalReviewAuthorize
+                  orderId={approved.orderId}
+                  sourceHint={approved.source}
+                  onAuthorized={(result) => {
+                    if (result.status === 'authorized') {
+                      setHoldMessage(result.message ?? null);
+                      setState('authorized');
+                      onSuccess?.({ reference: result.reference, authorized: true, message: result.message ?? undefined });
+                      setTimeout(() => goToResult(result.reference), 1400);
+                      return;
+                    }
+                    if (result.status === 'pending') {
+                      setState('pending');
+                      onSuccess?.({ reference: result.reference, pending: true, message: result.message ?? undefined });
+                      setTimeout(() => goToResult(result.reference), 1400);
+                      return;
+                    }
+                    setState('success');
+                    onSuccess?.({ reference: result.reference });
+                    setTimeout(() => goToResult(result.reference), 900);
+                  }}
+                  onChangeMethod={() => {
+                    // Back to the funding buttons. The in-flight order is kept
+                    // and reused by `paypal-create-order`.
+                    setApproved(null);
+                    setError(null);
+                    setEligible({});
+                    setState('loading');
+                    setReloadKey((k) => k + 1);
+                  }}
+                />
+              ) : state === 'success' ? (
+
                 <div className="py-10 flex flex-col items-center justify-center text-center animate-fade-in">
                   <div className="relative">
                     <div className="absolute inset-0 rounded-full bg-primary/20 animate-ping" />
