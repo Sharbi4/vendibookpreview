@@ -630,7 +630,9 @@ const PayPalPaymentPanel = ({
                         <WalletPayButtons
                           totalUsd={totalUsd}
                           startOrder={() => handlersRef.current.startOrder()}
-                          finishOrder={(orderId) => handlersRef.current.finishOrder(orderId)}
+                          finishOrder={(orderId) =>
+                            handlersRef.current.finishOrder(orderId).then(() => undefined)
+                          }
                           onFailure={(title, detail) => handlersRef.current.fail(title, detail)}
                           onAvailable={setWalletsAvailable}
                           merchantId={merchantId}

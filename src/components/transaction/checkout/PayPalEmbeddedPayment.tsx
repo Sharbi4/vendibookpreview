@@ -1,5 +1,4 @@
 import type { ReactNode } from 'react';
-import { Loader2 } from 'lucide-react';
 
 import PayPalPaymentPanel, {
   type PayPalCheckoutTarget,
@@ -82,10 +81,10 @@ const PayPalEmbeddedPayment = ({
       {breakdown ? <div className="v2-pay-breakdown">{breakdown}</div> : null}
 
       {readiness.loading ? (
-        <div className="v2-pay-loading">
-          <Loader2 className="animate-spin" aria-hidden />
-          Checking payment availability…
-        </div>
+        /* Readiness is prefetched while the buyer is on earlier steps, so this
+           only appears on a genuinely cold lookup. It reserves the space
+           quietly — no spinner copy that makes checkout feel stalled. */
+        <div className="v2-pay-cold" aria-hidden="true" />
       ) : gatedOut ? (
         <PaymentUnavailableState
           title={

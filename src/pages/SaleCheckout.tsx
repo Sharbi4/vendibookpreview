@@ -47,7 +47,6 @@ import OrderReviewStage from '@/components/checkout/OrderReviewStage';
 import TransactionAgreementStep from '@/components/checkout/TransactionAgreementStep';
 import PostPaymentTimeline from '@/components/checkout/PostPaymentTimeline';
 import { recordCheckoutAgreements } from '@/lib/legal/recordCheckoutAgreements';
-import { loadPayPalSdk } from '@/lib/paypalClient';
 import { Button } from '@/components/ui/button';
 import { useLegalDocument } from '@/hooks/useLegalDocument';
 import { CONSENT_TRIGGERS, DOCUMENT_TYPES } from '@/lib/legalDocuments';
@@ -195,15 +194,6 @@ const SaleCheckout = () => {
   const agreement = useLegalDocument(DOCUMENT_TYPES.SALE_BUYER_TERMS);
   const privacyConsent = useLegalDocument(DOCUMENT_TYPES.CHECKOUT_PRIVACY_ELECTRONIC_CONSENT);
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
-
-  /**
-   * Warm the official PayPal SDK as soon as checkout opens so the payment
-   * surface is interactive the moment the buyer reaches the Payment step.
-   * No PayPal order is created here — nothing is charged or reserved.
-   */
-  useEffect(() => {
-    loadPayPalSdk({ pageType: 'checkout' }).catch(() => undefined);
-  }, []);
 
   /**
    * Entering the Payment step with online payment selected creates (or
