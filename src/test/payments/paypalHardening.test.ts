@@ -50,6 +50,8 @@ vi.mock('@/integrations/supabase/client', () => ({
         data: {
           enabled: true,
           environment: 'sandbox',
+          intent: 'CAPTURE',
+          user_action: 'CONTINUE',
           client_id: 'SANDBOX_ID',
           partner_attribution_id: 'VENDIBOOK_SP_PPCP',
           currency: 'USD',
@@ -166,6 +168,8 @@ describe('PayPal SDK loading is isolated by intent, merchant and components', ()
     stop();
     expect(sdk.__src.startsWith('https://www.paypal.com/sdk/js?')).toBe(true);
     expect(sdk.__src).toContain('client-id=SANDBOX_ID');
+    expect(sdk.__src).toContain('intent=capture');
+    expect(sdk.__src).toContain('commit=false');
   });
 
   it('adds PayPal preconnect hints once', () => {

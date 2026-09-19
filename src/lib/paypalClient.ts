@@ -39,7 +39,7 @@ let configPromise: Promise<PayPalRuntimeConfig> | null = null;
  * per-tab cache removes a cold-start edge call from every checkout paint. The
  * client id it carries is publishable; nothing secret is stored.
  */
-const CONFIG_CACHE_KEY = 'vb:paypal-config';
+const CONFIG_CACHE_KEY = 'vb:paypal-config:v2';
 const CONFIG_TTL_MS = 10 * 60 * 1000;
 
 function readCachedConfig(): PayPalRuntimeConfig | null {
@@ -48,6 +48,7 @@ function readCachedConfig(): PayPalRuntimeConfig | null {
     if (!raw) return null;
     const parsed = JSON.parse(raw) as { at: number; config: PayPalRuntimeConfig };
     if (!parsed?.at || Date.now() - parsed.at > CONFIG_TTL_MS) return null;
+    if (parsed.config?.intent !== 'CAPTURE' || parsed.config?.user_action !== 'CONTINUE') return null;
     return parsed.config ?? null;
   } catch {
     return null;

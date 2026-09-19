@@ -1,7 +1,12 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
-import { getPayPalAccessToken, paypalConfigStatus, paypalEnvironment } from "../_shared/paypal.ts";
+import {
+  PAYPAL_CHECKOUT_INTENT,
+  getPayPalAccessToken,
+  paypalConfigStatus,
+  paypalEnvironment,
+} from "../_shared/paypal.ts";
 
 /** Administrator-only payment system health panel. Never exposes secret values. */
 serve(async (req) => {
@@ -59,8 +64,9 @@ serve(async (req) => {
       admin.from("payment_records").select("id", { count: "exact", head: true })
         .eq("internal_status", "needs_review"),
       admin.from("paypal_api_logs")
-        .select("environment, created_at, endpoint")
-        .like("endpoint", "%/v2/checkout/orders%")
+        .select("environment, created_at, endpoint, request_body")
+        .eq("endpoint", "/v2/checkout/orders")
+        .eq("method", "POST")
         .order("created_at", { ascending: false }).limit(1).maybeSingle(),
       admin.from("payment_records")
         .select("payment_status, gross_amount_cents")
@@ -75,9 +81,28 @@ serve(async (req) => {
       .filter((m: any) => !m.paypal_plan_id)
       .map((m: any) => `${m.tier}/${m.billing_interval}`);
 
+    const lastOrderEnvironment = lastOrderCall.data?.environment ?? null;
+    const lastOrderIntent = String(lastOrderCall.data?.request_body?.intent ?? "").toUpperCase() || null;
+    const environmentMismatch = !!lastOrderEnvironment && lastOrderEnvironment !== config.environment;
+    const intentMismatch = !!lastOrderIntent && lastOrderIntent !== PAYPAL_CHECKOUT_INTENT;
+    const agreementIssues = [
+      environmentMismatch
+        ? `SDK environment is ${config.environment}, but the most recent order used ${lastOrderEnvironment}.`
+        : null,
+      intentMismatch
+        ? `SDK intent is ${PAYPAL_CHECKOUT_INTENT}, but the most recent order used ${lastOrderIntent}.`
+        : null,
+      apiConnectivity !== "ok"
+        ? "The configured client ID and client secret did not authenticate together."
+        : null,
+    ].filter(Boolean);
+
     return jsonResponse(200, {
       paypal: {
         environment: config.environment,
+        sdk_environment: config.environment,
+        sdk_intent: PAYPAL_CHECKOUT_INTENT,
+        client_id_prefix: config.client_id_prefix,
         client_id_configured: config.client_id_configured,
         client_secret_configured: config.client_secret_configured,
         webhook_id_configured: config.webhook_id_configured,
@@ -87,15 +112,22 @@ serve(async (req) => {
           (planMappings.data ?? []).some((m: any) => !!m.paypal_plan_id),
         // Environment drift is what produced a production PayPal popup against
         // a sandbox order. Surface it loudly instead of leaving it implicit.
-        last_order_environment: lastOrderCall.data?.environment ?? null,
+        last_order_environment: lastOrderEnvironment,
+        last_order_intent: lastOrderIntent,
         last_order_call_at: lastOrderCall.data?.created_at ?? null,
-        environment_mismatch:
-          !!lastOrderCall.data?.environment &&
-          lastOrderCall.data.environment !== config.environment,
+        environment_mismatch: environmentMismatch,
+        intent_mismatch: intentMismatch,
+        sdk_and_orders_agree: agreementIssues.length === 0,
+        sdk_and_orders_detail: agreementIssues.length === 0
+          ? "SDK and orders agree on sandbox/live environment and CAPTURE intent; the configured client ID and secret authenticate as one app."
+          : agreementIssues.join(" "),
         environment_mismatch_detail:
-          lastOrderCall.data?.environment && lastOrderCall.data.environment !== config.environment
-            ? `Configured environment is ${config.environment} but the most recent order call ran against ${lastOrderCall.data.environment}. Buyers will be sent to the wrong PayPal environment.`
+          environmentMismatch
+            ? `Configured environment is ${config.environment} but the most recent order call ran against ${lastOrderEnvironment}. Buyers will be sent to the wrong PayPal environment.`
             : null,
+        intent_mismatch_detail: intentMismatch
+          ? `Configured SDK intent is ${PAYPAL_CHECKOUT_INTENT} but the most recent order used ${lastOrderIntent}. PayPal checkout will fail until they match.`
+          : null,
         last_checkout_webhook_at: lastCheckoutWebhook.data?.received_at ?? null,
         last_subscription_webhook_at: lastSubscriptionWebhook.data?.received_at ?? null,
         missing_plan_mappings: missingPlanIds,

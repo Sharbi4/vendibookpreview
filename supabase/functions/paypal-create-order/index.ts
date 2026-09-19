@@ -542,7 +542,7 @@ serve(async (req) => {
           breakdown: quote.breakdown,
           tax: taxPayload(quote),
           payment_intent: PAYPAL_CHECKOUT_INTENT,
-          payment_strategy: decision.strategy,
+          payment_strategy: "capture_after_buyer_review",
           reused: true,
         });
       }
@@ -569,7 +569,7 @@ serve(async (req) => {
           breakdown: quote.breakdown,
           tax: taxPayload(quote),
           payment_intent: PAYPAL_CHECKOUT_INTENT,
-          payment_strategy: decision.strategy,
+          payment_strategy: "capture_after_buyer_review",
           reused: true,
         });
       }
@@ -611,7 +611,7 @@ serve(async (req) => {
         seller_proceeds_cents: quote.sellerProceedsCents,
         payment_status: "created",
         internal_status: "awaiting_buyer_approval",
-        payment_strategy: decision.strategy,
+        payment_strategy: "capture_after_buyer_review",
         payment_intent: PAYPAL_CHECKOUT_INTENT,
         // balance_due_cents is NOT NULL DEFAULT 0 — an explicit NULL violates
         // the constraint and kills order creation for every checkout.
@@ -765,8 +765,8 @@ serve(async (req) => {
       breakdown: quote.breakdown,
       tax: taxPayload(quote),
       payment_intent: PAYPAL_CHECKOUT_INTENT,
-      payment_strategy: decision.strategy,
-      buyer_message: decision.buyerMessage,
+      payment_strategy: "capture_after_buyer_review",
+      buyer_message: "Nothing is charged until you return to Vendibook, review the payment, and select Submit payment.",
       balance_due_cents: decision.balanceDueCents,
       balance_due_at: decision.balanceDueAt,
     });
