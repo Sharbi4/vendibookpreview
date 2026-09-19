@@ -8,7 +8,9 @@ import { authPath } from '@/lib/auth/returnTo';
 import { TRUST_COPY } from '@/lib/transactionVocabulary';
 
 import PayPalPayLaterMessage from '@/components/payments/PayPalPayLaterMessage';
+import PayPalReviewAuthorize from './PayPalReviewAuthorize';
 import WalletPayButtons from './WalletPayButtons';
+
 
 export type PayPalCheckoutTarget =
   | { kind: 'sale'; id: string }
@@ -102,9 +104,16 @@ const PayPalPaymentPanel = ({
    */
   const intentRef = useRef<'CAPTURE' | 'AUTHORIZE'>('CAPTURE');
   const [holdMessage, setHoldMessage] = useState<string | null>(null);
+  /**
+   * Set once the payer approves at PayPal. Nothing is captured at that point:
+   * the panel shows the Review & authorize step and only the payer's explicit
+   * Submit payment triggers `paypal-capture-order`.
+   */
+  const [approved, setApproved] = useState<{ orderId: string; source?: string | null } | null>(null);
   /** Sandbox-only testing notice. Never shown in live. */
   const [isSandbox, setIsSandbox] = useState(false);
   const [sandboxNoteDismissed, setSandboxNoteDismissed] = useState(false);
+
   const stateRef = useRef<PanelState>('loading');
   stateRef.current = state;
 
