@@ -5,19 +5,25 @@ import {
   getPayPalConfig,
   loadPayPalAuthorizeSdk,
   loadPayPalSdk,
+  preconnectPayPal,
 } from '@/lib/paypalClient';
 import { sellerPaymentReadinessQuery } from '@/hooks/useSellerPaymentReadiness';
 
 /**
- * Pre-warms everything the payment step needs while the buyer is still on
- * the earlier checkout steps: the runtime config, the seller-readiness
- * lookup, and the PayPal SDK script itself. When the payment step mounts,
- * all three resolve from cache and the buttons render immediately.
+ * The SINGLE checkout prewarm mechanism. Pages must not also call
+ * `loadPayPalSdk` directly: that would force a CAPTURE bundle onto an
+ * AUTHORIZE checkout and download a second, unused SDK.
  *
- * `predictedIntent` is only a best guess used to pick which SDK script to
- * prefetch (PayPal serves authorize and capture as separate URLs). A wrong
- * guess is harmless — the payment panel simply loads the other namespace.
- * The server remains authoritative for the real intent on every order.
+ * Pre-warms everything the payment step needs while the buyer is still on the
+ * earlier steps: PayPal host connections, the runtime config, the
+ * seller-readiness lookup (and the merchant id it carries), and the exact SDK
+ * bundle the payment step is predicted to use. No PayPal order is created
+ * here — nothing is charged, held or reserved.
+ *
+ * `predictedIntent` only picks which script to prefetch (PayPal serves
+ * authorize and capture as separate instances). A wrong guess is harmless: the
+ * payment panel loads the other namespace. The server remains authoritative
+ * for the real intent on every order.
  */
 export function useWarmPayPalCheckout(
   sellerId: string | null | undefined,
@@ -27,6 +33,9 @@ export function useWarmPayPalCheckout(
 
   useEffect(() => {
     let cancelled = false;
+
+    // 0. Open the connections to PayPal's script/asset hosts.
+    preconnectPayPal();
 
     // 1. Runtime config (client id, currency) — cached per tab afterwards.
     getPayPalConfig().catch(() => undefined);
@@ -43,8 +52,12 @@ export function useWarmPayPalCheckout(
         }
       }
       if (cancelled) return;
-      const load = predictedIntent === 'AUTHORIZE' ? loadPayPalAuthorizeSdk : loadPayPalSdk;
-      load({ merchantId, pageType: 'checkout' }).catch(() => undefined);
+      if (predictedIntent === 'AUTHORIZE') {
+        // Wallets never render on an AUTHORIZE checkout.
+        loadPayPalAuthorizeSdk({ merchantId, pageType: 'checkout' }).catch(() => undefined);
+      } else {
+        loadPayPalSdk({ merchantId, pageType: 'checkout', wallets: true }).catch(() => undefined);
+      }
     })();
 
     return () => {

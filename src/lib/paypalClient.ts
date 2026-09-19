@@ -1,9 +1,12 @@
 /**
- * Runtime loader for the PayPal JS SDK.
+ * Runtime loader for the PayPal JS SDK (v5).
  *
  * The client id is fetched from the `paypal-config` edge function at runtime
  * (never a VITE_ build-time variable) so sandbox/live can be switched without
- * a redeploy.
+ * a redeploy. NOTE: v5 always loads from https://www.paypal.com/sdk/js — the
+ * sandbox client id is what selects the sandbox environment. Do not "fix" this
+ * host. (A v6 migration, which uses a sandbox-specific host, is a separate
+ * change.)
  */
 import { supabase } from '@/integrations/supabase/client';
 
@@ -15,6 +18,8 @@ export interface PayPalRuntimeConfig {
   partner_attribution_id?: string | null;
   currency: string;
   components: string[];
+  /** Wallet components, added only for a CAPTURE checkout. */
+  wallet_components?: string[];
   enable_funding: string[];
 }
 
@@ -25,9 +30,7 @@ export interface PayPalRuntimeConfig {
  */
 export const PARTNER_ATTRIBUTION_ID = 'VENDIBOOK_SP_PPCP';
 
-
 let configPromise: Promise<PayPalRuntimeConfig> | null = null;
-let sdkPromise: Promise<any> | null = null;
 
 /**
  * The runtime config only changes when the environment is switched, so a short
@@ -35,7 +38,7 @@ let sdkPromise: Promise<any> | null = null;
  * client id it carries is publishable; nothing secret is stored.
  */
 const CONFIG_CACHE_KEY = 'vb:paypal-config';
-const CONFIG_TTL_MS = 5 * 60 * 1000;
+const CONFIG_TTL_MS = 10 * 60 * 1000;
 
 function readCachedConfig(): PayPalRuntimeConfig | null {
   try {
@@ -61,6 +64,9 @@ export function getPayPalConfig(): Promise<PayPalRuntimeConfig> {
       .then(({ data, error }) => {
         if (error) throw error;
         const config = data as PayPalRuntimeConfig;
+        // Never cache a disabled/unconfigured response — that would keep
+        // checkout switched off for the rest of the session.
+        if (!config?.enabled || !config.client_id) return config;
         try {
           sessionStorage.setItem(
             CONFIG_CACHE_KEY,
@@ -79,8 +85,28 @@ export function getPayPalConfig(): Promise<PayPalRuntimeConfig> {
   return configPromise;
 }
 
+/**
+ * One-time DNS/connection warm-up for PayPal's script and asset hosts. Costs
+ * nothing, creates no order, and shaves the TLS handshake off the first SDK
+ * fetch when the buyer reaches the payment step.
+ */
+export function preconnectPayPal(): void {
+  if (typeof document === 'undefined') return;
+  const hosts = ['https://www.paypal.com', 'https://www.paypalobjects.com'];
+  for (const host of hosts) {
+    for (const rel of ['dns-prefetch', 'preconnect']) {
+      const selector = `link[rel="${rel}"][href="${host}"]`;
+      if (document.head.querySelector(selector)) continue;
+      const link = document.createElement('link');
+      link.rel = rel;
+      link.href = host;
+      if (rel === 'preconnect') link.crossOrigin = '';
+      document.head.appendChild(link);
+    }
+  }
+}
 
-/** Loads (once) and resolves the global `window.paypal` namespace. */
+/** Loads (once per exact configuration) and resolves a `window.paypal*` namespace. */
 export interface PayPalSdkOptions {
   /**
    * Seller's PayPal merchant id. Required by PayPal when the order is routed
@@ -89,6 +115,11 @@ export interface PayPalSdkOptions {
   merchantId?: string | null;
   /** PayPal analytics hint: which page the buttons are rendered on. */
   pageType?: 'checkout' | 'cart' | 'product-details' | 'home' | 'mini-cart' | 'search-results';
+  /**
+   * Adds the wallet components (Apple Pay / Google Pay). Only meaningful for a
+   * CAPTURE checkout, where WalletPayButtons actually renders.
+   */
+  wallets?: boolean;
 }
 
 export function loadPayPalSdk(options: PayPalSdkOptions = {}): Promise<any> {
@@ -96,86 +127,142 @@ export function loadPayPalSdk(options: PayPalSdkOptions = {}): Promise<any> {
 }
 
 /**
- * Loads a SECOND, isolated SDK instance configured with `intent=authorize`.
+ * Loads an SDK instance configured with `intent=authorize`.
  *
- * Used by flows that must hold funds and capture later (Verified Seller).
- * PayPal only allows one intent per SDK instance, so this mounts under its own
- * `data-namespace` and never disturbs the standard capture checkout.
+ * Used by flows that must hold funds and capture later. PayPal only allows one
+ * intent per SDK instance, so this mounts under its own `data-namespace` and
+ * never disturbs a capture checkout loaded in the same tab.
  */
 export function loadPayPalAuthorizeSdk(options: PayPalSdkOptions = {}): Promise<any> {
   return loadSdk('authorize', options);
 }
 
-const sdkPromises: Partial<Record<'capture' | 'authorize', Promise<any>>> = {};
-let loadedKey: string | null = null;
+/**
+ * Every distinct (environment + client id + intent + merchant + component set)
+ * combination is its own SDK instance with its own namespace. A namespace is
+ * NEVER shared across merchants or intents: reusing seller A's SDK for seller
+ * B would pay the wrong payee, and reusing a CAPTURE namespace for an
+ * AUTHORIZE order makes PayPal reject the approval.
+ */
+const sdkPromises = new Map<string, Promise<any>>();
+
+/** Stable, DOM-safe namespace suffix derived from the full cache key. */
+function namespaceFor(key: string): string {
+  let hash = 0;
+  for (let i = 0; i < key.length; i++) {
+    hash = (hash * 31 + key.charCodeAt(i)) >>> 0;
+  }
+  return `paypal_${hash.toString(36)}`;
+}
+
+function componentsFor(config: PayPalRuntimeConfig, intent: 'capture' | 'authorize', wallets: boolean): string[] {
+  const base = config.components?.length ? [...config.components] : ['buttons', 'messages'];
+  // Wallets are only rendered on a CAPTURE checkout; never ship those bundles
+  // to an AUTHORIZE checkout that cannot use them.
+  if (intent === 'capture' && wallets) {
+    for (const c of config.wallet_components ?? ['applepay', 'googlepay']) {
+      if (!base.includes(c)) base.push(c);
+    }
+  }
+  return base.filter((c) => c !== 'card-fields');
+}
 
 function loadSdk(intent: 'capture' | 'authorize', options: PayPalSdkOptions = {}): Promise<any> {
-  const namespace = intent === 'authorize' ? 'paypalAuthorize' : 'paypal';
-  // A different payee means a different SDK instance — never reuse a cached
-  // loader across merchants.
-  const cacheKey = `${intent}:${options.merchantId ?? 'first-party'}`;
-  if (loadedKey && loadedKey !== cacheKey) {
-    sdkPromise = null;
-    delete sdkPromises[intent];
-  }
-  loadedKey = cacheKey;
-  const cached = intent === 'capture' ? sdkPromise : sdkPromises[intent];
-  if (cached) return cached;
+  const wallets = options.wallets === true;
+  const merchant = options.merchantId || 'first-party';
 
   const promise = getPayPalConfig().then((config) => {
     if (!config.enabled || !config.client_id) {
       throw new Error('PayPal is not configured yet.');
     }
-    const existing = (window as any)[namespace];
-    if (existing) return existing;
-
-    const params = new URLSearchParams({
-      'client-id': config.client_id,
-      currency: config.currency || 'USD',
+    const components = componentsFor(config, intent, wallets);
+    const key = [
+      config.environment,
+      config.client_id,
       intent,
-      components: (config.components ?? ['buttons']).join(','),
-      // Pay Now: buyers see "Pay Now" in PayPal, never "Continue".
-      commit: intent === 'capture' ? 'true' : 'false',
-    });
-    // Seller-routed (Connected Path) checkout must name the payee here.
-    if (options.merchantId) params.set('merchant-id', options.merchantId);
-    if (config.enable_funding?.length) {
-      params.set('enable-funding', config.enable_funding.join(','));
-    }
+      merchant,
+      components.join('+'),
+    ].join('|');
 
-    return new Promise((resolve, reject) => {
-      const script = document.createElement('script');
-      script.src = `https://www.paypal.com/sdk/js?${params.toString()}`;
-      script.async = true;
-      // Mandatory PayPal Partner attribution on the SDK tag itself.
-      script.setAttribute(
-        'data-partner-attribution-id',
-        config.partner_attribution_id || PARTNER_ATTRIBUTION_ID,
+    const cached = sdkPromises.get(key);
+    if (cached) return cached;
+
+    const namespace = namespaceFor(key);
+    const loader = new Promise<any>((resolve, reject) => {
+      const existing = (window as any)[namespace];
+      if (existing) {
+        resolve(existing);
+        return;
+      }
+
+      const params = new URLSearchParams({
+        'client-id': config.client_id as string,
+        currency: config.currency || 'USD',
+        intent,
+        components: components.join(','),
+        // Pay Now: buyers see "Pay Now" in PayPal, never "Continue".
+        commit: intent === 'capture' ? 'true' : 'false',
+      });
+      // Seller-routed (Connected Path) checkout must name the payee here.
+      if (options.merchantId) params.set('merchant-id', options.merchantId);
+      // Sandbox-only: makes funding eligibility deterministic while testing.
+      // Never sent in live.
+      if (config.environment === 'sandbox') params.set('buyer-country', 'US');
+      if (config.enable_funding?.length) {
+        params.set('enable-funding', config.enable_funding.join(','));
+      }
+
+      const src = `https://www.paypal.com/sdk/js?${params.toString()}`;
+      // Reuse an identical script tag rather than downloading it twice.
+      const prior = document.head.querySelector<HTMLScriptElement>(
+        `script[data-vb-paypal-key="${namespace}"]`,
       );
-      script.setAttribute('data-page-type', options.pageType ?? 'checkout');
-      if (namespace !== 'paypal') script.setAttribute('data-namespace', namespace);
+      const script = prior ?? document.createElement('script');
 
-      script.onload = () => {
+      const settle = () => {
         const ns = (window as any)[namespace];
         if (ns) resolve(ns);
         else reject(new Error('PayPal did not finish loading.'));
       };
-      script.onerror = () => {
-        if (intent === 'capture') sdkPromise = null;
-        else delete sdkPromises[intent];
-        reject(new Error('We could not reach PayPal. Check your connection and try again.'));
-      };
-      document.head.appendChild(script);
-    });
-  }).catch((err) => {
-    if (intent === 'capture') sdkPromise = null;
-    else delete sdkPromises[intent];
-    throw err;
-  });
 
-  if (intent === 'capture') sdkPromise = promise;
-  else sdkPromises[intent] = promise;
+      script.addEventListener('load', settle);
+      script.addEventListener('error', () => {
+        sdkPromises.delete(key);
+        script.remove();
+        reject(new Error('We could not reach PayPal. Check your connection and try again.'));
+      });
+
+      if (!prior) {
+        script.src = src;
+        script.async = true;
+        script.setAttribute('data-vb-paypal-key', namespace);
+        // Mandatory PayPal Partner attribution on the SDK tag itself.
+        script.setAttribute(
+          'data-partner-attribution-id',
+          config.partner_attribution_id || PARTNER_ATTRIBUTION_ID,
+        );
+        script.setAttribute('data-page-type', options.pageType ?? 'checkout');
+        script.setAttribute('data-namespace', namespace);
+        document.head.appendChild(script);
+      } else if ((prior as any).__vbLoaded) {
+        settle();
+      }
+      script.addEventListener('load', () => {
+        (script as any).__vbLoaded = true;
+      });
+    }).catch((err) => {
+      sdkPromises.delete(key);
+      throw err;
+    });
+
+    sdkPromises.set(key, loader);
+    return loader;
+  });
 
   return promise;
 }
 
+/** Test-only: forget every cached SDK instance. */
+export function __resetPayPalSdkCache(): void {
+  sdkPromises.clear();
+}

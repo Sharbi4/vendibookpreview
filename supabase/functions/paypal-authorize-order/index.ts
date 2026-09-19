@@ -105,7 +105,12 @@ serve(async (req) => {
             402,
             "payment_declined",
             "PayPal couldn't authorize that payment method. Nothing was charged — please try another one.",
+            {
+              issue: err.issue ?? null,
+              recoverable: err.issue === "INSTRUMENT_DECLINED",
+            },
           );
+
         }
         throw err;
       }

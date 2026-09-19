@@ -140,7 +140,22 @@ serve(async (req) => {
           internal_status: "declined",
           last_error: { issue: err.issue ?? "declined" },
         }).eq("id", record.id);
-        return jsonError(402, "payment_declined", declineMessage(err.issue));
+        // PAYER_ACTION_REQUIRED: PayPal returns a HATEOAS `payer-action` link
+        // the buyer must complete. Hand it to the client instead of dead-ending.
+        let payerActionUrl: string | null = null;
+        if (err.issue === "PAYER_ACTION_REQUIRED") {
+          const pending = await getPayPalOrder(order_id).catch(() => null);
+          payerActionUrl =
+            (pending?.links ?? []).find((l: any) => l?.rel === "payer-action")?.href ?? null;
+        }
+        // INSTRUMENT_DECLINED is recoverable on a Buttons checkout: the payer
+        // can pick another funding source via actions.restart().
+        return jsonError(402, "payment_declined", declineMessage(err.issue), {
+          issue: err.issue ?? null,
+          recoverable: err.issue === "INSTRUMENT_DECLINED",
+          ...(payerActionUrl ? { payer_action_url: payerActionUrl } : {}),
+        });
+
       } else {
         throw err;
       }

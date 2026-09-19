@@ -112,3 +112,17 @@
 - [x] Move rental verification into Details while preserving server gates.
 - [x] Add wizard-aware shell and independently scrolling desktop rail.
 - [x] Validate real sale/rental routes, mobile layout, typecheck, build, and checkout tests.
+
+## PayPal checkout review (2026-09-19)
+
+- [ ] Decline reasons surfaced from the server on create + approve
+- [ ] PAYER_ACTION_REQUIRED sends the buyer to PayPal's payer-action link
+- [ ] Unpaid / declined / pending sale orders must not render as confirmed
+      (OrderTracking, OrderDetail) + real provider on Report issue
+- [ ] Static PayPal preconnects, warm on every checkout entry, config TTL cache
+- [ ] Sandbox aids: buyer-country, sandbox buyer-account banner, env mismatch
+      flagged in paypal-system-status
+- [ ] Order return_url / cancel_url + PaymentSuccess server re-verification
+- [ ] Receipt completeness (capture id, card brand/last4, PDF + email actions)
+- [ ] Webhooks: CHECKOUT.ORDER.COMPLETED, PAYMENT.CAPTURE.DECLINED,
+      PAYMENT.AUTHORIZATION.VOIDED, log unhandled events

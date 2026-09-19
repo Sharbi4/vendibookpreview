@@ -22,10 +22,15 @@ serve((req) => {
     client_id: paypalPublicClientId(),
     partner_attribution_id: PARTNER_ATTRIBUTION_ID,
     currency: "USD",
-    // applepay/googlepay are express wallets layered on the same PayPal order
-    // lifecycle; the SDK hides them automatically when they are not eligible.
-    components: ["buttons", "messages", "card-fields", "applepay", "googlepay"],
+    // Only what the checkout actually renders. CardFields is NOT rendered
+    // (our "Debit or Credit Card" option is a Buttons funding source), so the
+    // card-fields component is deliberately excluded.
+    components: ["buttons", "messages"],
+    // Express wallets layered on the same PayPal order lifecycle. The client
+    // adds these ONLY for a CAPTURE checkout, where WalletPayButtons renders.
+    wallet_components: ["applepay", "googlepay"],
     enable_funding: ["venmo", "paylater"],
+
   });
 });
 

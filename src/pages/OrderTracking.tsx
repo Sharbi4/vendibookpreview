@@ -514,7 +514,7 @@ const OrderTracking = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
-  const { transaction, isLoading, error, refetch } = useOrderTracking(transactionId);
+  const { transaction, paymentRecord, isLoading, error, refetch } = useOrderTracking(transactionId);
   const { toast } = useToast();
   const [isConfirming, setIsConfirming] = useState(false);
   const [isPayingFreight, setIsPayingFreight] = useState(false);
@@ -638,6 +638,73 @@ const OrderTracking = () => {
     || SHIPPING_STATUS_CONFIG.pending;
   const StatusIcon = statusConfig.icon;
 
+  /**
+   * A sale_transaction row is created BEFORE the buyer pays. Without this
+   * guard an unpaid, declined or abandoned attempt renders the shipping
+   * timeline and reads as "Order confirmed". Only a settled payment (or a
+   * pay-in-person sale, which has no online payment at all) may do that.
+   */
+  const paymentState = paymentRecord?.payment_status ?? null;
+  const isPaidOnline = paymentState === 'completed';
+  const isPaymentPending = paymentState === 'pending' || paymentState === 'approved';
+  const declineReason = (() => {
+    const err = paymentRecord?.last_error as { issue?: string; message?: string } | null;
+    if (!err) return null;
+    return err.message ?? err.issue ?? null;
+  })();
+
+  if (!isCashTransaction && !isPaidOnline) {
+    const amountDue = Number(transaction.amount ?? 0);
+    return (
+      <div className="v2-order min-h-screen flex flex-col">
+        <SEO title="Payment required | VendiBook" description="Complete payment for your order" noindex />
+        <Header />
+        <main className="flex-1 container py-12">
+          <div className="max-w-xl mx-auto">
+            <Button variant="ghost" className="mb-6" onClick={() => navigate('/dashboard')}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Dashboard
+            </Button>
+            {isPaymentPending ? (
+              <Card>
+                <CardContent className="pt-6 space-y-3">
+                  <h1 className="text-2xl font-semibold">Payment is being reviewed</h1>
+                  <p className="text-muted-foreground">
+                    PayPal is still clearing this payment. Nothing else is needed from you — we'll
+                    update this order and email you the moment it settles.
+                  </p>
+                  <Button variant="outline" onClick={() => refetch()}>Check again</Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardContent className="pt-6 space-y-4">
+                  <h1 className="text-2xl font-semibold">Payment required</h1>
+                  {declineReason ? (
+                    <p className="text-sm font-medium text-destructive">{declineReason}</p>
+                  ) : null}
+                  <p className="text-muted-foreground">
+                    This order isn't paid yet, so nothing has been confirmed or scheduled.
+                    {amountDue > 0 ? ` Amount due: $${amountDue.toLocaleString()}.` : ''}
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    <Button asChild>
+                      <Link to={`/checkout/${transaction.listing_id}`}>Complete payment</Link>
+                    </Button>
+                    <Button variant="outline" asChild>
+                      <Link to="/dashboard">Back to dashboard</Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   const isVendibookFreight = transaction.fulfillment_type === 'vendibook_freight';
   const hasTracking = !!transaction.tracking_number;
   const isBuyer = user?.id === transaction.buyer_id;
@@ -690,7 +757,9 @@ const OrderTracking = () => {
                 context={{
                   featureArea: "purchase",
                   transactionStatus: transaction.status,
-                  paymentMethod: isCashTransaction ? "pay_in_person" : "paypal",
+                  paymentMethod: isCashTransaction
+                    ? "pay_in_person"
+                    : (paymentRecord?.provider ?? "paypal"),
                   related: {
                     sale_transaction_id: transaction.id,
                     listing_id: transaction.listing_id,

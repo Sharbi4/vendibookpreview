@@ -114,6 +114,36 @@ async function handleEvent(admin: any, event: any) {
         .eq("payment_status", "created");
       return;
 
+    // The payer's approval was reversed before money moved (e.g. they backed
+    // out at PayPal). Never fulfil on this: mark the attempt cancelled unless
+    // it already reached an authorized/completed state.
+    case "CHECKOUT.PAYMENT-APPROVAL.REVERSED": {
+      const orderId = resource.id ?? resource.order_id;
+      const reference = resource.custom_id || resource.invoice_id;
+      let record: any = null;
+      if (orderId) {
+        const { data } = await admin.from("payment_records")
+          .select("*")
+          .eq("paypal_order_id", orderId)
+          .maybeSingle();
+        record = data ?? null;
+      }
+      if (!record && reference) {
+        record = await findRecord(admin, reference, undefined, resource.supplementary_data);
+      }
+      if (!record) return;
+      if (record.payment_status === "completed" || record.authorization_status === "created") return;
+      await admin.from("payment_records").update({
+        payment_status: "cancelled",
+        internal_status: "approval_reversed:provider",
+        last_error: { issue: "CHECKOUT.PAYMENT-APPROVAL.REVERSED" },
+      }).eq("id", record.id)
+        .neq("payment_status", "completed");
+      await holdPayables(admin, record.id, "PayPal approval was reversed before payment.", "cancelled");
+      return;
+    }
+
+
     // ── Authorization (temporary hold) lifecycle ───────────────────────
     // Idempotent: applyAuthorization / markAuthorizationExpired no-op when
     // the state has already been recorded by the authorize endpoint.
@@ -152,20 +182,35 @@ async function handleEvent(admin: any, event: any) {
       return;
     }
 
+    // PayPal marks the whole order complete once every capture settled. Our
+    // per-capture handlers already finalised the money; this only records the
+    // order-level signal so reconciliation can see it.
+    case "CHECKOUT.ORDER.COMPLETED": {
+      const orderId = resource.id;
+      if (!orderId) return;
+      await admin.from("payment_records")
+        .update({ internal_status: "order_completed" })
+        .eq("paypal_order_id", orderId)
+        .eq("payment_status", "completed");
+      safeLog("webhook_order_completed", { order_id: orderId });
+      return;
+    }
+
     case "PAYMENT.CAPTURE.COMPLETED":
     case "PAYMENT.CAPTURE.PENDING":
+    case "PAYMENT.CAPTURE.DECLINED":
     case "PAYMENT.CAPTURE.DENIED": {
       const reference = resource.custom_id || resource.invoice_id;
       const record = await findRecord(admin, reference, resource.id, resource.supplementary_data);
       if (!record) return;
 
-      if (type === "PAYMENT.CAPTURE.DENIED") {
+      if (type === "PAYMENT.CAPTURE.DENIED" || type === "PAYMENT.CAPTURE.DECLINED") {
         await admin.from("payment_records").update({
           payment_status: "declined",
           internal_status: "declined",
           paypal_capture_id: resource.id,
         }).eq("id", record.id);
-        await holdPayables(admin, record.id, "Payment was denied by PayPal.", "cancelled");
+        await holdPayables(admin, record.id, "PayPal did not approve this payment.", "cancelled");
         return;
       }
 
@@ -291,7 +336,16 @@ async function handleEvent(admin: any, event: any) {
       return;
 
     default:
-      safeLog("webhook_unhandled", { type });
+      // Enough detail to reconcile later without logging any payer PII.
+      safeLog("webhook_unhandled", {
+        type,
+        event_id: event.id,
+        resource_type: event.resource_type ?? null,
+        resource_id: resource?.id ?? null,
+        reference: resource?.custom_id ?? resource?.invoice_id ?? null,
+        status: resource?.status ?? null,
+        create_time: event.create_time ?? null,
+      });
   }
 }
 

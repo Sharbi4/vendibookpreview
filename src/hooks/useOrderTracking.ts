@@ -41,6 +41,21 @@ export interface TrackingTransaction {
   };
 }
 
+/**
+ * The payment attempt behind a sale transaction. A transaction row is created
+ * BEFORE payment, so this is what decides whether an order is real money or an
+ * abandoned/declined attempt.
+ */
+export interface TrackingPayment {
+  reference: string;
+  provider: string | null;
+  payment_status: string | null;
+  payment_intent: string | null;
+  last_error: unknown;
+  created_at: string;
+  gross_amount_cents: number | null;
+}
+
 export const useOrderTracking = (transactionId: string | undefined) => {
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -90,6 +105,32 @@ export const useOrderTracking = (transactionId: string | undefined) => {
     enabled: !!transactionId && !!user,
   });
 
+  // Latest payment attempt for this transaction. RLS limits rows to the
+  // buyer/seller, so nothing extra is exposed here.
+  const { data: paymentRecord } = useQuery({
+    queryKey: ['order-tracking-payment', transactionId],
+    enabled: !!transactionId && !!user,
+    queryFn: async () => {
+      if (!transactionId) return null;
+      const { data } = await supabase
+        .from('payment_records')
+        .select(
+          'reference, provider, payment_status, payment_intent, last_error, created_at, gross_amount_cents',
+        )
+        .eq('sale_transaction_id', transactionId)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      const rows = (data ?? []) as unknown as TrackingPayment[];
+      // A settled payment always wins over a later abandoned attempt.
+      return (
+        rows.find((r) => r.payment_status === 'completed') ??
+        rows.find((r) => r.payment_status === 'approved' || r.payment_status === 'pending') ??
+        rows[0] ??
+        null
+      );
+    },
+  });
+
   // Set up real-time subscription for tracking updates
   useEffect(() => {
     if (!transactionId || !user) return;
@@ -121,6 +162,7 @@ export const useOrderTracking = (transactionId: string | undefined) => {
 
   return {
     transaction,
+    paymentRecord: paymentRecord ?? null,
     isLoading,
     error,
     refetch,

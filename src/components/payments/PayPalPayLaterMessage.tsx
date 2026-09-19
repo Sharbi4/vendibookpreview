@@ -1,12 +1,21 @@
 import { useEffect, useRef } from 'react';
 
-import { loadPayPalSdk } from '@/lib/paypalClient';
+import { loadPayPalAuthorizeSdk, loadPayPalSdk } from '@/lib/paypalClient';
 
 type PayPalPayLaterMessageProps = {
   amount?: number | null;
   placement: 'product' | 'checkout';
   merchantId?: string | null;
   className?: string;
+  /**
+   * The intent of the SDK instance this checkout is actually using. Pass the
+   * resolved value so Pay Later messaging reuses the EXACT same SDK instance
+   * as the payment buttons instead of pulling in a second CAPTURE bundle.
+   * `null` means "not resolved yet" — nothing loads until it is.
+   */
+  intent?: 'CAPTURE' | 'AUTHORIZE' | null;
+  /** Adds the wallet components so the key matches the panel's capture SDK. */
+  wallets?: boolean;
 };
 
 /**
@@ -18,19 +27,25 @@ export default function PayPalPayLaterMessage({
   placement,
   merchantId,
   className = '',
+  intent = 'CAPTURE',
+  wallets = false,
 }: PayPalPayLaterMessageProps) {
   const messageRef = useRef<HTMLDivElement>(null);
   const validAmount = Number.isFinite(amount) && Number(amount) > 0;
 
   useEffect(() => {
-    if (!validAmount || !messageRef.current) return;
+    if (!validAmount || !intent || !messageRef.current) return;
     let cancelled = false;
     const container = messageRef.current;
 
-    loadPayPalSdk({
+    const options = {
       merchantId,
-      pageType: placement === 'product' ? 'product-details' : 'checkout',
-    })
+      pageType: placement === 'product' ? ('product-details' as const) : ('checkout' as const),
+      wallets,
+    };
+    const load = intent === 'AUTHORIZE' ? loadPayPalAuthorizeSdk : loadPayPalSdk;
+
+    load(options)
       .then((paypal) => {
         if (cancelled || !paypal?.Messages || !container) return;
         container.replaceChildren();
@@ -45,9 +60,9 @@ export default function PayPalPayLaterMessage({
       cancelled = true;
       container.replaceChildren();
     };
-  }, [merchantId, placement, validAmount, amount]);
+  }, [merchantId, placement, validAmount, amount, intent, wallets]);
 
-  if (!validAmount) return null;
+  if (!validAmount || !intent) return null;
 
   return (
     <div

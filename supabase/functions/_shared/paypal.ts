@@ -17,6 +17,8 @@
 
 
 import { logPayPalApiCall } from "./paypalApiLog.ts";
+import { assertionIssuerClientId, buildAuthAssertionToken } from "./paypalAssertion.ts";
+
 
 const LIVE_BASE = "https://api-m.paypal.com";
 
@@ -196,14 +198,22 @@ export const PARTNER_ATTRIBUTION_ID = Deno.env.get("PAYPAL_BN_CODE") ?? "VENDIBO
  * `PayPal-Auth-Assertion` lets Vendibook act on an onboarded seller's behalf.
  * Unsigned JWT (alg none) — PayPal authenticates the partner via the access
  * token; the assertion only names the merchant.
+ *
+ * `iss` MUST be the platform client id for the same environment as the access
+ * token being sent, so the environment is always resolved explicitly here.
  */
-export function buildAuthAssertion(merchantId: string): string | null {
-  const clientId = Deno.env.get("PAYPAL_CLIENT_ID");
-  if (!clientId || !merchantId) return null;
-  const b64 = (obj: unknown) =>
-    btoa(JSON.stringify(obj)).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
-  return `${b64({ alg: "none" })}.${b64({ iss: clientId, payer_id: merchantId })}.`;
+export function buildAuthAssertion(
+  merchantId: string,
+  environment?: PayPalEnvironment,
+): string | null {
+  const env = environment ?? paypalEnvironment();
+  const clientId = assertionIssuerClientId(env, {
+    sandboxClientId: Deno.env.get("PAYPAL_SANDBOX_CLIENT_ID"),
+    liveClientId: Deno.env.get("PAYPAL_CLIENT_ID"),
+  });
+  return buildAuthAssertionToken(clientId, merchantId);
 }
+
 
 // ---------------------------------------------------------------- request
 interface PayPalRequestOptions {
@@ -266,7 +276,7 @@ export async function paypalRequest<T = any>(
       // onboarding/status). It never changes who is paid on an order — orders
       // stay first-party.
       if (actAsMerchantId) {
-        const assertion = buildAuthAssertion(actAsMerchantId);
+        const assertion = buildAuthAssertion(actAsMerchantId, env);
         // The assertion itself is never logged — only the merchant it names.
         if (assertion) headers["PayPal-Auth-Assertion"] = assertion;
       }

@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { parseEdgeError } from '@/lib/edgeErrors';
 import { isSafeInternalPath } from '@/lib/originNav';
+import { authPath } from '@/lib/auth/returnTo';
 
 type Outcome =
   | { kind: 'working' }
@@ -111,12 +112,16 @@ const PaymentReturn = () => {
         navigate(`/receipt/${ref}`, { replace: true });
         return;
       }
-      if (data.status === 'authorized' && ref) {
-        setOutcome({ kind: 'authorized', reference: ref, message: data.message });
-        return;
-      }
-      if (data.status === 'pending' && ref) {
-        setOutcome({ kind: 'pending', reference: ref, message: data.message });
+      // Authorized and pending are real, verified outcomes with a record —
+      // they resolve straight to the receipt, which states the true status.
+      // No intermediate "payment approved" confirmation screen.
+      if ((data.status === 'authorized' || data.status === 'pending') && ref) {
+        try {
+          sessionStorage.removeItem('pp-checkout-return');
+        } catch {
+          /* ignore */
+        }
+        navigate(`/receipt/${ref}`, { replace: true });
         return;
       }
       if (data.status === 'cancelled') {
@@ -165,7 +170,11 @@ const PaymentReturn = () => {
                 Sign in with the account you started checkout from and we'll pick this back up.
               </p>
               <Button asChild className="mt-6 w-full">
-                <Link to="/auth">Sign in</Link>
+                {/* Preserve the ENTIRE return URL so reconciliation resumes
+                    on exactly this order after signing back in. */}
+                <Link to={authPath(`${window.location.pathname}${window.location.search}`)}>
+                  Sign in
+                </Link>
               </Button>
             </>
           ) : outcome.kind === 'authorized' ? (

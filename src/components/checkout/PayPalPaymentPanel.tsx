@@ -2,13 +2,12 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { CheckCircle2, Loader2, Lock, ShieldCheck, X } from 'lucide-react';
 
 import { supabase } from '@/integrations/supabase/client';
-import { loadPayPalAuthorizeSdk, loadPayPalSdk } from '@/lib/paypalClient';
+import { getPayPalConfig, loadPayPalAuthorizeSdk, loadPayPalSdk } from '@/lib/paypalClient';
 import { parseEdgeError } from '@/lib/edgeErrors';
 import { authPath } from '@/lib/auth/returnTo';
 import { TRUST_COPY } from '@/lib/transactionVocabulary';
 
 import PayPalPayLaterMessage from '@/components/payments/PayPalPayLaterMessage';
-import PaymentFormSkeleton from './PaymentFormSkeleton';
 import WalletPayButtons from './WalletPayButtons';
 
 export type PayPalCheckoutTarget =
@@ -90,13 +89,19 @@ const PayPalPaymentPanel = ({
   /** Funding sources PayPal actually rendered for this buyer/device. */
   const [eligible, setEligible] = useState<Record<string, boolean>>({});
   const [reloadKey, setReloadKey] = useState(0);
-  const [sdkIntent, setSdkIntent] = useState<'CAPTURE' | 'AUTHORIZE'>('CAPTURE');
+  // null until `paypal-checkout-intent` answers. Nothing intent-specific
+  // (Pay Later messaging, wallets) may load before that, or the browser would
+  // pull a CAPTURE bundle into an AUTHORIZE checkout.
+  const [sdkIntent, setSdkIntent] = useState<'CAPTURE' | 'AUTHORIZE' | null>(null);
   /**
    * Set from the server's create-order response. The server alone decides
    * whether this checkout captures now or places a temporary hold.
    */
   const intentRef = useRef<'CAPTURE' | 'AUTHORIZE'>('CAPTURE');
   const [holdMessage, setHoldMessage] = useState<string | null>(null);
+  /** Sandbox-only testing notice. Never shown in live. */
+  const [isSandbox, setIsSandbox] = useState(false);
+  const [sandboxNoteDismissed, setSandboxNoteDismissed] = useState(false);
   const stateRef = useRef<PanelState>('loading');
   stateRef.current = state;
 
@@ -192,6 +197,15 @@ const PayPalPaymentPanel = ({
    * server to re-check the order against PayPal before telling the buyer it
    * failed. Returns true when the payment is in fact settled or held.
    */
+  /**
+   * A verified payment always resolves to the real receipt for its reference.
+   * `returnUrl` is only a fallback for flows that produce no payment record.
+   */
+  const goToResult = (reference?: string) => {
+    const destination = reference ? `/receipt/${reference}` : returnUrl;
+    if (destination) window.location.href = destination;
+  };
+
   const reconcile = async (orderID: string): Promise<boolean> => {
     const { data, error } = await supabase.functions.invoke('paypal-finalize-order', {
       body: { order_id: orderID },
@@ -201,29 +215,34 @@ const PayPalPaymentPanel = ({
     if (data.status === 'completed') {
       setState('success');
       onSuccess?.({ reference: data.reference, capture_id: undefined });
-      setTimeout(() => {
-        if (returnUrl) window.location.href = returnUrl;
-      }, 900);
+      setTimeout(() => goToResult(data.reference), 900);
       return true;
     }
     if (data.status === 'authorized') {
       setHoldMessage(data.message ?? null);
       setState('authorized');
       onSuccess?.({ reference: data.reference, authorized: true, message: data.message });
-      setTimeout(() => {
-        if (returnUrl) window.location.href = returnUrl;
-      }, 1400);
+      setTimeout(() => goToResult(data.reference), 1400);
       return true;
     }
     if (data.status === 'pending') {
       setState('pending');
       onSuccess?.({ reference: data.reference, pending: true, message: data.message });
+      // Pending is not paid, but it IS a real record: the receipt states the
+      // pending status honestly rather than a second confirmation screen.
+      setTimeout(() => goToResult(data.reference), 1400);
       return true;
     }
     return false;
   };
 
-  const finishOrder = async (orderID: string) => {
+  /**
+   * Returns 'restart' when PayPal reported a recoverable funding failure
+   * (e.g. INSTRUMENT_DECLINED): the payer keeps the PayPal window open and
+   * picks another funding source via `actions.restart()`. Nothing is marked
+   * paid in that case.
+   */
+  const finishOrder = async (orderID: string): Promise<'restart' | void> => {
     setState('processing');
 
     // AUTHORIZE flow: place the temporary hold. No money moves until the
@@ -236,6 +255,27 @@ const PayPalPaymentPanel = ({
       if (authErr || !auth || (auth.status !== 'authorized' && auth.status !== 'completed')) {
         if (await reconcile(orderID)) return;
         const parsed = await parseEdgeError(authErr, auth?.error ? auth : null);
+        const payerAction = parsed.raw?.payer_action_url as string | undefined;
+        if (payerAction) {
+          // PayPal returned a `payer-action` link: the buyer must finish
+          // approving there. Send them to it instead of dead-ending.
+          setState('ready');
+          setError({
+            title: 'PayPal needs one more step',
+            detail: 'Finish approving this payment in the PayPal window that just opened.',
+          });
+          window.open(payerAction, '_blank', 'noopener,noreferrer');
+          return;
+        }
+        if (parsed.raw?.recoverable === true) {
+          setState('ready');
+          setError({
+            title: 'That payment method was declined',
+            detail: parsed.message ||
+              'PayPal declined that payment method. Nothing was charged — choose another one.',
+          });
+          return 'restart';
+        }
         setState('error');
         setError({
           title: 'Payment not authorized',
@@ -247,9 +287,7 @@ const PayPalPaymentPanel = ({
       setHoldMessage(auth.message ?? null);
       setState('authorized');
       onSuccess?.({ reference: auth.reference, authorized: true, message: auth.message });
-      setTimeout(() => {
-        if (returnUrl) window.location.href = returnUrl;
-      }, 1400);
+      setTimeout(() => goToResult(auth.reference), 1400);
       return;
     }
 
@@ -261,6 +299,27 @@ const PayPalPaymentPanel = ({
     if (fnError || !result || (result.status !== 'completed' && !result.pending)) {
       if (await reconcile(orderID)) return;
       const parsed = await parseEdgeError(fnError, result?.error ? result : null);
+      const payerAction = parsed.raw?.payer_action_url as string | undefined;
+      if (payerAction) {
+        // PayPal returned a `payer-action` link: the buyer must finish
+        // approving there. Send them to it instead of dead-ending.
+        setState('ready');
+        setError({
+          title: 'PayPal needs one more step',
+          detail: 'Finish approving this payment in the PayPal window that just opened.',
+        });
+        window.open(payerAction, '_blank', 'noopener,noreferrer');
+        return;
+      }
+      if (parsed.raw?.recoverable === true) {
+        setState('ready');
+        setError({
+          title: 'That payment method was declined',
+          detail: parsed.message ||
+            'PayPal declined that payment method. Nothing was charged — choose another one.',
+        });
+        return 'restart';
+      }
       setState('error');
       setError({
         title: 'Payment not completed',
@@ -274,14 +333,13 @@ const PayPalPaymentPanel = ({
     if (result.pending) {
       setState('pending');
       onSuccess?.(result);
+      setTimeout(() => goToResult(result.reference), 1400);
       return;
     }
 
     setState('success');
     onSuccess?.(result);
-    setTimeout(() => {
-      if (returnUrl) window.location.href = returnUrl;
-    }, 900);
+    setTimeout(() => goToResult(result.reference), 900);
   };
 
   const handlersRef = useRef({ startOrder, finishOrder, fail });
@@ -341,8 +399,12 @@ const PayPalPaymentPanel = ({
         const intent = result.data.intent === 'AUTHORIZE' ? 'AUTHORIZE' : 'CAPTURE';
         intentRef.current = intent;
         setSdkIntent(intent);
-        const options = { merchantId, pageType: 'checkout' as const };
-        return intent === 'AUTHORIZE' ? loadPayPalAuthorizeSdk(options) : loadPayPalSdk(options);
+        getPayPalConfig()
+          .then((cfg) => setIsSandbox(cfg.environment === 'sandbox'))
+          .catch(() => undefined);
+        return intent === 'AUTHORIZE'
+          ? loadPayPalAuthorizeSdk({ merchantId, pageType: 'checkout' })
+          : loadPayPalSdk({ merchantId, pageType: 'checkout', wallets: true });
       })
       .then((paypal) => {
         if (!paypal) return;
@@ -367,9 +429,23 @@ const PayPalPaymentPanel = ({
               tagline: false,
               ...(color ? { color } : {}),
             },
-            appSwitchWhenAvailable: true,
+            // App Switch is intentionally DISABLED. PayPal's documented flow
+            // requires the return/cancel URL to match the initiating checkout
+            // page plus a unique session and a buttons.resume() handler; we
+            // implement none of that yet, and a half-configured App Switch
+            // creates ambiguous returns.
+            // TODO(paypal-app-switch): implement same-URL return + resume()
+            // end-to-end as its own change before re-enabling.
             createOrder: () => handlersRef.current.startOrder(),
-            onApprove: (data: { orderID: string }) => handlersRef.current.finishOrder(data.orderID),
+            onApprove: async (
+              data: { orderID: string },
+              actions?: { restart?: () => void },
+            ) => {
+              const outcome = await handlersRef.current.finishOrder(data.orderID);
+              // Recoverable funding failure — let the payer pick another
+              // funding source inside the PayPal window, per PayPal docs.
+              if (outcome === 'restart') actions?.restart?.();
+            },
             onCancel: () => {
               setState('ready');
               setError({
@@ -548,10 +624,40 @@ const PayPalPaymentPanel = ({
               ) : (
 
                 <>
+                  {isSandbox && !sandboxNoteDismissed ? (
+                    <div className="mb-3 rounded-2xl border border-border/60 bg-muted/30 px-3.5 py-3 text-xs text-muted-foreground">
+                      <div className="flex items-start gap-3">
+                        <p className="flex-1">
+                          Sandbox mode — sign in with a sandbox{' '}
+                          <strong className="text-foreground">buyer (Personal)</strong> account, not the
+                          business account that receives the money.{' '}
+                          <a
+                            href="https://developer.paypal.com/dashboard/accounts"
+                            target="_blank"
+                            rel="noreferrer"
+                            className="underline"
+                          >
+                            Sandbox accounts
+                          </a>
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setSandboxNoteDismissed(true)}
+                          className="shrink-0 rounded-full px-2 py-0.5 text-[11px] hover:bg-muted"
+                          aria-label="Dismiss sandbox notice"
+                        >
+                          Dismiss
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+
                   <PayPalPayLaterMessage
                     amount={totalUsd}
                     placement="checkout"
                     merchantId={merchantId}
+                    intent={sdkIntent}
+                    wallets={sdkIntent === 'CAPTURE'}
                   />
 
                   {/* The funding slots are mounted from first paint so the
@@ -564,7 +670,9 @@ const PayPalPaymentPanel = ({
                     <div ref={cardButtonRef} data-funding-source="Debit or Credit Card" />
                   </div>
 
-                  {state === 'loading' ? <PaymentFormSkeleton /> : null}
+                  {state === 'loading' ? (
+                    <div className="paypal-funding-cold" aria-hidden="true" />
+                  ) : null}
 
                   {/* Single "Powered by PayPal" line lives in the embedded
                       payment footer (PayPalEmbeddedPayment) — not here. */}
@@ -580,9 +688,12 @@ const PayPalPaymentPanel = ({
                         <WalletPayButtons
                           totalUsd={totalUsd}
                           startOrder={() => handlersRef.current.startOrder()}
-                          finishOrder={(orderId) => handlersRef.current.finishOrder(orderId)}
+                          finishOrder={(orderId) =>
+                            handlersRef.current.finishOrder(orderId).then(() => undefined)
+                          }
                           onFailure={(title, detail) => handlersRef.current.fail(title, detail)}
                           onAvailable={setWalletsAvailable}
+                          merchantId={merchantId}
                         />
                       ) : null}
                     </>

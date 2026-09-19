@@ -15,7 +15,14 @@ interface WalletPayButtonsProps {
   lineItemLabel?: string;
   /** Notifies the parent when at least one wallet button rendered. */
   onAvailable?: (available: boolean) => void;
+  /**
+   * Connected seller's PayPal merchant id. MUST match the panel's SDK — a
+   * first-party SDK inside a connected-seller checkout would name the wrong
+   * payee, so the wallets simply stay hidden if it cannot be loaded.
+   */
+  merchantId?: string | null;
 }
+
 
 const GOOGLE_PAY_SCRIPT = 'https://pay.google.com/gp/p/js/pay.js';
 
@@ -61,6 +68,7 @@ const WalletPayButtons = ({
   totalUsd,
   lineItemLabel = 'Vendibook order',
   onAvailable,
+  merchantId,
 }: WalletPayButtonsProps) => {
   const applePayRef = useRef<HTMLDivElement>(null);
   const googlePayRef = useRef<HTMLDivElement>(null);
@@ -83,7 +91,7 @@ const WalletPayButtons = ({
     const ApplePaySession = (window as any).ApplePaySession;
     if (!ApplePaySession?.canMakePayments?.()) return;
 
-    loadPayPalSdk()
+    loadPayPalSdk({ merchantId, pageType: 'checkout', wallets: true })
       .then(async (paypal: any) => {
         if (cancelled || !paypal?.Applepay) return;
         const applepay = paypal.Applepay();
@@ -99,7 +107,7 @@ const WalletPayButtons = ({
     return () => {
       cancelled = true;
     };
-  }, [totalUsd]);
+  }, [totalUsd, merchantId]);
 
   const payWithApple = async () => {
     const ctx = (window as any).__vbApplePay;
@@ -180,7 +188,11 @@ const WalletPayButtons = ({
     let cancelled = false;
     if (!totalUsd || totalUsd <= 0) return;
 
-    Promise.all([loadPayPalSdk(), getPayPalConfig(), loadGooglePayScript()])
+    Promise.all([
+      loadPayPalSdk({ merchantId, pageType: 'checkout', wallets: true }),
+      getPayPalConfig(),
+      loadGooglePayScript(),
+    ])
       .then(async ([paypal, cfg, google]: any[]) => {
         if (cancelled || !paypal?.Googlepay) return;
         const googlepay = paypal.Googlepay();
@@ -207,7 +219,7 @@ const WalletPayButtons = ({
     return () => {
       cancelled = true;
     };
-  }, [totalUsd]);
+  }, [totalUsd, merchantId]);
 
   const payWithGoogle = async () => {
     const ctx = (window as any).__vbGooglePay;

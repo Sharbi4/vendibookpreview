@@ -117,7 +117,6 @@ import PostPaymentTimeline from '@/components/checkout/PostPaymentTimeline';
 import { recordCheckoutAgreements } from '@/lib/legal/recordCheckoutAgreements';
 import { useLegalDocument } from '@/hooks/useLegalDocument';
 import { CONSENT_TRIGGERS, DOCUMENT_TYPES } from '@/lib/legalDocuments';
-import { loadPayPalSdk } from '@/lib/paypalClient';
 
 type FulfillmentSelection = 'pickup' | 'delivery' | 'on_site';
 
@@ -242,10 +241,6 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const legalAccepted = rentalAgreementAccepted && privacyAccepted;
 
-  /** Warm the official PayPal SDK early; no order is created by this. */
-  useEffect(() => {
-    loadPayPalSdk({ pageType: 'checkout' }).catch(() => undefined);
-  }, []);
   const [paypalCheckout, setPaypalCheckout] = useState<{ bookingId: string; returnUrl: string } | null>(null);
   /** Guards against creating a second booking_request row if the buyer
    *  closes the PayPal panel and hits the submit button again. */
