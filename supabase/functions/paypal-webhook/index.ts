@@ -114,6 +114,36 @@ async function handleEvent(admin: any, event: any) {
         .eq("payment_status", "created");
       return;
 
+    // The payer's approval was reversed before money moved (e.g. they backed
+    // out at PayPal). Never fulfil on this: mark the attempt cancelled unless
+    // it already reached an authorized/completed state.
+    case "CHECKOUT.PAYMENT-APPROVAL.REVERSED": {
+      const orderId = resource.id ?? resource.order_id;
+      const reference = resource.custom_id || resource.invoice_id;
+      let record: any = null;
+      if (orderId) {
+        const { data } = await admin.from("payment_records")
+          .select("*")
+          .eq("paypal_order_id", orderId)
+          .maybeSingle();
+        record = data ?? null;
+      }
+      if (!record && reference) {
+        record = await findRecord(admin, reference, undefined, resource.supplementary_data);
+      }
+      if (!record) return;
+      if (record.payment_status === "completed" || record.authorization_status === "created") return;
+      await admin.from("payment_records").update({
+        payment_status: "cancelled",
+        internal_status: "approval_reversed:provider",
+        last_error: { issue: "CHECKOUT.PAYMENT-APPROVAL.REVERSED" },
+      }).eq("id", record.id)
+        .neq("payment_status", "completed");
+      await holdPayables(admin, record.id, "PayPal approval was reversed before payment.", "cancelled");
+      return;
+    }
+
+
     // ── Authorization (temporary hold) lifecycle ───────────────────────
     // Idempotent: applyAuthorization / markAuthorizationExpired no-op when
     // the state has already been recorded by the authorize endpoint.
