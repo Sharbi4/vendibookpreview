@@ -10,13 +10,18 @@ import { supabase } from '@/integrations/supabase/client';
 import { parseEdgeError } from '@/lib/edgeErrors';
 import { isSafeInternalPath } from '@/lib/originNav';
 import { authPath } from '@/lib/auth/returnTo';
+import PayPalReviewAuthorize, { type ReviewData } from '@/components/checkout/PayPalReviewAuthorize';
+
 
 type Outcome =
   | { kind: 'working' }
   | { kind: 'signin' }
+  /** Approved at PayPal, nothing captured — final authorize step. */
+  | { kind: 'review'; data: ReviewData }
   | { kind: 'authorized'; reference: string; message?: string | null }
   | { kind: 'pending'; reference: string; message?: string | null }
   | { kind: 'failed'; title: string; detail: string };
+
 
 /**
  * Where PayPal sends the payer back after a redirect or app-switch approval.
