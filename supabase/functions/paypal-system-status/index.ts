@@ -41,6 +41,7 @@ serve(async (req) => {
       planMappings,
       pendingPayables,
       needsReview,
+      lastOrderCall,
       volume,
     ] = await Promise.all([
       admin.from("paypal_webhook_events").select("event_type, received_at")
@@ -57,6 +58,10 @@ serve(async (req) => {
         .in("status", ["eligible_for_review", "payout_approved", "payout_processing", "payout_failed"]),
       admin.from("payment_records").select("id", { count: "exact", head: true })
         .eq("internal_status", "needs_review"),
+      admin.from("paypal_api_logs")
+        .select("environment, created_at, endpoint")
+        .like("endpoint", "%/v2/checkout/orders%")
+        .order("created_at", { ascending: false }).limit(1).maybeSingle(),
       admin.from("payment_records")
         .select("payment_status, gross_amount_cents")
         .eq("provider", "paypal")
@@ -80,6 +85,17 @@ serve(async (req) => {
         one_time_ready: apiConnectivity === "ok",
         subscriptions_ready: apiConnectivity === "ok" &&
           (planMappings.data ?? []).some((m: any) => !!m.paypal_plan_id),
+        // Environment drift is what produced a production PayPal popup against
+        // a sandbox order. Surface it loudly instead of leaving it implicit.
+        last_order_environment: lastOrderCall.data?.environment ?? null,
+        last_order_call_at: lastOrderCall.data?.created_at ?? null,
+        environment_mismatch:
+          !!lastOrderCall.data?.environment &&
+          lastOrderCall.data.environment !== config.environment,
+        environment_mismatch_detail:
+          lastOrderCall.data?.environment && lastOrderCall.data.environment !== config.environment
+            ? `Configured environment is ${config.environment} but the most recent order call ran against ${lastOrderCall.data.environment}. Buyers will be sent to the wrong PayPal environment.`
+            : null,
         last_checkout_webhook_at: lastCheckoutWebhook.data?.received_at ?? null,
         last_subscription_webhook_at: lastSubscriptionWebhook.data?.received_at ?? null,
         missing_plan_mappings: missingPlanIds,
