@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { CheckCircle2, Loader2, Lock, ShieldCheck, X } from 'lucide-react';
 
 import { supabase } from '@/integrations/supabase/client';
-import { loadPayPalSdk } from '@/lib/paypalClient';
+import { loadPayPalAuthorizeSdk, loadPayPalSdk } from '@/lib/paypalClient';
 import { parseEdgeError } from '@/lib/edgeErrors';
 import { authPath } from '@/lib/auth/returnTo';
 import { TRUST_COPY } from '@/lib/transactionVocabulary';
@@ -92,6 +92,7 @@ const PayPalPaymentPanel = ({
   /** Funding sources PayPal actually rendered for this buyer/device. */
   const [eligible, setEligible] = useState<Record<string, boolean>>({});
   const [reloadKey, setReloadKey] = useState(0);
+  const [sdkIntent, setSdkIntent] = useState<'CAPTURE' | 'AUTHORIZE'>('CAPTURE');
   /**
    * Set from the server's create-order response. The server alone decides
    * whether this checkout captures now or places a temporary hold.
@@ -242,7 +243,19 @@ const PayPalPaymentPanel = ({
           setState('signin');
           return null;
         }
-        return loadPayPalSdk({ merchantId, pageType: 'checkout' });
+        return supabase.functions.invoke('paypal-checkout-intent', { body: target });
+      })
+      .then(async (result) => {
+        if (!result) return null;
+        if (result.error || !result.data?.intent) {
+          const parsed = await parseEdgeError(result.error, result.data?.error ? result.data : null);
+          throw new Error(parsed.message || 'We could not check payment availability. Please try again.');
+        }
+        const intent = result.data.intent === 'AUTHORIZE' ? 'AUTHORIZE' : 'CAPTURE';
+        intentRef.current = intent;
+        setSdkIntent(intent);
+        const options = { merchantId, pageType: 'checkout' as const };
+        return intent === 'AUTHORIZE' ? loadPayPalAuthorizeSdk(options) : loadPayPalSdk(options);
       })
       .then((paypal) => {
         if (!paypal) return;
@@ -479,13 +492,15 @@ const PayPalPaymentPanel = ({
                           <span /> <small>or</small> <span />
                         </div>
                       ) : null}
-                      <WalletPayButtons
-                        totalUsd={totalUsd}
-                        startOrder={() => handlersRef.current.startOrder()}
-                        finishOrder={(orderId) => handlersRef.current.finishOrder(orderId)}
-                        onFailure={(title, detail) => handlersRef.current.fail(title, detail)}
-                        onAvailable={setWalletsAvailable}
-                      />
+                      {sdkIntent === 'CAPTURE' ? (
+                        <WalletPayButtons
+                          totalUsd={totalUsd}
+                          startOrder={() => handlersRef.current.startOrder()}
+                          finishOrder={(orderId) => handlersRef.current.finishOrder(orderId)}
+                          onFailure={(title, detail) => handlersRef.current.fail(title, detail)}
+                          onAvailable={setWalletsAvailable}
+                        />
+                      ) : null}
                     </>
                   ) : null}
 
