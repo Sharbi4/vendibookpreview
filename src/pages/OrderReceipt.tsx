@@ -6,6 +6,7 @@ import SEO from '@/components/SEO';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface OrderRecord {
   reference: string;
@@ -244,6 +245,7 @@ const OrderReceipt = () => {
     }
     return order?.payment_source === 'card' ? 'Card via PayPal' : 'PayPal';
   })();
+  const { toast } = useToast();
   const [emailing, setEmailing] = useState(false);
   const emailReceipt = async () => {
     if (!order) return;
