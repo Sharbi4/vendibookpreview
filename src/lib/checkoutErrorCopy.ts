@@ -51,6 +51,33 @@ const MAP: Record<string, CheckoutErrorCopy> = {
     title: "No billing account found",
     description: "We couldn't find a billing account for you yet.",
   },
+  already_paid: {
+    title: "This listing already has a completed purchase",
+    description:
+      "Your payment for this listing already went through. Nothing new has been charged — open that order to track it.",
+    actionLabel: "View your order",
+    actionKind: "back",
+  },
+  listing_unavailable: {
+    title: "This listing is no longer available",
+    description:
+      "The seller closed or unpublished this listing, so checkout can't continue. Nothing has been charged.",
+    actionLabel: "Back to listing",
+    actionKind: "back",
+  },
+  legal_acceptance_required: {
+    title: "Agreements still need accepting",
+    description:
+      "Go back to Agreements and tick the box accepting the Terms of Service, Payments Terms, and Privacy Policy.",
+    actionLabel: "Back",
+    actionKind: "back",
+  },
+  self_transaction: {
+    title: "You own this listing",
+    description: "You can't purchase your own listing.",
+    actionLabel: "Back",
+    actionKind: "back",
+  },
   payment_not_completed: {
     title: "Payment not completed",
     description: "We couldn't confirm your payment. If you were charged, contact support.",
