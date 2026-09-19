@@ -157,6 +157,43 @@ const PayPalPaymentPanel = ({
     return data.order_id as string;
   };
 
+  /**
+   * Last-resort reconciliation. The payer already approved at PayPal, so a
+   * failed authorize/capture call is not proof that nothing happened: ask the
+   * server to re-check the order against PayPal before telling the buyer it
+   * failed. Returns true when the payment is in fact settled or held.
+   */
+  const reconcile = async (orderID: string): Promise<boolean> => {
+    const { data, error } = await supabase.functions.invoke('paypal-finalize-order', {
+      body: { order_id: orderID },
+    });
+    if (error || !data?.status) return false;
+
+    if (data.status === 'completed') {
+      setState('success');
+      onSuccess?.({ reference: data.reference, capture_id: undefined });
+      setTimeout(() => {
+        if (returnUrl) window.location.href = returnUrl;
+      }, 900);
+      return true;
+    }
+    if (data.status === 'authorized') {
+      setHoldMessage(data.message ?? null);
+      setState('authorized');
+      onSuccess?.({ reference: data.reference, authorized: true, message: data.message });
+      setTimeout(() => {
+        if (returnUrl) window.location.href = returnUrl;
+      }, 1400);
+      return true;
+    }
+    if (data.status === 'pending') {
+      setState('pending');
+      onSuccess?.({ reference: data.reference, pending: true, message: data.message });
+      return true;
+    }
+    return false;
+  };
+
   const finishOrder = async (orderID: string) => {
     setState('processing');
 
@@ -168,6 +205,7 @@ const PayPalPaymentPanel = ({
         { body: { order_id: orderID } },
       );
       if (authErr || !auth || (auth.status !== 'authorized' && auth.status !== 'completed')) {
+        if (await reconcile(orderID)) return;
         const parsed = await parseEdgeError(authErr, auth?.error ? auth : null);
         setState('error');
         setError({
@@ -192,6 +230,7 @@ const PayPalPaymentPanel = ({
     );
 
     if (fnError || !result || (result.status !== 'completed' && !result.pending)) {
+      if (await reconcile(orderID)) return;
       const parsed = await parseEdgeError(fnError, result?.error ? result : null);
       setState('error');
       setError({
