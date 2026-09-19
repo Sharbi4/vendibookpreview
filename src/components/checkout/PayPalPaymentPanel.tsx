@@ -444,7 +444,10 @@ const PayPalPaymentPanel = ({
           return instance
             .render(container)
             .then(() => {
-              if (!cancelled) setEligible((prev) => ({ ...prev, [key]: true }));
+              if (!cancelled) {
+                setEligible((prev) => ({ ...prev, [key]: true }));
+                if (key === 'paypal') setState(current => current === 'loading' ? 'ready' : current);
+              }
               return true;
             })
             .catch(() => {
@@ -506,7 +509,7 @@ const PayPalPaymentPanel = ({
           ref={containerRef}
           className={
             embedded
-              ? 'sale-light relative w-full'
+              ? 'sale-light relative w-full rounded-2xl border border-[#e5dfd7] bg-[#fffdf9] p-4 sm:p-5'
               : 'sale-light relative w-full md:max-w-lg md:rounded-[26px] rounded-t-[26px] border border-border/70 bg-card shadow-[0_40px_120px_-40px_rgba(24,20,16,0.55)] mt-6 md:mt-0 flex flex-col max-h-[calc(100dvh-1.5rem)] md:max-h-[calc(100dvh-3rem)]'
           }
         >

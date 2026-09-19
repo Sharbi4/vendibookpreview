@@ -299,7 +299,7 @@ const OrderReceipt = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="sale-light min-h-screen bg-[#f8f6f2]">
       <SEO title="Receipt | Vendibook" description="Your Vendibook order receipt." noindex />
       <Header />
 
@@ -316,7 +316,7 @@ const OrderReceipt = () => {
             </Link>
           </div>
         ) : (
-          <article className="rounded-[26px] border border-border/70 bg-card p-7 shadow-[0_40px_120px_-70px_rgba(24,20,16,0.45)] md:p-10">
+          <article className="rounded-[26px] border border-border/70 bg-[#fffdf9] p-7 shadow-[0_40px_120px_-70px_rgba(24,20,16,0.45)] md:p-10">
             {/* Document header */}
             <header className="flex flex-wrap items-start justify-between gap-4 border-b border-border/70 pb-6">
               <div>

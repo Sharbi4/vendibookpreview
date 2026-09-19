@@ -112,7 +112,7 @@ const SaleCheckout = () => {
   const isOwner = user?.id && listing?.host_id && user.id === listing.host_id;
 
   // Form state — persisted per-listing so leaving and returning restores it.
-  const sessionKey = `sale:${listingId ?? 'unknown'}`;
+  const sessionKey = `sale:${user?.id ?? 'guest'}:${listingId ?? 'unknown'}`;
   interface PersistedState {
     buyerInfo: BuyerInfo;
     fulfillmentSelected: FulfillmentSelection;

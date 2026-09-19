@@ -53,12 +53,12 @@ export function PayPalWordmark({
 }) {
   const [failed, setFailed] = useState(false);
   // Never show a broken image: fall back to the PayPal name in brand type.
-  if (failed || surface === 'light') {
-    return <PayPalTextMark surface={surface} className={cn('text-sm', className)} />;
+  if (failed) {
+    return <span className={cn('text-sm font-semibold', className)}>PayPal</span>;
   }
   return (
     <img
-      src={paypalWordmarkWhite.url}
+      src={surface === 'light' ? paypalMonogram.url : paypalWordmarkWhite.url}
       alt="PayPal"
       onError={() => setFailed(true)}
       className={cn('h-4 w-auto', className)}

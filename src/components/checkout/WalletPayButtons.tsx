@@ -318,11 +318,7 @@ const WalletPayButtons = ({
         </button>
       ) : null}
 
-      <div className="flex items-center gap-3 pt-1">
-        <span className="h-px flex-1 bg-border/60" />
-        <span className="text-[11px] uppercase tracking-wide text-muted-foreground">or</span>
-        <span className="h-px flex-1 bg-border/60" />
-      </div>
+
     </div>
   );
 };

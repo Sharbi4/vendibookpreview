@@ -56,6 +56,7 @@ export default function SellerPayPalConnect({
   const [connection, setConnection] = useState<Connection | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [capabilityError, setCapabilityError] = useState<string | null>(null);
+  const [onboardingLink, setOnboardingLink] = useState<string | null>(null);
   const [sellerTermsAccepted, setSellerTermsAccepted] = useState(false);
   const [flowMessage, setFlowMessage] = useState<
     { tone: 'success' | 'error' | 'info'; text: string } | null
@@ -173,7 +174,12 @@ export default function SellerPayPalConnect({
       setFlowMessage({ tone: 'error', text: 'Please accept the Seller Payment Terms and electronic records consent first.' });
       return;
     }
+    // Open during the click gesture; an async popup can be blocked by browsers.
+    // PayPal onboarding must run outside Lovable's embedded preview frame.
+    const paypalWindow = window.open('about:blank', '_blank');
+    if (paypalWindow) paypalWindow.opener = null;
     setBusy('connect');
+    setOnboardingLink(null);
     setFlowMessage(null);
     try {
       // Record the versioned acceptance before we ask PayPal for a referral
@@ -193,18 +199,27 @@ export default function SellerPayPalConnect({
       });
       if (error) throw new Error(error.message);
       if (data?.already_connected) {
+        paypalWindow?.close();
         await loadConnection();
         setFlowMessage({ tone: 'info', text: 'Your PayPal connection already exists. Check its status below.' });
         setBusy(null);
         return;
       }
       if (data?.onboarding_url) {
-        toast.success('Taking you to PayPal to connect your account…');
-        window.location.href = data.onboarding_url as string;
+        const url = new URL(data.onboarding_url as string);
+        if (url.protocol !== 'https:' || !['www.paypal.com', 'www.sandbox.paypal.com'].includes(url.hostname)) {
+          throw new Error('PayPal returned an unexpected setup link. Please try again.');
+        }
+        setOnboardingLink(url.href);
+        if (paypalWindow && !paypalWindow.closed) paypalWindow.location.replace(url.href);
+        setFlowMessage({ tone: 'info', text: 'Complete setup in the PayPal tab, then return here and check your status. If no tab opened, use Continue on PayPal below.' });
+        await loadConnection();
+        setBusy(null);
       } else {
         throw new Error("PayPal didn't return a signup link. Please try again.");
       }
     } catch (e) {
+      paypalWindow?.close();
       const message = e instanceof Error ? e.message : 'Could not start PayPal connection.';
       setFlowMessage({ tone: 'error', text: message });
       toast.error(message);
@@ -299,6 +314,8 @@ export default function SellerPayPalConnect({
     { label: 'Online checkout enabled on your listings', state: step(isReady, false) },
   ];
 
+  const onboardingFallback = onboardingLink ? <a href={onboardingLink} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 text-sm font-medium underline underline-offset-4">Continue on PayPal <ExternalLink className="h-4 w-4" /></a> : null;
+
   if (variant === 'pill') {
     const hasConnection = Boolean(connection) && !canReconnect;
     const label = isReady ? 'Connected to PayPal' : hasConnection ? 'Finish PayPal setup' : 'Connect to PayPal';
@@ -316,6 +333,7 @@ export default function SellerPayPalConnect({
           </PopoverTrigger>
           <PopoverContent align="end" className="w-80 max-w-[calc(100vw-2rem)] rounded-2xl p-4">
             <div className="space-y-3">
+              {onboardingFallback}
               <div>
                 <h2 className="text-sm font-semibold">{isReady ? 'Ready to receive payments' : 'Receive payments with PayPal'}</h2>
                 <p className="mt-1 text-xs text-muted-foreground">{isReady ? connection?.paypal_email || 'Your PayPal Business account is connected.' : 'Connect your PayPal Business account to accept online payments on eligible listings.'}</p>
@@ -333,7 +351,7 @@ export default function SellerPayPalConnect({
                 <Button className="w-full rounded-full bg-[#0070ba] text-white hover:bg-[#005ea6]" disabled={!!busy || !sellerTermsAccepted} onClick={connect}>{busy === 'connect' ? 'Connecting…' : 'Get started with PayPal'}</Button>
               </>}
               {enabled && hasConnection && <div className="space-y-1">
-                {!isReady && connection?.referral_url && <Button asChild variant="ghost" className="w-full justify-start"><a href={connection.referral_url}><ExternalLink className="mr-2 h-4 w-4" />Continue on PayPal</a></Button>}
+                {!isReady && connection?.referral_url && <Button asChild variant="ghost" className="w-full justify-start"><a href={connection.referral_url} target="_blank" rel="noopener noreferrer"><ExternalLink className="mr-2 h-4 w-4" />Continue on PayPal</a></Button>}
                 <Button variant="ghost" className="w-full justify-start" disabled={!!busy} onClick={refreshStatus}><RefreshCw className={`mr-2 h-4 w-4 ${busy === 'refresh' ? 'animate-spin' : ''}`} />Check status</Button>
                 <Button variant="ghost" className="w-full justify-start text-destructive" disabled={!!busy} onClick={disconnect}><Unlink className="mr-2 h-4 w-4" />Disconnect</Button>
               </div>}
@@ -352,6 +370,7 @@ export default function SellerPayPalConnect({
   if (variant === 'dark') {
     return (
       <div className="v2-paypal-panel space-y-4">
+        {onboardingFallback}
         {capabilityError && (
           <div className="v2-paypal-message is-error" role="alert">
             <XCircle />
@@ -507,6 +526,7 @@ export default function SellerPayPalConnect({
         <CreditCard className="h-4 w-4" />
       </div>
       <div className="min-w-0 flex-1">
+        {onboardingFallback}
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-sm font-semibold text-foreground">PayPal seller account</span>
           {isReady && (
