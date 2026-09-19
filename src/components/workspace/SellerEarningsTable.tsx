@@ -119,6 +119,8 @@ export default function SellerEarningsTable() {
           'id, reference, transaction_type, listing_id, gross_amount_cents, platform_fee_cents, refunded_cents, seller_proceeds_cents, tax_cents, payment_status, authorization_status, dispute_status, created_at, captured_at, listings(title)',
         )
         .eq('seller_id', user!.id)
+        // Abandoned checkout attempts never charged anyone — not earnings.
+        .not('payment_status', 'in', '("created","cancelled")')
         .order('created_at', { ascending: false })
         .limit(100);
       if (error) throw error;
