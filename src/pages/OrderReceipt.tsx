@@ -20,6 +20,8 @@ interface OrderRecord {
   payment_status: string;
   payment_intent: string;
   payment_source: string | null;
+  paypal_capture_id: string | null;
+  payment_source_detail: Record<string, unknown> | null;
   transaction_type: string;
   listing_id: string | null;
   seller_id: string | null;
@@ -152,7 +154,7 @@ const OrderReceipt = () => {
       const { data, error: err } = await supabase
         .from('payment_records')
         .select(
-          'reference, created_at, captured_at, currency, gross_amount_cents, tax_cents, discount_cents, captured_amount_cents, refunded_cents, payment_status, payment_intent, payment_source, transaction_type, listing_id, seller_id, sale_transaction_id, booking_request_id, buyer_email, order_items, shipping_address',
+          'reference, created_at, captured_at, currency, paypal_capture_id, payment_source_detail, gross_amount_cents, tax_cents, discount_cents, captured_amount_cents, refunded_cents, payment_status, payment_intent, payment_source, transaction_type, listing_id, seller_id, sale_transaction_id, booking_request_id, buyer_email, order_items, shipping_address',
         )
         .eq('reference', reference)
         .maybeSingle();
@@ -229,6 +231,19 @@ const OrderReceipt = () => {
   const refunded = order?.refunded_cents ?? 0;
   const isHold = order?.payment_intent === 'AUTHORIZE' && order?.payment_status !== 'completed';
   const isPending = order?.payment_status === 'pending';
+  /** "Visa ending 4242 (via PayPal)" when PayPal told us the card details. */
+  const paymentMethodLabel = (() => {
+    const detail = (order?.payment_source_detail ?? {}) as any;
+    const card = detail?.card ?? detail?.payment_source?.card;
+    const brand = card?.brand ?? card?.card_type;
+    const last4 = card?.last_digits ?? card?.last4;
+    if (brand || last4) {
+      return `${brand ? String(brand).toLowerCase().replace(/^\w/, (c: string) => c.toUpperCase()) : 'Card'}${
+        last4 ? ` ending ${last4}` : ''
+      } via PayPal`;
+    }
+    return order?.payment_source === 'card' ? 'Card via PayPal' : 'PayPal';
+  })();
   const totalLabel = isPending ? 'Total pending' : isHold ? 'Authorized total' : 'Total paid';
 
   const issuedAt = order ? new Date(order.captured_at ?? order.created_at) : null;
@@ -294,10 +309,18 @@ const OrderReceipt = () => {
                     {isPending ? 'Pending' : isHold ? 'Authorized (not captured)' : 'Paid'}
                   </dd>
                 </div>
+                {order.paypal_capture_id ? (
+                  <div className="mt-1">
+                    <dt className="inline">PayPal transaction id </dt>
+                    <dd className="inline font-mono text-[11px] text-foreground">
+                      {order.paypal_capture_id}
+                    </dd>
+                  </div>
+                ) : null}
                 <div className="mt-1">
                   <dt className="inline">Paid with </dt>
                   <dd className="inline text-foreground">
-                    {order.payment_source === 'card' ? 'Card via PayPal' : 'PayPal'}
+                    {paymentMethodLabel}
                   </dd>
                 </div>
               </dl>
