@@ -280,7 +280,7 @@ function loadSdk(requestedIntent: 'authorize' | null, options: PayPalSdkOptions 
   });
 
   return promise.then((paypal) => {
-    warmSdkSignatures.add(sdkSignature(intent, options));
+    warmSdkSignatures.add(sdkSignature(requestedIntent ?? 'capture', options));
     return paypal;
   });
 }
