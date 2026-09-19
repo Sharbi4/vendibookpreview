@@ -639,8 +639,11 @@ export async function createPayPalOrder(input: CreateOrderInput) {
             // Physical assets that Vendibook ships need a real address;
             // everything else is a service/digital line with no shipping.
             shipping_preference: shipping ? "SET_PROVIDED_ADDRESS" : "NO_SHIPPING",
-            // Pay Now: the buyer never sees "Continue" on a capture order.
-            user_action: intent === "AUTHORIZE" ? "CONTINUE" : "PAY_NOW",
+            // CONTINUE: PayPal hands the payer back to Vendibook after they
+            // approve, and Vendibook shows a final Review & authorize step
+            // before anything is captured. Never PAY_NOW.
+            user_action: "CONTINUE",
+
             landing_page: "LOGIN",
             // Server half of App Switch. The SDK sets appSwitchWhenAvailable.
             // PayPal expects an object here — a bare boolean is rejected as
