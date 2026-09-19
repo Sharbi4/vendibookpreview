@@ -519,7 +519,7 @@ const OrderReceipt = () => {
               </button>
               {order.booking_request_id ? (
                 <Link
-                  to={`/booking/${order.booking_request_id}`}
+                  to={`/dashboard/bookings/${order.booking_request_id}`}
                   className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
                 >
                   View booking <ArrowRight className="h-4 w-4" />
