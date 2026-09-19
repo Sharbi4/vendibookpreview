@@ -7,6 +7,7 @@ import SEO from '@/components/SEO';
 import PayPalPaymentPanel from '@/components/checkout/PayPalPaymentPanel';
 import { effectivePriceCents, formatUsd, type MonetizationProduct } from '@/lib/monetization/products';
 import { useToast } from '@/hooks/use-toast';
+import { useWarmPayPalCheckout } from '@/hooks/useWarmPayPalCheckout';
 
 /**
  * Hosted checkout surface for a single monetization product.
@@ -25,6 +26,10 @@ const ProductCheckout = () => {
 
   const [product, setProduct] = useState<MonetizationProduct | null>(null);
   const [loading, setLoading] = useState(true);
+
+  // Vendibook's own products are first-party CAPTURE charges. Warm PayPal the
+  // moment this page opens so the buttons are already loaded at payment time.
+  useWarmPayPalCheckout(null, 'CAPTURE');
 
   useEffect(() => {
     let cancelled = false;
