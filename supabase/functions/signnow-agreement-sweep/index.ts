@@ -85,7 +85,7 @@ Deno.serve(async (req) => {
 
     for (const id of saleTargets) {
       try {
-        const res = await ensurePurchaseSaleAgreement(id);
+        const res: any = await ensurePurchaseSaleAgreement(id);
         if (res.created) created++;
         else skipped++;
         results.push({ kind: 'purchase_sale_agreement', id, ...res });
@@ -97,7 +97,7 @@ Deno.serve(async (req) => {
 
     for (const id of bookingTargets) {
       try {
-        const res = await ensureRentalAgreement(id);
+        const res: any = await ensureRentalAgreement(id);
         if (res.created) created++;
         else skipped++;
         results.push({ kind: 'rental_agreement', id, ...res });
