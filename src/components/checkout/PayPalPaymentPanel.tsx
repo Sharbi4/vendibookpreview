@@ -449,15 +449,15 @@ const PayPalPaymentPanel = ({
             // TODO(paypal-app-switch): implement same-URL return + resume()
             // end-to-end as its own change before re-enabling.
             createOrder: () => handlersRef.current.startOrder(),
-            onApprove: async (
-              data: { orderID: string },
-              actions?: { restart?: () => void },
-            ) => {
-              const outcome = await handlersRef.current.finishOrder(data.orderID);
-              // Recoverable funding failure — let the payer pick another
-              // funding source inside the PayPal window, per PayPal docs.
-              if (outcome === 'restart') actions?.restart?.();
+            // Approval is NOT payment. PayPal hands the payer back here and
+            // the panel shows a final Review & authorize step; capture only
+            // runs when the payer submits it themselves.
+            onApprove: async (data: { orderID: string; paymentSource?: string }) => {
+              setError(null);
+              setApproved({ orderId: data.orderID, source: data.paymentSource ?? key });
+              setState('review');
             },
+
             onCancel: () => {
               setState('ready');
               setError({
