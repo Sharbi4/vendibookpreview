@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { parseEdgeError } from '@/lib/edgeErrors';
 import { isSafeInternalPath } from '@/lib/originNav';
+import { authPath } from '@/lib/auth/returnTo';
 
 type Outcome =
   | { kind: 'working' }
@@ -171,11 +172,7 @@ const PaymentReturn = () => {
               <Button asChild className="mt-6 w-full">
                 {/* Preserve the ENTIRE return URL so reconciliation resumes
                     on exactly this order after signing back in. */}
-                <Link
-                  to={`/auth?returnTo=${encodeURIComponent(
-                    `${window.location.pathname}${window.location.search}`,
-                  )}`}
-                >
+                <Link to={authPath(`${window.location.pathname}${window.location.search}`)}>
                   Sign in
                 </Link>
               </Button>
