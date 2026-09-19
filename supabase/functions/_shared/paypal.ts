@@ -17,6 +17,8 @@
 
 
 import { logPayPalApiCall } from "./paypalApiLog.ts";
+import { assertionIssuerClientId, buildAuthAssertionToken } from "./paypalAssertion.ts";
+
 
 const LIVE_BASE = "https://api-m.paypal.com";
 
@@ -274,7 +276,7 @@ export async function paypalRequest<T = any>(
       // onboarding/status). It never changes who is paid on an order — orders
       // stay first-party.
       if (actAsMerchantId) {
-        const assertion = buildAuthAssertion(actAsMerchantId);
+        const assertion = buildAuthAssertion(actAsMerchantId, env);
         // The assertion itself is never logged — only the merchant it names.
         if (assertion) headers["PayPal-Auth-Assertion"] = assertion;
       }
