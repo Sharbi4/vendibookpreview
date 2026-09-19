@@ -479,11 +479,8 @@ const PayPalPaymentPanel = ({
 
                   {state === 'loading' ? <PaymentFormSkeleton /> : null}
 
-                  {state !== 'loading' && state !== 'processing' ? (
-                    <p className="paypal-powered-by">
-                      Powered by <PayPalMonogram className="h-3.5" /> PayPal
-                    </p>
-                  ) : null}
+                  {/* Single "Powered by PayPal" line lives in the embedded
+                      payment footer (PayPalEmbeddedPayment) — not here. */}
 
                   {state !== 'processing' ? (
                     <>
@@ -538,13 +535,9 @@ const PayPalPaymentPanel = ({
                     </div>
                   ) : null}
 
-                  <p className="text-[11px] text-muted-foreground text-center">
-                    PayPal terms and eligibility apply to the payment method you choose.
-                  </p>
                 </>
               )}
 
-              <TrustRow />
             </div>
           </div>
         </div>
