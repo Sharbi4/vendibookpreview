@@ -22,7 +22,7 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify({ error: 'unauthorized' }), { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } })
   }
 
-  let body: { webhook_id?: string; simulate?: boolean; event_type?: string }
+  let body: { webhook_id?: string; simulate?: boolean; event_type?: string; add_event_type?: string }
   try {
     body = await req.json()
   } catch {
