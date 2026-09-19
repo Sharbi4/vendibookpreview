@@ -125,16 +125,25 @@ serve(async (req) => {
       return jsonResponse(200, { transaction_id: existing.id, reused: true, amount: Number(existing.amount) });
     }
 
+    // Buyer-scoped on purpose: this only blocks the SAME buyer from paying
+    // twice for the same listing. A listing that is sold out / unpublished is
+    // stopped earlier by `assertListingPurchasable`, which is listing-scoped.
     const { data: alreadyPaid } = await admin
       .from("sale_transactions")
-      .select("id")
+      .select("id, status")
       .eq("listing_id", listingId)
       .eq("buyer_id", user.id)
       .in("status", ["paid", "buyer_confirmed", "seller_confirmed", "completed"])
+      .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
     if (alreadyPaid) {
-      return jsonError(409, "already_paid", "You've already completed a purchase for this listing.");
+      return jsonError(
+        409,
+        "already_paid",
+        "You already have a completed purchase for this listing. Open that order to track it.",
+        { transaction_id: alreadyPaid.id, transaction_status: alreadyPaid.status },
+      );
     }
 
     // COMMITMENT POINT: snapshot the seller fee that both sides agreed to.

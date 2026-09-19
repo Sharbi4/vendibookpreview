@@ -32,7 +32,8 @@ serve(async (req) => {
     const { data: isAdmin } = await admin.rpc("has_role", { _user_id: user.id, _role: "admin" });
     if (!isAdmin) return jsonError(403, "forbidden", "Admin access is required.");
 
-    const { action, order_id, limit } = await req.json().catch(() => ({}));
+    const body = await req.json().catch(() => ({}));
+    const { action, order_id, limit } = body ?? {};
 
     if (action === "list_failed_attempts") {
       const { data } = await admin
@@ -64,6 +65,96 @@ serve(async (req) => {
         attempts: data ?? [],
         records: records ?? [],
         receipts: receipts ?? [],
+      });
+    }
+
+    // ── Sandbox-only test reset ──────────────────────────────────────────
+    // Clears payment + sale rows for one listing so a sandbox test purchase
+    // never permanently bricks a test listing. Hard-refuses in live.
+    if (action === "reset_sandbox_listing") {
+      if ((Deno.env.get("PAYPAL_ENVIRONMENT") ?? "live").toLowerCase() === "live") {
+        return jsonError(403, "live_environment", "Test reset is disabled in the live environment.");
+      }
+      const listingId = body?.listing_id ? String(body.listing_id) : null;
+      if (!listingId) return jsonError(400, "missing_fields", "A listing id is required.");
+
+      const { data: records } = await admin
+        .from("payment_records")
+        .select("id, reference, payment_status, paypal_order_id, paypal_capture_id")
+        .eq("listing_id", listingId);
+      const { data: sales } = await admin
+        .from("sale_transactions")
+        .select("id, status")
+        .eq("listing_id", listingId);
+
+      // Reconcile every record against PayPal first: never silently discard a
+      // record that PayPal says actually captured without saying so.
+      const provider: Array<Record<string, unknown>> = [];
+      for (const rec of records ?? []) {
+        if (!rec.paypal_order_id) continue;
+        try {
+          const order = await getPayPalOrder(rec.paypal_order_id);
+          provider.push({
+            reference: rec.reference,
+            local_status: rec.payment_status,
+            provider_status: order?.status ?? null,
+            captured: !!extractCaptureFacts(order),
+          });
+        } catch {
+          provider.push({ reference: rec.reference, local_status: rec.payment_status, provider_status: "unreachable" });
+        }
+      }
+
+      const recordIds = (records ?? []).map((r: any) => r.id);
+      const saleIds = (sales ?? []).map((r: any) => r.id);
+
+      if (recordIds.length) {
+        for (const child of [
+          "payment_attempts",
+          "payment_receipts",
+          "order_timeline_events",
+          "payment_ledger_entries",
+        ]) {
+          await admin.from(child).delete().in("payment_record_id", recordIds);
+        }
+        await admin.from("payment_records").delete().in("id", recordIds);
+      }
+      if (saleIds.length) {
+        for (const child of [
+          "sale_transaction_status_history",
+          "transaction_terms",
+          "seller_payables",
+          "documents",
+        ]) {
+          await admin.from(child).delete().in("sale_transaction_id", saleIds);
+        }
+        await admin.from("sale_transactions").delete().in("id", saleIds);
+      }
+      await admin.from("listings").update({ status: "published" }).eq("id", listingId);
+
+      await auditPayment(admin, {
+        actorId: user.id,
+        actorRole: "admin",
+        actorIp: requestIp(req),
+        provider: "paypal",
+        action: "sandbox.reset_listing",
+        entityType: "payment_record",
+        entityId: listingId,
+        newValue: {
+          environment: Deno.env.get("PAYPAL_ENVIRONMENT") ?? "sandbox",
+          listing_id: listingId,
+          payment_records_removed: recordIds.length,
+          sale_transactions_removed: saleIds.length,
+          provider_states: provider,
+        },
+      });
+
+      return jsonResponse(200, {
+        listing_id: listingId,
+        payment_records_removed: recordIds.length,
+        sale_transactions_removed: saleIds.length,
+        provider_states: provider,
+        listing_status: "published",
       });
     }
 

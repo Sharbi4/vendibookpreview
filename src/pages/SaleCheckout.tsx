@@ -173,6 +173,14 @@ const SaleCheckout = () => {
   const [legalAccepted, setLegalAccepted] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [paypalCheckout, setPaypalCheckout] = useState<{ transactionId: string; returnUrl: string } | null>(null);
+  /**
+   * A terminal failure from `create-sale-intent`. Rendered inline in place of
+   * the PayPal buttons so the payment area never keeps shimmering after a
+   * request that already failed.
+   */
+  const [intentError, setIntentError] = useState<
+    { title: string; detail: string; actionLabel?: string; actionHref?: string } | null
+  >(null);
   /** Contained five-step checkout. Only the active step body is rendered. */
   const [step, setStep] = useState(1);
   const [furthestStep, setFurthestStep] = useState(1);
@@ -762,6 +770,7 @@ const SaleCheckout = () => {
 
     // Handle card / PayPal payment
     setIsPurchasing(true);
+    setIntentError(null);
 
     try {
       const isVendibookFreight = fulfillmentSelected === 'vendibook_freight';
@@ -792,6 +801,17 @@ const SaleCheckout = () => {
         const parsed = await parseEdgeError(error, data?.error ? { error: data.error, code: data.code } : null);
         const copy = checkoutErrorCopy(parsed);
         setPaypalCheckout(null);
+        // `already_paid` carries the existing order, so the buyer can go
+        // straight to it instead of being stranded on a dead payment step.
+        const existingId = typeof parsed.raw?.transaction_id === 'string'
+          ? (parsed.raw.transaction_id as string)
+          : null;
+        setIntentError({
+          title: copy.title,
+          detail: copy.description,
+          actionLabel: existingId ? 'View your order' : copy.actionLabel,
+          actionHref: existingId ? `/order-tracking/${existingId}` : undefined,
+        });
         toast({
           title: copy.title,
           description: copy.description,
@@ -834,6 +854,7 @@ const SaleCheckout = () => {
       setPaypalCheckout(null);
       const parsed = await parseEdgeError(error);
       const copy = checkoutErrorCopy(parsed);
+      setIntentError({ title: copy.title, detail: copy.description, actionLabel: copy.actionLabel });
       toast({
         title: copy.title,
         description: copy.description,
@@ -1271,6 +1292,18 @@ const SaleCheckout = () => {
                   returnUrl={paypalCheckout?.returnUrl}
                   totalUsd={totalPrice}
                   blocked={!paypalCheckout}
+                  error={
+                    intentError
+                      ? {
+                          ...intentError,
+                          onRetry: () => {
+                            setIntentError(null);
+                            autoIntentRef.current = false;
+                            void runPurchaseRef.current?.();
+                          },
+                        }
+                      : null
+                  }
                 />
               )}            </div>
           ) : null}
