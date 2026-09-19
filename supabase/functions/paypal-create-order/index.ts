@@ -526,14 +526,18 @@ serve(async (req) => {
 
       const { data: inflight } = await admin
         .from("payment_records")
-        .select("id, reference, paypal_order_id, gross_amount_cents")
+        .select("id, reference, paypal_order_id, gross_amount_cents, payment_intent")
         .eq("fee_breakdown->fulfillment->>key", fulfillment.key)
         .in("payment_status", ["created", "approved"])
         .gt("created_at", new Date(Date.now() - 20 * 60_000).toISOString())
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
-      if (inflight?.paypal_order_id && inflight.gross_amount_cents === quote.grossCents) {
+      if (
+        inflight?.paypal_order_id &&
+        inflight.gross_amount_cents === quote.grossCents &&
+        inflight.payment_intent === PAYPAL_CHECKOUT_INTENT
+      ) {
         return jsonResponse(200, {
           order_id: inflight.paypal_order_id,
           reference: inflight.reference,
@@ -551,7 +555,7 @@ serve(async (req) => {
     if (inflightFilter) {
       const { data: existing } = await admin
         .from("payment_records")
-        .select("id, reference, paypal_order_id, payment_status, gross_amount_cents")
+        .select("id, reference, paypal_order_id, payment_status, gross_amount_cents, payment_intent")
         .eq(inflightFilter.column, inflightFilter.value)
         .in("payment_status", ["created", "approved"])
         .gt("created_at", new Date(Date.now() - 20 * 60_000).toISOString())
@@ -559,7 +563,11 @@ serve(async (req) => {
         .limit(1)
         .maybeSingle();
 
-      if (existing?.paypal_order_id && existing.gross_amount_cents === quote.grossCents) {
+      if (
+        existing?.paypal_order_id &&
+        existing.gross_amount_cents === quote.grossCents &&
+        existing.payment_intent === PAYPAL_CHECKOUT_INTENT
+      ) {
         safeLog("reusing_inflight_order", { reference: existing.reference });
         return jsonResponse(200, {
           order_id: existing.paypal_order_id,
