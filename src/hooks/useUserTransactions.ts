@@ -47,6 +47,9 @@ export function useUserTransactions(userId?: string) {
         'id, reference, transaction_type, provider, payment_status, internal_status, dispute_status, currency, gross_amount_cents, refunded_cents, seller_proceeds_cents, paypal_order_id, paypal_capture_id, payment_source, created_at, captured_at, listing_id, buyer_id, seller_id',
       )
       .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
+      // `created` rows are checkout attempts that were never approved at PayPal
+      // (no money moved). They are not activity and must never be listed.
+      .not('payment_status', 'in', '("created","cancelled")')
       .order('created_at', { ascending: false })
       .limit(200);
 
