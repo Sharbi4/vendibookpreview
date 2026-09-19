@@ -1751,17 +1751,33 @@
 /* Official PayPal SDK funding controls. Empty/ineligible sources collapse. */
 .paypal-funding-stack { display: grid; gap: 12px; width: 100%; }
 .paypal-funding-stack > div:empty { display: none; }
-/* Quiet reserved surface while PayPal's own script paints the buttons.
-   Fixed height so nothing shifts; no "loading" copy. */
-.paypal-funding-cold,
-.v2-pay-cold {
-  height: 168px;
-  border-radius: 16px;
-  background: hsl(var(--muted) / 0.28);
+.paypal-funding-stack > div:not(:empty) { min-height: 48px; }
+.paypal-funding-stage { position: relative; min-height: 258px; }
+.paypal-funding-real { display: grid; gap: 12px; opacity: 1; }
+.paypal-funding-real.is-loading { opacity: 0; }
+.paypal-funding-skeleton-layer { position: absolute; inset: 0; }
+.paypal-form-skeleton { display: grid; gap: 12px; width: 100%; }
+.paypal-form-skeleton-message {
+  width: min(78%, 330px);
+  height: 18px;
+  border-radius: 6px;
+  background: hsl(var(--muted) / .38);
   animation: vb-pay-cold 1.6s ease-in-out infinite;
 }
-.v2-pay-cold { height: 196px; }
+.paypal-form-skeleton-buttons { display: grid; gap: 12px; }
+.paypal-form-skeleton-button {
+  width: 100%;
+  height: 48px;
+  border-radius: 999px;
+  background: hsl(var(--muted) / .38);
+  animation: vb-pay-cold 1.6s ease-in-out infinite;
+}
+.paypal-review-skeleton { display: grid; gap: 14px; padding-block: 8px; }
 @keyframes vb-pay-cold { 0%, 100% { opacity: 0.55; } 50% { opacity: 0.85; } }
+@media (prefers-reduced-motion: reduce) {
+  .paypal-form-skeleton-message,
+  .paypal-form-skeleton-button { animation: none; }
+}
 
 .paypal-powered-by { display: flex; align-items: center; justify-content: center; gap: 5px; margin-top: -4px; color: hsl(var(--muted-foreground)); font-size: 11px; }
 .paypal-alternate-divider { display: flex; align-items: center; gap: 12px; }

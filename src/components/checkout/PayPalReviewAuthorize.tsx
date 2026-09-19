@@ -148,9 +148,13 @@ const PayPalReviewAuthorize = ({
 
   if (loading) {
     return (
-      <div className="py-10 flex flex-col items-center gap-3 text-center">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
-        <p className="text-sm text-muted-foreground">Loading your payment details…</p>
+      <div className="paypal-review-skeleton" aria-busy="true" role="status">
+        <span className="sr-only">Loading payment review</span>
+        <div className="h-6 w-44 rounded-md bg-muted/40 animate-pulse" aria-hidden="true" />
+        <div className="h-4 w-72 max-w-full rounded bg-muted/30 animate-pulse" aria-hidden="true" />
+        <div className="h-24 rounded-2xl bg-muted/30 animate-pulse" aria-hidden="true" />
+        <div className="h-24 rounded-2xl bg-muted/30 animate-pulse" aria-hidden="true" />
+        <div className="h-36 rounded-2xl bg-muted/30 animate-pulse" aria-hidden="true" />
       </div>
     );
   }

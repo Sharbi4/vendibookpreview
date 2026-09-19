@@ -1,36 +1,13 @@
-/**
- * Shimmer skeleton that mimics the Express Checkout row + tabs +
- * input rows PayPal will render, so the modal never shows an empty
- * spinner while the PayPal SDK boots.
- */
-const shimmer = 'bg-muted/30 animate-pulse';
-
+/** Silent placeholder matching the Pay Later line and PayPal's button stack. */
 const PaymentFormSkeleton = () => (
-  <div className="space-y-4" aria-busy="true" aria-live="polite">
-    <div className="grid grid-cols-3 gap-2">
-      <div className={`h-11 rounded-xl ${shimmer}`} />
-      <div className={`h-11 rounded-xl ${shimmer}`} />
-      <div className={`h-11 rounded-xl ${shimmer}`} />
+  <div className="paypal-form-skeleton" aria-busy="true" role="status">
+    <span className="sr-only">Loading secure payment options</span>
+    <div className="paypal-form-skeleton-message" aria-hidden="true" />
+    <div className="paypal-form-skeleton-buttons" aria-hidden="true">
+      {Array.from({ length: 4 }, (_, index) => (
+        <div key={index} className="paypal-form-skeleton-button" />
+      ))}
     </div>
-    <div className="flex items-center gap-3 py-1">
-      <div className="h-px flex-1 bg-border/60" />
-      <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
-        or pay with card
-      </span>
-      <div className="h-px flex-1 bg-border/60" />
-    </div>
-    <div className="grid grid-cols-3 gap-2">
-      <div className={`h-9 rounded-lg ${shimmer}`} />
-      <div className={`h-9 rounded-lg ${shimmer}`} />
-      <div className={`h-9 rounded-lg ${shimmer}`} />
-    </div>
-    <div className={`h-12 rounded-xl ${shimmer}`} />
-    <div className="grid grid-cols-2 gap-3">
-      <div className={`h-12 rounded-xl ${shimmer}`} />
-      <div className={`h-12 rounded-xl ${shimmer}`} />
-    </div>
-    <div className={`h-12 rounded-xl ${shimmer}`} />
-    <span className="sr-only">Loading secure payment form…</span>
   </div>
 );
 
