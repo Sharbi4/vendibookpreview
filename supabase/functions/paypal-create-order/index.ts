@@ -2,7 +2,13 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
 import { hasCurrentLegalAcceptance } from "../_shared/legalVersions.ts";
-import { PayPalError, safeLog } from "../_shared/paypal.ts";
+import {
+  PAYPAL_CHECKOUT_INTENT,
+  PAYPAL_CHECKOUT_USER_ACTION,
+  PayPalError,
+  paypalEnvironment,
+  safeLog,
+} from "../_shared/paypal.ts";
 import { getPaymentProvider, PaymentProviderError } from "../_shared/payments/index.ts";
 import { auditPayment, requestIp } from "../_shared/paymentAudit.ts";
 import { assertListingPurchasable } from "../_shared/listingGuard.ts";
@@ -520,14 +526,18 @@ serve(async (req) => {
 
       const { data: inflight } = await admin
         .from("payment_records")
-        .select("id, reference, paypal_order_id, gross_amount_cents")
+        .select("id, reference, paypal_order_id, gross_amount_cents, payment_intent")
         .eq("fee_breakdown->fulfillment->>key", fulfillment.key)
         .in("payment_status", ["created", "approved"])
         .gt("created_at", new Date(Date.now() - 20 * 60_000).toISOString())
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
-      if (inflight?.paypal_order_id && inflight.gross_amount_cents === quote.grossCents) {
+      if (
+        inflight?.paypal_order_id &&
+        inflight.gross_amount_cents === quote.grossCents &&
+        inflight.payment_intent === PAYPAL_CHECKOUT_INTENT
+      ) {
         return jsonResponse(200, {
           order_id: inflight.paypal_order_id,
           reference: inflight.reference,
@@ -535,8 +545,8 @@ serve(async (req) => {
           currency: quote.currency,
           breakdown: quote.breakdown,
           tax: taxPayload(quote),
-          payment_intent: decision.intent,
-          payment_strategy: decision.strategy,
+          payment_intent: PAYPAL_CHECKOUT_INTENT,
+          payment_strategy: "capture_after_buyer_review",
           reused: true,
         });
       }
@@ -545,7 +555,7 @@ serve(async (req) => {
     if (inflightFilter) {
       const { data: existing } = await admin
         .from("payment_records")
-        .select("id, reference, paypal_order_id, payment_status, gross_amount_cents")
+        .select("id, reference, paypal_order_id, payment_status, gross_amount_cents, payment_intent")
         .eq(inflightFilter.column, inflightFilter.value)
         .in("payment_status", ["created", "approved"])
         .gt("created_at", new Date(Date.now() - 20 * 60_000).toISOString())
@@ -553,7 +563,11 @@ serve(async (req) => {
         .limit(1)
         .maybeSingle();
 
-      if (existing?.paypal_order_id && existing.gross_amount_cents === quote.grossCents) {
+      if (
+        existing?.paypal_order_id &&
+        existing.gross_amount_cents === quote.grossCents &&
+        existing.payment_intent === PAYPAL_CHECKOUT_INTENT
+      ) {
         safeLog("reusing_inflight_order", { reference: existing.reference });
         return jsonResponse(200, {
           order_id: existing.paypal_order_id,
@@ -562,8 +576,8 @@ serve(async (req) => {
           currency: quote.currency,
           breakdown: quote.breakdown,
           tax: taxPayload(quote),
-          payment_intent: decision.intent,
-          payment_strategy: decision.strategy,
+          payment_intent: PAYPAL_CHECKOUT_INTENT,
+          payment_strategy: "capture_after_buyer_review",
           reused: true,
         });
       }
@@ -605,8 +619,8 @@ serve(async (req) => {
         seller_proceeds_cents: quote.sellerProceedsCents,
         payment_status: "created",
         internal_status: "awaiting_buyer_approval",
-        payment_strategy: decision.strategy,
-        payment_intent: decision.intent,
+        payment_strategy: "capture_after_buyer_review",
+        payment_intent: PAYPAL_CHECKOUT_INTENT,
         // balance_due_cents is NOT NULL DEFAULT 0 — an explicit NULL violates
         // the constraint and kills order creation for every checkout.
         balance_due_cents: decision.balanceDueCents ?? 0,
@@ -681,7 +695,7 @@ serve(async (req) => {
       description: quote.description,
       idempotencyKey: quote.reference,
       softDescriptor: buildSoftDescriptor(sellerDisplayName),
-      intent: decision.intent === "AUTHORIZE" ? "AUTHORIZE" : "CAPTURE",
+      intent: PAYPAL_CHECKOUT_INTENT,
       // Itemized amounts must reconcile exactly with the order total.
       breakdown: {
         itemTotalCents: detail.itemTotalCents,
@@ -742,7 +756,13 @@ serve(async (req) => {
       },
     });
 
-    safeLog("order_created", { reference: quote.reference, orderId: order.providerOrderId });
+    safeLog("order_created", {
+      reference: quote.reference,
+      orderId: order.providerOrderId,
+      intent: PAYPAL_CHECKOUT_INTENT,
+      user_action: PAYPAL_CHECKOUT_USER_ACTION,
+      environment: paypalEnvironment(),
+    });
 
 
     return jsonResponse(200, {
@@ -752,9 +772,9 @@ serve(async (req) => {
       currency: quote.currency,
       breakdown: quote.breakdown,
       tax: taxPayload(quote),
-      payment_intent: decision.intent,
-      payment_strategy: decision.strategy,
-      buyer_message: decision.buyerMessage,
+      payment_intent: PAYPAL_CHECKOUT_INTENT,
+      payment_strategy: "capture_after_buyer_review",
+      buyer_message: "Nothing is charged until you return to Vendibook, review the payment, and select Submit payment.",
       balance_due_cents: decision.balanceDueCents,
       balance_due_at: decision.balanceDueAt,
     });

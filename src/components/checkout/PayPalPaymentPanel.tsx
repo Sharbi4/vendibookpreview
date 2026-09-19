@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { CheckCircle2, Loader2, Lock, ShieldCheck, X } from 'lucide-react';
 
 import { supabase } from '@/integrations/supabase/client';
-import { getPayPalConfig, isPayPalSdkWarm, loadPayPalAuthorizeSdk, loadPayPalSdk } from '@/lib/paypalClient';
+import { getPayPalConfig, isPayPalSdkWarm, loadPayPalSdk } from '@/lib/paypalClient';
 import { parseEdgeError } from '@/lib/edgeErrors';
 import { authPath } from '@/lib/auth/returnTo';
 import { TRUST_COPY } from '@/lib/transactionVocabulary';
@@ -429,15 +429,15 @@ const PayPalPaymentPanel = ({
           const parsed = await parseEdgeError(result.error, result.data?.error ? result.data : null);
           throw new Error(parsed.message || 'We could not check payment availability. Please try again.');
         }
-        const intent = result.data.intent === 'AUTHORIZE' ? 'AUTHORIZE' : 'CAPTURE';
-        intentRef.current = intent;
-        setSdkIntent(intent);
-        getPayPalConfig()
-          .then((cfg) => setIsSandbox(cfg.environment === 'sandbox'))
-          .catch(() => undefined);
-        return intent === 'AUTHORIZE'
-          ? loadPayPalAuthorizeSdk({ merchantId, pageType: 'checkout' })
-          : loadPayPalSdk({ merchantId, pageType: 'checkout', wallets: true });
+        return getPayPalConfig().then((cfg) => {
+          if (result.data.intent !== cfg.intent) {
+            throw new Error(`PayPal checkout configuration mismatch: SDK ${cfg.intent}, order ${result.data.intent}.`);
+          }
+          intentRef.current = cfg.intent;
+          setSdkIntent(cfg.intent);
+          setIsSandbox(cfg.environment === 'sandbox');
+          return loadPayPalSdk({ merchantId, pageType: 'checkout', wallets: true });
+        });
       })
       .then((paypal) => {
         if (!paypal) return;

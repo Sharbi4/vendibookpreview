@@ -311,13 +311,9 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   // Inclusive day counting: same start/end = 1 day
   const rentalDays = startDate && endDate ? differenceInDays(endDate, startDate) + 1 : 0;
 
-  // Pre-warm PayPal config/readiness/SDK during the earlier steps so the
-  // payment buttons render immediately. Matches the server's rule: bookings
-  // starting within 10 days authorize first, longer-lead bookings capture.
-  const predictedIntent = startDate
-    ? (differenceInDays(startDate, new Date()) <= 10 ? 'AUTHORIZE' : 'CAPTURE')
-    : 'AUTHORIZE';
-  useWarmPayPalCheckout(listing?.host_id ?? null, predictedIntent);
+  // Pre-warm the canonical CAPTURE SDK during earlier steps. PayPal approval
+  // returns to Vendibook; capture waits for the buyer's final Submit payment.
+  useWarmPayPalCheckout(listing?.host_id ?? null, 'CAPTURE');
 
   /** Shared period quote (weekly/monthly bundling), also used for the summary line. */
   const rentalQuote = useMemo(

@@ -3,7 +3,6 @@ import { useQueryClient } from '@tanstack/react-query';
 
 import {
   getPayPalConfig,
-  loadPayPalAuthorizeSdk,
   loadPayPalSdk,
   preconnectPayPal,
 } from '@/lib/paypalClient';
@@ -27,7 +26,7 @@ import { sellerPaymentReadinessQuery } from '@/hooks/useSellerPaymentReadiness';
  */
 export function useWarmPayPalCheckout(
   sellerId: string | null | undefined,
-  predictedIntent: 'CAPTURE' | 'AUTHORIZE' = 'AUTHORIZE',
+  _predictedIntent: 'CAPTURE' | 'AUTHORIZE' = 'CAPTURE',
 ) {
   const queryClient = useQueryClient();
 
@@ -52,18 +51,13 @@ export function useWarmPayPalCheckout(
         }
       }
       if (cancelled) return;
-      if (predictedIntent === 'AUTHORIZE') {
-        // Wallets never render on an AUTHORIZE checkout.
-        loadPayPalAuthorizeSdk({ merchantId, pageType: 'checkout' }).catch(() => undefined);
-      } else {
-        loadPayPalSdk({ merchantId, pageType: 'checkout', wallets: true }).catch(() => undefined);
-      }
+      loadPayPalSdk({ merchantId, pageType: 'checkout', wallets: true }).catch(() => undefined);
     })();
 
     return () => {
       cancelled = true;
     };
-  }, [sellerId, predictedIntent, queryClient]);
+  }, [sellerId, queryClient]);
 }
 
 export default useWarmPayPalCheckout;
