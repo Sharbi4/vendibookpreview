@@ -60,21 +60,15 @@ Deno.serve(async (req) => {
     if (body.simulate) {
       const eventType = body.event_type ?? 'PAYMENT.CAPTURE.COMPLETED'
       try {
-        await paypalRequest('/v1/notifications/simulate-event', {
+        const token = await getPayPalAccessTokenForEnv('sandbox')
+        const resp = await fetch('https://api-m.sandbox.paypal.com/v1/notifications/simulate-event', {
           method: 'POST',
-          retries: 1,
-          body: {
-            webhook_id: webhookId,
-            event_type: eventType,
-            resource: {
-              id: 'SIMULATED-CAPTURE-ID',
-              status: 'COMPLETED',
-              amount: { value: '10.00', currency_code: 'USD' },
-              supplementary_data: { related_ids: { order_id: 'SIMULATED-ORDER-ID' } },
-            },
-          },
+          headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ webhook_id: webhookId, event_type: eventType }),
         })
-        result.simulated = eventType
+        const text = await resp.text()
+        result.simulate_status = resp.status
+        result.simulate_response = text.slice(0, 800)
       } catch (simErr) {
         result.simulate_error = (simErr as Error).message
       }
