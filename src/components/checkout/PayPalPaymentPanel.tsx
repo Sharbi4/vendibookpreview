@@ -252,6 +252,18 @@ const PayPalPaymentPanel = ({
       if (authErr || !auth || (auth.status !== 'authorized' && auth.status !== 'completed')) {
         if (await reconcile(orderID)) return;
         const parsed = await parseEdgeError(authErr, auth?.error ? auth : null);
+        const payerAction = parsed.raw?.payer_action_url as string | undefined;
+        if (payerAction) {
+          // PayPal returned a `payer-action` link: the buyer must finish
+          // approving there. Send them to it instead of dead-ending.
+          setState('ready');
+          setError({
+            title: 'PayPal needs one more step',
+            detail: 'Finish approving this payment in the PayPal window that just opened.',
+          });
+          window.open(payerAction, '_blank', 'noopener,noreferrer');
+          return;
+        }
         if (parsed.raw?.recoverable === true) {
           setState('ready');
           setError({
@@ -284,6 +296,18 @@ const PayPalPaymentPanel = ({
     if (fnError || !result || (result.status !== 'completed' && !result.pending)) {
       if (await reconcile(orderID)) return;
       const parsed = await parseEdgeError(fnError, result?.error ? result : null);
+      const payerAction = parsed.raw?.payer_action_url as string | undefined;
+      if (payerAction) {
+        // PayPal returned a `payer-action` link: the buyer must finish
+        // approving there. Send them to it instead of dead-ending.
+        setState('ready');
+        setError({
+          title: 'PayPal needs one more step',
+          detail: 'Finish approving this payment in the PayPal window that just opened.',
+        });
+        window.open(payerAction, '_blank', 'noopener,noreferrer');
+        return;
+      }
       if (parsed.raw?.recoverable === true) {
         setState('ready');
         setError({
