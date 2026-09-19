@@ -1,11 +1,12 @@
 // TEMPORARY one-shot setup: registers the Vendibook webhook with the PayPal
 // SANDBOX API and returns the webhook id so it can be stored as
 // PAYPAL_WEBHOOK_ID_SANDBOX. Refuses to run in live. Deleted after use.
+import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { corsHeaders, jsonResponse } from "../_shared/jsonError.ts";
-import {
-  paypalEnvironment,
-  SANDBOX_BASE,
-} from "../_shared/paypal.ts";
+import { paypalEnvironment } from "../_shared/paypal.ts";
+
+const SANDBOX_BASE = "https://api-m.sandbox.paypal.com";
+
 
 const WEBHOOK_URL = "https://nbrehbwfsmedbelzntqs.supabase.co/functions/v1/paypal-webhook";
 
@@ -100,6 +101,3 @@ serve(async (req) => {
     url: created.url,
   });
 });
-
-// Local copy of the std serve helper (removed with the function itself).
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
