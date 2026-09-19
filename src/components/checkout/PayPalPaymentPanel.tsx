@@ -126,6 +126,17 @@ const PayPalPaymentPanel = ({
 
   const startOrder = async (): Promise<string> => {
     setError(null);
+    // Remember where the payer left so a declined/abandoned PayPal return can
+    // put them straight back on this payment step instead of a dead end.
+    try {
+      sessionStorage.setItem(
+        'pp-checkout-return',
+        `${window.location.pathname}${window.location.search}`,
+      );
+    } catch {
+      /* storage unavailable — the return page falls back to its own screen */
+    }
+
     // Re-check the session right before creating the order: a token that
     // expired while the panel sat open would otherwise surface as a generic
     // PayPal failure after the payer already opened the window.
