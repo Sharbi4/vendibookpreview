@@ -140,7 +140,13 @@ serve(async (req) => {
           internal_status: "declined",
           last_error: { issue: err.issue ?? "declined" },
         }).eq("id", record.id);
-        return jsonError(402, "payment_declined", declineMessage(err.issue));
+        // INSTRUMENT_DECLINED is recoverable on a Buttons checkout: the payer
+        // can pick another funding source via actions.restart().
+        return jsonError(402, "payment_declined", declineMessage(err.issue), {
+          issue: err.issue ?? null,
+          recoverable: err.issue === "INSTRUMENT_DECLINED",
+        });
+
       } else {
         throw err;
       }
