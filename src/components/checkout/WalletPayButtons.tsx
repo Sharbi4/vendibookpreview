@@ -15,7 +15,14 @@ interface WalletPayButtonsProps {
   lineItemLabel?: string;
   /** Notifies the parent when at least one wallet button rendered. */
   onAvailable?: (available: boolean) => void;
+  /**
+   * Connected seller's PayPal merchant id. MUST match the panel's SDK — a
+   * first-party SDK inside a connected-seller checkout would name the wrong
+   * payee, so the wallets simply stay hidden if it cannot be loaded.
+   */
+  merchantId?: string | null;
 }
+
 
 const GOOGLE_PAY_SCRIPT = 'https://pay.google.com/gp/p/js/pay.js';
 
