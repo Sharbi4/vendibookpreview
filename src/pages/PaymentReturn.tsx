@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { AlertTriangle, ArrowRight, Clock, Loader2, ShieldCheck } from 'lucide-react';
+import { AlertTriangle, ArrowRight, Clock, ShieldCheck } from 'lucide-react';
 
 import SEO from '@/components/SEO';
 import Header from '@/components/layout/Header';
@@ -154,15 +154,13 @@ const PaymentReturn = () => {
       <main className="flex-1 flex items-center justify-center px-5 py-16">
         <div className="w-full max-w-lg rounded-[26px] border border-border/70 bg-card p-8 text-center shadow-[0_40px_120px_-70px_rgba(24,20,16,0.45)]">
           {outcome.kind === 'working' ? (
-            <>
-              <Loader2 className="mx-auto h-8 w-8 animate-spin text-muted-foreground" />
-              <h1 className="mt-5 text-xl font-semibold tracking-tight text-foreground">
-                Confirming your payment with PayPal…
-              </h1>
-              <p className="mt-2 text-sm text-muted-foreground">
-                Please keep this page open. This usually takes a few seconds.
-              </p>
-            </>
+            <div className="paypal-return-skeleton" aria-busy="true" role="status">
+              <span className="sr-only">Loading payment review</span>
+              <div className="mx-auto h-7 w-52 rounded-md bg-muted/40 animate-pulse" aria-hidden="true" />
+              <div className="mx-auto h-4 w-72 max-w-full rounded bg-muted/30 animate-pulse" aria-hidden="true" />
+              <div className="h-24 rounded-2xl bg-muted/30 animate-pulse" aria-hidden="true" />
+              <div className="h-36 rounded-2xl bg-muted/30 animate-pulse" aria-hidden="true" />
+            </div>
           ) : outcome.kind === 'signin' ? (
             <>
               <h1 className="text-xl font-semibold tracking-tight text-foreground">

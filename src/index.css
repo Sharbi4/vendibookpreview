@@ -1772,7 +1772,8 @@
   background: hsl(var(--muted) / .38);
   animation: vb-pay-cold 1.6s ease-in-out infinite;
 }
-.paypal-review-skeleton { display: grid; gap: 14px; padding-block: 8px; }
+.paypal-review-skeleton,
+.paypal-return-skeleton { display: grid; gap: 14px; padding-block: 8px; }
 @keyframes vb-pay-cold { 0%, 100% { opacity: 0.55; } 50% { opacity: 0.85; } }
 @media (prefers-reduced-motion: reduce) {
   .paypal-form-skeleton-message,
