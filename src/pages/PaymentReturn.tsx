@@ -50,6 +50,26 @@ const PaymentReturn = () => {
   const [attempt, setAttempt] = useState(0);
   const running = useRef(false);
 
+  /**
+   * A declined or unfinished payment is never a confirmation. Send the payer
+   * back to the payment step they came from with the reason, so it shows in
+   * red above the PayPal buttons; only fall back to this page's own failure
+   * screen when we have no safe checkout path to return to.
+   */
+  const failWith = (title: string, detail: string) => {
+    if (retryTo) {
+      try {
+        sessionStorage.setItem('pp-decline', detail);
+        sessionStorage.removeItem('pp-checkout-return');
+      } catch {
+        /* storage unavailable — the checkout still reopens */
+      }
+      navigate(retryTo, { replace: true });
+      return;
+    }
+    setOutcome({ kind: 'failed', title, detail });
+  };
+
   useEffect(() => {
     if (running.current) return;
     running.current = true;
@@ -73,17 +93,21 @@ const PaymentReturn = () => {
 
       if (error || !data?.status) {
         const parsed = await parseEdgeError(error, data?.error ? data : null);
-        setOutcome({
-          kind: 'failed',
-          title: 'We could not confirm this payment',
-          detail: parsed.message ||
+        failWith(
+          'We could not confirm this payment',
+          parsed.message ||
             'We could not reach PayPal to confirm this payment. Nothing has been charged twice — please try again.',
-        });
+        );
         return;
       }
 
       const ref = data.reference as string | undefined;
       if (data.status === 'completed' && ref) {
+        try {
+          sessionStorage.removeItem('pp-checkout-return');
+        } catch {
+          /* ignore */
+        }
         navigate(`/receipt/${ref}`, { replace: true });
         return;
       }
@@ -102,13 +126,13 @@ const PaymentReturn = () => {
         return;
       }
 
-      setOutcome({
-        kind: 'failed',
-        title: 'This payment was not completed',
-        detail: (data.message as string) ||
+      failWith(
+        'This payment was not completed',
+        (data.message as string) ||
           'Your payment was not completed and nothing has been charged. You can go back and try again or use another method.',
-      });
+      );
     })();
+
 
     return () => {
       cancelled = true;
