@@ -47,6 +47,16 @@ Deno.serve(async (req) => {
       disabled_event_types: webhook.event_types.filter((e) => e.status !== 'ENABLED').map((e) => e.name),
     }
 
+    if (body.add_event_type) {
+      try {
+        const patchOp = [{ op: 'add', path: '/event_types', value: [{ name: body.add_event_type }] }]
+        await paypalRequest(`/v1/notifications/webhooks/${encodeURIComponent(webhookId)}`, { method: 'PATCH', retries: 1, body: patchOp })
+        result.added_event_type = body.add_event_type
+      } catch (patchErr) {
+        result.add_event_error = (patchErr as Error).message
+      }
+    }
+
     if (body.simulate) {
       const eventType = body.event_type ?? 'PAYMENT.CAPTURE.COMPLETED'
       try {
