@@ -49,9 +49,16 @@ Deno.serve(async (req) => {
 
     if (body.add_event_type) {
       try {
-        const patchOp = [{ op: 'add', path: '/event_types', value: [{ name: body.add_event_type }] }]
-        await paypalRequest(`/v1/notifications/webhooks/${encodeURIComponent(webhookId)}`, { method: 'PATCH', retries: 1, body: patchOp })
-        result.added_event_type = body.add_event_type
+        const patchOp = [{ op: 'add', path: '/event_types', value: [{ name: body.add_event_type, description: 'Authorization expired (Vendibook)' }] }]
+        const resp = await fetch(`https://api-m.sandbox.paypal.com/v1/notifications/webhooks/${encodeURIComponent(webhookId)}`, {
+          method: 'PATCH',
+          headers: { Authorization: `Bearer ${await getPayPalAccessTokenForEnv('sandbox')}`, 'Content-Type': 'application/json' },
+          body: JSON.stringify(patchOp),
+        })
+        const text = await resp.text()
+        result.add_event_status = resp.status
+        if (!resp.ok) result.add_event_error = text.slice(0, 400)
+        else result.added_event_type = body.add_event_type
       } catch (patchErr) {
         result.add_event_error = (patchErr as Error).message
       }
