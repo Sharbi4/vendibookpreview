@@ -38,7 +38,7 @@ let configPromise: Promise<PayPalRuntimeConfig> | null = null;
  * client id it carries is publishable; nothing secret is stored.
  */
 const CONFIG_CACHE_KEY = 'vb:paypal-config';
-const CONFIG_TTL_MS = 5 * 60 * 1000;
+const CONFIG_TTL_MS = 10 * 60 * 1000;
 
 function readCachedConfig(): PayPalRuntimeConfig | null {
   try {
@@ -64,6 +64,9 @@ export function getPayPalConfig(): Promise<PayPalRuntimeConfig> {
       .then(({ data, error }) => {
         if (error) throw error;
         const config = data as PayPalRuntimeConfig;
+        // Never cache a disabled/unconfigured response — that would keep
+        // checkout switched off for the rest of the session.
+        if (!config?.enabled || !config.client_id) return config;
         try {
           sessionStorage.setItem(
             CONFIG_CACHE_KEY,
@@ -202,6 +205,9 @@ function loadSdk(intent: 'capture' | 'authorize', options: PayPalSdkOptions = {}
       });
       // Seller-routed (Connected Path) checkout must name the payee here.
       if (options.merchantId) params.set('merchant-id', options.merchantId);
+      // Sandbox-only: makes funding eligibility deterministic while testing.
+      // Never sent in live.
+      if (config.environment === 'sandbox') params.set('buyer-country', 'US');
       if (config.enable_funding?.length) {
         params.set('enable-funding', config.enable_funding.join(','));
       }
