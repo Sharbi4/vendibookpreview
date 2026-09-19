@@ -605,8 +605,9 @@ const PayPalPaymentPanel = ({
                       role="alert"
                       className="rounded-xl border border-destructive/40 bg-destructive/[0.06] px-4 py-3 text-sm space-y-2"
                     >
-                      <p className="font-semibold text-foreground">{error.title}</p>
-                      <p className="text-xs text-muted-foreground">{error.detail}</p>
+                      <p className="font-semibold text-destructive">{error.title}</p>
+                      <p className="text-xs text-destructive/90">{error.detail}</p>
+
                       <button
                         type="button"
                         onClick={() => {
