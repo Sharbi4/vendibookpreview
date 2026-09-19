@@ -24,6 +24,7 @@ interface OrderRecord {
   listing_id: string | null;
   seller_id: string | null;
   sale_transaction_id: string | null;
+  booking_request_id: string | null;
   buyer_email: string | null;
   order_items: unknown;
   shipping_address: Record<string, unknown> | null;
@@ -56,6 +57,19 @@ interface SaleInfo {
   delivery_instructions: string | null;
   shipping_notes: string | null;
   estimated_delivery_date: string | null;
+}
+
+interface BookingInfo {
+  start_date: string | null;
+  end_date: string | null;
+  start_time: string | null;
+  end_time: string | null;
+  fulfillment_selected: string | null;
+  delivery_address: string | null;
+  delivery_instructions: string | null;
+  message: string | null;
+  status: string | null;
+  host_id: string | null;
 }
 
 interface ReceiptLine {
@@ -121,6 +135,7 @@ const OrderReceipt = () => {
   const [order, setOrder] = useState<OrderRecord | null>(null);
   const [listing, setListing] = useState<ListingInfo | null>(null);
   const [sale, setSale] = useState<SaleInfo | null>(null);
+  const [booking, setBooking] = useState<BookingInfo | null>(null);
   const [seller, setSeller] = useState<{ name: string | null; city: string | null; state: string | null } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -137,7 +152,7 @@ const OrderReceipt = () => {
       const { data, error: err } = await supabase
         .from('payment_records')
         .select(
-          'reference, created_at, captured_at, currency, gross_amount_cents, tax_cents, discount_cents, captured_amount_cents, refunded_cents, payment_status, payment_intent, payment_source, transaction_type, listing_id, seller_id, sale_transaction_id, buyer_email, order_items, shipping_address',
+          'reference, created_at, captured_at, currency, gross_amount_cents, tax_cents, discount_cents, captured_amount_cents, refunded_cents, payment_status, payment_intent, payment_source, transaction_type, listing_id, seller_id, sale_transaction_id, booking_request_id, buyer_email, order_items, shipping_address',
         )
         .eq('reference', reference)
         .maybeSingle();
@@ -174,6 +189,17 @@ const OrderReceipt = () => {
         if (!cancelled && s) setSale(s as unknown as SaleInfo);
       }
 
+      if (data.booking_request_id) {
+        const { data: b } = await supabase
+          .from('booking_requests')
+          .select(
+            'start_date, end_date, start_time, end_time, fulfillment_selected, delivery_address, delivery_instructions, message, status, host_id',
+          )
+          .eq('id', data.booking_request_id)
+          .maybeSingle();
+        if (!cancelled && b) setBooking(b as unknown as BookingInfo);
+      }
+
       if (data.seller_id) {
         const { data: p } = await supabase
           .rpc('get_safe_host_profile', { host_user_id: data.seller_id })
@@ -202,6 +228,8 @@ const OrderReceipt = () => {
   const totalCents = order ? order.captured_amount_cents || order.gross_amount_cents : 0;
   const refunded = order?.refunded_cents ?? 0;
   const isHold = order?.payment_intent === 'AUTHORIZE' && order?.payment_status !== 'completed';
+  const isPending = order?.payment_status === 'pending';
+  const totalLabel = isPending ? 'Total pending' : isHold ? 'Authorized total' : 'Total paid';
 
   const issuedAt = order ? new Date(order.captured_at ?? order.created_at) : null;
 
@@ -261,6 +289,12 @@ const OrderReceipt = () => {
                   </div>
                 ) : null}
                 <div className="mt-1">
+                  <dt className="inline">Status </dt>
+                  <dd className="inline text-foreground">
+                    {isPending ? 'Pending' : isHold ? 'Authorized (not captured)' : 'Paid'}
+                  </dd>
+                </div>
+                <div className="mt-1">
                   <dt className="inline">Paid with </dt>
                   <dd className="inline text-foreground">
                     {order.payment_source === 'card' ? 'Card via PayPal' : 'PayPal'}
@@ -269,9 +303,15 @@ const OrderReceipt = () => {
               </dl>
             </header>
 
-            {isHold ? (
+            {isPending ? (
               <p className="mt-5 rounded-2xl border border-border/60 bg-muted/30 px-4 py-3 text-xs text-muted-foreground">
-                PayPal is holding these funds. You are charged only when this transaction is confirmed.
+                PayPal is still clearing this payment. It is not settled yet — we'll email you the
+                moment it does.
+              </p>
+            ) : isHold ? (
+              <p className="mt-5 rounded-2xl border border-border/60 bg-muted/30 px-4 py-3 text-xs text-muted-foreground">
+                Funds are authorized and held by PayPal — not captured or charged yet. You are charged
+                only when this transaction is confirmed.
               </p>
             ) : null}
 
@@ -363,7 +403,7 @@ const OrderReceipt = () => {
                   ) : null}
                   <tr className="border-t border-border/70">
                     <td className="pt-3 font-medium text-foreground" colSpan={2}>
-                      {isHold ? 'Authorized total' : 'Total paid'}
+                      {totalLabel}
                     </td>
                     <td className="pt-3 text-right text-xl font-semibold tracking-tight text-foreground">
                       {usd(totalCents, order.currency)}
@@ -384,16 +424,67 @@ const OrderReceipt = () => {
                   {buyerAddress ? <p className="text-muted-foreground">{buyerAddress}</p> : null}
                 </div>
               </div>
-              <div>
-                <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Seller</h3>
-                <div className="mt-2 space-y-0.5 text-sm text-foreground">
-                  <p>{seller?.name ?? 'Vendibook seller'}</p>
-                  {seller?.city || seller?.state ? (
-                    <p className="text-muted-foreground">{[seller?.city, seller?.state].filter(Boolean).join(', ')}</p>
-                  ) : null}
-                  <p className="text-xs text-muted-foreground">Contact details are in your Vendibook messages.</p>
+              {order.seller_id ? (
+                <div>
+                  <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                    {booking ? 'Host' : 'Seller'}
+                  </h3>
+                  <div className="mt-2 space-y-0.5 text-sm text-foreground">
+                    <p>{seller?.name ?? (booking ? 'Vendibook host' : 'Vendibook seller')}</p>
+                    {seller?.city || seller?.state ? (
+                      <p className="text-muted-foreground">{[seller?.city, seller?.state].filter(Boolean).join(', ')}</p>
+                    ) : null}
+                    <p className="text-xs text-muted-foreground">Contact details are in your Vendibook messages.</p>
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div>
+                  <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                    Provider
+                  </h3>
+                  <div className="mt-2 space-y-0.5 text-sm text-foreground">
+                    <p>Vendibook</p>
+                    <p className="text-xs text-muted-foreground">
+                      Paid to Vendibook through PayPal.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {booking ? (
+                <div className="sm:col-span-2">
+                  <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">
+                    Rental details
+                  </h3>
+                  <div className="mt-2 space-y-1 text-sm text-muted-foreground">
+                    <p className="text-foreground">
+                      {FULFILLMENT_LABELS[booking.fulfillment_selected ?? ''] ?? 'Arranged with the host'}
+                    </p>
+                    {booking.start_date ? (
+                      <p>
+                        Starts:{' '}
+                        {new Date(`${booking.start_date}T00:00:00`).toLocaleDateString('en-US', {
+                          dateStyle: 'medium',
+                        })}
+                        {booking.start_time ? ` at ${booking.start_time}` : ''}
+                      </p>
+                    ) : null}
+                    {booking.end_date ? (
+                      <p>
+                        Ends:{' '}
+                        {new Date(`${booking.end_date}T00:00:00`).toLocaleDateString('en-US', {
+                          dateStyle: 'medium',
+                        })}
+                        {booking.end_time ? ` at ${booking.end_time}` : ''}
+                      </p>
+                    ) : null}
+                    {booking.delivery_address ? <p>Delivery address: {booking.delivery_address}</p> : null}
+                    {booking.delivery_instructions ? <p>Instructions: {booking.delivery_instructions}</p> : null}
+                    {booking.message ? <p>Notes: {booking.message}</p> : null}
+                    {booking.status ? <p>Booking status: {booking.status}</p> : null}
+                  </div>
+                </div>
+              ) : null}
 
               {sale ? (
                 <div className="sm:col-span-2">
@@ -426,7 +517,14 @@ const OrderReceipt = () => {
               >
                 <Printer className="h-4 w-4" /> Print or save PDF
               </button>
-              {order.sale_transaction_id ? (
+              {order.booking_request_id ? (
+                <Link
+                  to={`/booking/${order.booking_request_id}`}
+                  className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
+                >
+                  View booking <ArrowRight className="h-4 w-4" />
+                </Link>
+              ) : order.sale_transaction_id ? (
                 <Link
                   to={`/order-tracking/${order.sale_transaction_id}`}
                   className="inline-flex items-center gap-2 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground"
