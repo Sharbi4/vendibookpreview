@@ -1508,12 +1508,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
                   onChange={(code, valid) => { setReferralCode(code); setReferralValid(valid); }}
                   autoFillFromCookie
                 />
-              </details>
-
-              <p className="text-xs text-muted-foreground">
-                PayPal terms and eligibility apply to the payment method you choose.
-              </p>
-            </div>
+              </details>            </div>
           ) : null}
         </SaleCheckoutWizard>
 

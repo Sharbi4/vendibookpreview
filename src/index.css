@@ -2282,6 +2282,9 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
   font-size: 11.5px; color: hsl(var(--v2-stone));
 }
 .v2-pay-foot svg { width: 12px; height: 12px; }
+.v2-pay-foot-links { margin-left: auto; display: inline-flex; gap: 12px; }
+.v2-pay-foot-links a { color: inherit; text-decoration: underline; text-underline-offset: 2px; }
+.v2-pay-foot-links a:hover { color: hsl(var(--v2-ink, #1c1f24)); }
 
 /* Premium light-silver PayPal surface used inside the Payment step. */
 .v2-pay-panel.is-silver {
