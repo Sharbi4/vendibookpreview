@@ -54,12 +54,15 @@ type PanelState =
   | 'signin'
 
   | 'ready'
+  /** Approved at PayPal, nothing captured — final authorize step. */
+  | 'review'
   | 'processing'
   | 'success'
   | 'pending'
   /** PayPal is holding the funds; nothing has been charged yet. */
   | 'authorized'
   | 'error';
+
 
 /**
  * Vendibook-branded PayPal checkout in a dark-glass modal. Buyers pay with
