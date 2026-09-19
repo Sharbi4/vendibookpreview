@@ -113,7 +113,8 @@ const IdentityVerificationInfo = lazy(() => import("./pages/IdentityVerification
 const VerificationComplete = lazy(() => import("./pages/VerificationComplete"));
 const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
 const BookingConfirmation = lazy(() => import("./pages/BookingConfirmation"));
-const OrderConfirmation = lazy(() => import("./pages/OrderConfirmation"));
+const OrderReceipt = lazy(() => import("./pages/OrderReceipt"));
+const PaymentReturn = lazy(() => import("./pages/PaymentReturn"));
 const PaymentCancelled = lazy(() => import("./pages/PaymentCancelled"));
 const Messages = lazy(() => import("./pages/Messages"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
@@ -431,8 +432,12 @@ const AnimatedRoutes = () => {
           <Route path="/verify-identity" element={<PageTransition><IdentityVerification /></PageTransition>} />
           <Route path="/verification-complete" element={<PageTransition><VerificationComplete /></PageTransition>} />
           <Route path="/booking-confirmation" element={<PageTransition><BookingConfirmation /></PageTransition>} />
-          <Route path="/order-confirmation" element={<PageTransition><OrderConfirmation /></PageTransition>} />
-          <Route path="/order-confirmation/:reference" element={<PageTransition><OrderConfirmation /></PageTransition>} />
+          <Route path="/receipt/:reference" element={<PageTransition><OrderReceipt /></PageTransition>} />
+          <Route path="/receipt" element={<PageTransition><OrderReceipt /></PageTransition>} />
+          <Route path="/order-confirmation" element={<PageTransition><OrderReceipt /></PageTransition>} />
+          <Route path="/order-confirmation/:reference" element={<PageTransition><OrderReceipt /></PageTransition>} />
+          <Route path="/payment/return" element={<PageTransition><PaymentReturn /></PageTransition>} />
+          <Route path="/payment/cancelled" element={<PageTransition><PaymentCancelled /></PageTransition>} />
           <Route path="/payment-success" element={<PageTransition><PaymentSuccess /></PageTransition>} />
           <Route path="/payment-cancelled" element={<PageTransition><PaymentCancelled /></PageTransition>} />
           <Route path="/messages" element={<PreserveQueryRedirect to="/dashboard/messages" />} />
