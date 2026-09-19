@@ -17,7 +17,7 @@ import {
   Video,
 } from 'lucide-react';
 import WorkspaceShell from '@/components/workspace/WorkspaceShell';
-import PayPalReadyBadge from '@/components/workspace/PayPalReadyBadge';
+import SellerPayPalConnect from '@/components/account/SellerPayPalConnect';
 import { useAuth } from '@/contexts/AuthContext';
 import { useHostListings } from '@/hooks/useHostListings';
 import { useShopperBookings } from '@/hooks/useShopperBookings';
@@ -29,10 +29,8 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useHandoffTasks } from '@/hooks/useHandoffTasks';
 import { useVideoWalkthroughs } from '@/hooks/useVideoWalkthroughs';
-import SellerBusinessAccountHelp from '@/components/payments/SellerBusinessAccountHelp';
 import { formatWalkthroughTime } from '@/lib/videoWalkthroughs';
 import { toDashboardTarget } from '@/lib/navigation/dashboardTargets';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const money = (cents: number | null | undefined) =>
   cents == null
@@ -66,7 +64,7 @@ export default function WorkspaceHome() {
   const { bookings: sellerBookings } = useHostBookings();
   const { transactions } = useUserTransactions(user?.id);
   const { conversations } = useConversations();
-  const { status: paypalStatus, isReady: paypalReady, connection } = useMyPayPalConnection();
+  const { isReady: paypalReady } = useMyPayPalConnection();
   const { notifications, unreadCount: notificationUnread } = useNotifications(user?.id);
   const { favorites } = useFavorites();
   const { walkthroughs } = useVideoWalkthroughs();
@@ -108,23 +106,6 @@ export default function WorkspaceHome() {
         to: '/dashboard/listings?status=draft',
         icon: FileText,
       });
-    if (isSeller && paypalStatus === 'action_required')
-      items.push({
-        id: 'paypal-action',
-        label: 'PayPal needs your attention',
-        hint: 'Resolve the issue on your PayPal account so you can receive payments.',
-        to: '/dashboard/payments/setup',
-        icon: AlertTriangle,
-        tone: 'warn',
-      });
-    if (isSeller && !paypalReady && paypalStatus !== 'action_required')
-      items.push({
-        id: 'paypal-connect',
-        label: 'Accept secure online payments',
-        hint: 'Finish seller setup so buyers can pay you through Vendibook.',
-        to: '/dashboard/seller-setup',
-        icon: CreditCard,
-      });
     if (disputes.length)
       items.push({
         id: 'disputes',
@@ -164,7 +145,6 @@ export default function WorkspaceHome() {
     pendingSellerBookings.length,
     drafts.length,
     isSeller,
-    paypalStatus,
     paypalReady,
     disputes.length,
     pendingBuyerBookings.length,
@@ -226,7 +206,7 @@ export default function WorkspaceHome() {
   return (
     <WorkspaceShell>
       <div className="v2-page-stack">
-        <header className="v2-page-heading v2-greeting">
+        <header className="v2-page-heading v2-greeting flex-wrap">
           <div>
             <p className="v2-eyebrow">Your workspace</p>
             <h1>Good to see you, {firstName}.</h1>
@@ -240,13 +220,9 @@ export default function WorkspaceHome() {
                 <Search />
                 Browse the marketplace
               </Link>
-              {isSeller && <PayPalReadyBadge />}
             </div>
           </div>
-          <Avatar className="hidden h-16 w-16 sm:flex">
-            <AvatarImage src={profile?.avatar_url || undefined} alt={name} />
-            <AvatarFallback>{firstName[0]?.toUpperCase()}</AvatarFallback>
-          </Avatar>
+          <SellerPayPalConnect variant="pill" showWhenDisabled />
         </header>
 
         {tasks.length > 0 && (
@@ -443,32 +419,6 @@ export default function WorkspaceHome() {
                 <span>Payments you made</span>
               </div>
             </div>
-            <Link className="v2-task-row" to={paypalReady ? '/dashboard/payments' : '/dashboard/payments/setup'}>
-              <span className={`v2-task-marker ${paypalReady ? 'is-ok' : 'is-warn'}`}>
-                <CreditCard />
-              </span>
-              <span className="v2-task-copy">
-                <strong>
-                  {paypalReady
-                    ? 'PayPal connected — ready to receive payments'
-                    : paypalStatus === 'action_required'
-                      ? 'PayPal action required'
-                      : connection
-                        ? 'PayPal setup in progress'
-                        : 'PayPal not connected'}
-                </strong>
-                <small>
-                  {paypalReady
-                    ? connection?.paypal_email || 'Your connected PayPal Business account'
-                    : 'Connect PayPal to let qualified buyers pay through Vendibook.'}
-                </small>
-              </span>
-              <span className="v2-task-action">
-                Open
-                <ArrowRight />
-              </span>
-            </Link>
-            {!paypalReady && <SellerBusinessAccountHelp className="mt-3 px-1" compact />}
           </section>
         </div>
 

@@ -5,8 +5,12 @@ import { Button } from '@/components/ui/button';
 import { recordLegalAcceptance } from '@/lib/legal/recordAcceptance';
 import SellerBusinessAccountHelp from '@/components/payments/SellerBusinessAccountHelp';
 import { Badge } from '@/components/ui/badge';
+import { Link } from 'react-router-dom';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { PayPalWordmark } from '@/components/brand/ProviderLogos';
 import { toast } from 'sonner';
 import {
+  ChevronDown,
   AlertTriangle,
   CheckCircle2,
   Circle,
@@ -24,6 +28,9 @@ type Connection = {
   merchant_id: string | null;
   paypal_email: string | null;
   referral_url: string | null;
+  oauth_scopes: string[];
+  acdc_vetting_status: string | null;
+  vaulting_status: string | null;
 };
 
 /**
@@ -42,7 +49,7 @@ export default function SellerPayPalConnect({
 }: {
   showWhenDisabled?: boolean;
   /** `dark` renders the money-center PayPal Partner module. */
-  variant?: 'inline' | 'dark';
+  variant?: 'inline' | 'dark' | 'pill';
 }) {
   const { user } = useAuth();
   const [enabled, setEnabled] = useState<boolean | null>(null);
@@ -59,7 +66,7 @@ export default function SellerPayPalConnect({
     if (!user) return null;
     const { data } = await supabase
       .from('seller_paypal_accounts')
-      .select('id, onboarding_status, action_reasons, merchant_id, paypal_email, referral_url')
+      .select('id, onboarding_status, action_reasons, merchant_id, paypal_email, referral_url, oauth_scopes, acdc_vetting_status, vaulting_status')
       .eq('user_id', user.id)
       .is('archived_at', null)
       .maybeSingle();
@@ -234,7 +241,7 @@ export default function SellerPayPalConnect({
   const reasons = connection?.action_reasons ?? [];
   const emailUnconfirmed = reasons.includes('primary_email_unconfirmed');
   const notReceivable = reasons.includes('payments_receivable_false');
-  const needsPermissions = reasons.includes('oauth_not_active') || reasons.includes('vetting_pending');
+  const needsPermissions = reasons.includes('required_permissions_missing') || reasons.includes('oauth_not_active') || reasons.includes('vetting_pending');
   const status = connection?.onboarding_status ?? null;
   const isReady = status === 'ready';
   const canReconnect = status === 'disconnected' || status === 'revoked';
@@ -292,6 +299,56 @@ export default function SellerPayPalConnect({
     { label: 'Online checkout enabled on your listings', state: step(isReady, false) },
   ];
 
+  if (variant === 'pill') {
+    const hasConnection = Boolean(connection) && !canReconnect;
+    const label = isReady ? 'Connected to PayPal' : hasConnection ? 'Finish PayPal setup' : 'Connect to PayPal';
+    return (
+      <div className="shrink-0 space-y-2">
+        <Popover>
+          <PopoverTrigger asChild>
+            <button type="button" aria-label={label} className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#0070ba] px-5 py-3 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-[#005ea6] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#0070ba] focus-visible:ring-offset-2">
+              {isReady && <CheckCircle2 className="h-4 w-4" aria-hidden="true" />}
+              <span>{isReady ? 'Connected to' : hasConnection ? 'Finish' : 'Connect to'}</span>
+              <PayPalWordmark surface="dark" className="h-4" />
+              {hasConnection && !isReady && <span>setup</span>}
+              <ChevronDown className="h-4 w-4" aria-hidden="true" />
+            </button>
+          </PopoverTrigger>
+          <PopoverContent align="end" className="w-80 max-w-[calc(100vw-2rem)] rounded-2xl p-4">
+            <div className="space-y-3">
+              <div>
+                <h2 className="text-sm font-semibold">{isReady ? 'Ready to receive payments' : 'Receive payments with PayPal'}</h2>
+                <p className="mt-1 text-xs text-muted-foreground">{isReady ? connection?.paypal_email || 'Your PayPal Business account is connected.' : 'Connect your PayPal Business account to accept online payments on eligible listings.'}</p>
+              </div>
+              {capabilityError && <p role="alert" className="text-xs text-destructive">{capabilityError}</p>}
+              {enabled === false && <p className="text-xs text-muted-foreground">PayPal setup is currently unavailable. Please check back later.</p>}
+              {flowMessage && <p role={flowMessage.tone === 'error' ? 'alert' : 'status'} className="text-xs">{flowMessage.text}</p>}
+              {emailUnconfirmed && <p className="text-xs text-amber-700">{emailWarning}</p>}
+              {notReceivable && <p className="text-xs text-amber-700">{receivableWarning}</p>}
+              {enabled && !hasConnection && <>
+                <label className="flex items-start gap-2 text-xs leading-relaxed">
+                  <input type="checkbox" className="mt-1" checked={sellerTermsAccepted} onChange={(e) => setSellerTermsAccepted(e.target.checked)} disabled={!!busy} />
+                  <span>I accept the <a href="/legal/seller-payment-terms" target="_blank" rel="noreferrer" className="underline">Seller Payment Terms</a> and consent to <a href="/legal/esign" target="_blank" rel="noreferrer" className="underline">electronic records and signatures</a>.</span>
+                </label>
+                <Button className="w-full rounded-full bg-[#0070ba] text-white hover:bg-[#005ea6]" disabled={!!busy || !sellerTermsAccepted} onClick={connect}>{busy === 'connect' ? 'Connecting…' : 'Get started with PayPal'}</Button>
+              </>}
+              {enabled && hasConnection && <div className="space-y-1">
+                {!isReady && connection?.referral_url && <Button asChild variant="ghost" className="w-full justify-start"><a href={connection.referral_url}><ExternalLink className="mr-2 h-4 w-4" />Continue on PayPal</a></Button>}
+                <Button variant="ghost" className="w-full justify-start" disabled={!!busy} onClick={refreshStatus}><RefreshCw className={`mr-2 h-4 w-4 ${busy === 'refresh' ? 'animate-spin' : ''}`} />Check status</Button>
+                <Button variant="ghost" className="w-full justify-start text-destructive" disabled={!!busy} onClick={disconnect}><Unlink className="mr-2 h-4 w-4" />Disconnect</Button>
+              </div>}
+              <div className="flex flex-wrap gap-x-4 gap-y-2 border-t pt-3 text-xs">
+                <Link to="/dashboard/payments/setup" className="underline underline-offset-4">Payment settings</Link>
+                <Link to="/dashboard/payments" className="underline underline-offset-4">Payments &amp; learn more</Link>
+              </div>
+            </div>
+          </PopoverContent>
+        </Popover>
+        <p className="text-xs text-muted-foreground sm:text-right">{isReady ? 'Ready to receive payments' : hasConnection ? 'Complete setup to receive payments' : 'Connect to receive payments'}</p>
+      </div>
+    );
+  }
+
   if (variant === 'dark') {
     return (
       <div className="v2-paypal-panel space-y-4">
@@ -313,6 +370,14 @@ export default function SellerPayPalConnect({
             {isReady ? <CheckCircle2 /> : connection ? <AlertTriangle /> : <CreditCard />}
             {statusLabel}
           </span>
+          {isReady && (            <details className="mt-3 text-xs">
+              <summary className="cursor-pointer font-medium">PayPal permissions and card approval</summary>
+              <p className="mt-2">Advanced cards: {connection?.acdc_vetting_status ?? 'Not approved yet'}</p>
+              <p>Saved payment methods: {connection?.vaulting_status ?? 'Not enabled for this checkout'}</p>
+              <ul className="mt-2 space-y-1 break-all">
+                {(connection?.oauth_scopes ?? []).map(scope => <li key={scope}>{scope}</li>)}
+              </ul>
+            </details>)}
           {isReady && connection?.paypal_email && (
             <span className="v2-paypal-note">{connection.paypal_email}</span>
           )}
@@ -503,6 +568,15 @@ export default function SellerPayPalConnect({
 
         {isReady && (
           <>
+            <details className="mt-3 text-xs">
+              <summary className="cursor-pointer font-medium">PayPal permissions and card approval</summary>
+              <p className="mt-2">Advanced cards: {connection?.acdc_vetting_status ?? 'Not approved yet'}</p>
+              <p>Saved payment methods: {connection?.vaulting_status ?? 'Not enabled for this checkout'}</p>
+              <ul className="mt-2 space-y-1 break-all">
+                {(connection?.oauth_scopes ?? []).map(scope => <li key={scope}>{scope}</li>)}
+              </ul>
+            </details>
+
             <p className="text-xs text-muted-foreground mt-0.5">
               Your PayPal account is connected and can receive payments.
               {connection?.paypal_email && (
