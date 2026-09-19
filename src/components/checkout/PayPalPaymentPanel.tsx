@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { CheckCircle2, Loader2, Lock, ShieldCheck, X } from 'lucide-react';
 
 import { supabase } from '@/integrations/supabase/client';
-import { loadPayPalAuthorizeSdk, loadPayPalSdk } from '@/lib/paypalClient';
+import { getPayPalConfig, loadPayPalAuthorizeSdk, loadPayPalSdk } from '@/lib/paypalClient';
 import { parseEdgeError } from '@/lib/edgeErrors';
 import { authPath } from '@/lib/auth/returnTo';
 import { TRUST_COPY } from '@/lib/transactionVocabulary';
