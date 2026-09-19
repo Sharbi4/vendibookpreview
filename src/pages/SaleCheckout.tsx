@@ -5,6 +5,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useListing } from '@/hooks/useListing';
 import { computeDeliveryFee, deliveryRateLabel, normalizeDeliveryFeeType } from '@/lib/fulfillment/delivery';
 import { useToast } from '@/hooks/use-toast';
+import { useWarmPayPalCheckout } from '@/hooks/useWarmPayPalCheckout';
 import { useFreightEstimate } from '@/hooks/useFreightEstimate';
 import { supabase } from '@/integrations/supabase/client';
 import { parseEdgeError } from '@/lib/edgeErrors';
@@ -386,6 +387,10 @@ const SaleCheckout = () => {
   // behaviour is unchanged; once the real check ships this blocks the
   // PayPal purchase action without touching any money logic.
   const sellerReadiness = useSellerPaymentReadiness(listing?.host_id ?? null);
+  // Pre-warm PayPal config/readiness/SDK while the buyer works through the
+  // earlier steps so the payment buttons render without a loading wait.
+  // Sales authorize first until the seller confirms, hence the AUTHORIZE guess.
+  useWarmPayPalCheckout(listing?.host_id ?? null, 'AUTHORIZE');
   const paypalPurchaseBlocked = sellerReadiness.gatingActive && !sellerReadiness.ready;
   const [fulfillmentReady, setFulfillmentReady] = useState(false);
 

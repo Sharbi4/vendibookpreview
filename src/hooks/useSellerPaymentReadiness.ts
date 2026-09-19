@@ -19,10 +19,13 @@ export interface SellerPaymentReadiness {
  * Path routing is off, and callers MUST NOT block checkout in that case: the
  * current first-party Vendibook PayPal checkout keeps working exactly as before.
  */
-export function useSellerPaymentReadiness(sellerId?: string | null): SellerPaymentReadiness {
-  const query = useQuery({
+/**
+ * Shared query options so checkout pages can prefetch readiness (and the
+ * merchant id it carries) before the payment step mounts.
+ */
+export function sellerPaymentReadinessQuery(sellerId: string) {
+  return {
     queryKey: ['seller-payment-readiness', sellerId],
-    enabled: Boolean(sellerId),
     staleTime: 5 * 60_000,
     // A readiness lookup must never stall the payment step behind retry
     // backoff: one attempt, then fall through to the unblocked default.
@@ -46,6 +49,13 @@ export function useSellerPaymentReadiness(sellerId?: string | null): SellerPayme
         merchantId: payload.merchant_id ?? null,
       };
     },
+  } as const;
+}
+
+export function useSellerPaymentReadiness(sellerId?: string | null): SellerPaymentReadiness {
+  const query = useQuery({
+    ...sellerPaymentReadinessQuery(sellerId ?? ''),
+    enabled: Boolean(sellerId),
   });
 
   if (!sellerId) {

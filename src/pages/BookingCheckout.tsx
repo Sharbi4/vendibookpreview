@@ -67,6 +67,7 @@ import { ReferralCodeField } from '@/components/referrals/ReferralCodeField';
 import { useSellerVerifiedBadge } from '@/hooks/useSellerVerifiedBadge';
 import { authPath } from '@/lib/auth/returnTo';
 import { useSellerPaymentReadiness } from '@/hooks/useSellerPaymentReadiness';
+import { useWarmPayPalCheckout } from '@/hooks/useWarmPayPalCheckout';
 import { PayPalMonogram } from '@/components/brand/ProviderLogos';
 import SEO from '@/components/SEO';
 
@@ -314,6 +315,14 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   // Calculate pricing - supports both hourly and daily
   // Inclusive day counting: same start/end = 1 day
   const rentalDays = startDate && endDate ? differenceInDays(endDate, startDate) + 1 : 0;
+
+  // Pre-warm PayPal config/readiness/SDK during the earlier steps so the
+  // payment buttons render immediately. Matches the server's rule: bookings
+  // starting within 10 days authorize first, longer-lead bookings capture.
+  const predictedIntent = startDate
+    ? (differenceInDays(startDate, new Date()) <= 10 ? 'AUTHORIZE' : 'CAPTURE')
+    : 'AUTHORIZE';
+  useWarmPayPalCheckout(listing?.host_id ?? null, predictedIntent);
 
   /** Shared period quote (weekly/monthly bundling), also used for the summary line. */
   const rentalQuote = useMemo(
