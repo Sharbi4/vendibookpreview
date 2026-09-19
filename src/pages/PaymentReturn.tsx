@@ -32,7 +32,19 @@ const PaymentReturn = () => {
   const orderId = params.get('token') ?? params.get('order_id') ?? '';
   const reference = params.get('ref') ?? '';
   const retryParam = params.get('returnTo');
-  const retryTo = isSafeInternalPath(retryParam) ? retryParam : null;
+  const storedRetry = (() => {
+    try {
+      return sessionStorage.getItem('pp-checkout-return');
+    } catch {
+      return null;
+    }
+  })();
+  const retryTo = isSafeInternalPath(retryParam)
+    ? retryParam
+    : isSafeInternalPath(storedRetry)
+      ? storedRetry
+      : null;
+
 
   const [outcome, setOutcome] = useState<Outcome>({ kind: 'working' });
   const [attempt, setAttempt] = useState(0);
