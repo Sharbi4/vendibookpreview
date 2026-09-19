@@ -1,9 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
-import { DEFAULT_SHORT_LEAD_MAX_DAYS, leadTimeDays } from "../_shared/payments/paymentStrategy.ts";
-
-type CheckoutIntent = "CAPTURE" | "AUTHORIZE";
+import { PAYPAL_CHECKOUT_INTENT } from "../_shared/paypal.ts";
 
 /** Returns the PayPal SDK intent without creating an order. */
 serve(async (req) => {
@@ -24,8 +22,6 @@ serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const kind = String(body?.kind ?? "");
     const id = body?.id ? String(body.id) : null;
-    let intent: CheckoutIntent = "CAPTURE";
-
     if (kind === "sale") {
       if (!id) return jsonError(400, "missing_fields", "Missing transaction id.");
       const { data: sale } = await admin.from("sale_transactions")
@@ -33,7 +29,6 @@ serve(async (req) => {
       if (!sale) return jsonError(404, "not_found", "We couldn't find that transaction.");
       if (sale.buyer_id !== user.id) return jsonError(403, "forbidden", "You aren't the buyer on this transaction.");
       if (sale.seller_id === user.id) return jsonError(403, "self_transaction", "You can't purchase your own listing.");
-      intent = sale.seller_confirmed_at ? "CAPTURE" : "AUTHORIZE";
     } else if (kind === "booking") {
       if (!id) return jsonError(400, "missing_fields", "Missing booking id.");
       const { data: booking } = await admin.from("booking_requests")
@@ -45,16 +40,11 @@ serve(async (req) => {
       if (!booking.is_instant_book && booking.status !== "approved") {
         return jsonError(409, "payment_not_ready", "The host needs to approve this request before payment.");
       }
-      const startAt = booking.start_date
-        ? new Date(`${booking.start_date}T${booking.start_time ?? "00:00:00"}`).toISOString()
-        : null;
-      const lead = leadTimeDays(startAt, new Date());
-      intent = lead === null || lead <= DEFAULT_SHORT_LEAD_MAX_DAYS ? "AUTHORIZE" : "CAPTURE";
     } else if (!["product", "freight", "notary", "protected_sale_deposit", "concierge"].includes(kind)) {
       return jsonError(400, "invalid_kind", "This payment type isn't supported.");
     }
 
-    return jsonResponse(200, { intent });
+    return jsonResponse(200, { intent: PAYPAL_CHECKOUT_INTENT });
   } catch (error) {
     return unknownErrorResponse(error, "We couldn't check payment availability. Please try again.");
   }

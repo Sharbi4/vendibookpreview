@@ -2,7 +2,13 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
 import { hasCurrentLegalAcceptance } from "../_shared/legalVersions.ts";
-import { PayPalError, safeLog } from "../_shared/paypal.ts";
+import {
+  PAYPAL_CHECKOUT_INTENT,
+  PAYPAL_CHECKOUT_USER_ACTION,
+  PayPalError,
+  paypalEnvironment,
+  safeLog,
+} from "../_shared/paypal.ts";
 import { getPaymentProvider, PaymentProviderError } from "../_shared/payments/index.ts";
 import { auditPayment, requestIp } from "../_shared/paymentAudit.ts";
 import { assertListingPurchasable } from "../_shared/listingGuard.ts";
@@ -535,7 +541,7 @@ serve(async (req) => {
           currency: quote.currency,
           breakdown: quote.breakdown,
           tax: taxPayload(quote),
-          payment_intent: decision.intent,
+          payment_intent: PAYPAL_CHECKOUT_INTENT,
           payment_strategy: decision.strategy,
           reused: true,
         });
@@ -562,7 +568,7 @@ serve(async (req) => {
           currency: quote.currency,
           breakdown: quote.breakdown,
           tax: taxPayload(quote),
-          payment_intent: decision.intent,
+          payment_intent: PAYPAL_CHECKOUT_INTENT,
           payment_strategy: decision.strategy,
           reused: true,
         });
@@ -606,7 +612,7 @@ serve(async (req) => {
         payment_status: "created",
         internal_status: "awaiting_buyer_approval",
         payment_strategy: decision.strategy,
-        payment_intent: decision.intent,
+        payment_intent: PAYPAL_CHECKOUT_INTENT,
         // balance_due_cents is NOT NULL DEFAULT 0 — an explicit NULL violates
         // the constraint and kills order creation for every checkout.
         balance_due_cents: decision.balanceDueCents ?? 0,
@@ -681,7 +687,7 @@ serve(async (req) => {
       description: quote.description,
       idempotencyKey: quote.reference,
       softDescriptor: buildSoftDescriptor(sellerDisplayName),
-      intent: decision.intent === "AUTHORIZE" ? "AUTHORIZE" : "CAPTURE",
+      intent: PAYPAL_CHECKOUT_INTENT,
       // Itemized amounts must reconcile exactly with the order total.
       breakdown: {
         itemTotalCents: detail.itemTotalCents,
@@ -742,7 +748,13 @@ serve(async (req) => {
       },
     });
 
-    safeLog("order_created", { reference: quote.reference, orderId: order.providerOrderId });
+    safeLog("order_created", {
+      reference: quote.reference,
+      orderId: order.providerOrderId,
+      intent: PAYPAL_CHECKOUT_INTENT,
+      user_action: PAYPAL_CHECKOUT_USER_ACTION,
+      environment: paypalEnvironment(),
+    });
 
 
     return jsonResponse(200, {
@@ -752,7 +764,7 @@ serve(async (req) => {
       currency: quote.currency,
       breakdown: quote.breakdown,
       tax: taxPayload(quote),
-      payment_intent: decision.intent,
+      payment_intent: PAYPAL_CHECKOUT_INTENT,
       payment_strategy: decision.strategy,
       buyer_message: decision.buyerMessage,
       balance_due_cents: decision.balanceDueCents,

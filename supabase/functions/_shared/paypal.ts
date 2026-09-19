@@ -26,6 +26,14 @@ const SANDBOX_BASE = "https://api-m.sandbox.paypal.com";
 
 export type PayPalEnvironment = "sandbox" | "live";
 
+/**
+ * Canonical marketplace checkout contract. Approval returns the buyer to
+ * Vendibook for a final review; only their Submit payment click captures.
+ * PayPal AUTHORIZE is reserved for separate, explicit hold workflows.
+ */
+export const PAYPAL_CHECKOUT_INTENT = "CAPTURE" as const;
+export const PAYPAL_CHECKOUT_USER_ACTION = "CONTINUE" as const;
+
 export function paypalEnvironment(): PayPalEnvironment {
   const raw = (Deno.env.get("PAYPAL_ENVIRONMENT") ?? "sandbox").toLowerCase();
   return raw === "live" || raw === "production" ? "live" : "sandbox";
@@ -58,9 +66,13 @@ export function paypalWebhookIdSource(): string | null {
 }
 
 export function paypalConfigStatus() {
+  const clientId = paypalPublicClientId();
   return {
     environment: paypalEnvironment(),
-    client_id_configured: !!paypalPublicClientId(),
+    intent: PAYPAL_CHECKOUT_INTENT,
+    user_action: PAYPAL_CHECKOUT_USER_ACTION,
+    client_id_configured: !!clientId,
+    client_id_prefix: clientId ? clientId.slice(0, 8) : null,
     client_secret_configured: !!(paypalEnvironment() === "sandbox"
       ? Deno.env.get("PAYPAL_SANDBOX_CLIENT_SECRET") ?? Deno.env.get("PAYPAL_CLIENT_SECRET")
       : Deno.env.get("PAYPAL_CLIENT_SECRET")),
@@ -566,9 +578,10 @@ export async function createPayPalOrder(input: CreateOrderInput) {
     ...(discountCents ? { discount: money(discountCents, currency) } : {}),
   };
 
-  // AUTHORIZE places a temporary hold on approval; nothing is charged until
-  // an explicit capture. CAPTURE (the default) charges on approval.
-  const intent = input.intent === "AUTHORIZE" ? "AUTHORIZE" : "CAPTURE";
+  // Marketplace checkout always creates CAPTURE orders. `user_action` below
+  // controls the final-review UI independently: approval itself does not call
+  // capture; Vendibook captures only after the buyer submits the review step.
+  const intent = PAYPAL_CHECKOUT_INTENT;
   const shipping = buildShipping(input.shipping);
   // Buyer contact rides on the shipping object so PayPal can prefill login and
   // run the Contact Module. It is sent even on NO_SHIPPING orders.
@@ -642,7 +655,7 @@ export async function createPayPalOrder(input: CreateOrderInput) {
             // CONTINUE: PayPal hands the payer back to Vendibook after they
             // approve, and Vendibook shows a final Review & authorize step
             // before anything is captured. Never PAY_NOW.
-            user_action: "CONTINUE",
+            user_action: PAYPAL_CHECKOUT_USER_ACTION,
 
             landing_page: "LOGIN",
             // Server half of App Switch. The SDK sets appSwitchWhenAvailable.

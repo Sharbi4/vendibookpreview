@@ -2,6 +2,8 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { corsHeaders, jsonResponse } from "../_shared/jsonError.ts";
 import {
   PARTNER_ATTRIBUTION_ID,
+  PAYPAL_CHECKOUT_INTENT,
+  PAYPAL_CHECKOUT_USER_ACTION,
   paypalConfigStatus,
   paypalPublicClientId,
 } from "../_shared/paypal.ts";
@@ -19,6 +21,8 @@ serve((req) => {
   return jsonResponse(200, {
     enabled: status.client_id_configured && status.client_secret_configured,
     environment: status.environment,
+    intent: PAYPAL_CHECKOUT_INTENT,
+    user_action: PAYPAL_CHECKOUT_USER_ACTION,
     client_id: paypalPublicClientId(),
     partner_attribution_id: PARTNER_ATTRIBUTION_ID,
     currency: "USD",

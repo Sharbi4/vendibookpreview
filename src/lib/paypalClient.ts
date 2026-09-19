@@ -13,6 +13,8 @@ import { supabase } from '@/integrations/supabase/client';
 export interface PayPalRuntimeConfig {
   enabled: boolean;
   environment: 'sandbox' | 'live';
+  intent: 'CAPTURE';
+  user_action: 'CONTINUE';
   client_id: string | null;
   /** PayPal-assigned BN code. Required on the SDK script tag. */
   partner_attribution_id?: string | null;
@@ -123,7 +125,7 @@ export interface PayPalSdkOptions {
 }
 
 export function loadPayPalSdk(options: PayPalSdkOptions = {}): Promise<any> {
-  return loadSdk('capture', options);
+  return loadSdk(null, options);
 }
 
 /**
@@ -180,7 +182,7 @@ function componentsFor(config: PayPalRuntimeConfig, intent: 'capture' | 'authori
   return base.filter((c) => c !== 'card-fields');
 }
 
-function loadSdk(intent: 'capture' | 'authorize', options: PayPalSdkOptions = {}): Promise<any> {
+function loadSdk(requestedIntent: 'authorize' | null, options: PayPalSdkOptions = {}): Promise<any> {
   const wallets = options.wallets === true;
   const merchant = options.merchantId || 'first-party';
 
@@ -188,6 +190,9 @@ function loadSdk(intent: 'capture' | 'authorize', options: PayPalSdkOptions = {}
     if (!config.enabled || !config.client_id) {
       throw new Error('PayPal is not configured yet.');
     }
+    // Normal checkout always follows the server-provided canonical intent.
+    // The explicit authorize branch is only for separate verification holds.
+    const intent = requestedIntent ?? config.intent.toLowerCase();
     const components = componentsFor(config, intent, wallets);
     const key = [
       config.environment,
@@ -213,8 +218,9 @@ function loadSdk(intent: 'capture' | 'authorize', options: PayPalSdkOptions = {}
         currency: config.currency || 'USD',
         intent,
         components: components.join(','),
-        // Pay Now: buyers see "Pay Now" in PayPal, never "Continue".
-        commit: intent === 'capture' ? 'true' : 'false',
+        // `CONTINUE` returns the buyer for Vendibook's final review. It is
+        // independent of CAPTURE vs AUTHORIZE and therefore always false here.
+        commit: config.user_action === 'CONTINUE' ? 'false' : 'true',
       });
       // Seller-routed (Connected Path) checkout must name the payee here.
       if (options.merchantId) params.set('merchant-id', options.merchantId);
