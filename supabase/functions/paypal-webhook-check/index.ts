@@ -1,5 +1,5 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
-import { paypalRequest, paypalEnvironment } from '../_shared/paypal.ts'
+import { paypalRequest, paypalEnvironment, getPayPalAccessTokenForEnv } from '../_shared/paypal.ts'
 
 // Temporary one-time diagnostic: confirms a PayPal webhook ID exists in the
 // sandbox, reports its URL and subscribed event types, and can simulate an
