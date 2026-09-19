@@ -41,7 +41,7 @@ export interface QuoteResult {
   /** Amount owed to the seller/host (never includes tax). */
   sellerProceedsCents: number;
   description: string;
-  breakdown: Array<{ label: string; amountCents: number; kind?: "fee" | "credit" }>;
+  breakdown: Array<{ label: string; amountCents: number; kind?: "fee" | "credit" | "tax" }>;
   sellerId: string | null;
   buyerId: string | null;
   listingId: string | null;
@@ -78,7 +78,7 @@ export function applyTaxToQuote(
   quote.taxRatePct = tax.ratePct;
   quote.taxState = tax.state;
   quote.taxSource = tax.source;
-  quote.breakdown.push({ label: tax.label, amountCents: tax.taxCents, kind: "fee" });
+  quote.breakdown.push({ label: tax.label, amountCents: tax.taxCents, kind: "tax" });
   return quote;
 }
 

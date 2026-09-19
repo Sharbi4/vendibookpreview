@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { AlertTriangle, ArrowRight, Clock, ShieldCheck } from 'lucide-react';
+import { AlertTriangle } from 'lucide-react';
 
 import SEO from '@/components/SEO';
 import Header from '@/components/layout/Header';
@@ -18,8 +18,6 @@ type Outcome =
   | { kind: 'signin' }
   /** Approved at PayPal, nothing captured — final authorize step. */
   | { kind: 'review'; data: ReviewData }
-  | { kind: 'authorized'; reference: string; message?: string | null }
-  | { kind: 'pending'; reference: string; message?: string | null }
   | { kind: 'failed'; title: string; detail: string };
 
 
@@ -112,8 +110,7 @@ const PaymentReturn = () => {
 
       const review = data as ReviewData;
       const ref = review.reference;
-      const done = ['completed', 'authorized', 'pending'].includes(review.record_status);
-      if (done) {
+       if (review.record_status === 'completed') {
         try {
           sessionStorage.removeItem('pp-checkout-return');
         } catch {
@@ -183,6 +180,13 @@ const PaymentReturn = () => {
                 orderId={outcome.data.order_id ?? orderId}
                 initialData={outcome.data}
                 onAuthorized={(result) => {
+                  if (result.status !== 'completed') {
+                    failWith(
+                      'This payment is not complete',
+                      result.message ?? 'PayPal has not completed this payment. Return to checkout and try again.',
+                    );
+                    return;
+                  }
                   try {
                     sessionStorage.removeItem('pp-checkout-return');
                   } catch {
@@ -196,37 +200,6 @@ const PaymentReturn = () => {
                 }}
               />
             </div>
-          ) : outcome.kind === 'authorized' ? (
-
-            <>
-              <ShieldCheck className="mx-auto h-9 w-9 text-primary" />
-              <h1 className="mt-4 text-xl font-semibold tracking-tight text-foreground">
-                Payment authorized — not charged yet
-              </h1>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {outcome.message ??
-                  'PayPal is holding these funds. You are only charged once this transaction is confirmed.'}
-              </p>
-              <Button asChild className="mt-6 w-full">
-                <Link to={`/receipt/${outcome.reference}`}>
-                  View your receipt <ArrowRight className="ml-2 h-4 w-4" />
-                </Link>
-              </Button>
-            </>
-          ) : outcome.kind === 'pending' ? (
-            <>
-              <Clock className="mx-auto h-9 w-9 text-primary" />
-              <h1 className="mt-4 text-xl font-semibold tracking-tight text-foreground">
-                PayPal is still clearing this payment
-              </h1>
-              <p className="mt-2 text-sm text-muted-foreground">
-                {outcome.message ??
-                  'Nothing further is needed from you. We will email you the moment it settles.'}
-              </p>
-              <Button asChild className="mt-6 w-full">
-                <Link to={`/receipt/${outcome.reference}`}>View your receipt</Link>
-              </Button>
-            </>
           ) : (
             <>
               <AlertTriangle className="mx-auto h-9 w-9 text-primary" />

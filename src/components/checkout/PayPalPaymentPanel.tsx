@@ -252,18 +252,11 @@ const PayPalPaymentPanel = ({
       return true;
     }
     if (data.status === 'authorized') {
-      setHoldMessage(data.message ?? null);
-      setState('authorized');
-      onSuccess?.({ reference: data.reference, authorized: true, message: data.message });
-      setTimeout(() => goToResult(data.reference), 1400);
-      return true;
+      return false;
     }
     if (data.status === 'pending') {
       setState('pending');
       onSuccess?.({ reference: data.reference, pending: true, message: data.message });
-      // Pending is not paid, but it IS a real record: the receipt states the
-      // pending status honestly rather than a second confirmation screen.
-      setTimeout(() => goToResult(data.reference), 1400);
       return true;
     }
     return false;
@@ -366,7 +359,6 @@ const PayPalPaymentPanel = ({
     if (result.pending) {
       setState('pending');
       onSuccess?.(result);
-      setTimeout(() => goToResult(result.reference), 1400);
       return;
     }
 
@@ -611,17 +603,13 @@ const PayPalPaymentPanel = ({
                   orderId={approved.orderId}
                   sourceHint={approved.source}
                   onAuthorized={(result) => {
-                    if (result.status === 'authorized') {
-                      setHoldMessage(result.message ?? null);
-                      setState('authorized');
-                      onSuccess?.({ reference: result.reference, authorized: true, message: result.message ?? undefined });
-                      setTimeout(() => goToResult(result.reference), 1400);
-                      return;
-                    }
                     if (result.status === 'pending') {
                       setState('pending');
                       onSuccess?.({ reference: result.reference, pending: true, message: result.message ?? undefined });
-                      setTimeout(() => goToResult(result.reference), 1400);
+                      return;
+                    }
+                    if (result.status !== 'completed') {
+                      fail('Payment not completed', result.message ?? 'PayPal did not complete this payment. Please try again.');
                       return;
                     }
                     setState('success');

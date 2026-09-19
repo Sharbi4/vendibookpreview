@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowRight, Loader2, MapPin, Printer, Receipt } from 'lucide-react';
 
 import SEO from '@/components/SEO';
@@ -60,6 +60,7 @@ interface SaleInfo {
   delivery_instructions: string | null;
   shipping_notes: string | null;
   estimated_delivery_date: string | null;
+  tax_jurisdiction: string | null;
 }
 
 interface BookingInfo {
@@ -73,6 +74,7 @@ interface BookingInfo {
   message: string | null;
   status: string | null;
   host_id: string | null;
+  tax_jurisdiction: string | null;
 }
 
 interface ReceiptLine {
@@ -110,6 +112,7 @@ const toLines = (raw: unknown): ReceiptLine[] => {
   return raw.flatMap((entry) => {
     if (!entry || typeof entry !== 'object') return [];
     const line = entry as Record<string, any>;
+    if (/^(estimated\s+)?(?:sales\s+)?tax\b/i.test(String(line.name ?? ''))) return [];
     const unitCents = typeof line.unitAmountCents === 'number'
       ? line.unitAmountCents
       : Math.round(Number(line.unit_amount?.value ?? 0) * 100);
@@ -134,6 +137,7 @@ const OrderReceipt = () => {
   const { reference: routeReference } = useParams<{ reference: string }>();
   const [params] = useSearchParams();
   const reference = routeReference ?? params.get('ref') ?? '';
+  const navigate = useNavigate();
 
   const [order, setOrder] = useState<OrderRecord | null>(null);
   const [listing, setListing] = useState<ListingInfo | null>(null);
@@ -170,6 +174,11 @@ const OrderReceipt = () => {
         return;
       }
 
+      if (data.payment_status !== 'completed') {
+        navigate(`/payment/return?ref=${encodeURIComponent(data.reference)}`, { replace: true });
+        return;
+      }
+
       setOrder(data as unknown as OrderRecord);
 
       if (data.listing_id) {
@@ -185,7 +194,7 @@ const OrderReceipt = () => {
         const { data: s } = await supabase
           .from('sale_transactions')
           .select(
-            'buyer_name, buyer_email, buyer_phone, buyer_address1, buyer_address2, buyer_city, buyer_state, buyer_zip, fulfillment_type, delivery_address, delivery_instructions, shipping_notes, estimated_delivery_date',
+            'buyer_name, buyer_email, buyer_phone, buyer_address1, buyer_address2, buyer_city, buyer_state, buyer_zip, fulfillment_type, delivery_address, delivery_instructions, shipping_notes, estimated_delivery_date, tax_jurisdiction',
           )
           .eq('id', data.sale_transaction_id)
           .maybeSingle();
@@ -196,7 +205,7 @@ const OrderReceipt = () => {
         const { data: b } = await supabase
           .from('booking_requests')
           .select(
-            'start_date, end_date, start_time, end_time, fulfillment_selected, delivery_address, delivery_instructions, message, status, host_id',
+            'start_date, end_date, start_time, end_time, fulfillment_selected, delivery_address, delivery_instructions, message, status, host_id, tax_jurisdiction',
           )
           .eq('id', data.booking_request_id)
           .maybeSingle();
@@ -223,15 +232,13 @@ const OrderReceipt = () => {
     return () => {
       cancelled = true;
     };
-  }, [reference]);
+  }, [reference, navigate]);
 
   const lines = useMemo(() => toLines(order?.order_items), [order]);
   const lineTotal = lines.reduce((sum, l) => sum + l.unitCents * l.qty, 0);
   const subtotalCents = lineTotal || Math.max(0, (order?.gross_amount_cents ?? 0) - (order?.tax_cents ?? 0));
   const totalCents = order ? order.captured_amount_cents || order.gross_amount_cents : 0;
   const refunded = order?.refunded_cents ?? 0;
-  const isHold = order?.payment_intent === 'AUTHORIZE' && order?.payment_status !== 'completed';
-  const isPending = order?.payment_status === 'pending';
   /** "Visa ending 4242 (via PayPal)" when PayPal told us the card details. */
   const paymentMethodLabel = (() => {
     const detail = (order?.metadata ?? {}) as any;
@@ -272,7 +279,7 @@ const OrderReceipt = () => {
       setEmailing(false);
     }
   };
-  const totalLabel = isPending ? 'Total pending' : isHold ? 'Authorized total' : 'Total paid';
+  const taxJurisdiction = sale?.tax_jurisdiction ?? booking?.tax_jurisdiction ?? null;
 
   const issuedAt = order ? new Date(order.captured_at ?? order.created_at) : null;
 
@@ -334,7 +341,7 @@ const OrderReceipt = () => {
                 <div className="mt-1">
                   <dt className="inline">Status </dt>
                   <dd className="inline text-foreground">
-                    {isPending ? 'Pending' : isHold ? 'Authorized (not captured)' : 'Paid'}
+                    Paid
                   </dd>
                 </div>
                 {order.paypal_capture_id ? (
@@ -353,18 +360,6 @@ const OrderReceipt = () => {
                 </div>
               </dl>
             </header>
-
-            {isPending ? (
-              <p className="mt-5 rounded-2xl border border-border/60 bg-muted/30 px-4 py-3 text-xs text-muted-foreground">
-                PayPal is still clearing this payment. It is not settled yet — we'll email you the
-                moment it does.
-              </p>
-            ) : isHold ? (
-              <p className="mt-5 rounded-2xl border border-border/60 bg-muted/30 px-4 py-3 text-xs text-muted-foreground">
-                Funds are authorized and held by PayPal — not captured or charged yet. You are charged
-                only when this transaction is confirmed.
-              </p>
-            ) : null}
 
             {/* Item */}
             {listing ? (
@@ -443,7 +438,9 @@ const OrderReceipt = () => {
                     </tr>
                   ) : null}
                   <tr>
-                    <td className="py-1 text-muted-foreground" colSpan={2}>Sales tax</td>
+                    <td className="py-1 text-muted-foreground" colSpan={2}>
+                      Sales tax{taxJurisdiction ? ` (${taxJurisdiction})` : ''}
+                    </td>
                     <td className="py-1 text-right text-foreground">{usd(order.tax_cents ?? 0, order.currency)}</td>
                   </tr>
                   {refunded > 0 ? (
@@ -454,7 +451,7 @@ const OrderReceipt = () => {
                   ) : null}
                   <tr className="border-t border-border/70">
                     <td className="pt-3 font-medium text-foreground" colSpan={2}>
-                      {totalLabel}
+                      Total paid
                     </td>
                     <td className="pt-3 text-right text-xl font-semibold tracking-tight text-foreground">
                       {usd(totalCents, order.currency)}
@@ -562,16 +559,14 @@ const OrderReceipt = () => {
 
             <footer className="mt-8 flex flex-wrap items-center gap-3 border-t border-border/70 pt-6">
               {/* Emailed copy of this receipt, only ever for a settled payment. */}
-              {!isPending && !isHold ? (
-                <button
-                  type="button"
-                  disabled={emailing}
-                  onClick={emailReceipt}
-                  className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background px-5 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted/40 disabled:opacity-60"
-                >
-                  {emailing ? 'Sending…' : 'Email me this receipt'}
-                </button>
-              ) : null}
+              <button
+                type="button"
+                disabled={emailing}
+                onClick={emailReceipt}
+                className="inline-flex items-center gap-2 rounded-full border border-border/70 bg-background px-5 py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-muted/40 disabled:opacity-60"
+              >
+                {emailing ? 'Sending…' : 'Email me this receipt'}
+              </button>
               <button
                 type="button"
                 onClick={() => window.print()}
