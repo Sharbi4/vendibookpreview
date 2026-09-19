@@ -100,6 +100,24 @@ const PayPalPaymentPanel = ({
   const stateRef = useRef<PanelState>('loading');
   stateRef.current = state;
 
+  // A payer sent back here after PayPal declined or abandoned the payment
+  // arrives with the reason stashed by the return page. Surface it in red on
+  // the payment step, then clear it so a reload doesn't repeat a stale notice.
+  useEffect(() => {
+    let stashed: string | null = null;
+    try {
+      stashed = sessionStorage.getItem('pp-decline');
+      if (stashed) sessionStorage.removeItem('pp-decline');
+    } catch {
+      stashed = null;
+    }
+    if (stashed) {
+      setError({ title: 'Payment declined', detail: stashed });
+    }
+  }, []);
+
+
+
 
   // ESC to close + lock body scroll while open (modal presentation only).
   useEffect(() => {
