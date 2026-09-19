@@ -99,6 +99,9 @@ const PayPalPaymentPanel = ({
    */
   const intentRef = useRef<'CAPTURE' | 'AUTHORIZE'>('CAPTURE');
   const [holdMessage, setHoldMessage] = useState<string | null>(null);
+  /** Sandbox-only testing notice. Never shown in live. */
+  const [isSandbox, setIsSandbox] = useState(false);
+  const [sandboxNoteDismissed, setSandboxNoteDismissed] = useState(false);
   const stateRef = useRef<PanelState>('loading');
   stateRef.current = state;
 
@@ -396,6 +399,9 @@ const PayPalPaymentPanel = ({
         const intent = result.data.intent === 'AUTHORIZE' ? 'AUTHORIZE' : 'CAPTURE';
         intentRef.current = intent;
         setSdkIntent(intent);
+        getPayPalConfig()
+          .then((cfg) => setIsSandbox(cfg.environment === 'sandbox'))
+          .catch(() => undefined);
         return intent === 'AUTHORIZE'
           ? loadPayPalAuthorizeSdk({ merchantId, pageType: 'checkout' })
           : loadPayPalSdk({ merchantId, pageType: 'checkout', wallets: true });
@@ -618,6 +624,34 @@ const PayPalPaymentPanel = ({
               ) : (
 
                 <>
+                  {isSandbox && !sandboxNoteDismissed ? (
+                    <div className="mb-3 rounded-2xl border border-border/60 bg-muted/30 px-3.5 py-3 text-xs text-muted-foreground">
+                      <div className="flex items-start gap-3">
+                        <p className="flex-1">
+                          Sandbox mode — sign in with a sandbox{' '}
+                          <strong className="text-foreground">buyer (Personal)</strong> account, not the
+                          business account that receives the money.{' '}
+                          <a
+                            href="https://developer.paypal.com/dashboard/accounts"
+                            target="_blank"
+                            rel="noreferrer"
+                            className="underline"
+                          >
+                            Sandbox accounts
+                          </a>
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => setSandboxNoteDismissed(true)}
+                          className="shrink-0 rounded-full px-2 py-0.5 text-[11px] hover:bg-muted"
+                          aria-label="Dismiss sandbox notice"
+                        >
+                          Dismiss
+                        </button>
+                      </div>
+                    </div>
+                  ) : null}
+
                   <PayPalPayLaterMessage
                     amount={totalUsd}
                     placement="checkout"
