@@ -193,7 +193,7 @@ function loadSdk(requestedIntent: 'authorize' | null, options: PayPalSdkOptions 
     }
     // Normal checkout always follows the server-provided canonical intent.
     // The explicit authorize branch is only for separate verification holds.
-    const intent = requestedIntent ?? config.intent.toLowerCase();
+    const intent: 'capture' | 'authorize' = requestedIntent ?? 'capture';
     const components = componentsFor(config, intent, wallets);
     const key = [
       config.environment,
