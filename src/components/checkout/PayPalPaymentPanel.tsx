@@ -2,12 +2,13 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { CheckCircle2, Loader2, Lock, ShieldCheck, X } from 'lucide-react';
 
 import { supabase } from '@/integrations/supabase/client';
-import { getPayPalConfig, loadPayPalAuthorizeSdk, loadPayPalSdk } from '@/lib/paypalClient';
+import { getPayPalConfig, isPayPalSdkWarm, loadPayPalAuthorizeSdk, loadPayPalSdk } from '@/lib/paypalClient';
 import { parseEdgeError } from '@/lib/edgeErrors';
 import { authPath } from '@/lib/auth/returnTo';
 import { TRUST_COPY } from '@/lib/transactionVocabulary';
 
 import PayPalPayLaterMessage from '@/components/payments/PayPalPayLaterMessage';
+import PaymentFormSkeleton from './PaymentFormSkeleton';
 import PayPalReviewAuthorize from './PayPalReviewAuthorize';
 import WalletPayButtons from './WalletPayButtons';
 
@@ -113,9 +114,29 @@ const PayPalPaymentPanel = ({
   /** Sandbox-only testing notice. Never shown in live. */
   const [isSandbox, setIsSandbox] = useState(false);
   const [sandboxNoteDismissed, setSandboxNoteDismissed] = useState(false);
+  const [showColdSkeleton, setShowColdSkeleton] = useState(false);
 
   const stateRef = useRef<PanelState>('loading');
   stateRef.current = state;
+
+  // A warm SDK resolves before this delay, so returning to the payment step
+  // never flashes a placeholder for a single frame.
+  useEffect(() => {
+    if (state !== 'loading') {
+      setShowColdSkeleton(false);
+      return;
+    }
+    if (sdkIntent && isPayPalSdkWarm(sdkIntent, {
+      merchantId,
+      pageType: 'checkout',
+      wallets: sdkIntent === 'CAPTURE',
+    })) {
+      setShowColdSkeleton(false);
+      return;
+    }
+    const timer = window.setTimeout(() => setShowColdSkeleton(true), 140);
+    return () => window.clearTimeout(timer);
+  }, [state, reloadKey, sdkIntent, merchantId]);
 
   // A payer sent back here after PayPal declined or abandoned the payment
   // arrives with the reason stashed by the return page. Surface it in red on
@@ -437,7 +458,7 @@ const PayPalPaymentPanel = ({
             style: {
               layout: 'vertical',
               shape: 'pill',
-              height: 50,
+              height: 48,
               tagline: false,
               ...(color ? { color } : {}),
             },
@@ -697,27 +718,31 @@ const PayPalPaymentPanel = ({
                     </div>
                   ) : null}
 
-                  <PayPalPayLaterMessage
-                    amount={totalUsd}
-                    placement="checkout"
-                    merchantId={merchantId}
-                    intent={sdkIntent}
-                    wallets={sdkIntent === 'CAPTURE'}
-                  />
+                  <div className="paypal-funding-stage">
+                    <div className={state === 'loading' ? 'paypal-funding-real is-loading' : 'paypal-funding-real'}>
+                      <PayPalPayLaterMessage
+                        amount={totalUsd}
+                        placement="checkout"
+                        merchantId={merchantId}
+                        intent={sdkIntent}
+                        wallets={sdkIntent === 'CAPTURE'}
+                      />
 
-                  {/* The funding slots are mounted from first paint so the
-                      surface never jumps: PayPal renders the real controls
-                      straight into these fixed-height containers. */}
-                  <div className="paypal-funding-stack" aria-busy={state === 'loading'}>
-                    <div ref={paypalButtonRef} data-funding-source="PayPal" />
-                    <div ref={venmoButtonRef} data-funding-source="Venmo" />
-                    <div ref={payLaterButtonRef} data-funding-source="Pay Later" />
-                    <div ref={cardButtonRef} data-funding-source="Debit or Credit Card" />
+                      {/* PayPal renders directly into these stable 48px slots. */}
+                      <div className="paypal-funding-stack" aria-busy={state === 'loading'}>
+                        <div ref={paypalButtonRef} data-funding-source="PayPal" />
+                        <div ref={venmoButtonRef} data-funding-source="Venmo" />
+                        <div ref={payLaterButtonRef} data-funding-source="Pay Later" />
+                        <div ref={cardButtonRef} data-funding-source="Debit or Credit Card" />
+                      </div>
+                    </div>
+
+                    {state === 'loading' && showColdSkeleton ? (
+                      <div className="paypal-funding-skeleton-layer">
+                        <PaymentFormSkeleton />
+                      </div>
+                    ) : null}
                   </div>
-
-                  {state === 'loading' ? (
-                    <div className="paypal-funding-cold" aria-hidden="true" />
-                  ) : null}
 
                   {/* Single "Powered by PayPal" line lives in the embedded
                       payment footer (PayPalEmbeddedPayment) — not here. */}

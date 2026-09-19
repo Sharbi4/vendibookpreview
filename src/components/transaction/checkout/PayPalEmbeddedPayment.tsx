@@ -5,6 +5,7 @@ import PayPalPaymentPanel, {
 } from '@/components/checkout/PayPalPaymentPanel';
 import { PayPalMonogram, PayPalWordmark } from '@/components/brand/ProviderLogos';
 import { useSellerPaymentReadiness } from '@/hooks/useSellerPaymentReadiness';
+import PaymentFormSkeleton from '@/components/checkout/PaymentFormSkeleton';
 import PaymentUnavailableState from './PaymentUnavailableState';
 
 interface PayPalEmbeddedPaymentProps {
@@ -81,10 +82,7 @@ const PayPalEmbeddedPayment = ({
       {breakdown ? <div className="v2-pay-breakdown">{breakdown}</div> : null}
 
       {readiness.loading ? (
-        /* Readiness is prefetched while the buyer is on earlier steps, so this
-           only appears on a genuinely cold lookup. It reserves the space
-           quietly — no spinner copy that makes checkout feel stalled. */
-        <div className="v2-pay-cold" aria-hidden="true" />
+        <PaymentFormSkeleton />
       ) : gatedOut ? (
         <PaymentUnavailableState
           title={
@@ -98,9 +96,11 @@ const PayPalEmbeddedPayment = ({
           messageLabel={counterparty === 'host' ? 'Message host' : 'Message seller'}
         />
       ) : blocked ? (
-        <div className="v2-pay-blocked" role="status">
-          {blockedReason || 'Complete the details above to continue to payment.'}
-        </div>
+        blockedReason ? (
+          <div className="v2-pay-blocked" role="status">{blockedReason}</div>
+        ) : (
+          <PaymentFormSkeleton />
+        )
       ) : (
         <div className="v2-pay-embed">
           <PayPalPaymentPanel

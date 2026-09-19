@@ -1271,7 +1271,6 @@ const SaleCheckout = () => {
                   returnUrl={paypalCheckout?.returnUrl}
                   totalUsd={totalPrice}
                   blocked={!paypalCheckout}
-                  blockedReason="Preparing your payment…"
                 />
               )}            </div>
           ) : null}

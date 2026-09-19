@@ -136,7 +136,7 @@ const PriceBreakdownModal = ({
             {isProcessing ? (
               <>
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                Preparing checkout...
+                <span className="sr-only">Opening secure checkout</span>
               </>
             ) : (
               <>
