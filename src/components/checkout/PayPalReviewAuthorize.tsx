@@ -60,7 +60,7 @@ interface Props {
   /** Called with the payment reference once a capture is verified. */
   onAuthorized: (result: {
     reference?: string;
-    status: 'completed' | 'authorized' | 'pending';
+    status: 'completed' | 'pending';
     message?: string | null;
   }) => void;
   /** Back to the PayPal buttons without losing the order. */
@@ -119,14 +119,17 @@ const PayPalReviewAuthorize = ({
     setSubmitting(true);
     setError(null);
 
-    const authorizeFlow = data.payment_intent === 'AUTHORIZE';
-    const fn = authorizeFlow ? 'paypal-authorize-order' : 'paypal-capture-order';
-    const { data: result, error: fnError } = await supabase.functions.invoke(fn, {
+    if (data.payment_intent !== 'CAPTURE') {
+      setSubmitting(false);
+      setError('This payment uses an outdated payment flow. Choose another payment method to restart safely.');
+      return;
+    }
+    const { data: result, error: fnError } = await supabase.functions.invoke('paypal-capture-order', {
       body: { order_id: data.order_id ?? orderId },
     });
     setSubmitting(false);
 
-    if (fnError || !result || (result.status !== 'completed' && result.status !== 'authorized' && !result.pending)) {
+    if (fnError || !result || (result.status !== 'completed' && !result.pending)) {
       const parsed = await parseEdgeError(fnError, result?.error ? result : null);
       setError(
         parsed.message ||
@@ -137,11 +140,7 @@ const PayPalReviewAuthorize = ({
 
     onAuthorized({
       reference: result.reference ?? data.reference,
-      status: result.status === 'authorized'
-        ? 'authorized'
-        : result.pending
-          ? 'pending'
-          : 'completed',
+      status: result.pending ? 'pending' : 'completed',
       message: result.message ?? null,
     });
   };

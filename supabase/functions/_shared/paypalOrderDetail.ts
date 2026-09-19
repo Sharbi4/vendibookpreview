@@ -56,6 +56,7 @@ export function buildOrderDetail(
   for (const line of quote.breakdown ?? []) {
     const amount = Math.round(line.amountCents);
     if (!amount) continue;
+    if (line.kind === "tax") continue;
     if (amount < 0 || line.kind === "credit") {
       discountCents += Math.abs(amount);
       continue;

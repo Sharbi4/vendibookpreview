@@ -496,8 +496,8 @@ serve(async (req) => {
     }
 
     // ── Payment policy ───────────────────────────────────────────────────
-    // Decided server-side only. The browser never chooses whether money is
-    // captured now or merely authorized (a temporary PayPal hold).
+    // Eligibility remains server-side. Marketplace checkout itself always
+    // creates a CAPTURE order and waits for the buyer's final Submit action.
     const decision: PaymentStrategyDecision = strategyContext
       ? determinePaymentStrategy({ ...strategyContext, grossCents: quote.grossCents })
       : determinePaymentStrategy({ mode: "sale", grossCents: quote.grossCents, requiresSellerAcceptance: false });

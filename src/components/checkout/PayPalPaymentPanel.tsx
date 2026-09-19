@@ -62,8 +62,6 @@ type PanelState =
   | 'processing'
   | 'success'
   | 'pending'
-  /** PayPal is holding the funds; nothing has been charged yet. */
-  | 'authorized'
   | 'error';
 
 
@@ -98,13 +96,12 @@ const PayPalPaymentPanel = ({
   // null until `paypal-checkout-intent` answers. Nothing intent-specific
   // (Pay Later messaging, wallets) may load before that, or the browser would
   // pull a CAPTURE bundle into an AUTHORIZE checkout.
-  const [sdkIntent, setSdkIntent] = useState<'CAPTURE' | 'AUTHORIZE' | null>(null);
+  const [sdkIntent, setSdkIntent] = useState<'CAPTURE' | null>(null);
   /**
    * Set from the server's create-order response. The server alone decides
    * whether this checkout captures now or places a temporary hold.
    */
-  const intentRef = useRef<'CAPTURE' | 'AUTHORIZE'>('CAPTURE');
-  const [holdMessage, setHoldMessage] = useState<string | null>(null);
+  const intentRef = useRef<'CAPTURE'>('CAPTURE');
   /**
    * Set once the payer approves at PayPal. Nothing is captured at that point:
    * the panel shows the Review & authorize step and only the payer's explicit
@@ -219,8 +216,12 @@ const PayPalPaymentPanel = ({
     }
 
 
-    intentRef.current = data.payment_intent === 'AUTHORIZE' ? 'AUTHORIZE' : 'CAPTURE';
-    setHoldMessage(typeof data.buyer_message === 'string' ? data.buyer_message : null);
+    if (data.payment_intent !== 'CAPTURE') {
+      const message = 'PayPal returned an incompatible payment intent. Nothing was charged — please try again.';
+      fail('Payment could not be started', message);
+      throw new Error(message);
+    }
+    intentRef.current = 'CAPTURE';
     return data.order_id as string;
   };
 
@@ -251,19 +252,9 @@ const PayPalPaymentPanel = ({
       setTimeout(() => goToResult(data.reference), 900);
       return true;
     }
-    if (data.status === 'authorized') {
-      setHoldMessage(data.message ?? null);
-      setState('authorized');
-      onSuccess?.({ reference: data.reference, authorized: true, message: data.message });
-      setTimeout(() => goToResult(data.reference), 1400);
-      return true;
-    }
     if (data.status === 'pending') {
       setState('pending');
       onSuccess?.({ reference: data.reference, pending: true, message: data.message });
-      // Pending is not paid, but it IS a real record: the receipt states the
-      // pending status honestly rather than a second confirmation screen.
-      setTimeout(() => goToResult(data.reference), 1400);
       return true;
     }
     return false;
@@ -277,52 +268,6 @@ const PayPalPaymentPanel = ({
    */
   const finishOrder = async (orderID: string): Promise<'restart' | void> => {
     setState('processing');
-
-    // AUTHORIZE flow: place the temporary hold. No money moves until the
-    // transaction is confirmed and the hold is captured server-side.
-    if (intentRef.current === 'AUTHORIZE') {
-      const { data: auth, error: authErr } = await supabase.functions.invoke(
-        'paypal-authorize-order',
-        { body: { order_id: orderID } },
-      );
-      if (authErr || !auth || (auth.status !== 'authorized' && auth.status !== 'completed')) {
-        if (await reconcile(orderID)) return;
-        const parsed = await parseEdgeError(authErr, auth?.error ? auth : null);
-        const payerAction = parsed.raw?.payer_action_url as string | undefined;
-        if (payerAction) {
-          // PayPal returned a `payer-action` link: the buyer must finish
-          // approving there. Send them to it instead of dead-ending.
-          setState('ready');
-          setError({
-            title: 'PayPal needs one more step',
-            detail: 'Finish approving this payment in the PayPal window that just opened.',
-          });
-          window.open(payerAction, '_blank', 'noopener,noreferrer');
-          return;
-        }
-        if (parsed.raw?.recoverable === true) {
-          setState('ready');
-          setError({
-            title: 'That payment method was declined',
-            detail: parsed.message ||
-              'PayPal declined that payment method. Nothing was charged — choose another one.',
-          });
-          return 'restart';
-        }
-        setState('error');
-        setError({
-          title: 'Payment not authorized',
-          detail: auth?.message || parsed.message ||
-            'We could not authorize this payment and nothing has been charged. Please try again or use another method.',
-        });
-        return;
-      }
-      setHoldMessage(auth.message ?? null);
-      setState('authorized');
-      onSuccess?.({ reference: auth.reference, authorized: true, message: auth.message });
-      setTimeout(() => goToResult(auth.reference), 1400);
-      return;
-    }
 
     const { data: result, error: fnError } = await supabase.functions.invoke(
       'paypal-capture-order',
@@ -366,7 +311,6 @@ const PayPalPaymentPanel = ({
     if (result.pending) {
       setState('pending');
       onSuccess?.(result);
-      setTimeout(() => goToResult(result.reference), 1400);
       return;
     }
 
@@ -407,7 +351,7 @@ const PayPalPaymentPanel = ({
           const raw = sessionStorage.getItem(cacheKey);
           if (raw) {
             const cached = JSON.parse(raw) as { intent?: string; at?: number };
-            if ((cached.intent === 'AUTHORIZE' || cached.intent === 'CAPTURE') &&
+            if (cached.intent === 'CAPTURE' &&
                 typeof cached.at === 'number' && Date.now() - cached.at < 5 * 60_000) {
               return { data: { intent: cached.intent }, error: null };
             }
@@ -415,7 +359,7 @@ const PayPalPaymentPanel = ({
         } catch { /* cache unreadable — fetch fresh */ }
         return supabase.functions.invoke('paypal-checkout-intent', { body: target })
           .then((res) => {
-            if (!res.error && (res.data?.intent === 'AUTHORIZE' || res.data?.intent === 'CAPTURE')) {
+            if (!res.error && res.data?.intent === 'CAPTURE') {
               try {
                 sessionStorage.setItem(cacheKey, JSON.stringify({ intent: res.data.intent, at: Date.now() }));
               } catch { /* storage full/blocked — ignore */ }
@@ -611,17 +555,13 @@ const PayPalPaymentPanel = ({
                   orderId={approved.orderId}
                   sourceHint={approved.source}
                   onAuthorized={(result) => {
-                    if (result.status === 'authorized') {
-                      setHoldMessage(result.message ?? null);
-                      setState('authorized');
-                      onSuccess?.({ reference: result.reference, authorized: true, message: result.message ?? undefined });
-                      setTimeout(() => goToResult(result.reference), 1400);
-                      return;
-                    }
                     if (result.status === 'pending') {
                       setState('pending');
                       onSuccess?.({ reference: result.reference, pending: true, message: result.message ?? undefined });
-                      setTimeout(() => goToResult(result.reference), 1400);
+                      return;
+                    }
+                    if (result.status !== 'completed') {
+                      fail('Payment not completed', result.message ?? 'PayPal did not complete this payment. Please try again.');
                       return;
                     }
                     setState('success');
@@ -649,19 +589,6 @@ const PayPalPaymentPanel = ({
                   </div>
                   <p className="mt-4 text-lg font-semibold text-foreground">Payment confirmed</p>
                   <p className="text-xs text-muted-foreground mt-1">Redirecting to your receipt…</p>
-                </div>
-              ) : state === 'authorized' ? (
-                <div className="py-10 flex flex-col items-center justify-center text-center animate-fade-in">
-                  <div className="relative h-16 w-16 rounded-full bg-primary/15 flex items-center justify-center border border-primary/30">
-                    <ShieldCheck className="h-9 w-9 text-primary" />
-                  </div>
-                  <p className="mt-4 text-lg font-semibold text-foreground">
-                    Payment authorized — not charged yet
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1 max-w-sm">
-                    {holdMessage ??
-                      'PayPal is holding these funds temporarily. You are only charged once this transaction is confirmed.'}
-                  </p>
                 </div>
               ) : state === 'pending' ? (
                 <div className="py-8 text-center space-y-2">
