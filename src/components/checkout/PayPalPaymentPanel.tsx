@@ -7,11 +7,9 @@ import { parseEdgeError } from '@/lib/edgeErrors';
 import { authPath } from '@/lib/auth/returnTo';
 import { TRUST_COPY } from '@/lib/transactionVocabulary';
 
-import { PayPalMonogram } from '@/components/brand/ProviderLogos';
 import PayPalPayLaterMessage from '@/components/payments/PayPalPayLaterMessage';
 import PaymentFormSkeleton from './PaymentFormSkeleton';
 import WalletPayButtons from './WalletPayButtons';
-import TrustRow from './TrustRow';
 
 export type PayPalCheckoutTarget =
   | { kind: 'sale'; id: string }
@@ -243,7 +241,28 @@ const PayPalPaymentPanel = ({
           setState('signin');
           return null;
         }
-        return supabase.functions.invoke('paypal-checkout-intent', { body: target });
+        // Cached per-target for a few minutes so returning to the payment
+        // step doesn't re-wait on the intent check before the SDK loads.
+        const cacheKey = `pp-intent:${target.kind}:${'id' in target ? target.id : target.slug}`;
+        try {
+          const raw = sessionStorage.getItem(cacheKey);
+          if (raw) {
+            const cached = JSON.parse(raw) as { intent?: string; at?: number };
+            if ((cached.intent === 'AUTHORIZE' || cached.intent === 'CAPTURE') &&
+                typeof cached.at === 'number' && Date.now() - cached.at < 5 * 60_000) {
+              return { data: { intent: cached.intent }, error: null };
+            }
+          }
+        } catch { /* cache unreadable — fetch fresh */ }
+        return supabase.functions.invoke('paypal-checkout-intent', { body: target })
+          .then((res) => {
+            if (!res.error && (res.data?.intent === 'AUTHORIZE' || res.data?.intent === 'CAPTURE')) {
+              try {
+                sessionStorage.setItem(cacheKey, JSON.stringify({ intent: res.data.intent, at: Date.now() }));
+              } catch { /* storage full/blocked — ignore */ }
+            }
+            return res;
+          });
       })
       .then(async (result) => {
         if (!result) return null;

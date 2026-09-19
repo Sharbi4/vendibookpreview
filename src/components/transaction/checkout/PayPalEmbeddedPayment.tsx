@@ -117,8 +117,12 @@ const PayPalEmbeddedPayment = ({
       )}
 
       <p className="v2-pay-foot">
-        <Lock aria-hidden />
-        Payment processed through PayPal. Vendibook does not store your full card number.
+        <PayPalMonogram aria-hidden className="h-3.5" />
+        Powered by PayPal
+        <span className="v2-pay-foot-links">
+          <a href="/terms" target="_blank" rel="noreferrer">Terms</a>
+          <a href="/privacy" target="_blank" rel="noreferrer">Privacy</a>
+        </span>
       </p>
     </div>
   );
