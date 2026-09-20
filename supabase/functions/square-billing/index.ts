@@ -34,8 +34,10 @@ Deno.serve(async req => {
         if (!consent || consent.user_id !== user.id || consent.revoked_at || consent.related_ids?.product_slug !== product.slug) return jsonError(400,'consent','Accept recurring billing terms before subscribing.');
         const active = check(await admin.from('host_subscriptions').select('id').eq('user_id',user.id).in('status',['active','trialing','past_due','unpaid']).limit(1));
         if (active?.length) return jsonError(409,'existing_subscription','You already have a membership. Manage it before starting another subscription.');
-        const legacy = check(await admin.from('paypal_subscriptions').select('id').eq('user_id',user.id).in('status',['active','approved','approval_pending']).limit(1));
-        if (legacy?.length) return jsonError(409,'existing_subscription','An existing PayPal subscription or approval must be resolved before starting Square billing.');
+        // Only a billing-active PayPal subscription blocks Square. `approval_pending`
+        // rows are abandoned approvals that never became a membership.
+        const legacy = check(await admin.from('paypal_subscriptions').select('id').eq('user_id',user.id).in('status',['active','approved']).limit(1));
+        if (legacy?.length) return jsonError(409,'existing_subscription','An existing PayPal membership must be cancelled before starting a new one.');
         plan = check(await admin.from('square_billing_plans').select('*').eq('product_id',product.id).eq('environment',config.environment).eq('billing_interval',interval).maybeSingle());
         if (!plan) return jsonError(409,'plan_unavailable','This billing option is not configured yet.');
         if(Number(consent.related_ids?.price_cents_shown)!==plan.price_cents) return jsonError(409,'consent_price','The plan price changed. Review the current billing terms again.');
