@@ -1,4 +1,8 @@
 # PayPal sandbox rejection review
+
+## Current mode: regular sandbox testing
+The normal PayPal request path no longer reads the legacy negative-test secrets and strips any PayPal-Mock-Response header. This supersedes the negative-test activation instructions below. Deploy paypal-capture-order with the updated shared paypal.ts to activate regular captures. PayPal's real success, pending and refusal responses remain authoritative; sandbox has not been switched to live.
+
 Reviewed 2026-09-20 against Vendibook LC - Integration Guide (24 pages) and PayPal's official documentation. Branch: `fix/paypal-webhook-config`.
 
 ## What is verified

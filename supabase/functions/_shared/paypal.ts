@@ -1,5 +1,4 @@
 import { cardPaymentSource } from "./paypalCardPolicy.ts";
-import { sandboxCaptureTestHeaders } from './paypalSandboxTest.ts';
 /**
  * Vendibook PayPal service layer.
  *
@@ -285,10 +284,12 @@ export async function paypalRequest<T = any>(
         "PayPal-Partner-Attribution-Id": PARTNER_ATTRIBUTION_ID,
         ...(extraHeaders ?? {}),
       };
-      Object.assign(headers, sandboxCaptureTestHeaders(
-        env, method, path, Deno.env.get("PAYPAL_SANDBOX_DECLINE_ORDER_ID"),
-        Deno.env.get("PAYPAL_SANDBOX_CAPTURE_ERROR") || "INSTRUMENT_DECLINED",
-      ));
+      // Normal checkout must use PayPal's actual outcome. Legacy negative-test
+      // secrets are intentionally ignored, including ALL_SANDBOX_ORDERS.
+      // Also prevent a caller from accidentally reintroducing a mock response.
+      for (const name of Object.keys(headers)) {
+        if (name.toLowerCase() === "paypal-mock-response") delete headers[name];
+      }
       if (idempotencyKey) headers["PayPal-Request-Id"] = idempotencyKey;
       // Identifies an onboarded seller on merchant-scoped calls (Step 2
       // onboarding/status). It never changes who is paid on an order — orders
