@@ -325,7 +325,24 @@ Deno.serve(async (req) => {
             capabilities: [],
           });
         }
-        throw err;
+        // 401 AUTHORIZATION_ERROR on the tracking-id lookup: retry once via
+        // the seller's merchant id (path lookup), which some partner apps are
+        // authorized for when the tracking lookup is not. If that also fails,
+        // probe which account the credentials belong to, then surface the
+        // original error.
+        if (
+          err instanceof PayPalError && err.status === 401 &&
+          err.issue === "AUTHORIZATION_ERROR" && row.merchant_id
+        ) {
+          try {
+            raw = await getMerchantIntegrationStatus(row.merchant_id);
+          } catch (retryErr) {
+            await probePartnerIdentity();
+            throw retryErr;
+          }
+        } else {
+          throw err;
+        }
       }
       const derived = deriveStatus(raw);
 
