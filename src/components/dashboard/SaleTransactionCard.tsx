@@ -34,6 +34,7 @@ const getSaleNextAction = (
   if (role === 'buyer') {
     switch (status) {
       case 'pending': return 'Complete checkout to secure your purchase. Your card is not charged until you finish.';
+      case 'payment_failed': return 'Your payment attempt failed. Open the purchase to retry payment.';
       case 'paid':
         if (hasShipping && !tx.shipped_at) return 'Payment secured. The seller will ship your item shortly.';
         if (hasShipping && tx.shipped_at && !tx.delivered_at) return 'Your item is on the way. Confirm receipt once it arrives.';
@@ -48,6 +49,7 @@ const getSaleNextAction = (
   }
   switch (status) {
     case 'pending': return 'Waiting on the buyer to complete payment.';
+    case 'payment_failed': return 'The buyer’s payment attempt failed. Wait for confirmed payment before handoff.';
     case 'paid':
       if (hasShipping && !tx.shipped_at) return 'Payment secured. Ship the item and mark as shipped.';
       if (hasShipping && tx.shipped_at && !tx.delivered_at) return 'Item in transit — buyer will confirm on delivery.';
@@ -72,6 +74,7 @@ interface SaleTransactionCardProps {
 
 // Role-specific status labels for clarity
 const getStatusConfig = (status: string, role: 'buyer' | 'seller', transaction: SaleTransaction) => {
+  if (status === 'payment_failed') return { label: 'Payment failed', variant: 'destructive' as const, icon: AlertCircle };
   const hasShipping = transaction.fulfillment_type === 'delivery' || transaction.fulfillment_type === 'vendibook_freight';
   
   // Role-specific labels for better clarity
@@ -190,7 +193,7 @@ const SaleTransactionCard = ({
     }
   };
 
-  const showTrackingSection = role === 'buyer' && 
+  const showTrackingSection = role === 'buyer' && ['paid', 'buyer_confirmed', 'seller_confirmed', 'completed'].includes(transaction.status) &&
     (transaction.fulfillment_type === 'delivery' || transaction.fulfillment_type === 'vendibook_freight');
 
   const getShippingStatusLabel = () => {
@@ -504,6 +507,9 @@ const SaleTransactionCard = ({
             
             {/* Actions with clearer labels */}
             <div className="flex flex-wrap gap-2">
+              {role === 'buyer' && transaction.status === 'payment_failed' && (
+                <Button asChild><Link to={`/order-tracking/${transaction.id}`}>Retry payment</Link></Button>
+              )}
               {canConfirm && (
                 <Button 
                   onClick={() => onConfirm(transaction.id)}

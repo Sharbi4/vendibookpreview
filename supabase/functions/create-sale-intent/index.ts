@@ -101,7 +101,7 @@ serve(async (req) => {
       terms_id: body?.terms_id ?? null,
     };
 
-    // Reuse any pending intent for this buyer + listing so a double click or a
+    // Reuse a pending or failed purchase for this buyer + listing so a retry or
     // refresh can never create two transactions. The fulfillment selection can
     // legitimately have changed since that row was created, so re-sync it —
     // otherwise the buyer would pay against a stale delivery amount.
@@ -110,22 +110,20 @@ serve(async (req) => {
       .select("id, status, amount")
       .eq("listing_id", listingId)
       .eq("buyer_id", user.id)
-      // `payment_failed` is recoverable: a declined capture parks the order
-      // there, and starting a new attempt returns it to `pending`.
       .in("status", ["pending", "payment_failed"])
-      .gt("created_at", new Date(Date.now() - 60 * 60_000).toISOString())
+      .or(`status.eq.payment_failed,created_at.gt.${new Date(Date.now() - 60 * 60_000).toISOString()}`)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
 
     if (existing) {
-      await admin
+      const { data: updated, error: updateError } = await admin
         .from("sale_transactions")
-        .update(existing.status === "payment_failed"
-          ? { ...mutableFields, status: "pending" }
-          : mutableFields)
+        .update(mutableFields)
         .eq("id", existing.id)
-        .eq("status", existing.status);
+        .in("status", ["pending", "payment_failed"])
+        .select("id").maybeSingle();
+      if (updateError || !updated) return jsonError(409, "purchase_changed", "This purchase changed. Refresh its status before trying again.");
       return jsonResponse(200, { transaction_id: existing.id, reused: true, amount: Number(existing.amount) });
     }
 

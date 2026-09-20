@@ -11,6 +11,7 @@ type FilterId = 'all' | 'action' | 'completed' | 'cancelled';
 
 const STATUS_MAP: Record<string, { label: string; tone: 'success' | 'warning' | 'muted' | 'info'; body: string; next?: string }> = {
   pending: { label: 'Pending', tone: 'warning', body: 'Buyer started checkout but hasn\'t paid yet.', next: "We'll notify you the moment payment clears." },
+  payment_failed: { label: 'Payment failed', tone: 'warning', body: 'The buyer’s latest payment attempt was declined or failed. This purchase is unpaid.', next: 'The buyer can retry payment. Do not arrange handoff until payment is confirmed.' },
   pending_cash: { label: 'Cash pending', tone: 'warning', body: 'Buyer chose Pay in Person — this is your signal to arrange the handoff.', next: 'Mark the order paid on your end once you receive the cash.' },
   paid: { label: 'Paid — action needed', tone: 'info', body: 'The buyer paid and funds are in payment protection.', next: 'Coordinate delivery and mark the order shipped/handed off. Payout runs after buyer confirmation.' },
   buyer_confirmed: { label: 'Buyer confirmed', tone: 'info', body: 'Buyer confirmed receipt.', next: 'Your payout is queued on Vendibook\'s standard schedule.' },

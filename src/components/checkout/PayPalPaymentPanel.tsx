@@ -679,7 +679,8 @@ const PayPalPaymentPanel = ({
                   {sdkIntent === 'CAPTURE' ? (
                     <PayPalCardFields
                       target={target}
-                      createOrder={() => handlersRef.current.startOrder(true)}
+                      merchantId={merchantId}
+                      createOrder={(advanced = true) => handlersRef.current.startOrder(advanced)}
                       onApprove={(orderId) => {
                         setError(null);
                         setApproved({ orderId, source: 'card' });

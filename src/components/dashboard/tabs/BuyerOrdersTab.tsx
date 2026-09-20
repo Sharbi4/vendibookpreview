@@ -10,6 +10,7 @@ type FilterId = 'all' | 'in_progress' | 'completed' | 'cancelled';
 
 const STATUS_MAP: Record<string, { label: string; tone: 'success' | 'warning' | 'muted' | 'info'; body: string; next?: string }> = {
   pending: { label: 'Awaiting payment', tone: 'warning', body: 'Your checkout is not yet complete.', next: 'Finish payment to reserve the item.' },
+  payment_failed: { label: 'Payment failed', tone: 'warning', body: 'Your latest payment attempt was declined or failed. This purchase is unpaid.', next: 'Open the purchase to retry with another payment method.' },
   pending_cash: { label: 'Cash pending', tone: 'warning', body: 'Cash / Pay-in-Person hold — the seller has been notified.', next: "Meet the seller to hand over payment. We'll mark it paid on confirmation." },
   paid: { label: 'Paid — awaiting delivery', tone: 'info', body: 'Payment is safe with payment protection.', next: 'Confirm delivery once you receive the item — funds release to the seller after that.' },
   buyer_confirmed: { label: 'You confirmed', tone: 'success', body: 'Thanks — you confirmed delivery.', next: 'Payout to the seller runs on Vendibook\'s schedule.' },
@@ -22,7 +23,7 @@ const STATUS_MAP: Record<string, { label: string; tone: 'success' | 'warning' | 
 
 const FILTERS: { id: FilterId; label: string; match: (s: string) => boolean }[] = [
   { id: 'all', label: 'All', match: () => true },
-  { id: 'in_progress', label: 'In progress', match: (s) => ['pending', 'pending_cash', 'paid', 'buyer_confirmed', 'seller_confirmed', 'disputed'].includes(s) },
+  { id: 'in_progress', label: 'In progress', match: (s) => ['pending', 'payment_failed', 'pending_cash', 'paid', 'buyer_confirmed', 'seller_confirmed', 'disputed'].includes(s) },
   { id: 'completed', label: 'Completed', match: (s) => s === 'completed' },
   { id: 'cancelled', label: 'Cancelled', match: (s) => ['cancelled', 'refunded'].includes(s) },
 ];

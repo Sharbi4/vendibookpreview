@@ -40,6 +40,8 @@ export function paymentPill(status: string | null | undefined): StatusPill {
       return { label: 'Disputed', tone: 'danger', icon: AlertTriangle };
     case 'cancelled':
     case 'failed':
+    case 'payment_failed':
+    case 'declined':
       return { label: 'Payment failed', tone: 'danger', icon: XCircle };
     default:
       return { label: status ?? 'Awaiting payment', tone: 'neutral', icon: CreditCard };

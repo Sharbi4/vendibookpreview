@@ -12,7 +12,7 @@ export interface SaleTransaction {
   seller_payout: number;
   payment_intent_id: string | null;
   checkout_session_id: string | null;
-  status: 'pending' | 'pending_cash' | 'paid' | 'buyer_confirmed' | 'seller_confirmed' | 'completed' | 'disputed' | 'refunded' | 'cancelled';
+  status: 'pending' | 'payment_failed' | 'pending_cash' | 'paid' | 'buyer_confirmed' | 'seller_confirmed' | 'completed' | 'disputed' | 'refunded' | 'cancelled';
   buyer_confirmed_at: string | null;
   seller_confirmed_at: string | null;
   payout_completed_at: string | null;

@@ -20,12 +20,13 @@ export function validCardBilling(address: BillingAddress): boolean {
 
 interface Props {
   target: PayPalCheckoutTarget;
-  createOrder: () => Promise<string>;
+  createOrder: (advanced?: boolean) => Promise<string>;
+  merchantId?: string | null;
   onApprove: (orderId: string) => void;
 }
 
 /** PAN, expiry, CVV and cardholder name live only in PayPal-hosted iframes. */
-export default function PayPalCardFields({ target, createOrder, onApprove }: Props) {
+export default function PayPalCardFields({ target, createOrder, onApprove, merchantId }: Props) {
   const id = `pp-card-${useId().replace(/:/g, '')}`;
   const targetKey = JSON.stringify(target);
   const callbacks = useRef({ createOrder, onApprove });
@@ -33,7 +34,7 @@ export default function PayPalCardFields({ target, createOrder, onApprove }: Pro
   const cardForm = useRef<any>(null);
   const submitting = useRef(false);
   const alive = useRef(false);
-  const [state, setState] = useState<'loading' | 'ready' | 'unavailable' | 'error'>('loading');
+  const [state, setState] = useState<'loading' | 'ready' | 'standard' | 'unavailable' | 'error'>('loading');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [attempt, setAttempt] = useState(0);
@@ -54,6 +55,26 @@ export default function PayPalCardFields({ target, createOrder, onApprove }: Pro
       submitting.current = false;
       setBusy(false);
     };
+    const renderStandardCard = async (payee?: string | null) => {
+      const paypal = await loadPayPalSdk({ merchantId: payee ?? merchantId });
+      if (cancelled) return;
+      if (!paypal.Buttons || !paypal.FUNDING?.CARD) { setState('unavailable'); return; }
+      const button = paypal.Buttons({
+        fundingSource: paypal.FUNDING.CARD,
+        style: { layout: 'vertical', shape: 'pill', height: 48, color: 'black', tagline: false },
+        createOrder: () => callbacks.current.createOrder(false),
+        onApprove: (approval: { orderID?: string }) => {
+          if (!cancelled && approval.orderID) callbacks.current.onApprove(approval.orderID);
+        },
+        onCancel: () => { if (!cancelled) setError('Card checkout was cancelled. You can try again.'); },
+        onError: () => { if (!cancelled) setError('Card checkout could not be completed. Please try again.'); },
+      });
+      fields.push(button);
+      if (!button.isEligible()) { setState('unavailable'); return; }
+      setState('standard');
+      await button.render(`#${id}-standard`);
+      if (!cancelled) setState('standard');
+    };
     void (async () => {
       const { data, error: availabilityError } = await supabase.functions.invoke('paypal-checkout-intent', {
         body: { ...JSON.parse(targetKey), card_fields: true },
@@ -63,13 +84,15 @@ export default function PayPalCardFields({ target, createOrder, onApprove }: Pro
         const parsed = await parseEdgeError(availabilityError);
         throw new Error(parsed.message || 'Card checkout could not load.');
       }
-      if (data?.card_fields_eligible !== true) { setState('unavailable'); return; }
+      // Older backends have no eligibility field. Keep the supported standard
+      // card path available while Advanced Card capability/deployment catches up.
+      if (data?.card_fields_eligible !== true) { await renderStandardCard(data?.merchant_id); return; }
       const paypal = await loadPayPalSdk({ merchantId: data.merchant_id, cardFields: true });
       if (cancelled) return;
       if (!paypal.CardFields) throw new Error('Card checkout could not load.');
       const form = paypal.CardFields({
         style: { input: { 'font-size': '16px', 'font-family': 'sans-serif', color: '#27231f' }, '.invalid': { color: '#b91c1c' } },
-        createOrder: () => callbacks.current.createOrder(),
+        createOrder: () => callbacks.current.createOrder(true),
         onApprove: (approval: { orderID?: string }) => {
           if (cancelled) return;
           if (!approval.orderID) { reportError(); return; }
@@ -85,7 +108,7 @@ export default function PayPalCardFields({ target, createOrder, onApprove }: Pro
         },
       });
       cardForm.current = form;
-      if (!form.isEligible()) { setState('unavailable'); return; }
+      if (!form.isEligible()) { await renderStandardCard(data.merchant_id); return; }
       const definitions = [
         ['name', form.NameField({ placeholder: 'Full name on card' })],
         ['number', form.NumberField({ placeholder: 'Card number' })],
@@ -109,7 +132,7 @@ export default function PayPalCardFields({ target, createOrder, onApprove }: Pro
       fields.forEach(field => { try { void Promise.resolve(field.close?.()).catch(() => {}); } catch { /* already closed */ } });
     };
     // Callback identities, focus, billing input and parent renders must not reset the hosted fields.
-  }, [targetKey, id, attempt]);
+  }, [targetKey, id, attempt, merchantId]);
 
   const submit = async () => {
     if (submitting.current || state !== 'ready' || !cardForm.current) return;
@@ -136,13 +159,15 @@ export default function PayPalCardFields({ target, createOrder, onApprove }: Pro
     }
   };
 
-  if (state === 'unavailable') return null;
   const inputClass = 'mt-1.5 h-12 w-full rounded-xl border border-[#ded7ce] bg-white px-3 text-sm text-[#27231f] focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15';
   return (
     <section aria-label="Debit or credit card" aria-busy={busy || state === 'loading'} className="relative rounded-2xl border border-[#e5dfd7] bg-[#fffdf9] p-4 sm:p-5 space-y-4">
       <h3 className="flex items-center gap-2 text-sm font-semibold"><CreditCard className="h-4 w-4" />Debit or credit card</h3>
+      <div id={`${id}-standard`} aria-hidden={state !== 'standard'} className={state === 'standard' ? '' : 'absolute inset-x-4 invisible pointer-events-none'} />
+      {state === 'standard' ? <p className="text-xs text-muted-foreground">Enter your card details in PayPal’s secure checkout, then return here to review your payment.</p> : null}
+      {state === 'unavailable' ? <p role="status" className="text-sm text-muted-foreground">PayPal is not offering card checkout for this transaction. Please choose another available payment method.</p> : null}
       {state === 'loading' ? <Loader2 aria-label="Loading card fields" className="mx-auto h-5 w-5 animate-spin" /> : null}
-      <div className={state === 'ready' ? 'space-y-3' : 'absolute inset-x-4 top-12 invisible pointer-events-none'}>
+      <div aria-hidden={state !== 'ready'} className={state === 'ready' ? 'space-y-3' : 'absolute inset-x-4 top-12 invisible pointer-events-none'}>
         <div className="grid grid-cols-2 gap-3">
           {([['name', 'Name on card'], ['number', 'Card number'], ['expiry', 'Expiration date'], ['cvv', 'Security code']] as const).map(([key, label]) => (
             <div key={key} className={key === 'name' || key === 'number' ? 'col-span-2' : ''}>

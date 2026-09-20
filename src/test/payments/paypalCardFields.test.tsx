@@ -97,7 +97,8 @@ describe('real hosted card checkout', () => {
     mocks.invoke.mockResolvedValue({ data: { card_fields_eligible: false } });
     render(<PayPalCardFields target={target} createOrder={vi.fn()} onApprove={vi.fn()} />);
     await waitFor(() => expect(screen.queryByLabelText('Loading card fields')).not.toBeInTheDocument());
-    expect(mocks.sdk).not.toHaveBeenCalled();
+    expect(factory).not.toHaveBeenCalled();
+    expect(screen.getByRole('status')).toHaveTextContent('not offering card checkout');
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
   });
   it('respects SDK eligibility even when the server check passes', async () => {
@@ -106,5 +107,23 @@ describe('real hosted card checkout', () => {
     await waitFor(() => expect(factory).toHaveBeenCalledTimes(1));
     expect(screen.queryByRole('button')).not.toBeInTheDocument();
     expect(mocks.sdk).toHaveBeenCalledWith({ merchantId: 'SELLER', cardFields: true });
+  });
+  it.each([undefined, false])('keeps an eligible standard card button when advanced eligibility is %s', async eligibility => {
+    mocks.invoke.mockResolvedValue({ data: { intent: 'CAPTURE', card_fields_eligible: eligibility } });
+    let standardOptions: any;
+    const standard = { isEligible: () => true, render: vi.fn().mockResolvedValue(undefined), close: vi.fn() };
+    const Buttons = vi.fn(config => { standardOptions = config; return standard; });
+    mocks.sdk.mockResolvedValue({ CardFields: factory, Buttons, FUNDING: { CARD: 'card' } });
+    const create = vi.fn().mockResolvedValue('STANDARD_ORDER');
+    const approve = vi.fn();
+    render(<PayPalCardFields target={target} createOrder={create} onApprove={approve} />);
+    expect(await screen.findByText(/Enter your card details in PayPal/)).toBeInTheDocument();
+    expect(factory).not.toHaveBeenCalled();
+    expect(standard.render).toHaveBeenCalledTimes(1);
+    expect(await standardOptions.createOrder()).toBe('STANDARD_ORDER');
+    expect(create).toHaveBeenCalledWith(false);
+    expect(approve).not.toHaveBeenCalled();
+    act(() => standardOptions.onApprove({ orderID: 'STANDARD_ORDER' }));
+    expect(approve).toHaveBeenCalledWith('STANDARD_ORDER');
   });
 });
