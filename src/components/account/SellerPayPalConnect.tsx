@@ -81,7 +81,13 @@ export default function SellerPayPalConnect({
         throw new Error(parsed.message);
       }
       await loadConnection();
-      if (data?.status === 'ready') {
+      if (data?.status_source === 'webhook') {
+        setFlowMessage({
+          tone: 'success',
+          text: 'PayPal confirmed your connection. Your account is recorded and ready to receive payments.',
+        });
+        toast.success('Your PayPal account is connected.');
+      } else if (data?.status === 'ready') {
         setFlowMessage({ tone: 'success', text: 'PayPal confirmed your account is ready to receive payments.' });
         toast.success('Your PayPal account is connected and ready to receive payments.');
       } else if (data?.pending || data?.status === 'link_sent') {
