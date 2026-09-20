@@ -380,8 +380,9 @@ export default function SellerPayPalConnect({
                       </ul>
                     ) : (
                       <p className="mt-2 text-[11px] text-muted-foreground">
-                        PayPal hasn&apos;t reported any granted permissions yet. Check your status, or
-                        reconnect to grant them.
+                        {webhookConfirmed
+                          ? 'PayPal confirmed your account finished onboarding and granted Vendibook permission, but does not publish the itemised permission list to this app.'
+                          : "PayPal hasn't reported any granted permissions yet. Check your status, or reconnect to grant them."}
                       </p>
                     )}
                   </details>
