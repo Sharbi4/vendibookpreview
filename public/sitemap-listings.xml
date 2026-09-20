@@ -1332,17 +1332,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/7c8c1ca4-b4bf-41ef-a9df-15c61af87059</loc>
-    <lastmod>2026-09-20</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/4f98020b-a296-4760-bc2b-78ef63d15fc5/7c8c1ca4-b4bf-41ef-a9df-15c61af87059/1789316638751-ocy60s.png</image:loc>
-      <image:title>Fully equipped BBQ smoker </image:title>
-      <image:caption>Fully equipped BBQ smoker  in San Dimas, CA on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/9ad68341-90d5-4dd7-b745-17041bdbc0c2</loc>
     <lastmod>2026-09-17</lastmod>
     <changefreq>weekly</changefreq>
@@ -1373,6 +1362,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/97dc8bb1-d9d3-4bf9-960a-8674082ded44/cd1c62cd-1e1f-4d72-8811-576957af53f4/1772215158047-hcat5w2.jpg</image:loc>
       <image:title>Downtown Phoenix Private Commercial Kitchens For Rent</image:title>
       <image:caption>Downtown Phoenix Private Commercial Kitchens For Rent in Phoenix, AZ on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/7c8c1ca4-b4bf-41ef-a9df-15c61af87059</loc>
+    <lastmod>2026-09-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/4f98020b-a296-4760-bc2b-78ef63d15fc5/7c8c1ca4-b4bf-41ef-a9df-15c61af87059/1789316638751-ocy60s.png</image:loc>
+      <image:title>Fully equipped BBQ smoker </image:title>
+      <image:caption>Fully equipped BBQ smoker  in San Dimas, CA on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
