@@ -30,6 +30,16 @@ async function refreshSeller(userId: string) {
   }
   return pending;
 }
+/**
+ * PayPal confirmed the seller finished onboarding and granted consent via the
+ * MERCHANT.ONBOARDING.COMPLETED webhook, but withholds the merchant-status API
+ * from this app, so no itemised scopes are available. The recorded connection
+ * is the authoritative fact in that case.
+ */
+export function isWebhookConfirmed(row: Pick<MyPayPalConnection, 'status_source' | 'merchant_id' | 'consent_granted' | 'onboarding_status'> | null | undefined) {
+  return !!row && row.status_source === 'webhook' && !!row.merchant_id && row.consent_granted === true
+    && !['disconnected', 'revoked'].includes(row.onboarding_status);
+}
 async function readConnection(userId: string) {
   const { data, error } = await supabase.from('seller_paypal_accounts').select(COLUMNS).eq('user_id', userId).is('archived_at', null).maybeSingle();
   if (error) throw error;
