@@ -48,6 +48,7 @@ describe('DocumentsCard', () => {
   beforeEach(() => {
     rows.length = 0;
     invokeMock.mockReset();
+    invokeMock.mockResolvedValue({ data: {}, error: null });
   });
 
   it('renders nothing inline when there are no document rows', async () => {
@@ -59,6 +60,12 @@ describe('DocumentsCard', () => {
   it('explains the empty state on a Documents tab', async () => {
     const { container } = render(<DocumentsCard scope={{ transaction_id: 'tx-1' }} />);
     await waitFor(() => expect(container.textContent).toContain('No documents have been prepared'));
+  });
+
+  it('shows preparation failures instead of silently reporting no documents', async () => {
+    invokeMock.mockResolvedValue({ data: null, error: new Error('unauthorized') });
+    render(<DocumentsCard scope={{ transaction_id: 'tx-failed' }} />);
+    expect(await screen.findByText(/We could not prepare your document/)).toBeTruthy();
   });
 
   it('shows per-party status and a Review & sign action for the current signer', async () => {

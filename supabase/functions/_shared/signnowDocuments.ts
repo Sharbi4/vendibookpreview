@@ -172,9 +172,10 @@ async function findLiveDocument(
     .is('superseded_by_document_id', null)
     .order('created_at', { ascending: false })
     .limit(1);
-  const { data } = 'transaction_id' in parent
+  const { data, error } = 'transaction_id' in parent
     ? await q.eq('transaction_id', parent.transaction_id)
     : await q.eq('booking_id', parent.booking_id);
+  if (error) throw new Error(`Document lookup failed: ${error.message}`);
   return (data && data[0]) ?? null;
 }
 

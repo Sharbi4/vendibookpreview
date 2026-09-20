@@ -41,8 +41,8 @@ Deno.serve(async (req) => {
       Deno.env.get('SUPABASE_ANON_KEY')!,
       { global: { headers: { Authorization: authHeader } } },
     );
-    const { data: claims } = await userClient.auth.getClaims(authHeader.replace('Bearer ', ''));
-    const uid = claims?.claims?.sub;
+    const { data: authData, error: authError } = await userClient.auth.getUser(authHeader.replace('Bearer ', ''));
+    const uid = authError ? undefined : authData?.user?.id;
     if (!uid) return jsonError(401, 'unauthorized', 'auth required');
 
     const admin = svc();

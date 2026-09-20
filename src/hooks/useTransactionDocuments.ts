@@ -70,7 +70,10 @@ export function useTransactionDocuments(scope: DocumentScope) {
     const { data, error } = 'booking_id' in scope
       ? await query.eq('booking_id', (scope as any).booking_id)
       : await query.eq('transaction_id', (scope as any).transaction_id);
-    if (error) { console.error('[documents] load failed', error.message); return []; }
+    if (error) {
+      console.error('[documents] load failed', error.message);
+      throw new Error('We could not load your documents. Please try again.');
+    }
     const rows = (data ?? []) as unknown as DocumentRow[];
     setDocs(rows);
     return rows;
@@ -86,15 +89,20 @@ export function useTransactionDocuments(scope: DocumentScope) {
           const { data, error } = await supabase.functions.invoke('signnow-ensure-document', {
             body: { kind, ...scope },
           });
-          if (error) continue; // not a participant, or a transient backend error
+          if (error) {
+            skips.push('We could not prepare your document. Please try again or contact support.');
+            continue;
+          }
           const skipped = (data as any)?.skipped;
           if (typeof skipped === 'string' && SKIP_COPY[skipped]) skips.push(SKIP_COPY[skipped]);
         } catch {
-          // A single document failing must never break the card.
+          skips.push('We could not prepare your document. Please try again or contact support.');
         }
       }
       const rows = await load();
       setNotice(rows.length ? null : (skips[0] ?? null));
+    } catch {
+      setNotice('We could not load your documents. Please try again.');
     } finally {
       setPreparing(false);
     }
@@ -125,7 +133,10 @@ export function useTransactionDocuments(scope: DocumentScope) {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const rows = await load();
+      try { await load(); } catch {
+        if (!cancelled) setNotice('We could not load your documents. Please try again.');
+        return;
+      }
       if (cancelled || preparedFor.current === scopeKey) return;
       preparedFor.current = scopeKey;
       // Documents already exist for every kind that can exist right now? Still

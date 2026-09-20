@@ -309,3 +309,27 @@ verify_jwt = false
 
 [functions.square-setup]
 verify_jwt = false
+
+# JWT validated through auth.getUser inside the handler (supports current signing keys).
+[functions.signnow-ensure-document]
+verify_jwt = false
+
+# JWT validated through auth.getUser inside the handler (supports current signing keys).
+[functions.signnow-ensure-bill-of-sale]
+verify_jwt = false
+
+# JWT validated through auth.getUser inside the handler (supports current signing keys).
+[functions.signnow-create-embedded-session]
+verify_jwt = false
+
+# JWT validated through auth.getUser inside the handler (supports current signing keys).
+[functions.signnow-download-signed]
+verify_jwt = false
+
+# JWT validated through auth.getUser inside the handler (supports current signing keys).
+[functions.signnow-create-amendment]
+verify_jwt = false
+
+# JWT validated through auth.getUser inside the handler (supports current signing keys).
+[functions.signnow-ensure-rental-agreement]
+verify_jwt = false

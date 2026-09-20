@@ -18,8 +18,8 @@ async function isAdminCaller(authHeader: string): Promise<boolean> {
     Deno.env.get('SUPABASE_ANON_KEY')!,
     { global: { headers: { Authorization: authHeader } } },
   );
-  const { data: claims } = await userClient.auth.getClaims(token);
-  const uid = claims?.claims?.sub;
+  const { data: authData, error: authError } = await userClient.auth.getUser(token);
+  const uid = authError ? undefined : authData?.user?.id;
   if (!uid) return false;
   const svc = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!, {
     auth: { persistSession: false },
