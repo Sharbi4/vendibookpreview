@@ -12,7 +12,7 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90",
+        default: CTA_PRIMARY,
         /** Vendibook primary conversion CTA — source of truth: listing detail "Buy now". */
         cta: CTA_PRIMARY,
         /** Neutral companion to `cta` — matches the listing page outline treatment. */

@@ -2658,25 +2658,6 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
   border-radius: 12px;
 }
 .v2-checkout-dialog button.h-12:disabled { opacity: .45; }
-/* No gradient CTAs inside the checkout shell — dashboard ink buttons only. */
-.v2-checkout-section-body button[class*="gradient"],
-.v2-checkout-section-body button[class*="from-"],
-.v2-checkout-section-body a[class*="gradient"] {
-  background-image: none !important;
-  background-color: hsl(var(--vendibook-orange)) !important;
-  color: hsl(var(--v2-ink)) !important;
-  border: 1px solid hsl(var(--vendibook-orange)) !important;
-  box-shadow: none !important;
-}
-.v2-checkout-section-body .bg-cta-primary,
-.v2-checkout .bg-cta-primary {
-  background-image: none !important;
-  background-color: hsl(var(--vendibook-orange)) !important;
-  color: hsl(var(--v2-ink)) !important;
-  box-shadow: none !important;
-  border-radius: 12px !important;
-}
-
 /* ─────────────────────────────────────────────────────────────
    Order confirmation / tracking — premium ivory-and-ink surface
    matching the workspace dashboard and the new checkout.
@@ -3442,3 +3423,39 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
 .sale-wizard-referral { margin-top: 16px; border-top: 1px solid hsl(var(--v2-line)); padding-top: 12px; }
 .sale-wizard-referral > summary { cursor: pointer; font-size: 13px; font-weight: 560; color: hsl(var(--v2-stone)); }
 .sale-wizard-referral > div, .sale-wizard-referral > * + * { margin-top: 10px; }
+
+/* Primary workspace and checkout actions share the homepage / Buy now material. */
+.v2-btn,
+.v2-btn-light,
+.bg-cta-primary {
+  background: linear-gradient(135deg, #FF4B1F 0%, #FF5A1F 45%, #FF7A22 100%);
+  color: #fff;
+  border-color: transparent;
+  border-radius: 16px;
+  font-weight: 700;
+  box-shadow: 0 18px 40px rgba(255, 75, 31, .32), inset 0 1px 0 rgba(255, 255, 255, .18);
+  transition: background .2s ease, box-shadow .2s ease, transform .2s ease;
+}
+.v2-btn:hover:not(:disabled),
+.v2-btn-light:hover:not(:disabled),
+.bg-cta-primary:hover:not(:disabled) {
+  background: linear-gradient(135deg, #FF3D16 0%, #FF551C 55%, #FF721F 100%);
+  border-color: transparent;
+  color: #fff;
+}
+.v2-btn:focus-visible,
+.v2-btn-light:focus-visible {
+  outline: 2px solid hsl(var(--ring));
+  outline-offset: 3px;
+}
+.v2-btn:disabled,
+.v2-btn-light:disabled,
+.bg-cta-primary:disabled {
+  opacity: .5;
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .v2-btn, .v2-btn-light, .bg-cta-primary { transition: none; }
+}

@@ -51,8 +51,8 @@ const SaleCheckoutFooter = ({
           onClick={onPrimary}
           disabled={primaryDisabled || busy}
           className={cn(
-            'flex-1 h-12 rounded-xl bg-primary text-primary-foreground text-[15px] font-semibold',
-            'shadow-[0_8px_24px_-12px_hsl(var(--primary)/0.65)] hover:opacity-95 active:scale-[0.995] transition-all',
+            'flex-1 h-12 rounded-xl bg-cta-primary text-white text-[15px] font-semibold',
+            'shadow-cta-primary hover:opacity-95 active:scale-[0.995] transition-all',
             'disabled:opacity-50 disabled:shadow-none inline-flex items-center justify-center gap-2',
           )}
         >
@@ -97,8 +97,8 @@ const SaleCheckoutFooter = ({
             onClick={onPrimary}
             disabled={primaryDisabled || busy}
             className={cn(
-              'w-full h-12 rounded-xl bg-primary text-primary-foreground text-[15px] font-semibold',
-              'shadow-[0_8px_24px_-12px_hsl(var(--primary)/0.65)] active:scale-[0.995] transition-all',
+              'w-full h-12 rounded-xl bg-cta-primary text-white text-[15px] font-semibold',
+              'shadow-cta-primary active:scale-[0.995] transition-all',
               'disabled:opacity-50 disabled:shadow-none inline-flex items-center justify-center gap-2',
             )}
           >

@@ -611,7 +611,7 @@ const PayPalPaymentPanel = ({
                   </p>
                   <a
                     href={authPath()}
-                    className="inline-flex w-full items-center justify-center rounded-2xl bg-primary px-4 py-3.5 text-sm font-semibold text-primary-foreground shadow-[0_16px_36px_-20px_hsl(var(--primary)/0.8)] transition-opacity hover:opacity-95"
+                    className="inline-flex w-full items-center justify-center rounded-2xl bg-cta-primary px-4 py-3.5 text-sm font-bold text-white shadow-cta-primary transition-opacity hover:opacity-95"
                   >
                     Sign in to continue
                   </a>
