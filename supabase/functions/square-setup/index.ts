@@ -7,11 +7,9 @@ Deno.serve(async req => {
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
   const operatorToken = Deno.env.get('SQUARE_SETUP_TOKEN');
   const presented = req.headers.get('X-Operator-Token') || '';
-  const authorized = Boolean(serviceKey) && (
-    req.headers.get('Authorization') === `Bearer ${serviceKey}` ||
-    (Boolean(operatorToken) && presented.length === operatorToken!.length &&
-      crypto.subtle.timingSafeEqual === undefined ? presented === operatorToken : presented === operatorToken)
-  );
+  const authorized =
+    (Boolean(serviceKey) && req.headers.get('Authorization') === `Bearer ${serviceKey}`) ||
+    (Boolean(operatorToken) && presented === operatorToken);
   if (!authorized) return new Response('Unauthorized', { status: 401 });
   if (req.method !== 'POST') return new Response('POST required', { status: 405 });
   try {
