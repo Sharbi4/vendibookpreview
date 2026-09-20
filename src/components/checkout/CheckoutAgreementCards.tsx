@@ -132,6 +132,11 @@ const CheckoutAgreementCards = ({
       />
 
       <p className="checkout-agreement-note">
+        Review the <a href="/terms" target="_blank" rel="noopener noreferrer" className="underline">Terms of Service</a>,{' '}
+        <a href="/legal/payments-terms" target="_blank" rel="noopener noreferrer" className="underline">Payments Terms</a>, and{' '}
+        <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline">Privacy Policy</a> before accepting.
+      </p>
+      <p className="checkout-agreement-note">
         After checkout, the buyer and seller may be asked to review and sign transaction documents electronically
         through Vendibook.
       </p>
