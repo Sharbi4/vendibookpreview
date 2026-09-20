@@ -114,6 +114,14 @@ const PayPalReviewAuthorize = ({
     () => (data ? fundingLabel(data.funding) : ''),
     [data],
   );
+  /**
+   * The payer chose a PayPal Pay Later option. PayPal does not return the
+   * approved instalment amounts or dates to this integration, so we never
+   * display a "due today" instalment figure we cannot verify — we state the
+   * order total and say plainly that PayPal sets the schedule.
+   */
+  const payLater = /pay[-_ ]?later|credit|installment/i.test(sourceHint ?? '');
+
 
   const submit = async () => {
     if (!data || !accepted || submitting) return;
