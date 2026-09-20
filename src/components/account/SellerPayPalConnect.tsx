@@ -458,11 +458,7 @@ export default function SellerPayPalConnect({
               <p className="mt-2 break-all">
                 PayPal account ID: {connection.merchant_id ?? 'Not reported by PayPal yet'}
               </p>
-               <p className="mt-1">
-                 {connection.merchant_id
-                   ? `Permissions granted to Vendibook: ${grantedScopes.length}`
-                   : 'PayPal permissions awaiting confirmation'}
-               </p>
+               <p className="mt-1">{permissionsLabel}</p>
                {grantedScopes.length > 0 && (
                  <ul className="mt-2 space-y-1 break-all">
                    {grantedScopes.map((scope) => (
