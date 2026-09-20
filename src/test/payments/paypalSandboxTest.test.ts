@@ -14,3 +14,15 @@ describe('scoped sandbox decline test', () => {
   it('does not alter status lookups', () => { expect(sandboxCaptureTestHeaders('sandbox', 'GET', path, id)).toEqual({}); });
 });
 
+
+describe('sandbox-wide decline sentinel', () => {
+  it('declines any sandbox capture when the sentinel is configured', () => {
+    expect(JSON.parse(sandboxCaptureTestHeaders('sandbox', 'POST', '/v2/checkout/orders/OTHERORDER0000001/capture', 'ALL_SANDBOX_ORDERS')['PayPal-Mock-Response'])).toEqual({ mock_application_codes: 'INSTRUMENT_DECLINED' });
+  });
+  it('never applies the sentinel in live', () => {
+    expect(sandboxCaptureTestHeaders('live', 'POST', path, 'ALL_SANDBOX_ORDERS')).toEqual({});
+  });
+  it('leaves non-capture calls alone', () => {
+    expect(sandboxCaptureTestHeaders('sandbox', 'POST', '/v2/checkout/orders', 'ALL_SANDBOX_ORDERS')).toEqual({});
+  });
+});
