@@ -292,8 +292,19 @@ export default function SellerPayPalConnect({
     </>
   );
 
+  // PayPal confirmed onboarding by webhook but withholds the status API from
+  // this app, so there are no itemised scopes to show. The recorded connection
+  // is the fact; don't present it as unfinished.
+  const permissionsLabel = webhookConfirmed && !grantedScopes.length
+    ? 'Permissions confirmed by PayPal (itemised list not available)'
+    : connection?.merchant_id
+      ? `Permissions granted to Vendibook (${grantedScopes.length})`
+      : 'PayPal permissions awaiting confirmation';
+
   const statusLabel = !connection
     ? 'Not connected'
+    : webhookConfirmed
+      ? 'Connected — confirmed by PayPal'
     : status === 'ready'
       ? 'Ready to receive payments'
       : status === 'link_sent'
@@ -359,9 +370,7 @@ export default function SellerPayPalConnect({
                   </p>
                     <details className="text-xs">
                       <summary className="cursor-pointer font-medium">
-                        {connection?.merchant_id
-                          ? `Permissions granted to Vendibook (${grantedScopes.length})`
-                          : 'PayPal permissions awaiting confirmation'}
+                        {permissionsLabel}
                       </summary>
                     {grantedScopes.length > 0 ? (
                       <ul className="mt-2 space-y-1 break-all text-[11px] text-muted-foreground">
