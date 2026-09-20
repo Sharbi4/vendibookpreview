@@ -38,12 +38,12 @@ describe('seller connection refresh', () => {
     await waitFor(() => expect(hook.result.current.isLoading).toBe(false));
     expect(hook.result.current.isReady).toBe(false);
   });
-  it('refreshes when the seller returns from a separate PayPal tab', async () => {
+  it.each(['focus', 'pageshow'])('refreshes when the seller returns through %s', async (event) => {
     state.user = { id: 'seller' };
     const hook = renderHook(useMyPayPalConnection, { wrapper });
     await waitFor(() => expect(hook.result.current.connection?.onboarding_status).toBe('link_sent'));
     state.complete = true; state.row.last_status_check_at = null;
-    act(() => { window.dispatchEvent(new Event('focus')); });
+    act(() => { window.dispatchEvent(new Event(event)); });
     await waitFor(() => expect(hook.result.current.isReady).toBe(true));
   });
   it('keeps the existing connection and surfaces a provider refresh error', async () => {
