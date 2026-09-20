@@ -22,7 +22,7 @@ import {
   Video,
 } from 'lucide-react';
 import WorkspaceShell from '@/components/workspace/WorkspaceShell';
-import SellerPayPalConnect from '@/components/account/SellerPayPalConnect';
+import PayPalReadyBadge from '@/components/workspace/PayPalReadyBadge';
 import { useAuth } from '@/contexts/AuthContext';
 import { useHostListings } from '@/hooks/useHostListings';
 import { useShopperBookings } from '@/hooks/useShopperBookings';
@@ -226,7 +226,7 @@ export default function WorkspaceHome() {
               </Link>
             </div>
           </div>
-          <SellerPayPalConnect variant="pill" showWhenDisabled />
+          {isSeller && <PayPalReadyBadge showDetails />}
         </header>
 
         {!listingsLoading && live.length > 0 && <FeaturedPromotionBanner listings={listings} />}
