@@ -10,6 +10,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { PayPalWordmark } from '@/components/brand/ProviderLogos';
 import { toast } from 'sonner';
 import { sellerVettingNotices } from '@/lib/paypal/sellerVetting';
+import { parseEdgeError } from '@/lib/edgeErrors';
 import {
   ChevronDown,
   AlertTriangle,
@@ -83,7 +84,10 @@ export default function SellerPayPalConnect({
       const { data, error } = await supabase.functions.invoke('paypal-seller-onboarding', {
         body: { action: 'refresh_status' },
       });
-      if (error) throw new Error(error.message);
+      if (error) {
+        const parsed = await parseEdgeError(error, data?.error ? data : null);
+        throw new Error(parsed.message);
+      }
       await loadConnection();
       if (data?.status === 'ready') {
         setFlowMessage({ tone: 'success', text: 'PayPal confirmed your account is ready to receive payments.' });
@@ -361,10 +365,12 @@ export default function SellerPayPalConnect({
                       {connection?.merchant_id ?? 'Not reported by PayPal yet'}
                     </span>
                   </p>
-                  <details className="text-xs">
-                    <summary className="cursor-pointer font-medium">
-                      Permissions granted to Vendibook ({grantedScopes.length})
-                    </summary>
+                    <details className="text-xs">
+                      <summary className="cursor-pointer font-medium">
+                        {connection?.merchant_id
+                          ? `Permissions granted to Vendibook (${grantedScopes.length})`
+                          : 'PayPal permissions awaiting confirmation'}
+                      </summary>
                     {grantedScopes.length > 0 ? (
                       <ul className="mt-2 space-y-1 break-all text-[11px] text-muted-foreground">
                         {grantedScopes.map((scope) => (
@@ -451,12 +457,18 @@ export default function SellerPayPalConnect({
               <p className="mt-2 break-all">
                 PayPal account ID: {connection.merchant_id ?? 'Not reported by PayPal yet'}
               </p>
-              <p className="mt-1">Permissions granted to Vendibook: {grantedScopes.length}</p>
-              <ul className="mt-2 space-y-1 break-all">
-                {grantedScopes.map((scope) => (
-                  <li key={scope}>{scope}</li>
-                ))}
-              </ul>
+               <p className="mt-1">
+                 {connection.merchant_id
+                   ? `Permissions granted to Vendibook: ${grantedScopes.length}`
+                   : 'PayPal permissions awaiting confirmation'}
+               </p>
+               {grantedScopes.length > 0 && (
+                 <ul className="mt-2 space-y-1 break-all">
+                   {grantedScopes.map((scope) => (
+                     <li key={scope}>{scope}</li>
+                   ))}
+                 </ul>
+               )}
             </details>
           )}
           {isReady && connection?.paypal_email && (
