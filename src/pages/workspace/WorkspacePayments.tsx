@@ -32,7 +32,8 @@ export default function WorkspacePayments() {
           <p>Manage PayPal setup, earnings, purchases, receipts, and disputes.</p>
         </header>
 
-        <section className="v2-panel p-5 sm:p-6">
+        {/* Temporarily hidden until official launch. */}
+        <section hidden className="v2-panel p-5 sm:p-6">
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="max-w-2xl">
               <div className="mb-2 flex items-center gap-2"><PayPalWordmark surface="light" /><span className="text-sm font-semibold">&amp; Vendibook</span></div>

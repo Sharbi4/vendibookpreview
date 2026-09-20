@@ -226,7 +226,8 @@ export default function WorkspaceHome() {
               </Link>
             </div>
           </div>
-          <SellerPayPalConnect variant="pill" showWhenDisabled />
+          {/* Temporarily hidden until official launch. */}
+          <div hidden><SellerPayPalConnect variant="pill" showWhenDisabled /></div>
         </header>
 
         {!listingsLoading && live.length > 0 && <FeaturedPromotionBanner listings={listings} />}
