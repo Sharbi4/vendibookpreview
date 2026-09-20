@@ -799,7 +799,18 @@ const SaleCheckout = () => {
 
       if (error || data?.error || !data?.transaction_id) {
         const parsed = await parseEdgeError(error, data?.error ? { error: data.error, code: data.code } : null);
-        const copy = checkoutErrorCopy(parsed);
+        if (parsed.code === 'legal_acceptance_required') {
+        setAgreementsRecorded(false);
+        setAgreedToTerms(false);
+        setPrivacyAccepted(false);
+        setPaypalCheckout(null);
+        setIntentError(null);
+        autoIntentRef.current = false;
+        goToStep(4);
+        toast({ title: 'Please review and accept the current agreements', description: 'Your checkout details are saved. Accept both boxes, then continue to payment.' });
+        return;
+      }
+      const copy = checkoutErrorCopy(parsed);
         setPaypalCheckout(null);
         // `already_paid` carries the existing order, so the buyer can go
         // straight to it instead of being stranded on a dead payment step.
@@ -853,6 +864,17 @@ const SaleCheckout = () => {
     } catch (error) {
       setPaypalCheckout(null);
       const parsed = await parseEdgeError(error);
+      if (parsed.code === 'legal_acceptance_required') {
+        setAgreementsRecorded(false);
+        setAgreedToTerms(false);
+        setPrivacyAccepted(false);
+        setPaypalCheckout(null);
+        setIntentError(null);
+        autoIntentRef.current = false;
+        goToStep(4);
+        toast({ title: 'Please review and accept the current agreements', description: 'Your checkout details are saved. Accept both boxes, then continue to payment.' });
+        return;
+      }
       const copy = checkoutErrorCopy(parsed);
       setIntentError({ title: copy.title, detail: copy.description, actionLabel: copy.actionLabel });
       toast({
