@@ -174,10 +174,7 @@ export default function SellerPayPalConnect({
       setFlowMessage({ tone: 'error', text: 'Please accept the Seller Payment Terms and electronic records consent first.' });
       return;
     }
-    // Open during the click gesture; an async popup can be blocked by browsers.
-    // PayPal onboarding must run outside Lovable's embedded preview frame.
-    const paypalWindow = window.open('about:blank', '_blank');
-    if (paypalWindow) paypalWindow.opener = null;
+    // Wait for a real referral URL; embedded previews can detach blank popup handles.
     setBusy('connect');
     setOnboardingLink(null);
     setFlowMessage(null);
@@ -197,9 +194,11 @@ export default function SellerPayPalConnect({
       const { data, error } = await supabase.functions.invoke('paypal-seller-onboarding', {
         body: { action: 'create_referral' },
       });
-      if (error) throw new Error(error.message);
+      if (error || data?.error) {
+        const parsed = await parseEdgeError(error, data?.error ? data : null);
+        throw new Error(parsed.message);
+      }
       if (data?.already_connected) {
-        paypalWindow?.close();
         await loadConnection();
         setFlowMessage({ tone: 'info', text: 'Your PayPal connection already exists. Check its status below.' });
         setBusy(null);
@@ -211,15 +210,14 @@ export default function SellerPayPalConnect({
           throw new Error('PayPal returned an unexpected setup link. Please try again.');
         }
         setOnboardingLink(url.href);
-        if (paypalWindow && !paypalWindow.closed) paypalWindow.location.replace(url.href);
-        setFlowMessage({ tone: 'info', text: 'Complete setup in the PayPal tab, then return here and check your status. If no tab opened, use Continue on PayPal below.' });
+        setFlowMessage({ tone: 'info', text: 'Your secure setup link is ready. Select Continue on PayPal to grant permissions, then return here. Your status will refresh automatically.' });
         await loadConnection();
+        if (window.self === window.top) window.location.assign(url.href);
         setBusy(null);
       } else {
         throw new Error("PayPal didn't return a signup link. Please try again.");
       }
     } catch (e) {
-      paypalWindow?.close();
       const message = e instanceof Error ? e.message : 'Could not start PayPal connection.';
       setFlowMessage({ tone: 'error', text: message });
       toast.error(message);
