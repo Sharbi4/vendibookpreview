@@ -20,12 +20,12 @@ import {
  */
 async function probePartnerIdentity(): Promise<void> {
   try {
-    const ident = await paypalRequest<{ user_id?: string }>(
-      "/v1/identity/oauth2/userinfo",
+    const ident = await paypalRequest<{ user_id?: string; payer_id?: string }>(
+      "/v1/identity/oauth2/userinfo?schema=paypalv1.1",
       { environment: paypalOnboardingEnvironment(), retries: 0 },
     );
     safeLog("partner_identity_probe", {
-      user_id: typeof ident?.user_id === "string" ? ident.user_id : null,
+      payer_id: typeof ident?.payer_id === "string" ? ident.payer_id : null,
       environment: paypalOnboardingEnvironment(),
     });
   } catch {
