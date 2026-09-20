@@ -180,7 +180,10 @@ export default function SellerPayPalConnect({
       setFlowMessage({ tone: 'error', text: 'Please accept the Seller Payment Terms and electronic records consent first.' });
       return;
     }
-    // Wait for a real referral URL; embedded previews can detach blank popup handles.
+    // Open the window synchronously (user-gesture context) so popup blockers
+    // allow it, then navigate it once the referral URL arrives. Embedded
+    // previews block top-level redirects, so a real window is the reliable path.
+    const popup = window.open('', 'vendibook_paypal_connect');
     setBusy('connect');
     setOnboardingLink(null);
     setFlowMessage(null);
@@ -205,6 +208,7 @@ export default function SellerPayPalConnect({
         throw new Error(parsed.message);
       }
       if (data?.already_connected) {
+        popup?.close();
         await loadConnection();
         setFlowMessage({ tone: 'info', text: 'Your PayPal connection already exists. Check its status below.' });
         setBusy(null);
@@ -216,14 +220,23 @@ export default function SellerPayPalConnect({
           throw new Error('PayPal returned an unexpected setup link. Please try again.');
         }
         setOnboardingLink(url.href);
-        setFlowMessage({ tone: 'info', text: 'Your secure setup link is ready. Select Continue on PayPal to grant permissions, then return here. Your status will refresh automatically.' });
         await loadConnection();
-        if (window.self === window.top) window.location.assign(url.href);
+        if (popup && !popup.closed) {
+          popup.location.href = url.href;
+          setFlowMessage({ tone: 'info', text: 'PayPal opened in a new window. Grant the permissions there, then return here. Your status will refresh automatically.' });
+        } else {
+          // Popup blocked or closed: navigate this tab when possible, else the
+          // "Continue on PayPal" fallback link stays visible.
+          if (window.self === window.top) window.location.assign(url.href);
+          setFlowMessage({ tone: 'info', text: 'Your secure setup link is ready. Select Continue on PayPal to grant permissions, then return here. Your status will refresh automatically.' });
+        }
         setBusy(null);
       } else {
+        popup?.close();
         throw new Error("PayPal didn't return a signup link. Please try again.");
       }
     } catch (e) {
+      if (popup && !popup.closed) popup.close();
       const message = e instanceof Error ? e.message : 'Could not start PayPal connection.';
       setFlowMessage({ tone: 'error', text: message });
       toast.error(message);
