@@ -54,7 +54,8 @@ export function useMyPayPalConnection() {
   const client = useQueryClient();
   const query = useQuery({
     queryKey: ['my-paypal-connection', userId], enabled: !!userId, staleTime: 15_000, refetchOnWindowFocus: true,
-    refetchInterval: q => q.state.data?.connection && !['ready', 'disconnected', 'revoked'].includes(q.state.data.connection.onboarding_status) ? 30_000 : false,
+    refetchInterval: q => q.state.data?.connection && !isWebhookConfirmed(q.state.data.connection)
+      && !['ready', 'disconnected', 'revoked'].includes(q.state.data.connection.onboarding_status) ? 30_000 : false,
     queryFn: async () => {
       let row = await readConnection(userId!);
       let refreshError: string | null = null;
