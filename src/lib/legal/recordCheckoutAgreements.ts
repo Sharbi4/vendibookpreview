@@ -52,15 +52,15 @@ const mirrorPlatformAcceptance = async (
   mode: RecordArgs['mode'],
   relatedIds: RecordArgs['relatedIds'],
 ) => {
-  const { data } = await supabase.auth.getUser();
+  const { data, error: authError } = await supabase.auth.getUser();
   const userId = data.user?.id;
-  if (!userId) return;
+  if (authError || !userId) throw new Error('Please sign in again before accepting the checkout agreements.');
   if (await hasCurrentAcceptance(userId, PLATFORM_SLUGS)) return;
   const { error } = await recordLegalAcceptance({
     userId,
     slugs: PLATFORM_SLUGS,
     surface: mode === 'sale' ? 'sale_checkout' : 'rental_checkout',
-    relatedEntityType: mode === 'sale' ? 'order' : 'booking',
+    relatedEntityType: 'listing',
     relatedEntityId: (relatedIds.listing_id as string | undefined) ?? null,
   });
   if (error) throw error;
