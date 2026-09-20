@@ -691,26 +691,8 @@ var create_upgrade_checkout_default = defineTool8({
       return { content: [{ type: "text", text: "That upgrade is not currently available." }], isError: true };
     }
     if (product.billing_type === "recurring") {
-      const { data, error: fnError } = await supabase.functions.invoke("paypal-subscription-create", {
-        body: {
-          product_slug,
-          billing_interval: /annual|yearly/i.test(product_slug) ? "annual" : "monthly",
-          return_path: listing_id ? `/listing/${listing_id}` : "/account",
-          cancel_path: listing_id ? `/listing/${listing_id}` : "/pricing"
-        }
-      });
-      if (fnError) {
-        return { content: [{ type: "text", text: `Checkout failed: ${fnError.message}` }], isError: true };
-      }
-      const payload = data;
-      const url2 = payload?.approve_url ?? payload?.url;
-      if (!url2) {
-        return { content: [{ type: "text", text: payload?.message ?? payload?.error ?? "We could not start that checkout." }], isError: true };
-      }
-      return {
-        content: [{ type: "text", text: `Complete payment here: ${url2}` }],
-        structuredContent: { product_slug, listing_id: listing_id ?? null, checkout_url: url2 }
-      };
+      const url2 = `/plans?plan=${encodeURIComponent(product_slug)}`;
+      return { content: [{ type: "text", text: `Review membership terms and continue: ${url2}` }], structuredContent: { checkout_url: url2 } };
     }
     const params = new URLSearchParams();
     if (listing_id) params.set("listing_id", listing_id);
