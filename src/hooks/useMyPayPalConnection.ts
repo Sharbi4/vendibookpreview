@@ -98,8 +98,9 @@ export function useMyPayPalConnection() {
     }
   }, [userId, client, reload]);
   const connection = userId ? query.data?.connection ?? null : null;
-  const isReady = connection?.onboarding_status === 'ready' && connection.primary_email_confirmed === true && connection.payments_receivable === true && connection.consent_granted === true && !!connection.merchant_id && !!connection.oauth_scopes?.length;
-  return { connection, status: connection?.onboarding_status ?? 'not_connected', isReady,
+  const webhookConfirmed = isWebhookConfirmed(connection);
+  const isReady = webhookConfirmed || (connection?.onboarding_status === 'ready' && connection.primary_email_confirmed === true && connection.payments_receivable === true && connection.consent_granted === true && !!connection.merchant_id && !!connection.oauth_scopes?.length);
+  return { connection, status: connection?.onboarding_status ?? 'not_connected', isReady, webhookConfirmed,
     isLoading: !!userId && query.isLoading, isRefreshing: query.isFetching,
     lastRefreshError: query.error?.message || query.data?.refreshError || null,
     reload, refreshFromPayPal, lastCheckedAt: connection?.last_status_check_at ?? null };
