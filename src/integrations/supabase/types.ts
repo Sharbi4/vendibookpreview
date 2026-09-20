@@ -3070,6 +3070,7 @@ export type Database = {
           payment_provider: Database["public"]["Enums"]["payment_provider"]
           paypal_subscription_id: string | null
           revoke_at_period_end: boolean
+          square_subscription_id: string | null
           status: string
           stripe_customer_id: string | null
           stripe_price_id: string | null
@@ -3095,6 +3096,7 @@ export type Database = {
           payment_provider?: Database["public"]["Enums"]["payment_provider"]
           paypal_subscription_id?: string | null
           revoke_at_period_end?: boolean
+          square_subscription_id?: string | null
           status?: string
           stripe_customer_id?: string | null
           stripe_price_id?: string | null
@@ -3120,6 +3122,7 @@ export type Database = {
           payment_provider?: Database["public"]["Enums"]["payment_provider"]
           paypal_subscription_id?: string | null
           revoke_at_period_end?: boolean
+          square_subscription_id?: string | null
           status?: string
           stripe_customer_id?: string | null
           stripe_price_id?: string | null
@@ -5262,6 +5265,7 @@ export type Database = {
           refund_amount_cents: number | null
           refund_status: string | null
           refunded_at: string | null
+          square_payment_id: string | null
           status: Database["public"]["Enums"]["monetization_purchase_status"]
           stripe_customer_id: string | null
           stripe_payment_intent_id: string | null
@@ -5295,6 +5299,7 @@ export type Database = {
           refund_amount_cents?: number | null
           refund_status?: string | null
           refunded_at?: string | null
+          square_payment_id?: string | null
           status?: Database["public"]["Enums"]["monetization_purchase_status"]
           stripe_customer_id?: string | null
           stripe_payment_intent_id?: string | null
@@ -5328,6 +5333,7 @@ export type Database = {
           refund_amount_cents?: number | null
           refund_status?: string | null
           refunded_at?: string | null
+          square_payment_id?: string | null
           status?: Database["public"]["Enums"]["monetization_purchase_status"]
           stripe_customer_id?: string | null
           stripe_payment_intent_id?: string | null
@@ -10177,6 +10183,152 @@ export type Database = {
         }
         Relationships: []
       }
+      square_billing_attempts: {
+        Row: {
+          amount_cents: number
+          billing_interval: string | null
+          card_id: string | null
+          consent_id: string | null
+          created_at: string
+          currency: string
+          customer_id: string | null
+          environment: string
+          id: string
+          kind: string
+          listing_id: string | null
+          paid_through: string | null
+          payment_id: string | null
+          product_id: string
+          purchase_id: string | null
+          status: string
+          subscription_id: string | null
+          tax_cents: number
+          tier: string | null
+          updated_at: string
+          user_id: string
+          variation_id: string | null
+        }
+        Insert: {
+          amount_cents: number
+          billing_interval?: string | null
+          card_id?: string | null
+          consent_id?: string | null
+          created_at?: string
+          currency: string
+          customer_id?: string | null
+          environment: string
+          id?: string
+          kind: string
+          listing_id?: string | null
+          paid_through?: string | null
+          payment_id?: string | null
+          product_id: string
+          purchase_id?: string | null
+          status?: string
+          subscription_id?: string | null
+          tax_cents?: number
+          tier?: string | null
+          updated_at?: string
+          user_id: string
+          variation_id?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          billing_interval?: string | null
+          card_id?: string | null
+          consent_id?: string | null
+          created_at?: string
+          currency?: string
+          customer_id?: string | null
+          environment?: string
+          id?: string
+          kind?: string
+          listing_id?: string | null
+          paid_through?: string | null
+          payment_id?: string | null
+          product_id?: string
+          purchase_id?: string | null
+          status?: string
+          subscription_id?: string | null
+          tax_cents?: number
+          tier?: string | null
+          updated_at?: string
+          user_id?: string
+          variation_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "square_billing_attempts_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "square_billing_attempts_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "square_billing_attempts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "monetization_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "square_billing_attempts_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "monetization_pending_reconciliation"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "square_billing_attempts_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "monetization_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      square_billing_plans: {
+        Row: {
+          billing_interval: string
+          currency: string
+          environment: string
+          price_cents: number
+          product_id: string
+          variation_id: string
+        }
+        Insert: {
+          billing_interval: string
+          currency?: string
+          environment: string
+          price_cents: number
+          product_id: string
+          variation_id: string
+        }
+        Update: {
+          billing_interval?: string
+          currency?: string
+          environment?: string
+          price_cents?: number
+          product_id?: string
+          variation_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "square_billing_plans_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "monetization_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       stripe_webhook_events: {
         Row: {
           endpoint: string
@@ -12208,6 +12360,15 @@ export type Database = {
       }
       freeze_payable_for_case: {
         Args: { _case_id: string; _payable_id: string }
+        Returns: undefined
+      }
+      fulfill_square_addon: {
+        Args: {
+          p_amount: number
+          p_attempt: string
+          p_currency: string
+          p_payment: string
+        }
         Returns: undefined
       }
       get_all_asset_requests: {
