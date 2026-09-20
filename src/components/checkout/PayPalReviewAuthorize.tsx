@@ -114,6 +114,14 @@ const PayPalReviewAuthorize = ({
     () => (data ? fundingLabel(data.funding) : ''),
     [data],
   );
+  /**
+   * The payer chose a PayPal Pay Later option. PayPal does not return the
+   * approved instalment amounts or dates to this integration, so we never
+   * display a "due today" instalment figure we cannot verify — we state the
+   * order total and say plainly that PayPal sets the schedule.
+   */
+  const payLater = /pay[-_ ]?later|credit|installment/i.test(sourceHint ?? '');
+
 
   const submit = async () => {
     if (!data || !accepted || submitting) return;
@@ -198,14 +206,27 @@ const PayPalReviewAuthorize = ({
         <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
           {method ? 'Paying with' : 'Payment review'}
         </p>
-        {method ? <p className="mt-1 text-sm font-semibold text-foreground">{method}</p> : null}
+        {payLater ? (
+          <p className="mt-1 text-sm font-semibold text-foreground">PayPal Pay Later</p>
+        ) : method ? (
+          <p className="mt-1 text-sm font-semibold text-foreground">{method}</p>
+        ) : null}
         {method && data.funding.email ? (
           <p className="text-xs text-muted-foreground">{data.funding.email}</p>
         ) : null}
         <p className="mt-2 text-sm text-foreground">
-          Amount to be charged: <span className="font-semibold">{amount}</span>
+          {payLater ? 'Order total' : 'Amount to be charged'}:{' '}
+          <span className="font-semibold">{amount}</span>
         </p>
+        {payLater ? (
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            You are not paying {amount} today. PayPal splits this purchase into the instalments
+            you approved and bills you on that schedule — the amounts and dates are shown in your
+            PayPal account. Vendibook charges the order total to PayPal, not to you directly.
+          </p>
+        ) : null}
       </div>
+
 
       {/* The item */}
       {data.listing ? (
@@ -240,10 +261,16 @@ const PayPalReviewAuthorize = ({
           </div>
         ))}
         <div className="mt-2 flex justify-between border-t border-border/70 pt-2 font-semibold text-foreground">
-          <span>Total</span>
+          <span>{payLater ? 'Order total (paid to PayPal)' : 'Total'}</span>
           <span>{amount}</span>
         </div>
+        {payLater ? (
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Your instalment amounts and dates are set by PayPal and shown in your PayPal account.
+          </p>
+        ) : null}
       </div>
+
 
       {(data.fulfillment.method || address) ? (
         <div className="rounded-2xl border border-border/70 px-4 py-3 text-xs text-muted-foreground">
@@ -282,7 +309,10 @@ const PayPalReviewAuthorize = ({
           <a href="/terms" target="_blank" rel="noreferrer" className="underline">
             Terms of Service
           </a>{' '}
-          and authorize this payment of {amount}.
+          {payLater
+            ? `and authorize this ${amount} purchase, paid to PayPal under the Pay Later plan I approved.`
+            : `and authorize this payment of ${amount}.`}
+
         </span>
       </label>
 
