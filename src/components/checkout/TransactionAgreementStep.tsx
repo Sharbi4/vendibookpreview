@@ -4,11 +4,11 @@ import { Checkbox } from '@/components/ui/checkbox';
 import type { LegalDocumentRow } from '@/lib/legalDocuments';
 
 export const SALE_AGREEMENT_ACCEPTANCE_TEXT =
-  'I have reviewed and agree to the Vendibook Purchase Agreement and the transaction details shown in this checkout.';
+  'I have reviewed and agree to the Vendibook Purchase Agreement, the Terms of Service, the Payments Terms, and the transaction details shown in this checkout.';
 export const RENTAL_AGREEMENT_ACCEPTANCE_TEXT =
-  'I have reviewed and agree to the Vendibook Rental Agreement and the booking details shown in this checkout.';
+  'I have reviewed and agree to the Vendibook Rental Agreement, the Terms of Service, the Payments Terms, and the booking details shown in this checkout.';
 export const CHECKOUT_PRIVACY_ACCEPTANCE_TEXT =
-  'I acknowledge the Checkout Privacy & Electronic Consent and agree to receive and sign transaction records electronically.';
+  'I acknowledge the Privacy Policy and the Checkout Privacy & Electronic Consent and agree to receive and sign transaction records electronically.';
 
 interface DocumentPaneProps {
   document: LegalDocumentRow | null | undefined;
