@@ -244,12 +244,14 @@ const SaleCheckout = () => {
     if (user?.email && !buyerInfo.email) updateBuyerInfo('email', user.email);
   }, [profile, user]);
 
+  // Depend on stable identity/selection values: a token refresh must not
+  // replace the mounted PayPal form with the offer-loading screen.
+  const offerPriceParam = searchParams.get('offer_price');
   // Check for accepted offer to get negotiated price
   useEffect(() => {
     const fetchAcceptedOffer = async () => {
       if (!user || !listingId) return;
 
-      const offerPriceParam = searchParams.get('offer_price');
       if (offerPriceParam) {
         const price = parseFloat(offerPriceParam);
         if (!isNaN(price) && price > 0) {
@@ -284,11 +286,13 @@ const SaleCheckout = () => {
     };
 
     fetchAcceptedOffer();
-  }, [user, listingId, searchParams]);
+  }, [user?.id, listingId, offerPriceParam]);
 
-  // Initialize fulfillment from listing data
+  // Background listing refreshes must not overwrite the buyer's selections.
+  const initializedListingRef = useRef<string | null>(null);
   useEffect(() => {
-    if (listing) {
+    if (listing && initializedListingRef.current !== listing.id) {
+      initializedListingRef.current = listing.id;
       if (listing.vendibook_freight_enabled) {
         setFulfillmentSelected('vendibook_freight');
       } else if (listing.fulfillment_type === 'delivery') {
