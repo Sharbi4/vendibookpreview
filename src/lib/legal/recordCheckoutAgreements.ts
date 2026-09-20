@@ -1,4 +1,6 @@
 import { supabase } from '@/integrations/supabase/client';
+import { recordLegalAcceptance, hasCurrentAcceptance } from '@/lib/legal/recordAcceptance';
+import type { LegalDocumentSlug } from '@/lib/legal/versions';
 import { CURRENT_VERSIONS, DOCUMENT_TYPES, type DocumentType } from '@/lib/legalDocuments';
 import {
   CHECKOUT_PRIVACY_ACCEPTANCE_TEXT,
@@ -39,11 +41,38 @@ const write = async (
 };
 
 /**
+ * The platform documents the server-side checkout gate (`paypal-create-order`,
+ * `create-sale-intent`) checks in `legal_acceptances`. Ticking the checkout
+ * agreement box must satisfy that gate, so we mirror the acceptance there in
+ * addition to the versioned `user_consents` rows.
+ */
+const PLATFORM_SLUGS: LegalDocumentSlug[] = ['terms-of-service', 'payments-terms', 'privacy-policy'];
+
+const mirrorPlatformAcceptance = async (
+  mode: RecordArgs['mode'],
+  relatedIds: RecordArgs['relatedIds'],
+) => {
+  const { data } = await supabase.auth.getUser();
+  const userId = data.user?.id;
+  if (!userId) return;
+  if (await hasCurrentAcceptance(userId, PLATFORM_SLUGS)) return;
+  const { error } = await recordLegalAcceptance({
+    userId,
+    slugs: PLATFORM_SLUGS,
+    surface: mode === 'sale' ? 'sale_checkout' : 'rental_checkout',
+    relatedEntityType: mode === 'sale' ? 'order' : 'booking',
+    relatedEntityId: (relatedIds.listing_id as string | undefined) ?? null,
+  });
+  if (error) throw error;
+};
+
+/**
  * Persists both checkout consents server-side. Each row stores the document
  * type, the frozen version, the exact acceptance sentence, the transaction
  * context, the route, locale, and user agent. Append-only — never updated.
  */
 export async function recordCheckoutAgreements({ mode, trigger, relatedIds, hashes }: RecordArgs) {
+  await mirrorPlatformAcceptance(mode, relatedIds);
   const agreementType =
     mode === 'sale' ? DOCUMENT_TYPES.SALE_BUYER_TERMS : DOCUMENT_TYPES.RENTAL_TRANSACTION_TERMS;
   await write(
