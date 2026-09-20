@@ -45,17 +45,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/10ae96b2-12c7-413a-a612-92110bc2050e</loc>
-    <lastmod>2026-09-19</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/5fbd89d5-fa6b-424c-97b8-dea19753eda8/10ae96b2-12c7-413a-a612-92110bc2050e/1781406117162-jk7v8.jpeg</image:loc>
-      <image:title>Food Truck renovated inside - out</image:title>
-      <image:caption>Food Truck renovated inside - out in Austin, TX on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/a3ead971-38c7-4c0c-8f3f-2b02185c7c2f</loc>
     <lastmod>2026-09-20</lastmod>
     <changefreq>weekly</changefreq>
@@ -493,6 +482,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/8a7bfd22-0a9f-4a8c-8b03-b9ecdf2f82cb/72f3eb0e-24b0-4253-8329-4ba9e5e2e298/1789251581909-42bcq6jbp5j.jpeg</image:loc>
       <image:title>Cedar Tap Trailer</image:title>
       <image:caption>Cedar Tap Trailer in Clearwater, FL on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/10ae96b2-12c7-413a-a612-92110bc2050e</loc>
+    <lastmod>2026-09-20</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/5fbd89d5-fa6b-424c-97b8-dea19753eda8/10ae96b2-12c7-413a-a612-92110bc2050e/1781406117162-jk7v8.jpeg</image:loc>
+      <image:title>Food Truck renovated inside - out</image:title>
+      <image:caption>Food Truck renovated inside - out in Austin, TX on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
