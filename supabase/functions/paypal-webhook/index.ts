@@ -205,12 +205,19 @@ async function handleEvent(admin: any, event: any) {
       if (!record) return;
 
       if (type === "PAYMENT.CAPTURE.DENIED" || type === "PAYMENT.CAPTURE.DECLINED") {
-        await admin.from("payment_records").update({
-          payment_status: "declined",
-          internal_status: "declined",
-          paypal_capture_id: resource.id,
-        }).eq("id", record.id);
-        await holdPayables(admin, record.id, "PayPal did not approve this payment.", "cancelled");
+        // Share terminal-state/race guards with capture processing. A late
+        // denial must not overwrite a previously verified completed payment.
+        const updated = await finalizeCapture(admin, record, {
+          captureId: resource.id,
+          status: "DECLINED",
+          amountCents: centsFromPayPalAmount(resource.amount?.value),
+          currency: resource.amount?.currency_code ?? "USD",
+          payerId: null,
+          paymentSource: null,
+        }, "webhook");
+        if (updated.payment_status === "declined") {
+          await holdPayables(admin, record.id, "PayPal did not approve this payment.", "cancelled");
+        }
         return;
       }
 

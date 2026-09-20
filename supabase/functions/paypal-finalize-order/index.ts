@@ -9,10 +9,9 @@ import { getPayPalOrder, safeLog } from "../_shared/paypal.ts";
  *
  * Used by the redirect/app-switch return page and as the recovery path when an
  * in-page authorize/capture call failed after the payer already approved. It
- * never moves money itself: it looks the order up, and delegates to the
- * canonical `paypal-capture-order` / `paypal-authorize-order` endpoints, which
- * are both idempotent. Its job is to answer one question truthfully — is this
- * payment actually completed/authorized, or does the buyer need to try again?
+ * only reads existing CAPTURE outcomes; an approved order returns to final
+ * review instead of capturing during recovery. Legacy AUTHORIZE records retain
+ * their existing delegation path. Approval alone never establishes payment.
  */
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -84,14 +83,15 @@ serve(async (req) => {
       });
     }
 
-    // Rental recovery is read-only at PayPal: only reconcile a capture that
+    // CAPTURE recovery is read-only at PayPal: only reconcile a capture that
     // already exists. An APPROVED order must return to the buyer's final review.
-    if (record.booking_request_id) {
+    if (record.booking_request_id || String(record.payment_intent ?? "CAPTURE").toUpperCase() === "CAPTURE") {
       const facts = order ? extractCaptureFacts(order) : null;
       if (facts) {
         const verified = await finalizeCapture(admin, record, facts, "capture_endpoint");
         return done(verified.payment_status, { pending: verified.payment_status === "pending" });
       }
+      if (["declined", "failed"].includes(record.payment_status)) return done(record.payment_status, { message: record.last_error?.reason ?? "Payment was not completed. Choose another payment method." });
       if (!order || record.payment_status === "pending") return done("pending", { pending: true, message: "Payment verification is pending. Do not pay again." });
       return done("review_required", { message: "Return to the final payment review to submit payment." });
     }

@@ -40,18 +40,17 @@ export interface ReviewData {
 const usd = (cents: number, currency = 'USD') =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency }).format((cents ?? 0) / 100);
 
-/**
- * Plain-language name for what the payer actually approved with. The SDK tells
- * us which funding button was used (PayPal / Venmo / Pay Later / card); PayPal
- * itself reports the card brand and last four when a card was used.
- */
-export function fundingLabel(funding: ReviewFunding, hint?: string | null): string {
-  if (funding.method === 'card') return funding.label;
-  if (funding.method === 'venmo') return funding.label;
-  if (hint === 'paylater') return 'PayPal Pay Later';
-  if (hint === 'venmo') return 'Venmo';
-  if (hint === 'card') return funding.label;
-  return 'PayPal balance or linked funding';
+/** Display only the funding source returned by the server's PayPal lookup. */
+export function fundingLabel(funding: ReviewFunding): string {
+  if (funding.method === 'card') {
+    const brand = funding.brand?.trim() || 'Card';
+    return funding.last4 && /^\d{4}$/.test(funding.last4)
+      ? `${brand} ending ${funding.last4}`
+      : brand;
+  }
+  if (funding.method === 'venmo') return 'Venmo';
+  if (funding.method === 'paypal') return 'PayPal';
+  return '';
 }
 
 interface Props {
@@ -112,8 +111,8 @@ const PayPalReviewAuthorize = ({
 
   const amount = data ? usd(data.amount_cents, data.currency) : '';
   const method = useMemo(
-    () => (data ? fundingLabel(data.funding, sourceHint) : ''),
-    [data, sourceHint],
+    () => (data ? fundingLabel(data.funding) : ''),
+    [data],
   );
 
   const submit = async () => {
@@ -197,10 +196,10 @@ const PayPalReviewAuthorize = ({
       {/* What they approved with */}
       <div className="rounded-2xl border border-border/70 bg-muted/25 px-4 py-3.5">
         <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-          Paying with
+          {method ? 'Paying with' : 'Payment review'}
         </p>
-        <p className="mt-1 text-sm font-semibold text-foreground">{method}</p>
-        {data.funding.email ? (
+        {method ? <p className="mt-1 text-sm font-semibold text-foreground">{method}</p> : null}
+        {method && data.funding.email ? (
           <p className="text-xs text-muted-foreground">{data.funding.email}</p>
         ) : null}
         <p className="mt-2 text-sm text-foreground">

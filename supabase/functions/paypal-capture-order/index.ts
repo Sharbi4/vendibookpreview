@@ -1,3 +1,4 @@
+import { captureFailure } from "../_shared/paypalCaptureOutcome.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
@@ -67,7 +68,11 @@ serve(async (req) => {
         } catch (_err) {
           providerOrder = null;
         }
-        const alreadyCaptured = providerOrder?.status === "COMPLETED";
+        const providerFacts = extractCaptureFacts(providerOrder);
+        if (!providerOrder || providerFacts?.status === "PENDING") {
+          return jsonResponse(200, { status: "pending", pending: true, reference: record.reference, message: "Payment verification is pending. Do not submit another payment." });
+        }
+        const alreadyCaptured = providerFacts?.status === "COMPLETED";
 
         await admin.from("payment_records").update({
           // `paypal_payment_status` stays factual; fulfillment is blocked via
@@ -137,12 +142,13 @@ serve(async (req) => {
       order = await capturePayPalOrder(order_id, `capture:${record.reference}`);
     } catch (err) {
       if (err instanceof PayPalError && err.issue === "ORDER_ALREADY_CAPTURED") {
-        order = record.booking_request_id ? await getPayPalOrder(order_id).catch(() => null) : await getPayPalOrder(order_id);
-      } else if (err instanceof PayPalError && err.status < 500) {
+        order = await getPayPalOrder(order_id).catch(() => null);
+      } else if (err instanceof PayPalError && err.status < 500 && err.status !== 429) {
+        const failure = captureFailure(err.issue, err.status);
         await admin.from("payment_records").update({
-          payment_status: "declined",
-          internal_status: "declined",
-          last_error: { issue: err.issue ?? "declined" },
+          payment_status: failure.status,
+          internal_status: failure.code,
+          last_error: { issue: err.issue ?? null, reason: failure.message, debug_id: err.debugId ?? null },
         }).eq("id", record.id).neq("payment_status", "completed");
         if (record.booking_request_id) {
           // Definitive provider refusal: no capture. Ambiguous errors retain the lock.
@@ -159,34 +165,31 @@ serve(async (req) => {
         }
         // INSTRUMENT_DECLINED is recoverable on a Buttons checkout: the payer
         // can pick another funding source via actions.restart().
-        return jsonError(402, "payment_declined", declineMessage(err.issue), {
+        return jsonError(failure.status === "declined" ? 402 : 409, failure.code, failure.message, {
+          reference: record.reference,
           issue: err.issue ?? null,
+          debug_id: err.debugId ?? null,
           recoverable: err.issue === "INSTRUMENT_DECLINED",
           ...(payerActionUrl ? { payer_action_url: payerActionUrl } : {}),
         });
 
       } else {
-        if (record.booking_request_id) {
+        {
           await admin.from("payment_records").update({ payment_status: "pending", internal_status: "capture_verification_pending" }).eq("id", record.id).neq("payment_status", "completed");
-          await admin.from("booking_requests").update({ payment_status: "pending" }).eq("id", record.booking_request_id).eq("payment_lock_record_id", record.id).neq("payment_status", "paid");
+          if (record.booking_request_id) await admin.from("booking_requests").update({ payment_status: "pending" }).eq("id", record.booking_request_id).eq("payment_lock_record_id", record.id).neq("payment_status", "paid");
           return jsonResponse(200, { status: "pending", pending: true, reference: record.reference, message: "PayPal confirmation is pending. Do not submit another payment." });
         }
-        throw err;
       }
     }
 
     const facts = extractCaptureFacts(order);
     if (!facts) {
-      if (record.booking_request_id) {
+      {
         await admin.from("payment_records").update({ payment_status: "pending", internal_status: "capture_verification_pending" }).eq("id", record.id).neq("payment_status", "completed");
-        await admin.from("booking_requests").update({ payment_status: "pending" }).eq("id", record.booking_request_id).eq("payment_lock_record_id", record.id).neq("payment_status", "paid");
+        if (record.booking_request_id) await admin.from("booking_requests").update({ payment_status: "pending" }).eq("id", record.booking_request_id).eq("payment_lock_record_id", record.id).neq("payment_status", "paid");
         return jsonResponse(200, { status: "pending", pending: true, reference: record.reference, message: "Payment verification is pending. Check this payment before trying again." });
       }
-      return jsonError(
-        502,
-        "capture_unverified",
-        `We couldn't verify the payment. Contact support with reference ${record.reference}.`,
-      );
+
     }
 
     let updated;
@@ -228,7 +231,8 @@ serve(async (req) => {
       capture_id: facts.captureId,
       amount_cents: updated.gross_amount_cents,
       currency: updated.currency,
-      pending: facts.status === "PENDING",
+      pending: updated.payment_status === "pending",
+      ...(updated.payment_status === "declined" || updated.payment_status === "failed" ? { message: `PayPal reported capture status ${facts.status}. Choose another payment method.`, issue: facts.status } : {}),
     });
   } catch (err) {
     if (err instanceof PayPalError) {
@@ -237,16 +241,3 @@ serve(async (req) => {
     return unknownErrorResponse(err);
   }
 });
-
-function declineMessage(issue?: string): string {
-  switch (issue) {
-    case "INSTRUMENT_DECLINED":
-      return "That payment method was declined. Please choose another one in PayPal.";
-    case "PAYER_ACTION_REQUIRED":
-      return "PayPal needs one more step from you. Please complete it and try again.";
-    case "ORDER_NOT_APPROVED":
-      return "Your payment was not completed. Nothing has been confirmed.";
-    default:
-      return "Your payment was not completed. No booking or order has been confirmed.";
-  }
-}

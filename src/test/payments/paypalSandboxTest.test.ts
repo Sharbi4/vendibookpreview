@@ -3,6 +3,16 @@ import { sandboxCaptureTestHeaders } from '../../../supabase/functions/_shared/p
 const id = '14B55178L6621730G';
 const path = `/v2/checkout/orders/${id}/capture`;
 describe('scoped sandbox decline test', () => {
+  it('preserves the explicit all-sandbox test setting without enabling live tests', () => {
+    expect(sandboxCaptureTestHeaders('sandbox', 'POST', path, 'ALL_SANDBOX_ORDERS')['PayPal-Mock-Response']).toBeTruthy();
+    expect(sandboxCaptureTestHeaders('live', 'POST', path, 'ALL_SANDBOX_ORDERS')).toEqual({});
+  });
+  it.each(['INSTRUMENT_DECLINED', 'TRANSACTION_REFUSED', 'INTERNAL_SERVER_ERROR'])('sends supported scenario %s to PayPal', code => {
+    expect(JSON.parse(sandboxCaptureTestHeaders('sandbox', 'POST', path, id, code)['PayPal-Mock-Response']).mock_application_codes).toBe(code);
+  });
+  it('rejects unsupported test names rather than silently making a normal capture', () => {
+    expect(() => sandboxCaptureTestHeaders('sandbox', 'POST', path, id, 'FAKE_SUCCESS')).toThrow('Unsupported');
+  });
   it('asks PayPal to decline only the selected sandbox capture', () => {
     expect(JSON.parse(sandboxCaptureTestHeaders('sandbox', 'POST', path, id)['PayPal-Mock-Response'])).toEqual({ mock_application_codes: 'INSTRUMENT_DECLINED' });
   });
@@ -12,17 +22,4 @@ describe('scoped sandbox decline test', () => {
     expect(sandboxCaptureTestHeaders('sandbox', 'POST', path)).toEqual({});
   });
   it('does not alter status lookups', () => { expect(sandboxCaptureTestHeaders('sandbox', 'GET', path, id)).toEqual({}); });
-});
-
-
-describe('sandbox-wide decline sentinel', () => {
-  it('declines any sandbox capture when the sentinel is configured', () => {
-    expect(JSON.parse(sandboxCaptureTestHeaders('sandbox', 'POST', '/v2/checkout/orders/OTHERORDER0000001/capture', 'ALL_SANDBOX_ORDERS')['PayPal-Mock-Response'])).toEqual({ mock_application_codes: 'INSTRUMENT_DECLINED' });
-  });
-  it('never applies the sentinel in live', () => {
-    expect(sandboxCaptureTestHeaders('live', 'POST', path, 'ALL_SANDBOX_ORDERS')).toEqual({});
-  });
-  it('leaves non-capture calls alone', () => {
-    expect(sandboxCaptureTestHeaders('sandbox', 'POST', '/v2/checkout/orders', 'ALL_SANDBOX_ORDERS')).toEqual({});
-  });
 });

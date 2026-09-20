@@ -286,6 +286,7 @@ export async function paypalRequest<T = any>(
       };
       Object.assign(headers, sandboxCaptureTestHeaders(
         env, method, path, Deno.env.get("PAYPAL_SANDBOX_DECLINE_ORDER_ID"),
+        Deno.env.get("PAYPAL_SANDBOX_CAPTURE_ERROR") || "INSTRUMENT_DECLINED",
       ));
       if (idempotencyKey) headers["PayPal-Request-Id"] = idempotencyKey;
       // Identifies an onboarded seller on merchant-scoped calls (Step 2

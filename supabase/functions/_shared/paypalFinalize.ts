@@ -1,3 +1,4 @@
+import { captureFromOrder } from "./paypalCaptureOutcome.ts";
 /**
  * Shared, idempotent finalisation of a PayPal capture.
  *
@@ -34,7 +35,7 @@ export interface CaptureFacts {
 
 /** Pulls the capture facts out of an Orders v2 capture/get response. */
 export function extractCaptureFacts(order: any): CaptureFacts | null {
-  const capture = order?.purchase_units?.[0]?.payments?.captures?.[0];
+  const capture = captureFromOrder(order);
   if (!capture) return null;
   const unit = order?.purchase_units?.[0];
   const source = order?.payment_source ?? {};
