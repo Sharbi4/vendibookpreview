@@ -2861,7 +2861,7 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
 .v2-home-paypal:hover .v2-home-paypal-cta svg { transform: translateX(3px); }
 @media (max-width: 639px) {
   .v2-home-paypal { flex-direction: column; align-items: flex-start; gap: 16px; padding: 22px 20px; }
-  .v2-home-paypal-mark { width: 240px; max-width: 100%; }
+  .v2-home-paypal-mark { width: 300px; max-width: 100%; }
   .v2-home-paypal-cta { margin-left: 0; }
 }
 
