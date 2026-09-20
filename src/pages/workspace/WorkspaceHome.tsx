@@ -1,3 +1,4 @@
+import DashboardNextSteps from '@/components/workspace/DashboardNextSteps';
 import FeaturedPromotionBanner from '@/components/workspace/FeaturedPromotionBanner';
 import FeaturedBadge from '@/components/listing/FeaturedBadge';
 import { canBoostListing } from '@/lib/listings/publicVisibility';
@@ -34,7 +35,6 @@ import { useFavorites } from '@/hooks/useFavorites';
 import { useHandoffTasks } from '@/hooks/useHandoffTasks';
 import { useVideoWalkthroughs } from '@/hooks/useVideoWalkthroughs';
 import { formatWalkthroughTime } from '@/lib/videoWalkthroughs';
-import { toDashboardTarget } from '@/lib/navigation/dashboardTargets';
 
 const money = (cents: number | null | undefined) =>
   cents == null
@@ -69,12 +69,12 @@ export default function WorkspaceHome() {
   const { transactions } = useUserTransactions(user?.id);
   const { conversations } = useConversations();
   const { isReady: paypalReady } = useMyPayPalConnection();
-  const { notifications, unreadCount: notificationUnread } = useNotifications(user?.id);
+  const { unreadCount: notificationUnread } = useNotifications(user?.id);
   const { favorites } = useFavorites();
   const { walkthroughs } = useVideoWalkthroughs();
   const { data: handoffTasks } = useHandoffTasks();
 
-  const name = profile?.full_name || user?.email || 'there';
+  const name = profile?.full_name?.trim() || 'there';
   const firstName = name.split(' ')[0];
 
   const drafts = listings.filter((l) => l.status === 'draft');
@@ -83,7 +83,7 @@ export default function WorkspaceHome() {
   const pendingBuyerBookings = buyerBookings.filter((b) => b.status === 'pending');
   const disputes = transactions.filter((t) => t.dispute_status && t.dispute_status !== 'none');
   const unread = conversations.reduce((sum, c) => sum + (c.unread_count ?? 0), 0);
-  const upcomingWalkthroughs = walkthroughs.filter((w) => ['scheduled','rescheduled'].includes(w.status) && +new Date(w.ends_at) > Date.now());
+  const upcomingWalkthroughs = walkthroughs.filter((w) => ['scheduled','rescheduled'].includes(w.status) && +new Date(w.ends_at) > Date.now()).sort((a,b) => +new Date(a.starts_at) - +new Date(b.starts_at));
 
   const isSeller = listings.length > 0 || sellerBookings.length > 0;
   const isBuyer = buyerBookings.length > 0 || transactions.some((t) => t.role === 'buyer');
@@ -93,7 +93,7 @@ export default function WorkspaceHome() {
     (handoffTasks ?? []).forEach((t) =>
       items.push({ id: t.id, label: t.label, hint: t.hint, to: t.to, icon: ShieldCheck, tone: t.tone }),
     );
-    upcomingWalkthroughs.slice(0, 3).forEach((w) => items.push({ id:`walkthrough-${w.id}`, label:`Video walkthrough ${formatWalkthroughTime(w.starts_at)}`, hint:w.listing?.title || 'Scheduled walkthrough', to:`/walkthrough/${w.id}`, icon:Video }));
+    upcomingWalkthroughs.forEach((w) => items.push({ id:`walkthrough-${w.id}`, label:`Video walkthrough ${formatWalkthroughTime(w.starts_at)}`, hint:w.listing?.title || 'Scheduled walkthrough', to:`/walkthrough/${w.id}`, icon:Video }));
     if (pendingSellerBookings.length)
       items.push({
         id: 'booking-requests',
@@ -105,8 +105,8 @@ export default function WorkspaceHome() {
     if (drafts.length)
       items.push({
         id: 'drafts',
-        label: `${drafts.length} unfinished listing${drafts.length === 1 ? '' : 's'}`,
-        hint: 'Finish and publish to start getting inquiries.',
+        label: `${drafts.length} listing draft${drafts.length === 1 ? '' : 's'}`,
+        hint: 'Pick up where you left off.',
         to: '/dashboard/listings?status=draft',
         icon: FileText,
       });
@@ -138,12 +138,12 @@ export default function WorkspaceHome() {
     if (!profile?.full_name || !profile?.avatar_url)
       items.push({
         id: 'profile',
-        label: 'Finish your profile',
-        hint: 'A name and photo build trust with buyers and hosts.',
+        label: 'Add your profile details',
+        hint: 'Add a name and photo so people know who they’re working with.',
         to: '/dashboard/account',
         icon: FileText,
       });
-    return items;
+    return items.sort((a,b) => Number(b.tone === 'warn') - Number(a.tone === 'warn'));
   }, [
     handoffTasks,
     pendingSellerBookings.length,
@@ -155,7 +155,7 @@ export default function WorkspaceHome() {
     unread,
     profile?.full_name,
     profile?.avatar_url,
-    upcomingWalkthroughs.length,
+    walkthroughs,
   ]);
 
   const recentActivity = useMemo(
@@ -188,7 +188,7 @@ export default function WorkspaceHome() {
         ...walkthroughs.map((w) => ({ id:`vw-${w.id}`, title:w.listing?.title||'Video walkthrough', detail:`Video walkthrough · ${w.status}`, date:w.created_at, amount:null, icon:Video })),
       ]
         .sort((a, b) => +new Date(b.date) - +new Date(a.date))
-        .slice(0, 5),
+        .slice(0, 3),
     [transactions, buyerBookings, sellerBookings, walkthroughs],
   );
 
@@ -212,50 +212,26 @@ export default function WorkspaceHome() {
       <div className="v2-page-stack">
         <header className="v2-page-heading v2-greeting flex-wrap">
           <div>
-            <p className="v2-eyebrow">Your workspace</p>
-            <h1>Good to see you, {firstName}.</h1>
-            <p>Everything you buy, rent, list, and sell — in one place.</p>
-            <div className="mt-6 flex flex-wrap items-center gap-2.5">
+            <p className="v2-eyebrow">Overview</p>
+            <h1>Welcome back, {firstName}.</h1>
+            <p>Your listings, conversations, and next steps.</p>
+            <div className="mt-4 flex flex-wrap items-center gap-2.5">
               <Link to="/dashboard/listings/new" className="v2-btn">
                 <List />
-                List an asset
+                Create a listing
               </Link>
               <Link to="/search" className="v2-btn-outline">
                 <Search />
-                Browse the marketplace
+                Explore listings
               </Link>
             </div>
           </div>
           <SellerPayPalConnect variant="pill" showWhenDisabled />
         </header>
 
-        {!listingsLoading && isSeller && <FeaturedPromotionBanner listings={listings} />}
+        {!listingsLoading && live.length > 0 && <FeaturedPromotionBanner listings={listings} />}
 
-        {tasks.length > 0 && (
-          <section className="v2-panel">
-            <div className="v2-panel-head">
-              <div>
-                <h2>Needs your attention</h2>
-                <p>Only real tasks from your account appear here.</p>
-              </div>
-            </div>
-            {tasks.map((task) => (
-              <Link className="v2-task-row" to={task.to} key={task.id}>
-                <span className={`v2-task-marker ${task.tone === 'warn' ? 'is-warn' : ''}`}>
-                  <task.icon />
-                </span>
-                <span className="v2-task-copy">
-                  <strong>{task.label}</strong>
-                  <small>{task.hint}</small>
-                </span>
-                <span className="v2-task-action">
-                  Open
-                  <ArrowRight />
-                </span>
-              </Link>
-            ))}
-          </section>
-        )}
+        <DashboardNextSteps tasks={tasks} />
 
         {listingsLoading && !listings.length && (
           <section className="v2-panel">
@@ -297,18 +273,18 @@ export default function WorkspaceHome() {
                     {leadListing.status === 'published' ? 'Live' : leadListing.status}
                   </span>
                   {leadFeatured && <FeaturedBadge listing={leadListing} compact showDaysLeft />}
-                  {isSeller && !paypalReady && (
+                  {leadListing.status === 'published' && !paypalReady && (
                     <span className="v2-status is-warn">Online payments not enabled</span>
                   )}
                 </div>
-                <h3>{leadListing.title}</h3>
+                <h3>{leadListing.title?.trim() || 'Untitled listing'}</h3>
                 <p>
                   {[leadListing.city, leadListing.state].filter(Boolean).join(', ') ||
                     'Location not set'}
                   {leadListing.mode ? ` · ${leadListing.mode === 'sale' ? 'For sale' : 'For rent'}` : ''}
                 </p>
                 <strong className="v2-price">{price(leadListing)}</strong>
-                {typeof leadListing.view_count === 'number' && (
+                {leadListing.status === 'published' && typeof leadListing.view_count === 'number' && (
                   <div className="v2-metrics">
                     <span>
                       <strong>{leadListing.view_count}</strong> views
@@ -316,8 +292,8 @@ export default function WorkspaceHome() {
                   </div>
                 )}
                 <div className="v2-listing-actions">
-                  <Link className="v2-btn v2-btn-sm" to={`/listing/${leadListing.id}`}>
-                    View
+                  <Link className="v2-btn v2-btn-sm" to={leadListing.status === 'draft' ? `/dashboard/listings/${leadListing.id}/edit` : `/listing/${leadListing.id}`}>
+                    {leadListing.status === 'draft' ? 'Finish listing' : 'View listing'}
                   </Link>
                   <Link className="v2-btn-outline v2-btn-sm" to={`/edit-listing/${leadListing.id}`}>
                     Edit
@@ -342,7 +318,7 @@ export default function WorkspaceHome() {
                   )}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <Link to={`/edit-listing/${listing.id}`} className="block truncate font-semibold">{listing.title}</Link>
+                  <Link to={`/edit-listing/${listing.id}`} className="block truncate font-semibold">{listing.title?.trim() || 'Untitled listing'}</Link>
                   <small>
                     {[listing.city, listing.state].filter(Boolean).join(', ') || 'Location not set'}{' '}
                     · {listing.status === 'published' ? 'Live' : listing.status}
@@ -375,7 +351,7 @@ export default function WorkspaceHome() {
             <div className="v2-panel-head">
               <div>
                 <h2>Recent activity</h2>
-                <p>Purchases, sales, rentals, and booking requests.</p>
+                <p>Your latest marketplace updates.</p>
               </div>
               <Link to="/dashboard/activity" className="v2-btn-quiet">
                 View all
@@ -398,7 +374,7 @@ export default function WorkspaceHome() {
               ))
             ) : (
               <div className="v2-empty">
-                <p>Nothing here yet.</p>
+                <p>Your activity will appear here.</p>
                 <Link to="/search" className="v2-btn-quiet">
                   Find something to buy or rent
                 </Link>
@@ -409,8 +385,8 @@ export default function WorkspaceHome() {
           <section className="v2-panel">
             <div className="v2-panel-head">
               <div>
-                <h2>Money</h2>
-                <p>Recorded marketplace payments and payment setup.</p>
+                <h2>Transactions</h2>
+                <p>Track purchases, sales, and payment status.</p>
               </div>
               <Link to="/dashboard/payments" className="v2-btn-quiet">
                 Open payments
@@ -419,11 +395,11 @@ export default function WorkspaceHome() {
             <div className="v2-snapshot">
               <div>
                 <strong>{sellerEarnings.length}</strong>
-                <span>Sales &amp; rental payments received</span>
+                <span>Seller transactions</span>
               </div>
               <div>
                 <strong>{buyerPayments.length}</strong>
-                <span>Payments you made</span>
+                <span>Buyer transactions</span>
               </div>
             </div>
           </section>
@@ -440,7 +416,7 @@ export default function WorkspaceHome() {
             </Link>
           </div>
           {conversations.length ? (
-            conversations.slice(0, 4).map((conversation) => {
+            conversations.slice(0, 2).map((conversation) => {
               const other =
                 conversation.host_id === user?.id ? conversation.shopper : conversation.host;
               return (
@@ -476,67 +452,16 @@ export default function WorkspaceHome() {
           )}
         </section>
 
-        <div className="v2-two-column">
-          <section className="v2-panel">
-            <div className="v2-panel-head">
-              <div>
-                <h2>Notifications</h2>
-                <p>
-                  {notificationUnread
-                    ? `${notificationUnread} unread`
-                    : 'Your latest account updates.'}
-                </p>
-              </div>
-              <Link to="/dashboard/notifications" className="v2-btn-quiet">
-                View all
-              </Link>
-            </div>
-            {notifications.length ? (
-              notifications.slice(0, 4).map((n) => (
-                <Link
-                  className="v2-activity-row"
-                  to={toDashboardTarget(n.link) || '/dashboard/notifications'}
-                  key={n.id}
-                >
-                  <span className="v2-activity-icon">
-                    <Bell />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <strong className="truncate">{n.title}</strong>
-                    <small className="truncate">{n.message}</small>
-                  </span>
-                  {!n.read_at && <span className="v2-status">New</span>}
-                </Link>
-              ))
-            ) : (
-              <div className="v2-empty">
-                <p>No notifications yet.</p>
-              </div>
-            )}
-          </section>
-
-          <section className="v2-panel">
-            <div className="v2-panel-head">
-              <div>
-                <h2>Saved listings</h2>
-                <p>
-                  {favorites.length
-                    ? `${favorites.length} saved ${favorites.length === 1 ? 'listing' : 'listings'}`
-                    : 'Save listings while browsing to compare them later.'}
-                </p>
-              </div>
-              <Link to="/dashboard/saved" className="v2-btn-quiet">
-                Open saved
-              </Link>
-            </div>
-            <div className="v2-empty">
-              <Link to="/search" className="v2-btn-quiet">
-                <Search />
-                Browse the marketplace
-              </Link>
-            </div>
-          </section>
-        </div>
+        <nav aria-label="Account shortcuts" className="grid gap-3 sm:grid-cols-2">
+          <Link to="/dashboard/notifications" className="v2-panel flex items-center gap-3 p-4 hover:border-orange-200">
+            <Bell className="h-5 w-5 shrink-0 text-muted-foreground" />
+            <span className="min-w-0 flex-1"><strong className="block text-sm">Updates</strong><small className="text-muted-foreground">{notificationUnread ? `${notificationUnread} unread` : 'You’re all caught up'}</small></span><ArrowRight className="h-4 w-4" />
+          </Link>
+          <Link to="/dashboard/saved" className="v2-panel flex items-center gap-3 p-4 hover:border-orange-200">
+            <Search className="h-5 w-5 shrink-0 text-muted-foreground" />
+            <span className="min-w-0 flex-1"><strong className="block text-sm">Your shortlist</strong><small className="text-muted-foreground">{favorites.length ? `${favorites.length} saved listings to compare` : 'Save listings as you browse'}</small></span><ArrowRight className="h-4 w-4" />
+          </Link>
+        </nav>
       </div>
     </WorkspaceShell>
   );
