@@ -586,7 +586,7 @@ async function loadBookingContext(bookingId: string) {
     .select(
       'id,host_id,shopper_id,listing_id,status,start_date,end_date,start_time,end_time,total_price,deposit_amount,' +
         'is_instant_book,is_hourly_booking,duration_hours,fulfillment_selected,delivery_address,delivery_instructions,' +
-        'delivery_fee_snapshot,tax_amount,slot_name',
+        'delivery_fee_snapshot,tax_amount,slot_name,renter_snapshot',
     )
     .eq('id', bookingId)
     .maybeSingle();
@@ -617,7 +617,10 @@ async function loadBookingContext(bookingId: string) {
     .maybeSingle();
 
   const host = await loadProfile(booking.host_id);
-  const renter = await loadProfile(booking.shopper_id);
+  const snapshot = booking.renter_snapshot;
+  const renter = snapshot ? { ...snapshot, id: booking.shopper_id,
+    full_name: `${snapshot.first_name ?? ''} ${snapshot.last_name ?? ''}`.trim() }
+    : await loadProfile(booking.shopper_id); // Legacy rows have no historical contact snapshot.
   return { booking, listing, rentalTerms, requirementRows, terms, host, renter };
 }
 
@@ -724,7 +727,7 @@ export async function ensureRentalAgreement(bookingId: string): Promise<EnsureRe
       { role: 'host', signnowRole: 'Host', order: 2, user_id: booking.host_id, profile: host },
     ],
     prefill,
-    snapshot: { source: 'booking_request', booking_id: bookingId, prefill },
+    snapshot: { source: 'booking_request', booking_id: bookingId, renter_contact: booking.renter_snapshot ?? null, delivery_address: booking.delivery_address ?? null, prefill },
     metadata: {
       requirements_version: REQUIREMENTS_SNAPSHOT_VERSION,
       is_instant_book: !!booking.is_instant_book,

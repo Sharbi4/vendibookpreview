@@ -1,4 +1,4 @@
-import { isValidRentalDateRange } from '@/lib/rentalCheckoutValidation';
+import { isValidRentalDateRange, parseRentalDate, parseRentalSlot, rentalIsInstant, rentalSubmitAllowed, validRentalContact } from '@/lib/rentalCheckoutValidation';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { format, parseISO, differenceInDays } from 'date-fns';
@@ -147,10 +147,9 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
     );
   /**
    * Instant Book skips host approval ONLY for identity-verified hosts.
-   * Everyone else: payment is taken and the booking waits for the host to
-   * accept. Mirrors the server rule in `paypalFinalize`.
+   * Everyone else sends a request first; PayPal is available only after approval.
    */
-  const { verified: hostIdentityVerified } = useSellerVerifiedBadge(listing?.host_id);
+  const { verified: hostIdentityVerified, loading: hostIdentityLoading } = useSellerVerifiedBadge(listing?.host_id);
   /** Hides the functional PayPal action if the host hasn't finished payment
    *  setup. Never blocks bookings when gating isn't active for this host. */
   const paymentReadiness = useSellerPaymentReadiness(listing?.host_id);
@@ -159,9 +158,9 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   // spots left on a selected day) and signals that with ?flow=request.
   const requestedFlow = searchParams.get('flow');
   const instantConfirm =
-    !!listing?.instant_book && hostIdentityVerified && requestedFlow !== 'request';
+    rentalIsInstant(!!listing?.instant_book, hostIdentityVerified, requestedFlow);
   const { data: ratingData } = useListingAverageRating(listingId);
-  const { data: requiredDocs } = useListingRequiredDocuments(listingId || '');
+  const { data: requiredDocs, isLoading: requirementsLoading, isError: requirementsError } = useListingRequiredDocuments(listingId || '');
   const requiredDocTypes = requiredDocs?.map(d => d.document_type as string);
   const { data: docsOnFileData } = useDocumentsOnFile(requiredDocTypes);
   const docsOnFile = docsOnFileData?.docsOnFile ?? false;
@@ -193,13 +192,14 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
         startDate: startDateParam,
         hourlyData: hourlyDataParam,
         timeSlots: timeSlotsParam,
+        endDate: endDateParam, startTime: startTimeParam, endTime: endTimeParam,
       }),
-    [startDateParam, hourlyDataParam, timeSlotsParam]
+    [startDateParam, endDateParam, hourlyDataParam, timeSlotsParam, startTimeParam, endTimeParam]
   );
 
-  const hoursParamValue = hoursParam ? Number(hoursParam) : 0;
   const hoursFromSelections = useMemo(() => getTotalSelectedHours(hourlySelections), [hourlySelections]);
-  const durationHours = hoursFromSelections > 0 ? hoursFromSelections : Number.isFinite(hoursParamValue) && hoursParamValue > 0 ? hoursParamValue : 0;
+  const durationHours = hoursFromSelections;
+  const hourlyInputRequested = !!(hoursParam || hourlyDataParam || timeSlotsParam || startTimeParam || endTimeParam);
   const selectedHourlyDays = useMemo(() => getSelectedDaysCount(hourlySelections), [hourlySelections]);
 
   const isHourlyBooking =
@@ -208,10 +208,10 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
 
   // State
   const [startDate, setStartDate] = useState<Date | undefined>(
-    startDateParam ? parseISO(startDateParam) : undefined
+    parseRentalDate(startDateParam)
   );
   const [endDate, setEndDate] = useState<Date | undefined>(
-    endDateParam ? parseISO(endDateParam) : undefined
+    parseRentalDate(endDateParam)
   );
   const [startTime, setStartTime] = useState<string | undefined>(startTimeParam || undefined);
   const [endTime, setEndTime] = useState<string | undefined>(endTimeParam || undefined);
@@ -249,11 +249,11 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   const agreementLockRef = useRef(false);
   const uploadedDocumentsRef = useRef(new Set<StagedDocument>());
   /** Where /auth should send the buyer back to — the rental flow, never /checkout. */
-  const bookingReturnPath = `/book/${listingId ?? ''}${
+  const bookingReturnPath = `${checkoutBasePath}/${listingId ?? ''}${
     searchParams.toString() ? `?${searchParams.toString()}` : ''
   }`;
   const confirmationUrl = (id: string) =>
-    `${window.location.origin}/booking-confirmation?booking_id=${id}`;
+    `${window.location.origin}/dashboard/bookings/${id}?step=payment`;
   const [stagedDocuments, setStagedDocuments] = useState<StagedDocument[]>([]);
   const [showAuthModal, setShowAuthModal] = useState(false);
 
@@ -271,8 +271,16 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   } | null>(null);
 
   // Slot selection state for vendor spaces
-  const [selectedSlot, setSelectedSlot] = useState<number | null>(null);
+  const [selectedSlot, setSelectedSlot] = useState<number | null>(() => parseRentalSlot(searchParams.get('slot')));
   const [selectedSlotName, setSelectedSlotName] = useState<string | null>(null);
+  useEffect(() => {
+    const slot = parseRentalSlot(searchParams.get('slot'));
+    const max = Number((listing as any)?.total_slots ?? 1);
+    setSelectedSlot(slot && slot <= max ? slot : null);
+    setSelectedSlotName(slot && slot <= max ? ((listing as any)?.slot_names?.[slot - 1] || `Spot ${slot}`) : null);
+    setStartDate(parseRentalDate(searchParams.get('start')));
+    setEndDate(parseRentalDate(searchParams.get('end')));
+  }, [searchParams, listing]);
 
   const isMobileAsset = listing?.category === 'food_truck' || listing?.category === 'food_trailer';
   /** Host-provided towing/handoff columns (may be absent on older listings). */
@@ -316,7 +324,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
 
   // Pre-warm the canonical CAPTURE SDK during earlier steps. PayPal approval
   // returns to Vendibook; capture waits for the buyer's final Submit payment.
-  useWarmPayPalCheckout(listing?.host_id ?? null, 'CAPTURE');
+  useWarmPayPalCheckout(listing?.host_id ?? null);
 
   /** Shared period quote (weekly/monthly bundling), also used for the summary line. */
   const rentalQuote = useMemo(
@@ -435,7 +443,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
 
   // Completeness — used to gate the review/payment section. No step wizard:
   // every section is always visible and each tracks its own completion.
-  const isStepContactComplete = Boolean(userInfo?.agreedToTerms);
+  const isStepContactComplete = validRentalContact(userInfo);
   const isBusinessInfoComplete = !requiresBusinessInfo || Boolean(
     businessInfo?.licenseType &&
     (businessInfo.licenseType !== 'other' || businessInfo.licenseTypeOther) &&
@@ -448,21 +456,22 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   const allDocsStaged = !hasRequiredDocs || docsOnFile || preBookingBlockers.every(req =>
     stagedDocuments.some(doc => doc.documentType === req.document_type)
   );
-  const isStepDocsComplete = !hasRequiredDocs || (docsStepDone && allDocsStaged);
+  const isStepDocsComplete = !requirementsLoading && !requirementsError && (preBookingBlockers.length === 0 || (docsStepDone && allDocsStaged));
   const isFulfillmentComplete = Boolean(userInfo?.agreedToTerms) &&
     (fulfillmentSelected !== 'delivery' || Boolean(deliveryAddress.trim()));
   const isStepFulfillmentComplete = isFulfillmentComplete;
   // The server records the attestation; this only tracks that the step was passed.
-  const isStepDisclosureComplete = disclosureDone;
+  const isStepDisclosureComplete = disclosureDone && !!disclosureRecord?.attestedAt && !!disclosureRecord?.documentVersion;
 
-  const canSubmit =
-    isStepContactComplete &&
-    isStepBusinessInfoComplete &&
-    isStepDocsComplete &&
-    isStepFulfillmentComplete &&
-    isStepDisclosureComplete;
+  const canSubmit = rentalSubmitAllowed({
+    contact: isStepContactComplete && !hostIdentityLoading, business: !!isStepBusinessInfoComplete,
+    documents: isStepDocsComplete, disclosure: isStepDisclosureComplete,
+    fulfillment: fulfillmentSelected, deliveryAddress, slotRequired: hasMultipleSlots,
+    slot: selectedSlot, legal: legalAccepted, dates: isValidRentalDateRange(startDate, endDate) && (!hourlyInputRequested || isHourlyBooking),
+    selfBooking: !!user && user.id === listing?.host_id,
+  });
 
-  const nextIncompleteReason = !isStepContactComplete
+  const nextIncompleteReason = hourlyInputRequested && !isHourlyBooking ? 'Choose valid rental hours for your dates.' : !isStepContactComplete
     ? 'Add your contact details above to continue.'
     : !isStepBusinessInfoComplete
       ? 'Finish your business details above to continue.'
@@ -475,21 +484,43 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
             : null;
 
   const handleDatesSelected = (start: Date, end: Date) => {
+    if (!isValidRentalDateRange(start, end)) return;
+    if (startDate?.getTime() === start.getTime() && endDate?.getTime() === end.getTime()) return;
+    setPaypalCheckout(null);
+    setRentalAgreementAccepted(false);
+    setPrivacyAccepted(false);
     setStartDate(start);
     setEndDate(end);
-    // Switching dates inside checkout should reset any hourly-only URL params
+    // Preserve compatible hourly selections; discard hours outside the new dates
     setStartTime(undefined);
     setEndTime(undefined);
 
     // Update URL
     const params = new URLSearchParams(searchParams);
     ['startTime', 'endTime', 'hours', 'hourlyData', 'timeSlots'].forEach((key) => params.delete(key));
+    const compatibleHours = Object.entries(hourlySelections).filter(([date]) =>
+      date >= format(start, 'yyyy-MM-dd') && date <= format(end, 'yyyy-MM-dd'));
+    if (compatibleHours.length) {
+      params.set('hourlyData', compatibleHours.map(([date, slots]) => `${date}:${[...slots].sort().join(',')}`).join('|'));
+      params.set('hours', String(compatibleHours.reduce((sum, [, slots]) => sum + slots.length, 0)));
+    }
     params.set('start', format(start, 'yyyy-MM-dd'));
     params.set('end', format(end, 'yyyy-MM-dd'));
     navigate(`${checkoutBasePath}/${listingId}?${params.toString()}`, { replace: true });
   };
 
   const termsGate = useTermsGate();
+  const selectionKey = JSON.stringify([startDate?.getTime(), endDate?.getTime(), selectedSlot,
+    fulfillmentSelected, deliveryAddress, businessInfo, userInfo, stagedDocuments.map(d => [d.documentType, d.file.name, d.file.size]),
+    rentalAgreement.data?.content_hash, privacyDocument.data?.content_hash]);
+  const previousSelection = useRef(selectionKey);
+  useEffect(() => {
+    if (previousSelection.current !== selectionKey) {
+      previousSelection.current = selectionKey;
+      setRentalAgreementAccepted(false); setPrivacyAccepted(false); setPaypalCheckout(null);
+    }
+  }, [selectionKey]);
+
 
   const buildCurrentTerms = () => {
     if (!listing || !listingId || !startDate || !endDate) return null;
@@ -534,7 +565,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
 
   const handleSubmit = async () => {
     if (agreementLockRef.current || submitLockRef.current || termsGate.preparing) return;
-    if (!canSubmit || paymentSetupBlocked || paymentReadiness.loading) {
+    if (!canSubmit || (instantConfirm && (paymentSetupBlocked || paymentReadiness.loading))) {
       toast({ title: 'Complete your booking details', description: nextIncompleteReason || 'Wait for payment availability to be confirmed.', variant: 'destructive' });
       return;
     }
@@ -587,7 +618,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
 
   const runSubmit = async () => {
     if (submitLockRef.current) return;
-    if (!canSubmit || !legalAccepted || paymentSetupBlocked || paymentReadiness.loading) {
+    if (!canSubmit || !legalAccepted || (instantConfirm && (paymentSetupBlocked || paymentReadiness.loading))) {
       toast({ title: 'Review your booking', description: nextIncompleteReason || 'Confirm your agreements and payment availability before continuing.', variant: 'destructive' });
       return;
     }
@@ -624,7 +655,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
       const hourlySlots = isHourlyBooking && Object.keys(hourlySelections).length > 0
         ? Object.entries(hourlySelections).map(([date, slots]) => ({
             date,
-            slots: slots.sort(),
+            slots: [...slots].sort(),
           }))
         : null;
 
@@ -637,7 +668,10 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
         message: message.trim() || null,
         total_price: fees.customerTotal,
         fulfillment_selected: fulfillmentSelected,
-        is_instant_book: listing.instant_book || false,
+        is_instant_book: instantConfirm,
+        renter_snapshot: { first_name: userInfo.firstName.trim(), last_name: userInfo.lastName.trim(),
+          email: user.email, phone_number: userInfo.phoneNumber.trim(), address1: userInfo.address1.trim(),
+          address2: userInfo.address2?.trim() || '', city: userInfo.city.trim(), state: userInfo.state.trim(), zip_code: userInfo.zipCode.trim() },
         deposit_amount: depositAmount,
         // Hourly booking fields
         is_hourly_booking: isHourlyBooking,
@@ -659,11 +693,12 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
 
       let bookingId = createdBookingIdRef.current;
       if (bookingId) {
+        // Financial fields are derived by the database after validating edits.
+        const { total_price: _total, delivery_fee_snapshot: _deliveryFee, deposit_amount: _deposit, ...editableBooking } = bookingData;
         const { error: syncError } = await supabase.from('booking_requests')
           .update({
-            ...(bookingData as any),
+            ...(editableBooking as any),
             delivery_address: fulfillmentSelected === 'delivery' ? deliveryAddress.trim() : null,
-            delivery_fee_snapshot: fulfillmentSelected === 'delivery' ? (listing.delivery_fee || null) : null,
           })
           .eq('id', bookingId).eq('shopper_id', user.id)
           .neq('payment_status', 'paid').select('id').single();
@@ -701,20 +736,25 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
       // reaching this point means the slot is still held for this guest.
 
 
-      setPaypalCheckout({
-        bookingId: bookingId!,
-        returnUrl: confirmationUrl(bookingId!),
-      });
+      if (instantConfirm) {
+        setPaypalCheckout({ bookingId: bookingId!, returnUrl: confirmationUrl(bookingId!) });
+      } else {
+        const { error: notificationError } = await supabase.functions.invoke('send-booking-notification', {
+          body: { booking_id: bookingId, event_type: 'submitted' },
+        });
+        if (notificationError) throw notificationError;
+        navigate(`/dashboard/bookings/${bookingId}`);
+      }
 
       // Fire tracking calls asynchronously so they never block the payment panel.
-      const formType = listing.instant_book ? 'instant_book' : 'booking_request_hold';
+      const formType = instantConfirm ? 'instant_book' : 'booking_request';
       setTimeout(() => {
         trackFormSubmitConversion({ form_type: formType, listing_id: listingId });
-        trackRequestSubmitted(listingId || '', listing.instant_book || false);
+        trackRequestSubmitted(listingId || '', instantConfirm);
       }, 0);
 
-      // NOTE: Do NOT send booking notifications here — they are sent only after
-      // the payment capture is verified server-side.
+      // Request-submitted notices belong to the request flow above. Paid
+      // booking notices are emitted only after server-verified capture.
       setIsSubmitting(false);
       return;
 
@@ -817,6 +857,9 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
                     onClick={() => {
                       setSelectedSlot(slotNumber);
                       setSelectedSlotName(slotName);
+                      const params = new URLSearchParams(searchParams);
+                      params.set('slot', String(slotNumber));
+                      navigate(`${checkoutBasePath}/${listingId}?${params}`, { replace: true });
                     }}
                     className={cn(
                       "relative p-4 rounded-xl border-2 transition-all duration-200 text-left group",
@@ -980,13 +1023,13 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
       typeLabel={listing.category ? listing.category.replace('_', ' ') : null}
       location={listingLocation}
       priceLabel={formatCurrency(totalChargedToday)}
-      priceNote="Total due today"
+      priceNote={instantConfirm ? "Total due at payment" : "Nothing due until approval"}
       meta={summaryMeta}
     >
       <MoneyBreakdown
         lines={moneyLines}
         total={formatCurrency(totalChargedToday)}
-        totalLabel="Total due today"
+        totalLabel={instantConfirm ? "Total due at payment" : "Total after host approval"}
       />
       {rentalStory}
     </ListingCheckoutSummary>
@@ -998,7 +1041,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
       title={listing.title}
       location={listingLocation}
       priceLabel={formatCurrency(totalChargedToday)}
-      priceNote="Total due today"
+      priceNote={instantConfirm ? "Total due at payment" : "Nothing due until approval"}
       meta={[{ label: isHourlyBooking ? 'Hours' : 'Dates', value: dateLabel }]}
     />
   );
@@ -1007,7 +1050,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
     <details className="sale-mobile-summary">
       <summary>Show order summary <strong>{formatCurrency(totalChargedToday)}</strong></summary>
       {mobileSummaryCard}
-      <MoneyBreakdown lines={moneyLines} total={formatCurrency(totalChargedToday)} totalLabel="Total due today" />
+      <MoneyBreakdown lines={moneyLines} total={formatCurrency(totalChargedToday)} totalLabel={instantConfirm ? "Total due at payment" : "Total after host approval"} />
     </details>
   );
 
@@ -1015,11 +1058,11 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
     <Button
       className="checkout-primary-action h-12 px-6 rounded-xl font-semibold bg-foreground text-background hover:bg-foreground/90"
       onClick={handleSubmit}
-      disabled={isSubmitting || termsGate.preparing || !canSubmit || paymentReadiness.loading || paymentSetupBlocked || !legalAccepted}
+      disabled={isSubmitting || termsGate.preparing || !canSubmit || (instantConfirm && (paymentReadiness.loading || paymentSetupBlocked)) || !legalAccepted}
       title={!canSubmit ? nextIncompleteReason ?? undefined : undefined}
     >
       {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-      {instantConfirm ? 'Confirm & pay' : 'Continue to payment'}
+      {instantConfirm ? 'Confirm & pay' : 'Send booking request'}
     </Button>
   );
 
@@ -1100,7 +1143,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
                 ...(hasMultipleSlots && selectedSlotName ? [{ label: 'Space', value: selectedSlotName }] : []),
               ]}
               priceLabel={formatCurrency(totalChargedToday)}
-              priceNote="Total due today"
+              priceNote={instantConfirm ? "Total due at payment" : "Nothing due until approval"}
               fulfillmentLabel={
                 fulfillmentSelected === 'delivery'
                   ? 'Host delivery'
@@ -1118,7 +1161,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
               onEditFulfillment={() => goToStep(2)}
               moneyLines={moneyLines}
               total={formatCurrency(totalChargedToday)}
-              totalLabel="Total due today"
+              totalLabel={instantConfirm ? "Total due at payment" : "Total after host approval"}
               onContinue={() => goToStep(2)}
               continueLabel="Continue"
               backHref={listingHref}
@@ -1308,6 +1351,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
                   <p className="text-sm font-semibold text-foreground mt-4 mb-1">Verification</p>
                   <p className="text-xs text-muted-foreground mb-4">Confirm insurance information and complete any identity check required for this rental.</p>
                   <RentalVerificationPanel
+                    onValidityChange={(valid) => { if (!valid) setDisclosureDone(false); }}
                     listingId={listing.id}
                     disabled={isSubmitting}
                     onInsuranceAnswer={(answer) =>
@@ -1341,7 +1385,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
                   {cancellationPolicyText ?? (
                     <>
                       This host hasn't published a custom policy, so Vendibook's standard rental
-                      policy applies: cancel before the host accepts for a full refund; after
+                      policy applies: cancel an unpaid request without a payment refund; after
                       acceptance, refunds follow the terms you accept at payment.{' '}
                       <Link to={`/listing/${listingId}#terms`} className="underline underline-offset-2">
                         See rental terms
@@ -1373,7 +1417,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   {instantConfirm
                     ? 'PayPal processes your payment now. Your booking is confirmed as soon as the payment completes, and the full record is saved to your account.'
-                    : 'PayPal processes your payment now and your request is sent to the host. If they decline or do not respond, Vendibook refunds the payment to your original payment method.'}
+                    : 'Send your request to the host. Nothing is charged or held. After approval, return to your booking to review the final total and pay with PayPal.'}
                 </p>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   Vendibook records the transaction and reviews host payouts after the rental begins. Payments are
@@ -1384,10 +1428,10 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
               <MoneyBreakdown
                 lines={moneyLines}
                 total={formatCurrency(totalChargedToday)}
-                totalLabel="Total due today"
+                totalLabel={instantConfirm ? "Total due at payment" : "Total after host approval"}
               />
 
-              {paypalCheckout ? (
+              {paypalCheckout && instantConfirm && canSubmit ? (
                 <>
                   <PayPalEmbeddedPayment
                     target={{ kind: 'booking', id: paypalCheckout.bookingId }}
@@ -1400,14 +1444,14 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
                     intent={
                       instantConfirm
                         ? 'Your booking is confirmed the moment PayPal verifies your payment.'
-                        : 'Your dates are held the moment PayPal verifies your payment; the host still has to accept.'
+                        : 'Pay after the host approves your request.'
                     }
                   />
                   <button type="button" className="v2-btn-quiet" onClick={() => setPaypalCheckout(null)}>
                     Edit booking details
                   </button>
                 </>
-              ) : paymentSetupBlocked ? (
+              ) : instantConfirm && paymentSetupBlocked ? (
                 <div className="rounded-xl border border-border bg-muted/40 p-4 space-y-2">
                   <div className="flex items-center gap-2">
                     <Info className="h-4 w-4 text-muted-foreground" />
@@ -1423,7 +1467,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
                   <Button
                     className="checkout-primary-action w-full h-14 text-base bg-foreground text-background hover:bg-foreground/90 rounded-xl font-semibold"
                     onClick={handleSubmit}
-                    disabled={isSubmitting || termsGate.preparing || !canSubmit || paymentReadiness.loading || paymentSetupBlocked || !legalAccepted}
+                    disabled={isSubmitting || termsGate.preparing || !canSubmit || (instantConfirm && (paymentReadiness.loading || paymentSetupBlocked)) || !legalAccepted}
                   >
                     {isSubmitting ? (
                       <>
@@ -1513,7 +1557,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
           onOpenChange={termsGate.setOpen}
           onConfirm={runSubmit}
           submitting={isSubmitting || termsGate.preparing}
-          confirmLabel="Continue to secure payment"
+          confirmLabel={instantConfirm ? "Continue to secure payment" : "Send booking request"}
         />
       ) : null}
     </div>

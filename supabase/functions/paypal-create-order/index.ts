@@ -1,3 +1,4 @@
+import { assertRentalCheckoutReady } from "../_shared/rentalCheckoutReady.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
@@ -98,6 +99,7 @@ serve(async (req) => {
     let quote: QuoteResult;
     let saleTransactionId: string | null = null;
     let bookingRequestId: string | null = null;
+    let rentalFingerprint: string | null = null;
     let monetizationPurchaseId: string | null = null;
     /** Set for Vendibook service charges so the capture can fulfil them. */
     let fulfillment: Record<string, string> | null = null;
@@ -204,6 +206,18 @@ serve(async (req) => {
       if (booking.host_id === user.id) {
         return jsonError(403, "self_transaction", "You can't book your own listing.");
       }
+      try { await assertRentalCheckoutReady(admin, booking, authHeader); }
+      catch (error) { return jsonError(409, "rental_requirements", (error as Error).message); }
+      if (booking.payment_lock_record_id || booking.payment_status === "paid") {
+        return jsonError(409, "payment_in_progress", "This booking already has a payment being verified. Open its payment status before paying again.");
+      }
+      if (booking.is_instant_book && booking.status !== "approved") {
+        const { data: verified } = await admin.rpc("is_seller_identity_verified", { _user_id: booking.host_id });
+        if (verified !== true) return jsonError(409, "payment_not_ready", "The host needs to approve this request before payment.");
+      }
+      const { data: fingerprint, error: fingerprintError } = await admin.rpc("rental_checkout_fingerprint", { b: booking });
+      if (fingerprintError || !fingerprint) return jsonError(409, "quote_unavailable", "We could not verify this booking. Please try again.");
+      rentalFingerprint = fingerprint;
       // COMMITMENT POINT for rentals: resolve Vendibook Pro once, lock the
       // host-side fee onto the booking, and never reprice it afterwards.
       const hostPro = booking.host_platform_fee !== null && booking.host_platform_fee !== undefined
@@ -555,7 +569,7 @@ serve(async (req) => {
     if (inflightFilter) {
       const { data: existing } = await admin
         .from("payment_records")
-        .select("id, reference, paypal_order_id, payment_status, gross_amount_cents, payment_intent")
+        .select("id, reference, paypal_order_id, payment_status, gross_amount_cents, payment_intent, fee_breakdown")
         .eq(inflightFilter.column, inflightFilter.value)
         .in("payment_status", ["created", "approved"])
         .gt("created_at", new Date(Date.now() - 20 * 60_000).toISOString())
@@ -566,7 +580,8 @@ serve(async (req) => {
       if (
         existing?.paypal_order_id &&
         existing.gross_amount_cents === quote.grossCents &&
-        existing.payment_intent === PAYPAL_CHECKOUT_INTENT
+        existing.payment_intent === PAYPAL_CHECKOUT_INTENT &&
+        (!bookingRequestId || existing.fee_breakdown?.rental_fingerprint === rentalFingerprint)
       ) {
         safeLog("reusing_inflight_order", { reference: existing.reference });
         return jsonResponse(200, {
@@ -627,6 +642,7 @@ serve(async (req) => {
         balance_due_at: decision.balanceDueAt,
         idempotency_key: quote.reference,
         fee_breakdown: {
+          ...(bookingRequestId ? { rental_fingerprint: rentalFingerprint } : {}),
           lines: quote.breakdown,
           release_at: quote.releaseAt,
           ...(fulfillment ? { fulfillment } : {}),
@@ -707,8 +723,8 @@ serve(async (req) => {
       shipping: shippingAddress,
       buyerEmail: user.email ?? null,
       buyerPhone,
-      returnUrl: `${SITE_URL}/payment/return?ref=${encodeURIComponent(quote.reference)}`,
-      cancelUrl: `${SITE_URL}/payment/cancelled?ref=${encodeURIComponent(quote.reference)}`,
+      returnUrl: `${SITE_URL}/payment/return?ref=${encodeURIComponent(quote.reference)}${bookingRequestId ? `&returnTo=${encodeURIComponent(`/dashboard/bookings/${bookingRequestId}?step=payment`)}` : ""}`,
+      cancelUrl: `${SITE_URL}/payment/cancelled?ref=${encodeURIComponent(quote.reference)}${bookingRequestId ? `&returnTo=${encodeURIComponent(`/dashboard/bookings/${bookingRequestId}?step=payment`)}` : ""}`,
       sellerId: quote.sellerId ?? null,
       payeeMerchantId: routing?.merchantId ?? null,
       platformFeeCents: routing?.platformFeeCents ?? 0,

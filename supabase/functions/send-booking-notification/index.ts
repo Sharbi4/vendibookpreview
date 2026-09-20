@@ -1,3 +1,4 @@
+import { assertRentalCheckoutReady } from "../_shared/rentalCheckoutReady.ts";
 // Routes booking-event notifications through the Lovable Emails queue using the
 // premium Satin Lux `generic-notice` template. No direct Resend usage.
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
@@ -60,6 +61,21 @@ serve(async (req) => {
       .from("booking_requests").select("*").eq("id", booking_id).single();
     if (bookingError || !booking) throw new Error(`Failed to fetch booking: ${bookingError?.message}`);
 
+    const bearer = (req.headers.get("Authorization") ?? "").replace("Bearer ", "");
+    const service = bearer === Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const { data: caller } = service ? { data: null } : await supabase.auth.getUser(bearer);
+    const allowedUser = event_type === "submitted" ? booking.shopper_id : booking.host_id;
+    if (!service && (caller?.user?.id !== allowedUser || event_type === "paid")) {
+      return new Response(JSON.stringify({ error: "Forbidden" }), { status: 403, headers: corsHeaders });
+    }
+    if ((event_type === "paid" && booking.payment_status !== "paid") ||
+        (event_type === "approved" && booking.status !== "approved") ||
+        (event_type === "submitted" && (booking.is_instant_book || booking.status !== "pending"))) {
+      return new Response(JSON.stringify({ error: "Booking state does not match event" }), { status: 409, headers: corsHeaders });
+    }
+    if (event_type === "submitted" && !service) {
+      await assertRentalCheckoutReady(supabase, booking, req.headers.get("Authorization") ?? "");
+    }
     const { data: listing } = await supabase
       .from("listings").select("title, address, fulfillment_type").eq("id", booking.listing_id).single();
     const { data: shopper } = await supabase
@@ -109,7 +125,7 @@ serve(async (req) => {
               ...(booking.message ? [{ label: "Message", value: booking.message }] : []),
             ],
             ctaLabel: "Review request",
-            ctaUrl: `${SITE_URL}/dashboard`,
+            ctaUrl: `${SITE_URL}/dashboard/bookings/${booking_id}?step=payment`,
           },
           idempotencyKey: `booking-${booking_id}-submitted-host`,
         });
@@ -119,7 +135,7 @@ serve(async (req) => {
           user_id: booking.host_id, type: "booking_request",
           title: `New Booking Request #${bookingRef}`,
           message: `${shopper?.full_name || "Someone"} requested ${listingTitle} from ${startDate} to ${endDate}`,
-          link: "/dashboard",
+          link: `/dashboard/bookings/${booking_id}?step=payment`,
         });
       }
       if (shopper?.email && shopperWantsRequest) {
@@ -134,7 +150,7 @@ serve(async (req) => {
             paragraphs: [`Your request for ${listingTitle} is in. You'll get an email the moment the host responds.`],
             details: [...baseDetails, { label: "Total", value: `$${Number(booking.total_price).toFixed(2)}` }],
             ctaLabel: "View status",
-            ctaUrl: `${SITE_URL}/dashboard`,
+            ctaUrl: `${SITE_URL}/dashboard/bookings/${booking_id}?step=payment`,
           },
           idempotencyKey: `booking-${booking_id}-submitted-guest`,
         });
@@ -162,7 +178,7 @@ serve(async (req) => {
               ? { tone: "info", title: "Message from host", body: host_response }
               : { tone: "warning", title: "Action required", body: "Your dates are not held until payment is received." },
             ctaLabel: `Complete payment · $${totalDue.toFixed(2)}`,
-            ctaUrl: `${SITE_URL}/dashboard`,
+            ctaUrl: `${SITE_URL}/dashboard/bookings/${booking_id}?step=payment`,
           },
           idempotencyKey: `booking-${booking_id}-approved-guest`,
         });
@@ -183,7 +199,7 @@ serve(async (req) => {
             ],
             alert: { tone: "info", title: "Dates not yet locked", body: "The calendar holds these dates until the guest completes payment." },
             ctaLabel: "View booking",
-            ctaUrl: `${SITE_URL}/dashboard`,
+            ctaUrl: `${SITE_URL}/dashboard/bookings/${booking_id}?step=payment`,
           },
           idempotencyKey: `booking-${booking_id}-approved-host`,
         });
@@ -192,7 +208,7 @@ serve(async (req) => {
         user_id: booking.shopper_id, type: "booking_approved",
         title: `💳 Booking #${bookingRef} Approved — Payment Required`,
         message: `Your booking for ${listingTitle} has been approved. Complete payment to confirm.`,
-        link: "/dashboard",
+        link: `/dashboard/bookings/${booking_id}?step=payment`,
       });
 
     } else if (event_type === "declined") {
@@ -225,7 +241,7 @@ serve(async (req) => {
             details: baseDetails,
             ...(host_response ? { alert: { tone: "info" as Tone, title: "Message you sent", body: host_response } } : {}),
             ctaLabel: "Manage calendar",
-            ctaUrl: `${SITE_URL}/dashboard`,
+            ctaUrl: `${SITE_URL}/dashboard/bookings/${booking_id}?step=payment`,
           },
           idempotencyKey: `booking-${booking_id}-declined-host`,
         });
@@ -234,7 +250,7 @@ serve(async (req) => {
         user_id: booking.shopper_id, type: "booking_declined",
         title: `Booking #${bookingRef} Declined`,
         message: `Your booking request for ${listingTitle} was not approved${host_response ? `: "${host_response}"` : ""}`,
-        link: "/dashboard",
+        link: `/dashboard/bookings/${booking_id}?step=payment`,
       });
 
     } else if (event_type === "hold_released") {
@@ -261,7 +277,7 @@ serve(async (req) => {
         user_id: booking.shopper_id, type: "payment_released",
         title: `Payment Hold Released — Booking #${bookingRef}`,
         message: `Your payment hold for ${listingTitle} has been released.`,
-        link: "/dashboard",
+        link: `/dashboard/bookings/${booking_id}?step=payment`,
       });
     } else if (event_type === "hold_expired") {
       if (shopper?.email) {
@@ -294,14 +310,14 @@ serve(async (req) => {
             details: baseDetails,
             alert: { tone: "warning", title: "Tip", body: "Responding within 24 hours protects your response rate and ranking." },
             ctaLabel: "Go to dashboard",
-            ctaUrl: `${SITE_URL}/dashboard`,
+            ctaUrl: `${SITE_URL}/dashboard/bookings/${booking_id}?step=payment`,
           },
           idempotencyKey: `booking-${booking_id}-expired-host`,
         });
       }
       inApp.push(
-        { user_id: booking.shopper_id, type: "booking_expired", title: `Booking #${bookingRef} Expired`, message: `Your request for ${listingTitle} expired. Hold released.`, link: "/dashboard" },
-        { user_id: booking.host_id, type: "booking_expired", title: `Request #${bookingRef} Expired`, message: `A request for ${listingTitle} expired without a response.`, link: "/dashboard" }
+        { user_id: booking.shopper_id, type: "booking_expired", title: `Booking #${bookingRef} Expired`, message: `Your request for ${listingTitle} expired. Hold released.`, link: `/dashboard/bookings/${booking_id}?step=payment` },
+        { user_id: booking.host_id, type: "booking_expired", title: `Request #${bookingRef} Expired`, message: `A request for ${listingTitle} expired without a response.`, link: `/dashboard/bookings/${booking_id}?step=payment` }
       );
     } else if (event_type === "paid") {
       if (host?.email && hostWantsRequest) {
@@ -320,7 +336,7 @@ serve(async (req) => {
             ],
             alert: { tone: "success", title: "Locked in", body: "You're all set — just deliver an amazing experience." },
             ctaLabel: "View booking",
-            ctaUrl: `${SITE_URL}/dashboard`,
+            ctaUrl: `${SITE_URL}/dashboard/bookings/${booking_id}?step=payment`,
           },
           idempotencyKey: `booking-${booking_id}-paid-host`,
         });
@@ -330,7 +346,7 @@ serve(async (req) => {
           user_id: booking.host_id, type: "booking_paid",
           title: `💰 Payment Received — Booking #${bookingRef}`,
           message: `${shopper?.full_name || "A guest"} paid $${booking.total_price} for ${listingTitle}.`,
-          link: "/dashboard",
+          link: `/dashboard/bookings/${booking_id}?step=payment`,
         });
       }
       if (shopper?.email && shopperWantsRequest) {
@@ -351,7 +367,7 @@ serve(async (req) => {
             ],
             alert: { tone: "success", title: "You're all set", body: "We'll send a reminder 24 hours before your rental starts." },
             ctaLabel: "View booking",
-            ctaUrl: `${SITE_URL}/dashboard`,
+            ctaUrl: `${SITE_URL}/dashboard/bookings/${booking_id}?step=payment`,
           },
           idempotencyKey: `booking-${booking_id}-paid-guest`,
         });
@@ -361,7 +377,7 @@ serve(async (req) => {
           user_id: booking.shopper_id, type: "booking_confirmed",
           title: `✅ Booking #${bookingRef} Confirmed`,
           message: `Your booking for ${listingTitle} (${startDate} → ${endDate}) is confirmed.`,
-          link: "/dashboard",
+          link: `/dashboard/bookings/${booking_id}?step=payment`,
         });
       }
     }
@@ -370,7 +386,11 @@ serve(async (req) => {
     // In-app notifications + push
     for (const notif of inApp) {
       try {
-        await supabase.from("notifications").insert(notif);
+        const { error: notificationError } = await supabase.from("notifications").insert({
+          ...notif, booking_event_key: `${booking_id}:${event_type}`,
+        });
+        if (notificationError?.code === "23505") continue;
+        if (notificationError) throw notificationError;
         await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-push-notification`, {
           method: "POST",
           headers: { "Content-Type": "application/json", "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}` },

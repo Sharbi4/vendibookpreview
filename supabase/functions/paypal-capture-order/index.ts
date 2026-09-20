@@ -128,18 +128,27 @@ serve(async (req) => {
       }
     }
 
+    if (record.booking_request_id) {
+      const { error: lockError } = await admin.rpc("claim_rental_capture", { p_record: record.id });
+      if (lockError) return jsonError(409, "rental_payment_not_ready", lockError.message);
+    }
     let order: any;
     try {
       order = await capturePayPalOrder(order_id, `capture:${record.reference}`);
     } catch (err) {
       if (err instanceof PayPalError && err.issue === "ORDER_ALREADY_CAPTURED") {
-        order = await getPayPalOrder(order_id);
+        order = record.booking_request_id ? await getPayPalOrder(order_id).catch(() => null) : await getPayPalOrder(order_id);
       } else if (err instanceof PayPalError && err.status < 500) {
         await admin.from("payment_records").update({
           payment_status: "declined",
           internal_status: "declined",
           last_error: { issue: err.issue ?? "declined" },
-        }).eq("id", record.id);
+        }).eq("id", record.id).neq("payment_status", "completed");
+        if (record.booking_request_id) {
+          // Definitive provider refusal: no capture. Ambiguous errors retain the lock.
+          await admin.from("booking_requests").update({ payment_lock_record_id: null })
+            .eq("id", record.booking_request_id).eq("payment_lock_record_id", record.id).neq("payment_status", "paid");
+        }
         // PAYER_ACTION_REQUIRED: PayPal returns a HATEOAS `payer-action` link
         // the buyer must complete. Hand it to the client instead of dead-ending.
         let payerActionUrl: string | null = null;
@@ -157,12 +166,22 @@ serve(async (req) => {
         });
 
       } else {
+        if (record.booking_request_id) {
+          await admin.from("payment_records").update({ payment_status: "pending", internal_status: "capture_verification_pending" }).eq("id", record.id).neq("payment_status", "completed");
+          await admin.from("booking_requests").update({ payment_status: "pending" }).eq("id", record.booking_request_id).eq("payment_lock_record_id", record.id).neq("payment_status", "paid");
+          return jsonResponse(200, { status: "pending", pending: true, reference: record.reference, message: "PayPal confirmation is pending. Do not submit another payment." });
+        }
         throw err;
       }
     }
 
     const facts = extractCaptureFacts(order);
     if (!facts) {
+      if (record.booking_request_id) {
+        await admin.from("payment_records").update({ payment_status: "pending", internal_status: "capture_verification_pending" }).eq("id", record.id).neq("payment_status", "completed");
+        await admin.from("booking_requests").update({ payment_status: "pending" }).eq("id", record.booking_request_id).eq("payment_lock_record_id", record.id).neq("payment_status", "paid");
+        return jsonResponse(200, { status: "pending", pending: true, reference: record.reference, message: "Payment verification is pending. Check this payment before trying again." });
+      }
       return jsonError(
         502,
         "capture_unverified",

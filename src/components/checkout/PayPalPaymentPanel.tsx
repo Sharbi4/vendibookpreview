@@ -184,7 +184,7 @@ const PayPalPaymentPanel = ({
     try {
       sessionStorage.setItem(
         'pp-checkout-return',
-        `${window.location.pathname}${window.location.search}`,
+        target.kind === 'booking' ? `/dashboard/bookings/${target.id}?step=payment` : `${window.location.pathname}${window.location.search}`,
       );
     } catch {
       /* storage unavailable — the return page falls back to its own screen */
@@ -254,6 +254,7 @@ const PayPalPaymentPanel = ({
     }
     if (data.status === 'pending') {
       setState('pending');
+      goToResult(data.reference);
       onSuccess?.({ reference: data.reference, pending: true, message: data.message });
       return true;
     }
@@ -274,7 +275,7 @@ const PayPalPaymentPanel = ({
       { body: { order_id: orderID } },
     );
 
-    if (fnError || !result || (result.status !== 'completed' && !result.pending)) {
+    if (fnError || !result || (result.status !== 'completed' && result.status !== 'pending' && !result.pending)) {
       if (await reconcile(orderID)) return;
       const parsed = await parseEdgeError(fnError, result?.error ? result : null);
       const payerAction = parsed.raw?.payer_action_url as string | undefined;
@@ -308,8 +309,9 @@ const PayPalPaymentPanel = ({
     }
 
 
-    if (result.pending) {
+    if (result.pending || result.status === 'pending') {
       setState('pending');
+      goToResult(result.reference);
       onSuccess?.(result);
       return;
     }
@@ -560,6 +562,7 @@ const PayPalPaymentPanel = ({
                   onAuthorized={(result) => {
                     if (result.status === 'pending') {
                       setState('pending');
+                      goToResult(result.reference);
                       onSuccess?.({ reference: result.reference, pending: true, message: result.message ?? undefined });
                       return;
                     }

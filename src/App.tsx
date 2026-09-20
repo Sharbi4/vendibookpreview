@@ -68,6 +68,8 @@ const WorkspaceListings = lazy(() => import("./pages/workspace/WorkspaceListings
 const WorkspaceListingNew = lazy(() => import("./pages/workspace/WorkspaceListingNew"));
 const WorkspaceListingEditor = lazy(() => import("./pages/workspace/WorkspaceListingEditor"));
 const WorkspaceActivity = lazy(() => import("./pages/workspace/WorkspaceActivity"));
+const WorkspaceTransactions = lazy(() => import("./pages/workspace/WorkspaceTransactions"));
+const WorkspaceCases = lazy(() => import("./pages/workspace/WorkspaceCases"));
 const WorkspacePayments = lazy(() => import("./pages/workspace/WorkspacePayments"));
 const WorkspacePaymentSetup = lazy(() => import("./pages/workspace/WorkspacePaymentSetup"));
 const WorkspaceSellerOnboarding = lazy(() => import("./pages/workspace/WorkspaceSellerOnboarding"));
@@ -323,6 +325,11 @@ const AnimatedRoutes = () => {
           <Route path="/dashboard/listings/new" element={<PageTransition><WorkspaceListingNew /></PageTransition>} />
           <Route path="/dashboard/listings/:listingId/edit" element={<PageTransition><WorkspaceListingEditor /></PageTransition>} />
           <Route path="/dashboard/activity" element={<PageTransition><WorkspaceActivity /></PageTransition>} />
+          <Route path="/dashboard/transactions" element={<PageTransition><WorkspaceTransactions /></PageTransition>} />
+          <Route path="/dashboard/transactions/:orderId" element={<PageTransition><OrderDetail /></PageTransition>} />
+          <Route path="/dashboard/transactions/:orderId/case/:caseId" element={<PageTransition><WorkspaceCases /></PageTransition>} />
+          <Route path="/dashboard/cases" element={<PageTransition><WorkspaceCases /></PageTransition>} />
+          <Route path="/cases/:caseId" element={<PageTransition><WorkspaceCases /></PageTransition>} />
           <Route path="/dashboard/messages" element={<PageTransition><WorkspaceMessages /></PageTransition>} />
           <Route path="/dashboard/messages/:conversationId" element={<PageTransition><WorkspaceMessages /></PageTransition>} />
           <Route path="/dashboard/inbox" element={<PreserveQueryRedirect to="/dashboard/messages" />} />
@@ -553,7 +560,7 @@ const AnimatedRoutes = () => {
 
           
           <Route path="/order-tracking/:transactionId" element={<PageTransition><OrderTracking /></PageTransition>} />
-          <Route path="/transactions" element={<PreserveQueryRedirect to="/dashboard/activity" />} />
+          <Route path="/transactions" element={<PreserveQueryRedirect to="/dashboard/transactions" />} />
           <Route path="/transactions/classic" element={<PageTransition><Transactions /></PageTransition>} />
           
           <Route path="/install" element={<PageTransition><Install /></PageTransition>} />

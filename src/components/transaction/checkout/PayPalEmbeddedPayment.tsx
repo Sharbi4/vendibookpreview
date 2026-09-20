@@ -59,7 +59,7 @@ interface PayPalEmbeddedPaymentProps {
  * The embedded PayPal section used by both checkout flows.
  *
  * Money rules preserved: the order is created server-side by the canonical
- * `paypal-create-order` endpoint, capture/authorize is verified server-side,
+ * `paypal-create-order` endpoint, CAPTURE is verified server-side,
  * and the SDK's onApprove callback alone is never treated as payment.
  * Connected-path gating is respected: when `gatingActive` is true and the
  * counterparty is not ready, no actionable payment control is rendered. When

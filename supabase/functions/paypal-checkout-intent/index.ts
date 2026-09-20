@@ -37,7 +37,9 @@ serve(async (req) => {
       if (!booking) return jsonError(404, "not_found", "We couldn't find that booking.");
       if (booking.shopper_id !== user.id) return jsonError(403, "forbidden", "You aren't the guest on this booking.");
       if (booking.host_id === user.id) return jsonError(403, "self_transaction", "You can't book your own listing.");
-      if (!booking.is_instant_book && booking.status !== "approved") {
+      const { data: hostVerified } = booking.is_instant_book
+        ? await admin.rpc("is_seller_identity_verified", { _user_id: booking.host_id }) : { data: false };
+      if (["declined", "cancelled"].includes(booking.status) || (booking.status !== "approved" && !(booking.is_instant_book && hostVerified === true))) {
         return jsonError(409, "payment_not_ready", "The host needs to approve this request before payment.");
       }
     } else if (!["product", "freight", "notary", "protected_sale_deposit", "concierge"].includes(kind)) {

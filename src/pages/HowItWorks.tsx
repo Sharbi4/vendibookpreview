@@ -1,7 +1,12 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import {
   ArrowRight,
+  Video,
+  FileSignature,
+  Navigation,
+  CheckCircle2,
   BadgeDollarSign,
   BadgeCheck,
   CalendarSearch,
@@ -123,7 +128,7 @@ const HeroCollage = () => {
 };
 
 /* ------------------------------------------------------------------ */
-/* Marketplace flow — five moves, editorial rows                        */
+/* Marketplace flow — discovery through the completed handoff          */
 /* ------------------------------------------------------------------ */
 
 interface FlowStep {
@@ -135,93 +140,87 @@ interface FlowStep {
 }
 
 const FLOW: FlowStep[] = [
-  {
-    step: '01',
-    title: 'Find the right equipment',
-    body: (
-      <>
-        Every listing is built for a business decision: full specs, real photos, transparent
-        pricing, and location up front. Search{' '}
-        <Link to="/browse" className="font-medium text-primary underline underline-offset-2 decoration-primary/40 hover:text-primary/80">
-          equipment for sale
-        </Link>{' '}
-        or{' '}
-        <Link to="/search?mode=rent" className="font-medium text-primary underline underline-offset-2 decoration-primary/40 hover:text-primary/80">
-          rentals near you
-        </Link>{' '}
-        — and talk directly to the people behind them.
-      </>
-    ),
-    art: searchPageArt,
-    artAlt: 'Browsing Vendibook search results with rich listing details',
-  },
-  {
-    step: '02',
-    title: 'Understand the opportunity',
-    body: (
-      <>
-        Run the numbers before you commit.{' '}
-        <Link to="/tools/pricepilot" className="font-medium text-primary underline underline-offset-2 decoration-primary/40 hover:text-primary/80">
-          PricePilot
-        </Link>{' '}
-        benchmarks the asking price against comparable live listings,{' '}
-        <Link to="/financing" className="font-medium text-primary underline underline-offset-2 decoration-primary/40 hover:text-primary/80">
-          financing partners
-        </Link>{' '}
-        show what monthly payments could look like, and{' '}
-        <Link to="/tools/permitpath" className="font-medium text-primary underline underline-offset-2 decoration-primary/40 hover:text-primary/80">
-          PermitPath
-        </Link>{' '}
-        maps the licenses your city will ask for. You evaluate the whole deal — not just the truck.
-      </>
-    ),
-    art: loanArt,
-    artAlt: 'Evaluating equipment financing and pricing',
-  },
-  {
-    step: '03',
-    title: 'Make the purchase',
-    body: (
-      <>
-        Negotiate in writing, make an offer, and check out through{' '}
-        <Link to="/payments" className="font-medium text-primary underline underline-offset-2 decoration-primary/40 hover:text-primary/80">
-          secure PayPal online payment
-        </Link>{' '}
-        — or Pay in Person where the listing allows it. Sellers offering PayPal checkout have
-        completed PayPal&apos;s business identity and payment-readiness checks. Either way, the agreement,
-        the messages, and the payment live on one transaction record.
-      </>
-    ),
-    art: documentsOkArt,
-    artAlt: 'Transaction documents checked and in order',
-  },
-  {
-    step: '04',
-    title: 'Get it where it needs to go',
-    body: (
-      <>
-        The right truck is rarely next door. Arrange pickup, seller delivery, or{' '}
-        <FreightLink /> where available — coordinated as part of the transaction, so
-        distance stops being a reason to settle.
-      </>
-    ),
-    art: deliveryMapArt,
-    artAlt: 'Delivery route map for arranged freight',
-  },
-  {
-    step: '05',
-    title: 'Complete the handoff',
-    body: (
-      <>
-        Confirm delivery, sign the paperwork online, and keep the entire record — messages,
-        offers, agreements, payment — in one place. When you're ready for the next truck,
-        everything you need is already here.
-      </>
-    ),
-    art: signArt,
-    artAlt: 'Purchase agreement signed and handoff confirmed',
-  },
+  { step: '01', title: 'Find equipment that fits your next move',
+    body: <>Compare photos, specifications, location, and pricing. Explore financing with third-party partners and use PricePilot to put the asking price in context.</>,
+    art: searchPageArt, artAlt: 'Compare food trucks and trailers on Vendibook' },
+  { step: '02', title: 'See it. Ask questions. Get clear.',
+    body: <>Message the seller and schedule a video walkthrough from an eligible listing. See the layout, ask about the equipment, and discuss pickup or delivery before making your decision.</>,
+    art: loanArt, artAlt: 'Evaluate equipment and plan your purchase' },
+  { step: '03', title: 'Agree on the deal. The seller approves.',
+    body: <>Make an offer or submit your purchase details. Keep the price, fulfillment choice, and agreement together. The seller reviews and accepts before you complete online payment.</>,
+    art: documentsOkArt, artAlt: 'Seller reviews the purchase and agreement' },
+  { step: '04', title: 'Your final review. Then Pay now.',
+    body: <>After seller approval, review the final total and terms, choose your PayPal payment method, and submit payment. Your transaction updates when payment is verified. Pay in Person is available only where the listing offers it.</>,
+    art: documentsOkArt, artAlt: 'Buyer reviews the final total before paying' },
+  { step: '05', title: 'A plan for every mile',
+    body: <>Choose buyer pickup, seller delivery, or coordinated Vendibook Freight where available. Keep the agreed timing and handoff details on your transaction. Delivery tracking appears when the assigned seller or driver starts Delivery Mode.</>,
+    art: deliveryMapArt, artAlt: 'Fulfillment and active delivery tracking' },
+  { step: '06', title: 'Walk through. Sign. Make it yours.',
+    body: <>At pickup or drop-off, review the equipment together, document its condition with a video walkthrough and photos, and complete the required online signatures and handoff confirmations. Keep the receipt, agreements, and evidence in your transaction record.</>,
+    art: signArt, artAlt: 'Condition walkthrough, signatures, and confirmed handoff' },
 ];
+
+const FULFILLMENT = [
+  { id: 'pickup', label: 'Buyer pickup', icon: KeyRound, title: 'Meet where the equipment is.',
+    body: 'Agree on a pickup time with the seller. Review access, transport requirements, and the meeting location before you travel.',
+    tracking: 'Your agreed pickup and handoff details stay on the transaction. Pickup does not include a delivery tracking promise.',
+    handoff: 'Inspect together at pickup, document the condition, and complete signatures before confirming the handoff.' },
+  { id: 'delivery', label: 'Seller delivery', icon: Truck, title: 'Bring the equipment to your next chapter.',
+    body: 'Confirm the delivery address, access requirements, and timing with the seller. Follow updates from your transaction.',
+    tracking: 'Live location appears once the seller or assigned driver starts Delivery Mode. An agreed delivery is not automatically a live tracked trip.',
+    handoff: 'At drop-off, do the condition walkthrough together, record photos or video, and complete the required signatures and delivery confirmation.' },
+  { id: 'freight', label: 'Vendibook Freight', icon: Navigation, title: 'More possibilities, even across state lines.',
+    body: 'Request freight coordination for eligible equipment. Review the transport quote, carrier arrangements, and timing before committing.',
+    tracking: 'Follow the confirmed transport updates on your transaction. Available tracking depends on the arranged transport and active Delivery Mode.',
+    handoff: 'Document condition at carrier pickup and delivery. Review the equipment before signing the applicable delivery and handoff documents.' },
+] as const;
+
+function FulfillmentJourney() {
+  const reduce = useReducedMotion();
+  const [selected, setSelected] = useState('delivery');
+  const option = FULFILLMENT.find(item => item.id === selected)!;
+  return <section id="after-payment" className="py-16 md:py-24 bg-[#eee9e2] border-y border-[#ded5ca]">
+    <div className="container max-w-6xl mx-auto px-4">
+      <div className="grid lg:grid-cols-[0.9fr_1.1fr] gap-10 lg:gap-16 items-start">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-primary mb-3">After payment, the details stay together</p>
+          <h2 className="text-3xl md:text-4xl font-semibold tracking-tight leading-tight">The deal isn't done<br />until the handoff is.</h2>
+          <p className="mt-5 text-muted-foreground leading-relaxed">Know what happens next, who is responsible, and where the record lives. Choose a fulfillment path to see the steps.</p>
+          <div role="group" aria-label="Fulfillment options" className="mt-7 flex flex-wrap gap-2">
+            {FULFILLMENT.map(item => <button key={item.id} id={`fulfillment-${item.id}`} type="button"
+              aria-pressed={selected === item.id} aria-controls="fulfillment-details"
+              onClick={() => setSelected(item.id)}
+              className={`inline-flex items-center gap-2 rounded-full px-4 py-3 text-sm font-medium border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${selected === item.id ? 'bg-[#25211e] text-white border-[#25211e]' : 'bg-[#fffdf9] border-[#d8cfc4] hover:border-primary'}`}>
+              <item.icon className="h-4 w-4" />{item.label}</button>)}
+          </div>
+          <div className="mt-8 flex flex-wrap gap-3">
+            <Button variant="cta" asChild><Link to="/browse">Browse now <ArrowRight className="ml-2 h-4 w-4" /></Link></Button>
+            <Button variant="cta-outline" asChild><Link to="/list">List now</Link></Button>
+          </div>
+        </div>
+        <motion.div key={selected} initial={reduce ? false : { opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: reduce ? 0 : 0.25 }} id="fulfillment-details" role="region" aria-live="polite" aria-labelledby={`fulfillment-${selected}`} className="overflow-hidden rounded-[28px] border border-[#d8cfc4] bg-[#fffdf9] shadow-[0_25px_70px_-45px_rgba(45,31,20,.45)]">
+          <div className="bg-[#25211e] text-white p-7 md:p-8">
+            <span className="text-[11px] uppercase tracking-[0.18em] text-orange-300">{option.label}</span>
+            <h3 className="mt-3 text-2xl font-semibold leading-tight">{option.title}</h3>
+          </div>
+          <ol className="p-6 md:p-8 space-y-6">
+            {[
+              { icon: CalendarSearch, title: 'Coordinate the plan', body: option.body },
+              { icon: MapPin, title: 'Follow the journey', body: option.tracking },
+              { icon: Video, title: 'Walk through the condition', body: option.handoff },
+              { icon: FileSignature, title: 'Sign and confirm', body: 'Complete the applicable digital documents and handoff confirmations. Find your receipt, signed paperwork, and transaction updates in your account.' },
+            ].map((step, index) => <li key={step.title} className="flex gap-4">
+              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#f5eee6] text-primary"><step.icon className="h-5 w-5" /></span>
+              <div><h4 className="font-semibold"><span className="text-xs text-muted-foreground mr-2">0{index + 1}</span>{step.title}</h4><p className="mt-1 text-sm leading-relaxed text-muted-foreground">{step.body}</p></div>
+            </li>)}
+          </ol>
+          <div className="border-t border-[#e5ddd3] px-7 py-5 text-sm flex gap-3"><CheckCircle2 className="h-5 w-5 shrink-0 text-primary" /><p>Questions after the handoff? Open the transaction to message the other party or report an issue to Vendibook.</p></div>
+        </motion.div>
+      </div>
+    </div>
+  </section>;
+}
+
 
 /* ------------------------------------------------------------------ */
 /* Buying / selling cards                                               */
@@ -381,24 +380,23 @@ const HowItWorks = () => {
                   How Vendibook Works
                 </div>
                 <h1 className="text-4xl sm:text-5xl md:text-[3.4rem] font-bold tracking-tight text-foreground mb-5 leading-[1.12]">
-                  <span className="text-highlighter">We don&rsquo;t do classifieds.</span>
+                  <span>Find your next truck.<br /><span className="text-primary">Finish the whole deal.</span></span>
                 </h1>
                 <p className="text-lg text-muted-foreground mb-4 max-w-xl leading-relaxed">
-                  Classifieds end at the listing. Vendibook starts there — and stays with
-                  you through evaluation, financing, transport, and the final signature.
+                  From the first video walkthrough to the final signature, buy and sell food trucks and trailers with a clear next step.
                 </p>
                 <p className="text-base text-muted-foreground mb-8 max-w-xl leading-relaxed">
                   One marketplace for buying, selling, and renting food trucks, trailers,
-                  kitchens, and vendor spaces — with the transaction built in, not bolted on.
+                  kitchens, and vendor spaces — with messages, approvals, payment, delivery, and documents connected.
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <Button variant="cta" size="lg" className="rounded-full" asChild>
                     <Link to="/browse">
-                      Browse listings <ArrowRight className="w-4 h-4 ml-1.5" />
+                      Browse now <ArrowRight className="w-4 h-4 ml-1.5" />
                     </Link>
                   </Button>
                   <Button variant="cta-outline" size="lg" className="rounded-full" asChild>
-                    <Link to="/list">List your equipment</Link>
+                    <Link to="/list">List now</Link>
                   </Button>
                 </div>
               </motion.div>
@@ -423,32 +421,29 @@ const HowItWorks = () => {
                 From first search to final signature — one connected process.
               </h2>
               <p className="text-base text-muted-foreground mt-3 leading-relaxed">
-                Five moves. No dead ends, no scattered paperwork, no starting over in
-                someone else&rsquo;s inbox.
+                See the equipment. Agree on the deal. Pay after seller approval. Follow the handoff through to completion.
               </p>
             </motion.div>
 
-            <div className="space-y-10 md:space-y-14">
-              {FLOW.map((f, i) => (
+            <div className="grid md:grid-cols-2 gap-5 md:gap-6">
+              {FLOW.map((f) => (
                 <motion.div
                   key={f.step}
                   {...(reduce ? {} : fadeUp)}
                   transition={{ duration: 0.5, delay: reduce ? 0 : 0.05, ease }}
-                  className={`grid md:grid-cols-2 gap-6 md:gap-12 items-center ${
-                    i % 2 === 1 ? 'md:[&>*:first-child]:order-2' : ''
-                  }`}
+                  className="rounded-[28px] border border-border bg-[#fffdf9] p-6 sm:p-8 shadow-[0_15px_45px_-35px_rgba(24,20,16,.35)]"
                 >
                   <div className="overflow-hidden rounded-[24px] border border-border bg-background shadow-[0_20px_48px_-24px_rgba(24,20,16,0.25)]">
                     <img
                       src={f.art}
                       alt={f.artAlt}
                       loading="lazy"
-                      className="aspect-[16/9] w-full object-contain p-5 sm:p-7"
+                      className="h-36 w-full object-contain p-4"
                     />
                   </div>
                   <div>
                     <span
-                      className="block text-5xl md:text-6xl font-bold text-primary/15 leading-none mb-3 select-none"
+                      className="block text-sm font-semibold text-primary leading-none mt-6 mb-3 select-none"
                       aria-hidden="true"
                     >
                       {f.step}
@@ -465,6 +460,8 @@ const HowItWorks = () => {
             </div>
           </div>
         </section>
+
+        <FulfillmentJourney />
 
         {/* ---------------------------------------------------------- */}
         {/* BUYING / SELLING CARDS                                      */}
@@ -681,11 +678,11 @@ const HowItWorks = () => {
                 <div className="flex flex-wrap gap-3 justify-center">
                   <Button variant="cta" size="lg" className="rounded-full" asChild>
                     <Link to="/browse">
-                      Browse listings <ArrowRight className="w-4 h-4 ml-1.5" />
+                      Browse now <ArrowRight className="w-4 h-4 ml-1.5" />
                     </Link>
                   </Button>
                   <Button variant="cta-outline" size="lg" className="rounded-full" asChild>
-                    <Link to="/list">List your equipment</Link>
+                    <Link to="/list">List now</Link>
                   </Button>
                 </div>
                 <p className="text-xs text-muted-foreground mt-7 inline-flex items-center gap-1.5">

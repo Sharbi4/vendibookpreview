@@ -87,6 +87,7 @@ serve(async (req) => {
       // Where OUR record stands. `completed` means the receipt is the right
       // destination and this screen must not offer to capture again.
       record_status: record.payment_status,
+      provider_reason: record.last_error?.issue ?? record.last_error?.reason ?? null,
       // Where PayPal says the order stands: APPROVED means awaiting capture.
       order_status: order?.status ?? null,
       payment_intent: record.payment_intent ?? "CAPTURE",

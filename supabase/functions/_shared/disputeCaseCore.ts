@@ -58,25 +58,41 @@ export async function collectEvidenceLinks(admin: any, payment: any) {
         .eq("id", payment.listing_id).maybeSingle();
       listingSnapshot = listing ?? null;
     }
-    if (payment.sale_transaction_id) {
+    if (payment.sale_transaction_id || payment.booking_request_id) {
+      const entityId = payment.sale_transaction_id || payment.booking_request_id;
+      const entityColumn = payment.sale_transaction_id ? 'sale_transaction_id' : 'booking_id';
       const [{ data: walkthroughs }, { data: docs }, { data: handoffs }, { data: fulfillment }, { data: consents }] =
         await Promise.all([
-          admin.from("video_walkthroughs").select("id, status, scheduled_at")
-            .eq("sale_transaction_id", payment.sale_transaction_id),
+          admin.from("video_walkthroughs").select("id, status, starts_at")
+            .eq("listing_id", payment.listing_id).eq("buyer_id", payment.buyer_id).eq("seller_id", payment.seller_id),
           admin.from("documents").select("id, document_type, status, signnow_document_id")
-            .eq("transaction_id", payment.sale_transaction_id),
-          admin.from("handoff_sessions").select("id, status")
-            .eq("sale_transaction_id", payment.sale_transaction_id),
-          admin.from("fulfillment_sessions").select("id, status")
-            .eq("sale_transaction_id", payment.sale_transaction_id),
+            .eq(payment.sale_transaction_id ? "transaction_id" : "booking_id", entityId),
+          admin.from("handoff_sessions").select("id, status, buyer_decision, buyer_decision_at, completed_at")
+            .eq(entityColumn, entityId),
+          admin.from("fulfillment_sessions").select("id, status, delivered_at, completed_at, last_location_at")
+            .eq(entityColumn, entityId),
           admin.from("legal_acceptances").select("id, document_slug, document_version, accepted_at")
-            .eq("related_entity_id", payment.sale_transaction_id),
+            .eq("related_entity_id", entityId),
         ]);
       links.video_walkthroughs = walkthroughs ?? [];
       links.documents = docs ?? [];
       links.handoff_sessions = handoffs ?? [];
       links.fulfillment_sessions = fulfillment ?? [];
       links.legal_acceptances = consents ?? [];
+      const { data: conversations } = await admin.from('conversations').select('id, created_at')
+        .eq('listing_id', payment.listing_id).eq('shopper_id', payment.buyer_id).eq('host_id', payment.seller_id);
+      links.conversations = conversations ?? [];
+      if (handoffs?.length) {
+        const { data: media } = await admin.from('handoff_media').select('id, handoff_session_id, media_type, created_at').in('handoff_session_id', handoffs.map((h: any) => h.id));
+        links.handoff_media = media ?? [];
+      }
+      // Link location evidence by ID; signed-in viewers open the existing
+      // tracking surface instead of exposing coordinates in a case summary.
+      if (fulfillment?.length) {
+        const { data: trips } = await admin.from('gps_trip_events').select('id, fulfillment_session_id, recorded_at').in('fulfillment_session_id', fulfillment.map((f: any) => f.id)).order('recorded_at', { ascending: false }).limit(200);
+        links.location_evidence = trips ?? [];
+      }
+      links.payment_snapshot = { status: payment.payment_status, captured_at: payment.captured_at, refunded_cents: payment.refunded_cents, updated_at: payment.updated_at };
     }
   } catch (e) {
     links.collection_error = (e as Error)?.message ?? "partial";

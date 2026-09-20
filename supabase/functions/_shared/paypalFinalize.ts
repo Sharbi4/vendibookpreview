@@ -153,6 +153,14 @@ export async function finalizeCapture(
   const paymentStatus = mapCaptureStatus(facts.status);
   const isPaid = paymentStatus === "completed";
 
+  // Completed captures cannot be downgraded by a delayed pending webhook.
+  if (record.payment_status === "completed") {
+    if (record.booking_request_id && record.internal_status === "paid" && isPaid && record.paypal_capture_id === facts.captureId) {
+      await propagateToDomainRecord(supabase, record, facts);
+    }
+    return record;
+  }
+
   // ------------------------------------------------------------ terminal guard
   // A refunded / reversed / cancelled / declined payment is never revived.
   if (TERMINAL_PAYMENT_STATES.has(String(record.payment_status))) {
@@ -261,6 +269,14 @@ export async function finalizeCapture(
   }
 
 
+  if (record.booking_request_id && (isPaid || paymentStatus === "pending")) {
+    const { error: lockError } = await supabase.rpc("claim_rental_capture", { p_record: record.id });
+    if (lockError) {
+      await supabase.from("payment_records").update({ internal_status: "rental_capture_review", last_error: { reason: lockError.message } }).eq("id", record.id);
+      throw new CaptureRejectedError("rental_capture_review", lockError.message);
+    }
+  }
+
   const { data: updated, error: updateErr } = await supabase
     .from("payment_records")
     .update({
@@ -278,6 +294,7 @@ export async function finalizeCapture(
     })
     .eq("id", record.id)
     // Race-safe: only transition out of a non-terminal state.
+    .neq("payment_status", "completed")
     .not("payment_status", "in", `(${TERMINAL_PAYMENT_STATES_SQL.join(",")})`)
     .select()
     .maybeSingle();
@@ -285,6 +302,13 @@ export async function finalizeCapture(
   // A failed or no-op write must never be treated as a successful capture:
   // money has moved at PayPal, so surface it for review instead of pretending
   // the record was finalised.
+  if (!updateErr && !updated) {
+    const { data: winner } = await supabase.from("payment_records").select("*").eq("id", record.id).maybeSingle();
+    if (winner?.payment_status === "completed") {
+      if (winner.booking_request_id && winner.internal_status === "paid") await propagateToDomainRecord(supabase, winner, facts);
+      return winner;
+    }
+  }
   if (updateErr || !updated) {
     safeLog("capture_record_update_failed", {
       reference: record.reference,
@@ -307,6 +331,12 @@ export async function finalizeCapture(
 
   const current = updated;
   if (!isPaid) {
+    if (record.booking_request_id) {
+      await supabase.from("booking_requests").update(paymentStatus === "pending"
+        ? { payment_status: "pending" } : { payment_status: "unpaid", payment_lock_record_id: null })
+        .eq("id", record.booking_request_id).eq("payment_lock_record_id", record.id).neq("payment_status", "paid");
+    }
+
 
     if (paymentStatus === "pending") {
       await notifyOrderParties(supabase, current, {
@@ -495,7 +525,7 @@ async function propagateToDomainRecord(
         .eq("id", record.booking_request_id)
         .maybeSingle();
 
-      const alreadyPaid = bookingRow?.payment_status === "paid";
+
       const update: Record<string, unknown> = {
         payment_status: "paid",
         payment_provider: "paypal",
@@ -535,13 +565,14 @@ async function propagateToDomainRecord(
         }
       }
 
-      await supabase.from("booking_requests")
+      const { data: paidBooking, error: paidError } = await supabase.from("booking_requests")
         .update(update)
         .eq("id", record.booking_request_id)
-        .neq("payment_status", "paid");
+        .neq("payment_status", "paid").select("id").maybeSingle();
+      if (paidError) throw paidError;
 
       // Notify host + guest with full booking details once money has landed.
-      if (!alreadyPaid) {
+      if (paidBooking || bookingRow?.payment_status === "paid") {
         try {
           await supabase.functions.invoke("send-booking-notification", {
             body: { booking_id: record.booking_request_id, event_type: "paid" },
@@ -557,7 +588,7 @@ async function propagateToDomainRecord(
       // Instant Book auto-approved on payment: ensure the rental agreement is
       // out for signature. Idempotent + config-tolerant; host-approved bookings
       // trigger the same helper from the approval path.
-      if (update.status === "approved") {
+      if (update.status === "approved" || bookingRow?.status === "approved") {
         try {
           const { ensureRentalAgreement } = await import("./signnowDocuments.ts");
           const res = await ensureRentalAgreement(record.booking_request_id);

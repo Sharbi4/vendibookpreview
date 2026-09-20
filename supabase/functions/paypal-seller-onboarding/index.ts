@@ -1,3 +1,4 @@
+import { deriveStatus } from "../_shared/paypalSellerStatus.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { hasCurrentLegalAcceptance } from "../_shared/legalVersions.ts";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
@@ -6,6 +7,7 @@ import {
   getMerchantIntegrationStatus,
   PayPalError,
   paypalOnboardingEnvironment,
+  paypalOnboardingClientId,
   paypalRequest,
   safeLog,
   sellerOnboardingEnabled,
@@ -66,6 +68,7 @@ const ALLOWED_RETURN_ORIGINS = new Set([
   "https://vendibook.com",
   "https://www.vendibook.com",
   "https://vendibookpreview.lovable.app",
+  "https://preview--vendibookpreview.lovable.app",
   "https://id-preview--f4d8586e-de66-4307-b052-b071b734f592.lovable.app",
   "http://localhost:8080",
 ]);
@@ -81,100 +84,6 @@ function returnUrlFor(req: Request): string {
     // fall through to the production default
   }
   return DEFAULT_RETURN_URL;
-}
-
-interface DerivedStatus {
-  status: "ready" | "action_required";
-  reasons: string[];
-  scopes: string[];
-  activeOauth: boolean;
-  ppcpApproved: boolean;
-  emailConfirmed: boolean;
-  receivable: boolean;
-  merchantId: string | null;
-  /** PPCP_CUSTOM (advanced card) vetting status, when PayPal reports it. */
-  acdcVetting: string | null;
-  /** Whether the merchant's integration reports vaulting capability. */
-  vaulting: string | null;
-  /** Capability names PayPal returned for this merchant. */
-  capabilities: string[];
-}
-
-function deriveStatus(raw: any): DerivedStatus {
-  const oauth = Array.isArray(raw?.oauth_integrations) ? raw.oauth_integrations : [];
-  const activeOauth = oauth.some(
-    (o: any) => String(o?.oauth_integration_status ?? "").toUpperCase() === "ACTIVE",
-  );
-  const scopes = oauth.flatMap((o: any) => (Array.isArray(o?.scopes) ? o.scopes : []));
-  const products = Array.isArray(raw?.products) ? raw.products : [];
-  // If PayPal doesn't return a products array yet, don't fail readiness on it.
-  const ppcpApproved = products.length === 0 ||
-    products.some(
-      (p: any) => p?.name === "PPCP" && String(p?.vetting_status ?? "").toUpperCase() === "APPROVED",
-    );
-  const emailConfirmed = raw?.primary_email_confirmed === true;
-  const receivable = raw?.payments_receivable === true;
-  const merchantId = typeof raw?.merchant_id === "string" ? raw.merchant_id : null;
-
-  // Advanced card processing (ACDC) and vaulting are reported per product /
-  // capability. We record what PayPal says; we never assume a capability.
-  const acdcProduct = products.find(
-    (p: any) => String(p?.name ?? "").toUpperCase() === "PPCP_CUSTOM",
-  );
-  const acdcVetting = acdcProduct
-    ? String(acdcProduct?.vetting_status ?? "PENDING").toUpperCase()
-    : null;
-  const capabilityList = Array.isArray(raw?.capabilities) ? raw.capabilities : [];
-  const capabilities = capabilityList
-    .map((c: any) => (typeof c === "string" ? c : c?.name))
-    .filter((c: any): c is string => typeof c === "string");
-  // Vaulting readiness is reported in two places, and PayPal treats either one
-  // being IN_REVIEW / NEED_MORE_DATA as "not available to the seller yet"
-  // (IWT pp.5-6): products[name == 'ADVANCED_VAULTING'].vetting_status and
-  // capabilities[name == 'PAYPAL_WALLET_VAULTING_ADVANCED'].status. Report the
-  // blocking state so the seller is told what PayPal actually needs.
-  const vaultingProduct = products.find(
-    (p: any) => String(p?.name ?? "").toUpperCase() === "ADVANCED_VAULTING",
-  );
-  const vaultingCapability = capabilityList.find(
-    (c: any) => String(c?.name ?? c ?? "").toUpperCase().includes("VAULT"),
-  );
-  const vaultingStates = [
-    vaultingProduct ? String(vaultingProduct?.vetting_status ?? "IN_REVIEW").toUpperCase() : null,
-    vaultingCapability ? String(vaultingCapability?.status ?? "ACTIVE").toUpperCase() : null,
-  ].filter((s): s is string => s !== null);
-  const vaulting = vaultingStates.length === 0
-    ? null
-    : vaultingStates.includes("NEED_MORE_DATA")
-      ? "NEED_MORE_DATA"
-      : vaultingStates.includes("DENIED")
-        ? "DENIED"
-        : vaultingStates.includes("IN_REVIEW")
-          ? "IN_REVIEW"
-          : vaultingStates.every((s) => s === "SUBSCRIBED" || s === "ACTIVE")
-            ? "SUBSCRIBED"
-            : vaultingStates[0];
-
-  const reasons: string[] = [];
-  if (!activeOauth) reasons.push("oauth_not_active");
-  if (!ppcpApproved) reasons.push("vetting_pending");
-  if (!emailConfirmed) reasons.push("primary_email_unconfirmed");
-  if (!receivable) reasons.push("payments_receivable_false");
-
-  const ready = activeOauth && ppcpApproved && emailConfirmed && receivable && !!merchantId;
-  return {
-    status: ready ? "ready" : "action_required",
-    reasons,
-    scopes,
-    activeOauth,
-    ppcpApproved,
-    emailConfirmed,
-    receivable,
-    merchantId,
-    acdcVetting,
-    vaulting,
-    capabilities,
-  };
 }
 
 Deno.serve(async (req) => {
@@ -218,12 +127,13 @@ Deno.serve(async (req) => {
     }
 
     const activeRow = async () => {
-      const { data } = await admin
+      const { data, error } = await admin
         .from("seller_paypal_accounts")
         .select("*")
         .eq("user_id", user.id)
         .is("archived_at", null)
         .maybeSingle();
+      if (error) throw error;
       return data;
     };
 
@@ -280,12 +190,13 @@ Deno.serve(async (req) => {
           "PayPal didn't return a signup link. Please try again in a moment.",
         );
       }
-      await admin.from("seller_paypal_accounts").insert({
+      const { error: insertError } = await admin.from("seller_paypal_accounts").insert({
         user_id: user.id,
         tracking_id: trackingId,
         onboarding_status: "link_sent",
         referral_url: referral.actionUrl,
       });
+      if (insertError) throw insertError;
       safeLog("seller_onboarding_started", { user_id: user.id, tracking: trackingId });
       return jsonResponse(200, { onboarding_url: referral.actionUrl, status: "link_sent" });
     }
@@ -297,14 +208,14 @@ Deno.serve(async (req) => {
       }
       let raw: Record<string, any>;
       try {
-        raw = await getMerchantIntegrationStatus(row.tracking_id);
+        raw = await getMerchantIntegrationStatus(row.merchant_id || row.tracking_id);
       } catch (err) {
         // PayPal 404s the merchant-integration lookup until the seller
         // actually finishes the hosted signup. That is a normal "not
         // finished yet" state, not a failure — keep the link_sent status,
         // stamp the check time and answer 200 so the UI shows guidance
         // instead of an error.
-        if (err instanceof PayPalError && err.status === 404) {
+        if (err instanceof PayPalError && err.status === 404 && err.issue !== 'USER_BUSINESS_ERROR') {
           await admin
             .from("seller_paypal_accounts")
             .update({
@@ -351,7 +262,7 @@ Deno.serve(async (req) => {
           throw err;
         }
       }
-      const derived = deriveStatus(raw);
+      const derived = deriveStatus(raw, paypalOnboardingClientId());
 
       // Slim, PII-free audit snapshot — no payer PII, no tokens.
       const slim = {
@@ -367,7 +278,7 @@ Deno.serve(async (req) => {
         capabilities: derived.capabilities,
       };
 
-      await admin
+      const { error: saveError } = await admin
         .from("seller_paypal_accounts")
         .update({
           merchant_id: derived.merchantId,
@@ -386,8 +297,9 @@ Deno.serve(async (req) => {
           last_status_check_at: new Date().toISOString(),
           updated_at: new Date().toISOString(),
         })
-        .eq("id", row.id);
+        .eq("id", row.id).is("archived_at", null);
 
+      if (saveError) throw saveError;
       safeLog("seller_status_refreshed", {
         user_id: user.id,
         onboarding_status: derived.status,
@@ -433,12 +345,10 @@ Deno.serve(async (req) => {
         issue: err.issue,
         debugId: err.debugId,
       });
-      if (err.status === 401 && err.issue === "AUTHORIZATION_ERROR") {
-        return jsonError(
-          503,
-          "paypal_partner_not_authorized",
-          "PayPal seller connection is not configured correctly for this sandbox app. Vendibook support must verify the platform Merchant ID and Partner Referrals access before setup can finish.",
-        );
+      if (['AUTHORIZATION_ERROR', 'USER_BUSINESS_ERROR', 'NOT_CONFIGURED'].includes(err.issue ?? '')) {
+        return jsonError(503, 'paypal_partner_configuration',
+          'PayPal could not verify Vendibook’s partner account. Support must check that the platform Merchant ID and app credentials belong to the same enabled PayPal Business partner account in this environment. Repeating seller signup will not fix this.',
+          { issue: err.issue, debug_id: err.debugId, environment: paypalOnboardingEnvironment() });
       }
       return jsonError(
         err.status >= 500 ? 502 : 400,

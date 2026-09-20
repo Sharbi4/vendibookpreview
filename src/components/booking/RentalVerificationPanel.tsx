@@ -12,6 +12,7 @@ interface RentalVerificationPanelProps {
   listingId: string;
   disabled?: boolean;
   onInsuranceAnswer: (answer: 'yes' | 'no' | 'unsure') => void;
+  onValidityChange?: (valid: boolean) => void;
   onComplete: (state: VerificationState) => void;
 }
 

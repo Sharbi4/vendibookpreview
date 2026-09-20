@@ -24,7 +24,14 @@ export async function deliverOrderReceipt(supabase: any, paymentRecordId: string
 
   let email: string | null = record.buyer_email ?? null;
   let buyerName: string | null = null;
-  if (record.buyer_id) {
+  if (record.booking_request_id) {
+    const { data: bookingContact } = await supabase.from('booking_requests').select('renter_snapshot').eq('id', record.booking_request_id).maybeSingle();
+    if (bookingContact?.renter_snapshot) {
+      buyerName = [bookingContact.renter_snapshot.first_name, bookingContact.renter_snapshot.last_name].filter(Boolean).join(' ');
+      email = bookingContact.renter_snapshot.email ?? email;
+    }
+  }
+  if (record.buyer_id && !buyerName) {
     const { data: profile } = await supabase
       .from('profiles')
       .select('full_name, email')

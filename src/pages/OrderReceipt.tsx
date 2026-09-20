@@ -1,3 +1,4 @@
+import { authPath } from '@/lib/auth/returnTo';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowRight, Loader2, MapPin, Printer, Receipt } from 'lucide-react';
@@ -64,6 +65,7 @@ interface SaleInfo {
 }
 
 interface BookingInfo {
+  renter_snapshot: Record<string, string> | null;
   start_date: string | null;
   end_date: string | null;
   start_time: string | null;
@@ -174,11 +176,6 @@ const OrderReceipt = () => {
         return;
       }
 
-      if (data.payment_status !== 'completed') {
-        navigate(`/payment/return?ref=${encodeURIComponent(data.reference)}`, { replace: true });
-        return;
-      }
-
       setOrder(data as unknown as OrderRecord);
 
       if (data.listing_id) {
@@ -205,7 +202,7 @@ const OrderReceipt = () => {
         const { data: b } = await supabase
           .from('booking_requests')
           .select(
-            'start_date, end_date, start_time, end_time, fulfillment_selected, delivery_address, delivery_instructions, message, status, host_id, tax_jurisdiction',
+            'renter_snapshot, start_date, end_date, start_time, end_time, fulfillment_selected, delivery_address, delivery_instructions, message, status, host_id, tax_jurisdiction',
           )
           .eq('id', data.booking_request_id)
           .maybeSingle();
@@ -254,8 +251,21 @@ const OrderReceipt = () => {
   })();
   const { toast } = useToast();
   const [emailing, setEmailing] = useState(false);
+  const [checking, setChecking] = useState(false);
+  const refreshPayment = async () => {
+    if (!order || checking) return;
+    setChecking(true);
+    try {
+      if (order.booking_request_id) {
+        const { error } = await supabase.functions.invoke('paypal-finalize-order', { body: { reference: order.reference } });
+        if (error) throw error;
+      }
+      window.location.reload();
+    } catch { toast({ title: 'Status unavailable', description: 'Please check again shortly before making another payment.' }); }
+    finally { setChecking(false); }
+  };
   const emailReceipt = async () => {
-    if (!order) return;
+    if (!order || order.payment_status !== 'completed') return;
     setEmailing(true);
     try {
       await supabase.functions.invoke('send-payment-receipt', {
@@ -288,7 +298,7 @@ const OrderReceipt = () => {
     ? [sale.buyer_address1, sale.buyer_address2, [sale.buyer_city, sale.buyer_state].filter(Boolean).join(', '), sale.buyer_zip]
         .filter(Boolean)
         .join(' · ')
-    : '';
+    : booking?.renter_snapshot ? [booking.renter_snapshot.address1, booking.renter_snapshot.address2, booking.renter_snapshot.city, booking.renter_snapshot.state, booking.renter_snapshot.zip_code].filter(Boolean).join(' · ') : '';
 
   if (loading) {
     return (
@@ -296,6 +306,18 @@ const OrderReceipt = () => {
         <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
       </div>
     );
+  }
+
+  if (order && order.payment_status !== 'completed') {
+    const pending = order.payment_status === 'pending';
+    return <div className="sale-light min-h-screen bg-[#f8f6f2]"><Header />
+      <main className="mx-auto max-w-2xl p-8"><section className="rounded-3xl border bg-[#fffdf9] p-8 space-y-4" role="status">
+        <h1 className="text-2xl font-semibold">{pending ? 'Payment pending' : 'Payment not completed'}</h1>
+        <p>{pending ? 'PayPal is still processing your payment. Your booking is not marked paid. Do not pay again while this is pending.' : 'This transaction has not completed. Open your booking to review the payment status and available next step.'}</p>
+        <p>Reference: {order.reference}</p>
+        <button className="v2-btn-primary" disabled={checking} onClick={refreshPayment}>{checking ? "Checking status..." : "Refresh status"}</button>
+        {order.booking_request_id ? <Link className="block underline" to={`/dashboard/bookings/${order.booking_request_id}?step=payment`}>Open booking payment</Link> : null}
+      </section></main><Footer /></div>;
   }
 
   return (
@@ -309,10 +331,10 @@ const OrderReceipt = () => {
             <h1 className="text-2xl font-semibold tracking-tight text-foreground">Receipt not found</h1>
             <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">{error}</p>
             <Link
-              to="/dashboard"
+              to={authPath(`${window.location.pathname}${window.location.search}`)}
               className="mt-6 inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-semibold text-primary-foreground"
             >
-              Go to dashboard <ArrowRight className="h-4 w-4" />
+              Sign in to view receipt <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         ) : (
@@ -466,9 +488,9 @@ const OrderReceipt = () => {
               <div>
                 <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Purchaser</h3>
                 <div className="mt-2 space-y-0.5 text-sm text-foreground">
-                  {sale?.buyer_name ? <p>{sale.buyer_name}</p> : null}
+                  {(sale?.buyer_name ?? (booking?.renter_snapshot ? `${booking.renter_snapshot.first_name} ${booking.renter_snapshot.last_name}` : null)) ? <p>{sale.buyer_name}</p> : null}
                   <p className="text-muted-foreground">{sale?.buyer_email ?? order.buyer_email ?? '—'}</p>
-                  {sale?.buyer_phone ? <p className="text-muted-foreground">{sale.buyer_phone}</p> : null}
+                  {(sale?.buyer_phone ?? booking?.renter_snapshot?.phone_number) ? <p className="text-muted-foreground">{sale.buyer_phone}</p> : null}
                   {buyerAddress ? <p className="text-muted-foreground">{buyerAddress}</p> : null}
                 </div>
               </div>

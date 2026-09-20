@@ -16,7 +16,7 @@ import PayPalReviewAuthorize, { type ReviewData } from '@/components/checkout/Pa
 type Outcome =
   | { kind: 'working' }
   | { kind: 'signin' }
-  /** Approved at PayPal, nothing captured — final authorize step. */
+  /** Approved at PayPal, nothing captured — final capture review. */
   | { kind: 'review'; data: ReviewData }
   | { kind: 'failed'; title: string; detail: string };
 
@@ -26,7 +26,7 @@ type Outcome =
  *
  * The browser's return alone is never treated as payment: the server
  * re-checks the order with PayPal and finishes it through the canonical
- * capture/authorize endpoints. A completed payment lands on the receipt; every
+ * capture endpoint. A completed payment lands on the receipt; every
  * other result stays here with a recoverable next step and an honest statement
  * about whether anything was charged.
  */
@@ -52,7 +52,7 @@ const PaymentReturn = () => {
 
   const [outcome, setOutcome] = useState<Outcome>({ kind: 'working' });
   const [attempt, setAttempt] = useState(0);
-  const running = useRef(false);
+
 
   /**
    * A declined or unfinished payment is never a confirmation. Send the payer
@@ -75,8 +75,6 @@ const PaymentReturn = () => {
   };
 
   useEffect(() => {
-    if (running.current) return;
-    running.current = true;
     let cancelled = false;
 
     (async () => {
@@ -84,19 +82,19 @@ const PaymentReturn = () => {
       const { data: session } = await supabase.auth.getSession();
       if (!session.session) {
         if (!cancelled) setOutcome({ kind: 'signin' });
-        running.current = false;
+
         return;
       }
 
       // Read-only: approval alone never captures. We look at where the order
       // stands and either resolve an already-finished payment to its receipt
-      // or present the final Review & authorize step.
+      // or present the final final payment review.
       const { data, error } = await supabase.functions.invoke('paypal-order-review', {
         body: { order_id: orderId || undefined, reference: reference || undefined },
       });
 
       if (cancelled) return;
-      running.current = false;
+
 
       if (error || !data?.reference) {
         const parsed = await parseEdgeError(error, data?.error ? data : null);
@@ -110,7 +108,7 @@ const PaymentReturn = () => {
 
       const review = data as ReviewData;
       const ref = review.reference;
-       if (review.record_status === 'completed') {
+       if (review.record_status === 'completed' || review.record_status === 'pending') {
         try {
           sessionStorage.removeItem('pp-checkout-return');
         } catch {
@@ -125,6 +123,10 @@ const PaymentReturn = () => {
         });
         return;
       }
+      if (['failed', 'declined'].includes(review.record_status)) {
+        failWith('Payment not completed', review.provider_reason ?? 'PayPal declined this payment. Choose another payment method.');
+        return;
+      }
       if (review.order_status === 'APPROVED' || review.order_status === 'SAVED') {
         setOutcome({ kind: 'review', data: review });
         return;
@@ -135,7 +137,7 @@ const PaymentReturn = () => {
         'Your payment was not approved and nothing has been charged. You can go back and try again or use another method.',
       );
 
-    })();
+    })().catch(() => { if (!cancelled) setOutcome({ kind: 'failed', title: 'Payment status unavailable', detail: 'We could not check PayPal. Check again before trying another payment.' }); });
 
 
     return () => {
@@ -180,7 +182,7 @@ const PaymentReturn = () => {
                 orderId={outcome.data.order_id ?? orderId}
                 initialData={outcome.data}
                 onAuthorized={(result) => {
-                  if (result.status !== 'completed') {
+                  if (result.status !== 'completed' && result.status !== 'pending') {
                     failWith(
                       'This payment is not complete',
                       result.message ?? 'PayPal has not completed this payment. Return to checkout and try again.',

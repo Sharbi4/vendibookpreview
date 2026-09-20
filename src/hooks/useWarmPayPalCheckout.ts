@@ -8,26 +8,8 @@ import {
 } from '@/lib/paypalClient';
 import { sellerPaymentReadinessQuery } from '@/hooks/useSellerPaymentReadiness';
 
-/**
- * The SINGLE checkout prewarm mechanism. Pages must not also call
- * `loadPayPalSdk` directly: that would force a CAPTURE bundle onto an
- * AUTHORIZE checkout and download a second, unused SDK.
- *
- * Pre-warms everything the payment step needs while the buyer is still on the
- * earlier steps: PayPal host connections, the runtime config, the
- * seller-readiness lookup (and the merchant id it carries), and the exact SDK
- * bundle the payment step is predicted to use. No PayPal order is created
- * here — nothing is charged, held or reserved.
- *
- * `predictedIntent` only picks which script to prefetch (PayPal serves
- * authorize and capture as separate instances). A wrong guess is harmless: the
- * payment panel loads the other namespace. The server remains authoritative
- * for the real intent on every order.
- */
-export function useWarmPayPalCheckout(
-  sellerId: string | null | undefined,
-  _predictedIntent: 'CAPTURE' | 'AUTHORIZE' = 'CAPTURE',
-) {
+/** Pre-warm the canonical CAPTURE SDK. This creates no order or hold. */
+export function useWarmPayPalCheckout(sellerId: string | null | undefined) {
   const queryClient = useQueryClient();
 
   useEffect(() => {

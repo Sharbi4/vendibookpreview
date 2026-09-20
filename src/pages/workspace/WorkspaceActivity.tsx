@@ -63,7 +63,7 @@ export default function WorkspaceActivity() {
         id: `payment-${t.id}`,
         kind: disputed ? 'disputes' : t.role === 'buyer' ? 'purchases' : 'sales',
         title: t.listing?.title || 'Vendibook payment',
-        counterparty: t.role === 'buyer' ? 'Paid to seller' : 'Received from buyer',
+        counterparty: t.role === 'buyer' ? 'Buyer payment' : 'Seller payment',
         state: disputed ? `Dispute: ${t.dispute_status}` : t.payment_status || 'recorded',
         nextAction: disputed ? 'Respond with evidence' : null,
         date: t.captured_at || t.created_at,
@@ -94,13 +94,13 @@ export default function WorkspaceActivity() {
         b.status === 'pending'
           ? 'Waiting on the host'
           : b.status === 'approved'
-            ? 'Confirmed — check your dates'
+            ? b.payment_status === 'paid' ? 'Confirmed — check your dates' : b.payment_status === 'pending' ? 'Payment processing' : 'Approved — Pay now'
             : null,
       date: b.created_at,
       amount: bookingMoney(b.total_price),
       reference: null,
       image: b.listing?.cover_image_url ?? null,
-      href: `/dashboard/bookings/${b.id}`,
+      href: `/dashboard/bookings/${b.id}${b.status === 'approved' && !['paid', 'pending'].includes(b.payment_status ?? '') ? '?step=payment' : ''}`,
     }));
 
     // Pending host requests are handled in the booking manager panel above,

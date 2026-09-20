@@ -1076,13 +1076,19 @@ export async function getMerchantIntegrationStatus(
         `?tracking_id=${encoded}`,
       { environment: env },
     );
-    if (Array.isArray(result?.merchant_integrations)) {
-      return result.merchant_integrations[0] ?? {};
+    const merchant = Array.isArray(result?.merchant_integrations) ? result.merchant_integrations.find((item: any) => item.tracking_id === trackingOrMerchantId) ?? result.merchant_integrations[0] : result;
+    if (merchant?.merchant_id && !Array.isArray(merchant.oauth_integrations)) {
+      return await getMerchantIntegrationStatus(merchant.merchant_id, { environment: env });
     }
-    return result ?? {};
+    return merchant ?? {};
   }
   return await paypalRequest<Record<string, any>>(
     `/v1/customer/partners/${encodeURIComponent(partnerId)}/merchant-integrations/${encoded}`,
     { environment: env },
   );
+}
+
+/** Public client ID paired with the onboarding environment; never a secret. */
+export function paypalOnboardingClientId(): string | null {
+  return clientCredentials(paypalOnboardingEnvironment()).id || null;
 }

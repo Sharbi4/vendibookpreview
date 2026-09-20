@@ -21,6 +21,8 @@ export interface UserTransaction {
   listing_id: string | null;
   buyer_id: string | null;
   seller_id: string | null;
+  booking_request_id: string | null;
+  sale_transaction_id: string | null;
   role: 'buyer' | 'seller';
   listing?: { title: string | null; cover_image_url: string | null } | null;
 }
@@ -44,7 +46,7 @@ export function useUserTransactions(userId?: string) {
     const { data, error } = await supabase
       .from('payment_records')
       .select(
-        'id, reference, transaction_type, provider, payment_status, internal_status, dispute_status, currency, gross_amount_cents, refunded_cents, seller_proceeds_cents, paypal_order_id, paypal_capture_id, payment_source, created_at, captured_at, listing_id, buyer_id, seller_id',
+        'id, reference, transaction_type, provider, payment_status, internal_status, dispute_status, currency, gross_amount_cents, refunded_cents, seller_proceeds_cents, paypal_order_id, paypal_capture_id, payment_source, created_at, captured_at, listing_id, buyer_id, seller_id, booking_request_id, sale_transaction_id',
       )
       .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
       // `created` rows are checkout attempts that were never approved at PayPal

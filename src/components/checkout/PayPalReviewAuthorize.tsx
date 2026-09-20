@@ -18,6 +18,7 @@ export interface ReviewData {
   reference: string;
   order_id: string | null;
   record_status: string;
+  provider_reason?: string | null;
   order_status: string | null;
   payment_intent: string;
   currency: string;

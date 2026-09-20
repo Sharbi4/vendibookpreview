@@ -85,6 +85,7 @@ const PaymentSuccess = () => {
   const isMonetization = searchParams.get('monetization') === 'true';
   // Rentals now have a dedicated confirmation surface; keep old links working.
   const legacyBookingId = searchParams.get('booking_id');
+  const paymentReference = searchParams.get('ref');
   const { user } = useAuth();
   
   const [booking, setBooking] = useState<BookingDetails | null>(null);
@@ -137,6 +138,7 @@ const PaymentSuccess = () => {
 
   useEffect(() => {
     const processPayment = async () => {
+      if (paymentReference || (legacyBookingId && !sessionId)) return;
       if (isMonetization) {
         // Provisioning happens in monetization-webhook. Confirm the purchase
         // actually flipped to 'completed' before we congratulate — otherwise
@@ -313,10 +315,11 @@ const PaymentSuccess = () => {
     };
 
     processPayment();
-  }, [sessionId, isPaymentProtected, isMonetization, user]);
+  }, [sessionId, isPaymentProtected, isMonetization, user, paymentReference, legacyBookingId]);
 
+  if (paymentReference) return <Navigate to={`/receipt/${encodeURIComponent(paymentReference)}`} replace />;
   if (legacyBookingId && !sessionId) {
-    return <Navigate to={`/booking-confirmation?booking_id=${legacyBookingId}`} replace />;
+    return <Navigate to={`/dashboard/bookings/${legacyBookingId}`} replace />;
   }
 
   return (

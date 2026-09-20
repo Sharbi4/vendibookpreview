@@ -1,5 +1,6 @@
-import { useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate, useLocation, useSearchParams, Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
 import { ArrowRight, CheckCircle2, Circle, Clock3, FileSignature, Loader2, LifeBuoy, RefreshCw, SearchCheck, Truck, Video } from 'lucide-react';
 import { useOrderDetail, recoverOrderPayment } from '@/hooks/useOrderDetail';
 import { Button } from '@/components/ui/button';
@@ -32,8 +33,24 @@ const toneClass: Record<string, string> = {
 const OrderDetailPage = () => {
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [params, setParams] = useSearchParams();
   const { data: order, isLoading, error, refetch } = useOrderDetail(orderId);
   const [working, setWorking] = useState<string | null>(null);
+  useEffect(() => {
+    if (order && location.hash === '#report-issue') document.getElementById('report-issue')?.scrollIntoView();
+  }, [order, location.hash]);
+  const messageParty = async () => {
+    if (!orderId) return;
+    const { data: payment } = await supabase.from('payment_records').select('listing_id, buyer_id, seller_id').eq('id', orderId).single();
+    if (!payment?.listing_id || !payment.buyer_id || !payment.seller_id) return toast.error('Messaging is unavailable for this transaction.');
+    const { data: conversation, error } = await supabase.from('conversations').select('id').eq('listing_id', payment.listing_id).eq('shopper_id', payment.buyer_id).eq('host_id', payment.seller_id).maybeSingle();
+    if (error) return toast.error('Could not open the conversation. Please try again.');
+    if (conversation) return navigate(`/messages/${conversation.id}`);
+    const { data: created, error: createError } = await supabase.from('conversations').insert({ listing_id: payment.listing_id, shopper_id: payment.buyer_id, host_id: payment.seller_id }).select('id').single();
+    if (createError) return toast.error('Could not start the conversation. Please use your inbox or contact support.');
+    navigate(`/messages/${created.id}`);
+  };
 
   const run = async (action: 'status' | 'retry') => {
     if (!orderId || working) return;
@@ -133,7 +150,8 @@ const OrderDetailPage = () => {
 
       <p className="mt-3 text-sm text-muted-foreground">{order.payment.description}</p>
 
-      <Tabs defaultValue="overview" className="mt-8">
+      <div className="flex flex-wrap gap-3 mt-5"><Button asChild variant="outline"><Link to="/dashboard/transactions">All transactions</Link></Button><Button variant="outline" onClick={() => void messageParty()}>Message {order.viewer_role === 'buyer' ? 'seller' : 'buyer'}</Button></div>
+      <Tabs value={params.get('tab') === 'documents' ? 'documents' : 'overview'} onValueChange={tab => setParams(previous => { const next = new URLSearchParams(previous); next.set('tab', tab); return next; })} className="mt-8">
         <TabsList>
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
@@ -431,11 +449,12 @@ const OrderDetailPage = () => {
             />
           </Card>
 
-          <OrderCaseSection
+          <section id="report-issue" className="scroll-mt-8"><OrderCaseSection
             orderId={order.id}
             viewerRole={order.viewer_role}
             canReport={order.viewer_role !== 'admin'}
-          />
+            showPayPal={order.payment.provider === 'paypal'}
+          /></section>
 
           <OrderEvidenceSection
             saleTransactionId={(order as any).links?.sale_transaction_id ?? null}

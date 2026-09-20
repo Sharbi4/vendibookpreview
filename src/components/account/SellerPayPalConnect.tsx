@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useMyPayPalConnection } from '@/hooks/useMyPayPalConnection';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { recordLegalAcceptance } from '@/lib/legal/recordAcceptance';
@@ -55,7 +56,7 @@ export default function SellerPayPalConnect({
 }) {
   const { user } = useAuth();
   const [enabled, setEnabled] = useState<boolean | null>(null);
-  const [connection, setConnection] = useState<Connection | null>(null);
+  const { connection, reload: loadConnection, isReady, lastRefreshError } = useMyPayPalConnection();
   const [busy, setBusy] = useState<string | null>(null);
   const [capabilityError, setCapabilityError] = useState<string | null>(null);
   const [onboardingLink, setOnboardingLink] = useState<string | null>(null);
@@ -65,17 +66,8 @@ export default function SellerPayPalConnect({
   >(null);
   const handledReturn = useRef(false);
 
-  const loadConnection = useCallback(async () => {
-    if (!user) return null;
-    const { data } = await supabase
-      .from('seller_paypal_accounts')
-      .select('id, onboarding_status, action_reasons, merchant_id, paypal_email, referral_url, oauth_scopes, acdc_vetting_status, vaulting_status')
-      .eq('user_id', user.id)
-      .is('archived_at', null)
-      .maybeSingle();
-    setConnection((data as Connection) ?? null);
-    return (data as Connection) ?? null;
-  }, [user]);
+  useEffect(() => { handledReturn.current = false; setFlowMessage(null); }, [user?.id]);
+  useEffect(() => { if (lastRefreshError) setFlowMessage({ tone: 'error', text: lastRefreshError }); }, [lastRefreshError]);
 
   const refreshStatus = useCallback(async () => {
     setBusy('refresh');
@@ -113,6 +105,7 @@ export default function SellerPayPalConnect({
   }, [loadConnection]);
 
   useEffect(() => {
+    if (!user?.id) return;
     let cancelled = false;
     (async () => {
       let caps: { enabled?: boolean } | null = null;
@@ -137,7 +130,9 @@ export default function SellerPayPalConnect({
       setEnabled(on);
       if (!on) return;
 
-      await loadConnection();
+      try { await loadConnection(); }
+      catch { if (!cancelled) setFlowMessage({ tone: 'error', text: "Couldn't load your PayPal connection. Please try checking status again." }); return; }
+      if (cancelled) return;
 
       // Returning from PayPal: refresh status once, then clean the URL.
       const params = new URLSearchParams(window.location.search);
@@ -263,7 +258,6 @@ export default function SellerPayPalConnect({
   const notReceivable = reasons.includes('payments_receivable_false');
   const needsPermissions = reasons.includes('required_permissions_missing') || reasons.includes('oauth_not_active') || reasons.includes('vetting_pending');
   const status = connection?.onboarding_status ?? null;
-  const isReady = status === 'ready';
   const canReconnect = status === 'disconnected' || status === 'revoked';
 
   // Onboarding status PayPal requires sellers to see: account ID, granted
@@ -320,11 +314,11 @@ export default function SellerPayPalConnect({
   const checklist: Array<{ label: string; state: string }> = [
     {
       label: 'PayPal Business account connected',
-      state: step(Boolean(connection) && !canReconnect, canReconnect),
+      state: step(Boolean(connection?.merchant_id) && !canReconnect, canReconnect),
     },
-    { label: 'Primary email confirmed', state: step(isReady, emailUnconfirmed) },
-    { label: 'Payments receivable', state: step(isReady, notReceivable) },
-    { label: 'Required permissions granted', state: step(isReady, needsPermissions) },
+    { label: 'Primary email confirmed', state: step(connection?.primary_email_confirmed === true, emailUnconfirmed) },
+    { label: 'Payments receivable', state: step(connection?.payments_receivable === true, notReceivable) },
+    { label: 'Required permissions granted', state: step(connection?.consent_granted === true && grantedScopes.length > 0, needsPermissions) },
     { label: 'Online checkout enabled on your listings', state: step(isReady, false) },
   ];
 

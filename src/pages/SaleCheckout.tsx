@@ -388,7 +388,7 @@ const SaleCheckout = () => {
   // Pre-warm PayPal config/readiness/SDK while the buyer works through the
   // earlier steps so the payment buttons render without a loading wait.
   // Sales authorize first until the seller confirms, hence the AUTHORIZE guess.
-  useWarmPayPalCheckout(listing?.host_id ?? null, 'CAPTURE');
+  useWarmPayPalCheckout(listing?.host_id ?? null);
   const paypalPurchaseBlocked = sellerReadiness.gatingActive && !sellerReadiness.ready;
   const [fulfillmentReady, setFulfillmentReady] = useState(false);
 

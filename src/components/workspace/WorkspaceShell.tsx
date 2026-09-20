@@ -27,7 +27,7 @@ import { cn } from '@/lib/utils';
 const desktopNav = [
   ['Home', '/dashboard', Home],
   ['Listings', '/dashboard/listings', List],
-  ['Activity', '/dashboard/activity', ShoppingBag],
+  ['Transactions', '/dashboard/transactions', ShoppingBag],
   ['Messages', '/dashboard/messages', Inbox],
   ['Notifications', '/dashboard/notifications', Bell],
   ['Saved', '/dashboard/saved', Heart],

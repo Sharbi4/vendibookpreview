@@ -39,7 +39,7 @@ export interface ContactWizardValue extends BookingUserInfo {
 
 interface ContactInfoWizardProps {
   onComplete: (value: ContactWizardValue) => void;
-  /** Emitted whenever a step is saved, so the parent can track partial state. */
+  /** Emitted on every edit, so the parent can track partial state. */
   onPartialChange?: (value: ContactWizardValue) => void;
   initialData?: Partial<ContactWizardValue>;
   listingId?: string;
@@ -105,6 +105,9 @@ export function ContactInfoWizard({
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
   const [doneSteps, setDoneSteps] = useState<StepKey[]>([]);
   const hydrated = useRef(false);
+  const partialCallback = useRef(onPartialChange);
+  partialCallback.current = onPartialChange;
+  useEffect(() => { partialCallback.current?.(value); }, [value]);
 
   const set = useCallback(<K extends keyof ContactWizardValue>(key: K, v: ContactWizardValue[K]) => {
     setValue((prev) => ({ ...prev, [key]: v }));

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useRef, useCallback, useEffect, useState } from 'react';
 import {
   BadgeCheck,
   FileText,
@@ -67,6 +67,7 @@ interface DisclosureStepProps {
   /** Bubbles the renter's insurance answer up so the booking payload keeps it. */
   onInsuranceAnswer?: (answer: InsuranceAnswer) => void;
   /** Fires once the attestation is recorded and identity is settled. */
+  onValidityChange?: (valid: boolean) => void;
   onComplete: (state: {
     attested: boolean;
     identityStatus: string;
@@ -88,6 +89,7 @@ export function DisclosureStep({
   listingId,
   onInsuranceAnswer,
   onComplete,
+  onValidityChange,
   disabled,
   compact = false,
 }: DisclosureStepProps) {
@@ -155,6 +157,10 @@ export function DisclosureStep({
 
   const attested = Boolean(attestation && !attestation.stale);
   const identityDone = Boolean(identity?.verified || identity?.pending_review || !identity?.available);
+  const currentlyValid = attested && identityDone && !!insurance && insurance === attestation?.insurance_answer;
+  const validityCallback = useRef(onValidityChange);
+  validityCallback.current = onValidityChange;
+  useEffect(() => { validityCallback.current?.(currentlyValid); }, [currentlyValid]);
 
   const handleAttest = async () => {
     if (!insurance || !agreed) return;
@@ -406,7 +412,7 @@ export function DisclosureStep({
 
       <Button
         className="h-12 w-full"
-        disabled={disabled || working || !attested || !identityDone}
+        disabled={disabled || working || !currentlyValid}
         onClick={() =>
           onComplete({
             attested: true,

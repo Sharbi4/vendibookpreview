@@ -36,7 +36,7 @@ const PaymentCancelled = () => {
               </div>
 
               <h1 className="text-2xl font-bold text-foreground mb-2">
-                No problem — your card wasn't charged
+                Checkout cancelled
               </h1>
 
               <p className="text-muted-foreground mb-6">
@@ -48,7 +48,7 @@ const PaymentCancelled = () => {
                 <ul className="space-y-2 text-sm text-muted-foreground">
                   <li className="flex items-start gap-2">
                     <span className="text-primary mt-0.5">•</span>
-                    Your card was not charged — nothing to undo.
+                    Check the transaction status before starting another payment.
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-primary mt-0.5">•</span>
@@ -56,7 +56,7 @@ const PaymentCancelled = () => {
                   </li>
                   <li className="flex items-start gap-2">
                     <span className="text-primary mt-0.5">•</span>
-                    The host is notified only once payment is securely held.
+                    Request-to-book needs host approval before payment is available.
                   </li>
                 </ul>
               </div>

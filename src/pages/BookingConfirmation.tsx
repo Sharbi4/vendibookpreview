@@ -1,17 +1,7 @@
-/**
- * BookingConfirmation — the single landing surface after a rental payment.
- *
- * PayPal returns here with `?booking_id=`. The page polls the booking row
- * until the server-side capture flips `payment_status` to `paid`, then shows
- * the correct state:
- *   - processing            → capture not yet recorded (webhook lag)
- *   - confirmed             → instant book, host approval not required
- *   - awaiting host approval→ paid, host still has to accept
- *   - declined / cancelled  → host said no; refund is on its way
- *   - failed                → payment never completed, nothing was charged
- *
- * No custodial-funds claims, no payout-timing promises to the renter.
- */
+/** Rental request, approval, and payment status. Approval never implies payment. */
+import { rentalBookingView } from '@/lib/rentalCheckoutValidation';
+import { useAuth } from '@/contexts/AuthContext';
+import PayPalEmbeddedPayment from '@/components/transaction/checkout/PayPalEmbeddedPayment';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { format, parseISO } from 'date-fns';
@@ -38,6 +28,8 @@ import { useListingRequiredDocuments } from '@/hooks/useRequiredDocuments';
 
 interface BookingRow {
   id: string;
+  host_id: string;
+  shopper_id: string;
   status: string | null;
   payment_status: string | null;
   start_date: string;
@@ -60,7 +52,7 @@ interface BookingRow {
   listings?: { title: string | null; cover_image_url: string | null; city: string | null; state: string | null } | null;
 }
 
-type View = 'loading' | 'processing' | 'confirmed' | 'awaiting_host' | 'declined' | 'failed' | 'not_found';
+type View = 'ready_to_pay' | 'loading' | 'processing' | 'confirmed' | 'awaiting_host' | 'declined' | 'failed' | 'not_found';
 
 const money = (n: number) =>
   n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 2 });
@@ -104,7 +96,9 @@ const BookingConfirmation = ({
   const bookingId = bookingIdProp ?? params.get('booking_id');
   const [booking, setBooking] = useState<BookingRow | null>(null);
   const [view, setView] = useState<View>('loading');
-  const attempts = useRef(0);
+  const { user } = useAuth();
+  const [paymentReference, setPaymentReference] = useState<string | null>(null);
+  const [payNow, setPayNow] = useState(params.get('step') === 'payment');
 
   useEffect(() => {
     if (!bookingId) {
@@ -118,7 +112,7 @@ const BookingConfirmation = ({
       const { data, error } = await supabase
         .from('booking_requests')
         .select(
-          'id, status, payment_status, start_date, end_date, start_time, end_time, is_hourly_booking, duration_hours, slot_name, total_price, tax_amount, delivery_fee_snapshot, deposit_amount, deposit_status, is_instant_book, fulfillment_selected, delivery_address, address_snapshot, listing_id, listings(title, cover_image_url, city, state)',
+          'id, host_id, shopper_id, status, payment_status, start_date, end_date, start_time, end_time, is_hourly_booking, duration_hours, slot_name, total_price, tax_amount, delivery_fee_snapshot, deposit_amount, deposit_status, is_instant_book, fulfillment_selected, delivery_address, address_snapshot, listing_id, listings(title, cover_image_url, city, state)',
         )
         .eq('id', bookingId)
         .maybeSingle();
@@ -133,30 +127,14 @@ const BookingConfirmation = ({
       const row = data as unknown as BookingRow;
       setBooking(row);
 
-      const paid = row.payment_status === 'paid';
-      const status = row.status ?? 'pending';
-
-      if (status === 'declined' || status === 'cancelled') {
-        setView('declined');
-        return;
-      }
-      if (paid && status === 'approved') {
-        setView('confirmed');
-        return;
-      }
-      if (paid) {
-        setView('awaiting_host');
-        return;
-      }
-
-      attempts.current += 1;
-      // ~30s of polling before we tell the renter the payment didn't land.
-      if (attempts.current >= 15) {
-        setView('failed');
-        return;
-      }
-      setView('processing');
-      timer = setTimeout(poll, 2000);
+      const { data: payment } = await supabase.from('payment_records').select('reference,payment_status')
+        .eq('booking_request_id', row.id).in('payment_status', ['pending', 'completed'])
+        .order('created_at', { ascending: false }).limit(1).maybeSingle();
+      if (cancelled) return;
+      setPaymentReference(payment?.reference ?? null);
+      const next = payment?.payment_status === 'pending' ? 'processing' : rentalBookingView(row);
+      setView(next);
+      if (next === 'awaiting_host' || next === 'processing') timer = setTimeout(poll, 5000);
     };
 
     poll();
@@ -228,7 +206,7 @@ const BookingConfirmation = ({
         'The host reviews your request — most hosts reply within a day.',
         'If the host requires documents, upload them now so approval is not held up.',
         'You will be emailed as soon as the host accepts or declines.',
-        'If the host declines or does not respond, your payment is refunded to your original payment method.',
+        'After approval, open this booking and select Pay now. No payment or hold is taken while you wait.',
       ];
     }
     if (view === 'processing') {
@@ -239,8 +217,7 @@ const BookingConfirmation = ({
     }
     if (view === 'declined') {
       return [
-        'Your refund has been started to your original payment method.',
-        'Refunds usually post within a few business days, depending on your bank.',
+        'If a payment was previously completed, check its transaction record for refund status.',
         'You can browse other rentals for the same dates from search.',
       ];
     }
@@ -248,25 +225,27 @@ const BookingConfirmation = ({
   }, [booking, view]);
 
   const headline: Record<View, string> = {
+    ready_to_pay: 'Ready to complete payment',
     loading: 'Loading your booking…',
     processing: 'Confirming your payment…',
     confirmed: 'Your booking is moving forward.',
-    awaiting_host: 'Your booking is moving forward.',
+    awaiting_host: 'Request sent — waiting for host',
     declined: 'This booking was not accepted',
     failed: 'We could not confirm your payment',
     not_found: 'Booking not found',
   };
 
   const body: Record<View, string> = {
+    ready_to_pay: 'Review your booking and final total, then pay securely with PayPal. Your booking is confirmed after payment is verified.',
     loading: '',
     processing:
-      'PayPal has your payment. We are recording it now — this usually takes a few seconds. You can safely stay on this page.',
+      'PayPal is still verifying this payment. It is not marked paid. Do not pay again while it is pending.',
     confirmed:
       'Your dates are locked in. The host has your booking details and you can message them any time from your dashboard.',
     awaiting_host:
-      'Your dates are held and your payment is recorded. The host still needs to accept. If they decline or do not respond, Vendibook refunds your payment to your original payment method.',
+      'The host is reviewing your request. Nothing is charged or held while you wait. We will let you know when you can complete payment.',
     declined:
-      'The host was not able to take this booking. Your payment is being refunded to your original payment method — refunds typically post within a few business days depending on your bank.',
+      'This booking is closed. If you previously paid, check the payment record for its refund status.',
     failed:
       'We did not receive a completed payment for this booking, so nothing has been charged. You can try again from the listing, or contact support@vendibook.com if you think this is a mistake.',
     not_found:
@@ -409,6 +388,18 @@ const BookingConfirmation = ({
                   />
                 ) : null}
               </div>
+            ) : null}
+
+            {paymentReference ? <Link className="mt-6 block underline" to={`/receipt/${paymentReference}`}>View payment status and receipt</Link> : null}
+            {booking && view === 'ready_to_pay' && user?.id === booking.shopper_id ? (
+              <section className="mt-6" aria-label="Rental payment">
+                {!payNow ? <Button variant="cta" onClick={() => setPayNow(true)}>Pay now</Button> : (
+                  <PayPalEmbeddedPayment target={{ kind: 'booking', id: booking.id }} sellerId={booking.host_id}
+                    counterparty="host" listingHref={`/listing/${booking.listing_id}`}
+                    returnUrl={`${window.location.origin}/dashboard/bookings/${booking.id}?step=payment`}
+                    heading="Review and complete payment" totalUsd={Number(booking.total_price)} />
+                )}
+              </section>
             ) : null}
 
             {booking && view !== 'failed' && view !== 'not_found' ? (

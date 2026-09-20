@@ -1,9 +1,8 @@
 /**
- * Vendibook case flow — Phase 1.
+ * Vendibook internal case actions.
  *
- * For our catalogue (vehicles, trailers, turnkey businesses, custom build-outs,
- * local pickup) PayPal's Purchase Protection is largely unavailable, so the
- * Vendibook case process is the real remedy. This function owns it end to end:
+ * This process is independent of PayPal's Resolution Center. It does not
+ * file a provider dispute or determine provider protection eligibility:
  *
  *   open            buyer/seller opens a case; seller payment freezes immediately
  *   reply           append-only statement from either party or an admin
@@ -17,8 +16,8 @@
  *    remaining time when the case closes without a refund
  *  - every transition is written append-only to dispute_case_events
  *
- * Phase 2 (PayPal dispute webhooks + automated evidence package) is NOT built
- * here, but `evidence_links` is populated so the package can be assembled later.
+ * PayPal webhook intake lives in _shared/paypalDisputeIntake.ts; evidence
+ * links are shared by that intake and this internal case flow.
  */
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
@@ -191,7 +190,7 @@ async function openCase(admin: any, userId: string, body: any) {
       role === "buyer"
         ? "Seller payment on this order is paused while the case is open, and the condition clock is paused with it."
         : "Seller payment on this order is paused while the case is open.",
-      "Opening a Vendibook case also satisfies PayPal's requirement that a buyer first attempt to resolve the issue with the seller. It does not extend or replace any deadline PayPal or your card issuer sets.",
+      "This is a Vendibook case, not a PayPal dispute. You can contact PayPal independently. This case does not extend or replace any deadline PayPal or your card issuer sets.",
     ],
     ctaLabel: "View your case", ctaUrl: link,
   });

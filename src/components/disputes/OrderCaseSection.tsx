@@ -13,6 +13,8 @@ import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { toast } from 'sonner';
+import { Link, useNavigate } from 'react-router-dom';
+import PayPalResolutionLink from './PayPalResolutionLink';
 import {
   CASE_OUTCOME_LABEL, CASE_STATUS_LABEL, ISSUE_TYPES, isCaseOpen, issueLabel,
 } from '@/lib/disputes';
@@ -28,6 +30,10 @@ interface CaseRow {
   response_deadline_at: string | null;
   disbursement_frozen: boolean;
   created_at: string;
+  paypal_dispute_id: string | null;
+  paypal_dispute_status: string | null;
+  paypal_dispute_updated_at: string | null;
+  evidence_links: Record<string, unknown>;
 }
 
 interface MessageRow {
@@ -49,14 +55,21 @@ const OrderCaseSection = ({
   orderId,
   viewerRole,
   canReport,
+  caseId,
+  showPayPal = true,
 }: {
   orderId: string;
   viewerRole: string;
   canReport: boolean;
+  caseId?: string;
+  showPayPal?: boolean;
 }) => {
+  const navigate = useNavigate();
   const [caseRow, setCaseRow] = useState<CaseRow | null>(null);
   const [messages, setMessages] = useState<MessageRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
+  const [events, setEvents] = useState<Array<{ id: string; event_type: string; created_at: string; to_state: string | null }>>([]);
   const [open, setOpen] = useState(false);
   const [busy, setBusy] = useState(false);
   const [issueType, setIssueType] = useState<string>('');
@@ -66,13 +79,18 @@ const OrderCaseSection = ({
   const fileRef = useRef<HTMLInputElement | null>(null);
 
   const load = useCallback(async () => {
-    const { data } = await supabase
+    setLoading(true);
+    setLoadError(false);
+    let query = supabase
       .from('dispute_cases')
-      .select('id, case_number, issue_type, description, status, outcome, resolution_reason, response_deadline_at, disbursement_frozen, created_at')
-      .eq('payment_record_id', orderId)
+      .select('id, case_number, issue_type, description, status, outcome, resolution_reason, response_deadline_at, disbursement_frozen, created_at, paypal_dispute_id, paypal_dispute_status, paypal_dispute_updated_at, evidence_links')
+      .eq('payment_record_id', orderId);
+    if (caseId) query = query.eq('id', caseId);
+    const { data, error } = await query
       .order('created_at', { ascending: false })
       .limit(1)
       .maybeSingle();
+    if (error) { setLoadError(true); setLoading(false); return; }
     setCaseRow((data as CaseRow) ?? null);
     if (data?.id) {
       const { data: msgs } = await supabase
@@ -81,9 +99,11 @@ const OrderCaseSection = ({
         .eq('case_id', data.id)
         .order('created_at', { ascending: true });
       setMessages((msgs as MessageRow[]) ?? []);
+      const { data: history } = await supabase.from('dispute_case_events').select('id, event_type, created_at, to_state').eq('case_id', data.id).order('created_at', { ascending: true });
+      setEvents(history ?? []);
     }
     setLoading(false);
-  }, [orderId]);
+  }, [orderId, caseId]);
 
   useEffect(() => { void load(); }, [load]);
 
@@ -103,6 +123,7 @@ const OrderCaseSection = ({
       setOpen(false);
       setDescription(''); setIssueType(''); setFiles([]);
       await load();
+      if (newCaseId) navigate(`/dashboard/transactions/${orderId}/case/${newCaseId}`);
     } catch (e) {
       toast.error((e as Error).message);
     } finally {
@@ -145,17 +166,18 @@ const OrderCaseSection = ({
   const active = useMemo(() => caseRow && isCaseOpen(caseRow.status), [caseRow]);
 
   if (loading) return null;
+  if (loadError) return <Card className="p-5"><p role="alert">We couldn't load support for this transaction.</p><Button variant="outline" onClick={() => void load()}>Try again</Button></Card>;
+  if (caseId && !caseRow) return <p>Case unavailable for this transaction.</p>;
 
   if (!caseRow) {
     if (!canReport) return null;
     return (
       <Card className="p-4 sm:p-5">
         <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-          Something wrong with this order?
+          Report an issue
         </h2>
         <p className="mt-2 text-sm text-muted-foreground">
-          Open a Vendibook case. The other party is notified with a response deadline, our team reviews
-          it, and seller payment on this order pauses while the case is open.
+          Start with a message to the other party, or ask Vendibook to review the issue. Your transaction records stay connected to the case.
         </p>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
@@ -206,9 +228,7 @@ const OrderCaseSection = ({
                 </Button>
               </div>
               <p className="text-xs text-muted-foreground">
-                Opening a Vendibook case also satisfies PayPal's requirement that a buyer first tries to
-                resolve the issue with the seller. It does not extend or replace any deadline PayPal or
-                your card issuer sets.
+                This opens a Vendibook support case only. You can contact PayPal independently; opening this case does not change any PayPal or card issuer deadline.
               </p>
             </div>
             <DialogFooter>
@@ -218,6 +238,7 @@ const OrderCaseSection = ({
             </DialogFooter>
           </DialogContent>
         </Dialog>
+        {showPayPal && <PayPalResolutionLink />}
       </Card>
     );
   }
@@ -234,6 +255,13 @@ const OrderCaseSection = ({
         <Badge variant="outline">{CASE_STATUS_LABEL[caseRow.status] ?? caseRow.status}</Badge>
       </div>
 
+      <p className="mt-4 text-sm whitespace-pre-wrap">{caseRow.description}</p>
+      {!caseId && <Link className="inline-block mt-3 text-sm underline" to={`/dashboard/transactions/${orderId}/case/${caseRow.id}`}>Open case details</Link>}
+      <div className="mt-4 rounded-xl border border-border p-4 text-sm"><p className="font-medium">Vendibook: {CASE_STATUS_LABEL[caseRow.status] ?? caseRow.status}</p><p className="mt-2">PayPal: {caseRow.paypal_dispute_status || 'No linked dispute recorded'}</p>{caseRow.paypal_dispute_id && <p className="mt-1 text-xs text-muted-foreground">{caseRow.paypal_dispute_id} · Updated {fmt(caseRow.paypal_dispute_updated_at)}</p>}</div>
+      {showPayPal && <PayPalResolutionLink />}
+      <details className="mt-4 rounded-xl border border-border p-4"><summary className="cursor-pointer text-sm font-medium">Connected evidence</summary><p className="mt-2 text-xs text-muted-foreground">Linked at case creation. Open the transaction to review the original documents, handoff evidence, and tracking.</p><ul className="mt-3 space-y-1 text-sm">{Object.entries(caseRow.evidence_links || {}).filter(([key, value]) => Array.isArray(value) && key !== 'collection_errors').map(([key, value]) => <li key={key}>{key.replace(/_/g, ' ')}: {(value as unknown[]).length} record(s)</li>)}</ul><Link className="inline-block mt-3 text-sm underline" to={`/dashboard/transactions/${orderId}`}>View transaction records</Link></details>
+      {events.length > 0 && <details className="mt-4 rounded-xl border border-border p-4"><summary className="cursor-pointer text-sm font-medium">Case timeline</summary><ol className="mt-3 space-y-3">{events.map(event => <li key={event.id} className="text-sm"><p>{event.event_type.replace(/_/g, ' ')}{event.to_state ? ` · ${event.to_state.replace(/_/g, ' ')}` : ''}</p><time className="text-xs text-muted-foreground">{fmt(event.created_at)}</time></li>)}</ol></details>}
+
       {active && caseRow.disbursement_frozen && (
         <div className="mt-4 flex items-start gap-3 rounded-xl border border-amber-500/40 bg-amber-500/5 p-3">
           <Lock className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600" />
@@ -247,7 +275,7 @@ const OrderCaseSection = ({
 
       {active && caseRow.response_deadline_at && (
         <p className="mt-3 flex items-center gap-2 text-xs text-muted-foreground">
-          <AlertTriangle className="h-3.5 w-3.5" /> Response due {fmt(caseRow.response_deadline_at)}
+          <AlertTriangle className="h-3.5 w-3.5" /> Vendibook response due {fmt(caseRow.response_deadline_at)}
         </p>
       )}
 

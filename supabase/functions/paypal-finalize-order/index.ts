@@ -1,3 +1,4 @@
+import { extractCaptureFacts, finalizeCapture } from "../_shared/paypalFinalize.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
@@ -83,6 +84,18 @@ serve(async (req) => {
       });
     }
 
+    // Rental recovery is read-only at PayPal: only reconcile a capture that
+    // already exists. An APPROVED order must return to the buyer's final review.
+    if (record.booking_request_id) {
+      const facts = order ? extractCaptureFacts(order) : null;
+      if (facts) {
+        const verified = await finalizeCapture(admin, record, facts, "capture_endpoint");
+        return done(verified.payment_status, { pending: verified.payment_status === "pending" });
+      }
+      if (!order || record.payment_status === "pending") return done("pending", { pending: true, message: "Payment verification is pending. Do not pay again." });
+      return done("review_required", { message: "Return to the final payment review to submit payment." });
+    }
+
     // APPROVED (or COMPLETED but not recorded yet): run the canonical endpoint.
     const intent = String(record.payment_intent ?? "CAPTURE").toUpperCase();
     const fn = intent === "AUTHORIZE" ? "paypal-authorize-order" : "paypal-capture-order";
@@ -102,7 +115,7 @@ serve(async (req) => {
     if (res.ok && (payload.status === "completed" || payload.status === "authorized")) {
       return done(String(payload.status), { message: payload.message ?? null });
     }
-    if (res.ok && payload.pending) {
+    if (res.ok && (payload.pending || payload.status === "pending")) {
       return done("pending", { message: payload.message ?? null });
     }
 
@@ -113,6 +126,7 @@ serve(async (req) => {
       .eq("id", record.id)
       .maybeSingle();
     if (fresh?.payment_status === "completed") return done("completed");
+    if (fresh?.payment_status === "pending") return done("pending", { pending: true });
     if (fresh?.paypal_authorization_id) return done("authorized");
 
     return done("failed", {

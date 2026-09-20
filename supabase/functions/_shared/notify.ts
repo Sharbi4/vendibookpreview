@@ -37,6 +37,7 @@ export interface NotifyInput {
    * Used so a webhook replay cannot spam the buyer.
    */
   dedupeKey?: string | null;
+  bookingEventKey?: string | null;
 }
 
 /**
@@ -72,6 +73,7 @@ export async function notifyUser(supabase: any, input: NotifyInput): Promise<boo
     }
 
     const { error } = await supabase.from("notifications").insert({
+      ...(input.bookingEventKey ? { booking_event_key: input.bookingEventKey } : {}),
       user_id: input.userId,
       type: input.type,
       title: input.title,
@@ -92,7 +94,7 @@ export async function notifyUser(supabase: any, input: NotifyInput): Promise<boo
 /** Convenience: notify buyer and/or seller about an order event. */
 export async function notifyOrderParties(
   supabase: any,
-  record: { id: string; buyer_id?: string | null; seller_id?: string | null; reference?: string | null },
+  record: { id: string; booking_request_id?: string | null; buyer_id?: string | null; seller_id?: string | null; reference?: string | null },
   opts: {
     type: PaymentNotificationCode;
     buyer?: { title: string; message: string };
@@ -109,6 +111,7 @@ export async function notifyOrderParties(
       message: opts.buyer.message,
       link,
       dedupeKey: opts.dedupeKey ? `${opts.dedupeKey}:buyer` : null,
+      bookingEventKey: record.booking_request_id && opts.dedupeKey ? `${record.id}:${opts.type}:${opts.dedupeKey}:buyer` : null,
     });
   }
   if (opts.seller) {
@@ -119,6 +122,7 @@ export async function notifyOrderParties(
       message: opts.seller.message,
       link,
       dedupeKey: opts.dedupeKey ? `${opts.dedupeKey}:seller` : null,
+      bookingEventKey: record.booking_request_id && opts.dedupeKey ? `${record.id}:${opts.type}:${opts.dedupeKey}:seller` : null,
     });
   }
 }

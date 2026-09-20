@@ -238,7 +238,7 @@ export function buildTerms(input: {
   if (selection.paymentMethod === 'paypal_checkout') {
     acknowledgements.push(
       selection.mode === 'rent'
-        ? 'Your PayPal payment is authorized now; funds are held by Vendibook until 24 hours after the rental ends.'
+        ? 'Request bookings require host approval before payment. Approve at PayPal, then review the final total on Vendibook and select Submit payment. Instant Book is confirmed only after verified payment.'
         : 'Your PayPal payment is charged now; funds are held in payment protection and typically released to the seller within 24 hours of delivery confirmation (24 to 48 hours at the outside).',
     );
   } else if (selection.paymentMethod === 'pay_in_person') {
