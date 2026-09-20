@@ -1434,7 +1434,7 @@ export const PublishWizard: React.FC = () => {
         return;
       }
 
-      const result = await Promise.race([saveStep(), guard]);
+      const result = await Promise.race([saveStep({ advance: false }), guard]);
       if (result !== true) {
         // saveStep surfaces its own error detail; add the exit context.
         toast({
@@ -1975,7 +1975,7 @@ export const PublishWizard: React.FC = () => {
   // Returns true when this step's fields were persisted (or nothing needed
   // writing), false on any failure — Save & exit uses this to avoid
   // navigating away with unsaved changes.
-  const saveStep = async (): Promise<boolean> => {
+  const saveStep = async (opts?: { advance?: boolean }): Promise<boolean> => {
     if (!listing || saveInFlightRef.current) return false;
     saveInFlightRef.current = true;
     setIsSaving(true);
@@ -2254,11 +2254,16 @@ export const PublishWizard: React.FC = () => {
         ? ['basics', 'photos', 'headline', 'includes', 'pricing', 'availability', 'location', 'documents', 'review']
         : ['basics', 'photos', 'headline', 'includes', 'pricing', 'location', 'review'];
       const currentIndex = steps.indexOf(step);
-      if (currentIndex === -1) {
-        // Orphaned/legacy step (e.g. ?step=details): continue forward.
-        setStep('includes');
-      } else if (currentIndex < steps.length - 1) {
-        setStep(steps[currentIndex + 1]);
+      // Save & exit calls saveStep({ advance: false }) — advancing here would
+      // fire the ?step= sync effect after the exit navigation and bounce the
+      // seller back into the wizard at the next step.
+      if (opts?.advance !== false) {
+        if (currentIndex === -1) {
+          // Orphaned/legacy step (e.g. ?step=details): continue forward.
+          setStep('includes');
+        } else if (currentIndex < steps.length - 1) {
+          setStep(steps[currentIndex + 1]);
+        }
       }
       return true;
     } catch (error) {
