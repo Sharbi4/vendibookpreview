@@ -8,4 +8,4 @@
 - [open] Phase 2 PayPal dispute webhooks + automated evidence package.
 - [open] Square disputes beyond refunds; SignNow UI triggers + counsel review of template text.
 - [open] Rotate pasted Square production access token.
-- [open] Preserve the selected PayPal Pay Later funding source through approval so review copy shows the order total, not a same-day charge.
+- [done] Preserve the selected PayPal Pay Later funding source through approval so review copy shows the order total, not a same-day charge.
