@@ -1,3 +1,4 @@
+import { isValidRentalDateRange } from '@/lib/rentalCheckoutValidation';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import { format, parseISO, differenceInDays } from 'date-fns';
@@ -43,7 +44,6 @@ import { trackRequestStarted, trackRequestSubmitted } from '@/lib/analytics';
 import { PayPalPaymentPanel } from '@/components/checkout';
 
 import CheckoutOrderSummary, { type OrderSummaryLine } from '@/components/checkout/CheckoutOrderSummary';
-import { isEmbeddedCheckoutEnabled } from '@/lib/featureFlags';
 import { parseEdgeError } from '@/lib/edgeErrors';
 import { checkoutErrorCopy } from '@/lib/checkoutErrorCopy';
 import { FinalReviewSheet } from '@/components/transaction/FinalReviewSheet';
@@ -199,7 +199,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
 
   const hoursParamValue = hoursParam ? Number(hoursParam) : 0;
   const hoursFromSelections = useMemo(() => getTotalSelectedHours(hourlySelections), [hourlySelections]);
-  const durationHours = hoursParamValue > 0 ? hoursParamValue : hoursFromSelections;
+  const durationHours = hoursFromSelections > 0 ? hoursFromSelections : Number.isFinite(hoursParamValue) && hoursParamValue > 0 ? hoursParamValue : 0;
   const selectedHourlyDays = useMemo(() => getSelectedDaysCount(hourlySelections), [hourlySelections]);
 
   const isHourlyBooking =
@@ -245,6 +245,9 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   /** Guards against creating a second booking_request row if the buyer
    *  closes the PayPal panel and hits the submit button again. */
   const createdBookingIdRef = useRef<string | null>(null);
+  const submitLockRef = useRef(false);
+  const agreementLockRef = useRef(false);
+  const uploadedDocumentsRef = useRef(new Set<StagedDocument>());
   /** Where /auth should send the buyer back to — the rental flow, never /checkout. */
   const bookingReturnPath = `/book/${listingId ?? ''}${
     searchParams.toString() ? `?${searchParams.toString()}` : ''
@@ -530,11 +533,16 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   };
 
   const handleSubmit = async () => {
+    if (agreementLockRef.current || submitLockRef.current || termsGate.preparing) return;
+    if (!canSubmit || paymentSetupBlocked || paymentReadiness.loading) {
+      toast({ title: 'Complete your booking details', description: nextIncompleteReason || 'Wait for payment availability to be confirmed.', variant: 'destructive' });
+      return;
+    }
     if (!user) {
       setShowAuthModal(true);
       return;
     }
-    if (!startDate || !endDate || !userInfo || !listing) {
+    if (!startDate || !endDate || !isValidRentalDateRange(startDate, endDate) || !userInfo || !listing) {
       toast({ title: 'Missing information', description: 'Please complete all required fields.', variant: 'destructive' });
       return;
     }
@@ -553,6 +561,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
     const t = buildCurrentTerms();
     if (!t) return;
     // Both consents are persisted server-side before the booking is created.
+    agreementLockRef.current = true;
     try {
       await recordCheckoutAgreements({
         mode: 'rental',
@@ -563,6 +572,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
           privacy: privacyDocument.data?.content_hash ?? null,
         },
       });
+      await termsGate.prepare(t);
     } catch (error) {
       toast({
         title: 'Could not record your acceptance',
@@ -570,18 +580,24 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
         variant: 'destructive',
       });
       return;
+    } finally {
+      agreementLockRef.current = false;
     }
-    await termsGate.prepare(t);
   };
 
   const runSubmit = async () => {
+    if (submitLockRef.current) return;
+    if (!canSubmit || !legalAccepted || paymentSetupBlocked || paymentReadiness.loading) {
+      toast({ title: 'Review your booking', description: nextIncompleteReason || 'Confirm your agreements and payment availability before continuing.', variant: 'destructive' });
+      return;
+    }
     if (!user) {
       // Show inline auth modal instead of redirecting
       setShowAuthModal(true);
       return;
     }
 
-    if (!startDate || !endDate || !userInfo || !listing) {
+    if (!startDate || !endDate || !isValidRentalDateRange(startDate, endDate) || !userInfo || !listing) {
       toast({
         title: 'Missing information',
         description: 'Please complete all required fields.',
@@ -600,19 +616,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
       return;
     }
 
-    // Check if we're in an iframe
-    const isInIframe = (() => {
-      try {
-        return window.self !== window.top;
-      } catch {
-        return true;
-      }
-    })();
-
-    // Pre-open a blank window BEFORE async calls to avoid popup blockers
-    const wantsEmbedded = isEmbeddedCheckoutEnabled() && (listing?.instant_book ?? false);
-    const checkoutWindow = !wantsEmbedded && isInIframe ? window.open('about:blank', '_blank') : null;
-
+    submitLockRef.current = true;
     setIsSubmitting(true);
 
     try {
@@ -653,104 +657,53 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
         }),
       };
 
-      // Reuse the already-created request instead of double-booking the dates,
-      // but re-sync it with the buyer's current selection so PayPal (which
-      // prices server-side from the row) can never charge stale dates/amounts.
-      if (createdBookingIdRef.current) {
-        const existingId = createdBookingIdRef.current;
-        const { error: syncError } = await supabase
-          .from('booking_requests')
+      let bookingId = createdBookingIdRef.current;
+      if (bookingId) {
+        const { error: syncError } = await supabase.from('booking_requests')
           .update({
             ...(bookingData as any),
             delivery_address: fulfillmentSelected === 'delivery' ? deliveryAddress.trim() : null,
             delivery_fee_snapshot: fulfillmentSelected === 'delivery' ? (listing.delivery_fee || null) : null,
           })
-          .eq('id', existingId)
-          .eq('shopper_id', user.id)
-          .neq('payment_status', 'paid');
-
+          .eq('id', bookingId).eq('shopper_id', user.id)
+          .neq('payment_status', 'paid').select('id').single();
         if (syncError) throw syncError;
+      } else {
+        const { data: bookingResult, error: bookingError } = await supabase
+          .from('booking_requests').insert(bookingData as any).select('id').single();
+        if (bookingError) throw bookingError;
+        bookingId = bookingResult.id;
+        createdBookingIdRef.current = bookingId;
+      }
 
-        if (checkoutWindow) checkoutWindow.close();
-        setPaypalCheckout({
-          bookingId: existingId,
-          returnUrl: confirmationUrl(existingId),
+      // Stop before payment on upload failure. Retry the same booking and skip
+      // documents already recorded successfully during this checkout session.
+      for (const stagedDoc of stagedDocuments) {
+        if (uploadedDocumentsRef.current.has(stagedDoc)) continue;
+        const fileExt = stagedDoc.file.name.split('.').pop();
+        const filePath = `${bookingId}/${stagedDoc.documentType}_${crypto.randomUUID()}.${fileExt}`;
+        const { error: uploadError } = await supabase.storage.from('booking-documents')
+          .upload(filePath, stagedDoc.file, { cacheControl: '3600', upsert: false });
+        if (uploadError) throw new Error('A required document could not be uploaded. Please try again before paying.');
+        const { data: urlData } = supabase.storage.from('booking-documents').getPublicUrl(filePath);
+        const { error: documentError } = await supabase.from('booking_documents').insert({
+          booking_id: bookingId!, document_type: stagedDoc.documentType,
+          file_url: urlData.publicUrl, file_name: stagedDoc.file.name, status: 'pending',
         });
-        setIsSubmitting(false);
-        return;
+        if (documentError) throw new Error('Your document could not be saved. Please retry before paying.');
+        uploadedDocumentsRef.current.add(stagedDoc);
+        supabase.functions.invoke('send-document-notification', {
+          body: { booking_id: bookingId, document_type: stagedDoc.documentType, event_type: 'uploaded' },
+        }).catch(console.error);
       }
-
-
-      const { data: bookingResult, error: bookingError } = await supabase
-        .from('booking_requests')
-        .insert(bookingData as any)
-        .select('id')
-        .single();
-
-      if (bookingError) throw bookingError;
-      createdBookingIdRef.current = bookingResult.id;
-
-      // Upload staged documents if any
-      if (stagedDocuments.length > 0) {
-        for (const stagedDoc of stagedDocuments) {
-          try {
-            const fileExt = stagedDoc.file.name.split('.').pop();
-            const fileName = `${stagedDoc.documentType}_${Date.now()}.${fileExt}`;
-            const filePath = `${bookingResult.id}/${fileName}`;
-
-            // Upload file to storage
-            const { error: uploadError } = await supabase.storage
-              .from('booking-documents')
-              .upload(filePath, stagedDoc.file, {
-                cacheControl: '3600',
-                upsert: false,
-              });
-
-            if (uploadError) {
-              console.error('Error uploading document:', uploadError);
-              continue;
-            }
-
-            // Get public URL
-            const { data: urlData } = supabase.storage
-              .from('booking-documents')
-              .getPublicUrl(filePath);
-
-            // Create document record
-            await supabase
-              .from('booking_documents')
-              .insert({
-                booking_id: bookingResult.id,
-                document_type: stagedDoc.documentType,
-                file_url: urlData.publicUrl,
-                file_name: stagedDoc.file.name,
-                status: 'pending',
-              });
-
-            // Send notification for document uploaded
-            supabase.functions.invoke('send-document-notification', {
-              body: {
-                booking_id: bookingResult.id,
-                document_type: stagedDoc.documentType,
-                event_type: 'uploaded',
-              },
-            }).catch(console.error);
-          } catch (docError) {
-            console.error('Error processing document:', docError);
-          }
-        }
-      }
-
-      // PayPal checkout happens in-page, so the pre-opened popup isn't needed.
-      if (checkoutWindow) checkoutWindow.close();
 
       // Availability is enforced by the database trigger on booking insert, so
       // reaching this point means the slot is still held for this guest.
 
 
       setPaypalCheckout({
-        bookingId: bookingResult.id,
-        returnUrl: confirmationUrl(bookingResult.id),
+        bookingId: bookingId!,
+        returnUrl: confirmationUrl(bookingId!),
       });
 
       // Fire tracking calls asynchronously so they never block the payment panel.
@@ -766,8 +719,6 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
       return;
 
     } catch (error) {
-      // Close the pre-opened window if there was an error
-      if (checkoutWindow) checkoutWindow.close();
       console.error('Error submitting booking:', error);
       const parsed = await parseEdgeError(error);
       const copy = checkoutErrorCopy(parsed);
@@ -777,6 +728,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
         variant: 'destructive',
       });
     } finally {
+      submitLockRef.current = false;
       setIsSubmitting(false);
       termsGate.reset();
     }
@@ -927,7 +879,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
     );
   }
 
-  if (!startDate || !endDate) {
+  if (!startDate || !endDate || !isValidRentalDateRange(startDate, endDate)) {
     return (
       <TransactionCheckoutShell
         mode="wizard"
@@ -1063,7 +1015,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
     <Button
       className="checkout-primary-action h-12 px-6 rounded-xl font-semibold bg-foreground text-background hover:bg-foreground/90"
       onClick={handleSubmit}
-      disabled={isSubmitting || paymentSetupBlocked || !legalAccepted}
+      disabled={isSubmitting || termsGate.preparing || !canSubmit || paymentReadiness.loading || paymentSetupBlocked || !legalAccepted}
       title={!canSubmit ? nextIncompleteReason ?? undefined : undefined}
     >
       {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
@@ -1471,7 +1423,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
                   <Button
                     className="checkout-primary-action w-full h-14 text-base bg-foreground text-background hover:bg-foreground/90 rounded-xl font-semibold"
                     onClick={handleSubmit}
-                    disabled={isSubmitting || !legalAccepted}
+                    disabled={isSubmitting || termsGate.preparing || !canSubmit || paymentReadiness.loading || paymentSetupBlocked || !legalAccepted}
                   >
                     {isSubmitting ? (
                       <>
