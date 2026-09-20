@@ -8,32 +8,9 @@ import {
   PayPalError,
   paypalOnboardingEnvironment,
   paypalOnboardingClientId,
-  paypalRequest,
   safeLog,
   sellerOnboardingEnabled,
 } from "../_shared/paypal.ts";
-
-/**
- * When the merchant-integrations lookup answers 401 AUTHORIZATION_ERROR, the
- * configured partner id almost never matches the account that owns the REST
- * app credentials. Ask PayPal which account the client credentials belong to
- * (the payer id — a public account identifier, not a secret) and log it so
- * support can compare it with PAYPAL_SANDBOX_PARTNER_MERCHANT_ID.
- */
-async function probePartnerIdentity(): Promise<void> {
-  try {
-    const ident = await paypalRequest<{ user_id?: string; payer_id?: string }>(
-      "/v1/identity/oauth2/userinfo?schema=paypalv1.1",
-      { environment: paypalOnboardingEnvironment(), retries: 0 },
-    );
-    safeLog("partner_identity_probe", {
-      payer_id: typeof ident?.payer_id === "string" ? ident.payer_id : null,
-      environment: paypalOnboardingEnvironment(),
-    });
-  } catch {
-    safeLog("partner_identity_probe_failed", {});
-  }
-}
 
 /**
  * paypal-seller-onboarding — Step 2 of the PayPal Complete Payments /
@@ -236,11 +213,10 @@ Deno.serve(async (req) => {
             capabilities: [],
           });
         }
-        // 401 AUTHORIZATION_ERROR on the tracking-id lookup: retry once via
-        // the seller's merchant id (path lookup), which some partner apps are
-        // authorized for when the tracking lookup is not. If that also fails,
-        // probe which account the credentials belong to, then surface the
-        // original error.
+        // 401 AUTHORIZATION_ERROR on the tracking-id lookup can mean PayPal
+        // has not enabled merchant-status access for this app. Retry once via
+        // the seller's merchant id, but do not reinterpret that response as a
+        // bad configured partner id.
         if (
           err instanceof PayPalError && err.status === 401 &&
           err.issue === "AUTHORIZATION_ERROR"
@@ -249,13 +225,9 @@ Deno.serve(async (req) => {
             try {
               raw = await getMerchantIntegrationStatus(row.merchant_id);
             } catch (retryErr) {
-              // Identify the credentials' own account before surfacing the
-              // error — the partner id never matches in this state.
-              await probePartnerIdentity();
               throw retryErr;
             }
           } else {
-            await probePartnerIdentity();
             throw err;
           }
         } else {
@@ -345,9 +317,14 @@ Deno.serve(async (req) => {
         issue: err.issue,
         debugId: err.debugId,
       });
-      if (['AUTHORIZATION_ERROR', 'USER_BUSINESS_ERROR', 'NOT_CONFIGURED'].includes(err.issue ?? '')) {
+      if (['AUTHORIZATION_ERROR', 'USER_BUSINESS_ERROR'].includes(err.issue ?? '')) {
+        return jsonError(503, 'paypal_status_access_unavailable',
+          'PayPal has not made seller status details available to this sandbox app yet. Vendibook’s configured partner Merchant ID has not been changed. Your completed connection remains recorded; please try the status check again later.',
+          { issue: err.issue, debug_id: err.debugId, environment: paypalOnboardingEnvironment() });
+      }
+      if (err.issue === 'NOT_CONFIGURED') {
         return jsonError(503, 'paypal_partner_configuration',
-          'PayPal could not verify Vendibook’s partner account. Support must check that the platform Merchant ID and app credentials belong to the same enabled PayPal Business partner account in this environment. Repeating seller signup will not fix this.',
+          'PayPal seller connection is temporarily unavailable because the partner setting is missing.',
           { issue: err.issue, debug_id: err.debugId, environment: paypalOnboardingEnvironment() });
       }
       return jsonError(
