@@ -43,3 +43,23 @@ export function catalogPrice(product: any, now = Date.now()) {
   if (!Number.isSafeInteger(cents) || cents <= 0) throw new Error('This product has no valid price.');
   return cents;
 }
+
+// Refund a Square payment. Square is used only for Vendibook-owned
+// subscriptions and add-ons, never for marketplace sales or rentals.
+export async function refundSquarePayment(input: {
+  paymentId: string; amountCents: number; currency: string; idempotencyKey: string; reason?: string;
+}) {
+  const result = await squareRequest('/v2/refunds', {
+    idempotency_key: input.idempotencyKey.slice(0, 45),
+    payment_id: input.paymentId,
+    amount_money: { amount: input.amountCents, currency: (input.currency || 'USD').toUpperCase() },
+    ...(input.reason ? { reason: String(input.reason).slice(0, 192) } : {}),
+  });
+  const refund = result.refund ?? {};
+  return { id: refund.id as string | undefined, status: refund.status as string | undefined };
+}
+
+export async function cancelSquareSubscription(subscriptionId: string) {
+  const result = await squareRequest('/v2/subscriptions/' + encodeURIComponent(subscriptionId) + '/cancel', {});
+  return result.subscription?.status as string | undefined;
+}
