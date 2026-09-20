@@ -332,13 +332,20 @@ Deno.serve(async (req) => {
         // original error.
         if (
           err instanceof PayPalError && err.status === 401 &&
-          err.issue === "AUTHORIZATION_ERROR" && row.merchant_id
+          err.issue === "AUTHORIZATION_ERROR"
         ) {
-          try {
-            raw = await getMerchantIntegrationStatus(row.merchant_id);
-          } catch (retryErr) {
+          if (row.merchant_id) {
+            try {
+              raw = await getMerchantIntegrationStatus(row.merchant_id);
+            } catch (retryErr) {
+              // Identify the credentials' own account before surfacing the
+              // error — the partner id never matches in this state.
+              await probePartnerIdentity();
+              throw retryErr;
+            }
+          } else {
             await probePartnerIdentity();
-            throw retryErr;
+            throw err;
           }
         } else {
           throw err;
