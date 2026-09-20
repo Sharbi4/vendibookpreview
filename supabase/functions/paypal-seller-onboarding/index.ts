@@ -386,6 +386,13 @@ Deno.serve(async (req) => {
         issue: err.issue,
         debugId: err.debugId,
       });
+      if (err.status === 401 && err.issue === "AUTHORIZATION_ERROR") {
+        return jsonError(
+          503,
+          "paypal_partner_not_authorized",
+          "PayPal seller connection is not configured correctly for this sandbox app. Vendibook support must verify the platform Merchant ID and Partner Referrals access before setup can finish.",
+        );
+      }
       return jsonError(
         err.status >= 500 ? 502 : 400,
         "paypal_error",
