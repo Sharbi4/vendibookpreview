@@ -1,3 +1,4 @@
+import { sandboxCaptureTestHeaders } from './paypalSandboxTest.ts';
 /**
  * Vendibook PayPal service layer.
  *
@@ -283,6 +284,9 @@ export async function paypalRequest<T = any>(
         "PayPal-Partner-Attribution-Id": PARTNER_ATTRIBUTION_ID,
         ...(extraHeaders ?? {}),
       };
+      Object.assign(headers, sandboxCaptureTestHeaders(
+        env, method, path, Deno.env.get("PAYPAL_SANDBOX_DECLINE_ORDER_ID"),
+      ));
       if (idempotencyKey) headers["PayPal-Request-Id"] = idempotencyKey;
       // Identifies an onboarded seller on merchant-scoped calls (Step 2
       // onboarding/status). It never changes who is paid on an order — orders
