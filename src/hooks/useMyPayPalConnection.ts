@@ -49,7 +49,8 @@ export function useMyPayPalConnection() {
       let row = await readConnection(userId!);
       let refreshError: string | null = null;
       const checked = Date.parse(row?.last_status_check_at || '') || 0;
-      const incomplete = row && (row.onboarding_status !== 'ready' || !row.oauth_scopes?.length || !row.consent_granted);
+      const incomplete = row && !isWebhookConfirmed(row)
+        && (row.onboarding_status !== 'ready' || !row.oauth_scopes?.length || !row.consent_granted);
       if (row && !['disconnected', 'revoked'].includes(row.onboarding_status) && Date.now() - checked > (incomplete ? 15_000 : 300_000)) {
         try { await refreshSeller(userId!); row = await readConnection(userId!); void client.invalidateQueries({ queryKey: ['seller-payment-readiness', userId] }); }
         catch (error) { refreshError = error instanceof Error ? error.message : "Couldn't verify PayPal status."; }
