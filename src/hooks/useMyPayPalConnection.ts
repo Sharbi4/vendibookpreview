@@ -57,8 +57,15 @@ export function useMyPayPalConnection() {
   });
   useEffect(() => {
     const onFocus = () => { if (userId) void query.refetch(); };
+    const onVisible = () => { if (document.visibilityState === 'visible') onFocus(); };
     window.addEventListener('focus', onFocus);
-    return () => window.removeEventListener('focus', onFocus);
+    window.addEventListener('pageshow', onFocus);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => {
+      window.removeEventListener('focus', onFocus);
+      window.removeEventListener('pageshow', onFocus);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
   }, [userId, query.refetch]);
   const reload = useCallback(async () => {
     if (!userId) return null;
