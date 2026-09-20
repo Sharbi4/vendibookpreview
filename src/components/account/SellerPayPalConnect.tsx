@@ -56,7 +56,7 @@ export default function SellerPayPalConnect({
 }) {
   const { user } = useAuth();
   const [enabled, setEnabled] = useState<boolean | null>(null);
-  const { connection, reload: loadConnection, isReady, lastRefreshError } = useMyPayPalConnection();
+  const { connection, reload: loadConnection, isReady, webhookConfirmed, lastRefreshError } = useMyPayPalConnection();
   const [busy, setBusy] = useState<string | null>(null);
   const [capabilityError, setCapabilityError] = useState<string | null>(null);
   const [onboardingLink, setOnboardingLink] = useState<string | null>(null);
