@@ -11,8 +11,10 @@ export type MyPayPalConnection = {
   payments_receivable: boolean | null; last_status_check_at: string | null;
   referral_url: string | null; oauth_scopes: string[]; consent_granted: boolean;
   acdc_vetting_status: string | null; vaulting_status: string | null;
+  /** 'webhook' when PayPal confirmed onboarding by webhook but withholds the status API. */
+  status_source: string | null;
 };
-const COLUMNS = 'id, onboarding_status, action_reasons, merchant_id, paypal_email, primary_email_confirmed, payments_receivable, last_status_check_at, referral_url, oauth_scopes, consent_granted, acdc_vetting_status, vaulting_status';
+const COLUMNS = 'id, onboarding_status, action_reasons, merchant_id, paypal_email, primary_email_confirmed, payments_receivable, last_status_check_at, referral_url, oauth_scopes, consent_granted, acdc_vetting_status, vaulting_status, status_source';
 const activeRefreshes = new Map<string, Promise<void>>();
 async function refreshSeller(userId: string) {
   let pending = activeRefreshes.get(userId);
