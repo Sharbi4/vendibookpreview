@@ -87,6 +87,7 @@ const PayPalReviewAuthorize = ({
   const [accepted, setAccepted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [errorTitle, setErrorTitle] = useState('Payment not completed');
 
   useEffect(() => {
     if (initialData) return;
@@ -125,25 +126,34 @@ const PayPalReviewAuthorize = ({
       setError('This payment uses an outdated payment flow. Choose another payment method to restart safely.');
       return;
     }
-    const { data: result, error: fnError } = await supabase.functions.invoke('paypal-capture-order', {
-      body: { order_id: data.order_id ?? orderId },
-    });
-    setSubmitting(false);
+    try {
+      const { data: result, error: fnError } = await supabase.functions.invoke('paypal-capture-order', {
+        body: { order_id: data.order_id ?? orderId },
+      });
+      const pending = result?.status === 'pending' || result?.pending === true;
+      if (!fnError && (result?.status === 'completed' || pending)) {
+        onAuthorized({
+          reference: result.reference ?? data.reference,
+          status: pending ? 'pending' : 'completed',
+          message: result.message ?? null,
+        });
+        return;
+      }
 
-    if (fnError || !result || (result.status !== 'completed' && !result.pending)) {
       const parsed = await parseEdgeError(fnError, result?.error ? result : null);
-      setError(
-        parsed.message ||
-          'Your payment was not completed and nothing has been charged. You can approve again or use another method.',
-      );
-      return;
+      const reason = result?.provider_reason || result?.message || parsed.message;
+      const declined = result?.status === 'declined' ||
+        /declin|INSTRUMENT_DECLINED|CARD_REFUSED/i.test(
+          [parsed.code, reason, JSON.stringify(parsed.raw?.details ?? [])].join(' '),
+        );
+      setErrorTitle(declined ? 'Payment declined' : 'Payment not completed');
+      setError(reason || 'We could not confirm your payment. Check your transaction status before trying again, or choose another payment method.');
+    } catch {
+      setErrorTitle('Unable to confirm payment');
+      setError('The connection was interrupted. Check your transaction status before trying again; your payment may still be processing.');
+    } finally {
+      setSubmitting(false);
     }
-
-    onAuthorized({
-      reference: result.reference ?? data.reference,
-      status: result.pending ? 'pending' : 'completed',
-      message: result.message ?? null,
-    });
   };
 
   if (loading) {
@@ -180,7 +190,7 @@ const PayPalReviewAuthorize = ({
       <div>
         <h3 className="text-lg font-semibold tracking-tight text-foreground">Review &amp; authorize</h3>
         <p className="mt-1 text-xs text-muted-foreground">
-          Nothing has been charged yet. Check the details below, then submit your payment.
+          Check the details below, then submit your payment. Your payment status will appear here.
         </p>
       </div>
 
@@ -256,7 +266,7 @@ const PayPalReviewAuthorize = ({
 
       {error ? (
         <div role="alert" className="rounded-xl border border-destructive/40 bg-destructive/[0.06] px-4 py-3">
-          <p className="text-sm font-semibold text-destructive">Payment not completed</p>
+          <p className="text-sm font-semibold text-destructive">{errorTitle}</p>
           <p className="mt-1 text-xs text-destructive/90">{error}</p>
         </div>
       ) : null}
