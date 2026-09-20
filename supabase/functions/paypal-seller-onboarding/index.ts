@@ -213,26 +213,41 @@ Deno.serve(async (req) => {
             capabilities: [],
           });
         }
-        // 401 AUTHORIZATION_ERROR on the tracking-id lookup can mean PayPal
-        // has not enabled merchant-status access for this app. Retry once via
-        // the seller's merchant id, but do not reinterpret that response as a
-        // bad configured partner id.
-        if (
-          err instanceof PayPalError && err.status === 401 &&
-          err.issue === "AUTHORIZATION_ERROR"
-        ) {
-          if (row.merchant_id) {
-            try {
-              raw = await getMerchantIntegrationStatus(row.merchant_id);
-            } catch (retryErr) {
-              throw retryErr;
-            }
-          } else {
-            throw err;
-          }
-        } else {
-          throw err;
+        // PayPal has not enabled merchant-status API access for this sandbox
+        // app (401 AUTHORIZATION_ERROR, or 404 USER_BUSINESS_ERROR when the
+        // tracking-id lookup falls through to the merchant-id path). That is
+        // not a bad configured partner id and not a broken connection: when
+        // the webhook has already recorded the seller's merchant id and
+        // consent, answer 200 from the locally recorded data and flag the
+        // status as recorded-locally so the UI can show the connection as
+        // ready instead of an error.
+        const statusApiUnavailable =
+          err instanceof PayPalError &&
+          ((err.status === 401 && err.issue === "AUTHORIZATION_ERROR") ||
+            (err.status === 404 && err.issue === "USER_BUSINESS_ERROR"));
+        if (statusApiUnavailable && row.merchant_id && row.consent_granted) {
+          await admin
+            .from("seller_paypal_accounts")
+            .update({
+              last_status_check_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", row.id);
+          safeLog("seller_status_local_fallback", { user_id: user.id });
+          return jsonResponse(200, {
+            status: row.onboarding_status,
+            pending: false,
+            status_source: "webhook",
+            action_reasons: row.action_reasons ?? [],
+            merchant_id: row.merchant_id,
+            paypal_email: row.paypal_email,
+            oauth_scopes: row.oauth_scopes ?? [],
+            acdc_vetting_status: row.acdc_vetting_status ?? null,
+            vaulting_status: row.vaulting_status ?? null,
+            capabilities: row.capabilities ?? [],
+          });
         }
+        throw err;
       }
       const derived = deriveStatus(raw, paypalOnboardingClientId());
 
