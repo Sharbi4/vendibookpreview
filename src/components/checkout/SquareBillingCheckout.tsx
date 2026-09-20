@@ -1,3 +1,4 @@
+import PaymentFormSkeleton from './PaymentFormSkeleton';
 import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -68,7 +69,7 @@ export default function SquareBillingCheckout({slug,listingId,consentId,interval
     <h1 className="mt-2 text-2xl font-semibold">{quote?.name||'Checkout'}</h1>
     {quote && <div className="my-5 space-y-2 border-y py-4 text-sm"><p className="flex justify-between"><span>Subtotal</span><span>{money(quote.amount_cents)}</span></p><p className="flex justify-between"><span>Sales tax</span><span>{money(quote.tax_cents)}</span></p><p className="flex justify-between text-lg font-semibold"><span>Total{quote.recurring?' per billing cycle':''}</span><span>{money(quote.amount_cents+quote.tax_cents)}</span></p>{quote.recurring && <p className="text-xs text-muted-foreground">Renews {quote.billing_interval}. Cancel from Account → Membership &amp; billing.</p>}</div>}
     <div ref={container} className={status?'hidden':'min-h-24'} />
-    {!ready&&!error&&!status&&<p role="status" className="text-sm">Loading secure card payment…</p>}
+    {!ready&&!error&&!status&&<PaymentFormSkeleton />}
     {!status&&quote?.recurring&&<label className="my-4 flex gap-2 text-sm"><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)} disabled={busy}/><span>I authorize Square to save this card and charge {money(quote.amount_cents+quote.tax_cents)} {quote.billing_interval} until I cancel.</span></label>}
     {error&&<p role="alert" className="my-3 text-sm text-destructive">{error}</p>}
     {status ? <div role="status" className="space-y-3"><p>{complete?'Payment confirmed. Your purchase is active.':'Your payment is being confirmed. Do not start another checkout.'}</p>{!complete&&<Button onClick={refresh} disabled={busy}>Check payment status</Button>}</div>:<Button className="mt-4 w-full rounded-full" disabled={!ready||busy||(quote?.recurring&&!consent)} onClick={pay}>{busy?'Processing…':quote?.recurring?'Subscribe and pay':'Pay now'}</Button>}
