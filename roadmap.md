@@ -126,3 +126,15 @@
 - [x] Receipt completeness (capture id, card brand/last4, PDF + email actions)
 - [x] Webhooks: CHECKOUT.ORDER.COMPLETED, PAYMENT.CAPTURE.DECLINED,
       PAYMENT.AUTHORIZATION.VOIDED, log unhandled events
+
+## Square subscriptions & add-ons (live)
+
+- [x] Square production credentials stored (application id, access token, location LQKF8A6PRKSRM).
+- [x] Billing tables + fulfilment routine applied to the database.
+- [x] Square billing switched ON (SQUARE_MONETIZATION_ENABLED=true, production).
+- [x] Production webhook registered (payment/subscription/invoice events) with
+      signature verification; unsigned requests rejected.
+- [x] Production subscription plans provisioned: Vendibook Pro $79/mo,
+      PermitPath Plus $7.99/mo.
+- [ ] Reconciliation schedule for square-reconcile (manual call for now).
+- [ ] Refund handling for Square purchases.
