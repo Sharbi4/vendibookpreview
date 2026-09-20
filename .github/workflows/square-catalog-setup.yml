@@ -1,0 +1,23 @@
+name: Configure Square subscription plans
+on:
+  workflow_dispatch:
+  push:
+    branches: [fix/paypal-webhook-config]
+    paths:
+      - scripts/setup-square-catalog.mjs
+      - .github/workflows/square-catalog-setup.yml
+permissions:
+  contents: read
+concurrency:
+  group: square-production-catalog
+  cancel-in-progress: false
+jobs:
+  configure:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
+      - name: Create and verify approved plans (no charges)
+        env:
+          SQUARE_ACCESS_TOKEN: ${{ secrets.SQUARE_ACCESS_TOKEN }}
+        run: node scripts/setup-square-catalog.mjs

@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
 import { corsHeaders, jsonResponse, jsonError } from '../_shared/jsonError.ts';
 import { squareConfig, squareRequest, catalogPrice } from '../_shared/square.ts';
+import { validateSquarePlan } from '../_shared/squarePlan.ts';
 import { syncSquareSubscription } from '../_shared/squareSubscription.ts';
 import { quoteSalesTax } from '../_shared/tax.ts';
 import { classifyProduct } from '../_shared/productEntitlement.ts';
@@ -39,9 +40,7 @@ Deno.serve(async req => {
         if (!plan) return jsonError(409,'plan_unavailable','This billing option is not configured yet.');
         if(Number(consent.related_ids?.price_cents_shown)!==plan.price_cents) return jsonError(409,'consent_price','The plan price changed. Review the current billing terms again.');
         const catalog = await squareRequest('/v2/catalog/object/'+encodeURIComponent(plan.variation_id));
-        const phases = catalog.object?.subscription_plan_variation_data?.phases;
-        const cadence = {monthly:'MONTHLY',quarterly:'QUARTERLY',annual:'ANNUAL'}[interval];
-        if (phases?.length !== 1 || phases[0].cadence !== cadence || phases[0].pricing?.type !== 'STATIC' || Number(phases[0].pricing?.price_money?.amount) !== plan.price_cents || phases[0].pricing?.price_money?.currency !== plan.currency) throw new Error('Square plan pricing does not match the catalog. Please contact support.');
+        validateSquarePlan(catalog.object, plan);
       }
       if (body.listing_id) {
         const listing = check(await admin.from('listings').select('id,host_id,category').eq('id',body.listing_id).maybeSingle());

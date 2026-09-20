@@ -33,6 +33,7 @@ export default function SquareBillingCheckout({slug,listingId,consentId,interval
   const lock=useRef(false);
   useEffect(()=>{
     let canceled=false;let instance:any;
+    setQuote(null);setReady(false);setStatus('');setError('');setConsent(false);
     void (async()=>{
       const q=await request({action:'prepare',product_slug:slug,listing_id:listingId,consent_id:consentId,billing_interval:interval});
       if(canceled)return;setQuote(q);

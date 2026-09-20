@@ -306,3 +306,6 @@ verify_jwt = false
 
 [functions.square-reconcile]
 verify_jwt = false
+
+[functions.square-setup]
+verify_jwt = false
