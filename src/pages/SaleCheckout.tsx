@@ -979,7 +979,7 @@ const SaleCheckout = () => {
   ];
 
   const moneyBreakdown = (
-    <MoneyBreakdown lines={moneyLines} total={formatCurrency(totalPrice)} totalNote="Due today" />
+    <MoneyBreakdown lines={moneyLines} total={formatCurrency(totalPrice)} totalNote="Order total" />
   );
 
   const summaryMeta = [
@@ -1214,7 +1214,7 @@ const SaleCheckout = () => {
                 onEditFulfillment={() => goToStep(2)}
                 moneyLines={moneyLines}
                 total={formatCurrency(totalPrice)}
-                totalNote="Due today"
+                totalNote="Order total"
                 onContinue={() => goToStep(2)}
                 continueLabel="Continue"
                 backHref={`/listing/${listingId}`}

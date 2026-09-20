@@ -65,6 +65,16 @@ type PanelState =
   | 'pending'
   | 'error';
 
+/**
+ * Each SDK button is mounted for one explicit funding source. PayPal can still
+ * return the generic value "paypal" after a Pay Later approval, so the mounted
+ * button key is the reliable source for the final review screen.
+ */
+export function reviewFundingSource(buttonKey: string, paymentSource?: string | null): string {
+  if (buttonKey === 'paylater' || buttonKey === 'venmo') return buttonKey;
+  return paymentSource || buttonKey;
+}
+
 
 /**
  * Vendibook-branded PayPal checkout in a dark-glass modal. Buyers pay with
@@ -420,7 +430,10 @@ const PayPalPaymentPanel = ({
             // runs when the payer submits it themselves.
             onApprove: async (data: { orderID: string; paymentSource?: string }) => {
               setError(null);
-              setApproved({ orderId: data.orderID, source: data.paymentSource ?? key });
+              setApproved({
+                orderId: data.orderID,
+                source: reviewFundingSource(key, data.paymentSource),
+              });
               setState('review');
             },
 
