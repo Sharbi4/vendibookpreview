@@ -206,14 +206,27 @@ const PayPalReviewAuthorize = ({
         <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
           {method ? 'Paying with' : 'Payment review'}
         </p>
-        {method ? <p className="mt-1 text-sm font-semibold text-foreground">{method}</p> : null}
+        {payLater ? (
+          <p className="mt-1 text-sm font-semibold text-foreground">PayPal Pay Later</p>
+        ) : method ? (
+          <p className="mt-1 text-sm font-semibold text-foreground">{method}</p>
+        ) : null}
         {method && data.funding.email ? (
           <p className="text-xs text-muted-foreground">{data.funding.email}</p>
         ) : null}
         <p className="mt-2 text-sm text-foreground">
-          Amount to be charged: <span className="font-semibold">{amount}</span>
+          {payLater ? 'Order total' : 'Amount to be charged'}:{' '}
+          <span className="font-semibold">{amount}</span>
         </p>
+        {payLater ? (
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            You are not paying {amount} today. PayPal splits this purchase into the instalments
+            you approved and bills you on that schedule — the amounts and dates are shown in your
+            PayPal account. Vendibook charges the order total to PayPal, not to you directly.
+          </p>
+        ) : null}
       </div>
+
 
       {/* The item */}
       {data.listing ? (
