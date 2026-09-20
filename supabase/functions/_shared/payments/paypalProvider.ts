@@ -143,6 +143,7 @@ export class PayPalProvider implements PaymentProvider, AuthorizationCapableProv
   async createOrder(req: CreateOrderRequest): Promise<ProviderOrder> {
     try {
       const order = await createPayPalOrder({
+        cardFields: req.cardFields === true,
         amountCents: req.amount.amountCents,
         currency: (req.amount.currency || "USD").toUpperCase(),
         reference: req.reference,
@@ -545,3 +546,4 @@ export class PayPalProvider implements PaymentProvider, AuthorizationCapableProv
     return paypalRequest<T>(path, init);
   }
 }
+

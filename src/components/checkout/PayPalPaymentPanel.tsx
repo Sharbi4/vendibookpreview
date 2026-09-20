@@ -10,6 +10,7 @@ import { TRUST_COPY } from '@/lib/transactionVocabulary';
 import PayPalPayLaterMessage from '@/components/payments/PayPalPayLaterMessage';
 import PaymentFormSkeleton from './PaymentFormSkeleton';
 import PayPalReviewAuthorize from './PayPalReviewAuthorize';
+import PayPalCardFields from './PayPalCardFields';
 import WalletPayButtons from './WalletPayButtons';
 
 
@@ -86,7 +87,6 @@ const PayPalPaymentPanel = ({
   const paypalButtonRef = useRef<HTMLDivElement>(null);
   const venmoButtonRef = useRef<HTMLDivElement>(null);
   const payLaterButtonRef = useRef<HTMLDivElement>(null);
-  const cardButtonRef = useRef<HTMLDivElement>(null);
   const [state, setState] = useState<PanelState>('loading');
   const [error, setError] = useState<{ title: string; detail: string } | null>(null);
   const [walletsAvailable, setWalletsAvailable] = useState(false);
@@ -177,7 +177,7 @@ const PayPalPaymentPanel = ({
     setState('error');
   };
 
-  const startOrder = async (): Promise<string> => {
+  const startOrder = async (cardFields = false): Promise<string> => {
     setError(null);
     // Remember where the payer left so a declined/abandoned PayPal return can
     // put them straight back on this payment step instead of a dead end.
@@ -199,7 +199,7 @@ const PayPalPaymentPanel = ({
       throw new Error('Please sign in to continue.');
     }
     const { data, error: fnError } = await supabase.functions.invoke('paypal-create-order', {
-      body: target,
+      body: { ...target, ...(cardFields ? { card_fields: true } : {}) },
     });
     if (fnError || !data?.order_id) {
       // A non-2xx response hides the server's reason inside `fnError.context`,
@@ -394,7 +394,6 @@ const PayPalPaymentPanel = ({
           { key: 'paypal', source: paypal.FUNDING.PAYPAL, container: paypalButtonRef.current, name: 'PayPal', color: 'silver' },
           { key: 'venmo', source: paypal.FUNDING.VENMO, container: venmoButtonRef.current, name: 'Venmo', color: undefined },
           { key: 'paylater', source: paypal.FUNDING.PAYLATER, container: payLaterButtonRef.current, name: 'Pay Later', color: 'silver' },
-          { key: 'card', source: paypal.FUNDING.CARD, container: cardButtonRef.current, name: 'debit or credit card', color: 'black' },
         ];
 
         const renders = sources.map(({ key, source, container, name, color }) => {
@@ -467,7 +466,7 @@ const PayPalPaymentPanel = ({
             fail('PayPal unavailable', 'PayPal checkout is not available in this browser.');
             return;
           }
-          setState('ready');
+          setState(current => current === 'loading' ? 'ready' : current);
         });
 
       })
@@ -666,7 +665,7 @@ const PayPalPaymentPanel = ({
                         <div ref={paypalButtonRef} data-funding-source="PayPal" />
                         <div ref={venmoButtonRef} data-funding-source="Venmo" />
                         <div ref={payLaterButtonRef} data-funding-source="Pay Later" />
-                        <div ref={cardButtonRef} data-funding-source="Debit or Credit Card" />
+
                       </div>
                     </div>
 
@@ -676,6 +675,18 @@ const PayPalPaymentPanel = ({
                       </div>
                     ) : null}
                   </div>
+
+                  {sdkIntent === 'CAPTURE' ? (
+                    <PayPalCardFields
+                      target={target}
+                      createOrder={() => handlersRef.current.startOrder(true)}
+                      onApprove={(orderId) => {
+                        setError(null);
+                        setApproved({ orderId, source: 'card' });
+                        setState('review');
+                      }}
+                    />
+                  ) : null}
 
                   {/* Single "Powered by PayPal" line lives in the embedded
                       payment footer (PayPalEmbeddedPayment) — not here. */}
@@ -749,3 +760,4 @@ const PayPalPaymentPanel = ({
 };
 
 export default PayPalPaymentPanel;
+

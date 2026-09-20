@@ -123,6 +123,8 @@ export interface PayPalSdkOptions {
    * CAPTURE checkout, where WalletPayButtons actually renders.
    */
   wallets?: boolean;
+  /** Opt in only where Advanced Card Fields are rendered. */
+  cardFields?: boolean;
 }
 
 export function loadPayPalSdk(options: PayPalSdkOptions = {}): Promise<any> {
@@ -151,7 +153,7 @@ const sdkPromises = new Map<string, Promise<any>>();
 const warmSdkSignatures = new Set<string>();
 
 function sdkSignature(intent: 'capture' | 'authorize', options: PayPalSdkOptions): string {
-  return `${intent}|${options.merchantId || 'first-party'}|${options.wallets === true}`;
+  return `${intent}|${options.merchantId || 'first-party'}|${options.wallets === true}|${options.cardFields === true}`;
 }
 
 /** Synchronous hint used only to avoid flashing a skeleton after preloading. */
@@ -171,7 +173,7 @@ function namespaceFor(key: string): string {
   return `paypal_${hash.toString(36)}`;
 }
 
-function componentsFor(config: PayPalRuntimeConfig, intent: 'capture' | 'authorize', wallets: boolean): string[] {
+function componentsFor(config: PayPalRuntimeConfig, intent: 'capture' | 'authorize', wallets: boolean, cardFields: boolean): string[] {
   const base = config.components?.length ? [...config.components] : ['buttons', 'messages'];
   // Wallets are only rendered on a CAPTURE checkout; never ship those bundles
   // to an AUTHORIZE checkout that cannot use them.
@@ -180,7 +182,9 @@ function componentsFor(config: PayPalRuntimeConfig, intent: 'capture' | 'authori
       if (!base.includes(c)) base.push(c);
     }
   }
-  return base.filter((c) => c !== 'card-fields');
+  const components = base.filter((c) => c !== 'card-fields');
+  if (intent === 'capture' && cardFields) components.push('card-fields');
+  return components;
 }
 
 function loadSdk(requestedIntent: 'authorize' | null, options: PayPalSdkOptions = {}): Promise<any> {
@@ -194,7 +198,7 @@ function loadSdk(requestedIntent: 'authorize' | null, options: PayPalSdkOptions 
     // Normal checkout always follows the server-provided canonical intent.
     // The explicit authorize branch is only for separate verification holds.
     const intent: 'capture' | 'authorize' = requestedIntent ?? 'capture';
-    const components = componentsFor(config, intent, wallets);
+    const components = componentsFor(config, intent, wallets, options.cardFields === true);
     const key = [
       config.environment,
       config.client_id,
@@ -290,3 +294,4 @@ export function __resetPayPalSdkCache(): void {
   sdkPromises.clear();
   warmSdkSignatures.clear();
 }
+

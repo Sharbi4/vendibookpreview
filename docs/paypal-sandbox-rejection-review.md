@@ -5,9 +5,10 @@ Reviewed 2026-09-20 against Vendibook LC - Integration Guide (24 pages) and PayP
 - API logs contain a sandbox HTTP 422 `INSTRUMENT_DECLINED` at 2026-09-20 11:52:24 UTC, with `PayPal-Mock-Response` present. PayPal debug ID: `3fc230ceac4f5`.
 - Earlier successful attempts returned actual capture status `COMPLETED`, not merely an SDK approval.
 - The latest decline log did not join to an existing payment record during this review. Its API response is verified; its complete receipt/fulfillment outcome is not independently certified.
-- 49 focused tests cover funding labels, final review errors, capture status extraction, failure classification, sandbox header restrictions, SDK configuration, and finalization safeguards. The finalizer tests were also rerun after isolating Deno dependencies from browser typechecking.
-- Application typecheck and production Vite/PWA build passed. Existing CSS/font/chunk-size warnings remain; no browser visual smoke test or full Deno deployment check was performed.
+- 68 focused tests cover hosted card persistence/validation, seller card eligibility, 3DS policy, funding labels, final review errors, capture status extraction, failure classification, sandbox header restrictions, SDK configuration, and finalization safeguards. The finalizer tests were also rerun after isolating Deno dependencies from browser typechecking.
 - No backend secrets, PayPal app features, or production environment selection were changed by this review.
+
+- Application typecheck and production Vite/PWA build passed. Existing CSS/font/chunk-size warnings remain; no browser visual smoke test or full Deno deployment check was performed.
 
 ## Implemented corrections
 1. Payment method labels now use the server's PayPal response only. Verified card brand/last four are shown when supplied. Unknown methods do not inherit a clicked-button label or claim a PayPal balance. PayPal is named as the funding source only when the response identifies that source.
@@ -57,13 +58,16 @@ A source push is not proof of edge-function deployment. Only the observed INSTRU
 | Pending capture | Provider returns nested capture PENDING | Pending receipt/status; no paid ledger or fulfillment | Local UI/finalizer tests; provider run pending |
 | Declined capture inside completed order | PayPal direct-card rejection response | Follow nested capture DECLINED, never outer COMPLETED | Capture extraction regression passes |
 | Late denied webhook | Signed, verified denial after completed capture | Do not overwrite completed payment | Shared finalizer regression passes; signed webhook replay pending |
-| Expired card, wrong CVV, insufficient funds, suspected fraud | Advanced Card Fields rejection triggers | Provider-specific refusal, no payment completion | Not supported by the current card-button integration; see gap below |
-| 3-D Secure challenge/cancellation/failure | PayPal's dedicated 3DS test cases for the implemented card product | Correct authentication and liability outcomes | Not certified by these Buttons tests |
+| Expired card, wrong CVV, insufficient funds, suspected fraud | Advanced Card Fields rejection triggers | Provider-specific refusal, no payment completion | Card Fields implemented; deployed sandbox exercise remains required |
+| 3-D Secure challenge/cancellation/failure | PayPal's dedicated 3DS test cases | Correct authentication and liability outcomes | Server authentication policy tested; real challenge exercise remains required |
 | Venmo | Eligibility tests | Only eligible funding shown | Guide p.19 states end-to-end Venmo sandbox testing is not fully available |
 
 ## Guide-specific gaps and external checks
-- Guide p.19 specifies custom Card Fields with cardholder name, expiry, CVV and billing address. Current code uses `paypal.Buttons({ fundingSource: CARD })` and explicitly excludes `card-fields` from the SDK. The name-on-card CCREJECT triggers belong to Expanded Card Checkout; do not present them as a reliable test of this Buttons integration.
-- Guide p.8 requires PPCP_CUSTOM SUBSCRIBED and CUSTOM_CARD_PROCESSING ACTIVE without limits before enabling advanced cards. A full Card Fields implementation and seller eligibility verification remain necessary for that portion of the guide; this patch does not enable an unverified product.
+- Guide p.19: the card button has been replaced with PayPal v5 Advanced Card Fields (hosted name, number, expiry and CVV), plus separate billing-address inputs. SDK validity and nonempty cardholder name are required before approval. Blur and parent rerenders do not recreate the fields. Approval opens the existing final review; only server capture can mark paid.
+- Guide p.8: routed seller card eligibility requires a fresh merchant-integration response with PPCP_CUSTOM SUBSCRIBED, CUSTOM_CARD_PROCESSING ACTIVE without limits, merchant consent and payment readiness. The SDK independently checks eligibility. Existing first-party routing remains unchanged and relies on SDK/API capability checks for the platform account.
+- Card orders use payment_source.card with SCA_WHEN_REQUIRED, rather than a preselected wallet payment source. Wallet/card orders are not cross-reused. Capture checks server-retrieved card authentication results; unknown, failed, rejected or incomplete authentication cannot bypass review and capture guards.
+- Deploy `paypal-checkout-intent`, `paypal-create-order`, `paypal-capture-order` and `paypal-config` with their shared imports, alongside the frontend. No database migration or switch to live is needed for Card Fields. Real rendering, app capability approval and issuer/3DS outcomes cannot be certified by mocked SDK tests.
+- Before testing natural Card Fields outcomes, clear PAYPAL_SANDBOX_DECLINE_ORDER_ID (especially ALL_SANDBOX_ORDERS) and PAYPAL_SANDBOX_CAPTURE_ERROR in the backend. Otherwise the explicit mock response intentionally overrides every selected capture. Use PayPal's documented card-testing values and CCREJECT name triggers; arbitrary incorrect card data is not a reliable sandbox bank-refusal test. Verify the resulting capture status, receipt and lack of fulfillment after each refusal.
 - Guide pp.8-9 and 19-20 require separate Apple Pay/Google Pay and vaulting readiness. These are not certified by a PayPal/card-button decline test.
 - Guide pp.4-5 requires BN attribution and safe API/debug-ID logging. Existing logs provide evidence of the actual sandbox requests; no raw card credentials should be added to logs or storage.
 - Guide pp.6-10 requires confirmed email, receivable payments, and merchant consent. These remain separate from buyer payment failures.
@@ -71,6 +75,9 @@ A source push is not proof of edge-function deployment. Only the observed INSTRU
 - Fastlane/vaulting, reporting configuration, PayPal app capability approval, domain registration, and signed webhook delivery require separate verification. Square subscriptions were not changed.
 
 ## Official sources
+- [Current v5 Card Fields integration](https://developer.paypal.com/v5/expanded/integrate/)
+- [Card Fields 3D Secure](https://developer.paypal.com/v5/expanded/3d-secure/integrate/card-fields/)
+- [Server authentication response policy](https://developer.paypal.com/platforms/checkout/advanced/customize/3d-secure/response-parameters/)
 - [Sandbox negative response headers](https://developer.paypal.com/negative-testing/request-headers/)
 - [Standard Checkout integration](https://developer.paypal.com/platforms/checkout/standard/integrate)
 - [Hosted-fields integration and three capture error examples](https://developer.paypal.com/platforms/checkout/advanced/sdk/v1/)
@@ -94,3 +101,20 @@ A source push is not proof of edge-function deployment. Only the observed INSTRU
 - `docs/paypal-sandbox-rejection-review.md`
 
 No database migration is required for this patch.
+
+## Advanced Card Fields additions
+- `src/components/checkout/PayPalCardFields.tsx`
+- `src/components/checkout/PayPalPaymentPanel.tsx`
+- `src/lib/paypalClient.ts`
+- `supabase/functions/paypal-checkout-intent/index.ts`
+- `supabase/functions/paypal-create-order/index.ts`
+- `supabase/functions/paypal-config/index.ts`
+- `supabase/functions/_shared/paypalCardEligibility.ts`
+- `supabase/functions/_shared/paypalCardPolicy.ts`
+- `supabase/functions/_shared/payments/types.ts`
+- `supabase/functions/_shared/payments/paypalProvider.ts`
+- `src/test/payments/paypalCardFields.test.tsx`
+- `src/test/payments/paypalCardPolicy.test.ts`
+- `src/test/payments/paypalHardening.test.ts`
+
+Existing capture and shared PayPal files above also receive card-specific payload and verification changes.

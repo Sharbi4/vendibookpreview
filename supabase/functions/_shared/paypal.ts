@@ -1,3 +1,4 @@
+import { cardPaymentSource } from "./paypalCardPolicy.ts";
 import { sandboxCaptureTestHeaders } from './paypalSandboxTest.ts';
 /**
  * Vendibook PayPal service layer.
@@ -406,6 +407,8 @@ export interface OrderShippingAddress {
 }
 
 export interface CreateOrderInput {
+  /** Hosted Advanced Card Fields; never accepts raw card details. */
+  cardFields?: boolean;
   /** Amount in cents — always computed server-side from trusted DB values. */
   amountCents: number;
   currency?: string;
@@ -650,7 +653,7 @@ export async function createPayPalOrder(input: CreateOrderInput) {
           ? { soft_descriptor: input.softDescriptor.slice(0, 22) }
           : {}),
       }],
-      payment_source: {
+      payment_source: input.cardFields ? cardPaymentSource(input.returnUrl, input.cancelUrl, !!shipping) : {
         paypal: {
           experience_context: {
             brand_name: "Vendibook",
@@ -1097,3 +1100,4 @@ export async function getMerchantIntegrationStatus(
 export function paypalOnboardingClientId(): string | null {
   return clientCredentials(paypalOnboardingEnvironment()).id || null;
 }
+

@@ -130,11 +130,23 @@ describe('PayPal SDK loading is isolated by intent, merchant and components', ()
     expect(document.head.querySelectorAll('script[data-vb-paypal-key]').length).toBe(1);
   });
 
-  it('never loads the unused card-fields component', async () => {
+  it('does not load card-fields unless explicitly requested', async () => {
     stop = autoResolveScripts();
     const sdk = await loadPayPalSdk({});
     stop();
     expect(sdk.__src).not.toContain('card-fields');
+  });
+
+  it('isolates advanced card fields from the wallet SDK', async () => {
+    stop = autoResolveScripts();
+    const wallet = await loadPayPalSdk({ merchantId: 'SELLER_A' });
+    const cards = await loadPayPalSdk({ merchantId: 'SELLER_A', cardFields: true });
+    stop();
+    expect(cards).not.toBe(wallet);
+    expect(cards.__src).toContain('card-fields');
+    expect(cards.__src).toContain('merchant-id=SELLER_A');
+    expect(cards.__src).toContain('intent=capture');
+    expect(cards.__src).toContain('commit=false');
   });
 
   it('omits wallet components from an AUTHORIZE checkout', async () => {

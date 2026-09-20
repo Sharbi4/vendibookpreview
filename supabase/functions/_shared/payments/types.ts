@@ -69,6 +69,8 @@ export type NormalizedPaymentStatus =
 // ------------------------------------------------------------------ orders
 
 export interface CreateOrderRequest {
+  /** Hosted Advanced Card Fields; never accepts raw card details. */
+  cardFields?: boolean;
   /** Server-derived amount. Callers must never pass a browser-supplied value. */
   amount: Money;
   /** Internal reference. Doubles as invoice id and idempotency key. */
@@ -368,3 +370,4 @@ export function defaultMarketplaceFees(input: MarketplaceFeeInput): MarketplaceF
   );
   return { grossCents, platformFeeCents, taxCents, refundReserveCents, sellerProceedsCents };
 }
+

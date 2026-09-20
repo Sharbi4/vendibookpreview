@@ -1,3 +1,5 @@
+import { cardEligibility } from "../_shared/paypalCardEligibility.ts";
+import { sameCheckoutSource } from "../_shared/paypalCardPolicy.ts";
 import { assertRentalCheckoutReady } from "../_shared/rentalCheckoutReady.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
@@ -93,6 +95,7 @@ serve(async (req) => {
     }
 
     const body = await req.json().catch(() => ({}));
+    const cardFields = body.card_fields === true;
     const kind = String(body?.kind ?? "");
     const targetId = body?.id ? String(body.id) : null;
 
@@ -520,6 +523,12 @@ serve(async (req) => {
       return jsonError(409, "payment_not_ready", decision.buyerMessage);
     }
 
+    // Card eligibility is checked again at order creation, not trusted from the browser.
+    const cardAccess = cardFields ? await cardEligibility(admin, kind === "sale" || kind === "booking" ? quote.sellerId : null) : null;
+    if (cardAccess && !cardAccess.eligible) {
+      return jsonError(409, "card_unavailable", "Card checkout is not available for this seller. Please choose another payment method.");
+    }
+
     // Reuse an in-flight order for the same target so a double click or a
     // page refresh can never create two PayPal orders.
     const inflightFilter = saleTransactionId
@@ -540,7 +549,7 @@ serve(async (req) => {
 
       const { data: inflight } = await admin
         .from("payment_records")
-        .select("id, reference, paypal_order_id, gross_amount_cents, payment_intent")
+        .select("id, reference, paypal_order_id, gross_amount_cents, payment_intent, fee_breakdown")
         .eq("fee_breakdown->fulfillment->>key", fulfillment.key)
         .in("payment_status", ["created", "approved"])
         .gt("created_at", new Date(Date.now() - 20 * 60_000).toISOString())
@@ -550,7 +559,8 @@ serve(async (req) => {
       if (
         inflight?.paypal_order_id &&
         inflight.gross_amount_cents === quote.grossCents &&
-        inflight.payment_intent === PAYPAL_CHECKOUT_INTENT
+        inflight.payment_intent === PAYPAL_CHECKOUT_INTENT &&
+        sameCheckoutSource(inflight.fee_breakdown, cardFields)
       ) {
         return jsonResponse(200, {
           order_id: inflight.paypal_order_id,
@@ -581,6 +591,7 @@ serve(async (req) => {
         existing?.paypal_order_id &&
         existing.gross_amount_cents === quote.grossCents &&
         existing.payment_intent === PAYPAL_CHECKOUT_INTENT &&
+        sameCheckoutSource(existing.fee_breakdown, cardFields) &&
         (!bookingRequestId || existing.fee_breakdown?.rental_fingerprint === rentalFingerprint)
       ) {
         safeLog("reusing_inflight_order", { reference: existing.reference });
@@ -642,6 +653,7 @@ serve(async (req) => {
         balance_due_at: decision.balanceDueAt,
         idempotency_key: quote.reference,
         fee_breakdown: {
+          checkout_source: cardFields ? "card_fields" : "buttons",
           ...(bookingRequestId ? { rental_fingerprint: rentalFingerprint } : {}),
           lines: quote.breakdown,
           release_at: quote.releaseAt,
@@ -664,7 +676,7 @@ serve(async (req) => {
     // with the flag off this resolves to first-party exactly as today.
     const sellerOwnedKind = kind === "sale" || kind === "booking";
     const sellerRouting = sellerOwnedKind && (quote.sellerProceedsCents ?? 0) > 0
-      ? await sellerMultipartyReady(admin, quote.sellerId ?? null)
+      ? cardAccess?.routing ?? await sellerMultipartyReady(admin, quote.sellerId ?? null)
       : { enabled: false, merchantId: null as string | null };
 
     // Vendibook keeps everything that is not the seller's net proceeds:
@@ -706,6 +718,7 @@ serve(async (req) => {
     // Routed through the provider abstraction — no direct SDK calls here.
     const provider = getPaymentProvider();
     const order = await provider.createOrder({
+      cardFields,
       amount: { amountCents: quote.grossCents, currency: quote.currency },
       reference: quote.reference,
       description: quote.description,
@@ -818,3 +831,4 @@ serve(async (req) => {
     return unknownErrorResponse(err);
   }
 });
+

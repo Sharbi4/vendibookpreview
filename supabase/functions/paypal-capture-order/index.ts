@@ -1,4 +1,5 @@
-import { captureFailure } from "../_shared/paypalCaptureOutcome.ts";
+import { captureFailure, captureFromOrder } from "../_shared/paypalCaptureOutcome.ts";
+import { cardAuthenticationReady } from "../_shared/paypalCardPolicy.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
@@ -129,6 +130,20 @@ serve(async (req) => {
         return jsonError(409, "listing_unavailable", LISTING_UNAVAILABLE_MESSAGE, {
           refund_pending: alreadyCaptured,
           reference: record.reference,
+        });
+      }
+    }
+
+    if (record.fee_breakdown?.checkout_source === "card_fields") {
+      // Read the actual card authentication result; never trust SDK callbacks
+      // or a browser-supplied liabilityShift when deciding whether to capture.
+      const approvedOrder = await getPayPalOrder(order_id);
+      const capture = captureFromOrder(approvedOrder);
+      if (!capture && (approvedOrder.status !== "APPROVED" ||
+        !approvedOrder.payment_source?.card || !cardAuthenticationReady(approvedOrder.payment_source.card))) {
+        return jsonError(409, "card_verification_required", "Card verification is incomplete or was not successful. Use a different payment method or try the card again.", {
+          reference: record.reference,
+          recoverable: true,
         });
       }
     }
