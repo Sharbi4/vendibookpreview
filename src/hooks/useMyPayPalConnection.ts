@@ -11,8 +11,10 @@ export type MyPayPalConnection = {
   payments_receivable: boolean | null; last_status_check_at: string | null;
   referral_url: string | null; oauth_scopes: string[]; consent_granted: boolean;
   acdc_vetting_status: string | null; vaulting_status: string | null;
+  /** 'webhook' when PayPal confirmed onboarding by webhook but withholds the status API. */
+  status_source: string | null;
 };
-const COLUMNS = 'id, onboarding_status, action_reasons, merchant_id, paypal_email, primary_email_confirmed, payments_receivable, last_status_check_at, referral_url, oauth_scopes, consent_granted, acdc_vetting_status, vaulting_status';
+const COLUMNS = 'id, onboarding_status, action_reasons, merchant_id, paypal_email, primary_email_confirmed, payments_receivable, last_status_check_at, referral_url, oauth_scopes, consent_granted, acdc_vetting_status, vaulting_status, status_source';
 const activeRefreshes = new Map<string, Promise<void>>();
 async function refreshSeller(userId: string) {
   let pending = activeRefreshes.get(userId);
@@ -28,6 +30,16 @@ async function refreshSeller(userId: string) {
   }
   return pending;
 }
+/**
+ * PayPal confirmed the seller finished onboarding and granted consent via the
+ * MERCHANT.ONBOARDING.COMPLETED webhook, but withholds the merchant-status API
+ * from this app, so no itemised scopes are available. The recorded connection
+ * is the authoritative fact in that case.
+ */
+export function isWebhookConfirmed(row: Pick<MyPayPalConnection, 'status_source' | 'merchant_id' | 'consent_granted' | 'onboarding_status'> | null | undefined) {
+  return !!row && row.status_source === 'webhook' && !!row.merchant_id && row.consent_granted === true
+    && !['disconnected', 'revoked'].includes(row.onboarding_status);
+}
 async function readConnection(userId: string) {
   const { data, error } = await supabase.from('seller_paypal_accounts').select(COLUMNS).eq('user_id', userId).is('archived_at', null).maybeSingle();
   if (error) throw error;
@@ -42,12 +54,14 @@ export function useMyPayPalConnection() {
   const client = useQueryClient();
   const query = useQuery({
     queryKey: ['my-paypal-connection', userId], enabled: !!userId, staleTime: 15_000, refetchOnWindowFocus: true,
-    refetchInterval: q => q.state.data?.connection && !['ready', 'disconnected', 'revoked'].includes(q.state.data.connection.onboarding_status) ? 30_000 : false,
+    refetchInterval: q => q.state.data?.connection && !isWebhookConfirmed(q.state.data.connection)
+      && !['ready', 'disconnected', 'revoked'].includes(q.state.data.connection.onboarding_status) ? 30_000 : false,
     queryFn: async () => {
       let row = await readConnection(userId!);
       let refreshError: string | null = null;
       const checked = Date.parse(row?.last_status_check_at || '') || 0;
-      const incomplete = row && (row.onboarding_status !== 'ready' || !row.oauth_scopes?.length || !row.consent_granted);
+      const incomplete = row && !isWebhookConfirmed(row)
+        && (row.onboarding_status !== 'ready' || !row.oauth_scopes?.length || !row.consent_granted);
       if (row && !['disconnected', 'revoked'].includes(row.onboarding_status) && Date.now() - checked > (incomplete ? 15_000 : 300_000)) {
         try { await refreshSeller(userId!); row = await readConnection(userId!); void client.invalidateQueries({ queryKey: ['seller-payment-readiness', userId] }); }
         catch (error) { refreshError = error instanceof Error ? error.message : "Couldn't verify PayPal status."; }
@@ -84,8 +98,9 @@ export function useMyPayPalConnection() {
     }
   }, [userId, client, reload]);
   const connection = userId ? query.data?.connection ?? null : null;
-  const isReady = connection?.onboarding_status === 'ready' && connection.primary_email_confirmed === true && connection.payments_receivable === true && connection.consent_granted === true && !!connection.merchant_id && !!connection.oauth_scopes?.length;
-  return { connection, status: connection?.onboarding_status ?? 'not_connected', isReady,
+  const webhookConfirmed = isWebhookConfirmed(connection);
+  const isReady = webhookConfirmed || (connection?.onboarding_status === 'ready' && connection.primary_email_confirmed === true && connection.payments_receivable === true && connection.consent_granted === true && !!connection.merchant_id && !!connection.oauth_scopes?.length);
+  return { connection, status: connection?.onboarding_status ?? 'not_connected', isReady, webhookConfirmed,
     isLoading: !!userId && query.isLoading, isRefreshing: query.isFetching,
     lastRefreshError: query.error?.message || query.data?.refreshError || null,
     reload, refreshFromPayPal, lastCheckedAt: connection?.last_status_check_at ?? null };

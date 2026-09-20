@@ -229,6 +229,7 @@ Deno.serve(async (req) => {
           await admin
             .from("seller_paypal_accounts")
             .update({
+              status_source: "webhook",
               last_status_check_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
             })

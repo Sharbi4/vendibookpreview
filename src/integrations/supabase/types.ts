@@ -8932,6 +8932,7 @@ export type Database = {
           products: Json | null
           referral_url: string | null
           status_payload: Json | null
+          status_source: string | null
           tracking_id: string
           updated_at: string
           user_id: string
@@ -8956,6 +8957,7 @@ export type Database = {
           products?: Json | null
           referral_url?: string | null
           status_payload?: Json | null
+          status_source?: string | null
           tracking_id: string
           updated_at?: string
           user_id: string
@@ -8980,6 +8982,7 @@ export type Database = {
           products?: Json | null
           referral_url?: string | null
           status_payload?: Json | null
+          status_source?: string | null
           tracking_id?: string
           updated_at?: string
           user_id?: string

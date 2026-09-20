@@ -1,0 +1,1 @@
+ALTER TABLE public.seller_paypal_accounts ADD COLUMN IF NOT EXISTS status_source text;

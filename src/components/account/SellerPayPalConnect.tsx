@@ -56,7 +56,7 @@ export default function SellerPayPalConnect({
 }) {
   const { user } = useAuth();
   const [enabled, setEnabled] = useState<boolean | null>(null);
-  const { connection, reload: loadConnection, isReady, lastRefreshError } = useMyPayPalConnection();
+  const { connection, reload: loadConnection, isReady, webhookConfirmed, lastRefreshError } = useMyPayPalConnection();
   const [busy, setBusy] = useState<string | null>(null);
   const [capabilityError, setCapabilityError] = useState<string | null>(null);
   const [onboardingLink, setOnboardingLink] = useState<string | null>(null);
@@ -81,7 +81,13 @@ export default function SellerPayPalConnect({
         throw new Error(parsed.message);
       }
       await loadConnection();
-      if (data?.status === 'ready') {
+      if (data?.status_source === 'webhook') {
+        setFlowMessage({
+          tone: 'success',
+          text: 'PayPal confirmed your connection. Your account is recorded and ready to receive payments.',
+        });
+        toast.success('Your PayPal account is connected.');
+      } else if (data?.status === 'ready') {
         setFlowMessage({ tone: 'success', text: 'PayPal confirmed your account is ready to receive payments.' });
         toast.success('Your PayPal account is connected and ready to receive payments.');
       } else if (data?.pending || data?.status === 'link_sent') {
@@ -292,8 +298,19 @@ export default function SellerPayPalConnect({
     </>
   );
 
+  // PayPal confirmed onboarding by webhook but withholds the status API from
+  // this app, so there are no itemised scopes to show. The recorded connection
+  // is the fact; don't present it as unfinished.
+  const permissionsLabel = webhookConfirmed && !grantedScopes.length
+    ? 'Permissions confirmed by PayPal (itemised list not available)'
+    : connection?.merchant_id
+      ? `Permissions granted to Vendibook (${grantedScopes.length})`
+      : 'PayPal permissions awaiting confirmation';
+
   const statusLabel = !connection
     ? 'Not connected'
+    : webhookConfirmed
+      ? 'Connected — confirmed by PayPal'
     : status === 'ready'
       ? 'Ready to receive payments'
       : status === 'link_sent'
@@ -359,9 +376,7 @@ export default function SellerPayPalConnect({
                   </p>
                     <details className="text-xs">
                       <summary className="cursor-pointer font-medium">
-                        {connection?.merchant_id
-                          ? `Permissions granted to Vendibook (${grantedScopes.length})`
-                          : 'PayPal permissions awaiting confirmation'}
+                        {permissionsLabel}
                       </summary>
                     {grantedScopes.length > 0 ? (
                       <ul className="mt-2 space-y-1 break-all text-[11px] text-muted-foreground">
@@ -371,8 +386,9 @@ export default function SellerPayPalConnect({
                       </ul>
                     ) : (
                       <p className="mt-2 text-[11px] text-muted-foreground">
-                        PayPal hasn&apos;t reported any granted permissions yet. Check your status, or
-                        reconnect to grant them.
+                        {webhookConfirmed
+                          ? 'PayPal confirmed your account finished onboarding and granted Vendibook permission, but does not publish the itemised permission list to this app.'
+                          : "PayPal hasn't reported any granted permissions yet. Check your status, or reconnect to grant them."}
                       </p>
                     )}
                   </details>
@@ -449,11 +465,7 @@ export default function SellerPayPalConnect({
               <p className="mt-2 break-all">
                 PayPal account ID: {connection.merchant_id ?? 'Not reported by PayPal yet'}
               </p>
-               <p className="mt-1">
-                 {connection.merchant_id
-                   ? `Permissions granted to Vendibook: ${grantedScopes.length}`
-                   : 'PayPal permissions awaiting confirmation'}
-               </p>
+               <p className="mt-1">{permissionsLabel}</p>
                {grantedScopes.length > 0 && (
                  <ul className="mt-2 space-y-1 break-all">
                    {grantedScopes.map((scope) => (
