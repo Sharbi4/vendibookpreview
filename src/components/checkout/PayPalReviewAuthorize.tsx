@@ -309,7 +309,10 @@ const PayPalReviewAuthorize = ({
           <a href="/terms" target="_blank" rel="noreferrer" className="underline">
             Terms of Service
           </a>{' '}
-          and authorize this payment of {amount}.
+          {payLater
+            ? `and authorize this ${amount} purchase, paid to PayPal under the Pay Later plan I approved.`
+            : `and authorize this payment of ${amount}.`}
+
         </span>
       </label>
 
