@@ -261,10 +261,16 @@ const PayPalReviewAuthorize = ({
           </div>
         ))}
         <div className="mt-2 flex justify-between border-t border-border/70 pt-2 font-semibold text-foreground">
-          <span>Total</span>
+          <span>{payLater ? 'Order total (paid to PayPal)' : 'Total'}</span>
           <span>{amount}</span>
         </div>
+        {payLater ? (
+          <p className="mt-1 text-[11px] text-muted-foreground">
+            Your instalment amounts and dates are set by PayPal and shown in your PayPal account.
+          </p>
+        ) : null}
       </div>
+
 
       {(data.fulfillment.method || address) ? (
         <div className="rounded-2xl border border-border/70 px-4 py-3 text-xs text-muted-foreground">
