@@ -110,7 +110,9 @@ serve(async (req) => {
       .select("id, status, amount")
       .eq("listing_id", listingId)
       .eq("buyer_id", user.id)
-      .in("status", ["pending"])
+      // `payment_failed` is recoverable: a declined capture parks the order
+      // there, and starting a new attempt returns it to `pending`.
+      .in("status", ["pending", "payment_failed"])
       .gt("created_at", new Date(Date.now() - 60 * 60_000).toISOString())
       .order("created_at", { ascending: false })
       .limit(1)
@@ -119,9 +121,11 @@ serve(async (req) => {
     if (existing) {
       await admin
         .from("sale_transactions")
-        .update(mutableFields)
+        .update(existing.status === "payment_failed"
+          ? { ...mutableFields, status: "pending" }
+          : mutableFields)
         .eq("id", existing.id)
-        .eq("status", "pending");
+        .eq("status", existing.status);
       return jsonResponse(200, { transaction_id: existing.id, reused: true, amount: Number(existing.amount) });
     }
 
