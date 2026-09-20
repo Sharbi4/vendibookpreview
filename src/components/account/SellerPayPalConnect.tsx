@@ -180,7 +180,10 @@ export default function SellerPayPalConnect({
       setFlowMessage({ tone: 'error', text: 'Please accept the Seller Payment Terms and electronic records consent first.' });
       return;
     }
-    // Wait for a real referral URL; embedded previews can detach blank popup handles.
+    // Open the window synchronously (user-gesture context) so popup blockers
+    // allow it, then navigate it once the referral URL arrives. Embedded
+    // previews block top-level redirects, so a real window is the reliable path.
+    const popup = window.open('', 'vendibook_paypal_connect');
     setBusy('connect');
     setOnboardingLink(null);
     setFlowMessage(null);
