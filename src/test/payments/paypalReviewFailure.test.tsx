@@ -5,7 +5,7 @@ vi.mock('@/integrations/supabase/client', () => ({ supabase: { functions: { invo
 import PayPalReviewAuthorize, { type ReviewData } from '@/components/checkout/PayPalReviewAuthorize';
 const review = { reference: 'payment', order_id: 'order', record_status: 'created', payment_intent: 'CAPTURE', currency: 'USD', amount_cents: 10000, lines: [], funding: { method: 'paypal', label: 'PayPal', email: null, brand: null, last4: null }, fulfillment: { method: null, address: null }, listing: null } as ReviewData;
 afterEach(cleanup);
-beforeEach(() => invoke.mockReset());
+beforeEach(() => { invoke.mockReset(); });
 function submit() {
   const success = vi.fn();
   render(<PayPalReviewAuthorize orderId="order" initialData={review} onAuthorized={success} onChangeMethod={vi.fn()} />);
