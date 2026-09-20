@@ -235,7 +235,7 @@ Deno.serve(async (req) => {
             .eq("id", row.id);
           safeLog("seller_status_local_fallback", { user_id: user.id });
           return jsonResponse(200, {
-            status: row.onboarding_status === "ready" ? "ready" : "connected",
+            status: row.onboarding_status,
             pending: false,
             status_source: "webhook",
             action_reasons: row.action_reasons ?? [],
