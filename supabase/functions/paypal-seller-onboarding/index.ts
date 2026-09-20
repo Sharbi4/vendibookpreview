@@ -105,12 +105,32 @@ function deriveStatus(raw: any): DerivedStatus {
   const capabilities = capabilityList
     .map((c: any) => (typeof c === "string" ? c : c?.name))
     .filter((c: any): c is string => typeof c === "string");
+  // Vaulting readiness is reported in two places, and PayPal treats either one
+  // being IN_REVIEW / NEED_MORE_DATA as "not available to the seller yet"
+  // (IWT pp.5-6): products[name == 'ADVANCED_VAULTING'].vetting_status and
+  // capabilities[name == 'PAYPAL_WALLET_VAULTING_ADVANCED'].status. Report the
+  // blocking state so the seller is told what PayPal actually needs.
+  const vaultingProduct = products.find(
+    (p: any) => String(p?.name ?? "").toUpperCase() === "ADVANCED_VAULTING",
+  );
   const vaultingCapability = capabilityList.find(
     (c: any) => String(c?.name ?? c ?? "").toUpperCase().includes("VAULT"),
   );
-  const vaulting = vaultingCapability
-    ? String(vaultingCapability?.status ?? "ACTIVE").toUpperCase()
-    : null;
+  const vaultingStates = [
+    vaultingProduct ? String(vaultingProduct?.vetting_status ?? "IN_REVIEW").toUpperCase() : null,
+    vaultingCapability ? String(vaultingCapability?.status ?? "ACTIVE").toUpperCase() : null,
+  ].filter((s): s is string => s !== null);
+  const vaulting = vaultingStates.length === 0
+    ? null
+    : vaultingStates.includes("NEED_MORE_DATA")
+      ? "NEED_MORE_DATA"
+      : vaultingStates.includes("DENIED")
+        ? "DENIED"
+        : vaultingStates.includes("IN_REVIEW")
+          ? "IN_REVIEW"
+          : vaultingStates.every((s) => s === "SUBSCRIBED" || s === "ACTIVE")
+            ? "SUBSCRIBED"
+            : vaultingStates[0];
 
   const reasons: string[] = [];
   if (!activeOauth) reasons.push("oauth_not_active");

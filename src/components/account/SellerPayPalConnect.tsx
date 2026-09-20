@@ -9,6 +9,7 @@ import { Link } from 'react-router-dom';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { PayPalWordmark } from '@/components/brand/ProviderLogos';
 import { toast } from 'sonner';
+import { sellerVettingNotices } from '@/lib/paypal/sellerVetting';
 import {
   ChevronDown,
   AlertTriangle,
@@ -261,6 +262,15 @@ export default function SellerPayPalConnect({
   const isReady = status === 'ready';
   const canReconnect = status === 'disconnected' || status === 'revoked';
 
+  // Onboarding status PayPal requires sellers to see: account ID, granted
+  // scopes, and the state of each vetted feature (IWT pp.4-6).
+  const grantedScopes = connection?.oauth_scopes ?? [];
+  const featureNotices = sellerVettingNotices({
+    acdcVettingStatus: connection?.acdc_vetting_status,
+    vaultingStatus: connection?.vaulting_status,
+    grantedScopes,
+  });
+
   /** PayPal's exact remediation copy — meaning must not change. */
   const emailWarning = (
     <>
@@ -337,7 +347,51 @@ export default function SellerPayPalConnect({
               <div>
                 <h2 className="text-sm font-semibold">{isReady ? 'Ready to receive payments' : 'Receive payments with PayPal'}</h2>
                 <p className="mt-1 text-xs text-muted-foreground">{isReady ? connection?.paypal_email || 'Your PayPal Business account is connected.' : 'Connect your PayPal Business account to accept online payments on eligible listings.'}</p>
+                {hasConnection && (
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Status: <span className="text-foreground/85">{statusLabel}</span>
+                  </p>
+                )}
               </div>
+              {hasConnection && (
+                <div className="space-y-2 rounded-xl bg-muted/50 p-3">
+                  <p className="text-xs text-muted-foreground">
+                    PayPal account ID:{' '}
+                    <span className="break-all font-mono text-[11px] text-foreground/85">
+                      {connection?.merchant_id ?? 'Not reported by PayPal yet'}
+                    </span>
+                  </p>
+                  <details className="text-xs">
+                    <summary className="cursor-pointer font-medium">
+                      Permissions granted to Vendibook ({grantedScopes.length})
+                    </summary>
+                    {grantedScopes.length > 0 ? (
+                      <ul className="mt-2 space-y-1 break-all text-[11px] text-muted-foreground">
+                        {grantedScopes.map((scope) => (
+                          <li key={scope}>{scope}</li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="mt-2 text-[11px] text-muted-foreground">
+                        PayPal hasn&apos;t reported any granted permissions yet. Check your status, or
+                        reconnect to grant them.
+                      </p>
+                    )}
+                  </details>
+                  {featureNotices.map((notice) => (
+                    <p
+                      key={notice.text}
+                      className={`text-xs ${
+                        notice.tone === 'warn'
+                          ? 'text-amber-700 dark:text-amber-400'
+                          : 'text-muted-foreground'
+                      }`}
+                    >
+                      {notice.text}
+                    </p>
+                  ))}
+                </div>
+              )}
               {capabilityError && <p role="alert" className="text-xs text-destructive">{capabilityError}</p>}
               {enabled === false && <p className="text-xs text-muted-foreground">PayPal setup is currently unavailable. Please check back later.</p>}
               {flowMessage && <p role={flowMessage.tone === 'error' ? 'alert' : 'status'} className="text-xs">{flowMessage.text}</p>}
@@ -389,14 +443,22 @@ export default function SellerPayPalConnect({
             {isReady ? <CheckCircle2 /> : connection ? <AlertTriangle /> : <CreditCard />}
             {statusLabel}
           </span>
-          {isReady && (            <details className="mt-3 text-xs">
-              <summary className="cursor-pointer font-medium">PayPal permissions and card approval</summary>
-              <p className="mt-2">Advanced cards: {connection?.acdc_vetting_status ?? 'Not approved yet'}</p>
-              <p>Saved payment methods: {connection?.vaulting_status ?? 'Not enabled for this checkout'}</p>
+          {connection && (
+            <details className="mt-3 text-xs">
+              <summary className="cursor-pointer font-medium">
+                PayPal account ID and granted permissions
+              </summary>
+              <p className="mt-2 break-all">
+                PayPal account ID: {connection.merchant_id ?? 'Not reported by PayPal yet'}
+              </p>
+              <p className="mt-1">Permissions granted to Vendibook: {grantedScopes.length}</p>
               <ul className="mt-2 space-y-1 break-all">
-                {(connection?.oauth_scopes ?? []).map(scope => <li key={scope}>{scope}</li>)}
+                {grantedScopes.map((scope) => (
+                  <li key={scope}>{scope}</li>
+                ))}
               </ul>
-            </details>)}
+            </details>
+          )}
           {isReady && connection?.paypal_email && (
             <span className="v2-paypal-note">{connection.paypal_email}</span>
           )}
@@ -422,6 +484,14 @@ export default function SellerPayPalConnect({
         )}
         {emailUnconfirmed && <p className="v2-paypal-warn">{emailWarning}</p>}
         {notReceivable && <p className="v2-paypal-warn">{receivableWarning}</p>}
+        {featureNotices.map((notice) => (
+          <p
+            key={notice.text}
+            className={notice.tone === 'warn' ? 'v2-paypal-warn' : 'v2-paypal-note'}
+          >
+            {notice.text}
+          </p>
+        ))}
         {needsPermissions && (
           <p className="v2-paypal-note">
             Finish connecting your PayPal account so Vendibook has the permissions it needs.
@@ -590,12 +660,22 @@ export default function SellerPayPalConnect({
           <>
             <details className="mt-3 text-xs">
               <summary className="cursor-pointer font-medium">PayPal permissions and card approval</summary>
-              <p className="mt-2">Advanced cards: {connection?.acdc_vetting_status ?? 'Not approved yet'}</p>
-              <p>Saved payment methods: {connection?.vaulting_status ?? 'Not enabled for this checkout'}</p>
               <ul className="mt-2 space-y-1 break-all">
-                {(connection?.oauth_scopes ?? []).map(scope => <li key={scope}>{scope}</li>)}
+                {grantedScopes.map(scope => <li key={scope}>{scope}</li>)}
               </ul>
             </details>
+            {featureNotices.map((notice) => (
+              <p
+                key={notice.text}
+                className={`mt-2 text-xs ${
+                  notice.tone === 'warn'
+                    ? 'text-amber-700 dark:text-amber-400'
+                    : 'text-muted-foreground'
+                }`}
+              >
+                {notice.text}
+              </p>
+            ))}
 
             <p className="text-xs text-muted-foreground mt-0.5">
               Your PayPal account is connected and can receive payments.
