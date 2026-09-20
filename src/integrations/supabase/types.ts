@@ -666,8 +666,6 @@ export type Database = {
           host_pro_discount: number
           host_response: string | null
           hourly_slots: Json | null
-          renter_snapshot: Json | null
-          payment_lock_record_id: string | null
           id: string
           is_hourly_booking: boolean | null
           is_instant_book: boolean | null
@@ -702,8 +700,6 @@ export type Database = {
           updated_at: string
         }
         Insert: {
-          renter_snapshot?: Json | null
-          payment_lock_record_id?: string | null
           access_instructions_snapshot?: string | null
           address_snapshot?: string | null
           balance_due_at?: string | null
@@ -778,8 +774,6 @@ export type Database = {
           updated_at?: string
         }
         Update: {
-          renter_snapshot?: Json | null
-          payment_lock_record_id?: string | null
           access_instructions_snapshot?: string | null
           address_snapshot?: string | null
           balance_due_at?: string | null
