@@ -434,8 +434,8 @@ const PayPalPaymentPanel = ({
             },
             onError: () => {
               fail(
-                `${name} had a problem`,
-                `${name} could not complete this payment right now. No charge was made — please try again or use another option.`,
+                'Payment not completed',
+                `${name} could not confirm this payment. Check your transaction status before trying again or using another option.`,
               );
             },
           });
