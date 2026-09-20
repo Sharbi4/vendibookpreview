@@ -1,4 +1,7 @@
 // Square is used only for Vendibook-owned subscriptions and add-ons.
+// Type-only declaration so the Vite-side typecheck (which reaches this file
+// through test imports) passes; Deno provides the real global at runtime.
+declare const Deno: { env: { get(key: string): string | undefined } };
 export function squareConfig() {
   const environment = Deno.env.get('SQUARE_ENVIRONMENT') || 'sandbox';
   if (!['sandbox', 'production'].includes(environment)) throw new Error('Invalid Square environment');
