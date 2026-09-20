@@ -1,3 +1,7 @@
+import FeaturedPromotionBanner from '@/components/workspace/FeaturedPromotionBanner';
+import FeaturedBadge from '@/components/listing/FeaturedBadge';
+import { canBoostListing } from '@/lib/listings/publicVisibility';
+import { isListingFeatured } from '@/lib/featured';
 import { useMemo } from 'react';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import {
@@ -225,6 +229,8 @@ export default function WorkspaceHome() {
           <SellerPayPalConnect variant="pill" showWhenDisabled />
         </header>
 
+        {!listingsLoading && isSeller && <FeaturedPromotionBanner listings={listings} />}
+
         {tasks.length > 0 && (
           <section className="v2-panel">
             <div className="v2-panel-head">
@@ -290,7 +296,7 @@ export default function WorkspaceHome() {
                   <span className={`v2-status ${leadListing.status === 'published' ? 'is-ok' : ''}`}>
                     {leadListing.status === 'published' ? 'Live' : leadListing.status}
                   </span>
-                  {leadFeatured && <span className="v2-status">Featured</span>}
+                  {leadFeatured && <FeaturedBadge listing={leadListing} compact showDaysLeft />}
                   {isSeller && !paypalReady && (
                     <span className="v2-status is-warn">Online payments not enabled</span>
                   )}
@@ -316,18 +322,18 @@ export default function WorkspaceHome() {
                   <Link className="v2-btn-outline v2-btn-sm" to={`/edit-listing/${leadListing.id}`}>
                     Edit
                   </Link>
-                  <Link
-                    className="v2-btn-outline v2-btn-sm"
+                  {canBoostListing(leadListing as never) && !leadFeatured && <Link
+                    className="v2-btn v2-btn-sm"
                     to={`/dashboard/listings?boost=${leadListing.id}`}
                   >
-                    Promote
-                  </Link>
+                    Boost listing
+                  </Link>}
                 </div>
               </div>
             </article>
 
             {otherListings.map((listing) => (
-              <Link className="v2-activity-row" to={`/edit-listing/${listing.id}`} key={listing.id}>
+              <div className="v2-activity-row flex-wrap" key={listing.id}>
                 <span className="v2-activity-thumb">
                   {listing.cover_image_url ? (
                     <img src={listing.cover_image_url} alt="" loading="lazy" />
@@ -336,14 +342,15 @@ export default function WorkspaceHome() {
                   )}
                 </span>
                 <span className="min-w-0 flex-1">
-                  <strong className="truncate">{listing.title}</strong>
+                  <Link to={`/edit-listing/${listing.id}`} className="block truncate font-semibold">{listing.title}</Link>
                   <small>
                     {[listing.city, listing.state].filter(Boolean).join(', ') || 'Location not set'}{' '}
                     · {listing.status === 'published' ? 'Live' : listing.status}
                   </small>
                 </span>
                 <strong>{price(listing)}</strong>
-              </Link>
+                {isListingFeatured(listing as never) ? <FeaturedBadge listing={listing} compact /> : canBoostListing(listing as never) && <Link className="v2-btn v2-btn-sm" to={`/dashboard/listings?boost=${listing.id}`}>Boost listing</Link>}
+              </div>
             ))}
           </section>
         )}

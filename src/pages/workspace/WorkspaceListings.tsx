@@ -1,3 +1,6 @@
+import FeaturedPromotionBanner from '@/components/workspace/FeaturedPromotionBanner';
+import FeaturedBadge from '@/components/listing/FeaturedBadge';
+import { canBoostListing } from '@/lib/listings/publicVisibility';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { CreditCard, Eye, Image as ImageIcon, Megaphone, Pencil, Plus, Share2, Video } from 'lucide-react';
@@ -10,10 +13,11 @@ import { PromoteListingModal } from '@/components/dashboard/PromoteListingModal'
 import { isListingFeatured } from '@/lib/featured';
 import { useVideoWalkthroughs } from '@/hooks/useVideoWalkthroughs';
 
-type StatusFilter = 'all' | 'published' | 'draft' | 'paused' | 'archived';
+type StatusFilter = 'featured' | 'all' | 'published' | 'draft' | 'paused' | 'archived';
 
 const FILTERS: { key: StatusFilter; label: string }[] = [
   { key: 'all', label: 'All' },
+  { key: 'featured', label: 'Featured' },
   { key: 'published', label: 'Live' },
   { key: 'draft', label: 'Drafts' },
   { key: 'paused', label: 'Paused' },
@@ -42,10 +46,15 @@ export default function WorkspaceListings() {
     FILTERS.some((f) => f.key === statusParam) ? statusParam : 'all',
   );
 
+  useEffect(() => {
+    setFilter(FILTERS.some(f => f.key === statusParam) ? statusParam : 'all');
+  }, [statusParam]);
+
   // Email campaign deep link: /dashboard/listings?boost=<listing_id>
   useEffect(() => {
     const boostId = searchParams.get('boost');
-    if (!boostId || boostHandled.current || isLoading) return;
+    if (!boostId) { boostHandled.current = false; return; }
+    if (boostHandled.current || isLoading) return;
     boostHandled.current = true;
 
     const listing = listings.find((l) => l.id === boostId);
@@ -65,7 +74,7 @@ export default function WorkspaceListings() {
       consume();
       return;
     }
-    if (listing.status !== 'published') {
+    if (!canBoostListing(listing as never)) {
       toast.info('That listing needs to be live before it can be Featured.');
       consume();
       return;
@@ -90,6 +99,7 @@ export default function WorkspaceListings() {
   const counts = useMemo(
     () => ({
       all: listings.length,
+      featured: listings.filter(l => isListingFeatured(l as never)).length,
       published: listings.filter((l) => l.status === 'published').length,
       draft: listings.filter((l) => l.status === 'draft').length,
       paused: listings.filter((l) => l.status === 'paused').length,
@@ -98,7 +108,7 @@ export default function WorkspaceListings() {
     [listings],
   );
 
-  const shown = filter === 'all' ? listings : listings.filter((l) => l.status === filter);
+  const shown = filter === 'featured' ? listings.filter(l => isListingFeatured(l as never)) : filter === 'all' ? listings : listings.filter((l) => l.status === filter);
 
   const share = async (id: string, title: string) => {
     const url = `${window.location.origin}/listing/${id}`;
@@ -134,12 +144,15 @@ export default function WorkspaceListings() {
           </div>
         </header>
 
+        {!isLoading && listings.length > 0 && <FeaturedPromotionBanner listings={listings} />}
+
         <div className="v2-filter-row">
-          {FILTERS.filter((f) => f.key === 'all' || counts[f.key] > 0).map((f) => (
+          {FILTERS.filter((f) => f.key === 'all' || f.key === 'featured' || counts[f.key] > 0).map((f) => (
             <button
               key={f.key}
               type="button"
-              className={`v2-filter${filter === f.key ? ' is-active' : ''}`}
+              className={`v2-filter${filter === f.key ? ' is-active' : ''}${f.key === 'featured' ? ' featured-gold' : ''}`}
+              aria-pressed={filter === f.key}
               onClick={() => setFilter(f.key)}
             >
               {f.label} ({counts[f.key]})
@@ -161,8 +174,9 @@ export default function WorkspaceListings() {
           </div>
         ) : shown.length === 0 ? (
           <div className="v2-card v2-empty">
-            <h2>{listings.length ? 'Nothing in this view' : 'Start your first listing'}</h2>
-            <p>List a truck, trailer, mobile kitchen, equipment, or vendor space.</p>
+            <h2>{filter === 'featured' ? 'Your next standout listing starts here' : listings.length ? 'Nothing in this view' : 'Start your first listing'}</h2>
+            <p>{filter === 'featured' ? 'Choose a live listing and select Boost listing to review Featured options.' : 'List a truck, trailer, mobile kitchen, equipment, or vendor space.'}</p>
+            {filter === 'featured' && <button type="button" className="v2-btn" onClick={() => setFilter('published')}>Choose a live listing</button>}
             <Link to="/dashboard/listings/new" className="v2-btn">
               Create a listing
             </Link>
@@ -199,7 +213,7 @@ export default function WorkspaceListings() {
                     <strong className="v2-price">{rate}</strong>
                     <div className="v2-listing-stats flex flex-wrap gap-2">
                       <span>{listing.view_count ?? 0} views</span>
-                      {featured && <span className="v2-status">Featured</span>}
+                      {featured && <FeaturedBadge listing={listing} compact showDaysLeft />}
                       {walkthroughs.filter(w=>w.listing_id===listing.id&&['scheduled','rescheduled'].includes(w.status)&&+new Date(w.ends_at)>Date.now()).length>0 && <Link className="v2-status is-ok" to="/dashboard/activity?filter=walkthroughs">{walkthroughs.filter(w=>w.listing_id===listing.id&&['scheduled','rescheduled'].includes(w.status)&&+new Date(w.ends_at)>Date.now()).length} upcoming walkthroughs</Link>}
                       {listing.status === 'published' && !paypalReady && (
                         <span className="v2-status is-warn">Online payments not set up</span>
@@ -226,14 +240,14 @@ export default function WorkspaceListings() {
                         <Pencil />
                         {listing.status === 'draft' ? 'Continue' : 'Edit'}
                       </Link>
-                      {listing.status === 'published' && !featured && (
+                      {canBoostListing(listing as never) && !featured && (
                         <button
                           type="button"
-                          className="v2-btn-outline v2-btn-sm"
+                          className="v2-btn v2-btn-sm"
                           onClick={() => setBoostTarget({ id: listing.id, title: listing.title })}
                         >
                           <Megaphone />
-                          Promote
+                          Boost listing
                         </button>
                       )}
                       <button
