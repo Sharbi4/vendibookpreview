@@ -1,3 +1,6 @@
+import FeaturedBadge from '@/components/listing/FeaturedBadge';
+import ListingFinancingBadge from '@/components/listing/ListingFinancingBadge';
+import { useEquinoxFinancingEnabled } from '@/hooks/useListingFinancing';
 import { Link } from 'react-router-dom';
 import { MapPin } from 'lucide-react';
 import { SmartImage } from '@/components/ui/SmartImage';
@@ -12,6 +15,7 @@ export interface V2CardListing {
   state?: string | null;
   category?: string | null;
   mode?: string | null;
+  status?: string | null;
   price_sale?: number | null;
   price_daily?: number | null;
   price_hourly?: number | null;
@@ -36,6 +40,7 @@ export default function V2ListingCard({
     (listing.category && CATEGORY_LABELS[listing.category as keyof typeof CATEGORY_LABELS]) ||
     null;
   const featured = isListingFeatured(listing as never);
+  const financingEnabled = useEquinoxFinancingEnabled(listing);
 
   return (
     <Link to={`/listing/${listing.id}`} className="v2-home-card">
@@ -48,7 +53,7 @@ export default function V2ListingCard({
           radiusClass="rounded-none"
           sizes="(max-width: 640px) 80vw, (max-width: 1024px) 40vw, 300px"
         />
-        {featured ? <em className="v2-home-chip">Featured</em> : null}
+        {featured ? <span className="absolute left-3 top-3 z-10"><FeaturedBadge listing={listing} variant="card" compact /></span> : null}
         {listing.mode ? (
           <em className="v2-home-chip is-mode">{listing.mode === 'rent' ? 'For rent' : 'For sale'}</em>
         ) : null}
@@ -61,6 +66,7 @@ export default function V2ListingCard({
             {place}
           </small>
         ) : null}
+        {financingEnabled ? <span className="flex flex-wrap gap-1.5"><ListingFinancingBadge listingId={listing.id} asLink={false} /></span> : null}
         <span className="v2-home-card-foot">
           <b>{price}</b>
           {category ? <i>{category}</i> : null}

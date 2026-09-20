@@ -1,3 +1,4 @@
+import ListingFinancingBadge from '@/components/listing/ListingFinancingBadge';
 import { deliveryRateLabel } from '@/lib/fulfillment/delivery';
 import { formatListingPriceLabel, type ListingPriceInput } from '@/lib/listings/rentalPricing';
 import { formatCurrency } from '@/lib/commissions';
@@ -552,14 +553,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
               </Link>
             )}
             {financingEnabled && (
-              <Link
-                to={`/financing?listing_id=${listing.id}`}
-                onClick={(e) => e.stopPropagation()}
-                className="relative z-10 inline-flex items-center gap-1 rounded-full bg-[#1b1714]/[0.05] px-2.5 py-1 text-[11px] font-medium text-[#1b1714]/70 hover:bg-[#1b1714]/[0.09] transition-colors"
-              >
-                <Banknote className="h-3 w-3" />
-                Financing available
-              </Link>
+              <ListingFinancingBadge listingId={listing.id} />
             )}
             {displayAmenities.length > 0 && (
               <TooltipProvider delayDuration={200}>
