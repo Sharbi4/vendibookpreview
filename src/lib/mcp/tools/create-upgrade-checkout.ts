@@ -69,28 +69,10 @@ export default defineTool({
       return { content: [{ type: "text", text: "That upgrade is not currently available." }], isError: true };
     }
 
-    // For recurring products (Pro) we start a PayPal subscription directly.
-    if (product.billing_type === "recurring") {
-      const { data, error: fnError } = await supabase.functions.invoke("paypal-subscription-create", {
-        body: {
-          product_slug: product_slug,
-          billing_interval: /annual|yearly/i.test(product_slug) ? "annual" : "monthly",
-          return_path: listing_id ? `/listing/${listing_id}` : "/account",
-          cancel_path: listing_id ? `/listing/${listing_id}` : "/pricing",
-        },
-      });
-      if (fnError) {
-        return { content: [{ type: "text", text: `Checkout failed: ${fnError.message}` }], isError: true };
-      }
-      const payload = data as { approve_url?: string; url?: string; message?: string; error?: string };
-      const url = payload?.approve_url ?? payload?.url;
-      if (!url) {
-        return { content: [{ type: "text", text: payload?.message ?? payload?.error ?? "We could not start that checkout." }], isError: true };
-      }
-      return {
-        content: [{ type: "text", text: `Complete payment here: ${url}` }],
-        structuredContent: { product_slug, listing_id: listing_id ?? null, checkout_url: url },
-      };
+    // A membership needs the interactive recurring-billing consent flow.
+    if (product.billing_type === 'recurring') {
+      const url = `/plans?plan=${encodeURIComponent(product_slug)}`;
+      return { content: [{ type: 'text', text: `Review membership terms and continue: ${url}` }], structuredContent: { checkout_url: url } };
     }
 
     // One-time products route through the in-app hosted checkout.

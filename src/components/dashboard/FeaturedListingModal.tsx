@@ -10,7 +10,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { PayPalMonogram } from '@/components/brand/ProviderLogos';
-import PayPalPaymentPanel from '@/components/checkout/PayPalPaymentPanel';
+import SquareBillingCheckout from '@/components/checkout/SquareBillingCheckout';
 import { useProBoostCredit, useRedeemProBoostCredit } from '@/hooks/useProBoostCredit';
 import { useCatalogPrice } from '@/hooks/useCatalogPrices';
 import { ACTIVE_PRODUCT_SLUGS } from '@/lib/monetization/catalogPricing';
@@ -223,8 +223,8 @@ export const FeaturedListingModal = ({
                   </Button>
 
                   <div className="mt-3 flex items-center justify-center gap-2 text-[11px] text-muted-foreground">
-                    <PayPalMonogram className="h-4" />
-                    <span>Payments by PayPal</span>
+                    
+                    <span>Payments by Square</span>
                     <span className="text-white/20">·</span>
                     <ShieldCheck className="h-3.5 w-3.5" />
                     <span>Secure checkout</span>
@@ -237,31 +237,9 @@ export const FeaturedListingModal = ({
       </Dialog>
 
       {open && step === 'pay' ? (
-        <PayPalPaymentPanel
-          target={{ kind: 'product', slug: ACTIVE_PRODUCT_SLUGS.featuredBoost, listing_id: listingId }}
-          totalUsd={boostPrice.amountUsd}
-          onClose={() => setStep('overview')}
-          onSuccess={(result) => {
-            setStage(result.pending ? 'review' : 'authorized');
-            setStep('status');
-          }}
-          summary={
-            <div className="space-y-1">
-              <button
-                type="button"
-                onClick={() => setStep('overview')}
-                className="mb-1 inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground"
-              >
-                <ArrowLeft className="h-3 w-3" /> Back to boost details
-              </button>
-              <p className="text-sm font-medium">
-                {boostPrice.name ?? `Featured Boost — ${durationLabel}`}
-              </p>
-              <p className="text-xs text-muted-foreground">{listingTitle}</p>
-              <p className="text-lg font-semibold">{formatUsd(boostPrice.cents)}</p>
-            </div>
-          }
-        />
+        <div className="fixed inset-0 z-[100] overflow-y-auto bg-black/30 px-4 py-6" role="dialog" aria-modal="true" aria-label="Featured boost checkout">
+          <SquareBillingCheckout slug={ACTIVE_PRODUCT_SLUGS.featuredBoost} listingId={listingId} onClose={() => { setStep('overview'); onOpenChange(false); }} />
+        </div>
       ) : null}
     </>
   );

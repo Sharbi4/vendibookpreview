@@ -171,40 +171,12 @@ export async function startMonetizationCheckout(input: StartCheckoutInput): Prom
 }
 
 async function runCheckout(input: StartCheckoutInput): Promise<{ url: string }> {
-  // Every Vendibook charge runs through PayPal. One-time products are paid on
-  // our own hosted checkout page; recurring plans use PayPal Subscriptions.
-  // Stripe is never reachable for a NEW purchase from this path.
-  const { data: product } = await (supabase as any)
-    .from('monetization_products')
-    .select('billing_type')
-    .eq('slug', input.productSlug)
-    .maybeSingle();
-
-  const isRecurring =
-    product?.billing_type === 'recurring' ||
-    (!product && RECURRING_SLUG_PATTERN.test(input.productSlug));
-
-  if (isRecurring) {
-    const { data, error } = await supabase.functions.invoke('paypal-subscription-create', {
-      body: {
-        product_slug: input.productSlug,
-        billing_interval: input.billingInterval ?? intervalFromSlug(input.productSlug),
-        consent_id: input.consentId,
-        return_path: input.successPath,
-        cancel_path: input.cancelPath,
-      },
-    });
-    if (error) throw error;
-    const payload = data as { approve_url?: string; url?: string; message?: string; error?: string };
-    const url = payload?.approve_url ?? payload?.url;
-    if (!url) throw new Error(payload?.message ?? payload?.error ?? 'We could not start that membership.');
-    return { url };
-  }
-
   const search = new URLSearchParams();
   if (input.listingId) search.set('listing_id', input.listingId);
   if (input.successPath) search.set('success', input.successPath);
   if (input.cancelPath) search.set('cancel', input.cancelPath);
+  if (input.consentId) search.set('consent_id', input.consentId);
+  if (input.billingInterval) search.set('interval', input.billingInterval);
   const qs = search.toString();
   return {
     url: `${window.location.origin}/checkout/product/${input.productSlug}${qs ? `?${qs}` : ''}`,

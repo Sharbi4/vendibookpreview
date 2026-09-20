@@ -21,7 +21,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { parseEdgeError } from '@/lib/edgeErrors';
 
-export type SubscriptionProvider = 'paypal' | 'legacy' | 'none';
+export type SubscriptionProvider = 'square' | 'paypal' | 'legacy' | 'none';
 
 /** Where PayPal members manage the funding source for a recurring plan. */
 export const PAYPAL_AUTOPAY_URL = 'https://www.paypal.com/myaccount/autopay/';
@@ -99,7 +99,7 @@ export function useSubscriptionManagement(product: SubscriptionProduct = 'pro') 
   const sub = query.data ?? null;
 
   const provider: SubscriptionProvider =
-    sub?.payment_provider === 'paypal' || sub?.paypal_subscription_id
+    sub?.payment_provider === 'square' ? 'square' : sub?.payment_provider === 'paypal' || sub?.paypal_subscription_id
       ? 'paypal'
       : sub?.stripe_subscription_id
       ? 'legacy'
@@ -128,7 +128,14 @@ export function useSubscriptionManagement(product: SubscriptionProduct = 'pro') 
   const cancel = useCallback(async () => {
     setBusy('cancel');
     try {
-      if (provider === 'paypal') {
+      if (provider === 'square') {
+        const attemptId = (sub?.metadata as {square_attempt_id?:string} | undefined)?.square_attempt_id;
+        if (!attemptId) throw new Error('This Square subscription needs a billing refresh.');
+        const {error}=await supabase.functions.invoke('square-billing',{body:{action:'cancel',attempt_id:attemptId}});
+        if(error) throw error;
+        await query.refetch();
+        toast({title:'Cancellation scheduled',description:'Your paid access remains available through the end of the current billing period.'});
+      } else if (provider === 'paypal') {
         const { data, error } = await supabase.functions.invoke('paypal-subscription-cancel', {
           body: {
             reason: 'Member requested cancellation',
@@ -167,7 +174,7 @@ export function useSubscriptionManagement(product: SubscriptionProduct = 'pro') 
     } finally {
       setBusy(null);
     }
-  }, [provider, sub?.paypal_subscription_id, refetchUntilSynced, toast]);
+  }, [provider, sub?.paypal_subscription_id, sub?.metadata, refetchUntilSynced, toast]);
 
   /** Legacy memberships can no longer be resumed self-serve. */
   const reactivate = useCallback(async () => {
@@ -184,6 +191,10 @@ export function useSubscriptionManagement(product: SubscriptionProduct = 'pro') 
    * support because the old billing portal is retired.
    */
   const openBilling = useCallback(async () => {
+    if (provider === 'square') {
+      toast({title:'Square billing',description:'Square emails your invoices. You can cancel here; contact support for a payment-method change.'});
+      return;
+    }
     if (provider === 'paypal') {
       window.open(PAYPAL_AUTOPAY_URL, '_blank', 'noopener,noreferrer');
       return;

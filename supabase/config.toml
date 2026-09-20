@@ -297,3 +297,12 @@ verify_jwt = false
 
 [functions.admin-cancel-order]
 verify_jwt = false
+
+[functions.square-billing]
+verify_jwt = false
+
+[functions.square-webhook]
+verify_jwt = false
+
+[functions.square-reconcile]
+verify_jwt = false
