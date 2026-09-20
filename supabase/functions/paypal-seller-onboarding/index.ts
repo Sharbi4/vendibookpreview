@@ -6,9 +6,32 @@ import {
   getMerchantIntegrationStatus,
   PayPalError,
   paypalOnboardingEnvironment,
+  paypalRequest,
   safeLog,
   sellerOnboardingEnabled,
 } from "../_shared/paypal.ts";
+
+/**
+ * When the merchant-integrations lookup answers 401 AUTHORIZATION_ERROR, the
+ * configured partner id almost never matches the account that owns the REST
+ * app credentials. Ask PayPal which account the client credentials belong to
+ * (the payer id — a public account identifier, not a secret) and log it so
+ * support can compare it with PAYPAL_SANDBOX_PARTNER_MERCHANT_ID.
+ */
+async function probePartnerIdentity(): Promise<void> {
+  try {
+    const ident = await paypalRequest<{ user_id?: string; payer_id?: string }>(
+      "/v1/identity/oauth2/userinfo?schema=paypalv1.1",
+      { environment: paypalOnboardingEnvironment(), retries: 0 },
+    );
+    safeLog("partner_identity_probe", {
+      payer_id: typeof ident?.payer_id === "string" ? ident.payer_id : null,
+      environment: paypalOnboardingEnvironment(),
+    });
+  } catch {
+    safeLog("partner_identity_probe_failed", {});
+  }
+}
 
 /**
  * paypal-seller-onboarding — Step 2 of the PayPal Complete Payments /
@@ -302,7 +325,31 @@ Deno.serve(async (req) => {
             capabilities: [],
           });
         }
-        throw err;
+        // 401 AUTHORIZATION_ERROR on the tracking-id lookup: retry once via
+        // the seller's merchant id (path lookup), which some partner apps are
+        // authorized for when the tracking lookup is not. If that also fails,
+        // probe which account the credentials belong to, then surface the
+        // original error.
+        if (
+          err instanceof PayPalError && err.status === 401 &&
+          err.issue === "AUTHORIZATION_ERROR"
+        ) {
+          if (row.merchant_id) {
+            try {
+              raw = await getMerchantIntegrationStatus(row.merchant_id);
+            } catch (retryErr) {
+              // Identify the credentials' own account before surfacing the
+              // error — the partner id never matches in this state.
+              await probePartnerIdentity();
+              throw retryErr;
+            }
+          } else {
+            await probePartnerIdentity();
+            throw err;
+          }
+        } else {
+          throw err;
+        }
       }
       const derived = deriveStatus(raw);
 
