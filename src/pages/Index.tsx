@@ -213,30 +213,30 @@ const Index = () => {
           <section className="v2-home-tools">
             <header className="v2-home-section-head"><div><p className="v2-home-eyebrow">Tools for the next step</p><h2>Price it. Finance it. Move it.</h2></div></header>
             <div className="v2-home-tools-grid">
-              <Link to="/tools/pricepilot"><Gauge /><span><strong>Price your equipment</strong><small>See a market-backed pricing range</small></span><ArrowRight /></Link>
-              <Link to="/financing"><Landmark /><span><strong>Explore financing</strong><small>See financing options from third-party equipment partners</small></span><ArrowRight /></Link>
-              <Link to="/vendibook-freight"><Truck /><span><strong>Plan delivery</strong><small>Arrange delivery support for eligible equipment</small></span><ArrowRight /></Link>
+              <Link to="/tools/pricepilot"><span className="v2-tool-icon"><Gauge /></span><span><strong>Price your equipment</strong><small>See a market-backed pricing range</small></span><ArrowRight /></Link>
+              <Link to="/financing"><span className="v2-tool-icon"><Landmark /></span><span><strong>Explore financing</strong><small>See financing options from third-party equipment partners</small></span><ArrowRight /></Link>
+              <Link to="/vendibook-freight"><span className="v2-tool-icon"><Truck /></span><span><strong>Plan delivery</strong><small>Arrange delivery support for eligible equipment</small></span><ArrowRight /></Link>
             </div>
           </section>
 
           <section className="v2-home-partners" aria-label="Transaction support">
             <div className="v2-home-partners-copy">
               <p className="v2-home-eyebrow">Transaction support</p>
-              <h2>The infrastructure behind the deal.</h2>
-              <p className="v2-home-partners-sub">Everything you need to move from interest to handoff in one connected flow.</p>
+              <h2>A stronger foundation for your next move.</h2>
+              <p className="v2-home-partners-sub">From the first conversation to the final handoff, keep the important parts of your purchase connected.</p>
             </div>
             <div className="v2-home-partner-tiles">
               <article>
                 <span className="v2-home-partner-mark"><PayPalWordmark surface="light" className="h-7 w-auto" /></span>
-                <div className="v2-home-partner-copy"><h3>Secure checkout</h3><p>Smooth online payment through PayPal</p></div>
+                <div className="v2-home-partner-copy"><span className="v2-partner-label">01 / Payment</span><h3>Secure checkout</h3><p>Smooth online payment through PayPal</p></div>
               </article>
               <article className="v2-home-partner-tile--dark">
                 <span className="v2-home-partner-mark"><EquinoxFundingLogo className="h-7 w-auto" /></span>
-                <div className="v2-home-partner-copy"><h3>Equipment financing</h3><p>Financing options for qualified buyers</p></div>
+                <div className="v2-home-partner-copy"><span className="v2-partner-label">02 / Financing</span><h3>Equipment financing</h3><p>Financing options for qualified buyers</p></div>
               </article>
               <article>
                 <span className="v2-home-partner-mark"><img src={vendibookWordmark} alt="Vendibook" /></span>
-                <div className="v2-home-partner-copy"><h3>Deal workflow &amp; records</h3><p>Messages, agreements, tracking, and order details in one place</p></div>
+                <div className="v2-home-partner-copy"><span className="v2-partner-label">03 / Handoff</span><h3>Deal workflow &amp; records</h3><p>Messages, agreements, tracking, and order details in one place</p></div>
               </article>
             </div>
           </section>
