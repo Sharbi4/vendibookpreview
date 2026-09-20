@@ -1,8 +1,6 @@
 import { Suspense, lazy } from 'react';
 import { Link } from 'react-router-dom';
 import WorkspaceShell from '@/components/workspace/WorkspaceShell';
-import PayPalReadyBadge from '@/components/workspace/PayPalReadyBadge';
-import SellerPayPalConnect from '@/components/account/SellerPayPalConnect';
 import { PayPalWordmark } from '@/components/brand/ProviderLogos';
 import WorkspaceBookingPayments from '@/components/workspace/WorkspaceBookingPayments';
 import PayoutCalendar from '@/components/workspace/PayoutCalendar';
@@ -34,34 +32,24 @@ export default function WorkspacePayments() {
           <p>Manage PayPal setup, earnings, purchases, receipts, and disputes.</p>
         </header>
 
-        <section className="v2-paypal-module">
-          <div className="v2-paypal-header">
-            <div>
-              <p>Payment partner</p>
-              <PayPalWordmark className="mt-2 h-6" />
+        <section className="v2-panel p-5 sm:p-6">
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="max-w-2xl">
+              <div className="mb-2 flex items-center gap-2"><PayPalWordmark surface="light" /><span className="text-sm font-semibold">&amp; Vendibook</span></div>
+              <h2 className="font-semibold">Your business. Payments made simpler.</h2>
+              <p className="mt-1 text-sm text-muted-foreground">Connect PayPal from your main dashboard. Track earnings, receipts, and payment activity here.</p>
             </div>
-            <div className="flex flex-col items-end gap-2">
-              <span>Business account connection</span>
-              <PayPalReadyBadge tone="dark" showDetails />
+            <Link to="/dashboard" className="v2-btn-outline">Go to dashboard</Link>
+          </div>
+          <details className="mt-4 border-t pt-4 text-sm">
+            <summary className="cursor-pointer font-medium">Learn about receiving payments</summary>
+            <div className="mt-3 space-y-3 text-muted-foreground">
+              <p>Buyers pay through PayPal on eligible listings. You can create and publish listings before connecting your account.</p>
+              <SellerBusinessAccountHelp compact />
+              <p>PayPal sets processing rates, which may vary by funding source. Review your payment settings for account requirements.</p>
+              <Link to="/dashboard/payments/setup" className="inline-block font-medium underline underline-offset-4">Payment settings</Link>
             </div>
-          </div>
-          <div className="v2-paypal-body">
-            <h2>Accept secure online payments</h2>
-            <p>
-              Connect PayPal to accept online checkout on eligible listings. Your connection status,
-              earnings, receipts, and payment activity stay organized here. You can create and
-              publish listings before connecting.
-            </p>
-            <SellerBusinessAccountHelp className="mt-3" compact />
-            <p className="mt-3 text-xs">
-              Pay Later and other funding sources may have different processing rates set and
-              charged by PayPal to you as the seller. See PayPal for current pricing.
-            </p>
-            <Link to="/dashboard/payments/setup" className="v2-paypal-cta mt-4 inline-flex w-fit">
-              Set up PayPal
-            </Link>
-          </div>
-          <SellerPayPalConnect showWhenDisabled variant="dark" />
+          </details>
         </section>
 
         <section className="v2-panel">
