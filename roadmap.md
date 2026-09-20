@@ -136,5 +136,7 @@
       signature verification; unsigned requests rejected.
 - [x] Production subscription plans provisioned: Vendibook Pro $79/mo,
       PermitPath Plus $7.99/mo.
-- [ ] Reconciliation schedule for square-reconcile (manual call for now).
-- [ ] Refund handling for Square purchases.
+- [x] Daily reconciliation job for square-reconcile (09:25 UTC, operator-token authed).
+- [x] Refund handling for Square purchases (admin-monetization-refund: Square refund,
+      full refund cancels the subscription, audit entry, refund event recorded).
+- [x] Verified add-ons + Featured Boost route through Square and auto-fulfil.
