@@ -6,9 +6,32 @@ import {
   getMerchantIntegrationStatus,
   PayPalError,
   paypalOnboardingEnvironment,
+  paypalRequest,
   safeLog,
   sellerOnboardingEnabled,
 } from "../_shared/paypal.ts";
+
+/**
+ * When the merchant-integrations lookup answers 401 AUTHORIZATION_ERROR, the
+ * configured partner id almost never matches the account that owns the REST
+ * app credentials. Ask PayPal which account the client credentials belong to
+ * (the payer id — a public account identifier, not a secret) and log it so
+ * support can compare it with PAYPAL_SANDBOX_PARTNER_MERCHANT_ID.
+ */
+async function probePartnerIdentity(): Promise<void> {
+  try {
+    const ident = await paypalRequest<{ user_id?: string }>(
+      "/v1/identity/oauth2/userinfo",
+      { environment: paypalOnboardingEnvironment(), retries: 0 },
+    );
+    safeLog("partner_identity_probe", {
+      user_id: typeof ident?.user_id === "string" ? ident.user_id : null,
+      environment: paypalOnboardingEnvironment(),
+    });
+  } catch {
+    safeLog("partner_identity_probe_failed", {});
+  }
+}
 
 /**
  * paypal-seller-onboarding — Step 2 of the PayPal Complete Payments /
