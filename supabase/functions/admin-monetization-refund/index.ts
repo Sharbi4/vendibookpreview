@@ -49,13 +49,89 @@ serve(async (req) => {
 
     const { data: purchase, error: pErr } = await supabase
       .from("monetization_purchases")
-      .select("id,user_id,status,amount_cents,currency,payment_provider")
+      .select("id,user_id,status,amount_cents,currency,payment_provider,square_payment_id")
       .eq("id", body.purchase_id)
       .maybeSingle();
     if (pErr) throw pErr;
     if (!purchase) throw new Error("Purchase not found");
     if (!["paid", "fulfilled"].includes(purchase.status)) {
       throw new Error(`Cannot refund status=${purchase.status}`);
+    }
+
+    const requestedAmount = body.amount_cents ?? purchase.amount_cents ?? 0;
+    if (requestedAmount <= 0) throw new Error("Refund amount must be > 0");
+    if (purchase.amount_cents && requestedAmount > purchase.amount_cents) {
+      throw new Error("Refund exceeds purchase amount");
+    }
+    const fullRefund = !!purchase.amount_cents && requestedAmount >= purchase.amount_cents;
+
+    // Square handles Vendibook-owned subscriptions and add-ons.
+    if (purchase.square_payment_id) {
+      const squarePaymentId = purchase.square_payment_id as string;
+      const squareRefund = await refundSquarePayment({
+        paymentId: squarePaymentId,
+        amountCents: requestedAmount,
+        currency: (purchase.currency ?? "USD").toUpperCase(),
+        idempotencyKey: `sqref-${purchase.id}-${requestedAmount}`,
+        reason: body.note || body.reason || "requested_by_customer",
+      });
+
+      const { data: attempt } = await supabase
+        .from("square_billing_attempts")
+        .select("id,kind,subscription_id")
+        .eq("purchase_id", purchase.id)
+        .maybeSingle();
+
+      let subscriptionCanceled: string | undefined;
+      if (fullRefund && attempt?.subscription_id) {
+        try {
+          subscriptionCanceled = await cancelSquareSubscription(attempt.subscription_id);
+        } catch (err) {
+          log("Subscription cancel failed", { message: (err as Error).message });
+        }
+      }
+
+      if (fullRefund) {
+        await supabase
+          .from("monetization_purchases")
+          .update({ status: "refunded", refunded_at: new Date().toISOString() })
+          .eq("id", purchase.id);
+        if (attempt?.id) {
+          await supabase.from("square_billing_attempts").update({ status: "refunded" }).eq("id", attempt.id);
+        }
+      }
+
+      await supabase.from("monetization_refund_events").insert({
+        purchase_id: purchase.id,
+        stripe_event_id: `admin_square_${squareRefund.id ?? purchase.id}`,
+        stripe_refund_id: squareRefund.id ?? null,
+        stripe_charge_id: squarePaymentId,
+        refund_amount_cents: requestedAmount,
+        refund_status: fullRefund ? "full" : "partial",
+        currency: purchase.currency ?? "usd",
+        metadata: { source: "admin_refund", provider: "square", admin_id: admin.id, note: body.note ?? "" },
+      });
+
+      await auditPayment(supabase, {
+        actorId: admin.id,
+        actorRole: "admin",
+        action: "square_refund",
+        entityType: "monetization_purchase",
+        entityId: purchase.id,
+        provider: "square",
+        refundId: squareRefund.id ?? null,
+        metadata: {
+          amount_cents: requestedAmount,
+          full: fullRefund,
+          refund_status: squareRefund.status ?? null,
+          subscription_canceled: subscriptionCanceled ?? null,
+        },
+      });
+
+      return new Response(
+        JSON.stringify({ ok: true, provider: "square", refund_id: squareRefund.id, status: squareRefund.status }),
+        { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
     // Vendibook refunds through PayPal only. The capture reference lives on the
@@ -74,18 +150,14 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({
           error:
-            "This purchase has no PayPal capture on file. It predates PayPal and must be refunded manually.",
+            "This purchase has no payment on file with PayPal or Square. It must be refunded manually.",
           manual: true,
         }),
         { status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
 
-    const requested = body.amount_cents ?? purchase.amount_cents ?? 0;
-    if (requested <= 0) throw new Error("Refund amount must be > 0");
-    if (purchase.amount_cents && requested > purchase.amount_cents) {
-      throw new Error("Refund exceeds purchase amount");
-    }
+    const requested = requestedAmount;
 
     log("Issuing refund", { purchase_id: purchase.id, captureId, requested });
 
