@@ -338,6 +338,24 @@ export async function finalizeCapture(
         .eq("id", record.booking_request_id).eq("payment_lock_record_id", record.id).neq("payment_status", "paid");
     }
 
+    // Keep the sale in step with the payment. A declined/failed capture must
+    // not leave the order sitting at `pending` — it moves to `payment_failed`,
+    // which is a recoverable state the buyer can retry from. A `pending`
+    // capture stays `pending`: PayPal is still reviewing it.
+    if (record.sale_transaction_id && (paymentStatus === "declined" || paymentStatus === "failed")) {
+      const { error: saleErr } = await supabase
+        .from("sale_transactions")
+        .update({ status: "payment_failed" })
+        .eq("id", record.sale_transaction_id)
+        .in("status", ["pending", "payment_authorized"]);
+      if (saleErr) {
+        safeLog("sale_status_sync_failed", {
+          reference: record.reference,
+          reason: saleErr.message,
+        });
+      }
+    }
+
 
     if (paymentStatus === "pending") {
       await notifyOrderParties(supabase, current, {
