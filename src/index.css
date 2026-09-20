@@ -2842,9 +2842,13 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
 .v2-home-paypal {
   display: flex; align-items: center; gap: 30px;
   background: transparent;
+  border: 1px solid hsl(28 12% 20% / .16);
+  border-radius: 18px;
   padding: 28px 32px;
+  transition: border-color .16s ease;
 }
-.v2-home-paypal-mark { display: block; flex: none; width: 320px; max-width: 46%; }
+.v2-home-paypal:hover { border-color: hsl(28 12% 20% / .32); }
+.v2-home-paypal-mark { display: block; flex: none; width: 420px; max-width: 52%; }
 .v2-home-paypal-mark img { display: block; width: 100%; height: auto; }
 .v2-home-paypal-copy { display: grid; gap: 4px; min-width: 0; }
 .v2-home-paypal-copy strong { color: hsl(28 10% 12%); font-size: 16.5px; font-weight: 660; letter-spacing: .002em; }
@@ -2857,7 +2861,7 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
 .v2-home-paypal:hover .v2-home-paypal-cta svg { transform: translateX(3px); }
 @media (max-width: 639px) {
   .v2-home-paypal { flex-direction: column; align-items: flex-start; gap: 16px; padding: 22px 20px; }
-  .v2-home-paypal-mark { width: 240px; max-width: 100%; }
+  .v2-home-paypal-mark { width: 300px; max-width: 100%; }
   .v2-home-paypal-cta { margin-left: 0; }
 }
 
