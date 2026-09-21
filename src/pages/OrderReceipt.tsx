@@ -375,7 +375,7 @@ const OrderReceipt = () => {
                   </div>
                 ) : null}
                 <div className="mt-1">
-                  <dt className="inline">Paid with </dt>
+                  <dt className="inline">Payment processed through </dt>
                   <dd className="inline text-foreground">
                     {paymentMethodLabel}
                   </dd>
@@ -473,7 +473,7 @@ const OrderReceipt = () => {
                   ) : null}
                   <tr className="border-t border-border/70">
                     <td className="pt-3 font-medium text-foreground" colSpan={2}>
-                      Total paid
+                      Order total paid through PayPal
                     </td>
                     <td className="pt-3 text-right text-xl font-semibold tracking-tight text-foreground">
                       {usd(totalCents, order.currency)}
@@ -481,6 +481,9 @@ const OrderReceipt = () => {
                   </tr>
                 </tbody>
               </table>
+              <p className="mt-3 text-xs text-muted-foreground">
+                This receipt records the full order payment processed by PayPal. If you used Pay in 4 or Pay Monthly, your amount due today and remaining payments follow your approved PayPal plan. View that plan in your PayPal account.
+              </p>
             </section>
 
             {/* Parties + fulfillment */}

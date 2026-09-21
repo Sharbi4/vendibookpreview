@@ -223,7 +223,7 @@ export function generateReceiptPdf(data: ReceiptData): void {
   doc.setTextColor(...darkColor);
   doc.setFontSize(12);
   doc.setFont('helvetica', 'bold');
-  doc.text('Total Paid', 28, yPos);
+  doc.text('Full order total', 28, yPos);
   doc.setTextColor(...primaryColor);
   doc.setFontSize(16);
   doc.text(formatCurrency(data.amount), pageWidth - 28, yPos, { align: 'right' });

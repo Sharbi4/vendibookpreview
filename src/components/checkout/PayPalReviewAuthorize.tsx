@@ -195,7 +195,7 @@ const PayPalReviewAuthorize = ({
   return (
     <div className="space-y-5">
       <div>
-        <h3 className="text-lg font-semibold tracking-tight text-foreground">Review &amp; authorize</h3>
+        <h3 className="text-lg font-semibold tracking-tight text-foreground">Review &amp; confirm</h3>
         <p className="mt-1 text-xs text-muted-foreground">
           Check the details below, then submit your payment. Your payment status will appear here.
         </p>
@@ -227,6 +227,10 @@ const PayPalReviewAuthorize = ({
         ) : null}
       </div>
 
+
+      <p className="text-xs text-muted-foreground">
+        If you selected Pay in 4 or Pay Monthly in PayPal, your amount due today and future payments follow the plan you approved there. This is the full order total, not an installment amount.
+      </p>
 
       {/* The item */}
       {data.listing ? (
