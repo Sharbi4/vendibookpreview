@@ -333,3 +333,31 @@ verify_jwt = false
 # JWT validated through auth.getUser inside the handler (supports current signing keys).
 [functions.signnow-ensure-rental-agreement]
 verify_jwt = false
+
+# Authenticated inside the handler: Daily signature/secret or verified user token.
+[functions.daily-webhook]
+verify_jwt = false
+
+# Authenticated inside the handler: Daily signature/secret or verified user token.
+[functions.daily-meeting-join-hook]
+verify_jwt = false
+
+# Authenticated inside the handler: Daily signature/secret or verified user token.
+[functions.video-walkthrough-access]
+verify_jwt = false
+
+# Authenticated inside the handler: Daily signature/secret or verified user token.
+[functions.video-walkthrough-recording-access]
+verify_jwt = false
+
+# Authenticated inside the handler: Daily signature/secret or verified user token.
+[functions.video-walkthrough-exit]
+verify_jwt = false
+
+# Authenticated inside the handler: Daily signature/secret or verified user token.
+[functions.video-walkthrough-notify]
+verify_jwt = false
+
+# The bootstrap handler verifies the user and requires administrator role.
+[functions.daily-webhook-bootstrap]
+verify_jwt = false

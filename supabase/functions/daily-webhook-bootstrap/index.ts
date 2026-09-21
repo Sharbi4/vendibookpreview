@@ -53,6 +53,7 @@ Deno.serve(async (req) => {
     };
 
     const existing = await call('/webhooks', { method: 'GET' });
+    if (!existing.ok) return json({ error: 'webhook_lookup_failed', message: 'Could not check existing Daily webhooks. Retry without creating a duplicate subscription.' }, 502);
     const list: any[] = Array.isArray(existing.body?.data) ? existing.body.data : Array.isArray(existing.body) ? existing.body : [];
     const mine = list.find((w) => w?.url === url);
 

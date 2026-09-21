@@ -46,10 +46,10 @@ Deno.serve(async (req) => {
   const eventType: string = payload.type || payload.event_type || 'unknown';
   const data: Record<string, any> = payload.payload || payload.data || payload;
   const roomName: string | null = data.room_name || data.room || null;
-  const sessionId: string | null = data.meeting_session_id || data.session_id || data.mtgSessionId || null;
+  const sessionId: string | null = data.mtg_session_id || data.meeting_session_id || data.session_id || data.mtgSessionId || null;
   const recordingId: string | null = data.recording_id || data.recordingId || data.id || null;
   const participantId: string | null = data.user_id || data.participant_id || null;
-  const dedupeKey = [eventType, sessionId || '', recordingId || '', participantId || '', payload.event_ts || timestamp].join('|');
+  const dedupeKey = payload.id || [eventType, sessionId || '', recordingId || '', participantId || '', payload.event_ts || timestamp].join('|');
 
   const { error: dupeError } = await admin.from('daily_webhook_events').insert({
     dedupe_key: dedupeKey,
@@ -61,7 +61,8 @@ Deno.serve(async (req) => {
     payload: { type: eventType, room_name: roomName, session_id: sessionId, recording_id: recordingId },
   });
   // A duplicate delivery is a success, not an error.
-  if (dupeError) return json({ received: true, duplicate: true }, 200);
+  if (dupeError?.code === '23505') return json({ received: true, duplicate: true }, 200);
+  if (dupeError) return json({ error: 'event_storage_failed' }, 503);
 
   try {
     let walkthroughId: string | null = null;
@@ -135,7 +136,7 @@ Deno.serve(async (req) => {
           const { data: row } = await admin.from('video_walkthrough_recordings')
             .select('id, status').eq('walkthrough_id', walkthroughId)
             .order('created_at', { ascending: false }).limit(1).maybeSingle();
-          if (row && RANK[row.status] < RANK.ready) {
+          if (row && row.status !== 'ready') {
             // Only the provider recording id is stored — never a playback URL.
             await admin.from('video_walkthrough_recordings').update({
               status: 'ready',

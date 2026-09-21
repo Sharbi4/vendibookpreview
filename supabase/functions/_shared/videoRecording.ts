@@ -24,23 +24,17 @@ export type RecordingAttempt =
 const requiredUserIds = (w: { buyer_id: string; seller_id: string }) => [w.buyer_id, w.seller_id];
 
 export async function hasRecordingConsent(db: Db, walkthroughId: string, userId: string): Promise<boolean> {
-  const { data } = await db
+  // Consent is specific to this meeting and the current recording notice.
+  // A general acceptance or consent for another call cannot authorize recording.
+  const { data, error } = await db
     .from('video_walkthrough_consents')
     .select('id')
     .eq('walkthrough_id', walkthroughId)
     .eq('user_id', userId)
     .eq('recording_consent_granted', true)
+    .eq('recording_consent_version', LEGAL_VERSIONS['recording-consent'])
     .limit(1);
-  if (Array.isArray(data) && data.length > 0) return true;
-  // Fall back to the versioned acceptance ledger for the recording notice.
-  const { data: accepted } = await db
-    .from('legal_acceptances')
-    .select('id')
-    .eq('user_id', userId)
-    .eq('document_slug', 'recording-consent')
-    .eq('document_version', LEGAL_VERSIONS['recording-consent'])
-    .limit(1);
-  return Array.isArray(accepted) && accepted.length > 0;
+  return !error && Array.isArray(data) && data.length > 0;
 }
 
 export async function consentStatus(db: Db, w: { id: string; buyer_id: string; seller_id: string }) {

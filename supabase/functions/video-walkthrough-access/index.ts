@@ -1,3 +1,4 @@
+import { hasRecordingConsent } from '../_shared/videoRecording.ts';
 /**
  * Mints a per-participant join token for a Vendibook meeting.
  *
@@ -50,9 +51,7 @@ Deno.serve(async(req)=>{
     // Explicit recording consent for THIS meeting is required before a token
     // is issued; refusal simply means no token and no entry.
     if(isParticipant){
-      const {data:consent}=await admin.from('video_walkthrough_consents').select('id')
-        .eq('walkthrough_id',w.id).eq('user_id',user.id).eq('recording_consent_granted',true).limit(1);
-      if(!Array.isArray(consent)||consent.length===0){
+      if(!await hasRecordingConsent(admin,w.id,user.id)){
         return json({error:'recording_consent_required',message:'Please confirm you agree to participate in this recorded video walkthrough.'},403);
       }
     }
