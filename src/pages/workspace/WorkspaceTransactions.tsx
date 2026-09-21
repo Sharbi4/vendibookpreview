@@ -48,7 +48,7 @@ export default function WorkspaceTransactions() {
   const loading = isLoading || buyer.isLoading || seller.isLoading || rentals.isLoading || hosted.isLoading;
   return <WorkspaceShell><div className="v2-page-stack">
     <header className="v2-page-heading"><p className="v2-eyebrow">Your deals, together</p><h1>Transactions</h1><p>Follow payments, handoffs, and paperwork from one place.</p>
-      <div className="flex flex-wrap gap-3 mt-4"><Button asChild variant="outline"><Link to="/dashboard/cases">Support cases</Link></Button><Button asChild variant="ghost"><Link to="/dashboard/activity">Walkthroughs & activity</Link></Button></div>
+      <div className="flex flex-wrap gap-3 mt-4"><Link className="v2-btn-outline" to="/dashboard/cases">Support cases</Link><Link className="v2-btn-quiet" to="/dashboard/activity">Walkthroughs & activity</Link></div>
     </header>
     <div className="v2-filter-row">{['All', 'Purchases', 'Sales', 'Rentals', 'Other'].map(f => <button key={f} className={`v2-filter${filter === f ? ' is-active' : ''}`} aria-pressed={filter === f} onClick={() => setFilter(f)}>{f}</button>)}</div>
     {loading ? <div role="status" aria-label="Loading transactions"><Loader2 className="animate-spin" /></div> : !visible.length ? <section className="v2-panel p-8"><h2>No transactions here yet</h2><p className="text-muted-foreground mt-2">Your purchases, sales, and rental requests will appear here.</p><Button asChild variant="cta" className="mt-5"><Link to="/browse">Browse now</Link></Button></section> : visible.map(r => <article className="v2-panel p-5 sm:p-6" key={r.id}>

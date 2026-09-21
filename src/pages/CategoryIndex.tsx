@@ -358,7 +358,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
       <li key={l.id}>
         <Link
           to={`/listing/${l.id}`}
-          className="group block h-full rounded-xl border border-border bg-card overflow-hidden hover:border-primary transition-colors"
+          className="seo-marketplace-card group block h-full rounded-xl border border-border bg-card overflow-hidden hover:border-primary transition-colors"
         >
           <div className="aspect-[4/3] bg-muted overflow-hidden">
             {l.cover_image_url ? (
@@ -470,7 +470,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
       : `${primary.length} ${catPluralLower}${intentLabel ? ` ${intentLabel}` : ''} available`;
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="sale-light commerce-readable seo-marketplace min-h-screen flex flex-col bg-background">
       <SEO
         title={config.title}
         description={config.description}
@@ -498,7 +498,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
             </BreadcrumbList>
           </Breadcrumb>
 
-          <header className="space-y-4 max-w-3xl">
+          <header className="seo-marketplace-hero space-y-5">
             <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-foreground">
               {config.h1}
             </h1>
@@ -512,7 +512,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
               </p>
             )}
             <div className="flex flex-wrap gap-2 pt-2">
-              <Button asChild variant="dark-shine">
+              <Button asChild variant="default" className="v2-btn">
                 <Link to={searchHref}>
                   Search {catPluralLower} {intentLabel}
                 </Link>
@@ -681,7 +681,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button asChild variant="dark-shine">
+              <Button asChild variant="default" className="v2-btn">
                 <Link to={sellerCta.ctaHref}>
                   {sellerCta.ctaLabel}
                 </Link>

@@ -154,7 +154,7 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
 
   if (!city || !categoryLabel || !dbCategory) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
+      <div className="sale-light commerce-readable seo-marketplace min-h-screen flex flex-col bg-background">
         <Header />
         <div className="flex-1 container py-16 text-center">
           <h1 className="text-2xl font-bold text-foreground mb-4">Page not found</h1>
@@ -261,7 +261,7 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
   }));
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="sale-light commerce-readable seo-marketplace min-h-screen flex flex-col bg-background">
       {/* Zero live listings = thin page; the expand-search module adds user value but not indexability. */}
       <SEO title={seoTitle} description={metaDescription} canonical={canonicalPath} noindex={!isLoading && listings.length === 0} />
       <JsonLd schema={[itemListSchema, breadcrumbSchema, faqSchema]} />
@@ -310,7 +310,7 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
           </Breadcrumb>
 
           {/* H1 */}
-          <div className="space-y-4">
+          <div className="seo-marketplace-hero space-y-4">
             <h1 className="text-3xl md:text-4xl font-bold text-foreground">
               {override?.h1 ?? `${categoryLabel} ${modeLabel} in ${city.name}, ${city.stateCode}`}
             </h1>
@@ -340,7 +340,7 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
                   <Link
                     key={l.id}
                     to={`/listing/${l.id}`}
-                    className="group rounded-xl overflow-hidden border border-border hover:shadow-lg transition-shadow bg-card"
+                    className="seo-marketplace-card group rounded-xl overflow-hidden border border-border hover:shadow-lg transition-shadow bg-card"
                   >
                     <div className="aspect-[4/3] overflow-hidden bg-muted relative">
                       <img

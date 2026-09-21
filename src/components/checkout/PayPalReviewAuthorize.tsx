@@ -193,10 +193,10 @@ const PayPalReviewAuthorize = ({
   const address = data.fulfillment.address as any;
 
   return (
-    <div className="space-y-5">
+    <div className="sale-light commerce-readable space-y-5 rounded-2xl bg-background p-4 sm:p-5">
       <div>
         <h3 className="text-lg font-semibold tracking-tight text-foreground">Review &amp; confirm</h3>
-        <p className="mt-1 text-xs text-muted-foreground">
+        <p className="mt-1 text-sm text-muted-foreground">
           Check the details below, then submit your payment. Your payment status will appear here.
         </p>
       </div>
@@ -212,14 +212,14 @@ const PayPalReviewAuthorize = ({
           <p className="mt-1 text-sm font-semibold text-foreground">{method}</p>
         ) : null}
         {method && data.funding.email ? (
-          <p className="text-xs text-muted-foreground">{data.funding.email}</p>
+          <p className="text-sm text-muted-foreground">{data.funding.email}</p>
         ) : null}
         <p className="mt-2 text-sm text-foreground">
           {payLater ? 'Order total' : 'Amount to be charged'}:{' '}
           <span className="font-semibold">{amount}</span>
         </p>
         {payLater ? (
-          <p className="mt-1.5 text-xs text-muted-foreground">
+          <p className="mt-1.5 text-sm text-muted-foreground">
             You are not paying {amount} today. PayPal splits this purchase into the instalments
             you approved and bills you on that schedule — the amounts and dates are shown in your
             PayPal account. Vendibook charges the order total to PayPal, not to you directly.
@@ -228,7 +228,7 @@ const PayPalReviewAuthorize = ({
       </div>
 
 
-      <p className="text-xs text-muted-foreground">
+      <p className="text-sm text-muted-foreground">
         If you selected Pay in 4 or Pay Monthly in PayPal, your amount due today and future payments follow the plan you approved there. This is the full order total, not an installment amount.
       </p>
 
@@ -244,11 +244,11 @@ const PayPalReviewAuthorize = ({
           ) : null}
           <div className="min-w-0">
             <p className="truncate text-sm font-semibold text-foreground">{data.listing.title}</p>
-            <p className="truncate text-xs text-muted-foreground">
+            <p className="truncate text-sm text-muted-foreground">
               {[data.listing.subtitle, data.listing.location].filter(Boolean).join(' · ')}
             </p>
             {data.listing.description ? (
-              <p className="mt-1 line-clamp-2 text-xs text-muted-foreground">
+              <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
                 {data.listing.description}
               </p>
             ) : null}
@@ -277,7 +277,7 @@ const PayPalReviewAuthorize = ({
 
 
       {(data.fulfillment.method || address) ? (
-        <div className="rounded-2xl border border-border/70 px-4 py-3 text-xs text-muted-foreground">
+        <div className="rounded-2xl border border-border/70 px-4 py-3 text-sm text-muted-foreground">
           {data.fulfillment.method ? (
             <p className="text-foreground">
               Fulfillment: <span className="font-medium">{data.fulfillment.method}</span>
@@ -301,7 +301,7 @@ const PayPalReviewAuthorize = ({
         </div>
       ) : null}
 
-      <label className="flex cursor-pointer items-start gap-3 text-xs text-muted-foreground">
+      <label className="flex cursor-pointer items-start gap-3 text-sm text-muted-foreground">
         <Checkbox
           checked={accepted}
           onCheckedChange={(v) => setAccepted(v === true)}

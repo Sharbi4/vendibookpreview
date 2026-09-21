@@ -310,7 +310,7 @@ const OrderReceipt = () => {
 
   if (order && order.payment_status !== 'completed') {
     const pending = order.payment_status === 'pending';
-    return <div className="sale-light min-h-screen bg-[#f8f6f2]"><Header />
+    return <div className="sale-light commerce-readable min-h-screen bg-[#f8f6f2]"><Header />
       <main className="mx-auto max-w-2xl p-8"><section className="rounded-3xl border bg-[#fffdf9] p-8 space-y-4" role="status">
         <h1 className="text-2xl font-semibold">{pending ? 'Payment pending' : 'Payment not completed'}</h1>
         <p>{pending ? 'PayPal is still processing your payment. Your booking is not marked paid. Do not pay again while this is pending.' : 'This transaction has not completed. Open your booking to review the payment status and available next step.'}</p>
@@ -321,7 +321,7 @@ const OrderReceipt = () => {
   }
 
   return (
-    <div className="sale-light min-h-screen bg-[#f8f6f2]">
+    <div className="sale-light commerce-readable min-h-screen bg-[#f8f6f2]">
       <SEO title="Receipt | Vendibook" description="Your Vendibook order receipt." noindex />
       <Header />
 
