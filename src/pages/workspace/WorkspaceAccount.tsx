@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import {
   Bell,
   CreditCard,
@@ -98,6 +99,7 @@ export default function WorkspaceAccount() {
   const [openPersonal, setOpenPersonal] = useState(false);
   const [openPublic, setOpenPublic] = useState(false);
   const [openPassword, setOpenPassword] = useState(false);
+  const [openCloseAccount, setOpenCloseAccount] = useState(false);
 
   const loadProfile = async () => {
     if (!user) return;
@@ -328,6 +330,12 @@ export default function WorkspaceAccount() {
               </section>
             )}
 
+            <section className="v2-panel p-5 sm:p-6" aria-labelledby="close-account-heading">
+              <h2 id="close-account-heading" className="text-base font-semibold">Close account</h2>
+              <p className="mt-2 text-sm text-[#57514b]">Ready to leave Vendibook? Request account closure with our support team.</p>
+              <button type="button" className="v2-btn-outline mt-4" onClick={() => setOpenCloseAccount(true)}>Close account</button>
+            </section>
+
             <div className="v2-account-grid">
               {linkGroups.map((group) => (
                 <section className="v2-panel" key={group.title}>
@@ -354,6 +362,24 @@ export default function WorkspaceAccount() {
           </>
         )}
       </div>
+
+      <Dialog open={openCloseAccount} onOpenChange={setOpenCloseAccount}>
+        <DialogContent className="sale-light commerce-readable sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Request account closure</DialogTitle>
+            <DialogDescription className="text-[#57514b]">
+              Email support from the address on your account. We’ll confirm your request and review any open bookings, sales, payouts, or subscriptions before closing your account.
+            </DialogDescription>
+          </DialogHeader>
+          <p className="text-sm text-[#57514b]">Transaction records may need to be retained. Opening this email does not close your account or cancel a subscription.</p>
+          <p className="text-sm">Account email: <strong>{user?.email || row.email}</strong></p>
+          <DialogFooter className="gap-2">
+            <button type="button" className="v2-btn-outline" onClick={() => setOpenCloseAccount(false)}>Keep my account</button>
+            <a className="v2-btn" href={`mailto:support@vendibook.com?subject=${encodeURIComponent('Vendibook account closure request')}&body=${encodeURIComponent('Hello Vendibook Support,\n\nPlease close my Vendibook account associated with ' + (user?.email || row.email) + '. Please let me know if any open transactions or subscriptions need attention.\n\nThank you.')}`}>Email closure request</a>
+          </DialogFooter>
+          <p className="text-xs text-[#57514b]">If your email app doesn’t open, email support@vendibook.com from your account address.</p>
+        </DialogContent>
+      </Dialog>
 
       {user && (
         <>
