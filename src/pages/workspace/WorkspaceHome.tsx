@@ -22,7 +22,6 @@ import {
   Video,
 } from 'lucide-react';
 import WorkspaceShell from '@/components/workspace/WorkspaceShell';
-import SellerPayPalConnect from '@/components/account/SellerPayPalConnect';
 import { useAuth } from '@/contexts/AuthContext';
 import { useHostListings } from '@/hooks/useHostListings';
 import { useShopperBookings } from '@/hooks/useShopperBookings';

@@ -1,12 +1,9 @@
 import { Suspense, lazy } from 'react';
-import { Link } from 'react-router-dom';
 import WorkspaceShell from '@/components/workspace/WorkspaceShell';
-import { PayPalWordmark } from '@/components/brand/ProviderLogos';
 import WorkspaceBookingPayments from '@/components/workspace/WorkspaceBookingPayments';
 import PayoutCalendar from '@/components/workspace/PayoutCalendar';
 import SellerPayoutBalance from '@/components/workspace/SellerPayoutBalance';
 import SellerEarningsTable from '@/components/workspace/SellerEarningsTable';
-import SellerBusinessAccountHelp from '@/components/payments/SellerBusinessAccountHelp';
 
 const PayoutsPanel = lazy(() => import('@/components/dashboard/tabs/PayoutsPanel'));
 const TransactionsDisputesTab = lazy(
