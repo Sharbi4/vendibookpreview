@@ -14,6 +14,21 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_closures: {
+        Row: {
+          closed_at: string
+          user_id: string
+        }
+        Insert: {
+          closed_at?: string
+          user_id: string
+        }
+        Update: {
+          closed_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_action_idempotency: {
         Row: {
           action: string
@@ -12095,6 +12110,7 @@ export type Database = {
       }
     }
     Functions: {
+      account_access_active: { Args: never; Returns: boolean }
       acknowledge_transaction_terms: {
         Args: { _ip: unknown; _terms_id: string; _ua: string }
         Returns: undefined
@@ -12292,6 +12308,7 @@ export type Database = {
         Args: { _user_id: string }
         Returns: boolean
       }
+      close_my_account: { Args: { confirmation: string }; Returns: Json }
       count_purchase_referrals_this_month: {
         Args: { p_referrer_id: string }
         Returns: number

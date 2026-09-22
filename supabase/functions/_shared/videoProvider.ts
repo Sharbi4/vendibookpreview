@@ -13,6 +13,8 @@ import {
   roomProfileFor,
 } from './videoMeetings.ts';
 
+declare const Deno: { env: { get(key: string): string | undefined } };
+
 export type VideoRoom = { roomName: string; roomUrl: string; expiresAt: string; notBefore: string; created: boolean };
 export type VideoJoin = { roomUrl: string; token: string; expiresAt: string };
 
