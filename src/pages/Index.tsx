@@ -86,7 +86,7 @@ const Index = () => {
 
   const saleQuery = useQuery({
     queryKey: ['home-v2-sale'],
-    queryFn: () => fetchListings('sale', ['food_truck', 'food_trailer']),
+    queryFn: () => fetchListings('sale', ['food_truck', 'food_trailer'], ROW_LIMIT * 2),
     staleTime: 60000,
   });
 

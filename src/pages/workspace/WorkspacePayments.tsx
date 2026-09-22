@@ -32,25 +32,6 @@ export default function WorkspacePayments() {
           <p>Manage PayPal setup, earnings, purchases, receipts, and disputes.</p>
         </header>
 
-        <section className="v2-panel p-5 sm:p-6">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="max-w-2xl">
-              <div className="mb-2 flex items-center gap-2"><PayPalWordmark surface="light" /><span className="text-sm font-semibold">&amp; Vendibook</span></div>
-              <h2 className="font-semibold">Your business. Payments made simpler.</h2>
-              <p className="mt-1 text-sm text-muted-foreground">Connect PayPal from your main dashboard. Track earnings, receipts, and payment activity here.</p>
-            </div>
-            <Link to="/dashboard" className="v2-btn-outline">Go to dashboard</Link>
-          </div>
-          <details className="mt-4 border-t pt-4 text-sm">
-            <summary className="cursor-pointer font-medium">Learn about receiving payments</summary>
-            <div className="mt-3 space-y-3 text-muted-foreground">
-              <p>Buyers pay through PayPal on eligible listings. You can create and publish listings before connecting your account.</p>
-              <SellerBusinessAccountHelp compact />
-              <p>PayPal sets processing rates, which may vary by funding source. Review your payment settings for account requirements.</p>
-              <Link to="/dashboard/payments/setup" className="inline-block font-medium underline underline-offset-4">Payment settings</Link>
-            </div>
-          </details>
-        </section>
 
         <section className="v2-panel">
           <SellerPayoutBalance />
