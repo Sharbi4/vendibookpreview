@@ -132,19 +132,16 @@ const Index = () => {
             <span className="v2-home-financing-cta">See financing options<ArrowRight aria-hidden="true" /></span>
           </Link>
 
-          {(() => {
-            const featured = featuredQuery.data ?? [];
-            const firstRow = featured.slice(0, 6);
-            const secondRow = featured.slice(6);
-            return (
-              <>
-                <V2ListingRow title="Featured on Vendibook" subtitle="Listings getting extra visibility right now." listings={firstRow} isLoading={featuredQuery.isLoading} viewAllHref="/search" viewAllLabel="Browse marketplace" priority featured />
-                {secondRow.length > 0 && (
-                  <V2ListingRow title="More featured picks" subtitle="Even more boosted listings worth a look." listings={secondRow} viewAllHref="/search" viewAllLabel="Browse marketplace" featured />
-                )}
-              </>
-            );
-          })()}
+          <V2ListingRow
+            title="Featured on Vendibook"
+            subtitle="Listings getting extra visibility right now."
+            listings={(featuredQuery.data ?? []).slice(0, 6)}
+            isLoading={featuredQuery.isLoading}
+            viewAllHref="/search"
+            viewAllLabel="Browse marketplace"
+            priority
+            featured
+          />
 
           {(() => {
             const sales = saleQuery.data ?? [];
