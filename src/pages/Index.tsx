@@ -29,7 +29,7 @@ const SELLER_STEPS = [
 
 type ListingCategory = 'food_truck' | 'food_trailer' | 'ghost_kitchen' | 'vendor_lot' | 'vendor_space';
 
-const fetchListings = async (mode: 'sale' | 'rent', categories?: readonly ListingCategory[]) => {
+const fetchListings = async (mode: 'sale' | 'rent', categories?: readonly ListingCategory[], limit = ROW_LIMIT) => {
   let query = supabase
     .from('listings')
     .select('*')
@@ -43,7 +43,7 @@ const fetchListings = async (mode: 'sale' | 'rent', categories?: readonly Listin
 
   const { data, error } = await excludeTestListings(query)
     .order('published_at', { ascending: false })
-    .limit(ROW_LIMIT);
+    .limit(limit);
 
   if (error) throw error;
   return sortNewFirstThenFeatured(filterPubliclyVisible(data ?? []) as never) as never[];
@@ -86,7 +86,7 @@ const Index = () => {
 
   const saleQuery = useQuery({
     queryKey: ['home-v2-sale'],
-    queryFn: () => fetchListings('sale', ['food_truck', 'food_trailer']),
+    queryFn: () => fetchListings('sale', ['food_truck', 'food_trailer'], ROW_LIMIT * 2),
     staleTime: 60000,
   });
 
@@ -132,17 +132,47 @@ const Index = () => {
             <span className="v2-home-financing-cta">See financing options<ArrowRight aria-hidden="true" /></span>
           </Link>
 
-          <V2ListingRow title="Featured on Vendibook" subtitle="Listings getting extra visibility right now." listings={featuredQuery.data ?? []} isLoading={featuredQuery.isLoading} viewAllHref="/search" viewAllLabel="Browse marketplace" priority featured />
+          {(() => {
+            const featured = featuredQuery.data ?? [];
+            const firstRow = featured.slice(0, 6);
+            const secondRow = featured.slice(6);
+            return (
+              <>
+                <V2ListingRow title="Featured on Vendibook" subtitle="Listings getting extra visibility right now." listings={firstRow} isLoading={featuredQuery.isLoading} viewAllHref="/search" viewAllLabel="Browse marketplace" priority featured />
+                {secondRow.length > 0 && (
+                  <V2ListingRow title="More featured picks" subtitle="Even more boosted listings worth a look." listings={secondRow} viewAllHref="/search" viewAllLabel="Browse marketplace" featured />
+                )}
+              </>
+            );
+          })()}
 
-          <V2ListingRow
-            title="Food trucks and trailers for sale"
-            subtitle="Fresh inventory from owners and dealers nationwide."
-            listings={saleQuery.data ?? []}
-            isLoading={saleQuery.isLoading}
-            viewAllHref="/search?mode=sale&category=food_truck%2Cfood_trailer"
-            viewAllLabel="Browse all for sale"
-            priority
-          />
+          {(() => {
+            const sales = saleQuery.data ?? [];
+            const firstRow = sales.slice(0, ROW_LIMIT);
+            const secondRow = sales.slice(ROW_LIMIT);
+            return (
+              <>
+                <V2ListingRow
+                  title="Food trucks and trailers for sale"
+                  subtitle="Fresh inventory from owners and dealers nationwide."
+                  listings={firstRow}
+                  isLoading={saleQuery.isLoading}
+                  viewAllHref="/search?mode=sale&category=food_truck%2Cfood_trailer"
+                  viewAllLabel="Browse all for sale"
+                  priority
+                />
+                {secondRow.length > 0 && (
+                  <V2ListingRow
+                    title="More for sale"
+                    subtitle="Additional trucks and trailers just listed."
+                    listings={secondRow}
+                    viewAllHref="/search?mode=sale&category=food_truck%2Cfood_trailer"
+                    viewAllLabel="Browse all for sale"
+                  />
+                )}
+              </>
+            );
+          })()}
 
           <V2ListingRow
             title="Available to rent"
