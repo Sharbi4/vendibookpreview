@@ -5093,6 +5093,84 @@ export type Database = {
           },
         ]
       }
+      message_safety_events: {
+        Row: {
+          created_at: string
+          evidence: Json
+          id: string
+          reason: string
+          reporter_id: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          thread_id: string
+          thread_kind: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          evidence?: Json
+          id?: string
+          reason: string
+          reporter_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          thread_id: string
+          thread_kind: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          evidence?: Json
+          id?: string
+          reason?: string
+          reporter_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          thread_id?: string
+          thread_kind?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      message_sending_holds: {
+        Row: {
+          created_at: string
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          reason: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          reason?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      message_user_blocks: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string
+        }
+        Relationships: []
+      }
       monetization_product_plans: {
         Row: {
           billing_interval: string
@@ -9675,6 +9753,75 @@ export type Database = {
         }
         Relationships: []
       }
+      signup_phone_challenges: {
+        Row: {
+          attempts: number
+          code_hash: string
+          created_at: string
+          delivery_state: string
+          expires_at: string
+          id: string
+          phone_e164: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          attempts?: number
+          code_hash: string
+          created_at?: string
+          delivery_state?: string
+          expires_at?: string
+          id?: string
+          phone_e164: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          attempts?: number
+          code_hash?: string
+          created_at?: string
+          delivery_state?: string
+          expires_at?: string
+          id?: string
+          phone_e164?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      signup_phone_policy: {
+        Row: {
+          enforced_from: string | null
+          id: boolean
+        }
+        Insert: {
+          enforced_from?: string | null
+          id?: boolean
+        }
+        Update: {
+          enforced_from?: string | null
+          id?: boolean
+        }
+        Relationships: []
+      }
+      signup_phone_verifications: {
+        Row: {
+          phone_e164: string
+          user_id: string
+          verified_at: string
+        }
+        Insert: {
+          phone_e164: string
+          user_id: string
+          verified_at?: string
+        }
+        Update: {
+          phone_e164?: string
+          user_id?: string
+          verified_at?: string
+        }
+        Relationships: []
+      }
       sms_consent_events: {
         Row: {
           created_at: string
@@ -12680,6 +12827,21 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      message_account_active: { Args: { actor?: string }; Returns: boolean }
+      message_content_problem: {
+        Args: { body: string; is_new: boolean }
+        Returns: string
+      }
+      message_normalize: { Args: { value: string }; Returns: string }
+      message_recipient: {
+        Args: { actor: string; kind: string; thread: string }
+        Returns: string
+      }
+      message_reserved_name: { Args: { value: string }; Returns: boolean }
+      message_safety_context: {
+        Args: { kind: string; thread: string }
+        Returns: Json
+      }
       public_display_name: {
         Args: { _fallback?: string; _user_id: string }
         Returns: string
@@ -12780,6 +12942,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      report_message_thread: {
+        Args: { kind: string; reason: string; thread: string }
+        Returns: undefined
+      }
       reschedule_video_walkthrough: {
         Args: { _starts_at: string; _walkthrough_id: string }
         Returns: {
@@ -12809,6 +12975,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      reserve_signup_phone_code: {
+        Args: { actor: string; hashed_code: string; phone: string }
+        Returns: string
       }
       restore_permit_document: {
         Args: { p_document_id: string }
@@ -12854,6 +13024,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      review_message_safety: {
+        Args: { action: string; event_id: string }
+        Returns: undefined
+      }
       revoke_user_consent: {
         Args: { _consent_id: string; _reason: string }
         Returns: undefined
@@ -12867,6 +13041,16 @@ export type Database = {
       }
       seller_payment_readiness: { Args: { _seller_id: string }; Returns: Json }
       seller_paypal_ready: { Args: { _user_id: string }; Returns: boolean }
+      send_marketplace_message: {
+        Args: { attachment?: Json; body: string; kind: string; thread: string }
+        Returns: Json
+      }
+      set_message_block: {
+        Args: { blocked: boolean; kind: string; thread: string }
+        Returns: undefined
+      }
+      signup_phone_required: { Args: { actor?: string }; Returns: boolean }
+      signup_phone_status: { Args: never; Returns: Json }
       soft_delete_permit_document: {
         Args: { p_document_id: string }
         Returns: {
@@ -13063,6 +13247,7 @@ export type Database = {
         Args: { _min_tier: string; _user_id: string }
         Returns: boolean
       }
+      verify_signup_phone_code: { Args: { code: string }; Returns: Json }
     }
     Enums: {
       app_role: "host" | "shopper" | "admin"
