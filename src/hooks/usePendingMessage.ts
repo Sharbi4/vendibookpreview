@@ -1,3 +1,4 @@
+import { sendMarketplaceMessage, messageSendError } from '@/lib/messageSafety';
 import { useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -34,15 +35,7 @@ export const usePendingMessage = () => {
         const conversationId = await getOrCreateConversation(listingId, hostId);
         if (!conversationId) return;
 
-        const { error } = await supabase
-          .from('conversation_messages')
-          .insert({
-            conversation_id: conversationId,
-            sender_id: user.id,
-            message,
-          });
-
-        if (error) throw error;
+        await sendMarketplaceMessage('conversation', conversationId, message);
 
         await supabase
           .from('conversations')
@@ -59,7 +52,7 @@ export const usePendingMessage = () => {
         console.error('Failed to send pending message:', err);
         toast({
           title: 'Error',
-          description: 'Failed to send your message. Please try again from the listing.',
+          description: messageSendError(err),
           variant: 'destructive',
         });
       }

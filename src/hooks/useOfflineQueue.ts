@@ -1,3 +1,4 @@
+import { sendMarketplaceMessage, messageSendError } from '@/lib/messageSafety';
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -50,18 +51,13 @@ export function useOfflineQueueSync() {
       let sent = 0;
       for (const m of q) {
         try {
-          const { error } = await supabase.from("conversation_messages").insert({
-            conversation_id: m.conversation_id,
-            sender_id: m.sender_id,
-            message: m.message,
-          });
-          if (error) {
-            remaining.push(m);
-          } else {
-            sent++;
-          }
-        } catch {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user?.id !== m.sender_id) { remaining.push(m); continue; }
+          await sendMarketplaceMessage('conversation', m.conversation_id, m.message);
+          sent++;
+        } catch (error) {
           remaining.push(m);
+          toast.error(messageSendError(error));
         }
       }
       writeQueue(remaining);

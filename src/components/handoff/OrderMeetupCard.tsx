@@ -1,3 +1,4 @@
+import { sendMarketplaceMessage, messageSendError } from '@/lib/messageSafety';
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { CalendarClock, MessageCircle } from 'lucide-react';
@@ -84,12 +85,8 @@ export default function OrderMeetupCard({ listingId, viewerRole }: OrderMeetupCa
 
   const sendRequest = async (text: string) => {
     if (detectPII(text).hasPII) return { success: false, error: PII_BLOCK_MESSAGE };
-    const { error } = await supabase.from('conversation_messages').insert({
-      conversation_id: state.conversationId,
-      sender_id: user!.id,
-      message: text,
-    });
-    if (error) return { success: false, error: 'We could not send that request. Please try again.' };
+    try { await sendMarketplaceMessage('conversation', state.conversationId!, text); }
+    catch (error) { return { success: false, error: messageSendError(error) }; }
     await load();
     return { success: true };
   };

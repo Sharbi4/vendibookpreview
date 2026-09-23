@@ -1,3 +1,4 @@
+import MessageSafetyQueue from '@/components/admin/MessageSafetyQueue';
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -216,6 +217,8 @@ export default function AdminMessages() {
             Refresh
           </Button>
         </div>
+
+        <MessageSafetyQueue />
 
         <Input
           value={search}

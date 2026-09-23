@@ -1,3 +1,4 @@
+import { messageSendError } from '@/lib/messageSafety';
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -148,7 +149,7 @@ export const useConversations = () => {
         console.error('Error creating conversation:', error);
         toast({
           title: 'Error',
-          description: 'Failed to start conversation.',
+          description: messageSendError(error),
           variant: 'destructive',
         });
         return null;

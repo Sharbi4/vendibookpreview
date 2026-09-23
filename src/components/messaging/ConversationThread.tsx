@@ -1,3 +1,4 @@
+import MessagingSafety from './MessagingSafety';
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { format, formatDistanceToNow } from 'date-fns';
@@ -150,10 +151,10 @@ const MessageBubble = ({
           <div className={cn('flex items-center gap-1', isOwn ? 'flex-row-reverse' : 'flex-row')}>
             <div
               className={cn(
-                'px-4 py-2 rounded-2xl inline-block text-left',
+                'message-bubble px-4 py-2 rounded-2xl inline-block text-left',
                 isOwn 
-                  ? 'bg-primary text-primary-foreground rounded-br-sm' 
-                  : 'bg-muted text-foreground rounded-bl-sm'
+                  ? 'is-own rounded-br-sm' 
+                  : 'rounded-bl-sm'
               )}
             >
               {hasTextContent && (
@@ -216,6 +217,7 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
 
   const [inputValue, setInputValue] = useState('');
   const [piiError, setPiiError] = useState<string | null>(null);
+  const [sendError, setSendError] = useState<string | null>(null);
   const [attachment, setAttachment] = useState<{
     file: File;
     preview: string;
@@ -270,6 +272,7 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInputValue(e.target.value);
+    setSendError(null);
     broadcastTyping();
   };
 
@@ -305,9 +308,10 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
   };
 
   const handleSend = async () => {
-    if ((!inputValue.trim() && !attachment) || piiError) return;
+    if (isSending || (!inputValue.trim() && !attachment) || piiError) return;
 
     stopTyping();
+    setSendError(null);
 
     const attachmentData = attachment ? {
       file: attachment.file,
@@ -323,7 +327,7 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
       setPiiError(null);
       removeAttachment();
     } else if (result.error) {
-      setPiiError(result.error);
+      setSendError(result.error);
     }
   };
 
@@ -368,7 +372,7 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
   const otherPartyName = getCounterpartyName(otherParty, 'Vendibook member');
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="message-thread flex flex-col h-full">
       {/* Header */}
       <div className="flex items-center gap-3 p-4 border-b border-border bg-background">
         <Button variant="ghost" size="icon" asChild className="md:hidden">
@@ -401,19 +405,7 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
         <WalkthroughCta listingId={conversation?.listing_id} conversationId={conversationId} compact />
       </div>
 
-      {/* Safety notice */}
-      <div className="mx-4 mt-3 rounded-lg border border-border bg-muted/50 px-3 py-2">
-        <div className="flex items-start gap-2">
-          <ShieldAlert className="h-4 w-4 mt-0.5 flex-shrink-0 text-primary" />
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            <span className="font-medium text-foreground">Stay safe on Vendibook.</span>{' '}
-            Vendibook will never message you asking for card details, bank details, verification
-            fees, or payment outside the site. Never follow a payment or verification link sent in
-            chat. We actively monitor for impersonation accounts and remove them — report anything
-            suspicious and keep payments on Vendibook.
-          </p>
-        </div>
-      </div>
+      <MessagingSafety kind="conversation" thread={conversationId} />
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4" ref={scrollRef}>
@@ -462,10 +454,10 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
       </div>
 
       {/* PII Warning */}
-      {piiError && (
+      {(piiError || sendError) && (
         <Alert variant="destructive" className="mx-4 mb-2">
           <AlertTriangle className="h-4 w-4" />
-          <AlertDescription className="text-sm">{piiError}</AlertDescription>
+          <AlertDescription className="text-sm">{piiError || sendError}</AlertDescription>
         </Alert>
       )}
 
@@ -538,7 +530,7 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
             placeholder="Type a message..."
-            className="min-h-[44px] max-h-32 resize-none"
+            className="message-composer min-h-[44px] max-h-32 resize-none"
             rows={1}
           />
           <Button

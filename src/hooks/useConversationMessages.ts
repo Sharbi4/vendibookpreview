@@ -1,3 +1,4 @@
+import { sendMarketplaceMessage, messageSendError } from '@/lib/messageSafety';
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -176,21 +177,10 @@ export const useConversationMessages = (conversationId: string | undefined) => {
         finalAttachmentUrl = urlData?.signedUrl || null;
       }
 
-      const { data, error } = await supabase
-        .from('conversation_messages')
-        .insert({
-          conversation_id: conversationId,
-          sender_id: user.id,
-          message: messageText.trim() || (attachment ? 'Sent an attachment' : ''),
-          attachment_url: finalAttachmentUrl,
-          attachment_name: attachment?.name || null,
-          attachment_type: attachment?.type || null,
-          attachment_size: attachment?.size || null,
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
+      const data = await sendMarketplaceMessage('conversation', conversationId,
+        messageText.trim() || 'Sent an attachment', attachment ? {
+          url: finalAttachmentUrl, name: attachment.name, type: attachment.type, size: attachment.size,
+        } : undefined);
 
       // Replace optimistic message with real one
       setMessages((prev) => 
@@ -210,10 +200,10 @@ export const useConversationMessages = (conversationId: string | undefined) => {
       setMessages((prev) => prev.filter((msg) => msg.id !== optimisticMessage.id));
       toast({
         title: 'Error',
-        description: 'Failed to send message. Please try again.',
+        description: messageSendError(error),
         variant: 'destructive',
       });
-      return { success: false, error: 'Failed to send message' };
+      return { success: false, error: messageSendError(error) };
     } finally {
       setIsSending(false);
     }

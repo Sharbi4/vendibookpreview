@@ -1,3 +1,4 @@
+import { sendMarketplaceMessage, messageSendError } from '@/lib/messageSafety';
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -78,28 +79,18 @@ export const useBookingMessages = (bookingId: string) => {
         attachmentData = await uploadAttachment(attachment);
       }
 
-      const { error } = await supabase
-        .from('booking_messages')
-        .insert({
-          booking_id: bookingId,
-          sender_id: user.id,
-          message: messageText.trim() || (attachment ? `Sent ${attachment.name}` : ''),
-          attachment_url: attachmentData?.url || null,
-          attachment_name: attachmentData?.name || null,
-          attachment_type: attachmentData?.type || null,
-        });
-
-      if (error) throw error;
-      
+      await sendMarketplaceMessage('booking', bookingId, messageText.trim() || 'Sent an attachment', attachmentData ?? undefined);
       // Refetch messages after sending
       await fetchMessages();
+      return true;
     } catch (error) {
       console.error('Error sending message:', error);
       toast({
         title: 'Error',
-        description: 'Failed to send message. Please try again.',
+        description: messageSendError(error),
         variant: 'destructive',
       });
+      return false;
     } finally {
       setIsSending(false);
     }

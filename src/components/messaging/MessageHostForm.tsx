@@ -1,3 +1,5 @@
+import { sendMarketplaceMessage, messageSendError } from '@/lib/messageSafety';
+import './messaging.css';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Send, Loader2 } from 'lucide-react';
@@ -67,15 +69,7 @@ const MessageHostForm = ({
       const conversationId = await getOrCreateConversation(listingId, hostId);
       if (conversationId) {
         // Send the message directly
-        const { error } = await supabase
-          .from('conversation_messages')
-          .insert({
-            conversation_id: conversationId,
-            sender_id: user.id,
-            message: message.trim(),
-          });
-
-        if (error) throw error;
+        await sendMarketplaceMessage('conversation', conversationId, message.trim());
 
         // Update conversation last_message_at
         await supabase
@@ -94,7 +88,7 @@ const MessageHostForm = ({
       console.error('Error sending message:', error);
       toast({
         title: 'Error',
-        description: 'Failed to send message. Please try again.',
+        description: messageSendError(error),
         variant: 'destructive',
       });
     } finally {
@@ -109,7 +103,7 @@ const MessageHostForm = ({
         onChange={(e) => setMessage(e.target.value)}
         placeholder="Write a message to the host..."
         rows={4}
-        className="min-h-[132px] max-h-[280px] resize-y text-base leading-relaxed bg-[rgba(11,15,18,0.7)] border-[1.5px] border-white/10 rounded-md p-4 align-top focus-visible:ring-primary/30"
+        className="message-composer min-h-[132px] max-h-[280px] resize-y text-base leading-relaxed border-[1.5px] border-white/10 rounded-md p-4 align-top focus-visible:ring-primary/30"
         disabled={isLoading}
       />
       <Button
