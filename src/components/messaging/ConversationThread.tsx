@@ -1,3 +1,4 @@
+import UnavailableConversation from './UnavailableConversation';
 import MessagingSafety from './MessagingSafety';
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
@@ -343,23 +344,7 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
     textareaRef.current?.focus();
   };
 
-  if (!isAuthorized) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full py-16 px-4 text-center">
-        <div className="w-16 h-16 bg-destructive/10 rounded-full flex items-center justify-center mb-4">
-          <ShieldAlert className="h-8 w-8 text-destructive" />
-        </div>
-        <h3 className="text-lg font-medium text-foreground mb-2">Not authorized</h3>
-        <p className="text-muted-foreground mb-4">You don't have permission to view this conversation.</p>
-        <Button asChild variant="outline">
-          <Link to="/dashboard/messages">
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Back to messages
-          </Link>
-        </Button>
-      </div>
-    );
-  }
+  if (!isLoading && !isAuthorized) return <UnavailableConversation conversationId={conversationId} />;
 
   if (isLoading) {
     return (
@@ -551,4 +536,6 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
   );
 };
 
-export default ConversationThread;
+export default function ConversationThreadView(props: ConversationThreadProps) {
+  return <ConversationThread key={props.conversationId} {...props} />;
+}

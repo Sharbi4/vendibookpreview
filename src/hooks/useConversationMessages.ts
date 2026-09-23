@@ -108,8 +108,6 @@ export const useConversationMessages = (conversationId: string | undefined) => {
       setMessages(data || []);
     } catch (error) {
       console.error('Error fetching messages:', error);
-    } finally {
-      setIsLoading(false);
     }
   }, [user, conversationId]);
 
@@ -226,8 +224,15 @@ export const useConversationMessages = (conversationId: string | undefined) => {
 
   // Initial fetch
   useEffect(() => {
-    fetchConversation();
-    fetchMessages();
+    setIsLoading(true);
+    setIsAuthorized(true);
+    setConversation(null);
+    setMessages([]);
+    let active = true;
+    Promise.all([fetchConversation(), fetchMessages()]).finally(() => {
+      if (active) setIsLoading(false);
+    });
+    return () => { active = false; };
   }, [fetchConversation, fetchMessages]);
 
   // Realtime subscription
