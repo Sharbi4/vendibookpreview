@@ -743,7 +743,6 @@ const AppContent = () => {
       <CookieConsent />
 
       <GoogleOneTap />
-      <PhoneVerificationPrompt />
       <TawkIdentity />
       
       
@@ -765,7 +764,7 @@ const App = () => (
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <AuthProvider>
-            <AppContent />
+            <PhoneVerificationPrompt><AppContent /></PhoneVerificationPrompt>
           </AuthProvider>
         </TooltipProvider>
       </QueryClientProvider>

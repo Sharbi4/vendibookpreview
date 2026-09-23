@@ -574,7 +574,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
 
               <Button 
                 type="button"
-                variant="dark-shine"
+                variant="cta"
                 className="w-full rounded-xl h-12"
                 disabled={resendingEmail}
                 onClick={handleResendVerification}
@@ -872,13 +872,13 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
                 disabled={isSubmitting}
               >
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account' : 'Send reset link'}
+                {mode === 'signin' ? 'Sign in' : mode === 'signup' ? 'Create account & verify phone' : 'Send reset link'}
               </Button>
 
               {mode === 'signup' && (
                 <p className="text-center text-xs leading-snug text-muted-foreground">
                   Continuing with Google creates your account with your Google name and email.
-                  Text messages are optional and never a condition of using Vendibook.
+                  A one-time mobile verification code is required to finish signup. Marketing and other text updates remain optional.
                 </p>
               )}
             </form>

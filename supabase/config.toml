@@ -361,3 +361,6 @@ verify_jwt = false
 # The bootstrap handler verifies the user and requires administrator role.
 [functions.daily-webhook-bootstrap]
 verify_jwt = false
+
+[functions.signup-phone-verification]
+verify_jwt = false

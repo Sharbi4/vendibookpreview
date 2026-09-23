@@ -1,324 +1,126 @@
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useLocation } from "react-router-dom";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Phone, ShieldCheck } from "lucide-react";
+import { ArrowRight, Loader2, ShieldCheck, Smartphone } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useSmsSubscription } from "@/hooks/useSmsSubscription";
 import { supabase } from "@/integrations/supabase/client";
-import { SmsConsentField } from "@/components/sms/SmsConsentField";
-import { SMS_CONSENT_DISCLOSURE } from "@/lib/sms/consent";
 import { normalizeNanpToE164 } from "@/lib/sms/phone";
-import { toast } from "sonner";
-import { claimPopupSlot, releasePopupSlot } from "@/hooks/useAutoPopup";
+import "./signup-phone.css";
 
-const DISMISS_KEY = "vb_phone_verify_dismissed_until_v1";
-const POPUP_ID = "phone-verification-prompt";
-const DISMISS_DURATION_MS = 1000 * 60 * 60 * 24; // 24h
-// Verification is only requested during the signup window (fresh accounts).
-const SIGNUP_WINDOW_MS = 1000 * 60 * 60 * 24; // 24h after account creation
+type Status = { required: boolean; phone?: string; pending?: boolean; retry_after?: number };
+const rpc = (name: string, args = {}) => (supabase as any).rpc(name, args);
 
-const formatWait = (seconds: number) => {
-  if (seconds < 60) return `${seconds}s`;
-  const m = Math.ceil(seconds / 60);
-  return `${m} minute${m === 1 ? "" : "s"}`;
-};
-
-/** Reads the JSON body of a failed edge function response. */
-const readFunctionError = async (fnError: any): Promise<any | null> => {
-  try {
-    const text = await fnError?.context?.text?.();
-    return text ? JSON.parse(text) : null;
-  } catch {
-    return null;
-  }
-};
-
-/**
- * Post-signup phone verification (TCPA-compliant, two-step):
- *   1. Mobile number + explicit unchecked consent  -> sms-record-consent + send-sms-verification
- *   2. 6-digit OTP                                 -> verify-sms-otp
- *
- * Also covers Google / OAuth signups, which never pass through the email
- * signup form and therefore have no phone number or consent on file.
- */
-export const PhoneVerificationPrompt = () => {
-  const { user } = useAuth();
-  const { subscription, isLoading } = useSmsSubscription(user?.id);
-  const [open, setOpen] = useState(false);
-  const [step, setStep] = useState<"phone" | "code">("phone");
+export default function PhoneVerificationPrompt({ children }: { children: ReactNode }) {
+  const { user, isLoading, signOut } = useAuth();
+  const { pathname } = useLocation();
+  const [status, setStatus] = useState<Status | null>(null);
+  const [checkedUser, setCheckedUser] = useState<string | null>(null);
   const [phone, setPhone] = useState("");
-  const [consent, setConsent] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const [code, setCode] = useState("");
-  const [sending, setSending] = useState(false);
-  const [verifying, setVerifying] = useState(false);
+  const [step, setStep] = useState<"phone" | "code">("phone");
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
   const [cooldown, setCooldown] = useState(0);
-  const [limitMessage, setLimitMessage] = useState<string | null>(null);
+  const [retry, setRetry] = useState(0);
 
-  // "Only require at sign up": the prompt is limited to freshly created
-  // accounts (including Google/OAuth signups). Established users are never
-  // nagged to verify later on.
-  const isNewSignup = useMemo(() => {
-    const createdAt = user?.created_at ? new Date(user.created_at).getTime() : 0;
-    if (!createdAt) return false;
-    return Date.now() - createdAt < SIGNUP_WINDOW_MS;
-  }, [user?.created_at]);
-
-  // Never interrupt a high-intent flow (listing builder, checkout, payment
-  // return). The prompt waits until the seller is on a calmer surface.
-  const path = useLocation().pathname;
-  const inFocusedFlow = useMemo(() => {
-    const p = path.toLowerCase();
-    return (
-      p.startsWith('/list') ||
-      p.startsWith('/create-listing') ||
-      p.startsWith('/edit-listing') ||
-      p.startsWith('/checkout') ||
-      p.includes('checkout') ||
-      p.startsWith('/payment') ||
-      p.startsWith('/walkthrough') ||
-      p.startsWith('/handoff') ||
-      p.startsWith('/book') ||
-      p.startsWith('/driver') ||
-      p.startsWith('/auth')
-    );
-  }, [path]);
-
-  // Needs verification when there is no subscription row at all (OAuth signups)
-  // or the row exists but the number was never confirmed.
-  const needsVerification = useMemo(
-    () => !!user?.id && isNewSignup && !isLoading && !subscription?.verified && !inFocusedFlow,
-    [user?.id, isNewSignup, isLoading, subscription?.verified, inFocusedFlow],
-  );
+  const check = useCallback(async () => {
+    const { data, error } = await rpc("signup_phone_status");
+    if (error || !data || typeof data.required !== "boolean") throw new Error("We couldn’t check your verification status. Please try again.");
+    return data as Status;
+  }, []);
 
   useEffect(() => {
-    if (subscription?.phone_number && !phone) setPhone(subscription.phone_number);
-    if (subscription?.phone_number && subscription.opted_in && !subscription.verified) {
-      setConsent(true);
-      setStep("code");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [subscription?.phone_number, subscription?.opted_in, subscription?.verified]);
+    let current = true;
+    setStatus(null); setCheckedUser(null); setError(""); setCode("");
+    if (!user) return;
+    check().then(data => {
+      if (!current) return;
+      setStatus(data); setCheckedUser(user.id);
+      setPhone(data.phone || user.user_metadata?.phone_number || "");
+      setStep(data.pending ? "code" : "phone");
+      setCooldown(data.retry_after || 0);
+    }).catch(e => { if (current) setError(e.message); });
+    return () => { current = false; };
+  }, [user?.id, retry, check]);
 
-  useEffect(() => {
-    if (!needsVerification) {
-      setOpen(false);
-      releasePopupSlot(POPUP_ID);
-      return;
-    }
-    const dismissedUntil = Number(localStorage.getItem(DISMISS_KEY) || 0);
-    if (dismissedUntil > Date.now()) return;
-
-    const pendingCode =
-      subscription?.phone_number && subscription?.opted_in && !subscription?.verified;
-    // Only open if no other auto-popup currently owns the screen.
-    const t = setTimeout(() => {
-      if (claimPopupSlot(POPUP_ID)) setOpen(true);
-    }, pendingCode ? 1200 : 6000);
-    return () => {
-      clearTimeout(t);
-      releasePopupSlot(POPUP_ID);
-    };
-  }, [needsVerification, subscription?.phone_number, subscription?.opted_in, subscription?.verified]);
-
-  // Cooldown ticker
   useEffect(() => {
     if (cooldown <= 0) return;
-    const id = setInterval(() => setCooldown((s) => (s <= 1 ? 0 : s - 1)), 1000);
-    return () => clearInterval(id);
+    const timer = setTimeout(() => setCooldown(value => Math.max(0, value - 1)), 1000);
+    return () => clearTimeout(timer);
   }, [cooldown]);
 
-  const dismiss = () => {
-    localStorage.setItem(DISMISS_KEY, String(Date.now() + DISMISS_DURATION_MS));
-    setOpen(false);
-    releasePopupSlot(POPUP_ID);
-  };
-
-  const sendCode = async () => {
-    if (cooldown > 0 || sending) return;
-    const e164 = normalizeNanpToE164(phone);
-    if (!e164) {
-      setError("Enter a valid US or Canadian mobile number.");
-      return;
-    }
-    if (!consent) {
-      setError("Please check the box to receive text messages before we send a code.");
-      return;
-    }
-    setError(null);
-    setSending(true);
+  async function sendCode() {
+    if (busy || cooldown > 0) return;
+    const normalized = normalizeNanpToE164(phone);
+    if (!normalized) { setError("Enter a valid US or Canadian mobile number."); return; }
+    setBusy(true); setError("");
     try {
-      // Record the affirmative consent first so the audit trail always
-      // precedes the message we send.
-      await supabase.functions.invoke("sms-record-consent", {
-        body: {
-          phone: e164,
-          source: "settings",
-          consent: true,
-          marketing: false,
-          disclosureText: SMS_CONSENT_DISCLOSURE,
-          userAgent: navigator.userAgent,
-          sourceUrl: window.location.href,
-        },
+      const { data, error: invokeError } = await supabase.functions.invoke("signup-phone-verification", {
+        body: { phone: normalized, security_sms_consent: true },
       });
-
-      const { data, error: fnError } = await supabase.functions.invoke("send-sms-verification", {
-        body: { phone_number: e164 },
-      });
-
-      const payload = (data as any) ?? (await readFunctionError(fnError));
-      if (payload?.error === "rate_limited") {
-        const retry = Number(payload.retry_after_seconds) || 60;
-        setCooldown(retry);
-        const msg =
-          payload.reason === "hourly_limit"
-            ? `Too many code requests. You can try again in ${formatWait(retry)}.`
-            : `Please wait ${formatWait(retry)} before requesting another code.`;
-        setLimitMessage(msg);
-        toast.error(msg);
-        setStep("code");
-        return;
+      let payload = data;
+      if (invokeError?.context) {
+        try { payload = await invokeError.context.json(); } catch { /* use generic delivery error */ }
       }
-      if (fnError || payload?.error) {
-        throw new Error(payload?.error || fnError?.message);
-      }
-      setLimitMessage(null);
-      setCooldown(Number(payload?.resend_available_in) || 60);
-      toast.success("Code sent — check your phone.");
-      setStep("code");
-    } catch (e: any) {
-      toast.error(e?.message || "Failed to send code");
-    } finally {
-      setSending(false);
-    }
-  };
+      if (payload?.retry_after) setCooldown(payload.retry_after);
+      if (invokeError || !payload?.ok) throw new Error(payload?.error || "We couldn’t send your code. Please try again.");
+      setPhone(normalized); setCode(""); setStep("code"); setCooldown(60);
+    } catch (e: any) { setError(e.message || "We couldn’t send your code."); }
+    finally { setBusy(false); }
+  }
 
-  const verifyCode = async () => {
-    if (code.length !== 6) return;
-    setVerifying(true);
+  async function verifyCode() {
+    if (busy || !/^\d{6}$/.test(code)) return;
+    setBusy(true); setError("");
     try {
-      const { data, error: fnError } = await supabase.functions.invoke("verify-sms-otp", {
-        body: { code },
-      });
-      if (fnError || (data as any)?.error) {
-        throw new Error((data as any)?.error || fnError?.message);
-      }
-      toast.success("Phone verified.");
-      localStorage.removeItem(DISMISS_KEY);
-      setOpen(false);
-      releasePopupSlot(POPUP_ID);
-    } catch (e: any) {
-      const msg = e?.message === "incorrect_code" ? "Wrong code — try again" : e?.message;
-      toast.error(msg || "Verification failed");
-    } finally {
-      setVerifying(false);
-    }
-  };
+      const { data, error: verifyError } = await rpc("verify_signup_phone_code", { code });
+      if (verifyError || !data?.ok) throw new Error(data?.error || verifyError?.message || "Verification failed. Please try again.");
+      const verified = await check();
+      if (verified.required) throw new Error("We couldn’t confirm verification. Please try again.");
+      setStatus(verified);
+      // The original URL remains in place, including checkout query parameters.
+    } catch (e: any) { setError(e.message || "Verification failed."); }
+    finally { setBusy(false); }
+  }
 
-  if (!needsVerification) return null;
+  // Legal/help/password-recovery pages remain accessible. Marketplace actions are also guarded on the server.
+  const publicHelp = ["/terms", "/privacy", "/sms-terms", "/help", "/help-center", "/reset-password"].some(path => pathname === path || pathname.startsWith(path + "/"));
+  if (publicHelp || (!isLoading && !user)) return <>{children}</>;
+  if (user && checkedUser === user.id && status?.required === false) return <>{children}</>;
 
-  return (
-    <Dialog open={open} onOpenChange={(o) => { if (!o) dismiss(); }}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            {step === "phone" ? (
-              <Phone className="h-5 w-5 text-primary" />
-            ) : (
-              <ShieldCheck className="h-5 w-5 text-primary" />
-            )}
-            {step === "phone" ? "Verify your mobile number" : "Enter your code"}
-          </DialogTitle>
-          <DialogDescription>
-            {step === "phone"
-              ? "A verified number protects your account and lets us reach you about bookings, payments, and pickups."
-              : `We sent a 6-digit code to ${normalizeNanpToE164(phone) || phone}.`}
-          </DialogDescription>
-        </DialogHeader>
-
-        {step === "phone" ? (
-          <div className="pt-1">
-            <SmsConsentField
-              phone={phone}
-              onPhoneChange={(v) => { setPhone(v); setError(null); }}
-              consent={consent}
-              onConsentChange={(v) => { setConsent(v); setError(null); }}
-              error={error ?? undefined}
-              testIdPrefix="verify-sms"
-            />
-          </div>
-        ) : (
-          <div className="space-y-2 pt-2">
-            <Label htmlFor="verify-code">6-digit code</Label>
-            <Input
-              id="verify-code"
-              inputMode="numeric"
-              maxLength={6}
-              placeholder="123456"
-              value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, "").slice(0, 6))}
-              className="text-center text-2xl tracking-[0.5em] font-mono"
-              style={{ fontSize: "24px" }}
-              data-testid="verify-sms-code-input"
-            />
-            <div className="flex items-center justify-between gap-3">
-              <button
-                type="button"
-                onClick={() => { setStep("phone"); setCode(""); }}
-                className="text-xs text-muted-foreground hover:text-foreground underline"
-              >
-                Wrong number? Edit it
-              </button>
-              <button
-                type="button"
-                onClick={sendCode}
-                disabled={sending || cooldown > 0}
-                className="text-xs text-muted-foreground hover:text-foreground underline disabled:opacity-50 disabled:no-underline"
-                data-testid="verify-sms-resend"
-              >
-                {sending
-                  ? "Resending…"
-                  : cooldown > 0
-                    ? `Resend in ${formatWait(cooldown)}`
-                    : "Resend code"}
-              </button>
-            </div>
-            {limitMessage && (
-              <p className="text-xs text-muted-foreground" role="status">
-                {limitMessage}
-              </p>
-            )}
-            <p className="text-[11px] text-muted-foreground">
-              Codes expire shortly. You can request up to 5 codes per hour.
-            </p>
-          </div>
-        )}
-
-        <DialogFooter className="gap-2 sm:gap-2">
-          <Button variant="ghost" onClick={dismiss}>Not now</Button>
-          {step === "phone" ? (
-            <Button onClick={sendCode} disabled={sending || cooldown > 0 || !phone.trim()} data-testid="verify-sms-send">
-              {sending ? "Sending…" : cooldown > 0 ? `Wait ${formatWait(cooldown)}` : "Send code"}
-            </Button>
-          ) : (
-            <Button onClick={verifyCode} disabled={verifying || code.length !== 6} data-testid="verify-sms-submit">
-              {verifying ? "Verifying…" : "Verify"}
-            </Button>
-          )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-};
-
-export default PhoneVerificationPrompt;
+  const checking = isLoading || !status || checkedUser !== user?.id;
+  return <main className="signup-phone-page">
+    <section className="signup-phone-card" aria-labelledby="signup-phone-title">
+      <a href="/" className="signup-phone-brand">VENDIBOOK</a>
+      <div className="signup-phone-icon"><Smartphone size={26} aria-hidden /></div>
+      <p className="signup-phone-eyebrow">One last step</p>
+      <h1 id="signup-phone-title">{checking ? "Securing your account" : step === "phone" ? "A safer marketplace starts with you." : "Check your messages."}</h1>
+      <p className="signup-phone-copy">{checking ? "Checking your account verification." : step === "phone"
+        ? "Verify your mobile number to finish signup. It helps us keep fake accounts out and real conversations moving."
+        : "Enter the six-digit code we sent to " + phone + "."}</p>
+      {checking ? <>
+        {!error && <Loader2 className="animate-spin mx-auto mt-6" aria-label="Checking verification" />}
+        {error && <><p className="signup-phone-error" role="alert">{error}</p><button className="signup-phone-primary" onClick={() => setRetry(n => n + 1)}>Try again</button></>}
+      </> : <form onSubmit={e => { e.preventDefault(); void (step === "phone" ? sendCode() : verifyCode()); }}>
+        {step === "phone" ? <>
+          <label htmlFor="signup-mobile">Mobile number</label>
+          <input id="signup-mobile" type="tel" autoComplete="tel" placeholder="(555) 123-4567" value={phone} onChange={e => { setPhone(e.target.value); setError(""); }} disabled={busy} required aria-describedby="signup-sms-disclosure" />
+          <p id="signup-sms-disclosure" className="signup-phone-note">By selecting “Text me a code,” you request a one-time account verification text. Message and data rates may apply. This does not sign you up for marketing or other text updates.</p>
+        </> : <>
+          <label htmlFor="signup-code">Verification code</label>
+          <input id="signup-code" className="signup-phone-code" inputMode="numeric" autoComplete="one-time-code" maxLength={6} placeholder="000000" value={code} onChange={e => { setCode(e.target.value.replace(/\D/g, "").slice(0, 6)); setError(""); }} disabled={busy} required autoFocus />
+          <p className="signup-phone-note">Your code expires after 10 minutes. Never share it with anyone.</p>
+        </>}
+        {error && <p className="signup-phone-error" role="alert">{error}</p>}
+        <button type="submit" className="signup-phone-primary" disabled={busy || (step === "phone" ? cooldown > 0 || !phone.trim() : code.length !== 6)}>
+          {busy ? <><Loader2 size={18} className="animate-spin" />{step === "phone" ? "Sending code…" : "Verifying…"}</> : <>{step === "phone" ? (cooldown ? "Try again in " + cooldown + "s" : "Text me a code") : "Verify & continue"}<ArrowRight size={18} /></>}
+        </button>
+        {step === "code" && <div className="signup-phone-links">
+          <button type="button" disabled={busy} onClick={() => { setStep("phone"); setCode(""); setError(""); }}>Change number</button>
+          <button type="button" disabled={busy || cooldown > 0} onClick={sendCode}>{cooldown ? "Resend in " + cooldown + "s" : "Resend code"}</button>
+        </div>}
+      </form>}
+      <div className="signup-phone-trust"><ShieldCheck size={16} aria-hidden /><span>Your number is not displayed on your public profile.</span></div>
+      <div className="signup-phone-links"><a href="/help">Need help?</a><button type="button" disabled={busy} onClick={() => void signOut()}>Sign out</button></div>
+    </section>
+  </main>;
+}
