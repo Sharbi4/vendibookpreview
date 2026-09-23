@@ -69,8 +69,8 @@ const MobileBottomNav = () => {
                 cn(
                   'flex flex-col items-center justify-center gap-0.5 py-2.5 text-[10px] font-medium transition-colors no-tap-highlight active:bg-muted/40',
                   isActive
-                    ? 'text-foreground'
-                    : 'text-muted-foreground hover:text-foreground'
+                    ? 'text-white'
+                    : 'text-white/80 hover:text-white'
                 )
               }
             >

@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   ArrowLeft,
@@ -10,6 +10,7 @@ import {
   Home,
   Inbox,
   List,
+  Menu,
   Plus,
   Search,
   Settings,
@@ -20,6 +21,9 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { useUnreadMessageCount } from '@/hooks/useUnreadMessageCount';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
+import { Sheet, SheetContent, SheetTitle, SheetDescription, SheetTrigger } from '@/components/ui/sheet';
+import darkLogo from '@/assets/vendibook-wordmark.png';
+import './workspace-navigation.css';
 import logo from '@/assets/vendibook-wordmark-light.png';
 import { cn } from '@/lib/utils';
 
@@ -62,6 +66,8 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
   const { user, profile, isLoading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  const [menuOpen, setMenuOpen] = useState(false);
+  useEffect(() => { setMenuOpen(false); }, [location.pathname]);
   const { unreadCount } = useNotifications(user?.id);
   const { count: unreadMessages } = useUnreadMessageCount();
 
@@ -122,8 +128,30 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
 
       <div className="v2-main-column">
         <header className="v2-topbar">
+          <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
+            <SheetTrigger asChild>
+              <button className="workspace-menu-trigger md:hidden" aria-label="Open dashboard menu">
+                <Menu aria-hidden="true" /><span className="sr-only">Dashboard menu</span>
+              </button>
+            </SheetTrigger>
+            <SheetContent side="left" className="workspace-mobile-menu">
+              <SheetTitle className="text-[#26221e]">Your dashboard</SheetTitle>
+              <SheetDescription className="text-[#625a52]">Everything you need, in one place.</SheetDescription>
+              <nav aria-label="Dashboard menu" className="mt-6 grid gap-1">
+                {desktopNav.map(([label, to, Icon]) => (
+                  <NavLink key={to} to={to} end={to === '/dashboard'}
+                    onClick={() => setMenuOpen(false)}
+                    className={({ isActive }) => cn('workspace-menu-link', isActive && 'is-active')}>
+                    <Icon aria-hidden="true" /><span>{label}</span>
+                  </NavLink>
+                ))}
+                <Link to="/list" onClick={() => setMenuOpen(false)} className="workspace-menu-link"><Plus />List an asset</Link>
+                <Link to="/search" onClick={() => setMenuOpen(false)} className="workspace-menu-link"><Compass />Browse marketplace</Link>
+              </nav>
+            </SheetContent>
+          </Sheet>
           <Link to="/" className="md:hidden" aria-label="Vendibook homepage">
-            <img src={logo} alt="Vendibook" className="h-6 w-auto" />
+            <img src={darkLogo} alt="Vendibook" className="h-6 w-auto" />
           </Link>
           <form action="/search" className="v2-search">
             <Search />

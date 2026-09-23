@@ -1,0 +1,9 @@
+
+.workspace-menu-trigger { flex: none; align-items: center; justify-content: center; width: 44px; height: 44px; border: 1px solid #d6cec5; border-radius: 12px; background: #fffaf3; color: #26221e; }
+.workspace-menu-trigger svg { width: 22px; height: 22px; margin: auto; }
+.workspace-mobile-menu { z-index: 60; background: #faf7f2; color: #26221e; border-color: #d6cec5; overflow-y: auto; padding-bottom: max(28px, env(safe-area-inset-bottom)); }
+.workspace-menu-link { display: flex; align-items: center; gap: 12px; min-height: 46px; padding: 10px 12px; border-radius: 12px; color: #443c35; font-size: 14px; font-weight: 600; }
+.workspace-menu-link svg { width: 20px; height: 20px; flex: none; }
+.workspace-menu-link:hover, .workspace-menu-link.is-active { background: #f4e3d5; color: #732c08; }
+.workspace-menu-link:focus-visible, .workspace-menu-trigger:focus-visible { outline: 2px solid #bf4a13; outline-offset: 2px; }
+@media (max-width: 767px) { .v2-topbar .v2-search { display: none; } .v2-topbar > a { margin-right: auto; } }

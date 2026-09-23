@@ -68,6 +68,7 @@ const AppDropdownMenu = ({ variant = 'dark', className = '' }: AppDropdownMenuPr
         onClick={() => setIsOpen(!isOpen)}
         className={`${triggerClasses} ${className}`}
         aria-label="Menu"
+        aria-expanded={isOpen}
       >
         {isOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
       </button>
@@ -83,7 +84,7 @@ const AppDropdownMenu = ({ variant = 'dark', className = '' }: AppDropdownMenuPr
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: -4 }}
                 transition={{ duration: 0.15 }}
-                className="fixed z-[9999] w-56 rounded-2xl overflow-hidden shadow-2xl shadow-black/50"
+                className="marketplace-dropdown fixed z-[9999] w-56 rounded-2xl overflow-hidden shadow-2xl shadow-black/50"
                 style={{
                   top: menuPos.top,
                   right: menuPos.right,
@@ -112,31 +113,31 @@ const AppDropdownMenu = ({ variant = 'dark', className = '' }: AppDropdownMenuPr
                     {user ? (
                       <>
                         <Link to="/list" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">
-                          <Plus className="w-4 h-4 text-white/50" /> Create a Listing
+                          <Plus className="w-4 h-4 text-white/80" /> Create a Listing
                         </Link>
                         <Link to="/dashboard" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">
-                          <LayoutDashboard className="w-4 h-4 text-white/50" /> Dashboard
+                          <LayoutDashboard className="w-4 h-4 text-white/80" /> Dashboard
                         </Link>
                         <Link to="/dashboard/messages" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">
-                          <MessageSquare className="w-4 h-4 text-white/50" /> Messages
+                          <MessageSquare className="w-4 h-4 text-white/80" /> Messages
                         </Link>
                         <Link to="/search" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">
-                          <Search className="w-4 h-4 text-white/50" /> Browse All
+                          <Search className="w-4 h-4 text-white/80" /> Browse All
                         </Link>
                         <Link to="/financing" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">
-                          <Landmark className="w-4 h-4 text-white/50" /> Financing
+                          <Landmark className="w-4 h-4 text-white/80" /> Financing
                         </Link>
                         <Link to="/pricing" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">
-                          <Crown className="w-4 h-4 text-white/50" /> Pricing & Pro
+                          <Crown className="w-4 h-4 text-white/80" /> Pricing & Pro
                         </Link>
                         <Link to="/help" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">
-                          <HelpCircle className="w-4 h-4 text-white/50" /> Help Center
+                          <HelpCircle className="w-4 h-4 text-white/80" /> Help Center
                         </Link>
                         <Link to="/contact" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">
-                          <Mail className="w-4 h-4 text-white/50" /> Contact Us
+                          <Mail className="w-4 h-4 text-white/80" /> Contact Us
                         </Link>
                         <Link to="/how-it-works" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">
-                          <Info className="w-4 h-4 text-white/50" /> Learn More
+                          <Info className="w-4 h-4 text-white/80" /> Learn More
                         </Link>
                         <button
                           onClick={handleSignOut}
@@ -148,28 +149,28 @@ const AppDropdownMenu = ({ variant = 'dark', className = '' }: AppDropdownMenuPr
                     ) : (
                       <>
                         <Link to="/auth" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">
-                          <UserPlus className="w-4 h-4 text-white/50" /> Sign Up / Login
+                          <UserPlus className="w-4 h-4 text-white/80" /> Sign Up / Login
                         </Link>
                         <Link to="/list" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">
-                          <Plus className="w-4 h-4 text-white/50" /> Create a Listing
+                          <Plus className="w-4 h-4 text-white/80" /> Create a Listing
                         </Link>
                         <Link to="/how-it-works" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">
-                          <Info className="w-4 h-4 text-white/50" /> Learn More
+                          <Info className="w-4 h-4 text-white/80" /> Learn More
                         </Link>
                         <Link to="/search" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">
-                          <Search className="w-4 h-4 text-white/50" /> Browse All
+                          <Search className="w-4 h-4 text-white/80" /> Browse All
                         </Link>
                         <Link to="/financing" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">
-                          <Landmark className="w-4 h-4 text-white/50" /> Financing
+                          <Landmark className="w-4 h-4 text-white/80" /> Financing
                         </Link>
                         <Link to="/pricing" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">
-                          <Crown className="w-4 h-4 text-white/50" /> Pricing & Pro
+                          <Crown className="w-4 h-4 text-white/80" /> Pricing & Pro
                         </Link>
                         <Link to="/help" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all border-b border-white/[0.04]">
-                          <HelpCircle className="w-4 h-4 text-white/50" /> Help Center
+                          <HelpCircle className="w-4 h-4 text-white/80" /> Help Center
                         </Link>
                         <Link to="/contact" onClick={handleClose} className="relative flex items-center gap-2.5 px-3.5 py-2.5 text-white/90 text-sm font-medium hover:bg-white/8 hover:text-white transition-all">
-                          <Mail className="w-4 h-4 text-white/50" /> Contact Us
+                          <Mail className="w-4 h-4 text-white/80" /> Contact Us
                         </Link>
                       </>
                     )}

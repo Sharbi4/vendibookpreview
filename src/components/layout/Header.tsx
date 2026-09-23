@@ -1,3 +1,4 @@
+import './navigation-contrast.css';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Menu, X, Search, User, LogOut, Shield, MessageCircle, HelpCircle, ShieldCheck, Clock, TrendingUp, Mic, MicOff, ChevronDown, CheckCircle2, Heart, CalendarDays, Home, Bell, Globe, Settings, Gift, LayoutDashboard, PlusCircle } from 'lucide-react';
@@ -275,7 +276,7 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
   return (
     <>
     <header
-      className="sticky top-0 z-50 w-full border-b border-border/30 shadow-sm"
+      className="marketplace-header sticky top-0 z-50 w-full border-b border-border/30 shadow-sm"
       style={{
         // Near-opaque charcoal instead of backdrop-filter: blur(24px).
         // backdrop-filter over animated/scrolling content re-samples every frame
@@ -402,8 +403,8 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
                 boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04), 0 4px 18px rgba(0,0,0,0.35)',
               }}
             >
-              <Search className="h-4 w-4 text-white/55 shrink-0" />
-              <span className="truncate text-white/55 text-left flex-1 min-w-0">Search food trucks, trailers...</span>
+              <Search className="h-4 w-4 text-white/80 shrink-0" />
+              <span className="truncate text-white/80 text-left flex-1 min-w-0">Search food trucks, trailers...</span>
             </button>
           )}
         </div>}
@@ -422,8 +423,8 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
               }}
             >
               <Search className="h-[18px] w-[18px] text-primary transition-transform duration-200 group-hover:scale-105" />
-              <span className="text-white/55 transition-colors group-hover:text-white/85">Search food trucks, trailers, or a city</span>
-              <span className="ml-auto rounded-full border border-white/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/40 transition-colors group-hover:text-white/60">Search</span>
+              <span className="text-white/80 transition-colors group-hover:text-white/85">Search food trucks, trailers, or a city</span>
+              <span className="ml-auto rounded-full border border-white/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/75 transition-colors group-hover:text-white/60">Search</span>
             </button>
           </div>
         )}
@@ -455,7 +456,7 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
             <>
               <ConciergeInbox userId={user.id} />
               <NotificationCenter />
-              <AppDropdownMenu variant="light" />
+              <AppDropdownMenu variant="dark" />
             </>
           ) : (
             <>
@@ -466,7 +467,7 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
               >
                 Sign Up / Login
               </Button>
-              <AppDropdownMenu variant="light" />
+              <AppDropdownMenu variant="dark" />
             </>
           )}
           {/* Language Switcher - Far Right */}
@@ -477,7 +478,7 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
         <div className={`flex lg:hidden items-center gap-1 shrink-0 ${isMobileSearchOpen ? 'hidden' : 'flex'}`}> 
           {user && <ConciergeInbox userId={user.id} />}
           {user && <NotificationCenter />}
-          <AppDropdownMenu variant="light" />
+          <AppDropdownMenu variant="dark" />
           <div className="hidden sm:block">
             <LanguageSwitcher />
           </div>
