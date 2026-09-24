@@ -47,9 +47,10 @@ import {
 import { useLegalDocument } from '@/hooks/useLegalDocument';
 import { useRecordConsent } from '@/hooks/useRecordConsent';
 import { cn } from '@/lib/utils';
+import { loadConversation, saveConversation, mergeMessages, type VendiMessage } from '@/lib/vendi-listing/conversation';
 
 
-type Msg = { id: string; role: 'vendi' | 'user'; content: string };
+type Msg = VendiMessage;
 
 interface LocalPhoto { id: string; file: File; url: string; kind: 'image' | 'video' }
 
@@ -118,6 +119,12 @@ const VendiListingBuilder: React.FC = () => {
   const [savingManually, setSavingManually] = useState(false);
   /** Server lookup for an unfinished Vendi draft has completed. */
   const [resumeChecked, setResumeChecked] = useState(false);
+  const [resumeError, setResumeError] = useState(false);
+  const [conversationReady, setConversationReady] = useState<string | null>(null);
+  const [conversationError, setConversationError] = useState(false);
+  const [conversationSaving, setConversationSaving] = useState(false);
+  const [conversationRetry, setConversationRetry] = useState(0);
+  const autosaveRef = useRef<Promise<void>>(Promise.resolve());
   /** Unfinished Vendi drafts on this account that belong to another session. */
   const [resumeOffers, setResumeOffers] = useState<ActiveVendiDraft[]>([]);
   /**
@@ -184,6 +191,9 @@ const VendiListingBuilder: React.FC = () => {
   const { data: legalDoc } = useLegalDocument(documentType);
   const recordConsent = useRecordConsent();
   const acceptanceText = publishAcceptanceText(draft.mode);
+  useEffect(() => {
+    setConsentId(null); setAttestInput(''); disclosureShownRef.current = false;
+  }, [documentType, legalDoc?.version]);
 
   /** Photos that actually count toward publish readiness (stored or local). */
   const imageCount = uploadedUrls.length || photos.filter((p) => p.kind === 'image').length;
@@ -229,7 +239,8 @@ const VendiListingBuilder: React.FC = () => {
         setUploadedUrls(parsed.uploadedUrls ?? []);
         setUploadedVideoUrls(parsed.uploadedVideoUrls ?? []);
         setDraftId(parsed.draftId ?? null);
-        setConsentId(parsed.consentId ?? null);
+        // Acceptance must be made against the current document on this visit.
+        setConsentId(null);
         askedRef.current = askedSet;
         setAsked(Array.from(askedSet));
         setMessages([
@@ -273,7 +284,7 @@ const VendiListingBuilder: React.FC = () => {
   // (every Vendi-supported column, media and required documents) and the
   // answered ledger is derived from it, so nothing already saved is re-asked.
   useEffect(() => {
-    if (!hydrated || !user || draftId || deepLinkId || resolvingRef.current) return;
+    if (!hydrated || !user || draftId || deepLinkId) return;
     resolvingRef.current = true;
     let cancelled = false;
     void (async () => {
@@ -313,15 +324,15 @@ const VendiListingBuilder: React.FC = () => {
             userId: user.id, metadata: { drafts: others.length },
           });
         }
+        if (!cancelled) { setResumeChecked(true); setResumeError(false); }
       } catch {
-        /* resume is best-effort; creation stays blocked until it settles */
+        if (!cancelled) setResumeError(true);
       } finally {
-        if (!cancelled) resolvingRef.current = false;
-        setResumeChecked(true);
+        resolvingRef.current = false;
       }
     })();
     return () => { cancelled = true; };
-  }, [hydrated, user, draftId, deepLinkId]);
+  }, [hydrated, user, draftId, deepLinkId, revalidateSeq]);
 
   /**
    * Apply an authoritative server row to the interview. The database is the
@@ -398,7 +409,7 @@ const VendiListingBuilder: React.FC = () => {
    * published elsewhere is detached instead of silently written to.
    */
   useEffect(() => {
-    if (!hydrated || !user || !draftId) return;
+    if (!hydrated || !user || !draftId || deepLinkId) return;
     const token = `${draftId}:${revalidateSeq}`;
     if (verifiedForRef.current === token) return;
     verifiedForRef.current = token;
@@ -408,7 +419,26 @@ const VendiListingBuilder: React.FC = () => {
       try {
         const result = await verifyVendiDraft(draftId, user.id);
         if (cancelled) return;
-        if (result.state === 'active') { applyServerDraft(result.draft); return; }
+        if (result.state === 'active') {
+          if (result.draft.session_key) {
+            sessionKeyRef.current = result.draft.session_key;
+            adoptVendiSessionKey(user.id, result.draft.session_key);
+          }
+          applyServerDraft(result.draft);
+          if (deepLinkId !== draftId) {
+            setDraft(result.draft.draft);
+            setMessages([{ id: uid(), role: 'vendi', content: resumeMessage(result.draft.draft, []) }]);
+            setPhotos([]); uploadedByItemRef.current.clear();
+            setUploadedUrls(result.draft.image_urls ?? []);
+            setUploadedVideoUrls(result.draft.video_urls ?? []);
+            setConsentId(null); setHistory([]); setAsked([]); askedRef.current = new Set();
+            setAnswered(deriveAnsweredFromDraft(result.draft.draft, { hasMedia: !!result.draft.image_urls?.length }));
+          }
+          setResumeChecked(true);
+          setResumeChecked(true);
+          setResumeError(false);
+          return;
+        }
         setDetached(result.state);
         trackVendi('vendi_session_retired', {
           userId: user.id, listingId: draftId, sessionKey: sessionKeyRef.current,
@@ -417,10 +447,11 @@ const VendiListingBuilder: React.FC = () => {
       } catch {
         /* transient network failure: keep the local state, retry on next focus */
         verifiedForRef.current = null;
+        if (!cancelled) setResumeError(true);
       }
     })();
     return () => { cancelled = true; };
-  }, [hydrated, user, draftId, revalidateSeq, applyServerDraft]);
+  }, [hydrated, user, draftId, deepLinkId, revalidateSeq, applyServerDraft]);
 
   // Coming back from another tab, the dashboard or the full editor re-reads the
   // row — but never mid-save, so a pending answer is not clobbered.
@@ -508,27 +539,55 @@ const VendiListingBuilder: React.FC = () => {
   // server resume settles, so a stale browser payload can't overwrite newer
   // server values, and it never runs while a resume choice is pending.
   useEffect(() => {
-    if (!draftId || !hydrated || !resumeChecked || resumeOffers.length || detached) return;
+    if (!draftId || !hydrated || !resumeChecked || deepLinkId || resumeOffers.length || detached || publishing || savingManually) return;
+    let cancelled = false;
     setSaveState('saving');
     const timer = window.setTimeout(() => {
-      void (async () => {
-      const payload = await withCoordinates(draftId, buildListingPayload(draft, uploadedUrls, uploadedVideoUrls));
-      void supabase
-        .from('listings')
-        .update(payload as never)
-        .eq('id', draftId)
-        .eq('status', 'draft') // never write over a listing that already went live
-        .then(({ error }) => {
-          setSaveState(error ? 'error' : 'saved');
-          if (error) {
-            noteTrouble();
-            trackVendi('vendi_save_failed', { userId: user?.id, listingId: draftId, metadata: { stage: 'autosave' } });
-          } else setTroubles(0);
-        });
-      })();
+      autosaveRef.current = autosaveRef.current.catch(() => {}).then(async () => {
+        if (cancelled || publishInFlightRef.current) return;
+        try {
+          const payload = await withCoordinates(draftId, buildListingPayload(draft, uploadedUrls, uploadedVideoUrls));
+          if (cancelled || publishInFlightRef.current) return;
+          const { data, error } = await supabase.from('listings').update(payload as never)
+            .eq('id', draftId).eq('host_id', user!.id).eq('status', 'draft').is('deleted_at', null).select('id');
+          if (error) throw error;
+          if (!data?.length) throw new Error('This draft is no longer editable.');
+          await syncRequiredDocuments(draftId);
+          if (!cancelled) { setSaveState('saved'); setTroubles(0); }
+        } catch {
+          if (!cancelled) { setSaveState('error'); noteTrouble(); }
+        }
+      });
     }, 1200);
-    return () => window.clearTimeout(timer);
-  }, [draft, uploadedUrls, uploadedVideoUrls, draftId, hydrated, resumeChecked, resumeOffers.length, detached, user?.id]);
+    return () => { cancelled = true; window.clearTimeout(timer); };
+  }, [draft, uploadedUrls, uploadedVideoUrls, draftId, hydrated, resumeChecked, deepLinkId, resumeOffers.length, detached, user?.id, publishing, savingManually]);
+
+  // Restore private chat before appending local messages. Never overwrite another tab's history.
+  useEffect(() => {
+    if (!draftId || !resumeChecked || deepLinkId || resumeOffers.length || detached) return;
+    let cancelled = false;
+    setConversationReady(null);
+    void loadConversation(draftId).then((saved) => {
+      if (cancelled) return;
+      setMessages((local) => mergeMessages(saved, local));
+      setConversationReady(draftId);
+      setConversationError(false);
+    }).catch(() => { if (!cancelled) setConversationError(true); });
+    return () => { cancelled = true; };
+  }, [draftId, resumeChecked, deepLinkId, resumeOffers.length, detached, conversationRetry]);
+
+  useEffect(() => {
+    if (!user || !draftId || conversationReady !== draftId) return;
+    let cancelled = false;
+    setConversationSaving(true);
+    const timer = window.setTimeout(() => {
+      void saveConversation(draftId, user.id, messages)
+        .then(() => { if (!cancelled) setConversationError(false); })
+        .catch(() => { if (!cancelled) setConversationError(true); })
+        .finally(() => { if (!cancelled) setConversationSaving(false); });
+    }, 400);
+    return () => { cancelled = true; window.clearTimeout(timer); };
+  }, [messages, draftId, user?.id, conversationReady]);
 
 
   // Ask the next unanswered question — once, and only once per question, and
@@ -588,7 +647,7 @@ const VendiListingBuilder: React.FC = () => {
 
 
   const say = (role: Msg['role'], content: string) =>
-    setMessages((prev) => [...prev, { id: uid(), role, content }]);
+    setMessages((prev) => [...prev, { id: uid(), role, content, createdAt: new Date().toISOString() }]);
 
   /**
    * Every seller message goes through corrections first.
@@ -829,16 +888,9 @@ const VendiListingBuilder: React.FC = () => {
   const syncRequiredDocuments = async (listingId: string) => {
     const docs = (draft.required_documents ?? []) as DocumentType[];
     if (draft.mode !== 'rent') return;
-    await supabase.from('listing_required_documents').delete().eq('listing_id', listingId);
-    if (!docs.length) return;
-    await supabase.from('listing_required_documents').insert(
-      docs.map((document_type) => ({
-        listing_id: listingId,
-        document_type,
-        is_required: true,
-        deadline_type: 'before_approval' as const,
-      })),
-    );
+    const { error } = await supabase.rpc('vendi_save_required_documents' as never,
+      { p_listing_id: listingId, p_documents: docs } as never);
+    if (error) throw error;
   };
 
   // Persist media to the owner's draft as soon as both exist, so photos survive
@@ -874,6 +926,7 @@ const VendiListingBuilder: React.FC = () => {
     setSavingManually(true);
     setSaveState('saving');
     try {
+      await autosaveRef.current;
       const { data: sessionData } = await supabase.auth.getSession();
       const accessToken = sessionData.session?.access_token;
       if (!accessToken) throw new Error('Please sign in again to save.');
@@ -905,19 +958,22 @@ const VendiListingBuilder: React.FC = () => {
         setUploadedUrls(images); setUploadedVideoUrls(videos);
       }
 
-      const { error: updateError } = await supabase
+      const { data: savedRows, error: updateError } = await supabase
         .from('listings')
         .update((await withCoordinates(listingId, buildListingPayload(draft, images, videos))) as never)
         .eq('id', listingId)
-        .eq('status', 'draft'); // never write over a listing that already went live
+        .eq('status', 'draft').eq('host_id', user.id).is('deleted_at', null).select('id');
       if (updateError) throw updateError;
+      if (!savedRows?.length) throw new Error('This draft is no longer editable. Please refresh.');
       await syncRequiredDocuments(listingId);
+      await saveConversation(listingId, user.id, messages);
 
       setSaveState('saved');
       toast.success('Draft saved.', {
         description: 'You can pick up right where you left off from your dashboard.',
         action: { label: 'Go to dashboard', onClick: () => navigate('/dashboard') },
       });
+      return true;
     } catch (error) {
       setSaveState('error');
       noteTrouble();
@@ -925,6 +981,7 @@ const VendiListingBuilder: React.FC = () => {
         error instanceof Error ? error.message : 'We could not save your draft.',
         { description: 'Your answers are still here — try again in a moment.' },
       );
+      return false;
     } finally {
       setSavingManually(false);
     }
@@ -948,6 +1005,10 @@ const VendiListingBuilder: React.FC = () => {
   const handleAttest = async (raw: string) => {
     const text = raw;
     if (attesting || consentId) return;
+    if (!legalDoc?.version || !draftId) {
+      setAttestError('Wait for your draft and agreement to finish loading, then try again.');
+      return;
+    }
     if (text !== 'YES') {
       const reason = !text.trim()
         ? 'Type YES to affirm the disclosure.'
@@ -966,7 +1027,7 @@ const VendiListingBuilder: React.FC = () => {
     try {
       const id = await recordConsent.mutateAsync({
         documentType,
-        documentVersion: legalDoc?.version ?? CURRENT_VERSIONS[documentType],
+        documentVersion: legalDoc.version,
         trigger: CONSENT_TRIGGERS.PUBLISH_LISTING,
         acceptanceText: `${acceptanceText} ${ATTESTATIONS.map((a) => a.text).join(' ')} Acknowledged by typing YES in the List with Vendi builder.`,
         relatedIds: draftId ? { listing_id: draftId } : undefined,
@@ -996,6 +1057,7 @@ const VendiListingBuilder: React.FC = () => {
     publishInFlightRef.current = true;
     setPublishing(true);
     try {
+      await autosaveRef.current;
       const { data: sessionData } = await supabase.auth.getSession();
       const accessToken = sessionData.session?.access_token;
       if (!accessToken) throw new Error('Please sign in again to publish.');
@@ -1026,9 +1088,12 @@ const VendiListingBuilder: React.FC = () => {
       setUploadedVideoUrls(videoUrls);
 
       const payload = await withCoordinates(listingId, buildListingPayload(draft, imageUrls, videoUrls));
-      const { error: updateError } = await supabase.from('listings').update(payload as never).eq('id', listingId);
+      const { data: savedRows, error: updateError } = await supabase.from('listings').update(payload as never)
+        .eq('id', listingId).eq('host_id', user.id).eq('status', 'draft').is('deleted_at', null).select('id');
       if (updateError) throw updateError;
+      if (!savedRows?.length) throw new Error('This draft changed elsewhere. Refresh before publishing.');
       await syncRequiredDocuments(listingId);
+      await saveConversation(listingId, user.id, messages);
 
       // 2. Canonical publish + authoritative verification.
       const verified = await publishVendiListing({
@@ -1055,7 +1120,7 @@ const VendiListingBuilder: React.FC = () => {
       trackVendi('vendi_publish_failed', { userId: user?.id, listingId: id, metadata: { reason: message.slice(0, 80) } });
       // Recovery state is deliberately untouched: the seller keeps their draft.
       toast.error(message, {
-        description: 'Your draft is saved — nothing was lost. You can try again or finish in the full editor.',
+        description: 'Your answers remain on this screen. Retry saving or finish in the full editor.',
         ...(id
           ? { action: { label: 'Review in full editor', onClick: () => navigate(`/create-listing/${id}`) } }
           : {}),
@@ -1088,6 +1153,7 @@ const VendiListingBuilder: React.FC = () => {
     setResumeOffers([]); setResumeChecked(true);
     setConsentId(null); setAttestInput(''); disclosureShownRef.current = false;
     setSaveState('idle');
+    setConversationReady(null); setConversationError(false); setHistory([]);
     askedRef.current = new Set(); setAsked([]);
     // Re-run the opening effect against the now-empty storage: one clean welcome.
     setHydrated(false); setSessionSeq((n) => n + 1);
@@ -1107,11 +1173,11 @@ const VendiListingBuilder: React.FC = () => {
     setDetached(null);
     verifiedForRef.current = `${offer.id}:${revalidateSeq}`;
     setResumeOffers([]);
-    setDraft((prev) => mergeServerDraft(prev, offer.draft, { preferServer: true }));
-    setAnswered((prev) => Array.from(new Set([
-      ...prev,
-      ...deriveAnsweredFromDraft(offer.draft, { hasMedia: !!offer.image_urls?.length }),
-    ])));
+    setDraft(offer.draft);
+    setAnswered(deriveAnsweredFromDraft(offer.draft, { hasMedia: !!offer.image_urls?.length }));
+    setMessages([{ id: uid(), role: 'vendi', content: resumeMessage(offer.draft, []) }]);
+    setConsentId(null); setHistory([]); setPhotos([]); setAsked([]); askedRef.current = new Set();
+    uploadedByItemRef.current.clear(); setConversationReady(null);
     setUploadedUrls(offer.image_urls ?? []);
     setUploadedVideoUrls(offer.video_urls ?? []);
     trackVendi('vendi_session_resumed', {
@@ -1120,8 +1186,8 @@ const VendiListingBuilder: React.FC = () => {
     });
     if (offer.mode === 'rent') {
       void loadRequiredDocuments(offer.id).then((docs) => {
-        if (docs.length) setDraft((prev) => ({ ...prev, required_documents: docs }));
-      });
+        setDraft((prev) => ({ ...prev, required_documents: docs }));
+      }).catch(() => setSaveState('error'));
     }
   };
 
@@ -1167,6 +1233,14 @@ const VendiListingBuilder: React.FC = () => {
     );
   }
   if (!user) return <VendiAuthGate />;
+
+  if (resumeError) return (
+    <div className="sale-light flex min-h-[70vh] flex-col items-center justify-center gap-4 bg-background px-6 text-center text-foreground">
+      <h1 className="text-2xl font-semibold">Your draft is still yours.</h1>
+      <p className="max-w-md text-muted-foreground">We couldn't check your saved listing. Reconnect and try again before continuing.</p>
+      <Button onClick={() => { setResumeError(false); setRevalidateSeq((n) => n + 1); }}>Try again</Button>
+    </div>
+  );
 
   // Resolving server identity. Rendering the interview before this settles is
   // what let a stale browser cache look like "no draft yet".
@@ -1298,7 +1372,7 @@ const VendiListingBuilder: React.FC = () => {
 
       <header className="sticky top-0 z-30 border-b border-border bg-background/85 backdrop-blur-xl">
         <div className="mx-auto flex max-w-6xl items-center gap-2 px-4 py-3 sm:gap-3 sm:px-6">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)} aria-label="Go back" className="text-muted-foreground hover:text-foreground">
+          <Button variant="ghost" size="icon" disabled={savingManually || publishing} onClick={async () => { if (!draft.mode || !draft.category || await handleSaveDraft()) navigate(-1); }} aria-label="Save and go back" className="text-muted-foreground hover:text-foreground">
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <img src={vendibookFavicon} alt="" className="h-8 w-8 rounded-xl ring-1 ring-border" />
@@ -1326,7 +1400,7 @@ const VendiListingBuilder: React.FC = () => {
               : <CloudUpload className="mr-2 h-4 w-4" />}
             <span className="hidden xs:inline sm:inline">Save draft</span>
           </Button>
-          <Button variant="ghost" size="sm" className="hidden rounded-full text-muted-foreground hover:text-foreground sm:inline-flex" onClick={() => navigate('/list')}>
+          <Button variant="ghost" size="sm" disabled={savingManually || publishing} className="hidden rounded-full text-muted-foreground hover:text-foreground sm:inline-flex" onClick={async () => { if (draftId) { if (await handleSaveDraft()) navigate(`/create-listing/${draftId}`); } else navigate('/list'); }}>
             <Wrench className="mr-2 h-4 w-4" /> Build it myself
           </Button>
 
@@ -1359,13 +1433,18 @@ const VendiListingBuilder: React.FC = () => {
             Tell Vendi about it. We'll build the listing.
           </h1>
           <p className="mt-3 text-base leading-relaxed text-muted-foreground sm:text-lg">
-            One question at a time. Nothing is invented — every detail comes from your answers, and your draft saves as you go.
+            Talk or type. Watch your listing take shape, then review every detail before it goes live.
           </p>
         </div>
       </div>
 
       <div className="relative mx-auto grid max-w-6xl items-start gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[minmax(0,1fr)_384px] lg:gap-8 lg:py-12">
         <section className="flex min-h-[72vh] flex-col overflow-hidden rounded-[28px] border border-border bg-card shadow-[0_1px_2px_rgba(24,20,16,0.04),0_26px_60px_-30px_rgba(24,20,16,0.30)]">
+          <div className="flex flex-wrap items-center justify-between gap-2 border-b border-border bg-secondary/40 px-5 py-3 text-xs text-foreground sm:px-9" role="status">
+            <span>Your private listing workspace</span>
+            {conversationError ? <button className="font-semibold text-destructive underline" onClick={() => setConversationRetry((n) => n + 1)}>Chat sync paused · Retry</button>
+              : <span className="text-muted-foreground">{conversationSaving ? 'Saving conversation…' : conversationReady ? 'Conversation synced to your account' : 'Conversation stays on this device until your draft is saved'}</span>}
+          </div>
           {/* Keyed by session: "Start over" drops the old thread instantly
               instead of leaving exiting bubbles on screen. */}
           <div key={sessionSeq} className="flex-1 space-y-6 overflow-y-auto px-5 py-7 sm:px-9 sm:py-10">
@@ -1687,8 +1766,10 @@ const VendiListingBuilder: React.FC = () => {
                     left and run the publish action once YES is typed. */}
                 <div className="mt-5 border-t border-border pt-4">
                   <VendiVoiceAgent
+                    key={sessionSeq}
                     disabled={publishing}
                     onAnswer={(text) => submitAnswer(text)}
+                    onAgentMessage={(text) => say('vendi', text)}
                     blockers={blockers}
                     canPublish={!publishing && blockers.length === 0 && !!consentId}
                     onGoToReview={() => setReviewing(true)}
@@ -1860,8 +1941,10 @@ const VendiListingBuilder: React.FC = () => {
                   hands the spoken answer back through the normal extraction. */}
               <div className="mt-3">
                 <VendiVoiceAgent
+                  key={sessionSeq}
                   disabled={publishing}
                   onAnswer={(text) => submitAnswer(text)}
+                  onAgentMessage={(text) => say('vendi', text)}
                   blockers={blockers}
                   canPublish={!publishing && blockers.length === 0 && !!consentId}
                   onGoToReview={() => setReviewing(true)}

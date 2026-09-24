@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { MIN_PHOTOS } from '@/lib/listings/publishParity';
 
 export const VENDI_VOICE_AGENT_ID = 'agent_0101kdmd2dn7exys7w22pnscqasf';
 
@@ -14,7 +15,7 @@ export const VENDI_VOICE_AGENT_ID = 'agent_0101kdmd2dn7exys7w22pnscqasf';
  * Upsells Vendi Voice is allowed to surface.
  *
  * `href` is the default destination. Featured Boost is a one-time product, so
- * it opens the hosted PayPal product checkout for the seller's own listing
+ * it opens the hosted product checkout for the seller's own listing
  * (`hostedSlug`). Vendibook Pro is a recurring subscription and must always go
  * through the /pricing hub first, where plan selection and the recurring
  * billing consent live — Vendi never starts a subscription by voice.
@@ -31,7 +32,7 @@ const UPSELLS: Record<
   },
   featured: {
     title: 'Featured boost',
-    body: 'Pin this listing to the top of search results in your city for 30 days. Paid securely with PayPal.',
+    body: 'Pin this listing to the top of search results in your city for 30 days. Review pricing and pay securely on screen.',
     cta: 'Boost this listing',
     href: '/pricing',
     hostedSlug: 'boost-featured-30',
@@ -59,6 +60,7 @@ const UPSELLS: Record<
 interface VendiVoiceAgentProps {
   /** Called with a spoken answer so the builder can run its normal extraction. */
   onAnswer: (text: string) => void;
+  onAgentMessage?: (text: string) => void;
   /** Plain-language context (current question + saved facts) for the agent. */
   context: string;
   disabled?: boolean;
@@ -85,6 +87,7 @@ interface VendiVoiceAgentProps {
  */
 const VendiVoiceAgent: React.FC<VendiVoiceAgentProps> = ({
   onAnswer,
+  onAgentMessage,
   context,
   disabled,
   blockers = [],
@@ -101,13 +104,15 @@ const VendiVoiceAgent: React.FC<VendiVoiceAgentProps> = ({
   const [upsell, setUpsell] = useState<string | null>(null);
   const answerRef = useRef(onAnswer);
   answerRef.current = onAnswer;
+  const messageRef = useRef(onAgentMessage);
+  messageRef.current = onAgentMessage;
   // Live refs so the agent's tools always read current builder state.
   const stateRef = useRef({ blockers, canPublish, onGoToReview, onPublish, onRequestMedia, imageCount, listingId });
   stateRef.current = { blockers, canPublish, onGoToReview, onPublish, onRequestMedia, imageCount, listingId };
 
   /**
    * Where an upgrade card / voice checkout should send the seller.
-   * One-time products (Featured Boost) open the hosted PayPal product checkout
+   * One-time products (Featured Boost) open the hosted product checkout
    * scoped to this listing; Pro keeps routing through the /pricing hub.
    */
   const upsellHref = useCallback(
@@ -132,7 +137,7 @@ const VendiVoiceAgent: React.FC<VendiVoiceAgentProps> = ({
         const text = (value ?? '').trim();
         if (!text) return 'No answer captured.';
         answerRef.current(text);
-        return 'Saved to the listing draft.';
+        return 'Answer added to the on-screen draft. Check the save indicator for server confirmation.';
       },
       list_missing: () => {
         const left = stateRef.current.blockers;
@@ -152,7 +157,7 @@ const VendiVoiceAgent: React.FC<VendiVoiceAgentProps> = ({
         const count = stateRef.current.imageCount;
         return count
           ? `${count} photo${count === 1 ? '' : 's'} attached to this listing.`
-          : 'No photos attached yet — at least one photo is required to publish.';
+          : `No photos attached yet — at least ${MIN_PHOTOS} photos are required to publish.`;
       },
       go_to_review: () => {
         stateRef.current.onGoToReview?.();
@@ -177,11 +182,11 @@ const VendiVoiceAgent: React.FC<VendiVoiceAgentProps> = ({
         navigate(href);
         if (key === 'featured') {
           return stateRef.current.listingId
-            ? 'Opened the Featured Boost checkout for this listing. The seller reviews the price and pays with PayPal on screen — nothing is charged until they approve it there.'
+            ? 'Opened the Featured Boost checkout for this listing. The seller reviews the price and pays on screen — nothing is charged until they approve it there.'
             : 'Opened the boost options page. The listing has to be saved before a boost can be attached to it.';
         }
         if (key === 'pro') {
-          return 'Opened the Vendibook Pro plans page. The seller picks a plan and approves the recurring PayPal billing there — I cannot start a subscription for them.';
+          return 'Opened the Vendibook Pro plans page. The seller picks a plan and approves the recurring billing there — I cannot start a subscription for them.';
         }
         return `Opened the ${target.title} page where payment is completed securely.`;
       },
@@ -204,9 +209,15 @@ const VendiVoiceAgent: React.FC<VendiVoiceAgentProps> = ({
   // drop can be explained instead of silently vanishing.
   const intentionalStopRef = useRef(false);
   const startingRef = useRef(false);
+  const mountedRef = useRef(true);
 
   const conversation = useConversation({
+    micMuted: muted,
     clientTools,
+    onMessage: ({ source, message }) => {
+      // Answers are extracted only by save_answer; transcripts must not apply them twice.
+      if (source === 'ai' && message.trim()) messageRef.current?.(message);
+    },
     onDisconnect: (details: unknown) => {
       const reason =
         (details as { reason?: string; message?: string } | undefined)?.reason ??
@@ -233,7 +244,7 @@ const VendiVoiceAgent: React.FC<VendiVoiceAgentProps> = ({
   const start = useCallback(async () => {
     // A second startSession while one is in flight reuses a single-use token
     // and drops the freshly-opened call, so only one attempt may run.
-    if (startingRef.current) return;
+    if (startingRef.current || disabled || conversation.status === 'connected') return;
     startingRef.current = true;
     setConnecting(true);
 
@@ -242,6 +253,7 @@ const VendiVoiceAgent: React.FC<VendiVoiceAgentProps> = ({
     try {
       const probe = await navigator.mediaDevices.getUserMedia({ audio: true });
       probe.getTracks().forEach((t) => t.stop());
+      if (!mountedRef.current) { startingRef.current = false; return; }
     } catch {
       startingRef.current = false;
       setConnecting(false);
@@ -257,6 +269,7 @@ const VendiVoiceAgent: React.FC<VendiVoiceAgentProps> = ({
         }),
       ]);
       if (error || !data?.token) throw new Error('token');
+      if (!mountedRef.current) return;
 
       const accessToken = sessionData.session?.access_token;
       const userId = sessionData.session?.user?.id;
@@ -282,6 +295,7 @@ const VendiVoiceAgent: React.FC<VendiVoiceAgentProps> = ({
           user_id: userId,
         },
       });
+      if (!mountedRef.current) { await conversation.endSession(); return; }
       try {
         if (context) conversation.sendContextualUpdate(context);
       } catch (ctxErr) {
@@ -293,9 +307,9 @@ const VendiVoiceAgent: React.FC<VendiVoiceAgentProps> = ({
       toast.error('Voice is unavailable right now — typing still works perfectly.');
     } finally {
       startingRef.current = false;
-      setConnecting(false);
+      if (mountedRef.current) setConnecting(false);
     }
-  }, [conversation, context]);
+  }, [conversation, context, disabled]);
 
   const stop = useCallback(() => {
     intentionalStopRef.current = true;
@@ -313,17 +327,17 @@ const VendiVoiceAgent: React.FC<VendiVoiceAgentProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [connected, context]);
 
-  useEffect(() => () => {
-    intentionalStopRef.current = true;
-    void conversation.endSession();
+  useEffect(() => {
+    mountedRef.current = true;
+    return () => {
+      mountedRef.current = false;
+      intentionalStopRef.current = true;
+      void conversation.endSession();
+    };
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
 
-  const toggleMute = useCallback(async () => {
-    const next = !muted;
-    await conversation.setVolume({ volume: next ? 0 : 1 });
-    setMuted(next);
-  }, [conversation, muted]);
+  const toggleMute = () => setMuted((value) => !value);
 
   const card = upsell ? UPSELLS[upsell] : null;
 
@@ -355,9 +369,9 @@ const VendiVoiceAgent: React.FC<VendiVoiceAgentProps> = ({
                   conversation.isSpeaking ? 'animate-pulse' : '',
                 )}
               />
-              {conversation.isSpeaking ? 'Vendi is speaking' : 'Listening…'}
+              {muted ? 'Microphone muted' : conversation.isSpeaking ? 'Vendi is speaking' : 'Listening…'}
             </span>
-            <Button type="button" size="sm" variant="ghost" onClick={toggleMute} className="rounded-full text-muted-foreground">
+            <Button type="button" size="sm" variant="ghost" onClick={toggleMute} aria-pressed={muted} aria-label={muted ? 'Unmute microphone' : 'Mute microphone'} className="rounded-full text-muted-foreground">
               {muted ? <MicOff className="mr-2 h-4 w-4" /> : <Mic className="mr-2 h-4 w-4" />}
               {muted ? 'Unmute' : 'Mute'}
             </Button>

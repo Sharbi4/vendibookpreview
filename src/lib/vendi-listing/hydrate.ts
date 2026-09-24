@@ -48,6 +48,7 @@ export function listingRowToVendiDraft(
     subcategory: str(row.subcategory),
 
     address: str(row.address) ?? str(row.pickup_location_text),
+    street_address: str(row.address) ?? str(row.pickup_location_text),
     city: str(row.city),
     state: str(row.state),
     zip_code: str(row.postal_code),
@@ -164,6 +165,9 @@ export function deriveAnsweredFromDraft(
   mark('mode', draft.mode);
   mark('subcategory', draft.subcategory);
   mark('location', draft.city && draft.state);
+  mark('street_address', draft.street_address);
+  mark('zip_code', draft.zip_code);
+  mark('rent_daily_rate', draft.mode === 'rent' && draft.price_daily);
   mark('description', (draft.description?.trim().length ?? 0) >= 20);
   mark('title', (draft.title?.trim().length ?? 0) >= 8);
   mark('sale_price', draft.mode === 'sale' && draft.price_sale);

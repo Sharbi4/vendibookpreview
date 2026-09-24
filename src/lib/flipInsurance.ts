@@ -1,8 +1,8 @@
 // Public partner configuration. No insurance purchase or verification happens here.
 export const FLIP_INSURANCE = {
   enabled: true,
-  partnerUrl: 'https://app.fliprogram.com/events/16206',
-  ownerUrl: 'https://app.fliprogram.com/events/16206',
+  partnerUrl: 'https://get.fliprogram.com/flip_annual?page=business%20activities&step=1',
+  ownerUrl: 'https://get.fliprogram.com/flip_annual?page=business%20activities&step=1',
   logoUrl: '/partners/flip-logo.png',
   resources: [
     { title: 'Food truck permits & licenses', description: 'Plan the questions to ask before you start operating.', url: 'https://www.fliprogram.com/blog/permits-and-licenses-required-for-a-food-truck-business' },

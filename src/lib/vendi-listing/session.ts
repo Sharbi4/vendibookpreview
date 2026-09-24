@@ -94,6 +94,8 @@ const ACTIVE_DRAFT_COLUMNS = [
   'amenities', 'highlights', 'length_inches', 'width_inches', 'height_inches', 'weight_lbs',
   'accept_paypal_checkout', 'accept_cash_payment', 'vendibook_freight_enabled',
   'image_urls', 'video_urls', 'cover_image_url',
+  'condition', 'operational_status', 'title_status', 'has_lien', 'no_known_problems',
+  'known_problems', 'included_items', 'photos_exclusions_answered', 'photos_exclusions_note',
 ].join(',');
 
 const toActive = (row: ListingRow, requiredDocuments: DocumentType[] = []): ActiveVendiDraft => ({
@@ -116,10 +118,11 @@ const toActive = (row: ListingRow, requiredDocuments: DocumentType[] = []): Acti
 
 /** Rental screening documents Vendi owns for a listing. */
 export async function loadRequiredDocuments(listingId: string): Promise<DocumentType[]> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('listing_required_documents')
     .select('document_type')
     .eq('listing_id', listingId);
+  if (error) throw error;
   return ((data ?? []) as Array<{ document_type: DocumentType }>).map((r) => r.document_type);
 }
 
@@ -128,7 +131,7 @@ export async function listActiveVendiDrafts(
   userId: string,
   limit = 6,
 ): Promise<ActiveVendiDraft[]> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('listings')
     .select(ACTIVE_DRAFT_COLUMNS)
     .eq('host_id', userId)
@@ -138,6 +141,7 @@ export async function listActiveVendiDrafts(
     .order('updated_at', { ascending: false })
     .limit(limit);
 
+  if (error) throw error;
   return ((data ?? []) as unknown as ListingRow[]).map((row) => toActive(row));
 }
 
@@ -161,17 +165,24 @@ export async function resolveVendiResume(
   sessionKey?: string | null,
 ): Promise<ResumeResolution> {
   const drafts = await listActiveVendiDrafts(userId);
-  const session = sessionKey ? drafts.find((d) => d.session_key === sessionKey) ?? null : null;
+  let session = sessionKey ? drafts.find((d) => d.session_key === sessionKey) ?? null : null;
 
   let retired = false;
   if (sessionKey && !session) {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from('listings')
       .select('id,status')
       .eq('host_id', userId)
       .eq('vendi_session_key', sessionKey)
       .maybeSingle();
+    if (error) throw error;
     retired = !!data && (data as { status?: string }).status !== RESUMABLE_STATUS;
+    // The matching session may be older than the six drafts shown in the chooser.
+    if (data && !retired) {
+      const verified = await verifyVendiDraft(String(data.id), userId);
+      if (verified.state === 'active') session = verified.draft;
+      else retired = true;
+    }
   }
 
   const others = drafts.filter((d) => d.id !== session?.id);
@@ -216,13 +227,14 @@ export async function verifyVendiDraft(
   listingId: string,
   userId: string,
 ): Promise<DraftVerification> {
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('listings')
     .select(`${ACTIVE_DRAFT_COLUMNS},deleted_at,host_id`)
     .eq('id', listingId)
     .eq('host_id', userId)
     .maybeSingle();
 
+  if (error) throw error;
   if (!data) return { state: 'gone' };
   const row = data as unknown as ListingRow;
   if (row.deleted_at) return { state: 'gone' };

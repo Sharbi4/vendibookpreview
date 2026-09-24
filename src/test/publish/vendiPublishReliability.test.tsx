@@ -12,7 +12,7 @@ const { navigate, toastSuccess, toastError, USER, listingUpdate, publishVendiLis
   toastSuccess: vi.fn(),
   toastError: vi.fn(),
   USER: { id: 'user-1', email: 'seller@example.com' },
-  listingUpdate: vi.fn(async () => ({ error: null })),
+  listingUpdate: vi.fn(async () => ({ data: [{ id: 'listing-1' }], error: null })),
   publishVendiListing: vi.fn(),
 }));
 
@@ -28,7 +28,7 @@ vi.mock('@/contexts/AuthContext', () => ({
   useAuth: () => ({ user: USER, isLoading: false }),
 }));
 
-vi.mock('@/hooks/useLegalDocument', () => ({ useLegalDocument: () => ({ data: null }) }));
+vi.mock('@/hooks/useLegalDocument', () => ({ useLegalDocument: () => ({ data: { version: 'v-current' } }) }));
 vi.mock('@/hooks/useRecordConsent', () => ({
   useRecordConsent: () => ({ mutateAsync: vi.fn(async () => 'consent-1'), isPending: false }),
 }));
@@ -37,8 +37,9 @@ vi.mock('@/components/vendi-listing/VendiAuthGate', () => ({ default: () => null
 
 vi.mock('@/integrations/supabase/client', () => {
   const table = () => {
+    let updating = false;
     const b: any = {
-      update: () => ({ eq: async () => listingUpdate() }),
+      update: () => { updating = true; return b; },
       delete: () => ({ eq: async () => ({ error: null }) }),
       insert: async () => ({ error: null }),
       select: () => b,
@@ -47,12 +48,18 @@ vi.mock('@/integrations/supabase/client', () => {
       not: () => b,
       order: () => b,
       limit: () => b,
+      then: (resolve) => (updating ? listingUpdate() : Promise.resolve({ data: [], error: null })).then(resolve),
       // The builder verifies its cached draft id against the server on arrival;
       // this row is the seller's still-unfinished draft.
       maybeSingle: async () => ({
         data: {
           id: 'listing-1', host_id: USER.id, status: 'draft', deleted_at: null,
           mode: 'rent', category: 'food_trailer', vendi_session_key: 'key-1',
+          title: 'Like new turnkey food trailer for lease', description: 'Turnkey trailer available for monthly lease with cooking equipment in Spring Hill, TN.',
+          city: 'Spring Hill', state: 'TN', address: '123 Main Street', postal_code: '37174', price_daily: 100, price_monthly: 1000, fulfillment_type: 'pickup',
+          image_urls: ['https://cdn.test/a.jpg', 'https://cdn.test/b.jpg', 'https://cdn.test/c.jpg'],
+          condition: 'like_new', operational_status: 'towable', no_known_problems: true,
+          included_items: 'All cooking equipment and two propane tanks', photos_exclusions_answered: true,
           created_at: '2026-01-01T00:00:00Z', updated_at: '2026-01-02T00:00:00Z',
         },
         error: null,
@@ -64,6 +71,7 @@ vi.mock('@/integrations/supabase/client', () => {
   return {
     supabase: {
       from: table,
+      rpc: async () => ({ error: null }),
       auth: { getSession: async () => ({ data: { session: { access_token: 'token' } } }) },
       functions: { invoke: async () => ({ data: { id: 'listing-1' }, error: null }) },
       storage: { from: () => ({ upload: async () => ({ error: null }), getPublicUrl: () => ({ data: { publicUrl: 'https://cdn.test/a.jpg' } }) }) },
@@ -90,6 +98,7 @@ const seedSession = (consentId: string | null) => {
         description: 'Turnkey trailer available for monthly lease in Spring Hill, TN.',
         category: 'food_trailer',
         mode: 'rent',
+        street_address: '123 Main Street', zip_code: '37174',
         city: 'Spring Hill',
         state: 'TN',
         price_monthly: 1000,
@@ -109,7 +118,7 @@ const seedSession = (consentId: string | null) => {
         'mode',
         'category',
         'subcategory',
-        'location',
+        'location', 'street_address', 'zip_code', 'rent_daily_rate',
         'rent_period',
         'rent_price',
         'description',
@@ -143,6 +152,17 @@ const seedSession = (consentId: string | null) => {
 const publishButton = async () =>
   await screen.findByRole('button', { name: /publish listing/i });
 
+vi.mock('@/lib/vendi-listing/conversation', () => ({
+ loadConversation: async () => [], saveConversation: async () => {}, mergeMessages: (a,b) => [...a,...b],
+}));
+
+const affirm = async () => {
+ const input = await screen.findByLabelText(/type YES/i);
+ fireEvent.change(input, { target: { value: 'YES' } });
+ fireEvent.click(screen.getByRole('button', { name: /affirm/i }));
+ await waitFor(() => expect(screen.getByRole('button', { name: /publish listing/i })).not.toBeDisabled());
+};
+
 beforeEach(() => {
   vi.clearAllMocks();
   localStorage.clear();
@@ -166,6 +186,7 @@ describe('List with Vendi publish reliability', () => {
     seedSession('consent-1');
     publishVendiListing.mockRejectedValue(new Error('Publishing did not complete.'));
     render(<VendiListingBuilder />);
+    await affirm();
     const btn = await publishButton();
     expect(btn).not.toBeDisabled();
     fireEvent.click(btn);
@@ -183,6 +204,7 @@ describe('List with Vendi publish reliability', () => {
       publishedAt: '2026-08-26T00:00:00Z', publicPath: '/listing/listing-1',
     });
     render(<VendiListingBuilder />);
+    await affirm();
     fireEvent.click(await publishButton());
 
     await waitFor(() => expect(navigate).toHaveBeenCalledWith('/listing/listing-1'));
@@ -200,6 +222,7 @@ describe('List with Vendi publish reliability', () => {
     let resolvePublish: (v: unknown) => void = () => {};
     publishVendiListing.mockImplementation(() => new Promise((res) => { resolvePublish = res; }));
     render(<VendiListingBuilder />);
+    await affirm();
     const btn = await publishButton();
     fireEvent.click(btn);
     fireEvent.click(btn);

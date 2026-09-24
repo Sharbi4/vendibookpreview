@@ -3,6 +3,13 @@ import SEO from '@/components/SEO';
 import RequireAuth from '@/components/auth/RequireAuth';
 import VendiListingBuilder from '@/components/vendi-listing/VendiListingBuilder';
 import VendiAuthGate from '@/components/vendi-listing/VendiAuthGate';
+import { useAuth } from '@/contexts/AuthContext';
+
+// Never carry a previous account's interview or in-flight state into another account.
+const AccountBuilder = () => {
+  const { user } = useAuth();
+  return <VendiListingBuilder key={user?.id ?? 'signed-out'} />;
+};
 
 const ListWithVendi: React.FC = () => (
   <>
@@ -14,7 +21,7 @@ const ListWithVendi: React.FC = () => (
     {/* Route-level gate: the interview, draft creation, and media uploads are
         never mounted for unauthenticated visitors. */}
     <RequireAuth fallback={<VendiAuthGate />}>
-      <VendiListingBuilder />
+      <AccountBuilder />
     </RequireAuth>
   </>
 );

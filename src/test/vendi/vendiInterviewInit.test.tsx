@@ -32,6 +32,8 @@ vi.mock('@/integrations/supabase/client', () => {
       delete: () => ({ eq: async () => ({ error: null }) }),
       insert: async () => ({ error: null }),
       select: () => b,
+      is: () => b, not: () => b, order: () => b, limit: () => b,
+      then: (resolve) => Promise.resolve({ data: [], error: null }).then(resolve),
       eq: () => b,
       maybeSingle: async () => ({ data: null, error: null }),
     });
@@ -132,7 +134,7 @@ describe('List with Vendi opening', () => {
         answered: [
           'import_choice', 'import_paste', 'category', 'mode', 'subcategory', 'location',
           'rent_period', 'rent_price', 'description', 'fulfillment', 'instant_book', 'photos',
-          'title', 'ready_gate', 'rent_extra_rates', 'deposit', 'availability',
+          'street_address', 'zip_code', 'rent_daily_rate', 'condition', 'operational_status', 'known_problems', 'included_items', 'photo_exclusions', 'title', 'ready_gate', 'rent_extra_rates', 'deposit', 'availability',
           'required_documents', 'pickup_instructions', 'amenities', 'highlights', 'dimensions',
         ],
         asked: QUESTIONS.map((x) => x.id),
