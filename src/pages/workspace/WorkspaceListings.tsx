@@ -1,3 +1,4 @@
+import ListingManageMenu from '@/components/workspace/ListingManageMenu';
 import FeaturedPromotionBanner from '@/components/workspace/FeaturedPromotionBanner';
 import FeaturedBadge from '@/components/listing/FeaturedBadge';
 import { canBoostListing } from '@/lib/listings/publicVisibility';
@@ -34,7 +35,7 @@ const money = (value?: number | null) =>
       }).format(value);
 
 export default function WorkspaceListings() {
-  const { listings, isLoading } = useHostListings();
+  const { listings, isLoading, pauseListing, unpauseListing, archiveListing, deleteListing } = useHostListings();
   const { isReady: paypalReady } = useMyPayPalConnection();
   const { walkthroughs } = useVideoWalkthroughs();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -229,6 +230,7 @@ export default function WorkspaceListings() {
                         ))}
                     </div>
                     <div className="v2-listing-actions">
+                      <ListingManageMenu listing={listing} onPause={pauseListing} onResume={unpauseListing} onArchive={archiveListing} onDelete={deleteListing} />
                       <Link className="v2-btn v2-btn-sm" to={`/listing/${listing.id}`}>
                         <Eye />
                         View

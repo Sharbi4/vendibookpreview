@@ -1,3 +1,4 @@
+import ListingManageMenu from '@/components/workspace/ListingManageMenu';
 import DashboardNextSteps from '@/components/workspace/DashboardNextSteps';
 import FeaturedPromotionBanner from '@/components/workspace/FeaturedPromotionBanner';
 import FeaturedBadge from '@/components/listing/FeaturedBadge';
@@ -62,7 +63,7 @@ type Task = {
 export default function WorkspaceHome() {
   const [routeParams] = useSearchParams();
   const { user, profile } = useAuth();
-  const { listings, isLoading: listingsLoading } = useHostListings();
+  const { listings, isLoading: listingsLoading, pauseListing, unpauseListing, archiveListing, deleteListing } = useHostListings();
   const { bookings: buyerBookings } = useShopperBookings();
   const { bookings: sellerBookings } = useHostBookings();
   const { transactions } = useUserTransactions(user?.id);
@@ -290,6 +291,7 @@ export default function WorkspaceHome() {
                   </div>
                 )}
                 <div className="v2-listing-actions">
+                  <ListingManageMenu listing={leadListing} onPause={pauseListing} onResume={unpauseListing} onArchive={archiveListing} onDelete={deleteListing} />
                   <Link className="v2-btn v2-btn-sm" to={leadListing.status === 'draft' ? `/dashboard/listings/${leadListing.id}/edit` : `/listing/${leadListing.id}`}>
                     {leadListing.status === 'draft' ? 'Finish listing' : 'View listing'}
                   </Link>
@@ -323,6 +325,7 @@ export default function WorkspaceHome() {
                   </small>
                 </span>
                 <strong>{price(listing)}</strong>
+                <ListingManageMenu listing={listing} onPause={pauseListing} onResume={unpauseListing} onArchive={archiveListing} onDelete={deleteListing} />
                 {isListingFeatured(listing as never) ? <FeaturedBadge listing={listing} compact /> : canBoostListing(listing as never) && <Link className="v2-btn v2-btn-sm" to={`/dashboard/listings?boost=${listing.id}`}>Boost listing</Link>}
               </div>
             ))}

@@ -27,6 +27,7 @@ export const useHostListings = () => {
         .from('listings')
         .select('*')
         .eq('host_id', user.id)
+        .is('deleted_at', null)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -123,7 +124,7 @@ export const useHostListings = () => {
     try {
       const { error } = await supabase
         .from('listings')
-        .delete()
+        .update({ deleted_at: new Date().toISOString(), status: 'archived' })
         .eq('id', id)
         .eq('host_id', user?.id);
 
