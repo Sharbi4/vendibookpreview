@@ -1,3 +1,4 @@
+import FlipInsuranceSection from '@/components/booking/FlipInsuranceSection';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
@@ -585,6 +586,7 @@ const HowItWorks = () => {
         {/* ---------------------------------------------------------- */}
         {/* RENT / HOST strip                                           */}
         {/* ---------------------------------------------------------- */}
+        <FlipInsuranceSection source="how_it_works" />
         <section className="py-14 md:py-20">
           <div className="container max-w-5xl mx-auto px-4">
             <motion.div

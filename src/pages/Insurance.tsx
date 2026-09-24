@@ -1,539 +1,87 @@
+import { Link } from 'react-router-dom';
+import { ArrowUpRight, ArrowRight, ShieldCheck, FileCheck2, Truck, Store, Check } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
-import { 
-  Shield, 
-  AlertTriangle, 
-  CreditCard, 
-  Lock, 
-  UserCheck, 
-  Scale,
-  Car,
-  Package,
-  UtensilsCrossed,
-  ExternalLink,
-  CheckCircle,
-  HelpCircle,
-  FileText,
-  Building,
-  Users,
-  Briefcase
-} from 'lucide-react';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import SEO from '@/components/SEO';
+import { FLIP_INSURANCE as flip } from '@/lib/flipInsurance';
+import './insurance.css';
+import { hasAnalyticsConsent } from '@/lib/cookieConsent';
 
-const Insurance = () => {
-  return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <Header />
-      
-      <main className="flex-1">
-        {/* Hero Section */}
-        <section className="bg-gradient-to-br from-foreground/[0.03] via-background to-foreground/[0.02] py-16">
-          <div className="container max-w-4xl">
-            <div className="flex items-center gap-3 mb-4">
-              <Shield className="h-10 w-10 text-foreground/70" />
-              <h1 className="text-4xl font-bold text-foreground">Insurance Information</h1>
-            </div>
-            <p className="text-xl text-muted-foreground mb-4">
-              Understanding your insurance responsibilities when renting on Vendibook
-            </p>
-            <p className="text-sm text-muted-foreground">Last Updated: December 13, 2025</p>
-          </div>
-        </section>
+function InsuranceLink({ children = 'Get insurance through FLIP', owner = false }: { children?: React.ReactNode; owner?: boolean }) {
+  if (!flip.enabled) return <Link className="insurance-cta" to="/contact">Ask about insurance<ArrowRight /></Link>;
+  return <a className="insurance-cta" href={owner ? flip.ownerUrl : flip.partnerUrl} target="_blank" rel="noopener noreferrer sponsored"
+    onClick={() => {
+      try {
+        if (!hasAnalyticsConsent()) return;
+        const analytics = window as unknown as { dataLayer?: Record<string, unknown>[] };
+        analytics.dataLayer?.push({ event: 'flip_insurance_cta_clicked', source: 'insurance_page', audience: owner ? 'owner' : 'renter' });
+      } catch { /* Analytics must never interrupt the partner link. */ }
+    }}>{children}<ArrowUpRight aria-hidden="true" /></a>;
+}
 
-        {/* Important Notice */}
-        <section className="py-8 bg-destructive/5 border-y border-destructive/20">
-          <div className="container max-w-4xl">
-            <div className="flex gap-4 items-start">
-              <AlertTriangle className="h-6 w-6 text-destructive flex-shrink-0 mt-1" />
-              <div>
-                <h2 className="font-semibold text-destructive mb-2">Important Notice</h2>
-                <p className="text-muted-foreground">
-                  Vendibook does not provide insurance coverage by default. Renters are responsible for 
-                  obtaining any insurance required by the Host before completing a booking. Please review 
-                  this page carefully to understand your insurance obligations.
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
+const steps = [
+  ['01', 'Choose your rental', 'Find your food truck or trailer and review the host’s insurance requirements.'],
+  ['02', 'Explore coverage', 'Use our partner link to apply and purchase directly through FLIP. Confirm that the policy fits your operation.'],
+  ['03', 'Keep your documents', 'After issuance, save your policy and Certificate of Insurance (COI). Share required documents through your rental’s document process.'],
+  ['04', 'Prepare for handoff', 'Confirm the required documents with your host, coordinate pickup or delivery, and complete your walkthrough.'],
+];
+const questions = [
+  ['Is insurance included with my booking?', 'No. Booking through Vendibook does not automatically insure you or the equipment. Insurance is purchased separately from a provider, and any host requirements still apply.'],
+  ['What is a Certificate of Insurance?', 'A COI summarizes evidence of an issued policy. Review the actual policy and any required endorsements with your provider; a certificate alone does not establish that every rental risk is covered.'],
+  ['Will Vendibook receive my documents?', 'When applicable, documents issued through our partner pathway can be shared with Vendibook for the rental process. Keep your own copy and complete any document requests shown in your booking. Opening the FLIP link does not confirm receipt or approval.'],
+  ['Can I use another insurance provider?', 'Yes. You may use another provider whose coverage and documentation satisfy the host’s requirements. Ask your host about the required limits, dates, and additional insured wording before purchasing.'],
+  ['Does a renter’s policy cover the owner or vehicle?', 'Do not assume it does. Owners and renters should separately confirm coverage for their roles, the specific equipment, rented property, and any driving or towing with a licensed insurance professional.'],
+  ['Where can I check prices and coverage details?', 'FLIP provides current pricing, eligibility, policy terms, limits, exclusions, and available options during its application process. Contact FLIP for policy advice and Vendibook for questions about your booking.'],
+];
 
-        {/* Table of Contents */}
-        <section className="py-8 border-b">
-          <div className="container max-w-4xl">
-            <h2 className="text-lg font-semibold mb-4">Contents</h2>
-            <div className="flex flex-wrap gap-4">
-              <a href="#overview" className="text-foreground/60 hover:underline">1. Overview</a>
-              <a href="#policy" className="text-foreground/60 hover:underline">2. Vendibook Policy</a>
-              <a href="#responsibility" className="text-foreground/60 hover:underline">3. Renter Responsibility</a>
-              <a href="#options" className="text-foreground/60 hover:underline">4. Recommended Options</a>
-              <a href="#host-requirements" className="text-foreground/60 hover:underline">5. Host Requirements</a>
-              <a href="#faq" className="text-foreground/60 hover:underline">6. FAQ</a>
-            </div>
-          </div>
-        </section>
-
-        <div className="container max-w-4xl py-12 space-y-16">
-          {/* Section 1: Overview */}
-          <section id="overview">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
-              <span className="bg-foreground text-background w-8 h-8 rounded-full flex items-center justify-center text-sm">1</span>
-              Insurance Overview
-            </h2>
-            <div className="prose prose-gray max-w-none">
-              <p className="text-muted-foreground mb-4">
-                When renting equipment, food trucks, trailers, or other assets through Vendibook, it's important 
-                to understand the insurance landscape. This page explains how insurance works on our platform 
-                and what you need to know before booking.
-              </p>
-              <p className="text-muted-foreground mb-6">
-                Insurance protects both renters and hosts from financial loss due to accidents, damage, theft, 
-                or liability claims. The specific coverage needed depends on the type of equipment being rented 
-                and how it will be used.
-              </p>
-             <Card className="bg-foreground/[0.03] border-foreground/10">
-                <CardContent className="pt-6">
-                  <p className="font-medium text-foreground">
-                    <strong>Key Point:</strong> Always verify your insurance coverage before operating any rented 
-                    equipment. Lack of proper insurance could result in significant financial liability.
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-          </section>
-
-          {/* Section 2: Vendibook Policy */}
-          <section id="policy">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
-              <span className="bg-foreground text-background w-8 h-8 rounded-full flex items-center justify-center text-sm">2</span>
-              Vendibook Insurance Policy
-            </h2>
-            
-            <Card className="mb-6 border-destructive/30 bg-destructive/5">
-              <CardHeader>
-                <CardTitle className="text-destructive">Vendibook Does Not Provide Insurance</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground">
-                  Vendibook is a marketplace platform that connects equipment owners with renters. We do not 
-                  provide, underwrite, or guarantee any insurance coverage for rentals conducted through our platform.
-                </p>
-              </CardContent>
-            </Card>
-
-            <h3 className="text-lg font-semibold mb-4">What This Means for You</h3>
-            <ul className="space-y-2 mb-8">
-              {[
-                'Vendibook does not offer liability insurance for renters',
-                'Vendibook does not offer damage protection plans',
-                'Vendibook does not cover theft, accidents, or equipment malfunction',
-                'Any insurance requirements are set by individual Hosts',
-                'Renters must obtain their own coverage when required'
-              ].map((item, index) => (
-                <li key={index} className="flex items-start gap-2 text-muted-foreground">
-                  <span className="text-destructive mt-1">•</span>
-                  {item}
-                </li>
-              ))}
-            </ul>
-
-            <h3 className="text-lg font-semibold mb-4">Platform Protections</h3>
-            <p className="text-muted-foreground mb-4">
-              While we don't provide insurance, Vendibook does offer certain platform protections:
-            </p>
-            <div className="grid sm:grid-cols-2 gap-4">
-              <Card>
-                <CardContent className="pt-6 flex items-start gap-3">
-                  <CreditCard className="h-5 w-5 text-foreground/60 flex-shrink-0" />
-                  <div>
-                    <h4 className="font-medium">Secure Payments</h4>
-                    <p className="text-sm text-muted-foreground">All transactions via PayPal</p>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6 flex items-start gap-3">
-                  <Lock className="h-5 w-5 text-foreground/60 flex-shrink-0" />
-                  <div>
-                    <h4 className="font-medium">Security Deposits</h4>
-                    <p className="text-sm text-muted-foreground">Refundable deposits available</p>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6 flex items-start gap-3">
-                  <Scale className="h-5 w-5 text-foreground/60 flex-shrink-0" />
-                  <div>
-                    <h4 className="font-medium">Dispute Resolution</h4>
-                    <p className="text-sm text-muted-foreground">Mediation for booking disputes</p>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6 flex items-start gap-3">
-                  <UserCheck className="h-5 w-5 text-foreground/60 flex-shrink-0" />
-                  <div>
-                    <h4 className="font-medium">Identity Verification</h4>
-                    <p className="text-sm text-muted-foreground">Identity verification</p>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </section>
-
-          {/* Section 3: Renter Responsibility */}
-          <section id="responsibility">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
-              <span className="bg-foreground text-background w-8 h-8 rounded-full flex items-center justify-center text-sm">3</span>
-              Renter Responsibility
-            </h2>
-            
-            <p className="text-muted-foreground mb-6">
-              As a renter on Vendibook, you are responsible for ensuring you have appropriate insurance 
-              coverage for any equipment you rent. This is especially important for:
-            </p>
-
-            <h3 className="text-lg font-semibold mb-4">Types of Coverage to Consider</h3>
-            <div className="grid gap-4 mb-8">
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-start gap-4">
-                    <Shield className="h-8 w-8 text-foreground/60 flex-shrink-0" />
-                    <div>
-                      <h4 className="font-semibold mb-1">General Liability Insurance</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Covers third-party bodily injury and property damage claims. Essential for food 
-                        service operations and public events.
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-start gap-4">
-                    <Car className="h-8 w-8 text-foreground/60 flex-shrink-0" />
-                    <div>
-                      <h4 className="font-semibold mb-1">Commercial Auto Insurance</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Required for operating food trucks and trailers on public roads. Your personal 
-                        auto policy typically won't cover commercial use.
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-start gap-4">
-                    <Package className="h-8 w-8 text-foreground/60 flex-shrink-0" />
-                    <div>
-                      <h4 className="font-semibold mb-1">Equipment/Inland Marine Insurance</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Covers damage to or theft of rented equipment. May be required by Hosts for 
-                        high-value items.
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-start gap-4">
-                    <UtensilsCrossed className="h-8 w-8 text-foreground/60 flex-shrink-0" />
-                    <div>
-                      <h4 className="font-semibold mb-1">Product Liability Insurance</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Covers claims arising from food products you sell. Critical for any food service operation.
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            <h3 className="text-lg font-semibold mb-4">Before You Book</h3>
-            <div className="space-y-3">
-              {[
-                'Review the listing\'s insurance requirements carefully',
-                'Contact your insurance provider to verify coverage',
-                'Obtain any additional coverage needed before the rental period',
-                'Keep proof of insurance readily available',
-                'Understand what is and isn\'t covered by your policy'
-              ].map((item, index) => (
-                <div key={index} className="flex items-start gap-3">
-                  <CheckCircle className="h-5 w-5 text-foreground/50 flex-shrink-0 mt-0.5" />
-                  <p className="text-muted-foreground">{item}</p>
-                </div>
-              ))}
-            </div>
-          </section>
-
-          {/* Section 4: Recommended Options */}
-          <section id="options">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
-              <span className="bg-foreground text-background w-8 h-8 rounded-full flex items-center justify-center text-sm">4</span>
-              Recommended Options
-            </h2>
-
-            <Card className="mb-6 border-2 border-foreground/10">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Shield className="h-5 w-5 text-foreground/60" />
-                  FLIP Insurance
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <p className="text-muted-foreground">
-                  FLIP (Food Liability Insurance Program) offers short-term liability insurance designed for 
-                  food vendors, event professionals, and mobile business operators. Coverage can be purchased 
-                  for single events or ongoing operations.
-                </p>
-                <Button variant="glass-cta" asChild>
-                  <a 
-                    href="https://www.fliprogram.com" 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2"
-                  >
-                    Visit FLIP Website
-                    <ExternalLink className="h-4 w-4" />
-                  </a>
-                </Button>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-muted/50 border-muted mb-8">
-              <CardContent className="pt-6">
-                <p className="text-sm text-muted-foreground">
-                  <strong>Important Disclaimer:</strong> Vendibook is not affiliated with, endorsed by, or partnered 
-                  with FLIP or any other insurance provider. This recommendation is provided for informational 
-                  purposes only. You must confirm eligibility, coverage terms, and pricing directly with FLIP 
-                  or any insurance provider you choose. Vendibook makes no guarantees about the availability, 
-                  suitability, or adequacy of any third-party insurance products.
-                </p>
-              </CardContent>
-            </Card>
-
-            <h3 className="text-lg font-semibold mb-4">Other Options to Explore</h3>
-            <div className="grid sm:grid-cols-2 gap-4">
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-start gap-3">
-                    <FileText className="h-5 w-5 text-foreground/60 flex-shrink-0" />
-                    <div>
-                      <h4 className="font-medium">Your Existing Insurance</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Check if your current business or personal policies can be extended
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-start gap-3">
-                    <Building className="h-5 w-5 text-foreground/60 flex-shrink-0" />
-                    <div>
-                      <h4 className="font-medium">Event Insurance Providers</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Companies like Thimble, Next Insurance, or Hiscox offer short-term coverage
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-start gap-3">
-                    <Briefcase className="h-5 w-5 text-foreground/60 flex-shrink-0" />
-                    <div>
-                      <h4 className="font-medium">Local Insurance Agents</h4>
-                      <p className="text-sm text-muted-foreground">
-                        A local agent can help find coverage tailored to your needs
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-              <Card>
-                <CardContent className="pt-6">
-                  <div className="flex items-start gap-3">
-                    <Users className="h-5 w-5 text-foreground/60 flex-shrink-0" />
-                    <div>
-                      <h4 className="font-medium">Industry Associations</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Food truck associations often offer group insurance programs
-                      </p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-          </section>
-
-          {/* Section 5: Host Requirements */}
-          <section id="host-requirements">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
-              <span className="bg-foreground text-background w-8 h-8 rounded-full flex items-center justify-center text-sm">5</span>
-              Host Requirements
-            </h2>
-
-            <p className="text-muted-foreground mb-6">
-              Individual Hosts on Vendibook may set their own insurance requirements for their listings. 
-              These requirements will be clearly displayed on the listing page and must be met before 
-              you can complete a booking.
-            </p>
-
-            <h3 className="text-lg font-semibold mb-4">Common Host Requirements</h3>
-            <ul className="space-y-2 mb-8">
-              {[
-                { title: 'Proof of Business Insurance', desc: 'Certificate of insurance showing liability coverage' },
-                { title: 'Additional Insured Endorsement', desc: 'Adding the Host as an additional insured on your policy' },
-                { title: 'Minimum Coverage Amounts', desc: 'Specific dollar amounts for liability coverage' },
-                { title: 'Commercial Auto Insurance', desc: 'For vehicle rentals' },
-                { title: 'Workers\' Compensation', desc: 'If you have employees' }
-              ].map((item, index) => (
-                <li key={index} className="flex items-start gap-2 text-muted-foreground">
-                  <span className="text-foreground/50 mt-1">•</span>
-                  <span><strong>{item.title}:</strong> {item.desc}</span>
-                </li>
-              ))}
-            </ul>
-
-            <Card className="bg-foreground/[0.03] border-foreground/10">
-              <CardContent className="pt-6">
-                <p className="text-muted-foreground">
-                  <strong>Tip:</strong> If you frequently rent equipment, consider getting a COI that can be 
-                  easily updated with additional insured endorsements. This makes the booking process faster 
-                  and smoother.
-                </p>
-              </CardContent>
-            </Card>
-          </section>
-
-          {/* Section 6: FAQ */}
-          <section id="faq">
-            <h2 className="text-2xl font-bold mb-6 flex items-center gap-3">
-              <span className="bg-foreground text-background w-8 h-8 rounded-full flex items-center justify-center text-sm">6</span>
-              Frequently Asked Questions
-            </h2>
-
-            <Accordion type="single" collapsible className="w-full">
-              <AccordionItem value="item-1">
-                <AccordionTrigger className="text-left">
-                  <span className="flex items-center gap-2">
-                     <HelpCircle className="h-4 w-4 text-foreground/50 flex-shrink-0" />
-                    Does Vendibook provide any insurance coverage?
-                  </span>
-                </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground">
-                  No. Vendibook is a marketplace platform and does not provide, underwrite, or guarantee 
-                  any insurance coverage. Renters must obtain their own insurance when required by Hosts.
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="item-2">
-                <AccordionTrigger className="text-left">
-                  <span className="flex items-center gap-2">
-                     <HelpCircle className="h-4 w-4 text-foreground/50 flex-shrink-0" />
-                    What happens if I damage rented equipment?
-                  </span>
-                </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground">
-                  You are financially responsible for any damage to rented equipment. If you have appropriate 
-                  insurance, you can file a claim with your provider. Security deposits may also be used to 
-                  cover damage costs.
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="item-3">
-                <AccordionTrigger className="text-left">
-                  <span className="flex items-center gap-2">
-                     <HelpCircle className="h-4 w-4 text-foreground/50 flex-shrink-0" />
-                    Can I book without insurance if the Host doesn't require it?
-                  </span>
-                </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground">
-                  Yes, if a Host doesn't require insurance documentation, you can complete the booking. 
-                  However, we strongly recommend having appropriate coverage regardless of Host requirements 
-                  to protect yourself from potential liability.
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="item-4">
-                <AccordionTrigger className="text-left">
-                  <span className="flex items-center gap-2">
-                     <HelpCircle className="h-4 w-4 text-foreground/50 flex-shrink-0" />
-                    How do I know what insurance a Host requires?
-                  </span>
-                </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground">
-                  Insurance requirements are displayed on the listing detail page under the "Requirements" 
-                  section. You'll also see them during checkout before completing your booking.
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="item-5">
-                <AccordionTrigger className="text-left">
-                  <span className="flex items-center gap-2">
-                     <HelpCircle className="h-4 w-4 text-foreground/50 flex-shrink-0" />
-                    Is FLIP the only insurance option?
-                  </span>
-                </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground">
-                  No. FLIP is one option we mention for informational purposes, but there are many insurance 
-                  providers that offer coverage for food vendors and event professionals. We encourage you 
-                  to shop around and find the coverage that best fits your needs and budget.
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="item-6">
-                <AccordionTrigger className="text-left">
-                  <span className="flex items-center gap-2">
-                    <HelpCircle className="h-4 w-4 text-foreground/50 flex-shrink-0" />
-                    What if I have questions about insurance requirements?
-                  </span>
-                </AccordionTrigger>
-                <AccordionContent className="text-muted-foreground">
-                  You can message the Host directly through Vendibook to ask questions about their specific 
-                  insurance requirements. For general insurance questions, we recommend consulting with a 
-                  licensed insurance professional.
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </section>
-
-          {/* Still Have Questions */}
-          <section className="text-center py-12 bg-muted/30 rounded-lg">
-            <h2 className="text-2xl font-bold mb-4">Still Have Questions?</h2>
-            <p className="text-muted-foreground mb-6">
-              Contact us if you need clarification on insurance requirements or have concerns about coverage.
-            </p>
-            <Button variant="glass-cta" asChild>
-              <Link to="/contact">Contact Support</Link>
-            </Button>
-          </section>
-
-          {/* Back to Home */}
-          <div className="text-center">
-            <Link to="/" className="text-foreground/60 hover:underline">
-              ← Back to Home
-            </Link>
-          </div>
+export default function Insurance() {
+  return <div className="insurance-page">
+    <SEO title="Food Truck & Food Trailer Insurance | Vendibook + FLIP" description="Explore food-business insurance through Vendibook’s partnership with FLIP. Learn about rental requirements, proof of insurance, and options for owners and operators." canonical="/insurance" />
+    <Header />
+    <main>
+      <section className="insurance-hero insurance-wrap">
+        <div>
+          <Link to="/" className="insurance-breadcrumb">Vendibook / Insurance</Link>
+          <p className="insurance-eyebrow">Vendibook + FLIP</p>
+          <h1>Food Truck &amp;<br />Food Trailer<br /><em>Insurance.</em></h1>
+          <p className="insurance-intro">Your next move deserves a little more certainty.</p>
+          <p className="insurance-body">From your first rental to your next season on the road, explore food-business insurance through Vendibook’s partnership with FLIP.</p>
+          <div className="insurance-actions"><InsuranceLink /><a href="#how-it-works" className="insurance-text-link">How it works<ArrowRight /></a></div>
+          <p className="insurance-small">Apply and purchase directly through FLIP. Opens in a new tab.</p>
         </div>
-      </main>
+        <div className="insurance-partner-card">
+          <div className="insurance-logo"><img src={flip.logoUrl} alt="FLIP — Food Liability Insurance Program" width="300" height="130" /></div>
+          <p className="insurance-eyebrow">Insurance for food businesses</p>
+          <h2>Built around<br />what you do.</h2>
+          <p>Access insurance options for your food-business operation, with application and policy management handled by FLIP.</p>
+          <ul>{['Explore options for your business','Review your policy before you buy','Keep proof of insurance on hand'].map(item => <li key={item}><Check aria-hidden="true" />{item}</li>)}</ul>
+          <span className="insurance-partner-note">Insurance available through FLIP · Not automatically included with a rental</span>
+        </div>
+      </section>
 
-      <Footer />
-    </div>
-  );
-};
+      <section className="insurance-journey" id="how-it-works"><div className="insurance-wrap">
+        <p className="insurance-eyebrow">One connected rental journey</p><h2>Find it. Plan ahead. Keep moving.</h2>
+        <div className="insurance-steps">{steps.map(([number,title,body]) => <article key={number}><span>{number}</span><h3>{title}</h3><p>{body}</p></article>)}</div>
+      </div></section>
 
-export default Insurance;
+      <section className="insurance-wrap insurance-section">
+        <div className="insurance-section-head"><p className="insurance-eyebrow">The right questions, before the keys</p><h2>Coverage should fit<br />your actual operation.</h2><p>Tell FLIP what you rent, own, serve, and move. Confirm the details with a licensed insurance professional.</p></div>
+        <div className="insurance-grid">
+          <article><ShieldCheck /><h3>Your business</h3><p>Discuss food-business liability and the activities you plan to carry out.</p></article>
+          <article><Truck /><h3>Your truck or trailer</h3><p>Ask about the specific vehicle, equipment, rented property, and any driving or towing.</p></article>
+          <article><FileCheck2 /><h3>Your rental requirements</h3><p>Check policy dates, host requirements, and any additional insured endorsements before handoff.</p></article>
+        </div>
+      </section>
+
+      <section className="insurance-wrap"><div className="insurance-owner"><div><Store aria-hidden="true" /><p className="insurance-eyebrow">For hosts &amp; owners</p><h2>Your equipment.<br />Your own coverage questions.</h2><p>FLIP is also a resource for food-business owners. Discuss your business and rental activities directly with FLIP to find out which options may fit. A renter’s policy does not automatically cover you or your asset.</p></div><InsuranceLink owner>Explore owner insurance options</InsuranceLink></div></section>
+
+      <section className="insurance-wrap insurance-section insurance-faq"><div><p className="insurance-eyebrow">A little clarity goes a long way</p><h2>Before you<br />get started.</h2><Link to="/contact" className="insurance-text-link">Questions about a booking?<ArrowRight /></Link></div><div>{questions.map(([q,a]) => <details key={q}><summary>{q}<span aria-hidden="true">+</span></summary><p>{a}</p></details>)}</div></section>
+
+      <section className="insurance-wrap insurance-section"><p className="insurance-eyebrow">From our insurance partner</p><h2>Useful reading for the road ahead.</h2><div className="insurance-grid insurance-resources">{flip.resources.map(resource => <a key={resource.url} href={resource.url} target="_blank" rel="noopener noreferrer"><span>FLIP resource<ArrowUpRight /></span><h3>{resource.title}</h3><p>{resource.description}</p></a>)}</div>
+        <div className="insurance-recognition"><img src="/partners/flip-cnbc-2025.png" width="1261" height="1047" loading="lazy" alt="CNBC World's Top Fintech Companies 2025, in cooperation with Statista" /><p>FLIP’s parent company, Veracity Insurance Solutions, was named to CNBC’s 2025 World’s Top Fintech Companies list.<br /><a href="https://www.fliprogram.com/blog/veracity-flip-recognized-cnbc-top-fintech-companies-2025" target="_blank" rel="noopener noreferrer">Read FLIP’s announcement<ArrowUpRight /></a></p></div>
+      </section>
+
+      <section className="insurance-wrap insurance-final"><p className="insurance-eyebrow">Ready for your next chapter?</p><h2>Find the equipment.<br />Prepare for what’s next.</h2><div className="insurance-actions"><InsuranceLink /><Link to="/search?mode=rent" className="insurance-text-link">Browse rentals<ArrowRight /></Link><Link to="/list" className="insurance-text-link">List your equipment<ArrowRight /></Link></div><p className="insurance-disclosure">Insurance products are available through FLIP and subject to eligibility requirements, policy terms, conditions, limits, and exclusions. Vendibook is not the insurer and does not underwrite or guarantee coverage. Purchasing insurance does not replace the rental agreement or the host’s requirements.</p></section>
+    </main><Footer />
+  </div>;
+}
