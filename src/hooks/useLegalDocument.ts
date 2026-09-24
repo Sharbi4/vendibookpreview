@@ -1,8 +1,8 @@
 /**
  * useLegalDocument — loads the currently-active version of a document from
  * the `legal_documents` table via the `current_legal_document` RPC.
- * Cache is per-type; documents are immutable once active so a long stale
- * window is safe.
+ * Cache is per-type; active versions can be superseded, so recheck on
+ * navigation or focus after a short stale window.
  */
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
@@ -12,7 +12,7 @@ export function useLegalDocument(documentType: DocumentType | null | undefined) 
   return useQuery<LegalDocumentRow | null>({
     queryKey: ['legal-document', documentType],
     enabled: !!documentType,
-    staleTime: 15 * 60 * 1000,
+    staleTime: 60 * 1000,
     queryFn: async () => {
       if (!documentType) return null;
       // RPC returns a single row (record type). supabase-js maps it as an object.
@@ -31,7 +31,7 @@ export function useLegalDocumentBySlug(slug: string | undefined) {
   return useQuery<LegalDocumentRow | null>({
     queryKey: ['legal-document-slug', slug],
     enabled: !!slug,
-    staleTime: 15 * 60 * 1000,
+    staleTime: 60 * 1000,
     queryFn: async () => {
       if (!slug) return null;
       const { data, error } = await supabase

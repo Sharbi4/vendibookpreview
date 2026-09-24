@@ -124,7 +124,7 @@ export const ConsentModal: React.FC<Props> = ({
               <span>Version {doc.version}</span>
               <span aria-hidden>·</span>
               <span>
-                Effective {new Date(doc.effective_at).toLocaleDateString()}
+                Effective {new Date(doc.effective_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}
               </span>
               <span aria-hidden>·</span>
               <a
