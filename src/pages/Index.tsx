@@ -17,7 +17,8 @@ import { useAuth } from '@/contexts/AuthContext';
 
 import vendibookWordmark from '@/assets/vendibook-wordmark.png';
 import { PayPalWordmark, EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
-import paypalBannerAsset from '@/assets/brand/paypal-wordmark-white-black.png.asset.json';
+import { FLIP_INSURANCE } from '@/lib/flipInsurance';
+import './home-partner-cards.css';
 
 const ROW_LIMIT = 8;
 
@@ -113,14 +114,33 @@ const Index = () => {
 
         <div className="v2-home-stack">
 
-          <Link to="/payments" className="v2-home-paypal">
-            <span className="v2-home-paypal-mark"><img src={paypalBannerAsset.url} alt="PayPal" /></span>
-            <span className="v2-home-paypal-copy">
-              <strong>Pay with PayPal on Vendibook</strong>
-              <small>Secure online checkout is available on eligible listings.</small>
-            </span>
-            <span className="v2-home-paypal-cta">How payments work<ArrowRight aria-hidden="true" /></span>
-          </Link>
+          <section className="home-partner-cards" aria-label="Payments and insurance">
+            <article className="home-partner-card home-partner-card--paypal">
+              <div className="home-partner-card-top">
+                <span className="home-partner-card-label">For your next purchase</span>
+                <PayPalWordmark surface="dark" className="home-partner-paypal-logo" />
+              </div>
+              <h2>A confident next step.</h2>
+              <p>Pay securely with PayPal on eligible listings. Keep your payment, agreement, and handoff details together on Vendibook.</p>
+              <Link to="/payments" className="home-partner-card-action">How payments work <ArrowRight aria-hidden="true" /></Link>
+              <small>Online checkout is available where offered by the seller.</small>
+            </article>
+            {FLIP_INSURANCE.enabled && (
+              <article className="home-partner-card home-partner-card--flip">
+                <div className="home-partner-card-top">
+                  <span className="home-partner-card-label">For the business ahead</span>
+                  <img src={FLIP_INSURANCE.logoUrl} alt="FLIP — Food Liability Insurance Program" className="home-partner-flip-logo" loading="lazy" width="145" height="66" />
+                </div>
+                <h2>Your next move. Considered.</h2>
+                <p>Explore food business insurance through FLIP, our insurance partner. Find coverage options for the operation you're building.</p>
+                <div className="home-partner-card-actions">
+                  <a href={FLIP_INSURANCE.partnerUrl} target="_blank" rel="noopener noreferrer sponsored" className="home-partner-card-action">Explore FLIP coverage <ArrowRight aria-hidden="true" /></a>
+                  <Link to="/insurance" className="home-partner-card-more">Learn more</Link>
+                </div>
+                <small>Purchased separately through FLIP. Eligibility, policy terms, and exclusions apply.</small>
+              </article>
+            )}
+          </section>
 
 
           <Link to="/financing" className="v2-home-financing">
