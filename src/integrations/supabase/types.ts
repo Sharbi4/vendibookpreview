@@ -8236,6 +8236,27 @@ export type Database = {
         }
         Relationships: []
       }
+      removed_spam_conversations: {
+        Row: {
+          conversation_id: string
+          recipient_id: string
+          removed_at: string
+          sender_id: string
+        }
+        Insert: {
+          conversation_id: string
+          recipient_id: string
+          removed_at?: string
+          sender_id: string
+        }
+        Update: {
+          conversation_id?: string
+          recipient_id?: string
+          removed_at?: string
+          sender_id?: string
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           booking_id: string
@@ -12663,6 +12684,10 @@ export type Database = {
           referrer_id: string
         }[]
       }
+      get_removed_conversation_notice: {
+        Args: { _conversation_id: string }
+        Returns: string
+      }
       get_safe_host_profile: {
         Args: { host_user_id: string }
         Returns: {
@@ -12896,6 +12921,10 @@ export type Database = {
       }
       release_seller_verification_retry: {
         Args: { _user_id: string }
+        Returns: undefined
+      }
+      remove_confirmed_spam_conversation: {
+        Args: { _conversation_id: string; _sender_id: string }
         Returns: undefined
       }
       rename_permit_document: {
