@@ -1,3 +1,4 @@
+import { buildHomepageSpotlight } from '@/lib/listings/homepageSpotlight';
 import { excludeTestListings } from '@/lib/excludeTestListings';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -99,6 +100,11 @@ const Index = () => {
 
   const featuredQuery = useQuery({ queryKey: ['home-v2-featured'], queryFn: fetchFeaturedListings, staleTime: 60000 });
 
+  const spotlightListings = buildHomepageSpotlight(
+    featuredQuery.data ?? [], [...(saleQuery.data ?? []), ...(rentQuery.data ?? [])], 8,
+  );
+  const hasMarketplacePicks = spotlightListings.some((listing) => !isListingFeatured(listing));
+
   return (
     <div className="min-h-screen flex flex-col v2-home">
       <SEO
@@ -153,10 +159,10 @@ const Index = () => {
           </Link>
 
           <V2ListingRow
-            title="Featured on Vendibook"
-            subtitle="Listings getting extra visibility right now."
-            listings={(featuredQuery.data ?? []).slice(0, 6)}
-            isLoading={featuredQuery.isLoading}
+            title={hasMarketplacePicks ? 'Featured & fresh finds' : 'Featured on Vendibook'}
+            subtitle={hasMarketplacePicks ? 'Featured listings first, followed by fresh picks from the marketplace.' : 'Listings getting extra visibility right now.'}
+            listings={spotlightListings}
+            isLoading={featuredQuery.isLoading || (spotlightListings.length === 0 && (saleQuery.isLoading || rentQuery.isLoading))}
             viewAllHref="/search"
             viewAllLabel="Browse marketplace"
             priority
