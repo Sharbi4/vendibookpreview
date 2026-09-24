@@ -17,7 +17,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 import vendibookWordmark from '@/assets/vendibook-wordmark.png';
 import { PayPalWordmark, EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
-import paypalBannerAsset from '@/assets/paypal-banner.png.asset.json';
+import paypalBannerAsset from '@/assets/brand/paypal-wordmark-white-black.png.asset.json';
 
 const ROW_LIMIT = 8;
 
