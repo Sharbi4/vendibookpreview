@@ -472,8 +472,8 @@ serve(async (req) => {
     }
 
     // ── Sales tax (marketplace facilitator model) ─────────────────────────
-    // Computed authoritatively here via _shared/tax.ts (TaxJar when
-    // configured, state table fallback). Tax rides on top of the merchandise /
+    // Computed authoritatively here via _shared/tax.ts (state sales-tax
+    // table). Tax rides on top of the merchandise /
     // rental / service amount — it is NEVER part of the seller payout or the
     // commission base, and is booked to `tax_collected` at capture.
     if (!skipTax) {

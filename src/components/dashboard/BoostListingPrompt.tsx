@@ -195,8 +195,8 @@ export const BoostListingPrompt = ({ listings, userId }: BoostListingPromptProps
               </span>
               <span className="text-3xl font-semibold tracking-tight text-foreground">{boostPrice.label}</span>
             </div>
-            {/* Sales tax is computed server-side at checkout (TaxJar, with a
-                state-rate fallback), so the price shown here is pre-tax. */}
+            {/* Sales tax is computed server-side at checkout from the state
+                sales-tax table, so the price shown here is pre-tax. */}
             <p className="mt-1 text-xs text-muted-foreground">
               Plus sales tax, calculated at checkout.
             </p>

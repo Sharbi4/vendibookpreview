@@ -7,14 +7,16 @@
  * part of the commission base — it rides on top of gross and is booked to a
  * `tax_collected` ledger entry at capture time.
  *
- * Rate source, in priority order:
- *   1. TaxJar SmartCalcs (`POST /v2/taxes`) when TAXJAR_API_KEY is configured
- *      — address-level accuracy.
- *   2. Built-in state-level average combined rate table — always available so
- *      checkout never breaks if the API key is missing or TaxJar is down.
+ * Rate source: the built-in STATE SALES TAX table below (each state's
+ * published statewide base sales-tax rate). No external tax API is called —
+ * the quote is always available and checkout never depends on a third-party
+ * service. Rates are the statewide base rate; local county/city add-ons are
+ * not included (we do not have address-level jurisdiction data).
  *
  * Every result is labeled with its `source` so receipts and admin tooling can
- * tell an exact TaxJar quote from a state-table estimate.
+ * tell how the quote was produced. Historical receipts may carry
+ * `source: "taxjar"` from the retired TaxJar integration; that value is kept
+ * in the type union for backward compatibility only and is never produced.
  */
 
 export type TaxKind = "sale" | "rental" | "service" | "product";
@@ -29,7 +31,7 @@ export type TaxSource = "taxjar" | "state_table" | "no_tax_state" | "no_destinat
 
 export interface TaxQuote {
   taxCents: number;
-  /** Effective combined rate used, e.g. 8.4 for 8.4%. */
+  /** Effective rate used, e.g. 5.6 for 5.6%. */
   ratePct: number;
   /** Normalized 2-letter state the quote is based on, if known. */
   state: string | null;
@@ -40,24 +42,20 @@ export interface TaxQuote {
 }
 
 /**
- * Average combined (state + local) sales-tax rate by state, in percent.
- * Approximate published 2025–2026 averages; used only when TaxJar is not
- * configured or unreachable. States with no general sales tax are 0.
+ * Statewide base sales-tax rate by state, in percent (published rates).
+ * States with no general sales tax are 0. Local add-ons are not included.
  */
-export const STATE_COMBINED_TAX_RATES: Record<string, number> = {
-  AL: 9.29, AK: 0, AZ: 8.4, AR: 9.43, CA: 8.85, CO: 7.81, CT: 6.35, DE: 0,
-  DC: 6.0, FL: 7.0, GA: 7.4, HI: 4.5, ID: 6.03, IL: 8.86, IN: 7.0, IA: 6.94,
-  KS: 8.67, KY: 6.0, LA: 9.56, ME: 5.5, MD: 6.0, MA: 6.25, MI: 6.0, MN: 7.52,
-  MS: 7.06, MO: 8.41, MT: 0, NE: 7.0, NV: 8.24, NH: 0, NJ: 6.6, NM: 7.72,
-  NY: 8.53, NC: 7.0, ND: 7.04, OH: 7.27, OK: 9.0, OR: 0, PA: 6.34, RI: 7.0,
-  SC: 7.5, SD: 6.11, TN: 9.61, TX: 8.2, UT: 7.25, VT: 6.36, VA: 5.77,
-  WA: 9.47, WV: 6.57, WI: 5.7, WY: 5.44,
+export const STATE_SALES_TAX_RATES: Record<string, number> = {
+  AL: 4.0, AK: 0, AZ: 5.6, AR: 6.5, CA: 7.25, CO: 2.9, CT: 6.35, DE: 0,
+  DC: 6.0, FL: 6.0, GA: 4.0, HI: 4.5, ID: 6.0, IL: 6.25, IN: 7.0, IA: 6.0,
+  KS: 6.5, KY: 6.0, LA: 4.45, ME: 5.5, MD: 6.0, MA: 6.25, MI: 6.0, MN: 6.875,
+  MS: 7.0, MO: 4.225, MT: 0, NE: 5.5, NV: 6.85, NH: 0, NJ: 6.625, NM: 5.125,
+  NY: 4.0, NC: 4.75, ND: 5.0, OH: 5.75, OK: 4.5, OR: 0, PA: 6.0, RI: 7.0,
+  SC: 6.0, SD: 4.2, TN: 7.0, TX: 6.25, UT: 6.1, VT: 6.0, VA: 5.3,
+  WA: 6.5, WV: 6.0, WI: 5.0, WY: 4.0,
 };
 
-/** Vendibook HQ — the "from" address for TaxJar rate lookups. */
-const ORIGIN = { state: "AZ", zip: "85001", city: "Phoenix", country: "US" } as const;
-
-const US_STATE_CODES = new Set(Object.keys(STATE_COMBINED_TAX_RATES));
+const US_STATE_CODES = new Set(Object.keys(STATE_SALES_TAX_RATES));
 
 export function normalizeUsState(value: string | null | undefined): string | null {
   if (!value) return null;
@@ -103,58 +101,10 @@ function buildLabel(state: string | null, source: TaxSource): string {
   return `Estimated tax${state ? ` (${state})` : ""}`;
 }
 
-/** TaxJar SmartCalcs rate lookup. Throws on any failure — caller falls back. */
-async function quoteViaTaxJar(
-  amountCents: number,
-  destination: Required<Pick<TaxDestination, "state">> & TaxDestination,
-): Promise<{ taxCents: number; ratePct: number }> {
-  const apiKey = Deno.env.get("TAXJAR_API_KEY");
-  if (!apiKey) throw new Error("taxjar_not_configured");
-
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 4_000);
-  try {
-    const res = await fetch("https://api.taxjar.com/v2/taxes", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from_country: ORIGIN.country,
-        from_state: ORIGIN.state,
-        from_zip: ORIGIN.zip,
-        from_city: ORIGIN.city,
-        to_country: "US",
-        to_state: destination.state,
-        ...(destination.zip ? { to_zip: destination.zip } : {}),
-        ...(destination.city ? { to_city: destination.city } : {}),
-        amount: amountCents / 100,
-        shipping: 0,
-      }),
-      signal: controller.signal,
-    });
-    if (!res.ok) {
-      const detail = (await res.text().catch(() => "")).replace(/\s+/g, " ").slice(0, 300);
-      throw new Error(`taxjar_http_${res.status}${detail ? `: ${detail}` : ""}`);
-    }
-    const json = await res.json();
-    const toCollect = Number(json?.tax?.amount_to_collect ?? NaN);
-    const rate = Number(json?.tax?.rate ?? NaN);
-    if (!Number.isFinite(toCollect) || toCollect < 0) throw new Error("taxjar_bad_response");
-    return {
-      taxCents: Math.round(toCollect * 100),
-      ratePct: Number.isFinite(rate) ? Math.round(rate * 10000) / 100 : 0,
-    };
-  } finally {
-    clearTimeout(timer);
-  }
-}
-
 /**
  * Quotes the estimated sales tax for a taxable amount heading to a US
- * destination. Never throws — any provider failure degrades to the built-in
- * state table so checkout stays available.
+ * destination, using the built-in state sales-tax table. Never throws —
+ * checkout stays available regardless of destination data quality.
  */
 export async function quoteSalesTax(opts: {
   amountCents: number;
@@ -175,33 +125,7 @@ export async function quoteSalesTax(opts: {
     };
   }
 
-  const zip = opts.destination.zip?.trim() || null;
-
-  // TaxJar requires to_zip for US destinations — without a ZIP the call
-  // deterministically 400s, so go straight to the state-table estimate.
-  if (zip && Deno.env.get("TAXJAR_API_KEY")) {
-    try {
-      const exact = await quoteViaTaxJar(taxableAmountCents, {
-        state,
-        zip,
-        city: opts.destination.city ?? null,
-      });
-      return {
-        taxCents: exact.taxCents,
-        ratePct: exact.ratePct,
-        state,
-        source: "taxjar",
-        taxableAmountCents,
-        label: buildLabel(state, "taxjar"),
-      };
-    } catch (err) {
-      console.warn(
-        `[TAX] TaxJar lookup failed, using state table fallback: ${(err as Error).message}`,
-      );
-    }
-  }
-
-  const ratePct = STATE_COMBINED_TAX_RATES[state] ?? 0;
+  const ratePct = STATE_SALES_TAX_RATES[state] ?? 0;
   if (ratePct <= 0) {
     return {
       taxCents: 0,
