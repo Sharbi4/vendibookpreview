@@ -11274,6 +11274,48 @@ export type Database = {
         }
         Relationships: []
       }
+      vendi_listing_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          listing_id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id: string
+          listing_id: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          listing_id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendi_listing_messages_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendi_listing_messages_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       video_walkthrough_consents: {
         Row: {
           accepted_at: string
@@ -13275,6 +13317,13 @@ export type Database = {
       user_has_tier: {
         Args: { _min_tier: string; _user_id: string }
         Returns: boolean
+      }
+      vendi_save_required_documents: {
+        Args: {
+          p_documents: Database["public"]["Enums"]["document_type"][]
+          p_listing_id: string
+        }
+        Returns: undefined
       }
       verify_signup_phone_code: { Args: { code: string }; Returns: Json }
     }

@@ -461,9 +461,9 @@ const SaleCheckout = () => {
   const buyerFreightCharge =
     fulfillmentSelected === 'vendibook_freight' && !isFreightSellerPaid ? freightCost : 0;
 
-  // Estimated sales tax — server-computed (TaxJar / state table) so the buyer
-  // sees the real total before PayPal opens. The authoritative amount is
-  // re-locked at order creation in `paypal-create-order`.
+  // Estimated sales tax — server-computed from the state sales-tax table so
+  // the buyer sees the real total before PayPal opens. The authoritative
+  // amount is re-locked at order creation in `paypal-create-order`.
   const [taxEstimate, setTaxEstimate] = useState<{ tax_cents: number; rate_pct: number; label: string } | null>(null);
   const [taxState, setTaxState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   useEffect(() => {

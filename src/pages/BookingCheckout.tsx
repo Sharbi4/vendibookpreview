@@ -356,7 +356,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   const fees = calculateRentalFees(basePrice, currentDeliveryFee);
   const depositAmount = (listing as any)?.deposit_amount || null;
 
-  // Estimated sales tax — server-computed (TaxJar / state table). The
+  // Estimated sales tax — server-computed from the state sales-tax table. The
   // authoritative amount is re-locked at order creation in
   // `paypal-create-order`; this is only so the renter sees the real total
   // before the PayPal window opens.
