@@ -44,7 +44,7 @@ const DraftsSection = ({ drafts, onDelete }: DraftsSectionProps) => {
   return (
     <div className="relative rounded-2xl p-[2px] overflow-hidden shadow-lg">
       {/* Animated gradient border - matching ActionRequiredBanner */}
-      <div 
+      <div
         className="absolute inset-0 rounded-2xl"
         style={{
           background: 'linear-gradient(270deg, hsl(25 95% 53%), hsl(15 80% 45%), hsl(350 60% 35%), hsl(25 95% 53%))',
@@ -52,7 +52,7 @@ const DraftsSection = ({ drafts, onDelete }: DraftsSectionProps) => {
           animation: 'gradient-shift 4s ease infinite',
         }}
       />
-      
+
       {/* Inner content */}
       <div className="relative rounded-[14px] bg-background p-4">
         <div className="flex items-center gap-2 mb-3">
@@ -64,17 +64,17 @@ const DraftsSection = ({ drafts, onDelete }: DraftsSectionProps) => {
             {drafts.length}
           </Badge>
         </div>
-        
+
         <div className="space-y-2">
           {drafts.slice(0, 3).map((draft) => (
-            <div 
+            <div
               key={draft.id}
               className="flex items-center gap-3 p-2 rounded-lg bg-muted/30 border border-border hover:border-primary/30 transition-all group"
             >
               <div className="w-12 h-12 rounded-md overflow-hidden flex-shrink-0 bg-muted">
                 {draft.cover_image_url ? (
-                  <img 
-                    src={draft.cover_image_url} 
+                  <img
+                    src={draft.cover_image_url}
                     alt={draft.title}
                     className="w-full h-full object-cover"
                   />
@@ -102,8 +102,8 @@ const DraftsSection = ({ drafts, onDelete }: DraftsSectionProps) => {
               <div className="flex items-center gap-1">
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button 
-                      variant="ghost" 
+                    <Button
+                      variant="ghost"
                       size="icon"
                       className="h-8 w-8 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
                     >
@@ -119,7 +119,7 @@ const DraftsSection = ({ drafts, onDelete }: DraftsSectionProps) => {
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction 
+                      <AlertDialogAction
                         onClick={() => onDelete(draft.id)}
                         className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                       >
@@ -129,34 +129,10 @@ const DraftsSection = ({ drafts, onDelete }: DraftsSectionProps) => {
                   </AlertDialogContent>
                 </AlertDialog>
 
-                {/* A Vendi draft resumes the SAME row in the chat it was started
-                    in; the full editor stays available as the secondary path. */}
-                {draft.vendi_session_key ? (
-                  <>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      asChild
-                      className="h-8 text-xs text-muted-foreground hover:text-foreground"
-                    >
-                      <Link to={`/create-listing/${draft.id}`}>Edit full listing</Link>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      asChild
-                      className="h-8 text-xs text-primary hover:text-primary"
-                    >
-                      <Link to={`/list-with-vendi?listing=${draft.id}`}>
-                        Continue with Vendi
-                        <ArrowRight className="h-3 w-3 ml-1" />
-                      </Link>
-                    </Button>
-                  </>
-                ) : (
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
                     asChild
                     className="h-8 text-xs text-primary hover:text-primary"
                   >
@@ -165,7 +141,6 @@ const DraftsSection = ({ drafts, onDelete }: DraftsSectionProps) => {
                       <ArrowRight className="h-3 w-3 ml-1" />
                     </Link>
                   </Button>
-                )}
               </div>
             </div>
 

@@ -42,7 +42,7 @@ const faqs = [
   {
     question: 'How do I sell a food truck online?',
     answer:
-      'Create a free Vendibook account and open the listing builder. You can chat through it with List with Vendi or fill out the step-by-step wizard yourself. Add exterior and interior photos, equipment specs, dimensions, and an honest asking price, save a draft at any point, then publish when you are ready. Buyers message you and submit offers, and you accept, decline, or counter from your dashboard.',
+      'Create a free Vendibook account and open the listing builder. Use the step-by-step wizard. Add exterior and interior photos, equipment specs, dimensions, and an honest asking price, save a draft at any point, then publish when you are ready. Buyers message you and submit offers, and you accept, decline, or counter from your dashboard.',
   },
   {
     question: 'Can I sell a food trailer or concession trailer on Vendibook?',
@@ -82,7 +82,7 @@ const faqs = [
   {
     question: 'Can I save my listing and finish it later?',
     answer:
-      'Yes. Listings save as drafts while you build them, whether you use List with Vendi or the step-by-step wizard. Nothing goes public until you review it and confirm the publish step yourself.',
+      'Yes. Listings save as drafts while you build them, as you complete the step-by-step wizard. Nothing goes public until you review it and confirm the publish step yourself.',
   },
   {
     question: 'Do I have to arrange shipping?',
@@ -131,7 +131,7 @@ const howToSchema = {
       '@type': 'HowToStep',
       position: 1,
       name: 'Build your listing',
-      text: 'Chat it through with List with Vendi or use the step-by-step wizard. Add photos, specs, and your asking price.',
+      text: 'Use the step-by-step wizard. Add photos, specs, and your asking price.',
       url: 'https://vendibook.com/list/start',
     },
     {
@@ -210,7 +210,7 @@ const steps = [
   {
     n: '01',
     title: 'Build your listing',
-    body: 'Chat it through with List with Vendi, or take the step-by-step wizard yourself. Photos, specs, dimensions, and your asking price.',
+    body: 'Use the step-by-step wizard. Photos, specs, dimensions, and your asking price.',
   },
   {
     n: '02',
@@ -222,14 +222,6 @@ const steps = [
     title: 'Manage inquiries and the handoff',
     body: 'Answer questions, weigh offers, pick pay in person or online checkout, then coordinate pickup, delivery, or freight and confirm the sale.',
   },
-];
-
-const chatMock = [
-  { from: 'vendi', text: 'Hi! What are you selling — a food truck, a trailer, or a mobile kitchen?' },
-  { from: 'seller', text: '2019 step van food truck, full kitchen, 20k miles on the build.' },
-  { from: 'vendi', text: 'Got it. Add a few photos and I’ll start the listing preview on the right.' },
-  { from: 'seller', text: '📷 6 photos added' },
-  { from: 'vendi', text: 'Looking good. Asking price, and do you want to allow online checkout or keep it pay-in-person only?' },
 ];
 
 const SellMyFoodTruck = () => {
@@ -421,109 +413,6 @@ const SellMyFoodTruck = () => {
                     </p>
                   </motion.div>
                 ))}
-              </div>
-            </div>
-          </section>
-
-          {/* ── LIST WITH VENDI ──────────────────────────────────── */}
-          <section className="py-16 md:py-[100px] border-t border-border">
-            <div className="container max-w-6xl">
-              <div className="grid lg:grid-cols-[1fr_1.05fr] gap-12 lg:gap-16 items-center">
-                <motion.div {...fade()}>
-                  <span className="inline-flex items-center gap-2 rounded-full chip-accent px-3 py-1 text-xs font-medium">
-                    Free · Easiest way to list
-                  </span>
-                  <h2 className="mt-5 text-2xl md:text-[2.1rem] leading-tight font-semibold tracking-[-0.015em] text-foreground">
-                    List with Vendi — just describe your truck.
-                  </h2>
-                  <p className="mt-5 text-muted-foreground leading-relaxed max-w-lg">
-                    Answer in plain language, drop in photos or video, and watch the listing build itself
-                    in a live preview beside the chat. Save a draft whenever you like, review everything at
-                    the end, and publish only when you say so.
-                  </p>
-                  <ul className="mt-7 space-y-3">
-                    {[
-                      'Chat naturally instead of filling out a long form',
-                      'Upload photos and video as you go',
-                      'Live preview of the real listing',
-                      'Save a draft and come back later',
-                      'Review, then publish when you are ready',
-                    ].map((line) => (
-                      <li key={line} className="flex items-start gap-3 text-sm text-foreground/80">
-                        <CheckCircle2 className="h-4 w-4 text-primary mt-0.5 shrink-0" aria-hidden="true" />
-                        <span>{line}</span>
-                      </li>
-                    ))}
-                  </ul>
-                  <div className="mt-8 flex flex-wrap gap-3">
-                    <Button variant="cta" asChild>
-                      <Link to={LIST_HREF}>
-                        List my food truck free
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Link>
-                    </Button>
-                    <Button variant="ghost" className="rounded-2xl text-foreground" asChild>
-                      <Link to="/list/start?mode=sale&path=self">Prefer to build it myself</Link>
-                    </Button>
-                  </div>
-                </motion.div>
-
-                {/* Product mock: chat + live preview */}
-                <motion.div {...fade(0.08)} aria-hidden="true">
-                  <div className="rounded-[30px] border border-border/80 bg-white/70 backdrop-blur-sm p-4 md:p-5 shadow-[0_30px_80px_-46px_rgba(24,20,16,0.5)]">
-                    <div className="grid sm:grid-cols-[1.15fr_1fr] gap-4">
-                      {/* Chat */}
-                      <div className="rounded-[22px] bg-[#fbfaf8] border border-border/70 p-4 space-y-3">
-                        {chatMock.map((m, i) => (
-                          <div
-                            key={i}
-                            className={
-                              m.from === 'seller'
-                                ? 'ml-auto max-w-[85%] rounded-2xl rounded-br-md bg-primary/10 px-3.5 py-2.5 text-[0.8rem] leading-relaxed text-foreground'
-                                : 'max-w-[90%] rounded-2xl rounded-bl-md bg-white border border-border/70 px-3.5 py-2.5 text-[0.8rem] leading-relaxed text-foreground/80'
-                            }
-                          >
-                            {m.text}
-                          </div>
-                        ))}
-                        <div className="mt-3 flex items-center gap-2 rounded-full border border-border/70 bg-white px-3.5 py-2.5">
-                          <span className="text-[0.78rem] text-muted-foreground">Type your answer…</span>
-                          <span className="ml-auto h-6 w-6 rounded-full bg-primary/90" />
-                        </div>
-                      </div>
-
-                      {/* Live preview */}
-                      <div className="rounded-[22px] bg-white border border-border/70 overflow-hidden">
-                        <div className="px-4 pt-3 pb-2 text-[0.65rem] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
-                          Live preview
-                        </div>
-                        <img
-                          src={featured?.imageUrl ?? heroTruck}
-                          alt=""
-                          loading="lazy"
-                          className="w-full aspect-[4/3] object-cover"
-                        />
-                        <div className="p-4">
-                          <div className="text-sm font-medium text-foreground line-clamp-1">
-                            {featured?.title ?? '2019 Step Van Food Truck'}
-                          </div>
-                          <div className="mt-1 text-xs text-muted-foreground">
-                            {featured?.city
-                              ? [featured.city, featured.state].filter(Boolean).join(', ')
-                              : 'Full kitchen build'}
-                          </div>
-                          <div className="mt-3 text-base font-semibold text-foreground">
-                            {featured?.priceSale
-                              ? `$${featured.priceSale.toLocaleString()}`
-                              : '$78,500'}
-                          </div>
-                          <div className="mt-3 h-8 rounded-full bg-primary/90" />
-                        </div>
-
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
               </div>
             </div>
           </section>

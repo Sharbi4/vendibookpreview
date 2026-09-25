@@ -1,9 +1,8 @@
 import { useEffect } from 'react';
-import { Link, useSearchParams } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { ArrowLeft } from 'lucide-react';
 import WorkspaceShell from '@/components/workspace/WorkspaceShell';
 import { QuickStartWizard } from '@/components/listing-wizard/QuickStartWizard';
-import ListingPathChoice from '@/components/listing/ListingPathChoice';
 import { trackEvent } from '@/lib/analytics';
 
 /**
@@ -12,30 +11,14 @@ import { trackEvent } from '@/lib/analytics';
  * and the follow-on routes differ so sellers never leave the dashboard.
  */
 export default function WorkspaceListingNew() {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const manual = searchParams.get('path') === 'self';
-
   useEffect(() => {
     trackEvent({
       category: 'Supply',
-      action: manual ? 'listing_quickstart_viewed' : 'listing_path_choice_viewed',
+      action: 'listing_quickstart_viewed',
       label: 'dashboard',
     });
     window.scrollTo({ top: 0 });
-  }, [manual]);
-
-  const chooseManual = () => {
-    const next = new URLSearchParams(searchParams);
-    next.set('path', 'self');
-    setSearchParams(next, { replace: true });
-  };
-
-  const searchWithoutPath = () => {
-    const next = new URLSearchParams(searchParams);
-    next.delete('path');
-    const qs = next.toString();
-    return qs ? `?${qs}` : '';
-  };
+  }, []);
 
   return (
     <WorkspaceShell>
@@ -53,15 +36,11 @@ export default function WorkspaceListingNew() {
         </header>
 
         <div className="v2-card sale-light v2-wizard-embed">
-          {manual ? (
-            <QuickStartWizard
+          <QuickStartWizard
               resumeTo={(id) => `/dashboard/listings/${id}/edit`}
               gatewayTo="/dashboard/listings/new"
               saveForLaterTo="/dashboard/listings"
             />
-          ) : (
-            <ListingPathChoice onChooseManual={chooseManual} search={searchWithoutPath()} />
-          )}
         </div>
       </div>
     </WorkspaceShell>
