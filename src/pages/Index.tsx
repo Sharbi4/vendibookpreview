@@ -56,7 +56,7 @@ const fetchFeaturedListings = async () => {
     .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null)
     .eq('moderation_status', 'clear').eq('featured_enabled', true)
     .gt('featured_expires_at', new Date().toISOString()))
-    .limit(12);
+    .limit(24);
   if (error) throw error;
   // Fair daily rotation only — the featured row should not lead with the
   // newest boosts (those get the hero spotlight instead).
@@ -101,7 +101,7 @@ const Index = () => {
   const featuredQuery = useQuery({ queryKey: ['home-v2-featured'], queryFn: fetchFeaturedListings, staleTime: 60000 });
 
   const spotlightListings = buildHomepageSpotlight(
-    featuredQuery.data ?? [], [...(saleQuery.data ?? []), ...(rentQuery.data ?? [])], 8,
+    featuredQuery.data ?? [], [...(saleQuery.data ?? []), ...(rentQuery.data ?? [])], 12,
   );
   const hasMarketplacePicks = spotlightListings.some((listing) => !isListingFeatured(listing));
 
