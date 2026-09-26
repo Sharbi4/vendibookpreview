@@ -3,6 +3,16 @@ import ReactDOM from "react-dom/client";
 import App from "./App.tsx";
 import "./index.css";
 import "./lib/i18n"; // Initialize i18n
+import { Capacitor } from '@capacitor/core';
+
+// Native resilience: disable Service Worker in the Capacitor container
+// to prevent stale cache / chunk-loading issues after app updates.
+if (Capacitor.isNativePlatform() && "serviceWorker" in navigator) {
+  navigator.serviceWorker
+    .getRegistrations()
+    .then((regs) => Promise.all(regs.map((r) => r.unregister())))
+    .catch(() => { /* no-op */ });
+}
 
 // Dev resilience: avoid stale Service Worker / cache causing
 // "TypeError: Importing a module script failed" after hot updates.

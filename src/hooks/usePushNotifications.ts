@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { Capacitor } from '@capacitor/core';
 
 // VAPID public key - this should match the private key in your edge function
 const VAPID_PUBLIC_KEY =
@@ -28,6 +29,11 @@ export const usePushNotifications = (userId: string | undefined) => {
 
   // Ensure we use the SAME service worker as the PWA (/sw.js)
   const getServiceWorkerRegistration = useCallback(async () => {
+    // Disable SW in Native Android/iOS to avoid stale cache issues
+    if (Capacitor.isNativePlatform()) {
+      throw new Error('Service workers are disabled in the native app.');
+    }
+
     if (!('serviceWorker' in navigator)) {
       throw new Error('Service workers not supported');
     }
@@ -42,8 +48,12 @@ export const usePushNotifications = (userId: string | undefined) => {
 
   // Check if push notifications are supported
   useEffect(() => {
+    // Only support web-based push for now; native push uses a different flow (FCM)
     const supported =
-      'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window;
+      !Capacitor.isNativePlatform() &&
+      'serviceWorker' in navigator &&
+      'PushManager' in window &&
+      'Notification' in window;
     setIsSupported(supported);
 
     if (supported) {
@@ -54,7 +64,7 @@ export const usePushNotifications = (userId: string | undefined) => {
   // Check current subscription status
   useEffect(() => {
     const checkSubscription = async () => {
-      if (!isSupported || !userId) {
+      if (!isSupported || !userId || Capacitor.isNativePlatform()) {
         setIsLoading(false);
         return;
       }
@@ -85,6 +95,14 @@ export const usePushNotifications = (userId: string | undefined) => {
         title: 'Please sign in',
         description: 'You need to be signed in to enable push notifications.',
         variant: 'destructive',
+      });
+      return false;
+    }
+
+    if (Capacitor.isNativePlatform()) {
+      toast({
+        title: 'Coming Soon',
+        description: 'Native notifications for Android are currently being prepared.',
       });
       return false;
     }
@@ -158,7 +176,7 @@ export const usePushNotifications = (userId: string | undefined) => {
 
   // Unsubscribe from push notifications
   const unsubscribe = useCallback(async () => {
-    if (!userId) return false;
+    if (!userId || Capacitor.isNativePlatform()) return false;
 
     try {
       setIsLoading(true);

@@ -1,3 +1,4 @@
+import { publicReturnUrl } from '@/lib/native/links';
 import { rememberAuthMethod } from '@/lib/auth/oauthIntent';
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
@@ -293,7 +294,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Preserve the flow the visitor came from (listing, checkout, /list/start)
       // so the email confirmation link lands them back there.
       const dest = returnTo && returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/dashboard';
-      const redirectUrl = `${window.location.origin}${dest}`;
+      const redirectUrl = publicReturnUrl(dest);
 
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -370,7 +371,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const resetPassword = async (email: string) => {
     try {
-      const redirectUrl = `${window.location.origin}/reset-password`;
+      const redirectUrl = publicReturnUrl('/reset-password');
       
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: redirectUrl,
