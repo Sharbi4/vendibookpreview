@@ -221,17 +221,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/26bd6a6a-f814-4f31-923d-68e7e326ff06</loc>
-    <lastmod>2026-09-25</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/04eccfc2-efde-4d72-a0e9-dbcfea829376/26bd6a6a-f814-4f31-923d-68e7e326ff06/1785968367203-hxdpyo.jpeg</image:loc>
-      <image:title>Fully equipped food trailer </image:title>
-      <image:caption>Fully equipped food trailer  in Saginaw, MI on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/5485ce08-9cd6-4c4c-851e-824e4b7d9451</loc>
     <lastmod>2026-09-24</lastmod>
     <changefreq>weekly</changefreq>
@@ -683,6 +672,17 @@
     </image:image>
   </url>
   <url>
+    <loc>https://vendibook.com/listing/26bd6a6a-f814-4f31-923d-68e7e326ff06</loc>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/04eccfc2-efde-4d72-a0e9-dbcfea829376/26bd6a6a-f814-4f31-923d-68e7e326ff06/1785968367203-hxdpyo.jpeg</image:loc>
+      <image:title>Fully equipped food trailer </image:title>
+      <image:caption>Fully equipped food trailer  in Saginaw, MI on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://vendibook.com/listing/24594068-25df-4bbe-b142-7bad96aacf39</loc>
     <lastmod>2026-09-22</lastmod>
     <changefreq>weekly</changefreq>
@@ -771,17 +771,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/d98cfc23-1156-489e-a4f7-1e0bafb74fe5</loc>
-    <lastmod>2026-09-25</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/e86990e4-0a49-4126-a786-ea2b29eb8457/d98cfc23-1156-489e-a4f7-1e0bafb74fe5/1782570587944-yn47a.jpeg</image:loc>
-      <image:title>2022 fully equit with bathroom food trailer</image:title>
-      <image:caption>2022 fully equit with bathroom food trailer in Lakeland, GA on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/fec5ac8b-3e30-4500-b3c4-e95820aaa00e</loc>
     <lastmod>2026-09-26</lastmod>
     <changefreq>weekly</changefreq>
@@ -790,6 +779,17 @@
       <image:loc>https://images.unsplash.com/photo-1565299585323-38d6b0865b47?w=800</image:loc>
       <image:title>Established Taco Truck</image:title>
       <image:caption>Established Taco Truck in Albuquerque, NM on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/d98cfc23-1156-489e-a4f7-1e0bafb74fe5</loc>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/e86990e4-0a49-4126-a786-ea2b29eb8457/d98cfc23-1156-489e-a4f7-1e0bafb74fe5/1782570587944-yn47a.jpeg</image:loc>
+      <image:title>2022 fully equit with bathroom food trailer</image:title>
+      <image:caption>2022 fully equit with bathroom food trailer in Lakeland, GA on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
