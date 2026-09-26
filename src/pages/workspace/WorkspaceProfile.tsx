@@ -24,7 +24,7 @@ export default function WorkspaceProfile() {
   const { user, profile } = useAuth();
   const { listings, isLoading: listingsLoading } = useHostListings();
   const { data: sold = [], isLoading: soldLoading } = useSellerSoldItems();
-  const { status, isReady, isLoading: paypalLoading } = useMyPayPalConnection();
+
 
   const name = profile?.full_name || user?.email || 'Your profile';
   const live = listings.filter((l) => l.status === 'published');
@@ -57,17 +57,6 @@ export default function WorkspaceProfile() {
           </div>
         </header>
 
-        <section className="v2-panel p-5">
-          <h2 className="text-base font-semibold">Payment readiness</h2>
-          <p className="text-sm text-muted-foreground mt-1">{readinessCopy}</p>
-          <p className="text-sm text-muted-foreground mt-2">
-            Payouts to you are reviewed and released by Vendibook — they are not automatic.
-          </p>
-          {!isReady && <SellerBusinessAccountHelp className="mt-3" compact />}
-          <Link to="/dashboard/payments/setup" className="v2-btn-outline v2-btn-sm mt-4 w-fit">
-            Open payment setup
-          </Link>
-        </section>
 
         <section className="v2-panel p-5">
           <div className="flex items-center justify-between gap-3">
