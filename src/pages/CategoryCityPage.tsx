@@ -29,6 +29,7 @@ import {
 import { useNationwideInventory, type InventoryCategory } from '@/hooks/useNationwideInventory';
 import { formatListingPriceLabel, PRICE_TBD } from '@/lib/listings/rentalPricing';
 import ExpandSearchModule, { LowInventoryInlineLine, LOW_INVENTORY_THRESHOLD, NEAR_EMPTY_THRESHOLD } from '@/components/seo/ExpandSearchModule';
+import TransactionConfidenceSection from '@/components/seo/TransactionConfidenceSection';
 
 interface CategoryCityPageProps {
   mode: 'rent' | 'buy';
@@ -489,6 +490,8 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
               </div>
             </section>
           )}
+
+          <TransactionConfidenceSection audience={mode === 'rent' ? 'renter' : 'buyer'} source={`city_${mode}`} />
 
           {/* FAQ Section — visible content matching FAQPage JSON-LD for rich results */}
           <section className="space-y-4 pt-6 border-t border-border">

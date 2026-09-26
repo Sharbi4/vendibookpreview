@@ -30,6 +30,7 @@ import heroSelling from '@/assets/how-selling-hero.jpg';
 import heroTruck from '@/assets/hero-food-truck.jpg';
 import trailerGrill from '@/assets/trailer-orange-grill.jpg';
 import trailerCafecito from '@/assets/trailer-cafecito.jpg';
+import TransactionConfidenceSection from '@/components/seo/TransactionConfidenceSection';
 
 const LIST_HREF = '/list/start?mode=sale';
 
@@ -651,6 +652,7 @@ const SellMyFoodTruck = () => {
             </div>
           </section>
 
+          <div className="mx-auto w-full max-w-6xl px-4 py-12 md:py-16"><TransactionConfidenceSection audience="seller" source="sell_my_food_truck" /></div>
         </main>
 
         <Footer />
