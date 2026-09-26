@@ -1,7 +1,6 @@
 import { Link } from 'react-router-dom';
 import { CheckCircle2, Image as ImageIcon } from 'lucide-react';
 import WorkspaceShell from '@/components/workspace/WorkspaceShell';
-import PayPalReadyBadge from '@/components/workspace/PayPalReadyBadge';
 import MessageBuyerButton from '@/components/workspace/MessageBuyerButton';
 import { useAuth } from '@/contexts/AuthContext';
 import { useHostListings } from '@/hooks/useHostListings';
@@ -52,7 +51,6 @@ export default function WorkspaceProfile() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2.5">
-            <PayPalReadyBadge showDetails />
             <Link to="/dashboard/account" className="v2-btn-outline">
               Edit profile
             </Link>
