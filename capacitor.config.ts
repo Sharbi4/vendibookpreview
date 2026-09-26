@@ -5,8 +5,9 @@ const config: CapacitorConfig = {
   appName: 'vendibookpreview',
   webDir: 'dist',
   server: {
-    url: 'https://f4d8586e-de66-4307-b052-b071b734f592.lovableproject.com?forceHideBadge=true',
-    cleartext: true
+    // Use the public site; Lovable preview URLs require a project login.
+    url: 'https://vendibook.com',
+    cleartext: false
   }
 };
 
