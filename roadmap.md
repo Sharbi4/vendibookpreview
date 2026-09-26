@@ -9,3 +9,5 @@
 - [open] Square disputes beyond refunds; SignNow UI triggers + counsel review of template text.
 - [open] Rotate pasted Square production access token.
 - [done] Preserve the selected PayPal Pay Later funding source through approval so review copy shows the order total, not a same-day charge.
+- [done] Replace TaxJar with state sales-tax rates: TaxJar API was 403-rejecting every lookup, so all tax fell to the fallback table anyway. Removed the TaxJar integration from _shared/tax.ts; checkout now uses the published statewide base sales-tax rate table as the single source.
+- [done] Homepage Featured row: raised the row from 8 to 12 listings (all live featured listings now show, currently 9).
