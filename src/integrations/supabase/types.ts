@@ -5523,6 +5523,72 @@ export type Database = {
           },
         ]
       }
+      native_push_devices: {
+        Row: {
+          token: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          token: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          token?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      native_push_jobs: {
+        Row: {
+          attempts: number
+          capability: string
+          id: string
+          next_attempt_at: string
+          notification_id: string
+          status: string
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          capability?: string
+          id?: string
+          next_attempt_at?: string
+          notification_id: string
+          status?: string
+          token: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          capability?: string
+          id?: string
+          next_attempt_at?: string
+          notification_id?: string
+          status?: string
+          token?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "native_push_jobs_notification_id_fkey"
+            columns: ["notification_id"]
+            isOneToOne: false
+            referencedRelation: "notifications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "native_push_jobs_token_fkey"
+            columns: ["token"]
+            isOneToOne: false
+            referencedRelation: "native_push_devices"
+            referencedColumns: ["token"]
+          },
+        ]
+      }
       newsletter_subscribers: {
         Row: {
           created_at: string
@@ -12584,6 +12650,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      dispatch_native_push_jobs: { Args: never; Returns: undefined }
       format_public_name: {
         Args: { _fallback?: string; _first: string; _last: string }
         Returns: string
@@ -13191,6 +13258,7 @@ export type Database = {
         Returns: string
       }
       sweep_non_public_listing_artifacts: { Args: never; Returns: Json }
+      test_native_push: { Args: never; Returns: undefined }
       unfreeze_payable_for_case: {
         Args: { _payable_id: string }
         Returns: undefined
