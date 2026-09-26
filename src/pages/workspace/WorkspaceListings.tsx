@@ -7,7 +7,6 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { CreditCard, Eye, Image as ImageIcon, Megaphone, Pencil, Plus, Share2, Video } from 'lucide-react';
 import { toast } from 'sonner';
 import WorkspaceShell from '@/components/workspace/WorkspaceShell';
-import PayPalReadyBadge from '@/components/workspace/PayPalReadyBadge';
 import { useHostListings } from '@/hooks/useHostListings';
 import { useMyPayPalConnection } from '@/hooks/useMyPayPalConnection';
 import { PromoteListingModal } from '@/components/dashboard/PromoteListingModal';
@@ -137,7 +136,6 @@ export default function WorkspaceListings() {
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2.5">
-            <PayPalReadyBadge />
             <Link to="/dashboard/listings/new" className="v2-btn">
               <Plus />
               List an asset
