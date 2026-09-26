@@ -113,6 +113,28 @@ export const CATEGORY_INDEX_CONFIGS: CategoryIndexConfig[] = [
           { href: '/food-trucks-for-sale/oregon', label: 'Oregon' },
         ],
       },
+      {
+        heading: 'Starting a coffee business?',
+        paragraphs: [
+          'Coffee is one of the lowest-cost mobile food concepts to launch. Espresso-ready trucks need a commercial espresso machine, grinder, water system, refrigeration, and enough power to run them all at once. Compare espresso setups, generator capacity, and asking prices side by side on our dedicated coffee inventory page.',
+        ],
+        links: [
+          { href: '/coffee-trucks-trailers-for-sale', label: 'Shop coffee trucks & trailers for sale' },
+          { href: '/financing', label: 'Finance a coffee trailer' },
+        ],
+      },
+      {
+        heading: 'Taco trucks for sale',
+        paragraphs: [
+          'Taco trucks are one of the most popular mobile food concepts in the US. When you shop taco trucks for sale, look for a full-length flat-top griddle, a hood and fire suppression system sized for it, a steam table for proteins, prep refrigeration, and a service window wide enough for fast lines. Mobile taco kitchens with commissary-ready water tanks and current health inspections usually get on the road fastest.',
+          'Browse the food trucks listed above and search for "taco" to surface taco truck inventory, or compare pricing across used food trucks before you make an offer.',
+        ],
+        links: [
+          { href: '/search?mode=sale&category=food_truck&q=taco', label: 'Shop taco trucks for sale' },
+          { href: '/food-truck-prices', label: 'Compare food truck prices' },
+          { href: '/financing', label: 'Finance a taco truck' },
+        ],
+      },
     ],
     faqs: truckFaqs,
     related: [
@@ -291,6 +313,16 @@ export const CATEGORY_INDEX_CONFIGS: CategoryIndexConfig[] = [
           { href: '/food-trailers-for-sale/michigan', label: 'Michigan' },
           { href: '/food-trailers-for-sale/ohio', label: 'Ohio' },
           { href: '/food-trailers-for-sale/arizona', label: 'Arizona' },
+        ],
+      },
+      {
+        heading: 'Starting a coffee business?',
+        paragraphs: [
+          'Coffee is one of the lowest-cost mobile food concepts to launch. Espresso-ready trailers need a commercial espresso machine, grinder, water system, refrigeration, and enough power to run them all at once. Compare espresso setups, generator capacity, and asking prices side by side on our dedicated coffee inventory page.',
+        ],
+        links: [
+          { href: '/coffee-trucks-trailers-for-sale', label: 'Shop coffee trucks & trailers for sale' },
+          { href: '/financing', label: 'Finance a coffee trailer' },
         ],
       },
     ],
