@@ -197,6 +197,13 @@ const Index = () => {
             );
           })()}
 
+          <nav aria-label="Shop by business type" className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+            <span>Shop by business type:</span>
+            <Link to="/coffee-trucks-trailers-for-sale" className="rounded-full border border-border px-3 py-1.5 text-foreground hover:border-primary hover:text-primary transition-colors">Coffee trucks &amp; trailers for sale</Link>
+            <Link to="/ice-cream-trucks-trailers-for-sale" className="rounded-full border border-border px-3 py-1.5 text-foreground hover:border-primary hover:text-primary transition-colors">Ice cream trucks &amp; trailers</Link>
+            <Link to="/food-trucks-for-sale" className="rounded-full border border-border px-3 py-1.5 text-foreground hover:border-primary hover:text-primary transition-colors">Taco &amp; food trucks for sale</Link>
+          </nav>
+
           <V2ListingRow
             title="Available to rent"
             subtitle="Food trucks, trailers, kitchens, and spaces ready for your next move."

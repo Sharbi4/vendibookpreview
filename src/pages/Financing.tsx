@@ -483,7 +483,8 @@ const Financing = () => {
               <p className="min-w-[240px] flex-1 text-sm leading-relaxed text-muted-foreground">
                 <span className="font-semibold text-foreground">Already found a listing?</span>{' '}
                 Look for this badge as you browse — financing can be used for eligible
-                for-sale inventory across Vendibook.
+                for-sale inventory across Vendibook, including{' '}
+                <Link to="/coffee-trucks-trailers-for-sale" className="font-medium text-foreground underline underline-offset-4">coffee trucks and trailers for sale</Link>.
               </p>
               <Button variant="cta-outline" size="sm" className="shrink-0 rounded-full" asChild>
                 <Link to="/browse">
