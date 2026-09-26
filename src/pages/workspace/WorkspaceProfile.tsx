@@ -4,9 +4,7 @@ import WorkspaceShell from '@/components/workspace/WorkspaceShell';
 import MessageBuyerButton from '@/components/workspace/MessageBuyerButton';
 import { useAuth } from '@/contexts/AuthContext';
 import { useHostListings } from '@/hooks/useHostListings';
-import { useMyPayPalConnection } from '@/hooks/useMyPayPalConnection';
 import { useSellerSoldItems } from '@/hooks/useSellerSoldItems';
-import SellerBusinessAccountHelp from '@/components/payments/SellerBusinessAccountHelp';
 
 const money = (value?: number | null) =>
   value == null
@@ -29,15 +27,8 @@ export default function WorkspaceProfile() {
   const name = profile?.full_name || user?.email || 'Your profile';
   const live = listings.filter((l) => l.status === 'published');
 
-  const readinessCopy = paypalLoading
-    ? 'Checking your payment setup…'
-    : isReady
-      ? 'Your PayPal Business account is connected and able to receive online payments.'
-      : status === 'action_required'
-        ? 'PayPal needs a few more details before your account can accept online payments.'
-        : status === 'link_sent' || status === 'onboarding'
-          ? 'Your PayPal connection is still in progress. Finish it to accept online payments.'
-          : 'Connect a PayPal Business account to accept online payments through Vendibook.';
+  const live = listings.filter((l) => l.status === 'published');
+
 
   return (
     <WorkspaceShell>
