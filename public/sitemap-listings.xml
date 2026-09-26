@@ -210,17 +210,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/25ab2846-d917-4438-a6ac-366c973bb5b2</loc>
-    <lastmod>2026-09-25</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/b5548157-8ddd-4c47-b79d-1c4483c000dc/25ab2846-d917-4438-a6ac-366c973bb5b2/1788275612843-8xv83yr22h3.jpeg</image:loc>
-      <image:title>Food Truck for sale in Brenham, TX</image:title>
-      <image:caption>Food Truck for sale in Brenham, TX in Brenham, TX on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/a27ad5e3-5260-4af1-beca-2a13b82fd733</loc>
     <lastmod>2026-09-26</lastmod>
     <changefreq>weekly</changefreq>
@@ -661,6 +650,17 @@
     </image:image>
   </url>
   <url>
+    <loc>https://vendibook.com/listing/25ab2846-d917-4438-a6ac-366c973bb5b2</loc>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/b5548157-8ddd-4c47-b79d-1c4483c000dc/25ab2846-d917-4438-a6ac-366c973bb5b2/1788275612843-8xv83yr22h3.jpeg</image:loc>
+      <image:title>Food Truck for sale in Brenham, TX</image:title>
+      <image:caption>Food Truck for sale in Brenham, TX in Brenham, TX on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://vendibook.com/listing/d4e891ae-bbf4-4580-9998-28681e04d2d4</loc>
     <lastmod>2026-09-25</lastmod>
     <changefreq>weekly</changefreq>
@@ -860,7 +860,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/0c055798-902a-4b1f-898f-d44b71c11282</loc>
-    <lastmod>2026-09-24</lastmod>
+    <lastmod>2026-09-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -969,17 +969,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/cc22ddd2-3a14-48df-80d3-9bafa40b547c</loc>
-    <lastmod>2026-09-23</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/4d7cee0d-2979-4d1a-8ff2-735accffa2a3/cc22ddd2-3a14-48df-80d3-9bafa40b547c/1789418025595-pxlnke.jpg</image:loc>
-      <image:title>Gorgeous Turn-key 2020 Diesel Mercedes Benz 2500 General Purpose Food Truck</image:title>
-      <image:caption>Gorgeous Turn-key 2020 Diesel Mercedes Benz 2500 General Purpose Food Truck in Goodlettsville, TN on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/074161d2-7252-4178-a3d4-0815adf43d90</loc>
     <lastmod>2026-09-26</lastmod>
     <changefreq>weekly</changefreq>
@@ -992,13 +981,24 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/5534f230-99a7-4ff6-a2b4-f495cdac1946</loc>
-    <lastmod>2026-09-22</lastmod>
+    <lastmod>2026-09-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/d8046cdd-aa84-42b4-b739-938de47c7c04/5534f230-99a7-4ff6-a2b4-f495cdac1946/1782332644864-g1ujpc.jpeg</image:loc>
       <image:title>Food trailer 8x15</image:title>
       <image:caption>Food trailer 8x15 in Missouri City, TX on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/cc22ddd2-3a14-48df-80d3-9bafa40b547c</loc>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/4d7cee0d-2979-4d1a-8ff2-735accffa2a3/cc22ddd2-3a14-48df-80d3-9bafa40b547c/1789418025595-pxlnke.jpg</image:loc>
+      <image:title>Gorgeous Turn-key 2020 Diesel Mercedes Benz 2500 General Purpose Food Truck</image:title>
+      <image:caption>Gorgeous Turn-key 2020 Diesel Mercedes Benz 2500 General Purpose Food Truck in Goodlettsville, TN on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -1212,7 +1212,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/109f57be-b1c6-41bb-a2a1-bc8c3efa8e51</loc>
-    <lastmod>2026-09-25</lastmod>
+    <lastmod>2026-09-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
