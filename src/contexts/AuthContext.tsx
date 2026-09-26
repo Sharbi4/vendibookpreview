@@ -1,3 +1,4 @@
+import { disableNativePush } from '@/lib/native/push';
 import { publicReturnUrl } from '@/lib/native/links';
 import { rememberAuthMethod } from '@/lib/auth/oauthIntent';
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
@@ -362,6 +363,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 
   const signOut = async () => {
+    await disableNativePush().catch(() => false);
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);

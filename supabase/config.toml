@@ -364,3 +364,6 @@ verify_jwt = false
 
 [functions.signup-phone-verification]
 verify_jwt = false
+
+[functions.send-native-push]
+verify_jwt = false

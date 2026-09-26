@@ -1,3 +1,4 @@
+import { NativePushLifecycle } from '@/hooks/useNativePushNotifications';
 import { useNativeNavigation } from '@/hooks/useNativeNavigation';
 import React, { Suspense, lazy, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
@@ -738,6 +739,7 @@ const AppContent = () => {
 
   return (
     <>
+      <NativePushLifecycle />
       <ScrollToTop />
       <OfflineBanner />
       <Toaster />

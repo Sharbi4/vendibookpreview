@@ -18,6 +18,7 @@ const config: CapacitorConfig = {
     cleartext: false
   },
   plugins: {
+    PushNotifications: { presentationOptions: ['alert', 'sound'] },
     SplashScreen: {
       launchShowDuration: 2000,
       backgroundColor: '#ffffff',

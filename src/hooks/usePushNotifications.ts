@@ -1,3 +1,4 @@
+import { useNativePushNotifications } from '@/hooks/useNativePushNotifications';
 import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -21,6 +22,7 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array {
 }
 
 export const usePushNotifications = (userId: string | undefined) => {
+  const native = useNativePushNotifications();
   const [isSupported, setIsSupported] = useState(false);
   const [isSubscribed, setIsSubscribed] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -218,6 +220,7 @@ export const usePushNotifications = (userId: string | undefined) => {
     }
   }, [toast, userId]);
 
+  if (Capacitor.getPlatform() === 'android') return native;
   return {
     isSupported,
     isSubscribed,

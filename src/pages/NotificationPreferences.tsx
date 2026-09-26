@@ -1,3 +1,4 @@
+import { Capacitor } from '@capacitor/core';
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -71,6 +72,12 @@ const TestPushButton = ({ userId }: { userId: string }) => {
   const sendTestNotification = async () => {
     setIsSending(true);
     try {
+      if (Capacitor.getPlatform() === 'android') {
+        const { error } = await (supabase as any).rpc('test_native_push');
+        if (error) throw error;
+        toast.success('Test notification queued. Watch for an Android notification.');
+        return;
+      }
       const { data, error } = await supabase.functions.invoke('send-push-notification', {
         body: {
           user_id: userId,
