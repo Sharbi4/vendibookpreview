@@ -23,11 +23,10 @@ export default function WorkspaceProfile() {
   const { listings, isLoading: listingsLoading } = useHostListings();
   const { data: sold = [], isLoading: soldLoading } = useSellerSoldItems();
 
-
   const name = profile?.full_name || user?.email || 'Your profile';
   const live = listings.filter((l) => l.status === 'published');
 
-  const live = listings.filter((l) => l.status === 'published');
+
 
 
   return (
