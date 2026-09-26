@@ -71,6 +71,11 @@ const faqs = [
       'If you turn on optional Vendibook online checkout, the buyer pays through PayPal’s secure hosted checkout rather than handing you cash or a wire. Card details are handled by PayPal, not by Vendibook, and eligible buyers may see PayPal Pay Later options at checkout. Payouts on completed online sales are reviewed and issued by Vendibook. You can read the full breakdown on the Vendibook payments page.',
   },
   {
+    question: 'When do I get paid after an online sale?',
+    answer:
+      'Payouts on completed online sales are reviewed by the Vendibook team after the handoff is confirmed. They are typically released within 24 hours of delivery confirmation, and we always strive for 24–48 hours. Funds are sent via PayPal, ACH, or Venmo depending on the payout account you have on file.',
+  },
+  {
     question: 'Can Vendibook Freight deliver the truck to my buyer?',
     answer:
       'Where coordination is available, buyers can review Vendibook Freight delivery options from the listing before they commit, so you do not have to drive it across the country yourself. Availability and cost depend on the listing, the route, and the equipment, and many sales are still simple local pickup.',
@@ -264,8 +269,8 @@ const SellMyFoodTruck = () => {
   return (
     <>
       <SEO
-        title="Sell My Food Truck | Sell Your Food Truck or Trailer | Vendibook"
-        description="Sell your food truck or food trailer on Vendibook. List free, reach buyers already shopping for mobile food equipment, offer financing options to eligible buyers, and choose pay in person or optional online checkout."
+        title="Sell My Food Truck Fast — List Free, Get Paid via PayPal | Vendibook"
+        description="Sell your food truck or trailer on Vendibook. List free, reach buyers already shopping for mobile food equipment, offer financing to eligible buyers, and get paid in person or through secure PayPal checkout."
         canonical="/sell-my-food-truck"
         type="website"
         ogTitle="Sell your food truck where buyers are already looking"
