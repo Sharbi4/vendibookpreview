@@ -61,7 +61,7 @@ export default function TransactionConfidenceSection({ audience, source }: { aud
           </div>
           <div className="flex items-center gap-2 text-xs text-muted-foreground">
             <span>Checkout by</span>
-            <span className="rounded-md bg-foreground px-2 py-1"><PayPalWordmark className="h-3.5" /></span>
+            <PayPalWordmark surface="light" className="h-4" />
           </div>
         </div>
         <ol className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
