@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://vendibook.com/listing/0bb809bc-965e-4598-8260-636db1563db7</loc>
-    <lastmod>2026-09-25</lastmod>
+    <lastmod>2026-09-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -221,6 +221,17 @@
     </image:image>
   </url>
   <url>
+    <loc>https://vendibook.com/listing/6b466651-d042-4150-932e-09a76290866b</loc>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/bffa9366-bf11-40f9-8650-6074ed8690d1/6b466651-d042-4150-932e-09a76290866b/1789407072704-i0j3wk.jpeg</image:loc>
+      <image:title>FOOD CONCESSION TRAILER MOBILE KITCHEN UNIT W/HCD INSIGNIA</image:title>
+      <image:caption>FOOD CONCESSION TRAILER MOBILE KITCHEN UNIT W/HCD INSIGNIA in Los Angeles, CA on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://vendibook.com/listing/26bd6a6a-f814-4f31-923d-68e7e326ff06</loc>
     <lastmod>2026-09-25</lastmod>
     <changefreq>weekly</changefreq>
@@ -229,17 +240,6 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/04eccfc2-efde-4d72-a0e9-dbcfea829376/26bd6a6a-f814-4f31-923d-68e7e326ff06/1785968367203-hxdpyo.jpeg</image:loc>
       <image:title>Fully equipped food trailer </image:title>
       <image:caption>Fully equipped food trailer  in Saginaw, MI on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://vendibook.com/listing/6b466651-d042-4150-932e-09a76290866b</loc>
-    <lastmod>2026-09-21</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/bffa9366-bf11-40f9-8650-6074ed8690d1/6b466651-d042-4150-932e-09a76290866b/1789407072704-i0j3wk.jpeg</image:loc>
-      <image:title>FOOD CONCESSION TRAILER MOBILE KITCHEN UNIT W/HCD INSIGNIA</image:title>
-      <image:caption>FOOD CONCESSION TRAILER MOBILE KITCHEN UNIT W/HCD INSIGNIA in Los Angeles, CA on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -507,17 +507,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/55edfe53-5622-438f-b663-7ced764cc9ca</loc>
-    <lastmod>2026-09-25</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/454f16ce-dcff-4a55-a5a1-e91e158758fe/55edfe53-5622-438f-b663-7ced764cc9ca/1782870668773-sbnj2.jpeg</image:loc>
-      <image:title>Mobile Bar Trailer</image:title>
-      <image:caption>Mobile Bar Trailer in Tomball, TX on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/99d179ad-16ad-4bb3-9ccb-cd1a8e157284</loc>
     <lastmod>2026-09-25</lastmod>
     <changefreq>weekly</changefreq>
@@ -540,6 +529,28 @@
     </image:image>
   </url>
   <url>
+    <loc>https://vendibook.com/listing/55edfe53-5622-438f-b663-7ced764cc9ca</loc>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/454f16ce-dcff-4a55-a5a1-e91e158758fe/55edfe53-5622-438f-b663-7ced764cc9ca/1782870668773-sbnj2.jpeg</image:loc>
+      <image:title>Mobile Bar Trailer</image:title>
+      <image:caption>Mobile Bar Trailer in Tomball, TX on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/5894832e-034c-48ba-8315-1321e9b32080</loc>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/ce5ab03f-9d2e-4052-b7c3-1a1347ad5b5d/5894832e-034c-48ba-8315-1321e9b32080/1784989676916-sqm31s.jpeg</image:loc>
+      <image:title>BBQ Food Trailer (large smoker included)</image:title>
+      <image:caption>BBQ Food Trailer (large smoker included) in Myakka City, FL on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://vendibook.com/listing/154df4be-3102-44c9-b014-b36bafce8391</loc>
     <lastmod>2026-09-23</lastmod>
     <changefreq>weekly</changefreq>
@@ -548,17 +559,6 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/609b6034-da38-445b-b0bb-9fc2b1ef74f5/154df4be-3102-44c9-b014-b36bafce8391/1781182024445-ppp4gp.jpeg</image:loc>
       <image:title>My Food Trailer</image:title>
       <image:caption>My Food Trailer in Norcross, GA on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://vendibook.com/listing/5894832e-034c-48ba-8315-1321e9b32080</loc>
-    <lastmod>2026-09-25</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/ce5ab03f-9d2e-4052-b7c3-1a1347ad5b5d/5894832e-034c-48ba-8315-1321e9b32080/1784989676916-sqm31s.jpeg</image:loc>
-      <image:title>BBQ Food Trailer (large smoker included)</image:title>
-      <image:caption>BBQ Food Trailer (large smoker included) in Myakka City, FL on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -783,7 +783,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/fec5ac8b-3e30-4500-b3c4-e95820aaa00e</loc>
-    <lastmod>2026-09-23</lastmod>
+    <lastmod>2026-09-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -871,7 +871,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/1791e770-182f-4723-a207-59f727e8310e</loc>
-    <lastmod>2026-09-25</lastmod>
+    <lastmod>2026-09-26</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
