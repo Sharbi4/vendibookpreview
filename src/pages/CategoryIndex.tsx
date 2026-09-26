@@ -22,6 +22,7 @@ import { SPECIALTY_DEFS, specialtyOrFilter, specialtyBrowseLinks, specialtyVehic
 import BrowseByBusinessType from '@/components/marketplace/BrowseByBusinessType';
 import { useNationwideInventory } from '@/hooks/useNationwideInventory';
 import ExpandSearchModule, { LowInventoryInlineLine, LOW_INVENTORY_THRESHOLD, NEAR_EMPTY_THRESHOLD } from '@/components/seo/ExpandSearchModule';
+import TransactionConfidenceSection from '@/components/seo/TransactionConfidenceSection';
 
 export type CategoryKey = 'food_truck' | 'food_trailer' | 'ghost_kitchen' | 'vendor_space';
 export type ModeFilter = 'rent' | 'sale' | 'any';
@@ -671,6 +672,8 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
               ))}
             </ul>
           </section>
+
+          <TransactionConfidenceSection audience={config.mode === 'rent' ? 'renter' : 'buyer'} source={`category_${config.path}`} />
 
           {/* Seller cross-link strip */}
           <section className="rounded-2xl border border-border bg-card p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">

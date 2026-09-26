@@ -1,17 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
-    <loc>https://vendibook.com/listing/0bb809bc-965e-4598-8260-636db1563db7</loc>
-    <lastmod>2026-09-26</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/b6d57fef-2a28-491e-9c30-928fdd7c2e84/0bb809bc-965e-4598-8260-636db1563db7/1789420072070-ugk3o.png</image:loc>
-      <image:title>2024 8x16 Turnkey Food Trailer – CA HCD Insignia – Health Permitted </image:title>
-      <image:caption>2024 8x16 Turnkey Food Trailer – CA HCD Insignia – Health Permitted  in Los Angeles, CA on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/3c5c4943-dca5-40cd-bfef-547446077f46</loc>
     <lastmod>2026-09-23</lastmod>
     <changefreq>weekly</changefreq>
@@ -658,6 +647,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/b5548157-8ddd-4c47-b79d-1c4483c000dc/25ab2846-d917-4438-a6ac-366c973bb5b2/1788275612843-8xv83yr22h3.jpeg</image:loc>
       <image:title>Food Truck for sale in Brenham, TX</image:title>
       <image:caption>Food Truck for sale in Brenham, TX in Brenham, TX on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/0bb809bc-965e-4598-8260-636db1563db7</loc>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/b6d57fef-2a28-491e-9c30-928fdd7c2e84/0bb809bc-965e-4598-8260-636db1563db7/1789420072070-ugk3o.png</image:loc>
+      <image:title>2024 8x16 Turnkey Food Trailer – CA HCD Insignia – Health Permitted </image:title>
+      <image:caption>2024 8x16 Turnkey Food Trailer – CA HCD Insignia – Health Permitted  in Los Angeles, CA on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -1354,17 +1354,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/d20b2e3b-ac23-40c8-882e-038909520493</loc>
-    <lastmod>2026-09-25</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/c7620448-d37b-47ff-b0a7-736df27ed0ff/d20b2e3b-ac23-40c8-882e-038909520493/1788918537909-ywe3a.jpeg</image:loc>
-      <image:title>Food Trailer for sale in Riverdale, MD</image:title>
-      <image:caption>Food Trailer for sale in Riverdale, MD in Riverdale, MD on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/cd1c62cd-1e1f-4d72-8811-576957af53f4</loc>
     <lastmod>2026-09-25</lastmod>
     <changefreq>weekly</changefreq>
@@ -1373,6 +1362,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/97dc8bb1-d9d3-4bf9-960a-8674082ded44/cd1c62cd-1e1f-4d72-8811-576957af53f4/1772215158047-hcat5w2.jpg</image:loc>
       <image:title>Downtown Phoenix Private Commercial Kitchens For Rent</image:title>
       <image:caption>Downtown Phoenix Private Commercial Kitchens For Rent in Phoenix, AZ on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/d20b2e3b-ac23-40c8-882e-038909520493</loc>
+    <lastmod>2026-09-26</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/c7620448-d37b-47ff-b0a7-736df27ed0ff/d20b2e3b-ac23-40c8-882e-038909520493/1788918537909-ywe3a.jpeg</image:loc>
+      <image:title>Food Trailer for sale in Riverdale, MD</image:title>
+      <image:caption>Food Trailer for sale in Riverdale, MD in Riverdale, MD on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
