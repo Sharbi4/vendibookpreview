@@ -132,3 +132,31 @@ These render meta tags via `SEO`/`JsonLd` after JS executes. Googlebot handles t
 - `/{citySlug}` (DynamicCityPage / CitySupplyPage)
 
 If we extend Option A's Worker, all of these can be added to the prerender path list — but listing pages are the highest priority because they carry the actual marketplace inventory and product schema.
+
+---
+
+## Buyer SEO pages (added 2026-09-27) — source ready, NOT deployed
+
+Crawler HTML support for the 5 buyer paths now lives inside the existing architecture (no framework migration):
+
+| Path | Crawler body |
+|---|---|
+| /food-trucks-for-sale, /food-trailers-for-sale | shared copy + live sale inventory (same filters and 48 limit as CategoryIndex) |
+| /used-food-trucks-for-sale | same, filtered to seller-declared used conditions (NULL/new never shown) |
+| /how-to-buy-a-food-truck | shared guide steps, FAQs, HowTo schema |
+| /food-truck-prices | shared title/description/cost components; live figures are left to the app, and the crawler HTML uses the page's own "figures appear when enough listings are available" wording |
+
+- Single source of copy: `supabase/functions/_shared/buyerSeoContent.ts` is imported by the React configs/pages *and* by `_shared/buyerSeoPrerender.ts` (pure renderer). Edit copy there only.
+- No redirect/meta-refresh in any HTML served at its own canonical URL. The listing HTML only redirects humans for the `/share/listing/:id` alias (or `?share=1`); the blog HTML redirect was removed because the Worker serves it at the same URL (JS-rendering crawlers would have looped).
+- Inventory query failure → truthful "couldn't load listings" text, stays indexable, 60s cache. Genuinely empty → `noindex, follow`.
+- Worker (`workers/seo-prerender-router.ts`): exact-match buyer paths + existing listing/blog patterns, crawler UA only; humans always pass through to the Lovable origin. Non-200 prerender responses fall back to origin. It respects the function's Cache-Control.
+- Sitemap: `public/sitemap_pages.xml` is hand-maintained; `scripts/generate-sitemaps.ts` never writes it and warns at build if any buyer path is missing.
+- Tests: `src/test/seo/buyerSeoPrerender.test.ts` (route selection, path parity worker/function/tracking/sitemap, content parity with app configs, used filter, error/empty states, escaping, no-redirect).
+
+### Remaining production steps (not done from this repo)
+1. Deploy the `seo-prerender` edge function (it now contains the buyer renderer). It shares the one backend instance with production, so this was intentionally not deployed in this pass.
+2. Hosting constraint: Lovable hosting has no user-agent rewrite hook, and `public/_redirects` is ignored. The Worker only runs if vendibook.com traffic is proxied through Cloudflare. Steps: put the zone on Cloudflare (proxied), then run `wrangler deploy` from `workers/` with the route `vendibook.com/*` (and `www.vendibook.com/*`) uncommented in `wrangler.toml`.
+3. Verify:
+   `curl -A "Googlebot/2.1" https://vendibook.com/used-food-trucks-for-sale | grep -E "<title>|canonical|<h1>"`
+   `curl -A "Mozilla/5.0" https://vendibook.com/used-food-trucks-for-sale | grep -c seo-prerender` (should be 0, meaning the SPA was served)
+4. Watch Search Console URL Inspection ("View crawled page") for the 5 URLs.
