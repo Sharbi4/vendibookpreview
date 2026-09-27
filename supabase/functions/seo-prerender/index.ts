@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { resolveListingBrand } from "../_shared/resolveListingBrand.ts";
+import { renderBuyerSeoPage, isBuyerSeoPrerenderPath, type PrerenderListing } from "../_shared/buyerSeoPrerender.ts";
+import { BUYER_HUB_INVENTORY } from "../_shared/buyerSeoContent.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -668,12 +670,7 @@ function buildBlogHTML(post: BlogPostMeta): string {
 
   <!-- JSON-LD -->
   <script type="application/ld+json">${JSON.stringify(schema)}</script>
-
-  <!-- Redirect humans to SPA -->
-  <script>window.location.replace(${JSON.stringify(canonicalUrl)});</script>
-  <noscript>
-    <meta http-equiv="refresh" content="0; url=${canonicalUrl}" />
-  </noscript>
+  <!-- No redirect: this HTML is served at the canonical URL itself; a redirect would loop. -->
 </head>
 <body>
   <h1>${escapeHtml(post.title)}</h1>
@@ -776,6 +773,45 @@ serve(async (req) => {
           "CDN-Cache-Control": "public, max-age=86400",
           "Vercel-CDN-Cache-Control": "public, max-age=86400",
           "Surrogate-Control": "public, max-age=86400",
+          Vary: "Accept-Encoding",
+        },
+      });
+    }
+
+    // Buyer SEO pages (shared copy with the React app — see _shared/buyerSeoContent.ts)
+    if (isBuyerSeoPrerenderPath(path)) {
+      const inv = BUYER_HUB_INVENTORY[path];
+      let listings: PrerenderListing[] = [];
+      let inventoryError = false;
+      if (inv) {
+        let q = supabase
+          .from("listings")
+          .select("id,title,city,state,price_sale,condition,cover_image_url")
+          .eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear")
+          .eq("category", inv.category)
+          .eq("mode", "sale")
+          .not("title", "ilike", "demo%")
+          .order("updated_at", { ascending: false })
+          .limit(48);
+        if (inv.conditions?.length) q = q.in("condition", inv.conditions);
+        const { data, error } = await q;
+        if (error) {
+          console.error("seo-prerender buyer inventory error:", error.message);
+          inventoryError = true;
+        } else {
+          listings = (data ?? []) as PrerenderListing[];
+        }
+      }
+      const result = renderBuyerSeoPage(path, { listings, inventoryError })!;
+      return new Response(result.html, {
+        status: result.status,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "text/html; charset=utf-8",
+          // Short cache when inventory failed so a transient error isn't pinned.
+          "Cache-Control": inventoryError
+            ? "public, max-age=60, s-maxage=60"
+            : "public, max-age=1800, s-maxage=3600, stale-while-revalidate=86400",
           Vary: "Accept-Encoding",
         },
       });
