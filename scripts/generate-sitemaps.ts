@@ -1,12 +1,14 @@
 /**
  * Generates sitemap-listings.xml and sitemap-locations.xml from live Supabase data.
+ * public/sitemap_pages.xml is hand-maintained and is NEVER written here (so manual
+ * entries survive rebuilds); this script only verifies the buyer SEO pages are in it.
  * Runs at predev + prebuild. Uses the public anon key (data is already public).
  *
  * Output:
  *   public/sitemap-listings.xml  — one <url> per active published listing, with <image:image>
  *   public/sitemap-locations.xml — city + category/city combo pages derived from real listing inventory
  */
-import { writeFileSync, mkdirSync } from "fs";
+import { writeFileSync, mkdirSync, readFileSync } from "fs";
 import { resolve } from "path";
 import { LEGAL_DOCUMENTS } from "../src/lib/legal/versions";
 
@@ -160,7 +162,27 @@ function buildLegalSitemap(): string {
   ].join("\n");
 }
 
+/** Buyer SEO pages that must be listed in the hand-maintained sitemap_pages.xml. */
+export const REQUIRED_PAGE_PATHS = [
+  "/food-trucks-for-sale",
+  "/food-trailers-for-sale",
+  "/used-food-trucks-for-sale",
+  "/how-to-buy-a-food-truck",
+  "/food-truck-prices",
+];
+
+function verifyPagesSitemap() {
+  try {
+    const xml = readFileSync(resolve("public/sitemap_pages.xml"), "utf8");
+    const missing = REQUIRED_PAGE_PATHS.filter((p) => !xml.includes(`<loc>${BASE_URL}${p}</loc>`));
+    if (missing.length) console.warn(`[sitemaps] sitemap_pages.xml is missing: ${missing.join(", ")}`);
+  } catch (err) {
+    console.warn(`[sitemaps] could not read sitemap_pages.xml: ${(err as Error).message}`);
+  }
+}
+
 async function main() {
+  verifyPagesSitemap();
   try {
     mkdirSync(resolve("public"), { recursive: true });
     writeFileSync(resolve("public/sitemap-legal.xml"), buildLegalSitemap());
