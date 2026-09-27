@@ -173,7 +173,13 @@ const FoodTruckPrices = () => {
       },
       {
         q: 'How much does a used food truck cost?',
-        a: `Most food trucks and trailers listed on Vendibook are used equipment, and the overall median asking price of ${formatUsd(o.median)} largely reflects the used market. Used prices vary most with age, mileage or tow wear, and installed kitchen equipment — compare live listings to see what similar units are asking today.`,
+        a: stats.usedUnits.sufficient
+          ? `Listings whose sellers marked them like new, good, or fair currently carry a median asking price of ${formatUsd(stats.usedUnits.median)} across ${stats.usedUnits.n} listings. Used prices vary most with age, mileage or tow wear, and installed kitchen equipment — compare live listings to see what similar units are asking today.`
+          : `We don't yet have enough condition-labelled listings to publish a reliable used-only median. Used prices vary most with age, mileage or tow wear, and installed kitchen equipment — compare live used listings to see what similar units are asking today.`,
+      },
+      {
+        q: 'How much does it cost to buy a food truck?',
+        a: `On Vendibook, ${stats.trucks.sufficient ? `food trucks currently list at a median asking price of ${formatUsd(stats.trucks.median)} across ${stats.trucks.n} listings` : `food trucks and trailers currently list at a median asking price of ${formatUsd(o.median)} across ${o.n} listings`}, and the middle half of all truck and trailer listings ask ${formatUsd(o.p25)} to ${formatUsd(o.p75)}. These are asking prices, not completed sale prices. The total cost to buy also includes sales tax, title and registration, inspection, transport, permits, insurance, and any repairs.`,
       },
       {
         q: 'Are food trailers cheaper than food trucks?',
@@ -286,6 +292,56 @@ const FoodTruckPrices = () => {
             Live marketplace data is temporarily unavailable — the guide below still applies.
           </p>
         )}
+      </section>
+
+      {/* Direct answer: cost to buy (rendered with or without live stats) */}
+      <section id="cost-to-buy" className="max-w-5xl mx-auto px-4 pb-8 scroll-mt-24">
+        <div className="rounded-3xl border border-border/60 bg-card p-6 md:p-8 shadow-sm space-y-4">
+          <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
+            How much does it cost to buy a food truck?
+          </h2>
+          {stats && stats.trucks.sufficient ? (
+            <p className="text-foreground leading-relaxed">
+              Food trucks listed on Vendibook right now have a median asking price of{' '}
+              <strong>{formatUsd(stats.trucks.median)}</strong> across {stats.trucks.n} listings
+              {stats.trucks.p25 != null && stats.trucks.p75 != null && (
+                <>, with the middle half asking {formatUsd(stats.trucks.p25)} to {formatUsd(stats.trucks.p75)}</>
+              )}.
+            </p>
+          ) : (
+            <p className="text-foreground leading-relaxed">
+              Asking prices vary widely with age, mileage, size, and installed equipment. Live marketplace figures appear
+              on this page when enough listings are available.
+            </p>
+          )}
+          <p className="text-sm text-muted-foreground leading-relaxed">
+            <strong className="text-foreground">Scope:</strong> these are sellers' advertised asking prices from
+            current Vendibook listings, not completed sale prices. Vendibook does not publish sold-price data here, and
+            final negotiated prices may differ.
+          </p>
+          <div>
+            <h3 className="font-semibold text-foreground mb-2">What the total cost to buy includes</h3>
+            <ul className="grid gap-1.5 sm:grid-cols-2 text-sm text-muted-foreground">
+              {[
+                'Purchase price (negotiated from the asking price)',
+                'Sales tax, title, and registration in your state',
+                'Mechanical and kitchen inspection',
+                'Travel to pick up, or freight transport',
+                'Health, fire, and business permits in your area',
+                'Commissary fees, where required',
+                'Commercial auto and liability insurance',
+                'Repairs, equipment changes, and wrap or branding',
+                'Financing costs, if you borrow',
+              ].map((c) => <li key={c}>• {c}</li>)}
+            </ul>
+          </div>
+          <div className="flex flex-wrap gap-3 text-sm font-semibold">
+            <Link to="/how-to-buy-a-food-truck" className="text-cta-primary hover:underline">How to buy a food truck</Link>
+            <Link to="/food-trucks-for-sale" className="text-cta-primary hover:underline">Food trucks for sale</Link>
+            <Link to="/used-food-trucks-for-sale" className="text-cta-primary hover:underline">Used food trucks</Link>
+            <Link to="/financing" className="text-cta-primary hover:underline">Financing</Link>
+          </div>
+        </div>
       </section>
 
       {stats && (

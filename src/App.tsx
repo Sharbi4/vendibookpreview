@@ -203,6 +203,7 @@ const RentMyCommercialKitchen = lazy(() => import("./pages/RentMyCommercialKitch
 const WhatIsVendibook = lazy(() => import("./pages/seo/WhatIsVendibook"));
 const WhyListOnVendibook = lazy(() => import("./pages/seo/WhyListOnVendibook"));
 const BestPlaceToSellAFoodTruck = lazy(() => import("./pages/seo/BestPlaceToSellAFoodTruck"));
+const HowToBuyAFoodTruck = lazy(() => import("./pages/seo/HowToBuyAFoodTruck"));
 const ListFoodTruckForSale = lazy(() => import("./pages/seo/ListFoodTruckForSale"));
 const RentOutMyFoodTruck = lazy(() => import("./pages/seo/RentOutMyFoodTruck"));
 const MobileFoodMarketplaceGlossary = lazy(() => import("./pages/resources/MobileFoodMarketplaceGlossary"));
@@ -594,6 +595,7 @@ const AnimatedRoutes = () => {
           <Route path="/what-is-vendibook" element={<PageTransition><WhatIsVendibook /></PageTransition>} />
           <Route path="/why-list-on-vendibook" element={<PageTransition><WhyListOnVendibook /></PageTransition>} />
           <Route path="/best-place-to-sell-a-food-truck" element={<PageTransition><BestPlaceToSellAFoodTruck /></PageTransition>} />
+          <Route path="/how-to-buy-a-food-truck" element={<PageTransition><HowToBuyAFoodTruck /></PageTransition>} />
           <Route path="/list-food-truck-for-sale" element={<PageTransition><ListFoodTruckForSale /></PageTransition>} />
           <Route path="/rent-out-my-food-truck" element={<PageTransition><RentOutMyFoodTruck /></PageTransition>} />
           <Route path="/resources/mobile-food-marketplace-glossary" element={<PageTransition><MobileFoodMarketplaceGlossary /></PageTransition>} />
