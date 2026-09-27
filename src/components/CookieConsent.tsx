@@ -17,7 +17,8 @@ import {
   initializeTrackingFromConsent,
   loadGoogleAnalytics,
   loadGoogleAds,
-  removeTrackingScripts, notifyConsentChanged } from '@/lib/cookieConsent';
+  removeTrackingScripts,
+} from '@/lib/cookieConsent';
 
 const defaultPreferences: CookiePreferences = {
   necessary: true,
@@ -65,7 +66,6 @@ const CookieConsent = () => {
   const savePreferences = (prefs: CookiePreferences) => {
     localStorage.setItem('cookie-consent', JSON.stringify(prefs));
     localStorage.setItem('cookie-consent-date', new Date().toISOString());
-    notifyConsentChanged();
     setPreferences(prefs);
     setShowBanner(false);
     releasePopupSlot(POPUP_ID);

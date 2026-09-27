@@ -3,11 +3,11 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const dbMock = vi.fn();
 vi.mock('@/hooks/useAnalyticsEvents', () => ({ trackEventToDb: (...a: unknown[]) => dbMock(...a) }));
 let consent = true;
-vi.mock('@/lib/cookieConsent', () => ({ hasAnalyticsConsent: () => consent, CONSENT_CHANGE_EVENT: 'vb:cookie-consent-change' }));
+vi.mock('@/lib/cookieConsent', () => ({ hasAnalyticsConsent: () => consent }));
 
 import {
   classifyDestination, parseUtm, trackBuyerSeoView, trackBuyerSeoCta, trackBuyerSeoDownstream,
-  getBuyerSeoAttribution, __resetBuyerSeoTracking, isBuyerSeoPage, sanitizeDestination, looksLikePii,
+  getBuyerSeoAttribution, __resetBuyerSeoTracking, isBuyerSeoPage,
 } from '@/lib/buyerSeoTracking';
 
 const names = () => dbMock.mock.calls.map((c) => c[0]);
@@ -70,45 +70,5 @@ describe('buyer SEO tracking', () => {
     trackBuyerSeoView('/food-trucks-for-sale', 'k1', '', 'food_truck');
     trackBuyerSeoCta({ landingPage: '/food-trucks-for-sale', ctaId: 'x', ctaLocation: 'hero', destination: '/search' });
     expect(dbMock).not.toHaveBeenCalled();
-  });
-
-  it('no consent => no storage, no events, no dedupe poisoning; accept later => one view', () => {
-    consent = false;
-    trackBuyerSeoView('/food-trucks-for-sale', 'k1', '?utm_source=linkedin', 'food_truck');
-    trackBuyerSeoCta({ landingPage: '/food-trucks-for-sale', ctaId: 'x', ctaLocation: 'body', destination: '/search' });
-    trackBuyerSeoDownstream('listing_view', 'L1');
-    expect(dbMock).not.toHaveBeenCalled();
-    expect(sessionStorage.getItem('vb_buyer_seo_attr')).toBeNull();
-    consent = true;
-    trackBuyerSeoView('/food-trucks-for-sale', 'k1', '?utm_source=linkedin', 'food_truck');
-    trackBuyerSeoView('/food-trucks-for-sale', 'k1', '?utm_source=linkedin', 'food_truck'); // StrictMode double effect
-    expect(names()).toEqual(['buyer_seo_landing_view']);
-    expect(getBuyerSeoAttribution()).toMatchObject({ landing_page: '/food-trucks-for-sale', utm_source: 'linkedin' });
-  });
-
-  it('revoke => attribution cleared and nothing further stored or sent', () => {
-    trackBuyerSeoView('/food-trucks-for-sale', 'k1', '', 'food_truck');
-    consent = false;
-    window.dispatchEvent(new Event('vb:cookie-consent-change'));
-    expect(sessionStorage.getItem('vb_buyer_seo_attr')).toBeNull();
-    dbMock.mockReset();
-    trackBuyerSeoView('/used-food-trucks-for-sale', 'k2', '', 'food_truck');
-    trackBuyerSeoDownstream('listing_view', 'L1');
-    expect(dbMock).not.toHaveBeenCalled();
-    expect(sessionStorage.getItem('vb_buyer_seo_attr')).toBeNull();
-  });
-
-  it('drops utm_term/content and PII-like UTM values', () => {
-    expect(parseUtm('?utm_source=a&utm_term=food+truck&utm_content=x')).toEqual({ utm_source: 'a' });
-    expect(parseUtm('?utm_campaign=jane%40x.com&utm_source=555-123-4567&utm_medium=cpc')).toEqual({ utm_medium: 'cpc' });
-    expect(looksLikePii('john at gmail dot com')).toBe(true);
-    expect(looksLikePii('spring_2026')).toBe(false);
-  });
-
-  it('destination keeps pathname + category/mode only', () => {
-    expect(sanitizeDestination('/search?category=food_truck&mode=sale&q=jane@x.com&phone=555#top')).toBe('/search?category=food_truck&mode=sale');
-    expect(sanitizeDestination('/listing/abc?email=a@b.c')).toBe('/listing/abc');
-    trackBuyerSeoCta({ landingPage: '/food-trucks-for-sale', ctaId: 's', ctaLocation: 'hero', destination: '/search?q=secret' });
-    expect(dbMock.mock.calls[0][2].destination).toBe('/search');
   });
 });

@@ -4,12 +4,10 @@ import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
 import { Shield, Cookie, Eye, Lock, Mail, Settings } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { notifyConsentChanged } from '@/lib/cookieConsent';
 
 const Privacy = () => {
   const openCookieSettings = () => {
     localStorage.removeItem('cookie-consent');
-    notifyConsentChanged();
     window.location.reload();
   };
 
