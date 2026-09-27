@@ -1,6 +1,7 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import type { MouseEvent } from 'react';
 import { useLocation } from 'react-router-dom';
+import { CONSENT_CHANGE_EVENT } from '@/lib/cookieConsent';
 import { isBuyerSeoPage, trackBuyerSeoCta, trackBuyerSeoView } from '@/lib/buyerSeoTracking';
 
 /**
@@ -13,10 +14,20 @@ export const useBuyerSeoTracking = (landingPage: string, category?: string) => {
   const location = useLocation();
   const enabled = isBuyerSeoPage(landingPage);
 
+  const loc = useRef(location);
+  loc.current = location;
+  const fireView = useCallback(() => {
+    if (enabled) trackBuyerSeoView(landingPage, loc.current.key, loc.current.search, category);
+  }, [enabled, landingPage, category]);
+
+  useEffect(() => { fireView(); }, [fireView, location.key, location.search]);
+
+  // Accepting analytics while on the landing page captures it once (deduped by nav key).
   useEffect(() => {
     if (!enabled) return;
-    trackBuyerSeoView(landingPage, location.key, location.search, category);
-  }, [enabled, landingPage, location.key, location.search, category]);
+    window.addEventListener(CONSENT_CHANGE_EVENT, fireView);
+    return () => window.removeEventListener(CONSENT_CHANGE_EVENT, fireView);
+  }, [enabled, fireView]);
 
   return useCallback((e: MouseEvent<HTMLElement>) => {
     if (!enabled) return;
@@ -24,6 +35,7 @@ export const useBuyerSeoTracking = (landingPage: string, category?: string) => {
     if (!a || a.closest('[data-site-chrome]')) return; // ignore site header/footer navigation
     const href = a.getAttribute('href') || '';
     if (!href.startsWith('/')) return; // internal navigation only (skip #jump links, external)
+    fireView(); // CTA before effect / late consent: make sure the landing is recorded first (deduped)
     const listingMatch = href.match(/^\/listing\/([^/?#]+)/);
     const ctaLocation = (a.closest('[data-cta-location]') as HTMLElement | null)?.dataset.ctaLocation ?? 'body';
     const ctaId = a.dataset.ctaId ?? (listingMatch ? 'listing_card' : `link_${href.split(/[?#]/)[0].replace(/[^a-z0-9]+/gi, '_').replace(/^_|_$/g, '')}`);
@@ -35,5 +47,5 @@ export const useBuyerSeoTracking = (landingPage: string, category?: string) => {
       category,
       listingId: listingMatch?.[1],
     });
-  }, [enabled, landingPage, category]);
+  }, [enabled, landingPage, category, fireView]);
 };
