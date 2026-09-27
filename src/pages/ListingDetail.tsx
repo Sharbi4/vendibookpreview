@@ -1,4 +1,5 @@
 import { useParams, Link } from 'react-router-dom';
+import { trackBuyerSeoDownstream } from '@/lib/buyerSeoTracking';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 
 import { toast } from '@/hooks/use-toast';
@@ -180,6 +181,7 @@ const ListingDetail = () => {
     if (id && listing && !isLoading) {
       trackView(id);
       trackListingViewed(id, listing.category);
+      trackBuyerSeoDownstream('listing_view', id, { asset_category: listing.category, listing_mode: (listing as { mode?: string }).mode ?? null });
     }
   }, [id, listing, isLoading, trackView]);
 

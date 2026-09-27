@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
+import { trackBuyerSeoDownstream } from '@/lib/buyerSeoTracking';
 import { useParams, useNavigate, useSearchParams, useLocation, Link } from 'react-router-dom';
 import { FileText, Loader2, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
@@ -741,6 +742,7 @@ const SaleCheckout = () => {
         if (!transactionId) throw new Error('Cash sale did not return a transaction id');
 
         trackFormSubmitConversion({ form_type: 'purchase_cash', listing_id: listingId });
+        trackBuyerSeoDownstream('checkout_started', listingId, { payment_path: 'in_person_request' });
         trackPurchase({
           value: priceSale,
           contentIds: [listingId],
@@ -847,6 +849,7 @@ const SaleCheckout = () => {
       }
 
       trackFormSubmitConversion({ form_type: 'purchase', listing_id: listingId });
+      trackBuyerSeoDownstream('checkout_started', listingId, { payment_path: 'online' });
       trackInitiateCheckout({
         value: totalPrice,
         contentIds: [listingId],

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { trackBuyerSeoDownstream } from '@/lib/buyerSeoTracking';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -75,6 +76,7 @@ export const LeadCaptureModal = ({
       if (error) throw error;
 
       trackFormSubmit('lead_capture', true, { listing_id: listingId });
+      trackBuyerSeoDownstream('inquiry_submitted', listingId, { inquiry_type: 'request_info' });
       setIsSubmitted(true);
       
       toast({
