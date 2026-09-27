@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useBuyerSeoTracking } from '@/hooks/useBuyerSeoTracking';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight, BarChart3, Calculator, TrendingUp, Truck, Container,
@@ -159,6 +160,7 @@ const FoodTruckPrices = () => {
     trackEvent({ category: 'SEO', action: 'price_report_chart_downloaded', label: '/food-truck-prices' });
   };
 
+  const onTrackedClick = useBuyerSeoTracking('/food-truck-prices', 'food_truck');
   const title = `Food Truck Prices & Cost Calculator (${YEAR}) | Vendibook`;
   const description =
     `See what food trucks and trailers cost in ${YEAR} using real Vendibook marketplace data. Compare prices, explore cost factors, and estimate your truck with PricePilot.`;
@@ -242,7 +244,7 @@ const FoodTruckPrices = () => {
   }, [faqs, description]);
 
   return (
-    <div className="sale-light min-h-screen bg-background flex flex-col">
+    <div className="sale-light min-h-screen bg-background flex flex-col" onClickCapture={onTrackedClick}>
       <SEO title={title} description={description} canonical="/food-truck-prices" type="article" />
       <JsonLd schema={jsonLd} />
       <Header />
@@ -295,7 +297,7 @@ const FoodTruckPrices = () => {
       </section>
 
       {/* Direct answer: cost to buy (rendered with or without live stats) */}
-      <section id="cost-to-buy" className="max-w-5xl mx-auto px-4 pb-8 scroll-mt-24">
+      <section id="cost-to-buy" data-cta-location="cost_to_buy" className="max-w-5xl mx-auto px-4 pb-8 scroll-mt-24">
         <div className="rounded-3xl border border-border/60 bg-card p-6 md:p-8 shadow-sm space-y-4">
           <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
             How much does it cost to buy a food truck?
@@ -771,3 +773,4 @@ function renderFaqAnswer(question: string, answer: string): React.ReactNode {
 }
 
 export default FoodTruckPrices;
+

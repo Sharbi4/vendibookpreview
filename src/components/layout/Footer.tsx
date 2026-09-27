@@ -178,7 +178,7 @@ const FooterAccordion = ({ section }: { section: FooterSection }) => {
 
 const Footer = () => {
   return (
-    <footer className="bg-card text-foreground border-t border-border">
+    <footer data-site-chrome="" className="bg-card text-foreground border-t border-border">
       {/* Main Footer Content */}
       <div className="container py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-7 gap-0 md:gap-8">

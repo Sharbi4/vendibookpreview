@@ -1,4 +1,5 @@
 // Analytics utility for tracking user interactions
+import { trackBuyerSeoDownstream } from '@/lib/buyerSeoTracking';
 // Integrates with Google Analytics 4, Facebook CAPI, and custom event tracking
 
 import { hasAnalyticsConsent } from '@/lib/cookieConsent';
@@ -752,6 +753,7 @@ export const trackHostContacted = (listingId: string, contentName?: string): voi
     action: 'host_contacted',
     metadata: { listing_id: listingId },
   });
+  trackBuyerSeoDownstream('inquiry_submitted', listingId, { inquiry_type: 'message' });
 
   // Fire Facebook CAPI Lead event
   trackLead({
