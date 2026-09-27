@@ -86,7 +86,7 @@ describe('rendered crawler HTML', () => {
   });
   it('inventory error is truthful and stays indexable; genuinely empty is noindex', () => {
     const err = renderBuyerSeoPage('/food-trailers-for-sale', { inventoryError: true })!;
-    expect(err.html).toContain("couldn&#39;t load listings right now");
+    expect(err.html).toContain("couldn't load listings right now");
     expect(err.html).toContain('content="index, follow"');
     expect(err.html).not.toContain('No listings are available');
     const empty = renderBuyerSeoPage('/food-trailers-for-sale', { listings: [] })!;
