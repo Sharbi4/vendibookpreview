@@ -6,12 +6,16 @@
  * (listing view, inquiry submitted, checkout started). It never records a
  * payment/purchase: verified completion lives server-side (PayPal webhook).
  *
- * Privacy: non-PII only (paths, CTA ids, category, listing id, UTM params).
- * Consent: every event is gated on the existing analytics consent.
+ * Privacy: non-PII only (paths, CTA ids, category, listing id, utm_source/
+ * medium/campaign). utm_term/utm_content are never recorded; remaining UTM
+ * values that look like an email or phone number are dropped. CTA destinations
+ * keep only the pathname plus allowlisted `category`/`mode` query params.
+ * Consent: nothing (storage, dedupe state, events) happens without analytics
+ * consent; revoking consent clears retained attribution.
  * Sinks: the same first-party analytics_events table + GA4 used by leadTracking.
  * See docs/analytics/buyer-seo-events.md for the event map.
  */
-import { hasAnalyticsConsent } from '@/lib/cookieConsent';
+import { hasAnalyticsConsent, CONSENT_CHANGE_EVENT } from '@/lib/cookieConsent';
 import { trackEventToDb } from '@/hooks/useAnalyticsEvents';
 
 export const BUYER_SEO_PAGES = [
@@ -41,7 +45,8 @@ export type BuyerSeoDestination =
 export type BuyerSeoDownstreamStage = 'listing_view' | 'inquiry_submitted' | 'checkout_started';
 
 const ATTR_KEY = 'vb_buyer_seo_attr';
-const UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content'] as const;
+const UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign'] as const;
+const DEST_QUERY_ALLOW = ['category', 'mode'] as const;
 const firedViews = new Set<string>();
 const firedDownstream = new Set<string>();
 
@@ -51,12 +56,15 @@ export interface BuyerSeoAttribution {
   utm_source?: string;
   utm_medium?: string;
   utm_campaign?: string;
-  utm_term?: string;
-  utm_content?: string;
 }
 
+const EMAIL_LIKE = /@|%40|\b[\w.+-]+\s*(at|\[at\])\s*[\w-]+\s*(dot|\.)\s*[a-z]{2,}\b/i;
+const PHONE_LIKE = /(\d[\s\-.()+]*){7,}/;
+/** True if a free-text value could plausibly be contact info. */
+export const looksLikePii = (v: string): boolean => EMAIL_LIKE.test(v) || PHONE_LIKE.test(v);
+
 const clean = (v: string | null): string | undefined => {
-  if (!v) return undefined;
+  if (!v || looksLikePii(v)) return undefined;
   const s = v.replace(/[^\w\-.~ +:/]/g, '').slice(0, 100).trim();
   return s || undefined;
 };
@@ -72,12 +80,27 @@ export const parseUtm = (search: string): Partial<BuyerSeoAttribution> => {
 };
 
 export const getBuyerSeoAttribution = (): BuyerSeoAttribution | null => {
+  if (!hasAnalyticsConsent()) return null;
   try {
     const raw = sessionStorage.getItem(ATTR_KEY);
     return raw ? (JSON.parse(raw) as BuyerSeoAttribution) : null;
   } catch {
     return null;
   }
+};
+
+/** Pathname + allowlisted structural params only — exported for tests. */
+export const sanitizeDestination = (href: string): string => {
+  const [beforeHash] = href.split('#');
+  const [path, query = ''] = beforeHash.split('?');
+  const p = new URLSearchParams(query);
+  const kept = new URLSearchParams();
+  for (const k of DEST_QUERY_ALLOW) {
+    const v = p.get(k);
+    if (v && /^[\w-]{1,40}$/.test(v)) kept.set(k, v);
+  }
+  const qs = kept.toString();
+  return (path.slice(0, 200)) + (qs ? `?${qs}` : '');
 };
 
 /** Pure classifier — exported for tests. */
@@ -112,6 +135,7 @@ const send = (name: string, payload: Record<string, unknown>, listingId?: string
  * return visit via client navigation counts again.
  */
 export const trackBuyerSeoView = (landingPage: string, navKey: string, search: string, category?: string) => {
+  if (!hasAnalyticsConsent()) return; // no storage, no dedupe mutation, no event
   const key = `${landingPage}|${navKey}`;
   if (firedViews.has(key)) return;
   firedViews.add(key);
@@ -134,11 +158,12 @@ export const trackBuyerSeoCta = (p: {
   category?: string;
   listingId?: string;
 }) => {
+  if (!hasAnalyticsConsent()) return;
   send('buyer_seo_cta_click', {
     landing_page: p.landingPage,
     cta_id: p.ctaId,
     cta_location: p.ctaLocation,
-    destination: p.destination.split('#')[0].slice(0, 200),
+    destination: sanitizeDestination(p.destination),
     destination_type: classifyDestination(p.destination),
     asset_category: p.category ?? null,
     listing_id: p.listingId ?? null,
@@ -151,6 +176,7 @@ export const trackBuyerSeoCta = (p: {
  * These are *starts*, not completed or paid transactions.
  */
 export const trackBuyerSeoDownstream = (stage: BuyerSeoDownstreamStage, listingId?: string, extra: Record<string, unknown> = {}) => {
+  if (!hasAnalyticsConsent()) return;
   const attr = getBuyerSeoAttribution();
   if (!attr) return;
   const key = `${stage}|${listingId ?? ''}`;
@@ -158,6 +184,19 @@ export const trackBuyerSeoDownstream = (stage: BuyerSeoDownstreamStage, listingI
   firedDownstream.add(key);
   send(`buyer_seo_attributed_${stage}`, { ...attr, listing_id: listingId ?? null, ...extra }, listingId);
 };
+
+/** Drop retained attribution + dedupe state (used on consent revocation). */
+export const clearBuyerSeoTracking = () => {
+  firedViews.clear();
+  firedDownstream.clear();
+  try { sessionStorage.removeItem(ATTR_KEY); } catch { /* ignore */ }
+};
+
+if (typeof window !== 'undefined') {
+  window.addEventListener(CONSENT_CHANGE_EVENT, () => {
+    if (!hasAnalyticsConsent()) clearBuyerSeoTracking();
+  });
+}
 
 /** Test helper. */
 export const __resetBuyerSeoTracking = () => {

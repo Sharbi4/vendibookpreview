@@ -14,6 +14,12 @@ const defaultPreferences: CookiePreferences = {
   functional: false,
 };
 
+/** Fired on window whenever stored cookie preferences change (save or reset). */
+export const CONSENT_CHANGE_EVENT = 'vb:cookie-consent-change';
+export const notifyConsentChanged = (): void => {
+  try { window.dispatchEvent(new Event(CONSENT_CHANGE_EVENT)); } catch { /* ignore */ }
+};
+
 export const getCookiePreferences = (): CookiePreferences | null => {
   const consent = localStorage.getItem('cookie-consent');
   if (!consent) return null;
