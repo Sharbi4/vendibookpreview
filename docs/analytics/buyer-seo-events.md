@@ -26,3 +26,10 @@ Attribution is first-touch per browser tab session (`sessionStorage.vb_buyer_seo
 
 ## Adding a CTA
 Put `data-cta-location="…"` on the section and optionally `data-cta-id="…"` on the link. Links without an id get `listing_card` or `link_<path>`.
+
+## Consent & privacy limits (2026-09-27)
+- Without analytics consent nothing happens: no sessionStorage attribution, no dedupe state, no events. `getBuyerSeoAttribution()` returns null.
+- Consent changes dispatch `vb:cookie-consent-change` (`notifyConsentChanged` in `src/lib/cookieConsent.ts`, called by the cookie banner and Privacy "reset"). On revoke, attribution and dedupe state are cleared. On accept while on a buyer page, that page's view fires once (deduped by router location key) and attribution is stored.
+- A CTA click first ensures the landing view is recorded (deduped), so late consent/CTA-before-effect never loses landing attribution.
+- UTM: only `utm_source`, `utm_medium`, `utm_campaign` are kept. `utm_term` and `utm_content` are never recorded. Values containing `@`/`%40`, "x at y dot com" patterns, or 7+ digit runs are dropped. This is a heuristic, not a guarantee.
+- `destination`: pathname plus `category`/`mode` query params only (values limited to `[\w-]{1,40}`); all other query params and hashes are dropped.
