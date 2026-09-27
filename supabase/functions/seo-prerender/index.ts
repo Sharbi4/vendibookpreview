@@ -476,7 +476,7 @@ function generateFAQSchema(listing: any) {
   };
 }
 
-function buildListingHTML(listing: any, reviews: any[] = []): string {
+function buildListingHTML(listing: any, reviews: any[] = [], redirectHumans = false): string {
   const isPhysical = PHYSICAL_CATEGORIES.includes(listing.category);
   const isRental = listing.mode === "rent";
 
@@ -577,11 +577,11 @@ function buildListingHTML(listing: any, reviews: any[] = []): string {
   <!-- JSON-LD (pure JSON, no other content) -->
   <script type="application/ld+json">${JSON.stringify(schemas)}</script>
 
-  <!-- Redirect humans to SPA (separate script tag) -->
+  ${redirectHumans ? `<!-- Share alias only: send humans to the canonical listing page (different URL, no loop) -->
   <script>window.location.replace(${JSON.stringify(canonicalUrl)});</script>
   <noscript>
     <meta http-equiv="refresh" content="0; url=${canonicalUrl}" />
-  </noscript>
+  </noscript>` : "<!-- Served at the canonical URL: no redirect (would loop) -->"}
 </head>
 <body>
   <h1>${escapeHtml(listing.title)}</h1>
@@ -738,7 +738,9 @@ serve(async (req) => {
       }
 
       const reviews = reviewsResult.data || [];
-      const html = buildListingHTML(listingResult.data, reviews);
+      // Redirect only for the /share alias (or legacy ?share=1 proxy); never at the canonical URL.
+      const isShareAlias = /^\/share\//i.test(path) || url.searchParams.get("share") === "1";
+      const html = buildListingHTML(listingResult.data, reviews, isShareAlias);
       return new Response(html, {
         headers: {
           ...corsHeaders,
