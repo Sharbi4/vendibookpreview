@@ -23,6 +23,8 @@ import BrowseByBusinessType from '@/components/marketplace/BrowseByBusinessType'
 import { useNationwideInventory } from '@/hooks/useNationwideInventory';
 import ExpandSearchModule, { LowInventoryInlineLine, LOW_INVENTORY_THRESHOLD, NEAR_EMPTY_THRESHOLD } from '@/components/seo/ExpandSearchModule';
 import TransactionConfidenceSection from '@/components/seo/TransactionConfidenceSection';
+import { useBuyerSeoTracking } from '@/hooks/useBuyerSeoTracking';
+import { Compass, Store, Hammer, Handshake } from 'lucide-react';
 
 export type CategoryKey = 'food_truck' | 'food_trailer' | 'ghost_kitchen' | 'vendor_space';
 export type ModeFilter = 'rent' | 'sale' | 'any';
@@ -185,6 +187,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
 
   const categories = config.categories ?? [config.category];
   const multiCategory = categories.length > 1;
+  const onTrackedClick = useBuyerSeoTracking(config.path, config.category);
 
   useEffect(() => {
     if (config.specialty) {
@@ -513,7 +516,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
       <JsonLd schema={[breadcrumbSchema, faqSchema, ...(totalListings > 0 ? [itemListSchema] : [])]} />
       <Header />
 
-      <main className="flex-1">
+      <main className="flex-1" onClickCapture={onTrackedClick}>
         <div className="container py-6 md:py-10 space-y-10">
           <Breadcrumb>
             <BreadcrumbList>
@@ -530,7 +533,10 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
             </BreadcrumbList>
           </Breadcrumb>
 
-          <header className="seo-marketplace-hero space-y-5">
+          <header className="seo-marketplace-hero space-y-5" data-cta-location="hero">
+            <p className="v2-home-eyebrow">
+              {config.mode === 'sale' ? 'Vendibook marketplace · For sale' : config.mode === 'rent' ? 'Vendibook marketplace · For rent' : 'Vendibook marketplace'}
+            </p>
             <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-foreground">
               {config.h1}
             </h1>
@@ -543,14 +549,15 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
                 <span>{config.clarification}</span>
               </p>
             )}
-            <div className="flex flex-wrap gap-2 pt-2">
-              <Button asChild variant="default" className="v2-btn">
-                <Link to={searchHref}>
+            <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 pt-2">
+              <Button asChild variant="cta" size="cta" className="w-full sm:w-auto">
+                <Link to={searchHref} data-cta-id="hero_search">
                   Search {catPluralLower} {intentLabel}
+                  <ArrowRight className="h-5 w-5" aria-hidden="true" />
                 </Link>
               </Button>
-              <Button asChild variant="outline">
-                <Link to={sellerCta.ctaHref}>{sellerCta.ctaLabel}</Link>
+              <Button asChild variant="cta-outline" size="cta" className="w-full sm:w-auto">
+                <Link to={sellerCta.ctaHref} data-cta-id="hero_sell">{sellerCta.ctaLabel}</Link>
               </Button>
             </div>
             {config.answerBlock && (
@@ -615,7 +622,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
               </div>
             </div>
           ) : localCount === 0 ? (
-            <div className="space-y-6">
+            <div className="space-y-6" data-cta-location="inventory_empty">
               <ExpandSearchModule
                 pageSlug={canonical}
                 resultCount={0}
@@ -647,7 +654,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
             </div>
 
           ) : (
-            <div className="space-y-10">
+            <div className="space-y-10" data-cta-location="inventory">
               {localCount > 0 && localCount <= NEAR_EMPTY_THRESHOLD && (
                 <LowInventoryInlineLine
                   pageSlug={canonical}
@@ -679,26 +686,47 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
           )}
 
           {config.answerBlock && (
-            <section id={config.answerBlock.id} aria-labelledby={`${config.answerBlock.id}-heading`} className="space-y-4 scroll-mt-24">
-              <h2 id={`${config.answerBlock.id}-heading`} className="text-2xl md:text-3xl font-semibold text-foreground">
-                {config.answerBlock.heading}
-              </h2>
-              <p className="text-base md:text-lg text-foreground leading-relaxed max-w-3xl">{config.answerBlock.lead}</p>
+            <section
+              id={config.answerBlock.id}
+              aria-labelledby={`${config.answerBlock.id}-heading`}
+              data-cta-location="answer_block"
+              className="scroll-mt-24 rounded-3xl border border-border bg-card p-5 md:p-10 space-y-6 shadow-sm"
+            >
+              <div className="space-y-3 max-w-3xl">
+                <p className="v2-home-eyebrow flex items-center gap-2"><Compass className="h-3.5 w-3.5" aria-hidden="true" /> Buyer's guide</p>
+                <h2 id={`${config.answerBlock.id}-heading`} className="text-2xl md:text-4xl font-bold tracking-tight text-foreground">
+                  {config.answerBlock.heading}
+                </h2>
+                <p className="text-base md:text-lg text-foreground leading-relaxed">{config.answerBlock.lead}</p>
+              </div>
               <ul className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {config.answerBlock.options.map((o) => (
-                  <li key={o.name} className="rounded-2xl border border-border bg-card p-5 space-y-2">
-                    <h3 className="font-semibold text-foreground">{o.name}</h3>
+                {config.answerBlock.options.map((o, idx) => {
+                  const Icon = [Store, Hammer, Handshake][idx % 3];
+                  return (
+                  <li key={o.name} className="rounded-2xl border border-border bg-background p-5 md:p-6 space-y-3">
+                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      <Icon className="h-5 w-5" aria-hidden="true" />
+                    </span>
+                    <h3 className="text-lg font-semibold text-foreground">{o.name}</h3>
                     <p className="text-sm text-foreground"><span className="font-medium">Good for: </span>{o.goodFor}</p>
                     <p className="text-sm text-muted-foreground"><span className="font-medium text-foreground">Trade-offs: </span>{o.tradeoffs}</p>
                   </li>
-                ))}
+                  );
+                })}
               </ul>
               {config.answerBlock.footnote && (
                 <p className="text-sm text-muted-foreground max-w-3xl">{config.answerBlock.footnote}</p>
               )}
-              {config.answerBlock.links && (
-                <div className="flex flex-wrap gap-2">
-                  {config.answerBlock.links.map((l) => (
+              {config.answerBlock.links && config.answerBlock.links.length > 0 && (
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 pt-2 border-t border-border">
+                  <Button asChild variant="cta" size="cta" className="w-full sm:w-auto mt-4 sm:mt-6">
+                    <Link to={config.answerBlock.links[0].href} data-cta-id="answer_primary">
+                      {config.answerBlock.links[0].label}
+                      <ArrowRight className="h-5 w-5" aria-hidden="true" />
+                    </Link>
+                  </Button>
+                  <div className="flex flex-wrap gap-2 sm:mt-6">
+                  {config.answerBlock.links.slice(1).map((l) => (
                     <Link key={l.href + l.label} to={l.href} className="inline-block px-3 py-1.5 rounded-full border border-border bg-card text-sm text-foreground hover:border-primary hover:text-primary transition-colors">
                       {l.label}
                     </Link>
