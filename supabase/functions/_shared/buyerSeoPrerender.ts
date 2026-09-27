@@ -118,7 +118,7 @@ function renderGuide(): RenderResult {
 }
 
 function renderPrices(year: number): RenderResult {
-  const body = `<h1>${esc(pricesH1(year))}</h1>\n<p>${esc(PRICES_INTRO)}</p>\n<section id="cost-to-buy"><h2>${esc(PRICES_COST_HEADING)}</h2><p>${esc(PRICES_FALLBACK_ANSWER)}</p><p>${esc(PRICES_SCOPE_NOTE)}</p><h3>What the total cost includes</h3><ul>${PRICES_COST_COMPONENTS.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></section>\n${links([{ href: '/food-trucks-for-sale', label: 'Food trucks for sale' }, { href: '/used-food-trucks-for-sale', label: 'Used food trucks for sale' }, { href: '/how-to-buy-a-food-truck', label: 'How to buy a food truck' }, { href: '/financing', label: 'Financing options' }])}`;
+  const body = `<h1>${esc(pricesH1(year))}</h1>\n<p>${esc(PRICES_INTRO)}</p>\n<section id="cost-to-buy"><h2>${esc(PRICES_COST_HEADING)}</h2><p>${esc(PRICES_FALLBACK_ANSWER)}</p><p>Scope: ${esc(PRICES_SCOPE_NOTE)}</p><h3>What the total cost includes</h3><ul>${PRICES_COST_COMPONENTS.map((x) => `<li>${esc(x)}</li>`).join('')}</ul></section>\n${links([{ href: '/food-trucks-for-sale', label: 'Food trucks for sale' }, { href: '/used-food-trucks-for-sale', label: 'Used food trucks for sale' }, { href: '/how-to-buy-a-food-truck', label: 'How to buy a food truck' }, { href: '/financing', label: 'Financing options' }])}`;
   const schemas = [crumbs([{ name: 'Home', href: '/' }, { name: 'Food Truck Prices', href: PRICES_PATH }])];
   return { status: 200, indexable: true, html: doc({ path: PRICES_PATH, title: pricesTitle(year), description: pricesDescription(year), ogType: 'article', robots: 'index, follow', schemas, body }) };
 }

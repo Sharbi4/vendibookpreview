@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useBuyerSeoTracking } from '@/hooks/useBuyerSeoTracking';
-import { pricesTitle, pricesDescription, PRICES_COST_COMPONENTS } from '../../supabase/functions/_shared/buyerSeoContent';
+import { pricesTitle, pricesDescription, PRICES_COST_COMPONENTS, PRICES_FALLBACK_ANSWER, PRICES_SCOPE_NOTE } from '../../supabase/functions/_shared/buyerSeoContent';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight, BarChart3, Calculator, TrendingUp, Truck, Container,
@@ -312,14 +312,11 @@ const FoodTruckPrices = () => {
             </p>
           ) : (
             <p className="text-foreground leading-relaxed">
-              Asking prices vary widely with age, mileage, size, and installed equipment. Live marketplace figures appear
-              on this page when enough listings are available.
+              {PRICES_FALLBACK_ANSWER}
             </p>
           )}
           <p className="text-sm text-muted-foreground leading-relaxed">
-            <strong className="text-foreground">Scope:</strong> these are sellers' advertised asking prices from
-            current Vendibook listings, not completed sale prices. Vendibook does not publish sold-price data here, and
-            final negotiated prices may differ.
+            <strong className="text-foreground">Scope:</strong> {PRICES_SCOPE_NOTE}
           </p>
           <div>
             <h3 className="font-semibold text-foreground mb-2">What the total cost to buy includes</h3>

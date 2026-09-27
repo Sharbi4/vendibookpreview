@@ -633,7 +633,7 @@ export const PRICES_COST_HEADING = 'How much does it cost to buy a food truck?';
 export const PRICES_FALLBACK_ANSWER =
   'Asking prices vary widely with age, mileage, size, and installed equipment. Live marketplace figures appear on this page when enough listings are available.';
 export const PRICES_SCOPE_NOTE =
-  'These figures are asking prices from current Vendibook listings, not completed sale prices. Vendibook does not publish sold-price data here, and final negotiated prices may differ.';
+  "these are sellers' advertised asking prices from current Vendibook listings, not completed sale prices. Vendibook does not publish sold-price data here, and final negotiated prices may differ.";
 export const PRICES_COST_COMPONENTS = [
   'Purchase price (negotiated from the asking price)',
   'Sales tax, title, and registration in your state',
