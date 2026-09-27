@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState } from 'react';
-import { useEffect } from 'react';
 import { useBuyerSeoTracking } from '@/hooks/useBuyerSeoTracking';
 import { Link } from 'react-router-dom';
 import {
@@ -161,6 +160,7 @@ const FoodTruckPrices = () => {
     trackEvent({ category: 'SEO', action: 'price_report_chart_downloaded', label: '/food-truck-prices' });
   };
 
+  const onTrackedClick = useBuyerSeoTracking('/food-truck-prices', 'food_truck');
   const title = `Food Truck Prices & Cost Calculator (${YEAR}) | Vendibook`;
   const description =
     `See what food trucks and trailers cost in ${YEAR} using real Vendibook marketplace data. Compare prices, explore cost factors, and estimate your truck with PricePilot.`;
@@ -244,9 +244,8 @@ const FoodTruckPrices = () => {
   }, [faqs, description]);
 
   return (
-    <div className="sale-light min-h-screen bg-background flex flex-col">
+    <div className="sale-light min-h-screen bg-background flex flex-col" onClickCapture={onTrackedClick}>
       <SEO title={title} description={description} canonical="/food-truck-prices" type="article" />
-      <TrackedPricesClicks />
       <JsonLd schema={jsonLd} />
       <Header />
 
@@ -775,18 +774,3 @@ function renderFaqAnswer(question: string, answer: string): React.ReactNode {
 
 export default FoodTruckPrices;
 
-/** Prices page has no single <main>; attach the delegated tracker to the document body scope. */
-function TrackedPricesClicks() {
-  const onClick = useBuyerSeoTracking('/food-truck-prices', 'food_truck');
-  useEffect(() => {
-    const handler = (e: MouseEvent) => {
-      const target = e.target as HTMLElement | null;
-      // Only content inside the page wrapper — never header/footer navigation.
-      if (!target?.closest('[data-buyer-seo-scope]')) return;
-      onClick(e as unknown as React.MouseEvent<HTMLElement>);
-    };
-    document.addEventListener('click', handler, true);
-    return () => document.removeEventListener('click', handler, true);
-  }, [onClick]);
-  return null;
-}

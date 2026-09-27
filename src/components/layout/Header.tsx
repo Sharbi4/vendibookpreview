@@ -275,7 +275,7 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
 
   return (
     <>
-    <header
+    <header data-site-chrome=""
       className="marketplace-header sticky top-0 z-50 w-full border-b border-border/30 shadow-sm"
       style={{
         // Near-opaque charcoal instead of backdrop-filter: blur(24px).

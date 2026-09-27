@@ -21,7 +21,7 @@ export const useBuyerSeoTracking = (landingPage: string, category?: string) => {
   return useCallback((e: MouseEvent<HTMLElement>) => {
     if (!enabled) return;
     const a = (e.target as HTMLElement).closest('a[href]') as HTMLAnchorElement | null;
-    if (!a) return;
+    if (!a || a.closest('[data-site-chrome]')) return; // ignore site header/footer navigation
     const href = a.getAttribute('href') || '';
     if (!href.startsWith('/')) return; // internal navigation only (skip #jump links, external)
     const listingMatch = href.match(/^\/listing\/([^/?#]+)/);
