@@ -1,3 +1,4 @@
 - "Used" listings = seller-declared `condition` in USED_CONDITION_VALUES (src/lib/listings/condition.ts, all non-'new' wizard options); NULL condition is never shown as used. Why: no invented columns or keyword guesses.
 - CategoryIndex treats a failed inventory query as an error state (retry, stays indexable), never as "no stock". Why: transient failures must not produce noindex/empty SEO pages.
 - Buyer SEO pages track via src/lib/buyerSeoTracking.ts (buyer_seo_* events, consent-gated, first-touch sessionStorage attribution; downstream = starts only, never paid). Why: measure SEO-to-transaction without duplicating existing conversion events. Map: docs/analytics/buyer-seo-events.md.
+- Seller-covered Vendibook Freight remains calculated internally but buyer-facing UI shows “Free shipping” and never exposes the freight rate or computed freight cost. Why: the seller absorbs the charge.

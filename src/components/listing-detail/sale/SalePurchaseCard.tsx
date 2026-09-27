@@ -274,7 +274,7 @@ export const SalePurchaseCard = ({
                 label="Nationwide freight"
                 note={
                   freightPayer === 'seller'
-                    ? 'Seller covers freight'
+                    ? 'Free shipping · Seller covers freight'
                     : 'Quoted by distance at checkout'
                 }
               />

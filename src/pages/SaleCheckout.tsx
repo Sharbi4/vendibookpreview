@@ -977,6 +977,8 @@ const SaleCheckout = () => {
       : []),
     ...(buyerFreightCharge > 0
       ? [{ label: 'Vendibook Freight', value: formatCurrency(buyerFreightCharge) }]
+      : fulfillmentSelected === 'vendibook_freight' && isFreightSellerPaid
+        ? [{ label: 'Vendibook Freight', value: 'Free shipping' }]
       : []),
     ...(taxSummaryLabel ? [{ label: taxSummaryLabel, value: taxSummaryValue, muted: taxAmount === 0 }] : []),
   ];

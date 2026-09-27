@@ -28,6 +28,7 @@ import { normalizeScheduleKeys } from '@/lib/scheduleUtils';
 import { isListingFeatured } from '@/lib/featured';
 import { TrustESignChip } from '@/components/trust/TrustESignChip';
 import { SmartImage } from '@/components/ui/SmartImage';
+import { isSellerCoveredFreight } from '@/lib/freight/presentation';
 
 // Types for hourly schedule
 interface TimeRange {
@@ -183,6 +184,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
   // Featured badge: dynamic, source of truth in src/lib/featured.ts
   const isFeatured = isListingFeatured(listing as any);
   const financingEnabled = useEquinoxFinancingEnabled(listing as any);
+  const hasSellerCoveredFreight = isSellerCoveredFreight(listing);
 
   // Specialty collection chip (coffee / ice cream) — deep-links to the same
   // filtered /search state used by the hub headers and filter pill strip.
@@ -317,6 +319,13 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
                 </TooltipContent>
               </Tooltip>
             </TooltipProvider>
+          )}
+
+          {hasSellerCoveredFreight && (
+            <Badge className="border-0 bg-emerald-500 text-[10px] font-semibold uppercase text-primary-foreground shadow-lg">
+              <Truck className="mr-1 h-3 w-3" />
+              Free shipping
+            </Badge>
           )}
 
           {/* Identity Verified badge — green shine metallic */}

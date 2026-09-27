@@ -21,6 +21,7 @@ import {
 } from '@/lib/fulfillment/delivery';
 import { cn } from '@/lib/utils';
 import { FreightLink } from '@/components/shared/FreightLink';
+import { freightBuyerDisplay } from '@/lib/freight/presentation';
 
 export type DeliveryChoice = {
   /** Matches the checkout's FulfillmentSelection values. */
@@ -214,10 +215,11 @@ export const DeliveryCheckSheet = ({
   })();
 
   const freightCharge = freightPayer === 'seller'
-    ? 'Seller covers freight'
+    ? 'Free shipping'
     : freight
       ? formatUsd(freight.total_cost)
       : null;
+  const freightDisplay = freight ? freightBuyerDisplay(freight, freightPayer === 'seller') : null;
 
   const busy = loading || freightLoading;
 
@@ -324,9 +326,7 @@ export const DeliveryCheckSheet = ({
                   icon={Package}
                   title="Vendibook Freight available"
                   charge={freightCharge}
-                  detail={`${freight.distance_miles.toLocaleString()} mi at $${freight.rate_per_mile.toFixed(2)}/mile, including fuel and handling. Estimated transit ${freight.estimated_transit_days.min}–${freight.estimated_transit_days.max} business days.${
-                    freightPayer === 'seller' ? ' The seller covers freight on this listing.' : ''
-                  }`}
+                  detail={freightDisplay?.detail ?? 'Freight estimate ready.'}
                   selectable
                   selected={choice === 'vendibook_freight'}
                   onSelect={() => setChoice('vendibook_freight')}
@@ -337,10 +337,14 @@ export const DeliveryCheckSheet = ({
                 <OptionRow
                   icon={Package}
                   title="Vendibook Freight available"
-                  charge="Quoted at checkout"
-                  detail={`Freight shipping is offered on this listing${
-                    miles !== null ? ` for the ~${miles} mi to ${place || zip}` : ''
-                  }. We couldn’t calculate a live estimate right now — your exact freight amount is quoted before you pay.`}
+                  charge={freightPayer === 'seller' ? 'Free shipping' : 'Quoted at checkout'}
+                  detail={
+                    freightPayer === 'seller'
+                      ? 'Seller covers freight on this listing. We couldn’t confirm the transit estimate right now — try again before continuing.'
+                      : `Freight shipping is offered on this listing${
+                          miles !== null ? ` for the ~${miles} mi to ${place || zip}` : ''
+                        }. We couldn’t calculate a live estimate right now — your exact freight amount is quoted before you pay.`
+                  }
                   selectable
                   selected={choice === 'vendibook_freight'}
                   onSelect={() => setChoice('vendibook_freight')}

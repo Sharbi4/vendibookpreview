@@ -12,3 +12,4 @@
 - [done] Replace TaxJar with state sales-tax rates: TaxJar API was 403-rejecting every lookup, so all tax fell to the fallback table anyway. Removed the TaxJar integration from _shared/tax.ts; checkout now uses the published statewide base sales-tax rate table as the single source.
 - [done] Homepage Featured row: raised the row from 8 to 12 listings (all live featured listings now show, currently 9).
 - [done] Refresh /how-purchasing-works with the current documented post-purchase handoff and the premium warm-white payments/checkout presentation.
+- [done] Seller-covered nationwide freight: show Free shipping on sale listing cards and hide the internal mileage/rate/cost from buyers while preserving the freight calculation.
