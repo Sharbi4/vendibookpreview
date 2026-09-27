@@ -29,6 +29,8 @@ export interface AiContentLayoutProps {
   extraSchemas?: object[];
   /** Optional intermediate breadcrumb (e.g. Resources). */
   breadcrumbParent?: { label: string; href: string };
+  /** Optional delegated click handler for content tracking. */
+  onMainClickCapture?: (e: React.MouseEvent<HTMLElement>) => void;
   children: ReactNode;
 }
 
@@ -44,6 +46,7 @@ const AiContentLayout = ({
   faqSchema,
   extraSchemas = [],
   breadcrumbParent,
+  onMainClickCapture,
   children,
 }: AiContentLayoutProps) => {
   const breadcrumbItems = [
@@ -104,7 +107,7 @@ const AiContentLayout = ({
       <SEO title={title} description={description} canonical={path} type={article ? 'article' : 'website'} />
       <JsonLd schema={schemas} />
       <Header />
-      <main className="flex-1">
+      <main className="flex-1" onClickCapture={onMainClickCapture}>
         <div className="container max-w-5xl py-6 md:py-10 space-y-10">
           <Breadcrumb>
             <BreadcrumbList>

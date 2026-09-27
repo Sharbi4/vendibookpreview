@@ -731,15 +731,16 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
                       {l.label}
                     </Link>
                   ))}
+                  </div>
                 </div>
               )}
             </section>
           )}
 
           {/* Editorial / commercial sections (SEO rental hub, state pages, etc.) */}
-          {config.sections?.map((s) => (
-            <section key={s.heading} className="space-y-3 max-w-3xl">
-              <h2 className="text-xl md:text-2xl font-semibold text-foreground">{s.heading}</h2>
+          {config.sections?.map((s, si) => (
+            <section key={s.heading} data-cta-location={`section_${si + 1}`} className="space-y-3 max-w-3xl border-l-2 border-primary/30 pl-5 md:pl-6">
+              <h2 className="text-xl md:text-2xl font-semibold tracking-tight text-foreground">{s.heading}</h2>
               {s.paragraphs.map((p, i) => (
                 <p key={i} className="text-muted-foreground leading-relaxed">{p}</p>
               ))}
@@ -760,7 +761,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
           ))}
 
           {/* Related categories */}
-          <section aria-labelledby="related-heading" className="space-y-3">
+          <section aria-labelledby="related-heading" data-cta-location="related" className="space-y-3">
             <h2 id="related-heading" className="text-xl font-semibold text-foreground">
               Related on Vendibook
             </h2>
@@ -833,7 +834,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
           {config.businessTypeNav && <BrowseByBusinessType exclude={config.specialty} />}
 
           {/* FAQ */}
-          <section aria-labelledby="faq-heading" className="space-y-4 max-w-3xl">
+          <section aria-labelledby="faq-heading" data-cta-location="faq" className="space-y-4 max-w-3xl">
             <h2 id="faq-heading" className="text-2xl font-semibold text-foreground">
               Frequently asked questions
             </h2>

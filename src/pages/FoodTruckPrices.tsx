@@ -1,4 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useEffect } from 'react';
+import { useBuyerSeoTracking } from '@/hooks/useBuyerSeoTracking';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight, BarChart3, Calculator, TrendingUp, Truck, Container,
@@ -244,6 +246,7 @@ const FoodTruckPrices = () => {
   return (
     <div className="sale-light min-h-screen bg-background flex flex-col">
       <SEO title={title} description={description} canonical="/food-truck-prices" type="article" />
+      <TrackedPricesClicks />
       <JsonLd schema={jsonLd} />
       <Header />
 
@@ -295,7 +298,7 @@ const FoodTruckPrices = () => {
       </section>
 
       {/* Direct answer: cost to buy (rendered with or without live stats) */}
-      <section id="cost-to-buy" className="max-w-5xl mx-auto px-4 pb-8 scroll-mt-24">
+      <section id="cost-to-buy" data-cta-location="cost_to_buy" className="max-w-5xl mx-auto px-4 pb-8 scroll-mt-24">
         <div className="rounded-3xl border border-border/60 bg-card p-6 md:p-8 shadow-sm space-y-4">
           <h2 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground">
             How much does it cost to buy a food truck?
@@ -771,3 +774,19 @@ function renderFaqAnswer(question: string, answer: string): React.ReactNode {
 }
 
 export default FoodTruckPrices;
+
+/** Prices page has no single <main>; attach the delegated tracker to the document body scope. */
+function TrackedPricesClicks() {
+  const onClick = useBuyerSeoTracking('/food-truck-prices', 'food_truck');
+  useEffect(() => {
+    const handler = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      // Only content inside the page wrapper — never header/footer navigation.
+      if (!target?.closest('[data-buyer-seo-scope]')) return;
+      onClick(e as unknown as React.MouseEvent<HTMLElement>);
+    };
+    document.addEventListener('click', handler, true);
+    return () => document.removeEventListener('click', handler, true);
+  }, [onClick]);
+  return null;
+}
