@@ -33,6 +33,16 @@ export interface CategoryIndexSection {
   links?: { href: string; label: string }[];
 }
 
+/** Answer-first comparison block rendered directly after the inventory grid. */
+export interface CategoryIndexAnswerBlock {
+  id: string;
+  heading: string;
+  lead: string;
+  options: { name: string; goodFor: string; tradeoffs: string }[];
+  footnote?: string;
+  links?: { href: string; label: string }[];
+}
+
 export interface CategoryIndexConfig {
   path: string;
   category: CategoryKey;
@@ -72,6 +82,13 @@ export interface CategoryIndexConfig {
   ogImage?: string;
   /** Render the cross-category "Browse by business type" navigation band (Phase 6). */
   businessTypeNav?: boolean;
+  /** Seller-declared condition filter (e.g. used-only). Like `subcategories`,
+   *  disables geographic fallback so unfiltered inventory is never shown. */
+  conditions?: string[];
+  /** Answer-first block (e.g. "Where to buy a food truck"), linked from the hero. */
+  answerBlock?: CategoryIndexAnswerBlock;
+  /** Label for the primary inventory heading noun (e.g. "used food trucks"). */
+  inventoryNoun?: string;
 }
 
 interface ListingRow {
@@ -89,6 +106,7 @@ interface ListingRow {
   city: string | null;
   state: string | null;
   address: string | null;
+  condition?: string | null;
 }
 
 const MIN_TIER = 6;
@@ -129,7 +147,7 @@ const categoryLabel = (c: CategoryKey): string =>
     : c === 'ghost_kitchen' ? 'Shared Kitchen'
     : 'Vendor Space';
 
-const baseSelect = 'id, title, description, cover_image_url, price_hourly, price_daily, price_weekly, price_monthly, price_sale, mode, category, city, state, address';
+const baseSelect = 'id, title, description, cover_image_url, price_hourly, price_daily, price_weekly, price_monthly, price_sale, mode, category, city, state, address, condition';
 
 const baseQuery = (
   categories: CategoryKey[],
@@ -137,6 +155,7 @@ const baseQuery = (
   limit: number,
   orFilter?: string,
   subcategories?: string[],
+  conditions?: string[],
 ) => {
   let q = supabase
     .from('listings')
@@ -149,6 +168,7 @@ const baseQuery = (
     .limit(limit);
   if (mode !== 'any') q = q.eq('mode', mode);
   if (subcategories?.length) q = q.in('subcategory', subcategories as any[]);
+  if (conditions?.length) q = q.in('condition', conditions);
   if (orFilter) q = q.or(orFilter);
   return q;
 };
@@ -158,6 +178,10 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
   const [stateFallback, setStateFallback] = useState<ListingRow[]>([]);
   const [nationwideFallback, setNationwideFallback] = useState<ListingRow[]>([]);
   const [loading, setLoading] = useState(true);
+  // A failed inventory query is NOT "no stock": we keep the page indexable,
+  // skip empty-state messaging, and offer a retry instead.
+  const [loadError, setLoadError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
   const categories = config.categories ?? [config.category];
   const multiCategory = categories.length > 1;
@@ -178,28 +202,35 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
     let cancelled = false;
     (async () => {
       setLoading(true);
+      setLoadError(false);
       setPrimary([]);
       setStateFallback([]);
       setNationwideFallback([]);
 
       // Tier 1: city OR state OR specialty/subcategory OR all
       const specialtyFilter = config.specialty ? specialtyOrFilter(config.specialty) : undefined;
-      let q1 = baseQuery(categories, config.mode, 48, specialtyFilter, config.subcategories);
+      let q1 = baseQuery(categories, config.mode, 48, specialtyFilter, config.subcategories, config.conditions);
       if (config.city) {
         q1 = q1.or(`city.ilike.${config.city.name},address.ilike.%${config.city.name}%`);
       } else if (config.state) {
         q1 = q1.or(`state.eq.${config.state.code},state.ilike.${config.state.name}`);
       }
-      const { data: d1 } = await q1;
-      const primaryRows = (d1 as ListingRow[]) || [];
+      const { data: d1, error: e1 } = await q1;
       if (cancelled) return;
+      if (e1) {
+        console.warn('[CategoryIndex] inventory query failed', e1.message);
+        setLoadError(true);
+        setLoading(false);
+        return;
+      }
+      const primaryRows = (d1 as ListingRow[]) || [];
       setPrimary(primaryRows);
 
       const excludeIds = new Set(primaryRows.map((r) => r.id));
 
       // Specialty / subcategory pages never fall back to unrelated inventory —
       // only real matches may appear on the collection.
-      if (!config.specialty && !config.subcategories?.length) {
+      if (!config.specialty && !config.subcategories?.length && !config.conditions?.length) {
         // Tier 2: state fallback (only when city is set AND primary is thin)
         if (config.city && primaryRows.length < MIN_TIER) {
           let q2 = baseQuery(categories, config.mode, 24);
@@ -226,7 +257,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
       setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [config.category, config.mode, config.city?.name, config.state?.code, config.specialty, config.subcategories?.join(','), categories.join(',')]);
+  }, [config.category, config.mode, config.city?.name, config.state?.code, config.specialty, config.subcategories?.join(','), config.conditions?.join(','), categories.join(','), reloadKey]);
 
   const canonical = config.path;
   const totalListings = primary.length + stateFallback.length + nationwideFallback.length;
@@ -310,12 +341,12 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
   // page useful for a visitor but do not make a specialty/state/city page
   // worth indexing on its own. This applies to every hub, including specialty
   // hubs and the coffee/ice-cream vehicle landing pages.
-  const noindex = !loading && (primary.length === 0 || totalListings === 0);
+  const noindex = !loading && !loadError && (primary.length === 0 || totalListings === 0);
 
   // Low-inventory freight funnel. Triggered by the page's OWN on-topic
   // inventory (primary tier) — geographic fallback rows are not local supply.
   const localCount = primary.length;
-  const isLowInventory = !loading && localCount < LOW_INVENTORY_THRESHOLD;
+  const isLowInventory = !loading && !loadError && localCount < LOW_INVENTORY_THRESHOLD;
 
   // Live inventory signals shown above the fold. Real numbers only — when a
   // page has no on-topic inventory the whole block is withheld rather than
@@ -437,7 +468,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
     : multiCategory
       ? 'Food Trucks & Food Trailers'
       : categoryLabel(config.category) + 's';
-  const catPluralLower = config.specialty
+  const catPluralLower = config.inventoryNoun ? config.inventoryNoun : config.specialty
     ? SPECIALTY_DEFS[config.specialty].pluralLower
     : multiCategory
       ? 'food trucks & food trailers'
@@ -522,6 +553,11 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
                 <Link to={sellerCta.ctaHref}>{sellerCta.ctaLabel}</Link>
               </Button>
             </div>
+            {config.answerBlock && (
+              <a href={`#${config.answerBlock.id}`} className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+                {config.answerBlock.heading} <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </a>
+            )}
             {config.specialty && (
               <div className="flex flex-wrap gap-2 pt-1">
                 {specialtyBrowseLinks(config.specialty).map((l) => (
@@ -566,6 +602,17 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
           {loading ? (
             <div className="flex items-center justify-center py-16 text-muted-foreground">
               <Loader2 className="h-6 w-6 animate-spin" />
+            </div>
+          ) : loadError ? (
+            <div role="alert" className="rounded-2xl border border-border bg-card p-6 space-y-3">
+              <p className="font-medium text-foreground">We couldn't load listings right now.</p>
+              <p className="text-sm text-muted-foreground">
+                This is a temporary loading problem, not an empty marketplace. Try again, or use search.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="default" className="v2-btn" onClick={() => setReloadKey((k) => k + 1)}>Try again</Button>
+                <Button asChild variant="outline"><Link to={searchHref}>Open search</Link></Button>
+              </div>
             </div>
           ) : localCount === 0 ? (
             <div className="space-y-6">
@@ -629,6 +676,36 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
                 />
               )}
             </div>
+          )}
+
+          {config.answerBlock && (
+            <section id={config.answerBlock.id} aria-labelledby={`${config.answerBlock.id}-heading`} className="space-y-4 scroll-mt-24">
+              <h2 id={`${config.answerBlock.id}-heading`} className="text-2xl md:text-3xl font-semibold text-foreground">
+                {config.answerBlock.heading}
+              </h2>
+              <p className="text-base md:text-lg text-foreground leading-relaxed max-w-3xl">{config.answerBlock.lead}</p>
+              <ul className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {config.answerBlock.options.map((o) => (
+                  <li key={o.name} className="rounded-2xl border border-border bg-card p-5 space-y-2">
+                    <h3 className="font-semibold text-foreground">{o.name}</h3>
+                    <p className="text-sm text-foreground"><span className="font-medium">Good for: </span>{o.goodFor}</p>
+                    <p className="text-sm text-muted-foreground"><span className="font-medium text-foreground">Trade-offs: </span>{o.tradeoffs}</p>
+                  </li>
+                ))}
+              </ul>
+              {config.answerBlock.footnote && (
+                <p className="text-sm text-muted-foreground max-w-3xl">{config.answerBlock.footnote}</p>
+              )}
+              {config.answerBlock.links && (
+                <div className="flex flex-wrap gap-2">
+                  {config.answerBlock.links.map((l) => (
+                    <Link key={l.href + l.label} to={l.href} className="inline-block px-3 py-1.5 rounded-full border border-border bg-card text-sm text-foreground hover:border-primary hover:text-primary transition-colors">
+                      {l.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </section>
           )}
 
           {/* Editorial / commercial sections (SEO rental hub, state pages, etc.) */}
