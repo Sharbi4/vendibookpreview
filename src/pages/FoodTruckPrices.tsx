@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useBuyerSeoTracking } from '@/hooks/useBuyerSeoTracking';
+import { pricesTitle, pricesDescription, PRICES_COST_COMPONENTS } from '../../supabase/functions/_shared/buyerSeoContent';
 import { Link } from 'react-router-dom';
 import {
   ArrowRight, BarChart3, Calculator, TrendingUp, Truck, Container,
@@ -161,9 +162,8 @@ const FoodTruckPrices = () => {
   };
 
   const onTrackedClick = useBuyerSeoTracking('/food-truck-prices', 'food_truck');
-  const title = `Food Truck Prices & Cost Calculator (${YEAR}) | Vendibook`;
-  const description =
-    `See what food trucks and trailers cost in ${YEAR} using real Vendibook marketplace data. Compare prices, explore cost factors, and estimate your truck with PricePilot.`;
+  const title = pricesTitle(YEAR);
+  const description = pricesDescription(YEAR);
 
   const faqs = useMemo(() => {
     if (!stats) return [];
@@ -324,17 +324,7 @@ const FoodTruckPrices = () => {
           <div>
             <h3 className="font-semibold text-foreground mb-2">What the total cost to buy includes</h3>
             <ul className="grid gap-1.5 sm:grid-cols-2 text-sm text-muted-foreground">
-              {[
-                'Purchase price (negotiated from the asking price)',
-                'Sales tax, title, and registration in your state',
-                'Mechanical and kitchen inspection',
-                'Travel to pick up, or freight transport',
-                'Health, fire, and business permits in your area',
-                'Commissary fees, where required',
-                'Commercial auto and liability insurance',
-                'Repairs, equipment changes, and wrap or branding',
-                'Financing costs, if you borrow',
-              ].map((c) => <li key={c}>• {c}</li>)}
+              {PRICES_COST_COMPONENTS.map((c) => <li key={c}>• {c}</li>)}
             </ul>
           </div>
           <div className="flex flex-wrap gap-3 text-sm font-semibold">

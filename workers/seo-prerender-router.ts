@@ -15,6 +15,9 @@
  *   curl -A "linkedinbot/1.0" https://vendibook.com/blog/rise-food-truck-fleet-owner | grep og:title
  */
 
+const PRERENDER_URL =
+  "https://nbrehbwfsmedbelzntqs.supabase.co/functions/v1/seo-prerender";
+
 const CRAWLER_RE =
   /(googlebot|bingbot|slurp|duckduckbot|baiduspider|yandex|linkedinbot|twitterbot|facebookexternal|facebot|slackbot|discordbot|whatsapp|telegrambot|pinterest|redditbot|applebot)/i;
 
@@ -44,9 +47,6 @@ export function prerenderTarget(pathname: string, ua: string): string | null {
   return `${PRERENDER_URL}?path=${encodeURIComponent(pathname)}`;
 }
 
-const PRERENDER_URL =
-  "https://nbrehbwfsmedbelzntqs.supabase.co/functions/v1/seo-prerender";
-
 export default {
   async fetch(request: Request): Promise<Response> {
     const url = new URL(request.url);
@@ -57,7 +57,8 @@ export default {
 
       try {
         const response = await fetch(target, {
-          cf: { cacheTtl: 86400, cacheEverything: true },
+          // Respect the function's Cache-Control (short TTL on inventory errors).
+          cf: { cacheEverything: true },
         } as any);
 
         // Non-200 from prerender (e.g. 404 listing, 5xx) → let the origin SPA answer.
