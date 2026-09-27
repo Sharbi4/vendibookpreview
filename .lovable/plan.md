@@ -1,17 +1,11 @@
-# Bounded checkout wizard refactor
+# Seller-covered freight display
 
 ## Build
-- Bound the desktop sale/rental wizard to the viewport, keep its heading/navigation/footer fixed, and scroll only the active step body.
-- Add internal-scroll reset on step changes and preserve natural mobile document scrolling.
-- Add wizard mode to the shared checkout shell with a compact heading, fixed-width main column, sticky independently scrolling summary rail.
-- Remove review-stage-owned actions in wizard use, provide a Back to listing footer action, remove duplicate pickup copy, and remove financing from Payment.
-- Tighten full and compact financing banners.
-- Split rental verification into a reusable compact Step 3 panel while leaving Step 4 for cancellation and the two primary agreements only; preserve existing verification calls and completion gates.
+- Add a clear “Free shipping” badge to sale listing cards whenever Vendibook Freight is enabled and the seller covers freight.
+- Keep the internal freight estimate based on mileage and the existing $4.50-per-mile calculation, but hide the mileage, rate, and calculated freight amount from buyers on seller-covered listings.
+- Show “Seller covers freight” / “Free shipping” in the delivery checker and checkout wherever the buyer-facing freight charge appears.
+- Preserve buyer-paid freight estimates and all existing checkout calculations.
 
-## Validation
-- Exercise real sale and rental routes at 1280×768, 1280×800, 1280×900, and 390px.
-- Verify every step separately, internal desktop scrolling, visible footer, no duplicate controls/copy, and mobile overflow.
-- Run checkout-focused tests and inspect the automatic build result.
-
-## Technical details
-- No pricing, PayPal, offer, tax, freight, availability, legal persistence, SignNow, authentication, or access-control logic changes.
+## Verify
+- Add focused coverage for seller-paid versus buyer-paid freight display rules.
+- Check the listing page and delivery flow on desktop and mobile, then confirm the project builds cleanly.
