@@ -28,6 +28,7 @@ import { SaleStickyActionBar } from './SaleStickyActionBar';
 import { SaleLocationCard } from './SaleSharedSections';
 import TitleWalkthroughCta from '@/components/listing-detail/TitleWalkthroughCta';
 import { formatCurrency } from '@/lib/commissions';
+import { isSellerCoveredFreight } from '@/lib/freight/presentation';
 
 interface SaleListingLayoutProps {
   listing: any;
@@ -73,7 +74,7 @@ export const SaleListingLayout = ({
   const featured = isListingFeatured(listing);
   const condition = conditionLabel(listing.condition);
   const freightEnabled = Boolean(listing.vendibook_freight_enabled);
-  const sellerCoversFreight = freightEnabled && listing.freight_payer === 'seller';
+  const sellerCoversFreight = isSellerCoveredFreight(listing);
 
   return (
     <main className="sale-light flex-1">

@@ -21,6 +21,7 @@ import {
 } from '@/lib/fulfillment/delivery';
 import { cn } from '@/lib/utils';
 import { FreightLink } from '@/components/shared/FreightLink';
+import { freightBuyerDisplay } from '@/lib/freight/presentation';
 
 export type DeliveryChoice = {
   /** Matches the checkout's FulfillmentSelection values. */
@@ -218,6 +219,7 @@ export const DeliveryCheckSheet = ({
     : freight
       ? formatUsd(freight.total_cost)
       : null;
+  const freightDisplay = freight ? freightBuyerDisplay(freight, freightPayer === 'seller') : null;
 
   const busy = loading || freightLoading;
 
@@ -324,11 +326,7 @@ export const DeliveryCheckSheet = ({
                   icon={Package}
                   title="Vendibook Freight available"
                   charge={freightCharge}
-                  detail={
-                    freightPayer === 'seller'
-                      ? `Seller covers freight on this listing. Estimated transit ${freight.estimated_transit_days.min}–${freight.estimated_transit_days.max} business days.`
-                      : `${freight.distance_miles.toLocaleString()} mi at $${freight.rate_per_mile.toFixed(2)}/mile, including fuel and handling. Estimated transit ${freight.estimated_transit_days.min}–${freight.estimated_transit_days.max} business days.`
-                  }
+                  detail={freightDisplay?.detail ?? 'Freight estimate ready.'}
                   selectable
                   selected={choice === 'vendibook_freight'}
                   onSelect={() => setChoice('vendibook_freight')}

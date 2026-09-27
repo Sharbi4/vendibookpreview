@@ -7,6 +7,7 @@ import { SmartImage } from '@/components/ui/SmartImage';
 import { formatListingPriceLabel } from '@/lib/listings/rentalPricing';
 import { isListingFeatured } from '@/lib/featured';
 import { CATEGORY_LABELS } from '@/types/listing';
+import { isSellerCoveredFreight } from '@/lib/freight/presentation';
 
 export interface V2CardListing {
   id: string;
@@ -43,8 +44,7 @@ export default function V2ListingCard({
     null;
   const featured = isListingFeatured(listing as never);
   const financingEnabled = useEquinoxFinancingEnabled(listing);
-  const hasSellerCoveredFreight =
-    listing.mode === 'sale' && listing.vendibook_freight_enabled === true && listing.freight_payer === 'seller';
+  const hasSellerCoveredFreight = isSellerCoveredFreight(listing);
 
   return (
     <Link to={`/listing/${listing.id}`} className="v2-home-card">

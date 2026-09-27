@@ -28,6 +28,7 @@ import { normalizeScheduleKeys } from '@/lib/scheduleUtils';
 import { isListingFeatured } from '@/lib/featured';
 import { TrustESignChip } from '@/components/trust/TrustESignChip';
 import { SmartImage } from '@/components/ui/SmartImage';
+import { isSellerCoveredFreight } from '@/lib/freight/presentation';
 
 // Types for hourly schedule
 interface TimeRange {
@@ -183,10 +184,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
   // Featured badge: dynamic, source of truth in src/lib/featured.ts
   const isFeatured = isListingFeatured(listing as any);
   const financingEnabled = useEquinoxFinancingEnabled(listing as any);
-  const hasSellerCoveredFreight =
-    listing.mode === 'sale' &&
-    Boolean(listing.vendibook_freight_enabled) &&
-    listing.freight_payer === 'seller';
+  const hasSellerCoveredFreight = isSellerCoveredFreight(listing);
 
   // Specialty collection chip (coffee / ice cream) — deep-links to the same
   // filtered /search state used by the hub headers and filter pill strip.
