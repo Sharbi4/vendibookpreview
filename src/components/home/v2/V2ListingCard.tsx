@@ -57,11 +57,15 @@ export default function V2ListingCard({
           radiusClass="rounded-none"
           sizes="(max-width: 640px) 80vw, (max-width: 1024px) 40vw, 300px"
         />
-        {featured ? <span className="absolute left-3 top-3 z-10"><FeaturedBadge listing={listing} variant="card" compact /></span> : null}
-        {hasSellerCoveredFreight ? (
-          <span className="v2-home-chip inline-flex items-center gap-1">
-            <Truck className="h-3 w-3" aria-hidden="true" />
-            Free shipping
+        {(featured || hasSellerCoveredFreight) ? (
+          <span className="absolute left-3 top-3 z-10 flex max-w-[calc(100%-6rem)] flex-wrap items-center gap-1.5">
+            {featured ? <FeaturedBadge listing={listing} variant="card" compact /> : null}
+            {hasSellerCoveredFreight ? (
+              <span className="v2-home-chip static inline-flex items-center gap-1">
+                <Truck className="h-3 w-3" aria-hidden="true" />
+                Free shipping
+              </span>
+            ) : null}
           </span>
         ) : null}
         {listing.mode ? (
