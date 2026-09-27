@@ -73,6 +73,7 @@ export const SaleListingLayout = ({
   const featured = isListingFeatured(listing);
   const condition = conditionLabel(listing.condition);
   const freightEnabled = Boolean(listing.vendibook_freight_enabled);
+  const sellerCoversFreight = freightEnabled && listing.freight_payer === 'seller';
 
   return (
     <main className="sale-light flex-1">
@@ -160,7 +161,7 @@ export const SaleListingLayout = ({
                   )}
                   {freightEnabled && (
                     <Badge variant="secondary" className="text-[11px] font-normal">
-                      Nationwide freight
+                      {sellerCoversFreight ? 'Free shipping' : 'Nationwide freight'}
                     </Badge>
                   )}
                 </div>
