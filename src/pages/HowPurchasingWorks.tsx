@@ -1,681 +1,436 @@
 import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import {
-  Search,
-  ReceiptText,
-  CreditCard,
-  MailCheck,
-  Truck,
-  PackageCheck,
-  ShieldCheck,
-  Banknote,
-  Clock,
-  MessageSquareWarning,
-  Building2,
-  MapPin,
   ArrowRight,
-  FileText,
-  LifeBuoy,
-  HandCoins,
-  HelpCircle,
-  BadgeDollarSign,
+  Banknote,
+  Check,
+  CheckCircle2,
+  CircleDot,
+  ClipboardCheck,
+  CreditCard,
+  FileCheck2,
   KeyRound,
-  Route as RouteIcon,
+  LifeBuoy,
+  MapPin,
+  MessageSquare,
+  PackageCheck,
+  Search,
+  ShieldCheck,
+  Truck,
+  Video,
   type LucideIcon,
 } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
+import JsonLd from '@/components/JsonLd';
 import { Button } from '@/components/ui/button';
 import { GuideBreadcrumb } from '@/components/education/GuideBreadcrumb';
-import { FreightLink, linkifyFreight } from '@/components/shared/FreightLink';
-import { PayPalMonogram, EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
-import { cn } from '@/lib/utils';
-import businessNegotiationArt from '@/assets/education/business-negotiation.svg.asset.json';
-import securePaymentArt from '@/assets/education/secure-payment.svg.asset.json';
+import { PayPalMonogram } from '@/components/brand/ProviderLogos';
 import deliveryMapArt from '@/assets/education/delivery-map.svg.asset.json';
-import movingArt from '@/assets/education/moving.svg.asset.json';
 import documentsOkArt from '@/assets/education/documents-ok.svg.asset.json';
 
-/**
- * /how-purchasing-works — buyer education page for for-sale equipment.
- *
- * Copy guardrails (do not regress): no custodial-funds language, no guaranteed
- * approvals or payout timing, no 72h/7-day processing claims, no automatic
- * tax-calculation claims, and Plaid identity verification stays optional.
- * Everything below reflects the current live PayPal + Pay in Person model.
- */
+const ease = [0.22, 1, 0.36, 1] as const;
 
 const fadeUp = {
-  initial: { opacity: 0, y: 18 },
+  initial: { opacity: 0, y: 14 },
   whileInView: { opacity: 1, y: 0 },
   viewport: { once: true, margin: '-60px' },
-  transition: { duration: 0.45 },
+  transition: { duration: 0.42, ease },
 };
 
-/* ------------------------------------------------------------------ */
-/* Hero visual — listing card flowing through the purchase journey     */
-/* ------------------------------------------------------------------ */
-
-const HERO_FLOW = [
-  { icon: CreditCard, label: 'Choose how to pay' },
-  { icon: Truck, label: 'Plan pickup or delivery' },
-  { icon: PackageCheck, label: 'Confirm receipt' },
-  { icon: HandCoins, label: 'Purchase complete' },
-];
-
-const HeroJourneyVisual = () => {
-  const reduce = useReducedMotion();
-  return (
-    <div
-      className="relative rounded-3xl border border-border bg-card shadow-[0_24px_60px_-24px_rgba(0,0,0,0.18)] p-5 sm:p-6"
-      aria-hidden="true"
-    >
-      {/* Mini listing card */}
-      <div className="rounded-2xl border border-border bg-background overflow-hidden">
-        <div className="h-28 bg-foreground/[0.04] flex items-center justify-center">
-          <Truck className="w-10 h-10 text-foreground/25" />
-        </div>
-        <div className="p-4">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-sm font-semibold text-foreground">2021 Concession Food Truck</p>
-              <p className="text-xs text-muted-foreground mt-0.5 inline-flex items-center gap-1">
-                <MapPin className="w-3 h-3" /> Austin, TX area
-              </p>
-            </div>
-            <p className="text-sm font-bold text-foreground whitespace-nowrap">$68,500</p>
-          </div>
-          <div className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-foreground/5 border border-border px-2.5 py-1 text-[10px] font-medium text-foreground/70">
-            <ShieldCheck className="w-3 h-3 text-primary" /> Built for serious buyers
-          </div>
-        </div>
-      </div>
-
-      {/* Journey rail */}
-      <div className="relative mt-6 px-1">
-        <svg
-          className="absolute left-0 right-0 top-1/2 -translate-y-1/2 w-full h-2 text-border"
-          viewBox="0 0 100 2"
-          preserveAspectRatio="none"
-        >
-          <line x1="0" y1="1" x2="100" y2="1" stroke="currentColor" strokeWidth="2" strokeDasharray="3 3" />
-        </svg>
-        <motion.svg
-          className="absolute left-0 right-0 top-1/2 -translate-y-1/2 w-full h-2 text-primary"
-          viewBox="0 0 100 2"
-          preserveAspectRatio="none"
-          initial={reduce ? undefined : { opacity: 0 }}
-          animate={{ opacity: 1 }}
-        >
-          <motion.line
-            x1="0"
-            y1="1"
-            x2="100"
-            y2="1"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            initial={reduce ? { pathLength: 1 } : { pathLength: 0 }}
-            animate={{ pathLength: 1 }}
-            transition={reduce ? { duration: 0 } : { duration: 2.4, ease: 'easeInOut', delay: 0.4 }}
-          />
-        </motion.svg>
-        <ol className="relative grid grid-cols-4 gap-1">
-          {HERO_FLOW.map((node, i) => (
-            <motion.li
-              key={node.label}
-              className="flex flex-col items-center text-center gap-2"
-              initial={reduce ? undefined : { opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.35, delay: 0.2 + i * 0.35 }}
-            >
-              <span
-                className={cn(
-                  'w-10 h-10 rounded-full border bg-background flex items-center justify-center shadow-sm',
-                  i === 0 ? 'border-primary/40 text-primary' : 'border-border text-foreground/60',
-                )}
-              >
-                <node.icon className="w-4 h-4" />
-              </span>
-              <span className="text-[10px] sm:text-[11px] font-medium text-foreground/70 leading-tight">
-                {node.label}
-              </span>
-            </motion.li>
-          ))}
-        </ol>
-      </div>
-    </div>
-  );
-};
-
-/* ------------------------------------------------------------------ */
-/* Six-stage journey                                                   */
-/* ------------------------------------------------------------------ */
-
-const JOURNEY: {
+type JourneyStep = {
   icon: LucideIcon;
   title: string;
   body: string;
-  tags: string[];
-  art?: string;
-  artAlt?: string;
-}[] = [
+  detail: string;
+};
+
+const PURCHASE_STEPS: JourneyStep[] = [
   {
     icon: Search,
-    title: 'Find a truck that fits your business',
-    body: 'Explore detailed listings with photos, specs, pricing, and location information so you can quickly narrow in on the equipment that makes sense for your concept and budget.',
-    tags: ['Photos, specs & pricing', 'Browse nationwide'],
+    title: 'Find and review the right listing',
+    body: 'Compare photos, equipment, condition, location, seller details, and available documents. Message the seller or request a live walkthrough before you commit.',
+    detail: 'Listings, messages, and walkthroughs stay connected.',
   },
   {
-    icon: ReceiptText,
-    title: 'Ask questions. Compare. Make an offer.',
-    body: 'Message the seller directly, clarify the details that matter, and submit an offer where the listing supports it. You can take your time before deciding to move forward.',
-    tags: ['Message the seller', 'Offers where available'],
-    art: businessNegotiationArt.url,
-    artAlt: 'A buyer and seller negotiating an offer',
+    icon: ClipboardCheck,
+    title: 'Agree on the purchase',
+    body: 'Use the listed price or make an offer where available. Review the order, purchase agreement, delivery choice, and total before moving forward.',
+    detail: 'The agreement and order details remain with the transaction.',
   },
   {
     icon: CreditCard,
-    title: 'Choose how you want to pay',
-    body: 'When online checkout is offered, you can pay through Vendibook’s PayPal checkout. If the seller allows Pay in Person, you can arrange payment directly at pickup or delivery instead.',
-    tags: ['PayPal checkout', 'Pay in Person'],
-    art: securePaymentArt.url,
-    artAlt: 'Paying securely online with PayPal checkout',
-  },
-  {
-    icon: MailCheck,
-    title: 'Seller confirms the sale',
-    body: 'The seller reviews the purchase and confirms the next steps. From there, you’ll coordinate the details you need for pickup, delivery, or freight.',
-    tags: ['Seller confirmation', 'Stay connected'],
+    title: 'Choose an available payment path',
+    body: 'Eligible listings can offer PayPal checkout. A seller may also allow Pay in Person, which keeps the sale organized on Vendibook while payment happens directly at handoff.',
+    detail: 'Payment options depend on the listing and transaction.',
   },
   {
     icon: Truck,
-    title: 'Choose the delivery option that works for you',
-    body: 'Pick up locally, use seller delivery when offered, or explore Vendibook Freight for longer-distance purchases. Freight is quoted and arranged separately when available.',
-    tags: ['Pickup', 'Seller delivery', 'Vendibook Freight'],
+    title: 'Coordinate pickup or delivery',
+    body: 'After the purchase starts, use the order page and messages to agree on timing. Follow shipment updates when delivery or freight is used.',
+    detail: 'Your order shows the next action for each side.',
+  },
+];
+
+const HANDOFF_STEPS: JourneyStep[] = [
+  {
+    icon: KeyRound,
+    title: 'Start the documented handoff',
+    body: 'For local pickup, the seller starts the handoff and the buyer enters the six-digit pickup code. Delivery handoffs begin from the order when the equipment arrives.',
+    detail: 'The code helps document that both sides are present for pickup.',
+  },
+  {
+    icon: Video,
+    title: 'Record the condition walkthrough',
+    body: 'With the required notice accepted, capture the equipment, its condition, and relevant details. Photos or video are timestamped and stored with the transaction record.',
+    detail: 'The record documents what was captured; it is not a Vendibook inspection.',
   },
   {
     icon: PackageCheck,
-    title: 'Receive your truck and confirm delivery',
-    body: 'Once the truck or trailer is in your hands, inspect it and confirm receipt when everything is in order. That confirmation wraps up the handoff and moves the seller’s payout forward.',
-    tags: ['Inspect before confirming', 'Confirm & you’re set'],
+    title: 'Accept it, note exceptions, or report an issue',
+    body: 'The buyer records how the equipment was received. If something is wrong, report it before completing the handoff so the issue and supporting evidence stay on the record.',
+    detail: 'A reported issue keeps the handoff open for support review.',
+  },
+  {
+    icon: FileCheck2,
+    title: 'Review and complete the handoff',
+    body: 'Review the handoff summary and condition acknowledgment. Once the required handoff and confirmation steps are complete, the sale can close.',
+    detail: 'The completed record remains available from the order.',
   },
 ];
-
-/* ------------------------------------------------------------------ */
-/* Before you commit                                                   */
-/* ------------------------------------------------------------------ */
-
-const TRUST_POINTS = [
-  {
-    icon: 'paypal',
-    title: 'Pay online with PayPal when it’s available',
-    body: 'For listings with online checkout, payment is completed through Vendibook’s PayPal-powered checkout and recorded with the purchase.',
-  },
-  {
-    icon: 'banknote',
-    title: 'Prefer to pay in person? Some sellers offer that too.',
-    body: 'When Pay in Person is available, you and the seller arrange payment directly at pickup or delivery.',
-  },
-  {
-    icon: 'clock',
-    title: 'Your purchase keeps moving after payment',
-    body: 'Once payment is completed, the next steps are pickup or delivery, receipt confirmation, and the seller’s payout. Vendibook keeps those steps organized so both sides always know what comes next.',
-  },
-  {
-    icon: 'shield',
-    title: 'Confirm only after you’ve received and inspected it',
-    body: 'Take a moment to inspect the equipment before confirming receipt. Your confirmation tells Vendibook the handoff has been completed.',
-  },
-  {
-    icon: 'warning',
-    title: 'Something not right? Tell us before you confirm.',
-    body: 'If there’s an issue with the equipment or delivery, report it through Vendibook before confirming receipt so the concern is documented and can be addressed during the handoff.',
-  },
-  {
-    icon: 'building',
-    title: 'Vendibook brings the marketplace together',
-    body: 'Vendibook connects buyers and sellers and provides the marketplace tools around the purchase. The seller owns the equipment, and financing decisions are made by third-party financing partners.',
-  },
-];
-
-const TrustIcon = ({ kind }: { kind: string }) => {
-  const cls = 'w-5 h-5';
-  switch (kind) {
-    case 'paypal':
-      return <PayPalMonogram className="w-5 h-5" />;
-    case 'banknote':
-      return <Banknote className={cls} />;
-    case 'clock':
-      return <Clock className={cls} />;
-    case 'shield':
-      return <ShieldCheck className={cls} />;
-    case 'warning':
-      return <MessageSquareWarning className={cls} />;
-    default:
-      return <Building2 className={cls} />;
-  }
-};
-
-/* ------------------------------------------------------------------ */
-/* Fulfillment comparison                                              */
-/* ------------------------------------------------------------------ */
-
-const FreightRouteAnimation = () => {
-  const reduce = useReducedMotion();
-  return (
-    <div className="relative h-12 mt-4" aria-hidden="true">
-      <svg className="w-full h-full" viewBox="0 0 200 40" preserveAspectRatio="none">
-        <path
-          d="M8 30 C 60 8, 140 8, 192 30"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeDasharray="4 4"
-          className="text-border"
-        />
-        <motion.path
-          d="M8 30 C 60 8, 140 8, 192 30"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="1.5"
-          strokeLinecap="round"
-          className="text-primary"
-          initial={reduce ? { pathLength: 1 } : { pathLength: 0 }}
-          whileInView={{ pathLength: 1 }}
-          viewport={{ once: true }}
-          transition={reduce ? { duration: 0 } : { duration: 1.8, ease: 'easeInOut' }}
-        />
-      </svg>
-      <motion.div
-        className="absolute top-0 left-0"
-        initial={reduce ? { left: 'calc(96% - 12px)', top: '18px' } : { left: '0%', top: '18px' }}
-        whileInView={reduce ? undefined : { left: 'calc(96% - 12px)' }}
-        viewport={{ once: true }}
-        transition={{ duration: 1.8, ease: 'easeInOut' }}
-      >
-        <span className="flex w-7 h-7 rounded-full bg-primary/10 border border-primary/30 items-center justify-center">
-          <Truck className="w-3.5 h-3.5 text-primary" />
-        </span>
-      </motion.div>
-    </div>
-  );
-};
 
 const FULFILLMENT = [
   {
     icon: KeyRound,
-    title: 'Pickup',
-    who: 'A simple option for local purchases',
-    body: 'Coordinate a pickup time with the seller and collect the truck or trailer directly. Final pickup details are arranged with the seller.',
+    title: 'Buyer pickup',
+    eyebrow: 'Meet locally',
+    body: 'Agree on a time in messages. At pickup, use the six-digit code, document the walkthrough, and record the buyer’s condition decision.',
   },
   {
     icon: MapPin,
     title: 'Seller delivery',
-    who: 'When delivery is offered by the seller',
-    body: 'Some sellers can bring the equipment to you. Availability, timing, and any delivery cost depend on the listing and are arranged with the seller.',
+    eyebrow: 'When the seller offers it',
+    body: 'Coordinate access and timing, follow order updates, then complete the same condition and evidence steps when the equipment arrives.',
   },
-  {
-    icon: RouteIcon,
-    title: 'Vendibook Freight',
-    who: 'For longer-distance purchases',
-    body: 'Found the right truck in another city or state? When Freight is available, Vendibook can help coordinate transport so you can consider equipment beyond your local market. Freight is quoted and arranged separately.',
-    freight: true,
-  },
-];
-
-/* ------------------------------------------------------------------ */
-/* Related resources                                                   */
-/* ------------------------------------------------------------------ */
-
-const RESOURCES = [
   {
     icon: Truck,
     title: 'Vendibook Freight',
-    body: 'See how long-distance transport works and what to expect when Freight is available.',
-    cta: 'Explore Vendibook Freight',
-    to: '/vendibook-freight',
-  },
-  {
-    icon: FileText,
-    title: 'Disputes & buyer support',
-    body: 'Know what to do if there’s a problem before, during, or after the handoff.',
-    cta: 'Learn about buyer support',
-    to: '/help/dispute-evidence',
-  },
-  {
-    icon: BadgeDollarSign,
-    title: 'Financing',
-    body: 'Explore financing options available through third-party partners on eligible equipment.',
-    cta: 'See financing options',
-    to: '/financing',
-  },
-  {
-    icon: HelpCircle,
-    title: 'Help Center',
-    body: 'Find answers about buying, payments, delivery, your account, and more.',
-    cta: 'Visit the Help Center',
-    to: '/help',
+    eyebrow: 'For longer distances',
+    body: 'Freight is quoted and arranged separately when available. Shipment and delivery events can be documented before the handoff is completed.',
   },
 ];
 
-/* ------------------------------------------------------------------ */
-/* Page                                                                */
-/* ------------------------------------------------------------------ */
+const FAQS = [
+  {
+    q: 'What happens after I pay online?',
+    a: 'Your order page shows the next step. You and the seller coordinate pickup or delivery, document the handoff, and complete the required confirmations. If there is a problem, report it before completing the handoff.',
+  },
+  {
+    q: 'What is the documented handoff?',
+    a: 'It is a transaction record for pickup or delivery. Depending on the handoff, it can include a pickup code, a recorded condition walkthrough, photos or video, the buyer’s condition decision, exceptions, and an acknowledgment.',
+  },
+  {
+    q: 'Does Vendibook inspect or certify the equipment?',
+    a: 'No. The handoff record documents information captured by the buyer and seller. It is not an inspection, appraisal, title verification, or guarantee by Vendibook. Buyers should arrange an independent inspection when appropriate.',
+  },
+  {
+    q: 'What if the equipment is not as expected?',
+    a: 'Do not mark the handoff complete. Record the issue and supporting evidence in the handoff flow, then continue with Vendibook support so the documented concern can be reviewed.',
+  },
+  {
+    q: 'When is the seller paid?',
+    a: 'Vendibook reviews the required delivery or handoff confirmations before issuing the seller payout. Payouts are typically released within 24 hours of delivery confirmation, and Vendibook strives for 24–48 hours. Timing can vary when a transaction needs review.',
+  },
+];
+
+const HandoffPreview = () => {
+  const nodes = [
+    { label: 'Payment confirmed', icon: CheckCircle2, done: true },
+    { label: 'Handoff walkthrough', icon: Video, active: true },
+    { label: 'Buyer decision', icon: PackageCheck },
+    { label: 'Sale complete', icon: Check },
+  ];
+
+  return (
+    <div className="overflow-hidden border border-border bg-card shadow-lg">
+      <div className="border-b border-border p-5 sm:p-6">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">Order handoff</p>
+            <h2 className="mt-2 text-xl font-semibold text-foreground">Your next step is always clear.</h2>
+          </div>
+          <span className="inline-flex shrink-0 items-center gap-1.5 rounded-full border border-border bg-muted px-3 py-1 text-xs font-medium text-foreground">
+            <CircleDot className="h-3.5 w-3.5 text-primary" /> In progress
+          </span>
+        </div>
+      </div>
+      <ol className="p-5 sm:p-6">
+        {nodes.map((node, index) => (
+          <li key={node.label} className="relative flex gap-4 pb-6 last:pb-0">
+            {index < nodes.length - 1 ? (
+              <span className="absolute left-[17px] top-9 h-full w-px bg-border" aria-hidden />
+            ) : null}
+            <span className={`relative z-10 grid h-9 w-9 shrink-0 place-items-center rounded-full border ${node.done ? 'border-primary bg-primary text-primary-foreground' : node.active ? 'border-primary bg-card text-primary' : 'border-border bg-card text-muted-foreground'}`}>
+              <node.icon className="h-4 w-4" />
+            </span>
+            <div className="min-w-0 pt-1.5">
+              <p className="text-sm font-semibold text-foreground">{node.label}</p>
+              {node.active ? <p className="mt-1 text-xs text-muted-foreground">Capture condition and supporting evidence</p> : null}
+            </div>
+          </li>
+        ))}
+      </ol>
+      <div className="flex items-center gap-3 border-t border-border bg-muted/40 px-5 py-4 sm:px-6">
+        <ShieldCheck className="h-5 w-5 shrink-0 text-primary" />
+        <p className="text-xs leading-relaxed text-muted-foreground">Pickup, delivery, evidence, and confirmations stay connected to the order.</p>
+      </div>
+    </div>
+  );
+};
 
 const HowPurchasingWorks = () => {
   const reduce = useReducedMotion();
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
+    <div className="sale-light flex min-h-screen flex-col overflow-x-hidden bg-background">
       <SEO
         title="How Purchasing Works on Vendibook"
-        description="See how buying a food truck or trailer works on Vendibook — from browsing listings and making an offer to PayPal checkout, financing options, pickup, delivery, and final confirmation."
+        description="See how buying a food truck or trailer works on Vendibook, including offers, PayPal checkout, pickup or delivery, the documented condition handoff, confirmations, and seller payout review."
         canonical="/how-purchasing-works"
+        ogTitle="How Purchasing Works on Vendibook"
+        ogDescription="From the first listing to a documented pickup or delivery handoff."
+        twitterTitle="How Purchasing Works on Vendibook"
+        twitterDescription="From the first listing to a documented pickup or delivery handoff."
+      />
+      <JsonLd
+        schema={{
+          '@context': 'https://schema.org',
+          '@type': 'FAQPage',
+          mainEntity: FAQS.map((faq) => ({
+            '@type': 'Question',
+            name: faq.q,
+            acceptedAnswer: { '@type': 'Answer', text: faq.a },
+          })),
+        }}
       />
 
       <Header />
 
       <main className="flex-1">
-        {/* HERO */}
-        <section className="relative pt-14 pb-12 md:pt-20 md:pb-16 overflow-hidden">
-          <div className="absolute inset-0 bg-gradient-to-b from-foreground/[0.03] via-background to-background" />
-          <div className="container max-w-6xl mx-auto px-4 relative z-10">
+        <section className="border-b border-border pb-16 pt-8 md:pb-24 md:pt-12">
+          <div className="container mx-auto max-w-6xl px-4">
             <GuideBreadcrumb
               items={[
                 { label: 'Home', to: '/' },
                 { label: 'How Vendibook Works', to: '/how-it-works' },
                 { label: 'How Purchasing Works' },
               ]}
-              className="mb-6"
+              className="mb-8"
             />
-            <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center">
+            <div className="grid items-center gap-12 lg:grid-cols-[1.08fr,0.92fr] lg:gap-16">
               <motion.div
-                initial={reduce ? undefined : { opacity: 0, y: 20 }}
+                initial={reduce ? undefined : { opacity: 0, y: 18 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5 }}
+                transition={{ duration: 0.5, ease }}
               >
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-foreground/5 border border-border text-xs font-medium text-foreground mb-4">
-                  Buying on Vendibook
-                </div>
-                <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground mb-5 leading-[1.08]">
-                  Buy your next food truck with more confidence.
+                <p className="text-sm font-semibold uppercase tracking-[0.14em] text-primary">Buying on Vendibook</p>
+                <h1 className="mt-4 max-w-3xl text-4xl font-bold leading-tight text-foreground sm:text-5xl md:text-6xl">
+                  From a promising listing to a documented handoff.
                 </h1>
-                <p className="text-lg text-muted-foreground mb-8 max-w-xl leading-relaxed">
-                  Shop food trucks and trailers from sellers across the marketplace, ask questions,
-                  compare options, make an offer where available, explore financing, and arrange pickup
-                  or delivery — all from one place.
+                <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground">
+                  Review the equipment, agree on the deal, choose an available payment path, and keep pickup or delivery organized through the final condition decision.
                 </p>
-                <div className="flex flex-wrap gap-3">
+                <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                   <Button variant="cta" size="lg" className="rounded-full" asChild>
-                    <Link to="/browse">Browse food trucks & trailers</Link>
+                    <Link to="/search">
+                      Browse listings <ArrowRight className="ml-1.5 h-4 w-4" />
+                    </Link>
                   </Button>
                   <Button variant="cta-outline" size="lg" className="rounded-full" asChild>
-                    <Link to="/financing">Explore financing</Link>
+                    <Link to="/payments">See payment options</Link>
                   </Button>
                 </div>
               </motion.div>
-
               <motion.div
-                initial={reduce ? undefined : { opacity: 0, scale: 0.97 }}
-                animate={{ opacity: 1, scale: 1 }}
-                transition={{ duration: 0.6, delay: 0.1 }}
+                initial={reduce ? undefined : { opacity: 0, y: 18 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.55, delay: 0.08, ease }}
               >
-                <HeroJourneyVisual />
+                <HandoffPreview />
               </motion.div>
             </div>
           </div>
         </section>
 
-        {/* SIX-STAGE JOURNEY */}
-        <section className="py-12 md:py-16">
-          <div className="container max-w-3xl mx-auto px-4">
-            <motion.div {...(reduce ? {} : fadeUp)} className="text-center mb-10">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground mb-2">
-                Buying on Vendibook
+        <section className="bg-muted/40 py-16 md:py-24">
+          <div className="container mx-auto max-w-6xl px-4">
+            <motion.div {...(reduce ? {} : fadeUp)} className="max-w-3xl">
+              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-primary">Before the handoff</p>
+              <h2 className="mt-3 text-3xl font-bold text-foreground sm:text-4xl">Move from search to a confirmed order.</h2>
+              <p className="mt-4 text-base leading-relaxed text-muted-foreground">
+                Vendibook keeps the listing, conversation, agreement, payment record, and fulfillment choice connected.
               </p>
-              <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-                From first look to final handoff
-              </h2>
             </motion.div>
-
-            <ol className="relative space-y-4">
-              <div
-                className="absolute left-[27px] top-4 bottom-4 w-px bg-border hidden sm:block"
-                aria-hidden="true"
-              />
-              {JOURNEY.map((stage, i) => (
-                <motion.li
-                  key={stage.title}
-                  {...(reduce ? {} : fadeUp)}
-                  transition={{ duration: 0.4, delay: reduce ? 0 : i * 0.05 }}
-                  className="relative flex gap-4 sm:gap-5 rounded-2xl border border-border bg-card p-5 sm:p-6 hover:shadow-md transition-shadow"
-                >
-                  <div className="relative z-10 flex flex-col items-center">
-                    <span className="w-14 h-14 rounded-2xl bg-background border border-border flex items-center justify-center shadow-sm shrink-0">
-                      <stage.icon className="w-5 h-5 text-foreground/70" />
-                    </span>
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary mb-1">
-                      0{i + 1}
-                    </p>
-                    <h3 className="text-lg font-semibold text-foreground mb-1.5">{stage.title}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{linkifyFreight(stage.body)}</p>
-                    <div className="flex flex-wrap gap-1.5 mt-3">
-                      {stage.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="inline-flex items-center rounded-full bg-foreground/5 border border-border px-2.5 py-1 text-[10px] font-medium text-foreground/70"
-                        >
-                          {linkifyFreight(tag)}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                  {stage.art && (
-                    <img
-                      src={stage.art}
-                      alt={stage.artAlt ?? ''}
-                      loading="lazy"
-                      className="ml-auto hidden sm:block h-20 w-20 shrink-0 self-center rounded-2xl border border-border bg-background object-contain p-1.5 shadow-sm"
-                    />
-                  )}
-                </motion.li>
-              ))}
-            </ol>
-          </div>
-        </section>
-
-        {/* MONEY / TRUST */}
-        <section className="py-12 md:py-16 border-y border-border bg-card/40">
-          <div className="container max-w-3xl mx-auto px-4">
-            <motion.div {...(reduce ? {} : fadeUp)} className="text-center mb-10">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground mb-2">
-                Before you commit
-              </p>
-              <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-                Keep the purchase together
-              </h2>
-              <p className="text-base text-muted-foreground mt-3 max-w-xl mx-auto leading-relaxed">
-                Pay through PayPal online checkout or in person where the listing allows it, confirm the
-                handoff, and find the whole transaction in one record when you need it.
-              </p>
-              <img
-                src={documentsOkArt.url}
-                alt="Purchase documents and payment confirmation in one record"
-                loading="lazy"
-                className="mx-auto mt-8 h-32 w-auto rounded-3xl border border-border bg-card object-contain shadow-sm"
-              />
-            </motion.div>
-
-            <ul className="space-y-3">
-              {TRUST_POINTS.map((point, i) => (
-                <motion.li
-                  key={point.title}
-                  {...(reduce ? {} : fadeUp)}
-                  transition={{ duration: 0.4, delay: reduce ? 0 : i * 0.04 }}
-                  className="flex gap-4 rounded-2xl border border-border bg-background p-5"
-                >
-                  <span className="w-10 h-10 rounded-full bg-foreground/5 border border-border flex items-center justify-center shrink-0 text-foreground/70">
-                    <TrustIcon kind={point.icon} />
-                  </span>
-                  <div>
-                    <h3 className="text-base font-semibold text-foreground mb-1">{point.title}</h3>
-                    <p className="text-sm text-muted-foreground leading-relaxed">{point.body}</p>
-                  </div>
-                </motion.li>
-              ))}
-            </ul>
-          </div>
-        </section>
-
-        {/* FULFILLMENT COMPARISON */}
-        <section className="py-12 md:py-16">
-          <div className="container max-w-5xl mx-auto px-4">
-            <motion.div {...(reduce ? {} : fadeUp)} className="text-center mb-10">
-              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground mb-2">
-                Flexible delivery options
-              </p>
-              <h2 className="text-2xl md:text-3xl font-bold text-foreground">Shop beyond local</h2>
-              <p className="text-base text-muted-foreground mt-3 max-w-xl mx-auto leading-relaxed">
-                Financing through third-party partners, pickup, seller delivery, and <FreightLink className="mx-0.5" />
-                where available — so the right truck in another state is a real option, not just a saved
-                tab.
-              </p>
-              <img
-                src={movingArt.url}
-                alt="Food truck being transported across state lines"
-                loading="lazy"
-                className="mx-auto mt-8 h-36 w-auto rounded-3xl border border-border bg-card object-contain shadow-sm"
-              />
-            </motion.div>
-
-            <div className="grid md:grid-cols-3 gap-4 md:gap-5">
-              {FULFILLMENT.map((f, i) => (
+            <div className="mt-12 border-y border-border">
+              {PURCHASE_STEPS.map((step, index) => (
                 <motion.div
-                  key={f.title}
+                  key={step.title}
                   {...(reduce ? {} : fadeUp)}
-                  transition={{ duration: 0.4, delay: reduce ? 0 : i * 0.06 }}
-                  className="rounded-3xl border border-border bg-card p-6 flex flex-col hover:shadow-md transition-shadow"
+                  transition={{ ...fadeUp.transition, delay: reduce ? 0 : index * 0.05 }}
+                  className="grid gap-4 border-b border-border py-8 last:border-b-0 md:grid-cols-[72px,1fr,1.25fr] md:items-start md:gap-8"
                 >
-                  <span className="w-11 h-11 rounded-2xl bg-background border border-border flex items-center justify-center mb-4 shadow-sm">
-                    <f.icon className="w-5 h-5 text-foreground/70" />
-                  </span>
-                  <h3 className="text-lg font-semibold text-foreground">{linkifyFreight(f.title)}</h3>
-                  <p className="text-[11px] font-semibold uppercase tracking-[0.12em] text-primary mt-1 mb-2.5">
-                    {f.who}
-                  </p>
-                  <p className="text-sm text-muted-foreground leading-relaxed">{linkifyFreight(f.body)}</p>
-                  {f.freight && <FreightRouteAnimation />}
+                  <span className="text-3xl font-semibold text-primary">0{index + 1}</span>
+                  <div className="flex items-start gap-3">
+                    <step.icon className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden />
+                    <h3 className="text-xl font-semibold text-foreground">{step.title}</h3>
+                  </div>
+                  <div>
+                    <p className="text-sm leading-relaxed text-muted-foreground">{step.body}</p>
+                    <p className="mt-3 text-xs font-medium text-foreground">{step.detail}</p>
+                  </div>
                 </motion.div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* FINANCING */}
-        <section className="py-12 md:py-16 border-y border-border bg-card/40">
-          <div className="container max-w-4xl mx-auto px-4">
-            <motion.div
-              {...(reduce ? {} : fadeUp)}
-              className="rounded-3xl border border-border bg-background p-6 sm:p-8 md:p-10 flex flex-col md:flex-row md:items-center gap-6 md:gap-10"
-            >
-              <div className="flex-1">
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-foreground/5 border border-border text-xs font-medium text-foreground mb-4">
-                  Financing available on eligible equipment
-                </div>
-                <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
-                  Found the right truck? Explore financing.
-                </h2>
-                <p className="text-sm md:text-base text-muted-foreground leading-relaxed mb-5 max-w-xl">
-                  Financing can make a larger equipment purchase more manageable. Eligible listings may
-                  offer access to third-party financing partners through Vendibook. Approval, rates, and
-                  terms are determined by the financing provider.
+        <section className="border-y border-border bg-card py-16 md:py-24">
+          <div className="container mx-auto max-w-6xl px-4">
+            <div className="grid items-start gap-10 lg:grid-cols-[0.76fr,1.24fr] lg:gap-16">
+              <motion.div {...(reduce ? {} : fadeUp)} className="lg:sticky lg:top-28">
+                <p className="text-sm font-semibold uppercase tracking-[0.14em] text-primary">After purchase</p>
+                <h2 className="mt-3 text-3xl font-bold text-foreground sm:text-4xl">The new post-purchase handoff.</h2>
+                <p className="mt-4 text-base leading-relaxed text-muted-foreground">
+                  The handoff is more than a final checkbox. It creates a clear record of arrival, condition, exceptions, and completion.
                 </p>
-                <Button variant="cta-outline" className="rounded-full" asChild>
-                  <Link to="/financing">
-                    See financing options <ArrowRight className="w-4 h-4 ml-1.5" />
-                  </Link>
+                <img
+                  src={documentsOkArt.url}
+                  alt="Purchase documents and handoff evidence kept together"
+                  loading="lazy"
+                  className="mt-8 aspect-[4/3] w-full border border-border bg-muted/40 object-contain p-5 shadow-sm"
+                />
+              </motion.div>
+              <ol className="border-t border-border">
+                {HANDOFF_STEPS.map((step, index) => (
+                  <motion.li
+                    key={step.title}
+                    {...(reduce ? {} : fadeUp)}
+                    transition={{ ...fadeUp.transition, delay: reduce ? 0 : index * 0.05 }}
+                    className="grid gap-4 border-b border-border py-8 sm:grid-cols-[52px,1fr]"
+                  >
+                    <span className="grid h-11 w-11 place-items-center rounded-full border border-border bg-background text-primary">
+                      <step.icon className="h-5 w-5" />
+                    </span>
+                    <div>
+                      <p className="text-xs font-semibold uppercase tracking-[0.14em] text-primary">Handoff {index + 1}</p>
+                      <h3 className="mt-1 text-xl font-semibold text-foreground">{step.title}</h3>
+                      <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{step.body}</p>
+                      <p className="mt-3 flex items-start gap-2 text-xs font-medium leading-relaxed text-foreground">
+                        <ShieldCheck className="mt-0.5 h-3.5 w-3.5 shrink-0 text-primary" /> {step.detail}
+                      </p>
+                    </div>
+                  </motion.li>
+                ))}
+              </ol>
+            </div>
+          </div>
+        </section>
+
+        <section className="py-16 md:py-24">
+          <div className="container mx-auto max-w-6xl px-4">
+            <motion.div {...(reduce ? {} : fadeUp)} className="max-w-3xl">
+              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-primary">Pickup or delivery</p>
+              <h2 className="mt-3 text-3xl font-bold text-foreground sm:text-4xl">One handoff record, adapted to the journey.</h2>
+              <p className="mt-4 text-base leading-relaxed text-muted-foreground">The exact steps reflect how the equipment reaches you.</p>
+            </motion.div>
+            <div className="mt-10 grid gap-px overflow-hidden border border-border bg-border md:grid-cols-3">
+              {FULFILLMENT.map((option, index) => (
+                <motion.div
+                  key={option.title}
+                  {...(reduce ? {} : fadeUp)}
+                  transition={{ ...fadeUp.transition, delay: reduce ? 0 : index * 0.05 }}
+                  className="bg-card p-7 sm:p-8"
+                >
+                  <option.icon className="h-6 w-6 text-primary" aria-hidden />
+                  <p className="mt-6 text-xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{option.eyebrow}</p>
+                  <h3 className="mt-2 text-xl font-semibold text-foreground">{option.title}</h3>
+                  <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{option.body}</p>
+                </motion.div>
+              ))}
+            </div>
+            <motion.div {...(reduce ? {} : fadeUp)} className="mt-10 grid items-center gap-8 border-y border-border py-10 md:grid-cols-[0.72fr,1.28fr]">
+              <img
+                src={deliveryMapArt.url}
+                alt="Pickup and delivery coordination map"
+                loading="lazy"
+                className="mx-auto max-h-56 w-full object-contain"
+              />
+              <div>
+                <p className="text-sm font-semibold uppercase tracking-[0.14em] text-primary">Long-distance purchase</p>
+                <h3 className="mt-2 text-2xl font-bold text-foreground">Shopping another city or state?</h3>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                  Ask for a live walkthrough and independent inspection before purchase. When freight is available, transport is quoted separately and the delivery record leads into the same condition handoff.
+                </p>
+                <Button variant="cta-outline" className="mt-6 rounded-full" asChild>
+                  <Link to="/vendibook-freight">Explore Vendibook Freight <ArrowRight className="ml-1.5 h-4 w-4" /></Link>
                 </Button>
               </div>
-              <div className="shrink-0 flex items-center justify-center rounded-2xl border border-border bg-card px-8 py-6">
-                <EquinoxFundingLogo className="h-8 w-auto" />
-              </div>
             </motion.div>
           </div>
         </section>
 
-        {/* RELATED RESOURCES */}
-        <section className="py-12 md:py-16">
-          <div className="container max-w-5xl mx-auto px-4">
-            <motion.div {...(reduce ? {} : fadeUp)} className="text-center mb-10">
-              <h2 className="text-2xl md:text-3xl font-bold text-foreground">Helpful before you buy</h2>
-              <p className="text-base text-muted-foreground mt-3 max-w-xl mx-auto">
-                Learn more about delivery, financing, and what to do if something doesn’t go as planned.
-              </p>
-            </motion.div>
+        <section className="border-y border-border bg-muted/40 py-16 md:py-24">
+          <div className="container mx-auto max-w-6xl px-4">
+            <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
+              <motion.div {...(reduce ? {} : fadeUp)}>
+                <PayPalMonogram className="h-7" />
+                <h2 className="mt-5 text-3xl font-bold text-foreground">Online payment and seller payout are separate steps.</h2>
+                <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+                  PayPal processes eligible online payments. Vendibook keeps the purchase and handoff record organized, then manually reviews and records the seller payout after the required confirmation steps.
+                </p>
+              </motion.div>
+              <motion.div {...(reduce ? {} : fadeUp)} className="border-l border-border pl-6 sm:pl-8">
+                <Banknote className="h-6 w-6 text-primary" />
+                <h3 className="mt-5 text-xl font-semibold text-foreground">What happens after completion</h3>
+                <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                  Payouts are typically released within 24 hours of delivery confirmation, and Vendibook strives for 24–48 hours. A transaction that needs review can take longer. Payment is sent through the payout method on file, which may be PayPal, ACH, or Venmo.
+                </p>
+              </motion.div>
+            </div>
+          </div>
+        </section>
 
-            <div className="grid sm:grid-cols-2 gap-4 md:gap-5">
-              {RESOURCES.map((r, i) => (
-                <motion.div
-                  key={r.title}
-                  {...(reduce ? {} : fadeUp)}
-                  transition={{ duration: 0.4, delay: reduce ? 0 : i * 0.05 }}
-                >
-                  <Link
-                    to={r.to}
-                    className="group flex gap-4 rounded-3xl border border-border bg-card p-6 h-full hover:shadow-md hover:border-foreground/25 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                  >
-                    <span className="w-11 h-11 rounded-2xl bg-background border border-border flex items-center justify-center shrink-0 shadow-sm">
-                      <r.icon className="w-5 h-5 text-foreground/70" />
-                    </span>
-                    <span>
-                      <span className="block text-base font-semibold text-foreground mb-1">
-                        {r.title}
-                      </span>
-                      <span className="block text-sm text-muted-foreground leading-relaxed mb-2.5">
-                        {r.body}
-                      </span>
-                      <span className="inline-flex items-center text-sm font-medium text-primary">
-                        {r.cta}
-                        <ArrowRight className="w-3.5 h-3.5 ml-1 transition-transform group-hover:translate-x-0.5" />
-                      </span>
-                    </span>
-                  </Link>
+        <section className="py-16 md:py-24">
+          <div className="container mx-auto max-w-4xl px-4">
+            <motion.div {...(reduce ? {} : fadeUp)} className="max-w-2xl">
+              <p className="text-sm font-semibold uppercase tracking-[0.14em] text-primary">Questions</p>
+              <h2 className="mt-3 text-3xl font-bold text-foreground sm:text-4xl">Know what to expect.</h2>
+            </motion.div>
+            <div className="mt-10 border-t border-border">
+              {FAQS.map((faq) => (
+                <motion.div key={faq.q} {...(reduce ? {} : fadeUp)} className="grid gap-3 border-b border-border py-7 md:grid-cols-[0.8fr,1.2fr] md:gap-10">
+                  <h3 className="font-semibold text-foreground">{faq.q}</h3>
+                  <p className="text-sm leading-relaxed text-muted-foreground">{faq.a}</p>
                 </motion.div>
               ))}
             </div>
           </div>
         </section>
 
-        {/* FINAL CTA */}
-        <section className="pb-16 md:pb-20">
-          <div className="container max-w-3xl mx-auto px-4 text-center">
+        <section className="border-t border-border pb-20 pt-16 md:pb-24">
+          <div className="container mx-auto max-w-4xl px-4 text-center">
             <motion.div {...(reduce ? {} : fadeUp)}>
-              <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-3">
-                Ready to start looking?
-              </h2>
-              <p className="text-base text-muted-foreground mb-7">
-                Browse food trucks and trailers for sale from sellers across the marketplace.
+              <h2 className="text-3xl font-bold text-foreground sm:text-4xl">Ready to find your next truck or trailer?</h2>
+              <p className="mx-auto mt-4 max-w-xl text-base leading-relaxed text-muted-foreground">
+                Browse the marketplace, compare the details, and keep the purchase organized through handoff.
               </p>
-              <Button variant="cta" size="lg" className="rounded-full" asChild>
-                <Link to="/browse">
-                  Browse food trucks & trailers <ArrowRight className="w-4 h-4 ml-1.5" />
-                </Link>
+              <Button variant="cta" size="lg" className="mt-8 rounded-full" asChild>
+                <Link to="/search">Browse listings <ArrowRight className="ml-1.5 h-4 w-4" /></Link>
               </Button>
-              <p className="text-xs text-muted-foreground mt-6 inline-flex items-center gap-1.5">
-                <LifeBuoy className="w-3.5 h-3.5" />
-                Have questions before you buy? See{' '}
-                <Link to="/payments" className="underline underline-offset-2 hover:text-foreground">
-                  how payments work
-                </Link>{' '}
-                or visit the{' '}
-                <Link to="/help" className="underline underline-offset-2 hover:text-foreground">
-                  Help Center
-                </Link>
-                .
+              <p className="mt-6 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+                <LifeBuoy className="h-3.5 w-3.5" /> Need help? Visit the{' '}
+                <Link to="/help" className="font-medium text-foreground underline underline-offset-4">Help Center</Link>.
               </p>
             </motion.div>
           </div>
