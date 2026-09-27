@@ -618,3 +618,46 @@ export const HOW_TO_BUY_FAQS: { question: string; answer: string }[] = [
     "answer": "Some buyers finance through third-party lenders. Approval, rates, and terms depend on the lender and your application; Vendibook does not guarantee approval or terms."
   }
 ];
+
+/** Must equal USED_CONDITION_VALUES in src/lib/listings/condition.ts (parity-tested). */
+export const USED_CONDITIONS = ['like_new', 'good', 'fair', 'needs_work'];
+
+export const PRICES_PATH = '/food-truck-prices';
+export const pricesTitle = (year: number) => `Food Truck Prices & Cost Calculator (${year}) | Vendibook`;
+export const pricesDescription = (year: number) =>
+  `See what food trucks and trailers cost in ${year} using real Vendibook marketplace data. Compare prices, explore cost factors, and estimate your truck with PricePilot.`;
+export const pricesH1 = (year: number) => `Food Truck Prices: How Much Does a Food Truck Cost in ${year}?`;
+export const PRICES_INTRO =
+  'Explore real food truck and trailer listing prices from the Vendibook marketplace, compare equipment types, and estimate the cost of your next mobile food business.';
+export const PRICES_COST_HEADING = 'How much does it cost to buy a food truck?';
+export const PRICES_FALLBACK_ANSWER =
+  'Asking prices vary widely with age, mileage, size, and installed equipment. Live marketplace figures appear on this page when enough listings are available.';
+export const PRICES_SCOPE_NOTE =
+  'These figures are asking prices from current Vendibook listings, not completed sale prices. Vendibook does not publish sold-price data here, and final negotiated prices may differ.';
+export const PRICES_COST_COMPONENTS = [
+  'Purchase price (negotiated from the asking price)',
+  'Sales tax, title, and registration in your state',
+  'Mechanical and kitchen inspection',
+  'Travel to pick up, or freight transport',
+  'Health, fire, and business permits in your area',
+  'Commissary fees, where required',
+  'Commercial auto and liability insurance',
+  'Repairs, equipment changes, and wrap or branding',
+  'Financing costs, if you borrow',
+];
+
+/** The 5 buyer SEO paths served by seo-prerender for crawlers. */
+export const BUYER_SEO_PRERENDER_PATHS = [
+  '/food-trucks-for-sale',
+  '/food-trailers-for-sale',
+  '/used-food-trucks-for-sale',
+  HOW_TO_BUY_PATH,
+  PRICES_PATH,
+];
+
+/** Inventory filter for each hub (mirrors CategoryIndex config). */
+export const BUYER_HUB_INVENTORY: Record<string, { category: string; conditions?: string[] }> = {
+  '/food-trucks-for-sale': { category: 'food_truck' },
+  '/food-trailers-for-sale': { category: 'food_trailer' },
+  '/used-food-trucks-for-sale': { category: 'food_truck', conditions: USED_CONDITIONS },
+};
