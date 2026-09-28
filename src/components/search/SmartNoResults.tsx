@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, Banknote, Truck, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { trackLeadEvent } from '@/lib/leadTracking';
 import { supabase } from '@/integrations/supabase/client';
 import ListingCard from '@/components/listing/ListingCard';
 import { EmptyStateEmailCapture } from './EmptyStateEmailCapture';
@@ -24,6 +26,27 @@ interface Suggestion {
  * and shows the first batch that returns results. Falls back to the
  * existing email capture form if nothing matches.
  */
+const BuyerHelpCards = () => (
+  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <Link to="/financing" className="group flex items-start gap-3 rounded-2xl border border-border bg-card p-4 hover:border-primary/50 transition-colors">
+      <Banknote className="h-5 w-5 text-primary shrink-0 mt-0.5" aria-hidden="true" />
+      <div className="text-left">
+        <p className="font-semibold text-foreground text-sm">Explore financing options</p>
+        <p className="text-xs text-muted-foreground mt-0.5">See if you qualify to spread the cost of a truck or trailer. Terms depend on approval.</p>
+        <span className="inline-flex items-center gap-1 text-xs font-medium text-primary mt-2">Check financing <ArrowRight className="h-3 w-3" /></span>
+      </div>
+    </Link>
+    <Link to="/vendibook-freight" className="group flex items-start gap-3 rounded-2xl border border-border bg-card p-4 hover:border-primary/50 transition-colors">
+      <Truck className="h-5 w-5 text-primary shrink-0 mt-0.5" aria-hidden="true" />
+      <div className="text-left">
+        <p className="font-semibold text-foreground text-sm">Nothing nearby? We can ship it</p>
+        <p className="text-xs text-muted-foreground mt-0.5">Vendibook Freight delivers trucks and trailers nationwide, so you can buy from any state.</p>
+        <span className="inline-flex items-center gap-1 text-xs font-medium text-primary mt-2">How freight works <ArrowRight className="h-3 w-3" /></span>
+      </div>
+    </Link>
+  </div>
+);
+
 export const SmartNoResults = ({
   searchParams,
   onClearFilters,
@@ -40,32 +63,33 @@ export const SmartNoResults = ({
     setSuggestion(null);
 
     const run = async () => {
-      // Try variations in order of specificity preserved
+      // Try progressively wider variations. The final step has no filters,
+      // so shoppers always see real listings instead of a dead end.
       const baseRadius = (searchParams.radius_miles as number) || 25;
+      const hasQuery = typeof searchParams.query === 'string' && (searchParams.query as string).trim() !== '';
       const variations: Array<{ params: Record<string, unknown>; reason: string }> = [];
-
-      // 1. Widen radius if location-based and not already at max
       if (searchParams.lat && baseRadius < 100) {
-        variations.push({
-          params: { ...searchParams, radius_miles: 100, page: 1 },
-          reason: `Expanded to within 100 miles`});
+        variations.push({ params: { ...searchParams, radius_miles: 100, page: 1 }, reason: 'Expanded to within 100 miles' });
       }
-      // 2. Drop category but keep location
+      if (hasQuery) {
+        variations.push({
+          params: { ...searchParams, query: undefined, radius_miles: Math.max(baseRadius, 100), page: 1 },
+          reason: 'Similar listings in your area'});
+      }
       if (category) {
         variations.push({
-          params: { ...searchParams, category: undefined, radius_miles: Math.max(baseRadius, 50), page: 1 },
-          reason: `Other categories near you`});
+          params: { ...searchParams, query: undefined, category: undefined, radius_miles: Math.max(baseRadius, 100), page: 1 },
+          reason: 'Other categories near you'});
       }
-      // 3. Drop mode (rent vs sale)
       if (mode) {
         variations.push({
-          params: { ...searchParams, mode: undefined, page: 1 },
+          params: { ...searchParams, query: undefined, mode: undefined, page: 1 },
           reason: mode === 'rent' ? 'Available for sale instead' : 'Available for rent instead'});
       }
-      // 4. Drop everything except mode/category — show top fresh listings
-      variations.push({
-        params: { mode, category, page: 1, radius_miles: 250 },
-        reason: 'Popular listings you might like'});
+      if (mode || category) {
+        variations.push({ params: { mode, category, page: 1 }, reason: 'Available nationwide — Vendibook Freight can deliver' });
+      }
+      variations.push({ params: { page: 1 }, reason: 'Popular listings on Vendibook' });
 
       for (const v of variations) {
         if (cancelled) return;
@@ -76,7 +100,8 @@ export const SmartNoResults = ({
           const listings = (data as any)?.listings ?? [];
           if (listings.length > 0) {
             if (!cancelled) {
-              setSuggestion({ listings: listings.slice(0, 3), reason: v.reason });
+              setSuggestion({ listings: listings.slice(0, 6), reason: v.reason });
+              trackLeadEvent('search_performed', { source: 'zero_results_fallback', reason: v.reason, result_count: listings.length } as any);
               setLoading(false);
             }
             return;
@@ -107,6 +132,8 @@ export const SmartNoResults = ({
 
   if (!suggestion) {
     return (
+      <div className="py-8 space-y-6">
+        <BuyerHelpCards />
       <EmptyStateEmailCapture
         onClearFilters={onClearFilters}
         category={category}
@@ -114,6 +141,7 @@ export const SmartNoResults = ({
         locationText={locationText}
         activeFiltersCount={activeFiltersCount}
       />
+      </div>
     );
   }
 
@@ -141,6 +169,7 @@ export const SmartNoResults = ({
           />
         ))}
       </div>
+      <BuyerHelpCards />
       <div className="pt-4 border-t border-border">
         <EmptyStateEmailCapture
           onClearFilters={onClearFilters}
