@@ -2966,6 +2966,8 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
   background: hsl(240 6% 10% / .88); padding: 4px 10px;
   color: hsl(40 30% 97%); font-size: 11px; font-weight: 650; font-style: normal; letter-spacing: .01em;
 }
+/* Inline variant: sits in the badge flex row on cards instead of pinning to the corner (unlayered so it beats .v2-home-chip). */
+.v2-home-chip.is-inline { position: static; }
 .v2-home-chip.is-mode { left: auto; right: 10px; background: hsl(40 40% 99% / .94); color: hsl(var(--v2h-ink)); }
 .v2-home-card-body { display: flex; flex: 1; flex-direction: column; gap: 7px; padding: 15px 16px 17px; }
 .v2-home-card-body strong { min-height: 2.7em; color: hsl(var(--v2h-ink)); font-size: 16px; font-weight: 680; line-height: 1.35; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
