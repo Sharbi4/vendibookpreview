@@ -61,7 +61,7 @@ export default function V2ListingCard({
           <span className="absolute left-3 top-3 z-10 flex max-w-[calc(100%-6rem)] flex-wrap items-center gap-1.5">
             {featured ? <FeaturedBadge listing={listing} variant="card" compact /> : null}
             {hasSellerCoveredFreight ? (
-              <span className="v2-home-chip static inline-flex items-center gap-1">
+              <span className="v2-home-chip is-inline inline-flex items-center gap-1">
                 <Truck className="h-3 w-3" aria-hidden="true" />
                 Free shipping
               </span>
