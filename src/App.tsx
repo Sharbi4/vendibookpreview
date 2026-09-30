@@ -667,6 +667,12 @@ const AnimatedRoutes = () => {
             />
           ))}
 
+          {/* Fallbacks for old/unknown location links: send to the closest real page instead of a 404 */}
+          <Route path="/food-trailers-for-sale/:slug" element={<Navigate to="/food-trailers-for-sale" replace />} />
+          <Route path="/food-trucks-for-sale/:slug" element={<Navigate to="/food-trucks-for-sale" replace />} />
+          <Route path="/:citySlug/list" element={<Navigate to="/list" replace />} />
+          <Route path="/dashboard/home" element={<Navigate to="/dashboard" replace />} />
+
           {/* Cities hub page */}
           <Route path="/cities" element={<PageTransition><Cities /></PageTransition>} />
           
