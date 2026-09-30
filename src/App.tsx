@@ -215,6 +215,7 @@ const ListingPublished = lazy(() => import("./pages/ListingPublished"));
 const ListingImprove = lazy(() => import("./pages/ListingImprove"));
 const Cities = lazy(() => import("./pages/Cities"));
 const SaleCheckout = lazy(() => import("./pages/SaleCheckout"));
+const MetaCheckout = lazy(() => import("./pages/MetaCheckout"));
 const BookingCheckout = lazy(() => import("./pages/BookingCheckout"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const OAuthConsent = lazy(() => import("./pages/OAuthConsent"));
@@ -551,6 +552,7 @@ const AnimatedRoutes = () => {
           <Route path="/listing-published" element={<PageTransition><ListingPublished /></PageTransition>} />
           <Route path="/listing-published/:listingId" element={<PageTransition><ListingPublished /></PageTransition>} />
           <Route path="/listings/:listingId/improve" element={<PageTransition><ListingImprove /></PageTransition>} />
+          <Route path="/meta-checkout" element={<PageTransition><MetaCheckout /></PageTransition>} />
           <Route path="/checkout/:listingId" element={<PageTransition><SaleCheckout /></PageTransition>} />
           <Route path="/book/:listingId" element={<PageTransition><BookingCheckout /></PageTransition>} />
 
