@@ -970,7 +970,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/a2a2f761-da8c-4f59-ad5c-6a8b54f67083</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-09-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -1046,17 +1046,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/c8d152a4-dbc2-4239-8e0a-56cecac50266</loc>
-    <lastmod>2026-09-30</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/b420d8c8-f0f5-4f20-8250-64d70c9993df/c8d152a4-dbc2-4239-8e0a-56cecac50266/1786451155485-v4zvfc.jpeg</image:loc>
-      <image:title>2026 Fully loaded Food trailer READY </image:title>
-      <image:caption>2026 Fully loaded Food trailer READY  in Lilburn, GA on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/ce6ce158-6307-4a6f-9c6f-46f1f720be2b</loc>
     <lastmod>2026-09-30</lastmod>
     <changefreq>weekly</changefreq>
@@ -1065,6 +1054,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/dadee20b-7da1-4b3b-b1a1-0405e8448039/ce6ce158-6307-4a6f-9c6f-46f1f720be2b/1789939727497-3c7hgd.jpeg</image:loc>
       <image:title>Brand New Coffee Food Trailer</image:title>
       <image:caption>Brand New Coffee Food Trailer in Glendale, CA on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/c8d152a4-dbc2-4239-8e0a-56cecac50266</loc>
+    <lastmod>2026-09-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/b420d8c8-f0f5-4f20-8250-64d70c9993df/c8d152a4-dbc2-4239-8e0a-56cecac50266/1786451155485-v4zvfc.jpeg</image:loc>
+      <image:title>2026 Fully loaded Food trailer READY </image:title>
+      <image:caption>2026 Fully loaded Food trailer READY  in Lilburn, GA on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -1109,17 +1109,6 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/481e4bf0-531b-4343-bd3b-c4c78795f147/f1a879a6-6c16-4c17-b902-a2c84b1036ff/1786409044323-ilg5fa.jpg</image:loc>
       <image:title>Mobile Ice Cream Trailer For Sale - See Profits Fast</image:title>
       <image:caption>Mobile Ice Cream Trailer For Sale - See Profits Fast in Everett, WA on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://vendibook.com/listing/0bb809bc-965e-4598-8260-636db1563db7</loc>
-    <lastmod>2026-09-30</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/b6d57fef-2a28-491e-9c30-928fdd7c2e84/0bb809bc-965e-4598-8260-636db1563db7/1789420072070-ugk3o.png</image:loc>
-      <image:title>2024 8x16 Turnkey Food Trailer – CA HCD Insignia – Health Permitted </image:title>
-      <image:caption>2024 8x16 Turnkey Food Trailer – CA HCD Insignia – Health Permitted  in Los Angeles, CA on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -1409,8 +1398,19 @@
     </image:image>
   </url>
   <url>
+    <loc>https://vendibook.com/listing/99578bd4-d236-4371-b8f6-563a5d10d7a5</loc>
+    <lastmod>2026-09-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/6d671fdc-75f4-411e-ae85-de3e55a34d44/99578bd4-d236-4371-b8f6-563a5d10d7a5/1790799642367-s1om3h.jpg</image:loc>
+      <image:title>Fully loaded Food truck</image:title>
+      <image:caption>Fully loaded Food truck in Brighton, NY on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
     <loc>https://vendibook.com/listing/be33206d-3b79-476f-b9fa-58421ad17bd1</loc>
-    <lastmod>2026-09-29</lastmod>
+    <lastmod>2026-09-30</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -1472,6 +1472,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/41ca9d55-fd61-4f35-bf1f-f06b7cc29883/38bea00a-bf1b-42fa-a235-25332aa654ca/1787727943517-tuiyvp.jpg</image:loc>
       <image:title>Austin Vegan Food Truck and Trailer</image:title>
       <image:caption>Austin Vegan Food Truck and Trailer in Austin, TX on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/0bb809bc-965e-4598-8260-636db1563db7</loc>
+    <lastmod>2026-09-30</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/b6d57fef-2a28-491e-9c30-928fdd7c2e84/0bb809bc-965e-4598-8260-636db1563db7/1789420072070-ugk3o.png</image:loc>
+      <image:title>2024 8x16 Turnkey Food Trailer – CA HCD Insignia – Health Permitted </image:title>
+      <image:caption>2024 8x16 Turnkey Food Trailer – CA HCD Insignia – Health Permitted  in Los Angeles, CA on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
