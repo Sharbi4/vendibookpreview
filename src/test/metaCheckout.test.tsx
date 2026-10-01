@@ -1,4 +1,4 @@
-import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes, useNavigate } from 'react-router-dom';
 import MetaCheckout from '@/pages/MetaCheckout';
@@ -61,6 +61,8 @@ describe('Meta checkout handoff', () => {
   it.each([['sale', 'Sale checkout destination'], ['rent', 'Booking destination']])('routes one %s listing', async (mode, destination) => {
     lookup.mockResolvedValue({ data: [item(a, mode)], error: null });
     mount(`${a}:1`, '&coupon=TEST');
+    expect(await screen.findByRole('heading', { name: 'Your cart' })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole('link', { name: /Continue to/ }));
     expect(await screen.findByText(destination)).toBeInTheDocument();
     expect(eq).toHaveBeenCalledWith('status', 'published');
     expect(eq).toHaveBeenCalledWith('moderation_status', 'clear');
@@ -70,25 +72,35 @@ describe('Meta checkout handoff', () => {
   it('shows multiple listings in requested order with separate destinations', async () => {
     lookup.mockResolvedValue({ data: [item(b, 'rent', 'Kitchen'), item()], error: null });
     mount(`${a}:1,${b}:1`);
+    fireEvent.click(await screen.findByRole('button', { name: 'Continue to checkout' }));
     const links = await screen.findAllByRole('link');
     expect(links.map((link) => link.getAttribute('href'))).toEqual([`/checkout/${a}`, `/book/${b}`]);
     expect(screen.getAllByRole('img').map((image) => image.getAttribute('alt'))).toEqual(['Food truck', 'Kitchen']);
   });
-  it('explains excess quantity before continuing with one asset', async () => {
+  it('shows requested quantity and total but requires an explicit correction before checkout', async () => {
     lookup.mockResolvedValue({ data: [item()], error: null });
     mount(`${a}:3`);
-    expect(await screen.findByText(/You requested 3/)).toBeInTheDocument();
-    expect(screen.getByRole('link', { name: 'Checkout' })).toHaveAttribute('href', `/checkout/${a}`);
+    expect(await screen.findByText('Quantity: 3')).toBeInTheDocument();
+    expect(screen.getByText('Line total: $36,000.00')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Continue to checkout' })).toBeDisabled();
+    fireEvent.click(screen.getByRole('button', { name: 'Use quantity 1' }));
+    expect(await screen.findByText('Quantity: 1')).toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'Continue to checkout' })).toHaveAttribute('href', `/checkout/${a}`);
+    expect(screen.getByText('Line total: $12,000.00')).toBeInTheDocument();
   });
   it('reports unavailable items in a partially available selection', async () => {
     lookup.mockResolvedValue({ data: [item()], error: null });
     mount(`${a}:1,${b}:1`);
     expect(await screen.findByRole('status')).toHaveTextContent('Some selected items are no longer available');
+    expect(within(screen.getByRole('list', { name: 'Cart items' })).getAllByRole('listitem')).toHaveLength(2);
+    expect(within(screen.getByRole('region', { name: 'Order summary' })).getByText('Unavailable')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Continue to checkout' })).toBeDisabled();
   });
   it('excludes test listings', async () => {
     lookup.mockResolvedValue({ data: [item(a, 'sale', 'QA test truck')], error: null });
     mount(`${a}:1`);
-    expect(await screen.findByRole('link', { name: 'Browse listings' })).toBeInTheDocument();
+    expect(await screen.findByText('Unavailable item')).toBeInTheDocument();
+    expect(screen.queryByText('QA test truck')).not.toBeInTheDocument();
   });
   it('does not query for invalid input', () => {
     mount('%ZZ');
@@ -101,6 +113,7 @@ describe('Meta checkout handoff', () => {
     lookup.mockResolvedValueOnce({ data: [item()], error: null });
     mount(`${a}:1`);
     fireEvent.click(await screen.findByRole('button', { name: 'Try again' }));
+    fireEvent.click(await screen.findByRole('link', { name: 'Continue to checkout' }));
     expect(await screen.findByText('Sale checkout destination')).toBeInTheDocument();
   });
   it('clears stale selections and ignores a late response after URL changes', async () => {
@@ -112,5 +125,33 @@ describe('Meta checkout handoff', () => {
     await act(async () => resolve({ data: [item()], error: null }));
     expect(screen.getByText('This item is no longer available')).toBeInTheDocument();
     expect(screen.queryByText('Sale checkout destination')).not.toBeInTheDocument();
+  });
+  it('matches the supplied Meta URL summary and ignores blank coupon and tracking', async () => {
+    lookup.mockResolvedValue({ data: [{ ...item(a), price_sale: 59999 }, { ...item(b, 'sale', 'Tap Trailer'), price_sale: 11000 }], error: null });
+    mount(`${a}:1,${b}:1`, '&coupon&cart_origin=meta_shops&fbclid=tracking-only');
+    expect(await screen.findByText('Line total: $59,999.00')).toBeInTheDocument();
+    expect(screen.getByText('Line total: $11,000.00')).toBeInTheDocument();
+    expect(screen.getAllByText('Quantity: 1')).toHaveLength(2);
+    expect(within(screen.getByRole('region', { name: 'Order summary' })).getByText('$70,999.00')).toBeInTheDocument();
+    expect(screen.queryByText(/Coupon not applied/)).not.toBeInTheDocument();
+  });
+  it('uses cent arithmetic and never applies an unsupported offer', async () => {
+    lookup.mockResolvedValue({ data: [{ ...item(a), price_sale: 0.1 }, { ...item(b), price_sale: 0.2 }], error: null });
+    mount(`${a}:1,${b}:1`, '&coupon=SAVE50');
+    expect(await screen.findByText('Coupon not applied. Listing purchases and rentals do not support coupon codes.')).toBeInTheDocument();
+    expect(within(screen.getByRole('region', { name: 'Order summary' })).getByText('$0.30')).toBeInTheDocument();
+  });
+  it('uses the feed rental price precedence and labels the billing period', async () => {
+    lookup.mockResolvedValue({ data: [{ ...item(a, 'rent'), price_daily: 0, price_weekly: 500 }], error: null });
+    mount(`${a}:1`);
+    expect(await screen.findByText('Unit price: $500.00/week')).toBeInTheDocument();
+    expect(screen.getByText(/Rental lines use one listed billing period/)).toBeInTheDocument();
+  });
+  it('does not invent a subtotal for missing prices', async () => {
+    lookup.mockResolvedValue({ data: [{ ...item(), price_sale: null }], error: null });
+    mount(`${a}:1`);
+    expect(await screen.findByText('Price unavailable')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Continue to checkout' })).toBeDisabled();
+    expect(within(screen.getByRole('region', { name: 'Order summary' })).getByText('Unavailable')).toBeInTheDocument();
   });
 });
