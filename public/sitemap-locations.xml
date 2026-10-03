@@ -101,7 +101,6 @@
   <url><loc>https://vendibook.com/scottsdale</loc><lastmod>2026-10-03</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/seattle</loc><lastmod>2026-10-03</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/seguin</loc><lastmod>2026-10-03</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://vendibook.com/sioux-falls</loc><lastmod>2026-10-03</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/sparta</loc><lastmod>2026-10-03</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/stoughton</loc><lastmod>2026-10-03</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/terre-haute</loc><lastmod>2026-10-03</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
@@ -254,8 +253,6 @@
   <url><loc>https://vendibook.com/buy/food-trailer/scottsdale-az</loc><lastmod>2026-10-03</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-trailer/seguin-tx</loc><lastmod>2026-10-03</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/buy/food-trailer/seguin-tx</loc><lastmod>2026-10-03</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
-  <url><loc>https://vendibook.com/rent/food-trailer/sioux-falls-sd</loc><lastmod>2026-10-03</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
-  <url><loc>https://vendibook.com/buy/food-trailer/sioux-falls-sd</loc><lastmod>2026-10-03</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-trailer/sparta-tn</loc><lastmod>2026-10-03</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/buy/food-trailer/sparta-tn</loc><lastmod>2026-10-03</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-trailer/stoughton-ma</loc><lastmod>2026-10-03</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
@@ -290,6 +287,8 @@
   <url><loc>https://vendibook.com/buy/food-truck/centennial-co</loc><lastmod>2026-10-03</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-truck/chambersburg-pa</loc><lastmod>2026-10-03</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/buy/food-truck/chambersburg-pa</loc><lastmod>2026-10-03</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://vendibook.com/rent/food-truck/charlotte-nc</loc><lastmod>2026-10-03</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://vendibook.com/buy/food-truck/charlotte-nc</loc><lastmod>2026-10-03</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-truck/chicago-il</loc><lastmod>2026-10-03</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/buy/food-truck/chicago-il</loc><lastmod>2026-10-03</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-truck/cottonwood-heights-ut</loc><lastmod>2026-10-03</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
@@ -340,8 +339,6 @@
   <url><loc>https://vendibook.com/buy/food-truck/san-francisco-ca</loc><lastmod>2026-10-03</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-truck/seattle-wa</loc><lastmod>2026-10-03</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/buy/food-truck/seattle-wa</loc><lastmod>2026-10-03</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
-  <url><loc>https://vendibook.com/rent/food-truck/sioux-falls-sd</loc><lastmod>2026-10-03</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
-  <url><loc>https://vendibook.com/buy/food-truck/sioux-falls-sd</loc><lastmod>2026-10-03</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-truck/us-highway-19-n-palm-harbor-fl</loc><lastmod>2026-10-03</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/buy/food-truck/us-highway-19-n-palm-harbor-fl</loc><lastmod>2026-10-03</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-truck/vail-az</loc><lastmod>2026-10-03</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
