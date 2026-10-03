@@ -7,42 +7,67 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-interface AddressRequestEmail {
-  to: string;
-  firstName: string;
-  listingTitle: string;
-  listingId?: string;
-  category?: string;
-}
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), {
+    status,
+    headers: { ...corsHeaders, "Content-Type": "application/json" },
+  });
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Admin-only: emails a listing's own host about free QR signage.
+ * The recipient, name and listing title are always loaded server-side from
+ * the listing — callers can never choose who receives the email or its text.
+ */
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
-    const data: AddressRequestEmail = await req.json();
-    if (!data.to) {
-      return new Response(JSON.stringify({ error: "Recipient required" }), {
-        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
-      });
-    }
+    const authHeader = req.headers.get("Authorization") ?? "";
+    const token = authHeader.replace(/^Bearer\s+/i, "");
+    if (!token) return json({ error: "Unauthorized" }, 401);
+
     const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const { data: userData, error: userError } = await admin.auth.getUser(token);
+    if (userError || !userData.user) return json({ error: "Unauthorized" }, 401);
+
+    const { data: isAdmin } = await admin.rpc("has_role", { _user_id: userData.user.id, _role: "admin" });
+    if (!isAdmin) return json({ error: "Forbidden" }, 403);
+
+    const body = await req.json().catch(() => ({}));
+    const listingId = typeof body?.listingId === "string" ? body.listingId : "";
+    if (!UUID.test(listingId)) return json({ error: "Valid listingId required" }, 400);
+
+    const { data: listing } = await admin
+      .from("listings")
+      .select("id, title, host_id")
+      .eq("id", listingId)
+      .is("deleted_at", null)
+      .maybeSingle();
+    if (!listing?.host_id) return json({ error: "Listing not found" }, 404);
+
+    const { data: host } = await admin
+      .from("profiles")
+      .select("email, first_name")
+      .eq("id", listing.host_id)
+      .maybeSingle();
+    if (!host?.email) return json({ error: "Host email unavailable" }, 404);
+
+    const firstName = host.first_name || "there";
     const { error } = await invokeTransactionalEmail({
-        templateName: "support-reply",
-        recipientEmail: data.to,
-        idempotencyKey: `signage-addr-${data.listingId || data.to}-${Date.now()}`,
-        templateData: {
-          name: data.firstName,
-          subject: `Free QR signage for ${data.listingTitle}`,
-          message: `Hi ${data.firstName}, we'd love to ship you free QR signage for "${data.listingTitle}". Reply with your shipping address and we'll get it on the way.`,
-        },
-      });
+      templateName: "support-reply",
+      recipientEmail: host.email,
+      idempotencyKey: `signage-addr-${listing.id}-${new Date().toISOString().slice(0, 10)}`,
+      templateData: {
+        name: firstName,
+        subject: `Free QR signage for ${listing.title}`,
+        message: `Hi ${firstName}, we'd love to ship you free QR signage for "${listing.title}". Reply with your shipping address and we'll get it on the way.`,
+      },
+    });
     if (error) throw error;
-    return new Response(JSON.stringify({ success: true }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" }
-    });
-  } catch (e: any) {
-    console.error("send-qr-signage-address-request error", e);
-    return new Response(JSON.stringify({ error: e.message }), {
-      status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
-    });
+    return json({ success: true });
+  } catch (e) {
+    console.error("send-qr-signage-address-request error", e instanceof Error ? e.message : e);
+    return json({ error: "Could not send the signage email" }, 500);
   }
 });
