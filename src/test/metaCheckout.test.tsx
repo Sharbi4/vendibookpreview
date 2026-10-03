@@ -77,14 +77,11 @@ describe('Meta checkout handoff', () => {
     expect(links.map((link) => link.getAttribute('href'))).toEqual([`/checkout/${a}`, `/book/${b}`]);
     expect(screen.getAllByRole('img').map((image) => image.getAttribute('alt'))).toEqual(['Food truck', 'Kitchen']);
   });
-  it('shows requested quantity and total but requires an explicit correction before checkout', async () => {
+  it('normalizes Meta quantities above 1 and allows checkout', async () => {
     lookup.mockResolvedValue({ data: [item()], error: null });
     mount(`${a}:3`);
-    expect(await screen.findByText('Quantity: 3')).toBeInTheDocument();
-    expect(screen.getByText('Line total: $36,000.00')).toBeInTheDocument();
-    expect(screen.getByRole('button', { name: 'Continue to checkout' })).toBeDisabled();
-    fireEvent.click(screen.getByRole('button', { name: 'Use quantity 1' }));
     expect(await screen.findByText('Quantity: 1')).toBeInTheDocument();
+    expect(screen.getByText(/quantity is set to 1/)).toBeInTheDocument();
     expect(screen.getByRole('link', { name: 'Continue to checkout' })).toHaveAttribute('href', `/checkout/${a}`);
     expect(screen.getByText('Line total: $12,000.00')).toBeInTheDocument();
   });

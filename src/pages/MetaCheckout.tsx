@@ -85,15 +85,17 @@ export default function MetaCheckout() {
     return () => { cancelled = true; };
   }, [key, attempt]);
 
+  // Every listing is one unique asset, so Meta's cart quantity is normalized
+  // to 1 automatically instead of blocking checkout.
   const lines = products.map((product) => {
     const listing = items?.find((item) => item.id === product.id);
     const price = listing ? catalogPrice(listing) : null;
-    const total = price ? price.cents * product.quantity : null;
-    return { ...product, listing, price, total: Number.isSafeInteger(total) ? total : null };
+    const total = price ? price.cents : null;
+    return { id: product.id, requested: product.quantity, quantity: 1, listing, price, total };
   });
   const sum = lines.reduce((total, line) => total + (line.total ?? 0), 0);
   const subtotal = lines.every((line) => line.total !== null) && Number.isSafeInteger(sum) ? sum : null;
-  const canCheckout = lines.length > 0 && subtotal !== null && lines.every((line) => line.listing && line.price && line.quantity === 1);
+  const canCheckout = lines.length > 0 && subtotal !== null && lines.every((line) => line.listing && line.price);
   const hasRentals = lines.some((line) => line.listing?.mode === 'rent');
   const coupon = params.get('coupon')?.trim();
 
@@ -127,8 +129,9 @@ export default function MetaCheckout() {
           <p role="status" className="text-muted-foreground mb-6">Some selected items are no longer available. Remove them to continue.</p>
         )}
         <ul aria-label="Cart items" className="space-y-4">
-          {lines.map(({ id, quantity, listing: l, price, total }) => {
+          {lines.map(({ id, quantity, requested, listing: l, price }) => {
             const img = l?.cover_image_url || l?.image_urls?.[0];
+            const total = price ? price.cents : null;
             return (
               <li key={id} className="flex flex-wrap items-start gap-4 rounded-xl border border-border bg-card p-4">
                 {img ? <img src={img} alt={l.title} className="h-20 w-24 shrink-0 rounded-lg object-cover" loading="lazy" /> : <div className="h-20 w-24 shrink-0 rounded-lg bg-muted" />}
@@ -137,15 +140,8 @@ export default function MetaCheckout() {
                   {!l && <p className="text-sm text-muted-foreground break-all">Product ID: {id}</p>}
                   <p className="text-sm text-muted-foreground">Quantity: {quantity}</p>
                   <p className="text-sm text-muted-foreground">{price ? `Unit price: ${money(price.cents)}${price.period}` : l ? 'Price unavailable' : 'This item is no longer available'}</p>
-                  {quantity > 1 && (
-                    <div className="mt-2 text-sm text-muted-foreground">
-                      <p>Each listing is one asset. Change the quantity to one before checkout. Rental duration is selected when booking.</p>
-                      <Button variant="outline" className="mt-2" onClick={() => {
-                        const next = new URLSearchParams(params);
-                        next.set('products', products.map((product) => `${product.id}:${product.id === id ? 1 : product.quantity}`).join(','));
-                        setParams(next, { replace: true });
-                      }}>Use quantity 1</Button>
-                    </div>
+                  {l && requested > 1 && (
+                    <p className="mt-2 text-sm text-muted-foreground">Each listing is one unique item, so quantity is set to 1.{l.mode === 'rent' ? ' Rental dates are chosen when booking.' : ''}</p>
                   )}
                   {!l && <Button variant="outline" className="mt-2" onClick={() => {
                     const next = new URLSearchParams(params);
