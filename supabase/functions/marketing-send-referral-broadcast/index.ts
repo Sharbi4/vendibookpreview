@@ -14,6 +14,8 @@ import {
   UNSUBSCRIBE_URL_BASE,
 } from "../_shared/marketing-templates/constants.ts";
 import { MK, FONT, radius, SUPPORT_EMAIL, SUPPORT_HOURS } from "../_shared/marketing-templates/brand.ts";
+import { isTrustedOrAdmin, forbiddenResponse } from "../_shared/trustedCaller.ts";
+import { emailLinkToken } from "../_shared/emailLinkToken.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -138,6 +140,7 @@ async function sendOne(apiKey: string, to: string, subject: string, html: string
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (!(await isTrustedOrAdmin(req))) return forbiddenResponse(corsHeaders);
   try {
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
     if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY not configured");
@@ -195,7 +198,7 @@ serve(async (req) => {
     const errors: Array<{ to: string; error: string }> = [];
 
     for (const to of recipients) {
-      const unsubscribeUrl = `${UNSUBSCRIBE_URL_BASE}?e=${encodeURIComponent(to)}`;
+      const unsubscribeUrl = `${UNSUBSCRIBE_URL_BASE}?e=${encodeURIComponent(to)}&t=${emailLinkToken(to)}`;
       const html = renderReferralEmail({ recipientEmail: to, dashboardUrl, termsUrl, unsubscribeUrl });
       const res = await sendOne(RESEND_API_KEY, to, subject, html, unsubscribeUrl);
       if (res.ok) sent++; else { failed++; errors.push({ to, error: res.error || "unknown" }); }

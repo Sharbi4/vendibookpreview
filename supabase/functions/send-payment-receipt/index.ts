@@ -1,6 +1,6 @@
 // Thin proxy: routes payment receipts through Lovable Emails queue.
-import { createClient } from 'npm:@supabase/supabase-js@2';
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
+import { getAuthedUser, isTrustedInternal } from '../_shared/trustedCaller.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -16,7 +16,16 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
   try {
     const d = await req.json();
-    const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+    // Signed-in shoppers can only email a receipt to their own account email.
+    if (!isTrustedInternal(req)) {
+      const user = await getAuthedUser(req);
+      if (!user?.email) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      d.email = user.email;
+    }
 
     if (!d?.email || !d?.transactionId) {
       return new Response(JSON.stringify({ error: 'email and transactionId required' }), {

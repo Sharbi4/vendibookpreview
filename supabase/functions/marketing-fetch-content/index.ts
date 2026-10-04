@@ -4,6 +4,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { VENDIBOOK_BASE_URL } from "../_shared/marketing-templates/constants.ts";
+import { isTrustedOrAdmin, forbiddenResponse } from "../_shared/trustedCaller.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -49,6 +50,7 @@ function mapRental(r: any, extraTagline?: string | null) {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (!(await isTrustedOrAdmin(req))) return forbiddenResponse(corsHeaders);
   try {
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,

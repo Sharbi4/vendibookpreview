@@ -3,6 +3,7 @@
 // sends through the shared transactional email helper so all sends are queued, retried, and logged.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
+import { getAuthedUser, isTrustedInternal } from '../_shared/trustedCaller.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -28,6 +29,16 @@ Deno.serve(async (req) => {
       .eq('id', offer_id)
       .single();
     if (offerErr || !offer) throw new Error(`Offer not found: ${offerErr?.message}`);
+
+    // Only the buyer or seller on this offer (or the backend) can send its emails.
+    if (!isTrustedInternal(req)) {
+      const caller = await getAuthedUser(req);
+      if (!caller || (caller.id !== offer.buyer_id && caller.id !== offer.seller_id)) {
+        return new Response(JSON.stringify({ error: 'Forbidden' }), {
+          status: caller ? 403 : 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+    }
 
     const [{ data: seller }, { data: buyer }] = await Promise.all([
       supabase.from('profiles').select('id, email, full_name, first_name').eq('id', offer.seller_id).maybeSingle(),

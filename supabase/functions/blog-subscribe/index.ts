@@ -3,6 +3,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { Resend } from "https://esm.sh/resend@2.0.0";
+import { emailLinkToken, escapeHtml } from "../_shared/emailLinkToken.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -17,11 +18,11 @@ const HOME_URL = "https://vendibook.com";
 const BLOG_URL = "https://vendibook.com/blog";
 const LOGO_IMG = "https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png?v=2026-08";
 
-const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const EMAIL_RE = /^[^\s@<>"'&]+@[^\s@<>"'&]+\.[^\s@<>"'&]+$/;
 
-function buildConfirmationHtml(name: string | null) {
+function buildConfirmationHtml(name: string | null, email: string) {
   const greeting = name ? `Welcome, ${name.split(" ")[0]}!` : "Welcome to Vendibook!";
-  const unsubUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/marketing-unsubscribe`;
+  const unsubUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/marketing-unsubscribe?e=${encodeURIComponent(email)}&t=${emailLinkToken(email)}`;
   return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light only"><title>${greeting}</title></head>
 <body style="margin:0;padding:0;background:#f5f5f4;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#1a1a1a;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f5f5f4;padding:24px 12px;"><tr><td align="center">
@@ -92,8 +93,8 @@ serve(async (req) => {
   try {
     const body = await req.json().catch(() => ({}));
     const email = String(body.email || "").trim().toLowerCase();
-    const name = body.name ? String(body.name).trim().slice(0, 120) : null;
-    const source = body.source ? String(body.source).slice(0, 60) : "subscribe_page";
+    const name = body.name ? escapeHtml(String(body.name).trim().slice(0, 120)) : null;
+    const source = body.source ? String(body.source).replace(/[^\w\-:. ]/g, "").slice(0, 60) || "subscribe_page" : "subscribe_page";
 
     if (!email || !EMAIL_RE.test(email) || email.length > 254) {
       return new Response(JSON.stringify({ error: "Please enter a valid email address." }), {
@@ -135,7 +136,7 @@ serve(async (req) => {
         from: FROM,
         to: [email],
         subject: "Welcome to Vendibook",
-        html: buildConfirmationHtml(name),
+        html: buildConfirmationHtml(name, email),
         reply_to: REPLY_TO,
         tags: [{ name: "type", value: "subscribe_confirmation" }],
       });

@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { isTrustedOrAdmin, forbiddenResponse } from "../_shared/trustedCaller.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,6 +20,7 @@ const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+  if (!(await isTrustedOrAdmin(req))) return forbiddenResponse(corsHeaders);
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -37,7 +39,21 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log(`Fetching image from: ${imageUrl}`);
+    // Confine names to a flat, safe filename and only fetch https images.
+    if (typeof fileName !== "string" || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,99}\.(png|jpe?g|webp|gif|svg)$/i.test(fileName) || fileName.includes("..")) {
+      return new Response(JSON.stringify({ error: "Invalid fileName" }), {
+        status: 400, headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+    let parsedUrl: URL;
+    try { parsedUrl = new URL(imageUrl); } catch { parsedUrl = new URL("about:blank"); }
+    if (parsedUrl.protocol !== "https:") {
+      return new Response(JSON.stringify({ error: "imageUrl must be https" }), {
+        status: 400, headers: { "Content-Type": "application/json", ...corsHeaders },
+      });
+    }
+    const MAX_BYTES = 5 * 1024 * 1024;
+    console.log(`Fetching image from: ${parsedUrl.host}`);
 
     // Fetch the image
     const imageResponse = await fetch(imageUrl);
@@ -52,7 +68,10 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error(`Invalid content type: ${contentType}`);
     }
 
+    const declared = Number(imageResponse.headers.get("content-length") || 0);
+    if (declared > MAX_BYTES) throw new Error("Image too large (max 5MB)");
     const imageData = await imageResponse.arrayBuffer();
+    if (imageData.byteLength > MAX_BYTES) throw new Error("Image too large (max 5MB)");
     console.log(`Image fetched: ${imageData.byteLength} bytes, type: ${contentType}`);
 
     // Upload to Supabase Storage

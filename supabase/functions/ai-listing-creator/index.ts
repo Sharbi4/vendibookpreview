@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { resolveHostTier, tierAtLeast, tierRequiredBody } from "../_shared/resolveHostTier.ts";
+import { forbiddenResponse, getAuthedUser, isAdminUser, isTrustedInternal } from "../_shared/trustedCaller.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -213,6 +214,8 @@ serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+  // Paid AI listing assistant: signed-in members only.
+  if (!isTrustedInternal(req) && !(await getAuthedUser(req))) return forbiddenResponse(corsHeaders, 401);
 
   try {
     // Tier gate — Starter+ required for AI listing generation for signed-in users.
@@ -246,10 +249,16 @@ serve(async (req) => {
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
     // Build enriched messages with context
-    const enrichedMessages = [...messages];
+    // Only user/assistant turns are accepted — callers can't inject system
+    // instructions or other roles into the model conversation.
+    if (!Array.isArray(messages)) throw new Error("messages must be an array");
+    const enrichedMessages = messages
+      .filter((m: any) => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string")
+      .slice(-30)
+      .map((m: any) => ({ role: m.role, content: m.content.slice(0, 8000) }));
 
     // Extract category, city, state from conversation for market data
-    const fullConvo = messages.map((m: any) => m.content).join(" ").toLowerCase();
+    const fullConvo = enrichedMessages.map((m: any) => m.content).join(" ").toLowerCase();
     let detectedCategory: string | null = null;
     let detectedCity: string | null = null;
     let detectedState: string | null = null;

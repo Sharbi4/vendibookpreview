@@ -1,6 +1,7 @@
 // Thin proxy: routes refund notification emails through Lovable Emails queue.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
+import { isTrustedOrAdmin, forbiddenResponse } from "../_shared/trustedCaller.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -9,6 +10,7 @@ const corsHeaders = {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+  if (!(await isTrustedOrAdmin(req))) return forbiddenResponse(corsHeaders);
   try {
     const b = await req.json();
     if (!b?.email || !b?.bookingId) {

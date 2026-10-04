@@ -8,6 +8,7 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { MK, FONT, esc, mkButton, marketingShell } from "../_shared/marketing-templates/brand.ts";
+import { emailLinkToken } from "../_shared/emailLinkToken.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -270,7 +271,7 @@ Deno.serve(async (req) => {
       const RESEND_KEY = Deno.env.get("RESEND_API_KEY");
       if (!RESEND_KEY) throw new Error("RESEND_API_KEY not configured");
 
-      const unsubUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/marketing-unsubscribe?e=${encodeURIComponent(testEmail)}`;
+      const unsubUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/marketing-unsubscribe?e=${encodeURIComponent(testEmail)}&t=${emailLinkToken(testEmail)}`;
       const html = buildDigestHtml(d, listings, unsubUrl, { test: true });
       const res = await resend("/emails", {
         method: "POST",

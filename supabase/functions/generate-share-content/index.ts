@@ -1,5 +1,6 @@
 // Generates AI share captions for a listing across channels
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { getAuthedUser, isAdminUser, isTrustedInternal } from "../_shared/trustedCaller.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -14,7 +15,11 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const { listing_id, channels = ["facebook", "x", "sms", "email"], variant = "default" } = await req.json();
+    const { listing_id, channels: rawChannels = ["facebook", "x", "sms", "email"], variant: rawVariant = "default" } = await req.json();
+    // Fixed vocabularies — never let caller text into the model instructions.
+    const variant = ["default", "hype", "professional", "casual"].includes(rawVariant) ? rawVariant : "default";
+    const channels = (Array.isArray(rawChannels) ? rawChannels : [])
+      .filter((c: unknown) => typeof c === "string" && ["facebook", "x", "sms", "email", "instagram", "linkedin"].includes(c as string));
     if (!listing_id) {
       return new Response(JSON.stringify({ error: "listing_id required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -43,7 +48,7 @@ Deno.serve(async (req) => {
     // Fetch listing
     const { data: listing } = await admin
       .from("listings")
-      .select("title, description, category, city, state, price_daily, price_hourly, price_sale, mode")
+      .select("title, description, category, city, state, price_daily, price_hourly, price_sale, mode, host_id")
       .eq("id", listing_id)
       .maybeSingle();
 
@@ -51,6 +56,16 @@ Deno.serve(async (req) => {
       return new Response(JSON.stringify({ error: "listing not found" }), {
         status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Only the listing owner (or an admin/backend) can generate share copy.
+    if (!isTrustedInternal(req)) {
+      const caller = await getAuthedUser(req);
+      if (!caller || (caller.id !== listing.host_id && !(await isAdminUser(caller.id)))) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: caller ? 403 : 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     // Generate per channel via Lovable AI

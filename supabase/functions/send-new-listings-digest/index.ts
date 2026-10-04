@@ -15,6 +15,7 @@ import {
   MARKETING_REPLY_TO,
   SITE_URL,
 } from "../_shared/marketing-templates/brand.ts";
+import { emailLinkToken } from "../_shared/emailLinkToken.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -349,7 +350,7 @@ Deno.serve(async (req) => {
       const recipients = audience.filter((e) => !alreadySent.has(e));
 
       const unsubFor = (email: string) =>
-        `${Deno.env.get("SUPABASE_URL")}/functions/v1/marketing-unsubscribe?e=${encodeURIComponent(email)}`;
+        `${Deno.env.get("SUPABASE_URL")}/functions/v1/marketing-unsubscribe?e=${encodeURIComponent(email)}&t=${emailLinkToken(email)}`;
 
       let sent = 0;
       const failures: Array<{ email: string; error: string }> = [];
@@ -422,7 +423,7 @@ Deno.serve(async (req) => {
     const RESEND_KEY = Deno.env.get("RESEND_API_KEY");
     if (!RESEND_KEY) throw new Error("RESEND_API_KEY not configured");
 
-    const unsubUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/marketing-unsubscribe?e=${encodeURIComponent(testEmail)}`;
+    const unsubUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/marketing-unsubscribe?e=${encodeURIComponent(testEmail)}&t=${emailLinkToken(testEmail)}`;
     const html = buildDigestHtml({ forSale, rentals, unsubscribeUrl: unsubUrl, test: true });
 
     const res = await fetch("https://api.resend.com/emails", {

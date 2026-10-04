@@ -3,6 +3,7 @@
 // and sends through the shared transactional email helper so all sends are queued, retried, and logged.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
+import { isTrustedOrAdmin, forbiddenResponse } from "../_shared/trustedCaller.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -23,6 +24,7 @@ type NotificationType =
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+  if (!(await isTrustedOrAdmin(req))) return forbiddenResponse(corsHeaders);
   try {
     const { transaction_id, notification_type, audience } = await req.json() as {
       transaction_id: string; notification_type: NotificationType; audience?: 'buyer' | 'seller' | 'both';

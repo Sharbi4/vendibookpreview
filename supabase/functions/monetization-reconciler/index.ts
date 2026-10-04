@@ -17,6 +17,7 @@ import { fulfillMonetizationPurchase } from "../_shared/fulfillMonetizationPurch
 import { resolveSubscriptionPeriod } from "../_shared/subscriptionPeriod.ts";
 import { grantMonthlyBoostCredit } from "../_shared/proBoostCredit.ts";
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
+import { isTrustedOrAdmin, forbiddenResponse } from "../_shared/trustedCaller.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -39,6 +40,7 @@ interface ReconResult {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (!(await isTrustedOrAdmin(req))) return forbiddenResponse(corsHeaders);
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;

@@ -12,6 +12,7 @@ import {
   VENDIBOOK_BASE_URL,
 } from "../_shared/marketing-templates/constants.ts";
 import { MK, FONT, radius } from "../_shared/marketing-templates/brand.ts";
+import { isTrustedOrAdmin, forbiddenResponse } from "../_shared/trustedCaller.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -190,6 +191,7 @@ function renderReferralEmail(opts: {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (!(await isTrustedOrAdmin(req))) return forbiddenResponse(corsHeaders);
   try {
     const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
     if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY not configured");

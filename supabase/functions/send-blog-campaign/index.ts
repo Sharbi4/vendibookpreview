@@ -11,6 +11,7 @@ import {
   MK, FONT, esc, mkButton, marketingShell,
   MARKETING_FROM, MARKETING_REPLY_TO, SITE_URL,
 } from "../_shared/marketing-templates/brand.ts";
+import { emailLinkToken } from "../_shared/emailLinkToken.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -200,7 +201,7 @@ serve(async (req) => {
     let failCount = 0;
 
     for (const r of recipients) {
-      const unsubUrl = `${supabaseUrl}/functions/v1/marketing-unsubscribe?e=${encodeURIComponent(r.email)}`;
+      const unsubUrl = `${supabaseUrl}/functions/v1/marketing-unsubscribe?e=${encodeURIComponent(r.email)}&t=${emailLinkToken(r.email)}`;
       try {
         const { data, error } = await resend.emails.send({
           from: FROM,

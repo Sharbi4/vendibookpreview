@@ -512,6 +512,7 @@ async function propagateToDomainRecord(
       if (flipped?.id) {
         try {
           await supabase.functions.invoke("send-sale-notification", {
+            headers: { Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""}` },
             body: {
               transaction_id: record.sale_transaction_id,
               notification_type: "payment_received",

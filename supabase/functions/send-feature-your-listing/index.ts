@@ -22,6 +22,7 @@ import {
   buildFeatureYourListingText,
   type CampaignListing,
 } from "../_shared/marketing-templates/feature-your-listing.ts";
+import { emailLinkToken } from "../_shared/emailLinkToken.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -78,7 +79,7 @@ serve(async (req) => {
       body.mode ?? "preview_count";
 
     const unsubFor = (email: string) =>
-      `${supabaseUrl}/functions/v1/marketing-unsubscribe?e=${encodeURIComponent(email)}`;
+      `${supabaseUrl}/functions/v1/marketing-unsubscribe?e=${encodeURIComponent(email)}&t=${emailLinkToken(email)}`;
 
     // ---- price straight from the monetization catalog (never hardcoded) ----
     const { data: product } = await admin

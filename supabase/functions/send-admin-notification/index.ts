@@ -1,5 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { sendTransactionalEmailInternal } from "../_shared/invokeTransactionalEmail.ts";
+import { getAuthedUser, isTrustedInternal } from "../_shared/trustedCaller.ts";
+
+// Alert types the website may send directly. Payment/subscription alerts
+// are backend-only so nobody can fabricate revenue notices.
+const PUBLIC_TYPES = new Set(["newsletter_signup", "freight_quote_request"]);
+const SIGNED_IN_TYPES = new Set(["new_listing", "new_user"]);
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -28,6 +34,15 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
     const { type, data }: NotificationRequest = await req.json();
+
+    if (!isTrustedInternal(req)) {
+      const allowed = PUBLIC_TYPES.has(type) || (SIGNED_IN_TYPES.has(type) && !!(await getAuthedUser(req)));
+      if (!allowed) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
 
     const subjectMap: Record<string, string> = {
       new_user: "New Vendibook user signed up",
@@ -98,11 +113,12 @@ serve(async (req) => {
       source_page: "Source page",
     };
 
-    const details = Object.entries(data || {})
+    const details = Object.entries(data && typeof data === "object" ? data : {})
+      .slice(0, 30)
       .filter(([, v]) => v !== null && v !== undefined && v !== "")
       .map(([k, v]) => ({
         label: labelMap[k] || k.replace(/_/g, " "),
-        value: typeof v === "object" ? JSON.stringify(v) : String(v),
+        value: (typeof v === "object" ? JSON.stringify(v) : String(v)).slice(0, 1000),
         mono: k.endsWith("_id") || k === "email" || k === "host_email" || k === "contact_email",
       }));
 

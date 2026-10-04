@@ -196,7 +196,9 @@ serve(async (req) => {
     }
 
     // Send confirmation email to the user (best-effort — never blocks the ticket).
-    const recipient = insertPayload.reply_email;
+    // Confirmation only ever goes to the signed-in account's own address;
+    // a caller-supplied reply_email is stored for staff but never emailed.
+    const recipient = user.email || null;
     if (recipient) {
       try {
         await invokeTransactionalEmail({

@@ -1,6 +1,7 @@
 // Thin proxy: routes listing-published emails through Lovable Emails queue.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
+import { getAuthedUser, isTrustedInternal } from '../_shared/trustedCaller.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -17,6 +18,24 @@ Deno.serve(async (req) => {
       });
     }
     const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
+    // Hosts can only trigger this for their own listing, sent to their own email.
+    if (!isTrustedInternal(req)) {
+      const user = await getAuthedUser(req);
+      if (!user?.email) {
+        return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+          status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      const { data: listing } = await supabase
+        .from('listings').select('id, host_id, title').eq('id', b.listingId).maybeSingle();
+      if (!listing || listing.host_id !== user.id) {
+        return new Response(JSON.stringify({ error: 'Forbidden' }), {
+          status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+      b.hostEmail = user.email;
+      b.listingTitle = listing.title;
+    }
 
     const { error } = await invokeTransactionalEmail({
         templateName: 'listing-published',
