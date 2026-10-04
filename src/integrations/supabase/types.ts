@@ -12783,6 +12783,7 @@ export type Database = {
         }[]
       }
       get_my_seller_verification: { Args: never; Returns: Json }
+      get_public_feature_flag: { Args: { flag_key: string }; Returns: boolean }
       get_referral_leaderboard: {
         Args: { p_limit?: number }
         Returns: {
