@@ -367,3 +367,6 @@ verify_jwt = false
 
 [functions.send-native-push]
 verify_jwt = false
+
+[functions.send-message-removed-notice]
+verify_jwt = false
