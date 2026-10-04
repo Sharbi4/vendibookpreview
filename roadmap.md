@@ -14,5 +14,5 @@
 - [done] Refresh /how-purchasing-works with the current documented post-purchase handoff and the premium warm-white payments/checkout presentation.
 - [done] Seller-covered nationwide freight: show Free shipping on sale listing cards and hide the internal mileage/rate/cost from buyers while preserving the freight calculation.
 
-- [ ] AI risk checker on messages/offers + admin email alert
+- [done] AI risk checker on messages/offers + admin email alert
 - [ ] Plaid identity verification right after sign-up, then redirect back to intended page
