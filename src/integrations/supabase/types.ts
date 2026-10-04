@@ -12962,6 +12962,7 @@ export type Database = {
         }
       }
       message_account_active: { Args: { actor?: string }; Returns: boolean }
+      message_contact_info_problem: { Args: { body: string }; Returns: string }
       message_content_problem: {
         Args: { body: string; is_new: boolean }
         Returns: string
