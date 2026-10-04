@@ -4,6 +4,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { FROM_EMAIL, FROM_NAME, REPLY_TO_EMAIL } from "../_shared/marketing-templates/constants.ts";
+import { isTrustedOrAdmin, forbiddenResponse } from "../_shared/trustedCaller.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -63,6 +64,7 @@ async function alertAdmin(supabase: any, subject: string, html: string) {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (!(await isTrustedOrAdmin(req))) return forbiddenResponse(corsHeaders);
   try {
     const { action } = await req.json().catch(() => ({ action: "send_test" }));
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, SERVICE_KEY);

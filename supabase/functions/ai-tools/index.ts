@@ -267,7 +267,13 @@ serve(async (req) => {
   try {
     const { tool, data }: RequestBody = await req.json();
     const slug = TOOL_MAP[tool];
-    if (slug) {
+    // Unknown tools are rejected outright so they can't skip the access gate.
+    if (!slug || !Object.prototype.hasOwnProperty.call(TOOL_MAP, tool)) {
+      return new Response(JSON.stringify({ error: "Unknown tool" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    {
       const gate = await gateToolAccess(req, slug, corsHeaders);
       if (gate.response) return gate.response;
     }

@@ -27,6 +27,7 @@ serve(async (req) => {
     );
 
     // Gate: Negotiation Coach is a Growth+ feature.
+    let callerId: string | null = null;
     const authHeader = req.headers.get("Authorization");
     if (authHeader) {
       try {
@@ -36,6 +37,7 @@ serve(async (req) => {
           { global: { headers: { Authorization: authHeader } } },
         );
         const { data: { user } } = await authClient.auth.getUser();
+        callerId = user?.id ?? null;
         if (user?.id) {
           const tier = await resolveHostTier(user.id);
           if (!tierAtLeast(tier, "pro")) {
@@ -52,6 +54,10 @@ serve(async (req) => {
         }
       } catch (gateErr) {
         console.error("negotiation-coach gate error:", gateErr);
+        return new Response(
+          JSON.stringify({ error: "auth_required", code: "auth_required" }),
+          { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
       }
     } else {
       return new Response(
@@ -68,6 +74,12 @@ serve(async (req) => {
       .eq("id", offerId)
       .maybeSingle();
     if (offerErr || !offer) throw new Error("Offer not found");
+    // Only the buyer or seller on this offer can get coaching for it.
+    if (!callerId || (callerId !== offer.seller_id && callerId !== offer.buyer_id)) {
+      return new Response(JSON.stringify({ error: "Offer not found" }), {
+        status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
 
     const { data: listing } = await supabase
       .from("listings")

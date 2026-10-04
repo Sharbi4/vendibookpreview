@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getAuthedUser, isAdminUser, isTrustedInternal } from "../_shared/trustedCaller.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -61,6 +62,16 @@ const handler = async (req: Request): Promise<Response> => {
     
     if (!data.user_id) {
       throw new Error("Missing required field: user_id");
+    }
+
+    // Only the account owner, an admin, or the backend may sync a profile.
+    if (!isTrustedInternal(req)) {
+      const caller = await getAuthedUser(req);
+      if (!caller || (caller.id !== data.user_id && !(await isAdminUser(caller.id)))) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: caller ? 403 : 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
     }
 
     logStep("Fetching user profile", { user_id: data.user_id });

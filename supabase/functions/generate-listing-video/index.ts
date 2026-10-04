@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { forbiddenResponse, getAuthedUser, isAdminUser, isTrustedInternal } from "../_shared/trustedCaller.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -24,6 +25,8 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
  */
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const videoCaller = isTrustedInternal(req) ? null : await getAuthedUser(req);
+  if (!isTrustedInternal(req) && !videoCaller) return forbiddenResponse(corsHeaders, 401);
 
   try {
     const { listing_id } = await req.json();
@@ -45,6 +48,11 @@ serve(async (req) => {
         status: 404,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    // Only the listing owner (or an admin/backend) may generate media for it.
+    if (videoCaller && videoCaller.id !== listing.host_id && !(await isAdminUser(videoCaller.id))) {
+      return forbiddenResponse(corsHeaders);
     }
 
     const photos: string[] = (listing.image_urls && listing.image_urls.length

@@ -126,7 +126,12 @@ serve(async (req) => {
       isSample = true;
     }
 
-    const categoryLabel = category?.replace(/_/g, " ") || "mobile food asset";
+    // Caller text is untrusted: reduce title/category to plain words so they
+    // can't carry instructions into the system prompt.
+    const clean = (v: unknown, max: number) =>
+      typeof v === "string" ? v.replace(/[^A-Za-z0-9 ,&'\-\/]/g, " ").replace(/\s+/g, " ").trim().slice(0, max) : "";
+    const safeTitle = clean(title, 120);
+    const categoryLabel = clean(typeof category === "string" ? category.replace(/_/g, " ") : "", 60) || "mobile food asset";
     const modeLabel = mode === "sale" ? "for sale" : "for rent";
 
     const systemPrompt = `You are an expert copywriter specializing in mobile food business marketplace listings. Transform rough descriptions into compelling, professional listing copy.
@@ -142,7 +147,7 @@ Guidelines:
 - No pricing
 - Honest and accurate
 
-Listing: ${categoryLabel} ${modeLabel}${title ? ` titled "${title}"` : ""}.`;
+Listing: ${categoryLabel} ${modeLabel}${safeTitle ? ` titled "${safeTitle}"` : ""}.`;
 
     const response = await fetch("https://ai.gateway.lovable.dev/v1/chat/completions", {
       method: "POST",

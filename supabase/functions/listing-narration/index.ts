@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { forbiddenResponse, getAuthedUser, isAdminUser, isTrustedInternal } from "../_shared/trustedCaller.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -112,6 +113,8 @@ async function tts(text: string, voiceId: string): Promise<ArrayBuffer> {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  // Paid AI narration: signed-in members only.
+  if (!isTrustedInternal(req) && !(await getAuthedUser(req))) return forbiddenResponse(corsHeaders, 401);
 
   try {
     const { listing_id, voice_id } = await req.json();

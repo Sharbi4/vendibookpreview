@@ -2,6 +2,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { VENDIBOOK_BASE_URL } from "../_shared/marketing-templates/constants.ts";
+import { verifyEmailLinkToken } from "../_shared/emailLinkToken.ts";
 
 serve(async (req) => {
   const url = new URL(req.url);
@@ -10,6 +11,9 @@ serve(async (req) => {
   const rating = url.searchParams.get("r");
   const validRatings = ["helpful", "okay", "not_for_me"];
   if (!sendId || !email || !rating || !validRatings.includes(rating)) {
+    return new Response("Invalid feedback link", { status: 400 });
+  }
+  if (!verifyEmailLinkToken(`${sendId}:${email}`, url.searchParams.get("t"), "feedback")) {
     return new Response("Invalid feedback link", { status: 400 });
   }
   try {

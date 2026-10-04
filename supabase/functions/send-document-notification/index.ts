@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { refundPayment } from "../_shared/paymentOps.ts";
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
+import { getAuthedUser, isAdminUser, isTrustedInternal } from "../_shared/trustedCaller.ts";
 
 // Emails are sent via the Lovable Emails queue (send-transactional-email),
 // using the premium Satin Lux `generic-notice` template. No direct Resend usage.
@@ -148,6 +149,26 @@ serve(async (req) => {
       throw new Error(`Failed to fetch booking: ${bookingError?.message}`);
     }
     logStep("Booking fetched", { booking_id: booking.id, is_instant_book: booking.is_instant_book });
+
+    // Authorization: the renter may only report uploads; review outcomes
+    // (approve/reject) may only come from the host, an admin, or the backend.
+    if (!isTrustedInternal(req)) {
+      const caller = await getAuthedUser(req);
+      if (!caller) {
+        return new Response(JSON.stringify({ error: "Unauthorized" }), {
+          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      const isHost = caller.id === booking.host_id;
+      const isShopper = caller.id === booking.shopper_id;
+      const isAdmin = !isHost && !isShopper ? await isAdminUser(caller.id) : false;
+      const allowed = event_type === "uploaded" ? (isShopper || isHost || isAdmin) : (isHost || isAdmin);
+      if (!allowed) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
 
     // Fetch listing details including instant_book flag
     const { data: listing, error: listingError } = await supabaseClient

@@ -49,6 +49,14 @@ serve(async (req) => {
     
     logStep("Request received", { transaction_id, role });
 
+    // Reject anything other than the two real roles — otherwise neither
+    // ownership check below would run.
+    if (role !== 'buyer' && role !== 'seller') {
+      return new Response(JSON.stringify({ error: "Invalid role" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     if (!transaction_id || !role) {
       throw new Error("Missing required fields: transaction_id or role");
     }

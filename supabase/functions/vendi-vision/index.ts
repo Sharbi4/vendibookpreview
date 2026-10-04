@@ -1,3 +1,4 @@
+import { getAuthedUser } from "../_shared/trustedCaller.ts";
 // Vendi Vision: Snap-a-photo → AI extracts category, condition, suggested title/description, est. value.
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 
@@ -8,6 +9,12 @@ const corsHeaders = {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  // Paid AI: signed-in members only.
+  if (!(await getAuthedUser(req))) {
+    return new Response(JSON.stringify({ error: "Please sign in to use Vendi Vision." }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
 
   try {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");

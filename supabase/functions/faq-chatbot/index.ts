@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { isTrustedOrAdmin, forbiddenResponse } from "../_shared/trustedCaller.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -87,6 +88,7 @@ const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+  if (!(await isTrustedOrAdmin(req))) return forbiddenResponse(corsHeaders);
 
   try {
     logStep("FAQ chatbot started");
@@ -131,7 +133,7 @@ const handler = async (req: Request): Promise<Response> => {
     
     // Limit conversation history to prevent abuse
     const safeHistory = conversationHistory.slice(-10).filter(msg => 
-      msg && typeof msg.role === 'string' && typeof msg.content === 'string' &&
+      msg && (msg.role === 'user' || msg.role === 'assistant') && typeof msg.content === 'string' &&
       msg.content.length <= 2000
     );
     

@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getAuthedUser, isAdminUser, isTrustedInternal } from "../_shared/trustedCaller.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -47,7 +48,20 @@ Deno.serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL, SERVICE_KEY);
     const body = (await req.json()) as RouteRequest;
-    const { user_id, event_type, entity_id, payload = {}, force = false } = body;
+    const { user_id, event_type, entity_id, payload = {} } = body;
+    let force = body.force === true;
+
+    // Browsers may only route events for their own account and cannot
+    // bypass cooldowns; backend callers may target any user.
+    if (!isTrustedInternal(req)) {
+      const caller = await getAuthedUser(req);
+      if (!caller || caller.id !== user_id) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: caller ? 403 : 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      force = false;
+    }
 
     if (!user_id || !event_type) {
       return new Response(JSON.stringify({ error: "user_id and event_type required" }), {

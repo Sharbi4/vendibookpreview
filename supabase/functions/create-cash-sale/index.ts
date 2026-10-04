@@ -209,6 +209,7 @@ Deno.serve(async (req) => {
     try {
       await supabase.functions.invoke('send-sale-notification', {
         body: { transaction_id: tx.id, notification_type: 'cash_purchase_request' },
+        headers: { Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? ''}` },
       });
     } catch (_) { /* email failures do not block checkout */ }
 

@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getAuthedUser, isAdminUser, isTrustedInternal } from "../_shared/trustedCaller.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -183,6 +184,17 @@ Deno.serve(async (req) => {
     const { user_id, title, body, url, tag } = await req.json() as PushNotificationRequest;
 
     logStep("Request received", { user_id, title });
+
+    // Backend triggers may notify anyone; signed-in users may only send a
+    // test notification to themselves (admins excepted).
+    if (!isTrustedInternal(req)) {
+      const caller = await getAuthedUser(req);
+      if (!caller || (caller.id !== user_id && !(await isAdminUser(caller.id)))) {
+        return new Response(JSON.stringify({ error: "Forbidden" }), {
+          status: caller ? 403 : 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
 
     if (!user_id || !title || !body) {
       return new Response(

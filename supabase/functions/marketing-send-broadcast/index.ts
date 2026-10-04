@@ -8,6 +8,8 @@ import {
   FROM_EMAIL, FROM_NAME, REPLY_TO_EMAIL, LOGO_DARK_URL, LOGO_LIGHT_URL,
   MAILING_ADDRESS, VENDIBOOK_BASE_URL, FEEDBACK_REDIRECT_URL, UNSUBSCRIBE_URL_BASE,
 } from "../_shared/marketing-templates/constants.ts";
+import { isTrustedOrAdmin, forbiddenResponse } from "../_shared/trustedCaller.ts";
+import { emailLinkToken } from "../_shared/emailLinkToken.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -32,7 +34,7 @@ async function sendOne(apiKey: string, to: string, subject: string, html: string
         html,
         reply_to: REPLY_TO_EMAIL,
         headers: {
-          "List-Unsubscribe": `<${UNSUBSCRIBE_URL_BASE}?e=${encodeURIComponent(to)}>`,
+          "List-Unsubscribe": `<${UNSUBSCRIBE_URL_BASE}?e=${encodeURIComponent(to)}&t=${emailLinkToken(to)}>`,
           "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
         },
         tags: [
@@ -52,6 +54,7 @@ async function sendOne(apiKey: string, to: string, subject: string, html: string
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (!(await isTrustedOrAdmin(req))) return forbiddenResponse(corsHeaders);
   try {
     const { sendId } = await req.json();
     if (!sendId) throw new Error("sendId required");
@@ -107,7 +110,7 @@ serve(async (req) => {
         expandTools: !!payload.meta?.bothThin,
         recipientEmail: to,
         sendId: send.id,
-        unsubscribeUrl: `${UNSUBSCRIBE_URL_BASE}?e=${encodeURIComponent(to)}`,
+        unsubscribeUrl: `${UNSUBSCRIBE_URL_BASE}?e=${encodeURIComponent(to)}&t=${emailLinkToken(to)}`,
         feedbackBaseUrl: FEEDBACK_REDIRECT_URL,
         logoLightUrl: LOGO_LIGHT_URL,
         logoDarkUrl: LOGO_DARK_URL,

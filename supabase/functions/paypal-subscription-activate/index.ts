@@ -31,6 +31,10 @@ serve(async (req) => {
     // Already recorded (double click / refresh / webhook arrived first).
     const { data: existingSame } = await admin.from("paypal_subscriptions").select("*")
       .eq("paypal_subscription_id", subscription_id).maybeSingle();
+    if (existingSame && existingSame.user_id !== user.id) {
+      // Never reveal another member's subscription status.
+      return jsonError(404, "not_found", "We couldn't find that subscription on your account.");
+    }
     if (existingSame) {
       return jsonResponse(200, {
         status: existingSame.status,
@@ -50,6 +54,9 @@ serve(async (req) => {
     }
 
     const subscription = await getPayPalSubscription(subscription_id);
+    if (subscription?.custom_id && subscription.custom_id !== user.id) {
+      return jsonError(404, "not_found", "We couldn't find that subscription on your account.");
+    }
     const paypalStatus: string = subscription?.status ?? "APPROVAL_PENDING";
     const planId: string = subscription?.plan_id ?? "";
 

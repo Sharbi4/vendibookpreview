@@ -63,12 +63,23 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Count the attempt atomically before checking, so parallel guesses
+    // can't all reuse the same attempt number.
+    const prev = row.attempts ?? 0;
+    const { data: bumped } = await admin
+      .from("sms_verification_codes")
+      .update({ attempts: prev + 1 })
+      .eq("id", row.id)
+      .eq("attempts", prev)
+      .select("id");
+    if (!bumped || bumped.length === 0) {
+      return new Response(JSON.stringify({ error: "try_again" }), {
+        status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     const expected = await sha256(`${user.id}:${code}`);
     if (expected !== row.code_hash) {
-      await admin
-        .from("sms_verification_codes")
-        .update({ attempts: (row.attempts ?? 0) + 1 })
-        .eq("id", row.id);
       return new Response(JSON.stringify({ error: "incorrect_code" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });

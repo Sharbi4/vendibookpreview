@@ -35,7 +35,9 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}))
     const rawEmails: unknown = body.emails
-    const note: string = typeof body.note === 'string' ? body.note.slice(0, 500) : ''
+    // Free-text notes are not forwarded: invites carry only fixed Vendibook copy
+    // so the endpoint can't be used to send arbitrary content to strangers.
+    const note = ''
 
     if (!Array.isArray(rawEmails) || rawEmails.length === 0) {
       return json({ error: 'emails[] required' }, 400)
@@ -48,7 +50,7 @@ Deno.serve(async (req) => {
           .map((e) => e.trim().toLowerCase())
           .filter((e) => EMAIL_RE.test(e)),
       ),
-    ).slice(0, 10)
+    ).slice(0, 5)
 
     if (emails.length === 0) return json({ error: 'No valid emails' }, 400)
 
