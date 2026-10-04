@@ -2,8 +2,8 @@ import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 /**
- * Reads a single global feature flag from the publicly readable
- * `app_feature_flags` table. Fails closed: any error, missing row, or
+ * Reads a single global feature flag through the public read-only lookup.
+ * Fails closed: any error, missing row, or
  * in-flight fetch resolves to `false` so gated surfaces stay hidden.
  */
 export function usePublicFeatureFlag(key: string): boolean {
@@ -11,13 +11,11 @@ export function usePublicFeatureFlag(key: string): boolean {
     queryKey: ['public-feature-flag', key],
     staleTime: 5 * 60 * 1000,
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from('app_feature_flags')
-        .select('enabled')
-        .eq('key', key)
-        .maybeSingle();
+      const { data, error } = await supabase.rpc('get_public_feature_flag', {
+        flag_key: key,
+      });
       if (error) return false;
-      return data?.enabled === true;
+      return data === true;
     },
   });
 

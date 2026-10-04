@@ -101,17 +101,15 @@ export const buildReferralUrl = (code: string, path = "/") => {
   return url.toString();
 };
 
-/** Reads a single global feature flag from `app_feature_flags`. Defaults to `true` if not found. */
+/** Reads a single global feature flag through the public read-only lookup. */
 export const useFeatureFlag = (key: string, defaultValue = true) => {
   return useQuery({
     queryKey: ["feature-flag", key],
     queryFn: async (): Promise<boolean> => {
-      const { data } = await supabase
-        .from("app_feature_flags")
-        .select("enabled")
-        .eq("key", key)
-        .maybeSingle();
-      return data ? !!data.enabled : defaultValue;
+      const { data, error } = await supabase.rpc("get_public_feature_flag", {
+        flag_key: key,
+      });
+      return error || data === null ? defaultValue : data === true;
     },
     staleTime: 60_000,
   });
