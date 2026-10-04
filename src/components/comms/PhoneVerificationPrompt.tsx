@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { useLocation } from "react-router-dom";
-import { ArrowRight, Loader2, ShieldCheck, Smartphone } from "lucide-react";
+import { ArrowRight, Loader2, Lock, ShieldCheck, Smartphone } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { normalizeNanpToE164 } from "@/lib/sms/phone";
@@ -21,6 +21,7 @@ export default function PhoneVerificationPrompt({ children }: { children: ReactN
   const [busy, setBusy] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const [retry, setRetry] = useState(0);
+  const [showForm, setShowForm] = useState(false);
 
   const check = useCallback(async () => {
     const { data, error } = await rpc("signup_phone_status");
@@ -88,6 +89,16 @@ export default function PhoneVerificationPrompt({ children }: { children: ReactN
   if (user && checkedUser === user.id && status?.required === false) return <>{children}</>;
 
   const checking = isLoading || !status || checkedUser !== user?.id;
+  // Dashboard stays viewable with a clear lock warning; messaging/offers stay blocked server-side.
+  const onDashboard = pathname === "/dashboard" || pathname.startsWith("/dashboard/");
+  if (!checking && onDashboard && !showForm) return <>
+    <div role="alert" className="signup-phone-banner">
+      <Lock size={18} aria-hidden />
+      <div><strong>Messages and offers are locked.</strong> Verify your mobile number to message buyers, respond to offers, and manage bookings.</div>
+      <button type="button" onClick={() => setShowForm(true)}>Verify now</button>
+    </div>
+    {children}
+  </>;
   return <main className="signup-phone-page">
     <section className="signup-phone-card" aria-labelledby="signup-phone-title">
       <a href="/" className="signup-phone-brand">VENDIBOOK</a>
