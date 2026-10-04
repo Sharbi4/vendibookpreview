@@ -15,6 +15,13 @@
       "when": 1791156899502,
       "tag": "0001_scope_public_feature_flag_reads",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791157350087,
+      "tag": "0002_require_phone_all_users",
+      "breakpoints": true
     }
   ]
 }
