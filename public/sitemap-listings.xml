@@ -837,17 +837,6 @@
     </image:image>
   </url>
   <url>
-    <loc>https://vendibook.com/listing/ce6ce158-6307-4a6f-9c6f-46f1f720be2b</loc>
-    <lastmod>2026-10-04</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-    <image:image>
-      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/dadee20b-7da1-4b3b-b1a1-0405e8448039/ce6ce158-6307-4a6f-9c6f-46f1f720be2b/1789939727497-3c7hgd.jpeg</image:loc>
-      <image:title>Brand New Coffee Food Trailer</image:title>
-      <image:caption>Brand New Coffee Food Trailer in Glendale, CA on Vendibook</image:caption>
-    </image:image>
-  </url>
-  <url>
     <loc>https://vendibook.com/listing/1d8c9104-4554-4e50-ba50-dc3c0008af6d</loc>
     <lastmod>2026-10-02</lastmod>
     <changefreq>weekly</changefreq>
@@ -900,6 +889,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/3f63ade7-535a-4040-9101-d969e9a50677/fa7c0293-761e-4f75-8893-f3ecd3f8357f/1789434242544-c09u6xupvlr.jpeg</image:loc>
       <image:title>Brand new beautiful coffee trailer for sale!!</image:title>
       <image:caption>Brand new beautiful coffee trailer for sale!! in Placerville, CA on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/ce6ce158-6307-4a6f-9c6f-46f1f720be2b</loc>
+    <lastmod>2026-10-04</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/dadee20b-7da1-4b3b-b1a1-0405e8448039/ce6ce158-6307-4a6f-9c6f-46f1f720be2b/1789939727497-3c7hgd.jpeg</image:loc>
+      <image:title>Brand New Coffee Food Trailer</image:title>
+      <image:caption>Brand New Coffee Food Trailer in Glendale, CA on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
