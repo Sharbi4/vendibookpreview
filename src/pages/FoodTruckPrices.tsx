@@ -608,7 +608,7 @@ const FoodTruckPrices = () => {
                 asChild variant="cta" className="shrink-0"
                 onClick={() => trackEvent({ category: 'SEO', action: 'price_report_financing_click', label: '/financing' })}
               >
-                <Link to="/financing">Explore food truck financing <ArrowRight className="h-4 w-4" /></Link>
+                <Link to="/financing#calculator">Estimate your monthly payment <ArrowRight className="h-4 w-4" /></Link>
               </Button>
             </div>
           </Section>

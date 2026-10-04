@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import { FINANCING_STEPS, FINANCING_FAQ, FINANCING_TITLE, FINANCING_DESCRIPTION, FINANCING_INTRO, FINANCING_SECTIONS, FINANCING_RESOURCES } from '../../supabase/functions/_shared/financingContent';
 import { Link, useSearchParams } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import { useQuery } from '@tanstack/react-query';
@@ -14,7 +15,7 @@ import {
   ShoppingCart,
   Truck,
 } from 'lucide-react';
-import SEO, { generateFAQSchema } from '@/components/SEO';
+import SEO from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -23,6 +24,11 @@ import { GuideBreadcrumb } from '@/components/education/GuideBreadcrumb';
 import { EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
 import { FinancingAvailableBadge } from '@/components/financing/FinancingAvailableBadge';
 import { useFinancingHandoff } from '@/hooks/useFinancingHandoff';
+import { FinancingCalculator } from '@/components/financing/FinancingCalculator';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { useBuyerSeoTracking } from '@/hooks/useBuyerSeoTracking';
+import { trackBuyerSeoFinancing } from '@/lib/buyerSeoTracking';
+import { financingInventoryUrl } from '@/lib/financing/calculator';
 import heroTruck from '@/assets/hero-food-truck.jpg';
 import heroTrailer from '@/assets/trailer-orange-grill.jpg';
 import heroCoffee from '@/assets/food-truck-coffee.jpg';
@@ -39,8 +45,8 @@ import {
  * Vendibook's warm editorial marketplace language (not a partner microsite).
  *
  * Copy guardrails (do not regress): Vendibook is not the lender; no
- * guaranteed approvals, rates, terms, or funding; exact program facts below
- * are partner-provided and must stay caveated; the user leaves Vendibook to
+ * guaranteed approvals, rates, terms, or funding; calculator rates are
+ * illustrative, not provider quotes; the user leaves Vendibook to
  * apply; financing availability on listings is marketplace-wide for eligible
  * published for-sale equipment — not a seller opt-in.
  */
@@ -77,25 +83,12 @@ const fadeUp = {
 
 const TRUST = [
   { icon: FileText, label: 'Quick online application' },
-  { icon: Clock, label: 'Many decisions in 24–48 hours' },
+  { icon: Clock, label: 'Estimate payments before applying' },
   { icon: ShieldCheck, label: 'Startups & established businesses may qualify' },
   { icon: Truck, label: 'Trucks, trailers, carts & builds' },
 ];
 
-const STEPS = [
-  {
-    title: 'Choose a truck or trailer',
-    body: 'Browse eligible for-sale equipment on Vendibook and pick the one you want.',
-  },
-  {
-    title: 'Submit a short online application',
-    body: 'You apply with Equinox Funding — basic business, owner, and equipment details.',
-  },
-  {
-    title: 'Review any options you qualify for',
-    body: 'Qualified applicants review terms and sign electronically. Many decisions come back within 24–48 hours.',
-  },
-];
+
 
 const OPTIONS = [
   {
@@ -135,11 +128,11 @@ const PROCESS = [
   },
   {
     title: 'See your options',
-    body: 'Qualified applicants review their terms and sign electronically. Many decisions come back within 24–48 hours.',
+    body: 'If approved, compare the payment schedule, total repayment, fees, and any ownership or end-of-term conditions before signing. Timing varies.',
   },
   {
     title: 'The seller gets paid',
-    body: 'After approval and paperwork, the financing provider pays the seller directly. You make payments under your signed agreement — and the truck is yours to run.',
+    body: 'Confirm the provider’s payment process with the seller and arrange pickup or delivery. Ownership and repayment obligations follow your signed agreement.',
   },
 ];
 
@@ -150,52 +143,28 @@ const QUALIFY = [
   },
   {
     title: 'Growing',
-    body: 'Options may be available for businesses operating 6 months to 2 years, including low- or zero-down programs for qualified applicants.',
+    body: 'An operating history can help a provider understand your sales and cash flow. Prepare recent business records and an equipment quote.',
   },
   {
     title: 'Established',
-    body: 'Options may include zero-down, multi-unit, and fleet financing for qualified businesses.',
+    body: 'Planning another unit or replacing equipment? Consider how the payment fits your existing commitments and seasonal cash flow.',
   },
 ];
 
 const SNAPSHOT = [
-  'Financing from $2,500 – $25M',
-  'Lease-to-own options',
-  'General FICO benchmarks: 640 for startups, 575 for established businesses',
-  'Low- or zero-down programs may be available',
-  'Fully custom builds and conversions may be financed',
+  'Equipment details and seller quote',
+  'Business and owner information',
+  'Financial records requested by the provider',
+  'Cash available for a down payment and reserves',
+  'A full repayment schedule, including fees and final payments',
+  'Ownership, insurance, and early repayment terms',
 ];
 
-const FAQ = [
-  {
-    q: 'Can a fully custom food trailer build be financed?',
-    a: 'Fully custom builds and conversions may be financed.',
-  },
-  {
-    q: 'Can shipping or freight be financed too?',
-    a: 'Vendibook Freight transportation may be included in eligible financing arrangements, depending on the financing provider and the transaction. Mention transportation when you apply.',
-  },
-  {
-    q: 'How fast are decisions?',
-    a: 'Many decisions are returned within 24–48 hours.',
-  },
-  {
-    q: 'How much does credit matter?',
-    a: 'Credit is one of several underwriting factors.',
-  },
-  {
-    q: 'Can a first-time operator qualify?',
-    a: 'First-time operators may qualify depending on the full profile and build.',
-  },
-  {
-    q: 'What happens after I submit?',
-    a: 'After submission, an Equinox financing specialist may contact the applicant for additional information.',
-  },
-];
+
 
 const ApplyCta = ({
   className = '',
-  label = 'Check financing options',
+  label = 'Apply for Financing',
   size = 'lg',
   source,
   listingId,
@@ -220,7 +189,12 @@ const ApplyCta = ({
 );
 
 const Financing = () => {
-  const { startFinancingApply, financingLeadDialog } = useFinancingHandoff();
+  const { startFinancingApply: handoff, financingLeadDialog } = useFinancingHandoff();
+  const onTrackedClick = useBuyerSeoTracking('/financing');
+  const startFinancingApply = (source: FinancingSource, listingId?: string) => {
+    trackBuyerSeoFinancing('apply_clicked', { cta_location: source, listing_id: listingId ?? null });
+    handoff(source, listingId);
+  };
   const reduce = useReducedMotion();
   const [params] = useSearchParams();
   const listingIdParam = params.get('listing_id');
@@ -228,13 +202,13 @@ const Financing = () => {
   const listingId = contextListing?.id;
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    if (window.location.hash) document.getElementById(window.location.hash.slice(1))?.scrollIntoView();
+    else window.scrollTo({ top: 0, behavior: 'instant' });
     trackFinancingPageViewed(listingIdParam ?? undefined);
   }, [listingIdParam]);
 
-  const title = 'Financing for Food Trucks, Trailers & Carts | Vendibook';
-  const description =
-    'Financing with Equinox Funding for food trucks, food trailers, and food carts listed on Vendibook. Apply online — subject to prequalification and underwriting.';
+  const title = FINANCING_TITLE;
+  const description = FINANCING_DESCRIPTION;
   const canonical = '/financing';
 
   return (
@@ -248,14 +222,21 @@ const Financing = () => {
         imageAlt="Equipment financing for mobile food businesses on Vendibook"
       />
       <JsonLd
-        schema={[generateFAQSchema(FAQ.map((item) => ({ question: item.q, answer: item.a })))]}
+        schema={[
+          { '@context': 'https://schema.org', '@type': 'WebPage', '@id': 'https://vendibook.com/financing#webpage', url: 'https://vendibook.com/financing', name: title, description, breadcrumb: { '@id': 'https://vendibook.com/financing#breadcrumb' } },
+          { '@context': 'https://schema.org', '@type': 'BreadcrumbList', '@id': 'https://vendibook.com/financing#breadcrumb', itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://vendibook.com/' },
+            { '@type': 'ListItem', position: 2, name: 'How Vendibook Works', item: 'https://vendibook.com/how-it-works' },
+            { '@type': 'ListItem', position: 3, name: 'Financing', item: 'https://vendibook.com/financing' },
+          ] },
+        ]}
       />
 
       <Header />
 
-      <main className="flex-1 pb-44 md:pb-0">
+      <main className="flex-1 pb-44 md:pb-0" onClickCapture={onTrackedClick}>
         {/* HERO */}
-        <section className="relative overflow-hidden pt-10 pb-12 md:pt-16 md:pb-16">
+        <section data-cta-location="hero" className="relative overflow-hidden pt-10 pb-12 md:pt-16 md:pb-16">
           <div className="absolute inset-0 bg-gradient-to-b from-foreground/[0.035] via-background to-background" />
           <div className="container max-w-6xl mx-auto px-4 relative z-10">
             <GuideBreadcrumb
@@ -275,15 +256,13 @@ const Financing = () => {
                 transition={{ duration: 0.5 }}
               >
                 <p className="text-xs font-semibold uppercase tracking-[0.18em] text-muted-foreground">
-                  Food truck &amp; trailer financing
+                  Find it. Plan it. Make your next move.
                 </p>
                 <h1 className="mt-3 text-[2.1rem] leading-[1.06] md:text-5xl font-bold tracking-tight text-foreground">
-                  Found the right truck? Financing may help you make it yours.
+                  Food Truck &amp; Food Trailer Financing
                 </h1>
                 <p className="mt-5 max-w-xl text-base md:text-lg text-muted-foreground leading-relaxed">
-                  A quick online application with our financing partner. Many
-                  decisions come back within 24–48 hours, with options for
-                  eligible food trucks, trailers, carts, and custom builds.
+                  {FINANCING_INTRO}
                 </p>
 
                 <div className="mt-7 flex flex-wrap gap-3">
@@ -293,13 +272,14 @@ const Financing = () => {
                     listingId={listingId}
                   />
                   <Button variant="cta-outline" size="lg" className="rounded-full" asChild>
-                    <Link to="/browse">Browse trucks &amp; trailers</Link>
+                    <Link to={financingInventoryUrl(undefined, undefined, params.toString())}>Browse Food Trucks &amp; Trailers</Link>
                   </Button>
                 </div>
+                <a href="#calculator" className="mt-5 inline-flex text-sm font-semibold underline underline-offset-4 hover:text-primary">Estimate your monthly payment ↓</a>
                 <p className="mt-3.5 max-w-md text-xs leading-relaxed text-muted-foreground">
                   You apply with Equinox Funding, our third-party financing
                   partner. Approval, rates, and terms are subject to underwriting
-                  and are not guaranteed.
+                  and are not guaranteed. Vendibook is not a lender.
                 </p>
 
                 <span className="mt-6 inline-flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 shadow-sm">
@@ -317,12 +297,11 @@ const Financing = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.55, delay: reduce ? 0 : 0.12 }}
                 className="relative"
-                aria-hidden
               >
                 <div className="overflow-hidden rounded-[2rem] border border-border bg-card shadow-[0_30px_80px_-40px_rgba(0,0,0,0.35)]">
                   <img
                     src={heroTruck}
-                    alt=""
+                    alt="Equipped food truck with an open serving window"
                     loading="eager"
                     className="h-[260px] w-full object-cover md:h-[340px]"
                   />
@@ -377,9 +356,9 @@ const Financing = () => {
                   <p className={`text-[10px] font-semibold uppercase tracking-[0.14em] ${EMERALD}`}>
                     Financing this listing
                   </p>
-                  <p className="truncate text-base font-semibold text-foreground">
+                  <Link to={`/listing/${contextListing.id}`} data-cta-id="financing_context_listing" className="block truncate text-base font-semibold text-foreground underline underline-offset-4">
                     {contextListing.title}
-                  </p>
+                  </Link>
                   <p className="mt-0.5 text-sm text-muted-foreground">
                     {contextListing.price_sale
                       ? `$${Number(contextListing.price_sale).toLocaleString()}`
@@ -409,11 +388,11 @@ const Financing = () => {
               id="how-heading"
               className="text-2xl md:text-3xl font-bold text-foreground"
             >
-              How it works
+              How food truck financing works
             </motion.h2>
 
-            <div className="mt-8 grid gap-6 sm:grid-cols-3">
-              {STEPS.map((step, i) => (
+            <div className="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+              {FINANCING_STEPS.map((step, i) => (
                 <motion.div
                   key={step.title}
                   {...(reduce ? {} : fadeUp)}
@@ -439,6 +418,17 @@ const Financing = () => {
                 Applying is with Equinox Funding and subject to underwriting.
               </p>
             </motion.div>
+          </div>
+        </section>
+
+        <FinancingCalculator />
+
+        <section aria-label="Financing essentials" className="py-12 md:py-16" data-cta-location="buyer_guidance">
+          <div className="container max-w-6xl mx-auto px-4 grid gap-8 md:grid-cols-3">
+            {FINANCING_SECTIONS.map(section => <article key={section.heading}>
+              <h2 className="text-xl font-semibold tracking-tight">{section.heading}</h2>
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">{section.text}</p>
+            </article>)}
           </div>
         </section>
 
@@ -487,7 +477,7 @@ const Financing = () => {
                 <Link to="/coffee-trucks-trailers-for-sale" className="font-medium text-foreground underline underline-offset-4">coffee trucks and trailers for sale</Link>.
               </p>
               <Button variant="cta-outline" size="sm" className="shrink-0 rounded-full" asChild>
-                <Link to="/browse">
+                <Link to={financingInventoryUrl(undefined, undefined, params.toString())}>
                   Browse inventory
                   <ArrowRight className="ml-1 h-3.5 w-3.5" aria-hidden />
                 </Link>
@@ -504,8 +494,8 @@ const Financing = () => {
                 Who this may work for
               </h2>
               <p className="mt-3 text-base leading-relaxed text-muted-foreground">
-                Approval is never guaranteed — but more profiles may qualify than
-                most people expect.
+                The provider reviews each application. Prepare the records that
+                explain your business and the equipment you plan to buy.
               </p>
             </motion.div>
 
@@ -599,7 +589,7 @@ const Financing = () => {
               id="snapshot-heading"
               className="text-2xl md:text-3xl font-bold text-foreground"
             >
-              Program snapshot
+              What to prepare and review
             </motion.h2>
 
             <motion.div
@@ -618,9 +608,8 @@ const Financing = () => {
                 ))}
               </ul>
               <p className="mt-5 border-t border-border pt-4 text-xs leading-relaxed text-muted-foreground">
-                Partner-provided information. Each point is subject to program
-                availability and underwriting. These are not guarantees or universal
-                minimums, and not all applicants qualify.
+                This is a planning checklist. Confirm the current application requirements
+                and any offer directly with the provider. Not all applicants qualify.
               </p>
             </motion.div>
 
@@ -684,19 +673,19 @@ const Financing = () => {
             >
               Financing questions, answered.
             </motion.h2>
-            <dl>
-              {FAQ.map((item, i) => (
-                <motion.div
-                  key={item.q}
-                  {...(reduce ? {} : fadeUp)}
-                  transition={{ duration: 0.4, delay: reduce ? 0 : i * 0.04, ease }}
-                  className="border-b border-border py-5 last:border-b-0"
-                >
-                  <dt className="text-base font-semibold text-foreground">{item.q}</dt>
-                  <dd className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{item.a}</dd>
-                </motion.div>
-              ))}
-            </dl>
+            <Accordion type="single" collapsible onValueChange={value => { if (value) trackBuyerSeoFinancing('faq_opened', { faq_id: value }); }}>
+              {FINANCING_FAQ.map((item, i) => <AccordionItem key={item.q} value={`financing-faq-${i + 1}`}>
+                <AccordionTrigger className="text-left text-base">{item.q}</AccordionTrigger>
+                <AccordionContent className="text-sm leading-relaxed text-muted-foreground">{item.a}</AccordionContent>
+              </AccordionItem>)}
+            </Accordion>
+            <div className="mt-8 rounded-xl border border-border p-5">
+              <h3 className="font-semibold text-foreground">Compare equipment before you apply</h3>
+              <p className="mt-2 text-sm text-muted-foreground">Review asking prices, photos, and seller-provided details. Financing eligibility is confirmed separately by the provider.</p>
+              <div className="mt-3 flex flex-wrap gap-x-5 gap-y-2 text-sm">
+                {FINANCING_RESOURCES.map(resource => <Link key={resource.href} to={resource.href} className="underline underline-offset-4 hover:text-primary">{resource.label}</Link>)}
+              </div>
+            </div>
           </div>
         </section>
 
@@ -718,11 +707,11 @@ const Financing = () => {
                   listingId={listingId}
                 />
                 <Button variant="cta-outline" size="lg" className="rounded-full" asChild>
-                  <Link to="/browse">Browse trucks &amp; trailers</Link>
+                  <Link to={financingInventoryUrl(undefined, undefined, params.toString())}>Browse Food Trucks &amp; Trailers</Link>
                 </Button>
               </div>
-              <p className="mt-6 inline-flex items-center gap-1.5 text-xs text-muted-foreground">
-                <HandCoins className="h-3.5 w-3.5" aria-hidden />
+              <p className="mt-6 text-xs leading-relaxed text-muted-foreground">
+                <HandCoins className="inline h-3.5 w-3.5 mr-1" aria-hidden />
                 Prefer to pay another way? See{' '}
                 <Link to="/payments" className="underline underline-offset-2 hover:text-foreground">
                   PayPal checkout and Pay in Person
@@ -751,7 +740,7 @@ const Financing = () => {
           className="w-full rounded-full font-semibold"
           onClick={() => startFinancingApply('financing_page_sticky', listingId)}
         >
-          Check financing options
+          Apply for Financing
           <ArrowRight className="ml-1.5 h-4 w-4" aria-hidden />
         </Button>
         <p className="mt-1.5 text-center text-[10px] leading-snug text-muted-foreground">

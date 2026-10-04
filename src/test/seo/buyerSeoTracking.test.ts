@@ -8,6 +8,7 @@ vi.mock('@/lib/cookieConsent', () => ({ hasAnalyticsConsent: () => consent }));
 import {
   classifyDestination, parseUtm, trackBuyerSeoView, trackBuyerSeoCta, trackBuyerSeoDownstream,
   getBuyerSeoAttribution, __resetBuyerSeoTracking, isBuyerSeoPage,
+  trackBuyerSeoFinancing,
 } from '@/lib/buyerSeoTracking';
 
 const names = () => dbMock.mock.calls.map((c) => c[0]);
@@ -70,5 +71,17 @@ describe('buyer SEO tracking', () => {
     trackBuyerSeoView('/food-trucks-for-sale', 'k1', '', 'food_truck');
     trackBuyerSeoCta({ landingPage: '/food-trucks-for-sale', ctaId: 'x', ctaLocation: 'hero', destination: '/search' });
     expect(dbMock).not.toHaveBeenCalled();
+    expect(getBuyerSeoAttribution()).toBeNull();
+  });
+
+  it('attributes financing actions and downstream starts without payment events', () => {
+    trackBuyerSeoView('/financing', 'f1', '?utm_source=google');
+    trackBuyerSeoFinancing('calculator_completed', { equipment_price: 45000 });
+    trackBuyerSeoDownstream('checkout_started', 'truck-1');
+    expect(names()).toEqual(['buyer_seo_landing_view', 'buyer_seo_financing_calculator_completed', 'buyer_seo_attributed_checkout_started']);
+    expect(dbMock.mock.calls[1][2]).toMatchObject({ landing_page: '/financing', utm_source: 'google' });
+    consent = false;
+    trackBuyerSeoFinancing('apply_clicked');
+    expect(names()).toHaveLength(3);
   });
 });

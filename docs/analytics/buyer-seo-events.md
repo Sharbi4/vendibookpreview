@@ -26,3 +26,19 @@ Attribution is first-touch per browser tab session (`sessionStorage.vb_buyer_seo
 
 ## Adding a CTA
 Put `data-cta-location="…"` on the section and optionally `data-cta-id="…"` on the link. Links without an id get `listing_card` or `link_<path>`.
+
+## Financing hub extension — October 2026
+
+`/financing` now uses the same `buyer_seo_landing_view` and `buyer_seo_cta_click` contract. Internal listing links are classified as `listing_detail`; calculator links include `cta_location=calculator`. Existing financing application/handoff events remain intact.
+
+Additional consent-gated events:
+
+| Event | Trigger |
+| --- | --- |
+| `buyer_seo_financing_calculator_started` | First input edit or calculation in this mounted calculator |
+| `buyer_seo_financing_calculator_completed` | Valid calculation submitted, or main budget CTA used; deduped until inputs change |
+| `buyer_seo_financing_calculator_browse_clicked` | Main or category-specific budget inventory link clicked |
+| `buyer_seo_financing_apply_clicked` | Application CTA used, with placement and optional listing ID |
+| `buyer_seo_financing_faq_opened` | FAQ accordion opened, with stable question index |
+
+These events carry the first buyer-SEO landing attribution, plus `page_path=/financing`. Calculator events contain non-personal planning inputs only. First-touch session storage is now written only with analytics consent. Existing signup-completed events include that attribution when consent exists; no additional signup conversion or paid event is emitted. Listing views, inquiries and checkout starts retain the existing downstream attribution behavior. Campaign UTMs are retained on calculator-to-search links, not blindly appended to partner application URLs.

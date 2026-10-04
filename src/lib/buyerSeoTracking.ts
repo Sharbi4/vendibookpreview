@@ -20,6 +20,7 @@ export const BUYER_SEO_PAGES = [
   '/used-food-trucks-for-sale',
   '/how-to-buy-a-food-truck',
   '/food-truck-prices',
+  '/financing',
 ] as const;
 
 export const isBuyerSeoPage = (path: string): boolean =>
@@ -112,6 +113,7 @@ const send = (name: string, payload: Record<string, unknown>, listingId?: string
  * return visit via client navigation counts again.
  */
 export const trackBuyerSeoView = (landingPage: string, navKey: string, search: string, category?: string) => {
+  if (!hasAnalyticsConsent()) return;
   const key = `${landingPage}|${navKey}`;
   if (firedViews.has(key)) return;
   firedViews.add(key);
@@ -151,12 +153,27 @@ export const trackBuyerSeoCta = (p: {
  * These are *starts*, not completed or paid transactions.
  */
 export const trackBuyerSeoDownstream = (stage: BuyerSeoDownstreamStage, listingId?: string, extra: Record<string, unknown> = {}) => {
+  if (!hasAnalyticsConsent()) return;
   const attr = getBuyerSeoAttribution();
   if (!attr) return;
   const key = `${stage}|${listingId ?? ''}`;
   if (firedDownstream.has(key)) return;
   firedDownstream.add(key);
   send(`buyer_seo_attributed_${stage}`, { ...attr, listing_id: listingId ?? null, ...extra }, listingId);
+};
+
+/** Financing-specific interactions share the buyer SEO consent and first-touch contract. */
+export const trackBuyerSeoFinancing = (
+  action: 'calculator_started' | 'calculator_completed' | 'calculator_browse_clicked' | 'apply_clicked' | 'faq_opened',
+  details: Record<string, string | number | null> = {},
+) => {
+  if (!hasAnalyticsConsent()) return;
+  send(`buyer_seo_financing_${action}`, {
+    ...getBuyerSeoAttribution(),
+    landing_page: getBuyerSeoAttribution()?.landing_page ?? '/financing',
+    page_path: '/financing',
+    ...details,
+  });
 };
 
 /** Test helper. */

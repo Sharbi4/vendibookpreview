@@ -646,13 +646,14 @@ export const PRICES_COST_COMPONENTS = [
   'Financing costs, if you borrow',
 ];
 
-/** The 5 buyer SEO paths served by seo-prerender for crawlers. */
+/** Buyer SEO paths served by seo-prerender for crawlers. */
 export const BUYER_SEO_PRERENDER_PATHS = [
   '/food-trucks-for-sale',
   '/food-trailers-for-sale',
   '/used-food-trucks-for-sale',
   HOW_TO_BUY_PATH,
   PRICES_PATH,
+  '/financing',
 ];
 
 /** Inventory filter for each hub (mirrors CategoryIndex config). */

@@ -168,6 +168,7 @@ export const REQUIRED_PAGE_PATHS = [
   "/food-trailers-for-sale",
   "/used-food-trucks-for-sale",
   "/how-to-buy-a-food-truck",
+  "/financing",
   "/food-truck-prices",
 ];
 

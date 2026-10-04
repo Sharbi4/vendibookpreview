@@ -1,5 +1,5 @@
 // Analytics utility for tracking user interactions
-import { trackBuyerSeoDownstream } from '@/lib/buyerSeoTracking';
+import { getBuyerSeoAttribution, trackBuyerSeoDownstream } from '@/lib/buyerSeoTracking';
 // Integrates with Google Analytics 4, Facebook CAPI, and custom event tracking
 
 import { hasAnalyticsConsent } from '@/lib/cookieConsent';
@@ -133,6 +133,7 @@ export const trackSignupCompleted = (role?: string): void => {
     category: 'Activation',
     action: 'signup_completed',
     label: role || 'unknown',
+    metadata: hasAnalyticsConsent() ? { ...getBuyerSeoAttribution() } : undefined,
   });
 
   // Fire Facebook CAPI CompleteRegistration event

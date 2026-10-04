@@ -19,7 +19,7 @@ const PRERENDER_URL =
   "https://nbrehbwfsmedbelzntqs.supabase.co/functions/v1/seo-prerender";
 
 const CRAWLER_RE =
-  /(googlebot|bingbot|slurp|duckduckbot|baiduspider|yandex|linkedinbot|twitterbot|facebookexternal|facebot|slackbot|discordbot|whatsapp|telegrambot|pinterest|redditbot|applebot)/i;
+  /(googlebot|bingbot|slurp|duckduckbot|baiduspider|yandex|linkedinbot|twitterbot|facebookexternal|facebot|slackbot|discordbot|whatsapp|telegrambot|pinterest|redditbot|applebot|oai-searchbot|chatgpt-user|perplexitybot|perplexity-user)/i;
 
 export const BUYER_SEO_PATHS = [
   "/food-trucks-for-sale",
@@ -27,6 +27,7 @@ export const BUYER_SEO_PATHS = [
   "/used-food-trucks-for-sale",
   "/how-to-buy-a-food-truck",
   "/food-truck-prices",
+  "/financing",
 ];
 
 export const PRERENDER_PATHS = [
@@ -53,7 +54,7 @@ export default {
     const ua = request.headers.get("user-agent") ?? "";
     const target = prerenderTarget(url.pathname, ua);
 
-    if (target) {
+    if (target && (request.method === 'GET' || request.method === 'HEAD')) {
 
       try {
         const response = await fetch(target, {
@@ -63,9 +64,14 @@ export default {
 
         // Non-200 from prerender (e.g. 404 listing, 5xx) → let the origin SPA answer.
         if (!response.ok) return fetch(request);
-        return new Response(response.body, {
+        const headers = new Headers(response.headers);
+        // The origin returns a SPA to browsers. Never share bot HTML through
+        // downstream caches that don't include User-Agent in their cache key.
+        headers.set('Vary', 'Accept-Encoding, User-Agent');
+        headers.set('Cache-Control', 'private, no-store');
+        return new Response(request.method === 'HEAD' ? null : response.body, {
           status: response.status,
-          headers: response.headers,
+          headers,
         });
       } catch {
         // If prerender fails, fall through to origin

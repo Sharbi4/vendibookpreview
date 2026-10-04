@@ -11,6 +11,7 @@ import {
   PRICES_INTRO, PRICES_COST_HEADING, PRICES_FALLBACK_ANSWER, PRICES_SCOPE_NOTE, PRICES_COST_COMPONENTS,
   type SeoLink, type SeoFaq,
 } from './buyerSeoContent.ts';
+import { FINANCING_TITLE, FINANCING_DESCRIPTION, FINANCING_INTRO, FINANCING_STEPS, FINANCING_FAQ, FINANCING_SECTIONS, FINANCING_RESOURCES } from './financingContent.ts';
 
 export const SITE = 'https://vendibook.com';
 
@@ -35,7 +36,7 @@ const crumbs = (items: { name: string; href: string }[]) => ({
 });
 const usd = (n: number) => `$${Math.round(n).toLocaleString('en-US')}`;
 
-function doc(o: { path: string; title: string; description: string; ogType: string; robots: string; schemas: unknown[]; body: string }) {
+function doc(o: { path: string; title: string; description: string; ogType: string; robots: string; schemas: unknown[]; body: string; image?: string }) {
   const url = `${SITE}${o.path}`;
   // "<" is escaped in JSON-LD to prevent </script> breakouts from listing titles.
   const ld = JSON.stringify(o.schemas).replace(/</g, '\\u003c');
@@ -53,6 +54,7 @@ function doc(o: { path: string; title: string; description: string; ogType: stri
 <meta property="og:title" content="${esc(o.title)}" />
 <meta property="og:description" content="${esc(o.description)}" />
 <meta property="og:url" content="${url}" />
+${o.image ? `<meta property="og:image" content="${esc(o.image)}" /><meta name="twitter:image" content="${esc(o.image)}" />` : ''}
 <meta name="twitter:card" content="summary_large_image" />
 <meta name="twitter:title" content="${esc(o.title)}" />
 <meta name="twitter:description" content="${esc(o.description)}" />
@@ -123,8 +125,24 @@ function renderPrices(year: number): RenderResult {
   return { status: 200, indexable: true, html: doc({ path: PRICES_PATH, title: pricesTitle(year), description: pricesDescription(year), ogType: 'article', robots: 'index, follow', schemas, body }) };
 }
 
+function renderFinancing(): RenderResult {
+  const path = '/financing';
+  const schemas = [
+    { '@context': 'https://schema.org', '@type': 'WebPage', name: FINANCING_TITLE, description: FINANCING_DESCRIPTION, url: `${SITE}${path}` },
+    crumbs([{ name: 'Home', href: '/' }, { name: 'How Vendibook Works', href: '/how-it-works' }, { name: 'Financing', href: path }]),
+  ];
+  const body = `<h1>Food Truck &amp; Food Trailer Financing</h1><p>${esc(FINANCING_INTRO)}</p>
+<p>You apply with Equinox Funding, our third-party financing partner. Vendibook is not a lender. Approval, rates, and terms are subject to underwriting and are not guaranteed.</p>
+<section><h2>How food truck financing works</h2><ol>${FINANCING_STEPS.map(step => `<li><h3>${esc(step.title)}</h3><p>${esc(step.body)}</p></li>`).join('')}</ol></section>
+<section id="calculator"><h2>Food truck financing calculator</h2><p>Estimate a fixed-rate monthly equipment payment using the purchase price, down payment, illustrative annual interest rate, and term in months. The default 10% rate is an editable illustration, not an average rate, offer, or quote. Taxes, fees, insurance, and transportation are not included.</p><p>The order estimate compares gross sales with the equipment payment only. It does not include operating costs or predict profit. Actual financing terms, eligibility, costs, revenue, and profitability vary.</p><a href="${SITE}/financing#calculator">Open the interactive calculator</a></section>
+${FINANCING_SECTIONS.map(section => `<section><h2>${esc(section.heading)}</h2><p>${esc(section.text)}</p></section>`).join('')}
+${faqHtml(FINANCING_FAQ)}<section><h2>Compare equipment before you apply</h2>${links(FINANCING_RESOURCES)}</section>`;
+  return { status: 200, indexable: true, html: doc({ path, title: FINANCING_TITLE, description: FINANCING_DESCRIPTION, ogType: 'website', robots: 'index, follow', schemas, body, image: `${SITE}/images/social/vendibook-og-financing.jpg` }) };
+}
+
 export function renderBuyerSeoPage(path: string, input: RenderInput = {}): RenderResult | null {
   if (!isBuyerSeoPrerenderPath(path)) return null;
+  if (path === '/financing') return renderFinancing();
   if (path === HOW_TO_BUY_PATH) return renderGuide();
   if (path === PRICES_PATH) return renderPrices(input.year ?? new Date().getFullYear());
   return renderHub(path, input);

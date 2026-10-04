@@ -9,6 +9,27 @@ import { prerenderTarget, BUYER_SEO_PATHS } from '../../../workers/seo-prerender
 import { CATEGORY_INDEX_CONFIGS } from '@/data/categoryIndexConfigs';
 import { USED_CONDITION_VALUES } from '@/lib/listings/condition';
 import { BUYER_SEO_PAGES } from '@/lib/buyerSeoTracking';
+import { FINANCING_FAQ, FINANCING_TITLE, FINANCING_SECTIONS } from '../../../supabase/functions/_shared/financingContent';
+
+describe('financing and AI search access', () => {
+  it.each(['OAI-SearchBot/1.0', 'ChatGPT-User/1.0', 'PerplexityBot/1.0', 'Perplexity-User/1.0'])('serves public SEO pages to %s only', ua => {
+    expect(prerenderTarget('/financing', ua)).toContain('path=%2Ffinancing');
+    expect(prerenderTarget('/dashboard', ua)).toBeNull();
+    expect(prerenderTarget('/checkout', ua)).toBeNull();
+  });
+  it('renders matching financing answers and valid WebPage/Breadcrumb JSON-LD without invented offers', () => {
+    const result = renderBuyerSeoPage('/financing')!;
+    const doc = new DOMParser().parseFromString(result.html, 'text/html');
+    expect(result.indexable).toBe(true);
+    expect(doc.title).toBe(FINANCING_TITLE);
+    expect(doc.querySelectorAll('h1')).toHaveLength(1);
+    expect(doc.querySelector('link[rel="canonical"]')?.getAttribute('href')).toBe('https://vendibook.com/financing');
+    for (const faq of FINANCING_FAQ) expect(doc.body.textContent).toContain(faq.a);
+    for (const section of FINANCING_SECTIONS) expect(doc.body.textContent).toContain(section.text);
+    const schemas = JSON.parse(doc.querySelector('script[type="application/ld+json"]')!.textContent!);
+    expect(schemas.map((schema: Record<string, string>) => schema['@type'])).toEqual(['WebPage', 'BreadcrumbList']);
+  });
+});
 
 const GOOGLEBOT = 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)';
 const HUMAN = 'Mozilla/5.0 (Windows NT 10.0) Chrome/128 Safari/537.36';
