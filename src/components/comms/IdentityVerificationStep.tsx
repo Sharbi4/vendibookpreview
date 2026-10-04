@@ -1,0 +1,60 @@
+import { useState } from "react";
+import { ArrowRight, BadgeCheck, Loader2, ShieldCheck } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { openPlaidLink } from "@/lib/plaidLink";
+import "./signup-phone.css";
+
+type Result = { link_token?: string; identity_verified?: boolean; identity_status?: string | null; message?: string; error?: string };
+
+async function call(action: string): Promise<Result> {
+  const { data, error } = await supabase.functions.invoke("verified-seller", { body: { action } });
+  let payload = data as Result | null;
+  if (error && (error as any).context) {
+    try { payload = await (error as any).context.json(); } catch { /* generic */ }
+  }
+  if (error || payload?.error) throw new Error(payload?.error || "We couldn’t start your identity check. Please try again.");
+  return payload ?? {};
+}
+
+/** Free, required Plaid identity check shown right after phone verification. */
+export default function IdentityVerificationStep({ onDone, onSignOut }: { onDone: () => void; onSignOut: () => void }) {
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const [notice, setNotice] = useState("");
+
+  async function verify() {
+    if (busy) return;
+    setBusy(true); setError(""); setNotice("");
+    try {
+      const started = await call("signup-verify");
+      if (started.identity_verified) { onDone(); return; }
+      if (!started.link_token) { setNotice(started.message || "Your identity check is being reviewed."); return; }
+      const outcome = await openPlaidLink(started.link_token);
+      const settled = await call("signup-refresh");
+      if (settled.identity_verified) { onDone(); return; }
+      if (settled.identity_status === "pending_review") setNotice("Thanks! Your identity check is being reviewed. We'll email you when it's done.");
+      else if (outcome.exited) setNotice("You closed the check before it finished. Tap the button to pick up where you left off.");
+      else if (settled.identity_status === "failed") setError("We couldn't confirm your identity. Tap the button to try once more.");
+      else setNotice(settled.message || "Still checking — tap the button again in a moment.");
+    } catch (e: any) { setError(e.message || "Something went wrong. Please try again."); }
+    finally { setBusy(false); }
+  }
+
+  return <main className="signup-phone-page">
+    <section className="signup-phone-card" aria-labelledby="signup-id-title">
+      <a href="/" className="signup-phone-brand">VENDIBOOK</a>
+      <div className="signup-phone-icon"><BadgeCheck size={26} aria-hidden /></div>
+      <p className="signup-phone-eyebrow">Final step</p>
+      <h1 id="signup-id-title">Confirm it’s really you.</h1>
+      <p className="signup-phone-copy">Every Vendibook member verifies their identity with Plaid. It takes about two minutes, it’s free, and it keeps scammers out of your conversations.</p>
+      <p className="signup-phone-note">You’ll need a government-issued photo ID and your phone camera. Plaid securely confirms your identity — Vendibook never shows your ID to other members.</p>
+      {error && <p className="signup-phone-error" role="alert">{error}</p>}
+      {notice && <p className="signup-phone-note" role="status">{notice}</p>}
+      <button type="button" className="signup-phone-primary" onClick={verify} disabled={busy}>
+        {busy ? <><Loader2 size={18} className="animate-spin" />Opening secure check…</> : <>Verify my identity<ArrowRight size={18} /></>}
+      </button>
+      <div className="signup-phone-trust"><ShieldCheck size={16} aria-hidden /><span>Free for every member. You’ll go right back to where you were when you’re done.</span></div>
+      <div className="signup-phone-links"><a href="/help">Need help?</a><button type="button" disabled={busy} onClick={onSignOut}>Sign out</button></div>
+    </section>
+  </main>;
+}
