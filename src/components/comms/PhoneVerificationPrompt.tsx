@@ -4,9 +4,10 @@ import { ArrowRight, Loader2, Lock, ShieldCheck, Smartphone } from "lucide-react
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { normalizeNanpToE164 } from "@/lib/sms/phone";
+import IdentityStep from "./IdentityVerificationStep";
 import "./signup-phone.css";
 
-type Status = { required: boolean; phone?: string; pending?: boolean; retry_after?: number };
+type Status = { required: boolean; identity_required?: boolean; phone?: string; pending?: boolean; retry_after?: number };
 const rpc = (name: string, args = {}) => (supabase as any).rpc(name, args);
 
 export default function PhoneVerificationPrompt({ children }: { children: ReactNode }) {
@@ -86,19 +87,23 @@ export default function PhoneVerificationPrompt({ children }: { children: ReactN
   // Legal/help/password-recovery pages remain accessible. Marketplace actions are also guarded on the server.
   const publicHelp = ["/terms", "/privacy", "/sms-terms", "/help", "/help-center", "/reset-password"].some(path => pathname === path || pathname.startsWith(path + "/"));
   if (publicHelp || (!isLoading && !user)) return <>{children}</>;
-  if (user && checkedUser === user.id && status?.required === false) return <>{children}</>;
+  if (user && checkedUser === user.id && status?.required === false && !status.identity_required) return <>{children}</>;
 
   const checking = isLoading || !status || checkedUser !== user?.id;
+  const identityStep = !checking && status?.required === false && !!status?.identity_required;
   // Dashboard stays viewable with a clear lock warning; messaging/offers stay blocked server-side.
   const onDashboard = pathname === "/dashboard" || pathname.startsWith("/dashboard/");
   if (!checking && onDashboard && !showForm) return <>
     <div role="alert" className="signup-phone-banner">
       <Lock size={18} aria-hidden />
-      <div><strong>Messages and offers are locked.</strong> Verify your mobile number to message buyers, respond to offers, and manage bookings.</div>
+      <div><strong>Messages and offers are locked.</strong> {identityStep
+        ? "Verify your identity to message, make offers, buy, and manage bookings."
+        : "Verify your mobile number to message, make offers, and manage bookings."}</div>
       <button type="button" onClick={() => setShowForm(true)}>Verify now</button>
     </div>
     {children}
   </>;
+  if (identityStep) return <IdentityStep onDone={() => setRetry(n => n + 1)} onSignOut={() => void signOut()} />;
   return <main className="signup-phone-page">
     <section className="signup-phone-card" aria-labelledby="signup-phone-title">
       <a href="/" className="signup-phone-brand">VENDIBOOK</a>

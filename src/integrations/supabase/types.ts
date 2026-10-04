@@ -9880,14 +9880,17 @@ export type Database = {
         Row: {
           enforced_from: string | null
           id: boolean
+          identity_enforced_from: string | null
         }
         Insert: {
           enforced_from?: string | null
           id?: boolean
+          identity_enforced_from?: string | null
         }
         Update: {
           enforced_from?: string | null
           id?: boolean
+          identity_enforced_from?: string | null
         }
         Relationships: []
       }
@@ -13189,6 +13192,7 @@ export type Database = {
         Args: { blocked: boolean; kind: string; thread: string }
         Returns: undefined
       }
+      signup_identity_required: { Args: { actor?: string }; Returns: boolean }
       signup_phone_required: { Args: { actor?: string }; Returns: boolean }
       signup_phone_status: { Args: never; Returns: Json }
       soft_delete_permit_document: {

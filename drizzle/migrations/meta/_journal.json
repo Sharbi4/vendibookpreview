@@ -29,6 +29,13 @@
       "when": 1791157773636,
       "tag": "0003_ai_message_risk_scan",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791158262426,
+      "tag": "0004_require_identity_verification",
+      "breakpoints": true
     }
   ]
 }

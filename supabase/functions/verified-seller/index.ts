@@ -364,6 +364,62 @@ serve(async (req) => {
       return jsonResponse(200, publicState(record, payment, enabled, legacyVerified));
     }
 
+    // ------------------------------------------- free signup identity check
+    // Required for every member right after signup. Free: no PayPal hold.
+    if (action === "signup-verify" || action === "signup-refresh") {
+      const markVerified = async () => {
+        const nowIso = new Date().toISOString();
+        await admin.from("profiles").update({ identity_verified: true, identity_verified_at: nowIso }).eq("id", userId);
+        await admin.from("seller_verifications").update({ status: "verified", verified_at: record.verified_at ?? nowIso, updated_at: nowIso }).eq("user_id", userId);
+        return jsonResponse(200, { identity_verified: true, identity_status: "success" });
+      };
+      if (legacyVerified) return jsonResponse(200, { identity_verified: true, identity_status: "success" });
+
+      if (action === "signup-refresh") {
+        const result = await reconcileVerification(admin, userId);
+        if (result.identity_status === "success") return await markVerified();
+        return jsonResponse(200, { identity_verified: false, identity_status: result.identity_status, message: result.message });
+      }
+
+      if (record.identity_status === "success") return await markVerified();
+      const signupTemplate = plaidTemplateId();
+      if (!signupTemplate) {
+        log("plaid_not_configured", plaidConfigStatus());
+        return jsonError(503, "verification_unavailable", "Identity verification isn't available right now. Please try again shortly.");
+      }
+      if (record.identity_status === "pending_review") {
+        return jsonResponse(200, { identity_verified: false, identity_status: "pending_review", message: "Your identity check is being reviewed. We'll email you as soon as it's done." });
+      }
+      // Resume an in-flight attempt.
+      if (record.current_attempt_id && (record.identity_status === "active" || !record.identity_status)) {
+        return jsonResponse(200, { link_token: await issueLinkToken(userId, signupTemplate), identity_status: "active" });
+      }
+      // Failed / expired / canceled: one free Plaid retry, then support.
+      if (record.current_attempt_id) {
+        const { data: claimed } = await admin.rpc("claim_seller_verification_retry", { _user_id: userId });
+        if (claimed !== true) {
+          return jsonError(403, "retry_limit_reached", "We couldn't verify your identity. Contact support@vendibook.com and we'll help you finish.");
+        }
+        let session;
+        try {
+          session = await retryIdentityVerification({ clientUserId: userId, templateId: signupTemplate });
+        } catch (err) {
+          await admin.rpc("release_seller_verification_retry", { _user_id: userId });
+          throw err;
+        }
+        await persistSession(admin, userId, signupTemplate, session, null, record.current_attempt_id);
+        const token = await tryIssueLinkToken(userId, signupTemplate);
+        if (!token) return jsonError(502, "link_token_unavailable", "Your identity check is ready. Tap the button again in a moment.");
+        return jsonResponse(200, { link_token: token, identity_status: "active" });
+      }
+      await admin.from("seller_verifications").update({ template_id: signupTemplate, updated_at: new Date().toISOString() }).eq("user_id", userId);
+      const session = await createIdentityVerification({ clientUserId: userId, templateId: signupTemplate });
+      await persistSession(admin, userId, signupTemplate, session, null);
+      const token = await tryIssueLinkToken(userId, signupTemplate);
+      if (!token) return jsonError(502, "link_token_unavailable", "Your identity check is ready. Tap the button again in a moment.");
+      return jsonResponse(200, { link_token: token, identity_status: "active" });
+    }
+
     if (!enabled) {
       return jsonError(
         403,
