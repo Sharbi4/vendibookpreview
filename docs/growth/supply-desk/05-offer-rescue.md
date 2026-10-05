@@ -6,8 +6,8 @@ _Supply Desk · data and code checked 2026-10-05 on `fix/paypal-webhook-config`_
 
 | | Today |
 |---|---|
-| Offers, all time | **4**: 2 expired unanswered (Jun 9, Sep 11), 2 cancelled by the buyer (Oct 4) |
-| Seller response to offers | **0 of 4** |
+| Offers, all time | **4**, but only **2 real**: both expired unanswered (Jun 9, Sep 11). The 2 cancelled on Oct 4 came from an account the safety system deactivated for off-platform contact attempts under a different identity (`message_sending_holds`). Send-ready rescue copy for the 2 real offers: `outreach/offer-rescue-2026-10-05.md` |
+| Seller response to offers | **0 of 2** real offers |
 | Conversations (90 days) | 3. The seller replied in 1, after **12.1 hours** to first reply |
 | Listing leads / booking requests (90 days) | 0 / 0 |
 | Video walkthrough requests (30 days) | 5 |
@@ -17,7 +17,7 @@ _Supply Desk · data and code checked 2026-10-05 on `fix/paypal-webhook-config`_
 | Admin alert on an unanswered offer | **None** |
 | Offer expiry | 48 hours (`expire-stale-offers`); counters also 48 hours |
 
-**Diagnosis.** At this volume every offer is precious. Each of the 4 offers was worth about $18–49k. The seller gets one email and nothing else, and the offer quietly expires 48 hours later.
+**Diagnosis.** At this volume every offer is precious. The 2 real offers were $15k and $22k. The seller gets one email and nothing else, and the offer quietly expires 48 hours later.
 
 ## The loop
 
