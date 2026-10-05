@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { sendTransactionalEmailInternal } from "../_shared/invokeTransactionalEmail.ts";
+import { getCaller, isBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -16,6 +17,13 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   try {
     const { email, fullName, role }: WelcomeEmailRequest = await req.json();
+    // Only the backend, or a signed-in member for their own address, may send.
+    if (!(await isBackendCaller(req))) {
+      const caller = await getCaller(req);
+      if (!caller?.email || !email || caller.email.toLowerCase() !== String(email).trim().toLowerCase()) {
+        return forbiddenResponse(corsHeaders);
+      }
+    }
     if (!email) {
       return new Response(JSON.stringify({ error: "Email is required" }), {
         status: 400,
