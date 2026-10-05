@@ -39,6 +39,8 @@ const MessageHostForm = ({
   const [isLoading, setIsLoading] = useState(false);
   // Guest (logged-out) inquiry: buyers can ask before creating an account.
   const [guest, setGuest] = useState({ name: '', email: '', phone: '' });
+  // Honeypot: hidden from people, filled in by form-spamming bots.
+  const [website, setWebsite] = useState('');
   const [guestSent, setGuestSent] = useState(false);
 
   const goToAuth = () => {
@@ -59,6 +61,11 @@ const MessageHostForm = ({
 
     setIsLoading(true);
     try {
+      if (website) {
+        // Bot filled the hidden field: show success, save nothing.
+        setGuestSent(true);
+        return;
+      }
       // Client-generated id: anon users can insert leads but not read them back.
       const leadId = crypto.randomUUID();
       const { error } = await supabase.from('listing_leads').insert({
@@ -150,7 +157,7 @@ const MessageHostForm = ({
         <CheckCircle2 className="h-8 w-8 mx-auto text-emerald-500" />
         <p className="font-semibold">Question sent</p>
         <p className="text-sm text-muted-foreground">
-          We passed it to the seller. A Vendibook concierge will follow up at <strong>{guest.email.trim()}</strong> within 1 business hour.
+          We got it. A Vendibook concierge will review it, connect you with the seller, and follow up at <strong>{guest.email.trim()}</strong> within 1 business hour.
         </p>
         <Button variant="link" className="h-auto p-0 text-sm" onClick={goToAuth}>
           Create a free account to chat with the seller directly
@@ -171,6 +178,16 @@ const MessageHostForm = ({
       />
       {!user && (
         <div className="space-y-2">
+          <input
+            type="text"
+            name="website"
+            tabIndex={-1}
+            autoComplete="off"
+            aria-hidden="true"
+            value={website}
+            onChange={(e) => setWebsite(e.target.value)}
+            className="absolute -left-[9999px] h-0 w-0 opacity-0"
+          />
           <Input
             type="email"
             inputMode="email"
