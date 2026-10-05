@@ -55,7 +55,7 @@ Tracked weekly, with pulse checks every hour. Definitions are in `liquidity-scor
 
 ## 3. Website roadmap (ranked by liquidity impact)
 
-These are ready to paste into Lovable as prompts. Respect the project knowledge: PayPal only, no Stripe.
+These are ready to paste into Lovable as prompts. Payments run on **Square and PayPal**. No Stripe. **PayPal is intentionally in sandbox mode right now. Do not change PayPal environment, credentials, plans, or webhook configuration** in any growth work or Lovable prompt.
 
 **P0: Guest inquiry, no login (est. 5–10× more contacts)**
 > On sale listing pages (`SalePurchaseCard`, `SaleListingMobile`, and the shared `MessageHostForm`), let anonymous visitors send a question to the seller without creating an account. Collect name, email or phone (one required), and the message, with quick-pick chips: "Is this still available?", "Is the title clean?", "Can I see it in person / video walkthrough?", "Is the price negotiable?". Insert into the existing `listing_leads` table (`listing_id`, `host_id`, `name`, `email`, `phone`, `message`, `source='guest_inquiry'`) with an anon-insert RLS policy and rate limiting. Notify the seller by email and SMS with a magic link to reply. Fire `trackHostContacted` and a `guest_inquiry_submitted` analytics event. On mobile, make "Ask a question" a text inquiry, and offer the Vendi call as a secondary option.
