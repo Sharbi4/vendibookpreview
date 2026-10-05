@@ -57,7 +57,11 @@ export function parseLocationInput(input?: string | null): ParsedLocation {
 
   if (parts.length >= 2) {
     state = toStateCode(parts[parts.length - 1]);
-    city = state ? parts.slice(0, -1).join(', ') : parts.join(', ');
+    // Full addresses and neighborhoods ("TX-99, Houston, TX", "123 Main St,
+    // Austin, TX", "Midtown, Houston, TX"): the locality is the part right
+    // before the state. Joining everything made the city "tx-99, houston",
+    // which matched no listing and returned zero results.
+    city = state ? parts[parts.length - 2] : parts.join(', ');
   } else if (parts.length === 1) {
     const only = parts[0];
     const asState = toStateCode(only);

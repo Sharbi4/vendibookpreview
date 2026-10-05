@@ -299,16 +299,25 @@ const Search = () => {
     !!locationCoords && searchRadius < 100 && page === 1 && !isFetching &&
     !radiusAutoExpanded && totalCount < 5;
 
-  // Debounced search_performed funnel event — fires ~600ms after results settle so we
+  // Debounced search_performed funnel event — fires ~1.5s after results settle so we
   // don't double-count while the user is still typing or toggling filters.
+  // Only report what was actually searched: skip while the location box is
+  // still mid-typing (raw text ahead of the debounced value) and report the
+  // debounced text, so pauses on fragments like "new" aren't logged as dead
+  // ends.
   useEffect(() => {
-    if (isLoadingListings) return;
+    // isFetching too: placeholderData keeps the previous search's count on
+    // screen while the new one loads, which would log the wrong result_count.
+    if (isLoadingListings || isFetching) return;
+    if (locationText.trim() !== debouncedLocationText.trim()) return;
+    const searchedLocation = debouncedLocationText.trim();
+    if (searchedLocation && searchedLocation.length < 3 && !locationCoords) return;
     const t = setTimeout(() => {
       const payload = {
         query: debouncedQuery.trim() || undefined,
         mode: mode !== 'all' ? mode : 'all',
         category: category !== 'all' ? category : 'all',
-        locationText: locationText || undefined,
+        locationText: searchedLocation || undefined,
         result_count: totalCount,
         page,
         source: 'search_page',
@@ -321,10 +330,10 @@ const Search = () => {
       } else {
         trackLeadEvent('search_results_returned', payload);
       }
-    }, 600);
+    }, 1500);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [debouncedQuery, mode, category, locationText, totalCount, page, isLoadingListings]);
+  }, [debouncedQuery, mode, category, locationText, debouncedLocationText, locationCoords, totalCount, page, isLoadingListings, isFetching]);
 
 
 
