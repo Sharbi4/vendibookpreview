@@ -56,6 +56,9 @@ serve(async (req) => {
       throw new Error("Missing required fields: transaction_id or reason");
     }
 
+    if (typeof reason !== "string" || reason.length > 2000) {
+      throw new Error("Please keep the dispute reason under 2,000 characters");
+    }
     if (reason.length < 10) {
       throw new Error("Please provide a more detailed reason (at least 10 characters)");
     }
@@ -188,7 +191,7 @@ serve(async (req) => {
 
     const otherParagraphs = [
       `${disputeRaiser} has raised a dispute for the transaction involving ${listingTitle}.`,
-      `Reason: ${reason}`,
+      `Our support team has the details and will share what's needed while we review it.`,
       `Payment is now held pending resolution. Our team may contact you for more information.`,
       ...(termsBlock ? [termsBlock] : []),
     ];

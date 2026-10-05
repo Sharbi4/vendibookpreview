@@ -53,7 +53,16 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    const { booking_id, event_type, host_response, reason }: NotificationRequest = await req.json();
+    const rawReq: NotificationRequest = await req.json();
+    const { booking_id, event_type } = rawReq;
+    // Host-written text is bounded and stripped of links before it reaches an email.
+    const boundText = (v: unknown): string | undefined => {
+      if (typeof v !== "string") return undefined;
+      const t = v.replace(/[\u0000-\u001f]/g, " ").replace(/\b(?:https?:\/\/|www\.)\S+/gi, "[link removed]").replace(/\s+/g, " ").trim().slice(0, 500);
+      return t || undefined;
+    };
+    const host_response = boundText(rawReq.host_response);
+    const reason = boundText(rawReq.reason);
     logStep("Request received", { booking_id, event_type });
     if (!booking_id || !event_type) throw new Error("Missing booking_id or event_type");
 
