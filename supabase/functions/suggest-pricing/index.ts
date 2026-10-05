@@ -34,26 +34,34 @@ serve(async (req) => {
     // Anonymous users pass through so the marketing preview works, but any
     // signed-in user below Growth gets a clean entitlement error.
     const authHeader = req.headers.get("Authorization");
-    if (authHeader) {
-      try {
-        const authClient = createClient(
-          Deno.env.get("SUPABASE_URL")!,
-          Deno.env.get("SUPABASE_ANON_KEY")!,
-          { global: { headers: { Authorization: authHeader } } },
-        );
-        const { data: { user } } = await authClient.auth.getUser();
-        if (user?.id) {
-          const tier = await resolveHostTier(user.id);
-          if (!tierAtLeast(tier, "pro")) {
-            return new Response(
-              JSON.stringify({ ...tierRequiredBody("pro", tier), feature: "pricepilot" }),
-              { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-            );
-          }
-        }
-      } catch (gateErr) {
-        console.error("suggest-pricing gate error (non-fatal):", gateErr);
-      }
+    if (!authHeader) {
+      return new Response(JSON.stringify({ error: "Please sign in to continue." }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    let gateUserId: string | null = null;
+    try {
+      const authClient = createClient(
+        Deno.env.get("SUPABASE_URL")!,
+        Deno.env.get("SUPABASE_ANON_KEY")!,
+        { global: { headers: { Authorization: authHeader } } },
+      );
+      const { data: { user } } = await authClient.auth.getUser();
+      gateUserId = user?.id ?? null;
+    } catch {
+      gateUserId = null;
+    }
+    if (!gateUserId) {
+      return new Response(JSON.stringify({ error: "Please sign in to continue." }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const tier = await resolveHostTier(gateUserId);
+    if (!tierAtLeast(tier, "pro")) {
+      return new Response(
+        JSON.stringify({ ...tierRequiredBody("pro", tier), feature: "pricepilot" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
     }
 
     const {
