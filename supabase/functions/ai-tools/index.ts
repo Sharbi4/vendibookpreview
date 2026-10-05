@@ -266,7 +266,13 @@ serve(async (req) => {
 
   try {
     const { tool, data }: RequestBody = await req.json();
-    const slug = TOOL_MAP[tool];
+    const slug = typeof tool === "string" && Object.prototype.hasOwnProperty.call(TOOL_MAP, tool) ? TOOL_MAP[tool] : undefined;
+    // Unknown tools are rejected before any paid call — every request is gated.
+    if (!slug) {
+      return new Response(JSON.stringify({ error: "Unknown tool" }), {
+        status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     if (slug) {
       const gate = await gateToolAccess(req, slug, corsHeaders);
       if (gate.response) return gate.response;
