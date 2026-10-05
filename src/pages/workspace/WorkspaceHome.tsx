@@ -204,10 +204,6 @@ export default function WorkspaceHome() {
   }
 
   const leadListing = live[0] || listings[0] || null;
-  const otherListings = listings.filter((l) => l.id !== leadListing?.id).slice(0, 3);
-  const leadFeatured =
-    !!leadListing?.featured_enabled &&
-    (!leadListing?.featured_expires_at || new Date(leadListing.featured_expires_at) > new Date());
 
   return (
     <WorkspaceShell>
