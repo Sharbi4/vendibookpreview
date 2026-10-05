@@ -153,7 +153,8 @@ serve(async (req) => {
       what_i_was_doing: body.what_i_was_doing?.slice(0, 2000) || null,
       what_happened_instead: body.what_happened_instead?.slice(0, 2000) || null,
       is_blocking: !!body.is_blocking,
-      reply_email: body.reply_email?.slice(0, 255) || user.email || null,
+      // Confirmations only go to the signed-in account email.
+      reply_email: user.email || null,
       related_listing_id: body.related_listing_id || null,
       related_sale_transaction_id: body.related_sale_transaction_id || null,
       related_booking_id: body.related_booking_id || null,
