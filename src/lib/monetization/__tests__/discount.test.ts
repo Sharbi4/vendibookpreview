@@ -92,8 +92,8 @@ describe('effectivePriceCents (promo window)', () => {
 });
 
 describe('formatUsd', () => {
-  it('formats whole-dollar amounts without decimals', () => {
-    expect(formatUsd(4900)).toBe('$49');
+  it('always formats with two decimals', () => {
+    expect(formatUsd(4900)).toBe('$49.00');
   });
   it('formats non-round amounts with two decimals', () => {
     expect(formatUsd(4165)).toBe('$41.65');
