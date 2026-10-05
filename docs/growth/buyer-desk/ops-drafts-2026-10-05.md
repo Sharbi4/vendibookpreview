@@ -1,5 +1,7 @@
 # Ops Drafts: Ready to Send (2026-10-05)
 
+> **Sending rule (owner, 2026-10-05):** all email goes out through Resend from Vendibook's sending domain, never from anyone's personal Gmail. Section B is automated by the `send-listing-fix-nudges` edge function (Resend, admin-only). Run `preview_count`, then `test` to yourself, then `broadcast` with `confirm: "2026-10-listing-fix-nudge"`. It picks recipients and fixes from live data, so the table below is reference copy only. Section A3 (Tucson) is a test request (owner's own email): ignore it.
+
 Route via the concierge inbox. Requester contact details live in `asset_requests` (look up by id); none are copied here. UTM on every link: `utm_source=email&utm_medium=concierge&utm_campaign=buyer-desk-ops`.
 
 ---
