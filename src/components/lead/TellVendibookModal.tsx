@@ -222,6 +222,8 @@ export const TellVendibookModal = ({
           name: name.trim(),
           email: email.trim(),
           phone: phone.trim(),
+          intent,
+          category: category || '',
           intentLabel,
           categoryLabel,
           city: city.trim(),

@@ -1,12 +1,41 @@
+import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
+import { leadListingFilter, leadMatchLine, rankLeadMatches, type MatchableListing } from '../_shared/leadMatches.ts'
 
 // Public trigger for the concierge lead form: sends the requester a
 // confirmation and notifies the support inbox. Template structure and copy
 // are fixed here — the client only supplies the lead's own details.
+// Buyer/renter requests also get up to 3 matching live listings, so the
+// requester sees real options immediately and the concierge sees what to
+// send (or that supply is missing).
 
 const SUPPORT_INBOX = 'support@vendibook.com'
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+const SITE_URL = 'https://vendibook.com'
+const MATCH_UTM = 'utm_source=email&utm_medium=concierge&utm_campaign=lead-confirmation'
+
+async function findMatches(req: { intent: string; category: string; city: string; budget: string }): Promise<MatchableListing[]> {
+  const filter = leadListingFilter(req)
+  if (!filter || !req.city) return []
+  try {
+    const db = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!)
+    // Same visibility rules as search-listings.
+    let q = db
+      .from('listings')
+      .select('id, title, mode, category, city, state, price_sale, price_daily, price_weekly, price_monthly, vendibook_freight_enabled')
+      .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
+      .eq('mode', filter.mode)
+    if (filter.categories) q = q.in('category', filter.categories)
+    const { data, error } = await q.limit(500)
+    if (error) throw error
+    return rankLeadMatches(req, (data ?? []) as MatchableListing[])
+  } catch (err) {
+    // Matches are a bonus; never block the confirmation on them.
+    console.warn('lead match lookup failed', err)
+    return []
+  }
+}
 
 function json(data: Record<string, unknown>, status = 200): Response {
   return new Response(JSON.stringify(data), {
@@ -46,6 +75,12 @@ Deno.serve(async (req) => {
   const notes = str(body.notes, 2000)
   const listingId = str(body.listingId, 60)
   const sourcePage = str(body.sourcePage, 200) || 'site'
+  const intent = str(body.intent, 20)
+  const category = str(body.category, 40)
+
+  const matches = await findMatches({ intent, category, city, budget })
+  const matchLines = matches.map((m) => leadMatchLine(m, SITE_URL, MATCH_UTM))
+  const isBuyerRequest = !!leadListingFilter({ intent })
 
   const sends: Promise<unknown>[] = []
 
@@ -62,6 +97,9 @@ Deno.serve(async (req) => {
           bodyParagraphs: [
             `Thanks for reaching out — a Vendibook concierge will follow up within 1 business hour (Mon–Fri, 9am–5pm AZ time).`,
             `Here's what we have on file: ${intentLabel} · ${categoryLabel} · ${city}${timeline ? ` · ${timeline.replace(/_/g, ' ')}` : ''}${budget ? ` · ${budget.replace(/_/g, ' ')}` : ''}.`,
+            ...(matchLines.length
+              ? [`While you wait, here ${matchLines.length === 1 ? 'is a live listing that matches' : 'are live listings that match'} what you asked for:`, ...matchLines]
+              : []),
             `We'll confirm availability, pricing, and next steps before you commit to anything. Outside business hours? We'll reach out first thing the next business day.`,
           ],
           signedBy: 'Vendibook Concierge',
@@ -85,6 +123,11 @@ Deno.serve(async (req) => {
           `Contact: ${name || '(no name)'} · ${email || '(no email)'} · ${phone || '(no phone)'}`,
           `Intent: ${intentLabel} · Category: ${categoryLabel} · City: ${city}${timeline ? ` · Timeline: ${timeline}` : ''}${budget ? ` · Budget: ${budget}` : ''}${listingId ? ` · Listing: ${listingId}` : ''}`,
           notes ? `Notes: ${notes}` : 'No notes provided.',
+          ...(isBuyerRequest
+            ? matchLines.length
+              ? [email && EMAIL_RE.test(email) ? 'Matches also emailed to the requester:' : 'Suggested matches (requester gave no email):', ...matchLines]
+              : ['No live listing matches: send this to Supply Desk as a sourcing need.']
+            : []),
         ],
         signedBy: 'Vendibook Lead Router',
         signedTitle: 'Internal Notification',
