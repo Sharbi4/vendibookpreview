@@ -5,6 +5,7 @@
  * Also sends to GA4 Measurement ID: G-NNWR0V8SH2
  */
 
+import { toGa4EventParams } from '@/lib/ga4Params';
 import { hasMarketingConsent, hasAnalyticsConsent } from '@/lib/cookieConsent';
 
 declare global {
@@ -26,7 +27,7 @@ const sendConversionEvent = (eventName: string, params?: Record<string, unknown>
   if (hasMarketingConsent()) {
     window.gtag('event', eventName, {
       send_to: GOOGLE_ADS_ID,
-      ...params,
+      ...toGa4EventParams(params),
     });
   }
   
@@ -34,7 +35,7 @@ const sendConversionEvent = (eventName: string, params?: Record<string, unknown>
   if (hasAnalyticsConsent()) {
     window.gtag('event', eventName, {
       send_to: GA4_MEASUREMENT_ID,
-      ...params,
+      ...toGa4EventParams(params),
     });
   }
 };

@@ -1,4 +1,5 @@
 // Analytics utility for tracking user interactions
+import { toGa4EventParams } from '@/lib/ga4Params';
 import { getBuyerSeoAttribution, trackBuyerSeoDownstream } from '@/lib/buyerSeoTracking';
 // Integrates with Google Analytics 4, Facebook CAPI, and custom event tracking
 
@@ -59,7 +60,7 @@ const trackEvent = (event: AnalyticsEvent): void => {
       event_category: event.category,
       event_label: event.label,
       value: event.value,
-      ...event.metadata,
+      ...toGa4EventParams(event.metadata),
     });
   }
 

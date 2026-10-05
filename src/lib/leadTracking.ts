@@ -3,6 +3,7 @@
  * Writes to public.analytics_events and to window.gtag (if loaded) so the
  * same event powers admin funnels and GA4.
  */
+import { toGa4EventParams } from '@/lib/ga4Params';
 import { trackEventToDb } from '@/hooks/useAnalyticsEvents';
 
 export type LeadEventName =
@@ -309,7 +310,7 @@ export const trackLeadEvent = (name: LeadEventName, payload: LeadEventPayload = 
 
   if (typeof window !== 'undefined' && (window as any).gtag) {
     try {
-      (window as any).gtag('event', name, payload);
+      (window as any).gtag('event', name, toGa4EventParams(payload as Record<string, unknown>));
     } catch {
       // ignore
     }
