@@ -64,17 +64,30 @@ seller_first as (
 buyer_first as (
   select buyer_id, min(m) as m from txns group by buyer_id
 ),
+contact_events as (
+  select date_trunc('month', created_at)::date as m, shopper_id as buyer_id, host_id as seller_id from conversations
+  union all select date_trunc('month', created_at)::date, buyer_id, seller_id from offers
+  union all select date_trunc('month', created_at)::date, shopper_id, host_id from booking_requests
+),
 contacts as (
-  select date_trunc('month', created_at)::date as m, shopper_id as buyer_id from conversations
-  union all select date_trunc('month', created_at)::date, buyer_id from offers
-  union all select date_trunc('month', created_at)::date, shopper_id from booking_requests
+  select * from contact_events
+  where buyer_id <> seller_id
+    and buyer_id not in (select id from internal_users)
+    and seller_id not in (select id from internal_users)
+),
+guest_leads as (
+  select ll.created_at from listing_leads ll
+  where ll.host_id not in (select id from internal_users)
+    and ll.email !~* '@(example\.com|vendibook\.com)$'
+    and not exists (select 1 from profiles p where lower(p.email) = lower(ll.email)
+      and (p.id = ll.host_id or p.id in (select id from internal_users)))
 ),
 scraper_uas as (
   select user_agent from listing_views
   group by user_agent
   having count(distinct session_id) >= 200
      and count(*) filter (where viewer_id is not null) = 0
-     and count(*)::numeric / count(distinct session_id) < 1.05
+     and count(*)::numeric / nullif(count(distinct session_id), 0) < 1.05
 ),
 real_views as (
   select date_trunc('month', v.viewed_at)::date as m, v.session_id
@@ -82,6 +95,8 @@ real_views as (
   where coalesce(v.user_agent, '') !~* '(bot|crawl|spider|headless|facebookexternalhit|meta-external|python|curl|lighthouse)'
     and not exists (select 1 from scraper_uas s where s.user_agent = v.user_agent)
     and v.viewer_id is distinct from l.host_id
+    and l.host_id not in (select id from internal_users)
+    and (v.viewer_id is null or v.viewer_id not in (select id from internal_users))
 ),
 base as (
   select
@@ -103,7 +118,7 @@ base as (
     (select count(*) from buyer_first bf where bf.m = mo.m) as new_recorded_buyers,
     (select count(distinct buyer_id) from contacts c where c.m = mo.m and c.buyer_id not in (select id from internal_users)) as contacting_buyers,
     (select count(*) from contacts c where c.m = mo.m and c.buyer_id not in (select id from internal_users)) as buyer_contacts,
-    (select count(*) from listing_leads ll where date_trunc('month', ll.created_at)::date = mo.m) as guest_and_info_leads,
+    (select count(*) from guest_leads ll where date_trunc('month', ll.created_at)::date = mo.m) as guest_and_info_leads,
     (select count(distinct session_id) from real_views rv where rv.m = mo.m) as filtered_view_sessions,
     (select count(*) from profiles p where date_trunc('month', p.created_at)::date = mo.m and p.id not in (select id from internal_users)) as new_signups
   from months mo

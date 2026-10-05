@@ -68,7 +68,7 @@ function worker(name: string, rows = fixture(), fail: (table: string, columns: s
     serve: (h: typeof handler) => { handler = h; }, createClient: () => admin,
     Deno: { env: { get: () => "test-only" } }, Response, Date, console: { error: vi.fn() },
     setTimeout: (fn: () => void) => fn(), fetch: provider, readAllRows, pageAll: readAllRows,
-    isInternalCaller: () => true, isMailableAddress: () => true, hasContactDetails,
+    unsubToken: () => "test-token", isInternalCaller: () => true, isMailableAddress: () => true, hasContactDetails,
     maskContactDetails: (v: string) => v, pickListingFixes: () => [],
     invokeTransactionalEmail: dispatch, SELLER_CONCIERGE_CAMPAIGN_ID: "concierge",
     LISTING_FIX_CAMPAIGN_ID: "listing-fix", MARKETING_FROM: "test", MARKETING_REPLY_TO: "test",
@@ -157,4 +157,5 @@ describe("unanswered message worker", () => {
     expect((await w.run()).body.sent).toBe(0); expect(w.dispatch).toHaveBeenCalledTimes(1);
   });
 });
+
 
