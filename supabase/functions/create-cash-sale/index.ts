@@ -155,12 +155,13 @@ Deno.serve(async (req) => {
       .select('offer_amount, counter_amount, status')
       .eq('listing_id', listing.id)
       .eq('buyer_id', user.id)
-      .in('status', ['accepted', 'counter_accepted'])
+      .eq('status', 'accepted')
       .order('updated_at', { ascending: false })
       .limit(1)
       .maybeSingle();
     if (acceptedOffer) {
-      const offerPrice = acceptedOffer.status === 'counter_accepted'
+      // An accepted counter keeps status 'accepted' with counter_amount set.
+      const offerPrice = Number(acceptedOffer.counter_amount) > 0
         ? Number(acceptedOffer.counter_amount)
         : Number(acceptedOffer.offer_amount);
       if (offerPrice > 0) serverAmount = offerPrice;
