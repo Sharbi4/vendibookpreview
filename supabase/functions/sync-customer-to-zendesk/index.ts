@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getCaller, isAdminUser, isBackendCaller, forbiddenResponse, unauthorizedResponse } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -61,6 +62,11 @@ const handler = async (req: Request): Promise<Response> => {
     
     if (!data.user_id) {
       throw new Error("Missing required field: user_id");
+    }
+    if (!(await isBackendCaller(req))) {
+      const caller = await getCaller(req);
+      if (!caller) return unauthorizedResponse(corsHeaders);
+      if (caller.id !== data.user_id && !(await isAdminUser(caller.id))) return forbiddenResponse(corsHeaders);
     }
 
     logStep("Fetching user profile", { user_id: data.user_id });

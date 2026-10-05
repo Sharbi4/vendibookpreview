@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { refundPayment } from "../_shared/paymentOps.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { getCaller, isAdminUser, isBackendCaller, forbiddenResponse, unauthorizedResponse } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -42,6 +43,19 @@ serve(async (req) => {
 
     if (bookingError || !booking) {
       throw new Error(`Booking not found: ${bookingError?.message}`);
+    }
+
+    // Only the listing's host, an admin, or a backend job may refund a deposit.
+    if (!(await isBackendCaller(req))) {
+      const caller = await getCaller(req);
+      if (!caller) return unauthorizedResponse(corsHeaders);
+      const isHost = (booking as any).listings?.host_id === caller.id || (booking as any).host_id === caller.id;
+      if (!isHost && !(await isAdminUser(caller.id))) return forbiddenResponse(corsHeaders);
+    }
+    const deposit = Number(booking.deposit_amount ?? 0);
+    const deduction = Number(deduction_amount);
+    if (!['full', 'partial', 'forfeit'].includes(String(refund_type)) || !Number.isFinite(deduction) || deduction < 0 || deduction > deposit) {
+      return new Response(JSON.stringify({ error: 'Invalid refund amount.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
     logStep("Found booking", { bookingId: booking.id, depositAmount: booking.deposit_amount, depositStatus: booking.deposit_status });
 
