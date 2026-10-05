@@ -56,8 +56,19 @@ Deno.serve(async req => {
       const amount = plan?.price_cents ?? catalogPrice(product);
       const currency = String(plan?.currency || product.currency || 'USD').toUpperCase();
       if (currency !== 'USD') return jsonError(400,'currency','This checkout currently supports USD.');
-      const profile = check(await admin.from('profiles').select('first_name,last_name,email,state,city,zip_code').eq('id',user.id).maybeSingle());
-      if (!profile?.state) return jsonError(400,'billing_address','Add your billing address in Account settings before paying.');
+      const profile = check(await admin.from('profiles').select('first_name,last_name,email,state,city,zip_code').eq('id',user.id).maybeSingle()) || {};
+      // Billing address is collected inside this checkout (buyer's own address,
+      // never a delivery address). Saved to the profile for next time.
+      const ba = body.billing_address;
+      if (ba && typeof ba === 'object') {
+        const state = String(ba.state || '').trim().toUpperCase();
+        const zip = String(ba.zip || '').trim();
+        const city = String(ba.city || '').trim().slice(0,80);
+        if (!/^[A-Z]{2}$/.test(state) || !/^\d{5}(-\d{4})?$/.test(zip)) return jsonError(400,'billing_address','Enter a valid 2-letter state and ZIP code.');
+        profile.state = state; profile.zip_code = zip; profile.city = city || profile.city || null;
+        check(await admin.from('profiles').update({state,zip_code:zip,...(city?{city}:{})}).eq('id',user.id));
+      }
+      if (!profile.state || !profile.zip_code) return jsonResponse(200,{needs_billing_address:true,name:product.name,billing_address:{state:profile.state||'',city:profile.city||'',zip:profile.zip_code||''}});
       const tax = await quoteSalesTax({amountCents:amount,destination:{state:profile.state,city:profile.city,zip:profile.zip_code},kind:'product'});
       const attempts = check(await admin.from('square_billing_attempts').select('*').eq('user_id',user.id).eq('environment',config.environment).eq('product_id',product.id).in('status',['pending','processing']).limit(10));
       let attempt = attempts?.find((a:any) => (a.listing_id || null) === (body.listing_id || null));
