@@ -50,8 +50,8 @@ const PROGRAMS = [
 
 const FAQ = [
   ["Who counts as a new user?", "Anyone without a prior Vendibook account using their email, phone, or device. We check at signup."],
-  ["When do I get paid?", "After your referral qualifies, our team reviews it. Once approved and any hold window has passed, payouts run weekly on Mondays once you've accumulated at least $50."],
-  ["How is the money sent?", "Sent to your saved payout destination, batched weekly on Mondays. Minimum $50 accumulated before a transfer is initiated."],
+  ["When do I get paid?", "After your referral qualifies, our team reviews it. Once it's approved and any hold window has passed, our team sends your reward manually, usually in a Monday batch once you've accumulated at least $50."],
+  ["How is the money sent?", "Our team sends approved rewards by hand to the payout details you saved. Payouts aren't automatic, and nothing is sent until you've accumulated at least $50."],
   ["Can I refer myself with a second account?", "No. Self-referrals are auto-detected and voided. Fraud also triggers account suspension."],
   ["Are referral rewards taxable?", "Yes. If you earn $600+ in a calendar year, we collect W-9 info and issue a 1099 form."],
   ["What if the buyer files a chargeback?", "Purchase referrals are held 14 days. If a dispute resolves in the buyer's favor within that window, the reward is forfeited."],
@@ -189,7 +189,7 @@ const ReferralLanding = () => {
             {[
               { icon: LinkIcon, t: "1. Get your link", d: "Sign up and we generate a unique referral code and link for you." },
               { icon: Share2, t: "2. Share it", d: "Text, email, post, or hand out the QR code at events. We track every click." },
-              { icon: DollarSign, t: "3. Get paid", d: "Vendibook sends your reward to your saved payout destination when the referral qualifies." },
+              { icon: DollarSign, t: "3. Get paid", d: "Once the referral qualifies and our team approves it, we send your reward to your saved payout details." },
             ].map(({ icon: Icon, t, d }) => (
               <div key={t} className="text-center">
                 <div className="inline-flex p-4 rounded-full bg-[#FF5124]/15 mb-4">

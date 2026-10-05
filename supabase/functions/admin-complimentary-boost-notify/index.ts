@@ -36,7 +36,7 @@ serve(async (req) => {
 
     const { data: listing } = await admin
       .from("listings")
-      .select("id, title, cover_image_url, host_id, featured_enabled, featured_expires_at")
+      .select("id, title, cover_image_url, host_id, featured_enabled, featured_at, featured_expires_at")
       .eq("id", listingId)
       .maybeSingle();
     if (!listing) return jsonError(404, "not_found", "Listing not found.");
@@ -61,17 +61,25 @@ serve(async (req) => {
       timeZone: "UTC",
     });
 
+    // Length of this grant (e.g. a 14-day trial), not a fixed 30 days.
+    const startedAt = listing.featured_at ? new Date(listing.featured_at).getTime() : Date.now();
+    const durationDays = Math.max(
+      1,
+      Math.round((new Date(listing.featured_expires_at).getTime() - startedAt) / 86_400_000),
+    );
+
     const result = await sendTransactionalEmailInternal({
       templateName: "complimentary-featured-boost",
       recipientEmail: profile.email,
-      idempotencyKey: `complimentary-boost-${listing.id}`,
+      // One email per grant: a later grant on the same listing gets its own.
+      idempotencyKey: `complimentary-boost-${listing.id}-${listing.featured_at ?? listing.featured_expires_at}`,
       templateData: {
         firstName,
         listingTitle: listing.title,
         listingId: listing.id,
         listingImageUrl: listing.cover_image_url ?? undefined,
         expiresAtFormatted,
-        durationDays: 30,
+        durationDays,
       },
     });
 

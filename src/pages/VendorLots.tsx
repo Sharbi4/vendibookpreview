@@ -134,7 +134,7 @@ const ValuePropsSection = () => {
     { icon: Shield, title: "Liability Protection", desc: "We collect COI documents and verify insurance before any booking is confirmed." },
     { icon: Store, title: "Your Own Storefront", desc: "Get a shareable profile page with reviews, photos, and availability to attract more vendors." },
     { icon: CalendarClock, title: "Flexible Terms", desc: "Set hourly, daily, weekly, or monthly rates. You control pricing and availability." },
-    { icon: DollarSign, title: "Passive Income", desc: "Hosts earn an average of $1,500/month per spot. Get paid automatically via direct deposit." }
+    { icon: DollarSign, title: "Passive Income", desc: "Turn unused space into monthly income. You set the price for each spot, and our team handles payouts after each booking." }
   ];
 
   return (
