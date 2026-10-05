@@ -128,6 +128,7 @@ serve(async (req) => {
       .from("listings")
       .select("id,title,description,category,mode,city,state,price_daily,price_weekly,price_sale")
       .eq("id", listing_id)
+      .eq("status", "published")
       .maybeSingle();
 
     if (error || !listing) {
@@ -137,7 +138,9 @@ serve(async (req) => {
       });
     }
 
-    const voice = voice_id || DEFAULT_VOICE_ID;
+    // Voice is fixed server-side; callers cannot pick arbitrary voices.
+    void voice_id;
+    const voice = DEFAULT_VOICE_ID;
     const script = await buildNarrationScript(listing);
     const audio = await tts(script, voice);
 
