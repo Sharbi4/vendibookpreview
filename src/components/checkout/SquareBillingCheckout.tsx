@@ -29,6 +29,9 @@ export default function SquareBillingCheckout({slug,listingId,consentId,interval
   const [status,setStatus]=useState('');
   const [error,setError]=useState('');
   const [consent,setConsent]=useState(false);
+  const [needsAddress,setNeedsAddress]=useState(false);
+  const [addr,setAddr]=useState({city:'',state:'',zip:''});
+  const [submittedAddr,setSubmittedAddr]=useState<null|{city:string;state:string;zip:string}>(null);
   const container=useRef<HTMLDivElement>(null);
   const card=useRef<any>(null);
   const lock=useRef(false);
@@ -36,8 +39,10 @@ export default function SquareBillingCheckout({slug,listingId,consentId,interval
     let canceled=false;let instance:any;
     setQuote(null);setReady(false);setStatus('');setError('');setConsent(false);
     void (async()=>{
-      const q=await request({action:'prepare',product_slug:slug,listing_id:listingId,consent_id:consentId,billing_interval:interval});
-      if(canceled)return;setQuote(q);
+      const q=await request({action:'prepare',product_slug:slug,listing_id:listingId,consent_id:consentId,billing_interval:interval,...(submittedAddr?{billing_address:submittedAddr}:{})});
+      if(canceled)return;
+      if(q?.needs_billing_address){setNeedsAddress(true);setAddr(a=>({city:a.city||q.billing_address?.city||'',state:a.state||q.billing_address?.state||'',zip:a.zip||q.billing_address?.zip||''}));return;}
+      setNeedsAddress(false);setQuote(q);
       const sdk=await loadSdk(q.environment);
       if(canceled)return;
       instance=await sdk.payments(q.application_id,q.location_id).card();
@@ -45,7 +50,13 @@ export default function SquareBillingCheckout({slug,listingId,consentId,interval
       await instance.attach(container.current);card.current=instance;setReady(true);
     })().catch(e=>{if(!canceled)setError(e.message);});
     return ()=>{canceled=true;card.current=null;void instance?.destroy();};
-  },[slug,listingId,consentId,interval]);
+  },[slug,listingId,consentId,interval,submittedAddr]);
+  const saveAddress=(e:React.FormEvent)=>{
+    e.preventDefault();
+    const state=addr.state.trim().toUpperCase();const zip=addr.zip.trim();
+    if(!/^[A-Z]{2}$/.test(state)||!/^\d{5}(-\d{4})?$/.test(zip)){setError('Enter a 2-letter state (e.g. AZ) and a 5-digit ZIP code.');return;}
+    setError('');setSubmittedAddr({city:addr.city.trim(),state,zip});
+  };
   const refresh=async()=>{
     if(!quote)return;
     setBusy(true);setError('');
