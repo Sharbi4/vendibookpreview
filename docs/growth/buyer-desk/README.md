@@ -7,8 +7,9 @@ Owner: Buyer Desk lead (reports to Growth & Liquidity). Data comes from read-onl
 | [hot-but-cold-2026-10-05.md](hot-but-cold-2026-10-05.md) | Top 15 high-view, zero-contact listings with diagnosis and fixes, plus the clean-traffic SQL |
 | [demand-map-2026-10-05.md](demand-map-2026-10-05.md) | Demand by category × state × budget, plus sourcing briefs SB-1…SB-7 for Supply Desk |
 | [muse-prompts-2026-10-05.md](muse-prompts-2026-10-05.md) | MUSE-1 (reply to "looking to buy/rent" posts) and MUSE-3 (promote hot-but-cold listings) |
+| [market-capture-2026-10-05.md](market-capture-2026-10-05.md) | Market Capture Framework scorecard: compete on trust + fulfillment, own rentals/commissaries/vendor lots |
 | [personas.md](personas.md) | 4 buyer personas and the messaging for each |
-| [lovable-prompts.md](lovable-prompts.md) | LP-1…LP-8 buyer-side site changes (Square + PayPal only, never Stripe; PayPal stays in sandbox) |
+| [lovable-prompts.md](lovable-prompts.md) | LP-1…LP-10 buyer-side site changes (Square + PayPal only, never Stripe; PayPal stays in sandbox) |
 
 ## Headline for Growth lead (2026-10-05)
 - **Baseline correction:** 3,700 of 4,842 "human" sessions are one scraper UA, and 316 are a host viewing their own listing. Clean = **753 sessions → BCR 0.80%**. The 1.5% target is about 11 contacts per 30d (+5).

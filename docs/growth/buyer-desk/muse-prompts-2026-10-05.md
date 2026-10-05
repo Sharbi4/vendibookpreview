@@ -4,6 +4,22 @@ Ready to paste into Muse. Every listing below is live and published as of 2026-1
 
 UTM format: `?utm_source={fb|ig|threads}&utm_medium=muse&utm_campaign=muse-N`
 
+## Approved Vendibook claims (paste into MUSE-1 and MUSE-3)
+
+Market Capture positioning: compete on **trust + fulfillment**, not price. Add at most ONE of these per post or reply, and only where it's true for the linked listing:
+
+```
+VENDIBOOK CLAIMS (use at most one per post/reply; never invent others)
+- "Members verify their phone and ID before they can message or make offers." (platform-wide)
+- "Every message is screened for scams." (platform-wide)
+- "Free shipping on this one, arranged through Vendibook." ONLY if the listing page shows "Free shipping". Never quote a freight price.
+- "Nationwide delivery available." ONLY if the listing page shows delivery/freight.
+- "Financing available." ONLY if the listing page shows the financing option.
+- "Clean title, no lien." ONLY if the listing shows both.
+- "Make an offer right on the listing." ONLY if the listing shows Make Offer.
+Never claim lower prices than other sites, "verified" units, inspections, warranties, or escrow.
+```
+
 ---
 
 ## MUSE-1 — "Looking to buy/rent" reply agent

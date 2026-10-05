@@ -67,3 +67,21 @@ When search returns zero results (Search.tsx; event search_zero_results), replac
 ```
 In the listing wizard, if the title contains "trailer" but category is food_truck (or "truck" with category food_trailer), show an inline prompt: "Looks like a trailer. Switch category so trailer buyers can find it?" with a one-click switch. Add an admin view listing all published listings with this mismatch. Payments: Square and PayPal only, never Stripe; PayPal stays in sandbox. Do not change the PayPal environment, credentials, plans or webhooks.
 ```
+
+### LP-9 · "Why buy on Vendibook" trust + fulfillment strip (Market Capture: trust/fulfillment wedge)
+```
+On sale listing pages (SaleListingLayout desktop, SaleListingMobile mobile), add a compact "Buy with confidence" strip directly under the price in SalePurchaseCard / above the fold on mobile. Show only the items that are true for this listing, using existing data and components:
+- "Verified members": every buyer and seller verifies phone + ID before messaging or offers (show only if signup_phone_required and signup_identity_required are enabled).
+- "PayPal-verified seller": reuse PayPalVerifiedSellerTrust when paypalBusinessVerified is true.
+- "Free shipping" when Vendibook Freight is enabled and the seller covers it, or "Nationwide delivery available" when the buyer pays. Never show the freight rate or computed freight cost when the seller covers it (AGENTS.md rule).
+- "Financing available" when isFinanceableSaleListing(listing) is true (opens the existing FinancingActionPanel).
+- "Clean title · No lien" only when title_status = 'clean' and has_lien = 'no'.
+- "Remote notary closing" when proof_notary_enabled is true.
+Each item gets a one-line tooltip. Add the same strip (max 3 items) to sale listing cards in search results. Track 'trust_strip_item_click' with the item key. Don't add new claims or badges beyond these. Payments: Square and PayPal only, never Stripe; PayPal stays in sandbox. Do not change the PayPal environment, credentials, plans or webhooks.
+```
+
+### LP-10 · Price vs. comps (price transparency instead of a price war)
+```
+Add a small "Price check" line to sale listing pages and cards: compare price_sale with the median price_sale of published, non-deleted sale listings in the same category (and the same subcategory when there are at least 5 comps; otherwise category only). Show "$X below typical" (green) when the price is 10%+ under the median, "Around typical" within ±10%, and nothing when it's above (don't shame sellers publicly). Compute the medians in a SQL view or RPC refreshed hourly, not on the client. Tooltip: "Based on N similar listings on Vendibook. Not an appraisal." In the host dashboard, show sellers whose price is 25%+ above the median a private nudge: "Similar listings ask about $Y. Consider turning on offers." Track 'price_check_shown' with the bucket. Payments: Square and PayPal only, never Stripe; PayPal stays in sandbox. Do not change the PayPal environment, credentials, plans or webhooks.
+```
+
