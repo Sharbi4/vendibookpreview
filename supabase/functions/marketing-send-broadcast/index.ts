@@ -8,6 +8,7 @@ import {
   FROM_EMAIL, FROM_NAME, REPLY_TO_EMAIL, LOGO_DARK_URL, LOGO_LIGHT_URL,
   MAILING_ADDRESS, VENDIBOOK_BASE_URL, FEEDBACK_REDIRECT_URL, UNSUBSCRIBE_URL_BASE,
 } from "../_shared/marketing-templates/constants.ts";
+import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -52,6 +53,7 @@ async function sendOne(apiKey: string, to: string, subject: string, html: string
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (!(await isAdminOrBackendCaller(req))) return forbiddenResponse();
   try {
     const { sendId } = await req.json();
     if (!sendId) throw new Error("sendId required");

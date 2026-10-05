@@ -12,6 +12,7 @@ import {
   ensurePurchaseSaleAgreement,
   ensureRentalAgreement,
 } from '../_shared/signnowDocuments.ts';
+import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
 
 const SALE_STATUSES = ['paid', 'buyer_confirmed', 'seller_confirmed', 'completed'];
 const BOOKING_STATUSES = ['approved', 'completed'];
@@ -29,6 +30,7 @@ function svc() {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  if (!(await isAdminOrBackendCaller(req))) return forbiddenResponse();
 
   try {
     const supabase = svc();

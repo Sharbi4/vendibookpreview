@@ -4,6 +4,7 @@ import { corsHeaders, jsonResponse, unknownErrorResponse } from "../_shared/json
 import { formatUsd } from "../_shared/adminPaymentAlert.ts";
 import { notifyUser } from "../_shared/notify.ts";
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
+import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
 
 /**
  * Pre-renewal heads-up: emails + in-app notification a few days before a
@@ -29,6 +30,7 @@ const fmtDate = (iso?: string | null) => {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (!(await isAdminOrBackendCaller(req))) return forbiddenResponse();
 
   try {
     const admin = createClient(

@@ -6,6 +6,7 @@
 
 import { corsHeaders, jsonResponse, unknownErrorResponse } from '../_shared/jsonError.ts';
 import { getAccessToken, isSignNowConfigured, signnowBase } from '../_shared/signnow.ts';
+import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
 
 async function signnowGet(path: string, token: string) {
   const res = await fetch(`${signnowBase()}${path}`, {
@@ -19,6 +20,7 @@ async function signnowGet(path: string, token: string) {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+  if (!(await isAdminOrBackendCaller(req))) return forbiddenResponse();
 
   try {
     if (!isSignNowConfigured()) {

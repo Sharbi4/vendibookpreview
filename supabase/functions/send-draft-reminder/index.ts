@@ -9,6 +9,7 @@ import {
   isInternalEmail,
   isQaTitle,
 } from '../_shared/draftReminderPolicy.ts'
+import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -21,6 +22,7 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (!(await isAdminOrBackendCaller(req))) return forbiddenResponse();
 
   try {
     logStep("Function started");

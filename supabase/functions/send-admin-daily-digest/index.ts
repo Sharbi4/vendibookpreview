@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
+import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
 
 
 const corsHeaders = {
@@ -45,6 +46,7 @@ const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+  if (!(await isAdminOrBackendCaller(req))) return forbiddenResponse();
 
   console.log("Starting admin daily digest generation...");
 
