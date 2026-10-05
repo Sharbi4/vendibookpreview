@@ -7,7 +7,7 @@ Route via the concierge inbox. Requester contact details live in `asset_requests
 ## A. Unmatched asset requests
 
 ### A1 · Atlanta trailer rental, bakery/café concept (asset_request `3b173035-e87f-4f53-8a54-78a515ee5d25`, 2026-08-16)
-Context: rent, Atlanta, budget "≤$500" (unit not given), 1–3 months. They came from the Lilburn listing. Status still `new`, 7 weeks unanswered.
+Context: rent, Atlanta, budget "Under $500" **per day** (the Tell Vendibook form labels rental budgets per day), 1–3 months. They came from the Lilburn listing. Status still `new`, 7 weeks unanswered.
 
 **Subject:** Your Atlanta food trailer rental: 2 options available now
 
@@ -21,7 +21,7 @@ Context: rent, Atlanta, budget "≤$500" (unit not given), 1–3 months. They ca
 > • **Fully Loaded Food Trailer, Rex, GA**: $300/day or $1,600/week (3-day minimum)
 > https://vendibook.com/listing/f13ba587-0d95-48f3-9a18-3bb92e540e05?utm_source=email&utm_medium=concierge&utm_campaign=buyer-desk-ops
 >
-> You mentioned a budget of about $500. If that's per week or per month, neither trailer fits yet. Reply with your dates and how you'd use the trailer (weekend markets or daily service), and I'll ask both owners whether they'd do a longer-term rate for 1–3 months.
+> Both fit the under-$500/day budget you gave us. For 1–3 months, the Lilburn trailer's $5,000/month rate works out to about $165/day. Reply with your start date and how you'll use the trailer (weekend markets or daily service), and I'll confirm availability with the owner.
 >
 > Thanks,
 > Vendibook Concierge
