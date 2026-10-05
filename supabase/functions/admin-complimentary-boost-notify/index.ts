@@ -18,9 +18,15 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
   try {
-    const expected = Deno.env.get("ADMIN_NOTIFY_SECRET") ?? "";
-    const provided = req.headers.get("x-admin-secret") ?? "";
-    if (!expected || provided !== expected) {
+    // Either the admin notify secret, or the shared server-to-server secret
+    // that scheduled jobs and database-initiated calls use.
+    const adminSecret = Deno.env.get("ADMIN_NOTIFY_SECRET") ?? "";
+    const sweepSecret = Deno.env.get("RELEASE_SWEEP_SECRET") ?? "";
+    const providedAdmin = req.headers.get("x-admin-secret") ?? "";
+    const providedCron = req.headers.get("x-cron-secret") ?? "";
+    const authorized = (!!adminSecret && providedAdmin === adminSecret) ||
+      (!!sweepSecret && providedCron === sweepSecret);
+    if (!authorized) {
       return jsonError(401, "unauthorized", "Not authorized.");
     }
 
