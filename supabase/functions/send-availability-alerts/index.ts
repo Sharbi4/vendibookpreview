@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 import { rankLeadMatches, type MatchableListing } from '../_shared/leadMatches.ts'
 import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
@@ -96,7 +96,7 @@ const LEAD_CATEGORY: Record<string, string> = {
   vendor_space: 'vendor_space',
 }
 
-async function notifyOpenAssetRequests(supabase: ReturnType<typeof createClient>, listings: Listing[]): Promise<number> {
+async function notifyOpenAssetRequests(supabase: SupabaseClient, listings: Listing[]): Promise<number> {
   const since = new Date(Date.now() - REQUEST_LOOKBACK_DAYS * 24 * 60 * 60 * 1000).toISOString()
   const { data: requests, error } = await supabase
     .from('asset_requests')
