@@ -15,6 +15,7 @@ describe('canonical listing route map', () => {
     '/list',
     '/list/start',
     '/list/concierge',
+    '/list/finish/:listingId',
     '/create-listing/:listingId',
     '/edit-listing/:listingId',
     '/listing-published/:listingId',
@@ -26,6 +27,7 @@ describe('canonical listing route map', () => {
 
   it('builds resume, edit and published deep links from a listing id', () => {
     expect(LISTING_ROUTES.resume('abc')).toBe('/create-listing/abc');
+    expect(LISTING_ROUTES.finish('abc')).toBe('/list/finish/abc');
     expect(LISTING_ROUTES.edit('abc')).toBe('/edit-listing/abc');
     expect(LISTING_ROUTES.published('abc')).toBe('/listing-published/abc');
   });

@@ -5,6 +5,7 @@
  *   /list            opening choice page (self-serve vs concierge)
  *   /list/start      QuickStart wizard entry — creates the draft
  *   /create-listing/:listingId   PublishWizard (draft continuation)
+ *   /list/finish/:listingId      one-screen finish & publish for older drafts
  *   /edit-listing/:listingId     PublishWizard (published listing edit)
  *   /listing-published/:listingId  post-publish surface
  *
@@ -23,6 +24,8 @@ export const LISTING_ROUTES = {
   quickStart: '/list/start',
   /** Concierge introduction / intake placeholder. */
   conciergeIntro: '/list/concierge',
+  /** One-screen finish & publish for drafts missing only disclosures. */
+  finish: (listingId: string) => `/list/finish/${listingId}`,
   /** Draft continuation (PublishWizard). */
   resume: (listingId: string) => `/create-listing/${listingId}`,
   /** Published listing edit (PublishWizard). */

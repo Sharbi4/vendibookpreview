@@ -92,6 +92,7 @@ const RentItOut = lazy(() => import("./pages/RentItOut"));
 const ListingPaymentsFinancing = lazy(() => import("./pages/ListingPaymentsFinancing"));
 const ListingStart = lazy(() => import("./pages/ListingStart"));
 const ListStart = lazy(() => import("./pages/ListStart"));
+const ListingFinish = lazy(() => import("./pages/ListingFinish"));
 const ConciergeIntro = lazy(() => import("./pages/ConciergeIntro"));
 const ConciergeOrderPage = lazy(() => import("./pages/ConciergeOrder"));
 
@@ -539,6 +540,7 @@ const AnimatedRoutes = () => {
           <Route path="/list" element={<PageTransition><ListingStart /></PageTransition>} />
           <Route path="/list/start" element={<PageTransition><ListStart /></PageTransition>} />
           <Route path="/list/concierge" element={<PageTransition><ConciergeIntro /></PageTransition>} />
+          <Route path="/list/finish/:listingId" element={<PageTransition><ListingFinish /></PageTransition>} />
           <Route path="/list/concierge/:orderId" element={<PageTransition><ConciergeOrderPage /></PageTransition>} />
 
 
