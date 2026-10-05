@@ -11,16 +11,23 @@
 //   optimize — the listing with the most fixes from pickListingFixes
 //   share    — no fixes left on any listing
 // Order: featured → listings with offers off → everyone else.
+// Integrity routing (never coach or promote a listing that fails checks):
+//   placeholder/broken title      → fix_title (only that ask)
+//   phone/email in title or text  → remove_contact (only that ask)
+//   sale price under $1,000       → skipped pending review
+// Missed-offer rescue sellers get the rescue variant instead of coaching.
 // Skips unsubscribed/suppressed/unmailable addresses, internal accounts,
-// admins, body.excludeUserIds, anyone already sent this campaign, and anyone
-// who got the listing-fix nudge in the last 14 days.
+// admins, held or suspended accounts, body.excludeUserIds, anyone already
+// sent this campaign, anyone who got the listing-fix nudge in the last 14
+// days, and anyone sent the complimentary-featured-boost email in 7 days.
+// Every send carries Idempotency-Key `${CAMPAIGN_ID}:${user_id}`.
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
-import { Resend } from "https://esm.sh/resend@2.0.0";
 import { isMailableAddress } from "../_shared/marketingAudience.ts";
 import { isInternalCaller } from "../_shared/internalAuth.ts";
 import { pickListingFixes, type FixableListing } from "../_shared/listingFixes.ts";
+import { hasContactDetails } from "../_shared/contactPatterns.ts";
 import { MARKETING_FROM, MARKETING_REPLY_TO } from "../_shared/marketing-templates/brand.ts";
 import { LISTING_FIX_CAMPAIGN_ID } from "../_shared/marketing-templates/listing-fix-nudge.ts";
 import {
@@ -29,6 +36,7 @@ import {
   buildSellerConciergeText,
   sellerConciergeSubject,
   type ConciergeVariant,
+  type RescueDetails,
   type SellerConciergeData,
 } from "../_shared/marketing-templates/seller-concierge.ts";
 
@@ -41,10 +49,24 @@ const CAMPAIGN_ID = SELLER_CONCIERGE_CAMPAIGN_ID;
 const MAX_FIXES = 3;
 const DEFAULT_LIMIT = 20;
 const NUDGE_COOLDOWN_DAYS = 14;
+const BOOST_EMAIL_COOLDOWN_DAYS = 7;
+const MIN_SALE_PRICE = 1000;
+const BROKEN_TITLE = /^\s*(that.?s (good|perfect)|use this instead|my food (trailer|truck)|my ghost kitchen|untitled)\b/i;
+
+// Missed offers that expired with no seller response (see
+// docs/growth/supply-desk/outreach/offer-rescue-2026-10-05.md).
+const RESCUES: Record<string, RescueDetails> = {
+  "20434a7d-a365-4d4a-ab9b-5cff26815f33": { offerAmount: 15000, askingPrice: 20000, offerDateLabel: "September 11", stale: false },
+  "33fb896d-2c60-42e7-b3eb-20d2e44ee08e": { offerAmount: 22000, askingPrice: 40000, offerDateLabel: "June", stale: true },
+};
+const RESCUE_LISTINGS: Record<string, string> = {
+  "20434a7d-a365-4d4a-ab9b-5cff26815f33": "c649440f-d3df-4f3a-a622-e118767efb4d",
+  "33fb896d-2c60-42e7-b3eb-20d2e44ee08e": "efa664df-1f34-421f-90f8-2ebc88e471fd",
+};
 const TEST_TITLE_PREFIXES = ["Demo%", "QA %", "QA_%", "QA-%", "Test %", "E2E %", "Smoke %", "Sandbox %"];
 const INTERNAL_EMAIL = /@(example\.com|vendibook\.com)$/i;
 const LISTING_COLUMNS =
-  "id, host_id, title, mode, category, description, image_urls, condition, title_status, operational_status, year_built, make, mileage, accepts_offers, price_monthly, featured_enabled, featured_source, featured_expires_at";
+  "id, host_id, title, mode, category, description, image_urls, condition, title_status, operational_status, year_built, make, mileage, accepts_offers, price_monthly, price_sale, featured_enabled, featured_source, featured_expires_at";
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -58,6 +80,8 @@ type ListingRow = FixableListing & {
   id: string;
   host_id: string | null;
   title: string | null;
+  description: string | null;
+  price_sale: number | null;
   featured_enabled: boolean | null;
   featured_source: string | null;
   featured_expires_at: string | null;
@@ -76,7 +100,9 @@ async function pageAll<T>(build: (from: number, to: number) => PageResult<T>): P
   return out;
 }
 
-const VARIANT_RANK: Record<ConciergeVariant, number> = { featured: 0, optimize: 1, share: 2 };
+const VARIANT_RANK: Record<ConciergeVariant, number> = {
+  rescue: 0, featured: 1, remove_contact: 2, fix_title: 3, optimize: 4, share: 5,
+};
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -135,9 +161,22 @@ serve(async (req) => {
       !!l.featured_expires_at && new Date(l.featured_expires_at).getTime() > now;
     for (const l of listings) {
       if (!l.host_id) continue;
+      if (l.mode === "sale" && Number(l.price_sale ?? 0) < MIN_SALE_PRICE) continue; // price/category under review
+      const rescueListing = RESCUE_LISTINGS[l.host_id];
+      const brokenTitle = BROKEN_TITLE.test(String(l.title ?? "")) || String(l.title ?? "").trim().length < 8;
+      const contact = hasContactDetails(`${l.title ?? ""}\n${l.description ?? ""}`);
       const fixes = pickListingFixes(l).slice(0, MAX_FIXES);
-      const variant: ConciergeVariant = isCompFeatured(l) ? "featured" : fixes.length ? "optimize" : "share";
-      const cand: Candidate = { listing: l, variant, fixes, offersOff: fixes.some((f) => f.key === "offers") };
+      const variant: ConciergeVariant =
+        rescueListing === l.id ? "rescue"
+        : contact ? "remove_contact"
+        : brokenTitle ? "fix_title"
+        : isCompFeatured(l) ? "featured"
+        : fixes.length ? "optimize" : "share";
+      const onlyAsk = variant === "rescue" || variant === "remove_contact" || variant === "fix_title";
+      const cand: Candidate = {
+        listing: l, variant, fixes: onlyAsk ? [] : fixes,
+        offersOff: fixes.some((f) => f.key === "offers"),
+      };
       const prev = bySeller.get(l.host_id);
       const better = !prev ||
         VARIANT_RANK[variant] < VARIANT_RANK[prev.variant] ||
@@ -146,19 +185,20 @@ serve(async (req) => {
     }
 
     const hostIds = Array.from(bySeller.keys());
-    type ProfileRow = { id: string; email: string | null; first_name: string | null; full_name: string | null; avatar_url: string | null };
+    type ProfileRow = { id: string; email: string | null; first_name: string | null; full_name: string | null; avatar_url: string | null; account_suspended: boolean | null };
     const profiles: ProfileRow[] = [];
     for (let i = 0; i < hostIds.length; i += 200) {
       const { data, error } = await admin
         .from("profiles")
-        .select("id, email, first_name, full_name, avatar_url")
+        .select("id, email, first_name, full_name, avatar_url, account_suspended")
         .in("id", hostIds.slice(i, i + 200));
       if (error) return json({ error: `Profile query failed: ${error.message}` }, 500);
       profiles.push(...((data ?? []) as ProfileRow[]));
     }
 
     const nudgeSince = new Date(now - NUDGE_COOLDOWN_DAYS * 24 * 60 * 60 * 1000).toISOString();
-    const [{ data: unsubs }, { data: suppressed }, { data: alreadySent }, { data: recentNudges }, { data: admins }] = await Promise.all([
+    const boostSince = new Date(now - BOOST_EMAIL_COOLDOWN_DAYS * 24 * 60 * 60 * 1000).toISOString();
+    const [{ data: unsubs }, { data: suppressed }, { data: alreadySent }, { data: recentNudges }, { data: admins }, { data: holds }, { data: boostEmails }] = await Promise.all([
       admin.from("email_unsubscribes").select("email"),
       admin.from("suppressed_emails").select("email"),
       admin.from("blog_campaign_sends").select("email, user_id")
@@ -167,6 +207,9 @@ serve(async (req) => {
         .eq("campaign_id", LISTING_FIX_CAMPAIGN_ID).eq("is_test", false).eq("status", "sent")
         .gte("created_at", nudgeSince),
       admin.from("user_roles").select("user_id").eq("role", "admin"),
+      admin.from("message_sending_holds").select("user_id"),
+      admin.from("email_send_log").select("recipient_email")
+        .eq("template_name", "complimentary-featured-boost").gte("created_at", boostSince),
     ]);
     const blocked = new Set<string>();
     for (const r of [...(unsubs ?? []), ...(suppressed ?? [])]) {
@@ -176,6 +219,9 @@ serve(async (req) => {
     const priorEmails = new Set(priorRows.map((r) => String(r.email ?? "").toLowerCase()));
     const priorUsers = new Set(priorRows.map((r) => r.user_id).filter(Boolean));
     const adminIds = new Set(((admins ?? []) as { user_id: string }[]).map((r) => r.user_id));
+    const heldIds = new Set(((holds ?? []) as { user_id: string }[]).map((r) => r.user_id));
+    const boostEmailed = new Set(((boostEmails ?? []) as { recipient_email: string | null }[])
+      .map((r) => String(r.recipient_email ?? "").toLowerCase()));
 
     const firstNameOf = (p: ProfileRow): string | null => {
       const raw = (p.first_name ?? "").trim() || (p.full_name ?? "").trim().split(/\s+/)[0] || "";
@@ -192,7 +238,8 @@ serve(async (req) => {
       const email = String(p?.email ?? "").trim().toLowerCase();
       if (
         !isMailableAddress(email) || INTERNAL_EMAIL.test(email) || blocked.has(email) ||
-        priorEmails.has(email) || priorUsers.has(p.id) || adminIds.has(p.id) || excludeUserIds.has(p.id)
+        priorEmails.has(email) || priorUsers.has(p.id) || adminIds.has(p.id) || excludeUserIds.has(p.id) ||
+        heldIds.has(p.id) || p.account_suspended === true || boostEmailed.has(email)
       ) {
         skipped++;
         continue;
@@ -210,6 +257,7 @@ serve(async (req) => {
           fixes: c.fixes,
           featuredUntil: c.variant === "featured" ? featuredUntil(c.listing.featured_expires_at) : null,
           needsProfilePhoto: !p.avatar_url,
+          rescue: c.variant === "rescue" ? RESCUES[p.id] : null,
           unsubscribeUrl: unsubFor(email),
         },
       });
@@ -242,7 +290,22 @@ serve(async (req) => {
 
     const resendKey = Deno.env.get("RESEND_API_KEY");
     if (!resendKey) return json({ error: "RESEND_API_KEY not configured" }, 500);
-    const resend = new Resend(resendKey);
+    // Direct API call: the esm resend@2 SDK cannot set Idempotency-Key, and a
+    // retry or an overlapping hourly run must never mail a seller twice.
+    const sendEmail = async (payload: Record<string, unknown>, idempotencyKey: string) => {
+      const res = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${resendKey}`,
+          "Content-Type": "application/json",
+          "Idempotency-Key": idempotencyKey,
+        },
+        body: JSON.stringify(payload),
+      });
+      const out = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(out?.message || `Resend HTTP ${res.status}`);
+      return out as { id?: string };
+    };
 
     const isTest = mode === "test";
     let queue: Recipient[] = recipients.slice(0, limit);
@@ -267,7 +330,7 @@ serve(async (req) => {
     for (const r of queue) {
       const subject = sellerConciergeSubject(r.data);
       try {
-        const { data, error } = await resend.emails.send({
+        const data = await sendEmail({
           from: MARKETING_FROM,
           to: [r.email],
           subject: isTest ? `[TEST] ${subject}` : subject,
@@ -283,8 +346,7 @@ serve(async (req) => {
             { name: "campaign", value: "seller_concierge_2026_10" },
             { name: "variant", value: r.data.variant },
           ],
-        });
-        if (error) throw new Error(error.message);
+        }, `${CAMPAIGN_ID}:${isTest ? `test:${r.email}:${Date.now()}` : r.user_id}`);
         sent++;
         await admin.from("blog_campaign_sends").insert({
           campaign_id: CAMPAIGN_ID, user_id: r.user_id, email: r.email,

@@ -6,7 +6,16 @@ import type { ListingFix } from "../listingFixes.ts";
 
 export const SELLER_CONCIERGE_CAMPAIGN_ID = "2026-10-seller-concierge";
 
-export type ConciergeVariant = "featured" | "optimize" | "share";
+export type ConciergeVariant = "featured" | "optimize" | "share" | "fix_title" | "remove_contact" | "rescue";
+
+/** Missed-offer rescue: an offer expired before the seller responded. */
+export interface RescueDetails {
+  offerAmount: number;
+  askingPrice: number;
+  offerDateLabel: string; // e.g. "September 11"
+  /** Older rescues ask "still for sale?" instead of "open to talking?". */
+  stale: boolean;
+}
 
 export interface SellerConciergeData {
   firstName: string | null;
@@ -17,6 +26,7 @@ export interface SellerConciergeData {
   /** Formatted end date of a complimentary feature, e.g. "October 19". */
   featuredUntil?: string | null;
   needsProfilePhoto: boolean;
+  rescue?: RescueDetails | null;
   unsubscribeUrl: string;
 }
 
@@ -38,13 +48,32 @@ export const conciergeListingUrl = (d: Pick<SellerConciergeData, "listingId" | "
 const referralUrl = (variant: ConciergeVariant) => `${SITE_URL}/referral?${utm("referral", variant)}`;
 const accountUrl = (variant: ConciergeVariant) => `${SITE_URL}/account?${utm("profile", variant)}`;
 
-export function sellerConciergeSubject(d: Pick<SellerConciergeData, "variant" | "listingTitle">): string {
+const money = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
+
+export function sellerConciergeSubject(d: Pick<SellerConciergeData, "variant" | "listingTitle" | "rescue">): string {
+  if (d.variant === "rescue" && d.rescue) {
+    return d.rescue.stale ? "Is your food trailer still for sale?" : `A buyer offered ${money(d.rescue.offerAmount)} for your listing`;
+  }
+  if (d.variant === "fix_title") return "One quick fix so buyers can find your listing";
+  if (d.variant === "remove_contact") return "A quick change to keep your listing live and safe";
   if (d.variant === "featured") return `Your ${d.listingTitle} is featured free for 14 days`;
   if (d.variant === "share") return `Your ${d.listingTitle} looks great. Want us to share it?`;
   return `A few changes to get more buyers messaging about your ${d.listingTitle}`;
 }
 
 function intro(d: SellerConciergeData): string {
+  if (d.variant === "rescue" && d.rescue) {
+    const r = d.rescue;
+    return r.stale
+      ? `Back in ${esc(r.offerDateLabel)} a buyer offered <strong>${money(r.offerAmount)}</strong> for your listing, which is priced at ${money(r.askingPrice)}. The offer expired before you responded. Our alerts were thin back then, and that's on us. Is it still for sale? Reply "yes" and I'll help you update the listing, or reply "sold" and I'll take it down.`
+      : `On ${esc(r.offerDateLabel)} a buyer offered <strong>${money(r.offerAmount)}</strong> for your listing, which is priced at ${money(r.askingPrice)}. The offer expired before you saw it, because offers stay open 48 hours and our only alert was one email. If you're still selling, reply to this email and I'll let the buyer know you're open to talking. If it's sold, reply "sold" and I'll take it down.`;
+  }
+  if (d.variant === "fix_title") {
+    return `Your listing's title currently reads <strong>"${esc(d.listingTitle)}"</strong>. Buyers search by title, so a clear one like "2021 16ft Concession Trailer, Fully Equipped" helps the right people find it. It takes a minute to change.`;
+  }
+  if (d.variant === "remove_contact") {
+    return `Your listing <strong>${esc(d.listingTitle)}</strong> includes a phone number or email address in its description. To protect buyers and sellers from scams, please remove it and let buyers reach you through Vendibook messages. You get every message by email, and it keeps a record if anything goes wrong.`;
+  }
   if (d.variant === "featured") {
     return `Good news: buyers are already looking at your <strong>${esc(d.listingTitle)}</strong>, so we've featured it on Vendibook for free for 14 days${d.featuredUntil ? `, through ${esc(d.featuredUntil)}` : ""}. Featured listings show at the top of the homepage and search.`;
   }
@@ -69,12 +98,14 @@ export function buildSellerConciergeHtml(d: SellerConciergeData): string {
   const shareBlock = d.variant === "share"
     ? `<p style="${p}">If you post it on Instagram or Facebook, tag <strong>@vendibook</strong> and we'll reshare it. Adding your listing link to your bio helps buyers find it too.</p>`
     : "";
-  const profileBlock = d.needsProfilePhoto
+  const profileBlock = d.variant === "rescue" || d.variant === "fix_title" || d.variant === "remove_contact"
+    ? ""
+    : d.needsProfilePhoto
     ? `<p style="${p}">Also add a photo and a short bio to <a href="${esc(accountUrl(d.variant))}" style="color:${MK.text};">your profile</a>. Buyers check who they're dealing with before they message.</p>`
     : `<p style="${p}">Also add a short bio to <a href="${esc(accountUrl(d.variant))}" style="color:${MK.text};">your profile</a>. Buyers like to know who they're buying from.</p>`;
   const cta = d.variant === "share"
     ? mkButton("View my listing", conciergeListingUrl(d))
-    : mkButton("Update my listing", conciergeEditUrl(d));
+    : mkButton(d.variant === "fix_title" ? "Edit my title" : d.variant === "remove_contact" ? "Edit my description" : "Update my listing", conciergeEditUrl(d));
   const bodyRows = `
 <tr><td style="padding:16px 28px 8px;">
   <p style="${p}">${hi}</p>
@@ -90,7 +121,11 @@ export function buildSellerConciergeHtml(d: SellerConciergeData): string {
 </td></tr>`;
   return marketingShell({
     title: sellerConciergeSubject(d),
-    preheader: d.variant === "featured"
+    preheader: d.variant === "rescue"
+      ? "A buyer made an offer on your listing."
+      : d.variant === "fix_title" || d.variant === "remove_contact"
+      ? "One quick change to your listing."
+      : d.variant === "featured"
       ? "Your listing is featured free for 14 days."
       : d.variant === "share" ? "Tag @vendibook and we'll reshare it." : "Small changes that get buyers to reach out.",
     bodyRows,
@@ -109,10 +144,11 @@ export function buildSellerConciergeText(d: SellerConciergeData): string {
     ...(d.variant === "share"
       ? ["", "If you post it on Instagram or Facebook, tag @vendibook and we'll reshare it."]
       : []),
-    "",
-    d.needsProfilePhoto
-      ? `Also add a photo and a short bio to your profile: ${accountUrl(d.variant)}`
-      : `Also add a short bio to your profile: ${accountUrl(d.variant)}`,
+    ...(d.variant === "rescue" || d.variant === "fix_title" || d.variant === "remove_contact"
+      ? []
+      : ["", d.needsProfilePhoto
+        ? `Also add a photo and a short bio to your profile: ${accountUrl(d.variant)}`
+        : `Also add a short bio to your profile: ${accountUrl(d.variant)}`]),
     "",
     d.variant === "share"
       ? `View your listing: ${conciergeListingUrl(d)}`
