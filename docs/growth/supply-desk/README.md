@@ -14,6 +14,24 @@ _Lead: Supply Desk (Claude) · reports to Growth & Liquidity · updated 2026-10-
 | `08-supply-to-demand.md` | Owner's 5-step supply → demand playbook applied: hero listings, quick wins, incentives, metrics |
 | `outreach/` | Send-ready copy: 123 seller concierge emails, 2 real offer rescues |
 
+## ⚠️ HOLD all seller outreach: ID-verification wall (found 2026-10-05)
+
+Since **2026-10-05 00:10 UTC**, `signup_phone_policy.identity_enforced_from` has been set. `guard_signup_phone_actions` runs on INSERT/UPDATE of `listings`, `offers`, `conversations`, `conversation_messages`, `sale_transactions` and `booking_*`. It blocks any signed-in user who isn't a verified admin and has no `profiles.identity_verified`. It doesn't check when the account was created, so it applies to existing users too.
+
+| Who | Blocked |
+|---|---|
+| Live sellers | **123 of 123** (phone and/or ID) |
+| All accounts | 339 of 358 need ID verification |
+
+What a blocked seller can't do:
+- edit or publish a listing (including `/list/finish`, "turn on offers", adding photos)
+- reply to a buyer
+- accept, counter or decline an offer
+
+In the app, every page outside `/dashboard` shows a full-page Plaid ID check. The dashboard shows a "locked" banner.
+
+Every link in the concierge emails, draft reminders and offer rescues leads into this wall. **Don't send `outreach/` until the owner decides.** The options are in `09-verification-wall.md`.
+
 ## Shipped today (acting on findings)
 
 | What | Where | Effect |
