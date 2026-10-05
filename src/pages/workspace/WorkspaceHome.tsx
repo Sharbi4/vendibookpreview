@@ -14,6 +14,7 @@ import {
   Bell,
   CalendarDays,
   CreditCard,
+  DollarSign,
   FileText,
   Image as ImageIcon,
   Inbox,
@@ -27,6 +28,8 @@ import {
 import WorkspaceShell from '@/components/workspace/WorkspaceShell';
 import { useAuth } from '@/contexts/AuthContext';
 import { useHostListings } from '@/hooks/useHostListings';
+import { useHostOffers } from '@/hooks/useHostOffers';
+import { legacyDashboardRedirect } from '@/lib/workspace/legacyDashboardRedirect';
 import { useShopperBookings } from '@/hooks/useShopperBookings';
 import { useHostBookings } from '@/hooks/useHostBookings';
 import { useUserTransactions } from '@/hooks/useUserTransactions';
@@ -75,6 +78,7 @@ export default function WorkspaceHome() {
   const { favorites } = useFavorites();
   const { walkthroughs } = useVideoWalkthroughs();
   const { data: handoffTasks } = useHandoffTasks();
+  const { pendingOffers } = useHostOffers();
 
   const name = profile?.full_name?.trim() || 'there';
   const firstName = name.split(' ')[0];
@@ -96,6 +100,15 @@ export default function WorkspaceHome() {
       items.push({ id: t.id, label: t.label, hint: t.hint, to: t.to, icon: ShieldCheck, tone: t.tone }),
     );
     upcomingWalkthroughs.forEach((w) => items.push({ id:`walkthrough-${w.id}`, label:`Video walkthrough ${formatWalkthroughTime(w.starts_at)}`, hint:w.listing?.title || 'Scheduled walkthrough', to:`/walkthrough/${w.id}`, icon:Video }));
+    if (pendingOffers.length)
+      items.push({
+        id: 'offers',
+        label: `${pendingOffers.length} offer${pendingOffers.length === 1 ? '' : 's'} waiting on you`,
+        hint: 'Accept, counter, or decline. Offers expire after 48 hours.',
+        to: '/dashboard/offers',
+        icon: DollarSign,
+        tone: 'warn',
+      });
     if (pendingSellerBookings.length)
       items.push({
         id: 'booking-requests',
@@ -148,6 +161,7 @@ export default function WorkspaceHome() {
     return items.sort((a,b) => Number(b.tone === 'warn') - Number(a.tone === 'warn'));
   }, [
     handoffTasks,
+    pendingOffers.length,
     pendingSellerBookings.length,
     drafts.length,
     isSeller,
@@ -197,10 +211,12 @@ export default function WorkspaceHome() {
   const sellerEarnings = transactions.filter((t) => t.role === 'seller');
   const buyerPayments = transactions.filter((t) => t.role === 'buyer');
 
-  // Older links and emails used /dashboard?view=…&tab=… — keep them working by
-  // handing those deep links to the previous dashboard, query string intact.
-  if (routeParams.get('tab') || routeParams.get('view')) {
-    return <Navigate to={`/dashboard/classic?${routeParams.toString()}`} replace />;
+  // Older links and emails used /dashboard?view=…&tab=… and offer emails use
+  // /dashboard?offer=<id>. Map them onto workspace pages (the old
+  // /dashboard/classic hand-off redirected straight back here in a loop).
+  const legacyTarget = legacyDashboardRedirect(routeParams);
+  if (legacyTarget) {
+    return <Navigate to={legacyTarget} replace />;
   }
 
   const leadListing = live[0] || listings[0] || null;

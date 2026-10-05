@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { formatDistanceToNow } from 'date-fns';
 import { Tag, Check, X, Clock, Loader2, MessageSquare, DollarSign, ArrowRightLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -27,9 +27,13 @@ interface OfferCardProps {
   onDecline: (offerId: string, response?: string) => void;
   onCounter: (offerId: string, amount: number, message?: string) => void;
   isResponding: boolean;
+  /** Set when an email deep link targets this offer. Never acts on its own. */
+  focusAction?: OfferFocusAction | null;
 }
 
-const OfferCard = ({ offer, onAccept, onDecline, onCounter, isResponding }: OfferCardProps) => {
+export type OfferFocusAction = 'review' | 'accept' | 'counter' | 'decline';
+
+const OfferCard = ({ offer, onAccept, onDecline, onCounter, isResponding, focusAction }: OfferCardProps) => {
   const [showDeclineModal, setShowDeclineModal] = useState(false);
   const [showCounterModal, setShowCounterModal] = useState(false);
   const [declineReason, setDeclineReason] = useState('');
@@ -67,6 +71,20 @@ const OfferCard = ({ offer, onAccept, onDecline, onCounter, isResponding }: Offe
     setShowCounterModal(true);
   };
 
+  // Email deep link: scroll to the offer and open the matching dialog. Accept
+  // is never automatic — the seller still clicks Accept on the card.
+  const cardRef = useRef<HTMLDivElement>(null);
+  const focusHandled = useRef(false);
+  useEffect(() => {
+    if (!focusAction || focusHandled.current) return;
+    focusHandled.current = true;
+    cardRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    if (!isPending || isExpired) return;
+    if (focusAction === 'counter') openCounterModal();
+    if (focusAction === 'decline') setShowDeclineModal(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [focusAction]);
+
   const getStatusBadge = () => {
     if (isExpired) {
       return <Badge variant="outline" className="text-muted-foreground">Expired</Badge>;
@@ -95,7 +113,11 @@ const OfferCard = ({ offer, onAccept, onDecline, onCounter, isResponding }: Offe
 
   return (
     <>
-      <Card className="border border-border shadow-sm hover:shadow-md transition-shadow">
+      <Card
+        ref={cardRef}
+        id={`offer-${offer.id}`}
+        className={`border shadow-sm hover:shadow-md transition-shadow ${focusAction ? 'border-primary ring-2 ring-primary/40' : 'border-border'}`}
+      >
         <CardContent className="p-4">
           <div className="flex gap-4">
             {/* Listing Image */}
@@ -348,7 +370,15 @@ const OfferCard = ({ offer, onAccept, onDecline, onCounter, isResponding }: Offe
   );
 };
 
-export const HostOffersSection = () => {
+interface HostOffersSectionProps {
+  /** Offer targeted by an email deep link (?offer=<id>&action=…). */
+  focusOfferId?: string | null;
+  focusAction?: OfferFocusAction | null;
+  /** Render an empty state instead of nothing when there are no offers. */
+  showEmpty?: boolean;
+}
+
+export const HostOffersSection = ({ focusOfferId, focusAction, showEmpty = false }: HostOffersSectionProps = {}) => {
   const { pendingOffers, counteredOffers, respondedOffers, isLoading, respondToOffer, isResponding } = useHostOffers();
 
   const handleAccept = (offerId: string) => {
@@ -374,13 +404,19 @@ export const HostOffersSection = () => {
   const allEmpty = pendingOffers.length === 0 && counteredOffers.length === 0 && respondedOffers.length === 0;
 
   if (allEmpty) {
-    return null;
+    return showEmpty ? (
+      <p className="text-sm text-muted-foreground text-center py-6">
+        No offers yet. When a buyer makes an offer on one of your listings, it shows up here.
+      </p>
+    ) : null;
   }
 
   const activeOffers = [...pendingOffers, ...counteredOffers];
+  const focusIsHistory = !!focusOfferId && respondedOffers.some((o) => o.id === focusOfferId);
+  const focusFor = (id: string) => (id === focusOfferId ? focusAction ?? 'review' : null);
 
   return (
-    <Tabs defaultValue="active" className="w-full">
+    <Tabs defaultValue={focusIsHistory ? 'history' : 'active'} className="w-full">
       <TabsList className="grid w-full grid-cols-2 mb-4">
         <TabsTrigger value="active" className="relative">
           Active
@@ -407,6 +443,7 @@ export const HostOffersSection = () => {
               onDecline={handleDecline}
               onCounter={handleCounter}
               isResponding={isResponding}
+              focusAction={focusFor(offer.id)}
             />
           ))
         )}
@@ -426,6 +463,7 @@ export const HostOffersSection = () => {
               onDecline={handleDecline}
               onCounter={handleCounter}
               isResponding={isResponding}
+              focusAction={focusFor(offer.id)}
             />
           ))
         )}

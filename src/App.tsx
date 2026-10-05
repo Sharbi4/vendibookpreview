@@ -84,6 +84,7 @@ const WorkspaceProfile = lazy(() => import("./pages/workspace/WorkspaceProfile")
 const WorkspaceMessages = lazy(() => import("./pages/workspace/WorkspaceMessages"));
 const WorkspaceNotifications = lazy(() => import("./pages/workspace/WorkspaceNotifications"));
 const WorkspaceSaved = lazy(() => import("./pages/workspace/WorkspaceSaved"));
+const WorkspaceOffers = lazy(() => import("./pages/workspace/WorkspaceOffers"));
 const WalkthroughSchedule = lazy(() => import("./pages/WalkthroughSchedule"));
 const WalkthroughDetail = lazy(() => import("./pages/WalkthroughDetail"));
 const WalkthroughNextSteps = lazy(() => import("./pages/WalkthroughNextSteps"));
@@ -341,6 +342,7 @@ const AnimatedRoutes = () => {
           <Route path="/dashboard/notifications" element={<PageTransition><WorkspaceNotifications /></PageTransition>} />
           <Route path="/dashboard/notifications/settings" element={<PageTransition><NotificationPreferences /></PageTransition>} />
           <Route path="/dashboard/saved" element={<PageTransition><WorkspaceSaved /></PageTransition>} />
+          <Route path="/dashboard/offers" element={<PageTransition><WorkspaceOffers /></PageTransition>} />
           <Route path="/dashboard/payments" element={<PageTransition><WorkspacePayments /></PageTransition>} />
           <Route path="/dashboard/payments/setup" element={<PageTransition><WorkspacePaymentSetup /></PageTransition>} />
           <Route path="/dashboard/seller-setup" element={<PageTransition><WorkspaceSellerOnboarding /></PageTransition>} />
