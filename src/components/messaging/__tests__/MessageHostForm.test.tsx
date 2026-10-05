@@ -82,6 +82,17 @@ describe('MessageHostForm guest inquiry', () => {
     expect(mocks.insert).not.toHaveBeenCalled();
   });
 
+  it('silently drops submissions that fill the hidden honeypot field', async () => {
+    const { container } = renderForm();
+    fireEvent.change(screen.getByPlaceholderText(/your email/i), { target: { value: 'bot@example.org' } });
+    fireEvent.change(container.querySelector('input[name="website"]') as HTMLInputElement, { target: { value: 'spam.example' } });
+    fireEvent.click(screen.getByRole('button', { name: /ask the seller/i }));
+
+    await waitFor(() => expect(screen.getByText(/question sent/i)).toBeInTheDocument());
+    expect(mocks.insert).not.toHaveBeenCalled();
+    expect(mocks.invoke).not.toHaveBeenCalled();
+  });
+
   it('keeps the direct-message flow for signed-in users', () => {
     mocks.user = { id: 'buyer-1' };
     renderForm();
