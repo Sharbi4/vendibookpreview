@@ -8,6 +8,16 @@
 //
 // Buyer contact details go to the concierge inbox only — the seller gets the
 // question, not the buyer's email/phone — so the deal stays on Vendibook.
+//
+// Guests are unverified, so this must not become a way around the member
+// trust gate (phone + ID before contacting members):
+// - The seller is always read from listings.host_id; the client-supplied
+//   listing_leads.host_id is never trusted.
+// - Questions containing contact details or links, flagged by
+//   message-risk-scan, or unscannable are held: only the concierge inbox
+//   hears about them. Over the rate limits, nobody is emailed.
+// - Buyer confirmations go out at most once per email per day so the form
+//   can't be used to mail-bomb someone else's address.
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
@@ -18,6 +28,31 @@ const SITE_URL = 'https://vendibook.com'
 // Only act on fresh leads so old ids can't be replayed.
 const MAX_LEAD_AGE_MS = 15 * 60 * 1000
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+const DAY_MS = 24 * 60 * 60 * 1000
+const HOUR_MS = 60 * 60 * 1000
+// Abuse limits (guest_inquiry leads, counting this one).
+const MAX_PER_EMAIL_PER_DAY = 3
+const MAX_PER_EMAIL_LISTING_PER_DAY = 1
+const MAX_PER_SELLER_PER_HOUR = 5
+
+// Contact details, links and off-platform payment/chat handles. Matches are
+// held for the concierge and masked in anything a seller sees.
+const CONTACT_PATTERNS: RegExp[] = [
+  /[a-z0-9._%+-]+\s*@\s*[a-z0-9-]+(?:\s*\.\s*[a-z0-9-]+)+/gi,
+  /[a-z0-9._%+-]+\s*(?:\(at\)|\[at\]|\sat\s)\s*[a-z0-9-]+\s*(?:\(dot\)|\[dot\]|\sdot\s)\s*[a-z]{2,}/gi,
+  /(?:https?:\/\/|www\.)\S+/gi,
+  /\b[a-z0-9-]+\.(?:com|net|org|io|co|me|ly|link|xyz|info|biz|app|site|online|shop)\b\S*/gi,
+  /(?:\+?\d[\s().-]*){10,}/g,
+  /\b(?:whats\s?app|telegram|signal|wechat|cash\s?app|zelle|venmo|western\s?union|money\s?gram|gift\s?cards?)\b/gi,
+]
+
+function hasContactDetails(text: string): boolean {
+  return CONTACT_PATTERNS.some((re) => { re.lastIndex = 0; return re.test(text) })
+}
+
+function maskContactDetails(text: string): string {
+  return CONTACT_PATTERNS.reduce((t, re) => t.replace(re, '[contact removed]'), text)
+}
 
 function json(data: Record<string, unknown>, status = 200): Response {
   return new Response(JSON.stringify(data), {
@@ -43,7 +78,7 @@ Deno.serve(async (req) => {
 
   const { data: lead, error: leadErr } = await supabase
     .from('listing_leads')
-    .select('id, listing_id, host_id, email, name, phone, message, source, created_at, listing:listings(id, title, mode, price_sale, price_daily, city, state)')
+    .select('id, listing_id, host_id, email, name, phone, message, source, created_at, listing:listings(id, host_id, title, mode, price_sale, price_daily, city, state)')
     .eq('id', leadId)
     .maybeSingle()
   if (leadErr || !lead) return json({ error: 'Lead not found' }, 404)
@@ -52,6 +87,10 @@ Deno.serve(async (req) => {
   }
 
   const listing = (lead as any).listing ?? {}
+  // Never trust the client-supplied host_id: anon inserts could point it at
+  // any account. The seller is whoever owns the listing.
+  const sellerId: string | null = listing.host_id ?? null
+  const hostMismatch = !sellerId || sellerId !== lead.host_id
   const title: string = listing.title || 'your listing'
   const listingUrl = `${SITE_URL}/listing/${lead.listing_id}`
   const where = [listing.city, listing.state].filter(Boolean).join(', ')
@@ -59,13 +98,84 @@ Deno.serve(async (req) => {
     ? `$${Number(listing.price_sale).toLocaleString('en-US')}`
     : listing.price_daily ? `$${Number(listing.price_daily).toLocaleString('en-US')}/day` : ''
   const question = lead.message?.trim() || '(no message, buyer asked for more info)'
+  const sellerQuestion = maskContactDetails(question)
   const buyerFirst = lead.name?.trim().split(/\s+/)[0] || undefined
 
-  const { data: seller } = await supabase
-    .from('profiles')
-    .select('id, email, full_name, first_name')
-    .eq('id', lead.host_id)
-    .maybeSingle()
+  const { data: seller } = sellerId
+    ? await supabase
+      .from('profiles')
+      .select('id, email, full_name, first_name')
+      .eq('id', sellerId)
+      .maybeSingle()
+    : { data: null }
+
+  // Abuse limits, counted over recent guest inquiries (this lead included).
+  const email = lead.email.trim().toLowerCase()
+  // Case-insensitive exact match: escape ilike wildcards in the address.
+  const emailPattern = email.replace(/[\\%_]/g, (c) => `\\${c}`)
+  const createdAt = new Date(lead.created_at).getTime()
+  const dayAgo = new Date(createdAt - DAY_MS).toISOString()
+  const hourAgo = new Date(createdAt - HOUR_MS).toISOString()
+  const countLeads = async (by: { email?: boolean; listingId?: string; hostId?: string }, since: string) => {
+    let q = supabase.from('listing_leads').select('id', { count: 'exact', head: true })
+      .eq('source', 'guest_inquiry').gte('created_at', since).lte('created_at', lead.created_at)
+    if (by.email) q = q.ilike('email', emailPattern)
+    if (by.listingId) q = q.eq('listing_id', by.listingId)
+    if (by.hostId) q = q.eq('host_id', by.hostId)
+    const { count } = await q
+    return count ?? 0
+  }
+  const [perEmail, perEmailListing, perSeller] = await Promise.all([
+    countLeads({ email: true }, dayAgo),
+    countLeads({ email: true, listingId: lead.listing_id }, dayAgo),
+    sellerId ? countLeads({ hostId: sellerId }, hourAgo) : Promise.resolve(0),
+  ])
+  const rateLimited = perEmail > MAX_PER_EMAIL_PER_DAY
+    || perEmailListing > MAX_PER_EMAIL_LISTING_PER_DAY
+    || perSeller > MAX_PER_SELLER_PER_HOUR
+  if (rateLimited) {
+    // The lead stays saved for review; a burst sends no email to anyone, so
+    // it can't flood sellers, the support inbox, or a victim's address.
+    console.warn('[notify-listing-lead] rate limited', { leadId, perEmail, perEmailListing, perSeller })
+    return json({ skipped: true, reason: 'rate limited' })
+  }
+
+  // Same AI review that chat messages and offers get. Fail closed: if the
+  // scan can't run, the seller isn't notified and the concierge follows up.
+  let risk: { flagged: boolean; score?: number; error?: string } = { flagged: false }
+  if (lead.message?.trim()) {
+    try {
+      const res = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/message-risk-scan`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-cron-secret': Deno.env.get('RELEASE_SWEEP_SECRET') ?? '',
+          Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+        },
+        body: JSON.stringify({ kind: 'listing_lead', id: lead.id }),
+      })
+      const body = await res.json().catch(() => ({}))
+      risk = res.ok ? { flagged: !!body.flagged, score: body.score } : { flagged: false, error: `scan ${res.status}` }
+    } catch (err) {
+      risk = { flagged: false, error: String(err) }
+    }
+  }
+
+  const contactDetails = hasContactDetails(question)
+  const holdReasons = [
+    hostMismatch && 'host_id does not match listing owner',
+    contactDetails && 'question contains contact details or links',
+    risk.flagged && `AI risk ${risk.score}/100`,
+    risk.error && `risk scan unavailable (${risk.error})`,
+  ].filter(Boolean) as string[]
+  const held = holdReasons.length > 0
+
+  // Once per email per day.
+  const { count: priorBuyerLeads } = await supabase
+    .from('listing_leads').select('id', { count: 'exact', head: true })
+    .eq('source', 'guest_inquiry').ilike('email', emailPattern)
+    .gte('created_at', dayAgo).lt('created_at', lead.created_at)
+  const sendBuyerConfirmation = (priorBuyerLeads ?? 0) === 0
 
   const sends: Promise<{ error?: unknown } | unknown>[] = []
 
@@ -76,13 +186,14 @@ Deno.serve(async (req) => {
     idempotencyKey: `listing-lead-internal-${lead.id}`,
     templateData: {
       firstName: 'Vendibook Concierge',
-      subject: `Guest inquiry: ${title}${price ? ` (${price})` : ''}`,
+      subject: `${held ? '[HELD] ' : ''}Guest inquiry: ${title}${price ? ` (${price})` : ''}`,
       bodyParagraphs: [
+        ...(held ? [`HELD: the seller was NOT notified. Review before connecting. Reasons: ${holdReasons.join('; ')}.`] : []),
         `A logged-out buyer asked about ${title}${where ? ` in ${where}` : ''}: ${listingUrl}`,
         `Buyer: ${lead.name || '(no name)'} · ${lead.email} · ${lead.phone || '(no phone)'}`,
         `Question: ${question}`,
         `Seller: ${seller?.full_name || '(unknown)'} · ${seller?.email || '(no email)'}`,
-        'Connect both sides within 1 business hour.',
+        held ? 'Unverified guest: verify the buyer before passing anything to the seller.' : 'Connect both sides within 1 business hour.',
       ],
       signedBy: 'Vendibook Lead Router',
       signedTitle: 'Internal Notification',
@@ -90,7 +201,7 @@ Deno.serve(async (req) => {
   }))
 
   // 2) Seller heads-up (question only, no buyer contact details).
-  if (seller?.email) {
+  if (!held && seller?.email) {
     const { data: prefs } = await supabase
       .from('notification_preferences')
       .select('sale_email')
@@ -106,7 +217,7 @@ Deno.serve(async (req) => {
           subject: `A buyer is asking about ${title}`,
           bodyParagraphs: [
             `${buyerFirst ? `${buyerFirst}, a buyer,` : 'A buyer'} just asked about ${title}:`,
-            `"${question}"`,
+            `"${sellerQuestion}"`,
             'Our concierge team is connecting you with them now. Sellers who reply fast sell faster, so keep an eye on your Vendibook messages and phone today.',
             `Your listing: ${listingUrl}`,
           ],
@@ -118,15 +229,15 @@ Deno.serve(async (req) => {
   }
 
   // 3) Buyer confirmation.
-  sends.push(invokeTransactionalEmail({
+  if (sendBuyerConfirmation) sends.push(invokeTransactionalEmail({
     templateName: 'support-reply',
     recipientEmail: lead.email,
     idempotencyKey: `listing-lead-buyer-${lead.id}`,
     templateData: {
       firstName: buyerFirst,
-      subject: `We sent your question about ${title}`,
+      subject: `We got your question about ${title}`,
       bodyParagraphs: [
-        `Thanks for asking about ${title}. We've passed your question to the seller, and a Vendibook concierge will follow up within 1 business hour (Mon–Fri, 9am–5pm AZ time).`,
+        `Thanks for asking about ${title}. A Vendibook concierge will review your question and follow up within 1 business hour (Mon–Fri, 9am–5pm AZ time).`,
         `Your question: "${question}"`,
         `Want to chat with the seller directly and make offers? Create a free account: ${SITE_URL}/auth`,
       ],
@@ -136,11 +247,11 @@ Deno.serve(async (req) => {
   }))
 
   // 4) In-app notification for the seller.
-  await notifyUser(supabase, {
-    userId: lead.host_id,
+  if (!held && sellerId) await notifyUser(supabase, {
+    userId: sellerId,
     type: 'listing_lead',
     title: 'New buyer question',
-    message: `A buyer asked about ${title}: "${question.slice(0, 140)}"`,
+    message: `A buyer asked about ${title}: "${sellerQuestion.slice(0, 140)}"`,
     link: `/listing/${lead.listing_id}`,
     dedupeKey: `listing-lead-${lead.id}`,
   })
@@ -153,5 +264,6 @@ Deno.serve(async (req) => {
   }
   if (failed.length) console.warn('[notify-listing-lead] some sends failed', { leadId, failed: failed.length })
 
+  if (held) console.warn('[notify-listing-lead] held from seller', { leadId, holdReasons })
   return json({ success: true })
 })
