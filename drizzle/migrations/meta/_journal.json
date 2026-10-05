@@ -36,6 +36,13 @@
       "when": 1791158262426,
       "tag": "0004_require_identity_verification",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791188168642,
+      "tag": "0005_internal_cron_secret_and_spotlight_uploads",
+      "breakpoints": true
     }
   ]
 }
