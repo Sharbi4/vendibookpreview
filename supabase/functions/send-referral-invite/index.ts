@@ -4,6 +4,7 @@
 // generic-notice template. Rate-limited to 10 recipients per call.
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
+import { checkRateLimit } from '../_shared/rateLimit.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -51,6 +52,17 @@ Deno.serve(async (req) => {
     ).slice(0, 10)
 
     if (emails.length === 0) return json({ error: 'No valid emails' }, 400)
+
+    // Bound outbound invites per member: never their own address, and a daily cap.
+    const own = (user.email ?? '').toLowerCase()
+    const recipients = emails.filter((e) => e !== own)
+    if (recipients.length === 0) return json({ error: 'No valid emails' }, 400)
+    let withinDaily = true
+    for (let i = 0; i < recipients.length && withinDaily; i++) {
+      withinDaily = await checkRateLimit('referral_invite_user', user.id, 25, 24 * 60)
+    }
+    if (!withinDaily) return json({ error: 'Daily invite limit reached. Please try again tomorrow.' }, 429)
+    emails.splice(0, emails.length, ...recipients)
 
     const admin = createClient(supabaseUrl, serviceKey)
 
