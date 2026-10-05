@@ -2,6 +2,7 @@
 // Looks up offer + buyer/seller, picks the right template + recipient, and
 // sends through the shared transactional email helper so all sends are queued, retried, and logged.
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { getCaller, isAdminUser, isBackendCaller, forbiddenResponse, unauthorizedResponse } from "../_shared/callerGuard.ts";
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 const corsHeaders = {
@@ -28,6 +29,13 @@ Deno.serve(async (req) => {
       .eq('id', offer_id)
       .single();
     if (offerErr || !offer) throw new Error(`Offer not found: ${offerErr?.message}`);
+    if (!(await isBackendCaller(req))) {
+      const caller = await getCaller(req);
+      if (!caller) return unauthorizedResponse(corsHeaders);
+      if (caller.id !== offer.buyer_id && caller.id !== offer.seller_id && !(await isAdminUser(caller.id))) {
+        return forbiddenResponse(corsHeaders);
+      }
+    }
 
     const [{ data: seller }, { data: buyer }] = await Promise.all([
       supabase.from('profiles').select('id, email, full_name, first_name').eq('id', offer.seller_id).maybeSingle(),
