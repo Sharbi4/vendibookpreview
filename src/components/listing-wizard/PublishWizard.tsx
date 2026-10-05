@@ -1006,7 +1006,12 @@ export const PublishWizard: React.FC = () => {
         photosExclusionsAnswered: (data as any).photos_exclusions_answered ?? false,
         photosExclusionsNote: (data as any).photos_exclusions_note || '',
         priceNegotiable: (data as any).price_negotiable ?? false,
-        acceptsOffers: (data as any).accepts_offers ?? false,
+        // Sale drafts that haven't completed disclosures default to accepting offers:
+        // negotiation is the norm for used equipment, and listings without offers get
+        // fewer buyer contacts. The seller can still switch it off.
+        acceptsOffers: data.mode === 'sale' && !(data as any).title_status && !(data as any).photos_exclusions_answered
+          ? true
+          : (data as any).accepts_offers ?? false,
         minOfferAmount: (data as any).min_offer_amount?.toString() || '',
       });
 
