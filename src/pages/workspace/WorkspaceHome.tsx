@@ -256,12 +256,12 @@ export default function WorkspaceHome() {
               </Link>
             </div>
 
-            <div className="grid gap-4 p-5 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="sale-light grid gap-4 p-5 sm:grid-cols-2 lg:grid-cols-3">
               {listings.slice(0, 6).map((listing) => {
                 const featured = isListingFeatured(listing as never);
                 const boostable = canBoostListing(listing as never) && !featured;
                 return (
-                  <article key={listing.id} className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card">
+                  <article key={listing.id} className="flex flex-col overflow-hidden rounded-2xl border border-border bg-background text-foreground shadow-sm">
                     <Link to={listing.status === 'draft' ? `/dashboard/listings/${listing.id}/edit` : `/listing/${listing.id}`} className="relative block aspect-[4/3] bg-muted">
                       {listing.cover_image_url ? (
                         <img src={listing.cover_image_url} alt={listing.title || 'Listing photo'} loading="lazy" className="h-full w-full object-cover" />

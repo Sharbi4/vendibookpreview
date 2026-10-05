@@ -46,7 +46,7 @@ const desktopNav = [
 /** Pro upsell + live tools. Go Pro routes to the /pricing hub, never straight to consent. */
 function GrowSection({ onNavigate, linkClass }: { onNavigate?: () => void; linkClass: string }) {
   return (
-    <div className="mt-4 grid gap-1 border-t border-border pt-4">
+    <div className="mt-4 grid gap-1 border-t border-current/10 pt-4">
       <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Grow with Vendibook</p>
       <Button asChild variant="cta" className="mb-2 w-full">
         <Link to="/pricing" onClick={onNavigate}><Crown />Get Vendibook Pro</Link>
