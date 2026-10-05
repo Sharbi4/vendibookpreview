@@ -1,3 +1,4 @@
+import { useCategoryPriceCheck } from '@/hooks/useCategoryPriceCheck';
 import { useCallback, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
@@ -112,6 +113,8 @@ export const SalePurchaseCard = ({
   const [showDeliveryResult, setShowDeliveryResult] = useState(false);
 
   const priceSale: number | null = listing?.price_sale ?? null;
+  const priceCheck = useCategoryPriceCheck(listing?.id, listing?.category, priceSale ? Number(priceSale) : null);
+  const categoryPlural = String(listing?.category ?? '').replace(/_/g, ' ').replace(/^(.*)$/, '$1s');
   const fulfillmentType: string = listing?.fulfillment_type || 'pickup';
   const sellerDelivers = fulfillmentType === 'delivery' || fulfillmentType === 'both';
   const offersPickup =
@@ -217,6 +220,14 @@ export const SalePurchaseCard = ({
               <span className="text-xs text-muted-foreground">or best offer</span>
             )}
           </div>
+          {priceCheck && (
+            <p
+              className="mt-1.5 text-xs font-medium text-emerald-700 dark:text-emerald-400"
+              title={`Based on ${priceCheck.comps} similar listings on Vendibook. Asking prices, not an appraisal.`}
+            >
+              ${priceCheck.belowBy.toLocaleString('en-US')} below the typical asking price for {categoryPlural} on Vendibook
+            </p>
+          )}
           <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
             <Lock className="h-3.5 w-3.5" />
             <span>Checkout by</span>
