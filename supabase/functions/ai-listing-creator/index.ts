@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { resolveHostTier, tierAtLeast, tierRequiredBody } from "../_shared/resolveHostTier.ts";
+import { getCaller, isAdminUser, unauthorizedResponse, forbiddenResponse } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -241,7 +242,13 @@ serve(async (req) => {
       }
     }
 
-    const { messages, imageUrls } = await req.json();
+    if (!(await getCaller(req))) return unauthorizedResponse(corsHeaders);
+    const { messages: rawMessages, imageUrls } = await req.json();
+    // Callers may only supply user/assistant turns; system instructions are ours.
+    const messages = (Array.isArray(rawMessages) ? rawMessages : [])
+      .filter((m: any) => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string")
+      .slice(-40)
+      .map((m: any) => ({ role: m.role, content: m.content.slice(0, 8000) }));
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
