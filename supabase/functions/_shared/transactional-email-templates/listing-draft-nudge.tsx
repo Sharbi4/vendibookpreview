@@ -17,11 +17,15 @@ interface Props {
   hostName?: string
   listingTitle?: string
   listingId?: string
+  /** Site-relative path to finish the draft, e.g. /list/finish/:id. */
+  finishPath?: string
   coverImageUrl?: string
 }
 
-const E = ({ hostName, listingTitle, listingId }: Props) => {
-  const finishUrl = listingId ? `${SITE_URL}/create-listing/${listingId}` : `${SITE_URL}/list`
+const E = ({ hostName, listingTitle, listingId, finishPath }: Props) => {
+  const finishUrl = finishPath
+    ? `${SITE_URL}${finishPath}`
+    : listingId ? `${SITE_URL}/create-listing/${listingId}` : `${SITE_URL}/list`
   return (
     <VendibookEmailLayout preview="Your listing is saved as a draft — finish publishing it">
       <Eyebrow>Draft saved</Eyebrow>
