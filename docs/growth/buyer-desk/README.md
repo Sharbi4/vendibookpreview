@@ -8,6 +8,7 @@ Owner: Buyer Desk lead (reports to Growth & Liquidity). Data comes from read-onl
 | [demand-map-2026-10-05.md](demand-map-2026-10-05.md) | Demand by category × state × budget, plus sourcing briefs SB-1…SB-7 for Supply Desk |
 | [muse-prompts-2026-10-05.md](muse-prompts-2026-10-05.md) | MUSE-1 (reply to "looking to buy/rent" posts) and MUSE-3 (promote hot-but-cold listings) |
 | [market-capture-2026-10-05.md](market-capture-2026-10-05.md) | Market Capture Framework scorecard: compete on trust + fulfillment, own rentals/commissaries/vendor lots |
+| [ops-drafts-2026-10-05.md](ops-drafts-2026-10-05.md) | Ready-to-send replies: 3 unmatched asset requests, 15 seller fix nudges, 4 contact-detail nudges |
 | [personas.md](personas.md) | 4 buyer personas and the messaging for each |
 | [lovable-prompts.md](lovable-prompts.md) | LP-1…LP-10 buyer-side site changes (Square + PayPal only, never Stripe; PayPal stays in sandbox) |
 
