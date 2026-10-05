@@ -112,7 +112,7 @@ Deno.serve(async (req) => {
   // Abuse limits, counted over recent guest inquiries (this lead included).
   const email = lead.email.trim().toLowerCase()
   // Case-insensitive exact match: escape ilike wildcards in the address.
-  const emailPattern = email.replace(/[\\%_]/g, (c) => `\\${c}`)
+  const emailPattern = email.replace(/[\\%_]/g, (c: string) => `\\${c}`)
   const createdAt = new Date(lead.created_at).getTime()
   const dayAgo = new Date(createdAt - DAY_MS).toISOString()
   const hourAgo = new Date(createdAt - HOUR_MS).toISOString()
