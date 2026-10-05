@@ -36,8 +36,10 @@ export const MAILING_ADDRESS = 'Vendibook · 1 S Church St, Tucson, AZ'
 const EMAIL_ASSETS =
   'https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets'
 
-/** Light backgrounds (default for every email surface). */
-export const LOGO_LIGHT_URL = `${EMAIL_ASSETS}/vendibook-hero-logo.png?v=2026-08`
+/** Light backgrounds (default for every email surface). Owner-supplied logo
+ * 2026-10-05: flame-pin + "vendibook" wordmark, 1000×297 on white
+ * (source: public/brand/vendibook-logo-email-white.png). */
+export const LOGO_LIGHT_URL = `${EMAIL_ASSETS}/vendibook-logo-email-2026-10.png?v=2026-10`
 /**
  * Dark backgrounds — verified 2026-08-20 to resolve (HTTP 200, 1000×293).
  * The master system is light-only; kept only for the marketing dark header.
