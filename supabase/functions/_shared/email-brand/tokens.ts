@@ -6,7 +6,7 @@
 // content surface, charcoal type, Vendibook orange accent.
 //
 // Constraints baked in on purpose:
-//   • no webfonts — system stack only
+//   • no webfonts — modern system stack only
 //   • no Tailwind, no CSS classes — inline styles only
 //   • 600px max content width
 //   • no gradients, no animation, no dark-mode hacks
@@ -84,7 +84,12 @@ export const color = {
 
 // ---- Type ------------------------------------------------------------
 export const FONT_STACK =
-  "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, Helvetica, sans-serif"
+  "Aptos, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, Helvetica, sans-serif"
+
+/** Email-safe equivalent of the homepage/dashboard orange CTA glow.
+ * Clients that do not support box-shadow gracefully retain the solid fill. */
+export const CTA_SHADOW =
+  '0 8px 20px rgba(255, 81, 36, 0.30), 0 2px 6px rgba(255, 81, 36, 0.22)'
 
 export const size = {
   h1: '28px',
@@ -197,6 +202,8 @@ export const t = {
   button: {
     backgroundColor: color.primary,
     color: color.primaryText,
+    border: `1px solid ${color.primary}`,
+    boxShadow: CTA_SHADOW,
     padding: '14px 26px',
     borderRadius: radius.button,
     fontWeight: 700,
