@@ -2,6 +2,7 @@
 // Triggered by pg_cron weekly OR by admin manually. One email per host (transactional).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
+import { isRealListingView } from '../_shared/realListingViews.ts'
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -86,8 +87,7 @@ Deno.serve(async (req) => {
       const listingIds = (hostListings || []).map((l: any) => l.id);
       if (listingIds.length === 0) continue;
 
-      const [{ count: viewsCount }, { data: bookings }, { count: inquiriesCount }] = await Promise.all([
-        supabase.from("listing_views").select("id", { count: "exact", head: true }).in("listing_id", listingIds).gte("viewed_at", sinceIso),
+      const [{ data: bookings }, { count: inquiriesCount }] = await Promise.all([
         supabase.from("booking_requests").select("id,total_price,status,listing_id,created_at").eq("host_id", hostId).gte("created_at", sinceIso),
         supabase.from("listing_leads").select("id", { count: "exact", head: true }).eq("host_id", hostId).gte("created_at", sinceIso),
       ]);
@@ -95,15 +95,17 @@ Deno.serve(async (req) => {
       const paidBookings = (bookings || []).filter((b: any) => ["approved", "completed", "paid"].includes(b.status));
       const earnings = paidBookings.reduce((acc: number, b: any) => acc + Number(b.total_price || 0), 0);
 
-      // Top listing by views in window
+      // Real buyer views only (no bots, scrapers or self-views); also picks the top listing.
       const viewsByListing: Record<string, number> = {};
       for (const id of listingIds) viewsByListing[id] = 0;
       const { data: viewRows } = await supabase
         .from("listing_views")
-        .select("listing_id")
+        .select("listing_id,viewer_id,user_agent")
         .in("listing_id", listingIds)
         .gte("viewed_at", sinceIso);
-      (viewRows || []).forEach((v: any) => { viewsByListing[v.listing_id] = (viewsByListing[v.listing_id] || 0) + 1; });
+      const realViews = (viewRows || []).filter((v: any) => isRealListingView(v, hostId));
+      realViews.forEach((v: any) => { viewsByListing[v.listing_id] = (viewsByListing[v.listing_id] || 0) + 1; });
+      const viewsCount = realViews.length;
       const topId = Object.entries(viewsByListing).sort((a, b) => b[1] - a[1])[0]?.[0];
       const topListing = (hostListings || []).find((l: any) => l.id === topId);
 

@@ -3,6 +3,7 @@
 // Triggered by pg_cron daily at 13:00 UTC.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
+import { isRealListingView } from '../_shared/realListingViews.ts'
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -94,12 +95,14 @@ Deno.serve(async (req) => {
         const listingIds = (hostListings || []).map((l: any) => l.id);
         if (listingIds.length === 0) { summary.skipped++; continue; }
 
-        const [{ count: viewsCount }, { data: bookings }, { count: inquiriesCount }, { data: viewRows }] = await Promise.all([
-          supabase.from("listing_views").select("id", { count: "exact", head: true }).in("listing_id", listingIds).gte("viewed_at", yIso).lt("viewed_at", tIso),
+        const [{ data: bookings }, { count: inquiriesCount }, { data: rawViewRows }] = await Promise.all([
           supabase.from("booking_requests").select("id,total_price,status,listing_id").eq("host_id", hostId).gte("created_at", yIso).lt("created_at", tIso),
           supabase.from("listing_leads").select("id", { count: "exact", head: true }).eq("host_id", hostId).gte("created_at", yIso).lt("created_at", tIso),
-          supabase.from("listing_views").select("listing_id").in("listing_id", listingIds).gte("viewed_at", yIso).lt("viewed_at", tIso),
+          supabase.from("listing_views").select("listing_id,viewer_id,user_agent").in("listing_id", listingIds).gte("viewed_at", yIso).lt("viewed_at", tIso),
         ]);
+        // Real buyer views only (no bots, scrapers or self-views).
+        const viewRows = (rawViewRows || []).filter((v: any) => isRealListingView(v, hostId));
+        const viewsCount = viewRows.length;
 
         const paid = (bookings || []).filter((b: any) => ["approved", "completed", "paid"].includes(b.status));
         const earnings = paid.reduce((acc: number, b: any) => acc + Number(b.total_price || 0), 0);

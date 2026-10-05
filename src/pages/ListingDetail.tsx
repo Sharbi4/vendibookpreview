@@ -179,7 +179,7 @@ const ListingDetail = () => {
   // Track page view when listing loads
   useEffect(() => {
     if (id && listing && !isLoading) {
-      trackView(id);
+      trackView(id, listing.host_id);
       trackListingViewed(id, listing.category);
       trackBuyerSeoDownstream('listing_view', id, { asset_category: listing.category, listing_mode: (listing as { mode?: string }).mode ?? null });
     }

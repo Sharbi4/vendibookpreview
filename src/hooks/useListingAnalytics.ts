@@ -166,12 +166,19 @@ export const useListingAnalytics = () => {
   return { analytics, isLoading, refetch: fetchAnalytics };
 };
 
+const BOT_UA_RE = /(bot|crawl|spider|headless|facebookexternalhit|meta-external|python|curl|lighthouse)/i;
+
 // Hook to track a listing view
 export const useTrackListingView = () => {
   const { user } = useAuth();
 
-  const trackView = useCallback(async (listingId: string) => {
+  const trackView = useCallback(async (listingId: string, hostId?: string) => {
     try {
+      // Only real buyer views: skip the seller's own visits and automated browsers,
+      // which otherwise inflate seller-facing view counts and digests.
+      if (hostId && user?.id === hostId) return;
+      if (navigator.webdriver || BOT_UA_RE.test(navigator.userAgent)) return;
+
       // Generate or get session ID for anonymous tracking
       let sessionId = sessionStorage.getItem('view_session_id');
       if (!sessionId) {
