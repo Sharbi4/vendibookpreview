@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ShoppingCart, Tag } from 'lucide-react';
+import { MessageSquare, ShoppingCart, Tag } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useAuth } from '@/contexts/AuthContext';
 import { MakeOfferModal } from '@/components/offers/MakeOfferModal';
 import { AuthGateOfferModal } from '@/components/offers/AuthGateOfferModal';
+import MessageHostForm from '@/components/messaging/MessageHostForm';
 
 interface SaleStickyActionBarProps {
   listingId: string;
@@ -27,6 +29,8 @@ export const SaleStickyActionBar = ({
   const navigate = useNavigate();
   const [showOfferModal, setShowOfferModal] = useState(false);
   const [showAuthGate, setShowAuthGate] = useState(false);
+  // Low-commitment first touch: works logged out (guest inquiry).
+  const [showAsk, setShowAsk] = useState(false);
   const [pendingAction, setPendingAction] = useState<'buy' | 'offer' | null>(null);
 
   if (isOwner) return null;
@@ -70,7 +74,17 @@ export const SaleStickyActionBar = ({
           boxShadow: '0 -18px 50px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)',
         }}
       >
-        <div className="px-3 py-3 grid grid-cols-2 gap-2.5 items-center">
+        <div className="px-3 py-3 grid grid-cols-[auto_1fr_1fr] gap-2.5 items-center">
+          <Button
+            variant="outline"
+            size="lg"
+            onClick={() => setShowAsk(true)}
+            aria-label="Ask the seller a question"
+            className="h-14 px-3.5 text-base font-bold gap-1.5 rounded-2xl border-0 bg-cta-glass hover:bg-white/10 text-white"
+          >
+            <MessageSquare className="h-4 w-4" />
+            Ask
+          </Button>
           <Button
             variant="outline"
             size="lg"
@@ -96,6 +110,15 @@ export const SaleStickyActionBar = ({
       </div>
 
 
+
+      <Dialog open={showAsk} onOpenChange={setShowAsk}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Ask the seller</DialogTitle>
+          </DialogHeader>
+          <MessageHostForm listingId={listingId} hostId={hostId} listingTitle={listingTitle} />
+        </DialogContent>
+      </Dialog>
 
       <AuthGateOfferModal
         open={showAuthGate}
