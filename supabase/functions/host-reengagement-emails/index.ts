@@ -88,7 +88,7 @@ Deno.serve(async (req) => {
 
         sentCount++;
       } catch (e) {
-        console.error('Failed to send to', profile.email, e);
+        console.error('Failed to send re-engagement email', profile.id, e);
       }
     }
 

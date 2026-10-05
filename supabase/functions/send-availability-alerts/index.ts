@@ -288,7 +288,7 @@ const handler = async (req: Request): Promise<Response> => {
               },
             });
           if (emailError) {
-            console.error(`[availability-alerts] email error for ${alert.email}`, emailError);
+            console.error(`[availability-alerts] email error for alert ${alert.id}`, emailError);
             continue;
           }
           emailsSent++;
