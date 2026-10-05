@@ -154,7 +154,7 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
           <Sheet open={menuOpen} onOpenChange={setMenuOpen}>
             <SheetTrigger asChild>
               <button className="workspace-menu-trigger md:hidden" aria-label="Open dashboard menu">
-                <Menu aria-hidden="true" /><span className="sr-only">Dashboard menu</span>
+                <Menu aria-hidden="true" /><span>Menu</span>
               </button>
             </SheetTrigger>
             <SheetContent side="left" className="workspace-mobile-menu">
@@ -235,6 +235,18 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
               </NavLink>
             );
           })}
+          <button
+            type="button"
+            className="v2-mobile-link"
+            onClick={() => setMenuOpen(true)}
+            aria-haspopup="dialog"
+            aria-expanded={menuOpen}
+          >
+            <span className="v2-mobile-icon">
+              <Menu />
+            </span>
+            <span>Menu</span>
+          </button>
         </div>
       </nav>
     </div>
