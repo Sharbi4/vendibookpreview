@@ -286,6 +286,9 @@ verify_jwt = false
 [functions.send-feature-your-listing]
 verify_jwt = false
 
+[functions.send-listing-fix-nudges]
+verify_jwt = false
+
 [functions.paypal-seller-onboarding]
 verify_jwt = false
 
