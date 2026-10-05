@@ -9,6 +9,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { Resend } from "https://esm.sh/resend@2.0.0";
+import { unsubToken } from "../_shared/unsubscribeToken.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -149,7 +150,7 @@ serve(async (req) => {
     const queueAll = Array.from(targets.values());
 
     const unsubFor = (email: string) =>
-      `${supabaseUrl}/functions/v1/marketing-unsubscribe?e=${encodeURIComponent(email)}`;
+      `${supabaseUrl}/functions/v1/marketing-unsubscribe?e=${encodeURIComponent(email)}&t=${unsubToken(email)}`;
     const ctaFor = (t: Target) =>
       `${SITE}/host/listings`;
 

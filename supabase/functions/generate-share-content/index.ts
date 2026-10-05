@@ -1,5 +1,6 @@
 // Generates AI share captions for a listing across channels
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { getCaller, isAdminUser, isBackendCaller, forbiddenResponse, unauthorizedResponse } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,6 +16,9 @@ Deno.serve(async (req) => {
 
   try {
     const { listing_id, channels = ["facebook", "x", "sms", "email"], variant = "default" } = await req.json();
+    if (!["default", "hype", "professional", "casual"].includes(String(variant))) {
+      return new Response(JSON.stringify({ error: "invalid variant" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    }
     if (!listing_id) {
       return new Response(JSON.stringify({ error: "listing_id required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -43,9 +47,14 @@ Deno.serve(async (req) => {
     // Fetch listing
     const { data: listing } = await admin
       .from("listings")
-      .select("title, description, category, city, state, price_daily, price_hourly, price_sale, mode")
+      .select("title, description, category, city, state, price_daily, price_hourly, price_sale, mode, host_id")
       .eq("id", listing_id)
       .maybeSingle();
+    if (listing && !(await isBackendCaller(req))) {
+      const shareCaller = await getCaller(req);
+      if (!shareCaller) return unauthorizedResponse(corsHeaders);
+      if (shareCaller.id !== (listing as any).host_id && !(await isAdminUser(shareCaller.id))) return forbiddenResponse(corsHeaders);
+    }
 
     if (!listing) {
       return new Response(JSON.stringify({ error: "listing not found" }), {

@@ -39,6 +39,7 @@ import {
   type RescueDetails,
   type SellerConciergeData,
 } from "../_shared/marketing-templates/seller-concierge.ts";
+import { unsubToken } from "../_shared/unsubscribeToken.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -136,7 +137,7 @@ serve(async (req) => {
     const limit = Math.max(1, Math.min(Number(body.limit) || DEFAULT_LIMIT, 100));
     const excludeUserIds = new Set<string>(Array.isArray(body.excludeUserIds) ? body.excludeUserIds.map(String) : []);
     const unsubFor = (email: string) =>
-      `${supabaseUrl}/functions/v1/marketing-unsubscribe?e=${encodeURIComponent(email)}`;
+      `${supabaseUrl}/functions/v1/marketing-unsubscribe?e=${encodeURIComponent(email)}&t=${unsubToken(email)}`;
     const now = Date.now();
 
     // ---- live listings ----

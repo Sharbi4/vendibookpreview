@@ -28,6 +28,7 @@ import {
   listingFixSubject,
   type ListingFixNudgeData,
 } from "../_shared/marketing-templates/listing-fix-nudge.ts";
+import { unsubToken } from "../_shared/unsubscribeToken.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -95,7 +96,7 @@ serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const mode: "preview_count" | "preview_html" | "test" | "broadcast" = body.mode ?? "preview_count";
     const unsubFor = (email: string) =>
-      `${supabaseUrl}/functions/v1/marketing-unsubscribe?e=${encodeURIComponent(email)}`;
+      `${supabaseUrl}/functions/v1/marketing-unsubscribe?e=${encodeURIComponent(email)}&t=${unsubToken(email)}`;
     const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
 
     // ---- live listings ----

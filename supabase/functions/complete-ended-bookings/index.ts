@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { refundPayment } from "../_shared/paymentOps.ts";
+import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
 
 declare const EdgeRuntime: { waitUntil: (promise: Promise<unknown>) => void };
 
@@ -18,6 +19,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+  if (!(await isAdminOrBackendCaller(req))) return forbiddenResponse();
 
   try {
     logStep("Function started - checking for ended bookings and pending releases");

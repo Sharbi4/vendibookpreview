@@ -2,6 +2,7 @@
 // Looks up transaction + buyer/seller, picks the right template,
 // and sends through the shared transactional email helper so all sends are queued, retried, and logged.
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { getCaller, isAdminUser, isBackendCaller, forbiddenResponse, unauthorizedResponse } from "../_shared/callerGuard.ts";
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 const corsHeaders = {
@@ -38,6 +39,13 @@ Deno.serve(async (req) => {
     const { data: tx, error: txErr } = await supabase
       .from('sale_transactions').select('*').eq('id', transaction_id).single();
     if (txErr || !tx) throw new Error('Transaction not found');
+    if (!(await isBackendCaller(req))) {
+      const caller = await getCaller(req);
+      if (!caller) return unauthorizedResponse(corsHeaders);
+      if (caller.id !== tx.buyer_id && caller.id !== tx.seller_id && !(await isAdminUser(caller.id))) {
+        return forbiddenResponse(corsHeaders);
+      }
+    }
 
     const [{ data: listing }, { data: buyerProfile }, { data: sellerProfile }] = await Promise.all([
       supabase.from('listings').select('title').eq('id', tx.listing_id).maybeSingle(),

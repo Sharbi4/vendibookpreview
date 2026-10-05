@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { escapeHtml } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -751,11 +752,11 @@ async function sendBookingLink(supabase: any, args: any) {
   // Send SMS via Zendesk ticket (which triggers SMS)
   if (phone) {
     try {
-      const smsBody = `Hi${name ? ' ' + name : ''}! 🚚 Here's the listing you asked about on Vendibook:\n\n` +
+      const smsBody = `Hi${name ? ' ' + escapeHtml(name) : ''}! 🚚 Here's the listing you asked about on Vendibook:\n\n` +
         `📋 ${listing.title}\n` +
         (location ? `📍 ${location}\n` : '') +
         (listing.price_daily ? `💰 $${listing.price_daily}/day\n` : '') +
-        (dateRange ? `📅 ${dateRange}\n` : '') +
+        (dateRange ? `📅 ${escapeHtml(dateRange)}\n` : '') +
         `\n👉 Book now: ${bookingUrl}\n\n` +
         `Questions? Reply to this text or call us!`;
 
@@ -812,21 +813,21 @@ async function sendBookingLink(supabase: any, args: any) {
             
             <div style="padding: 32px 24px;">
               <p style="font-size: 16px; color: #333; margin-bottom: 24px;">
-                Hi${name ? ' ' + name : ''}! Thanks for chatting with Vendi. Here's the listing you were interested in:
+                Hi${name ? ' ' + escapeHtml(name) : ''}! Thanks for chatting with Vendi. Here's the listing you were interested in:
               </p>
               
               <div style="border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; margin-bottom: 24px;">
-                ${listing.cover_image_url ? `<img src="${listing.cover_image_url}" alt="${listing.title}" style="width: 100%; height: 200px; object-fit: cover;" />` : ''}
+                ${listing.cover_image_url ? `<img src="${escapeHtml(listing.cover_image_url)}" alt="${escapeHtml(listing.title)}" style="width: 100%; height: 200px; object-fit: cover;" />` : ''}
                 <div style="padding: 20px;">
-                  <h2 style="margin: 0 0 8px; font-size: 20px; color: #111;">${listing.title}</h2>
-                  <p style="margin: 0 0 4px; color: #666; font-size: 14px;">${categoryLabels[listing.category] || listing.category}${location ? ' • ' + location : ''}</p>
+                  <h2 style="margin: 0 0 8px; font-size: 20px; color: #111;">${escapeHtml(listing.title)}</h2>
+                  <p style="margin: 0 0 4px; color: #666; font-size: 14px;">${escapeHtml(categoryLabels[listing.category] || listing.category)}${location ? ' • ' + escapeHtml(location) : ''}</p>
                   ${listing.price_daily ? `<p style="margin: 8px 0 0; font-size: 18px; font-weight: 700; color: #FF5124;">$${listing.price_daily}/day</p>` : ''}
                   ${listing.deposit_amount ? `<p style="margin: 4px 0 0; font-size: 13px; color: #888;">Refundable deposit: $${listing.deposit_amount}</p>` : ''}
-                  ${dateRange ? `<p style="margin: 8px 0 0; font-size: 14px; color: #555;">📅 ${dateRange}</p>` : ''}
+                  ${dateRange ? `<p style="margin: 8px 0 0; font-size: 14px; color: #555;">📅 ${escapeHtml(dateRange)}</p>` : ''}
                 </div>
               </div>
               
-              <a href="${bookingUrl}" style="display: block; background: #FF5124; color: white; text-align: center; padding: 16px 32px; border-radius: 8px; text-decoration: none; font-size: 16px; font-weight: 600; margin-bottom: 24px;">
+              <a href="${escapeHtml(bookingUrl)}" style="display: block; background: #FF5124; color: white; text-align: center; padding: 16px 32px; border-radius: 8px; text-decoration: none; font-size: 16px; font-weight: 600; margin-bottom: 24px;">
                 View Listing & Book Now →
               </a>
               

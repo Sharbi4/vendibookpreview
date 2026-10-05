@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { getCaller, isAdminUser, unauthorizedResponse, forbiddenResponse } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -87,6 +88,7 @@ const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+  if (!(await getCaller(req))) return unauthorizedResponse(corsHeaders);
 
   try {
     logStep("FAQ chatbot started");

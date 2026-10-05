@@ -8,6 +8,8 @@
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { buildMarketingAudience } from "../_shared/marketingAudience.ts";
+import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
+import { unsubToken } from "../_shared/unsubscribeToken.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -36,6 +38,7 @@ async function resendCall(path: string, init: RequestInit, key: string) {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (!(await isAdminOrBackendCaller(req))) return forbiddenResponse();
 
   try {
     const RESEND_KEY = Deno.env.get("RESEND_API_KEY");
@@ -84,7 +87,7 @@ Deno.serve(async (req) => {
     let sent = 0;
     let failed = 0;
     for (const r of queue) {
-      const unsubUrl = `${supabaseUrl}/functions/v1/marketing-unsubscribe?e=${encodeURIComponent(r.email)}`;
+      const unsubUrl = `${supabaseUrl}/functions/v1/marketing-unsubscribe?e=${encodeURIComponent(r.email)}&t=${unsubToken(r.email)}`;
       const personalized = html.includes("</body>")
         ? html.replace(
             "</body>",

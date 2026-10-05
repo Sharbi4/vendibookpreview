@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { getCaller, isAdminUser, isBackendCaller, forbiddenResponse, unauthorizedResponse } from "../_shared/callerGuard.ts";
 import { refundPayment } from "../_shared/paymentOps.ts";
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
@@ -148,6 +149,18 @@ serve(async (req) => {
       throw new Error(`Failed to fetch booking: ${bookingError?.message}`);
     }
     logStep("Booking fetched", { booking_id: booking.id, is_instant_book: booking.is_instant_book });
+
+    // Renters may only announce uploads on their own booking; review outcomes
+    // (approve/reject, which can confirm or refund) are host/admin only.
+    if (!(await isBackendCaller(req))) {
+      const caller = await getCaller(req);
+      if (!caller) return unauthorizedResponse(corsHeaders);
+      const admin = await isAdminUser(caller.id);
+      const isHost = caller.id === booking.host_id;
+      const isRenter = caller.id === booking.shopper_id;
+      const allowed = admin || isHost || (isRenter && event_type === "uploaded" && !check_all_approved && !is_bulk_approval);
+      if (!allowed) return forbiddenResponse(corsHeaders);
+    }
 
     // Fetch listing details including instant_book flag
     const { data: listing, error: listingError } = await supabaseClient

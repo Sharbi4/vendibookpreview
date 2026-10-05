@@ -18,6 +18,7 @@
 //   hears about them. Over the rate limits, nobody is emailed.
 // - Buyer confirmations go out at most once per email per day so the form
 //   can't be used to mail-bomb someone else's address.
+import { getCronSecret } from '../_shared/callerGuard.ts'
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
@@ -131,7 +132,7 @@ Deno.serve(async (req) => {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'x-cron-secret': Deno.env.get('RELEASE_SWEEP_SECRET') ?? '',
+          'x-cron-secret': await getCronSecret(),
           Authorization: `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
         },
         body: JSON.stringify({ kind: 'listing_lead', id: lead.id }),

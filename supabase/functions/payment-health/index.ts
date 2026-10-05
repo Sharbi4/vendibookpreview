@@ -4,6 +4,7 @@ import { corsHeaders, jsonResponse, unknownErrorResponse } from "../_shared/json
 import { getPayPalAccessToken, paypalConfigStatus, safeLog } from "../_shared/paypal.ts";
 import { getPaymentProvider } from "../_shared/payments/index.ts";
 import { ensureProviderPlan, intervalForProduct } from "../_shared/ensureProviderPlan.ts";
+import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
 
 /**
  * Secret-free payment diagnostics + idempotent membership catalog bootstrap.
@@ -19,6 +20,7 @@ import { ensureProviderPlan, intervalForProduct } from "../_shared/ensureProvide
  */
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (!(await isAdminOrBackendCaller(req))) return forbiddenResponse();
 
   try {
     const url = new URL(req.url);

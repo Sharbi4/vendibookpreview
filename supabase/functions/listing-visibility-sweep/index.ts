@@ -1,5 +1,6 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
 
 /**
  * listing-visibility-sweep
@@ -16,6 +17,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2';
  */
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
+  if (!(await isAdminOrBackendCaller(req))) return forbiddenResponse();
 
   try {
     const supabase = createClient(

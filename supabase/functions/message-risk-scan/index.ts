@@ -3,6 +3,7 @@
 // x-cron-secret). Flags risky content into message_safety_events (guest
 // inquiries have no account, so those only alert admins) and emails admins.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { isCronCaller } from "../_shared/callerGuard.ts";
 
 const json = (b: unknown, status = 200) =>
   new Response(JSON.stringify(b), { status, headers: { "Content-Type": "application/json" } });
@@ -10,8 +11,7 @@ const json = (b: unknown, status = 200) =>
 const RISK_THRESHOLD = 60;
 
 Deno.serve(async (req) => {
-  const secret = Deno.env.get("RELEASE_SWEEP_SECRET") ?? "";
-  if (!secret || req.headers.get("x-cron-secret") !== secret) return json({ error: "Forbidden" }, 403);
+  if (!(await isCronCaller(req))) return json({ error: "Forbidden" }, 403);
 
   let kind: string, id: string;
   try {

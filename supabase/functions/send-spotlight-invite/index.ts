@@ -15,6 +15,7 @@ import {
   buildSpotlightInviteText,
   type SpotlightSubjectVariant,
 } from "../_shared/marketing-templates/business-spotlight-invite.ts";
+import { unsubToken } from "../_shared/unsubscribeToken.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -78,7 +79,7 @@ serve(async (req) => {
     const subject = SPOTLIGHT_SUBJECTS[variant];
 
     const unsubFor = (email: string) =>
-      `${supabaseUrl}/functions/v1/marketing-unsubscribe?e=${encodeURIComponent(email)}`;
+      `${supabaseUrl}/functions/v1/marketing-unsubscribe?e=${encodeURIComponent(email)}&t=${unsubToken(email)}`;
 
     if (mode === "preview_html") {
       return json({

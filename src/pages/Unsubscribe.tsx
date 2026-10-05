@@ -27,7 +27,7 @@ const Unsubscribe = () => {
 
     try {
       const { data, error } = await supabase.functions.invoke("unsubscribe-email", {
-        body: { email: decodeURIComponent(email) },
+        body: { email: decodeURIComponent(email), token },
       });
 
       if (error) throw error;

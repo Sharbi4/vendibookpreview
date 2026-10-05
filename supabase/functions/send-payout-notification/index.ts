@@ -1,6 +1,7 @@
 // Thin proxy: routes payout notifications through Lovable Emails queue.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
+import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -9,6 +10,7 @@ const corsHeaders = {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+  if (!(await isAdminOrBackendCaller(req))) return forbiddenResponse();
   try {
     const p = await req.json();
     const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);

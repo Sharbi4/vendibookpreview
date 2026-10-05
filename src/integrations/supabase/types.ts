@@ -12848,6 +12848,11 @@ export type Database = {
         Args: { p_owner_id: string }
         Returns: undefined
       }
+      internal_cron_secret: { Args: never; Returns: string }
+      invoke_edge_function: {
+        Args: { _body?: Json; _fn: string }
+        Returns: number
+      }
       is_admin: { Args: { user_id: string }; Returns: boolean }
       is_dispute_case_participant: {
         Args: { _case_id: string; _user_id: string }

@@ -165,7 +165,7 @@ serve(async (req) => {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "Authorization": `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+              "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
             },
             body: JSON.stringify({
               email: shopperProfile.email,
@@ -193,7 +193,7 @@ serve(async (req) => {
             method: "POST",
             headers: {
               "Content-Type": "application/json",
-              "Authorization": `Bearer ${Deno.env.get("SUPABASE_ANON_KEY")}`,
+              "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
             },
             body: JSON.stringify({
               email: hostProfile.email,

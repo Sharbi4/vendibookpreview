@@ -49,7 +49,7 @@ serve(async (req) => {
     
     logStep("Request received", { transaction_id, role });
 
-    if (!transaction_id || !role) {
+    if (!transaction_id || (role !== "buyer" && role !== "seller")) {
       throw new Error("Missing required fields: transaction_id or role");
     }
 

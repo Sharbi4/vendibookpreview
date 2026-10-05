@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getCaller, isAdminUser, isBackendCaller, forbiddenResponse, unauthorizedResponse } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -182,6 +183,13 @@ Deno.serve(async (req) => {
 
     const { user_id, title, body, url, tag } = await req.json() as PushNotificationRequest;
 
+    // Backend jobs/triggers may push to anyone; members only to themselves
+    // (the "send test notification" button).
+    if (!(await isBackendCaller(req))) {
+      const caller = await getCaller(req);
+      if (!caller) return unauthorizedResponse(corsHeaders);
+      if (caller.id !== user_id && !(await isAdminUser(caller.id))) return forbiddenResponse(corsHeaders);
+    }
     logStep("Request received", { user_id, title });
 
     if (!user_id || !title || !body) {

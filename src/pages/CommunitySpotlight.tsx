@@ -174,7 +174,9 @@ export default function CommunitySpotlight() {
 
   const uploadOne = async (file: File, kind: "photo" | "logo") => {
     const ext = (file.name.split(".").pop() || "jpg").toLowerCase().slice(0, 5);
-    const path = `submissions/${crypto.randomUUID()}.${ext}`;
+    if (!user) throw new Error("Please sign in to add photos to your spotlight.");
+    // Uploads live in the member's own folder (enforced by storage rules).
+    const path = `submissions/${user.id}/${crypto.randomUUID()}.${ext}`;
     const { error } = await supabase.storage.from("spotlight-media").upload(path, file, {
       contentType: file.type,
       upsert: false,
@@ -203,6 +205,10 @@ export default function CommunitySpotlight() {
       return true;
     });
     if (!batch.length) return;
+    if (!user) {
+      toast.error("Please sign in to add photos to your spotlight.");
+      return;
+    }
 
     const start = media.length;
     setMedia((m) => [
