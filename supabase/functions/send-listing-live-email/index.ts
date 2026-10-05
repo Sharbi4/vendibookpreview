@@ -40,7 +40,13 @@ Deno.serve(async (req) => {
         recipientEmail: host.email,
         idempotencyKey: `listing-published-${b.listingId}`,
         templateData: {
-XX
+          hostName: host.first_name || host.full_name?.split(' ')[0] || undefined,
+          listingTitle: listing.title,
+          listingId: listing.id,
+          category: listing.category,
+          city: listing.city || (listing.address ? String(listing.address).split(',')[0] : undefined),
+          coverImageUrl: listing.cover_image_url,
+          listingType: listing.mode === 'sale' ? 'sale' : 'rental',
         },
       });
     if (error) throw error;
