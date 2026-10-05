@@ -1,3 +1,4 @@
+import { saleDisclosures } from '@/lib/listings/disclosures';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -489,9 +490,9 @@ export const SaleListingMobile = ({
           <div className="grid grid-cols-2 gap-2.5">
             <SpecCell icon={Box} label="Category" value={categoryLabel} />
             <SpecCell icon={Tag} label="Listing Type" value="For Sale" />
-            {listing.condition && (
-              <SpecCell icon={ShieldCheck} label="Condition" value={String(listing.condition)} className="capitalize" />
-            )}
+            {saleDisclosures(listing).map((d) => (
+              <SpecCell key={d.key} icon={ShieldCheck} label={d.label} value={d.value} />
+            ))}
             {brandValue && (
               <SpecCell icon={Building2} label={getBrandFieldLabel(listing.category)} value={brandValue} />
             )}

@@ -11,10 +11,22 @@ import {
   Droplets,
   Flame,
   Wrench,
+  ShieldCheck,
+  Activity,
+  FileCheck,
+  Landmark,
 } from 'lucide-react';
 import { SaleCard } from './SaleCard';
 import { useListingSpecs } from '@/hooks/useListingSpecs';
 import { formatDimensionSummary, formatFeetInches } from '@/lib/listings/dimensions';
+import { saleDisclosures, type DisclosureKey } from '@/lib/listings/disclosures';
+
+const DISCLOSURE_ICONS: Record<DisclosureKey, Row['icon']> = {
+  condition: ShieldCheck,
+  status: Activity,
+  title: FileCheck,
+  lien: Landmark,
+};
 
 interface SaleQuickSpecsProps {
   listing: any;
@@ -65,6 +77,13 @@ export const SaleQuickSpecs = ({ listing }: SaleQuickSpecsProps) => {
     const push = (label: string, value: string | null, icon: Row['icon']) => {
       if (value) out.push({ label, value, icon });
     };
+
+    // Seller disclosures first: condition and running status for every
+    // listing, title and lien for sales. These are buyers' first questions.
+    for (const d of saleDisclosures(listing)) {
+      if ((d.key === 'title' || d.key === 'lien') && listing?.mode !== 'sale') continue;
+      push(d.label, d.value, DISCLOSURE_ICONS[d.key]);
+    }
 
     // Year / make / model
     const year = num(listing?.year_built) ?? num(vehicle.year) ?? num(dims.kitchen_build_year);
