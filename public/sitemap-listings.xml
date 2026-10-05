@@ -409,7 +409,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/6f438a50-85bb-43bd-b0ad-c6253251b12d</loc>
-    <lastmod>2026-10-03</lastmod>
+    <lastmod>2026-10-05</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -1415,8 +1415,8 @@
     <priority>0.8</priority>
     <image:image>
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/7ca772e6-dfcc-482c-af31-5fe1fe7be26c/569f76e2-d019-48e7-b2c7-56ca326682c8/1791082121559-nione8.jpeg</image:loc>
-      <image:title>2022 food trailer fully equipped just need fridges</image:title>
-      <image:caption>2022 food trailer fully equipped just need fridges in Dayton, TX on Vendibook</image:caption>
+      <image:title>2022 Fully Equipped 16-Ft Food Trailer — Add Your Preferred Refrigeration</image:title>
+      <image:caption>2022 Fully Equipped 16-Ft Food Trailer — Add Your Preferred Refrigeration in Dayton, TX on Vendibook</image:caption>
     </image:image>
   </url>
   <url>
@@ -1439,6 +1439,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/4f5fddd6-47ba-4d95-b5e9-e75cebd8134c/fd182485-5c3d-4220-9706-0ec9adcd5002/1791212360618-a80pan.jpeg</image:loc>
       <image:title>Turnkey Mobile Vendor Business</image:title>
       <image:caption>Turnkey Mobile Vendor Business in Hebron, IN on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/c272f584-fda5-4403-952e-be7be00558a4</loc>
+    <lastmod>2026-10-05</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/ef38dde4-bc31-4be4-bae4-26c60d746ea6/c272f584-fda5-4403-952e-be7be00558a4/1791236598150-cguz2p.png</image:loc>
+      <image:title>Brand new food truck trailer for rent and for sale</image:title>
+      <image:caption>Brand new food truck trailer for rent and for sale in Roseville, CA on Vendibook</image:caption>
     </image:image>
   </url>
 </urlset>
