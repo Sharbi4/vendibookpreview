@@ -3,6 +3,11 @@
 Owner: Growth/Liquidity lead (Claude). Sub-teams: **Buyer Desk** (demand) and **Supply Desk** (sellers/hosts). Field agent: **Muse** (Facebook, Instagram, Threads).
 Baseline pulled from production on 2026-10-05. Re-run `docs/growth/liquidity-scorecard.sql` for current numbers.
 
+> **Operating priority (owner, 2026-10-05).** First: real, quality sellers, listings and buyers, plus trust and security of the site. Liquidity comes second.
+> - Never feature, promote or route anything that fails a quality or scam check. That covers stock or reused photos, prices that make no sense for the category, contact details in a listing, and off-platform payment pushes.
+> - Never claim "verified" beyond what the platform actually verifies (phone, plus free Plaid ID for anyone starting contact).
+> - Sellers are never blocked from answering buyers. Scammers are caught by message-risk-scan, the hourly trust-safety-sweep and the hourly pulse.
+
 ---
 
 ## 1. Diagnosis: real buyer traffic is thin, and too little of it converts to a contact
