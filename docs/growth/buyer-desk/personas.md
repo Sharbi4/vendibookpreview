@@ -7,7 +7,7 @@ Evidence comes from 30d clean traffic (753 sessions, 44–87% mobile on top list
 - **Budget:** $5k–$25k. This is the most crowded demand band: trailers under $20k get 7–17 sessions per listing.
 - **Says:** "ISO starter trailer", "how much to start a food truck", "can I finance", "do I need a commissary".
 - **Blockers:** fear of buying junk or a scam (blank title or condition), not knowing what passes health inspection, the login wall before asking a "dumb question", and the large one-time cost.
-- **Messaging that works:** "Clean title · Ready to inspect · Ask the seller anything, no account needed." Show price as both total and estimated monthly cost. Lead with "start under $X". Name the use case ("fairs and farmers' markets").
+- **Messaging that works:** "Clean title · Ready to inspect · Ask the seller anything; quick phone check, no sign-up form." Show price as both total and estimated monthly cost. Lead with "start under $X". Name the use case ("fairs and farmers' markets").
 - **Listings to show:** Lemonade 6x12 NC $5.9k, Aiken SC $8k, Placerville coffee $14k, Frostproof FL $18k.
 
 ## P2: Expanding operator
@@ -35,6 +35,6 @@ Evidence comes from 30d clean traffic (753 sessions, 44–87% mobile on top list
 - **Listings to show:** Phoenix ($100/day), Las Vegas ($100/day), Charlotte, Dallas, Boaz AL.
 
 ## Cross-persona rules
-1. Never ask for an account before the first question (all personas, worst for P1 on mobile).
+1. Let buyers type their question or offer before any verification, then verify phone + ID in place (the trust gate stays; only the order changes). Matters most for P1 on mobile.
 2. Show the same 4 trust facts everywhere: title status, condition, running/operational status, permit/insignia.
 3. Social copy follows the persona: P1 gets the dream plus a low starting price, P2 gets specs, P3 gets dates and rates, P4 gets compliance and logistics.

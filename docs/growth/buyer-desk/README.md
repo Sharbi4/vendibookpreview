@@ -12,7 +12,7 @@ Owner: Buyer Desk lead (reports to Growth & Liquidity). Data comes from read-onl
 
 ## Headline for Growth lead (2026-10-05)
 - **Baseline correction:** 3,700 of 4,842 "human" sessions are one scraper UA, and 316 are a host viewing their own listing. Clean = **753 sessions → BCR 0.80%**. The 1.5% target is about 11 contacts per 30d (+5).
-- **Clean traffic is mostly mobile** (44–87% on top listings), so LP-1 (no-login mobile "Ask a question") is the #1 lever.
+- **Clean traffic is mostly mobile** (44–87% on top listings), so LP-1 (mobile "Ask a question": type first, verify phone + ID in place, no redirect to /auth) is the #1 lever.
 - **Offers are off on 11 of the top 15** cold listings, and trust fields (title, condition, running status) are blank on 6 of them.
 - **Demand sits under $20k and in rentals**; supply skews $35k+. The biggest single gap is food-trailer rentals in the Twin Cities (17 zero-result sessions). Vendor lot and vendor space have 0 supply and 27 zero-result sessions.
 - **Two Atlanta rental asset requests were never matched**, though 2 Atlanta rentals are live. Ops should reply today.
