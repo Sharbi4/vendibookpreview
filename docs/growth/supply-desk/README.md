@@ -34,6 +34,8 @@ Every link in the concierge emails, draft reminders and offer rescues leads into
 
 ## Shipped today (acting on findings)
 
+_Deploy status (per Growth lead, 07:10 UTC): code is on the branch but **not live** until the coordinated publish and function deploy. Edge-function changes (draft-reminder pacing, boost-email length, 3-button offer email) are not deployed yet. Of these, only `admin-complimentary-boost-notify` is live. The 5 featured-trial sellers have received the official boost email._
+
 | What | Where | Effect |
 |---|---|---|
 | Archived 14 seed listings with Unsplash photos (owner instruction) | Production data, status only, reversible | Live supply is **130 real** (121 sale / 9 rent), down from 144. Rollback SQL is in 04 |
