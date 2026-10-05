@@ -16,13 +16,13 @@ Monthly Google searches for buyer-intent keywords, set against where vendibook.c
 | used food truck for sale | 1,900 | 31 | not ranked | `/used-food-trucks-for-sale` exists; strengthen it |
 | concession trailer for sale | 1,900 | 30 | #46 | |
 | food truck financing | 1,600 | 29 | "food van finance" #41 | `/financing` exists |
-| mobile bar trailer for sale | 880 | 11 | not ranked | **Low KD, no page** |
-| bbq trailer for sale | 720 | 10 | not ranked | **Low KD, no page** (BBQ listings live: Vail AZ, CA) |
+| mobile bar trailer for sale | 880 | 11 | not ranked | Hub exists (`/beverage-bar-trailers-for-sale`), unranked: link to it from beverage listings |
+| bbq trailer for sale | 720 | 10 | not ranked | Hub exists (`/bbq-trucks-trailers-for-sale`), unranked: link from BBQ listings (Vail AZ, CA) |
 | food trailer for rent | 720 | 11 | #18 ("food trailer rental") | |
 | cheap food trucks for sale | 590 | 35 | not ranked | Matches our biggest on-site demand band (under $20k) |
-| pizza trailer for sale | 590 | 7 | not ranked | **Low KD, no page** |
+| pizza trailer for sale | 590 | 7 | not ranked | Hub exists (`/pizza-trucks-trailers-for-sale`), unranked |
 | ghost kitchen for rent | 480 | 10 | not ranked | |
-| shaved ice trailer for sale | 260 | 13 | not ranked | Low KD |
+| shaved ice trailer for sale | 260 | 13 | not ranked | Hub exists (`/snow-cone-shaved-ice-trailers-for-sale`) |
 
 ## City and state long tail (where we already win)
 - Ranking now: "food truck for sale atlanta" **#6** (210/mo), "food trucks for sale texas" #9, "sell food truck" #5.
@@ -30,8 +30,8 @@ Monthly Google searches for buyer-intent keywords, set against where vendibook.c
 
 ## Plan
 1. **Quick wins (KD ≤ 17, page 2):** food truck for rent (#11), coffee truck/trailer (#12), rent a food truck (#28). Fix internal linking and listing freshness on those pages.
-2. **New subtype pages (KD 7–11, about 2,450/mo combined):** mobile bar, BBQ, pizza and shaved-ice trailers for sale. They only make sense where we have at least 2 live listings; recruit the rest via Supply Desk.
+2. **Specialty hubs already exist** for mobile bar, BBQ, pizza and shaved ice (KD 7–13, about 2,450/mo combined) but don't rank. They need inventory (Supply Desk) and internal links from matching listings, not new pages.
 3. **Commissary hub:** 8,800/mo combined, but it needs supply first (SB-4).
-4. **Florida, Texas and California city pages:** these states have the most live listings and the most on-site demand.
+4. **State pages:** TX/FL/GA/AZ/MI/OH truck and trailer pages exist; added `/food-trailers-for-sale/california` (commit below) because CA had 6 live trailers and no page.
 
 Note: Semrush only shows the keywords a domain already ranks for. Re-run it monthly and append a dated table.
