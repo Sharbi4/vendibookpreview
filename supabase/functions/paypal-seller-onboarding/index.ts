@@ -334,9 +334,15 @@ Deno.serve(async (req) => {
         debugId: err.debugId,
       });
       if (['AUTHORIZATION_ERROR', 'USER_BUSINESS_ERROR'].includes(err.issue ?? '')) {
-        return jsonError(503, 'paypal_status_access_unavailable',
-          'PayPal has not made seller status details available to this sandbox app yet. Vendibook’s configured partner Merchant ID has not been changed. Your completed connection remains recorded; please try the status check again later.',
-          { issue: err.issue, debug_id: err.debugId, environment: paypalOnboardingEnvironment() });
+        // Expected while PayPal withholds the merchant-status API from this app.
+        // Not a failure: the recorded connection stands, so answer 200 with a
+        // soft "status unavailable" flag the UI shows as an info notice.
+        return jsonResponse(200, {
+          status_unavailable: true,
+          code: 'paypal_status_access_unavailable',
+          message: 'PayPal hasn’t shared your account status details yet. Your connection is still recorded — check again later.',
+          debug_id: err.debugId,
+        });
       }
       if (err.issue === 'NOT_CONFIGURED') {
         return jsonError(503, 'paypal_partner_configuration',
