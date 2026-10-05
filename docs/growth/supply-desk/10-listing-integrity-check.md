@@ -7,7 +7,7 @@ _Supply Desk · read-only · quality-first checks set by the owner via the Growt
 | Stock photos (Unsplash, Pexels and similar) | **0** (the 14 seed listings were archived earlier today) |
 | Photos reused across different sellers | **0** |
 | Sale price under $1,000 | 1 |
-| Contact details in title/description | **2** |
+| Contact details in title/description | 2 found. **Now stripped automatically on every save** (`a00_strip_contact_details`); both are cleaned |
 | Broken or placeholder titles | **6** |
 | Condition missing | 47 (prompted in the concierge emails) |
 
@@ -15,8 +15,6 @@ _Supply Desk · read-only · quality-first checks set by the owner via the Growt
 
 | Listing | Issue | Suggested fix |
 |---|---|---|
-| `8d19aa3e` Turnkey Fully Equipped Commercial Food Trailer | Seller's phone number in description | Remove the number; buyers contact through Vendibook |
-| `f1a879a6` Mobile Ice Cream Trailer For Sale | Seller's email address in description | Remove the email |
 | `dcf9453f` "That's good" | Title is AI-editor chat text | Seller retitles it, or support does with the seller's OK |
 | `e822783b` "That's perfect" | Same | Same |
 | `a4b11455` "Use this instead "Food Trailer for Sale…" | Same | Same |
@@ -27,4 +25,4 @@ _Supply Desk · read-only · quality-first checks set by the owner via the Growt
 
 All 6 pass the stock, reuse and contact checks. **`a3ead971` (Charlotte lemonade trailer) has no condition set.** Its Brad email already asks for that.
 
-The title and contact problems point to two product gaps for the Growth lead: the wizard's AI writer can save chat text as the title, and descriptions aren't screened for phone numbers or emails before publishing.
+The title and contact problems point to two product gaps for the Growth lead: the wizard's AI writer can save chat text as the title, and descriptions weren't screened for phone numbers or emails. **Fixed:** contact details are now stripped automatically on save and logged in `listing_contact_redactions`, so there's no seller outreach for this.

@@ -14,9 +14,10 @@
 //              up to 3 asks (8+ photos, build year, what's included, …)
 // body.onlyUserIds restricts the run to those hosts (e.g. one new seller).
 // Order: integrity fixes → verified missed offers → featured → other coaching.
+// Contact details are stripped automatically on save (a00_strip_contact_details),
+// so there is no "remove your phone/email" ask.
 // Integrity routing (never coach or promote a listing that fails checks):
 //   placeholder/broken title      → fix_title (only that ask)
-//   phone/email in title or text  → remove_contact (only that ask)
 //   sale price under $1,000       → skipped pending review
 // Missed-offer rescue sellers get the rescue variant instead of coaching.
 // Skips unsubscribed/suppressed/unmailable addresses, internal accounts,
@@ -31,7 +32,6 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { isMailableAddress } from "../_shared/marketingAudience.ts";
 import { isInternalCaller } from "../_shared/internalAuth.ts";
 import { pickListingFixes, type FixableListing, type ListingFix } from "../_shared/listingFixes.ts";
-import { hasContactDetails } from "../_shared/contactPatterns.ts";
 import { MARKETING_FROM, MARKETING_REPLY_TO } from "../_shared/marketing-templates/brand.ts";
 import { LISTING_FIX_CAMPAIGN_ID } from "../_shared/marketing-templates/listing-fix-nudge.ts";
 import {
@@ -92,7 +92,7 @@ type ListingRow = FixableListing & {
 type PageResult<T> = PromiseLike<{ data: T[] | null; error: { message: string } | null }>;
 
 const VARIANT_RANK: Record<ConciergeVariant, number> = {
-  remove_contact: 0, fix_title: 1, rescue: 2, welcome: 3, featured: 4, optimize: 5, share: 6,
+  fix_title: 0, rescue: 1, welcome: 2, featured: 3, optimize: 4, share: 5,
 };
 const WELCOME_DAYS = 7;
 
@@ -196,17 +196,15 @@ serve(async (req) => {
       if (onlyUserIds && !onlyUserIds.has(l.host_id)) continue;
       if (l.mode === "sale" && Number(l.price_sale ?? 0) < MIN_SALE_PRICE) continue; // price/category under review
       const brokenTitle = BROKEN_TITLE.test(String(l.title ?? "")) || String(l.title ?? "").trim().length < 8;
-      const contact = hasContactDetails(`${l.title ?? ""}\n${l.description ?? ""}`);
       const isNew = !!l.published_at && now - Date.parse(l.published_at) <= WELCOME_DAYS * 24 * 60 * 60 * 1000;
       const fixes = isNew ? welcomeFixes(l) : pickListingFixes(l).slice(0, MAX_FIXES);
       const variant: ConciergeVariant =
-        contact ? "remove_contact"
-        : brokenTitle ? "fix_title"
+        brokenTitle ? "fix_title"
         : rescues.has(l.id) ? "rescue"
         : isNew ? "welcome"
         : isCompFeatured(l) ? "featured"
         : fixes.length ? "optimize" : "share";
-      const onlyAsk = variant === "rescue" || variant === "remove_contact" || variant === "fix_title";
+      const onlyAsk = variant === "rescue" || variant === "fix_title";
       const cand: Candidate = {
         listing: l, variant, fixes: onlyAsk ? [] : fixes,
         offersOff: fixes.some((f) => f.key === "offers"),
