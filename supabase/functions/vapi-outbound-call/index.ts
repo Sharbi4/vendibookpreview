@@ -1,5 +1,6 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { checkRateLimit, clientIp } from '../_shared/rateLimit.ts';
+import { requireSignedInOrBackend } from '../_shared/callerGuard.ts';
 
 const VAPI_PRIVATE_KEY = Deno.env.get('VAPI_PRIVATE_KEY');
 const VAPI_PHONE_NUMBER_ID = Deno.env.get('VAPI_PHONE_NUMBER_ID');
@@ -9,6 +10,7 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
+  { const denied = await requireSignedInOrBackend(req, corsHeaders); if (denied) return denied; }
 
   try {
     if (!VAPI_PRIVATE_KEY || !VAPI_PHONE_NUMBER_ID) {

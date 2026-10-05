@@ -114,3 +114,24 @@ export function maskEmail(email: unknown): string {
   if (at < 1) return "***";
   return `${s.slice(0, Math.min(2, at))}***${s.slice(at)}`;
 }
+
+/**
+ * Returns null when the request comes from a signed-in user or a backend
+ * caller; otherwise a 401 response. Used by paid features (AI, voice, maps).
+ */
+export async function requireSignedInOrBackend(
+  req: Request,
+  headers: Record<string, string> = guardCors,
+): Promise<Response | null> {
+  if (await isBackendCaller(req)) return null;
+  const caller = await getCaller(req);
+  return caller ? null : unauthorizedResponse(headers);
+}
+
+/** Returns null for admins / backend callers; otherwise a 403 response. */
+export async function requireAdminOrBackend(
+  req: Request,
+  headers: Record<string, string> = guardCors,
+): Promise<Response | null> {
+  return (await isAdminOrBackendCaller(req)) ? null : forbiddenResponse(headers);
+}

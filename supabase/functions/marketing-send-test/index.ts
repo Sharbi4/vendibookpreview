@@ -7,6 +7,7 @@ import {
   MAILING_ADDRESS, VENDIBOOK_BASE_URL, FEEDBACK_REDIRECT_URL, UNSUBSCRIBE_URL_BASE,
 } from "../_shared/marketing-templates/constants.ts";
 import { unsubToken } from "../_shared/unsubscribeToken.ts";
+import { requireAdminOrBackend } from '../_shared/callerGuard.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -19,6 +20,7 @@ function dateLabel(d = new Date()): string {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  { const denied = await requireAdminOrBackend(req, corsHeaders); if (denied) return denied; }
   try {
     const { sendId } = await req.json();
     if (!sendId) throw new Error("sendId required");

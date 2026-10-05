@@ -3,6 +3,7 @@
 // Triggered by pg_cron weekly or on-demand via POST.
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
+import { requireAdminOrBackend } from '../_shared/callerGuard.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -11,6 +12,7 @@ const corsHeaders = {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+  { const denied = await requireAdminOrBackend(req, corsHeaders); if (denied) return denied; }
 
   const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
   const since = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
