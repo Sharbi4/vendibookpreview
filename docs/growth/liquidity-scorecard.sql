@@ -4,12 +4,29 @@
 -- North star: Buyer Contact Rate = qualified buyer contacts / human listing-view sessions.
 -- A "buyer contact" is any buyer-initiated touch on a specific listing:
 --   conversations, offers, booking_requests, listing_leads, asset_requests with a listing_id.
--- Bot-like user agents are excluded from views.
+-- Views exclude:
+--   1. bot-like user agents;
+--   2. scraper user agents: 200+ sessions in 30d, ~1 view per session, never logged in
+--      (on 2026-10-05 one Chrome/119 agent was 3,700 of 4,843 "human" sessions);
+--   3. sellers viewing their own listings.
+-- Drafts exclude internal/test hosts (example.com, vendibook.com, admins), QA titles and
+-- unclaimed guest placeholders.
 
 with
+scraper_uas as (
+  select user_agent from listing_views
+  where viewed_at > now() - interval '30 days'
+  group by user_agent
+  having count(distinct session_id) >= 200
+     and count(*) filter (where viewer_id is not null) = 0
+     and count(*)::numeric / count(distinct session_id) < 1.05
+),
 human_views as (
-  select * from listing_views
-  where coalesce(user_agent, '') !~* '(bot|crawl|spider|headless|facebookexternalhit|meta-external|python|curl|lighthouse)'
+  select v.* from listing_views v
+  join listings l on l.id = v.listing_id
+  where coalesce(v.user_agent, '') !~* '(bot|crawl|spider|headless|facebookexternalhit|meta-external|python|curl|lighthouse)'
+    and not exists (select 1 from scraper_uas s where s.user_agent = v.user_agent)
+    and v.viewer_id is distinct from l.host_id
 ),
 contacts as (
   select listing_id, created_at, 'conversation' as kind from conversations
@@ -30,7 +47,11 @@ select
   (select count(*) from live where mode::text = 'sale') as live_sale,
   (select count(*) from live where mode::text = 'rent') as live_rent,
   (select count(*) from listings where published_at >= w.since and deleted_at is null) as new_listings,
-  (select count(*) from listings where status::text = 'draft' and deleted_at is null) as stuck_drafts,
+  (select count(*) from listings d left join profiles p on p.id = d.host_id
+    where d.status::text = 'draft' and d.deleted_at is null and d.guest_draft_token is null
+      and coalesce(p.email, '') !~* '@(example\.com|vendibook\.com)$'
+      and d.title !~* '^\s*QA'
+      and not exists (select 1 from user_roles r where r.user_id = d.host_id and r.role::text = 'admin')) as real_drafts,
 
   -- DEMAND
   (select count(distinct session_id) from human_views where viewed_at >= w.since) as view_sessions,
@@ -57,6 +78,7 @@ from w
 order by w.since desc;
 
 -- Hot-but-cold listings: high human views, zero buyer contacts in 30d.
+-- Apply the same scraper and self-view exclusions as above before trusting the counts.
 -- These are the listings Muse should push hardest and the seller should be coached on (price, offers, photos).
 -- select l.id, l.title, l.city, l.state, l.price_sale, l.accepts_offers,
 --        coalesce(array_length(l.image_urls,1),0) as photos, count(distinct v.session_id) as sessions_30d

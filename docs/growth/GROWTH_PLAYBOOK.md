@@ -5,25 +5,27 @@ Baseline pulled from production on 2026-10-05. Re-run `docs/growth/liquidity-sco
 
 ---
 
-## 1. Diagnosis: we have a demand-conversion problem, not a traffic or supply problem
+## 1. Diagnosis: real buyer traffic is thin, and too little of it converts to a contact
+
+> **Baseline corrected 2026-10-05.** The first pull counted 4,842 "human" view sessions. 3,700 of them were one scraper (Chrome/119 user agent, exactly 1 view per session, never logged in, around the clock) and 393 were sellers viewing their own listings. The scorecard SQL now excludes both automatically.
 
 | Metric (30d) | Value | Read |
 |---|---|---|
 | Live listings | 144 (125 sale / 19 rent) | Enough supply to transact in TX, FL, AZ, CA, GA |
 | New listings | 48 | Supply growth is healthy |
-| Stuck drafts | 151 | More drafts than live listings: a large, cheap supply win |
-| Human listing-view sessions | 4,842 | Real buyer attention |
+| Real drafts | 102 (151 raw, minus internal/test hosts, QA titles and guest placeholders) | A large, cheap supply win, but they're blocked by the disclosures step (see Supply Desk) |
+| Real listing-view sessions | 754 (4,843 before removing the scraper and self-views) | Real buyer attention is thin: grow it (SEO, Muse) as well as convert it |
 | **Buyer contacts** (messages + offers + leads + booking requests) | **6** | **The bottleneck** |
-| **Buyer Contact Rate** | **0.12%** | B2B high-ticket marketplaces should be at 2–5% |
+| **Buyer Contact Rate** | **0.80%** | B2B high-ticket marketplaces should be at 2–5% |
 | Listings with any contact | 2.8% | 97% of sellers hear nothing, which causes churn |
 | Zero-result searches | 19.6% | 1 in 5 searches is a dead end |
 | Offer response rate | 0% (3 offers) | No seller answered an offer |
 | Sale transactions / GMV | 1 / $1,200 | — |
 
-The top-viewed listing (Brand New Coffee Food Trailer, $40k, Glendale CA) had **344 views and 0 contacts**. Eight of the top 10 most-viewed listings have zero contacts ever.
+Seller-facing view counts are inflated by the same scraper and by self-views (the Glendale coffee trailer's 344 views were mostly its own seller), so host digests overstate interest. See Buyer Desk LP-5.
 
 ### Root causes found in the product
-1. **Login wall before first contact.** In the sale layout (`SalePurchaseCard` on desktop, `SaleListingMobile` on mobile), "Message seller," "Make offer," and "Buy now" all send anonymous users to `/auth`. The redirect lives in `MessageHostForm`. A $20k–$80k buyer's first question is "Is it still available? Clean title? Can I see it?", and we charge an account signup for it. This is the largest single leak.
+1. **Login wall before first contact. Shipped 2026-10-05 (commit 13e5949b; live once published in Lovable):** logged-out buyers can now ask a question with just an email (`MessageHostForm` → `listing_leads`, source `guest_inquiry`, `notify-listing-lead` emails concierge, seller and buyer). Original finding: in the sale layout (`SalePurchaseCard` on desktop, `SaleListingMobile` on mobile), "Message seller," "Make offer," and "Buy now" all send anonymous users to `/auth`. The redirect lives in `MessageHostForm`. A $20k–$80k buyer's first question is "Is it still available? Clean title? Can I see it?", and we charge an account signup for it. This is the largest single leak.
 2. **There's no one-tap question.** Messaging opens a blank form. Prefilled chips ("Still available?", "Clean title?", "Video walkthrough?", "Negotiable?") lower the effort of a first contact. Mobile is 51% of traffic.
 3. **"Ask for Help" on mobile sale listings starts a Vendi voice call** (`start-vendi-call`), not a text inquiry. That's a high-commitment step for a first touch.
 4. **Offers die silently.** Offers expire in 48h. Sellers aren't chased by SMS, and no human gets alerted when a high-ticket offer goes unanswered.
@@ -36,12 +38,12 @@ The top-viewed listing (Brand New Coffee Food Trailer, $40k, Glendale CA) had **
 
 Tracked weekly, with pulse checks every hour. Definitions are in `liquidity-scorecard.sql`.
 
-**North star: Buyer Contact Rate (BCR)** = buyer contacts ÷ human listing-view sessions. Target: 0.12% → 1.5% in 30 days → 3% in 90 days.
+**North star: Buyer Contact Rate (BCR)** = buyer contacts ÷ human listing-view sessions. Target: 0.80% → 1.5% in 30 days → 3% in 90 days. At ~750 real sessions a month, 1.5% is about 11 contacts in 30 days, so also grow real traffic.
 
 | Layer | Metric | Why it matters | 30-day target |
 |---|---|---|---|
 | Supply | Live listings by state × category | Liquidity is local. Density beats breadth | 15+ live in each of TX, FL, AZ, CA, GA |
-| Supply | Draft → publish rate | 151 drafts are free supply | Publish 50 of them |
+| Supply | Draft → publish rate | 102 real drafts are free supply | Publish ~20 (Supply Desk estimate, needs the /list/finish flow) |
 | Supply | % listings with ≥8 photos, price, offers on | Listing quality drives contacts | 70% |
 | Demand | Zero-result search rate | Unmet demand = supply-acquisition map | <10% |
 | Match | **Buyer Contact Rate** | North star | 1.5% |
