@@ -45,11 +45,10 @@ import VendorProfileChips, { type VendorProfile } from '@/components/tools/permi
 
 const pageJsonLd = {
   '@context': 'https://schema.org',
-  '@type': 'SoftwareApplication',
+  // No published app reviews: describe the page without claiming app rich-result eligibility.
+  '@type': 'WebPage',
+  url: 'https://vendibook.com/tools/permitpath',
   name: 'Vendi PermitPath — Food Truck Permit & License Finder',
-  applicationCategory: 'BusinessApplication',
-  operatingSystem: 'Web',
-  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   description: 'Find every license, permit, and inspection required for your mobile food business. Mapped to your city and setup.',
 };
 

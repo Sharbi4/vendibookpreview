@@ -49,7 +49,8 @@ describe('worker route selection', () => {
   });
   it('path lists agree across worker, function, tracking and sitemap', () => {
     expect([...BUYER_SEO_PATHS].sort()).toEqual([...BUYER_SEO_PRERENDER_PATHS].sort());
-    expect([...BUYER_SEO_PAGES].sort()).toEqual([...BUYER_SEO_PRERENDER_PATHS].sort());
+    // Tracking also covers specialty pages whose inventory uses the SPA renderer.
+    for (const path of BUYER_SEO_PRERENDER_PATHS) expect(BUYER_SEO_PAGES).toContain(path);
     const xml = readFileSync(resolve('public/sitemap_pages.xml'), 'utf8');
     const gen = readFileSync(resolve('scripts/generate-sitemaps.ts'), 'utf8');
     for (const p of BUYER_SEO_PRERENDER_PATHS) {

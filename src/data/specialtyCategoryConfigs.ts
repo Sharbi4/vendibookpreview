@@ -28,10 +28,22 @@ const coffee: CategoryIndexConfig = {
   description:
     'Browse coffee trucks and coffee trailers for sale on Vendibook. Compare owner-listed mobile coffee businesses, equipment, prices, locations, and financing options nationwide.',
   intro:
-    'Shop owner-listed coffee trucks, coffee trailers, and mobile coffee carts for sale across the US. Every listing includes real photos, equipment details, and transparent asking prices, with direct messaging to the seller — so you can compare mobile coffee businesses side by side and buy with confidence.',
+    'Compare coffee trucks and coffee trailers for sale across the US. Review the photos, asking prices, location, and equipment each seller provides, then message the owner to confirm what is included and arrange an inspection. Check the seller-declared condition when considering a used coffee truck or trailer.',
   clarification:
     'These are equipment and business-asset sales: you buy the truck, trailer, or cart and operate your own coffee business. Looking to hire coffee catering for an event instead? Message any owner through their listing to ask about services.',
   sections: [
+    {
+      heading: 'How much does a coffee truck or trailer cost?',
+      paragraphs: [
+        'Use the current asking prices above to compare available coffee builds. An empty shell, an equipped beverage trailer, and a truck with an espresso machine are different purchases: ask for an itemized equipment list and check whether the machine, grinder, generator, water system, and refrigeration are included. An asking price is not a completed sale price.',
+        'Plan your opening budget beyond the vehicle: inspection, pickup or delivery, repairs, utility upgrades, permits, insurance, stock, and working capital. Compare that total with your budget before deciding whether to buy outright or apply for financing. Rates, eligibility, and approval come from the provider.',
+      ],
+      links: [
+        { href: '/food-truck-prices', label: 'Compare marketplace asking prices and startup costs' },
+        { href: '/financing#calculator', label: 'Estimate a monthly equipment payment' },
+        { href: '/how-to-buy-a-food-truck', label: 'Buying and inspection checklist' },
+      ],
+    },
     {
       heading: 'Coffee truck vs. coffee trailer',
       paragraphs: [
@@ -65,7 +77,7 @@ const coffee: CategoryIndexConfig = {
     },
     {
       q: 'Can I buy a used coffee truck?',
-      a: 'Yes. Most coffee trucks and trailers on Vendibook are used, owner-listed units — sellers describe the condition, included equipment, and history on each listing, and you can request maintenance records or additional photos through direct messaging.',
+      a: 'Compare seller-declared condition on the listings above to find used coffee trucks and trailers. Availability changes, and condition is supplied by the seller. Ask for maintenance records, equipment history, and an inspection before committing.',
     },
     {
       q: 'Can coffee trailers be financed?',
@@ -85,6 +97,8 @@ const coffee: CategoryIndexConfig = {
     },
   ],
   related: [
+    { href: SPECIALTY_DEFS.coffee.truckPath!, label: 'Coffee trucks for sale' },
+    { href: SPECIALTY_DEFS.coffee.trailerPath!, label: 'Coffee trailers for sale' },
     { href: '/food-trucks-for-sale', label: 'All food trucks for sale' },
     { href: '/food-trailers-for-sale', label: 'All food trailers for sale' },
     ...siblingLinks('coffee'),

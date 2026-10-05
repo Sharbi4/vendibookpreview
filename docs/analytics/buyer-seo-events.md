@@ -5,7 +5,7 @@ Sinks: first-party `analytics_events` (event_category `buyer_seo`, with session_
 Consent: every event below is sent only when `hasAnalyticsConsent()` is true.
 Privacy: no names, emails, phone numbers or message text. Only paths, CTA ids, category, listing id and sanitized UTM params.
 
-Tracked pages: `/food-trucks-for-sale`, `/food-trailers-for-sale`, `/used-food-trucks-for-sale`, `/how-to-buy-a-food-truck`, `/food-truck-prices`.
+Tracked pages: `/food-trucks-for-sale`, `/food-trailers-for-sale`, `/used-food-trucks-for-sale`, `/how-to-buy-a-food-truck`, `/food-truck-prices`, `/financing`, `/coffee-trucks-trailers-for-sale`, `/coffee-trucks-for-sale`, `/coffee-trailers-for-sale`.
 
 | Event | Fires when | Properties |
 |---|---|---|

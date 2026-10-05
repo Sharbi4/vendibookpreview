@@ -17,6 +17,7 @@ import {
   type MarketStats, type GroupStats, type PricingRow,
 } from '@/lib/market-data/foodTruckPrices';
 import { buildPriceDistributionSvg, downloadSvg } from '@/lib/market-data/shareChart';
+import { downloadMarketSnapshot } from '@/lib/market-data/exportSnapshot';
 import { trackEvent } from '@/lib/analytics';
 import { cn } from '@/lib/utils';
 
@@ -665,6 +666,16 @@ const FoodTruckPrices = () => {
               >
                 <Newspaper className="h-4 w-4" /> Press &amp; media resources
               </Link>
+              {stats.overall.sufficient && (
+                <div className="mt-4">
+                  <Button variant="outline" onClick={() => downloadMarketSnapshot(stats)}>
+                    <Download className="h-4 w-4 mr-2" /> Download asking-price summary (CSV)
+                  </Button>
+                  <p className="text-xs text-muted-foreground mt-2">
+                    Includes the snapshot date, sample sizes, and source. Price statistics are omitted for groups with fewer than {MIN_SAMPLE} listings. This is Vendibook inventory, not a national market estimate.
+                  </p>
+                </div>
+              )}
             </div>
           </Section>
 

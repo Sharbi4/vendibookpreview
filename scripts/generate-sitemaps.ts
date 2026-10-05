@@ -53,7 +53,7 @@ function slugify(s: string): string {
 }
 
 async function fetchListings(): Promise<Listing[]> {
-  const url = `${SUPABASE_URL}/rest/v1/listings?select=id,title,category,city,state,cover_image_url,updated_at&status=eq.published&published_at=not.is.null&title=not.ilike.demo*&limit=10000`;
+  const url = `${SUPABASE_URL}/rest/v1/listings?select=id,title,category,city,state,cover_image_url,updated_at&status=eq.published&published_at=not.is.null&deleted_at=is.null&moderation_status=eq.clear&title=not.ilike.demo*&limit=10000`;
   const res = await fetch(url, {
     headers: {
       apikey: ANON_KEY,
@@ -199,13 +199,18 @@ async function main() {
       `[sitemaps] wrote sitemap-listings.xml (${listings.length} listings) + sitemap-locations.xml`,
     );
   } catch (err) {
-    // Never fail the build/dev start over sitemap generation — write empty valid files
-    console.warn(`[sitemaps] generation failed, writing empty sitemaps: ${(err as Error).message}`);
+    // A failed query must not erase the last successful inventory sitemap.
+    console.warn(`[sitemaps] generation failed, preserving existing sitemaps: ${(err as Error).message}`);
     const empty = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>\n`;
     try {
       mkdirSync(resolve("public"), { recursive: true });
-      writeFileSync(resolve("public/sitemap-listings.xml"), empty);
-      writeFileSync(resolve("public/sitemap-locations.xml"), empty);
+      for (const file of ["sitemap-listings.xml", "sitemap-locations.xml"]) {
+        try {
+          writeFileSync(resolve("public", file), empty, { flag: "wx" });
+        } catch (writeError) {
+          if ((writeError as NodeJS.ErrnoException).code !== "EEXIST") throw writeError;
+        }
+      }
     } catch {
       /* ignore */
     }

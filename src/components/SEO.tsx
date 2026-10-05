@@ -54,7 +54,9 @@ const SEO = ({
   noindex = false,
 }: SEOProps) => {
   const fullTitle = title.includes('Vendibook') ? title : `${title} | Vendibook`;
-  const canonicalUrl = canonical ? `${BASE_URL}${canonical}` : BASE_URL;
+  // Pages supply both site-relative paths and fully qualified canonical URLs.
+  // Concatenation turned legal/seller URLs into vendibook.comhttps://vendibook.com/…
+  const canonicalUrl = canonical ? new URL(canonical, `${BASE_URL}/`).href : BASE_URL;
   const imageUrl = image.startsWith('http') ? image : `${BASE_URL}${image}`;
   const ogTitleFinal = ogTitle || fullTitle;
   const ogDescriptionFinal = ogDescription || description;

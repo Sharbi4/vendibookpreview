@@ -639,6 +639,17 @@ export const generateItemListSchema = (
   if (searchParams?.query) urlParams.set('q', searchParams.query);
   const listUrl = `https://vendibook.com/search${urlParams.toString() ? '?' + urlParams.toString() : ''}`;
 
+  // Loading, failed, and empty searches have no visible list to mark up.
+  // Emit page identity instead of an empty carousel candidate.
+  if (listings.length === 0) {
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      name: listName,
+      url: listUrl,
+    };
+  }
+
   return {
     '@context': 'https://schema.org',
     '@type': 'ItemList',

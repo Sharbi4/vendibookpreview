@@ -30,6 +30,19 @@ describe('buyer SEO tracking', () => {
     expect(isBuyerSeoPage('/food-trucks-for-rent')).toBe(false);
   });
 
+  it('attributes coffee inventory interest only with analytics consent', () => {
+    const path = '/coffee-trucks-trailers-for-sale';
+    consent = false;
+    trackBuyerSeoView(path, 'coffee-denied', '', 'food_truck');
+    expect(names()).toEqual([]);
+    expect(getBuyerSeoAttribution()).toBeNull();
+    consent = true;
+    trackBuyerSeoView(path, 'coffee-allowed', '', 'food_truck');
+    trackBuyerSeoDownstream('listing_view', 'coffee-1');
+    expect(names()).toEqual(['buyer_seo_landing_view', 'buyer_seo_attributed_listing_view']);
+    expect(getBuyerSeoAttribution()?.landing_page).toBe(path);
+  });
+
   it('parses and sanitizes UTM params, ignores others', () => {
     const u = parseUtm('?utm_source=google&utm_campaign=<script>x&email=a@b.com');
     expect(u).toEqual({ utm_source: 'google', utm_campaign: 'scriptx' });

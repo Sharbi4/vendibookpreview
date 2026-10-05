@@ -226,13 +226,13 @@ const AnalysisState: React.FC = () => {
 
 const pageJsonLd = {
   '@context': 'https://schema.org',
-  '@type': 'SoftwareApplication',
+  // Pricing and ratings are not published as an app offer; mark up the tool page itself.
+  '@type': 'WebPage',
+  url: 'https://vendibook.com/tools/pricepilot',
   name: 'PricePilot — Food Truck & Food Trailer Pricing',
-  applicationCategory: 'BusinessApplication',
-  operatingSystem: 'Web',
   description:
     'Get a market-backed pricing recommendation for your food truck or food trailer. PricePilot helps sellers and owners understand value, pricing range, and market signals before listing. Premium access via Vendibook Pro or a one-time unlock.',
-  featureList: [
+  keywords: [
     'Comparable-based market range with low, recommended, and high positions',
     'Local, regional, national, and modeled market scope disclosure',
     'Daily and weekly rental rate benchmarks',

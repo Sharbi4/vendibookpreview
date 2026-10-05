@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import SEO from '@/components/SEO';
 import { z } from 'zod';
 import { Phone, Mail, Clock, Send, Loader2, CheckCircle, Ticket, Headphones, CalendarClock, ArrowRight } from 'lucide-react';
 import Header from '@/components/layout/Header';
@@ -97,6 +98,11 @@ const Contact = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <SEO
+        title="Contact Vendibook Support | Buying, Selling & Rentals"
+        description="Contact Vendibook support for help with listings, buying, selling, rentals, payments, and your account. Send a support request or schedule a callback."
+        canonical="/contact"
+      />
       <Header />
       
       <main className="flex-1">

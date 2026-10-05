@@ -21,6 +21,9 @@ export const BUYER_SEO_PAGES = [
   '/how-to-buy-a-food-truck',
   '/food-truck-prices',
   '/financing',
+  '/coffee-trucks-trailers-for-sale',
+  '/coffee-trucks-for-sale',
+  '/coffee-trailers-for-sale',
 ] as const;
 
 export const isBuyerSeoPage = (path: string): boolean =>

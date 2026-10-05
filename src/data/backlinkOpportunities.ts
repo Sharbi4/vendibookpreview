@@ -66,6 +66,20 @@ export interface BacklinkOpportunity {
 
 const HIGH: BacklinkOpportunity[] = [
   {
+    domain: 'escoffier.edu', name: 'Auguste Escoffier School of Culinary Arts', type: 'Culinary program',
+    priority: 'high', competitorLinked: 'UsedVending',
+    pitchAsset: 'Dated marketplace asking-price summary', destination: '/food-truck-prices',
+    angle: 'Verified October 4, 2026: food-entrepreneurship/how-to-buy-a-food-truck and how-to-start-your-own-food-truck link to UsedVending. Offer the existing buying guide and aggregate CSV with transparent sample sizes as additional student resources.',
+    difficulty: 'high', status: 'not_started',
+  },
+  {
+    domain: 'businessnewsdaily.com', name: 'Business News Daily', type: 'Entrepreneur resource',
+    priority: 'high', competitorLinked: 'UsedVending',
+    pitchAsset: 'Startup budget evidence and marketplace pricing', destination: '/food-truck-prices',
+    angle: 'Verified October 4, 2026: /9237-how-to-start-food-truck-business.html links to UsedVending. Offer a dated, sample-qualified asking-price summary and startup-cost methodology for an editorial update.',
+    difficulty: 'high', status: 'not_started',
+  },
+  {
     domain: 'jayde.com', name: 'Jayde Business Directory', type: 'Marketplace directory',
     priority: 'high', competitorLinked: 'Concession Nation',
     pitchAsset: 'Marketplace listing', destination: '/',
@@ -90,8 +104,8 @@ const HIGH: BacklinkOpportunity[] = [
     domain: 'mobile-cuisine.com', name: 'Mobile Cuisine', type: 'Food-business blog',
     priority: 'high',
     pitchAsset: 'Startup resources + pricing data', destination: '/tools/startup-guide',
-    angle: 'Long-running food truck startup blog. Offer Vendibook as a buy/sell/rent resource for their "getting started" content, plus citable pricing data.',
-    difficulty: 'medium', status: 'not_started',
+    angle: 'On hold: October 4, 2026 review found gambling content on the homepage. Recheck current editorial relevance before any outreach; historical food-truck content is not enough.',
+    difficulty: 'medium', status: 'on_hold',
   },
   {
     domain: 'foodtruckr.com', name: 'FoodTruckr', type: 'Food-business blog',
@@ -270,9 +284,9 @@ const MEDIUM: BacklinkOpportunity[] = [
   },
   {
     domain: 'pos.toasttab.com', name: 'Toast Blog (On the Line)', type: 'Food-business blog',
-    priority: 'medium',
+    priority: 'high', competitorLinked: 'UsedFoodTrucks',
     pitchAsset: 'Pricing data citation', destination: '/food-truck-prices',
-    angle: 'High-authority restaurant-industry publication. Pitch citable marketplace pricing data for their food-truck cost articles.',
+    angle: 'Verified October 4, 2026: /blog/on-the-line/selling-a-food-truck links to UsedFoodTrucks. Offer dated advertised-price statistics and CSV as a supporting resource; never describe asking prices as completed sales.',
     difficulty: 'high', status: 'not_started',
   },
   {

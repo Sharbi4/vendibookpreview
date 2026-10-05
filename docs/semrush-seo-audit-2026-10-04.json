@@ -1,0 +1,782 @@
+{
+  "domain": "vendibook.com",
+  "research_date_phoenix": "2026-10-04",
+  "organic": {
+    "data": "Keyword;Position;Previous Position;Search Volume;Url;Traffic;Keyword Difficulty\nsell my food truck;5;5;50;https://vendibook.com/sell-my-food-truck;1;0.00\nsell food truck;5;5;110;https://vendibook.com/sell-my-food-truck;2;3.00\nhow to sell a food truck;6;6;50;https://vendibook.com/sell-my-food-truck;0;0.00\nfood truck for sale atlanta;6;6;210;https://vendibook.com/buy/food-trailers/atlanta-ga;4;7.00\nsell a food truck;6;6;70;https://vendibook.com/sell-my-food-truck;1;2.00\ni sell food truck;6;6;40;https://vendibook.com/sell-my-food-truck;0;1.00\nfood trailer for sale houston tx;8;8;70;https://vendibook.com/listing/e746bd18-cad4-4cbf-9972-176bb8affc56;1;7.00\ngut truck for sale;9;9;40;https://vendibook.com/food-trucks-for-sale/texas;0;31.00\nfood trucks for sale texas;9;9;90;https://vendibook.com/food-trucks-for-sale/texas;1;4.00\nconcession trailers for rent;9;9;90;https://vendibook.com/rent/food-trailers/houston-tx;0;10.00\nfood trucks for sale atlanta;10;10;110;https://vendibook.com/food-trucks-for-sale/georgia;0;8.00\nhow do i start a food truck;10;10;70;https://vendibook.com/tools/startup-guide;0;7.00\nfood truck for rent;11;0;4400;https://vendibook.com/rent/food-trailers/houston-tx;17;18.00\nfood truck texas for sale;11;11;40;https://vendibook.com/food-trucks-for-sale/texas;0;4.00\nfood trailer for sale near me used;11;11;110;https://vendibook.com/buy/food-trailers/atlanta-ga;0;15.00\ncoffee truck for sale;12;12;1900;https://vendibook.com/coffee-trucks-trailers-for-sale;5;10.00\nlunch truck for sale miami;12;12;70;https://vendibook.com/buy/food-trucks/miami-fl;0;5.00\nfood trucks price;12;12;170;https://vendibook.com/food-truck-prices;0;29.00\nfood truck for sale in georgia;12;12;40;https://vendibook.com/buy/food-trailers/atlanta-ga;0;12.00\nlunch trucks for sale;12;12;170;https://vendibook.com/food-trucks-for-sale/texas;0;15.00\nmobile lemonade trailer;12;12;50;https://vendibook.com/listing/a3ead971-38c7-4c0c-8f3f-2b02185c7c2f;0;1.00\nequinox funding;13;13;40;https://vendibook.com/financing;0;48.00\nfood trailer for rent near me;13;13;140;https://vendibook.com/rent/food-trailers/houston-tx;0;15.00\nfood trailers for sale houston;13;13;110;https://vendibook.com/listing/e746bd18-cad4-4cbf-9972-176bb8affc56;0;15.00\nfood trucks for sale in atlanta;13;31;140;https://vendibook.com/food-trucks-for-sale/georgia;0;6.00\ncoffe truck for sale;14;14;70;https://vendibook.com/coffee-trucks-trailers-for-sale;0;6.00\nlemonade truck for sale;14;14;140;https://vendibook.com/listing/a3ead971-38c7-4c0c-8f3f-2b02185c7c2f;0;14.00\nfood trailer rent;14;14;50;https://vendibook.com/rent/food-trailers/houston-tx;0;15.00\nrent a food trailer;14;14;140;https://vendibook.com/rent/food-trailers/houston-tx;0;17.00\nfood trailers for sale in houston texas;14;14;70;https://vendibook.com/listing/e746bd18-cad4-4cbf-9972-176bb8affc56;0;12.00\nfood truck for sale in texas;15;15;110;https://vendibook.com/food-trucks-for-sale/texas;0;5.00\nhow can i start a food truck;15;15;480;https://vendibook.com/tools/startup-guide;0;13.00\nlemonade trailer for sale;15;15;260;https://vendibook.com/listing/a3ead971-38c7-4c0c-8f3f-2b02185c7c2f;0;17.00\nfood trucks for sale in arizona;15;15;70;https://vendibook.com/food-trucks-for-sale/arizona;0;5.00\nlunch box truck for sale;15;15;50;https://vendibook.com/food-trucks-for-sale/texas;0;5.00\nmobile kitchen for sale;15;15;210;https://vendibook.com/food-trailers-for-sale;0;18.00\ntaco truck for sale;16;16;1300;https://vendibook.com/food-trucks-for-sale;1;18.00\ntaco truck for sale used;16;16;40;https://vendibook.com/food-trucks-for-sale;0;12.00\narizona food trucks for sale;16;16;40;https://vendibook.com/food-trucks-for-sale/arizona;0;7.00\nfood trailers for sale in houston;16;16;90;https://vendibook.com/listing/e746bd18-cad4-4cbf-9972-176bb8affc56;0;16.00\n",
+    "metadata": {
+      "format": "csv",
+      "pagination": {
+        "limit": 40,
+        "sort": "position_asc"
+      },
+      "url": "https://www.semrush.com/analytics/organic/positions/?db=us&display_limit=40&display_sort=position_asc&export_columns=keyword%2Cposition%2Cprevious_position%2Cvolume%2Curl%2Ctraffic%2Ckeyword_difficulty&q=vendibook.com",
+      "usage": {
+        "api_units": 500
+      }
+    }
+  },
+  "audit": {
+    "data": {
+      "quality": {
+        "value": 87,
+        "delta": 0
+      },
+      "snapshot_id": "6ac26af147d73ceec1050145",
+      "pages_crawled": 100,
+      "finish_date": 1791126676190,
+      "errors": [
+        {
+          "id": 1,
+          "count": 0,
+          "delta": 0,
+          "checks": 99
+        },
+        {
+          "id": 2,
+          "count": 0,
+          "delta": 0,
+          "checks": 99
+        },
+        {
+          "id": 3,
+          "count": 0,
+          "delta": 0,
+          "checks": 59
+        },
+        {
+          "id": 6,
+          "count": 0,
+          "delta": 0,
+          "checks": 4770
+        },
+        {
+          "id": 7,
+          "count": 0,
+          "delta": 0,
+          "checks": 0
+        },
+        {
+          "id": 8,
+          "count": 0,
+          "delta": 0,
+          "checks": 4159
+        },
+        {
+          "id": 9,
+          "count": 0,
+          "delta": 0,
+          "checks": 99
+        },
+        {
+          "id": 10,
+          "count": 0,
+          "delta": 0,
+          "checks": 99
+        },
+        {
+          "id": 11,
+          "count": 0,
+          "delta": 0,
+          "checks": 0
+        },
+        {
+          "id": 13,
+          "count": 0,
+          "delta": 0,
+          "checks": 351
+        },
+        {
+          "id": 15,
+          "count": 2,
+          "delta": 0,
+          "checks": 5700
+        },
+        {
+          "id": 16,
+          "count": 0,
+          "delta": 0,
+          "checks": 1
+        },
+        {
+          "id": 17,
+          "count": 0,
+          "delta": 0,
+          "checks": 5
+        },
+        {
+          "id": 18,
+          "count": 11,
+          "delta": 0,
+          "checks": 75
+        },
+        {
+          "id": 19,
+          "count": 0,
+          "delta": 0,
+          "checks": 2
+        },
+        {
+          "id": 20,
+          "count": 0,
+          "delta": 0,
+          "checks": 0
+        },
+        {
+          "id": 21,
+          "count": 0,
+          "delta": 0,
+          "checks": 93
+        },
+        {
+          "id": 22,
+          "count": 0,
+          "delta": 0,
+          "checks": 0
+        },
+        {
+          "id": 23,
+          "count": 0,
+          "delta": 0,
+          "checks": 0
+        },
+        {
+          "id": 24,
+          "count": 0,
+          "delta": 0,
+          "checks": 0
+        },
+        {
+          "id": 25,
+          "count": 0,
+          "delta": 0,
+          "checks": 0
+        },
+        {
+          "id": 26,
+          "count": 0,
+          "delta": 0,
+          "checks": 0
+        },
+        {
+          "id": 27,
+          "count": 0,
+          "delta": 0,
+          "checks": 2
+        },
+        {
+          "id": 28,
+          "count": 0,
+          "delta": 0,
+          "checks": 2
+        },
+        {
+          "id": 29,
+          "count": 0,
+          "delta": 0,
+          "checks": 2
+        },
+        {
+          "id": 30,
+          "count": 0,
+          "delta": 0,
+          "checks": 1471
+        },
+        {
+          "id": 32,
+          "count": 0,
+          "delta": 0,
+          "checks": 0
+        },
+        {
+          "id": 33,
+          "count": 0,
+          "delta": 0,
+          "checks": 4963
+        },
+        {
+          "id": 38,
+          "count": 0,
+          "delta": 0,
+          "checks": 58
+        },
+        {
+          "id": 39,
+          "count": 0,
+          "delta": 0,
+          "checks": 58
+        },
+        {
+          "id": 40,
+          "count": 0,
+          "delta": 0,
+          "checks": 62
+        },
+        {
+          "id": 41,
+          "count": 0,
+          "delta": 0,
+          "checks": 180
+        },
+        {
+          "id": 42,
+          "count": 0,
+          "delta": 0,
+          "checks": 2
+        },
+        {
+          "id": 43,
+          "count": 0,
+          "delta": 0,
+          "checks": 5
+        },
+        {
+          "id": 44,
+          "count": 0,
+          "delta": 0,
+          "checks": 4453
+        },
+        {
+          "id": 45,
+          "count": 5,
+          "delta": 0,
+          "checks": 232
+        },
+        {
+          "id": 46,
+          "count": 0,
+          "delta": 0,
+          "checks": 0
+        },
+        {
+          "id": 111,
+          "count": 27,
+          "delta": 0,
+          "checks": 59
+        }
+      ],
+      "warnings": [
+        {
+          "id": 12,
+          "count": 0,
+          "delta": 0,
+          "checks": 94
+        },
+        {
+          "id": 14,
+          "count": 0,
+          "delta": 0,
+          "checks": 600
+        },
+        {
+          "id": 31,
+          "count": 0,
+          "delta": 0,
+          "checks": 4153
+        },
+        {
+          "id": 101,
+          "count": 0,
+          "delta": 0,
+          "checks": 59
+        },
+        {
+          "id": 102,
+          "count": 1,
+          "delta": 0,
+          "checks": 59
+        },
+        {
+          "id": 103,
+          "count": 0,
+          "delta": 0,
+          "checks": 59
+        },
+        {
+          "id": 105,
+          "count": 0,
+          "delta": 0,
+          "checks": 59
+        },
+        {
+          "id": 106,
+          "count": 0,
+          "delta": 0,
+          "checks": 59
+        },
+        {
+          "id": 108,
+          "count": 0,
+          "delta": 0,
+          "checks": 59
+        },
+        {
+          "id": 109,
+          "count": 0,
+          "delta": 0,
+          "checks": 4963
+        },
+        {
+          "id": 110,
+          "count": 0,
+          "delta": 0,
+          "checks": 475
+        },
+        {
+          "id": 112,
+          "count": 39,
+          "delta": 0,
+          "checks": 59
+        },
+        {
+          "id": 113,
+          "count": 0,
+          "delta": 0,
+          "checks": 59
+        },
+        {
+          "id": 114,
+          "count": 0,
+          "delta": 0,
+          "checks": 59
+        },
+        {
+          "id": 115,
+          "count": 0,
+          "delta": 0,
+          "checks": 59
+        },
+        {
+          "id": 116,
+          "count": 0,
+          "delta": 0,
+          "checks": 59
+        },
+        {
+          "id": 117,
+          "count": 2,
+          "delta": 0,
+          "checks": 59
+        },
+        {
+          "id": 120,
+          "count": 0,
+          "delta": 0,
+          "checks": 59
+        },
+        {
+          "id": 121,
+          "count": 0,
+          "delta": 0,
+          "checks": 59
+        },
+        {
+          "id": 122,
+          "count": 0,
+          "delta": 0,
+          "checks": 59
+        },
+        {
+          "id": 123,
+          "count": 0,
+          "delta": 0,
+          "checks": 4152
+        },
+        {
+          "id": 124,
+          "count": 0,
+          "delta": 0,
+          "checks": 1
+        },
+        {
+          "id": 125,
+          "count": 0,
+          "delta": 0,
+          "checks": 5
+        },
+        {
+          "id": 126,
+          "count": 0,
+          "delta": 0,
+          "checks": 0
+        },
+        {
+          "id": 127,
+          "count": 0,
+          "delta": 0,
+          "checks": 2
+        },
+        {
+          "id": 128,
+          "count": 0,
+          "delta": 0,
+          "checks": 657
+        },
+        {
+          "id": 129,
+          "count": 0,
+          "delta": 0,
+          "checks": 59
+        },
+        {
+          "id": 130,
+          "count": 0,
+          "delta": 0,
+          "checks": 355
+        },
+        {
+          "id": 131,
+          "count": 0,
+          "delta": 0,
+          "checks": 180
+        },
+        {
+          "id": 132,
+          "count": 0,
+          "delta": 0,
+          "checks": 180
+        },
+        {
+          "id": 133,
+          "count": 0,
+          "delta": 0,
+          "checks": 90
+        },
+        {
+          "id": 134,
+          "count": 0,
+          "delta": 0,
+          "checks": 59
+        },
+        {
+          "id": 135,
+          "count": 0,
+          "delta": 0,
+          "checks": 180
+        },
+        {
+          "id": 136,
+          "count": 0,
+          "delta": 0,
+          "checks": 4453
+        }
+      ],
+      "notices": [
+        {
+          "id": 104,
+          "count": 0,
+          "delta": 0,
+          "checks": 59
+        },
+        {
+          "id": 137,
+          "count": 0,
+          "delta": 0,
+          "checks": 1
+        },
+        {
+          "id": 4,
+          "count": 33,
+          "delta": 0,
+          "checks": 92
+        },
+        {
+          "id": 201,
+          "count": 0,
+          "delta": 0,
+          "checks": 59
+        },
+        {
+          "id": 202,
+          "count": 0,
+          "delta": 0,
+          "checks": 235
+        },
+        {
+          "id": 203,
+          "count": 0,
+          "delta": 0,
+          "checks": 1
+        },
+        {
+          "id": 204,
+          "count": 0,
+          "delta": 0,
+          "checks": 0
+        },
+        {
+          "id": 205,
+          "count": 0,
+          "delta": 0,
+          "checks": 2
+        },
+        {
+          "id": 206,
+          "count": 0,
+          "delta": 0,
+          "checks": 0
+        },
+        {
+          "id": 207,
+          "count": 0,
+          "delta": 0,
+          "checks": 0
+        },
+        {
+          "id": 208,
+          "count": 0,
+          "delta": 0,
+          "checks": 0
+        },
+        {
+          "id": 209,
+          "count": 0,
+          "delta": 0,
+          "checks": 0
+        },
+        {
+          "id": 210,
+          "count": 0,
+          "delta": 0,
+          "checks": 359
+        },
+        {
+          "id": 211,
+          "count": 0,
+          "delta": 0,
+          "checks": 59
+        },
+        {
+          "id": 212,
+          "count": 0,
+          "delta": 0,
+          "checks": 90
+        },
+        {
+          "id": 213,
+          "count": 1,
+          "delta": 0,
+          "checks": 59
+        },
+        {
+          "id": 214,
+          "count": 0,
+          "delta": 0,
+          "checks": 4963
+        },
+        {
+          "id": 215,
+          "count": 1,
+          "delta": 0,
+          "checks": 4388
+        },
+        {
+          "id": 216,
+          "count": 1,
+          "delta": 0,
+          "checks": 3872
+        },
+        {
+          "id": 217,
+          "count": 1,
+          "delta": 0,
+          "checks": 3820
+        },
+        {
+          "id": 218,
+          "count": 59,
+          "delta": 0,
+          "checks": 444
+        },
+        {
+          "id": 219,
+          "count": 0,
+          "delta": 0,
+          "checks": 1
+        },
+        {
+          "id": 220,
+          "count": 0,
+          "delta": 0,
+          "checks": 59
+        },
+        {
+          "id": 221,
+          "count": 0,
+          "delta": 0,
+          "checks": 59
+        },
+        {
+          "id": 222,
+          "count": 0,
+          "delta": 0,
+          "checks": 59
+        },
+        {
+          "id": 223,
+          "count": 15,
+          "delta": 0,
+          "checks": 59
+        }
+      ]
+    },
+    "metadata": {
+      "format": "json",
+      "url": "https://www.semrush.com/siteaudit/?id=31469344&snapshot_id=6ac26af147d73ceec1050145",
+      "usage": {
+        "api_units": 10000
+      }
+    }
+  },
+  "issue_details": {
+    "15": {
+      "data": {
+        "limit": 12,
+        "page": 0,
+        "total": 2,
+        "issue_id": 15,
+        "data": [
+          {
+            "target_url": "",
+            "page_id": "6ac26c946f3bb4cfa9e09e91",
+            "source_url": "https://vendibook.com/contact"
+          },
+          {
+            "target_url": "",
+            "page_id": "6ac26c946f3bb4cfa9e09e93",
+            "source_url": "https://vendibook.com/"
+          }
+        ]
+      },
+      "metadata": {
+        "format": "json",
+        "pagination": {
+          "limit": 12
+        },
+        "url": "https://www.semrush.com/siteaudit/?id=31469344&issueid=15&limit=12&page=1&snapshot_id=6ac26af147d73ceec1050145",
+        "usage": {
+          "api_units": 0
+        }
+      }
+    },
+    "18": {
+      "data": {
+        "limit": 12,
+        "page": 0,
+        "total": 11,
+        "issue_id": 18,
+        "data": [
+          {
+            "target_url": "https://vendibook.com/legal/recording-consent",
+            "page_id": "6ac26c946f3bb4cfa9e09e3f",
+            "source_url": "https://vendibook.com/sitemap_pages.xml"
+          },
+          {
+            "target_url": "https://vendibook.com/legal/payments-terms",
+            "page_id": "6ac26c946f3bb4cfa9e09e3f",
+            "source_url": "https://vendibook.com/sitemap_pages.xml"
+          },
+          {
+            "target_url": "https://vendibook.com/why-list-on-vendibook",
+            "page_id": "6ac26c946f3bb4cfa9e09e3f",
+            "source_url": "https://vendibook.com/sitemap_pages.xml"
+          },
+          {
+            "target_url": "https://vendibook.com/legal/handoff-terms",
+            "page_id": "6ac26c946f3bb4cfa9e09e3f",
+            "source_url": "https://vendibook.com/sitemap_pages.xml"
+          },
+          {
+            "target_url": "https://vendibook.com/legal/location-tracking",
+            "page_id": "6ac26c946f3bb4cfa9e09e3f",
+            "source_url": "https://vendibook.com/sitemap_pages.xml"
+          },
+          {
+            "target_url": "https://vendibook.com/legal/recording-consent",
+            "page_id": "6ac26c946f3bb4cfa9e09e3e",
+            "source_url": "https://vendibook.com/sitemap-legal.xml"
+          },
+          {
+            "target_url": "https://vendibook.com/legal/payments-terms",
+            "page_id": "6ac26c946f3bb4cfa9e09e3e",
+            "source_url": "https://vendibook.com/sitemap-legal.xml"
+          },
+          {
+            "target_url": "https://vendibook.com/legal/seller-payment-terms",
+            "page_id": "6ac26c946f3bb4cfa9e09e3e",
+            "source_url": "https://vendibook.com/sitemap-legal.xml"
+          },
+          {
+            "target_url": "https://vendibook.com/legal/location-tracking",
+            "page_id": "6ac26c946f3bb4cfa9e09e3e",
+            "source_url": "https://vendibook.com/sitemap-legal.xml"
+          },
+          {
+            "target_url": "https://vendibook.com/legal/esign",
+            "page_id": "6ac26c946f3bb4cfa9e09e3e",
+            "source_url": "https://vendibook.com/sitemap-legal.xml"
+          },
+          {
+            "target_url": "https://vendibook.com/legal/handoff-terms",
+            "page_id": "6ac26c946f3bb4cfa9e09e3e",
+            "source_url": "https://vendibook.com/sitemap-legal.xml"
+          }
+        ]
+      },
+      "metadata": {
+        "format": "json",
+        "pagination": {
+          "limit": 12
+        },
+        "url": "https://www.semrush.com/siteaudit/?id=31469344&issueid=18&limit=12&page=1&snapshot_id=6ac26af147d73ceec1050145",
+        "usage": {
+          "api_units": 0
+        }
+      }
+    },
+    "45": {
+      "data": {
+        "limit": 12,
+        "page": 0,
+        "total": 5,
+        "issue_id": 45,
+        "data": [
+          {
+            "target_url": "J:23:/:747754195",
+            "page_id": "6ac26c946f3bb4cfa9e09e64",
+            "source_url": "https://vendibook.com/tools/pricepilot"
+          },
+          {
+            "target_url": "J:23:/:1910345107",
+            "page_id": "6ac26c946f3bb4cfa9e09e81",
+            "source_url": "https://vendibook.com/tools/permitpath"
+          },
+          {
+            "target_url": "J:4:/:743627927",
+            "page_id": "6ac26c946f3bb4cfa9e09e50",
+            "source_url": "https://vendibook.com/search?mode=sale&category=food_truck,food_trailer"
+          },
+          {
+            "target_url": "J:4:/:-294012370",
+            "page_id": "6ac26c946f3bb4cfa9e09e85",
+            "source_url": "https://vendibook.com/search?mode=rent"
+          },
+          {
+            "target_url": "J:4:/:44437264",
+            "page_id": "6ac26c946f3bb4cfa9e09e77",
+            "source_url": "https://vendibook.com/search"
+          }
+        ]
+      },
+      "metadata": {
+        "format": "json",
+        "pagination": {
+          "limit": 12
+        },
+        "url": "https://www.semrush.com/siteaudit/?id=31469344&issueid=45&limit=12&page=1&snapshot_id=6ac26af147d73ceec1050145",
+        "usage": {
+          "api_units": 0
+        }
+      }
+    }
+  }
+}
