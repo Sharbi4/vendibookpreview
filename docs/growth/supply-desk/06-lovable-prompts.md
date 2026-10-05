@@ -10,7 +10,7 @@ Ship order: **LP-1 → LP-2** (they unblock draft recovery), then LP-3, then LP-
 
 ---
 
-## LP-1: One-screen "Finish & publish" for existing drafts
+## LP-1: One-screen "Finish & publish" for existing drafts (**SHIPPED in 87b59eea**, `src/pages/ListingFinish.tsx`; kept for reference)
 
 ```text
 Problem: 108 real seller drafts can't publish. Most were saved before we added the required
@@ -95,4 +95,59 @@ Capture first-touch attribution for sellers so we can count listings per channel
   wizard publish event.
 Migration must be additive (nullable columns only, no backfill, no changes to existing rows).
 No payment changes (Square untouched; PayPal stays sandbox, with credentials, plans and webhooks unchanged).
+```
+
+## LP-5: Listing health card with field anchors
+
+```text
+Extend the existing ListingHealthScoreCard (src/components/listing-wizard/ListingHealthScoreCard.tsx)
+and show it on each live listing in the seller dashboard, not only on the wizard review step.
+Use the Supply Desk rubric in docs/growth/supply-desk/04-listing-quality.md:
+- Photos ≥8 = 25 pts, 5–7 = 15, 3–4 = 5
+- Price present = 15
+- Offers on (sale) or instant book on (rent) = 15
+- Title status (titled sale assets) = 10
+- Condition = 10
+- Walkaround video = 10
+- Description ≥300 characters = 5
+- What's included = 5
+- Year/make = 5, but only once those fields are actually stored on listings
+Show the score and the top 3 fixes, each linking to /edit-listing/:id#<field>. Add stable
+anchor ids in the PublishWizard for: offers, photos, details (condition/title/included),
+description, video, availability. Scroll to and highlight the anchored field on load.
+Never say "overpriced": the comps flag reads "Show buyers why it's worth the price".
+No payment changes (Square untouched; PayPal stays sandbox, with credentials, plans and webhooks unchanged).
+```
+
+## LP-6: "Complete your profile" checklist
+
+```text
+On the seller dashboard, add a 3-item checklist card that shows until all three are done:
+profile photo (profiles.avatar_url), a bio of at least 40 characters (profiles.bio, already
+shown on public profiles via AboutSection), and identity verification (the existing
+verification flow). Each item links straight to the right settings field. Copy: "Buyers check
+who they're buying from. Sellers with a photo and bio look more trustworthy." Track
+profile_checklist_viewed / profile_checklist_item_completed {item}.
+No payment changes.
+```
+
+## LP-7: Offer rescue loop (spec in 05-offer-rescue.md)
+
+```text
+1) Update the offer-received-seller email template so it has three buttons: Accept $X,
+   Counter, Decline. They link to /dashboard?offer=<id>&action=accept|counter|decline. On the
+   dashboard, read those params and open the existing offer dialog preset to that action.
+   Nothing happens without the signed-in seller confirming.
+2) In send-offer-notification (new_offer), also call send-sms with template_name
+   'offer_received', category 'transactional', only when the seller's
+   sms_preferences.transactional_status = 'opted_in'. Body:
+   "Vendibook: $X offer on your {title}. Accept, counter or decline: {short link}. Reply STOP to opt out."
+3) Add nullable columns offers.seller_nudged_at, offers.admin_alerted_at and
+   offers.final_reminder_at (additive migration, no backfill). Add an hourly edge function,
+   offer-rescue-sweep, for pending offers with no responded_at:
+   ≥12h and seller_nudged_at null → seller email + SMS (if opted in); set seller_nudged_at.
+   ≥36h and admin_alerted_at null → send-admin-notification type 'offer_unanswered' with listing,
+   amount, hours open and seller phone if present; final seller email; set both timestamps.
+   Use idempotency keys per (offer, step). Respect send-sms quiet hours.
+No payment changes (Square untouched; PayPal stays sandbox, with credentials, plans and webhooks unchanged). No Stripe.
 ```

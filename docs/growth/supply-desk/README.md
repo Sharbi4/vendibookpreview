@@ -1,23 +1,31 @@
 # Supply Desk
 
-_Lead: Supply Desk (Claude) · reports to Growth & Liquidity · first pass 2026-10-05_
+_Lead: Supply Desk (Claude) · reports to Growth & Liquidity · updated 2026-10-05_
 
 | File | What |
 |---|---|
-| `01-draft-recovery.md` | Segmentation of the drafts, email/SMS sequence, yield estimate |
-| `02-density-plan.md` | Top 5 metros where demand outruns supply, with 60-day targets per category |
-| `03-muse-prompts.md` | MUSE-2 (recruit sellers to cross-list) and MUSE-4 ("Wanted" call-outs), ready to paste |
-| `06-lovable-prompts.md` | LP-1 to LP-4: supply-side site changes, ready to paste |
+| `01-draft-recovery.md` | Draft segmentation (102 real, shared definition), recovery sequence, yield |
+| `02-density-plan.md` | Top 5 metros (LA, Houston, MSP, Atlanta, Raleigh–Durham), 60-day targets |
+| `03-muse-prompts.md` | MUSE-2 (recruit sellers) and MUSE-4 (Wanted call-outs, now on Buyer Desk SB-1…7) |
+| `04-listing-quality.md` + `04-listing-scores.csv` | Quality rubric, scores for all 130 real live listings, coaching copy, seed-listing cleanup |
+| `05-offer-rescue.md` | Offer rescue loop (instant → 12 h → 36 h admin call) and response SLAs |
+| `06-lovable-prompts.md` | LP-1 (shipped) and LP-2…LP-7, all payment-safe |
+| `07-concierge-onboarding.md` | Owner's Studiotime concierge guide adapted: profile → list → optimize → share |
 
-Still to come: 04 listing-quality scoring and coaching, and 05 offer-rescue loop and SLAs.
+## Shipped today (acting on findings)
 
-## Headlines for the Growth lead
+| What | Where | Effect |
+|---|---|---|
+| Archived 14 seed listings with Unsplash photos (owner instruction) | Production data, status only, reversible | Live supply is **130 real** (121 sale / 9 rent), down from 144. Rollback SQL is in 04 |
+| `/list/finish/:listingId`: one-screen Finish & publish | 87b59eea | Backlog drafts answer only the missing disclosures plus the attestations, then publish through the canonical publisher |
+| Draft-reminder fix | 54e2d6c4 | Window 1–30 → 1–60 days. Spacing 2/7/14 days (was daily). Internal, QA and admin accounts skipped. Real title and name in the email. Links to the finish page |
 
-1. **The real draft count is 108, not 151.** 43 are QA/internal drafts or empty guest placeholders, including most of the "Tucson" cluster. Please update the scorecard baseline.
-2. **0 of 108 drafts can publish as-is.** 74 were started before the 2026-08-06 disclosures step, and 103 are missing the "what's included" and photo-exclusions answers. The gate is fine for new listings (all 77 published since then passed it). The backlog needs a one-screen finish flow (**LP-1**, **LP-2**), not weaker rules. Expected yield: **about 20 listings (15–27) in 30 days.**
-3. **Top 5 metros:** Los Angeles, Houston, Minneapolis–St Paul, Atlanta, Raleigh–Durham. The target is **+65 live listings in 60 days**, about 55% of it from MUSE-2.
-4. **SMS:** 0 draft hosts have marketing SMS opt-in, so SMS recovery reaches 22 drafts at most (transactional opt-in only).
-5. **Payments:** **Square + PayPal, with PayPal in sandbox. Don't change it.** This matches the playbook update in 58d3c11d. Every Supply Desk Lovable prompt says it explicitly.
-6. **MUSE-2 does not cold-DM Facebook Marketplace sellers.** That would break the "no DMs to people who haven't engaged" guardrail, so Marketplace finds are logged for a human to review.
+## Needs an owner decision
 
-Caveats: only about 30% of searches carry a location, and listing views look bot-inflated (sessions ≈ views). Metro rankings are relative, not absolute.
+1. **Concierge sender:** whose name signs the concierge emails (07)? The guide recommends a real person, ideally the founder.
+2. **SB-6 lead:** a Tucson truck owner who asked to sell on 2026-06-12 (`asset_requests`) never got a follow-up. Ops should call them now.
+3. **SMS:** legal should confirm draft reminders and offer alerts count as transactional for the 18 opted-in hosts.
+
+## Payments
+
+Square + PayPal, with PayPal **in sandbox. Do not change it** (environment, credentials, plans, webhooks). No Stripe, and no claims of automated payouts. Nothing shipped here touches payment code or settings.

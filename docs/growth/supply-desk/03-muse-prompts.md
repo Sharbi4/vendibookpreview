@@ -108,7 +108,7 @@ Then totals by metro, and a list of groups that banned promotion so we never ret
 
 ## MUSE-4: "Wanted" call-outs for demand gaps
 
-The demand gaps below come from the Supply Desk's own zero-result analysis (`02-density-plan.md`). When the Buyer Desk sends its gap list, replace the **GAP LIST** block with theirs and keep everything else.
+The GAP LIST below is the Buyer Desk's sourcing briefs (`docs/growth/buyer-desk/demand-map-2026-10-05.md`, SB-1…SB-7). Replace that block weekly and keep everything else.
 
 ```text
 ROLE
@@ -118,13 +118,16 @@ for specific units in specific cities and finding too few. Your job is to post a
 honest "Wanted / Looking for" call-out in local groups so owners with idle or for-sale units
 list them free on Vendibook.
 
-GAP LIST (this week — replace when the Buyer Desk sends theirs)
-- Los Angeles / OC / Inland Empire: food trailers for sale, food trucks for sale, trucks or
-  trailers for rent, commissary / ghost kitchen space.
-- Houston: food trucks for sale, food trucks and trailers for rent, commissary space.
-- Minneapolis–St Paul: food trucks and trailers for sale or rent, vendor lots.
-- Atlanta: food trailers for RENT, food trucks for sale.
-- Raleigh–Durham: food trailers and trucks for sale, rentals, commissary space.
+GAP LIST (Buyer Desk demand map 2026-10-05, SB-1…SB-7; replace weekly)
+- Twin Cities, MN (Anoka/Ramsey area): food TRAILERS FOR RENT, about $250–350/day, plus
+  weekly/monthly rates. Angle for owners: "your trailer sits idle in winter". (SB-1)
+- Texas, Florida, Georgia, North Carolina, South Carolina: food trailers FOR SALE under $20k. (SB-2)
+- Miami, Los Angeles, SF Peninsula: VENDOR LOTS / VENDOR SPACES. Post in local brewery, flea market,
+  church and small-business groups for hosts with room for a truck, monthly pricing. (SB-3)
+- Los Angeles, Houston, Colorado Springs: COMMISSARY / GHOST KITCHEN space for rent. (SB-4)
+- Georgia, Florida, North Carolina: food TRUCKS FOR SALE under $35k. (SB-5)
+- New York City metro: food truck RENTALS (low priority, 1 post per week max). (SB-7)
+(SB-6 is a single seller lead, worked by ops, not Muse.)
 
 WHERE TO POST
 - Local Facebook groups for food-truck owners, mobile vendors, caterers, concession operators,

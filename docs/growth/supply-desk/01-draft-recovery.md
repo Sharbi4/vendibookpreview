@@ -4,7 +4,8 @@ _Supply Desk · data pulled 2026-10-05 (read-only SELECTs on production) · code
 
 ## TL;DR
 
-- **151 drafts, but only 108 are real.** 43 are junk: 19 QA/internal drafts (`QA Cash Food Truck…`, hosts at `@example.com` / `@vendibook.com`) and 24 empty guest placeholders (`My Ghost Kitchen` / `My Food Truck`, created Jan 19–21, no photos and no price). Most of the 25 "Tucson" drafts are this junk. Exclude junk from every KPI. The Growth lead's draft count should read **108**.
+- **Definition (shared with the scorecard): real drafts = 102.** That is drafts excluding internal/test hosts (example.com, vendibook.com), admins, QA titles and every guest draft (`guest_draft_token` set). My first pass counted 108 because it kept 6 guest drafts that have no contact info, so they were unreachable anyway. Tables below are still on the 108 base; the reachable numbers are unchanged.
+- **151 drafts, but only 108 (now 102) are real.** 43 are junk: 19 QA/internal drafts (`QA Cash Food Truck…`, hosts at `@example.com` / `@vendibook.com`) and 24 empty guest placeholders (`My Ghost Kitchen` / `My Food Truck`, created Jan 19–21, no photos and no price). Most of the 25 "Tucson" drafts are this junk. Exclude junk from every KPI. The Growth lead's draft count should read **108**.
 - **No real draft can publish today without new answers.** On 2026-08-06 the wizard added a required disclosures step (`src/lib/listings/stages.ts → getStageRequirements`) plus 5 publish attestations. Required answers:
   - condition
   - operational status
@@ -28,7 +29,7 @@ _Supply Desk · data pulled 2026-10-05 (read-only SELECTs on production) · code
   | **Started before the gate existed** | **74** |
 
 - **The gate works for people who start fresh.** All 77 listings published since 2026-08-06 have disclosures filled in. The problem is the backlog: sellers who saved a draft in the old flow come back to six new questions they've never seen. Do not weaken the disclosures. They protect buyers on $10k–$80k deals. Make answering them a 60-second, one-screen task (**LP-1**).
-- 112 of 151 drafts already got a `draft_nudge_sent_at` nudge. The nudge links into the full wizard, which is the wrong surface for a returning seller.
+- 112 of 151 drafts already got a `draft_nudge_sent_at` nudge. The cron (`send-draft-reminder`) only covered drafts 1–30 days old, re-nudged daily, and linked into the full wizard. **Fixed in 54e2d6c4:** 1–60 days, spacing of 2/7/14 days, internal and QA accounts skipped, and drafts with 3+ photos land on `/list/finish/:id`. Drafts older than 60 days are only reached by this sequence.
 - **Expected yield with LP-1/LP-2 plus this sequence: about 20 new live listings (range 15–27) within 30 days,** +14% on 144 live.
 - **Payments: no changes.** Square and PayPal stay exactly as configured, and PayPal stays in sandbox. Seller copy below doesn't promise any specific online checkout method.
 
@@ -64,7 +65,7 @@ Other facts that shape the plan:
 
 ## Recovery sequence
 
-**Precondition:** ship **LP-1** (one-screen "Finish & publish" disclosures form) and **LP-2** (1-tap publish link) from `06-lovable-prompts.md`. Touch 1 links there, not to the full wizard.
+**Precondition met:** `/list/finish/:listingId` shipped in 87b59eea (LP-1). Use `https://vendibook.com/list/finish/{listing_id}?utm_source=email&utm_medium=lifecycle&utm_campaign=draft-recovery-e1` as `{one_tap_url}`. Sign-in is required and returns the seller to the page. The LP-2 audience helper is still to build; until then, ops pulls the audience with the segmentation SQL.
 
 Channel rules:
 
