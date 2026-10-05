@@ -23,13 +23,13 @@ _Lead: Supply Desk (Claude) · reports to Growth & Liquidity · updated 2026-10-
 | **Offer responses restored** | 2c7ac9c0 | Sellers had no screen to accept, counter or decline offers. They now have /dashboard/offers, 3-button offer emails, and a home-page task. Fixed the infinite loop on legacy /dashboard?tab= links |
 | Draft-reminder fix | 54e2d6c4 | Window 1–30 → 1–60 days. Spacing 2/7/14 days (was daily). Internal, QA and admin accounts skipped. Real title and name in the email. Links to the finish page |
 
-## Needs an owner decision
+## Owner decisions (2026-10-05)
 
-1. **Concierge sender:** whose name signs the concierge emails (07)? The guide recommends a real person, ideally the founder.
-2. **SB-6 lead:** a Tucson truck owner who asked to sell on 2026-06-12 (`asset_requests`) never got a follow-up. Ops should call them now.
-3. **Referral program:** `/referral` shows a waitlist, but the program is active in config ($150, 0 referrals ever). Is it open?
-4. **Featured:** offer complimentary 14-day features to the top 5 hero listings (08)?
-5. **SMS:** legal should confirm draft reminders and offer alerts count as transactional for the 18 opted-in hosts.
+1. **Concierge sender:** Brad, Customer Success. Applied to every outreach email.
+2. **Referral program:** on. It was already enabled (`referral_program_enabled = true`); my earlier "waitlist" note was wrong. Payouts stay manual (`referral_auto_payout_enabled = false`), and the referral page now says so. Every concierge email ends with an accurate referral line ($150 after the referred seller's first transaction within 90 days, after review).
+3. **Featured trial:** done. The 5 highest-traffic listings without a feature are featured free until **2026-10-19** (`featured_source = 'comp'`): Charlotte lemonade trailer, Lilburn rental, Boca Raton rental, Hiram truck, Stoughton Airstream. Their sellers' emails lead with the news (`featured_trial = yes` in the outreach CSV).
+4. **Tucson "seller lead" (SB-6):** this was the owner's own test submission (owner email, June 12), not a real seller. No reply sent, and dropped from the briefs.
+5. **Still open:** legal should confirm that draft reminders and offer alerts count as transactional SMS for the 18 opted-in hosts. The referral **terms** page still says "Payouts are batched weekly on Mondays"; it's legal text, so it was left for review.
 
 ## Payments
 

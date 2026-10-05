@@ -23,14 +23,16 @@ Subject: A buyer offered $15,000 for your food trailer
 >
 > If it's already sold, reply "sold" and I'll take the listing down for you.
 >
-> {concierge_first_name}, Vendibook
+> Brad  
+> Customer Success, Vendibook
 
 **To the buyer** (send only after the seller says they're still selling)
 Subject: The seller of the Seguin food trailer would like to talk
 
 > Hi {first_name}, your $15,000 offer on the food trailer in Seguin, TX expired before the seller saw it. They're still selling and open to an offer. You can make a new one here: https://vendibook.com/listing/c649440f-d3df-4f3a-a622-e118767efb4d?utm_source=email&utm_medium=concierge&utm_campaign=offer-rescue
 >
-> {concierge_first_name}, Vendibook
+> Brad  
+> Customer Success, Vendibook
 
 ---
 
@@ -49,7 +51,8 @@ Subject: Is your Bradenton food trailer still for sale?
 >
 > Is it still for sale? Reply "yes" and I'll help you update the listing. Two quick fixes would help: turn on offers with a minimum you're comfortable with, and answer the condition and title questions. Reply "sold" and I'll take it down.
 >
-> {concierge_first_name}, Vendibook
+> Brad  
+> Customer Success, Vendibook
 
 ---
 

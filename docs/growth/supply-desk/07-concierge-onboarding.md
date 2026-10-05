@@ -20,7 +20,7 @@ Listing signals (guide step 3) come from `04-listing-quality.md`. 90 of 121 sale
 ## The concierge
 
 - **Use a real person**, ideally the founder, signing with their real first name. The guide is explicit that a placeholder persona ("Jill") is only a stand-in. At $10k–$80k, sellers reply to a person.
-- Sender: `{concierge_first_name} at Vendibook`, reply-to a monitored inbox. Footer: support@vendibook.com.
+- Sender: `Brad, Customer Success at Vendibook`, reply-to a monitored inbox. Footer: support@vendibook.com.
 - **Honesty rule:** the concierge never claims to have "made your listing live". Sellers publish themselves on Vendibook. The concierge only says what is true about review and recommendations.
 
 ## The 4 steps, mapped to Vendibook triggers
@@ -45,7 +45,7 @@ Current queue sizes:
 
 > Hi {first_name},
 >
-> Thanks for joining Vendibook. I'm {concierge_first_name}, and I help sellers get set up.
+> Thanks for joining Vendibook. I'm Brad, and I help sellers get set up.
 >
 > Before you add your truck or trailer, add a **profile photo** and a **two-line bio** (how long you've run it, what you served, why you're selling). Buyers spending this much want to know who they're buying from, and a real face and story is the single biggest trust signal on a listing. Then **verify your ID** for the verified badge.
 >
@@ -54,7 +54,8 @@ Current queue sizes:
 > When you're ready, listing takes about 10 minutes: {list_url}. Here's a listing that does it well: {example_listing_url}.
 >
 > Just reply if you want help. I read every one.
-> {concierge_first_name}, Vendibook
+> Brad  
+> Customer Success, Vendibook
 
 ### V2: First listing (profile done, nothing started)
 
@@ -62,7 +63,7 @@ Current queue sizes:
 
 > Hi {first_name}, I saw you set up your profile but haven't added your listing yet. It takes about 10 minutes, or you can just tell Vendi about your unit and it drafts the listing for you: {vendi_url}. Listing is free. Here's a strong example: {example_listing_url}.
 > Reply with any questions.
-> {concierge_first_name}
+> Brad
 
 ### V3: Optimize (live listing, score under 80 or profile gaps)
 
@@ -79,7 +80,7 @@ Current queue sizes:
 > {if no avatar or bio: "Also: add a photo and a short bio to your profile ({profile_url}). Buyers check who they're dealing with before they message."}
 >
 > Each one takes a few minutes, and the link opens your listing editor. Reply if you'd like me to look again afterwards.
-> {concierge_first_name}
+> Brad
 
 Fix lines, used in this order and pulled from the CSV `top_fixes` column:
 
@@ -101,7 +102,7 @@ Fix lines, used in this order and pulled from the CSV `top_fixes` column:
 >
 > If you post it on Instagram or Facebook, tag **@vendibook** (instagram.com/vendibook) and we'll reshare it. Adding your Vendibook listing link to your bio or page helps buyers find it too: {listing_url}
 >
-> {concierge_first_name}
+> Brad
 
 _Truthfulness: say "we'll point buyers toward it" only while the Buyer Desk is actually matching inbound requests (MUSE-1 / hot-but-cold). Resharing a tagged post is a MUSE-5 task, and it must follow the Muse guardrails (disclosed, no fake reviews)._
 
