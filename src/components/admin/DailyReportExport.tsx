@@ -204,7 +204,13 @@ const DailyReportExport = () => {
       });
 
       const wb = XLSX.utils.book_new();
-      const ws = XLSX.utils.json_to_sheet(excelData);
+      // Neutralize spreadsheet formulas in user-supplied text (names, titles).
+      const safeCell = (v: unknown) =>
+        typeof v === 'string' && /^[=+\-@\t\r]/.test(v) ? `'${v}` : v;
+      const safeData = excelData.map((row) =>
+        Object.fromEntries(Object.entries(row).map(([k, v]) => [k, safeCell(v)])),
+      );
+      const ws = XLSX.utils.json_to_sheet(safeData);
 
       ws['!cols'] = [
         { wch: 15 }, { wch: 12 }, { wch: 15 }, { wch: 15 },
