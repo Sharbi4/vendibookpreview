@@ -319,6 +319,10 @@ const STATE_SALE_SPECS: StateSaleSpec[] = [
   { stateName: 'Michigan', stateCode: 'MI', category: 'food_trailer' },
   { stateName: 'Ohio', stateCode: 'OH', category: 'food_trailer' },
   { stateName: 'Arizona', stateCode: 'AZ', category: 'food_trailer' },
+  // California: 6 live trailers for sale and the #3 state for real buyer
+  // views (2026-10-05), but no trailer page — 'food truck for sale california'
+  // alone is 210 searches/mo.
+  { stateName: 'California', stateCode: 'CA', category: 'food_trailer' },
   // ---- Tier 2 trucks (already live — keep, no expansion) ----
   { stateName: 'North Carolina', stateCode: 'NC', category: 'food_truck' },
   { stateName: 'Oregon', stateCode: 'OR', category: 'food_truck' },
@@ -502,7 +506,7 @@ const stateSaleFaqs = (stateName: string, cat: CategoryKey) => {
 };
 
 // State slugs that have BOTH a truck and a trailer page (safe cross-links).
-const TRAILER_STATE_SLUGS = new Set(['texas', 'georgia', 'florida', 'michigan', 'ohio', 'arizona']);
+const TRAILER_STATE_SLUGS = new Set(['texas', 'georgia', 'florida', 'michigan', 'ohio', 'arizona', 'california']);
 
 CITY_CATEGORY_CONFIGS.push(
   ...STATE_SALE_SPECS.map((s): CategoryIndexConfig => {
