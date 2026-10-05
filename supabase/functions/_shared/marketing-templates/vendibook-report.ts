@@ -2,7 +2,7 @@
 // Pure HTML string builder (no React Email) to keep edge bundle small.
 
 // Palette derives from the master email design system (Phase 2 tokens).
-import { MK, color } from "./brand.ts";
+import { CTA_SHADOW, FONT, MK, color } from "./brand.ts";
 import { unsubToken } from "../unsubscribeToken.ts";
 
 const COLORS = {
@@ -113,7 +113,7 @@ function listingCard(c: ListingCard): string {
         </a>
       </td></tr>
       <tr><td style="padding-top:12px;">
-        <div style="font-family:Georgia,'Times New Roman',serif;font-size:18px;font-weight:600;color:${COLORS.textDark};line-height:1.25;max-height:46px;overflow:hidden;">
+        <div style="font-family:${FONT};font-size:18px;font-weight:700;color:${COLORS.textDark};line-height:1.25;max-height:46px;overflow:hidden;">
           <a href="${esc(c.url)}${SOURCE}" style="color:${COLORS.textDark};text-decoration:none;">${esc(c.title)}</a>
         </div>
         <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,Helvetica,sans-serif;font-size:12px;color:${COLORS.textMuted};margin-top:6px;">📍 ${esc(c.location)}</div>
@@ -141,7 +141,8 @@ function pillButton(label: string, url: string, opts: { ghost?: boolean; full?: 
   const bg = opts.ghost ? "transparent" : COLORS.orange;
   const color = opts.ghost ? COLORS.orange : "#ffffff";
   const border = opts.ghost ? `2px solid ${COLORS.orange}` : `2px solid ${COLORS.orange}`;
-  return `<a href="${esc(url)}" style="display:inline-block;background:${bg};color:${color};border:${border};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,Helvetica,sans-serif;font-weight:600;font-size:14px;padding:14px 32px;border-radius:999px;text-decoration:none;${opts.full ? "display:block;text-align:center;" : ""}">${esc(label)}</a>`;
+  const shadow = opts.ghost ? "none" : CTA_SHADOW;
+  return `<a href="${esc(url)}" style="display:inline-block;background:${bg};color:${color};border:${border};box-shadow:${shadow};font-family:${FONT};font-weight:700;font-size:14px;padding:14px 32px;border-radius:12px;text-decoration:none;${opts.full ? "display:block;text-align:center;" : ""}">${esc(label)}</a>`;
 }
 
 function toolColumn(t: ToolHighlight): string {
@@ -177,7 +178,7 @@ export function renderVendibookReport(p: ReportPayload): string {
   }
 </style>
 </head>
-<body style="margin:0;padding:0;background:${COLORS.bgWarm};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,Helvetica,sans-serif;color:${COLORS.textDark};">
+<body style="margin:0;padding:0;background:${COLORS.bgWarm};font-family:${FONT};color:${COLORS.textDark};">
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;">Browse this week's freshest listings — food trucks, kitchens, and vendor spaces on Vendibook.</div>
   <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%" style="background:${COLORS.bgWarm};">
     <tr><td align="center" style="padding:0;">
@@ -193,7 +194,7 @@ export function renderVendibookReport(p: ReportPayload): string {
 
         <!-- HERO HEADLINE -->
         <tr><td style="padding:48px 32px 36px;text-align:center;background:#fff;">
-          <h1 style="font-family:Georgia,'Times New Roman',serif;font-size:34px;line-height:1.15;color:${COLORS.textDark};font-weight:700;margin:0;">${esc(p.heroHeadline)}</h1>
+          <h1 style="font-family:${FONT};font-size:34px;line-height:1.15;color:${COLORS.textDark};font-weight:800;margin:0;">${esc(p.heroHeadline)}</h1>
           <p style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,Helvetica,sans-serif;font-size:15px;color:${COLORS.textMuted};margin:18px 0 0;">Browse this week's freshest listings below.</p>
         </td></tr>
 
@@ -206,7 +207,7 @@ export function renderVendibookReport(p: ReportPayload): string {
           <div style="height:1px;background:${COLORS.divider};margin:0 0 24px;"></div>
           <table role="presentation" cellpadding="0" cellspacing="0" border="0" width="100%">
             <tr><td style="background:${COLORS.bgWarm};border:1px solid ${COLORS.divider};border-radius:6px;padding:40px 28px;text-align:center;">
-              <h2 style="font-family:Georgia,'Times New Roman',serif;font-size:26px;color:${COLORS.textDark};font-weight:700;margin:0 0 12px;">${esc(p.listingsReplacement.headline)}</h2>
+              <h2 style="font-family:${FONT};font-size:26px;color:${COLORS.textDark};font-weight:700;margin:0 0 12px;">${esc(p.listingsReplacement.headline)}</h2>
               <p style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,Helvetica,sans-serif;font-size:15px;color:${COLORS.textMuted};margin:0 0 24px;">${esc(p.listingsReplacement.body)}</p>
               ${pillButton(p.listingsReplacement.ctaLabel, `${p.listingsReplacement.ctaUrl}${SOURCE}`)}
             </td></tr>
@@ -231,7 +232,7 @@ export function renderVendibookReport(p: ReportPayload): string {
         <tr><td style="background:${COLORS.bgDark};padding:48px 32px;text-align:center;">
           <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:3px;color:#9a9a9a;text-transform:uppercase;padding-bottom:14px;">BECOME A HOST</div>
           <div style="width:40px;height:2px;background:${COLORS.orange};margin:0 auto 22px;"></div>
-          <h2 style="font-family:Georgia,'Times New Roman',serif;font-size:28px;color:#fff;font-weight:700;margin:0 0 14px;line-height:1.25;">${esc(p.rentalReplacement.headline)}</h2>
+          <h2 style="font-family:${FONT};font-size:28px;color:#fff;font-weight:700;margin:0 0 14px;line-height:1.25;">${esc(p.rentalReplacement.headline)}</h2>
           <p style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,Helvetica,sans-serif;font-size:15px;color:#bdbdbd;line-height:1.6;margin:0 auto 26px;max-width:440px;">${esc(p.rentalReplacement.body)}</p>
           ${pillButton(p.rentalReplacement.ctaLabel, `${p.rentalReplacement.ctaUrl}${SOURCE}`)}
         </td></tr>`
@@ -244,7 +245,7 @@ export function renderVendibookReport(p: ReportPayload): string {
           <a href="${esc(p.featuredRental.url)}${SOURCE}" style="text-decoration:none;color:inherit;">
             <img src="${esc(p.featuredRental.image)}" alt="${esc(p.featuredRental.title)}" width="576" style="display:block;width:100%;height:auto;border-radius:4px;aspect-ratio:16/9;object-fit:cover;" />
           </a>
-          <h2 style="font-family:Georgia,'Times New Roman',serif;font-size:26px;color:${COLORS.textDark};margin:20px 0 8px;font-weight:700;line-height:1.2;">${esc(p.featuredRental.title)}</h2>
+          <h2 style="font-family:${FONT};font-size:26px;color:${COLORS.textDark};margin:20px 0 8px;font-weight:700;line-height:1.2;">${esc(p.featuredRental.title)}</h2>
           <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,Helvetica,sans-serif;font-size:13px;color:${COLORS.textMuted};margin-bottom:10px;">📍 ${esc(p.featuredRental.location)}</div>
           <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,Helvetica,sans-serif;font-size:20px;color:${COLORS.orange};font-weight:700;margin-bottom:6px;">${esc(p.featuredRental.price)}</div>
           ${p.featuredRental.extraTagline ? `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,Helvetica,sans-serif;font-size:13px;color:${COLORS.textMuted};font-style:italic;margin-bottom:14px;">${esc(p.featuredRental.extraTagline)}</div>` : `<div style="margin-bottom:8px;"></div>`}
@@ -270,7 +271,7 @@ export function renderVendibookReport(p: ReportPayload): string {
                 </div>
               </td>
               <td valign="top" class="stack">
-                <h3 style="font-family:Georgia,'Times New Roman',serif;font-size:22px;color:${COLORS.textDark};font-weight:600;margin:0 0 10px;">${esc(ref.headline)}</h3>
+                <h3 style="font-family:${FONT};font-size:22px;color:${COLORS.textDark};font-weight:700;margin:0 0 10px;">${esc(ref.headline)}</h3>
                 <p style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,Helvetica,sans-serif;font-size:14px;color:${COLORS.textMuted};line-height:1.55;margin:0 0 10px;">${esc(ref.body)}</p>
                 <p style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,Helvetica,sans-serif;font-size:13px;color:${COLORS.textMuted};line-height:1.55;margin:0 0 14px;">${esc(ref.secondary)}</p>
                 <a href="${esc(p.baseUrl)}/referral${SOURCE}" style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,Helvetica,sans-serif;font-size:14px;color:${COLORS.orange};font-weight:600;text-decoration:none;">Get your referral link →</a>
@@ -299,17 +300,17 @@ export function renderVendibookReport(p: ReportPayload): string {
         <tr><td style="background:#fff;padding:48px 36px;">
           <div style="text-align:center;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:3px;color:${COLORS.textMuted};text-transform:uppercase;padding-bottom:8px;">FROM THE VENDIBOOK TEAM</div>
           <div style="height:1px;background:${COLORS.divider};margin:0 auto 28px;width:60px;"></div>
-          ${p.insightTitle ? `<h3 style="font-family:Georgia,'Times New Roman',serif;font-size:22px;color:${COLORS.textDark};font-weight:600;text-align:center;margin:0 0 18px;">${esc(p.insightTitle)}</h3>` : ""}
-          <blockquote style="font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:22px;line-height:1.4;color:${COLORS.textDark};border-left:3px solid ${COLORS.orange};padding:8px 0 8px 20px;margin:0 0 24px;">"${esc(p.insightPullQuote)}"</blockquote>
+           ${p.insightTitle ? `<h3 style="font-family:${FONT};font-size:22px;color:${COLORS.textDark};font-weight:700;text-align:center;margin:0 0 18px;">${esc(p.insightTitle)}</h3>` : ""}
+          <blockquote style="font-family:${FONT};font-style:italic;font-size:22px;line-height:1.4;color:${COLORS.textDark};border-left:3px solid ${COLORS.orange};padding:8px 0 8px 20px;margin:0 0 24px;">"${esc(p.insightPullQuote)}"</blockquote>
           <p style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,Helvetica,sans-serif;font-size:15px;line-height:1.7;color:${COLORS.textDark};margin:0 0 16px;">${esc(p.insightBody)}</p>
-          <p style="font-family:Georgia,'Times New Roman',serif;font-style:italic;font-size:14px;color:${COLORS.textMuted};margin:0;">— The Vendibook Team</p>
+          <p style="font-family:${FONT};font-style:italic;font-size:14px;color:${COLORS.textMuted};margin:0;">— The Vendibook Team</p>
         </td></tr>
 
         <!-- TALK TO SOMEONE -->
         <tr><td style="background:#fff;padding:8px 32px 48px;text-align:center;">
           <div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,Helvetica,sans-serif;font-size:11px;letter-spacing:3px;color:${COLORS.textMuted};text-transform:uppercase;padding:24px 0 8px;">WE'RE HERE</div>
           <div style="height:1px;background:${COLORS.divider};margin:0 auto 24px;width:60px;"></div>
-          <h3 style="font-family:Georgia,'Times New Roman',serif;font-size:24px;color:${COLORS.textDark};font-weight:600;margin:0 0 14px;">Have questions about buying, selling, or renting?</h3>
+          <h3 style="font-family:${FONT};font-size:24px;color:${COLORS.textDark};font-weight:700;margin:0 0 14px;">Have questions about buying, selling, or renting?</h3>
           <p style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,Helvetica,sans-serif;font-size:14px;color:${COLORS.textMuted};line-height:1.6;margin:0 0 28px;max-width:480px;display:inline-block;">Whether you're exploring for the first time or ready to make a move — our team is available. No pressure, no scripts. Just a real conversation.</p>
           <div style="margin-top:8px;">
             ${pillButton("Book a Call", `${p.baseUrl}/contact?intent=call${SOURCE.slice(1)}`)}

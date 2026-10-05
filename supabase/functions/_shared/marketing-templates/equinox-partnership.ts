@@ -1,3 +1,5 @@
+import { CTA_SHADOW, FONT } from "./brand.ts";
+
 // Vendibook x Equinox Funding partnership announcement — responsive, table-based,
 // dark-luxury marketing email. One template, two audience variants.
 
@@ -70,7 +72,7 @@ export function buildEquinoxHtml(variant: EquinoxVariant, unsubUrl: string): str
 <meta name="color-scheme" content="light only">
 <title>${esc(SUBJECTS[variant])}</title>
 </head>
-<body style="margin:0;padding:0;background:#0a0a0b;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#f5f5f4;">
+<body style="margin:0;padding:0;background:#0a0a0b;font-family:${FONT};color:#f5f5f4;">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">${esc(PREVIEWS[variant])}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#0a0a0b;padding:24px 12px;">
   <tr><td align="center">
@@ -96,7 +98,7 @@ export function buildEquinoxHtml(variant: EquinoxVariant, unsubUrl: string): str
         </table>
       </td></tr>
       <tr><td align="center" style="padding:24px 28px 8px 28px;">
-        <a href="${b.primary.href}" style="display:inline-block;background:#ff5124;color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;padding:14px 30px;border-radius:999px;">${esc(b.primary.label)}</a>
+         <a href="${b.primary.href}" style="display:inline-block;background:#ff5124;color:#ffffff;border:1px solid #ff5124;box-shadow:${CTA_SHADOW};font-family:${FONT};text-decoration:none;font-weight:700;font-size:15px;padding:14px 30px;border-radius:12px;">${esc(b.primary.label)}</a>
       </td></tr>
       <tr><td align="center" style="padding:0 28px 26px 28px;">
         <a href="${b.secondary.href}" style="display:inline-block;background:transparent;color:#ffffff;text-decoration:none;font-weight:600;font-size:14px;padding:11px 26px;border-radius:999px;border:1px solid #3a3a44;">${esc(b.secondary.label)}</a>
