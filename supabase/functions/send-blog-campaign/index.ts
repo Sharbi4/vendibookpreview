@@ -12,6 +12,7 @@ import {
   MARKETING_FROM, MARKETING_REPLY_TO, SITE_URL,
 } from "../_shared/marketing-templates/brand.ts";
 import { unsubToken } from "../_shared/unsubscribeToken.ts";
+import { isAllowedTestRecipient } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -153,6 +154,9 @@ serve(async (req) => {
     if (mode === "test") {
       if (!testEmail || !isValidEmail(testEmail)) {
         return new Response(JSON.stringify({ error: "Valid testEmail required" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+      }
+      if (!(await isAllowedTestRecipient(req, testEmail))) {
+        return new Response(JSON.stringify({ error: "Test emails can only go to your own admin inbox or a vendibook.com address." }), { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } });
       }
       recipients = [{ email: testEmail, user_id: null }];
     } else {

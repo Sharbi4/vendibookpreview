@@ -145,9 +145,20 @@ serve(async (req) => {
       (typeof (product.metadata as Record<string, unknown> | null)?.grants_tier === "string"
         ? String((product.metadata as Record<string, unknown>).grants_tier)
         : product.slug);
-    const origin = req.headers.get("origin") ?? "https://vendibook.com";
-    const returnUrl = `${origin}${body.return_path ?? "/account/subscription?subscribed=1"}`;
-    const cancelUrl = `${origin}${body.cancel_path ?? "/pricing?cancelled=1"}`;
+    // Return/cancel destinations are restricted to Vendibook origins and
+    // same-site relative paths — never a caller-supplied host.
+    const ALLOWED_ORIGINS = new Set([
+      "https://vendibook.com",
+      "https://www.vendibook.com",
+      "https://vendibookpreview.lovable.app",
+      "https://id-preview--f4d8586e-de66-4307-b052-b071b734f592.lovable.app",
+    ]);
+    const reqOrigin = req.headers.get("origin") ?? "";
+    const origin = ALLOWED_ORIGINS.has(reqOrigin) ? reqOrigin : "https://vendibook.com";
+    const safePath = (p: unknown, fallback: string) =>
+      typeof p === "string" && /^\/(?![\/\\])[A-Za-z0-9\-._~\/?=&%]*$/.test(p) && p.length <= 200 ? p : fallback;
+    const returnUrl = `${origin}${safePath(body.return_path, "/account/subscription?subscribed=1")}`;
+    const cancelUrl = `${origin}${safePath(body.cancel_path, "/pricing?cancelled=1")}`;
 
     const { data: profile } = await admin.from("profiles")
       .select("full_name").eq("id", user.id).maybeSingle();

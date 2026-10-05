@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { requireSignedInOrBackend } from '../_shared/callerGuard.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -112,6 +113,7 @@ async function tts(text: string, voiceId: string): Promise<ArrayBuffer> {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  { const denied = await requireSignedInOrBackend(req, corsHeaders); if (denied) return denied; }
 
   try {
     const { listing_id, voice_id } = await req.json();
@@ -126,6 +128,7 @@ serve(async (req) => {
       .from("listings")
       .select("id,title,description,category,mode,city,state,price_daily,price_weekly,price_sale")
       .eq("id", listing_id)
+      .eq("status", "published")
       .maybeSingle();
 
     if (error || !listing) {
@@ -135,7 +138,9 @@ serve(async (req) => {
       });
     }
 
-    const voice = voice_id || DEFAULT_VOICE_ID;
+    // Voice is fixed server-side; callers cannot pick arbitrary voices.
+    void voice_id;
+    const voice = DEFAULT_VOICE_ID;
     const script = await buildNarrationScript(listing);
     const audio = await tts(script, voice);
 

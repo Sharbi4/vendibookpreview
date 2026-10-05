@@ -148,7 +148,7 @@ Deno.serve(async (req) => {
             });
           if (emailError) throw emailError;
           emailQueued = true;
-          console.log("Email enqueued via Lovable Emails:", profile.email);
+          console.log("Notification email enqueued");
         }
       } catch (emailError: any) {
         console.error("Failed to enqueue email notification:", emailError);

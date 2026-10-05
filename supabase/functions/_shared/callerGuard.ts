@@ -114,3 +114,36 @@ export function maskEmail(email: unknown): string {
   if (at < 1) return "***";
   return `${s.slice(0, Math.min(2, at))}***${s.slice(at)}`;
 }
+
+/**
+ * Returns null when the request comes from a signed-in user or a backend
+ * caller; otherwise a 401 response. Used by paid features (AI, voice, maps).
+ */
+export async function requireSignedInOrBackend(
+  req: Request,
+  headers: Record<string, string> = guardCors,
+): Promise<Response | null> {
+  if (await isBackendCaller(req)) return null;
+  const caller = await getCaller(req);
+  return caller ? null : unauthorizedResponse(headers);
+}
+
+/** Returns null for admins / backend callers; otherwise a 403 response. */
+export async function requireAdminOrBackend(
+  req: Request,
+  headers: Record<string, string> = guardCors,
+): Promise<Response | null> {
+  return (await isAdminOrBackendCaller(req)) ? null : forbiddenResponse(headers);
+}
+
+/**
+ * Admin test sends may only go to the signed-in admin's own inbox or a
+ * vendibook.com address — never an arbitrary outside recipient.
+ */
+export async function isAllowedTestRecipient(req: Request, email: string): Promise<boolean> {
+  const target = String(email ?? "").trim().toLowerCase();
+  if (!target) return false;
+  if (/^[^\s@]+@vendibook\.com$/.test(target)) return true;
+  const caller = await getCaller(req);
+  return !!caller?.email && caller.email.toLowerCase() === target;
+}

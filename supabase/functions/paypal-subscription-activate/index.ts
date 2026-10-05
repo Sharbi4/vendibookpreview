@@ -31,6 +31,9 @@ serve(async (req) => {
     // Already recorded (double click / refresh / webhook arrived first).
     const { data: existingSame } = await admin.from("paypal_subscriptions").select("*")
       .eq("paypal_subscription_id", subscription_id).maybeSingle();
+    if (existingSame && existingSame.user_id !== user.id) {
+      return jsonError(404, "not_found", "We couldn't find that membership on your account.");
+    }
     if (existingSame) {
       return jsonResponse(200, {
         status: existingSame.status,

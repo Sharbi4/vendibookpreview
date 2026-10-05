@@ -133,7 +133,7 @@ const handler = async (req: Request): Promise<Response> => {
     
     // Limit conversation history to prevent abuse
     const safeHistory = conversationHistory.slice(-10).filter(msg => 
-      msg && typeof msg.role === 'string' && typeof msg.content === 'string' &&
+      msg && (msg.role === 'user' || msg.role === 'assistant') && typeof msg.content === 'string' &&
       msg.content.length <= 2000
     );
     

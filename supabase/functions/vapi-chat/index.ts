@@ -1,4 +1,5 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+import { requireSignedInOrBackend } from '../_shared/callerGuard.ts';
 
 const VAPI_PRIVATE_KEY = Deno.env.get('VAPI_PRIVATE_KEY');
 const ASSISTANT_ID = '9dfe0a24-ce82-4e32-8889-3fc6a4afca89';
@@ -28,6 +29,7 @@ Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders });
   }
+  { const denied = await requireSignedInOrBackend(req, corsHeaders); if (denied) return denied; }
 
   try {
     if (!VAPI_PRIVATE_KEY) {

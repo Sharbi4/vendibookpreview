@@ -29,6 +29,13 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { imageUrl, fileName }: UploadRequest = await req.json();
 
+    // Object path must be a flat, safe file name (no folders, traversal or odd characters).
+    if (typeof fileName !== "string" || !/^[A-Za-z0-9][A-Za-z0-9._-]{0,99}\.(png|jpe?g|gif|webp|svg)$/i.test(fileName) || fileName.includes("..")) {
+      return new Response(
+        JSON.stringify({ error: "fileName must be a simple image file name (letters, numbers, dot, dash, underscore)." }),
+        { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } },
+      );
+    }
     if (!imageUrl || !fileName) {
       return new Response(
         JSON.stringify({ error: "imageUrl and fileName are required" }),

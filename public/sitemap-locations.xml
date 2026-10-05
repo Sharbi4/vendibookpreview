@@ -2,7 +2,6 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://vendibook.com/abingdon</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/aiken</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://vendibook.com/albuquerque</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/altamonte-springs</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/atlanta</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/austin</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
@@ -39,7 +38,6 @@
   <url><loc>https://vendibook.com/denver</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/douglasville</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/dumfries</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://vendibook.com/el-paso</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/elgin</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/ely</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/emeryville</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
@@ -55,6 +53,7 @@
   <url><loc>https://vendibook.com/goodlettsville</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/hackensack</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/harker-heights</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://vendibook.com/hebron</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/hiram</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/houston</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/huntsville</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
@@ -96,12 +95,10 @@
   <url><loc>https://vendibook.com/riverdale</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/round-rock</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/saginaw</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://vendibook.com/san-diego</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/san-dimas</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/san-francisco</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/sarasota</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/scottsdale</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
-  <url><loc>https://vendibook.com/seattle</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/seguin</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/sparta</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/stoughton</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>
@@ -161,8 +158,6 @@
   <url><loc>https://vendibook.com/buy/food-trailer/douglasville-ga</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-trailer/dumfries-va</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/buy/food-trailer/dumfries-va</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
-  <url><loc>https://vendibook.com/rent/food-trailer/el-paso-tx</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
-  <url><loc>https://vendibook.com/buy/food-trailer/el-paso-tx</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-trailer/elgin-sc</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/buy/food-trailer/elgin-sc</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-trailer/ely-mn</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
@@ -185,6 +180,8 @@
   <url><loc>https://vendibook.com/buy/food-trailer/glendale-ca</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-trailer/harker-heights-tx</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/buy/food-trailer/harker-heights-tx</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://vendibook.com/rent/food-trailer/hebron-in</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
+  <url><loc>https://vendibook.com/buy/food-trailer/hebron-in</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-trailer/houston-tx</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/buy/food-trailer/houston-tx</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-trailer/huntsville-tn</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
@@ -249,8 +246,6 @@
   <url><loc>https://vendibook.com/buy/food-trailer/riverdale-md</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-trailer/saginaw-mi</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/buy/food-trailer/saginaw-mi</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
-  <url><loc>https://vendibook.com/rent/food-trailer/san-diego-ca</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
-  <url><loc>https://vendibook.com/buy/food-trailer/san-diego-ca</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-trailer/san-dimas-ca</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/buy/food-trailer/san-dimas-ca</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-trailer/sarasota-fl</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
@@ -275,8 +270,6 @@
   <url><loc>https://vendibook.com/buy/food-trailer/valley-al</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-truck/abingdon-va</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/buy/food-truck/abingdon-va</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
-  <url><loc>https://vendibook.com/rent/food-truck/albuquerque-nm</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
-  <url><loc>https://vendibook.com/buy/food-truck/albuquerque-nm</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-truck/austin-tx</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/buy/food-truck/austin-tx</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-truck/bend-or</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
@@ -325,8 +318,6 @@
   <url><loc>https://vendibook.com/buy/food-truck/las-vegas-nv</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-truck/lorton-va</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/buy/food-truck/lorton-va</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
-  <url><loc>https://vendibook.com/rent/food-truck/los-angeles-ca</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
-  <url><loc>https://vendibook.com/buy/food-truck/los-angeles-ca</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-truck/magnolia-tx</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/buy/food-truck/magnolia-tx</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-truck/maryville-tn</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
@@ -335,16 +326,12 @@
   <url><loc>https://vendibook.com/buy/food-truck/nashville-tn</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-truck/ocean-springs-ms</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/buy/food-truck/ocean-springs-ms</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
-  <url><loc>https://vendibook.com/rent/food-truck/phoenix-az</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
-  <url><loc>https://vendibook.com/buy/food-truck/phoenix-az</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-truck/ridgefield-park-nj</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/buy/food-truck/ridgefield-park-nj</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-truck/round-rock-tx</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/buy/food-truck/round-rock-tx</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-truck/san-francisco-ca</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/buy/food-truck/san-francisco-ca</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
-  <url><loc>https://vendibook.com/rent/food-truck/seattle-wa</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
-  <url><loc>https://vendibook.com/buy/food-truck/seattle-wa</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-truck/us-highway-19-n-palm-harbor-fl</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/buy/food-truck/us-highway-19-n-palm-harbor-fl</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/food-truck/vail-az</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
@@ -357,12 +344,8 @@
   <url><loc>https://vendibook.com/buy/shared-kitchen/charlotte-nc</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/shared-kitchen/dallas-or</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/buy/shared-kitchen/dallas-or</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
-  <url><loc>https://vendibook.com/rent/shared-kitchen/dallas-tx</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
-  <url><loc>https://vendibook.com/buy/shared-kitchen/dallas-tx</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/shared-kitchen/las-vegas-nv</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/buy/shared-kitchen/las-vegas-nv</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
-  <url><loc>https://vendibook.com/rent/shared-kitchen/miami-fl</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
-  <url><loc>https://vendibook.com/buy/shared-kitchen/miami-fl</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/rent/shared-kitchen/phoenix-az</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
   <url><loc>https://vendibook.com/buy/shared-kitchen/phoenix-az</loc><lastmod>2026-10-05</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>
 </urlset>

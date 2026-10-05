@@ -73,7 +73,15 @@ serve(async (req) => {
   }
 
   try {
-    const { rawDescription, category, mode, title } = await req.json();
+    const parsedBody = await req.json();
+    const rawDescription = parsedBody?.rawDescription;
+    const ALLOWED_CATEGORIES = ["food_truck", "food_trailer", "ghost_kitchen", "vendor_lot", "vendor_space"];
+    const category = ALLOWED_CATEGORIES.includes(parsedBody?.category) ? parsedBody.category : undefined;
+    const mode = parsedBody?.mode === "rent" || parsedBody?.mode === "sale" ? parsedBody.mode : undefined;
+    // Title is quoted data only: strip quotes/newlines/control chars and cap length.
+    const title = typeof parsedBody?.title === "string"
+      ? parsedBody.title.replace(/[\u0000-\u001f"`\\{}<>]/g, " ").replace(/\s+/g, " ").trim().slice(0, 120)
+      : "";
 
     if (!rawDescription || rawDescription.trim().length < 10) {
       return json(400, { error: "Please provide a description with at least 10 characters", code: "input_too_short" });

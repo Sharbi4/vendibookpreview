@@ -90,7 +90,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    console.log("twilio status callback", { sid, status, to, errorCode });
+    console.log("twilio status callback", { sid, status, to: to ? `***${String(to).slice(-2)}` : null, errorCode });
     return new Response("ok", { headers: { "Content-Type": "text/plain" } });
   } catch (e: any) {
     console.error("twilio-status-callback error:", e);

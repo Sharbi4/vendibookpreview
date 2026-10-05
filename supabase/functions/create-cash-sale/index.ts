@@ -146,6 +146,32 @@ Deno.serve(async (req) => {
       return json(response);
     }
 
+    // The sale price is set server-side: the listing's asking price, or the
+    // amount of an offer the seller accepted (or a counter the buyer accepted)
+    // for this buyer. A caller-supplied amount is only a cross-check.
+    let serverAmount: number | null = Number(listing.price_sale) > 0 ? Number(listing.price_sale) : null;
+    const { data: acceptedOffer } = await supabase
+      .from('offers')
+      .select('offer_amount, counter_amount, status')
+      .eq('listing_id', listing.id)
+      .eq('buyer_id', user.id)
+      .eq('status', 'accepted')
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (acceptedOffer) {
+      // An accepted counter keeps status 'accepted' with counter_amount set.
+      const offerPrice = Number(acceptedOffer.counter_amount) > 0
+        ? Number(acceptedOffer.counter_amount)
+        : Number(acceptedOffer.offer_amount);
+      if (offerPrice > 0) serverAmount = offerPrice;
+    }
+    if (!serverAmount) return json({ error: 'price_unavailable', message: 'This listing has no price set for a cash sale.' }, 400);
+    if (Math.abs(Number(body.amount) - serverAmount) > 0.01) {
+      return json({ error: 'amount_mismatch', message: 'The price changed. Please refresh and try again.' }, 409);
+    }
+    body.amount = serverAmount;
+
     // Pay-in-Person is 100% free: no commission, no buyer fee.
     const isFreight = body.fulfillment_type === 'vendibook_freight';
     const { data: tx, error: txErr } = await supabase

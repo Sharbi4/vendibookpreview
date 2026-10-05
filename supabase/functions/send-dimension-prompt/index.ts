@@ -10,6 +10,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { unsubToken } from "../_shared/unsubscribeToken.ts";
+import { isAllowedTestRecipient } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -177,7 +178,7 @@ serve(async (req) => {
     const isTest = mode === "test";
     if (isTest) {
       const testEmail = String(body.testEmail ?? "").trim().toLowerCase();
-      if (!isValidEmail(testEmail)) return json({ error: "Valid testEmail required" }, 400);
+      if (!(await isAllowedTestRecipient(req, testEmail))) return json({ error: "Test emails can only go to your own admin inbox or a vendibook.com address." }, 403);
       const sample = queueAll[0];
       queue = [
         {
