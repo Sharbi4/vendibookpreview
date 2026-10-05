@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { ArrowRight, BadgeCheck, Loader2, ShieldCheck } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Loader2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { openPlaidLink } from "@/lib/plaidLink";
 import "./signup-phone.css";
@@ -21,6 +21,7 @@ export default function IdentityVerificationStep({ onDone, onSignOut }: { onDone
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const startedAutomatically = useRef(false);
 
   async function verify() {
     if (busy) return;
@@ -40,21 +41,20 @@ export default function IdentityVerificationStep({ onDone, onSignOut }: { onDone
     finally { setBusy(false); }
   }
 
+  useEffect(() => {
+    if (startedAutomatically.current) return;
+    startedAutomatically.current = true;
+    void verify();
+  }, []);
+
   return <main className="signup-phone-page">
     <section className="signup-phone-card" aria-labelledby="signup-id-title">
-      <a href="/" className="signup-phone-brand">VENDIBOOK</a>
-      <div className="signup-phone-icon"><BadgeCheck size={26} aria-hidden /></div>
-      <p className="signup-phone-eyebrow">Final step</p>
-      <h1 id="signup-id-title">Confirm it’s really you.</h1>
-      <p className="signup-phone-copy">Every Vendibook member verifies their identity with Plaid. It takes about two minutes, it’s free, and it keeps scammers out of your conversations.</p>
-      <p className="signup-phone-note">You’ll need a government-issued photo ID and your phone camera. Plaid securely confirms your identity — Vendibook never shows your ID to other members.</p>
+      <h1 id="signup-id-title">Opening secure verification…</h1>
+      {busy && <Loader2 className="animate-spin mx-auto mt-6" aria-label="Opening secure verification" />}
       {error && <p className="signup-phone-error" role="alert">{error}</p>}
       {notice && <p className="signup-phone-note" role="status">{notice}</p>}
-      <button type="button" className="signup-phone-primary" onClick={verify} disabled={busy}>
-        {busy ? <><Loader2 size={18} className="animate-spin" />Opening secure check…</> : <>Verify my identity<ArrowRight size={18} /></>}
-      </button>
-      <div className="signup-phone-trust"><ShieldCheck size={16} aria-hidden /><span>Free for every member. You’ll go right back to where you were when you’re done.</span></div>
-      <div className="signup-phone-links"><a href="/help">Need help?</a><button type="button" disabled={busy} onClick={onSignOut}>Sign out</button></div>
+      {!busy && (error || notice) && <button type="button" className="signup-phone-primary" onClick={verify}>Try again</button>}
+      {!busy && (error || notice) && <div className="signup-phone-links"><a href="/help">Need help?</a><button type="button" onClick={onSignOut}>Sign out</button></div>}
     </section>
   </main>;
 }
