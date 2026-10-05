@@ -11,6 +11,7 @@ import {
   MK, FONT, esc, mkButton, marketingShell,
   MARKETING_FROM, MARKETING_REPLY_TO, SITE_URL,
 } from "../_shared/marketing-templates/brand.ts";
+import { unsubToken } from "../_shared/unsubscribeToken.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -138,7 +139,7 @@ serve(async (req) => {
         JSON.stringify({
           campaignId: CAMPAIGN_ID,
           subject: campaign.subject,
-          html: buildHtml(campaign, `${supabaseUrl}/functions/v1/marketing-unsubscribe?e=preview%40vendibook.com`),
+          html: buildHtml(campaign, `${supabaseUrl}/functions/v1/marketing-unsubscribe?e=preview%40vendibook.com&t=${unsubToken("preview@vendibook.com")}`),
         }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
@@ -200,7 +201,7 @@ serve(async (req) => {
     let failCount = 0;
 
     for (const r of recipients) {
-      const unsubUrl = `${supabaseUrl}/functions/v1/marketing-unsubscribe?e=${encodeURIComponent(r.email)}`;
+      const unsubUrl = `${supabaseUrl}/functions/v1/marketing-unsubscribe?e=${encodeURIComponent(r.email)}&t=${unsubToken(r.email)}`;
       try {
         const { data, error } = await resend.emails.send({
           from: FROM,

@@ -6,6 +6,7 @@ import {
   FROM_EMAIL, FROM_NAME, REPLY_TO_EMAIL, LOGO_DARK_URL, LOGO_LIGHT_URL,
   MAILING_ADDRESS, VENDIBOOK_BASE_URL, FEEDBACK_REDIRECT_URL, UNSUBSCRIBE_URL_BASE,
 } from "../_shared/marketing-templates/constants.ts";
+import { unsubToken } from "../_shared/unsubscribeToken.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -53,7 +54,7 @@ serve(async (req) => {
       expandTools: !!payload.meta?.bothThin,
       recipientEmail: testEmail,
       sendId: send.id,
-      unsubscribeUrl: `${UNSUBSCRIBE_URL_BASE}?e=${encodeURIComponent(testEmail)}`,
+      unsubscribeUrl: `${UNSUBSCRIBE_URL_BASE}?e=${encodeURIComponent(testEmail)}&t=${unsubToken(testEmail)}`,
       feedbackBaseUrl: FEEDBACK_REDIRECT_URL,
       logoLightUrl: LOGO_LIGHT_URL,
       logoDarkUrl: LOGO_DARK_URL,

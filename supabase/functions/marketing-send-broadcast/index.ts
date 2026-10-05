@@ -9,6 +9,7 @@ import {
   MAILING_ADDRESS, VENDIBOOK_BASE_URL, FEEDBACK_REDIRECT_URL, UNSUBSCRIBE_URL_BASE,
 } from "../_shared/marketing-templates/constants.ts";
 import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
+import { unsubToken } from "../_shared/unsubscribeToken.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -33,7 +34,7 @@ async function sendOne(apiKey: string, to: string, subject: string, html: string
         html,
         reply_to: REPLY_TO_EMAIL,
         headers: {
-          "List-Unsubscribe": `<${UNSUBSCRIBE_URL_BASE}?e=${encodeURIComponent(to)}>`,
+          "List-Unsubscribe": `<${UNSUBSCRIBE_URL_BASE}?e=${encodeURIComponent(to)}&t=${unsubToken(to)}>`,
           "List-Unsubscribe-Post": "List-Unsubscribe=One-Click",
         },
         tags: [
@@ -109,7 +110,7 @@ serve(async (req) => {
         expandTools: !!payload.meta?.bothThin,
         recipientEmail: to,
         sendId: send.id,
-        unsubscribeUrl: `${UNSUBSCRIBE_URL_BASE}?e=${encodeURIComponent(to)}`,
+        unsubscribeUrl: `${UNSUBSCRIBE_URL_BASE}?e=${encodeURIComponent(to)}&t=${unsubToken(to)}`,
         feedbackBaseUrl: FEEDBACK_REDIRECT_URL,
         logoLightUrl: LOGO_LIGHT_URL,
         logoDarkUrl: LOGO_DARK_URL,

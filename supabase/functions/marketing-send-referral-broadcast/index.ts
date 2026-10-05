@@ -15,6 +15,7 @@ import {
 } from "../_shared/marketing-templates/constants.ts";
 import { MK, FONT, radius, SUPPORT_EMAIL, SUPPORT_HOURS } from "../_shared/marketing-templates/brand.ts";
 import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
+import { unsubToken } from "../_shared/unsubscribeToken.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -197,7 +198,7 @@ serve(async (req) => {
     const errors: Array<{ to: string; error: string }> = [];
 
     for (const to of recipients) {
-      const unsubscribeUrl = `${UNSUBSCRIBE_URL_BASE}?e=${encodeURIComponent(to)}`;
+      const unsubscribeUrl = `${UNSUBSCRIBE_URL_BASE}?e=${encodeURIComponent(to)}&t=${unsubToken(to)}`;
       const html = renderReferralEmail({ recipientEmail: to, dashboardUrl, termsUrl, unsubscribeUrl });
       const res = await sendOne(RESEND_API_KEY, to, subject, html, unsubscribeUrl);
       if (res.ok) sent++; else { failed++; errors.push({ to, error: res.error || "unknown" }); }

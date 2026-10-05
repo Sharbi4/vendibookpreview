@@ -9,6 +9,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { buildMarketingAudience } from "../_shared/marketingAudience.ts";
 import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
+import { unsubToken } from "../_shared/unsubscribeToken.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -86,7 +87,7 @@ Deno.serve(async (req) => {
     let sent = 0;
     let failed = 0;
     for (const r of queue) {
-      const unsubUrl = `${supabaseUrl}/functions/v1/marketing-unsubscribe?e=${encodeURIComponent(r.email)}`;
+      const unsubUrl = `${supabaseUrl}/functions/v1/marketing-unsubscribe?e=${encodeURIComponent(r.email)}&t=${unsubToken(r.email)}`;
       const personalized = html.includes("</body>")
         ? html.replace(
             "</body>",
