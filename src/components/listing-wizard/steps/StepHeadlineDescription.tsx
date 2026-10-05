@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { AIOptimizeButton } from '../AIOptimizeButton';
+import { ContactDetailsNotice } from '../ContactDetailsNotice';
 
 interface StepHeadlineDescriptionProps {
   title: string;
@@ -113,6 +114,7 @@ export const StepHeadlineDescription: React.FC<StepHeadlineDescriptionProps> = (
           rows={6}
           className="resize-none text-sm bg-background"
         />
+        <ContactDetailsNotice text={description} />
         
         <div className="flex items-center justify-between">
           <p className="text-xs text-muted-foreground">

@@ -553,7 +553,7 @@ export const SaleListingMobile = ({
           <AudioListingPlayer listingId={listing.id} />
           {listing.description && (
             <div className="text-sm leading-relaxed text-foreground/90">
-              <CollapsibleDescription description={listing.description} />
+              <CollapsibleDescription description={listing.description} maskContacts={!isOwner} />
             </div>
           )}
         </SaleCard>

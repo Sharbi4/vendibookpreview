@@ -254,7 +254,7 @@ export const RentalListingLayout = ({
                 {isOwner && <PromoVideoPlayer listingId={listing.id} />}
               </div>
               <AudioListingPlayer listingId={listing.id} />
-              <CollapsibleDescription description={listing.description} />
+              <CollapsibleDescription description={listing.description} maskContacts={!isOwner} />
             </SaleCard>
 
             <SaleFeaturesGrid

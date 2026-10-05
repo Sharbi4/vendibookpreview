@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
 import { cn } from '@/lib/utils';
 import { AIOptimizeButton } from './AIOptimizeButton';
+import { ContactDetailsNotice } from './ContactDetailsNotice';
 
 interface StepDetailsProps {
   formData: ListingFormData;
@@ -169,6 +170,7 @@ export const StepDetails: React.FC<StepDetailsProps> = ({
           rows={6}
           className="resize-none"
         />
+        <ContactDetailsNotice text={formData.description} />
         
         <div className="flex items-start justify-between gap-4">
           <p className="text-sm text-muted-foreground">

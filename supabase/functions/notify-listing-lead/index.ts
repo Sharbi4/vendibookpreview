@@ -22,6 +22,7 @@ import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 import { notifyUser } from '../_shared/notify.ts'
+import { hasContactDetails, maskContactDetails } from '../_shared/contactPatterns.ts'
 
 const SUPPORT_INBOX = 'support@vendibook.com'
 const SITE_URL = 'https://vendibook.com'
@@ -34,25 +35,6 @@ const HOUR_MS = 60 * 60 * 1000
 const MAX_PER_EMAIL_PER_DAY = 3
 const MAX_PER_EMAIL_LISTING_PER_DAY = 1
 const MAX_PER_SELLER_PER_HOUR = 5
-
-// Contact details, links and off-platform payment/chat handles. Matches are
-// held for the concierge and masked in anything a seller sees.
-const CONTACT_PATTERNS: RegExp[] = [
-  /[a-z0-9._%+-]+\s*@\s*[a-z0-9-]+(?:\s*\.\s*[a-z0-9-]+)+/gi,
-  /[a-z0-9._%+-]+\s*(?:\(at\)|\[at\]|\sat\s)\s*[a-z0-9-]+\s*(?:\(dot\)|\[dot\]|\sdot\s)\s*[a-z]{2,}/gi,
-  /(?:https?:\/\/|www\.)\S+/gi,
-  /\b[a-z0-9-]+\.(?:com|net|org|io|co|me|ly|link|xyz|info|biz|app|site|online|shop)\b\S*/gi,
-  /(?:\+?\d[\s().-]*){10,}/g,
-  /\b(?:whats\s?app|telegram|signal|wechat|cash\s?app|zelle|venmo|western\s?union|money\s?gram|gift\s?cards?)\b/gi,
-]
-
-function hasContactDetails(text: string): boolean {
-  return CONTACT_PATTERNS.some((re) => { re.lastIndex = 0; return re.test(text) })
-}
-
-function maskContactDetails(text: string): string {
-  return CONTACT_PATTERNS.reduce((t, re) => t.replace(re, '[contact removed]'), text)
-}
 
 function json(data: Record<string, unknown>, status = 200): Response {
   return new Response(JSON.stringify(data), {
