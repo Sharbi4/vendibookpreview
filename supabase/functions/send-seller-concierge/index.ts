@@ -10,6 +10,9 @@
 //   featured — a listing on a complimentary feature (featured_source='comp')
 //   optimize — the listing with the most fixes from pickListingFixes
 //   share    — no fixes left on any listing
+//   welcome  — listing published in the last WELCOME_DAYS days: welcome plus
+//              up to 3 asks (8+ photos, build year, what's included, …)
+// body.onlyUserIds restricts the run to those hosts (e.g. one new seller).
 // Order: integrity fixes → verified missed offers → featured → other coaching.
 // Integrity routing (never coach or promote a listing that fails checks):
 //   placeholder/broken title      → fix_title (only that ask)
@@ -27,7 +30,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { isMailableAddress } from "../_shared/marketingAudience.ts";
 import { isInternalCaller } from "../_shared/internalAuth.ts";
-import { pickListingFixes, type FixableListing } from "../_shared/listingFixes.ts";
+import { pickListingFixes, type FixableListing, type ListingFix } from "../_shared/listingFixes.ts";
 import { hasContactDetails } from "../_shared/contactPatterns.ts";
 import { MARKETING_FROM, MARKETING_REPLY_TO } from "../_shared/marketing-templates/brand.ts";
 import { LISTING_FIX_CAMPAIGN_ID } from "../_shared/marketing-templates/listing-fix-nudge.ts";
@@ -64,7 +67,7 @@ const RESCUE_LISTINGS: Record<string, string> = {
 const TEST_TITLE_PREFIXES = ["Demo%", "QA %", "QA_%", "QA-%", "Test %", "E2E %", "Smoke %", "Sandbox %"];
 const INTERNAL_EMAIL = /@(example\.com|vendibook\.com)$/i;
 const LISTING_COLUMNS =
-  "id, host_id, title, mode, category, description, image_urls, condition, title_status, operational_status, year_built, make, mileage, accepts_offers, price_monthly, price_sale, featured_enabled, featured_source, featured_expires_at";
+  "id, host_id, title, mode, category, description, image_urls, condition, title_status, operational_status, year_built, make, mileage, accepts_offers, price_monthly, price_sale, featured_enabled, featured_source, featured_expires_at, published_at, included_items";
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -79,6 +82,8 @@ type ListingRow = FixableListing & {
   host_id: string | null;
   title: string | null;
   description: string | null;
+  published_at: string | null;
+  included_items: string | null;
   price_sale: number | null;
   featured_enabled: boolean | null;
   featured_source: string | null;
@@ -87,8 +92,22 @@ type ListingRow = FixableListing & {
 type PageResult<T> = PromiseLike<{ data: T[] | null; error: { message: string } | null }>;
 
 const VARIANT_RANK: Record<ConciergeVariant, number> = {
-  remove_contact: 0, fix_title: 1, rescue: 2, featured: 3, optimize: 4, share: 5,
+  remove_contact: 0, fix_title: 1, rescue: 2, welcome: 3, featured: 4, optimize: 5, share: 6,
 };
+const WELCOME_DAYS = 7;
+
+/** Welcome asks: the shared fixes plus year and inclusions, photos first. */
+function welcomeFixes(l: ListingRow): ListingFix[] {
+  const out = pickListingFixes(l);
+  if (!l.year_built && !out.some((f) => f.key === "truck_basics")) {
+    out.push({ key: "year", text: "Add the build year. Buyers compare and filter on it." } as ListingFix);
+  }
+  if (!String(l.included_items ?? "").trim()) {
+    out.push({ key: "included", text: "List what's included in the price (equipment, generator, permits, wraps)." } as ListingFix);
+  }
+  const order = ["photos", "year", "truck_basics", "included", "trust_fields", "description", "offers"];
+  return out.sort((a, b) => (order.indexOf(a.key) + 99) % 99 - (order.indexOf(b.key) + 99) % 99).slice(0, MAX_FIXES);
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -121,6 +140,8 @@ serve(async (req) => {
     const mode: "preview_count" | "preview_html" | "test" | "broadcast" = body.mode ?? "preview_count";
     const limit = Math.max(1, Math.min(Number(body.limit) || DEFAULT_LIMIT, 100));
     const excludeUserIds = new Set<string>(Array.isArray(body.excludeUserIds) ? body.excludeUserIds.map(String) : []);
+    const onlyUserIds = Array.isArray(body.onlyUserIds) && body.onlyUserIds.length
+      ? new Set<string>(body.onlyUserIds.map(String)) : null;
     const unsubFor = (email: string) =>
       `${supabaseUrl}/functions/v1/marketing-unsubscribe?e=${encodeURIComponent(email)}&t=${unsubToken(email)}`;
     const now = Date.now();
@@ -172,14 +193,17 @@ serve(async (req) => {
       !!l.featured_expires_at && new Date(l.featured_expires_at).getTime() > now;
     for (const l of listings) {
       if (!l.host_id) continue;
+      if (onlyUserIds && !onlyUserIds.has(l.host_id)) continue;
       if (l.mode === "sale" && Number(l.price_sale ?? 0) < MIN_SALE_PRICE) continue; // price/category under review
       const brokenTitle = BROKEN_TITLE.test(String(l.title ?? "")) || String(l.title ?? "").trim().length < 8;
       const contact = hasContactDetails(`${l.title ?? ""}\n${l.description ?? ""}`);
-      const fixes = pickListingFixes(l).slice(0, MAX_FIXES);
+      const isNew = !!l.published_at && now - Date.parse(l.published_at) <= WELCOME_DAYS * 24 * 60 * 60 * 1000;
+      const fixes = isNew ? welcomeFixes(l) : pickListingFixes(l).slice(0, MAX_FIXES);
       const variant: ConciergeVariant =
         contact ? "remove_contact"
         : brokenTitle ? "fix_title"
         : rescues.has(l.id) ? "rescue"
+        : isNew ? "welcome"
         : isCompFeatured(l) ? "featured"
         : fixes.length ? "optimize" : "share";
       const onlyAsk = variant === "rescue" || variant === "remove_contact" || variant === "fix_title";

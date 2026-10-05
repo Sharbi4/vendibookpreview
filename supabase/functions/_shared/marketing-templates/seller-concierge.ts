@@ -6,7 +6,7 @@ import type { ListingFix } from "../listingFixes.ts";
 
 export const SELLER_CONCIERGE_CAMPAIGN_ID = "2026-10-seller-concierge";
 
-export type ConciergeVariant = "featured" | "optimize" | "share" | "fix_title" | "remove_contact" | "rescue";
+export type ConciergeVariant = "welcome" | "featured" | "optimize" | "share" | "fix_title" | "remove_contact" | "rescue";
 
 /** Missed-offer rescue: an offer expired before the seller responded. */
 export interface RescueDetails {
@@ -54,6 +54,7 @@ export function sellerConciergeSubject(d: Pick<SellerConciergeData, "variant" | 
   if (d.variant === "rescue" && d.rescue) {
     return d.rescue.stale ? "Is your food trailer still for sale?" : `A buyer offered ${money(d.rescue.offerAmount)} for your listing`;
   }
+  if (d.variant === "welcome") return `Welcome to Vendibook. Your ${d.listingTitle} is live`;
   if (d.variant === "fix_title") return "One quick fix so buyers can find your listing";
   if (d.variant === "remove_contact") return "A quick change to keep your listing live and safe";
   if (d.variant === "featured") return `Your ${d.listingTitle} is featured free for 14 days`;
@@ -67,6 +68,9 @@ function intro(d: SellerConciergeData): string {
     return r.stale
       ? `Back in ${esc(r.offerDateLabel)} a buyer offered <strong>${money(r.offerAmount)}</strong> for your listing, which is priced at ${money(r.askingPrice)}. The offer expired with no response recorded. Is it still for sale? Reply "yes" and I'll help you update the listing, or reply "sold" and I'll take it down.`
       : `On ${esc(r.offerDateLabel)} a buyer offered <strong>${money(r.offerAmount)}</strong> for your listing, which is priced at ${money(r.askingPrice)}. The offer expired with no response recorded. If you're still selling, reply to this email and I'll let the buyer know you're open to talking. If it's sold, reply "sold" and I'll take it down.`;
+  }
+  if (d.variant === "welcome") {
+    return `Welcome to Vendibook, and thanks for listing your <strong>${esc(d.listingTitle)}</strong>. It's live, and buyers can find it now. A few quick additions will help it stand out:`;
   }
   if (d.variant === "fix_title") {
     return `Your listing's title currently reads <strong>"${esc(d.listingTitle)}"</strong>. Buyers search by title, so a clear one like "2021 16ft Concession Trailer, Fully Equipped" helps the right people find it. It takes a minute to change.`;
@@ -125,6 +129,8 @@ export function buildSellerConciergeHtml(d: SellerConciergeData): string {
       ? "A buyer made an offer on your listing."
       : d.variant === "fix_title" || d.variant === "remove_contact"
       ? "One quick change to your listing."
+      : d.variant === "welcome"
+      ? "Your listing is live. Here's how to make it stand out."
       : d.variant === "featured"
       ? "Your listing is featured free for 14 days."
       : d.variant === "share" ? "Tag @vendibook and we'll reshare it." : "Small changes that get buyers to reach out.",
