@@ -81,7 +81,9 @@ export default function SellerPayPalConnect({
         throw new Error(parsed.message);
       }
       await loadConnection();
-      if (data?.status_source === 'webhook') {
+      if (data?.status_unavailable) {
+        setFlowMessage({ tone: 'info', text: data.message || 'PayPal hasn’t shared your status yet. Check again later.' });
+      } else if (data?.status_source === 'webhook') {
         setFlowMessage({
           tone: 'success',
           text: 'PayPal confirmed your connection. Your account is recorded and ready to receive payments.',
