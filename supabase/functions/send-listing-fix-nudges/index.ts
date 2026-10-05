@@ -8,8 +8,11 @@
 // Audience (computed live, never hardcoded): publicly live listings with
 // MIN_REAL_VIEWS+ real buyer view sessions in the last 30 days (bots, known
 // scrapers and the seller's own views excluded via realListingViews), zero
-// buyer contacts in the same window (conversations, offers, booking requests,
-// listing leads), and at least one concrete fix from pickListingFixes. One
+// buyer contacts in the same window from a real buyer (conversations, offers,
+// booking requests, listing leads; contacts from suspended accounts or
+// accounts on a message sending hold don't count, so a scam account's burst
+// can't silence a seller's nudge), and at least one fix from
+// pickListingFixes. One
 // email per seller (their most-viewed qualifying listing), skipping
 // unsubscribed/suppressed addresses and anyone already sent this campaign.
 
@@ -130,12 +133,35 @@ serve(async (req) => {
       sessions.set(v.listing_id, set);
     }
 
-    // ---- buyer contacts (30d) ----
+    // ---- buyer contacts (30d), real buyers only ----
+    type ContactRow = { listing_id: string | null; actor: string | null };
+    const contactRows: ContactRow[] = [];
+    for (const [table, actorCol] of [
+      ["conversations", "shopper_id"], ["offers", "buyer_id"],
+      ["booking_requests", "shopper_id"], ["listing_leads", null],
+    ] as const) {
+      const rows = await pageAll<Record<string, string | null>>((from, to) =>
+        admin.from(table).select(actorCol ? `listing_id, ${actorCol}` : "listing_id")
+          .gte("created_at", since).range(from, to) as unknown as PageResult<Record<string, string | null>>);
+      for (const r of rows) contactRows.push({ listing_id: r.listing_id, actor: actorCol ? r[actorCol] : null });
+    }
+    // Suspended accounts and accounts on a sending hold aren't real buyers.
+    const actorIds = [...new Set(contactRows.map((r) => r.actor).filter(Boolean) as string[])];
+    const notRealBuyer = new Set<string>();
+    for (let i = 0; i < actorIds.length; i += 200) {
+      const slice = actorIds.slice(i, i + 200);
+      const [{ data: susp }, { data: held }] = await Promise.all([
+        admin.from("profiles").select("id").eq("account_suspended", true).in("id", slice),
+        admin.from("message_sending_holds").select("user_id").in("user_id", slice),
+      ]);
+      for (const r of (susp ?? []) as { id: string }[]) notRealBuyer.add(r.id);
+      for (const r of (held ?? []) as { user_id: string }[]) notRealBuyer.add(r.user_id);
+    }
     const contacted = new Set<string>();
-    for (const table of ["conversations", "offers", "booking_requests", "listing_leads"]) {
-      const rows = await pageAll<{ listing_id: string | null }>((from, to) =>
-        admin.from(table).select("listing_id").gte("created_at", since).range(from, to) as unknown as PageResult<{ listing_id: string | null }>);
-      for (const r of rows) if (r.listing_id) contacted.add(r.listing_id);
+    for (const r of contactRows) {
+      if (!r.listing_id) continue;
+      if (r.actor && notRealBuyer.has(r.actor)) continue;
+      contacted.add(r.listing_id);
     }
 
     // ---- candidates: one per seller, most-viewed qualifying listing ----
