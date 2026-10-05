@@ -41,6 +41,7 @@ import {
   type SellerConciergeData,
 } from "../_shared/marketing-templates/seller-concierge.ts";
 import { unsubToken } from "../_shared/unsubscribeToken.ts";
+import { isAllowedTestRecipient } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -319,7 +320,7 @@ serve(async (req) => {
     let queue: Recipient[] = recipients.slice(0, limit);
     if (isTest) {
       const testEmail = String(body.testEmail ?? "").trim().toLowerCase();
-      if (!isMailableAddress(testEmail)) return json({ error: "Valid testEmail required" }, 400);
+      if (!(await isAllowedTestRecipient(req, testEmail))) return json({ error: "Test emails can only go to your own admin inbox or a vendibook.com address." }, 403);
       const want = body.variant as ConciergeVariant | undefined;
       const sample = want ? recipients.find((r) => r.data.variant === want) : recipients[0];
       if (!sample) return json({ error: "No eligible recipients to sample" }, 404);

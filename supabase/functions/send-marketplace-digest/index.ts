@@ -9,6 +9,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { MK, FONT, esc, mkButton, marketingShell } from "../_shared/marketing-templates/brand.ts";
 import { unsubToken } from "../_shared/unsubscribeToken.ts";
+import { isAllowedTestRecipient } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -268,6 +269,7 @@ Deno.serve(async (req) => {
       // -- test send: single recipient, never marks the digest as sent ------
       const testEmail = String(body?.email || "").trim().toLowerCase();
       if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(testEmail)) return json({ success: false, error: "Enter a valid test email address." }, 400);
+      if (!(await isAllowedTestRecipient(req, testEmail))) return json({ success: false, error: "Test emails can only go to your own admin inbox or a vendibook.com address." }, 403);
       const RESEND_KEY = Deno.env.get("RESEND_API_KEY");
       if (!RESEND_KEY) throw new Error("RESEND_API_KEY not configured");
 

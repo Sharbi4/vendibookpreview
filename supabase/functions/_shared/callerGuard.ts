@@ -135,3 +135,15 @@ export async function requireAdminOrBackend(
 ): Promise<Response | null> {
   return (await isAdminOrBackendCaller(req)) ? null : forbiddenResponse(headers);
 }
+
+/**
+ * Admin test sends may only go to the signed-in admin's own inbox or a
+ * vendibook.com address — never an arbitrary outside recipient.
+ */
+export async function isAllowedTestRecipient(req: Request, email: string): Promise<boolean> {
+  const target = String(email ?? "").trim().toLowerCase();
+  if (!target) return false;
+  if (/^[^\s@]+@vendibook\.com$/.test(target)) return true;
+  const caller = await getCaller(req);
+  return !!caller?.email && caller.email.toLowerCase() === target;
+}
