@@ -113,7 +113,7 @@ export const SalePurchaseCard = ({
   const [showDeliveryResult, setShowDeliveryResult] = useState(false);
 
   const priceSale: number | null = listing?.price_sale ?? null;
-  const priceCheck = useCategoryPriceCheck(listing?.id, listing?.category, priceSale ? Number(priceSale) : null);
+  const priceCheck = useCategoryPriceCheck(listing?.id, listing?.category, priceSale ? Number(priceSale) : null, { title_status: listing?.title_status, condition: listing?.condition });
   const categoryPlural = String(listing?.category ?? '').replace(/_/g, ' ').replace(/^(.*)$/, '$1s');
   const fulfillmentType: string = listing?.fulfillment_type || 'pickup';
   const sellerDelivers = fulfillmentType === 'delivery' || fulfillmentType === 'both';

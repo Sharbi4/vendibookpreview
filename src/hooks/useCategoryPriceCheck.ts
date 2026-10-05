@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
-import { priceCheck, type PriceCheck } from '@/lib/listings/priceCheck';
+import { priceCheck, type PriceCheck, type PriceCheckTrust } from '@/lib/listings/priceCheck';
 
 /** Live asking prices for a category's sale listings, cached for an hour. */
-export function useCategoryPriceCheck(listingId: string | undefined, category: string | undefined, price: number | null | undefined): PriceCheck | null {
+export function useCategoryPriceCheck(listingId: string | undefined, category: string | undefined, price: number | null | undefined, trust: PriceCheckTrust): PriceCheck | null {
   const { data } = useQuery({
     queryKey: ['category-sale-prices', category],
     enabled: !!category && !!price,
@@ -24,5 +24,5 @@ export function useCategoryPriceCheck(listingId: string | undefined, category: s
   });
   if (!data) return null;
   const comps = data.filter((r) => r.id !== listingId).map((r) => Number(r.price_sale));
-  return priceCheck(price, comps);
+  return priceCheck(price, comps, trust);
 }
