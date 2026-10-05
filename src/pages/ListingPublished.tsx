@@ -44,7 +44,10 @@ const ListingPublished: React.FC = () => {
   const [featuredSyncing, setFeaturedSyncing] = useState(featuredPaid);
   const [featuredActive, setFeaturedActive] = useState(false);
   const [isPublished, setIsPublished] = useState(false);
-  const [showShare, setShowShare] = useState(false);
+  // Open by default: right after publishing is when sellers are most likely to post
+  // their listing where they already sell (Facebook Marketplace, groups), and the
+  // listing-live email's "Share your listing" link lands here.
+  const [showShare, setShowShare] = useState(true);
 
   useEffect(() => {
     if (notaryPaid) {
