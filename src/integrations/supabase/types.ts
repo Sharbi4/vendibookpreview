@@ -3865,6 +3865,33 @@ export type Database = {
           },
         ]
       }
+      listing_contact_redactions: {
+        Row: {
+          created_at: string
+          field: string
+          host_id: string | null
+          id: string
+          kinds: string[]
+          listing_id: string
+        }
+        Insert: {
+          created_at?: string
+          field: string
+          host_id?: string | null
+          id?: string
+          kinds: string[]
+          listing_id: string
+        }
+        Update: {
+          created_at?: string
+          field?: string
+          host_id?: string | null
+          id?: string
+          kinds?: string[]
+          listing_id?: string
+        }
+        Relationships: []
+      }
       listing_events: {
         Row: {
           created_at: string
@@ -13243,6 +13270,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      strip_contact_details: {
+        Args: { t: string }
+        Returns: Record<string, unknown>
       }
       submit_feedback_by_token: {
         Args: {
