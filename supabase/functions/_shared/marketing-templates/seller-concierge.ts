@@ -1,0 +1,131 @@
+// Seller concierge email from Brad (Customer Success). Sent through Resend by
+// send-seller-concierge. Same marketing shell, fixes and safety note as the
+// listing-fix nudge so sellers see one consistent Vendibook voice.
+import { MK, FONT, esc, mkButton, marketingShell, SITE_URL } from "./brand.ts";
+import type { ListingFix } from "../listingFixes.ts";
+
+export const SELLER_CONCIERGE_CAMPAIGN_ID = "2026-10-seller-concierge";
+
+export type ConciergeVariant = "featured" | "optimize" | "share";
+
+export interface SellerConciergeData {
+  firstName: string | null;
+  listingId: string;
+  listingTitle: string;
+  variant: ConciergeVariant;
+  fixes: ListingFix[];
+  /** Formatted end date of a complimentary feature, e.g. "October 19". */
+  featuredUntil?: string | null;
+  needsProfilePhoto: boolean;
+  unsubscribeUrl: string;
+}
+
+const SIGN_OFF = ["Brad", "Customer Success, Vendibook"];
+
+const SAFETY_NOTE =
+  "Stay safe: take payment only through Vendibook checkout (Square or PayPal). Never accept wire transfers, gift cards or 'shipper' payments, and never share verification codes.";
+
+const REFERRAL_NOTE =
+  "Know another owner who's selling a truck, trailer or kitchen? Refer them to Vendibook. You may earn $150 once they complete their first transaction within 90 days, after our team reviews it.";
+
+const utm = (content: string, variant: ConciergeVariant) =>
+  `utm_source=email&utm_medium=campaign&utm_campaign=${SELLER_CONCIERGE_CAMPAIGN_ID}&utm_content=${variant}_${content}`;
+
+export const conciergeEditUrl = (d: Pick<SellerConciergeData, "listingId" | "variant">) =>
+  `${SITE_URL}/edit-listing/${encodeURIComponent(d.listingId)}?${utm("edit_cta", d.variant)}`;
+export const conciergeListingUrl = (d: Pick<SellerConciergeData, "listingId" | "variant">) =>
+  `${SITE_URL}/listing/${encodeURIComponent(d.listingId)}?${utm("listing", d.variant)}`;
+const referralUrl = (variant: ConciergeVariant) => `${SITE_URL}/referral?${utm("referral", variant)}`;
+const accountUrl = (variant: ConciergeVariant) => `${SITE_URL}/account?${utm("profile", variant)}`;
+
+export function sellerConciergeSubject(d: Pick<SellerConciergeData, "variant" | "listingTitle">): string {
+  if (d.variant === "featured") return `Your ${d.listingTitle} is featured free for 14 days`;
+  if (d.variant === "share") return `Your ${d.listingTitle} looks great. Want us to share it?`;
+  return `A few changes to get more buyers messaging about your ${d.listingTitle}`;
+}
+
+function intro(d: SellerConciergeData): string {
+  if (d.variant === "featured") {
+    return `Good news: buyers are already looking at your <strong>${esc(d.listingTitle)}</strong>, so we've featured it on Vendibook for free for 14 days${d.featuredUntil ? `, through ${esc(d.featuredUntil)}` : ""}. Featured listings show at the top of the homepage and search.`;
+  }
+  if (d.variant === "share") {
+    return `Thanks for putting the work in. Your <strong>${esc(d.listingTitle)}</strong> is one of the strongest listings on Vendibook.`;
+  }
+  return `I went through your listing <strong>${esc(d.listingTitle)}</strong>. A few changes usually turn visits into buyer messages:`;
+}
+
+function introText(d: SellerConciergeData): string {
+  return intro(d).replace(/<\/?strong>/g, "").replace(/&#39;/g, "'").replace(/&amp;/g, "&").replace(/&quot;/g, '"');
+}
+
+export function buildSellerConciergeHtml(d: SellerConciergeData): string {
+  const p = `font-family:${FONT};font-size:15px;line-height:1.6;color:${MK.text};margin:0 0 14px;`;
+  const small = `font-family:${FONT};font-size:13px;line-height:1.6;color:${MK.textMuted};margin:0 0 8px;`;
+  const hi = d.firstName ? `Hi ${esc(d.firstName)},` : "Hi there,";
+  const items = d.fixes.map((f) => `<li style="margin:0 0 8px;">${esc(f.text)}</li>`).join("");
+  const fixesBlock = d.fixes.length
+    ? `${d.variant === "featured" ? `<p style="${p}">These changes will turn that extra attention into messages:</p>` : ""}<ul style="${p}padding-left:20px;">${items}</ul>`
+    : "";
+  const shareBlock = d.variant === "share"
+    ? `<p style="${p}">If you post it on Instagram or Facebook, tag <strong>@vendibook</strong> and we'll reshare it. Adding your listing link to your bio helps buyers find it too.</p>`
+    : "";
+  const profileBlock = d.needsProfilePhoto
+    ? `<p style="${p}">Also add a photo and a short bio to <a href="${esc(accountUrl(d.variant))}" style="color:${MK.text};">your profile</a>. Buyers check who they're dealing with before they message.</p>`
+    : `<p style="${p}">Also add a short bio to <a href="${esc(accountUrl(d.variant))}" style="color:${MK.text};">your profile</a>. Buyers like to know who they're buying from.</p>`;
+  const cta = d.variant === "share"
+    ? mkButton("View my listing", conciergeListingUrl(d))
+    : mkButton("Update my listing", conciergeEditUrl(d));
+  const bodyRows = `
+<tr><td style="padding:16px 28px 8px;">
+  <p style="${p}">${hi}</p>
+  <p style="${p}">${intro(d)}</p>
+  ${fixesBlock}
+  ${shareBlock}
+  ${profileBlock}
+  <p style="margin:20px 0 24px;">${cta}</p>
+  <p style="${p}">Reply to this email if you have any questions. A real person reads every reply.</p>
+  <p style="${small}">${esc(REFERRAL_NOTE)} <a href="${esc(referralUrl(d.variant))}" style="color:${MK.textMuted};">See the referral terms</a>.</p>
+  <p style="${small}">${esc(SAFETY_NOTE)}</p>
+  <p style="${p}">${SIGN_OFF.map(esc).join("<br/>")}</p>
+</td></tr>`;
+  return marketingShell({
+    title: sellerConciergeSubject(d),
+    preheader: d.variant === "featured"
+      ? "Your listing is featured free for 14 days."
+      : d.variant === "share" ? "Tag @vendibook and we'll reshare it." : "Small changes that get buyers to reach out.",
+    bodyRows,
+    unsubscribeUrl: d.unsubscribeUrl,
+  });
+}
+
+export function buildSellerConciergeText(d: SellerConciergeData): string {
+  return [
+    d.firstName ? `Hi ${d.firstName},` : "Hi there,",
+    "",
+    introText(d),
+    ...(d.fixes.length
+      ? ["", ...(d.variant === "featured" ? ["These changes will turn that extra attention into messages:"] : []), ...d.fixes.map((f) => `- ${f.text}`)]
+      : []),
+    ...(d.variant === "share"
+      ? ["", "If you post it on Instagram or Facebook, tag @vendibook and we'll reshare it."]
+      : []),
+    "",
+    d.needsProfilePhoto
+      ? `Also add a photo and a short bio to your profile: ${accountUrl(d.variant)}`
+      : `Also add a short bio to your profile: ${accountUrl(d.variant)}`,
+    "",
+    d.variant === "share"
+      ? `View your listing: ${conciergeListingUrl(d)}`
+      : `Update your listing: ${conciergeEditUrl(d)}`,
+    "",
+    "Reply to this email if you have any questions. A real person reads every reply.",
+    "",
+    `${REFERRAL_NOTE} ${referralUrl(d.variant)}`,
+    "",
+    SAFETY_NOTE,
+    "",
+    ...SIGN_OFF,
+    "",
+    `Unsubscribe: ${d.unsubscribeUrl}`,
+  ].join("\n");
+}

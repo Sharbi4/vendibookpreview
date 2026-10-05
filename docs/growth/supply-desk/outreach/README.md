@@ -1,12 +1,16 @@
 # Outreach — how to send
 
-**Owner rule (2026-10-05): every outbound email goes through Resend** (the transactional email system, `invokeTransactionalEmail` / `send-transactional-email`) **using the established master-design templates** (`VendibookEmailLayout`, with the new logo). No Gmail, no plain text.
+**Owner rule (2026-10-05):** every email goes through **Resend**, using the established templates with the current logo, and stays consistent with the emails we've already sent. Outreach and coaching use the **marketing** templates (`_shared/marketing-templates/`, `marketingShell`). Account and transaction events use the **transactional** templates (`_shared/transactional-email-templates/`). No Gmail, and no plain-text one-offs.
 
-| File | Template | Data |
-|---|---|---|
-| `seller-concierge-2026-10-05.csv` | `generic-notice` | `template_data` column (JSON). Replace `{first_name}` at send time from `profiles` |
-| `offer-rescue-2026-10-05.md` | `generic-notice` | JSON blocks at the bottom |
+## Seller concierge (Brad) — `send-seller-concierge`
 
-From `hello@updates.vendibook.com`, Reply-To `support@vendibook.com`, signed "Brad · Customer Success". The subject comes from `template_data.subject`.
+- Template: `_shared/marketing-templates/seller-concierge.ts`. Same shell, fix list (`listingFixes.ts`), safety note and unsubscribe as the Growth lead's `listing-fix-nudge`. Preview: `seller-concierge-preview.png` (the logo loads in real inboxes).
+- Variants: **featured** (complimentary feature active), **optimize** (fixes from `pickListingFixes`), **share** (nothing left to fix).
+- Order: featured, then offers-off, then the rest. Sends at most `limit` per call (default 20), so run it hourly.
+- Skips: unsubscribed, suppressed and unmailable addresses, internal accounts, admins, `excludeUserIds`, anyone already sent this campaign, and anyone who got the listing-fix nudge in the last 14 days.
+- Run order: `{"mode":"preview_count"}` → `{"mode":"test","testEmail":"<owner>","variant":"featured"}` → `{"mode":"broadcast","confirm":"2026-10-seller-concierge","limit":20,"excludeUserIds":["77f157af-d5d8-4be4-95d8-a1b755c6c6a1"]}` hourly until `remaining` is 0.
+- `seller-concierge-2026-10-05.csv` is the earlier hand-written copy, kept for reference. The function computes the live audience and fixes itself.
 
-Recipient emails are joined from `profiles.email` at send time and never stored in the repo. Before sending, exclude `email_unsubscribes` and `suppressed_emails`.
+## Offer rescues
+
+`offer-rescue-2026-10-05.md`: 2 one-off seller emails. Send them through the same marketing shell, signed Brad. The JSON blocks hold the copy.

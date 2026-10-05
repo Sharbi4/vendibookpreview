@@ -376,3 +376,6 @@ verify_jwt = false
 
 [functions.notify-listing-lead]
 verify_jwt = false
+
+[functions.send-seller-concierge]
+verify_jwt = false
