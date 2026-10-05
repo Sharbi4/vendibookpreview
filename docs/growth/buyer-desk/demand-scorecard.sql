@@ -3,6 +3,10 @@
 -- (bot agents, auto-detected scrapers, sellers viewing their own listings), plus:
 --   * verified contacts (conversations, offers, booking requests) are split from
 --     unverified guest inquiries (listing_leads source='guest_inquiry');
+--   * contacts from suspended accounts or accounts on a message sending hold
+--     are excluded. On 2026-10-05 one scam account produced 4 of the 6
+--     "contacts" in 30d (all 4 in the last 7d), which made the 7d contact
+--     rate read 1.30% when the real rate was 0%;
 --   * zero-result searches are counted once per session+search and ignore
 --     half-typed locations (under 3 characters, or no letters/digits beyond
 --     "new"/"new o" style fragments), so the rate reflects real dead ends;
@@ -35,10 +39,22 @@ human_views as (
     and not exists (select 1 from scraper_uas s where s.user_agent = v.user_agent)
     and v.viewer_id is distinct from l.host_id
 ),
+not_real_buyers as (
+  select id as user_id from profiles where account_suspended
+  union select user_id from message_sending_holds
+),
 verified_contacts as (
-  select listing_id, created_at, 'conversation' as kind from conversations
-  union all select listing_id, created_at, 'offer' from offers
-  union all select listing_id, created_at, 'booking_request' from booking_requests
+  select listing_id, created_at, 'conversation' as kind from conversations c
+    where shopper_id not in (select user_id from not_real_buyers)
+  union all select listing_id, created_at, 'offer' from offers o
+    where buyer_id not in (select user_id from not_real_buyers)
+  union all select listing_id, created_at, 'booking_request' from booking_requests b
+    where shopper_id not in (select user_id from not_real_buyers)
+),
+blocked_contacts as (
+  select created_at from conversations where shopper_id in (select user_id from not_real_buyers)
+  union all select created_at from offers where buyer_id in (select user_id from not_real_buyers)
+  union all select created_at from booking_requests where shopper_id in (select user_id from not_real_buyers)
 ),
 zero_results as (
   select distinct on (coalesce(session_id, id::text), lower(coalesce(metadata->>'locationText', '')), metadata->>'category', metadata->>'mode', metadata->>'query')
@@ -69,6 +85,7 @@ select
   (select count(distinct session_id) from human_views where viewed_at >= w.since and channel = 'internal') as sessions_internal,
   -- Contacts
   (select count(*) from verified_contacts where created_at >= w.since) as verified_contacts,
+  (select count(*) from blocked_contacts where created_at >= w.since) as contacts_from_blocked_accounts,
   (select count(*) from listing_leads where created_at >= w.since and source = 'guest_inquiry') as guest_inquiries,
   (select count(*) from listing_leads where created_at >= w.since and coalesce(source, '') <> 'guest_inquiry') as other_listing_leads,
   round(100.0 * (select count(*) from verified_contacts where created_at >= w.since)

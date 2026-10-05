@@ -2,6 +2,8 @@
 
 Query: [`demand-scorecard.sql`](demand-scorecard.sql) (read-only; same view exclusions as `../liquidity-scorecard.sql`). Re-run daily; append a row below.
 
+> **Correction (2026-10-05, after the scam account was suspended).** The first version of this page counted every contact. One scam account (`6f524614…`, now suspended, on a sending hold) made **4 of the 6 contacts in 30 days, and all 4 of the last 7 days'**. Excluding suspended accounts and accounts on a sending hold: **7d = 0 real contacts (0.00%), 30d = 2 (0.26%)**. The numbers below are corrected; the earlier "1.30% over 7d, close to target" was entirely that one account.
+
 | Metric | 7d | 30d | Read |
 |---|---:|---:|---|
 | Real view sessions | 307 | 762 | ~44/day this week vs ~25/day over 30d: attention is growing |
@@ -10,8 +12,10 @@ Query: [`demand-scorecard.sql`](demand-scorecard.sql) (read-only; same view excl
 | — from social (FB/IG/Threads) | **90** | 105 | Social is 86% of its 30d volume in the last 7 days |
 | — from AI assistants | 3 | 14 | |
 | — direct | 79 | 305 | |
-| Verified contacts (conv + offer + booking) | 4 | 6 | |
-| **Verified BCR** | **1.30%** | 0.79% | 7d is close to the 1.5% target |
+| Contacts, all accounts | 4 | 6 | |
+| — from suspended/held accounts | **4** | **4** | One scam account on 2026-10-04 |
+| **Real verified contacts** | **0** | **2** | |
+| **Real verified BCR** | **0.00%** | **0.26%** | Not 1.30%/0.79%. The target is 5x further away than it looked |
 | Guest inquiries (unverified) | 0 | 0 | The feature isn't published yet |
 | Unique searches | 323 | 1,047 | Deduped per session+search |
 | **Real zero-result rate** | **23.8%** | **24.9%** | Higher than the raw 19.6%: deduping removes repeat successful searches too. Dead ends are the biggest search leak. |
@@ -20,7 +24,7 @@ Query: [`demand-scorecard.sql`](demand-scorecard.sql) (read-only; same view excl
 | Offers / response rate | 2 / 0% | 3 / 0% | Sellers don't respond to offers |
 
 ## Targets (30d, by 2026-11-04)
-- Verified BCR **≥ 1.5%** (about 11+ verified contacts at current traffic)
+- Real verified BCR **≥ 1.5%** (about 11+ real contacts at current traffic, from a base of 2)
 - Real zero-result rate **< 15%**
 - Offer response rate **≥ 50%**
 - Buyer concierge requests + alert signups **≥ 20/month** (requests now auto-include matched listings)
