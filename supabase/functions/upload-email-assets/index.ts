@@ -42,7 +42,12 @@ const handler = async (req: Request): Promise<Response> => {
     console.log(`Fetching image from: ${imageUrl}`);
 
     // Fetch the image
-    const imageResponse = await fetch(imageUrl);
+    let parsedUrl: URL;
+    try { parsedUrl = new URL(String(imageUrl)); } catch { throw new Error("Invalid image URL"); }
+    if (parsedUrl.protocol !== "https:" || /^(localhost|127\.|10\.|192\.168\.|169\.254\.|172\.(1[6-9]|2\d|3[01])\.|\[)/i.test(parsedUrl.hostname)) {
+      throw new Error("Only public https image URLs are allowed");
+    }
+    const imageResponse = await fetch(parsedUrl, { redirect: "error" });
     
     if (!imageResponse.ok) {
       throw new Error(`Failed to fetch image: ${imageResponse.status}`);
@@ -54,7 +59,10 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error(`Invalid content type: ${contentType}`);
     }
 
+    const MAX_BYTES = 5 * 1024 * 1024;
+    if (Number(imageResponse.headers.get("content-length") ?? 0) > MAX_BYTES) throw new Error("Image too large (max 5 MB)");
     const imageData = await imageResponse.arrayBuffer();
+    if (imageData.byteLength > MAX_BYTES) throw new Error("Image too large (max 5 MB)");
     console.log(`Image fetched: ${imageData.byteLength} bytes, type: ${contentType}`);
 
     // Upload to Supabase Storage
