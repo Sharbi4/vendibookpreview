@@ -6,6 +6,28 @@ Route via the concierge inbox. Requester contact details live in `asset_requests
 
 ---
 
+## A0. How to send A1 and A2 (Resend-era, no Gmail)
+
+Use the admin-only edge function `send-request-matches` (template `request-matches`, standard VendibookEmailLayout with listing cards, buttons, and a "Stay safe" payment callout). It **previews by default**; add `"send": true` only after checking the preview. Call it as an admin (JWT) or with the service role. After a send it marks the request `contacted` and sets `matched_listing_id`. It is idempotent per request + listings, so a repeat call can't double-send.
+
+**A1** (`3b173035…`, Atlanta bakery/café, budget under $500/day):
+```json
+{ "asset_request_id": "3b173035-e87f-4f53-8a54-78a515ee5d25",
+  "listing_ids": ["c8d152a4-dbc2-4239-8e0a-56cecac50266", "f13ba587-0d95-48f3-9a18-3bb92e540e05"],
+  "intro": "Sorry it took us this long to get back to you about renting a food trailer for your bakery/café concept. Both of these Atlanta-area trailers are available now and fit the under-$500/day budget you gave us.",
+  "closing": "For 1–3 months, the Lilburn trailer's monthly rate works out to about $165/day. Reply with your start date and how you'll use the trailer (weekend markets or daily service), and we'll confirm availability with the owner." }
+```
+
+**A2** (`132e8451…`, Atlanta rental, no budget or name given):
+```json
+{ "asset_request_id": "132e8451-384d-4bef-a5c1-5a301aef82f8",
+  "listing_ids": ["c8d152a4-dbc2-4239-8e0a-56cecac50266", "f13ba587-0d95-48f3-9a18-3bb92e540e05"],
+  "intro": "You asked us about renting a food trailer in Atlanta. Sorry it took us this long to reply. If you're still looking, these two equipped trailers in the Atlanta area are available now.",
+  "closing": "Send us your dates and budget and we'll check availability with the owners for you." }
+```
+
+Checked 2026-10-05: both requests have one request per address, are not unsubscribed or suppressed, and have no account flags; both listings are published and clear. The email copy in A1/A2 below is the earlier draft; the JSON above is what gets sent.
+
 ## A. Unmatched asset requests
 
 ### A1 · Atlanta trailer rental, bakery/café concept (asset_request `3b173035-e87f-4f53-8a54-78a515ee5d25`, 2026-08-16)
