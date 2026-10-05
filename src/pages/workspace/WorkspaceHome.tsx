@@ -5,6 +5,8 @@ import FeaturedBadge from '@/components/listing/FeaturedBadge';
 import { canBoostListing } from '@/lib/listings/publicVisibility';
 import { isListingFeatured } from '@/lib/featured';
 import { useMemo } from 'react';
+import { Rocket } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import {
   AlertTriangle,
@@ -258,77 +260,49 @@ export default function WorkspaceHome() {
               </Link>
             </div>
 
-            <article className="v2-lead-listing">
-              <div className="v2-lead-media">
-                {leadListing.cover_image_url ? (
-                  <img src={leadListing.cover_image_url} alt={leadListing.title} loading="lazy" />
-                ) : (
-                  <ImageIcon aria-label="No listing image yet" />
-                )}
-              </div>
-              <div className="v2-lead-body">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className={`v2-status ${leadListing.status === 'published' ? 'is-ok' : ''}`}>
-                    {leadListing.status === 'published' ? 'Live' : leadListing.status}
-                  </span>
-                  {leadFeatured && <FeaturedBadge listing={leadListing} compact showDaysLeft />}
-                  {leadListing.status === 'published' && !paypalReady && (
-                    <span className="v2-status is-warn">Online payments not enabled</span>
-                  )}
-                </div>
-                <h3>{leadListing.title?.trim() || 'Untitled listing'}</h3>
-                <p>
-                  {[leadListing.city, leadListing.state].filter(Boolean).join(', ') ||
-                    'Location not set'}
-                  {leadListing.mode ? ` · ${leadListing.mode === 'sale' ? 'For sale' : 'For rent'}` : ''}
-                </p>
-                <strong className="v2-price">{price(leadListing)}</strong>
-                {leadListing.status === 'published' && typeof leadListing.view_count === 'number' && (
-                  <div className="v2-metrics">
-                    <span>
-                      <strong>{leadListing.view_count}</strong> views
-                    </span>
-                  </div>
-                )}
-                <div className="v2-listing-actions">
-                  <ListingManageMenu listing={leadListing} onPause={pauseListing} onResume={unpauseListing} onArchive={archiveListing} onDelete={deleteListing} />
-                  <Link className="v2-btn v2-btn-sm" to={leadListing.status === 'draft' ? `/dashboard/listings/${leadListing.id}/edit` : `/listing/${leadListing.id}`}>
-                    {leadListing.status === 'draft' ? 'Finish listing' : 'View listing'}
-                  </Link>
-                  <Link className="v2-btn-outline v2-btn-sm" to={`/edit-listing/${leadListing.id}`}>
-                    Edit
-                  </Link>
-                  {canBoostListing(leadListing as never) && !leadFeatured && <Link
-                    className="v2-btn v2-btn-sm"
-                    to={`/dashboard/listings?boost=${leadListing.id}`}
-                  >
-                    Boost listing
-                  </Link>}
-                </div>
-              </div>
-            </article>
-
-            {otherListings.map((listing) => (
-              <div className="v2-activity-row flex-wrap" key={listing.id}>
-                <span className="v2-activity-thumb">
-                  {listing.cover_image_url ? (
-                    <img src={listing.cover_image_url} alt="" loading="lazy" />
-                  ) : (
-                    <ImageIcon />
-                  )}
-                </span>
-                <span className="min-w-0 flex-1">
-                  <Link to={`/edit-listing/${listing.id}`} className="block truncate font-semibold">{listing.title?.trim() || 'Untitled listing'}</Link>
-                  <small>
-                    {[listing.city, listing.state].filter(Boolean).join(', ') || 'Location not set'}{' '}
-                    · {listing.status === 'published' ? 'Live' : listing.status}
-                  </small>
-                </span>
-                <strong>{price(listing)}</strong>
-                <ListingManageMenu listing={listing} onPause={pauseListing} onResume={unpauseListing} onArchive={archiveListing} onDelete={deleteListing} />
-                {isListingFeatured(listing as never) ? <FeaturedBadge listing={listing} compact /> : canBoostListing(listing as never) && <Link className="v2-btn v2-btn-sm" to={`/dashboard/listings?boost=${listing.id}`}>Boost listing</Link>}
-              </div>
-            ))}
+            <div className="grid gap-4 p-5 sm:grid-cols-2 lg:grid-cols-3">
+              {listings.slice(0, 6).map((listing) => {
+                const featured = isListingFeatured(listing as never);
+                const boostable = canBoostListing(listing as never) && !featured;
+                return (
+                  <article key={listing.id} className="flex flex-col overflow-hidden rounded-2xl border border-border bg-card">
+                    <Link to={listing.status === 'draft' ? `/dashboard/listings/${listing.id}/edit` : `/listing/${listing.id}`} className="relative block aspect-[4/3] bg-muted">
+                      {listing.cover_image_url ? (
+                        <img src={listing.cover_image_url} alt={listing.title || 'Listing photo'} loading="lazy" className="h-full w-full object-cover" />
+                      ) : (
+                        <span className="flex h-full items-center justify-center text-muted-foreground"><ImageIcon aria-label="No listing image yet" /></span>
+                      )}
+                      <span className={`v2-status absolute left-3 top-3 ${listing.status === 'published' ? 'is-ok' : ''}`}>
+                        {listing.status === 'published' ? 'Live' : listing.status}
+                      </span>
+                    </Link>
+                    <div className="flex flex-1 flex-col gap-1.5 p-4">
+                      <div className="flex items-start justify-between gap-2">
+                        <h3 className="line-clamp-2 text-sm font-semibold">{listing.title?.trim() || 'Untitled listing'}</h3>
+                        <ListingManageMenu listing={listing} onPause={pauseListing} onResume={unpauseListing} onArchive={archiveListing} onDelete={deleteListing} />
+                      </div>
+                      <small className="text-muted-foreground">
+                        {[listing.city, listing.state].filter(Boolean).join(', ') || 'Location not set'}
+                        {listing.mode ? ` · ${listing.mode === 'sale' ? 'For sale' : 'For rent'}` : ''}
+                      </small>
+                      <strong className="v2-price">{price(listing)}</strong>
+                      {listing.status === 'published' && typeof listing.view_count === 'number' && (
+                        <small className="text-muted-foreground">{listing.view_count} views</small>
+                      )}
+                      {featured && <FeaturedBadge listing={listing} compact showDaysLeft />}
+                      <div className="mt-auto flex flex-col gap-2 pt-3">
+                        {boostable && (
+                          <Button asChild variant="cta" className="w-full">
+                            <Link to={`/dashboard/listings?boost=${listing.id}`}><Rocket />Boost listing</Link>
+                          </Button>
+                        )}
+                        <Link className="v2-btn-outline v2-btn-sm justify-center" to={`/edit-listing/${listing.id}`}>Edit</Link>
+                      </div>
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
           </section>
         )}
 
