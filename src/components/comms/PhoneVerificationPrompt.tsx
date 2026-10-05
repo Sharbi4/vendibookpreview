@@ -37,7 +37,14 @@ export default function PhoneVerificationPrompt({ children }: { children: ReactN
     check().then(data => {
       if (!current) return;
       setStatus(data); setCheckedUser(user.id);
-      setPhone(data.phone || user.user_metadata?.phone_number || "");
+      const meta = user.user_metadata || {};
+      const known = data.phone || meta.phone_number || meta.phone || user.phone || "";
+      setPhone(known);
+      if (!known) {
+        // Fall back to any number already saved on the member's profile.
+        supabase.from("profiles").select("phone_number").eq("id", user.id).maybeSingle()
+          .then(({ data: p }) => { if (current && p?.phone_number) setPhone(prev => prev || p.phone_number as string); });
+      }
       setStep(data.pending ? "code" : "phone");
       setCooldown(data.retry_after || 0);
     }).catch(e => { if (current) setError(e.message); });
