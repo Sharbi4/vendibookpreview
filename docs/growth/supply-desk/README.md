@@ -11,6 +11,8 @@ _Lead: Supply Desk (Claude) · reports to Growth & Liquidity · updated 2026-10-
 | `05-offer-rescue.md` | Offer rescue loop (instant → 12 h → 36 h admin call) and response SLAs |
 | `06-lovable-prompts.md` | LP-1 (shipped) and LP-2…LP-7, all payment-safe |
 | `07-concierge-onboarding.md` | Owner's Studiotime concierge guide adapted: profile → list → optimize → share |
+| `08-supply-to-demand.md` | Owner's 5-step supply → demand playbook applied: hero listings, quick wins, incentives, metrics |
+| `outreach/` | Send-ready copy: 123 seller concierge emails, 2 real offer rescues |
 
 ## Shipped today (acting on findings)
 
@@ -18,13 +20,16 @@ _Lead: Supply Desk (Claude) · reports to Growth & Liquidity · updated 2026-10-
 |---|---|---|
 | Archived 14 seed listings with Unsplash photos (owner instruction) | Production data, status only, reversible | Live supply is **130 real** (121 sale / 9 rent), down from 144. Rollback SQL is in 04 |
 | `/list/finish/:listingId`: one-screen Finish & publish | 87b59eea | Backlog drafts answer only the missing disclosures plus the attestations, then publish through the canonical publisher |
+| **Offer responses restored** | 2c7ac9c0 | Sellers had no screen to accept, counter or decline offers. They now have /dashboard/offers, 3-button offer emails, and a home-page task. Fixed the infinite loop on legacy /dashboard?tab= links |
 | Draft-reminder fix | 54e2d6c4 | Window 1–30 → 1–60 days. Spacing 2/7/14 days (was daily). Internal, QA and admin accounts skipped. Real title and name in the email. Links to the finish page |
 
 ## Needs an owner decision
 
 1. **Concierge sender:** whose name signs the concierge emails (07)? The guide recommends a real person, ideally the founder.
 2. **SB-6 lead:** a Tucson truck owner who asked to sell on 2026-06-12 (`asset_requests`) never got a follow-up. Ops should call them now.
-3. **SMS:** legal should confirm draft reminders and offer alerts count as transactional for the 18 opted-in hosts.
+3. **Referral program:** `/referral` shows a waitlist, but the program is active in config ($150, 0 referrals ever). Is it open?
+4. **Featured:** offer complimentary 14-day features to the top 5 hero listings (08)?
+5. **SMS:** legal should confirm draft reminders and offer alerts count as transactional for the 18 opted-in hosts.
 
 ## Payments
 
