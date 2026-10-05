@@ -10,7 +10,7 @@
 //   featured — a listing on a complimentary feature (featured_source='comp')
 //   optimize — the listing with the most fixes from pickListingFixes
 //   share    — no fixes left on any listing
-// Order: featured → listings with offers off → everyone else.
+// Order: integrity fixes → verified missed offers → featured → other coaching.
 // Integrity routing (never coach or promote a listing that fails checks):
 //   placeholder/broken title      → fix_title (only that ask)
 //   phone/email in title or text  → remove_contact (only that ask)
@@ -22,6 +22,7 @@
 // days, and anyone sent the complimentary-featured-boost email in 7 days.
 // Every send carries Idempotency-Key `${CAMPAIGN_ID}:${user_id}`.
 
+import { readAllRows as pageAll } from "../_shared/readAllRows.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { isMailableAddress } from "../_shared/marketingAudience.ts";
@@ -56,10 +57,6 @@ const BROKEN_TITLE = /^\s*(that.?s (good|perfect)|use this instead|my food (trai
 
 // Missed offers that expired with no seller response (see
 // docs/growth/supply-desk/outreach/offer-rescue-2026-10-05.md).
-const RESCUES: Record<string, RescueDetails> = {
-  "20434a7d-a365-4d4a-ab9b-5cff26815f33": { offerAmount: 15000, askingPrice: 20000, offerDateLabel: "September 11", stale: false },
-  "33fb896d-2c60-42e7-b3eb-20d2e44ee08e": { offerAmount: 22000, askingPrice: 40000, offerDateLabel: "June", stale: true },
-};
 const RESCUE_LISTINGS: Record<string, string> = {
   "20434a7d-a365-4d4a-ab9b-5cff26815f33": "c649440f-d3df-4f3a-a622-e118767efb4d",
   "33fb896d-2c60-42e7-b3eb-20d2e44ee08e": "efa664df-1f34-421f-90f8-2ebc88e471fd",
@@ -89,20 +86,8 @@ type ListingRow = FixableListing & {
 };
 type PageResult<T> = PromiseLike<{ data: T[] | null; error: { message: string } | null }>;
 
-async function pageAll<T>(build: (from: number, to: number) => PageResult<T>): Promise<T[]> {
-  const out: T[] = [];
-  const PAGE = 1000;
-  for (let from = 0; from < 200000; from += PAGE) {
-    const { data, error } = await build(from, from + PAGE - 1);
-    if (error) throw new Error(error.message);
-    out.push(...(data ?? []));
-    if (!data || data.length < PAGE) break;
-  }
-  return out;
-}
-
 const VARIANT_RANK: Record<ConciergeVariant, number> = {
-  rescue: 0, featured: 1, remove_contact: 2, fix_title: 3, optimize: 4, share: 5,
+  remove_contact: 0, fix_title: 1, rescue: 2, featured: 3, optimize: 4, share: 5,
 };
 
 serve(async (req) => {
@@ -149,10 +134,35 @@ serve(async (req) => {
         .eq("moderation_status", "clear")
         .is("deleted_at", null)
         .not("published_at", "is", null)
-        .range(from, to);
+        .order("id").range(from, to);
       for (const p of TEST_TITLE_PREFIXES) q = q.not("title", "ilike", p);
       return q as unknown as PageResult<ListingRow>;
     });
+
+    // Historical targets are an allowlist, not evidence of current offer state.
+    type Offer = { id: string; listing_id: string; seller_id: string; buyer_id: string;
+      offer_amount: number; created_at: string; expires_at: string | null;
+      responded_at: string | null; status: string };
+    const offers = await pageAll<Offer>((from, to) => admin.from("offers")
+      .select("id, listing_id, seller_id, buyer_id, offer_amount, created_at, expires_at, responded_at, status")
+      .in("listing_id", Object.values(RESCUE_LISTINGS))
+      .order("created_at", { ascending: false }).order("id").range(from, to));
+    const latestOffer = new Map<string, Offer>();
+    for (const offer of offers) if (!latestOffer.has(offer.listing_id)) latestOffer.set(offer.listing_id, offer);
+    const rescues = new Map<string, RescueDetails>();
+    for (const l of listings) {
+      const offer = latestOffer.get(l.id);
+      if (!offer || !l.host_id || RESCUE_LISTINGS[l.host_id] !== l.id || l.mode !== "sale" ||
+          offer.seller_id !== l.host_id || offer.buyer_id === l.host_id || offer.responded_at ||
+          offer.status !== "expired" || !offer.expires_at || !Number.isFinite(Date.parse(offer.expires_at)) ||
+          Date.parse(offer.expires_at) > now || !Number.isFinite(Date.parse(offer.created_at)) ||
+          !(offer.offer_amount > 0)) continue;
+      rescues.set(l.id, {
+        offerAmount: offer.offer_amount, askingPrice: Number(l.price_sale),
+        offerDateLabel: new Date(offer.created_at).toLocaleDateString("en-US", { month: "long", day: "numeric", year: "numeric", timeZone: "UTC" }),
+        stale: now - Date.parse(offer.created_at) > 60 * 24 * 60 * 60 * 1000,
+      });
+    }
 
     // ---- one candidate per seller ----
     type Candidate = { listing: ListingRow; variant: ConciergeVariant; fixes: ReturnType<typeof pickListingFixes>; offersOff: boolean };
@@ -163,14 +173,13 @@ serve(async (req) => {
     for (const l of listings) {
       if (!l.host_id) continue;
       if (l.mode === "sale" && Number(l.price_sale ?? 0) < MIN_SALE_PRICE) continue; // price/category under review
-      const rescueListing = RESCUE_LISTINGS[l.host_id];
       const brokenTitle = BROKEN_TITLE.test(String(l.title ?? "")) || String(l.title ?? "").trim().length < 8;
       const contact = hasContactDetails(`${l.title ?? ""}\n${l.description ?? ""}`);
       const fixes = pickListingFixes(l).slice(0, MAX_FIXES);
       const variant: ConciergeVariant =
-        rescueListing === l.id ? "rescue"
-        : contact ? "remove_contact"
+        contact ? "remove_contact"
         : brokenTitle ? "fix_title"
+        : rescues.has(l.id) ? "rescue"
         : isCompFeatured(l) ? "featured"
         : fixes.length ? "optimize" : "share";
       const onlyAsk = variant === "rescue" || variant === "remove_contact" || variant === "fix_title";
@@ -189,28 +198,26 @@ serve(async (req) => {
     type ProfileRow = { id: string; email: string | null; first_name: string | null; full_name: string | null; avatar_url: string | null; account_suspended: boolean | null };
     const profiles: ProfileRow[] = [];
     for (let i = 0; i < hostIds.length; i += 200) {
-      const { data, error } = await admin
+      profiles.push(...await pageAll<ProfileRow>((from, to) => admin
         .from("profiles")
         .select("id, email, first_name, full_name, avatar_url, account_suspended")
-        .in("id", hostIds.slice(i, i + 200));
-      if (error) return json({ error: `Profile query failed: ${error.message}` }, 500);
-      profiles.push(...((data ?? []) as ProfileRow[]));
+        .in("id", hostIds.slice(i, i + 200)).order("id").range(from, to)));
     }
 
     const nudgeSince = new Date(now - NUDGE_COOLDOWN_DAYS * 24 * 60 * 60 * 1000).toISOString();
     const boostSince = new Date(now - BOOST_EMAIL_COOLDOWN_DAYS * 24 * 60 * 60 * 1000).toISOString();
-    const [{ data: unsubs }, { data: suppressed }, { data: alreadySent }, { data: recentNudges }, { data: admins }, { data: holds }, { data: boostEmails }] = await Promise.all([
-      admin.from("email_unsubscribes").select("email"),
-      admin.from("suppressed_emails").select("email"),
-      admin.from("blog_campaign_sends").select("email, user_id")
-        .eq("campaign_id", CAMPAIGN_ID).eq("is_test", false).eq("status", "sent"),
-      admin.from("blog_campaign_sends").select("email, user_id")
+    const [unsubs, suppressed, alreadySent, recentNudges, admins, holds, boostEmails] = await Promise.all([
+      pageAll((from, to) => admin.from("email_unsubscribes").select("email").order("id").range(from, to)),
+      pageAll((from, to) => admin.from("suppressed_emails").select("email").order("id").range(from, to)),
+      pageAll((from, to) => admin.from("blog_campaign_sends").select("email, user_id")
+        .eq("campaign_id", CAMPAIGN_ID).eq("is_test", false).eq("status", "sent").order("id").range(from, to)),
+      pageAll((from, to) => admin.from("blog_campaign_sends").select("email, user_id")
         .eq("campaign_id", LISTING_FIX_CAMPAIGN_ID).eq("is_test", false).eq("status", "sent")
-        .gte("created_at", nudgeSince),
-      admin.from("user_roles").select("user_id").eq("role", "admin"),
-      admin.from("message_sending_holds").select("user_id"),
-      admin.from("email_send_log").select("recipient_email")
-        .eq("template_name", "complimentary-featured-boost").gte("created_at", boostSince),
+        .gte("created_at", nudgeSince).order("id").range(from, to)),
+      pageAll((from, to) => admin.from("user_roles").select("user_id").eq("role", "admin").order("id").range(from, to)),
+      pageAll((from, to) => admin.from("message_sending_holds").select("user_id").order("user_id").range(from, to)),
+      pageAll((from, to) => admin.from("email_send_log").select("recipient_email")
+        .eq("template_name", "complimentary-featured-boost").gte("created_at", boostSince).order("id").range(from, to)),
     ]);
     const blocked = new Set<string>();
     for (const r of [...(unsubs ?? []), ...(suppressed ?? [])]) {
@@ -258,7 +265,7 @@ serve(async (req) => {
           fixes: c.fixes,
           featuredUntil: c.variant === "featured" ? featuredUntil(c.listing.featured_expires_at) : null,
           needsProfilePhoto: !p.avatar_url,
-          rescue: c.variant === "rescue" ? RESCUES[p.id] : null,
+          rescue: c.variant === "rescue" ? rescues.get(c.listing.id) : null,
           unsubscribeUrl: unsubFor(email),
         },
       });

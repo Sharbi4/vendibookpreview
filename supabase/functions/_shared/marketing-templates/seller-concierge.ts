@@ -65,8 +65,8 @@ function intro(d: SellerConciergeData): string {
   if (d.variant === "rescue" && d.rescue) {
     const r = d.rescue;
     return r.stale
-      ? `Back in ${esc(r.offerDateLabel)} a buyer offered <strong>${money(r.offerAmount)}</strong> for your listing, which is priced at ${money(r.askingPrice)}. The offer expired before you responded. Our alerts were thin back then, and that's on us. Is it still for sale? Reply "yes" and I'll help you update the listing, or reply "sold" and I'll take it down.`
-      : `On ${esc(r.offerDateLabel)} a buyer offered <strong>${money(r.offerAmount)}</strong> for your listing, which is priced at ${money(r.askingPrice)}. The offer expired before you saw it, because offers stay open 48 hours and our only alert was one email. If you're still selling, reply to this email and I'll let the buyer know you're open to talking. If it's sold, reply "sold" and I'll take it down.`;
+      ? `Back in ${esc(r.offerDateLabel)} a buyer offered <strong>${money(r.offerAmount)}</strong> for your listing, which is priced at ${money(r.askingPrice)}. The offer expired with no response recorded. Is it still for sale? Reply "yes" and I'll help you update the listing, or reply "sold" and I'll take it down.`
+      : `On ${esc(r.offerDateLabel)} a buyer offered <strong>${money(r.offerAmount)}</strong> for your listing, which is priced at ${money(r.askingPrice)}. The offer expired with no response recorded. If you're still selling, reply to this email and I'll let the buyer know you're open to talking. If it's sold, reply "sold" and I'll take it down.`;
   }
   if (d.variant === "fix_title") {
     return `Your listing's title currently reads <strong>"${esc(d.listingTitle)}"</strong>. Buyers search by title, so a clear one like "2021 16ft Concession Trailer, Fully Equipped" helps the right people find it. It takes a minute to change.`;

@@ -2,22 +2,16 @@
 -- Ventures marketplace KPI template (versionone.vc/marketplace-kpi).
 -- One row per month from Jan 2026. Run in the Lovable/Supabase SQL editor.
 --
--- Definitions (honest-by-default):
---   * Internal accounts are excluded everywhere: admins and @vendibook.com /
---     @example.com emails. Self-dealing (buyer = seller) is excluded.
---   * Recorded GMV = rental bookings with status approved/completed or
---     payment_status paid, plus sales with status completed/paid/delivered.
---     Pending sales are reported separately ("sales pending close").
---     NOTE: Jan–Feb 2026 rentals predate the PayPal/Square stack and are mostly
---     marked unpaid; PayPal is in sandbox, so PayPal-recorded money may not be real.
---   * Revenue (est.) = recorded GMV x 12.9% nominal seller/host fee, plus
---     fulfilled seller services (boosts, Pro) from monetization_purchases.
---   * Paid CAC = $0 (no paid acquisition since launch).
---   * Sellers = hosts whose first listing was published by month end.
---   * Buyers = users with a recorded transaction. "Contacting buyers" = users
---     who opened a conversation, made an offer, or requested a booking.
---   * Real view sessions exclude bots, scraper user agents (200+ sessions,
---     ~1 view/session, never logged in) and sellers viewing their own listings.
+-- Operational scorecard only. Recorded values below are workflow activity,
+-- grouped by request creation month, NOT paid GMV or recognized revenue.
+-- Live/sandbox provenance is not persisted on payment_records or ledger entries.
+-- Never infer historical payment environment from today's server configuration.
+-- Actual paid GMV, refunds, net revenue and CAC remain NULL until reconciled
+-- provider evidence, fee/refund allocation and acquisition spend are available.
+-- Ledger activity is a separate result set below, by posting month and currency.
+-- Its timestamps are local posting dates, not authoritative provider event dates.
+-- Contact/session activity is not a linked buyer conversion cohort.
+-- View filtering is heuristic; residual bots and missing consent remain possible.
 
 with
 months as (
@@ -35,18 +29,22 @@ txns as (
   where (b.status::text in ('approved', 'completed') or b.payment_status = 'paid')
     and b.shopper_id is distinct from b.host_id
     and b.shopper_id not in (select id from internal_users)
+    and b.host_id not in (select id from internal_users)
   union all
   select date_trunc('month', s.created_at)::date, s.buyer_id, s.seller_id, s.amount::numeric, 'sale'
   from sale_transactions s
   where s.status in ('completed', 'paid', 'delivered')
     and s.buyer_id is distinct from s.seller_id
     and s.buyer_id not in (select id from internal_users)
+    and s.seller_id not in (select id from internal_users)
 ),
 pending_sales as (
   select date_trunc('month', s.created_at)::date as m, sum(s.amount) as amount, count(*) as n
   from sale_transactions s
   where s.status not in ('completed', 'paid', 'delivered', 'cancelled', 'refunded')
+    and s.buyer_id is distinct from s.seller_id
     and s.buyer_id not in (select id from internal_users)
+    and s.seller_id not in (select id from internal_users)
   group by 1
 ),
 services as (
@@ -89,11 +87,11 @@ base as (
   select
     mo.m,
     -- OVERALL
-    coalesce((select sum(amount) from txns t where t.m = mo.m), 0) as gmv_recorded,
-    (select count(*) from txns t where t.m = mo.m) as transactions,
+    coalesce((select sum(amount) from txns t where t.m = mo.m), 0) as workflow_recorded_value,
+    (select count(*) from txns t where t.m = mo.m) as workflow_records,
     coalesce((select amount from pending_sales p where p.m = mo.m), 0) as sales_pending_value,
     coalesce((select n from pending_sales p where p.m = mo.m), 0) as sales_pending_count,
-    coalesce((select amount from services s where s.m = mo.m), 0) as revenue_seller_services,
+    coalesce((select amount from services s where s.m = mo.m), 0) as fulfilled_services_recorded_value,
     -- SUPPLY
     (select count(*) from seller_first sf where sf.m <= mo.m) as total_sellers,
     (select count(*) from seller_first sf where sf.m = mo.m) as new_sellers,
@@ -101,29 +99,32 @@ base as (
     (select count(*) from pub p where p.m = mo.m) as new_listings,
     (select round(avg(price_sale)) from pub p where p.m = mo.m and p.mode = 'sale') as avg_new_sale_price,
     -- BUYERS / DEMAND
-    (select count(*) from buyer_first bf where bf.m <= mo.m) as total_buyers,
-    (select count(*) from buyer_first bf where bf.m = mo.m) as new_buyers,
+    (select count(*) from buyer_first bf where bf.m <= mo.m) as total_recorded_buyers,
+    (select count(*) from buyer_first bf where bf.m = mo.m) as new_recorded_buyers,
     (select count(distinct buyer_id) from contacts c where c.m = mo.m and c.buyer_id not in (select id from internal_users)) as contacting_buyers,
     (select count(*) from contacts c where c.m = mo.m and c.buyer_id not in (select id from internal_users)) as buyer_contacts,
     (select count(*) from listing_leads ll where date_trunc('month', ll.created_at)::date = mo.m) as guest_and_info_leads,
-    (select count(distinct session_id) from real_views rv where rv.m = mo.m) as real_view_sessions,
+    (select count(distinct session_id) from real_views rv where rv.m = mo.m) as filtered_view_sessions,
     (select count(*) from profiles p where date_trunc('month', p.created_at)::date = mo.m and p.id not in (select id from internal_users)) as new_signups
   from months mo
 )
 select
   to_char(m, 'Mon YYYY') as month,
-  gmv_recorded,
-  round(100.0 * (gmv_recorded - lag(gmv_recorded) over w) / nullif(lag(gmv_recorded) over w, 0), 1) as gmv_growth_mom_pct,
-  transactions,
-  round(gmv_recorded / nullif(transactions, 0)) as aov,
-  12.9 as take_rate_nominal_pct,
-  round(gmv_recorded * 0.129, 2) as revenue_txn_fees_est,
-  revenue_seller_services,
-  round(gmv_recorded * 0.129 + revenue_seller_services, 2) as revenue_total_est,
+  workflow_recorded_value,
+  round(100.0 * (workflow_recorded_value - lag(workflow_recorded_value) over w) / nullif(lag(workflow_recorded_value) over w, 0), 1) as workflow_value_growth_mom_pct,
+  workflow_records,
+  round(workflow_recorded_value / nullif(workflow_records, 0)) as avg_workflow_record_value,
+  null::numeric as verified_paid_gmv,
+  null::bigint as verified_paid_transactions,
+  null::numeric as verified_refunds,
+  null::numeric as realized_take_rate_pct,
+  null::numeric as recognized_net_revenue,
+  fulfilled_services_recorded_value,
+  'unavailable: live payment and fee/refund reconciliation required'::text as payment_metrics_status,
   sales_pending_count,
   sales_pending_value,
-  0 as paid_cac,
-  round(total_buyers::numeric / nullif(total_sellers, 0), 3) as buyer_to_seller_ratio,
+  null::numeric as paid_cac,
+  round(total_recorded_buyers::numeric / nullif(total_sellers, 0), 3) as recorded_buyer_to_published_seller_ratio,
   total_sellers,
   new_sellers,
   round(100.0 * (total_sellers - lag(total_sellers) over w) / nullif(lag(total_sellers) over w, 0), 1) as seller_growth_mom_pct,
@@ -131,14 +132,42 @@ select
   new_listings,
   round(100.0 * (total_listings_published - lag(total_listings_published) over w) / nullif(lag(total_listings_published) over w, 0), 1) as listing_growth_mom_pct,
   avg_new_sale_price,
-  total_buyers,
-  new_buyers,
+  total_recorded_buyers,
+  new_recorded_buyers,
   contacting_buyers,
   buyer_contacts,
   guest_and_info_leads,
-  real_view_sessions,
-  round(100.0 * buyer_contacts / nullif(real_view_sessions, 0), 2) as buyer_contact_rate_pct,
+  filtered_view_sessions,
+  round(100.0 * (buyer_contacts + guest_and_info_leads) / nullif(filtered_view_sessions, 0), 2) as contact_events_per_100_view_sessions,
+  null::numeric as linked_buyer_contact_conversion_pct,
   new_signups
 from base
 window w as (order by m)
 order by m;
+
+
+-- Separate reconciliation queue. These are recorded ledger amounts, NOT paid
+-- GMV/revenue. Preserve currency, posting dates and unknown environment.
+-- Captures can include taxes/shipping/deposits; fees can be duplicated across
+-- partial captures and refunds need allocation before recognized net revenue.
+with internal_users as (
+  select user_id as id from user_roles where role::text = 'admin'
+  union select id from profiles where coalesce(email, '') ~* '@(example\.com|vendibook\.com)$'
+)
+select date_trunc('month', le.created_at at time zone 'UTC')::date as posting_month,
+       le.currency,
+       'unknown'::text as payment_environment,
+       le.entry_type,
+       le.direction,
+       count(*) as ledger_entries,
+       sum(le.amount_cents)::numeric / 100 as recorded_ledger_amount,
+       'unreconciled; not verified live money'::text as measurement_status
+from payment_ledger_entries le
+join payment_records pr on pr.id = le.payment_record_id
+where pr.buyer_id is not null and pr.seller_id is not null
+  and pr.buyer_id <> pr.seller_id
+  and pr.buyer_id not in (select id from internal_users)
+  and pr.seller_id not in (select id from internal_users)
+  and le.entry_type in ('payment_captured', 'refund', 'reversal', 'platform_fee')
+group by 1, 2, 3, 4, 5
+order by 1, 2, 4, 5;

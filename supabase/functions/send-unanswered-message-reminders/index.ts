@@ -22,6 +22,7 @@
 // Auth: internal callers only (service-role bearer), e.g. an hourly cron.
 // Pass {"dry_run": true} to list what would be sent without sending.
 
+import { readAllRows } from "../_shared/readAllRows.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { isInternalCaller, internalOnlyResponse } from "../_shared/internalAuth.ts";
@@ -56,11 +57,10 @@ serve(async (req) => {
     const now = Date.now();
     const since = new Date(now - 30 * 24 * HOUR).toISOString();
 
-    const { data: convRows, error: convErr } = await admin
+    const convRows = await readAllRows<Conversation>((from, to) => admin
       .from("conversations")
       .select("id, listing_id, host_id, shopper_id")
-      .gte("last_message_at", since);
-    if (convErr) throw new Error(convErr.message);
+      .gte("last_message_at", since).order("id").range(from, to));
     const conversations = (convRows ?? []) as Conversation[];
     if (!conversations.length) return json({ ok: true, candidates: 0, sent: 0 });
 
@@ -68,12 +68,11 @@ serve(async (req) => {
     const latest = new Map<string, Message>();
     const ids = conversations.map((c) => c.id);
     for (let i = 0; i < ids.length; i += 200) {
-      const { data, error } = await admin
+      const data = await readAllRows<Message>((from, to) => admin
         .from("conversation_messages")
         .select("id, conversation_id, sender_id, message, created_at")
         .in("conversation_id", ids.slice(i, i + 200))
-        .order("created_at", { ascending: false });
-      if (error) throw new Error(error.message);
+        .order("created_at", { ascending: false }).order("id").range(from, to));
       for (const m of (data ?? []) as Message[]) if (!latest.has(m.conversation_id)) latest.set(m.conversation_id, m);
     }
 
@@ -87,14 +86,30 @@ serve(async (req) => {
     const buyerIds = [...new Set(waiting.map((c) => c.shopper_id))];
     const hostIds = [...new Set(waiting.map((c) => c.host_id))];
     const listingIds = [...new Set(waiting.map((c) => c.listing_id))];
-    const [{ data: buyers }, { data: holds }, { data: events }, { data: hosts }, { data: prefs }, { data: listings }] = await Promise.all([
-      admin.from("profiles").select("id, account_suspended").in("id", buyerIds),
-      admin.from("message_sending_holds").select("user_id").in("user_id", buyerIds),
-      admin.from("message_safety_events").select("user_id").eq("status", "open").in("user_id", buyerIds),
-      admin.from("profiles").select("id, email, first_name").in("id", hostIds),
-      admin.from("notification_preferences").select("user_id, message_email").in("user_id", hostIds),
-      admin.from("listings").select("id, title, status, deleted_at").in("id", listingIds),
+    // Batch IDs to bound URL size; fully page every required guard query.
+    const readForIds = async (table: string, columns: string, column: string, ids: string[], openOnly = false) => {
+      const rows: Record<string, any>[] = [];
+      for (let i = 0; i < ids.length; i += 200) {
+        rows.push(...await readAllRows<Record<string, any>>((from, to) => {
+          let query = admin.from(table).select(columns).in(column, ids.slice(i, i + 200));
+          if (openOnly) query = query.eq("status", "open");
+          return query.order(table === "message_sending_holds" ? "user_id" : "id").range(from, to);
+        }));
+      }
+      return rows;
+    };
+    const [buyers, holds, events, hosts, prefs, listings] = await Promise.all([
+      readForIds("profiles", "id, account_suspended", "id", buyerIds),
+      readForIds("message_sending_holds", "user_id", "user_id", buyerIds),
+      readForIds("message_safety_events", "user_id", "user_id", buyerIds, true),
+      readForIds("profiles", "id, email, first_name", "id", hostIds),
+      readForIds("notification_preferences", "user_id, message_email", "user_id", hostIds),
+      readForIds("listings", "id, title, status, deleted_at", "id", listingIds),
     ]);
+    // A missing profile is unknown eligibility, never an unsuspended buyer.
+    if (buyerIds.some(id => !buyers.some(b => b.id === id)) || hostIds.some(id => !hosts.some(h => h.id === id))) {
+      throw new Error("Required buyer/seller profile coverage is incomplete");
+    }
     const blockedBuyers = new Set<string>([
       ...((buyers ?? []) as { id: string; account_suspended: boolean | null }[]).filter((b) => b.account_suspended).map((b) => b.id),
       ...((holds ?? []) as { user_id: string }[]).map((h) => h.user_id),
@@ -107,26 +122,32 @@ serve(async (req) => {
     // Which reminder steps already went out (and when), per buyer message.
     const keys = waiting.flatMap((c) => {
       const m = latest.get(c.id)!;
-      return [keyFor("24h", m.id), keyFor("72h", m.id)];
+      return [keyFor("24h", m.id), keyFor("72h", m.id), `unanswered-msg-concierge-${m.id}`];
     });
     const sentAt = new Map<string, number>();
+    const suppressedKeys = new Set<string>();
     for (let i = 0; i < keys.length; i += 200) {
-      const { data } = await admin.from("email_send_log").select("idempotency_key, created_at")
-        .eq("status", "sent").in("idempotency_key", keys.slice(i, i + 200));
-      for (const r of (data ?? []) as { idempotency_key: string; created_at: string }[]) {
+      const data = await readAllRows<{ idempotency_key: string; created_at: string; status: string }>((from, to) => admin.from("email_send_log").select("idempotency_key, created_at, status")
+        .in("status", ["sent", "suppressed", "bounced", "complained"]).in("idempotency_key", keys.slice(i, i + 200)).order("id").range(from, to));
+      for (const r of data) {
+        if (r.status !== "sent") { suppressedKeys.add(r.idempotency_key); continue; }
         sentAt.set(r.idempotency_key, new Date(r.created_at).getTime());
       }
     }
 
     const planned: Array<{ conversation_id: string; step: string; skipped?: string }> = [];
-    let sent = 0;
+    let sent = 0, supportSent = 0, failed = 0;
     for (const c of waiting) {
       const m = latest.get(c.id)!;
       const ageMs = now - new Date(m.created_at).getTime();
       const firstAt = sentAt.get(keyFor("24h", m.id));
-      if (sentAt.has(keyFor("72h", m.id))) continue; // both reminders done
-      if (firstAt !== undefined && now - firstAt < FINAL_AFTER_FIRST_MS) continue; // too soon for final
-      const step = { key: firstAt === undefined ? "24h" : "72h" } as { key: "24h" | "72h" };
+      const finalSent = sentAt.has(keyFor("72h", m.id));
+      const supportKey = `unanswered-msg-concierge-${m.id}`;
+      const supportDone = sentAt.has(supportKey) || suppressedKeys.has(supportKey);
+      if (finalSent && supportDone) continue;
+      if (!finalSent && firstAt !== undefined && now - firstAt < FINAL_AFTER_FIRST_MS) continue;
+      const step = { key: finalSent || firstAt !== undefined ? "72h" : "24h" } as { key: "24h" | "72h" };
+      if (!finalSent && suppressedKeys.has(keyFor(step.key, m.id))) continue;
       const listing = listingById.get(c.listing_id);
       const host = hostById.get(c.host_id);
       const skip =
@@ -136,7 +157,7 @@ serve(async (req) => {
         !host?.email || !isMailableAddress(host.email) ? "no mailable seller email" : null;
       if (skip) { planned.push({ conversation_id: c.id, step: step.key, skipped: skip }); continue; }
 
-      planned.push({ conversation_id: c.id, step: step.key });
+      planned.push({ conversation_id: c.id, step: finalSent ? "concierge" : step.key });
       if (dryRun) continue;
 
       const title = String(listing!.title ?? "your listing").trim();
@@ -144,30 +165,34 @@ serve(async (req) => {
       const hours = Math.floor(ageMs / HOUR);
       const waitingLabel = hours >= 48 ? `${Math.floor(hours / 24)} days` : `${hours} hours`;
       const final = step.key === "72h";
-      const { error } = await invokeTransactionalEmail({
-        templateName: "message-reply-reminder",
-        recipientEmail: host!.email!.trim().toLowerCase(),
-        idempotencyKey: keyFor(step.key, m.id),
-        templateData: {
-          recipientName: host!.first_name ?? undefined,
-          listingTitle: title,
-          messagePreview: question,
-          conversationId: c.id,
-          waitingLabel,
-          final,
-        },
-        metadata: { conversation_id: c.id, step: step.key },
-      });
-      if (error) {
-        console.error("[unanswered-message-reminders] send failed", { conversation: c.id, step: step.key }, error);
-        continue;
+      if (!finalSent) {
+        const { data, error } = await invokeTransactionalEmail({
+          templateName: "message-reply-reminder",
+          recipientEmail: host!.email!.trim().toLowerCase(),
+          idempotencyKey: keyFor(step.key, m.id),
+          templateData: {
+            recipientName: host!.first_name ?? undefined,
+            listingTitle: title,
+            messagePreview: question,
+            conversationId: c.id,
+            waitingLabel,
+            final,
+          },
+          metadata: { conversation_id: c.id, step: step.key },
+        });
+        if (error) {
+          failed++;
+          console.error("[unanswered-message-reminders] send failed", { conversation: c.id, step: step.key }, error);
+          continue;
+        }
+        if (data?.sent !== true) continue; // Suppression is not a delivered reminder.
+        sent++;
       }
-      sent++;
-      if (final) {
-        await invokeTransactionalEmail({
+      if (final && !supportDone) {
+        const support = await invokeTransactionalEmail({
           templateName: "support-reply",
           recipientEmail: SUPPORT_INBOX,
-          idempotencyKey: `unanswered-msg-concierge-${m.id}`,
+          idempotencyKey: supportKey,
           templateData: {
             firstName: "Vendibook Concierge",
             subject: `Buyer waiting ${waitingLabel}: ${title}`,
@@ -180,10 +205,14 @@ serve(async (req) => {
             signedTitle: "Internal Notification",
           },
         });
+        if (support.error) {
+          failed++;
+          console.error("[unanswered-message-reminders] concierge send failed", { conversation: c.id }, support.error);
+        } else if (support.data?.sent === true) supportSent++;
       }
     }
 
-    return json({ ok: true, dry_run: dryRun, candidates: waiting.length, sent, planned });
+    return json({ ok: failed === 0, dry_run: dryRun, candidates: waiting.length, sent, support_sent: supportSent, failed, planned }, failed ? 503 : 200);
   } catch (e) {
     console.error("send-unanswered-message-reminders error:", (e as Error).message);
     return json({ error: (e as Error).message }, 500);
