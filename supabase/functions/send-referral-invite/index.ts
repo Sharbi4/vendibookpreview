@@ -99,7 +99,6 @@ Deno.serve(async (req) => {
       const paragraphs = [
         `${referrerName} invited you to join Vendibook — the marketplace for renting and selling food trucks and food trailers.`,
       ]
-      if (note) paragraphs.push(`"${note}"`)
       paragraphs.push(
         'Create a free account with the link below and you will both earn a $50 credit toward Vendibook fees when you subscribe to Starter or higher.',
       )

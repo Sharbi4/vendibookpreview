@@ -3,6 +3,7 @@
 
 // Palette derives from the master email design system (Phase 2 tokens).
 import { MK, color } from "./brand.ts";
+import { unsubToken } from "../unsubscribeToken.ts";
 
 const COLORS = {
   bgDark: color.text,          // charcoal (header band only)
@@ -155,7 +156,7 @@ function toolColumn(t: ToolHighlight): string {
 }
 
 function feedbackPill(label: string, rating: string, p: ReportPayload): string {
-  const url = `${p.feedbackBaseUrl}?s=${encodeURIComponent(p.sendId)}&e=${encodeURIComponent(p.recipientEmail)}&r=${rating}`;
+  const url = `${p.feedbackBaseUrl}?s=${encodeURIComponent(p.sendId)}&e=${encodeURIComponent(p.recipientEmail)}&r=${rating}&t=${unsubToken(`feedback:${p.sendId}:${p.recipientEmail}`)}`;
   return `<a href="${esc(url)}" style="display:inline-block;background:${COLORS.pill};color:${COLORS.textDark};border:1px solid ${COLORS.divider};font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,Helvetica,sans-serif;font-size:13px;font-weight:600;padding:10px 18px;border-radius:999px;text-decoration:none;margin:0 4px;">${label}</a>`;
 }
 
