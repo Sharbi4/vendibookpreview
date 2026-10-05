@@ -167,6 +167,7 @@ export const t = {
     margin: '0 0 20px',
   } as const,
   text: {
+    fontFamily: FONT_STACK,
     fontSize: size.bodySm,
     lineHeight: 1.65,
     color: color.text,
