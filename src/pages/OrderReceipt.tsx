@@ -23,6 +23,10 @@ interface OrderRecord {
   payment_intent: string;
   payment_source: string | null;
   paypal_capture_id: string | null;
+  /** Rentals paid on the host's Square account. */
+  provider?: string | null;
+  square_payment_id?: string | null;
+  square_receipt_url?: string | null;
   metadata: Record<string, unknown> | null;
   transaction_type: string;
   listing_id: string | null;
@@ -158,13 +162,18 @@ const OrderReceipt = () => {
     }
 
     (async () => {
-      const { data, error: err } = await supabase
-        .from('payment_records')
-        .select(
-          'reference, created_at, captured_at, currency, paypal_capture_id, metadata, gross_amount_cents, tax_cents, discount_cents, captured_amount_cents, refunded_cents, payment_status, payment_intent, payment_source, transaction_type, listing_id, seller_id, sale_transaction_id, booking_request_id, buyer_email, order_items, shipping_address',
-        )
+      const baseColumns =
+        'reference, created_at, captured_at, currency, paypal_capture_id, provider, metadata, gross_amount_cents, tax_cents, discount_cents, captured_amount_cents, refunded_cents, payment_status, payment_intent, payment_source, transaction_type, listing_id, seller_id, sale_transaction_id, booking_request_id, buyer_email, order_items, shipping_address';
+      let { data, error: err } = await (supabase.from('payment_records') as any)
+        .select(`${baseColumns}, square_payment_id, square_receipt_url`)
         .eq('reference', reference)
         .maybeSingle();
+      // Square columns arrive with the rental Square migration; until it runs,
+      // keep every existing receipt loading.
+      if (err && /square_/.test(err.message ?? '')) {
+        ({ data, error: err } = await (supabase.from('payment_records') as any)
+          .select(baseColumns).eq('reference', reference).maybeSingle());
+      }
 
       if (cancelled) return;
 
@@ -238,6 +247,10 @@ const OrderReceipt = () => {
   const refunded = order?.refunded_cents ?? 0;
   /** "Visa ending 4242 (via PayPal)" when PayPal told us the card details. */
   const paymentMethodLabel = (() => {
+    if (order?.provider === 'square') {
+      const brand = order.payment_source?.startsWith('card:') ? order.payment_source.slice(5) : null;
+      return brand ? `${brand.replace(/^\w/, (c: string) => c.toUpperCase())} card via Square` : 'Card via Square';
+    }
     const detail = (order?.metadata ?? {}) as any;
     const card = detail?.card ?? detail?.payment_source?.card ?? detail?.paypal?.card;
     const brand = card?.brand ?? card?.card_type;
@@ -257,7 +270,10 @@ const OrderReceipt = () => {
     setChecking(true);
     try {
       if (order.booking_request_id) {
-        const { error } = await supabase.functions.invoke('paypal-finalize-order', { body: { reference: order.reference } });
+        // Server-side verification with the processor that took the payment.
+        const { error } = order.provider === 'square'
+          ? await supabase.functions.invoke('square-rental-payment', { body: { action: 'status', booking_id: order.booking_request_id } })
+          : await supabase.functions.invoke('paypal-finalize-order', { body: { reference: order.reference } });
         if (error) throw error;
       }
       window.location.reload();
@@ -372,6 +388,21 @@ const OrderReceipt = () => {
                     <dd className="inline font-mono text-[11px] text-foreground">
                       {order.paypal_capture_id}
                     </dd>
+                  </div>
+                ) : null}
+                {order.square_payment_id ? (
+                  <div className="mt-1">
+                    <dt className="inline">Square payment id </dt>
+                    <dd className="inline font-mono text-[11px] text-foreground">
+                      {order.square_payment_id}
+                    </dd>
+                    {order.square_receipt_url ? (
+                      <dd className="mt-1">
+                        <a href={order.square_receipt_url} target="_blank" rel="noopener noreferrer" className="underline text-foreground">
+                          View Square receipt
+                        </a>
+                      </dd>
+                    ) : null}
                   </div>
                 ) : null}
                 <div className="mt-1">

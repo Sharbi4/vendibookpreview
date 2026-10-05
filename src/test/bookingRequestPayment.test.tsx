@@ -15,6 +15,8 @@ vi.mock('@/components/SEO', () => ({ default: () => null }));
 vi.mock('@/components/booking/AddToCalendarButton', () => ({ AddToCalendarButton: () => null }));
 vi.mock('@/components/documents/DocumentUploadSection', () => ({ DocumentUploadSection: () => null }));
 vi.mock('@/components/transaction/checkout/PayPalEmbeddedPayment', () => ({ default: ({ target }: any) => <div data-testid="paypal">{target.kind}:{target.id}</div> }));
+// The rental payment step (Square, or PayPal fallback) decides its processor server-side.
+vi.mock('@/components/booking/RentalPaymentPanel', () => ({ default: ({ bookingId }: any) => <div data-testid="paypal">booking:{bookingId}</div> }));
 import BookingConfirmation from '@/pages/BookingConfirmation';
 import OrderReceipt from '@/pages/OrderReceipt';
 vi.mock('@/hooks/use-toast', () => ({ useToast: () => ({ toast: vi.fn() }) }));

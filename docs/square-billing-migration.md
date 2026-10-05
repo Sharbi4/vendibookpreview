@@ -1,7 +1,7 @@
 # Square billing rollout — not enabled yet
 
 ## Scope
-New Vendibook catalog subscriptions and one-time catalog add-ons use Square. Marketplace sales, rentals and seller onboarding remain PayPal. Existing PayPal subscriptions retain cancellation, webhook processing and paid-period access; do not delete those integrations or automatically re-enroll customers.
+New Vendibook catalog subscriptions and one-time catalog add-ons use Square. Marketplace sales and seller onboarding remain PayPal. Rentals pay through Square on the host's own Square account (marketplace OAuth + app fee), see docs/payments/rental-square-migration.md. Existing PayPal subscriptions retain cancellation, webhook processing and paid-period access; do not delete those integrations or automatically re-enroll customers.
 
 ## Required backend configuration
 Revoke the production access token shared in chat. Save its replacement only in backend secrets as `SQUARE_ACCESS_TOKEN`; never in frontend VITE variables or GitHub.

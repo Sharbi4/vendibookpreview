@@ -47,6 +47,11 @@ interface Props {
   confirmLabel?: string;
   /** Optional extra related ids merged into the consent row's related_ids. */
   relatedIds?: Record<string, string>;
+  /**
+   * Render in the page (inside a checkout step) instead of a bottom sheet.
+   * Same review, same consent recording; `open` controls visibility.
+   */
+  inline?: boolean;
 }
 
 const pickDocument = (
@@ -85,6 +90,7 @@ export const FinalReviewSheet: React.FC<Props> = ({
   submitting,
   confirmLabel,
   relatedIds,
+  inline = false,
 }) => {
   const [agreed, setAgreed] = React.useState(false);
   const [priceOpen, setPriceOpen] = React.useState(false);
@@ -151,21 +157,7 @@ export const FinalReviewSheet: React.FC<Props> = ({
     }
   };
 
-  return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent
-        side="bottom"
-        className="max-h-[92vh] overflow-y-auto"
-        data-testid="final-review-sheet"
-      >
-        <SheetHeader>
-          <SheetTitle>Review your price and details</SheetTitle>
-          <SheetDescription>
-            Confirm the details below. The exact record you see here is saved
-            with your order and echoed in your confirmation email.
-          </SheetDescription>
-        </SheetHeader>
-
+  const body = (
         <div className="mt-4 space-y-4">
           <TransactionSummary
             terms={terms}
@@ -195,7 +187,47 @@ export const FinalReviewSheet: React.FC<Props> = ({
             {submitting || recording ? 'Working…' : label}
           </Button>
         </div>
+  );
 
+  if (inline) {
+    if (!open) return null;
+    return (
+      <section
+        className="rounded-xl border border-border bg-card p-4"
+        aria-labelledby="final-review-inline-title"
+        data-testid="final-review-inline"
+      >
+        <h3 id="final-review-inline-title" className="text-base font-semibold text-foreground">
+          Review your price and details
+        </h3>
+        <p className="mt-1 text-xs text-muted-foreground">
+          Confirm the details below. The exact record you see here is saved
+          with your booking and echoed in your confirmation email.
+        </p>
+        {body}
+        <button type="button" className="v2-btn-quiet mt-3" onClick={() => onOpenChange(false)}>
+          Edit booking details
+        </button>
+        <PriceDetailsModal terms={terms} open={priceOpen} onOpenChange={setPriceOpen} />
+      </section>
+    );
+  }
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      <SheetContent
+        side="bottom"
+        className="max-h-[92vh] overflow-y-auto"
+        data-testid="final-review-sheet"
+      >
+        <SheetHeader>
+          <SheetTitle>Review your price and details</SheetTitle>
+          <SheetDescription>
+            Confirm the details below. The exact record you see here is saved
+            with your order and echoed in your confirmation email.
+          </SheetDescription>
+        </SheetHeader>
+        {body}
         <PriceDetailsModal
           terms={terms}
           open={priceOpen}

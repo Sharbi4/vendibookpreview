@@ -4,6 +4,7 @@ import { ArrowLeft, ArrowRight, CheckCircle2, AlertTriangle, Circle, Loader2 } f
 import { toast } from 'sonner';
 import WorkspaceShell from '@/components/workspace/WorkspaceShell';
 import SellerPayPalConnect from '@/components/account/SellerPayPalConnect';
+import SellerSquareConnect from '@/components/account/SellerSquareConnect';
 import { PayPalWordmark } from '@/components/brand/ProviderLogos';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
@@ -232,6 +233,9 @@ export default function WorkspacePaymentSetup() {
           </div>
           <SellerPayPalConnect showWhenDisabled variant="dark" />
         </section>
+
+        {/* Rentals are paid by card into the host's own Square account. */}
+        <SellerSquareConnect />
 
         {/* Step 2 — account health */}
         <section className="v2-panel">

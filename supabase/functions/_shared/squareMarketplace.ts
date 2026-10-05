@@ -10,7 +10,7 @@
  *   SQUARE_ENVIRONMENT              sandbox | production (default sandbox)
  *   SQUARE_APPLICATION_ID           platform application id (OAuth client id)
  *   SQUARE_APPLICATION_SECRET       OAuth client secret
- *   SQUARE_OAUTH_REDIRECT_URL       e.g. https://vendibook.com/host/payments/square/callback
+ *   SQUARE_OAUTH_REDIRECT_URL       https://vendibook.com/dashboard/payments/square/callback
  *   SQUARE_TOKEN_ENCRYPTION_KEY     base64 of 32 random bytes (AES-256-GCM)
  *   RENTAL_SQUARE_ENABLED           'true' routes rental payments to Square
  *   RENTAL_PAYPAL_FALLBACK          'false' blocks PayPal for rentals entirely

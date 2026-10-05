@@ -1,6 +1,7 @@
 import { isValidRentalDateRange, parseRentalDate, parseRentalSlot, rentalIsInstant, rentalSubmitAllowed, validRentalContact } from '@/lib/rentalCheckoutValidation';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import {
   ArrowLeft,
@@ -68,14 +69,15 @@ import { useSellerVerifiedBadge } from '@/hooks/useSellerVerifiedBadge';
 import { authPath } from '@/lib/auth/returnTo';
 import { useSellerPaymentReadiness } from '@/hooks/useSellerPaymentReadiness';
 import { useWarmPayPalCheckout } from '@/hooks/useWarmPayPalCheckout';
-import { PayPalMonogram } from '@/components/brand/ProviderLogos';
 import SEO from '@/components/SEO';
 
 import TransactionCheckoutShell from '@/components/transaction/checkout/TransactionCheckoutShell';
 import CheckoutSection from '@/components/transaction/checkout/CheckoutSection';
 import ListingCheckoutSummary from '@/components/transaction/checkout/ListingCheckoutSummary';
 import MoneyBreakdown, { type MoneyLine } from '@/components/transaction/checkout/MoneyBreakdown';
-import PayPalEmbeddedPayment from '@/components/transaction/checkout/PayPalEmbeddedPayment';
+import RentalPaymentPanel from '@/components/booking/RentalPaymentPanel';
+import { clearRentalDraft, loadRentalDraft, newRequestKey, rentalDraftKey, saveRentalDraft } from '@/lib/rentalCheckoutDraft';
+import { trackRentalCheckout } from '@/lib/rentalCheckoutAnalytics';
 import CheckoutAgreementCards from '@/components/checkout/CheckoutAgreementCards';
 import SaleCheckoutWizard from '@/components/checkout/sale/SaleCheckoutWizard';
 
@@ -153,7 +155,19 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   /** Hides the functional PayPal action if the host hasn't finished payment
    *  setup. Never blocks bookings when gating isn't active for this host. */
   const paymentReadiness = useSellerPaymentReadiness(listing?.host_id);
-  const paymentSetupBlocked = paymentReadiness.gatingActive && !paymentReadiness.ready;
+  /** Rentals pay through the host's Square account when it is connected. */
+  const { data: hostSquareReady = false } = useQuery({
+    queryKey: ['host-square-ready', listing?.host_id],
+    enabled: Boolean(listing?.host_id),
+    staleTime: 5 * 60_000,
+    retry: false,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('host_square_ready' as never, { _host_id: listing!.host_id } as never);
+      if (error) return false;
+      return data === true;
+    },
+  });
+  const paymentSetupBlocked = paymentReadiness.gatingActive && !paymentReadiness.ready && !hostSquareReady;
   // The widget can downgrade an instant listing to a request (e.g. limited
   // spots left on a selected day) and signals that with ?flow=request.
   const requestedFlow = searchParams.get('flow');
@@ -185,6 +199,16 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   const startTimeParam = searchParams.get('startTime');
   const endTimeParam = searchParams.get('endTime');
   const hoursParam = searchParams.get('hours');
+
+  /** Progress for this exact selection survives refresh and back navigation. */
+  const draftKey = rentalDraftKey({
+    listingId: listingId ?? '',
+    start: startDateParam,
+    end: endDateParam,
+    slot: searchParams.get('slot'),
+    hourly: hourlyDataParam ?? timeSlotsParam,
+  });
+  const restoredDraft = useMemo(() => (listingId ? loadRentalDraft(draftKey) : null), [draftKey, listingId]);
 
   const hourlySelections = useMemo(
     () =>
@@ -219,18 +243,26 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   const [referralValid, setReferralValid] = useState<boolean>(false);
   const [showDateModal, setShowDateModal] = useState(false);
   /** Contained five-step checkout. Only the active step body is rendered. */
-  const [step, setStep] = useState(1);
-  const [furthestStep, setFurthestStep] = useState(1);
+  const [step, setStep] = useState(() => Math.min(restoredDraft?.step ?? 1, 3));
+  const [furthestStep, setFurthestStep] = useState(() => Math.min(restoredDraft?.furthestStep ?? 1, 3));
   /** Drop-off tracking: which step the renter reached / left from. */
-  useCheckoutFunnel({ flow: 'rental', step, listingId });
+  const { markCompleted } = useCheckoutFunnel({ flow: 'rental', step, listingId });
+  const completedRef = useRef(false);
   const goToStep = (next: number) => {
+    // Milestones are recorded when the renter moves forward past a step.
+    if (next > step) {
+      if (step === 2) trackRentalCheckout('delivery_selected', { listingId, step, fulfillment: fulfillmentSelected });
+      if (step === 3) trackRentalCheckout('booking_details_completed', { listingId, step });
+      if (step === 4) trackRentalCheckout('agreements_completed', { listingId, step });
+      if (next === 5) trackRentalCheckout('review_reached', { listingId, step: next });
+    }
     setStep(next);
     setFurthestStep((prev) => Math.max(prev, next));
   };
   const activeStep = RENTAL_STEPS[step - 1];
-  const [fulfillmentSelected, setFulfillmentSelected] = useState<FulfillmentSelection>('pickup');
-  const [deliveryAddress, setDeliveryAddress] = useState('');
-  const [message, setMessage] = useState('');
+  const [fulfillmentSelected, setFulfillmentSelected] = useState<FulfillmentSelection>(restoredDraft?.fulfillment ?? 'pickup');
+  const [deliveryAddress, setDeliveryAddress] = useState(restoredDraft?.deliveryAddress ?? '');
+  const [message, setMessage] = useState(restoredDraft?.message ?? '');
   const [userInfo, setUserInfo] = useState<BookingUserInfo | null>(null);
   const [editingContact, setEditingContact] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -241,10 +273,16 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   const [privacyAccepted, setPrivacyAccepted] = useState(false);
   const legalAccepted = rentalAgreementAccepted && privacyAccepted;
 
-  const [paypalCheckout, setPaypalCheckout] = useState<{ bookingId: string; returnUrl: string } | null>(null);
+  const [paymentTarget, setPaymentTarget] = useState<{ bookingId: string; returnUrl: string } | null>(null);
   /** Guards against creating a second booking_request row if the buyer
    *  closes the PayPal panel and hits the submit button again. */
-  const createdBookingIdRef = useRef<string | null>(null);
+  const createdBookingIdRef = useRef<string | null>(restoredDraft?.bookingId ?? null);
+  /** Sent as booking_requests.client_request_key: one booking per checkout. */
+  const requestKeyRef = useRef<string>(restoredDraft?.requestKey ?? newRequestKey());
+  useEffect(() => {
+    requestKeyRef.current = restoredDraft?.requestKey ?? newRequestKey();
+    createdBookingIdRef.current = restoredDraft?.bookingId ?? null;
+  }, [restoredDraft]);
   const submitLockRef = useRef(false);
   const agreementLockRef = useRef(false);
   const uploadedDocumentsRef = useRef(new Set<StagedDocument>());
@@ -310,13 +348,16 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
     if (listing) {
       if (isStaticLocation) {
         setFulfillmentSelected('on_site');
+      } else if (listing.fulfillment_type === 'both' && restoredDraft?.fulfillment && restoredDraft.fulfillment !== 'on_site') {
+        // Keep the renter's restored pickup/delivery choice.
+        setFulfillmentSelected(restoredDraft.fulfillment);
       } else if (listing.fulfillment_type === 'delivery') {
         setFulfillmentSelected('delivery');
       } else {
         setFulfillmentSelected('pickup');
       }
     }
-  }, [listing, isStaticLocation]);
+  }, [listing, isStaticLocation, restoredDraft]);
 
   // Calculate pricing - supports both hourly and daily
   // Inclusive day counting: same start/end = 1 day
@@ -486,7 +527,8 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   const handleDatesSelected = (start: Date, end: Date) => {
     if (!isValidRentalDateRange(start, end)) return;
     if (startDate?.getTime() === start.getTime() && endDate?.getTime() === end.getTime()) return;
-    setPaypalCheckout(null);
+    trackRentalCheckout('dates_selected', { listingId, step });
+    setPaymentTarget(null);
     setRentalAgreementAccepted(false);
     setPrivacyAccepted(false);
     setStartDate(start);
@@ -517,10 +559,75 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   useEffect(() => {
     if (previousSelection.current !== selectionKey) {
       previousSelection.current = selectionKey;
-      setRentalAgreementAccepted(false); setPrivacyAccepted(false); setPaypalCheckout(null);
+      setRentalAgreementAccepted(false); setPrivacyAccepted(false); setPaymentTarget(null);
     }
   }, [selectionKey]);
 
+
+  // Save progress for this selection (never agreements, never payment data).
+  useEffect(() => {
+    if (!listingId || completedRef.current) return;
+    saveRentalDraft(draftKey, {
+      step,
+      furthestStep,
+      fulfillment: fulfillmentSelected,
+      deliveryAddress,
+      message,
+      requestKey: requestKeyRef.current,
+      bookingId: createdBookingIdRef.current,
+    });
+  }, [draftKey, listingId, step, furthestStep, fulfillmentSelected, deliveryAddress, message, paymentTarget]);
+
+  // A booking already exists for this checkout: resume at payment, or open
+  // the booking if it was already paid or submitted as a request.
+  useEffect(() => {
+    const restoredId = restoredDraft?.bookingId;
+    if (!restoredId || !user) return;
+    let cancelled = false;
+    void supabase.from('booking_requests')
+      .select('id, status, payment_status, is_instant_book, shopper_id')
+      .eq('id', restoredId).eq('shopper_id', user.id).maybeSingle()
+      .then(({ data }) => {
+        if (cancelled) return;
+        if (!data || data.status === 'cancelled' || data.status === 'declined') {
+          createdBookingIdRef.current = null;
+          return;
+        }
+        if (data.payment_status === 'paid' || !data.is_instant_book) {
+          clearRentalDraft(draftKey);
+          navigate(`/dashboard/bookings/${data.id}`, { replace: true });
+          return;
+        }
+        setPaymentTarget({ bookingId: data.id, returnUrl: confirmationUrl(data.id) });
+        setStep(5);
+        setFurthestStep(5);
+      });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [restoredDraft?.bookingId, user?.id]);
+
+  useEffect(() => {
+    if (listing?.id) trackRentalCheckout('booking_started', { listingId: listing.id, flow: instantConfirm ? 'instant' : 'request' });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listing?.id]);
+
+  useEffect(() => {
+    const onHide = () => {
+      if (completedRef.current || !listingId) return;
+      trackRentalCheckout('booking_abandoned', { listingId, bookingId: createdBookingIdRef.current, step });
+    };
+    window.addEventListener('pagehide', onHide);
+    return () => window.removeEventListener('pagehide', onHide);
+  }, [listingId, step]);
+
+  /** Booking is paid (server-verified) or the request was sent. */
+  const completeCheckout = (bookingId: string, flow: 'instant' | 'request') => {
+    completedRef.current = true;
+    markCompleted();
+    trackRentalCheckout('booking_completed', { listingId, bookingId, flow, step: 5 });
+    clearRentalDraft(draftKey);
+    navigate(flow === 'instant' ? `/dashboard/bookings/${bookingId}?confirmed=1` : `/dashboard/bookings/${bookingId}`);
+  };
 
   const buildCurrentTerms = () => {
     if (!listing || !listingId || !startDate || !endDate) return null;
@@ -704,9 +811,20 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
           .neq('payment_status', 'paid').select('id').single();
         if (syncError) throw syncError;
       } else {
-        const { data: bookingResult, error: bookingError } = await supabase
-          .from('booking_requests').insert(bookingData as any).select('id').single();
-        if (bookingError) throw bookingError;
+        const keyed = { ...bookingData, client_request_key: requestKeyRef.current };
+        let { data: bookingResult, error: bookingError } = await supabase
+          .from('booking_requests').insert(keyed as any).select('id').single();
+        if (bookingError?.code === '23505' && /client_request_key/.test(bookingError.message ?? '')) {
+          // This checkout already created its booking (double submit, refresh).
+          // client_request_key isn't in the generated types until they're regenerated.
+          ({ data: bookingResult, error: bookingError } = await (supabase.from('booking_requests') as any)
+            .select('id').eq('shopper_id', user.id).eq('client_request_key', requestKeyRef.current).single());
+        } else if (bookingError?.code === 'PGRST204' && /client_request_key/.test(bookingError.message ?? '')) {
+          // Database not migrated yet: fall back to the in-memory guard.
+          ({ data: bookingResult, error: bookingError } = await supabase
+            .from('booking_requests').insert(bookingData as any).select('id').single());
+        }
+        if (bookingError || !bookingResult) throw bookingError ?? new Error('Booking could not be saved.');
         bookingId = bookingResult.id;
         createdBookingIdRef.current = bookingId;
       }
@@ -737,13 +855,13 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
 
 
       if (instantConfirm) {
-        setPaypalCheckout({ bookingId: bookingId!, returnUrl: confirmationUrl(bookingId!) });
+        setPaymentTarget({ bookingId: bookingId!, returnUrl: confirmationUrl(bookingId!) });
       } else {
         const { error: notificationError } = await supabase.functions.invoke('send-booking-notification', {
           body: { booking_id: bookingId, event_type: 'submitted' },
         });
         if (notificationError) throw notificationError;
-        navigate(`/dashboard/bookings/${bookingId}`);
+        completeCheckout(bookingId!, 'request');
       }
 
       // Fire tracking calls asynchronously so they never block the payment panel.
@@ -1054,7 +1172,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
     </details>
   );
 
-  const primaryStickyAction = paypalCheckout ? null : (
+  const primaryStickyAction = paymentTarget || termsGate.open ? null : (
     <Button
       className="checkout-primary-action h-12 px-6 rounded-xl font-semibold bg-foreground text-background hover:bg-foreground/90"
       onClick={handleSubmit}
@@ -1416,12 +1534,12 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
                 </div>
                 <p className="text-xs text-muted-foreground leading-relaxed">
                   {instantConfirm
-                    ? 'PayPal processes your payment now. Your booking is confirmed as soon as the payment completes, and the full record is saved to your account.'
-                    : 'Send your request to the host. Nothing is charged or held. After approval, return to your booking to review the final total and pay with PayPal.'}
+                    ? "You pay by card on this page. Your booking is confirmed as soon as the payment is verified, and the full record is saved to your account."
+                    : 'Send your request to the host. Nothing is charged or held. After approval, return to your booking to review the final total and pay by card.'}
                 </p>
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  Vendibook records the transaction and reviews host payouts after the rental begins. Payments are
-                  processed by PayPal; Vendibook does not hold or control your funds.
+                  Card payments are processed by Square and paid to the host's Square account; Vendibook's service
+                  fee, any sales tax and the refundable deposit are held by Vendibook. Vendibook never sees your card number.
                 </p>
               </div>
 
@@ -1431,23 +1549,25 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
                 totalLabel={instantConfirm ? "Total due at payment" : "Total after host approval"}
               />
 
-              {paypalCheckout && instantConfirm && canSubmit ? (
+              {paymentTarget && instantConfirm ? (
                 <>
-                  <PayPalEmbeddedPayment
-                    target={{ kind: 'booking', id: paypalCheckout.bookingId }}
-                    sellerId={listing.host_id}
-                    counterparty="host"
+                  <RentalPaymentPanel
+                    bookingId={paymentTarget.bookingId}
+                    listingId={listing.id}
+                    hostId={listing.host_id}
                     listingHref={listingHref}
-                    returnUrl={paypalCheckout.returnUrl}
                     totalUsd={totalChargedToday}
-                    heading={instantConfirm ? 'Confirm and pay with PayPal' : 'Secure your booking with PayPal'}
-                    intent={
-                      instantConfirm
-                        ? 'Your booking is confirmed the moment PayPal verifies your payment.'
-                        : 'Pay after the host approves your request.'
-                    }
+                    flow="instant"
+                    paypalReturnUrl={paymentTarget.returnUrl}
+                    heading="Confirm and pay"
+                    billingContact={userInfo ? {
+                      givenName: userInfo.firstName, familyName: userInfo.lastName, email: user?.email ?? undefined,
+                      phone: userInfo.phoneNumber, addressLines: [userInfo.address1, userInfo.address2].filter(Boolean) as string[],
+                      city: userInfo.city, state: userInfo.state, postalCode: userInfo.zipCode, countryCode: 'US',
+                    } : undefined}
+                    onPaid={(id) => completeCheckout(id, 'instant')}
                   />
-                  <button type="button" className="v2-btn-quiet" onClick={() => setPaypalCheckout(null)}>
+                  <button type="button" className="v2-btn-quiet" onClick={() => setPaymentTarget(null)}>
                     Edit booking details
                   </button>
                 </>
@@ -1462,6 +1582,17 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
                     right now. Please check back soon or message the host for an update.
                   </p>
                 </div>
+              ) : termsGate.terms && termsGate.open ? (
+                <FinalReviewSheet
+                  inline
+                  terms={termsGate.terms}
+                  termsId={termsGate.termsId}
+                  open={termsGate.open}
+                  onOpenChange={termsGate.setOpen}
+                  onConfirm={runSubmit}
+                  submitting={isSubmitting || termsGate.preparing}
+                  confirmLabel={instantConfirm ? 'Continue to payment' : 'Send booking request'}
+                />
               ) : (
                 <>
                   <Button
@@ -1482,7 +1613,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
                     ) : (
                       <>
                         <CreditCard className="h-5 w-5 mr-2" />
-                        Continue to payment · {formatCurrency(totalChargedToday)}
+                        Send booking request
                       </>
                     )}
                   </Button>
@@ -1491,7 +1622,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
                   )}
                   <p className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
                     <Lock className="h-3 w-3" />
-                    Secure checkout with <PayPalMonogram className="h-3.5 w-auto inline-block" />
+                    {instantConfirm ? 'Secure card checkout. You review the final total before paying.' : 'Nothing is charged until the host approves and you pay.'}
                   </p>
                 </>
               )}
@@ -1549,17 +1680,6 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
           }, 500);
         }}
       />
-      {termsGate.terms ? (
-        <FinalReviewSheet
-          terms={termsGate.terms}
-          termsId={termsGate.termsId}
-          open={termsGate.open}
-          onOpenChange={termsGate.setOpen}
-          onConfirm={runSubmit}
-          submitting={isSubmitting || termsGate.preparing}
-          confirmLabel={instantConfirm ? "Continue to secure payment" : "Send booking request"}
-        />
-      ) : null}
     </div>
   );
 };

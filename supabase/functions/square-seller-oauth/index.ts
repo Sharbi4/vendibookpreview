@@ -4,7 +4,7 @@
  *
  * Actions (host session required):
  *   start      -> one-time state + Square authorize URL
- *   complete   -> exchanges the code from /host/payments/square/callback,
+ *   complete   -> exchanges the code from /dashboard/payments/square/callback,
  *                 stores encrypted tokens and the host's main location
  *   status     -> connection status, no token material
  *   disconnect -> revokes Vendibook's access at Square and marks it revoked

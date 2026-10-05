@@ -150,3 +150,15 @@ BEGIN
     'Booking changed. Return to the booking payment step and pay again');
   EXECUTE definition;
 END $$;
+
+-- 10. Buyer-safe yes/no: can this host take rental card payments through
+-- Square? No account details are exposed.
+CREATE OR REPLACE FUNCTION public.host_square_ready(_host_id uuid)
+RETURNS boolean LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
+  SELECT EXISTS (
+    SELECT 1 FROM public.square_seller_accounts a
+    WHERE a.user_id = _host_id AND a.status = 'active' AND a.location_id IS NOT NULL
+  )
+$$;
+REVOKE ALL ON FUNCTION public.host_square_ready(uuid) FROM public;
+GRANT EXECUTE ON FUNCTION public.host_square_ready(uuid) TO anon, authenticated, service_role;
