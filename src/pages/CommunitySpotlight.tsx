@@ -205,6 +205,10 @@ export default function CommunitySpotlight() {
       return true;
     });
     if (!batch.length) return;
+    if (!user) {
+      toast.error("Please sign in to add photos to your spotlight.");
+      return;
+    }
 
     const start = media.length;
     setMedia((m) => [
