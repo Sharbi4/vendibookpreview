@@ -93,7 +93,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const code = String(Math.floor(100000 + Math.random() * 900000));
+    const code = String(100000 + (crypto.getRandomValues(new Uint32Array(1))[0] % 900000));
     const code_hash = await sha256(`${user.id}:${code}`);
 
     // Upsert subscription row (unverified) so we have phone + opt_in saved
