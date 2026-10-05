@@ -16,6 +16,7 @@ import {
   calculateRentalFees,
   calculateSaleFees,
   formatCurrency,
+  RENTAL_RENTER_FEE_PERCENT,
 } from './commissions';
 
 export const TERMS_VERSION = 'v1';
@@ -165,7 +166,7 @@ export function buildTerms(input: {
       lines.push({ label: 'Delivery', amountCents: deliveryCents, kind: 'delivery' });
     }
     lines.push({
-      label: 'Service fee (12.9%)',
+      label: `Service fee (${RENTAL_RENTER_FEE_PERCENT}%)`,
       amountCents: renterFeeCents,
       kind: 'fee',
       hint: 'Vendibook marketplace fee. Non-refundable once the booking is confirmed.',

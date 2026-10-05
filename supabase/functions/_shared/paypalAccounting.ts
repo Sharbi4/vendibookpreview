@@ -8,10 +8,11 @@
 
 import { newPaymentReference } from "./paypal.ts";
 import { computeProSellerFee } from "./proFee.ts";
+import { FEE_CONFIG } from "./feeConfig.ts";
 
-export const RENTAL_HOST_FEE_PERCENT = 12.9;
-export const RENTAL_RENTER_FEE_PERCENT = 12.9;
-export const SALE_SELLER_FEE_PERCENT = 12.9;
+export const RENTAL_HOST_FEE_PERCENT = FEE_CONFIG.rentalHostFeePct;
+export const RENTAL_RENTER_FEE_PERCENT = FEE_CONFIG.rentalRenterFeePct;
+export const SALE_SELLER_FEE_PERCENT = FEE_CONFIG.saleSellerFeePct;
 
 /** Days a payable stays pending before it becomes eligible for review. */
 export const RENTAL_RELEASE_HOURS = 24;
@@ -56,6 +57,8 @@ export interface QuoteResult {
   feeRatePct?: number | null;
   proDiscountCents?: number;
   proFeeApplied?: boolean;
+  /** Rentals: the host-side commission alone (platformFeeCents also holds the renter fee). */
+  hostFeeCents?: number;
 }
 
 /**
@@ -210,6 +213,7 @@ export function quoteBookingRequest(
       ...(depositCents ? [{ label: "Refundable deposit", amountCents: depositCents }] : []),
     ],
     feeRatePct: hostRatePct,
+    hostFeeCents,
     proDiscountCents: hostDiscountCents,
     proFeeApplied: hostDiscountCents > 0,
     sellerId: booking.host_id ?? null,
@@ -301,6 +305,8 @@ export async function ensureSellerPayable(
   // their own account, so this payable is a record of a completed payout —
   // never something the manual payout queue should pay again.
   const routed = (record.metadata as any)?.multiparty?.routed === true;
+  // Square rentals settle the host's share in the host's own Square account.
+  const routedProvider = (record.metadata as any)?.multiparty?.provider === "square" ? "square" : "paypal";
 
   const { data, error } = await supabase
     .from("seller_payables")
@@ -322,13 +328,15 @@ export async function ensureSellerPayable(
       paid_at: record.captured_at ?? new Date().toISOString(),
       release_due_at: releaseAt,
       payout_eligible_at: releaseAt,
-      payout_method: routed ? "paypal" : "dwolla_ach",
-      payout_provider: routed ? "paypal" : "dwolla_future",
+      payout_method: routed ? routedProvider : "dwolla_ach",
+      payout_provider: routed ? routedProvider : "dwolla_future",
       ...(routed
         ? {
           payout_completed_at: record.captured_at ?? new Date().toISOString(),
           external_payout_reference: (record.metadata as any)?.multiparty?.merchant_id ?? null,
-          admin_notes: "Paid directly by PayPal at capture (Connected Path).",
+          admin_notes: routedProvider === "square"
+            ? "Paid directly into the host's Square account at payment (app fee retained by Vendibook)."
+            : "Paid directly by PayPal at capture (Connected Path).",
         }
         : {}),
     })

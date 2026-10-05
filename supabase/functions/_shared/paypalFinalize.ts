@@ -31,6 +31,12 @@ export interface CaptureFacts {
   shippingAddress?: Record<string, unknown> | null;
   /** Billing address PayPal returned, when the payment source carried one. */
   billingAddress?: Record<string, unknown> | null;
+  /** Which processor captured the money. Defaults to PayPal. */
+  provider?: "paypal" | "square";
+  /** Square order id, when the payment created one. */
+  orderId?: string | null;
+  /** Square-hosted receipt link, when available. */
+  receiptUrl?: string | null;
 }
 
 /** Pulls the capture facts out of an Orders v2 capture/get response. */
@@ -76,6 +82,8 @@ function mapCaptureStatus(status: string) {
       return "declined";
     case "FAILED":
       return "failed";
+    case "CANCELED":
+      return "cancelled";
     case "REFUNDED":
       return "refunded";
     case "PARTIALLY_REFUNDED":
@@ -153,10 +161,15 @@ export async function finalizeCapture(
 ) {
   const paymentStatus = mapCaptureStatus(facts.status);
   const isPaid = paymentStatus === "completed";
+  // Rentals settle through Square; everything else through PayPal. The
+  // capture id lives in the provider's own column on payment_records.
+  const provider = facts.provider ?? "paypal";
+  const captureCol = provider === "square" ? "square_payment_id" : "paypal_capture_id";
+  const providerLabel = provider === "square" ? "Square" : "PayPal";
 
   // Completed captures cannot be downgraded by a delayed pending webhook.
   if (record.payment_status === "completed") {
-    if (record.booking_request_id && record.internal_status === "paid" && isPaid && record.paypal_capture_id === facts.captureId) {
+    if (record.booking_request_id && record.internal_status === "paid" && isPaid && record[captureCol] === facts.captureId) {
       await propagateToDomainRecord(supabase, record, facts);
     }
     return record;
@@ -177,20 +190,20 @@ export async function finalizeCapture(
   // If this record already carries a different capture id, the event does not
   // belong to it. Never fulfil on a foreign capture.
   if (
-    record.paypal_capture_id &&
+    record[captureCol] &&
     facts.captureId &&
-    record.paypal_capture_id !== facts.captureId
+    record[captureCol] !== facts.captureId
   ) {
     safeLog("capture_id_mismatch", {
       reference: record.reference,
-      expected: record.paypal_capture_id,
+      expected: record[captureCol],
       got: facts.captureId,
     });
     await supabase.from("payment_records").update({
       internal_status: "needs_review",
       last_error: {
         reason: "capture_id_mismatch",
-        expected: record.paypal_capture_id,
+        expected: record[captureCol],
         got: facts.captureId,
       },
     }).eq("id", record.id);
@@ -227,7 +240,7 @@ export async function finalizeCapture(
           expected_currency: expectedCurrency,
           got_currency: gotCurrency,
         },
-        paypal_capture_id: facts.captureId ?? record.paypal_capture_id,
+        [captureCol]: facts.captureId ?? record[captureCol],
         updated_at: new Date().toISOString(),
       }).eq("id", record.id);
       throw new CaptureRejectedError(
@@ -250,7 +263,7 @@ export async function finalizeCapture(
         await supabase.from("payment_records").update({
           payment_status: "completed",
           internal_status: "refund_review_listing_unavailable",
-          paypal_capture_id: facts.captureId ?? record.paypal_capture_id,
+          [captureCol]: facts.captureId ?? record[captureCol],
           last_error: { reason: "listing_unavailable", listing_reason: state.reason },
         }).eq("id", record.id);
         throw new CaptureRejectedError("listing_unavailable", LISTING_UNAVAILABLE_MESSAGE);
@@ -258,7 +271,7 @@ export async function finalizeCapture(
       if (state.host_id && record.buyer_id && state.host_id === record.buyer_id) {
         await supabase.from("payment_records").update({
           internal_status: "refund_review_self_purchase",
-          paypal_capture_id: facts.captureId ?? record.paypal_capture_id,
+          [captureCol]: facts.captureId ?? record[captureCol],
           last_error: { reason: "self_purchase" },
         }).eq("id", record.id);
         throw new CaptureRejectedError(
@@ -281,8 +294,13 @@ export async function finalizeCapture(
   const { data: updated, error: updateErr } = await supabase
     .from("payment_records")
     .update({
-      paypal_capture_id: facts.captureId,
-      paypal_payer_id: facts.payerId ?? record.paypal_payer_id,
+      [captureCol]: facts.captureId,
+      ...(provider === "square"
+        ? {
+          square_order_id: facts.orderId ?? record.square_order_id ?? null,
+          square_receipt_url: facts.receiptUrl ?? record.square_receipt_url ?? null,
+        }
+        : { paypal_payer_id: facts.payerId ?? record.paypal_payer_id }),
       payment_source: facts.paymentSource ?? record.payment_source,
       // Confirmation-page facts, taken from the capture response — never assumed.
       payer_email: facts.payerEmail ?? record.payer_email,
@@ -362,7 +380,7 @@ export async function finalizeCapture(
         type: "payment_pending",
         buyer: {
           title: "Payment pending",
-          message: `PayPal is still reviewing your payment for order ${current.reference}. We'll update you as soon as it clears.`,
+          message: `${providerLabel} is still reviewing your payment for order ${current.reference}. We'll update you as soon as it clears.`,
         },
         dedupeKey: `pending:${facts.captureId}`,
       });
@@ -387,7 +405,7 @@ export async function finalizeCapture(
     amountCents: facts.amountCents,
     currency: facts.currency,
     direction: "credit",
-    description: `PayPal capture ${facts.captureId}`,
+    description: `${providerLabel} capture ${facts.captureId}`,
     externalReference: facts.captureId,
     dedupeKey: `capture:${facts.captureId}`,
     metadata: { source },
@@ -428,7 +446,7 @@ export async function finalizeCapture(
     paymentRecordId: current.id,
     code: "payment_captured",
     title: "Payment captured",
-    description: "Your payment was successfully processed through PayPal.",
+    description: `Your payment was successfully processed through ${providerLabel}.`,
     actorRole: "provider",
     visibility: "both",
     dedupeKey: `captured:${facts.captureId}`,
@@ -547,9 +565,11 @@ async function propagateToDomainRecord(
 
       const update: Record<string, unknown> = {
         payment_status: "paid",
-        payment_provider: "paypal",
+        payment_provider: facts.provider ?? "paypal",
         payment_intent_id: facts.captureId,
-        checkout_session_id: record.paypal_order_id,
+        checkout_session_id: facts.provider === "square"
+          ? (facts.orderId ?? record.square_order_id ?? null)
+          : record.paypal_order_id,
         paid_at: nowIso,
       };
 

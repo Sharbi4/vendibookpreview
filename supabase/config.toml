@@ -316,6 +316,17 @@ verify_jwt = false
 [functions.square-setup]
 verify_jwt = false
 
+# Rental payments on hosts' Square accounts. JWT checked inside via auth.getUser;
+# the webhook authenticates with Square's HMAC signature instead.
+[functions.square-seller-oauth]
+verify_jwt = false
+
+[functions.square-rental-payment]
+verify_jwt = false
+
+[functions.square-rental-webhook]
+verify_jwt = false
+
 # JWT validated through auth.getUser inside the handler (supports current signing keys).
 [functions.signnow-ensure-document]
 verify_jwt = false

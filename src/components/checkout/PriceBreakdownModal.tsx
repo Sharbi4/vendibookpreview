@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { RENTAL_RENTER_FEE_PERCENT } from '@/lib/commissions';
 import { Loader2, Info, CreditCard } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -17,7 +18,6 @@ import { Separator } from '@/components/ui/separator';
 
 
 // Commission rates (must match edge function)
-const RENTAL_RENTER_FEE_PERCENT = 12.9;
 
 interface PriceBreakdownModalProps {
   open: boolean;

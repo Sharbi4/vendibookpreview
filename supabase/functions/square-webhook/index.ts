@@ -13,6 +13,10 @@ Deno.serve(async req => {
     if(event.type?.startsWith('payment.')) {
       const id=event.data?.object?.payment?.id;
       if(!id) return new Response('Invalid payment event',{status:400});
+      // Rental payments on hosts' own Square accounts belong to
+      // square-rental-webhook; the platform token can't read them.
+      const eventLocation=event.data?.object?.payment?.location_id;
+      if(eventLocation && eventLocation !== config.locationId) return new Response('Ignored');
       const {payment}=await squareRequest('/v2/payments/'+encodeURIComponent(id));
       if(payment.location_id !== config.locationId) return new Response('Ignored');
       const reference=payment.reference_id;

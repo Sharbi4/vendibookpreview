@@ -250,7 +250,9 @@ serve(async (req) => {
         await admin
           .from("booking_requests")
           .update({
-            host_platform_fee: quote.platformFeeCents / 100,
+            // Host commission only. platformFeeCents also carries the renter
+            // fee, and quoteBookingRequest reads this column back as the host fee.
+            host_platform_fee: (quote.hostFeeCents ?? quote.platformFeeCents) / 100,
             host_fee_rate_pct: quote.feeRatePct ?? null,
             host_pro_discount: (quote.proDiscountCents ?? 0) / 100,
             pro_fee_applied: !!quote.proFeeApplied,

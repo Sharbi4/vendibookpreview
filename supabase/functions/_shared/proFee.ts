@@ -13,10 +13,12 @@
  * src/lib/fees/proFee.test.ts).
  */
 
-export const STANDARD_FEE_PCT = 12.9;
-export const PRO_FEE_PCT = 10.9;
+import { FEE_CONFIG } from './feeConfig.ts';
+
+export const STANDARD_FEE_PCT = FEE_CONFIG.saleSellerFeePct;
+export const PRO_FEE_PCT = FEE_CONFIG.proSellerFeePct;
 /** Max saving versus standard, per completed transaction. */
-export const PRO_MAX_SAVINGS_CENTS = 50_000;
+export const PRO_MAX_SAVINGS_CENTS = FEE_CONFIG.proMaxSavingsCents;
 
 export interface ProFeeInput {
   /** Base the commission is charged on, in cents (sale price / rental subtotal). */

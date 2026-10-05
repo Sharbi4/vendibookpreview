@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { refundPayment } from "../_shared/paymentOps.ts";
+import { refundSquareRental } from "../_shared/squareRentalRefund.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
@@ -131,14 +132,22 @@ serve(async (req) => {
           throw new Error(`Refund amount ($${refund_amount}) cannot exceed booking total ($${booking.total_price})`);
         }
 
-        // Vendibook refunds through PayPal only.
-        const refund = await refundPayment({
-          paymentReference: booking.payment_intent_id,
-          provider: booking.payment_provider,
-          amountCents: refundAmountCents,
-          reason: cancellation_reason || 'Booking cancelled',
-          idempotencyKey: `booking-cancel-refund-${booking_id}-${refundAmountCents ?? "full"}`,
-        });
+        // Square rentals refund from the host's Square account (app fee
+        // refunded in proportion); everything else refunds through PayPal.
+        const refund = booking.payment_provider === 'square'
+          ? await refundSquareRental(supabaseClient, {
+            bookingId: booking_id,
+            amountCents: refundAmountCents,
+            reason: cancellation_reason || 'Booking cancelled',
+            idempotencyKey: `booking-cancel-refund-${booking_id}-${refundAmountCents ?? "full"}`,
+          })
+          : await refundPayment({
+            paymentReference: booking.payment_intent_id,
+            provider: booking.payment_provider,
+            amountCents: refundAmountCents,
+            reason: cancellation_reason || 'Booking cancelled',
+            idempotencyKey: `booking-cancel-refund-${booking_id}-${refundAmountCents ?? "full"}`,
+          });
 
         if (!refund.success) {
           throw new Error(refund.error ?? "Refund failed");

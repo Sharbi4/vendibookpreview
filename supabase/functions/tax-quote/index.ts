@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
+import { FEE_CONFIG } from "../_shared/feeConfig.ts";
 import {
   parseStateZipFromAddress,
   quoteSalesTax,
@@ -8,7 +9,7 @@ import {
   type TaxKind,
 } from "../_shared/tax.ts";
 
-const RENTER_FEE_PERCENT = 12.9;
+const RENTER_FEE_PERCENT = FEE_CONFIG.rentalRenterFeePct;
 
 /**
  * Read-only estimated sales-tax quote for checkout UIs. Returns the SAME math
