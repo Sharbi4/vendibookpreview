@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Headphones, Loader2, Pause, Play, Square } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Props {
   listingId: string;
@@ -30,17 +31,26 @@ export function AudioListingPlayer({ listingId, className, variant = "card" }: P
   const fetchAndPlay = async () => {
     try {
       setState("loading");
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) {
+        toast.error("Sign in to listen to this listing.");
+        setState("idle");
+        return;
+      }
       const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/listing-narration`;
       const resp = await fetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+          apikey: import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+          Authorization: `Bearer ${accessToken}`,
         },
         body: JSON.stringify({ listing_id: listingId }),
       });
       if (!resp.ok) {
-        if (resp.status === 429) toast.error("Audio narration is busy — try again in a moment.");
+        if (resp.status === 401) toast.error("Sign in to listen to this listing.");
+        else if (resp.status === 429) toast.error("Audio narration is busy — try again in a moment.");
         else if (resp.status === 402) toast.error("AI credits exhausted. Please add funds.");
         else toast.error("Couldn't generate audio.");
         setState("idle");
