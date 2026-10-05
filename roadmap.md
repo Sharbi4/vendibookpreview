@@ -15,4 +15,4 @@
 - [done] Seller-covered nationwide freight: show Free shipping on sale listing cards and hide the internal mileage/rate/cost from buyers while preserving the freight calculation.
 
 - [done] AI risk checker on messages/offers + admin email alert
-- [ ] Plaid identity verification right after sign-up, then redirect back to intended page
+- [done] Plaid identity verification right after sign-up (free, required for all members), then back to intended page

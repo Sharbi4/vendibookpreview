@@ -2,3 +2,6 @@
 - CategoryIndex treats a failed inventory query as an error state (retry, stays indexable), never as "no stock". Why: transient failures must not produce noindex/empty SEO pages.
 - Buyer SEO pages track via src/lib/buyerSeoTracking.ts (buyer_seo_* events, consent-gated, first-touch sessionStorage attribution; downstream = starts only, never paid). Why: measure SEO-to-transaction without duplicating existing conversion events. Map: docs/analytics/buyer-seo-events.md.
 - Seller-covered Vendibook Freight remains calculated internally but buyer-facing UI shows “Free shipping” and never exposes the freight rate or computed freight cost. Why: the seller absorbs the charge.
+
+- Member trust gate: signup_phone_required + signup_identity_required (free Plaid IDV via verified-seller signup-verify/signup-refresh) are enforced by guard_signup_phone_actions on messaging/offer/booking/sale tables and by PhoneVerificationPrompt in the UI; admins exempt. Why: scam accounts must be verified before contacting members.
+- message-risk-scan edge function is invoked by DB triggers on conversation_messages/offers (x-cron-secret) and emails admins via send-admin-notification type message_risk. Why: immediate AI risk alerts without blocking sends.
