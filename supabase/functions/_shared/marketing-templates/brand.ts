@@ -9,6 +9,7 @@
 // ─────────────────────────────────────────────────────────────
 import {
   color,
+  CTA_SHADOW,
   FONT_STACK,
   MAX_WIDTH,
   radius,
@@ -21,6 +22,7 @@ import {
 
 export {
   color,
+  CTA_SHADOW,
   FONT_STACK,
   MAX_WIDTH,
   radius,
@@ -76,12 +78,13 @@ export function esc(s: unknown): string {
   );
 }
 
-/** Orange pill CTA, white text. */
+/** Orange CTA with the static, email-safe version of the site button glow. */
 export function mkButton(label: string, href: string, opts: { ghost?: boolean } = {}): string {
   const bg = opts.ghost ? MK.surface : MK.orange;
   const fg = opts.ghost ? MK.text : MK.onOrange;
   const border = opts.ghost ? `1px solid ${MK.border}` : `1px solid ${MK.orange}`;
-  return `<a href="${esc(href)}" style="display:inline-block;background:${bg};color:${fg};border:${border};border-radius:${radius.button};padding:14px 28px;font-family:${FONT};font-size:15px;font-weight:700;line-height:1.2;text-decoration:none;">${esc(label)}</a>`;
+  const shadow = opts.ghost ? "none" : CTA_SHADOW;
+  return `<a href="${esc(href)}" style="display:inline-block;background:${bg};color:${fg};border:${border};border-radius:${radius.button};box-shadow:${shadow};padding:14px 28px;font-family:${FONT};font-size:15px;font-weight:700;line-height:1.2;text-decoration:none;">${esc(label)}</a>`;
 }
 
 /**

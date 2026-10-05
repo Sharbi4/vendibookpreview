@@ -1,3 +1,5 @@
+import { CTA_SHADOW, FONT } from "./brand.ts";
+
 // Vendibook Business Spotlight invitation — premium light/editorial marketing
 // email. Table-based, mobile-first, ivory canvas with a white content surface.
 //
@@ -79,7 +81,7 @@ export function buildSpotlightInviteHtml(
 <meta name="color-scheme" content="light only">
 <title>${esc(SPOTLIGHT_SUBJECT_A)}</title>
 </head>
-<body style="margin:0;padding:0;background:#f6f3ef;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#1d1a17;">
+<body style="margin:0;padding:0;background:#f6f3ef;font-family:${FONT};color:#1d1a17;">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">${esc(SPOTLIGHT_PREVIEW)}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f6f3ef;padding:36px 12px;">
   <tr><td align="center">
@@ -110,7 +112,7 @@ export function buildSpotlightInviteHtml(
         </table>
       </td></tr>
       <tr><td align="center" style="padding:32px 40px 12px 40px;">
-        <a href="${CTA_HREF}" style="display:inline-block;background:#ff5124;color:#ffffff;text-decoration:none;font-weight:700;font-size:16px;letter-spacing:0.02em;padding:18px 40px;border-radius:999px;">Share my business</a>
+         <a href="${CTA_HREF}" style="display:inline-block;background:#ff5124;color:#ffffff;border:1px solid #ff5124;box-shadow:${CTA_SHADOW};font-family:${FONT};text-decoration:none;font-weight:700;font-size:16px;padding:18px 40px;border-radius:12px;">Share my business</a>
       </td></tr>
       <tr><td align="center" style="padding:0 40px 28px 40px;font-size:14px;line-height:1.6;">
         <a href="${BROWSE_HREF}" style="color:#6b635a;text-decoration:underline;">Not ready to submit? Browse Vendibook</a>

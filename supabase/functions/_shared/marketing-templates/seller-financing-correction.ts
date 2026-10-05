@@ -6,6 +6,8 @@
 // 24–48 hours, sent via PayPal, ACH, or Venmo depending on the payout account
 // on file.
 //
+import { CTA_SHADOW, FONT } from "./brand.ts";
+
 // Premium editorial design: charcoal header band with the white Vendibook
 // wordmark, ivory canvas, one orange CTA. Table-based and Outlook-safe.
 
@@ -80,7 +82,7 @@ export function buildFinancingCorrectionHtml(unsubUrl: string): string {
 <meta name="color-scheme" content="light only">
 <title>${esc(CORRECTION_SUBJECT)}</title>
 </head>
-<body style="margin:0;padding:0;background:#f6f4f1;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#1c1c1e;">
+<body style="margin:0;padding:0;background:#f6f4f1;font-family:${FONT};color:#1c1c1e;">
 <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">${esc(CORRECTION_PREVIEW)}</div>
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f6f4f1;padding:28px 12px;">
   <tr><td align="center">
@@ -123,7 +125,7 @@ export function buildFinancingCorrectionHtml(unsubUrl: string): string {
       </td></tr>
 
       <tr><td align="center" style="padding:14px 36px 8px 36px;">
-        <a href="${PRIMARY.href}" style="display:inline-block;background:#ff5124;color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;padding:15px 32px;border-radius:999px;">${esc(PRIMARY.label)}</a>
+        <a href="${PRIMARY.href}" style="display:inline-block;background:#ff5124;color:#ffffff;border:1px solid #ff5124;box-shadow:${CTA_SHADOW};font-family:${FONT};text-decoration:none;font-weight:700;font-size:15px;padding:15px 32px;border-radius:12px;">${esc(PRIMARY.label)}</a>
       </td></tr>
       <tr><td align="center" style="padding:0 36px 22px 36px;">
         <a href="${SECONDARY.href}" style="display:inline-block;background:#ffffff;color:#1c1c1e;text-decoration:none;font-weight:600;font-size:14px;padding:12px 28px;border-radius:999px;border:1px solid #ddd8d2;">${esc(SECONDARY.label)}</a>
