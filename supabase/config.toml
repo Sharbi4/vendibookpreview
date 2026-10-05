@@ -370,3 +370,6 @@ verify_jwt = false
 
 [functions.send-message-removed-notice]
 verify_jwt = false
+
+[functions.notify-listing-lead]
+verify_jwt = false
