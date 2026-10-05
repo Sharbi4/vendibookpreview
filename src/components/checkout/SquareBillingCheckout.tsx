@@ -79,11 +79,18 @@ export default function SquareBillingCheckout({slug,listingId,consentId,interval
     <p className="text-xs uppercase tracking-widest text-muted-foreground">Vendibook · Secure billing</p>
     <h1 className="mt-2 text-2xl font-semibold">{quote?.name||'Checkout'}</h1>
     {quote && <div className="my-5 space-y-2 border-y py-4 text-sm"><p className="flex justify-between"><span>Subtotal</span><span>{money(quote.amount_cents)}</span></p><p className="flex justify-between"><span>Sales tax</span><span>{money(quote.tax_cents)}</span></p><p className="flex justify-between text-lg font-semibold"><span>Total{quote.recurring?' per billing cycle':''}</span><span>{money(quote.amount_cents+quote.tax_cents)}</span></p>{quote.recurring && <p className="text-xs text-muted-foreground">Renews {quote.billing_interval}. Cancel from Account → Membership &amp; billing.</p>}</div>}
-    <div ref={container} className={status?'hidden':'min-h-24'} />
-    {!ready&&!error&&!status&&<PaymentFormSkeleton />}
+    {needsAddress&&!quote&&<form onSubmit={saveAddress} className="my-5 space-y-3">
+      <p className="text-sm text-muted-foreground">Your billing address (used for sales tax). We'll save it for next time.</p>
+      <input aria-label="City" placeholder="City" autoComplete="billing address-level2" className="w-full rounded-xl border border-border bg-background px-3 py-2 text-base" value={addr.city} onChange={e=>setAddr({...addr,city:e.target.value})}/>
+      <div className="flex gap-3"><input aria-label="State" placeholder="State (AZ)" maxLength={2} autoComplete="billing address-level1" className="w-1/2 rounded-xl border border-border bg-background px-3 py-2 text-base uppercase" value={addr.state} onChange={e=>setAddr({...addr,state:e.target.value})}/>
+      <input aria-label="ZIP code" placeholder="ZIP" inputMode="numeric" autoComplete="billing postal-code" className="w-1/2 rounded-xl border border-border bg-background px-3 py-2 text-base" value={addr.zip} onChange={e=>setAddr({...addr,zip:e.target.value})}/></div>
+      <Button type="submit" className="w-full rounded-full">Continue to payment</Button>
+    </form>}
+    <div ref={container} className={status||needsAddress?'hidden':'min-h-24'} />
+    {!ready&&!error&&!status&&!needsAddress&&<PaymentFormSkeleton />}
     {!status&&quote?.recurring&&<label className="my-4 flex gap-2 text-sm"><input type="checkbox" checked={consent} onChange={e=>setConsent(e.target.checked)} disabled={busy}/><span>I authorize Square to save this card and charge {money(quote.amount_cents+quote.tax_cents)} {quote.billing_interval} until I cancel.</span></label>}
     {error&&<p role="alert" className="my-3 text-sm text-destructive">{error}</p>}
-    {status ? <div role="status" className="space-y-3"><p>{complete?'Payment confirmed. Your purchase is active.':'Your payment is being confirmed. Do not start another checkout.'}</p>{!complete&&<Button onClick={refresh} disabled={busy}>Check payment status</Button>}</div>:<Button className="mt-4 w-full rounded-full" disabled={!ready||busy||(quote?.recurring&&!consent)} onClick={pay}>{busy?'Processing…':quote?.recurring?'Subscribe and pay':'Pay now'}</Button>}
+    {needsAddress&&!quote ? null : status ? <div role="status" className="space-y-3"><p>{complete?'Payment confirmed. Your purchase is active.':'Your payment is being confirmed. Do not start another checkout.'}</p>{!complete&&<Button onClick={refresh} disabled={busy}>Check payment status</Button>}</div>:<Button className="mt-4 w-full rounded-full" disabled={!ready||busy||(quote?.recurring&&!consent)} onClick={pay}>{busy?'Processing…':quote?.recurring?'Subscribe and pay':'Pay now'}</Button>}
     <Button variant="ghost" className="mt-3 w-full" onClick={onClose} disabled={busy}>{complete?'Return to dashboard':'Back'}</Button>
     <p className="mt-4 text-center text-xs text-muted-foreground">Card details are securely handled by Square.</p>
   </section>;
