@@ -15,7 +15,11 @@ import {
   Search,
   Settings,
   ShoppingBag,
+  Crown,
+  Gauge,
+  FileCheck2,
 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications } from '@/hooks/useNotifications';
 import { useUnreadMessageCount } from '@/hooks/useUnreadMessageCount';
@@ -38,6 +42,24 @@ const desktopNav = [
   ['Payments', '/dashboard/payments', CreditCard],
   ['Account', '/dashboard/account', Settings],
 ] as const;
+
+/** Pro upsell + live tools. Go Pro routes to the /pricing hub, never straight to consent. */
+function GrowSection({ onNavigate, linkClass }: { onNavigate?: () => void; linkClass: string }) {
+  return (
+    <div className="mt-4 grid gap-1 border-t border-current/10 pt-4">
+      <p className="px-3 pb-1 text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Grow with Vendibook</p>
+      <Button asChild variant="cta" className="mb-2 w-full">
+        <Link to="/pricing" onClick={onNavigate}><Crown />Get Vendibook Pro</Link>
+      </Button>
+      <NavLink to="/tools/pricepilot" onClick={onNavigate} className={({ isActive }) => cn(linkClass, isActive && 'is-active')}>
+        <Gauge aria-hidden="true" /><span>PricePilot</span>
+      </NavLink>
+      <NavLink to="/tools/permitpath" onClick={onNavigate} className={({ isActive }) => cn(linkClass, isActive && 'is-active')}>
+        <FileCheck2 aria-hidden="true" /><span>PermitPath</span>
+      </NavLink>
+    </div>
+  );
+}
 
 const mobileNav = [
   ['Home', '/dashboard', Home],
@@ -113,6 +135,7 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
               )}
             </NavLink>
           ))}
+          <GrowSection linkClass="v2-nav-link" />
         </nav>
         <Link to="/dashboard/profile" className="v2-sidebar-profile">
           <Avatar className="h-9 w-9">
@@ -147,6 +170,7 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
                 ))}
                 <Link to="/list" onClick={() => setMenuOpen(false)} className="workspace-menu-link"><Plus />List an asset</Link>
                 <Link to="/search" onClick={() => setMenuOpen(false)} className="workspace-menu-link"><Compass />Browse marketplace</Link>
+                <GrowSection linkClass="workspace-menu-link" onNavigate={() => setMenuOpen(false)} />
               </nav>
             </SheetContent>
           </Sheet>
