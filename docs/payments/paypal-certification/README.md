@@ -38,9 +38,9 @@ The code checks `payments_receivable === true` and `primary_email_confirmed === 
 | 404 `USER_BUSINESS_ERROR` "Partner not Business or Account Closed" (merchant-id lookup, partner `48R2DERT59KTA`) | 55 | `f421372616341` (2026-09-20) |
 | 404 `USER_BUSINESS_ERROR` "Invalid account" (old config used the client id as partner id; fixed) | 127 | `f78661587bdeb` (2026-09-20) |
 
-**Ask for PayPal:**
-- Enable the merchant-integrations (seller status) API for our sandbox REST app.
-- Confirm that partner merchant ID `48R2DERT59KTA` is the sandbox Business account that owns the app.
+**Root cause found (2026-10-06): the configured partner ID is wrong.** Every first-party sandbox order (57 creates and 12 captures) was paid to `payee.merchant_id = JQ9RNCNVTREA8`. With no payee given, PayPal pays the account that owns the REST app, so `JQ9RNCNVTREA8` is Vendibook's sandbox partner account. The status calls used `48R2DERT59KTA`, which explains "Partner not Business or Account Closed" and "not authorized".
+
+**Fix:** set the Supabase secret `PAYPAL_SANDBOX_PARTNER_MERCHANT_ID=JQ9RNCNVTREA8`. This is a merchant ID, not a credential. Then press "Check status" on a connected sandbox seller to get a successful debug ID. If it still returns 401 after that, ask PayPal to enable the merchant-integrations API for the sandbox app.
 
 Until this call succeeds, no sandbox seller can reach "ready". That blocks the payee test in item 4 and the status debug ID in item 6.
 
