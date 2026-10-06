@@ -1,5 +1,7 @@
 # Rental bookings on Square
 
+> **Update 2026-10-06 (checkout steps):** rental checkout is now three steps: Review (dates, pickup/delivery/on-site, total), Details & agreement (contact, business info, documents, insurance attestation, one checkbox that records both the Rental Agreement and the Checkout Privacy & Electronic Consent with their exact wording), and Payment. Continuing to Payment prepares the final terms record right away, so the renter lands on it with one confirm before the card form.
+
 > **Update 2026-10-06 (owner):** rentals are live on Square with no PayPal anywhere in the rental flow and no identity check in rental checkout. When a host hasn't connected Square, the renter pays on Vendibook's live Square account (the billing credentials) and the host's share becomes a seller payable. `RENTAL_PAYPAL_FALLBACK` is gone. Set `RENTAL_SQUARE_PLATFORM_ENABLED=false` to require host accounts.
 
 Rental checkout moves from PayPal to Square using Square's marketplace pattern. The renter pays the host's own Square account. Vendibook's share is taken as `app_fee_money`.

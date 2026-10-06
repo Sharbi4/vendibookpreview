@@ -77,37 +77,25 @@ import { trackRentalCheckout } from '@/lib/rentalCheckoutAnalytics';
 import CheckoutAgreementCards from '@/components/checkout/CheckoutAgreementCards';
 import SaleCheckoutWizard from '@/components/checkout/sale/SaleCheckoutWizard';
 
-/** The contained rental checkout: one step visible at a time. */
+/** The contained rental checkout: three steps, one visible at a time. */
 const RENTAL_STEPS: Array<{ id: string; label: string; heading: string; description: string }> = [
   {
     id: 'review',
     label: 'Review',
     heading: 'Review your booking',
-    description: 'Confirm the rental, dates, and total before continuing.',
-  },
-  {
-    id: 'use',
-    label: 'Use',
-    heading: 'Pickup, delivery or on-site use',
-    description: "Select how you'll access this rental.",
+    description: 'Confirm your dates, pickup or delivery, and the total.',
   },
   {
     id: 'details',
     label: 'Details',
-    heading: 'Your details & requirements',
-    description: 'Who the host is renting to, plus anything this listing requires.',
-  },
-  {
-    id: 'agreement',
-    label: 'Agreement',
-    heading: 'Agreements',
-    description: 'Review and accept the terms for this booking before continuing to payment.',
+    heading: 'Your details & agreement',
+    description: 'Who the host is renting to, anything this listing requires, and the rental terms.',
   },
   {
     id: 'payment',
     label: 'Payment',
     heading: 'Payment',
-    description: "Choose how you'd like to pay.",
+    description: 'Confirm the final record and pay by card.',
   },
 ];
 import OrderReviewStage from '@/components/checkout/OrderReviewStage';
@@ -224,20 +212,26 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   const [referralCode, setReferralCode] = useState<string>('');
   const [referralValid, setReferralValid] = useState<boolean>(false);
   const [showDateModal, setShowDateModal] = useState(false);
-  /** Contained five-step checkout. Only the active step body is rendered. */
-  const [step, setStep] = useState(() => Math.min(restoredDraft?.step ?? 1, 3));
-  const [furthestStep, setFurthestStep] = useState(() => Math.min(restoredDraft?.furthestStep ?? 1, 3));
+  /** Contained three-step checkout. Only the active step body is rendered.
+   *  A restored draft resumes no further than Details; payment is re-entered
+   *  through the server-checked submit. */
+  const [step, setStep] = useState(() => Math.min(restoredDraft?.step ?? 1, 2));
+  const [furthestStep, setFurthestStep] = useState(() => Math.min(restoredDraft?.furthestStep ?? 1, 2));
   /** Drop-off tracking: which step the renter reached / left from. */
   const { markCompleted } = useCheckoutFunnel({ flow: 'rental', step, listingId });
   const completedRef = useRef(false);
   const goToStep = (next: number) => {
     // Milestones are recorded when the renter moves forward past a step.
     if (next > step) {
-      if (step === 2) trackRentalCheckout('delivery_selected', { listingId, step, fulfillment: fulfillmentSelected });
-      if (step === 3) trackRentalCheckout('booking_details_completed', { listingId, step });
-      if (step === 4) trackRentalCheckout('agreements_completed', { listingId, step });
-      if (next === 5) trackRentalCheckout('review_reached', { listingId, step: next });
+      if (step === 1) trackRentalCheckout('delivery_selected', { listingId, step, fulfillment: fulfillmentSelected });
+      if (step === 2) {
+        trackRentalCheckout('booking_details_completed', { listingId, step });
+        trackRentalCheckout('agreements_completed', { listingId, step });
+      }
+      if (next === 3) trackRentalCheckout('review_reached', { listingId, step: next });
     }
+    // Going back to edit invalidates a prepared (unpaid) terms record.
+    if (next < 3 && !paymentTarget) termsGate.reset();
     setStep(next);
     setFurthestStep((prev) => Math.max(prev, next));
   };
@@ -577,8 +571,8 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
           return;
         }
         setPaymentTarget({ bookingId: data.id, returnUrl: confirmationUrl(data.id) });
-        setStep(5);
-        setFurthestStep(5);
+        setStep(3);
+        setFurthestStep(3);
       });
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -602,7 +596,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   const completeCheckout = (bookingId: string, flow: 'instant' | 'request') => {
     completedRef.current = true;
     markCompleted();
-    trackRentalCheckout('booking_completed', { listingId, bookingId, flow, step: 5 });
+    trackRentalCheckout('booking_completed', { listingId, bookingId, flow, step: 3 });
     clearRentalDraft(draftKey);
     navigate(flow === 'instant' ? `/dashboard/bookings/${bookingId}?confirmed=1` : `/dashboard/bookings/${bookingId}`);
   };
@@ -699,6 +693,13 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
     } finally {
       agreementLockRef.current = false;
     }
+  };
+
+  /** Details -> Payment: prepare the final record right away so the renter
+   *  lands on it instead of pressing a second confirm button. */
+  const continueToPayment = () => {
+    goToStep(3);
+    if (user && canSubmit && legalAccepted && !paymentTarget && !termsGate.open) void handleSubmit();
   };
 
   const runSubmit = async () => {
@@ -1184,7 +1185,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
         exitLabel="Back to listing"
         summary={railSummary}
         mobileSummary={mobileSummary}
-        stickyAction={step < 5 ? undefined : (
+        stickyAction={step < 3 ? undefined : (
           <div className="v2-checkout-sticky-inner">
             <div className="v2-checkout-sticky-total">
               <span>Total due today</span>
@@ -1219,12 +1220,12 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
           onStepChange={goToStep}
           backHref={step === 1 ? listingHref : undefined}
           onBack={step > 1 ? () => goToStep(step - 1) : undefined}
-          onNext={step < 5 ? () => goToStep(step + 1) : undefined}
-          nextLabel={step === 4 ? 'Continue to payment' : 'Continue'}
+          onNext={step === 2 ? continueToPayment : step < 3 ? () => goToStep(step + 1) : undefined}
+          nextLabel={step === 2 ? 'Continue to payment' : 'Continue'}
           nextDisabled={
-            (step === 2 && fulfillmentSelected === 'delivery' && !deliveryAddress.trim()) ||
-            (step === 3 && !(isStepContactComplete && isStepBusinessInfoComplete && isStepDocsComplete && isStepDisclosureComplete)) ||
-            (step === 4 && !(rentalAgreementAccepted && privacyAccepted))
+            (step === 1 && fulfillmentSelected === 'delivery' && !deliveryAddress.trim()) ||
+            (step === 2 && !(isStepContactComplete && isStepBusinessInfoComplete && isStepDocsComplete && isStepDisclosureComplete
+              && rentalAgreementAccepted && privacyAccepted))
           }
         >
           {step === 1 ? (
@@ -1256,7 +1257,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
                     ? 'Access details are shared with your booking confirmation.'
                     : 'Collect from the host location.'
               }
-              onEditFulfillment={() => goToStep(2)}
+              onEditFulfillment={() => document.getElementById('checkout-use')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
               moneyLines={moneyLines}
               total={formatCurrency(totalChargedToday)}
               totalLabel={instantConfirm ? "Total due at payment" : "Total after host approval"}
@@ -1279,8 +1280,9 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
             </OrderReviewStage>
           ) : null}
 
-          {step === 2 ? (
-            <div className="space-y-5">
+          {step === 1 ? (
+            <div id="checkout-use" className="mt-6 space-y-5 scroll-mt-24">
+              <h3 className="text-base font-semibold text-foreground">Pickup, delivery or on-site use</h3>
               {supportsFulfillmentChoice && (
                 <div>
                   <Label className="text-sm font-medium mb-3 block">Fulfillment method</Label>
@@ -1378,7 +1380,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
             </div>
           ) : null}
 
-          {step === 3 ? (
+          {step === 2 ? (
             <div className="space-y-6">
               {isStepContactComplete && !editingContact ? (
                 <div className="flex items-center justify-between p-4 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl border border-emerald-200 dark:border-emerald-800/50">
@@ -1472,8 +1474,9 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
             </div>
           ) : null}
 
-          {step === 4 ? (
-            <div className="space-y-4">
+          {step === 2 ? (
+            <div className="mt-6 space-y-4 border-t border-border pt-6">
+              <h3 className="text-base font-semibold text-foreground">Agreement</h3>
               <div className="rounded-xl border border-border bg-muted/30 p-4">
                 <div className="flex items-center gap-2 mb-1.5">
                   <Clock className="h-4 w-4 text-foreground" />
@@ -1495,6 +1498,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
 
               <CheckoutAgreementCards
                 mode="rental"
+                combined
                 agreement={rentalAgreement}
                 privacy={privacyDocument}
                 agreementAccepted={rentalAgreementAccepted}
@@ -1505,7 +1509,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
             </div>
           ) : null}
 
-          {step === 5 ? (
+          {step === 3 ? (
             <div className="space-y-5">
               <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-1.5">
                 <div className="flex items-center gap-2">
