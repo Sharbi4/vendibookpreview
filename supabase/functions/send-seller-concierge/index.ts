@@ -13,6 +13,8 @@
 //   welcome  — listing published in the last WELCOME_DAYS days: welcome plus
 //              up to 3 asks (8+ photos, build year, what's included, …)
 // body.onlyUserIds restricts the run to those hosts (e.g. one new seller).
+// body.polish sends one admin-written review (title suggestions and asks per
+// listing) to a single host; see the comment where it is parsed.
 // Order: integrity fixes → verified missed offers → featured → other coaching.
 // Contact details are stripped automatically on save (a00_strip_contact_details),
 // so there is no "remove your phone/email" ask.
@@ -40,6 +42,7 @@ import {
   buildSellerConciergeText,
   sellerConciergeSubject,
   type ConciergeVariant,
+  type PolishItem,
   type RescueDetails,
   type SellerConciergeData,
 } from "../_shared/marketing-templates/seller-concierge.ts";
@@ -92,8 +95,10 @@ type ListingRow = FixableListing & {
 type PageResult<T> = PromiseLike<{ data: T[] | null; error: { message: string } | null }>;
 
 const VARIANT_RANK: Record<ConciergeVariant, number> = {
-  fix_title: 0, rescue: 1, welcome: 2, featured: 3, optimize: 4, share: 5,
+  polish: -1, fix_title: 0, rescue: 1, welcome: 2, featured: 3, optimize: 4, share: 5,
 };
+const POLISH_MAX_LISTINGS = 3;
+const POLISH_MAX_ASKS = 6;
 const WELCOME_DAYS = 7;
 
 /** Welcome asks: the shared fixes plus year and inclusions, photos first. */
@@ -140,7 +145,16 @@ serve(async (req) => {
     const mode: "preview_count" | "preview_html" | "test" | "broadcast" = body.mode ?? "preview_count";
     const limit = Math.max(1, Math.min(Number(body.limit) || DEFAULT_LIMIT, 100));
     const excludeUserIds = new Set<string>(Array.isArray(body.excludeUserIds) ? body.excludeUserIds.map(String) : []);
-    const onlyUserIds = Array.isArray(body.onlyUserIds) && body.onlyUserIds.length
+    // body.polish = { hostId, featuredTrialOffer?, items: [{ listingId, suggestedTitle?, asks[] }] }:
+    // an admin-written review for one seller. The run is limited to that host.
+    const polishReq = body.polish && typeof body.polish === "object" ? body.polish : null;
+    const polishHost = polishReq ? String(polishReq.hostId ?? "") : null;
+    if (polishReq && (!polishHost || !Array.isArray(polishReq.items) || !polishReq.items.length ||
+        polishReq.items.length > POLISH_MAX_LISTINGS)) {
+      return json({ error: `polish needs hostId and 1-${POLISH_MAX_LISTINGS} items` }, 400);
+    }
+    const onlyUserIds = polishHost ? new Set<string>([polishHost])
+      : Array.isArray(body.onlyUserIds) && body.onlyUserIds.length
       ? new Set<string>(body.onlyUserIds.map(String)) : null;
     const unsubFor = (email: string) =>
       `${supabaseUrl}/functions/v1/marketing-unsubscribe?e=${encodeURIComponent(email)}&t=${unsubToken(email)}`;
@@ -216,6 +230,28 @@ serve(async (req) => {
       if (better) bySeller.set(l.host_id, cand);
     }
 
+    let polishItems: PolishItem[] | null = null;
+    if (polishReq && polishHost) {
+      const own = new Map(listings.filter((l) => l.host_id === polishHost).map((l) => [l.id, l]));
+      const clean = (v: unknown, max: number) => String(v ?? "").replace(/\s+/g, " ").trim().slice(0, max);
+      polishItems = [];
+      for (const it of polishReq.items as Array<Record<string, unknown>>) {
+        const l = own.get(String(it?.listingId ?? ""));
+        if (!l) return json({ error: `Listing ${String(it?.listingId)} is not a live listing of this host` }, 400);
+        const asks = (Array.isArray(it.asks) ? it.asks : []).map((a) => clean(a, 300)).filter(Boolean);
+        if (asks.length > POLISH_MAX_ASKS) return json({ error: `At most ${POLISH_MAX_ASKS} asks per listing` }, 400);
+        polishItems.push({
+          listingId: l.id,
+          currentTitle: String(l.title ?? "Your listing").trim(),
+          suggestedTitle: clean(it.suggestedTitle, 80) || null,
+          asks,
+        });
+      }
+      bySeller.set(polishHost, {
+        listing: own.get(polishItems[0].listingId)!, variant: "polish", fixes: [], offersOff: false,
+      });
+    }
+
     const hostIds = Array.from(bySeller.keys());
     type ProfileRow = { id: string; email: string | null; first_name: string | null; full_name: string | null; avatar_url: string | null; account_suspended: boolean | null };
     const profiles: ProfileRow[] = [];
@@ -255,7 +291,7 @@ serve(async (req) => {
 
     const firstNameOf = (p: ProfileRow): string | null => {
       const raw = (p.first_name ?? "").trim() || (p.full_name ?? "").trim().split(/\s+/)[0] || "";
-      if (!/^[A-Za-z][A-Za-z'\-]{1,}$/.test(raw)) return null;
+      if (!/^[A-Za-z][A-Za-z'-]{1,}$/.test(raw)) return null;
       return raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
     };
     const featuredUntil = (iso: string | null) =>
@@ -288,6 +324,8 @@ serve(async (req) => {
           featuredUntil: c.variant === "featured" ? featuredUntil(c.listing.featured_expires_at) : null,
           needsProfilePhoto: !p.avatar_url,
           rescue: c.variant === "rescue" ? rescues.get(c.listing.id) : null,
+          polish: c.variant === "polish" ? polishItems : null,
+          featuredTrialOffer: c.variant === "polish" && polishReq?.featuredTrialOffer === true,
           unsubscribeUrl: unsubFor(email),
         },
       });

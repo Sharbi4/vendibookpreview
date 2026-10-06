@@ -106,7 +106,8 @@ describe("rescue eligibility", () => {
     rows.offers = [{ id: "offer", listing_id: listing, seller_id: seller, buyer_id: "buyer", offer_amount: 17500, status: "expired", responded_at: null, expires_at: ago(200), created_at: ago(248) }];
     return rows;
   }
-  it.each([["Call 602-555-1234 food trailer", "remove_contact"], ["Untitled", "fix_title"]])("routes integrity first: %s", async (title, variant) => {
+  // Contact details are stripped by the a00_strip_contact_details trigger, so they no longer change routing.
+  it.each([["Call 602-555-1234 food trailer", "rescue"], ["Untitled", "fix_title"]])("routes integrity first: %s", async (title, variant) => {
     const rows = rescueRows(); rows.listings[0].title = title;
     const result = await worker("send-seller-concierge", rows).run();
     expect(result.body.byVariant).toEqual({ [variant]: 1 });
@@ -118,6 +119,29 @@ describe("rescue eligibility", () => {
   it.each(["accepted", "rejected", "pending"])("does not rescue a now-%s offer", async status => {
     const rows = rescueRows(); rows.offers[0].status = status;
     expect((await worker("send-seller-concierge", rows).run()).body.byVariant.rescue).toBeUndefined();
+  });
+});
+
+describe("polish review", () => {
+  const polish = (listingId = listing) => ({ hostId: seller, featuredTrialOffer: true,
+    items: [{ listingId, suggestedTitle: "2026 Food Trailer, Seguin TX", asks: [" Add  the VIN. ", ""] }] });
+  it("sends the admin-written review to that host only", async () => {
+    const rows = fixture();
+    rows.listings.push({ ...rows.listings[0], id: "other-listing", host_id: "other-host" });
+    rows.profiles.push({ id: "other-host", email: "other@business.net", first_name: "Other", account_suspended: false });
+    const result = await worker("send-seller-concierge", rows).run({ mode: "preview_html", variant: "polish", polish: polish() });
+    const data = JSON.parse(result.body.html);
+    expect(data.variant).toBe("polish");
+    expect(data.featuredTrialOffer).toBe(true);
+    expect(data.polish).toEqual([{ listingId: listing, currentTitle: "Commercial food trailer", suggestedTitle: "2026 Food Trailer, Seguin TX", asks: ["Add the VIN."] }]);
+    expect((await worker("send-seller-concierge", rows).run({ polish: polish() })).body.eligibleRecipients).toBe(1);
+  });
+  it("rejects a listing the host does not own", async () => {
+    const rows = fixture();
+    rows.listings.push({ ...rows.listings[0], id: "other-listing", host_id: "other-host" });
+    const w = worker("send-seller-concierge", rows);
+    expect((await w.run({ mode: "broadcast", confirm: "concierge", polish: polish("other-listing") })).status).toBe(400);
+    expect(w.provider).not.toHaveBeenCalled();
   });
 });
 

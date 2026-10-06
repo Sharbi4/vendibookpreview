@@ -6,7 +6,15 @@ import type { ListingFix } from "../listingFixes.ts";
 
 export const SELLER_CONCIERGE_CAMPAIGN_ID = "2026-10-seller-concierge";
 
-export type ConciergeVariant = "welcome" | "featured" | "optimize" | "share" | "fix_title" | "rescue";
+export type ConciergeVariant = "welcome" | "featured" | "optimize" | "share" | "fix_title" | "rescue" | "polish";
+
+/** Hand-written concierge review of one listing (admin-supplied, "polish" variant). */
+export interface PolishItem {
+  listingId: string;
+  currentTitle: string;
+  suggestedTitle: string | null;
+  asks: string[];
+}
 
 /** Missed-offer rescue: an offer expired before the seller responded. */
 export interface RescueDetails {
@@ -27,6 +35,10 @@ export interface SellerConciergeData {
   featuredUntil?: string | null;
   needsProfilePhoto: boolean;
   rescue?: RescueDetails | null;
+  /** "polish" variant: one block per listing, in order. */
+  polish?: PolishItem[] | null;
+  /** "polish" variant: mention the free 14-day feature (subject to review). */
+  featuredTrialOffer?: boolean;
   unsubscribeUrl: string;
 }
 
@@ -45,12 +57,23 @@ export const conciergeEditUrl = (d: Pick<SellerConciergeData, "listingId" | "var
   `${SITE_URL}/edit-listing/${encodeURIComponent(d.listingId)}?${utm("edit_cta", d.variant)}`;
 export const conciergeListingUrl = (d: Pick<SellerConciergeData, "listingId" | "variant">) =>
   `${SITE_URL}/listing/${encodeURIComponent(d.listingId)}?${utm("listing", d.variant)}`;
+const FEATURED_TRIAL_NOTE =
+  "We feature a few strong new listings free for 14 days. Once these updates are in, reply to this email and I'll check whether yours qualify.";
+
+const editUrlFor = (listingId: string, variant: ConciergeVariant) =>
+  `${SITE_URL}/edit-listing/${encodeURIComponent(listingId)}?${utm("edit_cta", variant)}`;
+
 const referralUrl = (variant: ConciergeVariant) => `${SITE_URL}/referral?${utm("referral", variant)}`;
 const accountUrl = (variant: ConciergeVariant) => `${SITE_URL}/account?${utm("profile", variant)}`;
 
 const money = (n: number) => `$${Math.round(n).toLocaleString("en-US")}`;
 
-export function sellerConciergeSubject(d: Pick<SellerConciergeData, "variant" | "listingTitle" | "rescue">): string {
+export function sellerConciergeSubject(d: Pick<SellerConciergeData, "variant" | "listingTitle" | "rescue" | "polish">): string {
+  if (d.variant === "polish") {
+    return (d.polish?.length ?? 0) > 1
+      ? "A few quick changes to help your listings get booked and sold"
+      : "A few quick changes to help your listing stand out";
+  }
   if (d.variant === "rescue" && d.rescue) {
     return d.rescue.stale ? "Is your food trailer still for sale?" : `A buyer offered ${money(d.rescue.offerAmount)} for your listing`;
   }
@@ -67,6 +90,12 @@ function intro(d: SellerConciergeData): string {
     return r.stale
       ? `Back in ${esc(r.offerDateLabel)} a buyer offered <strong>${money(r.offerAmount)}</strong> for your listing, which is priced at ${money(r.askingPrice)}. The offer expired with no response recorded. Is it still for sale? Reply "yes" and I'll help you update the listing, or reply "sold" and I'll take it down.`
       : `On ${esc(r.offerDateLabel)} a buyer offered <strong>${money(r.offerAmount)}</strong> for your listing, which is priced at ${money(r.askingPrice)}. The offer expired with no response recorded. If you're still selling, reply to this email and I'll let the buyer know you're open to talking. If it's sold, reply "sold" and I'll take it down.`;
+  }
+  if (d.variant === "polish") {
+    const n = d.polish?.length ?? 0;
+    return n > 1
+      ? `Welcome to Vendibook, and thanks for listing with us. I went through your ${n} listings, and they're off to a strong start. A few changes will help buyers and renters find them and reach out:`
+      : `Welcome to Vendibook, and thanks for listing with us. I went through your listing, and it's off to a strong start. A few changes will help buyers find it and reach out:`;
   }
   if (d.variant === "welcome") {
     return `Welcome to Vendibook, and thanks for listing your <strong>${esc(d.listingTitle)}</strong>. It's live, and buyers can find it now. A few quick additions will help it stand out:`;
@@ -95,6 +124,14 @@ export function buildSellerConciergeHtml(d: SellerConciergeData): string {
   const fixesBlock = d.fixes.length
     ? `${d.variant === "featured" ? `<p style="${p}">These changes will turn that extra attention into messages:</p>` : ""}<ul style="${p}padding-left:20px;">${items}</ul>`
     : "";
+  const polishBlock = d.variant === "polish"
+    ? (d.polish ?? []).map((it) => `
+  <p style="${p}margin-top:22px;"><strong>${esc(it.currentTitle)}</strong></p>
+  ${it.suggestedTitle ? `<p style="${p}">Suggested title: <strong>${esc(it.suggestedTitle)}</strong></p>` : ""}
+  ${it.asks.length ? `<ul style="${p}padding-left:20px;">${it.asks.map((a) => `<li style="margin:0 0 8px;">${esc(a)}</li>`).join("")}</ul>` : ""}
+  <p style="margin:0 0 18px;">${mkButton("Edit this listing", editUrlFor(it.listingId, d.variant))}</p>`).join("") +
+      (d.featuredTrialOffer ? `<p style="${p}">${esc(FEATURED_TRIAL_NOTE)}</p>` : "")
+    : "";
   const shareBlock = d.variant === "share"
     ? `<p style="${p}">If you post it on Instagram or Facebook, tag <strong>@vendibook</strong> and we'll reshare it. Adding your listing link to your bio helps buyers find it too.</p>`
     : "";
@@ -103,7 +140,9 @@ export function buildSellerConciergeHtml(d: SellerConciergeData): string {
     : d.needsProfilePhoto
     ? `<p style="${p}">Also add a photo and a short bio to <a href="${esc(accountUrl(d.variant))}" style="color:${MK.text};">your profile</a>. Buyers check who they're dealing with before they message.</p>`
     : `<p style="${p}">Also add a short bio to <a href="${esc(accountUrl(d.variant))}" style="color:${MK.text};">your profile</a>. Buyers like to know who they're buying from.</p>`;
-  const cta = d.variant === "share"
+  const cta = d.variant === "polish"
+    ? ""
+    : d.variant === "share"
     ? mkButton("View my listing", conciergeListingUrl(d))
     : mkButton(d.variant === "fix_title" ? "Edit my title" : "Update my listing", conciergeEditUrl(d));
   const bodyRows = `
@@ -111,9 +150,10 @@ export function buildSellerConciergeHtml(d: SellerConciergeData): string {
   <p style="${p}">${hi}</p>
   <p style="${p}">${intro(d)}</p>
   ${fixesBlock}
+  ${polishBlock}
   ${shareBlock}
   ${profileBlock}
-  <p style="margin:20px 0 24px;">${cta}</p>
+  ${cta ? `<p style="margin:20px 0 24px;">${cta}</p>` : ""}
   <p style="${p}">Reply to this email if you have any questions. A real person reads every reply.</p>
   <p style="${small}">${esc(REFERRAL_NOTE)} <a href="${esc(referralUrl(d.variant))}" style="color:${MK.textMuted};">See the referral terms</a>.</p>
   <p style="${small}">${esc(SAFETY_NOTE)}</p>
@@ -129,6 +169,8 @@ export function buildSellerConciergeHtml(d: SellerConciergeData): string {
       ? "Your listing is live. Here's how to make it stand out."
       : d.variant === "featured"
       ? "Your listing is featured free for 14 days."
+      : d.variant === "polish"
+      ? "A few quick changes to help your listings stand out."
       : d.variant === "share" ? "Tag @vendibook and we'll reshare it." : "Small changes that get buyers to reach out.",
     bodyRows,
     unsubscribeUrl: d.unsubscribeUrl,
@@ -143,6 +185,15 @@ export function buildSellerConciergeText(d: SellerConciergeData): string {
     ...(d.fixes.length
       ? ["", ...(d.variant === "featured" ? ["These changes will turn that extra attention into messages:"] : []), ...d.fixes.map((f) => `- ${f.text}`)]
       : []),
+    ...(d.variant === "polish"
+      ? (d.polish ?? []).flatMap((it) => [
+        "",
+        it.currentTitle,
+        ...(it.suggestedTitle ? [`Suggested title: ${it.suggestedTitle}`] : []),
+        ...it.asks.map((a) => `- ${a}`),
+        `Edit this listing: ${editUrlFor(it.listingId, d.variant)}`,
+      ]).concat(d.featuredTrialOffer ? ["", FEATURED_TRIAL_NOTE] : [])
+      : []),
     ...(d.variant === "share"
       ? ["", "If you post it on Instagram or Facebook, tag @vendibook and we'll reshare it."]
       : []),
@@ -151,10 +202,12 @@ export function buildSellerConciergeText(d: SellerConciergeData): string {
       : ["", d.needsProfilePhoto
         ? `Also add a photo and a short bio to your profile: ${accountUrl(d.variant)}`
         : `Also add a short bio to your profile: ${accountUrl(d.variant)}`]),
-    "",
-    d.variant === "share"
-      ? `View your listing: ${conciergeListingUrl(d)}`
-      : `Update your listing: ${conciergeEditUrl(d)}`,
+    ...(d.variant === "polish" ? [] : [
+      "",
+      d.variant === "share"
+        ? `View your listing: ${conciergeListingUrl(d)}`
+        : `Update your listing: ${conciergeEditUrl(d)}`,
+    ]),
     "",
     "Reply to this email if you have any questions. A real person reads every reply.",
     "",
