@@ -307,7 +307,7 @@ export const SaleListingMobile = ({
           <div className="grid grid-cols-3 gap-3">
             <TrustItem icon={ShieldCheck} title="Detailed Listing" sub="Specs and documents" tone="primary" />
             <TrustItem icon={Lock} title="PayPal Checkout" sub="Processed by PayPal" tone="primary" />
-            <TrustItem icon={Zap} title="Responsive Seller" sub="Typically replies fast" tone="primary" />
+            <TrustItem icon={MessageSquare} title="Screened Messages" sub="Checked for scam risk" tone="primary" />
           </div>
         </SaleCard>
 
@@ -421,7 +421,7 @@ export const SaleListingMobile = ({
             <div className="flex flex-col gap-1 text-[11px] text-muted-foreground items-end">
               {respondsQuickly && (
                 <span className="inline-flex items-center gap-1 text-emerald-400">
-                  <Zap className="h-3 w-3" /> Responds quickly
+                  <Zap className="h-3 w-3" /> {lastActiveLabel}
                 </span>
               )}
               {memberYear && (
@@ -468,7 +468,7 @@ export const SaleListingMobile = ({
               )}
               {lastActiveLabel && (
                 <div className="text-xs text-emerald-400 mt-1 inline-flex items-center gap-1">
-                  <Zap className="h-3 w-3" /> Typically responds within 1 hour
+                  <Zap className="h-3 w-3" /> {lastActiveLabel}
                 </div>
               )}
             </div>
