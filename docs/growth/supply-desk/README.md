@@ -12,6 +12,7 @@ _Lead: Supply Desk (Claude) · reports to Growth & Liquidity · updated 2026-10-
 | `06-lovable-prompts.md` | LP-1 (shipped) and LP-2…LP-7, all payment-safe |
 | `07-concierge-onboarding.md` | Owner's Studiotime concierge guide adapted: profile → list → optimize → share |
 | `08-supply-to-demand.md` | Owner's 5-step supply → demand playbook applied: hero listings, quick wins, incentives, metrics |
+| `11-rental-liquidity.md` | Rental liquidity (2026-10-06): host phone-gate blocker and fix, Rent It While You Sell It (61 hosts; wave 1 TX/GA/FL/AZ = 31), 4 monthly-rate asks, Minneapolis 55303 sourcing list + MUSE-MN |
 | `outreach/` | Send-ready copy: 123 seller concierge emails, 2 real offer rescues |
 
 ## ✅ Outreach released (07:25 UTC, after the seller exemption went live)

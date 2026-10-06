@@ -73,6 +73,7 @@ function worker(name: string, rows = fixture(), fail: (table: string, columns: s
     invokeTransactionalEmail: dispatch, SELLER_CONCIERGE_CAMPAIGN_ID: "concierge",
     LISTING_FIX_CAMPAIGN_ID: "listing-fix", MARKETING_FROM: "test", MARKETING_REPLY_TO: "test",
     sellerConciergeSubject: () => "test", buildSellerConciergeHtml: JSON.stringify, buildSellerConciergeText: JSON.stringify,
+    RENT_WHILE_YOU_SELL_CAMPAIGN_ID: "rent", rentCampaignSubject: () => "test", buildRentCampaignHtml: JSON.stringify, buildRentCampaignText: JSON.stringify,
   });
   return { dispatch, provider, run: async (body: Row = {}) => {
     const response = await handler!(new Request("https://test.invalid", { method: "POST", body: JSON.stringify(body) }));
@@ -141,6 +142,51 @@ describe("polish review", () => {
     rows.listings.push({ ...rows.listings[0], id: "other-listing", host_id: "other-host" });
     const w = worker("send-seller-concierge", rows);
     expect((await w.run({ mode: "broadcast", confirm: "concierge", polish: polish("other-listing") })).status).toBe(400);
+    expect(w.provider).not.toHaveBeenCalled();
+  });
+});
+
+describe("rent while you sell", () => {
+  const old = ago(24 * 45);
+  function rentRows() {
+    const rows = fixture();
+    rows.listings = [
+      { id: listing, host_id: seller, title: "Commercial food trailer", category: "food_trailer", state: "TX", mode: "sale", price_sale: 20000, status: "published", moderation_status: "clear", deleted_at: null, published_at: old },
+    ];
+    rows.conversations = []; rows.offers = []; rows.blog_campaign_sends = [];
+    rows.listing_views = Array.from({ length: 12 }, (_, i) => ({ id: `v${i}`, listing_id: listing, viewed_at: ago(24) }));
+    return rows;
+  }
+  it("targets a viewed sale trailer with no offers, by state", async () => {
+    const result = await worker("send-rent-while-you-sell", rentRows()).run();
+    expect(result.body.byVariant).toEqual({ rent_while_you_sell: 1 });
+    expect(result.body.byState).toEqual({ TX: 1 });
+    const html = JSON.parse((await worker("send-rent-while-you-sell", rentRows()).run({ mode: "preview_html" })).body.html);
+    expect(html.views30).toBe(12);
+  });
+  it.each([
+    ["an offer", (r: Record<string, Row[]>) => { r.offers = [{ id: "o", listing_id: listing }]; }],
+    ["a linked rental", (r: Record<string, Row[]>) => { r.listings.push({ id: "rental", host_id: seller, source_listing_id: listing, mode: "rent", deleted_at: null, status: "draft" }); }],
+    ["too few views", (r: Record<string, Row[]>) => { r.listing_views = r.listing_views.slice(0, 9); }],
+    ["a recent concierge email", (r: Record<string, Row[]>) => { r.blog_campaign_sends = [{ id: "s", campaign_id: "concierge", user_id: seller, email: "x@y.z", status: "sent", is_test: false, created_at: ago(24) }]; }],
+  ])("skips a listing with %s", async (_, mutate) => {
+    const rows = rentRows(); mutate(rows);
+    expect((await worker("send-rent-while-you-sell", rows).run()).body.eligibleRecipients).toBe(0);
+  });
+  it("asks a rental without a monthly rate, with live comps", async () => {
+    const rows = rentRows();
+    rows.listings = [
+      { id: "r1", host_id: seller, title: "Trailer for rent", category: "food_trailer", state: "GA", mode: "rent", price_daily: 300, price_weekly: 1600, price_monthly: null, status: "published", moderation_status: "clear", deleted_at: null, published_at: old },
+      { id: "r2", host_id: "h2", category: "food_trailer", mode: "rent", price_monthly: 3000, status: "published", moderation_status: "clear", deleted_at: null, published_at: old },
+      { id: "r3", host_id: "h3", category: "food_truck", mode: "rent", price_monthly: 5000, status: "published", moderation_status: "clear", deleted_at: null, published_at: old },
+    ];
+    const data = JSON.parse((await worker("send-rent-while-you-sell", rows).run({ mode: "preview_html" })).body.html);
+    expect(data).toMatchObject({ variant: "monthly_rate", listingId: "r1", dailyRate: 300, weeklyRate: 1600, monthlyComps: { min: 3000, max: 5000 } });
+  });
+  it("restricts a wave to the requested states and requires confirmation", async () => {
+    expect((await worker("send-rent-while-you-sell", rentRows()).run({ states: ["ga"] })).body.eligibleRecipients).toBe(0);
+    const w = worker("send-rent-while-you-sell", rentRows());
+    expect((await w.run({ mode: "broadcast" })).status).toBe(400);
     expect(w.provider).not.toHaveBeenCalled();
   });
 });

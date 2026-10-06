@@ -29,6 +29,10 @@ export const isRentalConversionEligible = (listing: Pick<
   (listing.status === 'published' || listing.status === 'paused') &&
   (CONVERTIBLE_CATEGORIES as readonly string[]).includes(listing.category as string);
 
+/** The server's phone gate (guard_signup_phone_actions) rejected a new listing. */
+export const isPhoneVerificationError = (message: string | null | undefined): boolean =>
+  /verify your mobile number/i.test(message ?? '');
+
 export type LinkedRentalState = 'none' | 'draft' | 'live' | 'paused';
 
 export const linkedRentalState = (rental: Pick<ListingRow, 'status'> | null | undefined): LinkedRentalState => {

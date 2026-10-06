@@ -42,9 +42,9 @@ export interface SellerConciergeData {
   unsubscribeUrl: string;
 }
 
-const SIGN_OFF = ["Brad", "Customer Success, Vendibook"];
+export const SIGN_OFF = ["Brad", "Customer Success, Vendibook"];
 
-const SAFETY_NOTE =
+export const SAFETY_NOTE =
   "Stay safe: take payment only through Vendibook checkout (Square or PayPal). Never accept wire transfers, gift cards or 'shipper' payments, and never share verification codes.";
 
 const REFERRAL_NOTE =

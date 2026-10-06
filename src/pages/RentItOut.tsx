@@ -26,8 +26,10 @@ import { cn } from '@/lib/utils';
 import type { Tables } from '@/integrations/supabase/types';
 import {
   createLinkedRentalDraft,
+  isPhoneVerificationError,
   isRentalConversionEligible,
 } from '@/lib/listings/rentalConversion';
+import InlinePhoneVerification from '@/components/comms/InlinePhoneVerification';
 import { DOCUMENT_TYPE_LABELS, type DocumentType } from '@/types/documents';
 import { validateRentalRates } from '@/lib/listings/rentalPricing';
 
@@ -59,6 +61,10 @@ const RentItOut: React.FC = () => {
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  // Hosts are never shown the full-screen phone prompt, but creating the
+  // rental listing still needs a verified phone; verify inline, then retry.
+  const [needsPhone, setNeedsPhone] = useState(false);
+  const [attempt, setAttempt] = useState(0);
   const [source, setSource] = useState<Listing | null>(null);
   const [rental, setRental] = useState<Listing | null>(null);
   const [step, setStep] = useState(-1); // -1 = intro
@@ -93,6 +99,7 @@ const RentItOut: React.FC = () => {
     (async () => {
       setLoading(true);
       setError(null);
+      setNeedsPhone(false);
       const { data: src, error: srcErr } = await supabase
         .from('listings')
         .select('*')
@@ -120,7 +127,8 @@ const RentItOut: React.FC = () => {
       const created = await createLinkedRentalDraft(src.id);
       if (cancelled) return;
       if ('error' in created) {
-        setError(created.error);
+        if (isPhoneVerificationError(created.error)) setNeedsPhone(true);
+        else setError(created.error);
         setLoading(false);
         return;
       }
@@ -165,7 +173,7 @@ const RentItOut: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [listingId, user, authLoading, navigate]);
+  }, [listingId, user, authLoading, navigate, attempt]);
 
   const copiedSummary = useMemo(() => {
     if (!source) return [];
@@ -288,6 +296,22 @@ const RentItOut: React.FC = () => {
           <Skeleton className="h-10 w-2/3" />
           <Skeleton className="h-56 w-full rounded-3xl" />
           <Skeleton className="h-40 w-full rounded-3xl" />
+        </div>
+      </div>
+    );
+  }
+
+  if (needsPhone) {
+    return (
+      <div className="sale-light min-h-screen bg-[#FBF8F3] px-4 py-20">
+        <div className="mx-auto max-w-md rounded-3xl border border-black/10 bg-white p-8 shadow-sm">
+          <h1 className="text-xl font-semibold text-foreground">Verify your mobile number</h1>
+          <p className="mt-3 text-sm text-muted-foreground">
+            One quick step before we create your rental listing. It keeps fake accounts off Vendibook. You only do it once.
+          </p>
+          <div className="mt-6">
+            <InlinePhoneVerification onVerified={() => setAttempt((n) => n + 1)} />
+          </div>
         </div>
       </div>
     );
