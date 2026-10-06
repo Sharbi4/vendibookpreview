@@ -1449,7 +1449,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
               {listing.id ? (
                 <div className="pt-2 border-t border-border">
                   <p className="text-sm font-semibold text-foreground mt-4 mb-1">Verification</p>
-                  <p className="text-xs text-muted-foreground mb-4">Confirm insurance information and complete any identity check required for this rental.</p>
+                  <p className="text-xs text-muted-foreground mb-4">Answer one insurance question and confirm the rental requirements.</p>
                   <RentalVerificationPanel
                     onValidityChange={(valid) => { if (!valid) setDisclosureDone(false); }}
                     listingId={listing.id}

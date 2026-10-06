@@ -15,7 +15,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { InsuranceEducationCard } from '@/components/booking/InsuranceEducationCard';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
-import { toast } from 'sonner';
+import { parseEdgeError } from '@/lib/edgeErrors';
+import { authPath } from '@/lib/auth/returnTo';
 
 /**
  * Rental disclosure — insurance answer and the current terms, before payment.
@@ -98,23 +99,41 @@ export function DisclosureStep({
   const [identity, setIdentity] = useState<IdentityState | null>(null);
   const [insurance, setInsurance] = useState<InsuranceAnswer | ''>('');
   const [agreed, setAgreed] = useState(false);
+  const [needsSignIn, setNeedsSignIn] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
 
-  const call = useCallback(
-    async (action: string) => {
-      const { data, error: fnErr } = await supabase.functions.invoke('booking-verification', {
-        body: { action, listingId, route: window.location.pathname },
-      });
-      if (fnErr) throw new Error(fnErr.message);
-      if (data?.error) throw new Error(data?.message ?? 'Something went wrong.');
-      return data as {
-        documents?: LegalDoc[];
-        attestation?: Attestation | null;
-        identity?: IdentityState;
-        link_token?: string;
-      };
-    },
-    [listingId],
-  );
+  /** Calls booking-verification and turns any failure into a plain sentence. */
+  const invoke = useCallback(async (body: Record<string, unknown>) => {
+    const send = () => supabase.functions.invoke('booking-verification', {
+      body: { listingId, route: window.location.pathname, ...body },
+    });
+    let { data, error: fnErr } = await send();
+    let parsed = fnErr || data?.error ? await parseEdgeError(fnErr, data?.error ? data : null) : null;
+    // An expired access token: refresh the session once and retry before
+    // asking the renter to sign in again.
+    if (parsed && (parsed.status === 401 || parsed.code === 'unauthenticated')) {
+      const { data: refreshed } = await supabase.auth.refreshSession();
+      if (refreshed.session) {
+        ({ data, error: fnErr } = await send());
+        parsed = fnErr || data?.error ? await parseEdgeError(fnErr, data?.error ? data : null) : null;
+      }
+    }
+    if (parsed) {
+      if (parsed.status === 401 || parsed.code === 'unauthenticated') {
+        setNeedsSignIn(true);
+        throw new Error('Your session expired. Please sign in again.');
+      }
+      const generic = !parsed.message || /non-2xx|Failed to send|fetch/i.test(parsed.message);
+      throw new Error(generic
+        ? "We couldn't load this step right now. Nothing was charged. Please try again."
+        : parsed.message);
+    }
+    return data as {
+      documents?: LegalDoc[];
+      attestation?: Attestation | null;
+      identity?: IdentityState;
+    };
+  }, [listingId]);
 
   const applyState = useCallback(
     (data: { documents?: LegalDoc[]; attestation?: Attestation | null; identity?: IdentityState }) => {
@@ -133,9 +152,18 @@ export function DisclosureStep({
 
   useEffect(() => {
     let cancelled = false;
+    setLoading(true);
+    setError(null);
     (async () => {
       try {
-        const data = await call('status');
+        // Guests sign in first (the checkout shows the sign-in prompt above).
+        const { data: session } = await supabase.auth.getSession();
+        if (!session.session) {
+          if (!cancelled) setNeedsSignIn(true);
+          return;
+        }
+        setNeedsSignIn(false);
+        const data = await invoke({ action: 'status' });
         if (!cancelled) applyState(data);
       } catch (err) {
         if (!cancelled) {
@@ -150,7 +178,7 @@ export function DisclosureStep({
     return () => {
       cancelled = true;
     };
-  }, [call, applyState]);
+  }, [invoke, applyState, reloadKey]);
 
   const attested = Boolean(attestation && !attestation.stale);
   // Owner decision 2026-10-06: rental checkout has no identity check.
@@ -161,26 +189,31 @@ export function DisclosureStep({
   validityCallback.current = onValidityChange;
   useEffect(() => { validityCallback.current?.(currentlyValid); }, [currentlyValid]);
 
-  const handleAttest = async () => {
+  /** One action: record the answer (when it changed) and move on. */
+  const handleSaveAndContinue = async () => {
     if (!insurance || !agreed) return;
     setWorking(true);
     setError(null);
     try {
-      const { data, error: fnErr } = await supabase.functions.invoke('booking-verification', {
-        body: {
+      let current = attestation;
+      if (!currentlyValid) {
+        const data = await invoke({
           action: 'attest',
-          listingId,
           insuranceAnswer: insurance,
           agreed: true,
-          route: window.location.pathname,
           locale: navigator.language,
-        },
-      });
-      if (fnErr) throw new Error(fnErr.message);
-      if (data?.error) throw new Error(data?.message ?? 'We could not record your agreement.');
-      applyState(data);
+        });
+        applyState(data);
+        current = data.attestation ?? null;
+      }
       onInsuranceAnswer?.(insurance);
-      toast.success('Agreement recorded');
+      onComplete({
+        attested: true,
+        identityStatus: identity?.status ?? 'not_available',
+        attestedAt: current?.attested_at ?? null,
+        documentVersion: current?.document_version ?? null,
+        insuranceAnswer: insurance,
+      });
     } catch (err) {
       // Recoverable: the step stays on screen with the retry affordance.
       setError(err instanceof Error ? err.message : 'We could not record your agreement.');
@@ -188,6 +221,20 @@ export function DisclosureStep({
       setWorking(false);
     }
   };
+
+  if (needsSignIn) {
+    return (
+      <div className="rounded-2xl border border-border p-4 text-sm text-muted-foreground">
+        <p>Sign in to confirm your insurance answer for this rental. Your other details are kept.</p>
+        <a
+          href={authPath(`${window.location.pathname}${window.location.search}`, 'signin')}
+          className="mt-3 inline-flex font-medium text-foreground underline underline-offset-4"
+        >
+          Sign in to continue
+        </a>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -208,7 +255,14 @@ export function DisclosureStep({
       {error && (
         <Alert variant="destructive">
           <TriangleAlert className="h-4 w-4" />
-          <AlertDescription>{error}</AlertDescription>
+          <AlertDescription className="flex flex-wrap items-center gap-3">
+            <span>{error}</span>
+            {documents.length === 0 ? (
+              <Button type="button" size="sm" variant="outline" onClick={() => setReloadKey((k) => k + 1)}>
+                Try again
+              </Button>
+            ) : null}
+          </AlertDescription>
         </Alert>
       )}
 
@@ -306,16 +360,7 @@ export function DisclosureStep({
             Recorded {new Date(attestation!.attested_at).toLocaleString()} · version{' '}
             {attestation!.document_version}
           </p>
-        ) : (
-          <Button
-            onClick={handleAttest}
-            disabled={disabled || working || !insurance || !agreed || documents.length === 0}
-            className="w-full sm:w-auto"
-          >
-            {working && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-            {compact ? 'Save verification' : 'Record my agreement'}
-          </Button>
-        )}
+        ) : null}
         {attestation?.stale && (
           <p className="text-sm text-amber-600">
             Our terms were updated since you last agreed. Please confirm again.
@@ -325,17 +370,10 @@ export function DisclosureStep({
 
       <Button
         className="h-12 w-full"
-        disabled={disabled || working || !currentlyValid}
-        onClick={() =>
-          onComplete({
-            attested: true,
-            identityStatus: identity?.status ?? 'not_available',
-            attestedAt: attestation?.attested_at ?? null,
-            documentVersion: attestation?.document_version ?? null,
-            insuranceAnswer: (insurance || null) as InsuranceAnswer | null,
-          })
-        }
+        disabled={disabled || working || !insurance || !agreed || documents.length === 0}
+        onClick={handleSaveAndContinue}
       >
+        {working ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
         {compact ? 'Save and continue' : 'Continue to review'}
       </Button>
     </div>
