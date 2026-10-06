@@ -648,6 +648,7 @@ export type Database = {
           booking_end_timestamp: string | null
           business_info: Json | null
           checkout_session_id: string | null
+          client_request_key: string | null
           created_at: string
           delivery_address: string | null
           delivery_fee_snapshot: number | null
@@ -688,6 +689,7 @@ export type Database = {
           message: string | null
           paid_at: string | null
           payment_intent_id: string | null
+          payment_lock_record_id: string | null
           payment_provider: Database["public"]["Enums"]["payment_provider"]
           payment_status: string | null
           payment_strategy: string | null
@@ -699,6 +701,7 @@ export type Database = {
           payout_transfer_id: string | null
           pro_fee_applied: boolean
           referral_code: string | null
+          renter_snapshot: Json | null
           responded_at: string | null
           shopper_confirmed_at: string | null
           shopper_id: string
@@ -722,6 +725,7 @@ export type Database = {
           booking_end_timestamp?: string | null
           business_info?: Json | null
           checkout_session_id?: string | null
+          client_request_key?: string | null
           created_at?: string
           delivery_address?: string | null
           delivery_fee_snapshot?: number | null
@@ -762,6 +766,7 @@ export type Database = {
           message?: string | null
           paid_at?: string | null
           payment_intent_id?: string | null
+          payment_lock_record_id?: string | null
           payment_provider?: Database["public"]["Enums"]["payment_provider"]
           payment_status?: string | null
           payment_strategy?: string | null
@@ -773,6 +778,7 @@ export type Database = {
           payout_transfer_id?: string | null
           pro_fee_applied?: boolean
           referral_code?: string | null
+          renter_snapshot?: Json | null
           responded_at?: string | null
           shopper_confirmed_at?: string | null
           shopper_id: string
@@ -796,6 +802,7 @@ export type Database = {
           booking_end_timestamp?: string | null
           business_info?: Json | null
           checkout_session_id?: string | null
+          client_request_key?: string | null
           created_at?: string
           delivery_address?: string | null
           delivery_fee_snapshot?: number | null
@@ -836,6 +843,7 @@ export type Database = {
           message?: string | null
           paid_at?: string | null
           payment_intent_id?: string | null
+          payment_lock_record_id?: string | null
           payment_provider?: Database["public"]["Enums"]["payment_provider"]
           payment_status?: string | null
           payment_strategy?: string | null
@@ -847,6 +855,7 @@ export type Database = {
           payout_transfer_id?: string | null
           pro_fee_applied?: boolean
           referral_code?: string | null
+          renter_snapshot?: Json | null
           responded_at?: string | null
           shopper_confirmed_at?: string | null
           shopper_id?: string
@@ -5711,6 +5720,7 @@ export type Database = {
       }
       notifications: {
         Row: {
+          booking_event_key: string | null
           created_at: string
           id: string
           link: string | null
@@ -5721,6 +5731,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          booking_event_key?: string | null
           created_at?: string
           id?: string
           link?: string | null
@@ -5731,6 +5742,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          booking_event_key?: string | null
           created_at?: string
           id?: string
           link?: string | null
@@ -6263,6 +6275,7 @@ export type Database = {
       }
       payment_records: {
         Row: {
+          app_fee_cents: number | null
           authorization_expires_at: string | null
           authorization_honor_expires_at: string | null
           authorization_status: string | null
@@ -6314,11 +6327,17 @@ export type Database = {
           seller_id: string | null
           seller_proceeds_cents: number
           shipping_address: Json | null
+          square_location_id: string | null
+          square_merchant_id: string | null
+          square_order_id: string | null
+          square_payment_id: string | null
+          square_receipt_url: string | null
           tax_cents: number
           transaction_type: string
           updated_at: string
         }
         Insert: {
+          app_fee_cents?: number | null
           authorization_expires_at?: string | null
           authorization_honor_expires_at?: string | null
           authorization_status?: string | null
@@ -6370,11 +6389,17 @@ export type Database = {
           seller_id?: string | null
           seller_proceeds_cents?: number
           shipping_address?: Json | null
+          square_location_id?: string | null
+          square_merchant_id?: string | null
+          square_order_id?: string | null
+          square_payment_id?: string | null
+          square_receipt_url?: string | null
           tax_cents?: number
           transaction_type: string
           updated_at?: string
         }
         Update: {
+          app_fee_cents?: number | null
           authorization_expires_at?: string | null
           authorization_honor_expires_at?: string | null
           authorization_status?: string | null
@@ -6426,6 +6451,11 @@ export type Database = {
           seller_id?: string | null
           seller_proceeds_cents?: number
           shipping_address?: Json | null
+          square_location_id?: string | null
+          square_merchant_id?: string | null
+          square_order_id?: string | null
+          square_payment_id?: string | null
+          square_receipt_url?: string | null
           tax_cents?: number
           transaction_type?: string
           updated_at?: string
@@ -10611,6 +10641,135 @@ export type Database = {
           },
         ]
       }
+      square_oauth_states: {
+        Row: {
+          created_at: string
+          environment: string
+          expires_at: string
+          return_path: string | null
+          state: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          environment: string
+          expires_at?: string
+          return_path?: string | null
+          state: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          environment?: string
+          expires_at?: string
+          return_path?: string | null
+          state?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      square_seller_accounts: {
+        Row: {
+          access_token_encrypted: string
+          business_name: string | null
+          connected_at: string
+          created_at: string
+          currency: string
+          environment: string
+          id: string
+          last_error: string | null
+          location_id: string | null
+          location_name: string | null
+          merchant_id: string
+          refresh_token_encrypted: string | null
+          refreshed_at: string | null
+          revoked_at: string | null
+          scopes: string[]
+          status: string
+          token_expires_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token_encrypted: string
+          business_name?: string | null
+          connected_at?: string
+          created_at?: string
+          currency?: string
+          environment: string
+          id?: string
+          last_error?: string | null
+          location_id?: string | null
+          location_name?: string | null
+          merchant_id: string
+          refresh_token_encrypted?: string | null
+          refreshed_at?: string | null
+          revoked_at?: string | null
+          scopes?: string[]
+          status?: string
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token_encrypted?: string
+          business_name?: string | null
+          connected_at?: string
+          created_at?: string
+          currency?: string
+          environment?: string
+          id?: string
+          last_error?: string | null
+          location_id?: string | null
+          location_name?: string | null
+          merchant_id?: string
+          refresh_token_encrypted?: string | null
+          refreshed_at?: string | null
+          revoked_at?: string | null
+          scopes?: string[]
+          status?: string
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      square_webhook_events: {
+        Row: {
+          error: string | null
+          event_id: string
+          event_type: string
+          merchant_id: string | null
+          object_id: string | null
+          outcome: string | null
+          processed_at: string | null
+          received_at: string
+        }
+        Insert: {
+          error?: string | null
+          event_id: string
+          event_type: string
+          merchant_id?: string | null
+          object_id?: string | null
+          outcome?: string | null
+          processed_at?: string | null
+          received_at?: string
+        }
+        Update: {
+          error?: string | null
+          event_id?: string
+          event_type?: string
+          merchant_id?: string | null
+          object_id?: string | null
+          outcome?: string | null
+          processed_at?: string | null
+          received_at?: string
+        }
+        Relationships: []
+      }
       stripe_webhook_events: {
         Row: {
           endpoint: string
@@ -12610,6 +12769,7 @@ export type Database = {
         }
         Returns: Json
       }
+      claim_rental_capture: { Args: { p_record: string }; Returns: undefined }
       claim_seller_verification_retry: {
         Args: { _user_id: string }
         Returns: boolean
@@ -12813,6 +12973,17 @@ export type Database = {
         }[]
       }
       get_my_seller_verification: { Args: never; Returns: Json }
+      get_my_square_connection: {
+        Args: never
+        Returns: {
+          business_name: string
+          connected_at: string
+          environment: string
+          location_name: string
+          merchant_id: string
+          status: string
+        }[]
+      }
       get_public_feature_flag: { Args: { flag_key: string }; Returns: boolean }
       get_referral_leaderboard: {
         Args: { p_limit?: number }
@@ -12871,6 +13042,7 @@ export type Database = {
         Returns: boolean
       }
       host_active_listing_limit: { Args: { _user_id: string }; Returns: number }
+      host_square_ready: { Args: { _host_id: string }; Returns: boolean }
       increment_referral_counter: {
         Args: { p_owner_id: string }
         Returns: undefined
@@ -13116,6 +13288,11 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      rental_checkout_fingerprint: { Args: { b: Json }; Returns: string }
+      rental_period_subtotal: {
+        Args: { daily: number; days: number; monthly: number; weekly: number }
+        Returns: number
       }
       report_message_thread: {
         Args: { kind: string; reason: string; thread: string }
@@ -13549,7 +13726,12 @@ export type Database = {
         | "refunded"
         | "failed"
         | "cancelled"
-      payment_provider: "stripe" | "paypal" | "manual" | "dwolla_future"
+      payment_provider:
+        | "stripe"
+        | "paypal"
+        | "manual"
+        | "dwolla_future"
+        | "square"
       payout_method: "paypal" | "venmo" | "cash_app" | "ach"
       payout_preference_status:
         | "not_set"
@@ -13850,7 +14032,13 @@ export const Constants = {
         "failed",
         "cancelled",
       ],
-      payment_provider: ["stripe", "paypal", "manual", "dwolla_future"],
+      payment_provider: [
+        "stripe",
+        "paypal",
+        "manual",
+        "dwolla_future",
+        "square",
+      ],
       payout_method: ["paypal", "venmo", "cash_app", "ach"],
       payout_preference_status: [
         "not_set",
