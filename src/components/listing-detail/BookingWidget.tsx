@@ -269,10 +269,7 @@ export const BookingWidget = ({
 
   const handleBuyNow = () => {
     trackCTAClick('buy_now', 'booking_widget');
-    if (!user) {
-      navigate(`/auth?redirect=/checkout/${listingId}`);
-      return;
-    }
+    // Checkout shows the order before asking guests to sign in.
     navigate(`/checkout/${listingId}`);
   };
 

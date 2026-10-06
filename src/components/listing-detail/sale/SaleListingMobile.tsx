@@ -140,8 +140,8 @@ export const SaleListingMobile = ({
     return true;
   };
 
+  // Checkout shows the order before asking guests to sign in.
   const handleBuyNow = () => {
-    if (!requireAuth('buy')) return;
     navigate(`/checkout/${listing.id}`);
   };
 

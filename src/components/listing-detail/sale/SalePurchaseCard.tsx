@@ -146,9 +146,10 @@ export const SalePurchaseCard = ({
     return true;
   };
 
+  // Buyers see the full order (price, fulfillment, total) before signing in;
+  // checkout asks for sign-in when they continue past the review step.
   const handleBuy = () => {
     trackCTAClick('buy_now', 'sale_purchase_card');
-    if (!gate('buy')) return;
     navigate(`/checkout/${listing.id}`);
   };
 
@@ -461,8 +462,6 @@ export const SalePurchaseCard = ({
         onContinue={(choice) => {
           setShowDeliveryResult(false);
           trackCTAClick('continue_with_delivery_option', 'sale_purchase_card');
-          setPendingDelivery(choice);
-          if (!gate('buy')) return;
           navigate(`/checkout/${listing.id}`, { state: { deliveryChoice: choice } });
         }}
 

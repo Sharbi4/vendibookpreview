@@ -111,12 +111,8 @@ export const StickyMobileCTA = ({
   const isAvailable = status === 'published';
   const price = isRental ? priceDaily : priceSale;
 
+  // Checkout shows the order before asking guests to sign in.
   const handleBuyNow = () => {
-    if (!user) {
-      setPendingAction('buy');
-      setShowAuthGate(true);
-      return;
-    }
     navigate(`/checkout/${listingId}`);
   };
 

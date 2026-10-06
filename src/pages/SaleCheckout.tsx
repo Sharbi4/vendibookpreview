@@ -3,6 +3,7 @@ import { trackBuyerSeoDownstream } from '@/lib/buyerSeoTracking';
 import { useParams, useNavigate, useSearchParams, useLocation, Link } from 'react-router-dom';
 import { FileText, Loader2, ShieldCheck } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { authPath } from '@/lib/auth/returnTo';
 import { useListing } from '@/hooks/useListing';
 import { computeDeliveryFee, deliveryRateLabel, normalizeDeliveryFeeType } from '@/lib/fulfillment/delivery';
 import { useToast } from '@/hooks/use-toast';
@@ -639,7 +640,7 @@ const SaleCheckout = () => {
       return null;
     }
     if (!user) {
-      navigate(`/auth?redirect=/checkout/${listingId}`);
+      navigate(authPath(`/checkout/${listingId}`, 'signin'));
       return null;
     }
     if (isOwner) {
@@ -1058,7 +1059,7 @@ const SaleCheckout = () => {
     if (!validateFulfillment()) return;
     if (!validateDetails()) return;
     if (!user) {
-      navigate(`/auth?redirect=/checkout/${listingId}`);
+      navigate(authPath(`/checkout/${listingId}`, 'signin'));
       return;
     }
     if (paypalPurchaseBlocked && paymentMethod !== 'cash') {
@@ -1093,6 +1094,12 @@ const SaleCheckout = () => {
 
 
   const goToStep = (next: number) => {
+    // Guests can review the full order; continuing past it needs an account,
+    // and sign-in brings them straight back to this checkout.
+    if (!user && next > 1) {
+      navigate(authPath(`/checkout/${listingId}`, 'signin'));
+      return;
+    }
     setStep(next);
     setFurthestStep((prev) => Math.max(prev, next));
   };
@@ -1134,7 +1141,7 @@ const SaleCheckout = () => {
   const footer = (() => {
     switch (step) {
       case 1:
-        return { onNext: () => goToStep(2), nextLabel: 'Continue', nextDisabled: false, nextBusy: false };
+        return { onNext: () => goToStep(2), nextLabel: user ? 'Continue' : 'Sign in to continue', nextDisabled: false, nextBusy: false };
       case 2:
         return {
           onBack: () => goToStep(1),
@@ -1184,7 +1191,7 @@ const SaleCheckout = () => {
                 An account is required to pay securely. Sign in now so we can keep your details when you return.
               </p>
               <button
-                onClick={() => navigate(`/auth?redirect=/checkout/${listingId}`)}
+                onClick={() => navigate(authPath(`/checkout/${listingId}`, 'signin'))}
                 className="v2-btn mt-3"
               >
                 Sign in / Create account

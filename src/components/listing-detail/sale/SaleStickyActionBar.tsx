@@ -36,12 +36,8 @@ export const SaleStickyActionBar = ({
   if (isOwner) return null;
   const isAvailable = status === 'published';
 
+  // Checkout shows the order before asking guests to sign in.
   const handleBuy = () => {
-    if (!user) {
-      setPendingAction('buy');
-      setShowAuthGate(true);
-      return;
-    }
     navigate(`/checkout/${listingId}`);
   };
 
