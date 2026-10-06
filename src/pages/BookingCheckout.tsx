@@ -813,10 +813,11 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
       } else {
         const keyed = { ...bookingData, client_request_key: requestKeyRef.current };
         let { data: bookingResult, error: bookingError } = await supabase
-          .from('booking_requests').insert(keyed as any).select('id').single();
+          .from('booking_requests').insert(keyed as never).select('id').single();
         if (bookingError?.code === '23505' && /client_request_key/.test(bookingError.message ?? '')) {
           // This checkout already created its booking (double submit, refresh).
           // client_request_key isn't in the generated types until they're regenerated.
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           ({ data: bookingResult, error: bookingError } = await (supabase.from('booking_requests') as any)
             .select('id').eq('shopper_id', user.id).eq('client_request_key', requestKeyRef.current).single());
         } else if (bookingError?.code === 'PGRST204' && /client_request_key/.test(bookingError.message ?? '')) {

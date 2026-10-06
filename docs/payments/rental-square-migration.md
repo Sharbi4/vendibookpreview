@@ -123,7 +123,7 @@ Refunds go out from the host's account. The app fee is refunded in proportion, a
    - Set the OAuth redirect URL to `https://vendibook.com/dashboard/payments/square/callback`. Add a preview URL too if you test there.
    - Add a webhook subscription to `<SUPABASE_URL>/functions/v1/square-rental-webhook` for `payment.updated`, `refund.created`, `refund.updated` and `oauth.authorization.revoked`.
 2. Supabase secrets (never in code or the browser):
-   - `SQUARE_ENVIRONMENT=sandbox`, `SQUARE_APPLICATION_ID`, `SQUARE_APPLICATION_SECRET`
+   - `RENTAL_SQUARE_ENVIRONMENT=sandbox`, `RENTAL_SQUARE_APPLICATION_ID`, `RENTAL_SQUARE_APPLICATION_SECRET` (sandbox app). Vendibook billing already runs on the production app through `SQUARE_ENVIRONMENT`/`SQUARE_APPLICATION_ID`; the `RENTAL_*` values keep rentals separate. To go live, set `RENTAL_SQUARE_ENVIRONMENT=production` with the production app's id and secret.
    - `SQUARE_OAUTH_REDIRECT_URL`, `SQUARE_TOKEN_ENCRYPTION_KEY` (`openssl rand -base64 32`)
    - `SQUARE_RENTAL_WEBHOOK_SIGNATURE_KEY`, `SQUARE_RENTAL_WEBHOOK_URL` (exactly the subscribed URL)
    - `RENTAL_SQUARE_ENABLED=true`

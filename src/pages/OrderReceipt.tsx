@@ -164,6 +164,8 @@ const OrderReceipt = () => {
     (async () => {
       const baseColumns =
         'reference, created_at, captured_at, currency, paypal_capture_id, provider, metadata, gross_amount_cents, tax_cents, discount_cents, captured_amount_cents, refunded_cents, payment_status, payment_intent, payment_source, transaction_type, listing_id, seller_id, sale_transaction_id, booking_request_id, buyer_email, order_items, shipping_address';
+      // Square columns aren't in the generated types until they're regenerated.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let { data, error: err } = await (supabase.from('payment_records') as any)
         .select(`${baseColumns}, square_payment_id, square_receipt_url`)
         .eq('reference', reference)
@@ -171,6 +173,7 @@ const OrderReceipt = () => {
       // Square columns arrive with the rental Square migration; until it runs,
       // keep every existing receipt loading.
       if (err && /square_/.test(err.message ?? '')) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         ({ data, error: err } = await (supabase.from('payment_records') as any)
           .select(baseColumns).eq('reference', reference).maybeSingle());
       }

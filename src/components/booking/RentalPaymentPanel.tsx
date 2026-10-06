@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { parseEdgeError } from '@/lib/edgeErrors';
 import { formatCurrency } from '@/lib/commissions';
-import { loadSquareWebSdk } from '@/lib/squareWebSdk';
+import { loadSquareWebSdk, type SquareCard } from '@/lib/squareWebSdk';
 import { trackRentalCheckout } from '@/lib/rentalCheckoutAnalytics';
 import PaymentFormSkeleton from '@/components/checkout/PaymentFormSkeleton';
 import PayPalEmbeddedPayment from '@/components/transaction/checkout/PayPalEmbeddedPayment';
@@ -63,7 +63,7 @@ export default function RentalPaymentPanel(props: RentalPaymentPanelProps) {
   const [verifying, setVerifying] = useState(false);
   const [paid, setPaid] = useState(false);
   const container = useRef<HTMLDivElement>(null);
-  const card = useRef<any>(null);
+  const card = useRef<SquareCard | null>(null);
   const lock = useRef(false);
   /** Same key for retries of one attempt; a new key after a definitive decline. */
   const attemptKey = useRef(newAttemptKey());
@@ -81,7 +81,7 @@ export default function RentalPaymentPanel(props: RentalPaymentPanelProps) {
   useEffect(() => {
     if (config?.provider !== 'square') return;
     let cancelled = false;
-    let instance: any;
+    let instance: SquareCard | undefined;
     setCardReady(false);
     void (async () => {
       const sdk = await loadSquareWebSdk(config.environment);

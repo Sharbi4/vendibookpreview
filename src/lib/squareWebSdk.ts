@@ -3,11 +3,22 @@
  * Square-hosted iframes and never touch Vendibook code; the browser only ever
  * receives a single-use token.
  */
-let sdkPromise: Promise<any> | undefined;
+/** The slice of Square's Web Payments SDK Vendibook uses. */
+export interface SquareCard {
+  attach(target: HTMLElement | string | null): Promise<void>;
+  tokenize(details?: Record<string, unknown>): Promise<{ status: string; token?: string }>;
+  destroy(): Promise<boolean | void>;
+}
+export interface SquarePaymentsSdk {
+  payments(applicationId: string, locationId: string): { card(): Promise<SquareCard> };
+}
+type SquareWindow = Window & { Square?: SquarePaymentsSdk };
+
+let sdkPromise: Promise<SquarePaymentsSdk> | undefined;
 let sdkEnvironment: string | undefined;
 
-export function loadSquareWebSdk(environment: 'sandbox' | 'production'): Promise<any> {
-  const existing = (window as any).Square;
+export function loadSquareWebSdk(environment: 'sandbox' | 'production'): Promise<SquarePaymentsSdk> {
+  const existing = (window as SquareWindow).Square;
   if (existing && (!sdkEnvironment || sdkEnvironment === environment)) {
     sdkEnvironment = environment;
     return Promise.resolve(existing);
@@ -22,7 +33,11 @@ export function loadSquareWebSdk(environment: 'sandbox' | 'production'): Promise
       script.src = environment === 'production'
         ? 'https://web.squarecdn.com/v1/square.js'
         : 'https://sandbox.web.squarecdn.com/v1/square.js';
-      script.onload = () => resolve((window as any).Square);
+      script.onload = () => {
+        const sdk = (window as SquareWindow).Square;
+        if (sdk) resolve(sdk);
+        else reject(new Error('Secure card entry could not load. Check your connection and refresh.'));
+      };
       script.onerror = () => {
         sdkPromise = undefined;
         sdkEnvironment = undefined;

@@ -7,9 +7,12 @@
  *
  * Environment (all server-side; never sent to the browser except the
  * application id, which Square's Web Payments SDK requires):
- *   SQUARE_ENVIRONMENT              sandbox | production (default sandbox)
- *   SQUARE_APPLICATION_ID           platform application id (OAuth client id)
- *   SQUARE_APPLICATION_SECRET       OAuth client secret
+ *   RENTAL_SQUARE_ENVIRONMENT       sandbox | production for rentals only
+ *                                   (falls back to SQUARE_ENVIRONMENT, then sandbox)
+ *   RENTAL_SQUARE_APPLICATION_ID    rental app id (falls back to SQUARE_APPLICATION_ID)
+ *   SQUARE_APPLICATION_SECRET       OAuth client secret (RENTAL_SQUARE_APPLICATION_SECRET wins)
+ * The RENTAL_* overrides let rentals run on a sandbox app while Vendibook
+ * billing stays on the production app.
  *   SQUARE_OAUTH_REDIRECT_URL       https://vendibook.com/dashboard/payments/square/callback
  *   SQUARE_TOKEN_ENCRYPTION_KEY     base64 of 32 random bytes (AES-256-GCM)
  *   RENTAL_SQUARE_ENABLED           'true' routes rental payments to Square
@@ -36,12 +39,12 @@ export class SquareApiError extends Error {
 }
 
 export function marketplaceEnv() {
-  const environment = (Deno.env.get('SQUARE_ENVIRONMENT') || 'sandbox') as SquareEnvironment;
+  const environment = (Deno.env.get('RENTAL_SQUARE_ENVIRONMENT') || Deno.env.get('SQUARE_ENVIRONMENT') || 'sandbox') as SquareEnvironment;
   if (environment !== 'sandbox' && environment !== 'production') throw new Error('Invalid Square environment');
   return {
     environment,
-    applicationId: Deno.env.get('SQUARE_APPLICATION_ID') || '',
-    applicationSecret: Deno.env.get('SQUARE_APPLICATION_SECRET') || '',
+    applicationId: Deno.env.get('RENTAL_SQUARE_APPLICATION_ID') || Deno.env.get('SQUARE_APPLICATION_ID') || '',
+    applicationSecret: Deno.env.get('RENTAL_SQUARE_APPLICATION_SECRET') || Deno.env.get('SQUARE_APPLICATION_SECRET') || '',
     redirectUrl: Deno.env.get('SQUARE_OAUTH_REDIRECT_URL') || '',
     encryptionKey: Deno.env.get('SQUARE_TOKEN_ENCRYPTION_KEY') || '',
     rentalsEnabled: Deno.env.get('RENTAL_SQUARE_ENABLED') === 'true',
