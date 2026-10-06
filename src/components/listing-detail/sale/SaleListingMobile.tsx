@@ -38,7 +38,6 @@ import ListingExplainerVideo from '@/components/listing-detail/ListingExplainerV
 import { AmenitiesSection } from '@/components/listing-detail/AmenitiesSection';
 import ListingLocationMap from '@/components/listing-detail/ListingLocationMap';
 import CollapsibleDescription from '@/components/listing-detail/CollapsibleDescription';
-import AudioListingPlayer from '@/components/listing/AudioListingPlayer';
 import PromoVideoPlayer from '@/components/listing/PromoVideoPlayer';
 import MessageHostForm from '@/components/messaging/MessageHostForm';
 import RelatedListings from '@/components/listing-detail/RelatedListings';
@@ -551,7 +550,6 @@ export const SaleListingMobile = ({
             <h2 className="text-base font-semibold">About this listing</h2>
             <PromoVideoPlayer listingId={listing.id} />
           </div>
-          <AudioListingPlayer listingId={listing.id} />
           {listing.description && (
             <div className="text-sm leading-relaxed text-foreground/90">
               <CollapsibleDescription description={listing.description} maskContacts={!isOwner} />

@@ -11,7 +11,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import EnhancedPhotoGallery from '@/components/listing-detail/EnhancedPhotoGallery';
 import CollapsibleDescription from '@/components/listing-detail/CollapsibleDescription';
-import AudioListingPlayer from '@/components/listing/AudioListingPlayer';
 import PromoVideoPlayer from '@/components/listing/PromoVideoPlayer';
 import ReviewsSection from '@/components/reviews/ReviewsSection';
 import RelatedListings from '@/components/listing-detail/RelatedListings';
@@ -206,7 +205,6 @@ export const SaleListingLayout = ({
                 <h2 className="text-lg font-semibold">About this listing</h2>
                 {isOwner && <PromoVideoPlayer listingId={listing.id} />}
               </div>
-              <AudioListingPlayer listingId={listing.id} />
               <CollapsibleDescription description={listing.description} maskContacts={!isOwner} />
             </SaleCard>
 
