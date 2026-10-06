@@ -53,6 +53,7 @@ import { getPublicDisplayName } from '@/lib/displayName';
 import { formatLastActive } from '@/hooks/useActivityTracker';
 import { trackLeadEvent } from '@/lib/leadTracking';
 import { fulfillmentLabel } from '@/components/listing-detail/FulfillmentTypeBadge';
+import { buyerFreightRangeLabel } from '@/lib/freight/presentation';
 import { resolveListingBrand, getBrandFieldLabel } from '@/lib/resolveListingBrand';
 import { SaleCard } from './SaleCard';
 import { FinancingActionPanel } from './FinancingActionPanel';
@@ -515,7 +516,13 @@ export const SaleListingMobile = ({
           <PolicyRow
             icon={Truck}
             title="Pickup &amp; Transfer"
-            body="Pickup, delivery, or title transfer will be coordinated directly with the seller after purchase."
+            body={
+              !listing.vendibook_freight_enabled
+                ? 'Pickup, delivery, or title transfer will be coordinated directly with the seller after purchase.'
+                : listing.freight_payer === 'seller'
+                  ? 'Free shipping nationwide: the seller covers Vendibook Freight. Title transfer is coordinated with the seller after purchase.'
+                  : `Nationwide freight available: ${buyerFreightRangeLabel()}. Your exact quote is shown at checkout.`
+            }
           />
           <div className="h-px bg-white/[0.06] mx-5" />
           <PolicyRow

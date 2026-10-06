@@ -16,6 +16,7 @@ import {
   Star,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { buyerFreightRangeLabel } from '@/lib/freight/presentation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -287,7 +288,7 @@ export const SalePurchaseCard = ({
                 note={
                   freightPayer === 'seller'
                     ? 'Free shipping · Seller covers freight'
-                    : 'Quoted by distance at checkout'
+                    : buyerFreightRangeLabel()
                 }
               />
             )}
@@ -319,6 +320,7 @@ export const SalePurchaseCard = ({
                   Check delivery
                 </Button>
               </div>
+              <p className="text-xs text-muted-foreground">Enter your ZIP for an exact delivery quote before checkout.</p>
             </div>
           )}
 

@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { FREIGHT_RATES } from "../_shared/freightRates.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -44,14 +45,7 @@ interface FreightEstimateResponse {
   error?: string;
 }
 
-// Freight rate calculations - Premium flat rate
-const FREIGHT_RATES = {
-  ratePerMile: 4.50,
-  minimumCharge: 150,
-  handlingFee: 75,
-  fuelSurchargePercent: 0.08, // 8% fuel surcharge
-  defaultTaxRate: 0.0825, // 8.25% default tax rate (can be adjusted per state)
-};
+// Freight rates live in _shared/freightRates.ts (also used for the listing-page range).
 
 async function geocodeViaMapbox(address: string): Promise<{ lat: number; lng: number } | null> {
   const token = Deno.env.get("MAPBOX_PUBLIC_TOKEN");
