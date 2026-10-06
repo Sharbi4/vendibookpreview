@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom';
 import {
   ShieldCheck,
   Lock,
-  Zap,
+  MessageSquare,
   MapPin,
   FileText,
   HeadphonesIcon,
@@ -40,7 +40,7 @@ export const SaleTrustStrip = ({ className }: { className?: string }) => (
     <div className="grid grid-cols-3 gap-3">
       <TrustItem icon={ShieldCheck} title="Detailed Listing" sub="Specs, documents, and owner details in one place" />
       <TrustItem icon={Lock} title="PayPal Checkout" sub="Supported payments run through PayPal" />
-      <TrustItem icon={Zap} title="Responsive Seller" sub="Typically responds within 1 hour" />
+      <TrustItem icon={MessageSquare} title="Screened Messages" sub="Every message is checked for scam risk" />
     </div>
   </SaleCard>
 );
