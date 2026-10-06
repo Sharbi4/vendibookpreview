@@ -21,7 +21,9 @@ export function isExcludedTestListingTitle(title?: string | null): boolean {
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function excludeTestListings<T extends { not: (...args: any[]) => T }>(query: T): T {
-  let q = query;
+  // Admin-unlisted listings (sandbox certification) stay reachable by direct
+  // link but never appear in discovery feeds.
+  let q = query.not('unlisted', 'is', true);
   for (const pattern of TEST_TITLE_PREFIXES) {
     q = q.not('title', 'ilike', pattern);
   }

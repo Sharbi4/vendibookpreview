@@ -161,7 +161,7 @@ serve(async (req) => {
       const { data: listings, error } = await supabaseClient
         .from("listings")
         .select("*")
-        .eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear")
+        .eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear").eq("unlisted", false)
         .eq("mode", "sale")
         .not("price_sale", "is", null);
 
@@ -225,7 +225,7 @@ serve(async (req) => {
         throw new Error(error.message);
       }
 
-      if (!listing || listing.status !== 'published' || listing.mode !== 'sale' || !listing.price_sale) {
+      if (!listing || listing.status !== 'published' || listing.unlisted === true || listing.mode !== 'sale' || !listing.price_sale) {
         return new Response(JSON.stringify({
           success: false,
           message: "Listing not eligible for catalog (must be published sale listing with price)",

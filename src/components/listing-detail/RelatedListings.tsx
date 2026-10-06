@@ -39,7 +39,7 @@ const RelatedListings = ({ listingId, category, mode, address, latitude, longitu
       const { data } = await supabase
         .from('listings')
         .select('id, title, cover_image_url, price_daily, price_sale, mode, category, address, latitude, longitude, status, published_at, deleted_at, moderation_status')
-        .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
+        .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear').eq('unlisted', false)
         .neq('id', listingId)
         .eq('category', category as any)
         .eq('mode', mode as any)
@@ -54,7 +54,7 @@ const RelatedListings = ({ listingId, category, mode, address, latitude, longitu
         const { data: specData } = await supabase
           .from('listings')
           .select('id, title, cover_image_url, price_daily, price_sale, mode, category, address, latitude, longitude, status, published_at, deleted_at, moderation_status')
-          .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
+          .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear').eq('unlisted', false)
           .neq('id', listingId)
           .eq('subcategory', subcategory as any)
           .eq('mode', mode as any)

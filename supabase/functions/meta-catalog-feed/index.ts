@@ -35,7 +35,7 @@ Deno.serve(async (req) => {
       .eq('status', 'published')
       .not('published_at', 'is', null)
       .is('deleted_at', null)
-      .eq('moderation_status', 'clear')
+      .eq('moderation_status', 'clear').eq('unlisted', false)
       .order('published_at', { ascending: false })
       .range(from, from + pageSize - 1);
     if (error) {

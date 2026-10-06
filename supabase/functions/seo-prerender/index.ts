@@ -545,7 +545,7 @@ function buildListingHTML(listing: any, reviews: any[] = [], redirectHumans = fa
   <meta name="viewport" content="width=device-width,initial-scale=1" />
 
   <title>${escapeHtml(title)} | Vendibook</title>
-  <meta name="description" content="${escapeHtml(description)}" />
+  <meta name="description" content="${escapeHtml(description)}" />${(listing as { unlisted?: boolean }).unlisted === true ? '\n  <meta name="robots" content="noindex, nofollow" />' : ""}
   <link rel="canonical" href="${canonicalUrl}" />
 
   <!-- Open Graph -->
@@ -789,7 +789,7 @@ serve(async (req) => {
         let q = supabase
           .from("listings")
           .select("id,title,city,state,price_sale,condition,cover_image_url")
-          .eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear")
+          .eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear").eq("unlisted", false)
           .eq("category", inv.category)
           .eq("mode", "sale")
           .not("title", "ilike", "demo%")

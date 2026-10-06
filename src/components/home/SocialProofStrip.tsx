@@ -27,14 +27,14 @@ const SocialProofStrip = () => {
     queryKey: ['homepage-stats'],
     queryFn: async () => {
       const [{ count: listingCount }, { count: bookingCount }] = await Promise.all([
-        supabase.from('listings').select('*', { count: 'exact', head: true }).eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear'),
+        supabase.from('listings').select('*', { count: 'exact', head: true }).eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear').eq('unlisted', false),
         supabase.from('booking_requests').select('*', { count: 'exact', head: true }),
       ]);
       // Get unique cities
       const { data: cities } = await supabase
         .from('listings')
         .select('city')
-        .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
+        .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear').eq('unlisted', false)
         .not('city', 'is', null);
       const uniqueCities = new Set(cities?.map(c => c.city).filter(Boolean)).size;
       

@@ -87,7 +87,7 @@ function mapListingToProduct(listing: Record<string, unknown>, merchantId: strin
     vendor_space: 'Business & Industrial > Retail > Retail Fixtures',
   };
 
-  const availability = listing.status === 'published' ? 'in_stock' : 'out_of_stock';
+  const availability = listing.status === 'published' && listing.unlisted !== true ? 'in_stock' : 'out_of_stock';
 
   const product: Record<string, unknown> = {
     offerId: listing.id as string,
@@ -206,7 +206,7 @@ Deno.serve(async (req) => {
     const { data: listings, error: listingsError } = await supabase
       .from('listings')
       .select('*')
-      .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
+      .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear').eq('unlisted', false)
       .not('title', 'ilike', 'Demo %');
 
     if (listingsError) throw listingsError;

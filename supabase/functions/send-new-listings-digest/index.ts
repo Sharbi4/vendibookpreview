@@ -219,7 +219,7 @@ async function loadForSale(supabase: any): Promise<Listing[]> {
   const { data } = await supabase
     .from("listings")
     .select(LISTING_COLS)
-    .eq("status", "published")
+    .eq("status", "published").eq("unlisted", false)
     .eq("mode", "sale")
     .is("deleted_at", null)
     .not("cover_image_url", "is", null)
@@ -235,7 +235,7 @@ async function loadRentals(supabase: any): Promise<Listing[]> {
   const { data } = await supabase
     .from("listings")
     .select(LISTING_COLS)
-    .eq("status", "published")
+    .eq("status", "published").eq("unlisted", false)
     .eq("mode", "rent")
     .is("deleted_at", null)
     .not("cover_image_url", "is", null)

@@ -12,7 +12,7 @@ export function useCategoryPriceCheck(listingId: string | undefined, category: s
       const { data, error } = await supabase
         .from('listings')
         .select('id, price_sale')
-        .eq('status', 'published')
+        .eq('status', 'published').eq('unlisted', false)
         .eq('mode', 'sale')
         .eq('category', category as never)
         .is('deleted_at', null)

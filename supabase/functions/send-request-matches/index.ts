@@ -50,7 +50,8 @@ const usd = (v: unknown) => {
 };
 
 const isLive = (l: LiveListing) =>
-  l.status === "published" && l.moderation_status === "clear" && !l.deleted_at && !!l.published_at;
+  l.status === "published" && l.moderation_status === "clear" && !l.deleted_at && !!l.published_at &&
+  (l as { unlisted?: boolean }).unlisted !== true;
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -98,7 +99,7 @@ Deno.serve(async (req) => {
     const mode = request.intent === "rent" ? "rent" : request.intent === "buy" ? "sale" : null;
     if (!mode) return json({ error: "Only rent/buy requests can be matched" }, 422);
     const { data, error } = await admin.from("listings").select(LISTING_COLUMNS)
-      .eq("status", "published").eq("moderation_status", "clear").is("deleted_at", null)
+      .eq("status", "published").eq("moderation_status", "clear").eq("unlisted", false).is("deleted_at", null)
       .not("published_at", "is", null).eq("mode", mode).limit(500);
     if (error) return json({ error: error.message }, 500);
     const budgetMax = Number(request.budget_max) || null;

@@ -4852,6 +4852,7 @@ export type Database = {
           subcategory: string | null
           title: string
           title_status: string | null
+          unlisted: boolean
           total_slots: number | null
           tow_vehicle_requirement: string | null
           trailer_plug_type: string | null
@@ -4960,6 +4961,7 @@ export type Database = {
           subcategory?: string | null
           title: string
           title_status?: string | null
+          unlisted?: boolean
           total_slots?: number | null
           tow_vehicle_requirement?: string | null
           trailer_plug_type?: string | null
@@ -5068,6 +5070,7 @@ export type Database = {
           subcategory?: string | null
           title?: string
           title_status?: string | null
+          unlisted?: boolean
           total_slots?: number | null
           tow_vehicle_requirement?: string | null
           trailer_plug_type?: string | null

@@ -324,6 +324,8 @@ const ListingDetail = () => {
         canonical={`/listing/${listing.id}`}
         image={listing.cover_image_url || undefined}
         type="product"
+        // Admin-unlisted (sandbox certification) listings: reachable by link only.
+        noindex={(listing as { unlisted?: boolean }).unlisted === true}
         product={listingPrice ? {
           price: listingPrice,
           currency: 'USD',

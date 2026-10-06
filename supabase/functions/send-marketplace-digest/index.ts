@@ -208,7 +208,7 @@ async function loadListings(supabase: any, ids: string[]): Promise<Listing[]> {
     .from("listings")
     .select("id,title,cover_image_url,category,city,state,price_daily,price_sale,mode")
     .in("id", ids.slice(0, 3))
-    .eq("status", "published")
+    .eq("status", "published").eq("unlisted", false)
     .is("deleted_at", null);
   const rows = (data || []) as Listing[];
   // Preserve admin-chosen order

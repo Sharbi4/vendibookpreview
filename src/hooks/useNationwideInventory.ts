@@ -63,7 +63,7 @@ const countLive = async (
   let q = supabase
     .from('listings')
     .select('id', { count: 'exact', head: true })
-    .eq('status', 'published')
+    .eq('status', 'published').eq('unlisted', false)
     .not('published_at', 'is', null)
     .is('deleted_at', null)
     .eq('moderation_status', 'clear')

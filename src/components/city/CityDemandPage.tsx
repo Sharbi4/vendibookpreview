@@ -61,7 +61,7 @@ export function CityDemandPage({ city }: CityDemandPageProps) {
         const { data } = await supabase
           .from('listings')
           .select('id, title, cover_image_url, category, price_daily, address')
-          .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
+          .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear').eq('unlisted', false)
           .or(`city.eq.${city.name},address.ilike.%${city.name}%`)
           .limit(6);
         

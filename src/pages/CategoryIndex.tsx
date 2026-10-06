@@ -162,7 +162,7 @@ const baseQuery = (
   let q = supabase
     .from('listings')
     .select(baseSelect)
-    .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
+    .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear').eq('unlisted', false)
     .in('category', categories as any[])
     .not('published_at', 'is', null)
     .not('title', 'ilike', 'demo%')

@@ -135,7 +135,7 @@ export async function fetchPricingRows(): Promise<PricingRow[]> {
   const { data, error } = await supabase
     .from('listings')
     .select('id, title, category, price_sale, state, subcategory, condition, published_at, cover_image_url')
-    .eq('status', 'published')
+    .eq('status', 'published').eq('unlisted', false)
     .eq('mode', 'sale')
     .in('category', ['food_truck', 'food_trailer'])
     .is('deleted_at', null)

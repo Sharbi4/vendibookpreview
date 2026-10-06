@@ -150,7 +150,7 @@ async function searchListings(supabase: any, args: any) {
   let qb = supabase
     .from('listings')
     .select('id, title, description, category, mode, address, city, state, price_daily, price_hourly, price_sale, price_weekly, price_monthly, cover_image_url, instant_book, fulfillment_type, amenities, highlights')
-    .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
+    .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear').eq('unlisted', false)
     .not('title', 'ilike', 'Demo %')
     .limit(Math.min(limit, 10));
 
@@ -203,7 +203,7 @@ async function getListingDetails(supabase: any, args: any) {
     .from('listings')
     .select('*')
     .eq('id', listing_id)
-    .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
+    .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear').eq('unlisted', false)
     .maybeSingle();
 
   if (error) throw error;

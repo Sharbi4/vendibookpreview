@@ -105,7 +105,7 @@ export async function fetchMerchantRows(): Promise<string[][]> {
     .eq("status", "published")
     .not("published_at", "is", null)
     .is("deleted_at", null)
-    .eq("moderation_status", "clear")
+    .eq("moderation_status", "clear").eq("unlisted", false)
     .eq("mode", "sale")
     .in("category", ["food_truck", "food_trailer"])
     .not("title", "ilike", "demo%")
