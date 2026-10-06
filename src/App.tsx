@@ -35,7 +35,6 @@ import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import OfflineBanner from "@/components/system/OfflineBanner";
 import { useOfflineQueueSync } from "@/hooks/useOfflineQueue";
 import { ReferralCapture } from "@/components/referrals/ReferralCapture";
-const LiveActivityFeed = lazy(() => import("@/components/social-proof/LiveActivityFeed").then(m => ({ default: m.LiveActivityFeed })));
 import { toast } from "sonner";
 
 
@@ -769,7 +768,6 @@ const AppContent = () => {
       <AnimatedRoutes />
       <MobileBottomNav />
       <Suspense fallback={null}>
-        <LiveActivityFeed />
       </Suspense>
       <Suspense fallback={null}>
         <FloatingConciergeButton />

@@ -287,9 +287,11 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
         
         
         {/* E-sign trust chip (+ financing badge outside search, where it moves
-            into the information surface to keep the image quiet) */}
+            into the information surface to keep the image quiet). Card badges
+            are labels, not links: a tap anywhere on the card opens the listing,
+            which carries the financing panel. */}
         <div className="absolute bottom-2 left-2 z-10 flex max-w-[calc(100%-1rem)] flex-col items-start gap-1.5">
-          {financingEnabled && !isSearch && <FinancingAvailableBadge compact listingId={listing.id} />}
+          {financingEnabled && !isSearch && <FinancingAvailableBadge compact asLink={false} />}
           <TrustESignChip variant="card" />
         </div>
 
@@ -562,7 +564,7 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
               </Link>
             )}
             {financingEnabled && (
-              <ListingFinancingBadge listingId={listing.id} />
+              <ListingFinancingBadge listingId={listing.id} asLink={false} />
             )}
             {displayAmenities.length > 0 && (
               <TooltipProvider delayDuration={200}>

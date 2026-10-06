@@ -392,7 +392,7 @@ export const SalePurchaseCard = ({
 
           {/* Small print — details live in one overlay, never as extra modules */}
           <p className="text-[11px] leading-relaxed text-muted-foreground">
-            You won&rsquo;t be charged until you review the total at checkout. All sales are final.{' '}
+            No Vendibook buyer fee: your total is the price plus any delivery and sales tax, shown before you pay. All sales are final.{' '}
             <BuyingInfoDialog
               offersPickup={offersPickup}
               sellerDelivers={sellerDelivers}

@@ -27,13 +27,15 @@ const defaultPreferences: CookiePreferences = {
   functional: false,
 };
 
-// Pages where cookie consent is required for tracking
+// Pages where the consent banner is shown. Asked while browsing, never during
+// checkout, where a bottom banner covers the order summary and Continue
+// button. Tracking stays off until the visitor consents either way.
 const CONSENT_REQUIRED_ROUTES = [
-  '/checkout',
-  '/book/',
-  '/buy/',
   '/browse',
+  '/search',
+  '/listing/',
 ];
+const CHECKOUT_ROUTES = ['/checkout', '/book/', '/buy/', '/dashboard/bookings/new/'];
 
 const POPUP_ID = 'cookie-consent';
 
@@ -47,9 +49,9 @@ const CookieConsent = () => {
     const consent = localStorage.getItem('cookie-consent');
     if (!consent) {
       // Only show banner on pages where tracking matters
-      const shouldShowOnRoute = CONSENT_REQUIRED_ROUTES.some(route => 
-        location.pathname.startsWith(route)
-      );
+      const shouldShowOnRoute =
+        CONSENT_REQUIRED_ROUTES.some((route) => location.pathname.startsWith(route)) &&
+        !CHECKOUT_ROUTES.some((route) => location.pathname.startsWith(route));
       
       if (shouldShowOnRoute) {
         const timer = setTimeout(() => { if (claimPopupSlot(POPUP_ID)) setShowBanner(true); }, 1000);
@@ -106,6 +108,8 @@ const CookieConsent = () => {
   };
 
   if (!showBanner && !showSettings) return null;
+  // A banner opened while browsing stays out of the way once checkout starts.
+  if (!showSettings && CHECKOUT_ROUTES.some((route) => location.pathname.startsWith(route))) return null;
 
   return (
     <>
