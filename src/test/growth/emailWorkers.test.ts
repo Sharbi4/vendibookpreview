@@ -162,7 +162,9 @@ describe("rent while you sell", () => {
     expect(result.body.byVariant).toEqual({ rent_while_you_sell: 1 });
     expect(result.body.byState).toEqual({ TX: 1 });
     const html = JSON.parse((await worker("send-rent-while-you-sell", rentRows()).run({ mode: "preview_html" })).body.html);
-    expect(html.views30).toBe(12);
+    // Owner rule 2026-10-06: the seller's view count is never sent.
+    expect(html.views30).toBeUndefined();
+    expect(JSON.stringify(html)).not.toMatch(/\b12 views\b/);
   });
   it.each([
     ["an offer", (r: Record<string, Row[]>) => { r.offers = [{ id: "o", listing_id: listing }]; }],

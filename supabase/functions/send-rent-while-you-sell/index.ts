@@ -235,7 +235,7 @@ serve(async (req) => {
       return raw.charAt(0).toUpperCase() + raw.slice(1).toLowerCase();
     };
 
-    type Recipient = { email: string; user_id: string; state: string; data: RentCampaignData };
+    type Recipient = { email: string; user_id: string; state: string; views30: number; data: RentCampaignData };
     const recipients: Recipient[] = [];
     let skipped = 0;
     for (const p of profiles) {
@@ -254,13 +254,14 @@ serve(async (req) => {
         email,
         user_id: p.id,
         state: String(l.state ?? "").toUpperCase(),
+        // Internal ordering only; never rendered in the email.
+        views30: c.views30,
         data: {
           firstName: firstNameOf(p),
           variant: c.variant,
           listingId: l.id,
           listingTitle: String(l.title ?? "").trim(),
           unitWord: unitWordOf(l.category),
-          views30: c.variant === "rent_while_you_sell" ? c.views30 : undefined,
           dailyRate: c.variant === "monthly_rate" ? Number(l.price_daily) || null : null,
           weeklyRate: c.variant === "monthly_rate" ? Number(l.price_weekly) || null : null,
           monthlyComps: c.variant === "monthly_rate" ? compRange(l.category) : null,
@@ -272,7 +273,7 @@ serve(async (req) => {
     recipients.sort((a, b) =>
       VARIANT_RANK[a.data.variant] - VARIANT_RANK[b.data.variant] ||
       waveRank(a.state) - waveRank(b.state) ||
-      (b.data.views30 ?? 0) - (a.data.views30 ?? 0));
+      b.views30 - a.views30);
 
     if (mode === "preview_count") {
       const byVariant: Record<string, number> = {};
@@ -289,7 +290,7 @@ serve(async (req) => {
         skipped,
         nextBatch: recipients.slice(0, limit).map((r) => ({
           listing_id: r.data.listingId, title: r.data.listingTitle, variant: r.data.variant,
-          state: r.state, views30: r.data.views30 ?? null,
+          state: r.state, views30: r.views30,
         })),
       });
     }

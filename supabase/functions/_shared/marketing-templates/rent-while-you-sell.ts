@@ -22,8 +22,6 @@ export interface RentCampaignData {
   listingTitle: string;
   /** "truck" | "trailer" | "kitchen", used in copy. */
   unitWord: string;
-  /** rent_while_you_sell: listing views in the last 30 days. */
-  views30?: number;
   /** monthly_rate: the rates the listing already has. */
   dailyRate?: number | null;
   weeklyRate?: number | null;
@@ -71,9 +69,9 @@ function paragraphs(d: RentCampaignData): { lead: string; bullets: string[]; aft
       ],
     };
   }
-  const views = d.views30 && d.views30 > 0 ? `${d.views30} views` : "views";
+  // Owner rule 2026-10-06: never tell a seller their view count.
   return {
-    lead: `Your listing "${d.listingTitle}" has had ${views} on Vendibook in the last 30 days, but no offers yet. Renters are looking too, and there are only a handful of ${d.unitWord}s for rent on Vendibook. So here's an idea: rent it while you sell it.`,
+    lead: `Your listing "${d.listingTitle}" has been getting attention on Vendibook, but no offers yet. Renters are looking too, and there are only a handful of ${d.unitWord}s for rent on Vendibook. So here's an idea: rent it while you sell it.`,
     bullets: [
       "Earn rental income, including steady monthly income from one renter.",
       "Keep it listed for sale. Your sale listing stays exactly as it is.",
