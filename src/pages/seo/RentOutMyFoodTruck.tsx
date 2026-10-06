@@ -23,7 +23,7 @@ const FAQS = [
   {
     question: 'Who can book my truck?',
     answer:
-      'Every renter verifies their phone number before they can book, and every message is scanned for scams. You see the renter, their business details and their intended use before you approve a request.',
+      'Renters book from a Vendibook account, and every message is scanned for scams. You see the renter, their business details and their intended use before you approve a request.',
   },
   {
     question: 'Can I require a security deposit and set rules?',
@@ -42,7 +42,7 @@ const RentOutMyFoodTruck = () => (
     seo={{
       title: 'Rent Out Your Food Truck or Trailer | Vendibook',
       description:
-        'List your food truck or trailer for rent free. Card payments through Square, security deposits, signed agreements and phone-verified renters. Rent it while you sell it.',
+        'List your food truck or trailer for rent free. Card payments through Square, security deposits, signed agreements and scam-screened messages. Rent it while you sell it.',
       canonical: '/rent-out-my-food-truck',
     }}
     source="rent_out_my_food_truck"
@@ -51,7 +51,7 @@ const RentOutMyFoodTruck = () => (
     subhead="Turn the days your truck sits parked into income. Chefs, caterers and pop-ups book it on your calendar, pay by card upfront, and sign your agreement before they ever pick up the keys."
     primaryCta={{ label: 'List your truck for rent', to: LIST_URL }}
     secondaryCta={{ label: 'Browse trucks for rent', to: '/search?category=food_truck&mode=rent' }}
-    proofChips={['Free to list', 'Paid by card through Square', 'You approve every renter']}
+    proofChips={['Free to list', 'Paid by card through Square', 'Your rules, your calendar']}
     audience={{
       title: 'Who rents food trucks and trailers on Vendibook',
       items: ['Chefs testing a concept', 'Caterers with a big event', 'Pop-ups & festivals', 'Owners whose truck is in the shop', 'New operators before they buy'],
@@ -71,7 +71,7 @@ const RentOutMyFoodTruck = () => (
     }}
     features={[
       { icon: CreditCard, title: 'Card payments through Square', body: 'Renters pay upfront by card. Connect your own Square account to be paid directly, or let Vendibook pay out your share.' },
-      { icon: ShieldCheck, title: 'Deposits and verified renters', body: 'Collect a refundable security deposit at checkout. Every renter verifies their phone before booking.' },
+      { icon: ShieldCheck, title: 'Deposits and screened renters', body: 'Collect a refundable security deposit at checkout. Renters answer an insurance question before paying, and you decide whether to approve each request or use Instant Book.' },
       { icon: FileSignature, title: 'Signed rental agreement', body: 'Each booking comes with a rental agreement signed electronically, plus your own rules and pickup instructions.' },
       { icon: Video, title: 'Condition record at handoff', body: 'A condition video at pickup and return gives you a clear record of how the truck left and how it came back.' },
       { icon: CalendarCheck, title: 'Your calendar, your rules', body: 'Block dates and set daily, weekly or monthly rates. Pause rentals anytime.' },

@@ -103,7 +103,7 @@ const RentMyCommercialKitchen = () => (
     subhead="Fill slow mornings, late nights and off days with food trucks, caterers and delivery brands that need licensed space. You set the hours, the rules and who gets the keys."
     primaryCta={{ label: 'List your kitchen', to: LIST_URL }}
     secondaryCta={{ label: 'Calculate earnings', to: '/kitchen-earnings-calculator' }}
-    proofChips={['Free to list', 'Hourly or daily rates', 'You approve every renter']}
+    proofChips={['Free to list', 'Hourly or daily rates', 'Your rules, your calendar']}
     audience={{
       title: 'Who books kitchen time on Vendibook',
       items: ['Food trucks needing a commissary', 'Caterers prepping big events', 'Delivery-only brands', 'Bakers & meal-prep startups', 'Cottage food makers scaling up'],
@@ -125,7 +125,7 @@ const RentMyCommercialKitchen = () => (
       { icon: CalendarClock, title: 'Hours that fit your service', body: 'Rent by the hour, shift, day, week or month. Block your own prep and service times so renters never overlap.' },
       { icon: ClipboardCheck, title: 'Documents before approval', body: 'Ask for liability insurance, certifications and a business license, and review them before you say yes.' },
       { icon: CreditCard, title: 'Card payments through Square', body: 'Renters pay upfront by card. Connect your own Square account to be paid directly, or let Vendibook pay out your share.' },
-      { icon: ShieldCheck, title: 'Deposits and verified renters', body: 'Collect a refundable security deposit at checkout. Every renter verifies their phone before booking.' },
+      { icon: ShieldCheck, title: 'Deposits and screened renters', body: 'Collect a refundable security deposit at checkout. Renters answer an insurance question before paying, and you decide whether to approve each request or use Instant Book.' },
       { icon: FileSignature, title: 'Signed agreement and house rules', body: 'Each booking comes with an electronically signed rental agreement plus your equipment rules and access instructions.' },
       { icon: MessageSquareLock, title: 'Safe messaging', body: 'Talk to renters inside Vendibook, where every message is scanned for scams and the whole conversation stays on record.' },
     ]}
