@@ -55,4 +55,23 @@ describe('required signup phone gate',()=>{
   mocks.rpc.mockResolvedValue({data:{required:false,host_phone_required:true},error:null});mount();
   await screen.findByText('Private checkout content');
  });
+ it('lets an unverified member browse a listing, with a verify banner instead of a wall',async()=>{
+  mocks.path='/listing/c4113bc0-bd6e-41d5-bfd5-7eb135465c36';mount();
+  await screen.findByText('Messages and offers are locked.');
+  expect(screen.getByText('Private checkout content')).toBeTruthy();
+  fireEvent.click(screen.getByRole('button',{name:'Verify now'}));
+  await screen.findByText('A safer marketplace starts with you.');
+  expect(screen.queryByText('Private checkout content')).toBeNull();
+ });
+ it('never blocks browsing while the status check is pending or fails',async()=>{
+  mocks.path='/search';
+  mocks.rpc.mockResolvedValue({data:null,error:{message:'offline'}});mount();
+  await screen.findByText('Private checkout content');
+  expect(screen.queryByRole('button',{name:'Try again'})).toBeNull();
+ });
+ it('still walls messaging for an unverified member',async()=>{
+  mocks.path='/messages/abc';mount();
+  await screen.findByText('A safer marketplace starts with you.');
+  expect(screen.queryByText('Private checkout content')).toBeNull();
+ });
 });
