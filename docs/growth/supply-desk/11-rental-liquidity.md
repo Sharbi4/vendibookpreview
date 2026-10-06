@@ -15,7 +15,7 @@ So every campaign click would have hit a dead end. The same bug blocks any exist
 
 **Fixed in app code (this commit):** RentItOut now catches that error and shows an inline "Verify your mobile number" step (`InlinePhoneVerification`). The step uses the same `signup-phone-verification` function and `verify_signup_phone_code` RPC as the full-screen prompt, then retries creating the draft. No DB change is needed, and the policy ("creating a listing needs phone") is unchanged.
 
-**Proposed DB change (Growth lead's path, owner call):** exempt a linked-rental INSERT whose `source_listing_id` is the actor's own live sale listing. It's the same asset and starts no contact. With that change, sellers skip the extra step. The SQL was sent to the Growth lead. The wizard dead end for new listings still needs an owner decision:
+**DB fix live (Growth lead, migration 20261006040000, commit fa403afd):** a linked-rental INSERT whose `source_listing_id` is the actor's own live sale listing now counts as seller-side, so sellers converting a sale listing skip the phone step. The inline verify step remains as a fallback for any other phone-gate error. The wizard dead end for new listings still needs an owner decision:
 - (a) exempt existing hosts, or
 - (b) show the verify form on the create-listing routes.
 
