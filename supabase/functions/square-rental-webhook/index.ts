@@ -11,7 +11,7 @@
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { verifySquareSignature } from "../_shared/square.ts";
-import { activeSellerAccount, sellerAccessToken, squareApi } from "../_shared/squareMarketplace.ts";
+import { recordSquareContext, squareApi } from "../_shared/squareMarketplace.ts";
 import { safeLog } from "../_shared/paypal.ts";
 import { applySquareRefund } from "../_shared/squareRentalRefund.ts";
 import { CaptureRejectedError, finalizeCapture } from "../_shared/paypalFinalize.ts";
@@ -19,18 +19,19 @@ import { squarePaymentFacts } from "../_shared/squareRentalMath.ts";
 
 const ok = (text = "ok") => new Response(text, { status: 200 });
 
-async function sellerToken(admin: any, record: any) {
-  const account = await activeSellerAccount(admin, record.seller_id);
-  return account ? await sellerAccessToken(admin, account) : null;
+/** Token + API base for the Square account the payment was taken on. */
+async function squareAccess(admin: any, record: any) {
+  const ctx = await recordSquareContext(admin, record);
+  return ctx ? { token: await ctx.token(), base: ctx.base } : null;
 }
 
 async function handlePayment(admin: any, paymentId: string) {
   const { data: record } = await admin.from("payment_records").select("*")
     .eq("square_payment_id", paymentId).maybeSingle();
   if (!record) return "ignored_unknown_payment";
-  const token = await sellerToken(admin, record);
-  if (!token) return "host_not_connected";
-  const { payment } = await squareApi(`/v2/payments/${encodeURIComponent(paymentId)}`, { token });
+  const access = await squareAccess(admin, record);
+  if (!access) return "square_account_unavailable";
+  const { payment } = await squareApi(`/v2/payments/${encodeURIComponent(paymentId)}`, access);
   if (!payment || payment.location_id !== record.square_location_id) return "ignored_location";
   try {
     const updated = await finalizeCapture(admin, record, squarePaymentFacts(payment), "webhook");
@@ -50,9 +51,9 @@ async function handleRefund(admin: any, refundId: string, paymentId: string | un
   const { data: record } = await admin.from("payment_records").select("*")
     .eq("square_payment_id", paymentId).maybeSingle();
   if (!record) return "ignored_unknown_payment";
-  const token = await sellerToken(admin, record);
-  if (!token) return "host_not_connected";
-  const { refund } = await squareApi(`/v2/refunds/${encodeURIComponent(refundId)}`, { token });
+  const access = await squareAccess(admin, record);
+  if (!access) return "square_account_unavailable";
+  const { refund } = await squareApi(`/v2/refunds/${encodeURIComponent(refundId)}`, access);
   if (!refund || refund.payment_id !== paymentId) return "ignored_mismatch";
   return await applySquareRefund(admin, record, refund);
 }

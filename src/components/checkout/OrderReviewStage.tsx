@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Pencil, UserRound } from 'lucide-react';
+import { Lock, MapPin, Pencil, UserRound } from 'lucide-react';
 import { PayPalWordmark } from '@/components/brand/ProviderLogos';
 import MoneyBreakdown, { type MoneyLine } from '@/components/transaction/checkout/MoneyBreakdown';
 
@@ -36,13 +36,15 @@ interface OrderReviewStageProps {
   backHref: string;
   backLabel?: string;
   hideActions?: boolean;
+  /** Which checkout preview to show. Rentals pay by card through Square. */
+  paymentPreview?: 'paypal' | 'card';
 }
 
 /**
  * Stage 1 of checkout. A single premium asset card, an unambiguous money
  * hierarchy and the selected fulfillment — everything the buyer needs to
  * understand the transaction before entering the checkout stage. No payment
- * controls here: only a factual PayPal preview.
+ * controls here: only a factual preview of how payment works.
  */
 const OrderReviewStage = ({
   imageUrl,
@@ -67,6 +69,7 @@ const OrderReviewStage = ({
   backHref,
   backLabel = 'Back to listing',
   hideActions = false,
+  paymentPreview = 'paypal',
 }: OrderReviewStageProps) => (
   <div className="order-review">
     <section className="order-review-asset">
@@ -121,13 +124,23 @@ const OrderReviewStage = ({
 
     {children}
 
-    <section className="order-review-paypal">
-      <PayPalWordmark surface="light" className="text-base" />
-      <div>
-        <strong>Checkout with PayPal</strong>
-        <span>Eligible payment options are shown in the next step.</span>
-      </div>
-    </section>
+    {paymentPreview === 'card' ? (
+      <section className="order-review-paypal">
+        <Lock aria-hidden className="h-4 w-4" />
+        <div>
+          <strong>Secure card checkout</strong>
+          <span>You review the final total before anything is charged.</span>
+        </div>
+      </section>
+    ) : (
+      <section className="order-review-paypal">
+        <PayPalWordmark surface="light" className="text-base" />
+        <div>
+          <strong>Checkout with PayPal</strong>
+          <span>Eligible payment options are shown in the next step.</span>
+        </div>
+      </section>
+    )}
 
     {!hideActions ? (
       <div className="order-review-actions">

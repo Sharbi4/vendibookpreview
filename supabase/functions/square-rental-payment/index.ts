@@ -5,8 +5,10 @@
  * and a Square card token only, never an amount):
  *   config  -> which processor this booking pays with, plus the public Web
  *              Payments SDK ids (application id + the HOST's location id)
- *   pay     -> charges the card on the host's Square account with Vendibook's
- *              share as app_fee_money, then finalises from Square's response
+ *   pay     -> charges the card through Square: on the host's own Square
+ *              account (Vendibook's share as app_fee_money) when connected,
+ *              otherwise on Vendibook's live Square account (host paid via a
+ *              seller payable), then finalises from Square's response
  *   status  -> server-verified payment state; reconciles a pending payment by
  *              asking Square directly
  *
@@ -25,10 +27,8 @@ import { parseStateZipFromAddress, quoteSalesTax } from "../_shared/tax.ts";
 import { CaptureRejectedError, finalizeCapture } from "../_shared/paypalFinalize.ts";
 import { safeLog } from "../_shared/paypal.ts";
 import {
-  activeSellerAccount,
-  marketplaceConfigured,
-  marketplaceEnv,
-  sellerAccessToken,
+  recordSquareContext,
+  rentalSquareContext,
   squareApi,
   SquareApiError,
 } from "../_shared/squareMarketplace.ts";
@@ -45,22 +45,7 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 // deno-lint-ignore no-explicit-any
 type Admin = any;
 
-/** Which processor a rental pays with, decided only on the server. */
-async function resolveProvider(admin: Admin, hostId: string) {
-  const env = marketplaceEnv();
-  if (!marketplaceConfigured()) {
-    return env.paypalFallback
-      ? { provider: "paypal" as const, reason: "square_not_configured", account: null }
-      : { provider: "unavailable" as const, reason: "square_not_configured", account: null };
-  }
-  const account = await activeSellerAccount(admin, hostId);
-  if (account) return { provider: "square" as const, reason: null, account };
-  return env.paypalFallback
-    ? { provider: "paypal" as const, reason: "host_not_connected", account: null }
-    : { provider: "unavailable" as const, reason: "host_not_connected", account: null };
-}
-
-/** Same server-side quote PayPal used: trusted booking row + Pro fee + sales tax. */
+/** Server-side quote: trusted booking row + Pro fee + sales tax. */
 async function rentalQuote(admin: Admin, booking: any) {
   const locked = booking.host_platform_fee !== null && booking.host_platform_fee !== undefined;
   const hostPro = locked ? { isPro: !!booking.pro_fee_applied } : { isPro: (await resolveProStatus(admin, booking.host_id)).isPro };
@@ -98,11 +83,11 @@ async function releaseLock(admin: Admin, record: any) {
 
 /** Asks Square for the payment and finalises it (status checks). */
 async function reconcileSquareRecord(admin: Admin, record: any, source: "capture_endpoint" | "webhook") {
-  if (!record?.square_payment_id || !record.seller_id) return record;
-  const account = await activeSellerAccount(admin, record.seller_id);
-  if (!account) return record;
-  const token = await sellerAccessToken(admin, account);
-  const { payment } = await squareApi(`/v2/payments/${encodeURIComponent(record.square_payment_id)}`, { token });
+  if (!record?.square_payment_id) return record;
+  const ctx = await recordSquareContext(admin, record);
+  if (!ctx) return record;
+  const { payment } = await squareApi(`/v2/payments/${encodeURIComponent(record.square_payment_id)}`,
+    { token: await ctx.token(), base: ctx.base });
   if (!payment || payment.location_id !== record.square_location_id) return record;
   const updated = await finalizeCapture(admin, record, squarePaymentFacts(payment), source);
   if (["failed", "cancelled", "declined"].includes(String(updated?.payment_status))) await releaseLock(admin, record);
@@ -166,18 +151,15 @@ Deno.serve(async (req) => {
 
     // ------------------------------------------------------------ config
     if (action === "config") {
-      const routing = await resolveProvider(admin, booking.host_id);
-      if (routing.provider !== "square") {
-        return jsonResponse(200, { provider: routing.provider, reason: routing.reason });
-      }
+      const ctx = await rentalSquareContext(admin, booking.host_id);
+      if (!ctx) return jsonResponse(200, { provider: "unavailable", reason: "square_not_configured" });
       const { quote } = await rentalQuote(admin, booking);
-      const env = marketplaceEnv();
       return jsonResponse(200, {
         provider: "square",
-        environment: env.environment,
-        application_id: env.applicationId,
-        location_id: routing.account.location_id,
-        host_business_name: routing.account.business_name ?? routing.account.location_name ?? null,
+        environment: ctx.environment,
+        application_id: ctx.applicationId,
+        location_id: ctx.locationId,
+        host_business_name: ctx.mode === "host" ? ctx.businessName : null,
         amount_cents: quote.grossCents,
         currency: quote.currency,
         breakdown: quote.breakdown,
@@ -194,7 +176,7 @@ Deno.serve(async (req) => {
     if (!sourceId || sourceId.length > 512) return jsonError(400, "missing_fields", "Enter your card details.");
     if (!UUID_RE.test(attemptKey)) return jsonError(400, "missing_fields", "Refresh the page and try again.");
 
-    // Legal gate, enforced server-side exactly like the PayPal rental path.
+    // Legal gate, enforced server-side.
     for (const slug of ["terms-of-service", "payments-terms"] as const) {
       if (!(await hasCurrentLegalAcceptance(admin, user.id, slug))) {
         return jsonError(403, "legal_acceptance_required",
@@ -209,9 +191,9 @@ Deno.serve(async (req) => {
       return jsonError(409, "payment_not_ready", "The host needs to approve this request before payment.");
     }
 
-    const routing = await resolveProvider(admin, booking.host_id);
-    if (routing.provider !== "square") {
-      return jsonError(409, "square_unavailable", "Card payments for this host aren't set up yet. Please message the host or try again later.");
+    const ctx = await rentalSquareContext(admin, booking.host_id);
+    if (!ctx) {
+      return jsonError(409, "square_unavailable", "Card payment is temporarily unavailable. Nothing was charged. Please try again shortly.");
     }
 
     // Revalidate the listing and the dates immediately before charging.
@@ -235,12 +217,20 @@ Deno.serve(async (req) => {
     if (fingerprintError || !fingerprint) return jsonError(409, "quote_unavailable", "We could not verify this booking. Please try again.");
 
     const { quote, tax } = await rentalQuote(admin, booking);
-    let split;
-    try {
-      split = splitRentalCharge({ grossCents: quote.grossCents, sellerProceedsCents: quote.sellerProceedsCents });
-    } catch (err) {
-      safeLog("square_split_rejected", { booking: booking.id, reason: (err as Error).message });
-      return jsonError(409, "payment_unavailable", "Card payment isn't available for this booking. Please contact support.");
+    // Host account: Vendibook's share rides as app_fee_money. Vendibook's own
+    // account: the whole charge lands with Vendibook and the host's share is
+    // a seller payable, so there is no app fee.
+    let appFeeCents = 0;
+    if (ctx.mode === "host") {
+      try {
+        appFeeCents = splitRentalCharge({ grossCents: quote.grossCents, sellerProceedsCents: quote.sellerProceedsCents }).appFeeCents;
+      } catch (err) {
+        safeLog("square_split_rejected", { booking: booking.id, reason: (err as Error).message });
+        return jsonError(409, "payment_unavailable", "Card payment isn't available for this booking. Please contact support.");
+      }
+    }
+    if (!Number.isSafeInteger(quote.grossCents) || quote.grossCents <= 0) {
+      return jsonError(409, "invalid_amount", "This booking has no amount due.");
     }
 
     // Commitment point: lock the host fee and the tax snapshot on the booking.
@@ -267,7 +257,6 @@ Deno.serve(async (req) => {
     if (record && record.gross_amount_cents !== quote.grossCents) {
       return jsonError(409, "quote_changed", "The total changed. Refresh to see the latest amount before paying.");
     }
-    const account = routing.account;
     if (!record) {
       const { data: inserted, error: insertError } = await admin.from("payment_records").insert({
         reference: quote.reference,
@@ -288,9 +277,9 @@ Deno.serve(async (req) => {
         deposit_cents: quote.depositCents,
         discount_cents: quote.discountCents,
         seller_proceeds_cents: quote.sellerProceedsCents,
-        app_fee_cents: split.appFeeCents,
-        square_location_id: account.location_id,
-        square_merchant_id: account.merchant_id,
+        app_fee_cents: ctx.mode === "host" ? appFeeCents : null,
+        square_location_id: ctx.locationId,
+        square_merchant_id: ctx.merchantId,
         payment_status: "created",
         internal_status: "awaiting_payment",
         payment_strategy: "capture_now",
@@ -301,9 +290,11 @@ Deno.serve(async (req) => {
           rental_fingerprint: fingerprint,
           lines: quote.breakdown,
           release_at: quote.releaseAt,
-          app_fee_cents: split.appFeeCents,
+          ...(ctx.mode === "host" ? { app_fee_cents: appFeeCents } : {}),
         },
-        metadata: { multiparty: { routed: true, provider: "square", merchant_id: account.merchant_id } },
+        metadata: ctx.mode === "host"
+          ? { square_mode: "host", multiparty: { routed: true, provider: "square", merchant_id: ctx.merchantId } }
+          : { square_mode: "platform" },
       }).select().single();
       if (insertError || !inserted) {
         if ((insertError as any)?.code === "23505") {
@@ -326,18 +317,18 @@ Deno.serve(async (req) => {
       return jsonError(409, "payment_in_progress", claimError.message);
     }
 
-    const token = await sellerAccessToken(admin, account);
     let payment: any;
     try {
       ({ payment } = await squareApi("/v2/payments", {
-        token,
+        token: await ctx.token(),
+        base: ctx.base,
         body: {
           source_id: sourceId,
           idempotency_key: squareIdempotencyKey("vb", record.reference, attemptKey.slice(0, 8)),
-          amount_money: { amount: split.grossCents, currency: quote.currency },
-          app_fee_money: { amount: split.appFeeCents, currency: quote.currency },
+          amount_money: { amount: quote.grossCents, currency: quote.currency },
+          ...(ctx.mode === "host" ? { app_fee_money: { amount: appFeeCents, currency: quote.currency } } : {}),
           autocomplete: true,
-          location_id: account.location_id,
+          location_id: ctx.locationId,
           reference_id: String(record.reference).slice(0, 40),
           note: `Vendibook rental ${record.reference}`.slice(0, 500),
           ...(user.email ? { buyer_email_address: user.email } : {}),
@@ -366,8 +357,8 @@ Deno.serve(async (req) => {
     }
 
     // Verify Square's answer before trusting it.
-    if (payment.location_id !== account.location_id ||
-        Number(payment.app_fee_money?.amount ?? 0) !== split.appFeeCents) {
+    if (payment.location_id !== ctx.locationId ||
+        Number(payment.app_fee_money?.amount ?? 0) !== appFeeCents) {
       safeLog("square_payment_mismatch", { reference: record.reference });
       await admin.from("payment_records").update({ square_payment_id: payment.id, internal_status: "needs_review",
         last_error: { reason: "square_payment_mismatch" } }).eq("id", record.id);

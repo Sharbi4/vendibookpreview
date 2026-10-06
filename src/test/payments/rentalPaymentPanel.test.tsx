@@ -15,25 +15,22 @@ vi.mock('@/integrations/supabase/client', () => ({
 }));
 vi.mock('@/lib/rentalCheckoutAnalytics', () => ({ trackRentalCheckout: vi.fn() }));
 vi.mock('@/lib/squareWebSdk', () => ({ loadSquareWebSdk: vi.fn(() => new Promise(() => {})) }));
-vi.mock('@/components/transaction/checkout/PayPalEmbeddedPayment', () => ({
-  default: ({ target }: any) => <div data-testid="paypal">{target.kind}:{target.id}</div>,
-}));
 import RentalPaymentPanel from '@/components/booking/RentalPaymentPanel';
 
 const mount = () => render(
   <MemoryRouter>
     <RentalPaymentPanel bookingId="b1" listingId="l1" hostId="h1" listingHref="/listing/l1" totalUsd={112.9}
-      flow="instant" paypalReturnUrl="/dashboard/bookings/b1?step=payment" onPaid={() => {}} />
+      flow="instant" onPaid={() => {}} />
   </MemoryRouter>,
 );
 
 describe('RentalPaymentPanel', () => {
   beforeEach(() => { cleanup(); state.calls = []; });
 
-  it('asks the server which processor to use, sending only the booking id', async () => {
-    state.config = { provider: 'paypal', reason: 'square_not_configured' };
+  it('asks the server for the Square setup, sending only the booking id', async () => {
+    state.config = { provider: 'unavailable', reason: 'square_not_configured' };
     mount();
-    expect((await screen.findByTestId('paypal')).textContent).toBe('booking:b1');
+    expect(await screen.findByText(/Card payment is temporarily unavailable/)).toBeTruthy();
     expect(state.calls[0]).toEqual({ name: 'square-rental-payment', body: { action: 'config', booking_id: 'b1' } });
   });
 
@@ -43,13 +40,13 @@ describe('RentalPaymentPanel', () => {
     mount();
     expect(await screen.findByText(/Paid to Taco Trailers LLC through Square/)).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Pay $123.45' })).toBeTruthy();
-    expect(screen.queryByTestId('paypal')).toBeNull();
+    expect(screen.queryByText(/PayPal/i)).toBeNull();
   });
 
   it('never charges when card payments are unavailable for the host', async () => {
     state.config = { provider: 'unavailable', reason: 'host_not_connected' };
     mount();
-    expect(await screen.findByText(/aren't ready for this host yet/)).toBeTruthy();
+    expect(await screen.findByText(/Card payment is temporarily unavailable/)).toBeTruthy();
     expect(screen.queryByRole('button', { name: /Pay/ })).toBeNull();
   });
 });

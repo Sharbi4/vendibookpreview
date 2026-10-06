@@ -95,6 +95,12 @@ export default function PhoneVerificationPrompt({ children }: { children: ReactN
   const publicHelp = ["/terms", "/privacy", "/sms-terms", "/help", "/help-center", "/reset-password"].some(path => pathname === path || pathname.startsWith(path + "/"));
   if (publicHelp || (!isLoading && !user)) return <>{children}</>;
   if (user && checkedUser === user.id && status?.required === false && !status.identity_required) return <>{children}</>;
+  // Rental checkout needs a verified phone only (owner decision 2026-10-06):
+  // viewing listings, booking, paying and the booking/receipt pages never show
+  // the identity step. Messaging, offers and purchases stay identity-gated.
+  const rentalFlow = /^\/(listing|book|booking-confirmation|receipt)(\/|$)/.test(pathname) ||
+    pathname.startsWith('/dashboard/bookings') || pathname.startsWith('/payment/');
+  if (rentalFlow && user && checkedUser === user.id && status?.required === false) return <>{children}</>;
 
   const checking = isLoading || !status || checkedUser !== user?.id;
   const identityStep = !checking && status?.required === false && !!status?.identity_required;

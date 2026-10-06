@@ -8,7 +8,7 @@
  * COMPLETED refund first.
  */
 import { appendLedgerEntry, recalculatePayableAfterRefund } from "./paypalAccounting.ts";
-import { activeSellerAccount, sellerAccessToken, squareApi, SquareApiError } from "./squareMarketplace.ts";
+import { recordSquareContext, squareApi, SquareApiError } from "./squareMarketplace.ts";
 import { refundAppFeeShare, squareIdempotencyKey } from "./squareRentalMath.ts";
 
 export async function latestSquareRentalRecord(admin: any, bookingId: string) {
@@ -79,9 +79,10 @@ export async function refundSquareRental(admin: any, opts: {
   const amountCents = Math.min(remaining, Math.round(opts.amountCents ?? remaining));
   if (amountCents <= 0) return { success: false, error: "Nothing left to refund." };
 
-  const account = await activeSellerAccount(admin, record.seller_id);
-  if (!account) return { success: false, error: "The host's Square account is disconnected. An admin must refund this in Square." };
-  const appFeeCents = refundAppFeeShare({
+  const ctx = await recordSquareContext(admin, record);
+  if (!ctx) return { success: false, error: "The Square account for this payment is unavailable. An admin must refund this in Square." };
+  // Payments on Vendibook's own Square account carry no app fee.
+  const appFeeCents = ctx.mode === "platform" ? 0 : refundAppFeeShare({
     refundCents: amountCents,
     grossCents: record.gross_amount_cents,
     appFeeCents: Number(record.app_fee_cents ?? 0),
@@ -90,7 +91,8 @@ export async function refundSquareRental(admin: any, opts: {
   });
   try {
     const { refund } = await squareApi("/v2/refunds", {
-      token: await sellerAccessToken(admin, account),
+      token: await ctx.token(),
+      base: ctx.base,
       body: {
         idempotency_key: squareIdempotencyKey("rf", opts.idempotencyKey),
         payment_id: record.square_payment_id,

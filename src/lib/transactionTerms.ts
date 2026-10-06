@@ -47,7 +47,8 @@ export interface TermsListing {
 
 export interface TermsSelection {
   mode: 'rent' | 'sale';
-  paymentMethod: 'paypal_checkout' | 'pay_in_person' | 'offer' | 'other';
+  /** card_checkout = rental card payment through Square. */
+  paymentMethod: 'card_checkout' | 'paypal_checkout' | 'pay_in_person' | 'offer' | 'other';
   basePriceDollars: number;      // rental subtotal or sale price (before fees, before deposit)
   depositDollars?: number;       // security deposit (rental)
   deliveryFeeDollars?: number;   // buyer-visible delivery / freight
@@ -236,7 +237,13 @@ export function buildTerms(input: {
       ? `You are booking "${listing.title}" for the dates shown above.`
       : `You are buying "${listing.title}" from the seller.`,
   );
-  if (selection.paymentMethod === 'paypal_checkout') {
+  if (selection.paymentMethod === 'card_checkout') {
+    acknowledgements.push(
+      selection.mode === 'rent'
+        ? 'Request bookings require host approval before payment; after approval you pay by card on Vendibook. Instant Book is confirmed only after your card payment is verified.'
+        : 'Your card is charged when you confirm payment on Vendibook.',
+    );
+  } else if (selection.paymentMethod === 'paypal_checkout') {
     acknowledgements.push(
       selection.mode === 'rent'
         ? 'Request bookings require host approval before payment. Approve at PayPal, then review the final total on Vendibook and select Submit payment. Instant Book is confirmed only after verified payment.'

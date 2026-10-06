@@ -8,18 +8,16 @@ import { formatCurrency } from '@/lib/commissions';
 import { loadSquareWebSdk, type SquareCard } from '@/lib/squareWebSdk';
 import { trackRentalCheckout } from '@/lib/rentalCheckoutAnalytics';
 import PaymentFormSkeleton from '@/components/checkout/PaymentFormSkeleton';
-import PayPalEmbeddedPayment from '@/components/transaction/checkout/PayPalEmbeddedPayment';
 
 /**
- * Rental payment step. The server decides the processor per booking:
- * Square when the host has connected Square (the default for rentals), PayPal
- * only while the transition fallback is on. The browser never decides a
- * booking is paid; it reports what the server verified with Square.
+ * Rental payment step: card payment through Square only. The server picks the
+ * Square account (the host's own when connected, otherwise Vendibook's) and
+ * the amount. The browser never decides a booking is paid; it reports what
+ * the server verified with Square.
  */
 type Config =
   | { provider: 'square'; environment: 'sandbox' | 'production'; application_id: string; location_id: string;
       amount_cents: number; currency: string; host_business_name?: string | null }
-  | { provider: 'paypal'; reason?: string }
   | { provider: 'unavailable'; reason?: string };
 
 export interface RentalPaymentPanelProps {
@@ -30,8 +28,6 @@ export interface RentalPaymentPanelProps {
   /** Display-only estimate; the charged amount always comes from the server. */
   totalUsd: number;
   flow: 'instant' | 'request';
-  /** Where PayPal (fallback) returns after approval. */
-  paypalReturnUrl: string;
   heading?: string;
   /** Prefills Square's buyer verification (3-D Secure) contact. */
   billingContact?: { givenName?: string; familyName?: string; email?: string; phone?: string;
@@ -54,7 +50,7 @@ async function invoke(body: Record<string, unknown>) {
 const newAttemptKey = () => crypto.randomUUID();
 
 export default function RentalPaymentPanel(props: RentalPaymentPanelProps) {
-  const { bookingId, listingId, hostId, listingHref, totalUsd, flow, paypalReturnUrl, heading, billingContact, onPaid } = props;
+  const { bookingId, listingId, flow, heading, billingContact, onPaid } = props;
   const [config, setConfig] = useState<Config | null>(null);
   const [configError, setConfigError] = useState<string | null>(null);
   const [cardReady, setCardReady] = useState(false);
@@ -169,30 +165,13 @@ export default function RentalPaymentPanel(props: RentalPaymentPanelProps) {
   }
   if (!config) return <PaymentFormSkeleton />;
 
-  if (config.provider === 'paypal') {
-    return (
-      <PayPalEmbeddedPayment
-        target={{ kind: 'booking', id: bookingId }}
-        sellerId={hostId}
-        counterparty="host"
-        listingHref={listingHref}
-        returnUrl={paypalReturnUrl}
-        totalUsd={totalUsd}
-        heading={heading ?? 'Confirm and pay'}
-        intent={flow === 'instant'
-          ? 'Your booking is confirmed the moment your payment is verified.'
-          : 'Pay now that the host has approved your request.'}
-      />
-    );
-  }
-
   if (config.provider === 'unavailable') {
     return (
       <div className="rounded-xl border border-border bg-muted/40 p-4 space-y-2">
-        <p className="text-sm font-medium text-foreground flex items-center gap-2"><AlertCircle className="h-4 w-4 text-muted-foreground" /> Card payments aren't ready for this host yet</p>
+        <p className="text-sm font-medium text-foreground flex items-center gap-2"><AlertCircle className="h-4 w-4 text-muted-foreground" /> Card payment is temporarily unavailable</p>
         <p className="text-xs text-muted-foreground leading-relaxed">
-          Your booking is saved and nothing was charged. Message the host from your booking to let them
-          know, and come back to pay from the booking once their payment setup is finished.
+          Your booking is saved and nothing was charged. Please try again shortly from your booking,
+          or contact support@vendibook.com and we'll help you finish.
         </p>
         <Link className="text-xs underline" to={`/dashboard/bookings/${bookingId}`}>Open your booking</Link>
       </div>

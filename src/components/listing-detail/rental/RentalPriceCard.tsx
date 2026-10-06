@@ -2,7 +2,6 @@ import { Clock, CalendarDays, Truck, Info } from 'lucide-react';
 import { SaleCard } from '@/components/listing-detail/sale/SaleCard';
 import { RENTAL_RENTER_FEE_PERCENT } from '@/lib/commissions';
 import { deliveryRateLabel } from '@/lib/fulfillment/delivery';
-import PayPalPayLaterMessage from '@/components/payments/PayPalPayLaterMessage';
 
 interface RentalPriceCardProps {
   priceHourly?: number | null;
@@ -49,7 +48,6 @@ export const RentalPriceCard = ({
   deliveryFee,
   deliveryFeeType,
   instantBook,
-  paypalMerchantId,
 }: RentalPriceCardProps) => {
   const hasDelivery = fulfillmentType === 'delivery' || fulfillmentType === 'both';
   const deliveryLabel = hasDelivery ? deliveryRateLabel(deliveryFee, deliveryFeeType as any) : null;
@@ -88,18 +86,12 @@ export const RentalPriceCard = ({
         </p>
       )}
 
-      <PayPalPayLaterMessage
-        amount={priceDaily ?? (hourlyEnabled ? priceHourly : null) ?? priceWeekly ?? priceMonthly}
-        placement="product"
-        merchantId={paypalMerchantId}
-      />
-
       <p className="text-xs text-muted-foreground leading-relaxed">
         Pick your dates in the booking panel to see the exact total. Longer bookings automatically
         use the best available rate.{' '}
         {instantBook
-          ? 'This rental books instantly — you pay through PayPal at checkout.'
-          : 'This rental is request-to-book: your payment method is authorized when you request, and you are only charged if the host accepts.'}
+          ? 'This rental books instantly — you pay securely by card at checkout.'
+          : 'This rental is request-to-book: nothing is charged when you request. You pay by card after the host accepts.'}
       </p>
     </SaleCard>
   );

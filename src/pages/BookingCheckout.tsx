@@ -1,7 +1,6 @@
 import { isValidRentalDateRange, parseRentalDate, parseRentalSlot, rentalIsInstant, rentalSubmitAllowed, validRentalContact } from '@/lib/rentalCheckoutValidation';
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
 import { format, parseISO, differenceInDays } from 'date-fns';
 import {
   ArrowLeft,
@@ -42,7 +41,6 @@ import { quoteRentalPeriod } from '@/lib/listings/rentalPricing';
 import { trackFormSubmitConversion } from '@/lib/gtagConversions';
 import { useCheckoutFunnel } from '@/hooks/useCheckoutFunnel';
 import { trackRequestStarted, trackRequestSubmitted } from '@/lib/analytics';
-import { PayPalPaymentPanel } from '@/components/checkout';
 
 import CheckoutOrderSummary, { type OrderSummaryLine } from '@/components/checkout/CheckoutOrderSummary';
 import { parseEdgeError } from '@/lib/edgeErrors';
@@ -67,8 +65,6 @@ import { detectAvailabilityConflict } from '@/lib/availabilityConflict';
 import { ReferralCodeField } from '@/components/referrals/ReferralCodeField';
 import { useSellerVerifiedBadge } from '@/hooks/useSellerVerifiedBadge';
 import { authPath } from '@/lib/auth/returnTo';
-import { useSellerPaymentReadiness } from '@/hooks/useSellerPaymentReadiness';
-import { useWarmPayPalCheckout } from '@/hooks/useWarmPayPalCheckout';
 import SEO from '@/components/SEO';
 
 import TransactionCheckoutShell from '@/components/transaction/checkout/TransactionCheckoutShell';
@@ -149,25 +145,11 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
     );
   /**
    * Instant Book skips host approval ONLY for identity-verified hosts.
-   * Everyone else sends a request first; PayPal is available only after approval.
+   * Everyone else sends a request first; card payment opens after approval.
    */
   const { verified: hostIdentityVerified, loading: hostIdentityLoading } = useSellerVerifiedBadge(listing?.host_id);
-  /** Hides the functional PayPal action if the host hasn't finished payment
-   *  setup. Never blocks bookings when gating isn't active for this host. */
-  const paymentReadiness = useSellerPaymentReadiness(listing?.host_id);
-  /** Rentals pay through the host's Square account when it is connected. */
-  const { data: hostSquareReady = false } = useQuery({
-    queryKey: ['host-square-ready', listing?.host_id],
-    enabled: Boolean(listing?.host_id),
-    staleTime: 5 * 60_000,
-    retry: false,
-    queryFn: async () => {
-      const { data, error } = await supabase.rpc('host_square_ready' as never, { _host_id: listing!.host_id } as never);
-      if (error) return false;
-      return data === true;
-    },
-  });
-  const paymentSetupBlocked = paymentReadiness.gatingActive && !paymentReadiness.ready && !hostSquareReady;
+  // Rentals pay by card through Square; whether this booking can be paid is
+  // decided on the server at the payment step (square-rental-payment config).
   // The widget can downgrade an instant listing to a request (e.g. limited
   // spots left on a selected day) and signals that with ?flow=request.
   const requestedFlow = searchParams.get('flow');
@@ -275,7 +257,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
 
   const [paymentTarget, setPaymentTarget] = useState<{ bookingId: string; returnUrl: string } | null>(null);
   /** Guards against creating a second booking_request row if the buyer
-   *  closes the PayPal panel and hits the submit button again. */
+   *  closes the payment panel and hits the submit button again. */
   const createdBookingIdRef = useRef<string | null>(restoredDraft?.bookingId ?? null);
   /** Sent as booking_requests.client_request_key: one booking per checkout. */
   const requestKeyRef = useRef<string>(restoredDraft?.requestKey ?? newRequestKey());
@@ -363,10 +345,6 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   // Inclusive day counting: same start/end = 1 day
   const rentalDays = startDate && endDate ? differenceInDays(endDate, startDate) + 1 : 0;
 
-  // Pre-warm the canonical CAPTURE SDK during earlier steps. PayPal approval
-  // returns to Vendibook; capture waits for the buyer's final Submit payment.
-  useWarmPayPalCheckout(listing?.host_id ?? null);
-
   /** Shared period quote (weekly/monthly bundling), also used for the summary line. */
   const rentalQuote = useMemo(
     () =>
@@ -399,8 +377,8 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
 
   // Estimated sales tax — server-computed from the state sales-tax table. The
   // authoritative amount is re-locked at order creation in
-  // `paypal-create-order`; this is only so the renter sees the real total
-  // before the PayPal window opens.
+  // `square-rental-payment`; this is only so the renter sees the real total
+  // before paying.
   const [taxEstimate, setTaxEstimate] = useState<{ tax_cents: number; rate_pct: number; label: string } | null>(null);
   // Quote lifecycle, so the summary can show an explicit tax row
   // ("calculating…" / "calculated at payment") instead of silently omitting
@@ -446,7 +424,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   // rental ends, so it is part of today's charge.
   const totalChargedToday = fees.customerTotal + taxAmount + (depositAmount ?? 0);
 
-  // Always-visible tax row for the PayPal panel summary: real amount when
+  // Always-visible tax row for the payment summary: real amount when
   // quoted, an explicit placeholder while calculating or when the estimate
   // is unavailable (the server still adds tax authoritatively at payment).
   const taxSummaryLine: OrderSummaryLine | null = taxAmount > 0
@@ -651,7 +629,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
       },
       selection: {
         mode: 'rent',
-        paymentMethod: 'paypal_checkout',
+        paymentMethod: 'card_checkout',
         basePriceDollars: fees.subtotal - currentDeliveryFee,
         deliveryFeeDollars: currentDeliveryFee,
         depositDollars: depositAmount,
@@ -672,7 +650,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
 
   const handleSubmit = async () => {
     if (agreementLockRef.current || submitLockRef.current || termsGate.preparing) return;
-    if (!canSubmit || (instantConfirm && (paymentSetupBlocked || paymentReadiness.loading))) {
+    if (!canSubmit) {
       toast({ title: 'Complete your booking details', description: nextIncompleteReason || 'Wait for payment availability to be confirmed.', variant: 'destructive' });
       return;
     }
@@ -725,7 +703,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
 
   const runSubmit = async () => {
     if (submitLockRef.current) return;
-    if (!canSubmit || !legalAccepted || (instantConfirm && (paymentSetupBlocked || paymentReadiness.loading))) {
+    if (!canSubmit || !legalAccepted) {
       toast({ title: 'Review your booking', description: nextIncompleteReason || 'Confirm your agreements and payment availability before continuing.', variant: 'destructive' });
       return;
     }
@@ -1177,7 +1155,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
     <Button
       className="checkout-primary-action h-12 px-6 rounded-xl font-semibold bg-foreground text-background hover:bg-foreground/90"
       onClick={handleSubmit}
-      disabled={isSubmitting || termsGate.preparing || !canSubmit || (instantConfirm && (paymentReadiness.loading || paymentSetupBlocked)) || !legalAccepted}
+      disabled={isSubmitting || termsGate.preparing || !canSubmit || !legalAccepted}
       title={!canSubmit ? nextIncompleteReason ?? undefined : undefined}
     >
       {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
@@ -1251,6 +1229,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
         >
           {step === 1 ? (
             <OrderReviewStage
+              paymentPreview="card"
               imageUrl={coverImage}
               title={listing.title}
               categoryLabel={listing.category ? listing.category.replace(/_/g, ' ') : null}
@@ -1559,7 +1538,6 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
                     listingHref={listingHref}
                     totalUsd={totalChargedToday}
                     flow="instant"
-                    paypalReturnUrl={paymentTarget.returnUrl}
                     heading="Confirm and pay"
                     billingContact={userInfo ? {
                       givenName: userInfo.firstName, familyName: userInfo.lastName, email: user?.email ?? undefined,
@@ -1572,17 +1550,6 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
                     Edit booking details
                   </button>
                 </>
-              ) : instantConfirm && paymentSetupBlocked ? (
-                <div className="rounded-xl border border-border bg-muted/40 p-4 space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Info className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium text-foreground">Payment setup unavailable</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    This host hasn&apos;t finished setting up payments yet, so checkout can&apos;t be completed
-                    right now. Please check back soon or message the host for an update.
-                  </p>
-                </div>
               ) : termsGate.terms && termsGate.open ? (
                 <FinalReviewSheet
                   inline
@@ -1599,7 +1566,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
                   <Button
                     className="checkout-primary-action w-full h-14 text-base bg-foreground text-background hover:bg-foreground/90 rounded-xl font-semibold"
                     onClick={handleSubmit}
-                    disabled={isSubmitting || termsGate.preparing || !canSubmit || (instantConfirm && (paymentReadiness.loading || paymentSetupBlocked)) || !legalAccepted}
+                    disabled={isSubmitting || termsGate.preparing || !canSubmit || !legalAccepted}
                   >
                     {isSubmitting ? (
                       <>

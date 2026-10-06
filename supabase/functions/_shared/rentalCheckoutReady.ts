@@ -21,9 +21,10 @@ export async function assertRentalCheckoutReady(admin: any, booking: any, author
   const { data: verification, error: verificationError } = await admin.functions.invoke("booking-verification", {
     headers: { Authorization: authorization }, body: { action: "status", listingId: booking.listing_id },
   });
-  if (verificationError || !verification?.attestation || verification.attestation.stale ||
-      !verification.identity || (verification.identity.available && !verification.identity.verified && !verification.identity.pending_review)) {
-    throw new Error("Complete the current rental disclosure and verification before continuing.");
+  // Owner decision 2026-10-06: no identity check in rental checkout. The
+  // current disclosure (insurance answer + terms) is still required.
+  if (verificationError || !verification?.attestation || verification.attestation.stale) {
+    throw new Error("Confirm your insurance answer and the current rental terms before continuing.");
   }
   for (const type of ["rental_transaction_terms", "checkout_privacy_electronic_consent"]) {
     const { data: document, error: documentError } = await admin.from("legal_documents").select("version")

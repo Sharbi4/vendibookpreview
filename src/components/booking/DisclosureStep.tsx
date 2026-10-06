@@ -3,7 +3,6 @@ import {
   BadgeCheck,
   FileText,
   Loader2,
-  RefreshCw,
   ScrollText,
   ShieldCheck,
   TriangleAlert,
@@ -15,18 +14,16 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { InsuranceEducationCard } from '@/components/booking/InsuranceEducationCard';
 import { supabase } from '@/integrations/supabase/client';
-import { openPlaidLink } from '@/lib/plaidLink';
 import { cn } from '@/lib/utils';
 import { toast } from 'sonner';
 
 /**
- * Disclosure & verification — the last stop before payment.
+ * Rental disclosure — insurance answer and the current terms, before payment.
  *
- * Everything shown here is server-resolved: the ACTIVE legal document versions,
- * the renter's recorded attestation, and the authoritative identity status. The
- * client never chooses a version and never decides that identity passed.
- *
- * The identity check is free for renters. No payment is initiated on this step.
+ * Everything shown here is server-resolved: the ACTIVE legal document versions
+ * and the renter's recorded attestation. The client never chooses a version.
+ * There is no identity check in rental checkout (owner decision 2026-10-06).
+ * No payment is initiated on this step.
  */
 
 const INSURANCE_ANSWERS = [
@@ -156,7 +153,9 @@ export function DisclosureStep({
   }, [call, applyState]);
 
   const attested = Boolean(attestation && !attestation.stale);
-  const identityDone = Boolean(identity?.verified || identity?.pending_review || !identity?.available);
+  // Owner decision 2026-10-06: rental checkout has no identity check.
+  // Renters confirm insurance and the current terms only.
+  const identityDone = true;
   const currentlyValid = attested && identityDone && !!insurance && insurance === attestation?.insurance_answer;
   const validityCallback = useRef(onValidityChange);
   validityCallback.current = onValidityChange;
@@ -190,39 +189,6 @@ export function DisclosureStep({
     }
   };
 
-  const runIdentity = async (retry: boolean) => {
-    setWorking(true);
-    setError(null);
-    try {
-      const data = await call(retry ? 'idv-retry' : 'idv-start');
-      if (data.identity) setIdentity(data.identity);
-      if (data.link_token) {
-        const outcome = await openPlaidLink(data.link_token);
-        if (outcome.errorMessage) setError(outcome.errorMessage);
-        // The server, not Link, decides the outcome.
-        const refreshed = await call('idv-refresh');
-        applyState(refreshed);
-      }
-    } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'We could not start the identity check right now.',
-      );
-    } finally {
-      setWorking(false);
-    }
-  };
-
-  const refreshIdentity = async () => {
-    setWorking(true);
-    try {
-      applyState(await call('idv-refresh'));
-    } catch {
-      /* keep last known state — never blank the flow */
-    } finally {
-      setWorking(false);
-    }
-  };
-
   if (loading) {
     return (
       <div className="flex items-center gap-2 py-10 text-sm text-muted-foreground">
@@ -235,8 +201,8 @@ export function DisclosureStep({
   return (
     <div className={compact ? 'rental-verification-panel' : 'space-y-6'}>
       {!compact ? <p className="text-sm text-muted-foreground">
-        A quick review before payment. These are the current terms for this booking, plus a free
-        identity check that keeps hosts and renters safe.
+        A quick review before payment: confirm your insurance and the current terms for this
+        booking.
       </p> : null}
 
       {error && (
@@ -357,59 +323,6 @@ export function DisclosureStep({
         )}
       </div>
 
-      {/* Identity */}
-      {identity?.available && (
-        <div className="space-y-3 rounded-2xl border border-border p-4">
-          <div className="flex items-center gap-2">
-            <BadgeCheck className="h-4 w-4 text-primary" />
-            <h3 className="text-base font-semibold">Identity check</h3>
-            <span className="rounded-full bg-primary/10 px-2 py-0.5 text-xs font-medium text-primary">
-              Free
-            </span>
-          </div>
-
-          {identity.verified ? (
-            <p className="text-sm text-muted-foreground">
-              {identity.reused
-                ? 'Your identity is already verified on Vendibook — nothing else to do.'
-                : 'Identity verified. Thank you.'}
-            </p>
-          ) : identity.pending_review ? (
-            <div className="space-y-2">
-              <p className="text-sm text-muted-foreground">
-                Your check is under review. You can continue with your booking — we'll email you
-                when it clears.
-              </p>
-              <Button variant="outline" size="sm" onClick={refreshIdentity} disabled={working}>
-                <RefreshCw className={cn('mr-2 h-4 w-4', working && 'animate-spin')} />
-                Check status
-              </Button>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              <p className="text-sm text-muted-foreground">
-                Verify your identity with a photo ID. It takes about a minute and is free for
-                renters.
-              </p>
-              <Button
-                onClick={() => runIdentity(identity.can_retry)}
-                disabled={disabled || working}
-                variant={identity.can_retry ? 'outline' : 'default'}
-              >
-                {working && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                {identity.can_retry ? 'Try the identity check again' : 'Start identity check'}
-              </Button>
-              {!identity.can_retry &&
-                ['failed', 'expired', 'canceled'].includes(identity.status) && (
-                  <p className="text-sm text-muted-foreground">
-                    We couldn't confirm your identity. Message support and we'll help you finish.
-                  </p>
-                )}
-            </div>
-          )}
-        </div>
-      )}
-
       <Button
         className="h-12 w-full"
         disabled={disabled || working || !currentlyValid}
@@ -425,11 +338,6 @@ export function DisclosureStep({
       >
         {compact ? 'Save and continue' : 'Continue to review'}
       </Button>
-      {!identityDone && attested && (
-        <p className="text-center text-xs text-muted-foreground">
-          Finish the identity check to continue.
-        </p>
-      )}
     </div>
   );
 }

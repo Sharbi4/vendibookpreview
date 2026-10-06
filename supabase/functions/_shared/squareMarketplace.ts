@@ -16,7 +16,8 @@
  *   SQUARE_OAUTH_REDIRECT_URL       https://vendibook.com/dashboard/payments/square/callback
  *   SQUARE_TOKEN_ENCRYPTION_KEY     base64 of 32 random bytes (AES-256-GCM)
  *   RENTAL_SQUARE_ENABLED           'true' routes rental payments to Square
- *   RENTAL_PAYPAL_FALLBACK          'false' blocks PayPal for rentals entirely
+ *   RENTAL_SQUARE_PLATFORM_ENABLED  'false' stops using Vendibook's own Square account
+ *                                   when the host hasn't connected Square
  */
 declare const Deno: { env: { get(key: string): string | undefined } };
 
@@ -48,7 +49,6 @@ export function marketplaceEnv() {
     redirectUrl: Deno.env.get('SQUARE_OAUTH_REDIRECT_URL') || '',
     encryptionKey: Deno.env.get('SQUARE_TOKEN_ENCRYPTION_KEY') || '',
     rentalsEnabled: Deno.env.get('RENTAL_SQUARE_ENABLED') === 'true',
-    paypalFallback: Deno.env.get('RENTAL_PAYPAL_FALLBACK') !== 'false',
     base: environment === 'production' ? 'https://connect.squareup.com' : 'https://connect.squareupsandbox.com',
   };
 }
@@ -88,12 +88,12 @@ export async function decryptToken(sealed: string): Promise<string> {
 
 // ------------------------------------------------------------ HTTP
 
-export async function squareApi(path: string, opts: { token?: string; body?: unknown; method?: string; clientSecret?: boolean } = {}) {
+export async function squareApi(path: string, opts: { token?: string; body?: unknown; method?: string; clientSecret?: boolean; base?: string } = {}) {
   const env = marketplaceEnv();
   const headers: Record<string, string> = { 'Content-Type': 'application/json', 'Square-Version': SQUARE_API_VERSION };
   if (opts.clientSecret) headers.Authorization = `Client ${env.applicationSecret}`;
   else if (opts.token) headers.Authorization = `Bearer ${opts.token}`;
-  const response = await fetch(env.base + path, {
+  const response = await fetch((opts.base ?? env.base) + path, {
     method: opts.method ?? (opts.body ? 'POST' : 'GET'),
     headers,
     ...(opts.body ? { body: JSON.stringify(opts.body) } : {}),
@@ -192,4 +192,89 @@ export async function activeSellerAccount(admin: any, userId: string) {
   const { data } = await admin.from('square_seller_accounts').select('*')
     .eq('user_id', userId).eq('environment', marketplaceEnv().environment).maybeSingle();
   return data && data.status === 'active' && data.location_id ? data : null;
+}
+
+// ------------------------------------------------------------ payment context
+
+/**
+ * Where a rental card payment is taken:
+ *  - 'host'     the host's own Square account (OAuth), Vendibook keeps its
+ *               share as app_fee_money;
+ *  - 'platform' Vendibook's own live Square account (the billing account:
+ *               SQUARE_ENVIRONMENT / SQUARE_APPLICATION_ID / SQUARE_LOCATION_ID /
+ *               SQUARE_ACCESS_TOKEN). The host's share becomes a seller payable
+ *               released by Vendibook, exactly like the earlier first-party flow.
+ * Set RENTAL_SQUARE_PLATFORM_ENABLED=false to require host accounts.
+ */
+export interface RentalSquareContext {
+  mode: 'host' | 'platform';
+  environment: SquareEnvironment;
+  applicationId: string;
+  locationId: string;
+  merchantId: string | null;
+  businessName: string | null;
+  base: string;
+  token: () => Promise<string>;
+}
+
+export function platformSquare() {
+  const environment = (Deno.env.get('SQUARE_ENVIRONMENT') || 'sandbox') as SquareEnvironment;
+  const applicationId = Deno.env.get('SQUARE_APPLICATION_ID') || '';
+  const locationId = Deno.env.get('SQUARE_LOCATION_ID') || '';
+  const accessToken = Deno.env.get('SQUARE_ACCESS_TOKEN') || '';
+  if (Deno.env.get('RENTAL_SQUARE_PLATFORM_ENABLED') === 'false') return null;
+  if (environment !== 'sandbox' && environment !== 'production') return null;
+  if (!applicationId || !locationId || !accessToken) return null;
+  return {
+    environment,
+    applicationId,
+    locationId,
+    accessToken,
+    base: environment === 'production' ? 'https://connect.squareup.com' : 'https://connect.squareupsandbox.com',
+  };
+}
+
+function platformContext(locationId?: string | null): RentalSquareContext | null {
+  const p = platformSquare();
+  if (!p) return null;
+  return {
+    mode: 'platform',
+    environment: p.environment,
+    applicationId: p.applicationId,
+    locationId: locationId || p.locationId,
+    merchantId: null,
+    businessName: null,
+    base: p.base,
+    token: () => Promise.resolve(p.accessToken),
+  };
+}
+
+function hostContext(admin: any, account: Record<string, any>): RentalSquareContext {
+  const env = marketplaceEnv();
+  return {
+    mode: 'host',
+    environment: env.environment,
+    applicationId: env.applicationId,
+    locationId: account.location_id,
+    merchantId: account.merchant_id ?? null,
+    businessName: account.business_name ?? account.location_name ?? null,
+    base: env.base,
+    token: () => sellerAccessToken(admin, account),
+  };
+}
+
+/** The Square account a new rental payment for this host should use. */
+export async function rentalSquareContext(admin: any, hostId: string): Promise<RentalSquareContext | null> {
+  if (marketplaceConfigured()) {
+    const account = await activeSellerAccount(admin, hostId);
+    if (account) return hostContext(admin, account);
+  }
+  return platformContext();
+}
+
+/** The Square account an existing rental payment record was taken on. */
+export async function recordSquareContext(admin: any, record: Record<string, any>): Promise<RentalSquareContext | null> {
+  if (record?.metadata?.square_mode === 'platform') return platformContext(record.square_location_id);
+  const account = record?.seller_id ? await activeSellerAccount(admin, record.seller_id) : null;
+  return account ? hostContext(admin, account) : null;
 }

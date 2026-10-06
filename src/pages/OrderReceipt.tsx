@@ -332,7 +332,7 @@ const OrderReceipt = () => {
     return <div className="sale-light commerce-readable min-h-screen bg-[#f8f6f2]"><Header />
       <main className="mx-auto max-w-2xl p-8"><section className="rounded-3xl border bg-[#fffdf9] p-8 space-y-4" role="status">
         <h1 className="text-2xl font-semibold">{pending ? 'Payment pending' : 'Payment not completed'}</h1>
-        <p>{pending ? 'PayPal is still processing your payment. Your booking is not marked paid. Do not pay again while this is pending.' : 'This transaction has not completed. Open your booking to review the payment status and available next step.'}</p>
+        <p>{pending ? `${order.provider === 'square' ? 'Square' : 'PayPal'} is still processing your payment. Your booking is not marked paid. Do not pay again while this is pending.` : 'This transaction has not completed. Open your booking to review the payment status and available next step.'}</p>
         <p>Reference: {order.reference}</p>
         <button className="v2-btn-primary" disabled={checking} onClick={refreshPayment}>{checking ? "Checking status..." : "Refresh status"}</button>
         {order.booking_request_id ? <Link className="block underline" to={`/dashboard/bookings/${order.booking_request_id}?step=payment`}>Open booking payment</Link> : null}
@@ -507,7 +507,7 @@ const OrderReceipt = () => {
                   ) : null}
                   <tr className="border-t border-border/70">
                     <td className="pt-3 font-medium text-foreground" colSpan={2}>
-                      Order total paid through PayPal
+                      Order total paid through {order.provider === 'square' ? 'Square' : 'PayPal'}
                     </td>
                     <td className="pt-3 text-right text-xl font-semibold tracking-tight text-foreground">
                       {usd(totalCents, order.currency)}
@@ -516,7 +516,9 @@ const OrderReceipt = () => {
                 </tbody>
               </table>
               <p className="mt-3 text-xs text-muted-foreground">
-                This receipt records the full order payment processed by PayPal. If you used Pay in 4 or Pay Monthly, your amount due today and remaining payments follow your approved PayPal plan. View that plan in your PayPal account.
+                {order.provider === 'square'
+                  ? 'This receipt records the full card payment processed by Square.'
+                  : 'This receipt records the full order payment processed by PayPal. If you used Pay in 4 or Pay Monthly, your amount due today and remaining payments follow your approved PayPal plan. View that plan in your PayPal account.'}
               </p>
             </section>
 
@@ -552,7 +554,7 @@ const OrderReceipt = () => {
                   <div className="mt-2 space-y-0.5 text-sm text-foreground">
                     <p>Vendibook</p>
                     <p className="text-xs text-muted-foreground">
-                      Paid to Vendibook through PayPal.
+                      Paid to Vendibook through {order.provider === 'square' ? 'Square' : 'PayPal'}.
                     </p>
                   </div>
                 </div>

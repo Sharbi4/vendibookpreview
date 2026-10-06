@@ -415,7 +415,6 @@ const BookingConfirmation = ({
                     listingHref={`/listing/${booking.listing_id}`}
                     totalUsd={Number(booking.total_price) + Number(booking.deposit_amount ?? 0) + Number(booking.tax_amount ?? 0)}
                     flow="request"
-                    paypalReturnUrl={`${window.location.origin}/dashboard/bookings/${booking.id}?step=payment`}
                     heading="Review and complete payment"
                     onPaid={() => { setPayNow(false); setRefreshKey((k) => k + 1); }}
                   />
