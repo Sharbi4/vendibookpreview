@@ -98,8 +98,8 @@ const HostOnboardingWizard = () => {
         />
         <PathCard
           title="Asset Sales"
-          subtitle="Sell to verified buyers"
-          description="List your equipment for sale to thousands of verified buyers. Get fair market value with secure payments."
+          subtitle="Sell to serious buyers"
+          description="List your equipment for sale to buyers across the country. Get fair market value with secure payments."
           features={[
             'Payment Protection payment protection',
             'Verified buyer network',

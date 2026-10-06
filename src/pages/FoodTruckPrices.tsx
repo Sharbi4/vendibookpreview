@@ -391,7 +391,7 @@ const FoodTruckPrices = () => {
                 <h3 className="text-xl font-bold tracking-tight text-foreground mb-2">Selling a food truck?</h3>
                 <p className="text-muted-foreground leading-relaxed mb-6 flex-1">
                   Estimate your food truck or trailer's market value with PricePilot, then list it on
-                  Vendibook when you're ready to reach verified buyers.
+                  Vendibook when you're ready to reach buyers.
                 </p>
                 <div className="flex flex-wrap gap-3">
                   <Button

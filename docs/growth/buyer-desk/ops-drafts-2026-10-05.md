@@ -113,7 +113,7 @@ Template: *"Hi {first_name}, your listing **{title}** had **{N} real buyer visit
 
 ## C. Contact details in descriptions (check each first; the phone regex can match long price strings)
 
-> Hi {first_name}, quick tip on **{title}**: please keep phone numbers, emails and links out of the description. Deals that move off Vendibook lose our scam screening and payment protection. Buyers can message you and make offers right on the listing, and every member verifies their phone and ID first. Mind removing them? {edit link}
+> Hi {first_name}, quick tip on **{title}**: please keep phone numbers, emails and links out of the description. Deals that move off Vendibook lose our scam screening and payment protection. Buyers can message you and make offers right on the listing, and every message is checked for scam risk. Mind removing them? {edit link}
 
 Listings: `f1a879a6-6c16-4c17-b902-a2c84b1036ff` (WA ice cream trailer), `8d19aa3e-9c58-4a48-8557-5a87b4b2d4f9` (MI turnkey trailer), `c96a0bae-53c4-4df4-b895-b90e3d50703b` (AR pizza truck), `22701ef2-b32e-49fd-a38a-513ee38b605b` (FL 2026 trailer).
 Code fix (sent to Growth lead): mask contact details in listing descriptions on the buyer-facing page, reusing the guest-inquiry patterns. See LP-11.

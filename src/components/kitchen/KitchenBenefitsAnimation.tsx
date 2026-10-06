@@ -11,8 +11,8 @@ const benefits = [
     bgColor: 'bg-foreground/10'},
   {
     icon: Shield,
-    title: 'Verified Renters Only',
-    description: 'We screen every renter with ID verification & document review.',
+    title: 'Screened Messages',
+    description: 'Every renter message is checked for scam risk.',
     color: 'text-foreground/70',
     bgColor: 'bg-foreground/10'},
   {
