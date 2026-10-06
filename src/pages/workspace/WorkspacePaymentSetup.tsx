@@ -289,7 +289,7 @@ export default function WorkspacePaymentSetup() {
                   target="_blank"
                   rel="noreferrer noopener"
                 >
-                  paypal.com/businessprofile/settings
+                  https://www.paypal.com/businessprofile/settings
                 </a>{' '}
                 in order to receive payments! You currently cannot receive payments.
               </p>
@@ -304,7 +304,7 @@ export default function WorkspacePaymentSetup() {
                   target="_blank"
                   rel="noreferrer noopener"
                 >
-                  www.paypal.com
+                  https://www.paypal.com
                 </a>{' '}
                 for more information.
               </p>

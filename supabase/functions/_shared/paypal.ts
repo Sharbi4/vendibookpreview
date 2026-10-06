@@ -804,9 +804,16 @@ export async function refundPayPalCapture(opts: {
  */
 export async function createPayPalAuthorizeOrder(input: CreateOrderInput) {
   const currency = (input.currency ?? "USD").toUpperCase();
+  // PayPal requires items (name, description, unit_amount, category,
+  // quantity) on every order, so the amount carries an item_total breakdown.
+  const amount: Record<string, unknown> = money(input.amountCents, currency);
+  amount.breakdown = { item_total: money(input.amountCents, currency) };
+  const payeeMerchantId = input.payeeMerchantId?.trim() || null;
   return await paypalRequest("/v2/checkout/orders", {
     method: "POST",
     idempotencyKey: input.idempotencyKey,
+    reference: input.reference,
+    sellerId: input.sellerId ?? null,
     body: {
       intent: "AUTHORIZE",
       purchase_units: [{
@@ -814,7 +821,9 @@ export async function createPayPalAuthorizeOrder(input: CreateOrderInput) {
         invoice_id: input.reference,
         description: input.description.slice(0, 127),
         custom_id: input.reference,
-        amount: money(input.amountCents, currency),
+        amount,
+        items: buildItems(input, currency, input.amountCents),
+        ...(payeeMerchantId ? { payee: { merchant_id: payeeMerchantId } } : {}),
         ...(input.softDescriptor
           ? { soft_descriptor: input.softDescriptor.slice(0, 22) }
           : {}),

@@ -297,7 +297,7 @@ export default function SellerPayPalConnect({
         target="_blank"
         rel="noreferrer noopener"
       >
-        paypal.com/businessprofile/settings
+        https://www.paypal.com/businessprofile/settings
       </a>{' '}
       in order to receive payments! You currently cannot receive payments.
     </>
@@ -307,7 +307,7 @@ export default function SellerPayPalConnect({
       Attention: You currently cannot receive payments due to restriction on your PayPal account.
       Please reach out to PayPal Customer Support or connect to{' '}
       <a href="https://www.paypal.com" target="_blank" rel="noreferrer noopener">
-        www.paypal.com
+        https://www.paypal.com
       </a>{' '}
       for more information.
     </>
