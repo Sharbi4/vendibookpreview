@@ -112,7 +112,15 @@ export default function PhoneVerificationPrompt({ children }: { children: ReactN
   const identityStep = !checking && status?.required === false && !hostNeedsPhone && !!status?.identity_required;
   // Dashboard stays viewable with a clear lock warning; messaging/offers stay blocked server-side.
   const onDashboard = pathname === "/dashboard" || pathname.startsWith("/dashboard/");
-  if (!checking && onDashboard && !showForm && !hostNeedsPhone) return <>
+  // Browsing (home, search, listings, guides) never walls a signed-in member:
+  // walling it made signing up worse than staying logged out (site test
+  // 2026-10-06). Only pages that start contact, a booking, a purchase or a
+  // payment keep the full-page gate, and guard_signup_phone_actions still
+  // rejects contact attempts server-side.
+  const actionRoute = /^\/(checkout|meta-checkout|book|payment|purchases|orders|order-confirmation|order-tracking|transaction|transactions|messages|verify-identity)(\/|$)/.test(pathname);
+  const browsing = !onDashboard && !actionRoute && !createListingRoute;
+  if (browsing && !showForm && checking) return <>{children}</>;
+  if ((onDashboard || browsing) && !checking && !showForm && !hostNeedsPhone) return <>
     <div role="alert" className="signup-phone-banner">
       <Lock size={18} aria-hidden />
       <div><strong>Messages and offers are locked.</strong> {identityStep
