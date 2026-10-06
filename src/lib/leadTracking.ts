@@ -23,6 +23,7 @@ export type LeadEventName =
   | 'booking_request_submitted'
   | 'host_listing_started'
   | 'host_listing_published'
+  | 'rental_host_landing_cta'
   // Homepage funnel
   | 'homepage_primary_cta_click'
   | 'homepage_browse_click'
@@ -178,6 +179,7 @@ const EVENT_CATEGORY: Record<LeadEventName, string> = {
   booking_request_submitted: 'booking',
   host_listing_started: 'supply',
   host_listing_published: 'supply',
+  rental_host_landing_cta: 'supply',
   homepage_primary_cta_click: 'homepage',
   homepage_browse_click: 'homepage',
   homepage_host_list_click: 'homepage',
