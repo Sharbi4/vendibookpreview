@@ -74,6 +74,7 @@ import MoneyBreakdown, { type MoneyLine } from '@/components/transaction/checkou
 import RentalPaymentPanel from '@/components/booking/RentalPaymentPanel';
 import { clearRentalDraft, loadRentalDraft, newRequestKey, rentalDraftKey, saveRentalDraft } from '@/lib/rentalCheckoutDraft';
 import { trackRentalCheckout } from '@/lib/rentalCheckoutAnalytics';
+import { invokeEdge } from '@/lib/edge/invokeFunction';
 import CheckoutAgreementCards from '@/components/checkout/CheckoutAgreementCards';
 import SaleCheckoutWizard from '@/components/checkout/sale/SaleCheckoutWizard';
 
@@ -383,14 +384,16 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
     const controller = new AbortController();
     setTaxState('loading');
     const t = setTimeout(() => {
-      supabase.functions
-        .invoke('tax-quote', {
+      // Times out after 8s and refreshes an expired session once, so the
+      // summary never sits on "Calculating…" and signed-in renters get the
+      // same estimate as guests.
+      invokeEdge<{ tax_cents: number; rate_pct: number; label: string }>('tax-quote', {
           body: {
             kind: 'rental',
             listing_id: listing.id,
             total_cents: Math.round(fees.customerTotal * 100),
           },
-        })
+        }, { timeoutMs: 8000 })
         .then(({ data, error }) => {
           if (controller.signal.aborted) return;
           if (!error && data) {
