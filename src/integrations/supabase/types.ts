@@ -4852,10 +4852,10 @@ export type Database = {
           subcategory: string | null
           title: string
           title_status: string | null
-          unlisted: boolean
           total_slots: number | null
           tow_vehicle_requirement: string | null
           trailer_plug_type: string | null
+          unlisted: boolean
           updated_at: string
           vendi_session_key: string | null
           vendibook_freight_enabled: boolean | null
@@ -4961,10 +4961,10 @@ export type Database = {
           subcategory?: string | null
           title: string
           title_status?: string | null
-          unlisted?: boolean
           total_slots?: number | null
           tow_vehicle_requirement?: string | null
           trailer_plug_type?: string | null
+          unlisted?: boolean
           updated_at?: string
           vendi_session_key?: string | null
           vendibook_freight_enabled?: boolean | null
@@ -5070,10 +5070,10 @@ export type Database = {
           subcategory?: string | null
           title?: string
           title_status?: string | null
-          unlisted?: boolean
           total_slots?: number | null
           tow_vehicle_requirement?: string | null
           trailer_plug_type?: string | null
+          unlisted?: boolean
           updated_at?: string
           vendi_session_key?: string | null
           vendibook_freight_enabled?: boolean | null
@@ -12684,6 +12684,7 @@ export type Database = {
           total_slots: number | null
           tow_vehicle_requirement: string | null
           trailer_plug_type: string | null
+          unlisted: boolean
           updated_at: string
           vendi_session_key: string | null
           vendibook_freight_enabled: boolean | null
