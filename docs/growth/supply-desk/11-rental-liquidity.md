@@ -44,7 +44,7 @@ TX top 3 by views: "FOOD TRAILER - EXP 16X 8 FT" (83 views), "2020 The Food Trai
 **Email** (Brad, Resend marketing shell, unsubscribe headers, sends logged in `blog_campaign_sends`, Idempotency-Key `2026-10-rent-while-you-sell:<user_id>`):
 - Subject: "Your food trailer is getting views. Rent it while you sell it?"
 - Body:
-  - their real view count and "no offers yet";
+  - that the listing "has been getting attention" with "no offers yet" (never the view count: owner rule 2026-10-06);
   - "only a handful of food trailers for rent on Vendibook" (true: 5 food trailers, 0 food trucks);
   - three bullets: rental and monthly income, keep it listed for sale, a renter could become the buyer;
   - setup takes about 5 minutes (photos and specs are copied, "we suggest including a monthly rate"); nothing goes live until they publish.
