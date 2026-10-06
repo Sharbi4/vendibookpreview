@@ -29,3 +29,12 @@ describe('seller-covered freight presentation', () => {
     expect(display.detail).toContain('Estimated transit 7–10 business days.');
   });
 });
+describe('buyerFreightRangeLabel', () => {
+  it('quotes the per-mile rate and a before-tax range from the shared rates', async () => {
+    const { buyerFreightRangeLabel } = await import('./presentation');
+    // 250 mi: 1125 base + 8% fuel + $75 handling = 1290; 1000 mi: 4500 + 360 + 75 = 4935.
+    expect(buyerFreightRangeLabel()).toBe(
+      '$4.50/mile plus fuel and handling · about $1,290 for 250 mi, $4,935 for 1,000 mi, before tax',
+    );
+  });
+});
