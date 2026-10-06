@@ -7,7 +7,7 @@ import { normalizeNanpToE164 } from "@/lib/sms/phone";
 import IdentityStep from "./IdentityVerificationStep";
 import "./signup-phone.css";
 
-type Status = { required: boolean; identity_required?: boolean; phone?: string; pending?: boolean; retry_after?: number };
+type Status = { required: boolean; identity_required?: boolean; host_phone_required?: boolean; phone?: string; pending?: boolean; retry_after?: number };
 const rpc = (name: string, args = {}) => (supabase as any).rpc(name, args);
 
 export default function PhoneVerificationPrompt({ children }: { children: ReactNode }) {
@@ -84,7 +84,7 @@ export default function PhoneVerificationPrompt({ children }: { children: ReactN
       const { data, error: verifyError } = await rpc("verify_signup_phone_code", { code });
       if (verifyError || !data?.ok) throw new Error(data?.error || verifyError?.message || "Verification failed. Please try again.");
       const verified = await check();
-      if (verified.required) throw new Error("We couldn’t confirm verification. Please try again.");
+      if (verified.required || verified.host_phone_required) throw new Error("We couldn’t confirm verification. Please try again.");
       setStatus(verified);
       // The original URL remains in place, including checkout query parameters.
     } catch (e: any) { setError(e.message || "Verification failed."); }
@@ -94,19 +94,25 @@ export default function PhoneVerificationPrompt({ children }: { children: ReactN
   // Legal/help/password-recovery pages remain accessible. Marketplace actions are also guarded on the server.
   const publicHelp = ["/terms", "/privacy", "/sms-terms", "/help", "/help-center", "/reset-password"].some(path => pathname === path || pathname.startsWith(path + "/"));
   if (publicHelp || (!isLoading && !user)) return <>{children}</>;
-  if (user && checkedUser === user.id && status?.required === false && !status.identity_required) return <>{children}</>;
+  // Existing hosts are never walled, but starting a NEW listing needs a
+  // verified phone (owner decision 2026-10-06): show the form on those pages
+  // instead of letting the server reject the listing with an error.
+  const createListingRoute = pathname === "/list" || pathname === "/list/start" || pathname === "/list/ai" ||
+    pathname === "/list-with-vendi" || pathname === "/dashboard/listings/new";
+  const hostNeedsPhone = !!status?.host_phone_required && createListingRoute;
+  if (user && checkedUser === user.id && status?.required === false && !status.identity_required && !hostNeedsPhone) return <>{children}</>;
   // Rental checkout needs a verified phone only (owner decision 2026-10-06):
   // viewing listings, booking, paying and the booking/receipt pages never show
   // the identity step. Messaging, offers and purchases stay identity-gated.
   const rentalFlow = /^\/(listing|book|booking-confirmation|receipt)(\/|$)/.test(pathname) ||
     pathname.startsWith('/dashboard/bookings') || pathname.startsWith('/payment/');
-  if (rentalFlow && user && checkedUser === user.id && status?.required === false) return <>{children}</>;
+  if (rentalFlow && user && checkedUser === user.id && status?.required === false && !hostNeedsPhone) return <>{children}</>;
 
   const checking = isLoading || !status || checkedUser !== user?.id;
-  const identityStep = !checking && status?.required === false && !!status?.identity_required;
+  const identityStep = !checking && status?.required === false && !hostNeedsPhone && !!status?.identity_required;
   // Dashboard stays viewable with a clear lock warning; messaging/offers stay blocked server-side.
   const onDashboard = pathname === "/dashboard" || pathname.startsWith("/dashboard/");
-  if (!checking && onDashboard && !showForm) return <>
+  if (!checking && onDashboard && !showForm && !hostNeedsPhone) return <>
     <div role="alert" className="signup-phone-banner">
       <Lock size={18} aria-hidden />
       <div><strong>Messages and offers are locked.</strong> {identityStep

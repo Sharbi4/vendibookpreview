@@ -1,13 +1,13 @@
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-const mocks=vi.hoisted(()=>({rpc:vi.fn(),invoke:vi.fn(),signOut:vi.fn()}));
+const mocks=vi.hoisted(()=>({rpc:vi.fn(),invoke:vi.fn(),signOut:vi.fn(),path:'/checkout/trailer?step=payment'}));
 vi.mock('@/contexts/AuthContext',()=>({useAuth:()=>({user:{id:'new-user',user_metadata:{}},isLoading:false,signOut:mocks.signOut})}));
-vi.mock('react-router-dom',()=>({useLocation:()=>({pathname:'/checkout/trailer?step=payment'})}));
+vi.mock('react-router-dom',()=>({useLocation:()=>({pathname:mocks.path})}));
 vi.mock('@/integrations/supabase/client',()=>({supabase:{rpc:mocks.rpc,functions:{invoke:mocks.invoke}}}));
 import Gate from './PhoneVerificationPrompt';
 afterEach(cleanup);
-beforeEach(()=>{mocks.rpc.mockReset();mocks.invoke.mockReset();mocks.rpc.mockResolvedValue({data:{required:true},error:null});});
+beforeEach(()=>{mocks.path='/checkout/trailer?step=payment';mocks.rpc.mockReset();mocks.invoke.mockReset();mocks.rpc.mockResolvedValue({data:{required:true},error:null});});
 const mount=()=>render(<Gate><div>Private checkout content</div></Gate>);
 describe('required signup phone gate',()=>{
  it('does not mount checkout for an unverified signup',async()=>{
@@ -43,5 +43,16 @@ describe('required signup phone gate',()=>{
   await screen.findByText('Private checkout content');
   expect(mocks.rpc).toHaveBeenCalledWith('verify_signup_phone_code',{code:'123456'});
   expect(mocks.invoke).toHaveBeenCalledWith('signup-phone-verification',{body:{phone:'+12025550123',security_sms_consent:true}});
+ });
+ it('shows an unverified existing host the phone form when starting a new listing',async()=>{
+  mocks.path='/list';
+  mocks.rpc.mockResolvedValue({data:{required:false,host_phone_required:true},error:null});mount();
+  await screen.findByText('A safer marketplace starts with you.');
+  expect(screen.queryByText('Private checkout content')).toBeNull();
+ });
+ it('never walls that host anywhere else',async()=>{
+  mocks.path='/dashboard/listings';
+  mocks.rpc.mockResolvedValue({data:{required:false,host_phone_required:true},error:null});mount();
+  await screen.findByText('Private checkout content');
  });
 });
