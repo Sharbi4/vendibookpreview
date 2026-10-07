@@ -12,18 +12,30 @@ import { useAuth } from '@/contexts/AuthContext';
 import { buildTransactionTimeline, TransactionTimeline } from '@/components/transaction/TransactionTimeline';
 import { GetHelpWithOrder } from '@/components/trust/GetHelpWithOrder';
 import { DocumentsCard } from '@/components/documents/DocumentsCard';
-import { SaleHandoffActions } from '@/components/sale/SaleHandoffActions';
+import { SaleHandoffActions, SaleDeliveryControls } from '@/components/sale/SaleHandoffActions';
 import {
-  handoffChip, handoffMethod, handoffNextStep, handoffStage, isCommitted,
+  formatDeliveryWindow, handoffChip, handoffMethod, handoffNextStep, handoffStage, isCommitted,
   METHOD_LABEL, PAYOUT_COPY, type HandoffRole,
 } from '@/lib/sale/handoff';
+import { isSellerCoveredFreightOrder } from '@/lib/freight/presentation';
 import { isPickupLocationRevealed, PICKUP_LOCKED_MESSAGE } from '@/lib/fulfillment/pickupReveal';
 
 type Tx = (Record<string, any> & { id: string }) | null;
 type Listing = {
   id: string; title: string | null; image_urls: string[] | null; cover_image_url?: string | null;
   pickup_location_text?: string | null; pickup_instructions?: string | null; city?: string | null; state?: string | null;
+  mode?: string | null; vendibook_freight_enabled?: boolean | null; freight_payer?: string | null;
 } | null;
+
+type FulfillmentUpdate = {
+  id: string; kind: 'eta' | 'status'; from_value: string | null; to_value: string | null;
+  note: string | null; actor_role: string | null; created_at: string;
+};
+
+const STATUS_UPDATE_LABEL: Record<string, string> = {
+  pending: 'Pending', ready_for_pickup: 'Ready for pickup', shipped: 'Shipped',
+  out_for_delivery: 'Out for delivery', delivered: 'Delivered',
+};
 
 const money = (n: number | string | null | undefined): string => {
   const v = typeof n === 'string' ? Number.parseFloat(n) : n;
@@ -47,6 +59,7 @@ export default function TransactionDetail() {
   const [tx, setTx] = useState<Tx>(null);
   const [listing, setListing] = useState<Listing>(null);
   const [error, setError] = useState<string | null>(null);
+  const [updates, setUpdates] = useState<FulfillmentUpdate[]>([]);
 
   const load = useCallback(async () => {
     if (!transactionId) return;
@@ -61,10 +74,21 @@ export default function TransactionDetail() {
     if (data.listing_id) {
       const { data: l } = await supabase
         .from('listings')
-        .select('id, title, image_urls, cover_image_url, pickup_location_text, pickup_instructions, city, state')
+        .select('id, title, image_urls, cover_image_url, pickup_location_text, pickup_instructions, city, state, mode, vendibook_freight_enabled, freight_payer')
         .eq('id', data.listing_id)
         .maybeSingle();
       setListing(l as Listing);
+    }
+    if (handoffMethod(data) !== 'pickup') {
+      // sale_fulfillment_updates is newer than the generated types.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data: hist } = await (supabase as any)
+        .from('sale_fulfillment_updates')
+        .select('id, kind, from_value, to_value, note, actor_role, created_at')
+        .eq('sale_transaction_id', transactionId)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      setUpdates((hist ?? []) as FulfillmentUpdate[]);
     }
     setLoading(false);
   }, [transactionId]);
@@ -132,10 +156,14 @@ export default function TransactionDetail() {
   const heroImg = listing?.cover_image_url ?? listing?.image_urls?.[0] ?? null;
   const orderRef = `VB-${String(tx.id).slice(0, 8).toUpperCase()}`;
   const subtotal = Number(tx.amount ?? 0);
-  const delivery = Number(tx.delivery_fee ?? 0) + Number(tx.freight_cost ?? 0);
+  // Seller-covered Vendibook Freight: buyers see "Free shipping", never the freight cost.
+  const sellerCoversFreight = method === 'freight' && isSellerCoveredFreightOrder(tx.fulfillment_type ?? 'freight', listing);
+  const freightCost = Number(tx.freight_cost ?? 0);
+  const delivery = Number(tx.delivery_fee ?? 0) + (sellerCoversFreight ? 0 : freightCost);
   const discount = Number(tx.promo_discount ?? 0);
   const total = subtotal + delivery - discount;
-  const freightUnpaid = method === 'freight' && tx.freight_payment_status !== 'paid';
+  const freightUnpaid = method === 'freight' && !sellerCoversFreight && tx.freight_payment_status !== 'paid';
+  const etaLabel = formatDeliveryWindow(tx.estimated_delivery_date, tx.estimated_delivery_end);
 
   const pickupRevealed = isPickupLocationRevealed({
     fulfillmentType: 'pickup',
@@ -264,10 +292,45 @@ export default function TransactionDetail() {
                       : tx.tracking_number}
                   </p>
                 )}
+                {etaLabel && stage !== 'delivered' && (
+                  <p className="font-medium text-foreground">Estimated delivery: {etaLabel}</p>
+                )}
+                {sellerCoversFreight && (
+                  <p className="rounded-xl bg-muted p-3 text-muted-foreground">
+                    Free shipping. The seller covers Vendibook Freight on this order.
+                  </p>
+                )}
                 {freightUnpaid && (
                   <p className="rounded-xl bg-muted p-3 text-muted-foreground">
                     Freight is quoted and paid separately from this purchase. Nothing for freight was charged in this order.
                   </p>
+                )}
+                {role === 'seller' && (
+                  <SaleDeliveryControls
+                    transactionId={String(tx.id)}
+                    tx={tx}
+                    onDone={() => void load()}
+                  />
+                )}
+                {updates.length > 0 && (
+                  <div className="mt-3 border-t border-border pt-3">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Delivery updates</p>
+                    <ul className="mt-2 space-y-2">
+                      {updates.map((u) => (
+                        <li key={u.id} className="text-xs">
+                          <p className="text-foreground">
+                            {u.kind === 'eta'
+                              ? `Estimated delivery ${u.from_value ? `changed from ${u.from_value} to` : 'set to'} ${u.to_value ?? '—'}`
+                              : `Status: ${STATUS_UPDATE_LABEL[u.to_value ?? ''] ?? u.to_value ?? '—'}`}
+                          </p>
+                          {u.note && <p className="text-muted-foreground">{u.note}</p>}
+                          <p className="text-muted-foreground">
+                            {new Date(u.created_at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 )}
               </div>
             )}
@@ -292,11 +355,15 @@ export default function TransactionDetail() {
             <dl className="mt-3 space-y-2 text-sm">
               <Row label="Item" value={money(subtotal)} />
               {delivery > 0 && <Row label={method === 'freight' ? 'Freight' : 'Delivery'} value={money(delivery)} />}
+              {sellerCoversFreight && <Row label="Shipping" value="Free shipping" />}
               {discount > 0 && <Row label="Discount" value={`− ${money(discount)}`} />}
               <div className="my-2 h-px bg-border" />
               <Row label={role === 'buyer' ? 'Total paid' : 'Buyer total'} value={money(total)} strong />
               {role === 'seller' && tx.platform_fee != null && (
                 <Row label="Vendibook fee" value={`− ${money(tx.platform_fee)}`} />
+              )}
+              {role === 'seller' && sellerCoversFreight && freightCost > 0 && (
+                <Row label="Freight (seller-paid)" value={money(freightCost)} />
               )}
               {role === 'seller' && tx.seller_payout != null && (
                 <Row label="Your proceeds" value={money(tx.seller_payout)} strong />

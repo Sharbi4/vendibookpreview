@@ -1,6 +1,7 @@
 import { useCategoryPriceCheck } from '@/hooks/useCategoryPriceCheck';
 import { useCallback, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import {
   ArrowRight,
   Tag,
@@ -124,7 +125,20 @@ export const SalePurchaseCard = ({
   const freightPayer = listing?.freight_payer === 'seller' ? 'seller' : 'buyer';
   const radius = Number(listing?.delivery_radius_miles) || 0;
   const rateLabel = deliveryRateLabel(listing?.delivery_fee, listing?.delivery_fee_type);
-  const isAvailable = listing?.status === 'published';
+  // A paid (or in-progress) sale already holds this item; hide purchase CTAs.
+  const { data: alreadySold = false } = useQuery({
+    queryKey: ['listing-sale-committed', listing?.id],
+    enabled: !!listing?.id && !isOwner,
+    staleTime: 60_000,
+    queryFn: async () => {
+      // listing_sale_committed is newer than the generated types.
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const { data, error } = await (supabase as any).rpc('listing_sale_committed', { _listing_id: listing.id });
+      if (error) return false;
+      return data === true;
+    },
+  });
+  const isAvailable = listing?.status === 'published' && !alreadySold;
   const canCheck =
     (sellerDelivers || freightEnabled) &&
     typeof listing?.latitude === 'number' &&
@@ -359,6 +373,21 @@ export const SalePurchaseCard = ({
           )}
 
           {/* Actions */}
+          {alreadySold ? (
+            <div className="space-y-2.5">
+              <p className="rounded-xl border border-border bg-muted/50 px-4 py-3 text-sm font-medium text-foreground">
+                Sold — this item has already been purchased.
+              </p>
+              <Button
+                onClick={() => setShowContact(true)}
+                variant="outline"
+                className="h-12 w-full rounded-2xl font-semibold"
+              >
+                <MessageSquare className="w-4 h-4 mr-1.5" />
+                Contact
+              </Button>
+            </div>
+          ) : (
           <div className="space-y-2.5">
             <Button
               onClick={handleBuy}
@@ -392,6 +421,7 @@ export const SalePurchaseCard = ({
               </Button>
             </div>
           </div>
+          )}
 
           {/* Small print — details live in one overlay, never as extra modules */}
           <p className="text-[11px] leading-relaxed text-muted-foreground">

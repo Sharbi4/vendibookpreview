@@ -20,12 +20,17 @@ const STATUS_MAP: Record<string, { label: string; tone: 'success' | 'warning' | 
   disputed: { label: 'Disputed', tone: 'warning', body: 'The buyer opened a dispute.', next: 'Respond from the order page — our team mediates.' },
   refunded: { label: 'Refunded', tone: 'muted', body: 'Funds were returned to the buyer.' },
   cancelled: { label: 'Cancelled', tone: 'muted', body: 'This order was cancelled.' },
+  confirmed: { label: 'Paid — action needed', tone: 'info', body: 'The buyer\'s payment was received.', next: 'Coordinate pickup or delivery with the buyer from the order page.' },
+  payment_authorized: { label: 'Payment processing', tone: 'warning', body: 'The buyer\'s payment is authorized and being finalized.', next: 'Do not arrange handoff until payment is confirmed.' },
+  paid_out: { label: 'Paid out', tone: 'success', body: 'Sale complete and your payout was sent.' },
+  payout_failed: { label: 'Payout issue', tone: 'warning', body: 'Sale complete, but the payout did not go through.', next: 'Vendibook support is resolving it and will contact you.' },
+  partially_refunded: { label: 'Partially refunded', tone: 'muted', body: 'Part of the payment was returned to the buyer.' },
 };
 
 const FILTERS: { id: FilterId; label: string; match: (s: string) => boolean }[] = [
   { id: 'all', label: 'All', match: () => true },
-  { id: 'action', label: 'Action needed', match: (s) => ['paid', 'pending_cash', 'disputed', 'seller_confirmed'].includes(s) },
-  { id: 'completed', label: 'Completed', match: (s) => s === 'completed' || s === 'buyer_confirmed' },
+  { id: 'action', label: 'Action needed', match: (s) => ['paid', 'confirmed', 'pending_cash', 'disputed', 'seller_confirmed', 'payout_failed'].includes(s) },
+  { id: 'completed', label: 'Completed', match: (s) => ['completed', 'buyer_confirmed', 'paid_out', 'payout_failed'].includes(s) },
   { id: 'cancelled', label: 'Cancelled', match: (s) => ['cancelled', 'refunded'].includes(s) },
 ];
 

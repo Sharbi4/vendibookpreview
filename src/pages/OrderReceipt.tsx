@@ -8,6 +8,9 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/contexts/AuthContext';
+import { formatDeliveryWindow } from '@/lib/sale/handoff';
+import { isSellerCoveredFreightOrder } from '@/lib/freight/presentation';
 
 interface OrderRecord {
   reference: string;
@@ -31,6 +34,7 @@ interface OrderRecord {
   transaction_type: string;
   listing_id: string | null;
   seller_id: string | null;
+  buyer_id?: string | null;
   sale_transaction_id: string | null;
   booking_request_id: string | null;
   buyer_email: string | null;
@@ -49,6 +53,7 @@ interface ListingInfo {
   category: string | null;
   city: string | null;
   state: string | null;
+  freight_payer?: string | null;
 }
 
 interface SaleInfo {
@@ -65,6 +70,7 @@ interface SaleInfo {
   delivery_instructions: string | null;
   shipping_notes: string | null;
   estimated_delivery_date: string | null;
+  estimated_delivery_end?: string | null;
   tax_jurisdiction: string | null;
 }
 
@@ -107,7 +113,8 @@ const TYPE_LABELS: Record<string, string> = {
 const FULFILLMENT_LABELS: Record<string, string> = {
   pickup: 'Buyer pickup',
   delivery: 'Seller delivery',
-  freight: 'Vendibook freight',
+  freight: 'Vendibook Freight',
+  vendibook_freight: 'Vendibook Freight',
   on_site: 'On-site use',
   both: 'Pickup or delivery',
 };
@@ -144,6 +151,7 @@ const OrderReceipt = () => {
   const [params] = useSearchParams();
   const reference = routeReference ?? params.get('ref') ?? '';
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [order, setOrder] = useState<OrderRecord | null>(null);
   const [listing, setListing] = useState<ListingInfo | null>(null);
@@ -163,7 +171,7 @@ const OrderReceipt = () => {
 
     (async () => {
       const baseColumns =
-        'reference, created_at, captured_at, currency, paypal_capture_id, provider, metadata, gross_amount_cents, tax_cents, discount_cents, captured_amount_cents, refunded_cents, payment_status, payment_intent, payment_source, transaction_type, listing_id, seller_id, sale_transaction_id, booking_request_id, buyer_email, order_items, shipping_address';
+        'reference, created_at, captured_at, currency, paypal_capture_id, provider, metadata, gross_amount_cents, tax_cents, discount_cents, captured_amount_cents, refunded_cents, payment_status, payment_intent, payment_source, transaction_type, listing_id, seller_id, buyer_id, sale_transaction_id, booking_request_id, buyer_email, order_items, shipping_address';
       // Square columns aren't in the generated types until they're regenerated.
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       let { data, error: err } = await (supabase.from('payment_records') as any)
@@ -193,7 +201,7 @@ const OrderReceipt = () => {
       if (data.listing_id) {
         const { data: l } = await supabase
           .from('listings')
-          .select('id, title, cover_image_url, description, amenities, make, model, category, city, state')
+          .select('id, title, cover_image_url, description, amenities, make, model, category, city, state, freight_payer')
           .eq('id', data.listing_id)
           .maybeSingle();
         if (!cancelled && l) setListing(l as unknown as ListingInfo);
@@ -203,7 +211,7 @@ const OrderReceipt = () => {
         const { data: s } = await supabase
           .from('sale_transactions')
           .select(
-            'buyer_name, buyer_email, buyer_phone, buyer_address1, buyer_address2, buyer_city, buyer_state, buyer_zip, fulfillment_type, delivery_address, delivery_instructions, shipping_notes, estimated_delivery_date, tax_jurisdiction',
+            'buyer_name, buyer_email, buyer_phone, buyer_address1, buyer_address2, buyer_city, buyer_state, buyer_zip, fulfillment_type, delivery_address, delivery_instructions, shipping_notes, estimated_delivery_date, estimated_delivery_end, tax_jurisdiction',
           )
           .eq('id', data.sale_transaction_id)
           .maybeSingle();
@@ -319,6 +327,11 @@ const OrderReceipt = () => {
         .join(' · ')
     : booking?.renter_snapshot ? [booking.renter_snapshot.address1, booking.renter_snapshot.address2, booking.renter_snapshot.city, booking.renter_snapshot.state, booking.renter_snapshot.zip_code].filter(Boolean).join(' · ') : '';
 
+  const purchaserName = sale?.buyer_name
+    ?? (booking?.renter_snapshot ? [booking.renter_snapshot.first_name, booking.renter_snapshot.last_name].filter(Boolean).join(' ') : null)
+    ?? null;
+  const purchaserPhone = sale?.buyer_phone ?? booking?.renter_snapshot?.phone_number ?? null;
+
   if (loading) {
     return (
       <div className="flex min-h-[60vh] items-center justify-center">
@@ -327,15 +340,27 @@ const OrderReceipt = () => {
     );
   }
 
-  if (order && order.payment_status !== 'completed') {
+  /** Refunded orders were paid first; they still render as a receipt with a refund notice. */
+  const refundState = order?.payment_status === 'refunded' || order?.payment_status === 'partially_refunded'
+    ? order.payment_status
+    : null;
+  // Purchaser contact details and processor ids are for the buyer only.
+  const viewerIsBuyer = !!user && !!order && (order.buyer_id ? user.id === order.buyer_id : user.id !== order.seller_id);
+  const isSale = !!order?.sale_transaction_id;
+  const sellerCoversFreight = isSellerCoveredFreightOrder(sale?.fulfillment_type, listing);
+  const saleEta = sale ? formatDeliveryWindow(sale.estimated_delivery_date, sale.estimated_delivery_end) : null;
+
+  if (order && order.payment_status !== 'completed' && !refundState) {
     const pending = order.payment_status === 'pending';
+    const noun = isSale ? 'purchase' : 'booking';
     return <div className="sale-light commerce-readable min-h-screen bg-[#f8f6f2]"><Header />
       <main className="mx-auto max-w-2xl p-8"><section className="rounded-3xl border bg-[#fffdf9] p-8 space-y-4" role="status">
         <h1 className="text-2xl font-semibold">{pending ? 'Payment pending' : 'Payment not completed'}</h1>
-        <p>{pending ? `${order.provider === 'square' ? 'Square' : 'PayPal'} is still processing your payment. Your booking is not marked paid. Do not pay again while this is pending.` : 'This transaction has not completed. Open your booking to review the payment status and available next step.'}</p>
+        <p>{pending ? `${order.provider === 'square' ? 'Square' : 'PayPal'} is still processing your payment. Your ${noun} is not marked paid. Do not pay again while this is pending.` : `This transaction has not completed. Open your ${noun} to review the payment status and available next step.`}</p>
         <p>Reference: {order.reference}</p>
         <button className="v2-btn-primary" disabled={checking} onClick={refreshPayment}>{checking ? "Checking status..." : "Refresh status"}</button>
         {order.booking_request_id ? <Link className="block underline" to={`/dashboard/bookings/${order.booking_request_id}?step=payment`}>Open booking payment</Link> : null}
+        {order.sale_transaction_id ? <Link className="block underline" to={`/order-tracking/${order.sale_transaction_id}`}>Open purchase</Link> : null}
       </section></main><Footer /></div>;
   }
 
@@ -382,10 +407,10 @@ const OrderReceipt = () => {
                 <div className="mt-1">
                   <dt className="inline">Status </dt>
                   <dd className="inline text-foreground">
-                    Paid
+                    {refundState === 'refunded' ? 'Refunded' : refundState === 'partially_refunded' ? 'Paid · partially refunded' : 'Paid'}
                   </dd>
                 </div>
-                {order.paypal_capture_id ? (
+                {order.paypal_capture_id && viewerIsBuyer ? (
                   <div className="mt-1">
                     <dt className="inline">PayPal transaction id </dt>
                     <dd className="inline font-mono text-[11px] text-foreground">
@@ -416,6 +441,38 @@ const OrderReceipt = () => {
                 </div>
               </dl>
             </header>
+
+            {refundState ? (
+              <section className="mt-6 rounded-2xl border border-amber-200 bg-amber-50/70 p-4 text-sm" role="status">
+                <p className="font-medium text-foreground">
+                  {refundState === 'refunded' ? 'This order was refunded' : 'This order was partially refunded'}
+                </p>
+                <p className="mt-1 text-muted-foreground">
+                  {refunded > 0 ? `${usd(refunded, order.currency)} was returned to the original payment method. ` : ''}
+                  Refunds can take 3–5 business days to appear.
+                </p>
+              </section>
+            ) : null}
+
+            {isSale && viewerIsBuyer && !refundState ? (
+              <section className="mt-6 rounded-2xl border border-primary/25 bg-primary/5 p-4 text-sm">
+                <h2 className="font-semibold text-foreground">What happens next</h2>
+                <ol className="mt-2 list-decimal space-y-1 pl-5 text-muted-foreground">
+                  <li>Sign the purchase agreement from your order page.</li>
+                  <li>Ask the seller for a video walkthrough if you want one before the handoff.</li>
+                  <li>Arrange {sale?.fulfillment_type === 'pickup' ? 'pickup' : 'pickup or delivery'} with the seller.</li>
+                  <li>Message the seller with any questions. Keep everything on Vendibook.</li>
+                </ol>
+                <div className="mt-3 flex flex-wrap gap-3">
+                  <Link to={`/transaction/${order.sale_transaction_id}`} className="font-semibold text-primary underline-offset-4 hover:underline">
+                    Open your order
+                  </Link>
+                  <Link to="/messages" className="font-semibold text-primary underline-offset-4 hover:underline">
+                    Message the seller
+                  </Link>
+                </div>
+              </section>
+            ) : null}
 
             {/* Item */}
             {listing ? (
@@ -527,10 +584,16 @@ const OrderReceipt = () => {
               <div>
                 <h3 className="text-xs font-semibold uppercase tracking-[0.12em] text-muted-foreground">Purchaser</h3>
                 <div className="mt-2 space-y-0.5 text-sm text-foreground">
-                  {(sale?.buyer_name ?? (booking?.renter_snapshot ? `${booking.renter_snapshot.first_name} ${booking.renter_snapshot.last_name}` : null)) ? <p>{sale.buyer_name}</p> : null}
-                  <p className="text-muted-foreground">{sale?.buyer_email ?? order.buyer_email ?? '—'}</p>
-                  {(sale?.buyer_phone ?? booking?.renter_snapshot?.phone_number) ? <p className="text-muted-foreground">{sale.buyer_phone}</p> : null}
-                  {buyerAddress ? <p className="text-muted-foreground">{buyerAddress}</p> : null}
+                  {purchaserName ? <p>{purchaserName}</p> : null}
+                  {viewerIsBuyer ? (
+                    <>
+                      <p className="text-muted-foreground">{sale?.buyer_email ?? order.buyer_email ?? '—'}</p>
+                      {purchaserPhone ? <p className="text-muted-foreground">{purchaserPhone}</p> : null}
+                      {buyerAddress ? <p className="text-muted-foreground">{buyerAddress}</p> : null}
+                    </>
+                  ) : (
+                    <p className="text-xs text-muted-foreground">Contact details are in your Vendibook messages.</p>
+                  )}
                 </div>
               </div>
               {order.seller_id ? (
@@ -603,14 +666,10 @@ const OrderReceipt = () => {
                   <div className="mt-2 space-y-1 text-sm text-muted-foreground">
                     <p className="text-foreground">
                       {FULFILLMENT_LABELS[sale.fulfillment_type ?? ''] ?? 'Arranged with the seller'}
+                      {sellerCoversFreight ? ' · Free shipping' : ''}
                     </p>
                     {sale.delivery_address ? <p>Delivery address: {sale.delivery_address}</p> : null}
-                    {sale.estimated_delivery_date ? (
-                      <p>
-                        Estimated delivery:{' '}
-                        {new Date(sale.estimated_delivery_date).toLocaleDateString('en-US', { dateStyle: 'medium' })}
-                      </p>
-                    ) : null}
+                    {saleEta ? <p>Estimated delivery: {saleEta}</p> : null}
                     {sale.delivery_instructions ? <p>Instructions: {sale.delivery_instructions}</p> : null}
                     {sale.shipping_notes ? <p>Notes: {sale.shipping_notes}</p> : null}
                   </div>
@@ -620,6 +679,7 @@ const OrderReceipt = () => {
 
             <footer className="mt-8 flex flex-wrap items-center gap-3 border-t border-border/70 pt-6">
               {/* Emailed copy of this receipt, only ever for a settled payment. */}
+              {viewerIsBuyer ? (
               <button
                 type="button"
                 disabled={emailing}
@@ -628,6 +688,7 @@ const OrderReceipt = () => {
               >
                 {emailing ? 'Sending…' : 'Email me this receipt'}
               </button>
+              ) : null}
               <button
                 type="button"
                 onClick={() => window.print()}

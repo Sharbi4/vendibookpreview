@@ -4,6 +4,8 @@ import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom'
 import OrderPaymentLink from '@/components/orders/OrderPaymentLink';
 import { FreightLink, linkifyFreight } from '@/components/shared/FreightLink';
 import { format } from 'date-fns';
+import { formatDeliveryWindow } from '@/lib/sale/handoff';
+import { isSellerCoveredFreightOrder } from '@/lib/freight/presentation';
 import { 
   Package, Truck, CheckCircle2, Clock, MapPin, 
   ExternalLink, ArrowLeft, AlertCircle, PackageCheck,
@@ -152,6 +154,8 @@ interface CashFreightTimelineProps {
   onBuyerConfirm: () => void;
   isConfirming: boolean;
   isPayingFreight: boolean;
+  /** Seller-covered Vendibook Freight: no freight payment step, never show the cost. */
+  sellerCoversFreight?: boolean;
 }
 
 const CashFreightTimeline = ({ 
@@ -168,8 +172,10 @@ const CashFreightTimeline = ({
   onPayFreight,
   onBuyerConfirm,
   isConfirming,
-  isPayingFreight
+  isPayingFreight,
+  sellerCoversFreight = false,
 }: CashFreightTimelineProps) => {
+  const freightSettled = sellerCoversFreight || freightPaymentStatus === 'paid';
   const steps = [
     { 
       key: 'requested', 
@@ -187,10 +193,10 @@ const CashFreightTimeline = ({
     },
     { 
       key: 'freight_paid', 
-      label: 'Freight Paid', 
+      label: sellerCoversFreight ? 'Free Shipping' : 'Freight Paid',
       icon: CreditCard,
-      description: 'Shipping cost paid',
-      completedAt: freightPaidAt
+      description: sellerCoversFreight ? 'Seller covers shipping' : 'Shipping cost paid',
+      completedAt: sellerCoversFreight ? sellerConfirmedAt : freightPaidAt
     },
     { 
       key: 'buyer_confirmed', 
@@ -211,14 +217,14 @@ const CashFreightTimeline = ({
   // Determine current step
   let currentStep = 1;
   if (sellerConfirmedAt) currentStep = 2;
-  if (freightPaymentStatus === 'paid') currentStep = 3;
+  if (freightSettled && sellerConfirmedAt) currentStep = 3;
   if (buyerConfirmedAt) currentStep = 4;
   if (status === 'completed') currentStep = 5;
 
   // Determine available actions
   const canSellerConfirm = isSeller && !sellerConfirmedAt && status === 'pending_cash';
-  const canPayFreight = isBuyer && sellerConfirmedAt && freightPaymentStatus !== 'paid';
-  const canBuyerConfirm = isBuyer && freightPaymentStatus === 'paid' && !buyerConfirmedAt;
+  const canPayFreight = isBuyer && sellerConfirmedAt && !freightSettled;
+  const canBuyerConfirm = isBuyer && freightSettled && !!sellerConfirmedAt && !buyerConfirmedAt;
 
   return (
     <div className="space-y-4">
@@ -286,7 +292,7 @@ const CashFreightTimeline = ({
           </div>
         )}
 
-        {sellerConfirmedAt && freightPaymentStatus !== 'paid' && (
+        {sellerConfirmedAt && !freightSettled && (
           <div className="text-center">
             <CreditCard className="h-8 w-8 text-primary mx-auto mb-2" />
             <p className="font-medium text-foreground">Freight Payment Required</p>
@@ -308,10 +314,12 @@ const CashFreightTimeline = ({
           </div>
         )}
 
-        {freightPaymentStatus === 'paid' && !buyerConfirmedAt && status !== 'completed' && (
+        {freightSettled && !!sellerConfirmedAt && !buyerConfirmedAt && status !== 'completed' && (
           <div className="text-center">
             <Truck className="h-8 w-8 text-blue-500 mx-auto mb-2" />
-            <p className="font-medium text-foreground">Freight Paid — Awaiting Delivery</p>
+            <p className="font-medium text-foreground">
+              {sellerCoversFreight ? 'Free Shipping — Awaiting Delivery' : 'Freight Paid — Awaiting Delivery'}
+            </p>
             <p className="text-sm text-muted-foreground mt-1">
               {isBuyer 
                 ? 'Once you receive the item and have paid the seller, confirm receipt below.'
@@ -647,13 +655,16 @@ const OrderTracking = () => {
   const paymentState = paymentRecord?.payment_status ?? null;
   const isPaidOnline = paymentState === 'completed';
   const isPaymentPending = paymentState === 'pending' || paymentState === 'approved';
+  const isPartiallyRefunded = paymentState === 'partially_refunded' || transaction.status === 'partially_refunded';
+  const isRefunded = !isPartiallyRefunded && (paymentState === 'refunded' || transaction.status === 'refunded');
+  const isCancelled = transaction.status === 'cancelled';
   const declineReason = (() => {
     const err = paymentRecord?.last_error as { issue?: string; message?: string } | null;
     if (!err) return null;
     return err.message ?? err.issue ?? null;
   })();
 
-  if (!isCashTransaction && !isPaidOnline) {
+  if (!isCashTransaction && !isPaidOnline && !isRefunded && !isPartiallyRefunded) {
     const amountDue = Number(transaction.amount ?? 0);
     return (
       <div className="v2-order min-h-screen flex flex-col">
@@ -665,7 +676,19 @@ const OrderTracking = () => {
               <ArrowLeft className="h-4 w-4 mr-2" />
               Back to Dashboard
             </Button>
-            {isPaymentPending ? (
+            {isCancelled ? (
+              <Card>
+                <CardContent className="pt-6 space-y-3">
+                  <h1 className="text-2xl font-semibold">Order cancelled</h1>
+                  <p className="text-muted-foreground">
+                    This order was cancelled before payment, so nothing was charged.
+                  </p>
+                  <Button variant="outline" asChild>
+                    <Link to="/dashboard">Back to dashboard</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : isPaymentPending ? (
               <Card>
                 <CardContent className="pt-6 space-y-3">
                   <h1 className="text-2xl font-semibold">Payment is being reviewed</h1>
@@ -706,6 +729,15 @@ const OrderTracking = () => {
   }
 
   const isVendibookFreight = transaction.fulfillment_type === 'vendibook_freight';
+  // Seller-covered freight: buyers see "Free shipping" and never the freight cost.
+  const sellerCoversFreight = isSellerCoveredFreightOrder(transaction.fulfillment_type, transaction.listing);
+  const etaLabel = formatDeliveryWindow(transaction.estimated_delivery_date, transaction.estimated_delivery_end);
+  const headerTitle = isRefunded ? 'Order refunded'
+    : isPartiallyRefunded ? 'Order partially refunded'
+    : isCancelled ? 'Order cancelled'
+    : transaction.status === 'disputed' ? 'Order under review'
+    : ['completed', 'paid_out', 'payout_failed'].includes(transaction.status) ? 'Order complete'
+    : 'Order confirmed';
   const hasTracking = !!transaction.tracking_number;
   const isBuyer = user?.id === transaction.buyer_id;
   const isSeller = user?.id === transaction.seller_id;
@@ -734,7 +766,7 @@ const OrderTracking = () => {
           <div className="mb-8">
             <p className="v2-order-eyebrow">Order #{String(transaction.id).slice(0, 8).toUpperCase()}</p>
             <div className="flex items-center gap-3 mb-2 mt-2 flex-wrap">
-              <h1 className="v2-order-title">Order confirmed</h1>
+              <h1 className="v2-order-title">{headerTitle}</h1>
               {isCashTransaction && (
                 <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
                   <Banknote className="h-3 w-3 mr-1" />
@@ -770,6 +802,22 @@ const OrderTracking = () => {
           </div>
 
 
+          {(isRefunded || isPartiallyRefunded) && (
+            <Card className="mb-6 border-amber-200 bg-amber-50/60">
+              <CardContent className="pt-6">
+                <p className="font-medium text-foreground">
+                  {isRefunded ? 'This order was refunded' : 'This order was partially refunded'}
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {isRefunded
+                    ? 'The payment was returned to the original payment method. No further action is needed.'
+                    : 'Part of the payment was returned to the original payment method.'}
+                  {' '}Refunds can take 3–5 business days to appear.
+                </p>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Status Card */}
           <Card className="mb-6">
             <CardContent className="pt-6">
@@ -783,6 +831,7 @@ const OrderTracking = () => {
                   buyerConfirmedAt={transaction.buyer_confirmed_at}
                   createdAt={transaction.created_at}
                   freightCost={transaction.freight_cost || 0}
+                  sellerCoversFreight={sellerCoversFreight}
                   isBuyer={isBuyer}
                   isSeller={isSeller}
                   onSellerConfirm={handleCashConfirm}
@@ -851,12 +900,10 @@ const OrderTracking = () => {
                         </p>
                       </div>
                     )}
-                    {transaction.estimated_delivery_date && (
+                    {etaLabel && (
                       <div>
                         <p className="text-sm text-muted-foreground">Estimated Delivery</p>
-                        <p className="font-medium">
-                          {format(new Date(transaction.estimated_delivery_date), 'MMM d, yyyy')}
-                        </p>
+                        <p className="font-medium">{etaLabel}</p>
                       </div>
                     )}
                     {transaction.delivered_at && (
@@ -896,8 +943,15 @@ const OrderTracking = () => {
                           an email with tracking information and instructions to schedule your
                           delivery time once the item ships.
                         </p>
+                        {sellerCoversFreight && (
+                          <p className="text-sm text-muted-foreground mt-2">
+                            <span className="font-medium">Free shipping</span> — the seller covers freight on this order.
+                          </p>
+                        )}
                         <p className="text-sm text-muted-foreground mt-2">
-                          <span className="font-medium">Estimated transit:</span> 72 hours to 10 days
+                          {etaLabel
+                            ? <><span className="font-medium">Estimated delivery:</span> {etaLabel}</>
+                            : <><span className="font-medium">Estimated transit:</span> 72 hours to 10 days</>}
                         </p>
                       </div>
                     </div>
@@ -926,6 +980,7 @@ const OrderTracking = () => {
               freightCost={transaction.freight_cost}
               freightChargedToBuyer={Boolean(
                 isVendibookFreight &&
+                  !sellerCoversFreight &&
                   (transaction.freight_payment_status === 'paid' || !isCashTransaction),
               )}
               taxAmount={transaction.tax_amount}

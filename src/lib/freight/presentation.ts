@@ -14,6 +14,17 @@ export function isSellerCoveredFreight(listing: {
   return listing.mode === 'sale' && listing.vendibook_freight_enabled === true && listing.freight_payer === 'seller';
 }
 
+/**
+ * A placed sale ships on seller-covered Vendibook Freight. Mirrors the server
+ * (paypal-create-order): only `freight_payer === 'seller'` on a freight order.
+ */
+export function isSellerCoveredFreightOrder(
+  fulfillmentType: string | null | undefined,
+  listing: { freight_payer?: string | null } | null | undefined,
+): boolean {
+  return String(fulfillmentType ?? '').includes('freight') && listing?.freight_payer === 'seller';
+}
+
 /** Buyer-facing copy only. The full estimate remains available for internal accounting. */
 export function freightBuyerDisplay(estimate: FreightDisplayEstimate, sellerPaid: boolean) {
   const transit = `Estimated transit ${estimate.estimated_transit_days.min}–${estimate.estimated_transit_days.max} business days.`;

@@ -29,6 +29,8 @@ export interface SaleTxLike {
   freight_cost?: number | string | null;
   freight_payment_status?: string | null;
   delivery_fee?: number | string | null;
+  estimated_delivery_date?: string | null;
+  estimated_delivery_end?: string | null;
 }
 
 export function handoffMethod(tx: SaleTxLike): HandoffMethod {
@@ -47,6 +49,8 @@ export const METHOD_LABEL: Record<HandoffMethod, string> = {
 
 export type HandoffStage =
   | 'awaiting_payment'
+  | 'payment_processing'
+  | 'pay_in_person'
   | 'paid'
   | 'ready_for_pickup'
   | 'in_transit'
@@ -62,8 +66,10 @@ export function handoffStage(tx: SaleTxLike): HandoffStage {
   if (s === 'disputed') return 'disputed';
   if (s === 'refunded') return 'refunded';
   if (s === 'cancelled') return 'cancelled';
-  if (s === 'completed') return 'completed';
-  if (s === 'pending') return 'awaiting_payment';
+  if (s === 'completed' || s === 'paid_out' || s === 'payout_failed') return 'completed';
+  if (s === 'pending' || s === 'payment_failed') return 'awaiting_payment';
+  if (s === 'payment_authorized') return 'payment_processing';
+  if (s === 'pending_cash' && !tx.buyer_confirmed_at && !tx.seller_confirmed_at) return 'pay_in_person';
 
   if (tx.buyer_confirmed_at || tx.seller_confirmed_at) return 'awaiting_other_confirmation';
 
@@ -86,7 +92,11 @@ export function handoffChip(tx: SaleTxLike, role: HandoffRole): StatusChip {
   const method = handoffMethod(tx);
   switch (stage) {
     case 'awaiting_payment':
-      return { label: 'Awaiting payment', tone: 'pending' };
+      return { label: tx.status === 'payment_failed' ? 'Payment failed' : 'Awaiting payment', tone: tx.status === 'payment_failed' ? 'critical' : 'pending' };
+    case 'payment_processing':
+      return { label: 'Payment processing', tone: 'pending' };
+    case 'pay_in_person':
+      return { label: 'Pay in person', tone: 'active' };
     case 'paid':
       return {
         label: method === 'pickup' ? 'Payment confirmed · arranging pickup' : 'Payment confirmed · preparing',
@@ -142,9 +152,37 @@ export function handoffNextStep(tx: SaleTxLike, role: HandoffRole): HandoffNextS
 
   switch (stage) {
     case 'awaiting_payment':
+      if (tx.status === 'payment_failed') {
+        return role === 'buyer'
+          ? { title: 'Payment did not go through', body: 'Your payment failed and you were not charged. Try again from checkout with another method.', action: 'none' }
+          : { title: 'Buyer payment failed', body: 'The buyer\'s payment did not go through. We will notify you if they retry.', action: 'none', waiting: true };
+      }
       return role === 'buyer'
         ? { title: 'Finish your payment', body: 'This order is not confirmed until payment is received.', action: 'none' }
         : { title: 'Waiting on buyer payment', body: 'We will notify you the moment payment lands.', action: 'none', waiting: true };
+
+    case 'payment_processing':
+      return {
+        title: 'Payment processing',
+        body: 'The payment is authorized and being finalized. Nothing to do yet; we will update this order when it completes.',
+        action: 'none',
+        waiting: true,
+      };
+
+    case 'pay_in_person':
+      return role === 'buyer'
+        ? {
+            title: 'Pay the seller in person',
+            body: 'Arrange the handoff in messages and pay the seller in person. Confirm here once you have the item.',
+            action: 'confirm',
+            actionLabel: 'Confirm handoff',
+          }
+        : {
+            title: 'Collect payment in person',
+            body: 'Arrange the handoff in messages and collect payment from the buyer. Confirm here once paid and handed off.',
+            action: 'confirm',
+            actionLabel: 'Confirm payment and handoff',
+          };
 
     case 'paid':
       if (method === 'pickup') {
@@ -244,9 +282,11 @@ export function handoffNextStep(tx: SaleTxLike, role: HandoffRole): HandoffNextS
       return role === 'seller'
         ? {
             title: 'Handoff confirmed',
-            body: tx.payout_completed_at
+            body: tx.payout_completed_at || tx.status === 'paid_out'
               ? 'Your payout has been recorded as sent.'
-              : 'Vendibook reviews and issues the seller payout after the required confirmation steps are complete.',
+              : tx.status === 'payout_failed'
+                ? 'The sale is complete. Vendibook support is resolving your payout and will contact you.'
+                : 'Vendibook reviews and issues the seller payout after the required confirmation steps are complete.',
             action: 'none',
             done: true,
           }
@@ -273,9 +313,39 @@ export function canConfirm(tx: SaleTxLike, role: HandoffRole): boolean {
 
 /** Committed = money captured (or a cash sale under way). Gates detail reveal. */
 export function isCommitted(tx: SaleTxLike): boolean {
-  return ['pending_cash', 'paid', 'buyer_confirmed', 'seller_confirmed', 'completed', 'disputed'].includes(
-    String(tx.status ?? ''),
-  );
+  return [
+    'pending_cash', 'paid', 'confirmed', 'buyer_confirmed', 'seller_confirmed', 'completed', 'disputed',
+    'paid_out', 'payout_failed',
+  ].includes(String(tx.status ?? ''));
+}
+
+/** Money was captured online (excludes cash and pre-capture states). */
+export function isPaid(tx: SaleTxLike): boolean {
+  return [
+    'paid', 'confirmed', 'buyer_confirmed', 'seller_confirmed', 'completed', 'disputed', 'paid_out', 'payout_failed',
+  ].includes(String(tx.status ?? ''));
+}
+
+/** Parse a date-only 'YYYY-MM-DD' as a local calendar date (no UTC day shift). */
+export function parseDateOnly(d: string | null | undefined): Date | null {
+  if (!d) return null;
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(d.slice(0, 10));
+  if (!m) {
+    const parsed = new Date(d);
+    return Number.isNaN(parsed.getTime()) ? null : parsed;
+  }
+  return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), 12);
+}
+
+/** "October 14" or "October 14–16" / "October 30–November 2". */
+export function formatDeliveryWindow(start: string | null | undefined, end?: string | null): string | null {
+  const s = parseDateOnly(start);
+  if (!s) return null;
+  const fmt = (d: Date) => d.toLocaleDateString('en-US', { month: 'long', day: 'numeric' });
+  const e = parseDateOnly(end);
+  if (!e || e.getTime() === s.getTime()) return fmt(s);
+  if (e.getMonth() === s.getMonth() && e.getFullYear() === s.getFullYear()) return `${fmt(s)}–${e.getDate()}`;
+  return `${fmt(s)}–${fmt(e)}`;
 }
 
 export const PAYOUT_COPY =

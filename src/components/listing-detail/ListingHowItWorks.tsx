@@ -36,6 +36,7 @@ import {
 import type { LucideIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { isSellerCoveredFreight } from '@/lib/freight/presentation';
 
 // ---------- Types & variant logic ----------
 
@@ -52,6 +53,8 @@ type ListingLike = {
   price_daily?: number | null;
   price_weekly?: number | null;
   price_monthly?: number | null;
+  vendibook_freight_enabled?: boolean | null;
+  freight_payer?: string | null;
 };
 
 export type WalkthroughVariant =
@@ -129,10 +132,17 @@ export function resolveWalkthrough(listing: ListingLike): WalkthroughConfig {
           ? 'delivery'
           : 'pickup';
 
+  // Sale branches only: seller-covered freight reads "Free shipping" and never shows the rate.
+  const sellerCoversFreight = isSellerCoveredFreight({
+    mode: 'sale',
+    vendibook_freight_enabled: listing.vendibook_freight_enabled,
+    freight_payer: listing.freight_payer,
+  });
+
   // Dual-mode: build a wrapper config with both branches available.
   if (isDual) {
     const acceptsPayPal = listing.accept_paypal_checkout !== false;
-    const saleBranch = acceptsPayPal ? buildSaleCard(fulfillment) : buildSalePayInPerson(fulfillment);
+    const saleBranch = acceptsPayPal ? buildSaleCard(fulfillment, sellerCoversFreight) : buildSalePayInPerson(fulfillment);
     const rentBranch = listing.instant_book
       ? buildRentInstant(fulfillment)
       : buildRentRequest(fulfillment);
@@ -143,7 +153,7 @@ export function resolveWalkthrough(listing: ListingLike): WalkthroughConfig {
   // Sale variants
   if (isSale) {
     const acceptsPayPal = listing.accept_paypal_checkout !== false; // default to PayPal if flag absent
-    return acceptsPayPal ? buildSaleCard(fulfillment) : buildSalePayInPerson(fulfillment);
+    return acceptsPayPal ? buildSaleCard(fulfillment, sellerCoversFreight) : buildSalePayInPerson(fulfillment);
   }
 
   // Rental variants (default when mode is missing or unusual)
@@ -199,13 +209,16 @@ function fulfillmentStepForRental(f: FulfillmentContext): WalkthroughStep {
   }
 }
 
-function fulfillmentStepForSale(f: FulfillmentContext): WalkthroughStep {
+function fulfillmentStepForSale(f: FulfillmentContext, sellerCoversFreight = false): WalkthroughStep {
+  const freightNote = sellerCoversFreight
+    ? 'Freight on this listing is free shipping. The seller covers it.'
+    : 'Freight, when offered, is quoted at checkout.';
   if (f === 'delivery') {
     return {
       icon: Truck,
       title: 'Coordinate delivery or freight',
       description:
-        'Arrange delivery, local drop-off, or freight in Messages. If freight is offered, it is calculated at $4.50/mile.',
+        `Arrange delivery, local drop-off, or freight in Messages. ${freightNote}`,
     };
   }
   if (f === 'pickup_or_delivery') {
@@ -213,7 +226,7 @@ function fulfillmentStepForSale(f: FulfillmentContext): WalkthroughStep {
       icon: Truck,
       title: 'Choose pickup, delivery, or freight',
       description:
-        'This seller offers both pickup and delivery. Confirm which you want in Messages. Freight, when offered, is calculated at $4.50/mile. The seller\'s full address unlocks after purchase.',
+        `This seller offers both pickup and delivery. Confirm which you want in Messages. ${freightNote} The seller's full address unlocks after purchase.`,
     };
   }
   return {
@@ -288,7 +301,7 @@ function buildSaleAndRent(
 
 
 
-function buildSaleCard(fulfillment: FulfillmentContext): WalkthroughConfig {
+function buildSaleCard(fulfillment: FulfillmentContext, sellerCoversFreight = false): WalkthroughConfig {
   const inline: WalkthroughStep[] = [
     { icon: MessageCircle, title: 'Review the listing', description: '' },
     { icon: CreditCard, title: 'Pay securely with card', description: '' },
@@ -308,7 +321,7 @@ function buildSaleCard(fulfillment: FulfillmentContext): WalkthroughConfig {
       description:
         'Checkout runs through PayPal. Your payment method is charged when you place the order. Vendibook holds the funds until you confirm the item.',
     },
-    fulfillmentStepForSale(fulfillment),
+    fulfillmentStepForSale(fulfillment, sellerCoversFreight),
     {
       icon: CheckCircle2,
       title: 'Confirm the item, seller gets paid',

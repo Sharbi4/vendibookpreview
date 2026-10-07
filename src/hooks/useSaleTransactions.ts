@@ -33,6 +33,7 @@ export interface SaleTransaction {
   tracking_url: string | null;
   shipped_at: string | null;
   estimated_delivery_date: string | null;
+  estimated_delivery_end?: string | null;
   delivered_at: string | null;
   shipping_notes: string | null;
   // Link to the immutable transaction_terms snapshot the buyer/seller
@@ -46,6 +47,7 @@ export interface SaleTransaction {
     category: string;
     pickup_location_text: string | null;
     pickup_instructions: string | null;
+    freight_payer?: string | null;
   };
   buyer?: {
     id: string;
@@ -75,7 +77,7 @@ export const useBuyerSaleTransactions = (userId: string | undefined) => {
         .from('sale_transactions' as any)
         .select(`
           *,
-          listing:listings(id, title, cover_image_url, category, pickup_location_text, pickup_instructions)
+          listing:listings(id, title, cover_image_url, category, pickup_location_text, pickup_instructions, freight_payer)
         `)
         .eq('buyer_id', userId)
         .order('created_at', { ascending: false })) as any;
@@ -192,7 +194,7 @@ export const useSellerSaleTransactions = (userId: string | undefined) => {
         .from('sale_transactions' as any)
         .select(`
           *,
-          listing:listings(id, title, cover_image_url, category, pickup_location_text, pickup_instructions)
+          listing:listings(id, title, cover_image_url, category, pickup_location_text, pickup_instructions, freight_payer)
         `)
         .eq('seller_id', userId)
         .order('created_at', { ascending: false })) as any;

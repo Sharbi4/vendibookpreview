@@ -77,6 +77,7 @@ function decodePolyline(encoded: string): { lat: number; lng: number }[] {
 }
 
 const mapStyle = { width: '100%', height: '100%' };
+const STALE_MS = 5 * 60 * 1000;
 
 
 function TrackingMap({
@@ -147,16 +148,22 @@ export default function DeliveryTrackingPanel({ saleTransactionId, bookingId, fu
     return () => window.clearInterval(t);
   }, []);
 
-  const deliveryOrder = isDeliveryMode(session?.mode) || ['rental_delivery', 'equipment_delivery', 'shipping'].includes(fulfillmentType ?? '');
+  const deliveryOrder = isDeliveryMode(session?.mode)
+    || ['rental_delivery', 'equipment_delivery', 'shipping', 'delivery', 'vendibook_freight'].includes(fulfillmentType ?? '');
   if (!deliveryOrder) return null;
   if (isLoading && !session) return null;
 
+  const cancelled = session?.status === 'cancelled' || session?.status === 'canceled';
   const step = currentStep(session ?? null);
   const lat = num(session?.last_latitude);
   const lng = num(session?.last_longitude);
   const dLat = num(session?.destination_latitude);
   const dLng = num(session?.destination_longitude);
-  const live = !!session?.tracking_active && !session?.tracking_paused && lat !== null && lng !== null;
+  const tracking = !cancelled && !!session?.tracking_active && !session?.tracking_paused && lat !== null && lng !== null;
+  const lastAt = session?.last_location_at ? new Date(session.last_location_at).getTime() : null;
+  // A location older than 5 minutes is not "live": drop the badge and the ETA.
+  const stale = tracking && (lastAt === null || Date.now() - lastAt > STALE_MS);
+  const live = tracking && !stale;
   const eta = session?.route_duration_seconds ?? null;
   const distance = session?.route_distance_meters ?? null;
 
@@ -166,7 +173,9 @@ export default function DeliveryTrackingPanel({ saleTransactionId, bookingId, fu
         <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-wide text-muted-foreground">
           <Truck className="h-4 w-4" /> Delivery tracking
         </h2>
-        {live ? (
+        {cancelled ? (
+          <Badge variant="outline">Cancelled</Badge>
+        ) : live ? (
           <Badge variant="outline" className="border-emerald-500/30 text-emerald-600">Live</Badge>
         ) : session?.tracking_paused ? (
           <Badge variant="outline">Tracking paused</Badge>
@@ -174,6 +183,7 @@ export default function DeliveryTrackingPanel({ saleTransactionId, bookingId, fu
       </div>
 
       {/* Status timeline — always available, no invented data */}
+      {!cancelled && (
       <ol className="mt-4 grid gap-2 sm:grid-cols-5">
         {STEPS.map((s, i) => {
           const done = i < step;
@@ -197,8 +207,9 @@ export default function DeliveryTrackingPanel({ saleTransactionId, bookingId, fu
           );
         })}
       </ol>
+      )}
 
-      {live && apiKey && (
+      {tracking && apiKey && (
         <div className="mt-4 overflow-hidden rounded-xl border border-border">
           <div className="h-[280px] sm:h-[340px]">
             <TrackingMap
@@ -212,7 +223,18 @@ export default function DeliveryTrackingPanel({ saleTransactionId, bookingId, fu
       )}
 
       <div className="mt-4 space-y-1 text-sm">
-        {live ? (
+        {cancelled ? (
+          <p className="text-muted-foreground">This delivery was cancelled. Location sharing has stopped.</p>
+        ) : stale ? (
+          <>
+            <p className="font-medium">Location not updated since {lastAt !== null
+              ? new Date(lastAt).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })
+              : 'the delivery started'}</p>
+            <p className="text-muted-foreground">
+              The driver's last known position is shown. Message them if you need an update.
+            </p>
+          </>
+        ) : live ? (
           <>
             <p className="font-medium">
               {session?.status === 'arrived' ? 'Arriving now' : 'On the way'}

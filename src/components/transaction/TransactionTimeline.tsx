@@ -1,4 +1,7 @@
-import { Clock, Check, CircleDot, ShoppingBag, CreditCard, Truck, Package, Handshake, Banknote, type LucideIcon } from 'lucide-react';
+import {
+  Clock, Check, CircleDot, ShoppingBag, CreditCard, Truck, Package, Handshake, FileSignature, XCircle, type LucideIcon,
+} from 'lucide-react';
+import { handoffMethod, isPaid, type SaleTxLike } from '@/lib/sale/handoff';
 
 export interface TxTimelineEvent {
   id: string;
@@ -17,14 +20,21 @@ function fmt(ts: string | null | undefined): string | null {
 
 /** Build the ordered event timeline from a sale_transactions row. */
 export function buildTransactionTimeline(tx: Record<string, any>): TxTimelineEvent[] {
-  const paid = tx.status === 'paid' || tx.status === 'confirmed' || tx.status === 'completed';
-  const shipReq = tx.fulfillment_type === 'freight' || tx.fulfillment_type === 'delivery';
-  const shipped = !!tx.shipped_at;
-  const delivered = !!tx.delivered_at || tx.shipping_status === 'delivered';
+  const status = String(tx.status ?? '');
+  const method = handoffMethod(tx as SaleTxLike);
+  const paid = isPaid(tx as SaleTxLike);
+  const cash = status === 'pending_cash';
+  const shipReq = method !== 'pickup';
+  const ship = String(tx.shipping_status ?? '');
+  const delivered = !!tx.delivered_at || ship === 'delivered';
+  const outForDelivery = delivered || ship === 'out_for_delivery';
+  const shipped = outForDelivery || !!tx.shipped_at || ship === 'shipped' || ship === 'in_transit';
+  const readyForPickup = ship === 'ready_for_pickup';
   const buyerC = !!tx.buyer_confirmed_at;
   const sellerC = !!tx.seller_confirmed_at;
-  const completed = tx.status === 'completed' || (buyerC && sellerC);
-  const paidOut = !!tx.payout_completed_at;
+  const completed = ['completed', 'paid_out', 'payout_failed'].includes(status) || (buyerC && sellerC);
+  const terminal = status === 'refunded' || status === 'cancelled';
+  const underway = paid || cash;
 
   const events: TxTimelineEvent[] = [];
 
@@ -38,12 +48,26 @@ export function buildTransactionTimeline(tx: Record<string, any>): TxTimelineEve
 
   events.push({
     id: 'payment',
-    label: paid ? 'Payment received' : 'Payment pending',
+    label: paid ? 'Payment received'
+      : cash ? 'Pay in person at handoff'
+      : status === 'payment_authorized' ? 'Payment processing'
+      : status === 'payment_failed' ? 'Payment failed'
+      : 'Payment pending',
     detail: tx.payment_intent_id ? `Ref ${String(tx.payment_intent_id).slice(-8)}` : undefined,
-    timestamp: paid ? fmt(tx.updated_at ?? tx.created_at) : null,
-    state: paid ? 'complete' : 'active',
+    timestamp: paid ? fmt(tx.created_at) : null,
+    state: paid ? 'complete' : terminal ? 'pending' : 'active',
     icon: CreditCard,
   });
+
+  if (tx.bill_of_sale_completed_at) {
+    events.push({
+      id: 'agreement',
+      label: 'Bill of sale signed',
+      timestamp: fmt(tx.bill_of_sale_completed_at),
+      state: 'complete',
+      icon: FileSignature,
+    });
+  }
 
   if (shipReq) {
     events.push({
@@ -51,44 +75,65 @@ export function buildTransactionTimeline(tx: Record<string, any>): TxTimelineEve
       label: shipped ? 'Shipped' : 'Awaiting shipment',
       detail: tx.tracking_number ? `${tx.carrier ?? 'Carrier'} · ${tx.tracking_number}` : undefined,
       timestamp: fmt(tx.shipped_at),
-      state: shipped ? 'complete' : paid ? 'active' : 'pending',
+      state: shipped ? 'complete' : underway && !terminal ? 'active' : 'pending',
+      icon: Truck,
+    });
+    events.push({
+      id: 'out_for_delivery',
+      label: 'Out for delivery',
+      state: outForDelivery ? 'complete' : shipped && !terminal ? 'active' : 'pending',
+      timestamp: null,
       icon: Truck,
     });
     events.push({
       id: 'delivered',
-      label: delivered ? 'Delivered' : 'In transit',
+      label: 'Delivered',
       timestamp: fmt(tx.delivered_at),
-      state: delivered ? 'complete' : shipped ? 'active' : 'pending',
+      state: delivered ? 'complete' : outForDelivery && !terminal ? 'active' : 'pending',
       icon: Package,
     });
   } else {
     events.push({
-      id: 'handoff',
-      label: (buyerC && sellerC) ? 'Handoff confirmed'
-        : (buyerC || sellerC) ? 'Partial handoff confirmation'
-        : 'Handoff pending',
-      detail: `Buyer ${buyerC ? '✓' : '…'} · Seller ${sellerC ? '✓' : '…'}`,
-      timestamp: (buyerC && sellerC) ? fmt((tx.buyer_confirmed_at ?? '') > (tx.seller_confirmed_at ?? '') ? tx.buyer_confirmed_at : tx.seller_confirmed_at) : null,
-      state: (buyerC && sellerC) ? 'complete' : paid ? 'active' : 'pending',
-      icon: Handshake,
+      id: 'ready',
+      label: 'Ready for pickup',
+      timestamp: null,
+      state: readyForPickup || buyerC || sellerC || completed ? 'complete' : underway && !terminal ? 'active' : 'pending',
+      icon: Package,
     });
   }
 
   events.push({
+    id: 'handoff',
+    label: shipReq ? (buyerC ? 'Buyer confirmed receipt' : 'Buyer confirmation') : (
+      (buyerC && sellerC) ? 'Handoff confirmed'
+        : (buyerC || sellerC) ? 'Partial handoff confirmation'
+        : 'Picked up'
+    ),
+    detail: `Buyer ${buyerC ? '✓' : '…'} · Seller ${sellerC ? '✓' : '…'}`,
+    timestamp: fmt(tx.buyer_confirmed_at),
+    state: (buyerC && (shipReq || sellerC)) || completed ? 'complete'
+      : underway && !terminal && (shipReq ? delivered : true) ? 'active' : 'pending',
+    icon: Handshake,
+  });
+
+  if (terminal) {
+    events.push({
+      id: status,
+      label: status === 'refunded' ? 'Refunded' : 'Cancelled',
+      detail: status === 'refunded' ? 'This sale was refunded.' : 'This sale was cancelled.',
+      timestamp: fmt(tx.updated_at),
+      state: 'complete',
+      icon: XCircle,
+    });
+    return events;
+  }
+
+  events.push({
     id: 'completed',
-    label: 'Sale completed',
+    label: 'Sale complete',
     timestamp: completed ? fmt(tx.updated_at) : null,
     state: completed ? 'complete' : 'pending',
     icon: Check,
-  });
-
-  events.push({
-    id: 'payout',
-    label: paidOut ? 'Seller paid out' : 'Payout scheduled',
-    detail: !paidOut && completed ? 'Typically released within 24 hours of delivery confirmation' : undefined,
-    timestamp: fmt(tx.payout_completed_at),
-    state: paidOut ? 'complete' : completed ? 'active' : 'pending',
-    icon: Banknote,
   });
 
   return events;

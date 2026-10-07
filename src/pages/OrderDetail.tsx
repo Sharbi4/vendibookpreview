@@ -89,6 +89,10 @@ const OrderDetailPage = () => {
   }
 
   const a = order.amounts;
+  const nextAction = order.viewer_role === 'seller'
+    ? (order.seller_next_action ?? order.next_action)
+    : order.next_action;
+  const orderClosed = ['refunded', 'cancelled'].includes(order.order_status.code);
   const deadline = order.release?.deadline_at ? new Date(order.release.deadline_at) : null;
   const msLeft = deadline ? deadline.getTime() - Date.now() : null;
   const daysRemaining = msLeft != null ? Math.max(0, Math.ceil(msLeft / 86_400_000)) : null;
@@ -128,13 +132,13 @@ const OrderDetailPage = () => {
         <div className="flex items-start gap-3">
           <ArrowRight className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
           <div className="flex-1">
-            <p className="font-medium">{order.next_action.next_action_title}</p>
+            <p className="font-medium">{nextAction.next_action_title}</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              {order.next_action.next_action_description}
+              {nextAction.next_action_description}
             </p>
           </div>
         </div>
-        {(order.payment.is_payable || order.next_action.next_action_code === 'retry_payment') && (
+        {order.viewer_role !== 'seller' && (order.payment.is_payable || order.next_action.next_action_code === 'retry_payment') && (
           <div className="mt-4 flex flex-wrap gap-2">
             <Button size="sm" disabled={!!working} onClick={() => run('retry')}>
               {working ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
@@ -281,7 +285,7 @@ const OrderDetailPage = () => {
             </dl>
           </Card>
 
-          {order.viewer_role === 'buyer' && order.transaction_type === 'equipment_sale' && order.fulfillment.type === 'equipment_pickup' && (
+          {!orderClosed && order.viewer_role === 'buyer' && order.transaction_type === 'equipment_sale' && order.fulfillment.type === 'equipment_pickup' && (
             <Card className="flex flex-wrap items-center justify-between gap-3 p-4 sm:p-5">
               <div className="flex items-start gap-3">
                 <SearchCheck className="mt-0.5 h-5 w-5 text-primary" aria-hidden />
@@ -296,17 +300,19 @@ const OrderDetailPage = () => {
             </Card>
           )}
 
-          {['equipment_pickup', 'rental_pickup'].includes(order.fulfillment.type) && (
+          {!orderClosed && ['equipment_pickup', 'rental_pickup'].includes(order.fulfillment.type) && (
             <OrderMeetupCard listingId={order.listing?.id ?? null} viewerRole={order.viewer_role} />
           )}
 
-          <DeliveryTrackingPanel
-            saleTransactionId={(order as any).links?.sale_transaction_id ?? null}
-            bookingId={(order as any).links?.booking_request_id ?? null}
-            fulfillmentType={order.fulfillment.type}
-          />
+          {!orderClosed && (
+            <DeliveryTrackingPanel
+              saleTransactionId={(order as any).links?.sale_transaction_id ?? null}
+              bookingId={(order as any).links?.booking_request_id ?? null}
+              fulfillmentType={order.fulfillment.type}
+            />
+          )}
 
-          {order.viewer_role !== 'buyer' && ['rental_delivery','equipment_delivery','shipping'].includes(order.fulfillment.type) && (
+          {!orderClosed && order.viewer_role !== 'buyer' && ['rental_delivery','equipment_delivery','shipping'].includes(order.fulfillment.type) && (
             <Card className="flex flex-wrap items-center justify-between gap-3 p-4 sm:p-5">
               <div>
                 <p className="font-medium">Delivering this order yourself?</p>
@@ -425,7 +431,9 @@ const OrderDetailPage = () => {
             <dl className="mt-3 space-y-2 text-sm">
               <Line label="Gross" value={money(a.gross_cents, a.currency)} />
               {a.tax_cents > 0 && <Line label="Taxes" value={money(a.tax_cents, a.currency)} />}
-              {a.fee_cents > 0 && <Line label="Service fee" value={money(a.fee_cents, a.currency)} />}
+              {a.fee_cents > 0 && !(order.viewer_role === 'buyer' && order.transaction_type === 'equipment_sale') && (
+                <Line label="Service fee" value={money(a.fee_cents, a.currency)} />
+              )}
               {a.refunded_cents > 0 && (
                 <Line label="Refunded" value={`− ${money(a.refunded_cents, a.currency)}`} />
               )}

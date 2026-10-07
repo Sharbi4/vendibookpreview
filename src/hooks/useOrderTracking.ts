@@ -24,6 +24,7 @@ export interface TrackingTransaction {
   tracking_url: string | null;
   shipped_at: string | null;
   estimated_delivery_date: string | null;
+  estimated_delivery_end?: string | null;
   delivered_at: string | null;
   shipping_notes: string | null;
   // Cash transaction confirmation fields
@@ -38,6 +39,7 @@ export interface TrackingTransaction {
     title: string;
     cover_image_url: string | null;
     pickup_location_text: string | null;
+    freight_payer?: string | null;
   };
 }
 
@@ -87,13 +89,14 @@ export const useOrderTracking = (transactionId: string | undefined) => {
           tracking_url,
           shipped_at,
           estimated_delivery_date,
+          estimated_delivery_end,
           delivered_at,
           shipping_notes,
           buyer_confirmed_at,
           seller_confirmed_at,
           freight_payment_status,
           freight_paid_at,
-          listing:listings(id, title, cover_image_url, pickup_location_text)
+          listing:listings(id, title, cover_image_url, pickup_location_text, freight_payer)
         `)
         .eq('id', transactionId)
         .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`)
@@ -121,9 +124,10 @@ export const useOrderTracking = (transactionId: string | undefined) => {
         .order('created_at', { ascending: false })
         .limit(20);
       const rows = (data ?? []) as unknown as TrackingPayment[];
-      // A settled payment always wins over a later abandoned attempt.
+      // A settled (or since refunded) payment always wins over a later abandoned attempt.
       return (
         rows.find((r) => r.payment_status === 'completed') ??
+        rows.find((r) => r.payment_status === 'refunded' || r.payment_status === 'partially_refunded') ??
         rows.find((r) => r.payment_status === 'approved' || r.payment_status === 'pending') ??
         rows[0] ??
         null

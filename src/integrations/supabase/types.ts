@@ -8573,6 +8573,7 @@ export type Database = {
           delivery_fee: number | null
           delivery_instructions: string | null
           estimated_delivery_date: string | null
+          estimated_delivery_end: string | null
           fee_locked_at: string | null
           fee_rate_pct: number | null
           freight_checkout_session_id: string | null
@@ -8634,6 +8635,7 @@ export type Database = {
           delivery_fee?: number | null
           delivery_instructions?: string | null
           estimated_delivery_date?: string | null
+          estimated_delivery_end?: string | null
           fee_locked_at?: string | null
           fee_rate_pct?: number | null
           freight_checkout_session_id?: string | null
@@ -8695,6 +8697,7 @@ export type Database = {
           delivery_fee?: number | null
           delivery_instructions?: string | null
           estimated_delivery_date?: string | null
+          estimated_delivery_end?: string | null
           fee_locked_at?: string | null
           fee_rate_pct?: number | null
           freight_checkout_session_id?: string | null

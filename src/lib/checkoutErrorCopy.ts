@@ -65,6 +65,12 @@ const MAP: Record<string, CheckoutErrorCopy> = {
     actionLabel: "Back to listing",
     actionKind: "back",
   },
+  listing_sold: {
+    title: "Sold",
+    description: "Sold — this item has already been purchased. Nothing has been charged.",
+    actionLabel: "Back to listing",
+    actionKind: "back",
+  },
   legal_acceptance_required: {
     title: "Agreements still need accepting",
     description:

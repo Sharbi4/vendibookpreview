@@ -185,14 +185,18 @@ export async function buildOrderDetail(
       currency: record.currency ?? 'USD',
       gross_cents: record.gross_amount_cents ?? 0,
       tax_cents: record.tax_cents ?? 0,
-      fee_cents: record.platform_fee_cents ?? 0,
+      // On sales the stored platform fee is the SELLER's fee; buyers pay no
+      // Vendibook fee, so it is never shown to them as a charge.
+      fee_cents: viewerRole === 'buyer' && transactionType === 'equipment_sale'
+        ? 0
+        : (record.platform_fee_cents ?? 0),
       discount_cents: record.discount_cents ?? 0,
       refunded_cents: record.refunded_cents ?? 0,
       total_paid_cents: Math.max(0, (record.gross_amount_cents ?? 0) - (record.refunded_cents ?? 0)),
     },
     fulfillment: {
       type: fulfillmentType,
-      label: FULFILLMENT_LABEL[fulfillmentType],
+      label: domain.fulfillmentLabel ?? FULFILLMENT_LABEL[fulfillmentType],
       status: domain.fulfillmentStatus ?? null,
       details: viewerRole === 'seller' ? domain.sellerDetails : domain.details,
     },
@@ -406,6 +410,8 @@ async function loadSettlement(
 
 interface DomainSummary {
   fulfillmentRaw: string | null;
+  /** Overrides FULFILLMENT_LABEL (e.g. "Vendibook Freight · Free shipping"). */
+  fulfillmentLabel?: string | null;
   fulfillmentStatus: string | null;
   details: Record<string, unknown>;
   sellerDetails: Record<string, unknown>;
@@ -489,12 +495,44 @@ async function loadDomainRecord(
       .maybeSingle();
     if (!t) return empty;
 
-    const raw = t.delivery_address ? 'delivery' : (t.shipping_status ? 'shipping' : 'pickup');
+    // The buyer's chosen method is the source of truth, not the address or
+    // shipping columns (a pickup sale can still carry a contact address).
+    const ft = String(t.fulfillment_type ?? '').toLowerCase();
+    const isFreight = ft.includes('freight');
+    const raw = isFreight || ft.includes('deliver') || ft === 'shipping'
+      ? 'delivery'
+      : ft.includes('pickup') || ft === 'on_site'
+        ? 'pickup'
+        : (t.delivery_address ? 'delivery' : 'pickup');
+    let fulfillmentLabel: string | null = null;
+    if (isFreight) {
+      const { data: l } = await supabase
+        .from('listings')
+        .select('freight_payer')
+        .eq('id', t.listing_id)
+        .maybeSingle();
+      // Seller-covered freight: buyers see "Free shipping", never the rate or cost.
+      fulfillmentLabel = l?.freight_payer === 'seller' ? 'Vendibook Freight · Free shipping' : 'Vendibook Freight';
+    }
+
+    // Sales need the purchase agreement signed once one has been issued.
+    const { data: agreementDocs } = await supabase
+      .from('documents')
+      .select('status')
+      .eq('transaction_id', t.id)
+      .in('document_type', ['purchase_sale_agreement', 'bill_of_sale', 'purchase_agreement'])
+      .is('superseded_by_document_id', null)
+      .neq('status', 'voided');
+    const agreementRequired = (agreementDocs ?? []).length > 0;
+    const agreementSigned = !!t.bill_of_sale_completed_at ||
+      (agreementDocs ?? []).some((d: { status?: string }) => d.status === 'completed');
+
     return {
       fulfillmentRaw: raw,
+      fulfillmentLabel,
       fulfillmentStatus: t.shipping_status ?? t.status ?? null,
       details: {
-        method: raw,
+        method: isFreight ? 'vendibook_freight' : raw,
         // Buyer's own contact address captured at checkout. Not a destination.
         buyer_contact_address: formatBuyerAddress(t),
         delivery_address: t.delivery_address ?? null,
@@ -503,17 +541,19 @@ async function loadDomainRecord(
         tracking_number: t.tracking_number ?? null,
         tracking_url: t.tracking_url ?? null,
         estimated_delivery_date: t.estimated_delivery_date ?? null,
+        estimated_delivery_end: t.estimated_delivery_end ?? null,
         delivered_at: t.delivered_at ?? null,
         transfer_documentation_status: t.bill_of_sale_completed_at ? 'complete' : 'pending',
         seller_coordination_status: t.status ?? null,
       },
       sellerDetails: {
-        method: raw,
+        method: isFreight ? 'vendibook_freight' : raw,
         status: t.status ?? null,
         shipping_status: t.shipping_status ?? null,
         tracking_number: t.tracking_number ?? null,
       },
-      agreementRequired: false,
+      agreementRequired,
+      agreementSigned,
       documentsOutstanding: 0,
       pickupScheduled: raw !== 'pickup' || !!t.delivered_at || t.status === 'completed',
       deliveryConfirmed: !!t.delivered_at || t.status === 'completed',

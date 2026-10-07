@@ -61,10 +61,14 @@ export async function deliverOrderReceipt(supabase: any, paymentRecordId: string
     paypalCaptureId: record.paypal_capture_id ?? null,
     amountPaid: money(detail.amounts.total_paid_cents, currency) ?? '—',
     taxes: detail.amounts.tax_cents ? money(detail.amounts.tax_cents, currency) : null,
-    fees: detail.amounts.fee_cents ? money(detail.amounts.fee_cents, currency) : null,
+    // Buyers pay no Vendibook fee on sales; the stored platform fee is the seller's.
+    fees: detail.amounts.fee_cents && detail.transaction_type !== 'equipment_sale'
+      ? money(detail.amounts.fee_cents, currency)
+      : null,
     refundAmount: detail.amounts.refunded_cents ? money(detail.amounts.refunded_cents, currency) : null,
     fulfillmentLabel: detail.fulfillment.label,
-    fulfillmentNextStep: detail.next_action.next_action_title,
+    // The next step already leads the email as a callout; no duplicate row.
+    fulfillmentNextStep: undefined,
     nextActionTitle: detail.next_action.next_action_title,
     nextActionDescription: detail.next_action.next_action_description,
     orderUrl: `${SITE_URL}/orders/${record.id}`,

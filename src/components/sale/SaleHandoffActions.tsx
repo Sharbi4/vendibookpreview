@@ -1,13 +1,15 @@
 import { useState } from 'react';
-import { Loader2, ArrowRight, CheckCircle2, MessageSquare } from 'lucide-react';
+import { Loader2, ArrowRight, CheckCircle2, MessageSquare, CalendarClock, AlertTriangle, Truck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-import type { HandoffNextStep, HandoffRole } from '@/lib/sale/handoff';
+import { handoffMethod, type HandoffNextStep, type HandoffRole, type SaleTxLike } from '@/lib/sale/handoff';
 
 interface Props {
   transactionId: string;
@@ -115,6 +117,111 @@ export const SaleHandoffActions = ({ transactionId, role, step, onMessage, onDon
         </DialogContent>
       </Dialog>
     </>
+  );
+};
+
+const DELIVERY_ACTIVE = ['pending_cash', 'paid', 'buyer_confirmed', 'seller_confirmed'];
+
+/**
+ * Seller-only secondary delivery controls for delivery / freight sales:
+ * "Out for delivery", "Update delivery date" (set_eta) and "Report delay"
+ * (report_delay), all via `sale-fulfillment-update`.
+ */
+export const SaleDeliveryControls = ({ transactionId, tx, onDone }: {
+  transactionId: string;
+  tx: SaleTxLike;
+  onDone: () => void;
+}) => {
+  const [busy, setBusy] = useState(false);
+  const [dialog, setDialog] = useState<'set_eta' | 'report_delay' | null>(null);
+  const [start, setStart] = useState(tx.estimated_delivery_date ?? '');
+  const [end, setEnd] = useState(tx.estimated_delivery_end ?? '');
+  const [note, setNote] = useState('');
+
+  if (handoffMethod(tx) === 'pickup' || !DELIVERY_ACTIVE.includes(String(tx.status ?? ''))) return null;
+  const ship = String(tx.shipping_status ?? 'pending');
+  if (ship === 'delivered' || tx.delivered_at) return null;
+
+  const invoke = async (action: string, extra: Record<string, unknown> = {}) => {
+    setBusy(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('sale-fulfillment-update', {
+        body: { transaction_id: transactionId, action, ...extra },
+      });
+      if (error) throw error;
+      const failure = (data as { error?: string } | null)?.error;
+      if (failure) throw new Error(failure);
+      toast.success('Buyer notified.');
+      setDialog(null);
+      setNote('');
+      onDone();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'We could not save that update.');
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const submitDate = () => {
+    if (!start) { toast.error('Add the expected delivery date.'); return; }
+    if (end && end < start) { toast.error('The delivery window must end on or after it starts.'); return; }
+    void invoke(dialog ?? 'set_eta', {
+      estimated_delivery_date: start,
+      estimated_delivery_end: end || undefined,
+      notes: note.trim() || undefined,
+    });
+  };
+
+  return (
+    <div className="mt-3 flex flex-wrap gap-2">
+      {ship === 'shipped' && (
+        <Button size="sm" variant="outline" disabled={busy} onClick={() => void invoke('mark_out_for_delivery')}>
+          {busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Truck className="mr-2 h-4 w-4" />}
+          Out for delivery
+        </Button>
+      )}
+      <Button size="sm" variant="outline" disabled={busy} onClick={() => setDialog('set_eta')}>
+        <CalendarClock className="mr-2 h-4 w-4" /> Update delivery date
+      </Button>
+      <Button size="sm" variant="ghost" disabled={busy} onClick={() => setDialog('report_delay')}>
+        <AlertTriangle className="mr-2 h-4 w-4" /> Report delay
+      </Button>
+
+      <Dialog open={dialog !== null} onOpenChange={(open) => { if (!open) setDialog(null); }}>
+        <DialogContent className="sale-light sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{dialog === 'report_delay' ? 'Report a delay' : 'Update delivery date'}</DialogTitle>
+            <DialogDescription>
+              The buyer is notified of the new date. Add an end date for a delivery window.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1">
+                <Label htmlFor="eta-start">Expected delivery</Label>
+                <Input id="eta-start" type="date" value={start} onChange={(e) => setStart(e.target.value)} />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="eta-end">Window ends (optional)</Label>
+                <Input id="eta-end" type="date" value={end} min={start || undefined} onChange={(e) => setEnd(e.target.value)} />
+              </div>
+            </div>
+            <Textarea
+              placeholder={dialog === 'report_delay' ? 'What caused the delay? (optional)' : 'Note for the buyer (optional)'}
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              rows={3}
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="cta" disabled={busy} onClick={submitDate}>
+              {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Notify buyer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   );
 };
 

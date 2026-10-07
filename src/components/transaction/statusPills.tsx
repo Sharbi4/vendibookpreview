@@ -31,7 +31,17 @@ export function paymentPill(status: string | null | undefined): StatusPill {
     case 'paid':
     case 'confirmed':
     case 'completed':
+    case 'buyer_confirmed':
+    case 'seller_confirmed':
+    case 'paid_out':
+    case 'payout_failed':
       return { label: 'Payment received', tone: 'success', icon: CreditCard };
+    case 'payment_authorized':
+      return { label: 'Payment processing', tone: 'warning', icon: Clock };
+    case 'pending_cash':
+      return { label: 'Pay in person', tone: 'warning', icon: Clock };
+    case 'partially_refunded':
+      return { label: 'Partially refunded', tone: 'info', icon: RefreshCw };
     case 'pending':
       return { label: 'Payment pending', tone: 'warning', icon: Clock };
     case 'refunded':
@@ -39,6 +49,7 @@ export function paymentPill(status: string | null | undefined): StatusPill {
     case 'disputed':
       return { label: 'Disputed', tone: 'danger', icon: AlertTriangle };
     case 'cancelled':
+      return { label: 'Cancelled', tone: 'neutral', icon: XCircle };
     case 'failed':
     case 'payment_failed':
     case 'declined':
