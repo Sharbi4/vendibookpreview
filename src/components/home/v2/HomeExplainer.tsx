@@ -1,19 +1,14 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
 import { ArrowRight } from 'lucide-react';
 import { PayPalWordmark, EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
 import vendibookWordmark from '@/assets/vendibook-wordmark.png';
-import { supabase } from '@/integrations/supabase/client';
-import { excludeTestListings } from '@/lib/excludeTestListings';
-import { applyDiscoveryListingFilter, filterPubliclyVisible } from '@/lib/listings/publicVisibility';
 import { FLIP_INSURANCE } from '@/lib/flipInsurance';
 import './home-explainer.css';
 
 /**
- * Homepage explainer: what Vendibook is, the buyer and seller paths, live
- * marketplace counts and the services behind a deal. Every number here is
- * counted from public listings at load time; nothing is estimated or invented.
+ * Homepage explainer: what Vendibook is, the buyer and seller paths, and the
+ * partners behind a deal.
  */
 
 type Audience = 'buy' | 'sell';
@@ -43,22 +38,6 @@ const PATHS: Record<Audience, { steps: { title: string; body: string }[]; cta: {
   },
 };
 
-const fetchMarketCounts = async () => {
-  // Typed loosely: the generated listings types are too deep for the chained helpers.
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const base: any = supabase.from('listings').select('id, mode, state, status, published_at, deleted_at, moderation_status, unlisted');
-  const { data, error } = await excludeTestListings(applyDiscoveryListingFilter(base)).limit(5000);
-  if (error) throw error;
-  const rows = filterPubliclyVisible(data ?? []) as Array<{ mode: string | null; state: string | null }>;
-  const states = new Set(rows.map((r) => (r.state ?? '').trim().toUpperCase()).filter((s) => s.length === 2));
-  return {
-    total: rows.length,
-    forSale: rows.filter((r) => r.mode === 'sale').length,
-    forRent: rows.filter((r) => r.mode === 'rent').length,
-    states: states.size,
-  };
-};
-
 export function HomeTrustStrip() {
   const items = [
     { key: 'paypal', logo: <span className="hx-logo-paypal"><PayPalWordmark surface="light" className="hx-logo" /><b>PayPal</b></span>, label: 'Secure checkout', href: '/payments' },
@@ -83,10 +62,8 @@ export function HomeTrustStrip() {
 
 export default function HomeExplainer({ sellerHref }: { sellerHref: string }) {
   const [audience, setAudience] = useState<Audience>('buy');
-  const counts = useQuery({ queryKey: ['home-market-counts'], queryFn: fetchMarketCounts, staleTime: 5 * 60_000 });
   const path = PATHS[audience];
   const cta = audience === 'sell' ? { ...path.cta, href: sellerHref } : path.cta;
-  const c = counts.data;
 
   return (
     <section className="hx" aria-labelledby="hx-title">
@@ -98,14 +75,6 @@ export default function HomeExplainer({ sellerHref }: { sellerHref: string }) {
           trailers, kitchens and vendor spaces. Payments, financing, delivery, agreements and transaction records
           live in one place, instead of cash deals and lost paperwork.
         </p>
-        {c && c.total > 0 && (
-          <dl className="hx-stats" aria-label="Live on Vendibook right now">
-            <div><dt>Live listings</dt><dd>{c.total.toLocaleString()}</dd></div>
-            <div><dt>For sale</dt><dd>{c.forSale.toLocaleString()}</dd></div>
-            <div><dt>For rent</dt><dd>{c.forRent.toLocaleString()}</dd></div>
-            {c.states > 1 && <div><dt>States</dt><dd>{c.states}</dd></div>}
-          </dl>
-        )}
       </div>
 
       <div className="hx-paths">
