@@ -451,7 +451,7 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
               to="/become-a-host" 
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
-              Become a Host
+              List your equipment
             </Link>
           )}
         </nav>

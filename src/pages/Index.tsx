@@ -10,6 +10,7 @@ import Footer from '@/components/layout/Footer';
 import NewsletterPopup from '@/components/newsletter/NewsletterPopup';
 import HeroPremium from '@/components/home/hero/HeroPremium';
 import V2ListingRow from '@/components/home/v2/V2ListingRow';
+import HomeExplainer, { HomeTrustStrip } from '@/components/home/v2/HomeExplainer';
 import { usePageTracking } from '@/hooks/usePageTracking';
 import SEO, { generateOrganizationSchema, generateWebSiteSchema } from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
@@ -119,6 +120,9 @@ const Index = () => {
         <HeroPremium showGoogleSignIn={false} showRotator={false} />
 
         <div className="v2-home-stack">
+          <HomeTrustStrip />
+
+          <HomeExplainer sellerHref={sellerStartHref} />
 
           <section className="home-partner-cards" aria-label="Payments and insurance">
             <article className="home-partner-card home-partner-card--paypal">
@@ -232,6 +236,7 @@ const Index = () => {
                 <p className="v2-home-eyebrow">Sell on Vendibook</p>
                 <h2>Turn your truck or trailer into a live listing.</h2>
                 <p>Create your listing, reach buyers nationwide, and add online checkout when you're ready.</p>
+                <p className="v2-home-sell-pricing">Free to list. 12.9% seller fee only when it sells (10.9% with Vendibook Pro). No buyer fees on purchases.</p>
                 <div className="v2-home-sell-actions">
                   <Link to={sellerStartHref} className="v2-home-btn">
                     {user ? 'Create a listing' : 'Start selling'}
@@ -304,7 +309,7 @@ const Index = () => {
 
           <section className="v2-home-final">
             <div><p className="v2-home-eyebrow">Ready when you are</p><h2>Find your next truck, trailer, kitchen, or space.</h2></div>
-            <div><Link to="/search" className="v2-home-btn">Browse marketplace<ArrowRight /></Link><Link to="/list" className="v2-home-link">List an asset</Link></div>
+            <div><Link to="/search" className="v2-home-btn">Browse marketplace<ArrowRight /></Link><Link to={sellerStartHref} className="v2-home-link">List your equipment free</Link></div>
           </section>
         </div>
       </main>
