@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, FileCheck2, ShieldCheck, Truck, BadgePercent } from 'lucide-react';
 import { PayPalWordmark, EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
 import vendibookWordmark from '@/assets/vendibook-wordmark.png';
 import { FLIP_INSURANCE } from '@/lib/flipInsurance';
@@ -75,6 +75,12 @@ export default function HomeExplainer({ sellerHref }: { sellerHref: string }) {
           trailers, kitchens and vendor spaces. Payments, financing, delivery, agreements and transaction records
           live in one place, instead of cash deals and lost paperwork.
         </p>
+        <ul className="hx-points">
+          <li><ShieldCheck aria-hidden="true" /><div><strong>Secure online checkout</strong><span>Pay through PayPal on eligible listings instead of cash or wire.</span></div></li>
+          <li><FileCheck2 aria-hidden="true" /><div><strong>Agreements and records on every order</strong><span>Signed documents, payment status and handoff details in one place.</span></div></li>
+          <li><Truck aria-hidden="true" /><div><strong>Delivery and financing options</strong><span>Vendibook Freight and third-party financing where available.</span></div></li>
+          <li><BadgePercent aria-hidden="true" /><div><strong>Free to list</strong><span>Sellers pay only when a sale or booking completes.</span></div></li>
+        </ul>
       </div>
 
       <div className="hx-paths">
