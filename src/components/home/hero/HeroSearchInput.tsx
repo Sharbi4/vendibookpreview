@@ -1,4 +1,4 @@
-import { Navigation, Wand2, Mic, MicOff, Search, Loader2 } from 'lucide-react';
+import { Navigation, Wand2, Mic, Search, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { trackLeadEvent } from '@/lib/leadTracking';
 
@@ -125,7 +125,7 @@ const HeroSearchInput = ({
             {isAIParsing || isConnectingMic ? (
               <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
             ) : isRecording ? (
-              <MicOff className="w-4 h-4" aria-hidden="true" />
+              <Mic className="w-4 h-4" aria-hidden="true" />
             ) : (
               <Mic className="w-4 h-4" aria-hidden="true" />
             )}
