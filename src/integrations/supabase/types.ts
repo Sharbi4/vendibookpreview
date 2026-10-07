@@ -13091,6 +13091,10 @@ export type Database = {
           total_owed: number
         }[]
       }
+      listing_committed_sale: {
+        Args: { _exclude_sale?: string; _listing_id: string }
+        Returns: string
+      }
       listing_purchase_state: { Args: { _listing_id: string }; Returns: Json }
       listing_video_walkthrough_enabled: {
         Args: { _listing_id: string }
