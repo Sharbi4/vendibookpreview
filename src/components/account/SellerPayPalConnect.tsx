@@ -424,8 +424,8 @@ export default function SellerPayPalConnect({
               {capabilityError && <p role="alert" className="text-xs text-destructive">{capabilityError}</p>}
               {enabled === false && <p className="text-xs text-muted-foreground">PayPal setup is currently unavailable. Please check back later.</p>}
               {flowMessage && <p role={flowMessage.tone === 'error' ? 'alert' : 'status'} className="text-xs">{flowMessage.text}</p>}
-              {emailUnconfirmed && <p className="text-xs text-amber-700">{emailWarning}</p>}
-              {notReceivable && <p className="text-xs text-amber-700">{receivableWarning}</p>}
+              {emailUnconfirmed && <p role="alert" className="text-xs font-medium text-destructive">{emailWarning}</p>}
+              {notReceivable && <p role="alert" className="text-xs font-medium text-destructive">{receivableWarning}</p>}
               {enabled && !hasConnection && <>
                 <label className="flex items-start gap-2 text-xs leading-relaxed">
                   <input type="checkbox" className="mt-1" checked={sellerTermsAccepted} onChange={(e) => setSellerTermsAccepted(e.target.checked)} disabled={!!busy} />
@@ -513,8 +513,8 @@ export default function SellerPayPalConnect({
         {!connection && (
           <SellerBusinessAccountHelp className="v2-paypal-note" compact />
         )}
-        {emailUnconfirmed && <p className="v2-paypal-warn">{emailWarning}</p>}
-        {notReceivable && <p className="v2-paypal-warn">{receivableWarning}</p>}
+        {emailUnconfirmed && <p role="alert" className="v2-paypal-error">{emailWarning}</p>}
+        {notReceivable && <p role="alert" className="v2-paypal-error">{receivableWarning}</p>}
         {featureNotices.map((notice) => (
           <p
             key={notice.text}
@@ -755,12 +755,12 @@ export default function SellerPayPalConnect({
           <>
             <div className="mt-2 space-y-2">
               {emailUnconfirmed && (
-                <p className="text-xs text-amber-700 dark:text-amber-400 [&_a]:underline [&_a]:font-medium">
+                <p role="alert" className="text-xs font-medium text-destructive [&_a]:underline [&_a]:font-medium">
                   {emailWarning}
                 </p>
               )}
               {notReceivable && (
-                <p className="text-xs text-amber-700 dark:text-amber-400 [&_a]:underline [&_a]:font-medium">
+                <p role="alert" className="text-xs font-medium text-destructive [&_a]:underline [&_a]:font-medium">
                   {receivableWarning}
                 </p>
               )}

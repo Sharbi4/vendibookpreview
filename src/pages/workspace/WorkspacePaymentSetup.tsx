@@ -281,7 +281,7 @@ export default function WorkspacePaymentSetup() {
             )}
 
             {emailUnconfirmed && (
-              <p className="text-sm text-amber-700">
+              <p role="alert" className="text-sm font-medium text-destructive">
                 Attention: Please confirm your email address on{' '}
                 <a
                   className="underline"
@@ -295,7 +295,7 @@ export default function WorkspacePaymentSetup() {
               </p>
             )}
             {notReceivable && (
-              <p className="text-sm text-amber-700">
+              <p role="alert" className="text-sm font-medium text-destructive">
                 Attention: You currently cannot receive payments due to restriction on your PayPal
                 account. Please reach out to PayPal Customer Support or connect to{' '}
                 <a
