@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { refundPayment } from "../_shared/paymentOps.ts";
+import { refundSquareRental } from "../_shared/squareRentalRefund.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
@@ -84,7 +85,10 @@ serve(async (req) => {
       .rpc('is_admin', { user_id: user.id });
     const isAdmin = adminCheck === true;
 
-    if (!isShopperOrHost && !isAdmin) {
+    // Only the host (refunding their own renter) or an admin may issue a
+    // refund. A renter cancels through the booking page, which applies the
+    // cancellation policy; they must never be able to refund themselves.
+    if (user.id !== booking.host_id && !isAdmin) {
       throw new Error("Not authorized to refund this booking");
     }
     logStep("Authorization verified", { isShopperOrHost, isAdmin });
@@ -94,7 +98,8 @@ serve(async (req) => {
       throw new Error(`Cannot refund booking with status: ${booking.payment_status}`);
     }
 
-    if (!booking.payment_intent_id) {
+    const isSquare = booking.payment_provider === 'square';
+    if (!isSquare && !booking.payment_intent_id) {
       throw new Error("No payment intent found for this booking");
     }
 
@@ -107,8 +112,15 @@ serve(async (req) => {
       logStep("Full refund requested");
     }
 
-    // Vendibook refunds through PayPal only.
-    const refund = await refundPayment({
+    // Rentals are paid through Square; older bookings may be PayPal.
+    const refund = isSquare
+      ? await refundSquareRental(supabaseClient, {
+          bookingId: booking_id,
+          amountCents: refundAmountCents,
+          reason: (cancellation_reason || reason || 'Booking refund').slice(0, 190),
+          idempotencyKey: `booking-refund-${booking_id}-${refundAmountCents ?? "full"}`,
+        })
+      : await refundPayment({
       paymentReference: booking.payment_intent_id,
       provider: booking.payment_provider,
       amountCents: refundAmountCents,
@@ -117,7 +129,7 @@ serve(async (req) => {
     });
 
     if (!refund.success) {
-      logStep("Refund not completed", { error: refund.error, manual: refund.manual });
+      logStep("Refund not completed", { error: refund.error, manual: (refund as { manual?: boolean }).manual });
       throw new Error(refund.error ?? "Refund failed");
     }
 

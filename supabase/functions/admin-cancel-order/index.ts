@@ -90,9 +90,12 @@ serve(async (req) => {
     }
 
     if (payment.sale_transaction_id) {
-      await admin.from("sale_transactions")
-        .update({ status: "cancelled" })
+      // The buyer was refunded, so the sale ends as refunded. A paid sale
+      // cannot move to "cancelled" (enforce_sale_status_transition).
+      const { error: saleError } = await admin.from("sale_transactions")
+        .update({ status: "refunded" })
         .eq("id", payment.sale_transaction_id);
+      if (saleError) console.error("[admin-cancel-order] sale status not updated", saleError.message);
     }
 
     const { data: openCase } = await admin.from("dispute_cases")

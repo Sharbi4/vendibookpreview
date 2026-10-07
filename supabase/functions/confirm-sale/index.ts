@@ -230,7 +230,7 @@ serve(async (req) => {
             user_id: transaction.seller_id,
             type: 'sale_confirmed',
             title: 'Buyer confirmed receipt',
-            message: `The buyer has confirmed receipt of "${listingTitle}". ${newStatus === 'completed' ? 'Funds have been released to your account!' : 'Please confirm the handoff to release funds.'}`,
+            message: `The buyer has confirmed receipt of "${listingTitle}". ${newStatus === 'completed' ? 'Your payout is now queued for release.' : 'Please confirm the handoff to release funds.'}`,
             link: '/dashboard?tab=sales',
             send_email: false, // Email already sent via send-sale-notification
           }),
@@ -294,8 +294,8 @@ serve(async (req) => {
             body: JSON.stringify({
               user_id: transaction.seller_id,
               type: 'sale',
-              title: 'Sale complete - Funds released!',
-              message: `Your sale of "${listingTitle}" is complete. Funds have been released to your account!`,
+              title: 'Sale complete - payout queued',
+              message: `Your sale of "${listingTitle}" is complete. Your payout is queued; Vendibook releases seller payouts after review.`,
               link: '/dashboard?tab=sales',
               send_email: false,
             }),
@@ -313,7 +313,7 @@ serve(async (req) => {
         success: true,
         status: newStatus,
         message: newStatus === 'completed' 
-          ? 'Sale completed! Funds have been released to the seller.'
+          ? 'Sale completed! The seller\'s payout is now queued.'
           : `${role === 'buyer' ? 'Buyer' : 'Seller'} confirmation recorded. Waiting for ${role === 'buyer' ? 'seller' : 'buyer'} confirmation.`,
       }),
       {

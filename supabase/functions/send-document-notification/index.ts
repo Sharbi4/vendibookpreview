@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { getCaller, isAdminUser, isBackendCaller, forbiddenResponse, unauthorizedResponse } from "../_shared/callerGuard.ts";
 import { refundPayment } from "../_shared/paymentOps.ts";
+import { refundSquareRental } from "../_shared/squareRentalRefund.ts";
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 // Emails are sent via the Lovable Emails queue (send-transactional-email),
@@ -55,14 +56,21 @@ async function processInstantBookRefund(
   listingTitle: string,
   rejectionReason: string
 ): Promise<{ success: boolean; refundId?: string; error?: string }> {
-  if (!booking.payment_intent_id) {
+  const isSquare = booking.payment_provider === 'square';
+  if (!isSquare && !booking.payment_intent_id) {
     logStep("Cannot process refund - no payment reference found");
     return { success: false, error: "No payment reference found" };
   }
 
   try {
-    // Vendibook refunds through PayPal only.
-    const refund = await refundPayment({
+    // Rentals are paid through Square; older bookings may be PayPal.
+    const refund = isSquare
+      ? await refundSquareRental(supabaseClient, {
+          bookingId: booking.id,
+          reason: `Instant Book document rejected: ${rejectionReason}`.slice(0, 190),
+          idempotencyKey: `doc-reject-refund-${booking.id}`,
+        })
+      : await refundPayment({
       paymentReference: booking.payment_intent_id,
       provider: booking.payment_provider,
       reason: `Instant Book document rejected: ${rejectionReason}`.slice(0, 200),
@@ -70,7 +78,7 @@ async function processInstantBookRefund(
     });
 
     if (!refund.success) {
-      logStep("Refund not completed automatically", { error: refund.error, manual: refund.manual });
+      logStep("Refund not completed automatically", { error: refund.error, manual: (refund as { manual?: boolean }).manual });
       return { success: false, error: refund.error };
     }
 
