@@ -24,7 +24,11 @@ export const MULTIPARTY_FLAG_KEY = "paypal_multiparty_enabled";
  * as a hard guard. Missing/any value other than "true" means OFF.
  */
 export function multipartyEnvEnabled(): boolean {
-  return (Deno.env.get("PAYPAL_MULTIPARTY_ENABLED") ?? "").toLowerCase() === "true";
+  // Deno global is read through a typed cast so Node-side typechecks and
+  // vitest runs of this shared module compile; Deno is always present in
+  // edge functions, where this switch actually takes effect.
+  const deno = (globalThis as { Deno?: { env: { get(key: string): string | undefined } } }).Deno;
+  return (deno?.env.get("PAYPAL_MULTIPARTY_ENABLED") ?? "").toLowerCase() === "true";
 }
 
 function envEnabled(): boolean {

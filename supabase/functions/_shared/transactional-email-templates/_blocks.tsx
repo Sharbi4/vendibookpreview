@@ -1,4 +1,4 @@
-/// <reference types="npm:@types/react@18.3.1" />
+/// <reference types="npm:@types/react@18.3.23" />
 // Reusable Vendibook email content blocks:
 //   - <BlogHighlights /> — smart-by-role article picks
 //   - <ToolsBlock />     — role-aware Vendibook tools tour

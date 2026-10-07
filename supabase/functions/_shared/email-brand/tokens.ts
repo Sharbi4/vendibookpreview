@@ -177,6 +177,7 @@ export const t = {
     fontSize: size.bodySm,
     lineHeight: 1.65,
     color: color.text,
+    fontFamily: FONT_STACK,
     margin: '0 0 16px',
   } as const,
   listItem: {
