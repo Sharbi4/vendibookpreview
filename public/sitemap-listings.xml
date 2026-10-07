@@ -1443,7 +1443,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/c272f584-fda5-4403-952e-be7be00558a4</loc>
-    <lastmod>2026-10-06</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -1483,6 +1483,17 @@
       <image:loc>https://vendibook.com/brand/vendibook-icon-512.png</image:loc>
       <image:title>Sandbox PayPal certification listing (not for sale)</image:title>
       <image:caption>Sandbox PayPal certification listing (not for sale) in Phoenix, AZ on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/7aea7f81-6875-479a-a711-8c621e3cf1c4</loc>
+    <lastmod>2026-10-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://vendibook.com/brand/vendibook-icon-512.png</image:loc>
+      <image:title>Sandbox PayPal certification listing 2 (not for sale)</image:title>
+      <image:caption>Sandbox PayPal certification listing 2 (not for sale) in Phoenix, AZ on Vendibook</image:caption>
     </image:image>
   </url>
 </urlset>

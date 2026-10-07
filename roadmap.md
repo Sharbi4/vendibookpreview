@@ -1,5 +1,7 @@
 # Roadmap
 
+- [open] Premium homepage refresh using the attached tester feedback; preserve partner logos and existing search/voice behavior. Awaiting design selection.
+
 - [done] Checkout agreement gate: keep the payment-side Payments Terms version aligned with the version saved by the checked agreement box.
 - [done] PayPal seller connect (sandbox): partner Merchant ID 48R2DERT59KTA confirmed; status check now falls back to webhook-recorded connection data instead of erroring when PayPal status API is unavailable.
 - [open] Rental checkout 10-bug fix — planned, not started; preserve sandbox PayPal + CAPTURE-only architecture.
