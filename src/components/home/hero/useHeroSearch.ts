@@ -33,10 +33,24 @@ export const useHeroSearch = () => {
     setLocation((prev) => (prev ? prev + ' ' : '') + trimmed);
   }, []);
 
+  // Spoken query: show words live while the shopper talks, then run the
+  // search automatically once ElevenLabs finalizes the sentence.
+  const [partialTranscript, setPartialTranscript] = useState('');
+  const pendingVoiceSearchRef = useRef<string | null>(null);
+  const [voiceSearchTick, setVoiceSearchTick] = useState(0);
+
   const scribe = useScribe({
     modelId: 'scribe_v2_realtime',
     commitStrategy: 'vad' as any,
-    onCommittedTranscript: (data: any) => appendTranscript(data?.text ?? ''),
+    onPartialTranscript: (data: any) => setPartialTranscript(data?.text ?? ''),
+    onCommittedTranscript: (data: any) => {
+      const text = (data?.text ?? '').trim();
+      setPartialTranscript('');
+      if (!text) return;
+      setLocation(text);
+      pendingVoiceSearchRef.current = text;
+      setVoiceSearchTick((t) => t + 1);
+    },
   });
 
   // Fallback: browser-native speech recognition (Chrome/Edge/Safari) so voice
@@ -53,8 +67,11 @@ export const useHeroSearch = () => {
     recognition.onresult = (event: any) => {
       const transcript = Array.from(event.results as any[])
         .map((r: any) => r[0]?.transcript ?? '')
-        .join(' ');
-      appendTranscript(transcript);
+        .join(' ').trim();
+      if (!transcript) return;
+      setLocation(transcript);
+      pendingVoiceSearchRef.current = transcript;
+      setVoiceSearchTick((t) => t + 1);
     };
     recognition.onerror = () => {
       setIsRecording(false);
@@ -85,7 +102,8 @@ export const useHeroSearch = () => {
 
     setIsConnectingMic(true);
     try {
-      await navigator.mediaDevices.getUserMedia({ audio: true });
+      const probe = await navigator.mediaDevices.getUserMedia({ audio: true });
+      probe.getTracks().forEach((t) => t.stop());
     } catch {
       setIsConnectingMic(false);
       toast({
@@ -99,6 +117,8 @@ export const useHeroSearch = () => {
     try {
       const { data, error } = await supabase.functions.invoke('elevenlabs-scribe-token');
       if (error || !data?.token) throw new Error('Failed to get voice token');
+      setLocation('');
+      setPartialTranscript('');
 
       await scribe.connect({
         token: data.token,
@@ -138,8 +158,8 @@ export const useHeroSearch = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const handleAISearch = async () => {
-    const query = location.trim();
+  const handleAISearch = async (override?: string) => {
+    const query = (typeof override === 'string' ? override : location).trim();
     if (!query) {
       trackLeadEvent('search_performed', { query: '', source: 'home_hero' });
       navigate('/search');
@@ -184,6 +204,18 @@ export const useHeroSearch = () => {
     }
   };
 
+  // Auto-run the search after a spoken query is finalized.
+  useEffect(() => {
+    const q = pendingVoiceSearchRef.current;
+    if (!q) return;
+    pendingVoiceSearchRef.current = null;
+    try { scribe.disconnect(); } catch { /* noop */ }
+    setIsRecording(false);
+    trackLeadEvent('homepage_search_submit', { route: '/', query: q, source: 'home_hero_voice' });
+    void handleAISearch(q);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [voiceSearchTick]);
+
   const handleGeolocation = () => {
     if (!navigator.geolocation) return;
     setIsLocating(true);
@@ -218,6 +250,7 @@ export const useHeroSearch = () => {
     setIsInputFocused,
     isRecording,
     isConnectingMic,
+    partialTranscript,
     inputRef,
     toggleVoiceSearch,
     handleAISearch,

@@ -12,9 +12,10 @@ interface HeroSearchInputProps {
   setIsInputFocused: (v: boolean) => void;
   isRecording: boolean;
   isConnectingMic: boolean;
+  partialTranscript?: string;
   inputRef: React.RefObject<HTMLInputElement>;
   toggleVoiceSearch: () => void;
-  handleAISearch: () => void;
+  handleAISearch: (q?: string) => void;
   handleGeolocation: () => void;
   placeholders: string[];
   className?: string;
@@ -30,6 +31,7 @@ const HeroSearchInput = ({
   setIsInputFocused,
   isRecording,
   isConnectingMic,
+  partialTranscript,
   inputRef,
   toggleVoiceSearch,
   handleAISearch,
@@ -44,7 +46,7 @@ const HeroSearchInput = ({
       query: location.trim(),
       source: 'home_hero_search_button',
     });
-    handleAISearch();
+    handleAISearch(location);
   };
 
   return (
@@ -63,7 +65,7 @@ const HeroSearchInput = ({
           <input
             ref={inputRef}
             type="text"
-            value={location}
+            value={isRecording && partialTranscript ? partialTranscript : location}
             onChange={(e) => setLocation(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
@@ -72,7 +74,7 @@ const HeroSearchInput = ({
                   query: location.trim(),
                   source: 'home_hero_enter_key',
                 });
-                handleAISearch();
+                handleAISearch(location);
               }
             }}
             onFocus={() => setIsInputFocused(true)}
@@ -80,7 +82,12 @@ const HeroSearchInput = ({
             aria-label="Search food trucks and trailers"
             className={`w-full h-14 ${isAIParsing ? 'pl-12' : 'pl-5'} pr-2 bg-transparent text-foreground text-[16px] sm:text-sm focus:outline-none`}
           />
-          {!location && !isInputFocused && (
+          {isRecording && !location && !partialTranscript && (
+            <div className="absolute inset-0 flex items-center pl-5 pr-2 pointer-events-none">
+              <span className="text-destructive text-[16px] sm:text-sm">Listening… say what you're looking for</span>
+            </div>
+          )}
+          {!isRecording && !location && !isInputFocused && (
             <div className={`absolute inset-0 flex items-center ${isAIParsing ? 'pl-12' : 'pl-5'} pr-2 pointer-events-none overflow-hidden`}>
               <AnimatePresence mode="wait" initial={false}>
                 <motion.span
