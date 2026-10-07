@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react'; // v2
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Search, MapPin, SlidersHorizontal, Truck, ChevronRight, Map as MapIcon, X, Plus, UserPlus, Info, ArrowRight, Utensils,
-  Building2, ShoppingBag, Zap, Mic, MicOff, Loader2, Navigation} from 'lucide-react';
+  Building2, ShoppingBag, Zap, Loader2, Navigation} from 'lucide-react';
 import AppDropdownMenu from '@/components/layout/AppDropdownMenu';
 import SmartConciergeModal from '@/components/home/SmartConciergeModal';
 import { FilterPanel, FilterValues } from '@/components/search/FilterPanel';
@@ -25,7 +25,8 @@ import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import vendibookFavicon from '@/assets/vendibook-favicon.png';
 import vendibookLogo from '@/assets/vendibook-logo.png';
 import TrendingDropdown from '@/components/search/TrendingDropdown';
-import { useScribe } from '@elevenlabs/react';
+import { useVoiceDictation } from '@/hooks/useVoiceDictation';
+import { VoiceMicButton } from '@/components/voice/VoiceMicButton';
 import { toast } from '@/hooks/use-toast';
 
 const CATEGORIES = [
@@ -74,8 +75,6 @@ const Homepage2 = () => {
   const [showMap, setShowMap] = useState(false);
   const [learnMoreOpen, setLearnMoreOpen] = useState(false);
   const [showTrending, setShowTrending] = useState(false);
-  const [isRecording, setIsRecording] = useState(false);
-  const [isConnectingMic, setIsConnectingMic] = useState(false);
   const searchWrapperRef = useRef<HTMLDivElement>(null);
   
   // On desktop (lg+), the map panel is always visible, so always fetch the token.
@@ -83,14 +82,14 @@ const Homepage2 = () => {
   const isDesktop = typeof window !== 'undefined' && window.innerWidth >= 1024;
   const { apiKey, isLoading: mapLoading, error: mapError } = useGoogleMapsToken(showMap || isDesktop);
 
-  const scribe = useScribe({
-    modelId: 'scribe_v2_realtime',
-    commitStrategy: 'vad' as any,
-    onCommittedTranscript: (data: any) => {
-      if (data.text?.trim()) {
-        setQuery((prev: string) => (prev ? prev + ' ' : '') + data.text.trim());
-      }
-    }});
+  const [voiceSearchTick, setVoiceSearchTick] = useState(0);
+  const voice = useVoiceDictation({
+    onPartial: (text) => { if (text) setQuery(text); },
+    onFinal: (text) => { setQuery(text); setVoiceSearchTick((t) => t + 1); },
+  });
+  const isRecording = voice.isRecording;
+  const isConnectingMic = voice.isConnecting;
+  const toggleVoiceSearch = voice.toggle;
 
   // Close trending dropdown when clicking outside
   useEffect(() => {
@@ -187,31 +186,13 @@ const Homepage2 = () => {
 
   const handleSearch = () => { setPage(1); fetchListings(1); };
 
-  const toggleVoiceSearch = useCallback(async () => {
-    if (isRecording) {
-      scribe.disconnect();
-      setIsRecording(false);
-      setTimeout(() => { setPage(1); fetchListings(1); }, 300);
-      return;
-    }
-
-    setIsConnectingMic(true);
-    try {
-      await navigator.mediaDevices.getUserMedia({ audio: true });
-      const { data, error } = await supabase.functions.invoke('elevenlabs-scribe-token');
-      if (error || !data?.token) throw new Error('Failed to get voice token');
-      
-      await scribe.connect({
-        token: data.token,
-        microphone: { echoCancellation: true, noiseSuppression: true }});
-      setIsRecording(true);
-    } catch (err) {
-      console.error('Voice search error:', err);
-      toast({ title: 'Could not start voice search', description: 'Please check microphone permissions', variant: 'destructive' });
-    } finally {
-      setIsConnectingMic(false);
-    }
-  }, [isRecording, scribe, fetchListings]);
+  const lastVoiceTick = useRef(0);
+  useEffect(() => {
+    if (voiceSearchTick === lastVoiceTick.current) return;
+    lastVoiceTick.current = voiceSearchTick;
+    setPage(1);
+    fetchListings(1);
+  }, [voiceSearchTick, fetchListings]);
 
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
@@ -330,24 +311,14 @@ const Homepage2 = () => {
                       <Navigation className="w-3.5 h-3.5" />
                     </button>
                     {/* Mic button */}
-                    <button
+                    <VoiceMicButton
+                      isRecording={isRecording}
+                      isBusy={isConnectingMic}
                       onClick={toggleVoiceSearch}
-                      disabled={isConnectingMic}
-                      className={`absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center transition-all ${
-                        isRecording
-                          ? 'bg-red-500/80 text-white animate-pulse'
-                          : 'text-white/50 hover:text-white hover:bg-white/10'
-                      }`}
-                      title={isRecording ? 'Stop listening' : 'Voice search'}
-                    >
-                      {isConnectingMic ? (
-                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                      ) : isRecording ? (
-                        <MicOff className="w-3.5 h-3.5" />
-                      ) : (
-                        <Mic className="w-3.5 h-3.5" />
-                      )}
-                    </button>
+                      size="sm"
+                      label="Voice search"
+                      className="absolute right-2 top-1/2 -translate-y-1/2"
+                    />
                   </div>
                   {/* Trending dropdown */}
                   <AnimatePresence>
