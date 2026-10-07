@@ -1,4 +1,4 @@
-/// <reference types="npm:@types/react@18.3.1" />
+/// <reference types="npm:@types/react@18.3.23" />
 // Shared Vendibook brand chrome for auth emails — same wordmark and
 // footer link set used by the app (transactional) emails.
 

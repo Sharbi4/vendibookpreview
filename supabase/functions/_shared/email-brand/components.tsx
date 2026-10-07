@@ -1,4 +1,4 @@
-/// <reference types="npm:@types/react@18.3.1" />
+/// <reference types="npm:@types/react@18.3.23" />
 // ─────────────────────────────────────────────────────────────
 // VENDIBOOK MASTER EMAIL DESIGN SYSTEM — shared blocks
 //
