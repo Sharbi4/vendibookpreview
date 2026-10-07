@@ -478,7 +478,7 @@ const Pricing = () => {
                   style={{ background: 'radial-gradient(520px 260px at 85% -10%, rgba(255,106,26,0.28), transparent 70%)' }}
                   aria-hidden="true"
                 />
-                <span className="relative mb-4 inline-flex w-fit items-center gap-1.5 rounded-full border border-primary/40 bg-primary/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#ffb27a]">
+                <span className="relative mb-4 inline-flex w-fit items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-white">
                   For active sellers and hosts
                 </span>
                 <div className="flex items-baseline justify-between gap-3">
@@ -494,7 +494,7 @@ const Pricing = () => {
                   <span className="ml-1.5 text-base font-normal text-white/60">/month</span>
                 </p>
                 <p className="relative mt-2 text-sm text-white/70">
-                  <span className="font-semibold text-[#ffb27a]">10.9%</span> seller/host fee
+                  <span className="font-semibold text-white">10.9%</span> seller/host fee
                   — our lowest rate. Cancel anytime.
                 </p>
 
@@ -511,7 +511,7 @@ const Pricing = () => {
                 <ul className="relative mt-8 space-y-3.5">
                   {PRO_FEATURES.map((f) => (
                     <li key={f} className="flex gap-3 text-[15px] leading-relaxed text-white/90">
-                      <Check className="mt-0.5 h-5 w-5 shrink-0 text-[#ffb27a]" />
+                      <Check className="mt-0.5 h-5 w-5 shrink-0 text-white/80" />
                       <span>{f}</span>
                     </li>
                   ))}
