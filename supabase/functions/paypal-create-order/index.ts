@@ -156,6 +156,11 @@ serve(async (req) => {
       if (tx.seller_id === user.id) {
         return jsonError(403, "self_transaction", "You can't purchase your own listing.");
       }
+      // Only an open purchase can be paid online. A cancelled, cash or
+      // already-settled sale must never receive a new PayPal order.
+      if (!["pending", "payment_failed"].includes(String(tx.status))) {
+        return jsonError(409, "purchase_not_payable", "This purchase can't be paid online. Open the order to see its status.");
+      }
       const freightPayer = (tx as any).listing?.freight_payer === "seller" ? "seller" : "buyer";
       itemTitle = (tx as any).listing?.title ?? null;
       quote = quoteSaleTransaction(tx, (tx as any).listing?.title ?? "Listing", { freightPayer });

@@ -30,6 +30,8 @@ import type { DocumentStatus } from '@/types/documents';
 import type { AdminBookingDocument } from '@/hooks/useAdminDocumentReview';
 import { useAdminReviewDocument } from '@/hooks/useAdminDocumentReview';
 import { format } from 'date-fns';
+import { openBookingDocument } from '@/lib/documents/openBookingDocument';
+import { toast } from 'sonner';
 
 interface AdminDocumentReviewCardProps {
   document: AdminBookingDocument;
@@ -175,7 +177,7 @@ export const AdminDocumentReviewCard = ({
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => window.open(document.file_url, '_blank')}
+                onClick={() => { openBookingDocument(document.file_url).catch((e) => toast.error(e instanceof Error ? e.message : 'Could not open the document.')); }}
               >
                 <Eye className="h-4 w-4 mr-1" />
                 View Document

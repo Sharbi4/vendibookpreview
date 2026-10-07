@@ -5,6 +5,7 @@ import { assertListingPurchasable } from "../_shared/listingGuard.ts";
 import { resolveProStatus } from "../_shared/proEligibility.ts";
 import { computeProSellerFee } from "../_shared/proFee.ts";
 import { hasCurrentLegalAcceptance } from "../_shared/legalVersions.ts";
+import { priceFulfillment } from "../_shared/salePricing.ts";
 
 /**
  * Creates (or reuses) the PENDING sale_transactions row a PayPal order is
@@ -45,7 +46,7 @@ serve(async (req) => {
 
     const { data: listing } = await admin
       .from("listings")
-      .select("id, title, host_id, price_sale, status, mode")
+      .select("id, title, host_id, price_sale, status, mode, fulfillment_type, delivery_fee, delivery_fee_type, delivery_radius_miles, latitude, longitude, address, pickup_location_text, vendibook_freight_enabled")
       .eq("id", listingId)
       .maybeSingle();
 
@@ -78,14 +79,21 @@ serve(async (req) => {
       ? agreedAmount
       : Number(listing.price_sale);
 
-    const fulfillmentTypeIn = body?.fulfillment_type ?? "pickup";
+    const fulfillmentTypeIn = String(body?.fulfillment_type ?? "pickup");
     const needsAddressIn = fulfillmentTypeIn === "delivery" ||
       fulfillmentTypeIn === "vendibook_freight";
+
+    // Delivery and freight are priced here, never taken from the browser:
+    // they are added to what the buyer pays, so a client-sent value could
+    // shrink the charge while the seller is still owed full proceeds.
+    const pricing = await priceFulfillment(listing, fulfillmentTypeIn, body?.delivery_address);
+    if ("error" in pricing) return jsonError(409, pricing.code, pricing.error);
+
     /** Fulfillment/contact fields are re-synced on reuse; money never is. */
     const mutableFields = {
       fulfillment_type: fulfillmentTypeIn,
-      delivery_fee: Number(body?.delivery_fee ?? 0) || 0,
-      freight_cost: Number(body?.freight_cost ?? 0) || 0,
+      delivery_fee: pricing.deliveryFee,
+      freight_cost: pricing.freightCost,
       delivery_address: needsAddressIn ? (body?.delivery_address ?? null) : null,
       delivery_instructions: needsAddressIn ? (body?.delivery_instructions ?? null) : null,
       buyer_name: body?.buyer_name ?? null,
@@ -182,7 +190,12 @@ serve(async (req) => {
       return jsonError(500, "intent_failed", "We couldn't start this purchase. Please try again.");
     }
 
-    return jsonResponse(200, { transaction_id: created.id, amount });
+    return jsonResponse(200, {
+      transaction_id: created.id,
+      amount,
+      delivery_fee: pricing.deliveryFee,
+      freight_cost: pricing.freightCost,
+    });
 
 
   } catch (err) {

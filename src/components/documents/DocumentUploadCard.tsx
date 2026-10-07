@@ -27,6 +27,8 @@ import { cn } from '@/lib/utils';
 import { DOCUMENT_TYPE_LABELS, DOCUMENT_TYPE_DESCRIPTIONS } from '@/types/documents';
 import type { DocumentType, DocumentStatus } from '@/types/documents';
 import type { BookingDocument, ListingRequiredDocument } from '@/hooks/useRequiredDocuments';
+import { openBookingDocument } from '@/lib/documents/openBookingDocument';
+import { toast } from 'sonner';
 
 interface DocumentUploadCardProps {
   requirement: ListingRequiredDocument;
@@ -175,7 +177,7 @@ export const DocumentUploadCard = ({
             variant="ghost"
             size="sm"
             className="h-8 w-8 p-0"
-            onClick={() => window.open(uploadedDocument.file_url, '_blank')}
+            onClick={() => { openBookingDocument(uploadedDocument.file_url).catch((e) => toast.error(e instanceof Error ? e.message : 'Could not open the document.')); }}
           >
             <Eye className="h-4 w-4" />
           </Button>

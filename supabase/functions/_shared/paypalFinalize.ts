@@ -266,6 +266,7 @@ export async function finalizeCapture(
           [captureCol]: facts.captureId ?? record[captureCol],
           last_error: { reason: "listing_unavailable", listing_reason: state.reason },
         }).eq("id", record.id);
+        await alertRefundReview(supabase, record, "the listing was no longer available");
         throw new CaptureRejectedError("listing_unavailable", LISTING_UNAVAILABLE_MESSAGE);
       }
       if (state.host_id && record.buyer_id && state.host_id === record.buyer_id) {
@@ -274,10 +275,31 @@ export async function finalizeCapture(
           [captureCol]: facts.captureId ?? record[captureCol],
           last_error: { reason: "self_purchase" },
         }).eq("id", record.id);
+        await alertRefundReview(supabase, record, "the buyer is the listing's own seller");
         throw new CaptureRejectedError(
           "self_purchase",
           "You can't purchase your own listing.",
         );
+      }
+      // A sale listing is one unit. If another buyer's purchase is already
+      // committed, this capture must not become a second sale: hold it for
+      // refund review (the DB trigger would refuse to mark it paid anyway).
+      if (record.sale_transaction_id) {
+        const { data: otherSale } = await supabase.rpc("listing_committed_sale", {
+          _listing_id: record.listing_id,
+          _exclude_sale: record.sale_transaction_id,
+        });
+        if (otherSale) {
+          safeLog("capture_listing_already_sold", { reference: record.reference });
+          await supabase.from("payment_records").update({
+            payment_status: "completed",
+            internal_status: "refund_review_listing_sold",
+            [captureCol]: facts.captureId ?? record[captureCol],
+            last_error: { reason: "listing_already_sold", other_sale_id: otherSale },
+          }).eq("id", record.id);
+          await alertRefundReview(supabase, record, "another buyer had already purchased this listing");
+          throw new CaptureRejectedError("listing_unavailable", LISTING_UNAVAILABLE_MESSAGE);
+        }
       }
     }
   }
@@ -452,11 +474,16 @@ export async function finalizeCapture(
     dedupeKey: `captured:${facts.captureId}`,
     metadata: { source },
   });
+  // A routed (Connected Path) payment already went to the seller's own
+  // PayPal or Square account, so there is nothing for Vendibook to release.
+  const routedToSeller = !!(current.metadata as any)?.multiparty?.merchant_id;
   await recordOrderEvent(supabase, {
     paymentRecordId: current.id,
-    code: "payout_queued",
-    title: "Seller payout queued",
-    description: "Funds are scheduled for release to the seller per Vendibook transaction terms.",
+    code: routedToSeller ? "payout_recorded" : "payout_queued",
+    title: routedToSeller ? "Paid to your account" : "Seller payout queued",
+    description: routedToSeller
+      ? `The buyer's payment went directly to your connected ${providerLabel} account, minus Vendibook's fee.`
+      : "Your proceeds are recorded. Vendibook reviews and releases seller payouts per the transaction terms.",
     actorRole: "system",
     visibility: "seller",
     dedupeKey: `payout-queued:${facts.captureId}`,
@@ -509,6 +536,26 @@ export async function finalizeCapture(
   return current;
 }
 
+/**
+ * Money was captured but the order can't be fulfilled. Admins must refund it,
+ * so they get an alert rather than a status only visible in the database.
+ */
+async function alertRefundReview(supabase: any, record: Record<string, any>, why: string) {
+  try {
+    await supabase.functions.invoke("send-admin-notification", {
+      body: {
+        type: "payments_alert",
+        data: {
+          title: `Refund review: ${record.reference}`,
+          message: `A payment was captured for ${record.reference} but ${why}. Nothing will be fulfilled; refund the buyer from the admin orders page.`,
+        },
+      },
+    });
+  } catch {
+    safeLog("refund_review_alert_failed", { reference: record.reference });
+  }
+}
+
 /** Marks the underlying booking / sale / purchase as paid. */
 async function propagateToDomainRecord(
   supabase: any,
@@ -518,12 +565,26 @@ async function propagateToDomainRecord(
   const nowIso = new Date().toISOString();
   try {
     if (record.sale_transaction_id) {
-      const { data: flipped } = await supabase.from("sale_transactions").update({
+      const { data: flipped, error: flipError } = await supabase.from("sale_transactions").update({
         status: "paid",
         payment_provider: "paypal",
         payment_intent_id: facts.captureId,
         checkout_session_id: record.paypal_order_id,
       }).eq("id", record.sale_transaction_id).neq("status", "paid").select("id").maybeSingle();
+
+      // The sale refused to become paid (e.g. two buyers captured at the same
+      // moment and the one-sale-per-listing guard stopped the second). The
+      // money moved, so it must be refunded by an admin, never left silent.
+      if (flipError) {
+        safeLog("sale_paid_flip_failed", { reference: record.reference, reason: flipError.message });
+        await supabase.from("payment_records").update({
+          internal_status: /reason=sold/.test(flipError.message ?? "")
+            ? "refund_review_listing_sold"
+            : "sale_status_review",
+          last_error: { reason: "sale_status_update_failed", detail: String(flipError.message ?? "").slice(0, 300) },
+        }).eq("id", record.id);
+        await alertRefundReview(supabase, record, `the sale could not be marked paid (${String(flipError.message ?? "").slice(0, 120)})`);
+      }
 
       // Seller-facing "payment received, arrange the handoff" email. The buyer
       // receipt is delivered separately, so this send is seller-only.
