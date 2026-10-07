@@ -16,9 +16,11 @@
 
 We **ask** the seller to set the condition; we never set it for them. The choices match the listing editor: New, Like new, Good, Fair, Needs work. The email never mentions view counts.
 
-**Flagged to the Growth lead, not included in the email:**
-- The sale listing's category is `food_truck`. But S&H is a trailer builder, and the host's rental is filed as `food_trailer`.
-- The two listings may be the same unit: Tomball and Magnolia are next to each other.
+**Asks added at the Growth lead's request (the seller decides; we change nothing):**
+- **Category check.** The sale listing's category is `food_truck`. But S&H is a trailer builder, and the host's rental is filed as `food_trailer`.
+- **Possible duplicate unit.** Tomball and Magnolia are next to each other, so the two listings may be the same unit. If they are, we suggest relisting the rental from the sale listing with "Rent it while you sell it".
+
+  **Note on accuracy:** linking does **not** close the rental automatically when the sale completes. No trigger, function or app code does that today; the link only shows "Manage rental" on the sale card. So the email tells the seller to pause the rental themselves if the trailer sells.
 
 The email goes through `send-seller-concierge` with the `polish` variant: Resend marketing shell, signed Brad, with an edit button for each listing.
 
@@ -35,7 +37,9 @@ The email goes through `send-seller-concierge` with the `polish` variant: Resend
         "listingId": "a2a2f761-da8c-4f59-ad5c-6a8b54f67083",
         "suggestedTitle": null,
         "asks": [
-          "Set the condition: New, Like new, Good, Fair or Needs work. Buyers who filter by condition can't see your listing until it's set."
+          "Set the condition: New, Like new, Good, Fair or Needs work. Buyers who filter by condition can't see your listing until it's set.",
+          "Check the category. It's listed as Food Truck. If it's a towable trailer (S&H builds trailers), choose Food Trailer so the right buyers find it.",
+          "If this is the same trailer as your Tomball rental, you can relist the rental from this listing with \"Rent it while you sell it\" (the Rent it out button on your listing). The two then stay linked to the same trailer in your dashboard. If it sells, remember to pause the rental."
         ]
       },
       {
