@@ -456,6 +456,7 @@ const Pricing = () => {
                     finePrint={[
                       'Pay-in-person sales are free — no commission and no buyer fee.',
                       'Rentals paid in person still owe the host commission.',
+                      'Renters pay a separate 12.9% service fee at checkout, shown before they pay. Buyers pay no Vendibook fee on purchases.',
                     ]}
                   />
                 </div>

@@ -104,9 +104,8 @@ export default function HomeExplainer({ sellerHref }: { sellerHref: string }) {
           {audience === 'sell' && (
             <ul className="hx-pricing" aria-label="Seller pricing">
               <li><strong>Free</strong> to list</li>
-              <li><strong>12.9%</strong> only when it sells</li>
-              <li><strong>10.9%</strong> with Vendibook Pro</li>
-              <li><strong>$0</strong> buyer fees on purchases</li>
+              <li>One simple fee, only when a deal closes</li>
+              <li>Dealer or enterprise inventory? <Link to="/contact">Contact us</Link></li>
             </ul>
           )}
           <div className="hx-actions">

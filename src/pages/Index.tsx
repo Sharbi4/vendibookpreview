@@ -236,7 +236,7 @@ const Index = () => {
                 <p className="v2-home-eyebrow">Sell on Vendibook</p>
                 <h2>Turn your truck or trailer into a live listing.</h2>
                 <p>Create your listing, reach buyers nationwide, and add online checkout when you're ready.</p>
-                <p className="v2-home-sell-pricing">Free to list. 12.9% seller fee only when it sells (10.9% with Vendibook Pro). No buyer fees on purchases.</p>
+                <p className="v2-home-sell-pricing">Free to list. Vendibook's fee is taken only when a sale or booking completes. Listing dealer or enterprise inventory? <Link to="/contact">Talk to our team</Link>.</p>
                 <div className="v2-home-sell-actions">
                   <Link to={sellerStartHref} className="v2-home-btn">
                     {user ? 'Create a listing' : 'Start selling'}

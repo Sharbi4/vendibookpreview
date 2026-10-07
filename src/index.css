@@ -3004,6 +3004,7 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
 .v2-home-sell > div > p { margin-top: 10px; max-width: 56ch; color: hsl(32 10% 78%); font-size: 15px; line-height: 1.55; }
 .v2-home-sell-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 18px; }
 .v2-home-sell > div > p.v2-home-sell-pricing { margin-top: 12px; color: hsl(40 26% 92%); font-size: 14px; font-weight: 600; }
+.v2-home-sell-pricing a { color: hsl(40 26% 98%); text-decoration: underline; text-underline-offset: 3px; }
 .v2-home-sell-note { margin-top: 12px; color: hsl(32 9% 68%); font-size: 13px; }
 .v2-home-sell-note a { color: hsl(40 26% 96%); text-decoration: underline; text-underline-offset: 3px; }
 .v2-home-steps { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
