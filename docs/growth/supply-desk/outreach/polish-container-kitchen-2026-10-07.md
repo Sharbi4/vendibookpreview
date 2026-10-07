@@ -15,9 +15,11 @@ Requested by the hourly pulse (20:22 UTC). Checked read-only.
 
 We **ask**, and never set the condition or change the title for the seller. The condition choices match the listing editor exactly: New, Like new, Good, Fair, Needs work.
 
-Not included in the email:
-- **Category.** The listing is filed as `food_trailer` although it's a shipping container kitchen. We left this out to keep the ask short, and flagged it to the Growth lead instead.
-- **View counts.** Never sent to sellers (owner rule).
+**Category** (third ask, added at the Growth lead's request): the listing is filed as `food_trailer`, but it's a shipping container kitchen. The editor has no container category; its options are Food Truck, Food Trailer, Shared Kitchen (`ghost_kitchen`) and Vendor Space. The seller picks: Food Trailer if the unit is towable on a chassis, Shared Kitchen if it's stationary. We don't change it.
+
+View counts are never sent to sellers (owner rule).
+
+**Status: STAGED. Hold the send until the owner OKs this outreach batch** (Growth lead, 2026-10-07).
 
 The email goes through `send-seller-concierge` with the `polish` variant: Resend marketing shell, signed Brad, one edit button.
 
@@ -34,7 +36,8 @@ The email goes through `send-seller-concierge` with the `polish` variant: Resend
         "suggestedTitle": "Turnkey Shipping Container Kitchen, Atlanta GA",
         "asks": [
           "Set the condition: New, Like new, Good, Fair or Needs work. Buyers who filter by condition can't see your listing until it's set.",
-          "Use a plain title without emoji or all caps, like the suggestion above. A plain title is easier for buyers to read and find."
+          "Use a plain title without emoji or all caps, like the suggestion above. A plain title is easier for buyers to read and find.",
+          "Check the category. It's listed as Food Trailer. If the container sits on a trailer chassis and can be towed, that's right. If it's a stationary kitchen, choose Shared Kitchen so the right buyers find it."
         ]
       }
     ]
