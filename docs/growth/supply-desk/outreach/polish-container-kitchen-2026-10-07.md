@@ -34,7 +34,7 @@ The email goes through `send-seller-concierge` with the `polish` variant: Resend
         "suggestedTitle": "Turnkey Shipping Container Kitchen, Atlanta GA",
         "asks": [
           "Set the condition: New, Like new, Good, Fair or Needs work. Buyers who filter by condition can't see your listing until it's set.",
-          "Use a plain title without emoji or all caps, like the suggestion above. Search and buyer alerts read plain titles best."
+          "Use a plain title without emoji or all caps, like the suggestion above. A plain title is easier for buyers to read and find."
         ]
       }
     ]
