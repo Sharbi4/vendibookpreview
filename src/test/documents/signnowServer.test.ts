@@ -25,6 +25,7 @@ describe('SignNow document endpoint authentication', () => {
     const client = { auth: { getUser }, from: () => chain, rpc: async () => ({ data: false }) };
     loadModule('supabase/functions/signnow-ensure-document/index.ts', {
       'npm:@supabase/supabase-js@2.45.0': { createClient: () => client },
+      'npm:@supabase/supabase-js@2.90.1': { createClient: () => client },
       '../_shared/jsonError.ts': {
         corsHeaders: {}, jsonError: (status: number, code: string) => Response.json({ code }, { status }),
         jsonResponse: (status: number, body: unknown) => Response.json(body, { status }),
@@ -62,6 +63,7 @@ describe('document generation retry safety', () => {
     chain.then = (resolve: any) => Promise.resolve(result).then(resolve);
     const module = loadModule('supabase/functions/_shared/signnowDocuments.ts', {
       'npm:@supabase/supabase-js@2.45.0': { createClient: () => ({ from: () => chain }) },
+      'npm:@supabase/supabase-js@2.90.1': { createClient: () => ({ from: () => chain }) },
       './signnow.ts': { isSignNowConfigured: () => true, createDocumentFromTemplate: copy },
       './signnowTemplates.ts': {}, './invokeTransactionalEmail.ts': {}, './rentalRequirements.ts': {},
     }, { env: { get: () => 'test' } });
