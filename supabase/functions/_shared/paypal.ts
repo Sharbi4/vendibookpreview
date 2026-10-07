@@ -790,10 +790,17 @@ export async function refundPayPalCapture(opts: {
    * (Connected Path). PayPal refuses the refund without the assertion.
    */
   actAsMerchantId?: string | null;
+  /** Platform fee Vendibook returns on a routed capture's refund. */
+  platformFeeRefundCents?: number;
 }) {
   const body: Record<string, unknown> = {};
   if (opts.amountCents !== undefined) {
     body.amount = money(opts.amountCents, opts.currency ?? "USD");
+  }
+  if (opts.platformFeeRefundCents && opts.platformFeeRefundCents > 0) {
+    body.payment_instruction = {
+      platform_fees: [{ amount: money(opts.platformFeeRefundCents, opts.currency ?? "USD") }],
+    };
   }
   if (opts.reason) body.note_to_payer = opts.reason.slice(0, 255);
 

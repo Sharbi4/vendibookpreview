@@ -5,7 +5,12 @@ import { corsHeaders, jsonResponse } from "../_shared/jsonError.ts";
 import { centsFromPayPalAmount, safeLog, verifyPayPalWebhook } from "../_shared/paypal.ts";
 import { applyAuthorization, markAuthorizationExpired } from "../_shared/paypalAuthorization.ts";
 import { extractCaptureFacts, finalizeCapture } from "../_shared/paypalFinalize.ts";
-import { appendLedgerEntry, recalculatePayableAfterRefund } from "../_shared/paypalAccounting.ts";
+import {
+  appendLedgerEntry,
+  closeSaleAfterFullRefund,
+  recalculatePayableAfterRefund,
+  refundedCentsFromLedger,
+} from "../_shared/paypalAccounting.ts";
 import { notifyOrderParties, notifyUser } from "../_shared/notify.ts";
 import { ingestPayPalDispute } from "../_shared/paypalDisputeIntake.ts";
 import { resolveSubscriptionPeriod } from "../_shared/subscriptionPeriod.ts";
@@ -244,10 +249,9 @@ async function handleEvent(admin: any, event: any) {
       if (!record) return;
 
       const refundCents = centsFromPayPalAmount(resource.amount?.value);
-      const total = Math.min(record.gross_amount_cents, (record.refunded_cents ?? 0) + refundCents);
       const reversed = type.endsWith("REVERSED");
 
-      await appendLedgerEntry(admin, {
+      const inserted = await appendLedgerEntry(admin, {
         paymentRecordId: record.id,
         entryType: reversed ? "reversal" : "refund",
         amountCents: refundCents,
@@ -257,7 +261,10 @@ async function handleEvent(admin: any, event: any) {
         externalReference: resource.id,
         dedupeKey: `${reversed ? "reversal" : "refund"}:${resource.id}`,
       });
+      // Already recorded by paypal-refund (same refund id): nothing to add.
+      if (!inserted) return;
 
+      const total = Math.min(record.gross_amount_cents, await refundedCentsFromLedger(admin, record.id));
       await admin.from("payment_records").update({
         refunded_cents: total,
         payment_status: reversed
@@ -269,6 +276,9 @@ async function handleEvent(admin: any, event: any) {
       }).eq("id", record.id);
 
       await applyRefundToPayable(admin, record.id, total, reversed);
+      if (total >= record.gross_amount_cents) {
+        await closeSaleAfterFullRefund(admin, record, reversed ? "Payment reversed by PayPal" : "Refunded in full");
+      }
       await notifyOrderParties(admin, record, {
         type: "refund_completed",
         buyer: {

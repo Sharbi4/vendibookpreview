@@ -161,6 +161,20 @@ serve(async (req) => {
       if (!["pending", "payment_failed"].includes(String(tx.status))) {
         return jsonError(409, "purchase_not_payable", "This purchase can't be paid online. Open the order to see its status.");
       }
+      // Another buyer already secured this listing: never open a second order.
+      const { data: otherSale } = await admin.rpc("listing_committed_sale", {
+        _listing_id: tx.listing_id,
+        _exclude_sale: tx.id,
+      });
+      if (otherSale) {
+        return jsonError(409, "listing_sold", "This item has already been purchased by another buyer.");
+      }
+      // This buyer already paid for this sale through another PayPal order.
+      const { data: paidAttempt } = await admin.from("payment_records")
+        .select("id").eq("sale_transaction_id", tx.id).eq("payment_status", "completed").limit(1).maybeSingle();
+      if (paidAttempt) {
+        return jsonError(409, "already_paid", "This purchase is already paid. Open the order to see its status.");
+      }
       const freightPayer = (tx as any).listing?.freight_payer === "seller" ? "seller" : "buyer";
       itemTitle = (tx as any).listing?.title ?? null;
       quote = quoteSaleTransaction(tx, (tx as any).listing?.title ?? "Listing", { freightPayer });
@@ -318,12 +332,16 @@ serve(async (req) => {
       if (!targetId) return jsonError(400, "missing_fields", "Missing transaction id.");
       const { data: tx } = await admin
         .from("sale_transactions")
-        .select("*, listing:listings(title, city, state, address)")
+        .select("*, listing:listings(title, city, state, address, freight_payer)")
         .eq("id", targetId)
         .maybeSingle();
       if (!tx) return jsonError(404, "not_found", "We couldn't find that transaction.");
       if (tx.buyer_id !== user.id) {
         return jsonError(403, "forbidden", "Only the buyer can pay for freight.");
+      }
+      // Seller-covered freight is never charged to the buyer.
+      if ((tx as any).listing?.freight_payer === "seller") {
+        return jsonError(409, "freight_seller_paid", "Shipping on this order is free — the seller covers freight.");
       }
       if (!tx.seller_confirmed_at) {
         return jsonError(409, "not_ready", "The seller needs to confirm this sale before freight can be paid.");

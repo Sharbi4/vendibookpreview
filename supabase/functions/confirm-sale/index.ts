@@ -120,14 +120,35 @@ serve(async (req) => {
       updateData.seller_confirmed_at = new Date().toISOString();
     }
 
-    const { error: updateError } = await supabaseClient
+    // Conditional on this party not having confirmed yet, so a double submit
+    // can't confirm twice or send duplicate notifications.
+    const { data: confirmedRow, error: updateError } = await supabaseClient
       .from('sale_transactions')
       .update(updateData)
-      .eq('id', transaction_id);
+      .eq('id', transaction_id)
+      .is(role === 'buyer' ? 'buyer_confirmed_at' : 'seller_confirmed_at', null)
+      .select('id')
+      .maybeSingle();
 
     if (updateError) {
       throw new Error(`Failed to update transaction: ${updateError.message}`);
     }
+    if (!confirmedRow) {
+      throw new Error(role === 'buyer' ? "Buyer has already confirmed" : "Seller has already confirmed");
+    }
+
+    // Seller-routed PayPal payments settled into the seller's own PayPal
+    // account at checkout; there is no Vendibook payout to queue.
+    const { data: salePayment } = await supabaseClient
+      .from('payment_records')
+      .select('metadata')
+      .eq('sale_transaction_id', transaction_id)
+      .eq('payment_status', 'completed')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const paidToSellerDirectly = !!(salePayment?.metadata as any)?.multiparty?.merchant_id &&
+      (salePayment?.metadata as any)?.multiparty?.provider !== 'square';
 
     // If both parties confirmed, the seller's proceeds become eligible for
     // release. Vendibook settles seller payouts manually: we only flip the
@@ -155,7 +176,9 @@ serve(async (req) => {
         .from('sale_transactions')
         .update({
           status: 'completed',
-          message: 'Both parties confirmed. Your payout is queued for release by our team.',
+          message: paidToSellerDirectly
+            ? 'Both parties confirmed. The payment went to the seller\'s PayPal account at checkout.'
+            : 'Both parties confirmed. Your payout is queued for release by our team.',
         })
         .eq('id', transaction_id);
 
@@ -281,7 +304,7 @@ serve(async (req) => {
               type: 'sale',
               title: 'Transaction complete!',
               message: `Your purchase of "${listingTitle}" is complete. Thank you for using VendiBook!`,
-              link: '/dashboard?tab=purchases',
+              link: `/transaction/${transaction_id}`,
               send_email: false,
             }),
           }),
@@ -294,8 +317,10 @@ serve(async (req) => {
             body: JSON.stringify({
               user_id: transaction.seller_id,
               type: 'sale',
-              title: 'Sale complete - payout queued',
-              message: `Your sale of "${listingTitle}" is complete. Your payout is queued; Vendibook releases seller payouts after review.`,
+              title: paidToSellerDirectly ? 'Sale complete' : 'Sale complete - payout queued',
+              message: paidToSellerDirectly
+                ? `Your sale of "${listingTitle}" is complete. The payment was deposited to your PayPal account at checkout.`
+                : `Your sale of "${listingTitle}" is complete. Your payout is queued; Vendibook releases seller payouts after review.`,
               link: '/dashboard?tab=sales',
               send_email: false,
             }),

@@ -410,3 +410,91 @@ export function quoteServiceCharge(opts: {
     releaseAt: null,
   };
 }
+
+/**
+ * Total refunded on a payment, from the ledger. The ledger is deduplicated by
+ * PayPal refund id, so the refund endpoint and the PAYMENT.CAPTURE.REFUNDED
+ * webhook can both record the same refund without counting it twice.
+ * Pending refunds are stored as `refund_pending` and are not counted.
+ */
+export async function refundedCentsFromLedger(supabase: any, paymentRecordId: string): Promise<number> {
+  const { data, error } = await supabase.from("payment_ledger_entries")
+    .select("amount_cents")
+    .eq("payment_record_id", paymentRecordId)
+    .in("entry_type", ["refund", "reversal"]);
+  if (error) throw new Error(`Ledger read failed: ${error.message}`);
+  return (data ?? []).reduce((sum: number, row: { amount_cents: number }) => sum + Number(row.amount_cents ?? 0), 0);
+}
+
+const SALE_REFUNDABLE_FROM = new Set(["paid", "confirmed", "buyer_confirmed", "seller_confirmed", "disputed"]);
+const SALE_CANCELLABLE_FROM = new Set(["pending", "payment_authorized", "payment_failed", "pending_cash"]);
+
+/**
+ * Ends a sale whose buyer was refunded in full, so it never keeps looking like
+ * an active purchase: the sale becomes `refunded` (or `cancelled` if it never
+ * reached paid), unsigned agreements are voided and open handoff sessions are
+ * cancelled, deliveries stop sharing location. Failures are recorded on the
+ * payment for admin review instead of
+ * being swallowed. Idempotent.
+ */
+export async function closeSaleAfterFullRefund(
+  supabase: any,
+  record: { id: string; sale_transaction_id?: string | null },
+  reason: string,
+): Promise<{ ok: boolean; saleStatus?: string; error?: string }> {
+  const saleId = record.sale_transaction_id;
+  if (!saleId) return { ok: true };
+
+  const fail = async (error: string) => {
+    console.error("[closeSaleAfterFullRefund]", saleId, error);
+    await supabase.from("payment_records").update({
+      internal_status: "needs_review",
+      last_error: { reason: "sale_close_after_refund_failed", detail: error, at: new Date().toISOString() },
+    }).eq("id", record.id);
+    return { ok: false, error };
+  };
+
+  const { data: sale, error: readError } = await supabase.from("sale_transactions")
+    .select("id, status").eq("id", saleId).maybeSingle();
+  if (readError || !sale) return await fail(readError?.message ?? "sale not found");
+
+  let target: string | null = null;
+  if (sale.status === "refunded" || sale.status === "cancelled") target = null;
+  else if (SALE_REFUNDABLE_FROM.has(sale.status)) target = "refunded";
+  else if (SALE_CANCELLABLE_FROM.has(sale.status)) target = "cancelled";
+  else if (sale.status === "completed" || sale.status === "payout_failed") {
+    // A completed sale can only reach refunded through disputed.
+    const { error } = await supabase.from("sale_transactions").update({ status: "disputed" }).eq("id", saleId);
+    if (error) return await fail(error.message);
+    target = "refunded";
+  } else {
+    return await fail(`sale status ${sale.status} cannot be closed automatically`);
+  }
+
+  if (target) {
+    const { error } = await supabase.from("sale_transactions")
+      .update({ status: target, message: reason.slice(0, 500) }).eq("id", saleId);
+    if (error) return await fail(error.message);
+  }
+
+  const { error: docError } = await supabase.from("documents")
+    .update({ status: "voided" })
+    .eq("transaction_id", saleId)
+    .in("status", ["draft", "sent", "partially_signed"]);
+  if (docError) console.error("[closeSaleAfterFullRefund] documents not voided", docError.message);
+
+  const { error: handoffError } = await supabase.from("handoff_sessions")
+    .update({ status: "cancelled" })
+    .eq("sale_transaction_id", saleId)
+    .not("status", "in", "(completed,cancelled)");
+  if (handoffError) console.error("[closeSaleAfterFullRefund] handoff not cancelled", handoffError.message);
+
+  // Stop any delivery in progress and its live location sharing.
+  const { error: deliveryError } = await supabase.from("fulfillment_sessions")
+    .update({ status: "cancelled", tracking_active: false, tracking_paused: false })
+    .eq("sale_transaction_id", saleId)
+    .not("status", "in", "(completed,cancelled)");
+  if (deliveryError) console.error("[closeSaleAfterFullRefund] delivery not cancelled", deliveryError.message);
+
+  return { ok: true, saleStatus: target ?? sale.status };
+}

@@ -72,7 +72,13 @@ serve(async (req) => {
     let note: string | null = body?.note ?? null;
     let externalReference: string | null = body?.external_reference ?? null;
 
-    const blockers = payoutBlockers(payable, payment);
+    let saleStatus: string | null = null;
+    if (payment?.sale_transaction_id) {
+      const { data: sale } = await admin.from("sale_transactions")
+        .select("status").eq("id", payment.sale_transaction_id).maybeSingle();
+      saleStatus = sale?.status ?? null;
+    }
+    const blockers = payoutBlockers(payable, payment, saleStatus);
 
     // ---- Vendibook case freeze. FAIL CLOSED: if we cannot determine whether a
     // case is open, we refuse to move money. The database enforces the same rule
@@ -238,10 +244,20 @@ serve(async (req) => {
 });
 
 /** Reasons a payout must not be approved right now. */
-function payoutBlockers(payable: any, payment: any): string[] {
+function payoutBlockers(payable: any, payment: any, saleStatus: string | null = null): string[] {
   const reasons: string[] = [];
-  if (!payment || payment.payment_status !== "completed") {
+  const partialWithBalance = payment?.payment_status === "partially_refunded" && (payable.net_payout_cents ?? 0) > 0;
+  if (!payment || (payment.payment_status !== "completed" && !partialWithBalance)) {
     reasons.push("The buyer payment is not confirmed as completed.");
+  }
+  // Captures held for refund review (second buyer, duplicate payment, self
+  // purchase, sale status mismatch) must never be paid out.
+  const internal = String(payment?.internal_status ?? "");
+  if (internal.startsWith("refund_review") || internal === "sale_status_review" || internal === "needs_review") {
+    reasons.push("This payment is under refund or status review.");
+  }
+  if (saleStatus && ["disputed", "refunded", "cancelled"].includes(saleStatus)) {
+    reasons.push(`The sale is ${saleStatus}.`);
   }
   if (payment && payment.dispute_status && !["none", "resolved"].includes(payment.dispute_status)) {
     reasons.push("An active dispute is open on this payment.");

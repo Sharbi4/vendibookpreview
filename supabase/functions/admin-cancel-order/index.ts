@@ -13,6 +13,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
 import { invokeTransactionalEmail } from "../_shared/invokeTransactionalEmail.ts";
 import { notifyUser } from "../_shared/notify.ts";
+import { closeSaleAfterFullRefund } from "../_shared/paypalAccounting.ts";
+import { routedMerchantId } from "../_shared/paypalMultiparty.ts";
 
 const SITE_URL = "https://vendibook.com";
 
@@ -44,17 +46,22 @@ serve(async (req) => {
     const { data: payment } = await admin.from("payment_records")
       .select("*").eq("id", paymentRecordId).maybeSingle();
     if (!payment) return jsonError(404, "not_found", "Order not found.");
-    if (payment.payment_status === "refunded") {
-      return jsonError(409, "already_refunded", "This order was already refunded in full.");
-    }
+    // An order refunded earlier (for example from the payouts page) can still
+    // be cancelled here: the refund is skipped and only the close-out runs.
+    const alreadyRefunded = payment.payment_status === "refunded";
 
     const { data: payable } = await admin.from("seller_payables")
       .select("id, status, release_state").eq("payment_record_id", paymentRecordId).maybeSingle();
-    if (payable && ["payout_completed", "payout_processing"].includes(payable.status)) {
+    // Seller-routed payments settle straight into the seller's PayPal account
+    // (payable is payout_completed from capture) and are refunded from it, so
+    // only a Vendibook-held payout already in flight blocks the cancel.
+    const routed = !!routedMerchantId(payment);
+    if (!alreadyRefunded && !routed && payable && ["payout_completed", "payout_processing"].includes(payable.status)) {
       return jsonError(409, "payout_in_flight", "The seller has already been paid on this order. Handle it as a reversal instead.");
     }
 
     // ---- Refund first. Nothing is marked cancelled unless PayPal refunds.
+    if (!alreadyRefunded) {
     const refundRes = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/paypal-refund`, {
       method: "POST",
       headers: {
@@ -69,9 +76,10 @@ serve(async (req) => {
       return jsonError(refundRes.status, refundBody?.code ?? "refund_failed",
         refundBody?.error ?? "PayPal could not refund this order, so nothing was cancelled.");
     }
+    }
 
     // ---- Now close the records out.
-    if (payable?.id) {
+    if (payable?.id && payable.status !== "cancelled") {
       await admin.from("seller_payables").update({
         status: "cancelled",
         release_state: "auto_refunded",
@@ -89,14 +97,10 @@ serve(async (req) => {
       });
     }
 
-    if (payment.sale_transaction_id) {
-      // The buyer was refunded, so the sale ends as refunded. A paid sale
-      // cannot move to "cancelled" (enforce_sale_status_transition).
-      const { error: saleError } = await admin.from("sale_transactions")
-        .update({ status: "refunded" })
-        .eq("id", payment.sale_transaction_id);
-      if (saleError) console.error("[admin-cancel-order] sale status not updated", saleError.message);
-    }
+    // The buyer was refunded, so the sale ends (refunded, or cancelled if it
+    // never reached paid), unsigned agreements are voided and open handoffs
+    // closed. A failure is flagged on the order for review, not swallowed.
+    const saleClose = await closeSaleAfterFullRefund(admin, payment, `Order cancelled by Vendibook — ${reason}`);
 
     const { data: openCase } = await admin.from("dispute_cases")
       .select("id").eq("payment_record_id", paymentRecordId)
@@ -136,7 +140,13 @@ serve(async (req) => {
       });
     }
 
-    return jsonResponse(200, { success: true, refunded: true });
+    return jsonResponse(200, {
+      success: saleClose.ok,
+      refunded: true,
+      sale_status: saleClose.saleStatus ?? null,
+      needs_review: !saleClose.ok,
+      error: saleClose.ok ? undefined : `Refunded, but the sale could not be closed: ${saleClose.error}. It is flagged for review.`,
+    });
   } catch (err) {
     return unknownErrorResponse(err);
   }

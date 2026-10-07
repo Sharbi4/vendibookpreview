@@ -44,12 +44,15 @@ Deno.serve(async (req) => {
 
     let completed = w.status === 'completed';
     if (!completed && ['scheduled', 'rescheduled'].includes(w.status)) {
-      const { count } = await admin
+      // Completed only when both the buyer and the seller actually joined;
+      // one side joining alone is not a walkthrough.
+      const { data: joins } = await admin
         .from('video_walkthrough_events')
-        .select('id', { count: 'exact', head: true })
+        .select('event_type')
         .eq('walkthrough_id', w.id)
         .in('event_type', ['buyer_joined', 'seller_joined']);
-      if ((count ?? 0) > 0) {
+      const joined = new Set((joins ?? []).map((j: { event_type: string }) => j.event_type));
+      if (joined.has('buyer_joined') && joined.has('seller_joined')) {
         await admin
           .from('video_walkthroughs')
           .update({ status: 'completed', completed_at: new Date().toISOString() })

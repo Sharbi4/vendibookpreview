@@ -73,6 +73,14 @@ serve(async (req) => {
 
     switch (action.type) {
       case "mark_identity_verified": {
+        // Only a completed Vendibook identity check counts; a party can't
+        // simply declare themselves verified.
+        const { data: verified } = await admin.rpc("is_seller_identity_verified", { _user_id: user.id });
+        if (!verified) {
+          return new Response(JSON.stringify({ error: "identity_not_verified", message: "Finish ID verification first, then try again." }), {
+            status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
         if (role === "buyer") patch.buyer_identity_verified_at = now;
         else patch.seller_identity_verified_at = now;
         const bothVerified =
@@ -118,6 +126,13 @@ serve(async (req) => {
         if (["funds_released", "completed"].includes(ps.status)) {
           return new Response(JSON.stringify({ error: "cannot cancel after funds released" }), {
             status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
+        }
+        // A paid deposit must be refunded by Vendibook; cancelling here would
+        // drop the record while keeping the buyer's money.
+        if (ps.deposit_paid_at || ["deposit_paid", "balance_authorized", "handoff_scheduled"].includes(ps.status)) {
+          return new Response(JSON.stringify({ error: "deposit_paid", message: "A deposit was paid on this sale. Contact Vendibook support to cancel and refund it." }), {
+            status: 409, headers: { ...corsHeaders, "Content-Type": "application/json" },
           });
         }
         patch.status = "cancelled";

@@ -260,6 +260,26 @@ serve(async (req) => {
         const err = assertParticipant(target);
         if (err) return jsonError(403, "forbidden", err);
         const t = target!;
+        // Deliveries are run by the seller (or Vendibook), never the buyer,
+        // and only on a sale that is paid and still active.
+        if (!isAdmin && t.seller_id !== userId) {
+          return jsonError(403, "forbidden", "Only the seller can start a delivery.");
+        }
+        if (t.sale_transaction_id) {
+          const { data: saleRow } = await db.from("sale_transactions")
+            .select("status").eq("id", t.sale_transaction_id).maybeSingle();
+          if (!["paid", "pending_cash", "buyer_confirmed", "seller_confirmed", "confirmed"].includes(String(saleRow?.status))) {
+            return jsonError(409, "sale_not_active", "Deliveries can only start on a paid, active order.");
+          }
+        }
+        const { data: openSession } = await db.from("fulfillment_sessions")
+          .select("id")
+          .eq(t.sale_transaction_id ? "sale_transaction_id" : "booking_id", t.sale_transaction_id ?? t.booking_id)
+          .not("status", "in", "(completed,cancelled)")
+          .limit(1).maybeSingle();
+        if (openSession) {
+          return jsonError(409, "session_open", "A delivery is already in progress for this order.");
+        }
         const mode: Mode = FULFILLMENT_MODES.includes(body.mode) ? body.mode : "seller_delivery";
         const consent = !!body.location_consent;
 
@@ -551,6 +571,9 @@ serve(async (req) => {
             return jsonError(403, "forbidden", "Only the seller or the assigned driver can change tracking.");
           }
         }
+        if (["completed", "cancelled"].includes(String(session.status)) && action !== "end_tracking") {
+          return jsonError(409, "session_closed", "This delivery has ended.");
+        }
         const nowIso = new Date().toISOString();
         const patch: Record<string, unknown> = { updated_at: nowIso };
         if (action === "pause_tracking") patch.tracking_paused = true;
@@ -642,6 +665,9 @@ serve(async (req) => {
           if (!isAdmin && session.seller_id !== userId && session.assigned_driver_user_id !== userId) {
             return jsonError(403, "forbidden", "Only the seller or the assigned driver can mark arrival.");
           }
+        }
+        if (["completed", "cancelled", "arrived", "handoff"].includes(String(session.status))) {
+          return jsonError(409, "session_closed", "This delivery is already past arrival.");
         }
         await db
           .from("fulfillment_sessions")
@@ -932,6 +958,11 @@ serve(async (req) => {
         const g = await handoffGuard(handoff);
         if (g) return jsonError(403, "forbidden", g);
         if (!handoff.pickup_code) return jsonError(400, "no_code", "This handoff does not use a pickup code.");
+        // The seller holds the code and reads it to the buyer in person; only
+        // the buyer entering it proves both are together.
+        if (!isAdmin && handoff.buyer_id !== userId) {
+          return jsonError(403, "forbidden", "The buyer enters the pickup code shown on the seller's screen.");
+        }
         if (String(body.code ?? "").trim() !== handoff.pickup_code) {
           return jsonError(400, "bad_code", "That code doesn't match. Check the code with the seller.");
         }

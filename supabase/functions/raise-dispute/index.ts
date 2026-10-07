@@ -106,6 +106,28 @@ serve(async (req) => {
 
     logStep("Transaction disputed", { role, transactionId: transaction_id });
 
+    // Pause the seller payment while the dispute is open. Seller-routed
+    // payments already settled at capture, so this only holds payables
+    // Vendibook still controls; admin payout checks also refuse disputed sales.
+    const { data: disputedPayments } = await supabaseClient
+      .from('payment_records')
+      .select('id')
+      .eq('sale_transaction_id', transaction_id);
+    const paymentIds = (disputedPayments ?? []).map((p: { id: string }) => p.id);
+    if (paymentIds.length) {
+      const { error: holdError } = await supabaseClient
+        .from('seller_payables')
+        .update({
+          status: 'payout_on_hold',
+          dispute_frozen_at: new Date().toISOString(),
+          conditions_deadline_at: null,
+          hold_reason: 'Seller payment is paused while a dispute is open.',
+        })
+        .in('payment_record_id', paymentIds)
+        .in('status', ['pending_release', 'eligible_for_review', 'payout_approved']);
+      if (holdError) logStep("Warning: payout hold failed", { error: holdError.message });
+    }
+
     // Fetch listing, buyer, and seller info for email
     const { data: listing } = await supabaseClient
       .from('listings')

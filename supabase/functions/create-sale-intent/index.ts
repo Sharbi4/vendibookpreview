@@ -109,6 +109,18 @@ serve(async (req) => {
       terms_id: body?.terms_id ?? null,
     };
 
+    // A sale listing is one unit. Once another buyer's purchase is committed,
+    // nobody can start or resume checkout on it (the buyer who owns that sale
+    // falls through to the "already paid" answer below).
+    const { data: committedSale } = await admin.rpc("listing_committed_sale", { _listing_id: listingId });
+    if (committedSale) {
+      const { data: owner } = await admin.from("sale_transactions")
+        .select("buyer_id").eq("id", committedSale).maybeSingle();
+      if (owner?.buyer_id !== user.id) {
+        return jsonError(409, "listing_sold", "This item has already been purchased by another buyer.");
+      }
+    }
+
     // Reuse a pending or failed purchase for this buyer + listing so a retry or
     // refresh can never create two transactions. The fulfillment selection can
     // legitimately have changed since that row was created, so re-sync it —

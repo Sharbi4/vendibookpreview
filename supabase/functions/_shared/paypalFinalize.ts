@@ -172,6 +172,21 @@ export async function finalizeCapture(
     if (record.booking_request_id && record.internal_status === "paid" && isPaid && record[captureCol] === facts.captureId) {
       await propagateToDomainRecord(supabase, record, facts);
     }
+    // A sale whose payment completed but whose "paid" update was lost (an
+    // error after the payment row was written) is retried here, so a later
+    // webhook or return-page visit repairs it instead of leaving the sale
+    // pending with the money taken. Refund-review captures are never promoted.
+    if (
+      record.sale_transaction_id && isPaid && record[captureCol] === facts.captureId &&
+      !String(record.internal_status ?? "").startsWith("refund_review")
+    ) {
+      const { data: sale } = await supabase.from("sale_transactions")
+        .select("status").eq("id", record.sale_transaction_id).maybeSingle();
+      if (sale && ["pending", "payment_failed", "payment_authorized"].includes(sale.status)) {
+        safeLog("sale_paid_repair", { reference: record.reference });
+        await propagateToDomainRecord(supabase, record, facts);
+      }
+    }
     return record;
   }
 
@@ -299,6 +314,22 @@ export async function finalizeCapture(
           }).eq("id", record.id);
           await alertRefundReview(supabase, record, "another buyer had already purchased this listing");
           throw new CaptureRejectedError("listing_unavailable", LISTING_UNAVAILABLE_MESSAGE);
+        }
+        // Same buyer, same sale, second PayPal order (another tab, or card
+        // fields after buttons): only one payment may count toward the sale.
+        const { data: paidAttempt } = await supabase.from("payment_records")
+          .select("id").eq("sale_transaction_id", record.sale_transaction_id)
+          .eq("payment_status", "completed").neq("id", record.id).limit(1).maybeSingle();
+        if (paidAttempt) {
+          safeLog("capture_duplicate_sale_payment", { reference: record.reference });
+          await supabase.from("payment_records").update({
+            payment_status: "completed",
+            internal_status: "refund_review_duplicate_payment",
+            [captureCol]: facts.captureId ?? record[captureCol],
+            last_error: { reason: "duplicate_sale_payment", other_payment_id: paidAttempt.id },
+          }).eq("id", record.id);
+          await alertRefundReview(supabase, record, "the buyer had already paid for this sale with another PayPal order");
+          throw new CaptureRejectedError("duplicate_payment", "This purchase was already paid. The extra payment will be refunded.");
         }
       }
     }

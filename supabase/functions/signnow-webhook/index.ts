@@ -109,7 +109,11 @@ Deno.serve(async (req) => {
 
   const eventId: string = payload?.event_id ?? payload?.id ?? crypto.randomUUID();
   const eventType: string = payload?.event ?? payload?.event_type ?? 'unknown';
-  const signnowDocId: string | undefined = payload?.meta?.document_id ?? payload?.document_id ?? payload?.data?.document_id;
+  // SignNow v2 puts the id in different places by event version; the
+  // subscription also appends ?document_id= to the callback URL.
+  const signnowDocId: string | undefined = payload?.meta?.document_id ?? payload?.document_id ??
+    payload?.data?.document_id ?? payload?.content?.document_id ??
+    new URL(req.url).searchParams.get('document_id') ?? undefined;
 
   const svc = createClient(
     Deno.env.get('SUPABASE_URL')!,
@@ -127,20 +131,35 @@ Deno.serve(async (req) => {
   if (idemErr && !String(idemErr.message).toLowerCase().includes('duplicate')) {
     console.error('[signnow-webhook] idempotency insert error', idemErr);
   }
-  // If it was a duplicate insert (23505), acknowledge without reprocessing.
+  // A duplicate is only skipped once the first delivery finished. If that
+  // attempt failed (SignNow API down, storage error), SignNow's retry must
+  // run again or the agreement would be stuck forever.
   if (idemErr && (idemErr as any).code === '23505') {
-    return jsonResponse(200, { ok: true, duplicate: true });
+    const { data: prior } = await svc.from('signnow_webhook_events')
+      .select('processed_at').eq('event_id', eventId).maybeSingle();
+    if (prior?.processed_at) return jsonResponse(200, { ok: true, duplicate: true });
   }
+  const markEvent = async (error: string | null) => {
+    await svc.from('signnow_webhook_events')
+      .update({ processed_at: error ? null : new Date().toISOString(), error })
+      .eq('event_id', eventId);
+  };
 
   try {
-    if (!signnowDocId) return jsonResponse(200, { ok: true, note: 'no document_id in payload' });
+    if (!signnowDocId) {
+      await markEvent('no document_id in payload');
+      return jsonResponse(200, { ok: true, note: 'no document_id in payload' });
+    }
 
     const { data: doc } = await svc
       .from('documents')
       .select('id,document_type,transaction_id,booking_id,signers,status,signed_pdf_path,renter_signed_at,host_signed_at,partially_signed_at,completed_at')
       .eq('signnow_document_id', signnowDocId)
       .maybeSingle();
-    if (!doc) return jsonResponse(200, { ok: true, note: 'unknown document' });
+    if (!doc) {
+      await markEvent(null);
+      return jsonResponse(200, { ok: true, note: 'unknown document' });
+    }
 
     // Pull the current SignNow document to figure out which invites have signed.
     const remote = await getDocument(signnowDocId);
@@ -182,8 +201,11 @@ Deno.serve(async (req) => {
     if (hostSigned && !(doc as any).host_signed_at) updates.host_signed_at = hostSigned;
 
 
-    // On completion, pull PDF and stash it in private storage.
-    if (allSigned && doc.status !== 'completed' && !(doc as any).signed_pdf_path) {
+    // On completion, pull PDF and stash it in private storage. Retried on
+    // every later event until the PDF is stored, even if the document was
+    // already marked completed by an earlier delivery whose upload failed.
+    let pdfError: string | null = null;
+    if (allSigned && !(doc as any).signed_pdf_path) {
       try {
         const pdf = await downloadDocumentPdf(signnowDocId);
         const path = `${doc.id}.pdf`;
@@ -195,9 +217,10 @@ Deno.serve(async (req) => {
         updates.signed_pdf_path = path;
       } catch (e) {
         console.error('[signnow-webhook] pdf download/upload failed', e);
+        pdfError = `signed PDF not stored: ${(e as Error)?.message ?? String(e)}`.slice(0, 500);
       }
 
-      if (SALE_AGREEMENT_TYPES.has(doc.document_type) && doc.transaction_id) {
+      if (SALE_AGREEMENT_TYPES.has(doc.document_type) && doc.transaction_id && doc.status !== 'completed') {
         await svc
           .from('sale_transactions')
           .update({ bill_of_sale_completed_at: new Date().toISOString() })
@@ -211,9 +234,13 @@ Deno.serve(async (req) => {
       await onSaleAgreementSigned(svc, doc.transaction_id, true);
     }
 
+    await markEvent(pdfError);
+    // A missing PDF answers 500 so SignNow retries the delivery.
+    if (pdfError) return jsonError(500, 'pdf_not_stored', 'Signed PDF could not be stored yet.');
     return jsonResponse(200, { ok: true, status: nextStatus });
   } catch (e) {
     console.error('[signnow-webhook] handler error', e);
+    await markEvent(`handler error: ${(e as Error)?.message ?? String(e)}`.slice(0, 500)).catch(() => {});
     return unknownErrorResponse(e);
   }
 });

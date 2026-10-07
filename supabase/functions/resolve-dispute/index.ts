@@ -205,9 +205,19 @@ serve(async (req) => {
       );
     }
 
-    if (!transaction.payment_intent_id) {
+    // The PayPal payment behind this sale. Refunds and payout holds key off it.
+    const { data: paymentRecord } = await supabaseClient
+      .from("payment_records")
+      .select("id, payment_status")
+      .eq("sale_transaction_id", transaction.id)
+      .in("payment_status", ["completed", "partially_refunded", "refunded"])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!paymentRecord && !transaction.payment_intent_id) {
       return new Response(
-        JSON.stringify({ error: "No payment intent found for this transaction" }),
+        JSON.stringify({ error: "No payment found for this transaction" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
@@ -219,12 +229,35 @@ serve(async (req) => {
       // Vendibook refunds through PayPal only.
       logStep("Refunding buyer", { paymentReference: transaction.payment_intent_id });
 
-      const refund = await refundPayment({
-        paymentReference: transaction.payment_intent_id,
-        provider: (transaction as any).payment_provider,
-        reason: "Dispute resolved in buyer's favor",
-        idempotencyKey: `dispute-refund-${transaction.id}`,
-      });
+      // PayPal payments go through paypal-refund, which refunds as the seller
+      // when the payment was routed to them, records the ledger, payable and
+      // audit trail, and closes the sale. Older payments without a payment
+      // record keep the legacy path.
+      let refund: { success: boolean; error?: string; manual?: boolean; id?: string; status?: string };
+      if (paymentRecord && paymentRecord.payment_status !== "refunded") {
+        const res = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/paypal-refund`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: authHeader,
+            apikey: Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+          },
+          body: JSON.stringify({ payment_record_id: paymentRecord.id, reason: "Dispute resolved in the buyer's favor" }),
+        });
+        const body = await res.json().catch(() => ({}));
+        refund = res.ok
+          ? { success: true, id: body?.refund_id, status: body?.refund_status }
+          : { success: false, error: body?.error ?? `HTTP ${res.status}` };
+      } else if (paymentRecord) {
+        refund = { success: true, status: "already_refunded" };
+      } else {
+        refund = await refundPayment({
+          paymentReference: transaction.payment_intent_id,
+          provider: (transaction as any).payment_provider,
+          reason: "Dispute resolved in buyer's favor",
+          idempotencyKey: `dispute-refund-${transaction.id}`,
+        });
+      }
 
       if (!refund.success) {
         logStep("Refund not completed", { error: refund.error, manual: refund.manual });
@@ -242,15 +275,17 @@ serve(async (req) => {
       // payable eligible so an administrator can settle it. No transfer API runs.
       logStep("Releasing seller payable for manual payout", { transactionId: transaction.id });
 
-      const { error: payableError } = await supabaseClient
+      let payableQuery = supabaseClient
         .from("seller_payables")
         .update({
           payout_eligible_at: new Date().toISOString(),
           hold_reason: null,
         })
-        .eq("seller_id", transaction.seller_id)
-        .eq("listing_id", transaction.listing_id)
-        .in("status", ["pending_release", "on_hold"]);
+        .in("status", ["pending_release", "payout_on_hold", "disputed"]);
+      payableQuery = paymentRecord
+        ? payableQuery.eq("payment_record_id", paymentRecord.id)
+        : payableQuery.eq("seller_id", transaction.seller_id).eq("listing_id", transaction.listing_id);
+      const { error: payableError } = await payableQuery;
 
       if (payableError) {
         logStep("Warning: failed to release payable", { error: payableError.message });

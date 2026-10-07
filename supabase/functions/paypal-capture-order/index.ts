@@ -5,7 +5,20 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
 import { capturePayPalOrder, getPayPalOrder, PayPalError, safeLog } from "../_shared/paypal.ts";
 import { routedMerchantId } from "../_shared/paypalMultiparty.ts";
-import { CaptureRejectedError, extractCaptureFacts, finalizeCapture } from "../_shared/paypalFinalize.ts";
+import {
+  CaptureRejectedError,
+  extractCaptureFacts,
+  finalizeCapture,
+} from "../_shared/paypalFinalize.ts";
+
+const CLOSED_PAYMENT_STATES = new Set([
+  "refunded",
+  "partially_refunded",
+  "reversed",
+  "cancelled",
+  "chargeback",
+  "disputed_lost",
+]);
 import { auditPayment, requestIp } from "../_shared/paymentAudit.ts";
 import { getListingPurchaseState, LISTING_UNAVAILABLE_MESSAGE } from "../_shared/listingGuard.ts";
 import { recordOrderEvent } from "../_shared/orders/orderEvents.ts";
@@ -48,6 +61,18 @@ serve(async (req) => {
     // Orders routed to the seller must be read and captured as that seller.
     const asSeller = { actAsMerchantId: routedMerchantId(record) };
 
+    // Refunded, reversed or cancelled orders are never re-captured or
+    // rewritten. An old PayPal return URL lands here harmlessly. Declined and
+    // failed captures are not included: PayPal lets the buyer retry them.
+    if (CLOSED_PAYMENT_STATES.has(String(record.payment_status))) {
+      return jsonResponse(200, {
+        status: record.payment_status,
+        already_closed: true,
+        reference: record.reference,
+        capture_id: record.paypal_capture_id,
+      });
+    }
+
     // Already finalised (capture endpoint raced the webhook) — return success.
     if (record.payment_status === "completed") {
       return jsonResponse(200, {
@@ -64,7 +89,24 @@ serve(async (req) => {
     // the canonical state immediately before capturing.
     if (record.listing_id) {
       const state = await getListingPurchaseState(admin, record.listing_id);
-      if (!state.purchasable) {
+      let blockReason: string | null = state.purchasable ? null : state.reason;
+      if (!blockReason && record.sale_transaction_id) {
+        // Another buyer already secured this listing, or this buyer already
+        // paid for this sale through a different PayPal order: do not take
+        // a second payment.
+        const { data: otherSale } = await admin.rpc("listing_committed_sale", {
+          _listing_id: record.listing_id,
+          _exclude_sale: record.sale_transaction_id,
+        });
+        if (otherSale) blockReason = "sold";
+        else {
+          const { data: paidAttempt } = await admin.from("payment_records")
+            .select("id").eq("sale_transaction_id", record.sale_transaction_id)
+            .eq("payment_status", "completed").neq("id", record.id).limit(1).maybeSingle();
+          if (paidAttempt) blockReason = "duplicate_payment";
+        }
+      }
+      if (blockReason) {
         // Reconcile the ambiguous provider state before deciding.
         let providerOrder: any = null;
         try {
@@ -87,7 +129,7 @@ serve(async (req) => {
             : "cancelled_listing_unavailable",
           last_error: {
             reason: "listing_unavailable",
-            listing_reason: state.reason,
+            listing_reason: blockReason,
             listing_status: state.status,
           },
         }).eq("id", record.id);

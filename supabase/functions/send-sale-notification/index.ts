@@ -39,12 +39,23 @@ Deno.serve(async (req) => {
     const { data: tx, error: txErr } = await supabase
       .from('sale_transactions').select('*').eq('id', transaction_id).single();
     if (txErr || !tx) throw new Error('Transaction not found');
+    // Only Vendibook's own server functions (and admins) send sale emails.
+    // A buyer or seller calling this directly could otherwise make Vendibook
+    // email "payment received" for a sale that was never paid.
     if (!(await isBackendCaller(req))) {
       const caller = await getCaller(req);
       if (!caller) return unauthorizedResponse(corsHeaders);
-      if (caller.id !== tx.buyer_id && caller.id !== tx.seller_id && !(await isAdminUser(caller.id))) {
-        return forbiddenResponse(corsHeaders);
-      }
+      if (!(await isAdminUser(caller.id))) return forbiddenResponse(corsHeaders);
+    }
+    const PAID_STATUSES = ['paid', 'confirmed', 'buyer_confirmed', 'seller_confirmed', 'completed', 'paid_out', 'payout_failed'];
+    if (
+      ['payment_received', 'shipped', 'delivered', 'completed', 'payout_completed'].includes(notification_type) &&
+      !PAID_STATUSES.includes(String(tx.status)) &&
+      !(notification_type === 'completed' && tx.status === 'pending_cash')
+    ) {
+      return new Response(JSON.stringify({ success: false, skipped: 'sale_not_paid', status: tx.status }), {
+        status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const [{ data: listing }, { data: buyerProfile }, { data: sellerProfile }] = await Promise.all([
@@ -60,9 +71,17 @@ Deno.serve(async (req) => {
     const buyerFirst = buyerProfile?.first_name || buyerName.split(' ')[0];
     const sellerFirst = sellerProfile?.first_name || sellerName.split(' ')[0];
     const listingTitle = listing?.title || 'Item';
-    const orderNumber = `VB-${String(tx.id).slice(0, 8).toUpperCase()}`;
+    // Same order number as the receipt and /orders page: the PayPal payment
+    // reference once paid, otherwise the short sale id.
+    const { data: paymentRef } = await supabase
+      .from('payment_records').select('reference')
+      .eq('sale_transaction_id', tx.id)
+      .in('payment_status', ['completed', 'partially_refunded', 'refunded'])
+      .order('created_at', { ascending: false }).limit(1).maybeSingle();
+    const orderNumber = paymentRef?.reference ?? `VB-${String(tx.id).slice(0, 8).toUpperCase()}`;
+    const orderUrl = `https://vendibook.com/transaction/${tx.id}`;
 
-    // A cash / Pay-in-Person sale is one that never went through Stripe.
+    // A cash / Pay-in-Person sale is one that never went through PayPal.
     const isCashSale = !tx.payment_intent_id;
 
     const [{ data: buyerPrefs }, { data: sellerPrefs }] = await Promise.all([
@@ -146,10 +165,15 @@ Deno.serve(async (req) => {
       }
     } else {
       // --- Online (PayPal) flow ---
-      // Seller-facing template for any milestone. A freshly paid sale gets the
-      // handoff-oriented email; later milestones keep the completion email.
-      if (sellerOptedIn && sellerEmail && audience !== 'buyer') {
-        const sellerTemplate = notification_type === 'payment_received' ? 'sale-paid-seller' : 'sale-completed-seller';
+      // The seller gets the handoff email when paid and the completion email
+      // once, when the sale completes. Shipped / delivered / confirmation
+      // milestones are the seller's own actions and are not emailed back.
+      const sellerTemplate = notification_type === 'payment_received'
+        ? 'sale-paid-seller'
+        : notification_type === 'completed'
+        ? 'sale-completed-seller'
+        : null;
+      if (sellerTemplate && sellerOptedIn && sellerEmail && audience !== 'buyer') {
         enqueue(
           sellerTemplate,
           sellerEmail,
@@ -176,13 +200,54 @@ Deno.serve(async (req) => {
             customerName: buyerFirst,
             orderNumber,
             amount: `$${(Number(tx.amount) || 0).toFixed(2)}`,
-            paymentMethod: 'Card',
+            paymentMethod: 'PayPal',
             paidAt: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
             listingTitle,
             description: 'Purchase',
           }
         );
       }
+    }
+
+    // Buyer milestone emails: where the truck or trailer is, and what to do.
+    const BUYER_MILESTONES: Partial<Record<NotificationType, { heading: string; paragraphs: string[]; cta: string }>> = {
+      shipped: {
+        heading: `Your ${listingTitle} is on its way`,
+        paragraphs: [
+          `${sellerFirst} marked order ${orderNumber} as shipped.`,
+          tx.estimated_delivery_date
+            ? `Estimated delivery: ${new Date(`${tx.estimated_delivery_date}T12:00:00`).toLocaleDateString('en-US', { month: 'long', day: 'numeric' })}.`
+            : 'You will see the delivery date in Vendibook as soon as it is set.',
+          'Track the delivery and message the seller from your order page.',
+        ],
+        cta: 'Track your order',
+      },
+      delivered: {
+        heading: `Your ${listingTitle} was delivered`,
+        paragraphs: [
+          `${sellerFirst} marked order ${orderNumber} as delivered.`,
+          'Inspect it, then confirm receipt on your order page. If anything is wrong, report an issue there before confirming.',
+        ],
+        cta: 'Confirm receipt',
+      },
+      completed: {
+        heading: 'Your purchase is complete',
+        paragraphs: [
+          `Order ${orderNumber} for ${listingTitle} is complete. Your receipt and signed documents stay available on your order page.`,
+        ],
+        cta: 'View your order',
+      },
+    };
+    const milestone = !isCashSale ? BUYER_MILESTONES[notification_type] : undefined;
+    if (milestone && buyerOptedIn && buyerEmail && audience !== 'seller') {
+      enqueue('generic-notice', buyerEmail, `sale-${tx.id}-buyer-${notification_type}`, {
+        preview: milestone.heading,
+        kicker: `Order ${orderNumber}`,
+        heading: milestone.heading,
+        paragraphs: milestone.paragraphs,
+        ctaLabel: milestone.cta,
+        ctaUrl: orderUrl,
+      });
     }
 
     const results = await Promise.all(sends);
