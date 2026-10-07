@@ -334,7 +334,7 @@ const Pricing = () => {
       : null;
 
   const proCta = isPro ? (
-    <Button asChild variant="cta-outline" size="cta" className="w-full">
+    <Button asChild variant="cta-outline" size="cta" className="w-full border-white/30 bg-white text-[#181410] hover:bg-white/90">
       <Link to="/dashboard?view=host&tab=membership">Manage membership</Link>
     </Button>
   ) : (
@@ -389,12 +389,17 @@ const Pricing = () => {
                 Pricing
               </div>
               <h1 className="text-4xl sm:text-5xl md:text-[3.4rem] font-bold tracking-tight text-foreground mb-5 leading-[1.06]">
-                Vendibook Pricing — Membership and Seller Plans
+                Free to list. Pay only when you close.
               </h1>
               <p className="text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">
-                Start free and pay only when you earn. Upgrade to Pro when you&rsquo;re
+                No listing fees and no contract. Upgrade to Pro when you&rsquo;re
                 ready for a lower fee, more visibility, and the full tool set.
               </p>
+              <div className="mt-8 inline-flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
+                <span className="inline-flex items-center gap-1.5"><Check className="h-4 w-4 text-primary" /> Unlimited listings</span>
+                <span className="inline-flex items-center gap-1.5"><Check className="h-4 w-4 text-primary" /> Fee only on completed deals</span>
+                <span className="inline-flex items-center gap-1.5"><Check className="h-4 w-4 text-primary" /> Cancel Pro anytime</span>
+              </div>
             </motion.div>
           </div>
         </section>
@@ -466,30 +471,35 @@ const Pricing = () => {
               <motion.div
                 {...(reduce ? {} : fadeUp)}
                 transition={{ duration: 0.5, delay: reduce ? 0 : 0.08, ease }}
-                className={`relative flex flex-col rounded-[28px] border border-primary/35 bg-card p-8 md:p-10 ${CARD_SHADOW}`}
+                className="relative flex flex-col overflow-hidden rounded-[28px] border border-[#2a2622] bg-[#181410] p-8 text-white md:p-10 shadow-[0_2px_4px_rgba(24,20,16,0.08),0_40px_80px_-36px_rgba(24,20,16,0.6)]"
               >
-                <span className="absolute -top-3 left-8 inline-flex items-center gap-1.5 rounded-full bg-primary/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-primary">
-                  Most popular
+                <div
+                  className="pointer-events-none absolute inset-0"
+                  style={{ background: 'radial-gradient(520px 260px at 85% -10%, rgba(255,106,26,0.28), transparent 70%)' }}
+                  aria-hidden="true"
+                />
+                <span className="relative mb-4 inline-flex w-fit items-center gap-1.5 rounded-full border border-primary/40 bg-primary/15 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-[#ffb27a]">
+                  For active sellers and hosts
                 </span>
                 <div className="flex items-baseline justify-between gap-3">
-                  <h3 className="text-xl font-bold text-foreground">Vendibook Pro</h3>
+                  <h3 className="relative text-xl font-bold text-white">Vendibook Pro</h3>
                   {!tierLoading && isPro && (
-                    <span className="rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-[11px] font-semibold text-primary">
+                    <span className="rounded-full border border-white/25 bg-white/10 px-3 py-1 text-[11px] font-semibold text-white">
                       Your plan
                     </span>
                   )}
                 </div>
-                <p className="mt-5 text-4xl font-bold tracking-tight text-foreground">
+                <p className="relative mt-5 text-4xl font-bold tracking-tight text-white">
                   {loadingSubs ? '—' : formatUsd(proPrice)}
-                  <span className="ml-1.5 text-base font-normal text-muted-foreground">/month</span>
+                  <span className="ml-1.5 text-base font-normal text-white/60">/month</span>
                 </p>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  <span className="font-semibold text-primary">10.9%</span> seller/host fee
+                <p className="relative mt-2 text-sm text-white/70">
+                  <span className="font-semibold text-[#ffb27a]">10.9%</span> seller/host fee
                   — our lowest rate. Cancel anytime.
                 </p>
 
                 {isPro && (
-                  <p className="mt-3 text-sm text-muted-foreground">
+                  <p className="relative mt-3 text-sm text-white/70">
                     {cancelAtPeriodEnd
                       ? `Your membership stays active until ${renews ?? 'the end of the period'}.`
                       : renews
@@ -498,19 +508,20 @@ const Pricing = () => {
                   </p>
                 )}
 
-                <ul className="mt-8 space-y-3.5">
+                <ul className="relative mt-8 space-y-3.5">
                   {PRO_FEATURES.map((f) => (
-                    <li key={f} className="flex gap-3 text-[15px] leading-relaxed text-foreground">
-                      <Check className="mt-0.5 h-5 w-5 shrink-0 text-primary" />
+                    <li key={f} className="flex gap-3 text-[15px] leading-relaxed text-white/90">
+                      <Check className="mt-0.5 h-5 w-5 shrink-0 text-[#ffb27a]" />
                       <span>{f}</span>
                     </li>
                   ))}
                 </ul>
 
                 <div className="mt-10 flex-1" />
-                {proCta}
-                <div className="mt-3 flex justify-center">
+                <div className="relative">{proCta}</div>
+                <div className="relative mt-3 flex justify-center">
                   <PlanDetailsDialog
+                    className="text-white/65 hover:text-white"
                     title="Vendibook Pro"
                     priceLabel={`${loadingSubs ? '—' : formatUsd(proPrice)}/month`}
                     summary="A lower seller/host fee, a Featured Boost credit every billing period and the premium tool set — on one monthly membership."
@@ -560,6 +571,43 @@ const Pricing = () => {
               <span className="inline-flex items-center gap-1.5"><Lock className="h-4 w-4" /> PayPal-secured billing</span>
               <span className="inline-flex items-center gap-1.5"><XCircle className="h-4 w-4" /> Cancel anytime online</span>
             </div>
+
+            {/* How fees work — who pays what, stated once. */}
+            <motion.div {...(reduce ? {} : fadeUp)} className={`mt-14 overflow-hidden rounded-[24px] border border-border bg-card ${CARD_SHADOW}`}>
+              <div className="border-b border-border px-6 py-5 sm:px-8">
+                <p className="text-xs font-semibold uppercase tracking-[0.16em] text-primary">How fees work</p>
+                <p className="mt-1 text-sm text-muted-foreground">Fees apply only when a sale or booking completes through Vendibook.</p>
+              </div>
+              <dl className="grid divide-y divide-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
+                {[
+                  { who: 'Sellers and hosts', rate: '12.9%', note: '10.9% with Vendibook Pro, deducted from your payout.' },
+                  { who: 'Renters', rate: '12.9%', note: 'Service fee shown at checkout before you pay.' },
+                  { who: 'Buyers', rate: '$0', note: 'No Vendibook fee on purchases.' },
+                ].map((row) => (
+                  <div key={row.who} className="px-6 py-6 sm:px-8">
+                    <dt className="text-sm font-semibold text-foreground">{row.who}</dt>
+                    <dd className="mt-2 text-3xl font-bold tracking-tight text-foreground">{row.rate}</dd>
+                    <dd className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{row.note}</dd>
+                  </div>
+                ))}
+              </dl>
+            </motion.div>
+
+            {/* Dealers and enterprise — custom terms through the team. */}
+            <motion.div
+              {...(reduce ? {} : fadeUp)}
+              className={`mt-6 flex flex-col gap-4 rounded-[24px] border border-border bg-card p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8 ${CARD_SHADOW}`}
+            >
+              <div>
+                <p className="text-base font-semibold text-foreground">Dealers and enterprise</p>
+                <p className="mt-1.5 max-w-xl text-sm leading-relaxed text-muted-foreground">
+                  Listing a fleet or dealer inventory? Talk to our team about bulk onboarding and custom terms.
+                </p>
+              </div>
+              <Button asChild variant="cta-outline" size="cta" className="shrink-0">
+                <Link to="/contact">Contact sales <ArrowRight className="h-4 w-4" /></Link>
+              </Button>
+            </motion.div>
           </div>
         </section>
 
