@@ -83,8 +83,8 @@ const HeroSearchInput = ({
             className={`w-full h-14 ${isAIParsing ? 'pl-12' : 'pl-5'} pr-2 bg-transparent text-foreground text-[16px] sm:text-sm focus:outline-none`}
           />
           {isRecording && !location && !partialTranscript && (
-            <div className="absolute inset-0 flex items-center pl-5 pr-2 pointer-events-none">
-              <span className="text-destructive text-[16px] sm:text-sm">Listening… say what you're looking for</span>
+            <div className="absolute inset-0 flex items-center pl-5 pr-2 pointer-events-none overflow-hidden">
+              <span className="text-primary text-[16px] sm:text-sm whitespace-nowrap truncate">Listening…</span>
             </div>
           )}
           {!isRecording && !location && !isInputFocused && (
