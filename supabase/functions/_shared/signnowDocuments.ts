@@ -19,7 +19,7 @@
  * review all templates before Vendibook relies on them in production.
  */
 
-import { createClient } from 'npm:@supabase/supabase-js@2.45.0';
+import { createClient } from 'npm:@supabase/supabase-js@2.90.1';
 import {
   createDocumentFromTemplate,
   createEmbeddedInvite,
