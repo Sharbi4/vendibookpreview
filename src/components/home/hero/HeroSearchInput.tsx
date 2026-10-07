@@ -1,4 +1,4 @@
-import { Navigation, Wand2, Mic, MicOff, Search } from 'lucide-react';
+import { Navigation, Wand2, Mic, MicOff, Search, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { trackLeadEvent } from '@/lib/leadTracking';
 
