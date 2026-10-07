@@ -51,6 +51,8 @@ TX top 3 by views: "FOOD TRAILER - EXP 16X 8 FT" (83 views), "2020 The Food Trai
 - CTA: **Rent it out** → `https://vendibook.com/listings/<id>/rent-it-out?utm_source=email&utm_medium=campaign&utm_campaign=2026-10-rent-while-you-sell&utm_content=rent_while_you_sell_rent_cta`
 - Payment wording: "renters book and pay only through Vendibook checkout". Rental checkout is Square only (35c579a0), so no payment brand is named. No payout claims.
 
+**Exclusions:** always pass the do-not-contact list from `outreach/README.md` as `excludeUserIds`.
+
 **How to run it** (admin JWT or internal caller):
 1. `{"mode":"preview_count"}` returns `byState`, `byVariant` and `nextBatch`.
 2. `{"mode":"preview_html","variant":"rent_while_you_sell"}`
