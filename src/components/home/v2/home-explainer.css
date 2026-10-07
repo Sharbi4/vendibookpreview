@@ -64,6 +64,8 @@
 }
 .hx-pricing strong { color: hsl(var(--v2h-ink)); }
 .hx-pricing a { color: hsl(var(--v2h-ink)); font-weight: 650; text-decoration: underline; text-underline-offset: 3px; }
+.hx-fineprint { margin-top: 10px; color: hsl(var(--v2h-stone)); font-size: 12px; line-height: 1.5; }
+.hx-fineprint a { color: hsl(var(--v2h-ink)); text-decoration: underline; text-underline-offset: 2px; }
 .hx-actions { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
 
 @media (min-width: 768px) {

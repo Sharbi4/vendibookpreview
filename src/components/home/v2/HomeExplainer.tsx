@@ -108,6 +108,12 @@ export default function HomeExplainer({ sellerHref }: { sellerHref: string }) {
               <li>Dealer or enterprise inventory? <Link to="/contact">Contact us</Link></li>
             </ul>
           )}
+          {audience === 'sell' && (
+            <p className="hx-fineprint">
+              Sellers and hosts pay 12.9% of a completed sale or booking (10.9% with Vendibook Pro). Renters pay a
+              12.9% service fee shown at checkout; buyers pay no Vendibook fee. <Link to="/pricing">Full pricing</Link>
+            </p>
+          )}
           <div className="hx-actions">
             <Link to={cta.href} className="v2-home-btn">{cta.label}<ArrowRight aria-hidden="true" /></Link>
             <Link to={path.secondary.href} className="v2-home-btn is-quiet">{path.secondary.label}</Link>
