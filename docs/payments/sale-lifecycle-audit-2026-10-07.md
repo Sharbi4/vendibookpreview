@@ -101,6 +101,7 @@ missing notice), Low (polish).
 | 21 | Medium | Cash sale could be confirmed while another buyer had paid | Trigger checks moves into confirmed/completed | migration |
 | 22 | Low | `confirm-sale` double submit duplicated notifications; routed sellers told "payout queued" | Conditional update; routed copy | `confirm-sale` |
 | 23 | Low | Walkthrough marked completed when only one side joined | Requires both joins | `video-walkthrough-exit` |
+| 24 | High | A rental relisted from a sale listing ("Rent it while you sell it", same unit) stayed bookable after the sale was paid | Trigger pauses linked published rentals when the sale becomes paid/completed and notifies the seller | migration |
 
 Already correct: seller-routed lookups/capture/refund assertion, `PHYSICAL_GOODS` + listing title, payee and
 fee only when routed, PayPal idempotency keys, webhook event dedupe, ledger dedupe, capture amount checks,

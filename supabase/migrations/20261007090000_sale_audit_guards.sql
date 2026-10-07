@@ -132,3 +132,42 @@ CREATE POLICY "Sale parties read fulfillment updates"
   );
 -- Writes happen only through sale-fulfillment-update (service role).
 REVOKE INSERT, UPDATE, DELETE ON public.sale_fulfillment_updates FROM authenticated, anon;
+
+-- 7 ------------------------------------------------------------------------
+-- "Rent it while you sell it": a rental relisted from a sale listing
+-- (listings.source_listing_id) is the same physical unit. Once the sale is
+-- paid, the rental is paused so nobody can book a truck or trailer that has
+-- been sold, and the seller is told. Re-publishing stays the seller's choice.
+CREATE OR REPLACE FUNCTION public.pause_rentals_of_sold_listing()
+ RETURNS trigger
+ LANGUAGE plpgsql
+ SECURITY DEFINER
+ SET search_path TO 'public'
+AS $function$
+DECLARE
+  r record;
+BEGIN
+  IF NEW.listing_id IS NULL OR NEW.status IS NOT DISTINCT FROM OLD.status
+     OR NEW.status NOT IN ('paid','completed') THEN
+    RETURN NEW;
+  END IF;
+  FOR r IN
+    UPDATE public.listings
+       SET status = 'paused'::listing_status, updated_at = now()
+     WHERE source_listing_id = NEW.listing_id
+       AND status = 'published'::listing_status
+    RETURNING id, host_id, title
+  LOOP
+    INSERT INTO public.notifications (user_id, type, title, message, link)
+    VALUES (r.host_id, 'listing', 'Rental paused after your sale',
+            format('"%s" was paused because the same unit just sold. Re-publish it only if you still have it to rent.', r.title),
+            '/dashboard?view=host');
+  END LOOP;
+  RETURN NEW;
+END;
+$function$;
+
+DROP TRIGGER IF EXISTS trg_pause_rentals_of_sold_listing ON public.sale_transactions;
+CREATE TRIGGER trg_pause_rentals_of_sold_listing
+  AFTER UPDATE OF status ON public.sale_transactions
+  FOR EACH ROW EXECUTE FUNCTION public.pause_rentals_of_sold_listing();
