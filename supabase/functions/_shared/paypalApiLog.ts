@@ -29,6 +29,7 @@ function admin() {
 
 /** Header names whose values must never be stored. */
 const REDACTED_HEADERS = /^(authorization|paypal-auth-assertion|cookie|set-cookie)$/i;
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 /** Object keys that must never be stored, at any depth. */
 const FORBIDDEN_KEYS =
@@ -136,16 +137,23 @@ export function logPayPalApiCall(entry: PayPalLogEntry): void {
     response_body: entry.responseBody === undefined ? null : scrubForLog(entry.responseBody),
     paypal_debug_id: entry.debugId ?? null,
     latency_ms: entry.latencyMs ?? null,
-    seller_id: entry.sellerId ?? null,
+    // seller_id is a uuid column. Calls made on a seller's behalf can carry
+    // their PayPal merchant id instead, which would reject the whole row and
+    // lose the debug id. The (redacted) PayPal-Auth-Assertion header still
+    // marks the call as made for the seller.
+    seller_id: entry.sellerId && UUID_RE.test(entry.sellerId) ? entry.sellerId : null,
     order_id: entry.orderId ?? null,
     reference: entry.reference ?? null,
   };
   try {
     const result = db.from("paypal_api_logs").insert(row);
-    // supabase-js returns a thenable builder; attach a no-op catch.
-    Promise.resolve(result).catch(() => {
-      console.log("[PAYPAL] api_log_insert_failed");
-    });
+    // supabase-js resolves with { error } instead of rejecting, so check both.
+    Promise.resolve(result).then(
+      (res: { error?: { message?: string } | null }) => {
+        if (res?.error) console.log("[PAYPAL] api_log_insert_failed", res.error.message ?? "");
+      },
+      () => console.log("[PAYPAL] api_log_insert_failed"),
+    );
   } catch {
     console.log("[PAYPAL] api_log_insert_threw");
   }
