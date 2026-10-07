@@ -84,7 +84,7 @@ const HeroSearchInput = ({
           />
           {isRecording && !location && !partialTranscript && (
             <div className="absolute inset-0 flex items-center pl-5 pr-2 pointer-events-none overflow-hidden">
-              <span className="text-primary text-[16px] sm:text-sm whitespace-nowrap truncate">Listening…</span>
+              <span className="text-success text-[16px] sm:text-sm whitespace-nowrap truncate">Listening…</span>
             </div>
           )}
           {!isRecording && !location && !isInputFocused && (
@@ -114,13 +114,21 @@ const HeroSearchInput = ({
             disabled={isConnectingMic}
             aria-pressed={isRecording}
             className={`inline-flex h-11 w-11 items-center justify-center rounded-lg transition-colors ${
-              isRecording
-                ? `text-destructive bg-destructive/10 hover:bg-destructive/20 ${reduced ? '' : 'animate-pulse'}`
-                : 'text-muted-foreground/70 hover:text-foreground hover:bg-accent'
+              isAIParsing || isConnectingMic
+                ? `text-success bg-success/10 ${reduced ? '' : 'animate-pulse'}`
+                : isRecording
+                  ? `text-success bg-success/10 hover:bg-success/20 ${reduced ? '' : 'animate-pulse'}`
+                  : 'text-muted-foreground/70 hover:text-foreground hover:bg-accent'
             } disabled:opacity-50`}
             aria-label={isRecording ? 'Stop voice search' : 'Voice search'}
           >
-            {isRecording ? <MicOff className="w-4 h-4" aria-hidden="true" /> : <Mic className="w-4 h-4" aria-hidden="true" />}
+            {isAIParsing || isConnectingMic ? (
+              <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+            ) : isRecording ? (
+              <MicOff className="w-4 h-4" aria-hidden="true" />
+            ) : (
+              <Mic className="w-4 h-4" aria-hidden="true" />
+            )}
           </button>
           <button
             type="button"
