@@ -42,6 +42,8 @@ serve(async (req) => {
       subscription_renewed: "Membership renewed 🔁",
       freight_quote_request: "New Vendibook Freight quote request 🚚",
       message_risk: "High-risk message flagged — review now",
+      payments_alert: "Payment needs admin action",
+      handoff_issue: "Handoff issue reported — review now",
     };
 
     const labelMap: Record<string, string> = {

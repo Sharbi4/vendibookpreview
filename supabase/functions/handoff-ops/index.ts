@@ -123,6 +123,20 @@ async function logEvidence(db: any, row: Record<string, unknown>) {
   }
 }
 
+/** Order page for a delivery/handoff: sales and rentals have different screens. */
+function orderLink(session: { sale_transaction_id?: string | null; booking_id?: string | null }): string {
+  return session.sale_transaction_id
+    ? `/transaction/${session.sale_transaction_id}`
+    : `/dashboard/bookings/${session.booking_id}`;
+}
+
+/** The live position is not kept once sharing stops (Location Tracking disclosure). */
+const CLEAR_LIVE_POSITION = {
+  last_latitude: null,
+  last_longitude: null,
+  last_accuracy_m: null,
+} as const;
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -142,7 +156,7 @@ serve(async (req) => {
       const hash = await sha256(String(token));
       const { data: link } = await db
         .from("secure_driver_links")
-        .select("id, fulfillment_session_id, expires_at, revoked_at, driver_name")
+        .select("id, fulfillment_session_id, expires_at, revoked_at, driver_name, first_used_at")
         .eq("token_hash", hash)
         .maybeSingle();
       if (!link) return jsonError(403, "invalid_link", "This delivery link is not valid.");
@@ -321,6 +335,9 @@ serve(async (req) => {
             fulfillment_type: session.mode,
           } as TargetRef);
           if (errp) return jsonError(403, "forbidden", errp);
+          if (!isAdmin && session.seller_id !== userId && session.assigned_driver_user_id !== userId) {
+            return jsonError(403, "forbidden", "Only the seller or the assigned driver can share the delivery location.");
+          }
         }
         if (!session.location_consent) {
           return jsonError(400, "no_consent", "Location documentation is not enabled for this delivery.");
@@ -509,7 +526,7 @@ serve(async (req) => {
           type: "buyer_action_required",
           title: "Your delivery is on the way",
           message: "You can follow the delivery live on your order page.",
-          link: `/orders/${session.sale_transaction_id ?? session.booking_id}`,
+          link: orderLink(session),
           dedupeKey: `tracking_started:${sessionId}`,
         });
 
@@ -542,6 +559,7 @@ serve(async (req) => {
           patch.tracking_active = false;
           patch.tracking_paused = false;
           patch.tracking_ended_at = nowIso;
+          Object.assign(patch, CLEAR_LIVE_POSITION);
         }
         await db.from("fulfillment_sessions").update(patch).eq("id", sessionId);
         await logEvidence(db, {
@@ -582,6 +600,7 @@ serve(async (req) => {
           tracking_active: false,
           tracking_paused: false,
           tracking_ended_at: nowIso,
+          ...CLEAR_LIVE_POSITION,
           updated_at: nowIso,
         }).eq("id", sessionId);
         await db.from("secure_driver_links").update({ revoked_at: nowIso })
@@ -602,7 +621,7 @@ serve(async (req) => {
           type: "buyer_action_required",
           title: "Your delivery has been marked delivered",
           message: "Open your order to confirm the handoff and review the delivery record.",
-          link: `/orders/${session.sale_transaction_id ?? session.booking_id}`,
+          link: orderLink(session),
           dedupeKey: `delivered:${sessionId}`,
         });
         return jsonResponse(200, { success: true });
@@ -620,6 +639,9 @@ serve(async (req) => {
         if (!driverSessionId) {
           const errp = assertParticipant(session as unknown as TargetRef);
           if (errp) return jsonError(403, "forbidden", errp);
+          if (!isAdmin && session.seller_id !== userId && session.assigned_driver_user_id !== userId) {
+            return jsonError(403, "forbidden", "Only the seller or the assigned driver can mark arrival.");
+          }
         }
         await db
           .from("fulfillment_sessions")
@@ -654,9 +676,20 @@ serve(async (req) => {
         if (!session) return jsonError(404, "not_found", "That delivery session no longer exists.");
         const errp = assertParticipant(session as unknown as TargetRef);
         if (errp) return jsonError(403, "forbidden", errp);
+        if (!isAdmin && session.seller_id !== userId) {
+          return jsonError(403, "forbidden", "Only the seller can cancel this delivery.");
+        }
+        const cancelledAt = new Date().toISOString();
         await db
           .from("fulfillment_sessions")
-          .update({ status: "cancelled", cancelled_at: new Date().toISOString() })
+          .update({
+            status: "cancelled",
+            cancelled_at: cancelledAt,
+            tracking_active: false,
+            tracking_paused: false,
+            tracking_ended_at: session.tracking_ended_at ?? cancelledAt,
+            ...CLEAR_LIVE_POSITION,
+          })
           .eq("id", sessionId);
         await db.from("secure_driver_links").update({ revoked_at: new Date().toISOString() })
           .eq("fulfillment_session_id", sessionId).is("revoked_at", null);
@@ -759,7 +792,7 @@ serve(async (req) => {
         if (!driverSessionId) return jsonError(403, "invalid_link", "This delivery link is not valid.");
         const { data: session } = await db
           .from("fulfillment_sessions")
-          .select("id, status, mode, listing_id, sale_transaction_id, booking_id, driver_name, location_consent")
+          .select("id, status, mode, listing_id, sale_transaction_id, booking_id, driver_name, location_consent, tracking_active, tracking_paused, destination_label")
           .eq("id", driverSessionId)
           .maybeSingle();
         if (!session) return jsonError(404, "not_found", "This delivery is no longer available.");
@@ -783,6 +816,9 @@ serve(async (req) => {
             mode: session.mode,
             driver_name: session.driver_name,
             location_consent: session.location_consent,
+            tracking_active: session.tracking_active,
+            tracking_paused: session.tracking_paused,
+            destination_label: session.destination_label,
           },
           listing: listing ? { title: listing.title, city: listing.city, state: listing.state } : null,
           handoff: handoff ?? null,
@@ -805,6 +841,20 @@ serve(async (req) => {
         if (err) return jsonError(403, "forbidden", err);
         const t = target!;
         const mode: Mode = FULFILLMENT_MODES.includes(body.mode) ? body.mode : "buyer_pickup";
+
+        // A handoff records the unit changing hands, so the purchase or rental
+        // must be settled first (cash sales settle at the handoff itself).
+        if (t.sale_transaction_id) {
+          const { data: sale } = await db.from("sale_transactions").select("status").eq("id", t.sale_transaction_id).maybeSingle();
+          if (!["pending_cash", "paid", "buyer_confirmed", "seller_confirmed", "confirmed"].includes(String(sale?.status))) {
+            return jsonError(409, "not_ready", "The handoff opens once the purchase is paid.");
+          }
+        } else if (t.booking_id) {
+          const { data: booking } = await db.from("booking_requests").select("status, payment_status").eq("id", t.booking_id).maybeSingle();
+          if (booking?.status !== "approved" || booking?.payment_status !== "paid") {
+            return jsonError(409, "not_ready", "The handoff opens once the rental is approved and paid.");
+          }
+        }
 
         // Server-side gate: the Verified Handoff & Condition Evidence Terms must
         // be accepted at the current version before any capture step can begin.
@@ -945,14 +995,29 @@ serve(async (req) => {
             return jsonError(403, "handoff_terms_required", "Please accept the Verified Handoff Terms before capturing evidence.");
           }
         }
+        // The file must really exist in this handoff's private evidence
+        // folder: payout conditions count a saved walkthrough video, so a
+        // made-up path or size must never satisfy them.
+        const storagePath = String(body.storage_path ?? "");
+        const slash = storagePath.lastIndexOf("/");
+        if (!storagePath.startsWith(`${handoff.id}/`) || slash <= 0) {
+          return jsonError(400, "bad_media_path", "Upload the file to this handoff before saving it.");
+        }
+        const { data: listed } = await db.storage.from("handoff-evidence")
+          .list(storagePath.slice(0, slash), { search: storagePath.slice(slash + 1), limit: 5 });
+        const stored = (listed ?? []).find((o: any) => o?.name === storagePath.slice(slash + 1));
+        const storedBytes = Number(stored?.metadata?.size ?? 0);
+        if (!stored || storedBytes <= 0) {
+          return jsonError(400, "media_not_found", "We couldn't find that upload. Try uploading it again.");
+        }
         const { data: media, error } = await db.from("handoff_media").insert({
           handoff_session_id: handoff.id,
-          storage_path: String(body.storage_path),
+          storage_path: storagePath,
           media_type: body.media_type === "photo" ? "photo" : "video",
           kind: body.kind ?? "walkthrough",
           uploaded_by: userId,
           uploaded_by_role: userId === handoff.buyer_id ? "buyer" : driverSessionId ? "driver" : "seller",
-          byte_size: body.byte_size ?? null,
+          byte_size: storedBytes,
           duration_seconds: body.duration_seconds ?? null,
         }).select().single();
         if (error) return jsonError(400, "insert_failed", error.message);
@@ -995,6 +1060,10 @@ serve(async (req) => {
         const handoff = await loadHandoff(body.handoff_session_id);
         const g = await handoffGuard(handoff);
         if (g) return jsonError(403, "forbidden", g);
+        // The condition decision is the buyer's (or renter's) own statement.
+        if (!isAdmin && userId !== handoff.buyer_id) {
+          return jsonError(403, "forbidden", "Only the buyer can record how the unit was received.");
+        }
         if (handoff.finalized) return jsonError(400, "finalized", "This handoff record is finalized.");
         const decision = String(body.decision ?? "");
         if (!["accepted", "accepted_with_exceptions", "issue_reported"].includes(decision)) {
@@ -1058,6 +1127,28 @@ serve(async (req) => {
             : `/handoff/booking/${handoff.booking_id}`,
           dedupeKey: `decision:${handoff.id}`,
         });
+
+        // A problem at handoff needs Vendibook, not just the seller: alert
+        // admins so the evidence is reviewed before any payout.
+        if (decision !== "accepted") {
+          try {
+            await db.functions.invoke("send-admin-notification", {
+              body: {
+                type: "handoff_issue",
+                data: {
+                  decision,
+                  notes,
+                  handoff_session_id: handoff.id,
+                  sale_transaction_id: handoff.sale_transaction_id,
+                  booking_id: handoff.booking_id,
+                  listing_id: handoff.listing_id,
+                },
+              },
+            });
+          } catch (_) {
+            // the evidence record above is the source of truth
+          }
+        }
 
         return jsonResponse(200, { success: true, decision });
       }
