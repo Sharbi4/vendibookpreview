@@ -1,6 +1,8 @@
 import './navigation-contrast.css';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { VoiceMicButton } from '@/components/voice/VoiceMicButton';
+import { useVoiceDictation } from '@/hooks/useVoiceDictation';
 import { Menu, X, Search, User, LogOut, Shield, MessageCircle, HelpCircle, ShieldCheck, Clock, TrendingUp, Mic, MicOff, ChevronDown, CheckCircle2, Heart, CalendarDays, Home, Bell, Globe, Settings, Gift, LayoutDashboard, PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
@@ -239,6 +241,11 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
     }
   }, [navigate]);
 
+  const headerVoice = useVoiceDictation({
+    onPartial: (text) => { if (text) setMobileSearchQuery(text); },
+    onFinal: (text) => { setMobileSearchQuery(text); executeSearch(text); },
+  });
+
   const handleMobileSearch = (e: React.FormEvent) => {
     e.preventDefault();
     executeSearch(mobileSearchQuery);
@@ -332,9 +339,17 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
                     setShowSuggestions(true);
                   }}
                   onFocus={() => setShowSuggestions(true)}
-                  placeholder={isListening ? t('header.listening') : t('header.mobileSearchPlaceholder')}
-                  className={`pl-9 pr-4 py-2 w-full rounded-full border-border bg-muted/50 focus-visible:ring-primary ${isListening ? 'border-primary ring-2 ring-primary/20' : ''}`}
+                  placeholder={headerVoice.isRecording ? 'Listening…' : t('header.mobileSearchPlaceholder')}
+                  className={`pl-9 pr-10 py-2 w-full rounded-full border-border bg-muted/50 text-base focus-visible:ring-primary ${headerVoice.isRecording ? 'border-success ring-2 ring-success/20' : ''}`}
                   autoComplete="off"
+                />
+                <VoiceMicButton
+                  isRecording={headerVoice.isRecording}
+                  isBusy={headerVoice.isConnecting}
+                  onClick={headerVoice.toggle}
+                  size="sm"
+                  label="Voice search"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 rounded-full"
                 />
               </form>
               
