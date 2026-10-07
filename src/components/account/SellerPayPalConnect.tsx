@@ -613,8 +613,8 @@ export default function SellerPayPalConnect({
 
         {enabled === false && (
           <p className="v2-paypal-note">
-            Sandbox setup required — PayPal seller connection isn&apos;t switched on for this
-            environment yet. You can still create and publish listings.
+            Connecting your own PayPal account isn&apos;t available yet. You can still create
+            and publish listings; Vendibook collects payment and pays you out after each sale.
           </p>
         )}
       </div>

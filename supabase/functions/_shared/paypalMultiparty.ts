@@ -19,6 +19,13 @@
 
 export const MULTIPARTY_FLAG_KEY = "paypal_multiparty_enabled";
 
+/** Same resolution as paypal.ts paypalEnvironment(), without its Deno imports. */
+function paypalEnvironment(): "sandbox" | "live" {
+  const deno = (globalThis as { Deno?: { env: { get(key: string): string | undefined } } }).Deno;
+  const raw = (deno?.env.get("PAYPAL_ENVIRONMENT") ?? "sandbox").toLowerCase();
+  return raw === "live" || raw === "production" ? "live" : "sandbox";
+}
+
 /**
  * Environment-level switch. Synchronous so the PayPal request layer can use it
  * as a hard guard. Missing/any value other than "true" means OFF.
@@ -82,7 +89,7 @@ export async function sellerMultipartyReady(
   try {
     const { data, error } = await admin
       .from("seller_paypal_accounts")
-      .select("merchant_id, primary_email_confirmed, payments_receivable, onboarding_status")
+      .select("merchant_id, primary_email_confirmed, payments_receivable, onboarding_status, environment")
       .eq("user_id", sellerId)
       // Disconnected connections are archived, not deleted — only the active
       // one counts. Without this filter a stale disconnected row could flip
@@ -92,6 +99,11 @@ export async function sellerMultipartyReady(
     // Table does not exist yet (Step 2) → stay first-party.
     if (error || !data) return { enabled: false, merchantId: null };
 
+    // A connection made in the other PayPal environment (sandbox merchant ids
+    // don't exist in live) can never receive this order.
+    if (data.environment && data.environment !== paypalEnvironment()) {
+      return { enabled: false, merchantId: null };
+    }
     const ready = data.onboarding_status === "ready" &&
       data.primary_email_confirmed === true &&
       data.payments_receivable === true &&

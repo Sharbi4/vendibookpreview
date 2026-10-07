@@ -111,6 +111,16 @@ Deno.serve(async (req) => {
         .is("archived_at", null)
         .maybeSingle();
       if (error) throw error;
+      // A connection made in the other PayPal environment (e.g. sandbox, before
+      // the live switch) is archived so the seller connects again for real.
+      if (data && data.environment && data.environment !== paypalOnboardingEnvironment()) {
+        const now = new Date().toISOString();
+        await admin.from("seller_paypal_accounts")
+          .update({ archived_at: now, referral_url: null, updated_at: now })
+          .eq("id", data.id);
+        safeLog("seller_connection_env_mismatch_archived", { user_id: user.id, environment: data.environment });
+        return null;
+      }
       return data;
     };
 
@@ -170,6 +180,7 @@ Deno.serve(async (req) => {
       const { error: insertError } = await admin.from("seller_paypal_accounts").insert({
         user_id: user.id,
         tracking_id: trackingId,
+        environment: paypalOnboardingEnvironment(),
         onboarding_status: "link_sent",
         referral_url: referral.actionUrl,
       });

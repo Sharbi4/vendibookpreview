@@ -1,9 +1,10 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
-import { paypalRequest, paypalEnvironment, getPayPalAccessTokenForEnv } from '../_shared/paypal.ts'
+import { paypalApiBase, paypalRequest, paypalEnvironment, getPayPalAccessTokenForEnv } from '../_shared/paypal.ts'
 
-// Temporary one-time diagnostic: confirms a PayPal webhook ID exists in the
-// sandbox, reports its URL and subscribed event types, and can simulate an
-// event to prove end-to-end signature verification. Deleted after use.
+// Admin diagnostic: confirms a PayPal webhook ID exists in the environment
+// Vendibook is running in (PAYPAL_ENVIRONMENT), reports its URL and subscribed
+// event types, and in sandbox only can simulate an event to prove end-to-end
+// signature verification (PayPal has no live simulator).
 
 function safeEqual(a: string, b: string): boolean {
   if (a.length !== b.length) return false
@@ -50,9 +51,9 @@ Deno.serve(async (req) => {
     if (body.add_event_type) {
       try {
         const patchOp = [{ op: 'add', path: '/event_types', value: [{ name: body.add_event_type, description: 'Authorization expired (Vendibook)' }] }]
-        const resp = await fetch(`https://api-m.sandbox.paypal.com/v1/notifications/webhooks/${encodeURIComponent(webhookId)}`, {
+        const resp = await fetch(`${paypalApiBase()}/v1/notifications/webhooks/${encodeURIComponent(webhookId)}`, {
           method: 'PATCH',
-          headers: { Authorization: `Bearer ${await getPayPalAccessTokenForEnv('sandbox')}`, 'Content-Type': 'application/json' },
+          headers: { Authorization: `Bearer ${await getPayPalAccessTokenForEnv(paypalEnvironment())}`, 'Content-Type': 'application/json' },
           body: JSON.stringify(patchOp),
         })
         const text = await resp.text()
@@ -64,7 +65,9 @@ Deno.serve(async (req) => {
       }
     }
 
-    if (body.simulate) {
+    if (body.simulate && paypalEnvironment() !== 'sandbox') {
+      result.simulate_error = 'PayPal only simulates webhook events in sandbox.'
+    } else if (body.simulate) {
       const eventType = body.event_type ?? 'PAYMENT.CAPTURE.COMPLETED'
       try {
         const token = await getPayPalAccessTokenForEnv('sandbox')
