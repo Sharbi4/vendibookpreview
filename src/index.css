@@ -2011,6 +2011,15 @@ a.v2-paypal-badge:hover { border-color: hsl(30 12% 66%); }
 .v2-checklist li.is-pending svg { color: hsl(213 16% 58%); }
 .v2-checklist li.is-blocked { color: hsl(36 78% 78%); }
 .v2-checklist li.is-blocked svg { color: hsl(36 78% 66%); }
+/* Same checklist on a light card (payment setup step 2). */
+.v2-checklist.v2-checklist--light { border-color: hsl(var(--v2-line)); background: hsl(30 33% 98%); }
+.v2-checklist--light li { color: hsl(24 10% 35%); }
+.v2-checklist--light li + li { border-top-color: hsl(var(--v2-line)); }
+.v2-checklist--light li.is-done { color: hsl(24 14% 14%); }
+.v2-checklist--light li.is-done svg { color: hsl(152 55% 36%); }
+.v2-checklist--light li.is-pending svg { color: hsl(24 8% 55%); }
+.v2-checklist--light li.is-blocked { color: hsl(0 72% 42%); font-weight: 600; }
+.v2-checklist--light li.is-blocked svg { color: hsl(0 72% 48%); }
 
 /* Legacy panels recomposed into the money center */
 .v2-embedded-section { color: hsl(var(--v2-ink)); }

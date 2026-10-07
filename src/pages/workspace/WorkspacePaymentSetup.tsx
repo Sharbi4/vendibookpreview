@@ -263,7 +263,7 @@ export default function WorkspacePaymentSetup() {
             )}
 
             {connection && (
-              <ul className="v2-checklist" style={{ borderColor: 'hsl(var(--v2-line))' }}>
+              <ul className="v2-checklist v2-checklist--light">
                 <li className={emailUnconfirmed ? 'is-blocked' : isReady ? 'is-done' : 'is-pending'}>
                   {marker(emailUnconfirmed ? 'blocked' : isReady ? 'done' : 'pending')}
                   Primary email confirmed on your PayPal account
