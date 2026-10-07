@@ -3,6 +3,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
 import { getPayPalOrder, safeLog } from "../_shared/paypal.ts";
+import { routedMerchantId } from "../_shared/paypalMultiparty.ts";
 
 /**
  * Reconciling finalizer for a buyer who came back from PayPal.
@@ -68,7 +69,7 @@ serve(async (req) => {
     }
 
     // Ask PayPal what actually happened before deciding anything.
-    const order = await getPayPalOrder(providerOrderId).catch(() => null);
+    const order = await getPayPalOrder(providerOrderId, { actAsMerchantId: routedMerchantId(record) }).catch(() => null);
     const payPalStatus = String(order?.status ?? "").toUpperCase();
 
     if (payPalStatus === "CREATED" || payPalStatus === "PAYER_ACTION_REQUIRED") {

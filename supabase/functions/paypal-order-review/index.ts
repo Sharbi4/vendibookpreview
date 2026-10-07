@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
 import { getPayPalOrder, PayPalError } from "../_shared/paypal.ts";
+import { routedMerchantId } from "../_shared/paypalMultiparty.ts";
 
 /**
  * Read-only companion to `paypal-capture-order`.
@@ -45,7 +46,7 @@ serve(async (req) => {
     // Provider truth for the approval state and the chosen funding source.
     let order: any = null;
     try {
-      order = record.paypal_order_id ? await getPayPalOrder(record.paypal_order_id) : null;
+      order = record.paypal_order_id ? await getPayPalOrder(record.paypal_order_id, { actAsMerchantId: routedMerchantId(record) }) : null;
     } catch (_err) {
       order = null;
     }

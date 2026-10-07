@@ -50,6 +50,19 @@ export async function multipartyEnabled(admin?: any): Promise<boolean> {
 }
 
 /**
+ * Seller merchant id a PayPal order was routed to, as recorded on its payment
+ * record when the order was created. Read from the record, never from the
+ * current flag, so an order created while routing was on can still be looked
+ * up, captured and refunded after the flag is turned off.
+ */
+export function routedMerchantId(record: { metadata?: unknown } | null | undefined): string | null {
+  const mp = (record?.metadata as { multiparty?: { provider?: string; merchant_id?: unknown } } | null | undefined)
+    ?.multiparty;
+  if (!mp || mp.provider === "square") return null;
+  return typeof mp.merchant_id === "string" && mp.merchant_id ? mp.merchant_id : null;
+}
+
+/**
  * True only when multiparty is on AND this specific seller is ready to receive
  * funds through PayPal. Step 2 fills in the readiness lookup; until the seller
  * connection table exists this always returns false, so live routing is

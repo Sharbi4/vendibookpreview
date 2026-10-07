@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
 import { getPayPalOrder, PayPalError } from "../_shared/paypal.ts";
+import { routedMerchantId } from "../_shared/paypalMultiparty.ts";
 import { extractCaptureFacts, finalizeCapture } from "../_shared/paypalFinalize.ts";
 import { auditPayment, requestIp } from "../_shared/paymentAudit.ts";
 import { recordOrderEvent } from "../_shared/orders/orderEvents.ts";
@@ -80,7 +81,7 @@ serve(async (req) => {
 
       const { data: records } = await admin
         .from("payment_records")
-        .select("id, reference, payment_status, paypal_order_id, paypal_capture_id")
+        .select("id, reference, payment_status, paypal_order_id, paypal_capture_id, metadata")
         .eq("listing_id", listingId);
       const { data: sales } = await admin
         .from("sale_transactions")
@@ -93,7 +94,7 @@ serve(async (req) => {
       for (const rec of records ?? []) {
         if (!rec.paypal_order_id) continue;
         try {
-          const order = await getPayPalOrder(rec.paypal_order_id);
+          const order = await getPayPalOrder(rec.paypal_order_id, { actAsMerchantId: routedMerchantId(rec) });
           provider.push({
             reference: rec.reference,
             local_status: rec.payment_status,
@@ -172,7 +173,7 @@ serve(async (req) => {
       }
       let providerOrder: any;
       try {
-        providerOrder = await getPayPalOrder(record.paypal_order_id);
+        providerOrder = await getPayPalOrder(record.paypal_order_id, { actAsMerchantId: routedMerchantId(record) });
       } catch (err) {
         const status = err instanceof PayPalError ? err.status : 502;
         return jsonError(status >= 500 ? 503 : 409, "reconcile_failed", "PayPal could not be reached for this order.");

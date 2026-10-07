@@ -100,6 +100,8 @@ serve(async (req) => {
     const targetId = body?.id ? String(body.id) : null;
 
     let quote: QuoteResult;
+    // Listing title, used as the PayPal item name (sales and rentals).
+    let itemTitle: string | null = null;
     let saleTransactionId: string | null = null;
     let bookingRequestId: string | null = null;
     let rentalFingerprint: string | null = null;
@@ -155,6 +157,7 @@ serve(async (req) => {
         return jsonError(403, "self_transaction", "You can't purchase your own listing.");
       }
       const freightPayer = (tx as any).listing?.freight_payer === "seller" ? "seller" : "buyer";
+      itemTitle = (tx as any).listing?.title ?? null;
       quote = quoteSaleTransaction(tx, (tx as any).listing?.title ?? "Listing", { freightPayer });
       saleTransactionId = tx.id;
       // Buyer-paid freight now rides along with the purchase. Reuse the freight
@@ -226,6 +229,7 @@ serve(async (req) => {
       const hostPro = booking.host_platform_fee !== null && booking.host_platform_fee !== undefined
         ? { isPro: !!booking.pro_fee_applied }
         : { isPro: (await resolveProStatus(admin, booking.host_id)).isPro };
+      itemTitle = (booking as any).listing?.title ?? null;
       quote = quoteBookingRequest(booking, (booking as any).listing?.title ?? "Listing", hostPro);
       bookingRequestId = booking.id;
       strategyContext = {
@@ -702,7 +706,12 @@ serve(async (req) => {
     // ── Item-level detail (PayPal certification requirement) ─────────────
     // Every order carries real lines with stable SKUs, and the breakdown is
     // validated here so a mismatch surfaces as our error, not a PayPal 422.
-    const detail = buildOrderDetail(quote, { physical: !!shippingAddress });
+    // Equipment bought on Vendibook is a physical good even when the buyer
+    // picks it up; only shipped orders carry an address.
+    const detail = buildOrderDetail(quote, {
+      physical: !!shippingAddress || kind === "sale",
+      itemName: itemTitle,
+    });
 
     // Soft descriptor: the seller's business name so the buyer recognises the
     // charge on their statement. Falls back to VENDIBOOK.

@@ -4,6 +4,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
 import { capturePayPalOrder, getPayPalOrder, PayPalError, safeLog } from "../_shared/paypal.ts";
+import { routedMerchantId } from "../_shared/paypalMultiparty.ts";
 import { CaptureRejectedError, extractCaptureFacts, finalizeCapture } from "../_shared/paypalFinalize.ts";
 import { auditPayment, requestIp } from "../_shared/paymentAudit.ts";
 import { getListingPurchaseState, LISTING_UNAVAILABLE_MESSAGE } from "../_shared/listingGuard.ts";
@@ -44,6 +45,8 @@ serve(async (req) => {
     if (record.buyer_id !== user.id) {
       return jsonError(403, "forbidden", "This payment belongs to another account.");
     }
+    // Orders routed to the seller must be read and captured as that seller.
+    const asSeller = { actAsMerchantId: routedMerchantId(record) };
 
     // Already finalised (capture endpoint raced the webhook) — return success.
     if (record.payment_status === "completed") {
@@ -65,7 +68,7 @@ serve(async (req) => {
         // Reconcile the ambiguous provider state before deciding.
         let providerOrder: any = null;
         try {
-          providerOrder = await getPayPalOrder(order_id);
+          providerOrder = await getPayPalOrder(order_id, asSeller);
         } catch (_err) {
           providerOrder = null;
         }
@@ -137,7 +140,7 @@ serve(async (req) => {
     if (record.fee_breakdown?.checkout_source === "card_fields") {
       // Read the actual card authentication result; never trust SDK callbacks
       // or a browser-supplied liabilityShift when deciding whether to capture.
-      const approvedOrder = await getPayPalOrder(order_id);
+      const approvedOrder = await getPayPalOrder(order_id, asSeller);
       const capture = captureFromOrder(approvedOrder);
       if (!capture && (approvedOrder.status !== "APPROVED" ||
         !approvedOrder.payment_source?.card || !cardAuthenticationReady(approvedOrder.payment_source.card))) {
@@ -154,10 +157,10 @@ serve(async (req) => {
     }
     let order: any;
     try {
-      order = await capturePayPalOrder(order_id, `capture:${record.reference}`);
+      order = await capturePayPalOrder(order_id, `capture:${record.reference}`, asSeller);
     } catch (err) {
       if (err instanceof PayPalError && err.issue === "ORDER_ALREADY_CAPTURED") {
-        order = await getPayPalOrder(order_id).catch(() => null);
+        order = await getPayPalOrder(order_id, asSeller).catch(() => null);
       } else if (err instanceof PayPalError && err.status < 500 && err.status !== 429) {
         const failure = captureFailure(err.issue, err.status);
         await admin.from("payment_records").update({
@@ -174,7 +177,7 @@ serve(async (req) => {
         // the buyer must complete. Hand it to the client instead of dead-ending.
         let payerActionUrl: string | null = null;
         if (err.issue === "PAYER_ACTION_REQUIRED") {
-          const pending = await getPayPalOrder(order_id).catch(() => null);
+          const pending = await getPayPalOrder(order_id, asSeller).catch(() => null);
           payerActionUrl =
             (pending?.links ?? []).find((l: any) => l?.rel === "payer-action")?.href ?? null;
         }

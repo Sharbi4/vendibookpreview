@@ -46,9 +46,18 @@ export function buildOrderDetail(
     taxCents: number;
     grossCents: number;
   },
-  opts: { physical?: boolean } = {},
+  opts: {
+    physical?: boolean;
+    /**
+     * What the buyer is paying for (the listing title). Names the first item
+     * line instead of a generic quote label like "Item price"; the label
+     * stays as the line's description.
+     */
+    itemName?: string | null;
+  } = {},
 ): OrderDetailResult {
   const category = opts.physical ? "PHYSICAL_GOODS" as const : "DIGITAL_GOODS" as const;
+  const itemName = opts.itemName?.trim() || null;
   let shippingCents = 0;
   let discountCents = 0;
   const items: PayPalItemLine[] = [];
@@ -66,7 +75,7 @@ export function buildOrderDetail(
       continue;
     }
     items.push({
-      name: line.label.slice(0, 127),
+      name: (!items.length && itemName ? itemName : line.label).slice(0, 127),
       unitAmountCents: amount,
       quantity: 1,
       description: line.label.slice(0, 127),

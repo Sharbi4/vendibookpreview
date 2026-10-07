@@ -754,14 +754,28 @@ export async function addPayPalTracking(opts: {
   );
 }
 
-export async function getPayPalOrder(orderId: string) {
-  return await paypalRequest(`/v2/checkout/orders/${encodeURIComponent(orderId)}`);
+/**
+ * An order created on a seller's behalf (Connected Path) only exists for
+ * calls that carry the same PayPal-Auth-Assertion; without it PayPal answers
+ * 404 RESOURCE_NOT_FOUND. Pass `routedMerchantId(record)` as `actAsMerchantId`.
+ */
+export async function getPayPalOrder(
+  orderId: string,
+  opts: { actAsMerchantId?: string | null } = {},
+) {
+  return await paypalRequest(`/v2/checkout/orders/${encodeURIComponent(orderId)}`, {
+    actAsMerchantId: opts.actAsMerchantId ?? null,
+  });
 }
 
-export async function capturePayPalOrder(orderId: string, idempotencyKey: string) {
+export async function capturePayPalOrder(
+  orderId: string,
+  idempotencyKey: string,
+  opts: { actAsMerchantId?: string | null } = {},
+) {
   return await paypalRequest(
     `/v2/checkout/orders/${encodeURIComponent(orderId)}/capture`,
-    { method: "POST", idempotencyKey, body: {} },
+    { method: "POST", idempotencyKey, body: {}, actAsMerchantId: opts.actAsMerchantId ?? null },
   );
 }
 
