@@ -46,7 +46,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/f4d5e5ae-31eb-4ba0-9d2b-13df7279d020</loc>
-    <lastmod>2026-10-04</lastmod>
+    <lastmod>2026-10-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -101,7 +101,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/a3ead971-38c7-4c0c-8f3f-2b02185c7c2f</loc>
-    <lastmod>2026-10-06</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -299,7 +299,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/154df4be-3102-44c9-b014-b36bafce8391</loc>
-    <lastmod>2026-10-03</lastmod>
+    <lastmod>2026-10-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -332,7 +332,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/a27ad5e3-5260-4af1-beca-2a13b82fd733</loc>
-    <lastmod>2026-10-04</lastmod>
+    <lastmod>2026-10-06</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -596,7 +596,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/c8d152a4-dbc2-4239-8e0a-56cecac50266</loc>
-    <lastmod>2026-10-06</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -1069,7 +1069,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/1707a6d0-76e7-4ad0-8a31-403b6a5b047e</loc>
-    <lastmod>2026-10-06</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -1311,7 +1311,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/c001129e-dfb8-42e2-bb4f-cf83dc0a2027</loc>
-    <lastmod>2026-10-05</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -1421,7 +1421,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/6458a2bc-fd12-4457-8760-4eba5f810c6f</loc>
-    <lastmod>2026-10-06</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -1465,13 +1465,24 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/be901aba-936f-4322-b004-07f41c0ff086</loc>
-    <lastmod>2026-10-06</lastmod>
+    <lastmod>2026-10-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/aac30ed7-6431-4aa2-b320-a98ce63fec4c/be901aba-936f-4322-b004-07f41c0ff086/1791320853398-yznrn.jpeg</image:loc>
       <image:title>2026 Turn-Key Ready Food Trailer </image:title>
       <image:caption>2026 Turn-Key Ready Food Trailer  in Pasadena, TX on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/3617798f-fe0a-479a-b26b-1a3e95b567c4</loc>
+    <lastmod>2026-10-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://vendibook.com/brand/vendibook-icon-512.png</image:loc>
+      <image:title>Sandbox PayPal certification listing (not for sale)</image:title>
+      <image:caption>Sandbox PayPal certification listing (not for sale) in Phoenix, AZ on Vendibook</image:caption>
     </image:image>
   </url>
 </urlset>
