@@ -36,7 +36,11 @@ Subject: The seller of the Seguin food trailer would like to talk
 
 ---
 
-## R-2 · Bradenton, FL · "Food trailer (Indian food truck)" · $22,000 offer on $40,000 (expired 2026-06-11)
+## R-2 · Bradenton, FL  ⚠️ SUPERSEDED 2026-10-08: do not send
+
+> The seller edited the listing on 2026-10-08, so it is still for sale. Their one concierge email is now the polish ask in `polish-florida-2026-10-08.md` (condition, turn on offers mentioning the June offer, title and inclusions). Do not send the R-2 email below or the generic-notice data at the bottom. The buyer follow-up still needs the seller's explicit confirmation.
+
+## (original) R-2 · Bradenton, FL · "Food trailer (Indian food truck)" · $22,000 offer on $40,000 (expired 2026-06-11)
 
 - Offer `a4ab5437-a5d3-4e99-8c61-e0ab91ab910d` · listing `efa664df-1f34-421f-90f8-2ebc88e471fd`
 - Seller `33fb896d…` (last active 2026-06-09) · buyer `c71c552b…` (active only 2026-06-09)
