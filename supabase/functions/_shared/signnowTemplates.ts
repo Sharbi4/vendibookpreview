@@ -13,7 +13,7 @@
  *   2. signnow_templates row for (kind, current spec version)
  *   3. provision a new template through the SignNow API and persist it
  */
-import { createClient } from 'npm:@supabase/supabase-js@2.45.0';
+import { createClient } from 'npm:@supabase/supabase-js@2.90.1';
 import { getAccessToken, signnowBase } from './signnow.ts';
 import { getTemplateSpec, SPEC_VERSIONS, TEMPLATE_SPECS, variantVersion, supportsVariants, type AssetVariant, type SignNowFieldDef, type TemplateKind } from './signnowTemplateSpecs.ts';
 
