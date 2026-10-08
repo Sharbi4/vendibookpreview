@@ -15,7 +15,8 @@ INSERT INTO public.campus_partners (name, slug, city, state) VALUES
   ('Florida State College at Jacksonville', 'florida-state-college-at-jacksonville', 'Jacksonville', 'FL'),
   ('Central Piedmont Community College', 'central-piedmont-community-college', 'Charlotte', 'NC'),
   ('Los Angeles Trade-Technical College', 'los-angeles-trade-technical-college', 'Los Angeles', 'CA'),
-  ('Schoolcraft College', 'schoolcraft-college', 'Livonia', 'MI')
+  ('Schoolcraft College', 'schoolcraft-college', 'Livonia', 'MI'),
+  ('College of Southern Nevada', 'college-of-southern-nevada', 'Las Vegas', 'NV')
 ON CONFLICT (slug) DO NOTHING;
 
 INSERT INTO public.discount_codes (
@@ -37,7 +38,16 @@ SELECT v.code, p.name || ' Campus Partner benefit (2026-27)', 'campus_partner', 
     ('FSCJ27', 'florida-state-college-at-jacksonville'),
     ('CPCC27', 'central-piedmont-community-college'),
     ('LATTC27', 'los-angeles-trade-technical-college'),
-    ('SCHOOLCRAFT27', 'schoolcraft-college')
+    ('SCHOOLCRAFT27', 'schoolcraft-college'),
+    -- Also created in the parallel promo_codes build (now inactive there).
+    ('CSN27', 'college-of-southern-nevada'),
+    ('SCOTTSDALE27', 'scottsdale-community-college')
   ) AS v(code, slug)
   JOIN public.campus_partners p ON p.slug = v.slug
 ON CONFLICT (code_normalized) DO NOTHING;
+
+-- A parallel build (2026-10-08, Lovable) stored campus codes in promo_codes
+-- (program = 'campus_partner') and switched five on. discount_codes is the
+-- canonical table; those rows stay switched off and unused.
+UPDATE public.promo_codes SET is_active = false, updated_at = now()
+ WHERE program = 'campus_partner' AND is_active;
