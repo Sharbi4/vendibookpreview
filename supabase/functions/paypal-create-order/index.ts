@@ -1,3 +1,14 @@
+import {
+  applyPartnerCredit,
+  normalizePartnerCode,
+  PARTNER_MESSAGES,
+  type PartnerKind,
+  type PartnerResolution,
+  partnerSnapshot,
+  rentalEligibleBaseCents,
+  reservePartnerRedemption,
+  resolvePartnerCredit,
+} from "../_shared/campusPartner.ts";
 import { cardEligibility } from "../_shared/paypalCardEligibility.ts";
 import { sameCheckoutSource } from "../_shared/paypalCardPolicy.ts";
 import { assertRentalCheckoutReady } from "../_shared/rentalCheckoutReady.ts";
@@ -100,6 +111,10 @@ serve(async (req) => {
     const targetId = body?.id ? String(body.id) : null;
 
     let quote: QuoteResult;
+    // deno-lint-ignore no-explicit-any
+    let saleRow: any = null;
+    // deno-lint-ignore no-explicit-any
+    let bookingRow: any = null;
     // Listing title, used as the PayPal item name (sales and rentals).
     let itemTitle: string | null = null;
     let saleTransactionId: string | null = null;
@@ -178,6 +193,7 @@ serve(async (req) => {
       const freightPayer = (tx as any).listing?.freight_payer === "seller" ? "seller" : "buyer";
       itemTitle = (tx as any).listing?.title ?? null;
       quote = quoteSaleTransaction(tx, (tx as any).listing?.title ?? "Listing", { freightPayer });
+      saleRow = tx;
       saleTransactionId = tx.id;
       // Buyer-paid freight now rides along with the purchase. Reuse the freight
       // fulfillment key so the standalone freight invoice can never be charged
@@ -250,6 +266,7 @@ serve(async (req) => {
         : { isPro: (await resolveProStatus(admin, booking.host_id)).isPro };
       itemTitle = (booking as any).listing?.title ?? null;
       quote = quoteBookingRequest(booking, (booking as any).listing?.title ?? "Listing", hostPro);
+      bookingRow = booking;
       bookingRequestId = booking.id;
       strategyContext = {
         mode: "rent",
@@ -537,6 +554,38 @@ serve(async (req) => {
       }
     }
 
+    // ── Campus Partner credit (validated here, right before order creation) ──
+    const partnerCode = normalizePartnerCode(body?.partner_code);
+    let partner: PartnerResolution | null = null;
+    const partnerKind: PartnerKind = kind === "sale" ? "purchase" : "rental";
+    if (partnerCode && (saleRow || bookingRow)) {
+      const isCash = !!saleRow && (/cash|in_person/i.test(String(saleRow.payment_method ?? "")) ||
+        saleRow.is_cash_sale === true || String(saleRow.status) === "pending_cash");
+      partner = await resolvePartnerCredit(admin, {
+        code: partnerCode,
+        userId: user.id,
+        kind: partnerKind,
+        eligibleBaseCents: saleRow ? Math.round(Number(saleRow.amount ?? 0) * 100) : rentalEligibleBaseCents(quote, bookingRow),
+        isCash,
+      });
+      if (!partner.ok) {
+        return jsonError(409, "partner_code_invalid", partner.message ?? PARTNER_MESSAGES.invalid, { reason: partner.reason });
+      }
+      try {
+        applyPartnerCredit(quote, partner.creditCents);
+      } catch {
+        return jsonError(409, "partner_code_invalid", PARTNER_MESSAGES.not_eligible, { reason: "not_eligible" });
+      }
+    }
+    const reservePartner = async (recordId: string) =>
+      partner?.ok
+        ? await reservePartnerRedemption(admin, {
+          codeId: partner.row!.id, userId: user.id, kind: partnerKind, paymentRecordId: recordId,
+          creditCents: partner.creditCents, eligibleBaseCents: partner.eligibleBaseCents,
+          grossCents: quote.grossCents, platformFeeCents: quote.platformFeeCents,
+        })
+        : null;
+
     if (quote.grossCents <= 0) {
       return jsonError(400, "invalid_amount", "This transaction has no amount due.");
     }
@@ -623,6 +672,10 @@ serve(async (req) => {
         sameCheckoutSource(existing.fee_breakdown, cardFields) &&
         (!bookingRequestId || existing.fee_breakdown?.rental_fingerprint === rentalFingerprint)
       ) {
+        const reuseBlocked = await reservePartner(existing.id);
+        if (reuseBlocked) {
+          return jsonError(409, "partner_code_invalid", PARTNER_MESSAGES[reuseBlocked], { reason: reuseBlocked });
+        }
         safeLog("reusing_inflight_order", { reference: existing.reference });
         return jsonResponse(200, {
           order_id: existing.paypal_order_id,
@@ -687,6 +740,7 @@ serve(async (req) => {
           lines: quote.breakdown,
           release_at: quote.releaseAt,
           ...(fulfillment ? { fulfillment } : {}),
+          ...(partner?.ok ? { campus_partner: partnerSnapshot(partner, partnerKind) } : {}),
         },
       })
       .select()
@@ -695,6 +749,13 @@ serve(async (req) => {
     if (recordErr || !record) {
       safeLog("record_insert_failed", { message: recordErr?.message });
       return jsonError(500, "record_failed", "We couldn't start this payment. Please try again.");
+    }
+
+    const partnerBlocked = await reservePartner(record.id);
+    if (partnerBlocked) {
+      await admin.from("payment_records").update({ payment_status: "cancelled", internal_status: "partner_code_rejected" })
+        .eq("id", record.id).eq("payment_status", "created");
+      return jsonError(409, "partner_code_invalid", PARTNER_MESSAGES[partnerBlocked], { reason: partnerBlocked });
     }
 
     // ---- Connected Path routing decision (Step 3)

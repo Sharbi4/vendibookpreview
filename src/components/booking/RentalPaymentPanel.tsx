@@ -8,6 +8,8 @@ import { formatCurrency } from '@/lib/commissions';
 import { loadSquareWebSdk, type SquareCard } from '@/lib/squareWebSdk';
 import { trackRentalCheckout } from '@/lib/rentalCheckoutAnalytics';
 import PaymentFormSkeleton from '@/components/checkout/PaymentFormSkeleton';
+import CampusPartnerCodeField, { type AppliedPartnerCode } from '@/components/checkout/CampusPartnerCodeField';
+import { trackCampusPartner } from '@/lib/campusPartnerAnalytics';
 
 /**
  * Rental payment step: card payment through Square only. The server picks the
@@ -17,7 +19,9 @@ import PaymentFormSkeleton from '@/components/checkout/PaymentFormSkeleton';
  */
 type Config =
   | { provider: 'square'; environment: 'sandbox' | 'production'; application_id: string; location_id: string;
-      amount_cents: number; currency: string; host_business_name?: string | null }
+      amount_cents: number; currency: string; host_business_name?: string | null;
+      partner?: { valid: true; code: string; partner_name: string; credit_cents: number }
+        | { valid: false; reason?: string; message?: string } | null }
   | { provider: 'unavailable'; reason?: string };
 
 export interface RentalPaymentPanelProps {
@@ -33,6 +37,8 @@ export interface RentalPaymentPanelProps {
   billingContact?: { givenName?: string; familyName?: string; email?: string; phone?: string;
     addressLines?: string[]; city?: string; state?: string; postalCode?: string; countryCode?: string };
   onPaid: (bookingId: string) => void;
+  /** Server-quoted total and Campus Partner credit, for the order summary. */
+  onQuoteChange?: (quote: { amountCents: number; creditCents: number; partnerName: string | null }) => void;
 }
 
 async function invoke(body: Record<string, unknown>) {
@@ -50,7 +56,9 @@ async function invoke(body: Record<string, unknown>) {
 const newAttemptKey = () => crypto.randomUUID();
 
 export default function RentalPaymentPanel(props: RentalPaymentPanelProps) {
-  const { bookingId, listingId, flow, heading, billingContact, onPaid } = props;
+  const { bookingId, listingId, flow, heading, billingContact, onPaid, onQuoteChange } = props;
+  const [partner, setPartner] = useState<AppliedPartnerCode | null>(null);
+  const [partnerError, setPartnerError] = useState<string | null>(null);
   const [config, setConfig] = useState<Config | null>(null);
   const [configError, setConfigError] = useState<string | null>(null);
   const [cardReady, setCardReady] = useState(false);
@@ -68,11 +76,32 @@ export default function RentalPaymentPanel(props: RentalPaymentPanelProps) {
     let cancelled = false;
     setConfig(null);
     setConfigError(null);
-    invoke({ action: 'config', booking_id: bookingId })
-      .then((c) => { if (!cancelled) setConfig(c as Config); })
+    invoke({ action: 'config', booking_id: bookingId, ...(partner ? { partner_code: partner.code } : {}) })
+      .then((c) => {
+        if (cancelled) return;
+        const next = c as Config;
+        if (next.provider === 'square' && partner) {
+          if (next.partner?.valid) {
+            trackCampusPartner('partner_credit_applied', { kind: 'rental', code: partner.code, listingId, creditCents: next.partner.credit_cents });
+            setPartner((p) => p && { ...p, creditCents: next.partner && next.partner.valid ? next.partner.credit_cents : 0 });
+          } else {
+            // Keep checkout intact; only the code is dropped.
+            trackCampusPartner('partner_code_invalid', { kind: 'rental', code: partner.code, listingId, reason: (next.partner as { reason?: string } | null)?.reason });
+            setPartnerError((next.partner as { message?: string } | null)?.message || "That code can't be used on this booking.");
+            setPartner(null);
+            return;
+          }
+        }
+        setConfig(next);
+        if (next.provider === 'square') {
+          const credit = next.partner && next.partner.valid ? next.partner.credit_cents : 0;
+          onQuoteChange?.({ amountCents: next.amount_cents, creditCents: credit, partnerName: next.partner && next.partner.valid ? next.partner.partner_name : null });
+        }
+      })
       .catch((e) => { if (!cancelled) setConfigError((e as Error).message); });
     return () => { cancelled = true; };
-  }, [bookingId]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookingId, partner?.code]);
 
   useEffect(() => {
     if (config?.provider !== 'square') return;
@@ -122,6 +151,7 @@ export default function RentalPaymentPanel(props: RentalPaymentPanelProps) {
     setBusy(true);
     setError(null);
     trackRentalCheckout('payment_started', { listingId, bookingId, flow, provider: 'square', totalCents: config.amount_cents });
+    if (partner) trackCampusPartner('partner_checkout_started', { kind: 'rental', code: partner.code, listingId, creditCents: partner.creditCents });
     try {
       const result = await card.current.tokenize({
         amount: (config.amount_cents / 100).toFixed(2),
@@ -139,6 +169,7 @@ export default function RentalPaymentPanel(props: RentalPaymentPanelProps) {
         booking_id: bookingId,
         source_id: result.token,
         idempotency_key: attemptKey.current,
+        ...(partner ? { partner_code: partner.code } : {}),
       });
       if (response?.status === 'paid' || response?.payment_status === 'paid') finish(bookingId);
       else void poll();
@@ -147,7 +178,16 @@ export default function RentalPaymentPanel(props: RentalPaymentPanelProps) {
       trackRentalCheckout('square_payment_failed', { listingId, bookingId, flow, provider: 'square', errorCode: err.squareCode || err.code || 'unknown' });
       // A declined card is final for this attempt: the next try is a new charge.
       if (err.code === 'payment_failed' || err.code === 'tokenize_failed') attemptKey.current = newAttemptKey();
-      setError(err.message);
+      if (err.code === 'partner_code_invalid') {
+        attemptKey.current = newAttemptKey();
+        setPartnerError(err.message);
+        setPartner(null);
+      } else if (err.code === 'quote_changed') {
+        attemptKey.current = newAttemptKey();
+        setError(err.message);
+      } else {
+        setError(err.message);
+      }
     } finally {
       lock.current = false;
       setBusy(false);
@@ -196,6 +236,20 @@ export default function RentalPaymentPanel(props: RentalPaymentPanelProps) {
           Vendibook never sees or stores your card number.
         </p>
       </div>
+
+      <CampusPartnerCodeField
+        kind="rental"
+        listingId={listingId}
+        applied={partner}
+        onApply={(next) => { setPartnerError(null); setPartner(next); attemptKey.current = newAttemptKey(); }}
+        externalError={partnerError}
+        disabled={busy || verifying}
+      />
+      {partner && partner.creditCents ? (
+        <p className="text-xs text-muted-foreground">
+          Campus Partner credit: <span className="font-medium text-foreground">-{formatCurrency(partner.creditCents / 100)}</span>, funded by Vendibook.
+        </p>
+      ) : null}
 
       <div ref={container} className="min-h-[96px]" aria-busy={!cardReady} />
       {!cardReady && !error ? <p className="text-xs text-muted-foreground">Loading secure card entry…</p> : null}

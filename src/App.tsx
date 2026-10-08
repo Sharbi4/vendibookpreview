@@ -145,6 +145,7 @@ const AdminErrors = lazy(() => import("./pages/AdminErrors"));
 const AdminQA = lazy(() => import("./pages/AdminQA"));
 const AdminSupportTickets = lazy(() => import("./pages/AdminSupportTickets"));
 const AdminRevenue = lazy(() => import("./pages/AdminRevenue"));
+const AdminCampusPartners = lazy(() => import("./pages/AdminCampusPartners"));
 const AdminMonetizationOps = lazy(() => import("./pages/AdminMonetizationOps"));
 const AdminBilling = lazy(() => import("./pages/AdminBilling"));
 const ServicesHub = lazy(() => import("./pages/ServicesHub"));
@@ -484,6 +485,7 @@ const AnimatedRoutes = () => {
           <Route path="/admin/qa" element={<PageTransition><AdminQA /></PageTransition>} />
           <Route path="/admin/support" element={<PageTransition><AdminSupportTickets /></PageTransition>} />
           <Route path="/admin/revenue" element={<PageTransition><AdminRevenue /></PageTransition>} />
+          <Route path="/admin/campus-partners" element={<PageTransition><AdminCampusPartners /></PageTransition>} />
           <Route path="/admin/monetization-ops" element={<PageTransition><AdminMonetizationOps /></PageTransition>} />
           <Route path="/admin/billing" element={<PageTransition><AdminBilling /></PageTransition>} />
           <Route path="/services" element={<PageTransition><ServicesHub /></PageTransition>} />
