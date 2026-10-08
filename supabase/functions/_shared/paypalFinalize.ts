@@ -492,8 +492,8 @@ export async function finalizeCapture(
       metadata: {
         source,
         funded_by: "vendibook",
-        redemption_id: (current.fee_breakdown as any)?.campus_partner?.redemption_id ?? null,
-        partner_id: (current.fee_breakdown as any)?.campus_partner?.partner_id ?? null,
+        promo_code_id: (current.fee_breakdown as any)?.campus_partner?.promo_code_id ?? null,
+        code: (current.fee_breakdown as any)?.campus_partner?.code ?? null,
       },
     });
   }

@@ -1,3 +1,14 @@
+import {
+  applyPartnerCredit,
+  normalizePartnerCode,
+  PARTNER_MESSAGES,
+  type PartnerKind,
+  type PartnerResolution,
+  partnerSnapshot,
+  rentalEligibleBaseCents,
+  reservePartnerRedemption,
+  resolvePartnerCredit,
+} from "../_shared/campusPartner.ts";
 import { cardEligibility } from "../_shared/paypalCardEligibility.ts";
 import { sameCheckoutSource } from "../_shared/paypalCardPolicy.ts";
 import { assertRentalCheckoutReady } from "../_shared/rentalCheckoutReady.ts";
@@ -42,15 +53,6 @@ import {
   parseShippingAddress,
 } from "../_shared/paypalOrderDetail.ts";
 import { OrderArithmeticError } from "../_shared/paypal.ts";
-import { rentalTaxDestination, saleTaxDestination } from "../_shared/checkoutQuote.ts";
-import { applyCampusCredit } from "../_shared/campusPartnerMath.ts";
-import {
-  CAMPUS_MOVED_MESSAGE,
-  type CampusReservation,
-  campusCreditForCheckout,
-  campusFeeBreakdown,
-  reservationStillHeld,
-} from "../_shared/campusPartner.ts";
 
 const NOTARY_FEE_CENTS = 4500;
 const SITE_URL = "https://vendibook.com";
@@ -109,6 +111,10 @@ serve(async (req) => {
     const targetId = body?.id ? String(body.id) : null;
 
     let quote: QuoteResult;
+    // deno-lint-ignore no-explicit-any
+    let saleRow: any = null;
+    // deno-lint-ignore no-explicit-any
+    let bookingRow: any = null;
     // Listing title, used as the PayPal item name (sales and rentals).
     let itemTitle: string | null = null;
     let saleTransactionId: string | null = null;
@@ -134,8 +140,6 @@ serve(async (req) => {
      * Vendibook-owned products and service charges, which always capture now.
      */
     let strategyContext: Omit<PaymentStrategyContext, "grossCents"> | null = null;
-    /** Trusted sale / booking row, for the Campus Partner credit check. */
-    let campusRow: Record<string, any> | null = null;
 
     /** Buyer profile location — used for Vendibook-owned products/services. */
     const buyerTaxLocation = async (): Promise<TaxDestination> => {
@@ -189,6 +193,7 @@ serve(async (req) => {
       const freightPayer = (tx as any).listing?.freight_payer === "seller" ? "seller" : "buyer";
       itemTitle = (tx as any).listing?.title ?? null;
       quote = quoteSaleTransaction(tx, (tx as any).listing?.title ?? "Listing", { freightPayer });
+      saleRow = tx;
       saleTransactionId = tx.id;
       // Buyer-paid freight now rides along with the purchase. Reuse the freight
       // fulfillment key so the standalone freight invoice can never be charged
@@ -209,13 +214,17 @@ serve(async (req) => {
       };
       taxKind = "sale";
       // Destination sourcing: delivery/freight tax where the goods land;
-      // pickup/on-site tax where the listing sits. Shared with the Campus
-      // Partner endpoint so the total it shows matches this order.
+      // pickup/on-site tax where the listing sits.
       const listingLoc = (tx as any).listing ?? {};
+      const listingLocParsed = parseStateZipFromAddress(listingLoc.address);
       const delivers = tx.fulfillment_type === "delivery" ||
         tx.fulfillment_type === "vendibook_freight";
-      taxDestination = saleTaxDestination(tx);
-      campusRow = tx;
+      const parsed = delivers ? parseStateZipFromAddress(tx.delivery_address) : { state: null, zip: null };
+      taxDestination = {
+        state: parsed.state ?? listingLoc.state ?? null,
+        zip: parsed.zip ?? listingLocParsed.zip ?? null,
+        city: listingLoc.city ?? null,
+      };
       // Physical goods that move: PayPal and Venmo need the destination.
       if (delivers) {
         shippingAddress = parseShippingAddress(tx.delivery_address, {
@@ -257,6 +266,7 @@ serve(async (req) => {
         : { isPro: (await resolveProStatus(admin, booking.host_id)).isPro };
       itemTitle = (booking as any).listing?.title ?? null;
       quote = quoteBookingRequest(booking, (booking as any).listing?.title ?? "Listing", hostPro);
+      bookingRow = booking;
       bookingRequestId = booking.id;
       strategyContext = {
         mode: "rent",
@@ -270,8 +280,12 @@ serve(async (req) => {
       };
       taxKind = "rental";
       // Rentals are taxed where the rental happens — the listing's location.
-      taxDestination = rentalTaxDestination(booking);
-      campusRow = booking;
+      const bookingListingLoc = parseStateZipFromAddress((booking as any).listing?.address);
+      taxDestination = {
+        state: (booking as any).listing?.state ?? null,
+        zip: bookingListingLoc.zip ?? null,
+        city: (booking as any).listing?.city ?? null,
+      };
       if (booking.host_platform_fee === null || booking.host_platform_fee === undefined) {
         await admin
           .from("booking_requests")
@@ -540,31 +554,37 @@ serve(async (req) => {
       }
     }
 
-    // ── Campus Partner credit (Vendibook-funded) ─────────────────────────
-    // Re-validated here, immediately before the order exists, and applied
-    // after tax: the buyer pays less, while the platform fee basis, the
-    // seller's proceeds and the tax stay exactly as quoted.
-    let campusCredit: CampusReservation | null = null;
-    if (campusRow && (saleTransactionId || bookingRequestId)) {
-      const campus = await campusCreditForCheckout(admin, {
+    // ── Campus Partner credit (validated here, right before order creation) ──
+    const partnerCode = normalizePartnerCode(body?.partner_code);
+    let partner: PartnerResolution | null = null;
+    const partnerKind: PartnerKind = kind === "sale" ? "purchase" : "rental";
+    if (partnerCode && (saleRow || bookingRow)) {
+      const isCash = !!saleRow && (/cash|in_person/i.test(String(saleRow.payment_method ?? "")) ||
+        saleRow.is_cash_sale === true || String(saleRow.status) === "pending_cash");
+      partner = await resolvePartnerCredit(admin, {
+        code: partnerCode,
         userId: user.id,
-        type: saleTransactionId ? "sale" : "rental",
-        bookingRequestId,
-        saleTransactionId,
-        listingId: quote.listingId,
-        quote,
-        row: campusRow,
+        kind: partnerKind,
+        eligibleBaseCents: saleRow ? Math.round(Number(saleRow.amount ?? 0) * 100) : rentalEligibleBaseCents(quote, bookingRow),
+        isCash,
       });
-      if ("error" in campus) {
-        return jsonError(409, "partner_code_changed", `${campus.error.message} Your total has been updated; review it before paying.`);
+      if (!partner.ok) {
+        return jsonError(409, "partner_code_invalid", partner.message ?? PARTNER_MESSAGES.invalid, { reason: partner.reason });
       }
-      if (campus.applied) {
-        applyCampusCredit(quote, campus.reservation.creditCents);
-        campusCredit = campus.reservation;
+      try {
+        applyPartnerCredit(quote, partner.creditCents);
+      } catch {
+        return jsonError(409, "partner_code_invalid", PARTNER_MESSAGES.not_eligible, { reason: "not_eligible" });
       }
     }
-    const campusRedemptionId = campusCredit?.redemptionId ?? null;
-    const sameCampus = (fb: any) => (fb?.campus_partner?.redemption_id ?? null) === campusRedemptionId;
+    const reservePartner = async (recordId: string) =>
+      partner?.ok
+        ? await reservePartnerRedemption(admin, {
+          codeId: partner.row!.id, userId: user.id, kind: partnerKind, paymentRecordId: recordId,
+          creditCents: partner.creditCents, eligibleBaseCents: partner.eligibleBaseCents,
+          grossCents: quote.grossCents, platformFeeCents: quote.platformFeeCents,
+        })
+        : null;
 
     if (quote.grossCents <= 0) {
       return jsonError(400, "invalid_amount", "This transaction has no amount due.");
@@ -618,8 +638,7 @@ serve(async (req) => {
         inflight?.paypal_order_id &&
         inflight.gross_amount_cents === quote.grossCents &&
         inflight.payment_intent === PAYPAL_CHECKOUT_INTENT &&
-        sameCheckoutSource(inflight.fee_breakdown, cardFields) &&
-        sameCampus(inflight.fee_breakdown)
+        sameCheckoutSource(inflight.fee_breakdown, cardFields)
       ) {
         return jsonResponse(200, {
           order_id: inflight.paypal_order_id,
@@ -651,9 +670,12 @@ serve(async (req) => {
         existing.gross_amount_cents === quote.grossCents &&
         existing.payment_intent === PAYPAL_CHECKOUT_INTENT &&
         sameCheckoutSource(existing.fee_breakdown, cardFields) &&
-        sameCampus(existing.fee_breakdown) &&
         (!bookingRequestId || existing.fee_breakdown?.rental_fingerprint === rentalFingerprint)
       ) {
+        const reuseBlocked = await reservePartner(existing.id);
+        if (reuseBlocked) {
+          return jsonError(409, "partner_code_invalid", PARTNER_MESSAGES[reuseBlocked], { reason: reuseBlocked });
+        }
         safeLog("reusing_inflight_order", { reference: existing.reference });
         return jsonResponse(200, {
           order_id: existing.paypal_order_id,
@@ -718,7 +740,7 @@ serve(async (req) => {
           lines: quote.breakdown,
           release_at: quote.releaseAt,
           ...(fulfillment ? { fulfillment } : {}),
-          ...(campusCredit ? { campus_partner: campusFeeBreakdown(campusCredit) } : {}),
+          ...(partner?.ok ? { campus_partner: partnerSnapshot(partner, partnerKind) } : {}),
         },
       })
       .select()
@@ -729,12 +751,11 @@ serve(async (req) => {
       return jsonError(500, "record_failed", "We couldn't start this payment. Please try again.");
     }
 
-    // The Campus Partner reservation must still be ours now that the record
-    // carrying it exists; otherwise create no order and show the new total.
-    if (campusCredit && !(await reservationStillHeld(admin, campusCredit.redemptionId))) {
-      await admin.from("payment_records").update({ payment_status: "cancelled", internal_status: "campus_code_moved" })
+    const partnerBlocked = await reservePartner(record.id);
+    if (partnerBlocked) {
+      await admin.from("payment_records").update({ payment_status: "cancelled", internal_status: "partner_code_rejected" })
         .eq("id", record.id).eq("payment_status", "created");
-      return jsonError(409, "partner_code_changed", CAMPUS_MOVED_MESSAGE);
+      return jsonError(409, "partner_code_invalid", PARTNER_MESSAGES[partnerBlocked], { reason: partnerBlocked });
     }
 
     // ---- Connected Path routing decision (Step 3)

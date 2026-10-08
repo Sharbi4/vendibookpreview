@@ -52,6 +52,9 @@ export interface OrderDetail {
     total_paid_cents: number;
   };
 
+  /** Buyer/admin only: Vendibook-funded Campus Partner credit on this payment. */
+  campus_partner: { code: string | null; partner_name: string | null; credit_cents: number } | null;
+
   fulfillment: {
     type: FulfillmentType;
     label: string;
@@ -109,6 +112,14 @@ export interface OrderDetail {
   } | null;
 
   support: { email: string; phone: string; dispute_url: string };
+}
+
+/** fee_breakdown.campus_partner snapshot (kept local: this module is also type-checked by the web app). */
+function campusPartnerFromBreakdown(feeBreakdown: unknown): OrderDetail['campus_partner'] {
+  const snap = (feeBreakdown as any)?.campus_partner;
+  const credit = Math.round(Number(snap?.credit_cents ?? 0));
+  if (!(credit > 0)) return null;
+  return { code: snap?.code ?? null, partner_name: snap?.partner_name ?? null, credit_cents: credit };
 }
 
 const PAYMENT_SOURCE_LABEL: Record<string, string> = {
@@ -194,6 +205,7 @@ export async function buildOrderDetail(
       refunded_cents: record.refunded_cents ?? 0,
       total_paid_cents: Math.max(0, (record.gross_amount_cents ?? 0) - (record.refunded_cents ?? 0)),
     },
+    campus_partner: campusPartnerFromBreakdown(record.fee_breakdown),
     fulfillment: {
       type: fulfillmentType,
       label: domain.fulfillmentLabel ?? FULFILLMENT_LABEL[fulfillmentType],
@@ -223,6 +235,7 @@ export async function buildOrderDetail(
       fee_cents: 0,
       discount_cents: 0,
     };
+    detail.campus_partner = null;
     detail.payment.paypal_capture_id = null;
     detail.payment.payment_method_label = null;
   }

@@ -1,3 +1,5 @@
+-- Superseded by 20261008200000_campus_partner_promo_codes.sql (owner decision:
+-- Campus Partner runs on promo_codes). The objects below were retired there.
 -- Campus Partner codes (2026-10-08).
 --
 -- School-specific codes (PIMA27, SCC27, ...) give a Vendibook-funded credit:

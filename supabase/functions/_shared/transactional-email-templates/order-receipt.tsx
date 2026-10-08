@@ -35,13 +35,16 @@ interface OrderReceiptProps {
   nextActionDescription?: string
   orderUrl?: string
   coverImageUrl?: string
+  /** Vendibook-funded Campus Partner credit, already formatted (e.g. "$100.00"). */
+  campusCredit?: string
+  campusPartnerName?: string
 }
 
 const OrderReceiptEmail = ({
   orderNumber, buyerName, itemTitle, sellerName, transactionTypeLabel, orderDate,
   paypalTransactionId, paypalCaptureId, amountPaid, taxes, fees, refundAmount,
   fulfillmentLabel, fulfillmentNextStep, nextActionTitle, nextActionDescription,
-  orderUrl,
+  orderUrl, campusCredit, campusPartnerName,
 }: OrderReceiptProps) => {
   const hasPayPal = Boolean(paypalTransactionId || paypalCaptureId)
   return (
@@ -70,6 +73,7 @@ const OrderReceiptEmail = ({
           { label: 'Seller / host', value: sellerName },
           { label: 'Fulfillment', value: fulfillmentLabel },
           { label: 'Next step', value: fulfillmentNextStep },
+          { label: 'Vendibook Campus Partner credit', value: campusCredit ? `-${campusCredit}${campusPartnerName ? ` · ${campusPartnerName}` : ''}` : undefined },
           { label: 'Taxes', value: taxes },
           { label: 'Fees', value: fees },
           { label: 'Refunded', value: refundAmount },

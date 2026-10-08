@@ -26,6 +26,9 @@ interface ReceiptProps {
   coverImageUrl?: string
   /** Optional deep link to the order, when the caller has an order id. */
   orderId?: string
+  /** Vendibook-funded Campus Partner credit, already formatted (e.g. "$100.00"). */
+  campusCredit?: string
+  campusPartnerName?: string
 }
 
 const PaymentReceiptEmail = ({
@@ -37,6 +40,8 @@ const PaymentReceiptEmail = ({
   listingTitle,
   description,
   orderId,
+  campusCredit,
+  campusPartnerName,
 }: ReceiptProps) => {
   const ctaHref = orderId ? `${SITE_URL}/orders/${orderId}` : `${SITE_URL}/dashboard`
 
@@ -75,6 +80,7 @@ const PaymentReceiptEmail = ({
           { label: 'Item', value: listingTitle },
           { label: 'Description', value: description },
           { label: 'Order', value: orderNumber, mono: true },
+          { label: 'Vendibook Campus Partner credit', value: campusCredit ? `-${campusCredit}${campusPartnerName ? ` · ${campusPartnerName}` : ''}` : undefined },
           { label: 'Payment method', value: paymentMethod },
           { label: 'Status', value: 'Paid' },
         ]}

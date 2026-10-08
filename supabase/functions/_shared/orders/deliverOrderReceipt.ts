@@ -6,6 +6,7 @@
 
 import { buildOrderDetail } from './buildOrderDetail.ts';
 import { ensureReceiptSent } from './orderReceipts.ts';
+import { campusPartnerEmailFields } from '../campusPartner.ts';
 
 const SITE_URL = 'https://vendibook.com';
 
@@ -73,6 +74,7 @@ export async function deliverOrderReceipt(supabase: any, paymentRecordId: string
     nextActionDescription: detail.next_action.next_action_description,
     orderUrl: `${SITE_URL}/orders/${record.id}`,
     coverImageUrl: detail.listing?.image_url ?? null,
+    ...campusPartnerEmailFields(record.fee_breakdown, currency),
   }, override);
 }
 
@@ -182,6 +184,7 @@ async function buildBookingOverride(
       orderUrl: `${SITE_URL}/orders/${record.id}`,
       termsSnapshot,
       termsVersion,
+      ...campusPartnerEmailFields(record.fee_breakdown, currency),
     },
   };
 }

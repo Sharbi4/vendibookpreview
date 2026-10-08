@@ -16,6 +16,7 @@ import DeliveryTrackingPanel from '@/components/delivery/DeliveryTrackingPanel';
 import PayPalPaymentFacts from '@/components/checkout/PayPalPaymentFacts';
 import OrderCaseSection from '@/components/disputes/OrderCaseSection';
 import { DocumentsCard } from '@/components/documents/DocumentsCard';
+import CampusPartnerBenefit from '@/components/checkout/CampusPartnerBenefit';
 
 
 
@@ -434,6 +435,9 @@ const OrderDetailPage = () => {
               {a.fee_cents > 0 && !(order.viewer_role === 'buyer' && order.transaction_type === 'equipment_sale') && (
                 <Line label="Service fee" value={money(a.fee_cents, a.currency)} />
               )}
+              {a.discount_cents > 0 && order.viewer_role === 'buyer' && (
+                <Line label="Credits and discounts" value={`− ${money(a.discount_cents, a.currency)}`} />
+              )}
               {a.refunded_cents > 0 && (
                 <Line label="Refunded" value={`− ${money(a.refunded_cents, a.currency)}`} />
               )}
@@ -455,6 +459,7 @@ const OrderDetailPage = () => {
               bookingRequestId={(order as any).links?.booking_request_id ?? null}
               className="mt-4 rounded-xl border border-border bg-muted/20 p-4 text-left"
             />
+            {order.viewer_role === 'buyer' ? <CampusPartnerBenefit paymentRecordId={order.id} className="mt-4" /> : null}
           </Card>
 
           <section id="report-issue" className="scroll-mt-8"><OrderCaseSection

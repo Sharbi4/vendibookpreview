@@ -8,8 +8,8 @@ import { formatCurrency } from '@/lib/commissions';
 import { loadSquareWebSdk, type SquareCard } from '@/lib/squareWebSdk';
 import { trackRentalCheckout } from '@/lib/rentalCheckoutAnalytics';
 import PaymentFormSkeleton from '@/components/checkout/PaymentFormSkeleton';
-import PartnerCodeField from '@/components/checkout/PartnerCodeField';
-import { trackCampus } from '@/lib/campusPartner';
+import CampusPartnerCodeField, { usePersistedPartnerCode } from '@/components/checkout/CampusPartnerCodeField';
+import { trackCampusPartner } from '@/lib/campusPartnerAnalytics';
 
 /**
  * Rental payment step: card payment through Square only. The server picks the
@@ -17,12 +17,11 @@ import { trackCampus } from '@/lib/campusPartner';
  * the amount. The browser never decides a booking is paid; it reports what
  * the server verified with Square.
  */
-export interface RentalCampusCredit { code: string; partner_name: string; credit_cents: number }
-
 type Config =
   | { provider: 'square'; environment: 'sandbox' | 'production'; application_id: string; location_id: string;
       amount_cents: number; currency: string; host_business_name?: string | null;
-      campus_credit?: RentalCampusCredit | null; campus_notice?: string }
+      partner?: { valid: true; code: string; partner_name: string; credit_cents: number }
+        | { valid: false; reason?: string; message?: string } | null }
   | { provider: 'unavailable'; reason?: string };
 
 export interface RentalPaymentPanelProps {
@@ -38,8 +37,8 @@ export interface RentalPaymentPanelProps {
   billingContact?: { givenName?: string; familyName?: string; email?: string; phone?: string;
     addressLines?: string[]; city?: string; state?: string; postalCode?: string; countryCode?: string };
   onPaid: (bookingId: string) => void;
-  /** The server-verified amount due after any Campus Partner credit. */
-  onCampusChange?: (credit: (RentalCampusCredit & { amount_due_cents: number }) | null) => void;
+  /** Server-quoted total and Campus Partner credit, for the order summary. */
+  onQuoteChange?: (quote: { amountCents: number; creditCents: number; partnerName: string | null; code: string | null }) => void;
 }
 
 async function invoke(body: Record<string, unknown>) {
@@ -57,8 +56,12 @@ async function invoke(body: Record<string, unknown>) {
 const newAttemptKey = () => crypto.randomUUID();
 
 export default function RentalPaymentPanel(props: RentalPaymentPanelProps) {
-  const { bookingId, listingId, flow, heading, billingContact, onPaid, onCampusChange } = props;
+  const { bookingId, listingId, flow, heading, billingContact, onPaid, onQuoteChange } = props;
+  const [partner, setPartner] = usePersistedPartnerCode(`rental:${bookingId}`);
+  const [partnerError, setPartnerError] = useState<string | null>(null);
   const [config, setConfig] = useState<Config | null>(null);
+  /** Re-pricing after a code change; the card form stays mounted meanwhile. */
+  const [quoting, setQuoting] = useState(false);
   const [configError, setConfigError] = useState<string | null>(null);
   const [cardReady, setCardReady] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -71,45 +74,56 @@ export default function RentalPaymentPanel(props: RentalPaymentPanelProps) {
   /** Same key for retries of one attempt; a new key after a definitive decline. */
   const attemptKey = useRef(newAttemptKey());
 
-  const onCampusChangeRef = useRef(onCampusChange);
-  onCampusChangeRef.current = onCampusChange;
-  const publishCampus = useCallback((c: Config) => {
-    if (c.provider !== 'square') return;
-    onCampusChangeRef.current?.(c.campus_credit ? { ...c.campus_credit, amount_due_cents: c.amount_cents } : null);
-  }, []);
-
   useEffect(() => {
     let cancelled = false;
-    setConfig(null);
     setConfigError(null);
-    invoke({ action: 'config', booking_id: bookingId })
-      .then((c) => { if (!cancelled) { setConfig(c as Config); publishCampus(c as Config); } })
-      .catch((e) => { if (!cancelled) setConfigError((e as Error).message); });
+    setQuoting(true);
+    invoke({ action: 'config', booking_id: bookingId, ...(partner ? { partner_code: partner.code } : {}) })
+      .then((c) => {
+        if (cancelled) return;
+        const next = c as Config;
+        if (next.provider === 'square' && partner) {
+          if (next.partner?.valid) {
+            const credit = next.partner.credit_cents;
+            if (credit !== partner.creditCents) {
+              trackCampusPartner('partner_credit_applied', {
+                kind: 'rental', code: partner.code, listingId, creditCents: credit,
+                promoCodeId: partner.promoCodeId, partnerName: next.partner.partner_name,
+              });
+            }
+            setPartner((p) => p && { ...p, partnerName: next.partner && next.partner.valid ? next.partner.partner_name : p.partnerName, creditCents: credit });
+          } else {
+            // Keep checkout intact; only the code is dropped.
+            trackCampusPartner('partner_code_invalid', {
+              kind: 'rental', code: partner.code, listingId, promoCodeId: partner.promoCodeId,
+              reason: (next.partner as { reason?: string } | null)?.reason,
+            });
+            setPartnerError((next.partner as { message?: string } | null)?.message || "That code can't be used on this booking.");
+            setPartner(null);
+            return;
+          }
+        }
+        setConfig(next);
+        setQuoting(false);
+        if (next.provider === 'square') {
+          const credit = next.partner && next.partner.valid ? next.partner.credit_cents : 0;
+          onQuoteChange?.({
+            amountCents: next.amount_cents, creditCents: credit,
+            partnerName: next.partner && next.partner.valid ? next.partner.partner_name : null,
+            code: next.partner && next.partner.valid ? next.partner.code : null,
+          });
+        }
+      })
+      .catch((e) => { if (!cancelled) { setQuoting(false); setConfigError((e as Error).message); } });
     return () => { cancelled = true; };
-  }, [bookingId, publishCampus]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [bookingId, partner?.code]);
 
-  /** Re-reads the server total after a code is applied or removed (card entry stays mounted). */
-  const refreshAmount = useCallback(async () => {
-    try {
-      const c = (await invoke({ action: 'config', booking_id: bookingId })) as Config;
-      if (c.provider !== 'square') return;
-      setConfig((prev) => (prev?.provider === 'square'
-        ? { ...prev, amount_cents: c.amount_cents, campus_credit: c.campus_credit ?? null, campus_notice: c.campus_notice }
-        : c));
-      publishCampus(c);
-      // A different amount is a different charge: never reuse the old attempt.
-      attemptKey.current = newAttemptKey();
-    } catch (e) {
-      setError((e as Error).message);
-    }
-  }, [bookingId, publishCampus]);
-
-  const squareEnv = config?.provider === 'square' ? config.environment : null;
-  const squareApp = config?.provider === 'square' ? config.application_id : null;
-  const squareLocation = config?.provider === 'square' ? config.location_id : null;
+  const squareKey = config?.provider === 'square' ? `${config.environment}|${config.application_id}|${config.location_id}` : null;
 
   useEffect(() => {
     if (config?.provider !== 'square') return;
+    // Mounted once per Square account; a re-quote (code applied or removed) keeps the card entry.
     let cancelled = false;
     let instance: SquareCard | undefined;
     setCardReady(false);
@@ -123,19 +137,14 @@ export default function RentalPaymentPanel(props: RentalPaymentPanelProps) {
       setCardReady(true);
     })().catch((e) => { if (!cancelled) setError((e as Error).message); });
     return () => { cancelled = true; card.current = null; void instance?.destroy?.(); };
-    // Remount only when the Square account changes, not when the amount does.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [squareEnv, squareApp, squareLocation]);
+  }, [squareKey]);
 
-  const campusCredit = config?.provider === 'square' ? config.campus_credit ?? null : null;
   const finish = useCallback((id: string) => {
     setPaid(true);
     trackRentalCheckout('payment_completed', { listingId, bookingId: id, flow, provider: 'square' });
-    if (campusCredit) {
-      trackCampus('partner_transaction_completed', { kind: 'booking', targetId: id, listingId, creditCents: campusCredit.credit_cents });
-    }
     onPaid(id);
-  }, [campusCredit, flow, listingId, onPaid]);
+  }, [flow, listingId, onPaid]);
 
   /** Server-verified status polling for a payment Square is still settling. */
   const poll = useCallback(async () => {
@@ -157,13 +166,16 @@ export default function RentalPaymentPanel(props: RentalPaymentPanelProps) {
   }, [bookingId, finish]);
 
   const pay = async () => {
-    if (lock.current || !card.current || config?.provider !== 'square') return;
+    if (lock.current || quoting || !card.current || config?.provider !== 'square') return;
     lock.current = true;
     setBusy(true);
     setError(null);
     trackRentalCheckout('payment_started', { listingId, bookingId, flow, provider: 'square', totalCents: config.amount_cents });
-    if (config.campus_credit) {
-      trackCampus('partner_checkout_started', { kind: 'booking', targetId: bookingId, listingId, creditCents: config.campus_credit.credit_cents });
+    if (partner) {
+      trackCampusPartner('partner_checkout_started', {
+        kind: 'rental', code: partner.code, listingId, creditCents: partner.creditCents,
+        promoCodeId: partner.promoCodeId, partnerName: partner.partnerName,
+      });
     }
     try {
       const result = await card.current.tokenize({
@@ -182,6 +194,7 @@ export default function RentalPaymentPanel(props: RentalPaymentPanelProps) {
         booking_id: bookingId,
         source_id: result.token,
         idempotency_key: attemptKey.current,
+        ...(partner ? { partner_code: partner.code } : {}),
       });
       if (response?.status === 'paid' || response?.payment_status === 'paid') finish(bookingId);
       else void poll();
@@ -190,9 +203,16 @@ export default function RentalPaymentPanel(props: RentalPaymentPanelProps) {
       trackRentalCheckout('square_payment_failed', { listingId, bookingId, flow, provider: 'square', errorCode: err.squareCode || err.code || 'unknown' });
       // A declined card is final for this attempt: the next try is a new charge.
       if (err.code === 'payment_failed' || err.code === 'tokenize_failed') attemptKey.current = newAttemptKey();
-      setError(err.message);
-      // The Campus Partner code stopped qualifying: show the updated total.
-      if (err.code === 'partner_code_changed' || err.code === 'quote_changed') void refreshAmount();
+      if (err.code === 'partner_code_invalid') {
+        attemptKey.current = newAttemptKey();
+        setPartnerError(err.message);
+        setPartner(null);
+      } else if (err.code === 'quote_changed') {
+        attemptKey.current = newAttemptKey();
+        setError(err.message);
+      } else {
+        setError(err.message);
+      }
     } finally {
       lock.current = false;
       setBusy(false);
@@ -242,28 +262,26 @@ export default function RentalPaymentPanel(props: RentalPaymentPanelProps) {
         </p>
       </div>
 
-      <PartnerCodeField
-        kind="booking"
-        targetId={bookingId}
+      <CampusPartnerCodeField
+        kind="rental"
         listingId={listingId}
+        bookingId={bookingId}
+        applied={partner}
+        onApply={(next) => { setPartnerError(null); setPartner(next); attemptKey.current = newAttemptKey(); }}
+        externalError={partnerError}
         disabled={busy || verifying}
-        onChange={() => { setError(null); void refreshAmount(); }}
       />
-      {config.campus_notice && !config.campus_credit ? (
-        <p role="status" className="text-xs text-muted-foreground">{config.campus_notice}</p>
-      ) : null}
-
-      {config.campus_credit ? (
-        <div className="v2-money">
-          <div className="v2-money-row is-credit">
-            <span className="v2-money-label">Campus Partner credit</span>
-            <span className="v2-money-value">−{formatCurrency(config.campus_credit.credit_cents / 100)}</span>
+      {partner && partner.creditCents && !onQuoteChange ? (
+        <dl className="rounded-lg border border-border px-3 py-2 text-sm space-y-1" aria-label="Amount due">
+          <div className="flex justify-between gap-3">
+            <dt className="text-muted-foreground">Campus Partner credit</dt>
+            <dd className="font-medium text-emerald-700 dark:text-emerald-400">-{formatCurrency(partner.creditCents / 100)}</dd>
           </div>
-          <div className="v2-money-total">
-            <span>Total due today</span>
-            <strong>{formatCurrency(config.amount_cents / 100)}</strong>
+          <div className="flex justify-between gap-3 border-t border-border pt-1">
+            <dt className="font-semibold text-foreground">Total due today</dt>
+            <dd className="font-semibold text-foreground">{quoting ? '…' : formatCurrency(config.amount_cents / 100)}</dd>
           </div>
-        </div>
+        </dl>
       ) : null}
 
       <div ref={container} className="min-h-[96px]" aria-busy={!cardReady} />
@@ -283,9 +301,11 @@ export default function RentalPaymentPanel(props: RentalPaymentPanelProps) {
         type="button"
         className="checkout-primary-action w-full h-14 text-base rounded-xl font-semibold"
         onClick={pay}
-        disabled={!cardReady || busy || verifying}
+        disabled={!cardReady || busy || verifying || quoting}
       >
-        {busy ? <><Loader2 className="h-5 w-5 animate-spin mr-2" /> Processing…</> : `Pay ${formatCurrency(config.amount_cents / 100)}`}
+        {busy ? <><Loader2 className="h-5 w-5 animate-spin mr-2" /> Processing…</>
+          : quoting ? <><Loader2 className="h-5 w-5 animate-spin mr-2" /> Updating total…</>
+          : `Pay ${formatCurrency(config.amount_cents / 100)}`}
       </Button>
       <p className="flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground">
         <Lock className="h-3 w-3" /> Encrypted card entry by Square. You're charged once, only when you press Pay.

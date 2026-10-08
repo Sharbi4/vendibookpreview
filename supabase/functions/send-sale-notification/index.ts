@@ -4,6 +4,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { getCaller, isAdminUser, isBackendCaller, forbiddenResponse, unauthorizedResponse } from "../_shared/callerGuard.ts";
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
+import { campusPartnerEmailFields } from '../_shared/campusPartner.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -192,6 +193,13 @@ Deno.serve(async (req) => {
 
       // Buyer-facing receipt only on payment_received
       if (buyerOptedIn && buyerEmail && notification_type === 'payment_received' && audience !== 'seller') {
+        // The captured payment carries the Campus Partner snapshot and the amount actually charged.
+        const { data: paid } = await supabase.from('payment_records')
+          .select('captured_amount_cents, gross_amount_cents, fee_breakdown')
+          .eq('sale_transaction_id', tx.id).eq('payment_status', 'completed')
+          .order('created_at', { ascending: false }).limit(1).maybeSingle();
+        const campus = campusPartnerEmailFields(paid?.fee_breakdown);
+        const paidCents = campus.campusCredit ? Number(paid?.captured_amount_cents || paid?.gross_amount_cents || 0) : 0;
         enqueue(
           'payment-receipt',
           buyerEmail,
@@ -199,7 +207,8 @@ Deno.serve(async (req) => {
           {
             customerName: buyerFirst,
             orderNumber,
-            amount: `$${(Number(tx.amount) || 0).toFixed(2)}`,
+            amount: paidCents > 0 ? `$${(paidCents / 100).toFixed(2)}` : `$${(Number(tx.amount) || 0).toFixed(2)}`,
+            ...campus,
             paymentMethod: 'PayPal',
             paidAt: new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }),
             listingTitle,

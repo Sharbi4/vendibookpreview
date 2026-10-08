@@ -1,3 +1,4 @@
+import { trackCampusPartner } from '@/lib/campusPartnerAnalytics';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { CheckCircle2, Loader2, Lock, ShieldCheck, X } from 'lucide-react';
 
@@ -11,13 +12,12 @@ import PayPalPayLaterMessage from '@/components/payments/PayPalPayLaterMessage';
 import PaymentFormSkeleton from './PaymentFormSkeleton';
 import PayPalReviewAuthorize from './PayPalReviewAuthorize';
 import PayPalCardFields from './PayPalCardFields';
-import { trackCampus } from '@/lib/campusPartner';
 import WalletPayButtons from './WalletPayButtons';
 
 
 export type PayPalCheckoutTarget =
-  | { kind: 'sale'; id: string }
-  | { kind: 'booking'; id: string }
+  | { kind: 'sale'; id: string; partner_code?: string }
+  | { kind: 'booking'; id: string; partner_code?: string }
   | { kind: 'product'; slug: string; listing_id?: string }
   | { kind: 'freight'; id: string }
   | { kind: 'notary'; id: string }
@@ -209,6 +209,12 @@ const PayPalPaymentPanel = ({
       setState('signin');
       throw new Error('Please sign in to continue.');
     }
+    if ((target.kind === 'sale' || target.kind === 'booking') && target.partner_code) {
+      trackCampusPartner('partner_checkout_started', {
+        kind: target.kind === 'sale' ? 'purchase' : 'rental',
+        code: target.partner_code,
+      });
+    }
     const { data, error: fnError } = await supabase.functions.invoke('paypal-create-order', {
       body: { ...target, ...(cardFields ? { card_fields: true } : {}) },
     });
@@ -233,13 +239,6 @@ const PayPalPaymentPanel = ({
       throw new Error(message);
     }
     intentRef.current = 'CAPTURE';
-    const campusLine = (data.breakdown as Array<{ label: string; amountCents: number }> | undefined)
-      ?.find((l) => l.label === 'Campus Partner credit');
-    if (campusLine && (target.kind === 'sale' || target.kind === 'booking')) {
-      trackCampus('partner_checkout_started', {
-        kind: target.kind, targetId: target.id, creditCents: Math.abs(campusLine.amountCents),
-      });
-    }
     return data.order_id as string;
   };
 

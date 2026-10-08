@@ -20,6 +20,7 @@ import { calculateRentalFees } from '@/lib/commissions';
 import { generateReceiptPdf } from '@/lib/generateReceiptPdf';
 import { trackGA4Purchase } from '@/lib/ga4Conversions';
 import { trackCheckoutConversion } from '@/lib/gtagConversions';
+import CampusPartnerBenefit from '@/components/checkout/CampusPartnerBenefit';
 
 interface HourlySlotData {
   date: string;
@@ -511,6 +512,7 @@ const PaymentSuccess = () => {
                     saleTransactionId={saleTransaction?.id ?? null}
                     className="rounded-xl border border-border bg-muted/30 p-4 text-left mb-6"
                   />
+                  <CampusPartnerBenefit saleTransactionId={saleTransaction?.id ?? null} className="mb-6 text-left" />
 
                   {/* Tax Breakdown */}
                   {sessionInfo && sessionInfo.tax_total > 0 && (
@@ -729,6 +731,7 @@ const PaymentSuccess = () => {
                       <p className="font-mono font-bold text-lg text-foreground">VB-{booking.id.slice(0, 8).toUpperCase()}</p>
                     </div>
                   )}
+                  <CampusPartnerBenefit bookingRequestId={booking?.id ?? null} className="mb-4 text-left" />
 
                   <div className="relative w-24 h-24 mx-auto mb-6">
                     <div className={`absolute inset-0 ${booking?.is_instant_book ? 'bg-emerald-200' : isHold ? 'bg-amber-200' : 'bg-emerald-200'} rounded-full animate-pulse`} />

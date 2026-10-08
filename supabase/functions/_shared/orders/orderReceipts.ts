@@ -32,6 +32,9 @@ export interface ReceiptContext {
   nextActionDescription?: string | null;
   orderUrl: string;
   coverImageUrl?: string | null;
+  /** Vendibook Campus Partner credit, formatted, and the school. */
+  campusCredit?: string;
+  campusPartnerName?: string;
 }
 
 /**

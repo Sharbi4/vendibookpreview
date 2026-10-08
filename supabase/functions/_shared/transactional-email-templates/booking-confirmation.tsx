@@ -26,6 +26,9 @@ interface TermsSnapshot {
 }
 
 interface BookingProps {
+  /** Vendibook-funded Campus Partner credit, already formatted (e.g. "$100.00"). */
+  campusCredit?: string
+  campusPartnerName?: string
   guestName?: string
   listingTitle?: string
   startDate?: string
@@ -91,6 +94,8 @@ const TermsBlock = ({ snap, version }: { snap?: TermsSnapshot; version?: string 
 const APPROVED_STATUSES = new Set(['approved', 'confirmed', 'active', 'completed'])
 
 const BookingConfirmationEmail = ({
+  campusCredit,
+  campusPartnerName,
   guestName,
   listingTitle,
   startDate,
@@ -163,6 +168,7 @@ const BookingConfirmationEmail = ({
           { label: 'Location', value: cityState },
           { label: 'Order', value: orderNumber, mono: true },
           { label: 'Status', value: approved ? 'Confirmed' : 'Awaiting host approval' },
+          { label: 'Vendibook Campus Partner credit', value: campusCredit ? `-${campusCredit}${campusPartnerName ? ` · ${campusPartnerName}` : ''}` : undefined },
           { label: 'Paid today', value: totalPrice, emphasis: true },
         ]}
       />

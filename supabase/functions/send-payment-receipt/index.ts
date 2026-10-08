@@ -2,6 +2,7 @@
 import { createClient } from 'npm:@supabase/supabase-js@2';
 import { getCaller, isAdminUser, unauthorizedResponse, forbiddenResponse } from "../_shared/callerGuard.ts";
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
+import { campusPartnerEmailFields } from '../_shared/campusPartner.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -29,7 +30,7 @@ Deno.serve(async (req) => {
     const ref = String(d.transactionId);
     const isUuid = /^[0-9a-f-]{36}$/i.test(ref);
     const { data: record } = await supabase.from('payment_records')
-      .select('buyer_id, reference, sale_transaction_id, booking_request_id, listing_id, gross_amount_cents, captured_amount_cents, payment_status')
+      .select('buyer_id, reference, sale_transaction_id, booking_request_id, listing_id, gross_amount_cents, captured_amount_cents, payment_status, fee_breakdown')
       .or(isUuid ? `sale_transaction_id.eq.${ref},reference.eq.${ref}` : `reference.eq.${ref.replace(/[^A-Za-z0-9_-]/g, '')}`)
       .order('created_at', { ascending: false }).limit(1).maybeSingle();
     if (!record || record.payment_status !== 'completed') {
@@ -55,6 +56,7 @@ Deno.serve(async (req) => {
       description: d.transactionType === 'rental'
         ? `Rental${d.startDate ? ` (${d.startDate} → ${d.endDate})` : ''}`
         : 'Purchase',
+      ...campusPartnerEmailFields(record.fee_breakdown),
     };
 
     const { error } = await invokeTransactionalEmail({

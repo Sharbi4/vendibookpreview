@@ -18,6 +18,7 @@ import {
   METHOD_LABEL, PAYOUT_COPY, type HandoffRole,
 } from '@/lib/sale/handoff';
 import { isSellerCoveredFreightOrder } from '@/lib/freight/presentation';
+import CampusPartnerBenefit, { useCampusPartnerBenefit } from '@/components/checkout/CampusPartnerBenefit';
 import { isPickupLocationRevealed, PICKUP_LOCKED_MESSAGE } from '@/lib/fulfillment/pickupReveal';
 
 type Tx = (Record<string, any> & { id: string }) | null;
@@ -99,6 +100,8 @@ export default function TransactionDetail() {
     user && tx ? (user.id === tx.buyer_id ? 'buyer' : user.id === tx.seller_id ? 'seller' : null) : null;
 
   const timeline = useMemo(() => (tx ? buildTransactionTimeline(tx) : []), [tx]);
+  // Buyer-only (RLS): the Vendibook-funded Campus Partner credit on this purchase.
+  const campusBenefit = useCampusPartnerBenefit({ saleTransactionId: tx?.id ? String(tx.id) : null });
 
   const openMessages = useCallback(async () => {
     if (!tx) return;
@@ -161,7 +164,8 @@ export default function TransactionDetail() {
   const freightCost = Number(tx.freight_cost ?? 0);
   const delivery = Number(tx.delivery_fee ?? 0) + (sellerCoversFreight ? 0 : freightCost);
   const discount = Number(tx.promo_discount ?? 0);
-  const total = subtotal + delivery - discount;
+  const campusCredit = role === 'buyer' && campusBenefit ? Number(campusBenefit.credit_cents) / 100 : 0;
+  const total = subtotal + delivery - discount - campusCredit;
   const freightUnpaid = method === 'freight' && !sellerCoversFreight && tx.freight_payment_status !== 'paid';
   const etaLabel = formatDeliveryWindow(tx.estimated_delivery_date, tx.estimated_delivery_end);
 
@@ -357,6 +361,7 @@ export default function TransactionDetail() {
               {delivery > 0 && <Row label={method === 'freight' ? 'Freight' : 'Delivery'} value={money(delivery)} />}
               {sellerCoversFreight && <Row label="Shipping" value="Free shipping" />}
               {discount > 0 && <Row label="Discount" value={`− ${money(discount)}`} />}
+              {campusCredit > 0 && <Row label="Campus Partner credit" value={`− ${money(campusCredit)}`} />}
               <div className="my-2 h-px bg-border" />
               <Row label={role === 'buyer' ? 'Total paid' : 'Buyer total'} value={money(total)} strong />
               {role === 'seller' && tx.platform_fee != null && (
@@ -371,6 +376,7 @@ export default function TransactionDetail() {
               <Row label="Reference" value={orderRef} />
             </dl>
             <p className="mt-3 text-xs text-muted-foreground">{PAYOUT_COPY}</p>
+            {role === 'buyer' ? <CampusPartnerBenefit saleTransactionId={String(tx.id)} className="mt-4" /> : null}
           </section>
         </div>
 

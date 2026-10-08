@@ -25,6 +25,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { AddToCalendarButton } from '@/components/booking/AddToCalendarButton';
 import { DocumentUploadSection } from '@/components/documents/DocumentUploadSection';
 import { useListingRequiredDocuments } from '@/hooks/useRequiredDocuments';
+import CampusPartnerBenefit from '@/components/checkout/CampusPartnerBenefit';
 
 interface BookingRow {
   id: string;
@@ -404,6 +405,9 @@ const BookingConfirmation = ({
               </div>
             ) : null}
 
+            {booking && user?.id === booking.shopper_id && view !== 'failed' && view !== 'not_found' ? (
+              <CampusPartnerBenefit bookingRequestId={booking.id} className="mt-6" />
+            ) : null}
             {paymentReference ? <Link className="mt-6 block underline" to={`/receipt/${paymentReference}`}>View payment status and receipt</Link> : null}
             {booking && view === 'ready_to_pay' && user?.id === booking.shopper_id ? (
               <section className="mt-6" aria-label="Rental payment">

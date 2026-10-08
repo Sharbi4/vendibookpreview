@@ -46,8 +46,5 @@ SELECT v.code, p.name || ' Campus Partner benefit (2026-27)', 'campus_partner', 
   JOIN public.campus_partners p ON p.slug = v.slug
 ON CONFLICT (code_normalized) DO NOTHING;
 
--- A parallel build (2026-10-08, Lovable) stored campus codes in promo_codes
--- (program = 'campus_partner') and switched five on. discount_codes is the
--- canonical table; those rows stay switched off and unused.
-UPDATE public.promo_codes SET is_active = false, updated_at = now()
- WHERE program = 'campus_partner' AND is_active;
+-- Superseded by 20261008200000_campus_partner_promo_codes.sql: Campus Partner
+-- runs on promo_codes; these discount_codes rows were removed there.

@@ -10,7 +10,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Navigate } from 'react-router-dom';
 import { formatUsd, type MonetizationProduct } from '@/lib/monetization/products';
 import { SubscriptionRevenueSection, type HostSubscriptionRow } from '@/components/admin/SubscriptionRevenueSection';
-import CampusPartnersAdmin from '@/components/admin/CampusPartnersAdmin';
 import { toast } from 'sonner';
 
 interface PurchaseRow {
@@ -44,7 +43,6 @@ interface DiscountRow {
   max_uses: number | null;
   active: boolean;
   ends_at: string | null;
-  campaign_type?: string;
 }
 
 // deno-lint-ignore no-explicit-any
@@ -80,7 +78,7 @@ export default function AdminRevenue() {
         anyClient.from('monetization_products').select('*').order('display_order'),
         anyClient.from('monetization_purchases').select('*').order('created_at', { ascending: false }).limit(200),
         anyClient.from('listing_promotions').select('*').order('starts_at', { ascending: false }).limit(200),
-        anyClient.from('discount_codes').select('*').neq('campaign_type', 'campus_partner').order('created_at', { ascending: false }),
+        anyClient.from('discount_codes').select('*').order('created_at', { ascending: false }),
         anyClient.from('host_subscriptions').select('*').order('created_at', { ascending: false }).limit(1000),
       ]);
       setProducts(p.data ?? []);
@@ -187,7 +185,6 @@ export default function AdminRevenue() {
           <TabsTrigger value="purchases">Purchases</TabsTrigger>
           <TabsTrigger value="promotions">Promotions</TabsTrigger>
           <TabsTrigger value="discounts">Discount codes</TabsTrigger>
-          <TabsTrigger value="campus">Campus Partners</TabsTrigger>
         </TabsList>
 
         <TabsContent value="subscriptions" className="mt-4">
@@ -365,10 +362,6 @@ export default function AdminRevenue() {
               </tbody>
             </table>
           </div>
-        </TabsContent>
-
-        <TabsContent value="campus" className="mt-4">
-          <CampusPartnersAdmin />
         </TabsContent>
       </Tabs>
     </div>

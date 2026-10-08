@@ -21,17 +21,21 @@ import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_
 import { hasCurrentLegalAcceptance } from "../_shared/legalVersions.ts";
 import { assertRentalCheckoutReady } from "../_shared/rentalCheckoutReady.ts";
 import { getListingPurchaseState, LISTING_UNAVAILABLE_MESSAGE } from "../_shared/listingGuard.ts";
-import { rentalQuoteWithTax } from "../_shared/checkoutQuote.ts";
-import { applyCampusCredit } from "../_shared/campusPartnerMath.ts";
-import {
-  CAMPUS_MOVED_MESSAGE,
-  type CampusReservation,
-  campusCreditForCheckout,
-  campusFeeBreakdown,
-  reservationStillHeld,
-} from "../_shared/campusPartner.ts";
+import { resolveProStatus } from "../_shared/proEligibility.ts";
+import { applyTaxToQuote, quoteBookingRequest, type QuoteResult } from "../_shared/paypalAccounting.ts";
+import { parseStateZipFromAddress, quoteSalesTax } from "../_shared/tax.ts";
 import { CaptureRejectedError, finalizeCapture } from "../_shared/paypalFinalize.ts";
 import { safeLog } from "../_shared/paypal.ts";
+import {
+  applyPartnerCredit,
+  normalizePartnerCode,
+  PARTNER_MESSAGES,
+  type PartnerResolution,
+  partnerSnapshot,
+  rentalEligibleBaseCents,
+  reservePartnerRedemption,
+  resolvePartnerCredit,
+} from "../_shared/campusPartner.ts";
 import {
   recordSquareContext,
   rentalSquareContext,
@@ -51,22 +55,29 @@ const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 // deno-lint-ignore no-explicit-any
 type Admin = any;
 
-/**
- * Server-side quote: trusted booking row + Pro fee + sales tax, then any
- * Campus Partner credit the renter applied (re-validated here, after tax).
- * The credit lowers what the renter pays; the host's proceeds never change.
- */
-async function rentalQuote(admin: Admin, booking: any, userId: string) {
-  const { quote, tax } = await rentalQuoteWithTax(admin, booking);
-  const campus = await campusCreditForCheckout(admin, {
-    userId, type: "rental", bookingRequestId: booking.id, listingId: booking.listing_id ?? null, quote, row: booking,
+/** Server-side quote: trusted booking row + Pro fee + sales tax (+ Campus Partner credit). */
+async function rentalQuote(admin: Admin, booking: any, partnerCode = "", userId = "") {
+  const locked = booking.host_platform_fee !== null && booking.host_platform_fee !== undefined;
+  const hostPro = locked ? { isPro: !!booking.pro_fee_applied } : { isPro: (await resolveProStatus(admin, booking.host_id)).isPro };
+  const quote: QuoteResult = quoteBookingRequest(booking, booking.listing?.title ?? "Listing", hostPro);
+  const loc = parseStateZipFromAddress(booking.listing?.address);
+  const tax = await quoteSalesTax({
+    amountCents: quote.taxableBaseCents,
+    destination: { state: booking.listing?.state ?? null, zip: loc.zip ?? null, city: booking.listing?.city ?? null },
+    kind: "rental",
   });
-  let campusCredit: CampusReservation | null = null;
-  if (campus.applied) {
-    applyCampusCredit(quote, campus.reservation.creditCents);
-    campusCredit = campus.reservation;
+  applyTaxToQuote(quote, tax);
+  let partner: PartnerResolution | null = null;
+  if (partnerCode && userId) {
+    partner = await resolvePartnerCredit(admin, {
+      code: partnerCode, userId, kind: "rental", eligibleBaseCents: rentalEligibleBaseCents(quote, booking),
+    });
+    if (partner.ok) {
+      try { applyPartnerCredit(quote, partner.creditCents); }
+      catch { partner = { ...partner, ok: false, reason: "not_eligible", message: PARTNER_MESSAGES.not_eligible, creditCents: 0 }; }
+    }
   }
-  return { quote, tax, campusCredit, campusError: "error" in campus ? campus.error : null };
+  return { quote, tax, partner };
 }
 
 async function loadBooking(admin: Admin, bookingId: string) {
@@ -132,6 +143,7 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const action = String(body?.action ?? "");
     const bookingId = String(body?.booking_id ?? "");
+    const partnerCode = normalizePartnerCode(body?.partner_code);
     if (!UUID_RE.test(bookingId)) return jsonError(400, "missing_fields", "Missing booking.");
 
     const booking = await loadBooking(admin, bookingId);
@@ -162,8 +174,13 @@ Deno.serve(async (req) => {
     if (action === "config") {
       const ctx = await rentalSquareContext(admin, booking.host_id);
       if (!ctx) return jsonResponse(200, { provider: "unavailable", reason: "square_not_configured" });
-      const { quote, campusCredit, campusError } = await rentalQuote(admin, booking, user.id);
+      const { quote, partner } = await rentalQuote(admin, booking, partnerCode, user.id);
       return jsonResponse(200, {
+        partner: partner
+          ? partner.ok
+            ? { valid: true, code: partner.row!.code, partner_name: partner.row!.partner_name, credit_cents: partner.creditCents }
+            : { valid: false, reason: partner.reason, message: partner.message }
+          : null,
         provider: "square",
         environment: ctx.environment,
         application_id: ctx.applicationId,
@@ -173,10 +190,6 @@ Deno.serve(async (req) => {
         currency: quote.currency,
         breakdown: quote.breakdown,
         tax_cents: quote.taxCents,
-        campus_credit: campusCredit
-          ? { code: campusCredit.code, partner_name: campusCredit.partnerName, credit_cents: campusCredit.creditCents }
-          : null,
-        ...(campusError ? { campus_notice: campusError.message, campus_notice_code: campusError.code } : {}),
       });
     }
 
@@ -229,11 +242,9 @@ Deno.serve(async (req) => {
     const { data: fingerprint, error: fingerprintError } = await admin.rpc("rental_checkout_fingerprint", { b: booking });
     if (fingerprintError || !fingerprint) return jsonError(409, "quote_unavailable", "We could not verify this booking. Please try again.");
 
-    const { quote, tax, campusCredit, campusError } = await rentalQuote(admin, booking, user.id);
-    if (campusError) {
-      // The code stopped qualifying since it was applied: never charge an
-      // amount the renter wasn't shown.
-      return jsonError(409, "partner_code_changed", `${campusError.message} Your total has been updated; review it before paying.`);
+    const { quote, tax, partner } = await rentalQuote(admin, booking, partnerCode, user.id);
+    if (partner && !partner.ok) {
+      return jsonError(409, "partner_code_invalid", partner.message ?? PARTNER_MESSAGES.invalid, { reason: partner.reason });
     }
     // Host account: Vendibook's share rides as app_fee_money. Vendibook's own
     // account: the whole charge lands with Vendibook and the host's share is
@@ -272,8 +283,7 @@ Deno.serve(async (req) => {
     if (record?.payment_status === "completed") {
       return jsonResponse(200, { status: "paid", ...bookingView(await loadBooking(admin, booking.id), record) });
     }
-    if (record && (record.gross_amount_cents !== quote.grossCents ||
-        (record.fee_breakdown?.campus_partner?.redemption_id ?? null) !== (campusCredit?.redemptionId ?? null))) {
+    if (record && record.gross_amount_cents !== quote.grossCents) {
       return jsonError(409, "quote_changed", "The total changed. Refresh to see the latest amount before paying.");
     }
     if (!record) {
@@ -310,7 +320,7 @@ Deno.serve(async (req) => {
           lines: quote.breakdown,
           release_at: quote.releaseAt,
           ...(ctx.mode === "host" ? { app_fee_cents: appFeeCents } : {}),
-          ...(campusCredit ? { campus_partner: campusFeeBreakdown(campusCredit) } : {}),
+          ...(partner?.ok ? { campus_partner: partnerSnapshot(partner, "rental") } : {}),
         },
         metadata: ctx.mode === "host"
           ? { square_mode: "host", multiparty: { routed: true, provider: "square", merchant_id: ctx.merchantId } }
@@ -329,12 +339,17 @@ Deno.serve(async (req) => {
       }
     }
 
-    // The Campus Partner reservation must still be ours now that the record
-    // carrying it exists; otherwise charge nothing and show the new total.
-    if (campusCredit && !(await reservationStillHeld(admin, campusCredit.redemptionId))) {
-      await admin.from("payment_records").update({ payment_status: "cancelled", internal_status: "campus_code_moved" })
-        .eq("id", record.id).eq("payment_status", "created");
-      return jsonError(409, "partner_code_changed", CAMPUS_MOVED_MESSAGE);
+    if (partner?.ok) {
+      const blocked = await reservePartnerRedemption(admin, {
+        codeId: partner.row!.id, userId: user.id, kind: "rental", paymentRecordId: record.id,
+        creditCents: partner.creditCents, eligibleBaseCents: partner.eligibleBaseCents,
+        grossCents: quote.grossCents, platformFeeCents: quote.platformFeeCents,
+      });
+      if (blocked) {
+        await admin.from("payment_records").update({ payment_status: "cancelled", internal_status: "partner_code_rejected" })
+          .eq("id", record.id).eq("payment_status", "created");
+        return jsonError(409, "partner_code_invalid", PARTNER_MESSAGES[blocked], { reason: blocked });
+      }
     }
 
     // Serialize: only one payment per booking can be in flight.

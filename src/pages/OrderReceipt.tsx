@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { formatDeliveryWindow } from '@/lib/sale/handoff';
 import { isSellerCoveredFreightOrder } from '@/lib/freight/presentation';
+import CampusPartnerBenefit, { useCampusPartnerBenefit } from '@/components/checkout/CampusPartnerBenefit';
 
 interface OrderRecord {
   reference: string;
@@ -331,6 +332,10 @@ const OrderReceipt = () => {
     ?? (booking?.renter_snapshot ? [booking.renter_snapshot.first_name, booking.renter_snapshot.last_name].filter(Boolean).join(' ') : null)
     ?? null;
   const purchaserPhone = sale?.buyer_phone ?? booking?.renter_snapshot?.phone_number ?? null;
+  const campusBenefit = useCampusPartnerBenefit({
+    saleTransactionId: order?.sale_transaction_id ?? null,
+    bookingRequestId: order?.sale_transaction_id ? null : order?.booking_request_id ?? null,
+  });
 
   if (loading) {
     return (
@@ -546,7 +551,11 @@ const OrderReceipt = () => {
                   </tr>
                   {order.discount_cents > 0 ? (
                     <tr>
-                      <td className="py-1 text-muted-foreground" colSpan={2}>Discount</td>
+                      <td className="py-1 text-muted-foreground" colSpan={2}>
+                        {campusBenefit
+                          ? `Vendibook Campus Partner credit${campusBenefit.partner_name ? ` (${campusBenefit.partner_name})` : ''}`
+                          : 'Discount'}
+                      </td>
                       <td className="py-1 text-right text-foreground">-{usd(order.discount_cents, order.currency)}</td>
                     </tr>
                   ) : null}
@@ -577,6 +586,13 @@ const OrderReceipt = () => {
                   ? 'This receipt records the full card payment processed by Square.'
                   : 'This receipt records the full order payment processed by PayPal. If you used Pay in 4 or Pay Monthly, your amount due today and remaining payments follow your approved PayPal plan. View that plan in your PayPal account.'}
               </p>
+              {campusBenefit ? (
+                <CampusPartnerBenefit
+                  className="mt-4 print:border-border print:bg-transparent"
+                  saleTransactionId={order.sale_transaction_id ?? null}
+                  bookingRequestId={order.sale_transaction_id ? null : order.booking_request_id ?? null}
+                />
+              ) : null}
             </section>
 
             {/* Parties + fulfillment */}

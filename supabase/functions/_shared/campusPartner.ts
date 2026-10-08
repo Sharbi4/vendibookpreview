@@ -1,253 +1,199 @@
 /**
- * Campus Partner codes, server side. Codes live in public.discount_codes
- * (campaign_type = 'campus_partner'); every use is a row in
- * public.discount_code_redemptions, reserved when the shopper applies the
- * code and completed by the payment_records trigger when the processor
- * confirms the capture.
+ * Vendibook Campus Partner credits. Pure math plus server-side resolution on
+ * top of the existing promo_codes / promo_code_uses tables.
  *
- * Nothing here trusts the browser: the credit is recomputed from the trusted
- * quote and the code is re-validated immediately before every charge.
+ * The credit is Vendibook-funded: it lowers what the buyer pays and is never
+ * taken from the host/seller. Platform fees, seller proceeds, tax, deposits,
+ * delivery and freight are untouched.
  */
 import type { QuoteResult } from "./paypalAccounting.ts";
-import {
-  CAMPUS_INACTIVE_MESSAGE,
-  type CampusTransactionType,
-  computeCampusCredit,
-  normalizePartnerCode,
-  rentalEligibleSubtotalCents,
-} from "./campusPartnerMath.ts";
 
-// deno-lint-ignore no-explicit-any
-type Admin = any;
+export type PartnerKind = "rental" | "purchase";
 
-const CODE_SHAPE = /^[A-Z0-9-]{3,40}$/;
-const cents = (n: unknown) => Math.round(Number(n ?? 0) * 100);
-const usd = (c: number) => `$${(c / 100).toLocaleString("en-US", { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
-
-export class CampusCodeError extends Error {
-  constructor(public code: string, message: string) {
-    super(message);
-  }
-}
-
-export interface CampusCodeRow {
+export interface PartnerCodeRow {
   id: string;
   code: string;
-  code_normalized: string;
-  campaign_type: string;
-  active: boolean;
+  partner_name: string | null;
+  program: string;
+  is_active: boolean;
   starts_at: string | null;
-  ends_at: string | null;
+  expires_at: string | null;
   rental_percent: number | string | null;
   rental_cap_cents: number | null;
   purchase_credit_cents: number | null;
   purchase_min_cents: number | null;
-  partner_id: string;
-  partner?: { id: string; name: string; slug: string; active: boolean } | null;
+  rental_uses_per_user: number | null;
+  purchase_uses_per_user: number | null;
 }
 
-const CODE_SELECT = "id, code, code_normalized, campaign_type, active, starts_at, ends_at, rental_percent, " +
-  "rental_cap_cents, purchase_credit_cents, purchase_min_cents, partner_id, partner:campus_partners(id, name, slug, active)";
+export const PARTNER_CREDIT_LABEL = "Campus Partner credit";
 
-export async function findCampusCode(admin: Admin, raw: unknown): Promise<CampusCodeRow | null> {
-  const normalized = normalizePartnerCode(raw);
-  if (!CODE_SHAPE.test(normalized)) return null;
-  const { data } = await admin.from("discount_codes").select(CODE_SELECT)
-    .eq("code_normalized", normalized).eq("campaign_type", "campus_partner").maybeSingle();
-  return (data as CampusCodeRow) ?? null;
+/** Case- and whitespace-insensitive code form. */
+export function normalizePartnerCode(raw: unknown): string {
+  return String(raw ?? "").replace(/\s+/g, "").toUpperCase().slice(0, 40);
 }
 
-export function campusCodeIsLive(code: CampusCodeRow | null, now = Date.now()): code is CampusCodeRow {
-  if (!code || code.campaign_type !== "campus_partner" || !code.active) return false;
-  if (!code.partner?.active) return false;
-  if (code.starts_at && new Date(code.starts_at).getTime() > now) return false;
-  if (code.ends_at && new Date(code.ends_at).getTime() <= now) return false;
-  return true;
+export type PartnerReason =
+  | "invalid"
+  | "inactive"
+  | "not_started"
+  | "expired"
+  | "below_minimum"
+  | "cash_excluded"
+  | "limit_reached"
+  | "not_eligible";
+
+export function partnerCodeStatus(row: PartnerCodeRow | null, now = new Date()): PartnerReason | null {
+  if (!row || row.program !== "campus_partner") return "invalid";
+  if (!row.is_active) return "inactive";
+  if (row.starts_at && new Date(row.starts_at) > now) return "not_started";
+  if (row.expires_at && new Date(row.expires_at) <= now) return "expired";
+  return null;
+}
+
+/** 10% (configurable) of the eligible rental base, capped. */
+export function rentalPartnerCredit(row: PartnerCodeRow, eligibleBaseCents: number): number {
+  const base = Math.max(0, Math.round(eligibleBaseCents));
+  const pct = Number(row.rental_percent ?? 0);
+  if (!(pct > 0) || base <= 0) return 0;
+  return Math.max(0, Math.min(Math.floor((base * pct) / 100), Number(row.rental_cap_cents ?? 0), base));
+}
+
+/** Flat purchase credit when the eligible sale price meets the minimum. */
+export function purchasePartnerCredit(row: PartnerCodeRow, salePriceCents: number): number {
+  const price = Math.max(0, Math.round(salePriceCents));
+  if (price < Number(row.purchase_min_cents ?? Infinity)) return 0;
+  return Math.max(0, Math.min(Number(row.purchase_credit_cents ?? 0), price));
 }
 
 /**
- * Only an open online purchase can take the purchase credit: pay-in-person
- * (cash) sales carry no Vendibook commission and are never eligible.
+ * Applies the credit to an already-taxed quote. Only gross, discount and the
+ * itemized lines change; platform fee and seller proceeds stay as quoted.
+ * Refuses when the payer total could no longer cover the seller's share.
  */
-export function saleTakesCampusCredit(tx: Record<string, any>): boolean {
-  return ["pending", "payment_failed"].includes(String(tx?.status));
-}
-
-/** Only an unpaid, still-open booking can take the rental credit. */
-export function bookingTakesCampusCredit(booking: Record<string, any>): boolean {
-  return booking?.payment_status !== "paid" &&
-    !["declined", "cancelled", "completed"].includes(String(booking?.status));
-}
-
-/** What the credit is computed on, from the trusted row + quote. */
-export function campusBasis(type: CampusTransactionType, quote: QuoteResult, row: Record<string, any>) {
-  if (type === "rental") {
-    return {
-      eligibleSubtotalCents: rentalEligibleSubtotalCents(quote.taxableBaseCents, cents(row.delivery_fee_snapshot)),
-      // Renter fee + host commission: the credit can never exceed it.
-      platformFeeCents: quote.platformFeeCents,
-      gmvCents: quote.taxableBaseCents,
-    };
+export function applyPartnerCredit(quote: QuoteResult, creditCents: number): QuoteResult {
+  const credit = Math.max(0, Math.round(creditCents));
+  if (credit === 0) return quote;
+  if (quote.grossCents - credit < quote.sellerProceedsCents + quote.taxCents + quote.depositCents) {
+    throw new Error("partner_credit_exceeds_platform_share");
   }
-  return {
-    // Equipment price only: never freight, delivery or tax.
-    eligibleSubtotalCents: cents(row.amount),
-    platformFeeCents: quote.platformFeeCents,
-    gmvCents: quote.taxableBaseCents,
-  };
+  quote.grossCents -= credit;
+  quote.discountCents += credit;
+  quote.breakdown.push({ label: PARTNER_CREDIT_LABEL, amountCents: -credit, kind: "credit" });
+  return quote;
 }
 
-const LIMIT_MESSAGE: Record<CampusTransactionType, string> = {
-  rental: "You've already used this school's Campus Partner rental benefit the maximum number of times this school year. You can continue without it.",
-  sale: "You've already used this school's Campus Partner purchase benefit this school year. You can continue without it.",
+/** Eligible rental base: rental subtotal without renter fee, delivery, deposit, tax. */
+export function rentalEligibleBaseCents(quote: QuoteResult, booking: Record<string, any>): number {
+  const subtotal = quote.breakdown.find((l) => l.label === "Rental subtotal")?.amountCents ?? quote.taxableBaseCents;
+  const delivery = booking.fulfillment_selected === "delivery"
+    ? Math.round(Number(booking.delivery_fee_snapshot ?? 0) * 100)
+    : 0;
+  return Math.max(0, subtotal - delivery);
+}
+
+export interface PartnerResolution {
+  ok: boolean;
+  reason?: PartnerReason;
+  message?: string;
+  row?: PartnerCodeRow;
+  creditCents: number;
+  eligibleBaseCents: number;
+}
+
+export const PARTNER_MESSAGES: Record<PartnerReason, string> = {
+  invalid: "That Campus Partner code isn't active. Check the code with your school or continue without it.",
+  inactive: "That Campus Partner code isn't active. Check the code with your school or continue without it.",
+  not_started: "That Campus Partner code isn't active. Check the code with your school or continue without it.",
+  expired: "This Campus Partner code has expired. Check with your school for the current code.",
+  below_minimum: "The Campus Partner purchase credit applies to equipment priced at $5,000 or more. You can continue without it.",
+  cash_excluded: "Campus Partner credit applies to online checkout only, not pay-in-person purchases.",
+  limit_reached: "You've already used the available Campus Partner benefit for this transaction type.",
+  not_eligible: "This order isn't eligible for Campus Partner credit. You can continue without it.",
 };
 
-export interface CampusReservation {
-  redemptionId: string;
-  creditCents: number;
-  eligibleSubtotalCents: number;
-  codeId: string;
-  code: string;
-  partnerId: string;
-  partnerName: string;
-  partnerSlug: string;
+// deno-lint-ignore no-explicit-any
+export async function loadPartnerCode(admin: any, raw: unknown): Promise<PartnerCodeRow | null> {
+  const code = normalizePartnerCode(raw);
+  if (code.length < 3) return null;
+  const { data } = await admin.from("promo_codes").select(
+    "id, code, partner_name, program, is_active, starts_at, expires_at, rental_percent, rental_cap_cents, purchase_credit_cents, purchase_min_cents, rental_uses_per_user, purchase_uses_per_user",
+  ).eq("normalized_code", code).maybeSingle();
+  return (data as PartnerCodeRow) ?? null;
 }
 
-/** Validates, computes and atomically reserves the credit for one booking / sale. */
-export async function reserveCampusCredit(admin: Admin, opts: {
-  code: CampusCodeRow | null;
-  userId: string;
-  type: CampusTransactionType;
-  bookingRequestId?: string | null;
-  saleTransactionId?: string | null;
-  listingId: string | null;
-  quote: QuoteResult;
-  row: Record<string, any>;
-}): Promise<CampusReservation> {
-  const code = opts.code;
-  if (!campusCodeIsLive(code)) throw new CampusCodeError("partner_code_inactive", CAMPUS_INACTIVE_MESSAGE);
-  const basis = campusBasis(opts.type, opts.quote, opts.row);
-  const result = computeCampusCredit({ type: opts.type, terms: code, ...basis });
-  if (!result.eligible) {
-    if (result.reason === "below_minimum") {
-      throw new CampusCodeError("partner_code_below_minimum",
-        `The Campus Partner purchase credit applies to equipment priced at ${usd(result.minimumCents ?? 0)} or more. You can continue without it.`);
-    }
-    throw new CampusCodeError("partner_code_not_applicable",
-      opts.type === "rental"
-        ? "This Campus Partner code doesn't include a rental benefit. You can continue without it."
-        : "This Campus Partner code doesn't include a purchase benefit. You can continue without it.");
-  }
-  const { data, error } = await admin.rpc("campus_reserve_redemption", {
-    p_code_id: code.id,
-    p_user_id: opts.userId,
-    p_transaction_type: opts.type,
-    p_booking_request_id: opts.type === "rental" ? opts.bookingRequestId ?? null : null,
-    p_sale_transaction_id: opts.type === "sale" ? opts.saleTransactionId ?? null : null,
-    p_listing_id: opts.listingId,
-    p_eligible_subtotal_cents: result.eligibleSubtotalCents,
-    p_discount_cents: result.creditCents,
-    p_gmv_cents: basis.gmvCents,
-    p_platform_fee_cents: basis.platformFeeCents,
+/** Full server-side check for one user and one transaction. */
+export async function resolvePartnerCredit(
+  // deno-lint-ignore no-explicit-any
+  admin: any,
+  opts: { code: unknown; userId: string; kind: PartnerKind; eligibleBaseCents: number; isCash?: boolean },
+): Promise<PartnerResolution> {
+  const fail = (reason: PartnerReason, row?: PartnerCodeRow): PartnerResolution => ({
+    ok: false, reason, message: PARTNER_MESSAGES[reason], row, creditCents: 0, eligibleBaseCents: opts.eligibleBaseCents,
   });
-  if (error || !data) {
-    const msg = String(error?.message ?? "");
-    if (msg.includes("campus_limit_reached")) throw new CampusCodeError("partner_code_limit", LIMIT_MESSAGE[opts.type]);
-    if (msg.includes("campus_already_redeemed")) {
-      throw new CampusCodeError("partner_code_already_applied", "A Campus Partner credit is already applied to this order.");
-    }
-    if (msg.includes("campus_code_inactive")) throw new CampusCodeError("partner_code_inactive", CAMPUS_INACTIVE_MESSAGE);
-    throw new CampusCodeError("partner_code_unavailable",
-      "We couldn't apply the Campus Partner code right now. You can continue without it or try again.");
-  }
+  const row = await loadPartnerCode(admin, opts.code);
+  const status = partnerCodeStatus(row);
+  if (status) return fail(status, row ?? undefined);
+  if (opts.isCash) return fail("cash_excluded", row!);
+  const credit = opts.kind === "rental"
+    ? rentalPartnerCredit(row!, opts.eligibleBaseCents)
+    : purchasePartnerCredit(row!, opts.eligibleBaseCents);
+  if (credit <= 0) return fail(opts.kind === "purchase" ? "below_minimum" : "not_eligible", row!);
+  const { data: used } = await admin.rpc("partner_code_active_uses", {
+    p_code_id: row!.id, p_user: opts.userId, p_kind: opts.kind, p_exclude_record: null,
+  });
+  const limit = opts.kind === "rental" ? row!.rental_uses_per_user : row!.purchase_uses_per_user;
+  if (Number(used ?? 0) >= Number(limit ?? 0)) return fail("limit_reached", row!);
+  return { ok: true, row: row!, creditCents: credit, eligibleBaseCents: opts.eligibleBaseCents };
+}
+
+/** Reserves the redemption against a payment record. Returns an error reason or null. */
+export async function reservePartnerRedemption(
+  // deno-lint-ignore no-explicit-any
+  admin: any,
+  args: { codeId: string; userId: string; kind: PartnerKind; paymentRecordId: string; creditCents: number;
+    eligibleBaseCents: number; grossCents: number; platformFeeCents: number },
+): Promise<PartnerReason | null> {
+  const { data, error } = await admin.rpc("reserve_partner_redemption", {
+    p_code_id: args.codeId, p_user: args.userId, p_kind: args.kind, p_payment_record: args.paymentRecordId,
+    p_credit_cents: args.creditCents, p_base_cents: args.eligibleBaseCents, p_gross_cents: args.grossCents,
+    p_platform_fee_cents: args.platformFeeCents,
+  });
+  if (error) return "not_eligible";
+  if (data === "ok") return null;
+  if (data === "limit_reached") return "limit_reached";
+  if (data === "expired") return "expired";
+  return "inactive";
+}
+
+/** fee_breakdown snapshot for the payment record. */
+export function partnerSnapshot(res: PartnerResolution, kind: PartnerKind) {
   return {
-    redemptionId: String(data),
-    creditCents: result.creditCents,
-    eligibleSubtotalCents: result.eligibleSubtotalCents,
-    codeId: code.id,
-    code: code.code_normalized,
-    partnerId: code.partner_id,
-    partnerName: code.partner?.name ?? "",
-    partnerSlug: code.partner?.slug ?? "",
+    promo_code_id: res.row!.id,
+    code: res.row!.code,
+    partner_name: res.row!.partner_name,
+    kind,
+    credit_cents: res.creditCents,
+    eligible_base_cents: res.eligibleBaseCents,
+    funded_by: "vendibook",
   };
 }
 
-/** The shopper's reserved (not yet paid) redemption on a booking / sale. */
-export async function findReservation(admin: Admin, target: { bookingRequestId?: string | null; saleTransactionId?: string | null }) {
-  let q = admin.from("discount_code_redemptions").select("id, code_id, user_id, status")
-    .eq("campaign_type", "campus_partner").eq("status", "reserved");
-  q = target.bookingRequestId ? q.eq("booking_request_id", target.bookingRequestId) : q.eq("sale_transaction_id", target.saleTransactionId);
-  const { data } = await q.maybeSingle();
-  return data as { id: string; code_id: string; user_id: string; status: string } | null;
+/** Snapshot stored on payment_records.fee_breakdown.campus_partner, when any. */
+export function campusPartnerFromBreakdown(feeBreakdown: unknown): { code: string | null; partner_name: string | null; credit_cents: number } | null {
+  // deno-lint-ignore no-explicit-any
+  const snap = (feeBreakdown as any)?.campus_partner;
+  const credit = Math.round(Number(snap?.credit_cents ?? 0));
+  if (!(credit > 0)) return null;
+  return { code: snap?.code ?? null, partner_name: snap?.partner_name ?? null, credit_cents: credit };
 }
 
-export async function releaseReservation(admin: Admin, redemptionId: string) {
-  await admin.from("discount_code_redemptions")
-    .update({ status: "released", released_at: new Date().toISOString() })
-    .eq("id", redemptionId).eq("status", "reserved");
-}
-
-export type CheckoutCampusCredit =
-  | { applied: false }
-  | { applied: true; reservation: CampusReservation }
-  | { applied: false; error: CampusCodeError };
-
-/**
- * Called by every payment function right before it creates the processor
- * charge / order. Re-validates the reserved code against the current quote.
- * A code that stopped qualifying is released and reported, so the shopper is
- * never charged an amount different from the one they were shown.
- */
-export async function campusCreditForCheckout(admin: Admin, opts: {
-  userId: string;
-  type: CampusTransactionType;
-  bookingRequestId?: string | null;
-  saleTransactionId?: string | null;
-  listingId: string | null;
-  quote: QuoteResult;
-  row: Record<string, any>;
-}): Promise<CheckoutCampusCredit> {
-  const reservation = await findReservation(admin, opts);
-  if (!reservation) return { applied: false };
-  if (reservation.user_id !== opts.userId) {
-    await releaseReservation(admin, reservation.id);
-    return { applied: false };
-  }
-  const { data: code } = await admin.from("discount_codes").select(CODE_SELECT).eq("id", reservation.code_id).maybeSingle();
-  try {
-    const fresh = await reserveCampusCredit(admin, { ...opts, code: (code as CampusCodeRow) ?? null });
-    return { applied: true, reservation: fresh };
-  } catch (err) {
-    await releaseReservation(admin, reservation.id);
-    if (err instanceof CampusCodeError) return { applied: false, error: err };
-    throw err;
-  }
-}
-
-/**
- * Checked after the payment record (carrying the redemption id) exists and
- * before the processor is called: a reservation released in between (the
- * shopper applied the code to another checkout) must not be charged.
- */
-export async function reservationStillHeld(admin: Admin, redemptionId: string): Promise<boolean> {
-  const { data } = await admin.from("discount_code_redemptions").select("status").eq("id", redemptionId).maybeSingle();
-  return data?.status === "reserved" || data?.status === "completed";
-}
-
-export const CAMPUS_MOVED_MESSAGE =
-  "Your Campus Partner code was applied to another checkout, so it was removed here. Review your total before paying.";
-
-/** Stored on payment_records.fee_breakdown.campus_partner (the trigger reads redemption_id). */
-export function campusFeeBreakdown(r: CampusReservation) {
+/** Buyer email fields: "Vendibook Campus Partner credit -$XX" plus the school. */
+export function campusPartnerEmailFields(feeBreakdown: unknown, currency = "USD"): { campusCredit?: string; campusPartnerName?: string } {
+  const snap = campusPartnerFromBreakdown(feeBreakdown);
+  if (!snap) return {};
   return {
-    campaign_type: "campus_partner",
-    funded_by: "vendibook",
-    redemption_id: r.redemptionId,
-    code_id: r.codeId,
-    code: r.code,
-    partner_id: r.partnerId,
-    partner_slug: r.partnerSlug,
-    credit_cents: r.creditCents,
-    eligible_subtotal_cents: r.eligibleSubtotalCents,
+    campusCredit: new Intl.NumberFormat("en-US", { style: "currency", currency }).format(snap.credit_cents / 100),
+    campusPartnerName: snap.partner_name ?? undefined,
   };
 }
