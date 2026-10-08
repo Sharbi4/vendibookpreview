@@ -86,8 +86,8 @@ export default function RentalPaymentPanel(props: RentalPaymentPanelProps) {
             setPartner((p) => p && { ...p, creditCents: next.partner && next.partner.valid ? next.partner.credit_cents : 0 });
           } else {
             // Keep checkout intact; only the code is dropped.
-            trackCampusPartner('partner_code_invalid', { kind: 'rental', code: partner.code, listingId, reason: next.partner?.reason });
-            setPartnerError(next.partner?.message || "That code can't be used on this booking.");
+            trackCampusPartner('partner_code_invalid', { kind: 'rental', code: partner.code, listingId, reason: (next.partner as { reason?: string } | null)?.reason });
+            setPartnerError((next.partner as { message?: string } | null)?.message || "That code can't be used on this booking.");
             setPartner(null);
             return;
           }
