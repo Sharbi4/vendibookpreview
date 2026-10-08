@@ -7529,30 +7529,77 @@ export type Database = {
       }
       promo_code_uses: {
         Row: {
+          completed_at: string | null
+          credit_cents: number | null
           discount_applied: number
+          eligible_base_cents: number | null
+          gross_cents: number | null
           id: string
+          payment_record_id: string | null
+          platform_fee_cents: number | null
           promo_code_id: string
+          redemption_kind: string | null
+          refunded_cents: number
+          released_at: string | null
+          status: string
           transaction_id: string | null
+          updated_at: string
           used_at: string
           user_id: string
         }
         Insert: {
+          completed_at?: string | null
+          credit_cents?: number | null
           discount_applied: number
+          eligible_base_cents?: number | null
+          gross_cents?: number | null
           id?: string
+          payment_record_id?: string | null
+          platform_fee_cents?: number | null
           promo_code_id: string
+          redemption_kind?: string | null
+          refunded_cents?: number
+          released_at?: string | null
+          status?: string
           transaction_id?: string | null
+          updated_at?: string
           used_at?: string
           user_id: string
         }
         Update: {
+          completed_at?: string | null
+          credit_cents?: number | null
           discount_applied?: number
+          eligible_base_cents?: number | null
+          gross_cents?: number | null
           id?: string
+          payment_record_id?: string | null
+          platform_fee_cents?: number | null
           promo_code_id?: string
+          redemption_kind?: string | null
+          refunded_cents?: number
+          released_at?: string | null
+          status?: string
           transaction_id?: string | null
+          updated_at?: string
           used_at?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "promo_code_uses_payment_record_id_fkey"
+            columns: ["payment_record_id"]
+            isOneToOne: false
+            referencedRelation: "payment_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promo_code_uses_promo_code_id_fkey"
+            columns: ["promo_code_id"]
+            isOneToOne: false
+            referencedRelation: "campus_partner_summary"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "promo_code_uses_promo_code_id_fkey"
             columns: ["promo_code_id"]
@@ -7564,6 +7611,7 @@ export type Database = {
       }
       promo_codes: {
         Row: {
+          academic_year: string | null
           applies_to: string
           code: string
           created_at: string
@@ -7576,9 +7624,20 @@ export type Database = {
           is_active: boolean
           max_uses: number | null
           min_purchase_amount: number | null
+          normalized_code: string | null
+          partner_name: string | null
+          program: string
+          purchase_credit_cents: number | null
+          purchase_min_cents: number | null
+          purchase_uses_per_user: number | null
+          rental_cap_cents: number | null
+          rental_percent: number | null
+          rental_uses_per_user: number | null
+          starts_at: string | null
           updated_at: string
         }
         Insert: {
+          academic_year?: string | null
           applies_to?: string
           code: string
           created_at?: string
@@ -7591,9 +7650,20 @@ export type Database = {
           is_active?: boolean
           max_uses?: number | null
           min_purchase_amount?: number | null
+          normalized_code?: string | null
+          partner_name?: string | null
+          program?: string
+          purchase_credit_cents?: number | null
+          purchase_min_cents?: number | null
+          purchase_uses_per_user?: number | null
+          rental_cap_cents?: number | null
+          rental_percent?: number | null
+          rental_uses_per_user?: number | null
+          starts_at?: string | null
           updated_at?: string
         }
         Update: {
+          academic_year?: string | null
           applies_to?: string
           code?: string
           created_at?: string
@@ -7606,6 +7676,16 @@ export type Database = {
           is_active?: boolean
           max_uses?: number | null
           min_purchase_amount?: number | null
+          normalized_code?: string | null
+          partner_name?: string | null
+          program?: string
+          purchase_credit_cents?: number | null
+          purchase_min_cents?: number | null
+          purchase_uses_per_user?: number | null
+          rental_cap_cents?: number | null
+          rental_percent?: number | null
+          rental_uses_per_user?: number | null
+          starts_at?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -8795,6 +8875,13 @@ export type Database = {
             columns: ["listing_id"]
             isOneToOne: false
             referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_transactions_promo_code_id_fkey"
+            columns: ["promo_code_id"]
+            isOneToOne: false
+            referencedRelation: "campus_partner_summary"
             referencedColumns: ["id"]
           },
           {
@@ -12236,6 +12323,35 @@ export type Database = {
         }
         Relationships: []
       }
+      campus_partner_summary: {
+        Row: {
+          academic_year: string | null
+          code: string | null
+          expires_at: string | null
+          id: string | null
+          is_active: boolean | null
+          net_platform_revenue_cents: number | null
+          partner_name: string | null
+          platform_fee_cents: number | null
+          purchase_credit_cents: number | null
+          purchase_gmv_cents: number | null
+          purchase_min_cents: number | null
+          purchase_redemptions: number | null
+          purchase_uses_per_user: number | null
+          redemptions: number | null
+          refunded_cents: number | null
+          refunded_transactions: number | null
+          rental_cap_cents: number | null
+          rental_gmv_cents: number | null
+          rental_percent: number | null
+          rental_redemptions: number | null
+          rental_uses_per_user: number | null
+          starts_at: string | null
+          total_credit_cents: number | null
+          unique_users: number | null
+        }
+        Relationships: []
+      }
       monetization_pending_reconciliation: {
         Row: {
           age: string | null
@@ -13247,6 +13363,15 @@ export type Database = {
         Args: { kind: string; thread: string }
         Returns: Json
       }
+      partner_code_active_uses: {
+        Args: {
+          p_code_id: string
+          p_exclude_record?: string
+          p_kind: string
+          p_user: string
+        }
+        Returns: number
+      }
       public_display_name: {
         Args: { _fallback?: string; _user_id: string }
         Returns: string
@@ -13389,6 +13514,19 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      reserve_partner_redemption: {
+        Args: {
+          p_base_cents: number
+          p_code_id: string
+          p_credit_cents: number
+          p_gross_cents: number
+          p_kind: string
+          p_payment_record: string
+          p_platform_fee_cents: number
+          p_user: string
+        }
+        Returns: string
       }
       reserve_signup_phone_code: {
         Args: { actor: string; hashed_code: string; phone: string }
