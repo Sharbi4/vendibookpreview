@@ -93,9 +93,10 @@ function intro(d: SellerConciergeData): string {
   }
   if (d.variant === "polish") {
     const n = d.polish?.length ?? 0;
+    // Neutral: polish goes to new and established sellers alike.
     return n > 1
-      ? `Welcome to Vendibook, and thanks for listing with us. I went through your ${n} listings, and they're off to a strong start. A few changes will help buyers and renters find them and reach out:`
-      : `Welcome to Vendibook, and thanks for listing with us. I went through your listing, and it's off to a strong start. A few changes will help buyers find it and reach out:`;
+      ? `Thanks for listing with Vendibook. I went through your ${n} listings, and a few quick changes will help buyers and renters find them and reach out:`
+      : `Thanks for listing with Vendibook. I went through your listing, and a few quick changes will help buyers find it and reach out:`;
   }
   if (d.variant === "welcome") {
     return `Welcome to Vendibook, and thanks for listing your <strong>${esc(d.listingTitle)}</strong>. It's live, and buyers can find it now. A few quick additions will help it stand out:`;

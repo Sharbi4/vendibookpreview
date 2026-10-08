@@ -14,3 +14,17 @@
 ## Offer rescues
 
 `offer-rescue-2026-10-05.md`: 2 one-off seller emails. Send them through the same marketing shell, signed Brad. The JSON blocks hold the copy.
+
+## ⛔ Do not contact (until further notice)
+
+Pass these in `excludeUserIds` on **every** `send-seller-concierge` and `send-rent-while-you-sell` broadcast and test sample:
+
+```json
+"excludeUserIds": ["f2865e60-125e-4921-b7c5-898ba1675045"]
+```
+
+| Host | Why | Since |
+|---|---|---|
+| `f2865e60…` (Atlanta shipping container kitchen, listing `f4d5e5ae`) | Owner decision: do not email this seller | 2026-10-07 |
+
+The owner is deciding whether to make this permanent through `suppressed_emails`, which is a DB write and goes through the Growth lead only. Also never contact `b50b38af…`: a bounced duplicate signup.
