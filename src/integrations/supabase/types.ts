@@ -8504,6 +8504,50 @@ export type Database = {
           },
         ]
       }
+      sale_fulfillment_updates: {
+        Row: {
+          actor_id: string | null
+          actor_role: string | null
+          created_at: string
+          from_value: string | null
+          id: string
+          kind: string
+          note: string | null
+          sale_transaction_id: string
+          to_value: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_role?: string | null
+          created_at?: string
+          from_value?: string | null
+          id?: string
+          kind: string
+          note?: string | null
+          sale_transaction_id: string
+          to_value?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          actor_role?: string | null
+          created_at?: string
+          from_value?: string | null
+          id?: string
+          kind?: string
+          note?: string | null
+          sale_transaction_id?: string
+          to_value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_fulfillment_updates_sale_transaction_id_fkey"
+            columns: ["sale_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "sale_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sale_transaction_status_history: {
         Row: {
           actor: string | null
@@ -9163,6 +9207,7 @@ export type Database = {
           capabilities: Json | null
           consent_granted: boolean
           created_at: string
+          environment: string
           id: string
           last_status_check_at: string | null
           last_webhook_event_id: string | null
@@ -9188,6 +9233,7 @@ export type Database = {
           capabilities?: Json | null
           consent_granted?: boolean
           created_at?: string
+          environment: string
           id?: string
           last_status_check_at?: string | null
           last_webhook_event_id?: string | null
@@ -9213,6 +9259,7 @@ export type Database = {
           capabilities?: Json | null
           consent_granted?: boolean
           created_at?: string
+          environment?: string
           id?: string
           last_status_check_at?: string | null
           last_webhook_event_id?: string | null
@@ -13099,6 +13146,10 @@ export type Database = {
         Returns: string
       }
       listing_purchase_state: { Args: { _listing_id: string }; Returns: Json }
+      listing_sale_committed: {
+        Args: { _listing_id: string }
+        Returns: boolean
+      }
       listing_video_walkthrough_enabled: {
         Args: { _listing_id: string }
         Returns: boolean
@@ -13565,6 +13616,7 @@ export type Database = {
           delivery_fee: number | null
           delivery_instructions: string | null
           estimated_delivery_date: string | null
+          estimated_delivery_end: string | null
           fee_locked_at: string | null
           fee_rate_pct: number | null
           freight_checkout_session_id: string | null
