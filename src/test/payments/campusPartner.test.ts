@@ -2,10 +2,12 @@ import { describe, expect, it, vi } from 'vitest';
 
 vi.mock('../../../supabase/functions/_shared/paypal.ts', () => ({ newPaymentReference: () => 'VB-TEST' }));
 
-const acct = await import('../../../supabase/functions/_shared/paypalAccounting.ts');
-const cp = await import('../../../supabase/functions/_shared/campusPartner.ts');
-const od = await import('../../../supabase/functions/_shared/paypalOrderDetail.ts');
-const sq = await import('../../../supabase/functions/_shared/squareRentalMath.ts');
+// Deno modules, loaded at runtime so the app typecheck doesn't follow them.
+const shared = '../../../supabase/functions/_shared/';
+const acct = await import(/* @vite-ignore */ `${shared}paypalAccounting.ts`);
+const cp = await import(/* @vite-ignore */ `${shared}campusPartner.ts`);
+const od = await import(/* @vite-ignore */ `${shared}paypalOrderDetail.ts`);
+const sq = await import(/* @vite-ignore */ `${shared}squareRentalMath.ts`);
 
 const code = (over: Record<string, unknown> = {}) => ({
   id: 'c1', code: 'CSN27', partner_name: 'College of Southern Nevada', program: 'campus_partner', is_active: true,
