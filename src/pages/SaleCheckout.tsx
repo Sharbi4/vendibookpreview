@@ -29,6 +29,8 @@ import {
 } from '@/components/purchase-wizard';
 
 import { ReferralCodeField } from '@/components/referrals/ReferralCodeField';
+import CampusPartnerCodeField, { type AppliedPartnerCode } from '@/components/checkout/CampusPartnerCodeField';
+import { trackCampusPartner } from '@/lib/campusPartnerAnalytics';
 import { useTermsGate } from '@/hooks/useTermsGate';
 import { buildTerms, type TransactionTerms } from '@/lib/transactionTerms';
 import { useCheckoutState } from '@/hooks/useCheckoutState';
@@ -508,7 +510,11 @@ const SaleCheckout = () => {
   const taxAmount = (taxEstimate?.tax_cents ?? 0) / 100;
   // Item + seller delivery + buyer-paid freight + estimated sales tax. Mirrors
   // `quoteSaleTransaction` on the server, which re-locks the authoritative total.
-  const totalPrice = priceSale + currentDeliveryFee + buyerFreightCharge + taxAmount;
+  const [partnerCode, setPartnerCode] = useState<AppliedPartnerCode | null>(null);
+  // Campus Partner credit is online-only and Vendibook-funded: it never
+  // touches freight, delivery or tax, and the server applies the same amount.
+  const partnerCreditUsd = partnerCode && paymentMethod !== 'cash' ? (partnerCode.creditCents ?? 0) / 100 : 0;
+  const totalPrice = priceSale + currentDeliveryFee + buyerFreightCharge + taxAmount - partnerCreditUsd;
 
   const taxSummaryLabel = taxAmount > 0
     ? taxEstimate?.label || 'Estimated sales tax'
@@ -982,6 +988,9 @@ const SaleCheckout = () => {
         ? [{ label: 'Vendibook Freight', value: 'Free shipping' }]
       : []),
     ...(taxSummaryLabel ? [{ label: taxSummaryLabel, value: taxSummaryValue, muted: taxAmount === 0 }] : []),
+    ...(partnerCreditUsd > 0
+      ? [{ label: 'Campus Partner credit', value: `-${formatCurrency(partnerCreditUsd)}`, note: partnerCode?.partnerName, credit: true }]
+      : []),
   ];
 
   const moneyBreakdown = (
@@ -1322,9 +1331,19 @@ const SaleCheckout = () => {
                   </Button>
                 </div>
               ) : (
+                <>
+                <CampusPartnerCodeField
+                  kind="purchase"
+                  listingId={listing.id}
+                  applied={partnerCode}
+                  onApply={(next) => {
+                    setPartnerCode(next);
+                    if (next) trackCampusPartner('partner_credit_applied', { kind: 'purchase', code: next.code, listingId: listing.id, creditCents: next.creditCents });
+                  }}
+                />
                 <PayPalEmbeddedPayment
-                  target={{ kind: 'sale', id: paypalCheckout?.transactionId ?? '' }}
-                  key={paypalCheckout?.transactionId ?? 'pending'}
+                  target={{ kind: 'sale', id: paypalCheckout?.transactionId ?? '', ...(partnerCode ? { partner_code: partnerCode.code } : {}) }}
+                  key={`${paypalCheckout?.transactionId ?? 'pending'}:${partnerCode?.code ?? ''}`}
                   sellerId={listing.host_id}
                   listingHref={`/listing/${listingId}`}
                   returnUrl={paypalCheckout?.returnUrl}
