@@ -420,6 +420,10 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   // held by the platform; it is refunded (minus any damages/fees) after the
   // rental ends, so it is part of today's charge.
   const totalChargedToday = fees.customerTotal + taxAmount + (depositAmount ?? 0);
+  /** Campus Partner credit verified by the server for the booking being paid. */
+  const [campusCredit, setCampusCredit] = useState<{ partner_name: string; code: string; credit_cents: number; amount_due_cents: number } | null>(null);
+  /** What the shopper pays today: the server's amount once a Campus credit is applied. */
+  const displayTotal = campusCredit ? campusCredit.amount_due_cents / 100 : totalChargedToday;
 
   // Always-visible tax row for the payment summary: real amount when
   // quoted, an explicit placeholder while calculating or when the estimate
@@ -1101,6 +1105,14 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
           muted: true,
         }]
       : []),
+    ...(campusCredit
+      ? [{
+          label: 'Campus Partner credit',
+          value: `−${formatCurrency(campusCredit.credit_cents / 100)}`,
+          note: campusCredit.partner_name ? `${campusCredit.partner_name} Campus Partner benefit` : undefined,
+          credit: true,
+        }]
+      : []),
   ];
 
   const summaryMeta = [
@@ -1123,13 +1135,13 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
       title={listing.title}
       typeLabel={listing.category ? listing.category.replace('_', ' ') : null}
       location={listingLocation}
-      priceLabel={formatCurrency(totalChargedToday)}
+      priceLabel={formatCurrency(displayTotal)}
       priceNote={instantConfirm ? "Total due at payment" : "Nothing due until approval"}
       meta={summaryMeta}
     >
       <MoneyBreakdown
         lines={moneyLines}
-        total={formatCurrency(totalChargedToday)}
+        total={formatCurrency(displayTotal)}
         totalLabel={instantConfirm ? "Total due at payment" : "Total after host approval"}
       />
       {rentalStory}
@@ -1141,7 +1153,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
       imageUrl={coverImage}
       title={listing.title}
       location={listingLocation}
-      priceLabel={formatCurrency(totalChargedToday)}
+      priceLabel={formatCurrency(displayTotal)}
       priceNote={instantConfirm ? "Total due at payment" : "Nothing due until approval"}
       meta={[{ label: isHourlyBooking ? 'Hours' : 'Dates', value: dateLabel }]}
     />
@@ -1149,9 +1161,9 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
 
   const mobileSummary = (
     <details className="sale-mobile-summary">
-      <summary>Show order summary <strong>{formatCurrency(totalChargedToday)}</strong></summary>
+      <summary>Show order summary <strong>{formatCurrency(displayTotal)}</strong></summary>
       {mobileSummaryCard}
-      <MoneyBreakdown lines={moneyLines} total={formatCurrency(totalChargedToday)} totalLabel={instantConfirm ? "Total due at payment" : "Total after host approval"} />
+      <MoneyBreakdown lines={moneyLines} total={formatCurrency(displayTotal)} totalLabel={instantConfirm ? "Total due at payment" : "Total after host approval"} />
     </details>
   );
 
@@ -1192,7 +1204,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
           <div className="v2-checkout-sticky-inner">
             <div className="v2-checkout-sticky-total">
               <span>Total due today</span>
-              <strong>{formatCurrency(totalChargedToday)}</strong>
+              <strong>{formatCurrency(displayTotal)}</strong>
             </div>
             {primaryStickyAction}
           </div>
@@ -1244,7 +1256,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
                 { label: 'Duration', value: durationLabel },
                 ...(hasMultipleSlots && selectedSlotName ? [{ label: 'Space', value: selectedSlotName }] : []),
               ]}
-              priceLabel={formatCurrency(totalChargedToday)}
+              priceLabel={formatCurrency(displayTotal)}
               priceNote={instantConfirm ? "Total due at payment" : "Nothing due until approval"}
               fulfillmentLabel={
                 fulfillmentSelected === 'delivery'
@@ -1262,7 +1274,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
               }
               onEditFulfillment={() => document.getElementById('checkout-use')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
               moneyLines={moneyLines}
-              total={formatCurrency(totalChargedToday)}
+              total={formatCurrency(displayTotal)}
               totalLabel={instantConfirm ? "Total due at payment" : "Total after host approval"}
               onContinue={() => goToStep(2)}
               continueLabel="Continue"
@@ -1532,7 +1544,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
 
               <MoneyBreakdown
                 lines={moneyLines}
-                total={formatCurrency(totalChargedToday)}
+                total={formatCurrency(displayTotal)}
                 totalLabel={instantConfirm ? "Total due at payment" : "Total after host approval"}
               />
 
@@ -1552,8 +1564,9 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
                       city: userInfo.city, state: userInfo.state, postalCode: userInfo.zipCode, countryCode: 'US',
                     } : undefined}
                     onPaid={(id) => completeCheckout(id, 'instant')}
+                    onCampusChange={setCampusCredit}
                   />
-                  <button type="button" className="v2-btn-quiet" onClick={() => setPaymentTarget(null)}>
+                  <button type="button" className="v2-btn-quiet" onClick={() => { setPaymentTarget(null); setCampusCredit(null); }}>
                     Edit booking details
                   </button>
                 </>
@@ -1583,7 +1596,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
                     ) : instantConfirm ? (
                       <>
                         <Zap className="h-5 w-5 mr-2" />
-                        Confirm and pay {formatCurrency(totalChargedToday)}
+                        Confirm and pay {formatCurrency(displayTotal)}
                       </>
                     ) : (
                       <>

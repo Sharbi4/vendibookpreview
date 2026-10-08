@@ -11,6 +11,7 @@ import PayPalPayLaterMessage from '@/components/payments/PayPalPayLaterMessage';
 import PaymentFormSkeleton from './PaymentFormSkeleton';
 import PayPalReviewAuthorize from './PayPalReviewAuthorize';
 import PayPalCardFields from './PayPalCardFields';
+import { trackCampus } from '@/lib/campusPartner';
 import WalletPayButtons from './WalletPayButtons';
 
 
@@ -232,6 +233,13 @@ const PayPalPaymentPanel = ({
       throw new Error(message);
     }
     intentRef.current = 'CAPTURE';
+    const campusLine = (data.breakdown as Array<{ label: string; amountCents: number }> | undefined)
+      ?.find((l) => l.label === 'Campus Partner credit');
+    if (campusLine && (target.kind === 'sale' || target.kind === 'booking')) {
+      trackCampus('partner_checkout_started', {
+        kind: target.kind, targetId: target.id, creditCents: Math.abs(campusLine.amountCents),
+      });
+    }
     return data.order_id as string;
   };
 

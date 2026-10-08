@@ -393,3 +393,7 @@ verify_jwt = false
 
 [functions.send-seller-concierge]
 verify_jwt = false
+
+# Campus Partner codes at checkout. JWT validated through auth.getUser inside the handler.
+[functions.campus-partner-code]
+verify_jwt = false

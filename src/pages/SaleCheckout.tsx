@@ -45,6 +45,8 @@ import CheckoutSection from '@/components/transaction/checkout/CheckoutSection';
 import ListingCheckoutSummary from '@/components/transaction/checkout/ListingCheckoutSummary';
 import MoneyBreakdown, { type MoneyLine } from '@/components/transaction/checkout/MoneyBreakdown';
 import PayPalEmbeddedPayment from '@/components/transaction/checkout/PayPalEmbeddedPayment';
+import PartnerCodeField from '@/components/checkout/PartnerCodeField';
+import { campusCodeRequest, type CampusCodeState } from '@/lib/campusPartner';
 import OrderReviewStage from '@/components/checkout/OrderReviewStage';
 import TransactionAgreementStep from '@/components/checkout/TransactionAgreementStep';
 import PostPaymentTimeline from '@/components/checkout/PostPaymentTimeline';
@@ -175,6 +177,8 @@ const SaleCheckout = () => {
   const [legalAccepted, setLegalAccepted] = useState(false);
   const [isPurchasing, setIsPurchasing] = useState(false);
   const [paypalCheckout, setPaypalCheckout] = useState<{ transactionId: string; returnUrl: string } | null>(null);
+  /** Campus Partner credit verified by the server for this online purchase. */
+  const [campusCredit, setCampusCredit] = useState<CampusCodeState | null>(null);
   /**
    * A terminal failure from `create-sale-intent`. Rendered inline in place of
    * the PayPal buttons so the payment area never keeps shimmering after a
@@ -509,6 +513,10 @@ const SaleCheckout = () => {
   // Item + seller delivery + buyer-paid freight + estimated sales tax. Mirrors
   // `quoteSaleTransaction` on the server, which re-locks the authoritative total.
   const totalPrice = priceSale + currentDeliveryFee + buyerFreightCharge + taxAmount;
+  // Online purchases only: once a Campus Partner credit is applied, the
+  // server's amount (the exact PayPal order total) is what the buyer sees.
+  const campusApplied = paymentMethod !== 'cash' && campusCredit?.applied ? campusCredit : null;
+  const displayTotal = campusApplied ? campusApplied.amount_due_cents / 100 : totalPrice;
 
   const taxSummaryLabel = taxAmount > 0
     ? taxEstimate?.label || 'Estimated sales tax'
@@ -982,10 +990,18 @@ const SaleCheckout = () => {
         ? [{ label: 'Vendibook Freight', value: 'Free shipping' }]
       : []),
     ...(taxSummaryLabel ? [{ label: taxSummaryLabel, value: taxSummaryValue, muted: taxAmount === 0 }] : []),
+    ...(campusApplied
+      ? [{
+          label: 'Campus Partner credit',
+          value: `−${formatCurrency(campusApplied.credit_cents / 100)}`,
+          note: campusApplied.partner_name ? `${campusApplied.partner_name} Campus Partner benefit` : undefined,
+          credit: true,
+        }]
+      : []),
   ];
 
   const moneyBreakdown = (
-    <MoneyBreakdown lines={moneyLines} total={formatCurrency(totalPrice)} totalNote="Order total" />
+    <MoneyBreakdown lines={moneyLines} total={formatCurrency(displayTotal)} totalNote="Order total" />
   );
 
   const summaryMeta = [
@@ -1081,6 +1097,11 @@ const SaleCheckout = () => {
    */
   const changePaymentMethod = (method: PaymentMethod) => {
     if (method === paymentMethod) return;
+    // The credit is for online payment only; release it with this checkout.
+    if (campusCredit?.applied && paypalCheckout?.transactionId) {
+      void campusCodeRequest('remove', 'sale', paypalCheckout.transactionId).catch(() => undefined);
+    }
+    setCampusCredit(null);
     setPaymentMethod(method);
     setAgreedToTerms(false);
     setPrivacyAccepted(false);
@@ -1178,7 +1199,7 @@ const SaleCheckout = () => {
         summary={summaryContent}
         mobileSummary={
           <details className="sale-mobile-summary">
-            <summary>Show order summary <strong>{formatCurrency(totalPrice)}</strong></summary>
+            <summary>Show order summary <strong>{formatCurrency(displayTotal)}</strong></summary>
             {summaryContent}
           </details>
         }
@@ -1225,7 +1246,7 @@ const SaleCheckout = () => {
                 fulfillmentDetail={fulfillmentDetail}
                 onEditFulfillment={() => goToStep(2)}
                 moneyLines={moneyLines}
-                total={formatCurrency(totalPrice)}
+                total={formatCurrency(displayTotal)}
                 totalNote="Order total"
                 onContinue={() => goToStep(2)}
                 continueLabel="Continue"
@@ -1322,13 +1343,33 @@ const SaleCheckout = () => {
                   </Button>
                 </div>
               ) : (
+                <>
+                {paypalCheckout?.transactionId ? (
+                  <PartnerCodeField
+                    kind="sale"
+                    targetId={paypalCheckout.transactionId}
+                    listingId={listingId}
+                    onChange={setCampusCredit}
+                  />
+                ) : null}
                 <PayPalEmbeddedPayment
                   target={{ kind: 'sale', id: paypalCheckout?.transactionId ?? '' }}
-                  key={paypalCheckout?.transactionId ?? 'pending'}
+                  key={`${paypalCheckout?.transactionId ?? 'pending'}:${campusApplied?.code ?? 'none'}:${campusApplied?.amount_due_cents ?? 0}`}
                   sellerId={listing.host_id}
                   listingHref={`/listing/${listingId}`}
                   returnUrl={paypalCheckout?.returnUrl}
-                  totalUsd={totalPrice}
+                  totalUsd={displayTotal}
+                  breakdown={campusApplied ? (
+                    <MoneyBreakdown
+                      lines={[{
+                        label: 'Campus Partner credit',
+                        value: `−${formatCurrency(campusApplied.credit_cents / 100)}`,
+                        credit: true,
+                      }]}
+                      total={formatCurrency(displayTotal)}
+                      totalLabel="Total due today"
+                    />
+                  ) : undefined}
                   blocked={!paypalCheckout}
                   error={
                     intentError
@@ -1343,6 +1384,7 @@ const SaleCheckout = () => {
                       : null
                   }
                 />
+                </>
               )}            </div>
           ) : null}
         </SaleCheckoutWizard>

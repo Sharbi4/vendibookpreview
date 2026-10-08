@@ -477,6 +477,27 @@ export async function finalizeCapture(
     });
   }
 
+  // Campus Partner credit: the buyer paid this much less and Vendibook funds
+  // it out of the platform fee above. Seller/host proceeds are unchanged.
+  const campusCreditCents = Number((current.fee_breakdown as any)?.campus_partner?.credit_cents ?? 0);
+  if (campusCreditCents > 0) {
+    await appendLedgerEntry(supabase, {
+      paymentRecordId: current.id,
+      entryType: "promo_credit",
+      amountCents: campusCreditCents,
+      currency: facts.currency,
+      direction: "debit",
+      description: "Campus Partner credit (Vendibook-funded)",
+      dedupeKey: `promo:${facts.captureId}`,
+      metadata: {
+        source,
+        funded_by: "vendibook",
+        redemption_id: (current.fee_breakdown as any)?.campus_partner?.redemption_id ?? null,
+        partner_id: (current.fee_breakdown as any)?.campus_partner?.partner_id ?? null,
+      },
+    });
+  }
+
   // Sales tax collected on top of the merchandise total — held by Vendibook
   // for remittance, never paid out to the seller/host.
   if (current.tax_cents > 0) {

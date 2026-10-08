@@ -42,6 +42,15 @@ import {
   parseShippingAddress,
 } from "../_shared/paypalOrderDetail.ts";
 import { OrderArithmeticError } from "../_shared/paypal.ts";
+import { rentalTaxDestination, saleTaxDestination } from "../_shared/checkoutQuote.ts";
+import { applyCampusCredit } from "../_shared/campusPartnerMath.ts";
+import {
+  CAMPUS_MOVED_MESSAGE,
+  type CampusReservation,
+  campusCreditForCheckout,
+  campusFeeBreakdown,
+  reservationStillHeld,
+} from "../_shared/campusPartner.ts";
 
 const NOTARY_FEE_CENTS = 4500;
 const SITE_URL = "https://vendibook.com";
@@ -125,6 +134,8 @@ serve(async (req) => {
      * Vendibook-owned products and service charges, which always capture now.
      */
     let strategyContext: Omit<PaymentStrategyContext, "grossCents"> | null = null;
+    /** Trusted sale / booking row, for the Campus Partner credit check. */
+    let campusRow: Record<string, any> | null = null;
 
     /** Buyer profile location — used for Vendibook-owned products/services. */
     const buyerTaxLocation = async (): Promise<TaxDestination> => {
@@ -198,17 +209,13 @@ serve(async (req) => {
       };
       taxKind = "sale";
       // Destination sourcing: delivery/freight tax where the goods land;
-      // pickup/on-site tax where the listing sits.
+      // pickup/on-site tax where the listing sits. Shared with the Campus
+      // Partner endpoint so the total it shows matches this order.
       const listingLoc = (tx as any).listing ?? {};
-      const listingLocParsed = parseStateZipFromAddress(listingLoc.address);
       const delivers = tx.fulfillment_type === "delivery" ||
         tx.fulfillment_type === "vendibook_freight";
-      const parsed = delivers ? parseStateZipFromAddress(tx.delivery_address) : { state: null, zip: null };
-      taxDestination = {
-        state: parsed.state ?? listingLoc.state ?? null,
-        zip: parsed.zip ?? listingLocParsed.zip ?? null,
-        city: listingLoc.city ?? null,
-      };
+      taxDestination = saleTaxDestination(tx);
+      campusRow = tx;
       // Physical goods that move: PayPal and Venmo need the destination.
       if (delivers) {
         shippingAddress = parseShippingAddress(tx.delivery_address, {
@@ -263,12 +270,8 @@ serve(async (req) => {
       };
       taxKind = "rental";
       // Rentals are taxed where the rental happens — the listing's location.
-      const bookingListingLoc = parseStateZipFromAddress((booking as any).listing?.address);
-      taxDestination = {
-        state: (booking as any).listing?.state ?? null,
-        zip: bookingListingLoc.zip ?? null,
-        city: (booking as any).listing?.city ?? null,
-      };
+      taxDestination = rentalTaxDestination(booking);
+      campusRow = booking;
       if (booking.host_platform_fee === null || booking.host_platform_fee === undefined) {
         await admin
           .from("booking_requests")
@@ -537,6 +540,32 @@ serve(async (req) => {
       }
     }
 
+    // ── Campus Partner credit (Vendibook-funded) ─────────────────────────
+    // Re-validated here, immediately before the order exists, and applied
+    // after tax: the buyer pays less, while the platform fee basis, the
+    // seller's proceeds and the tax stay exactly as quoted.
+    let campusCredit: CampusReservation | null = null;
+    if (campusRow && (saleTransactionId || bookingRequestId)) {
+      const campus = await campusCreditForCheckout(admin, {
+        userId: user.id,
+        type: saleTransactionId ? "sale" : "rental",
+        bookingRequestId,
+        saleTransactionId,
+        listingId: quote.listingId,
+        quote,
+        row: campusRow,
+      });
+      if ("error" in campus) {
+        return jsonError(409, "partner_code_changed", `${campus.error.message} Your total has been updated; review it before paying.`);
+      }
+      if (campus.applied) {
+        applyCampusCredit(quote, campus.reservation.creditCents);
+        campusCredit = campus.reservation;
+      }
+    }
+    const campusRedemptionId = campusCredit?.redemptionId ?? null;
+    const sameCampus = (fb: any) => (fb?.campus_partner?.redemption_id ?? null) === campusRedemptionId;
+
     if (quote.grossCents <= 0) {
       return jsonError(400, "invalid_amount", "This transaction has no amount due.");
     }
@@ -589,7 +618,8 @@ serve(async (req) => {
         inflight?.paypal_order_id &&
         inflight.gross_amount_cents === quote.grossCents &&
         inflight.payment_intent === PAYPAL_CHECKOUT_INTENT &&
-        sameCheckoutSource(inflight.fee_breakdown, cardFields)
+        sameCheckoutSource(inflight.fee_breakdown, cardFields) &&
+        sameCampus(inflight.fee_breakdown)
       ) {
         return jsonResponse(200, {
           order_id: inflight.paypal_order_id,
@@ -621,6 +651,7 @@ serve(async (req) => {
         existing.gross_amount_cents === quote.grossCents &&
         existing.payment_intent === PAYPAL_CHECKOUT_INTENT &&
         sameCheckoutSource(existing.fee_breakdown, cardFields) &&
+        sameCampus(existing.fee_breakdown) &&
         (!bookingRequestId || existing.fee_breakdown?.rental_fingerprint === rentalFingerprint)
       ) {
         safeLog("reusing_inflight_order", { reference: existing.reference });
@@ -687,6 +718,7 @@ serve(async (req) => {
           lines: quote.breakdown,
           release_at: quote.releaseAt,
           ...(fulfillment ? { fulfillment } : {}),
+          ...(campusCredit ? { campus_partner: campusFeeBreakdown(campusCredit) } : {}),
         },
       })
       .select()
@@ -695,6 +727,14 @@ serve(async (req) => {
     if (recordErr || !record) {
       safeLog("record_insert_failed", { message: recordErr?.message });
       return jsonError(500, "record_failed", "We couldn't start this payment. Please try again.");
+    }
+
+    // The Campus Partner reservation must still be ours now that the record
+    // carrying it exists; otherwise create no order and show the new total.
+    if (campusCredit && !(await reservationStillHeld(admin, campusCredit.redemptionId))) {
+      await admin.from("payment_records").update({ payment_status: "cancelled", internal_status: "campus_code_moved" })
+        .eq("id", record.id).eq("payment_status", "created");
+      return jsonError(409, "partner_code_changed", CAMPUS_MOVED_MESSAGE);
     }
 
     // ---- Connected Path routing decision (Step 3)

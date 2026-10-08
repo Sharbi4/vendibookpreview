@@ -8,6 +8,8 @@ import { formatCurrency } from '@/lib/commissions';
 import { loadSquareWebSdk, type SquareCard } from '@/lib/squareWebSdk';
 import { trackRentalCheckout } from '@/lib/rentalCheckoutAnalytics';
 import PaymentFormSkeleton from '@/components/checkout/PaymentFormSkeleton';
+import PartnerCodeField from '@/components/checkout/PartnerCodeField';
+import { trackCampus } from '@/lib/campusPartner';
 
 /**
  * Rental payment step: card payment through Square only. The server picks the
@@ -15,9 +17,12 @@ import PaymentFormSkeleton from '@/components/checkout/PaymentFormSkeleton';
  * the amount. The browser never decides a booking is paid; it reports what
  * the server verified with Square.
  */
+export interface RentalCampusCredit { code: string; partner_name: string; credit_cents: number }
+
 type Config =
   | { provider: 'square'; environment: 'sandbox' | 'production'; application_id: string; location_id: string;
-      amount_cents: number; currency: string; host_business_name?: string | null }
+      amount_cents: number; currency: string; host_business_name?: string | null;
+      campus_credit?: RentalCampusCredit | null; campus_notice?: string }
   | { provider: 'unavailable'; reason?: string };
 
 export interface RentalPaymentPanelProps {
@@ -33,6 +38,8 @@ export interface RentalPaymentPanelProps {
   billingContact?: { givenName?: string; familyName?: string; email?: string; phone?: string;
     addressLines?: string[]; city?: string; state?: string; postalCode?: string; countryCode?: string };
   onPaid: (bookingId: string) => void;
+  /** The server-verified amount due after any Campus Partner credit. */
+  onCampusChange?: (credit: (RentalCampusCredit & { amount_due_cents: number }) | null) => void;
 }
 
 async function invoke(body: Record<string, unknown>) {
@@ -50,7 +57,7 @@ async function invoke(body: Record<string, unknown>) {
 const newAttemptKey = () => crypto.randomUUID();
 
 export default function RentalPaymentPanel(props: RentalPaymentPanelProps) {
-  const { bookingId, listingId, flow, heading, billingContact, onPaid } = props;
+  const { bookingId, listingId, flow, heading, billingContact, onPaid, onCampusChange } = props;
   const [config, setConfig] = useState<Config | null>(null);
   const [configError, setConfigError] = useState<string | null>(null);
   const [cardReady, setCardReady] = useState(false);
@@ -64,15 +71,42 @@ export default function RentalPaymentPanel(props: RentalPaymentPanelProps) {
   /** Same key for retries of one attempt; a new key after a definitive decline. */
   const attemptKey = useRef(newAttemptKey());
 
+  const onCampusChangeRef = useRef(onCampusChange);
+  onCampusChangeRef.current = onCampusChange;
+  const publishCampus = useCallback((c: Config) => {
+    if (c.provider !== 'square') return;
+    onCampusChangeRef.current?.(c.campus_credit ? { ...c.campus_credit, amount_due_cents: c.amount_cents } : null);
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
     setConfig(null);
     setConfigError(null);
     invoke({ action: 'config', booking_id: bookingId })
-      .then((c) => { if (!cancelled) setConfig(c as Config); })
+      .then((c) => { if (!cancelled) { setConfig(c as Config); publishCampus(c as Config); } })
       .catch((e) => { if (!cancelled) setConfigError((e as Error).message); });
     return () => { cancelled = true; };
-  }, [bookingId]);
+  }, [bookingId, publishCampus]);
+
+  /** Re-reads the server total after a code is applied or removed (card entry stays mounted). */
+  const refreshAmount = useCallback(async () => {
+    try {
+      const c = (await invoke({ action: 'config', booking_id: bookingId })) as Config;
+      if (c.provider !== 'square') return;
+      setConfig((prev) => (prev?.provider === 'square'
+        ? { ...prev, amount_cents: c.amount_cents, campus_credit: c.campus_credit ?? null, campus_notice: c.campus_notice }
+        : c));
+      publishCampus(c);
+      // A different amount is a different charge: never reuse the old attempt.
+      attemptKey.current = newAttemptKey();
+    } catch (e) {
+      setError((e as Error).message);
+    }
+  }, [bookingId, publishCampus]);
+
+  const squareEnv = config?.provider === 'square' ? config.environment : null;
+  const squareApp = config?.provider === 'square' ? config.application_id : null;
+  const squareLocation = config?.provider === 'square' ? config.location_id : null;
 
   useEffect(() => {
     if (config?.provider !== 'square') return;
@@ -89,13 +123,19 @@ export default function RentalPaymentPanel(props: RentalPaymentPanelProps) {
       setCardReady(true);
     })().catch((e) => { if (!cancelled) setError((e as Error).message); });
     return () => { cancelled = true; card.current = null; void instance?.destroy?.(); };
-  }, [config]);
+    // Remount only when the Square account changes, not when the amount does.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [squareEnv, squareApp, squareLocation]);
 
+  const campusCredit = config?.provider === 'square' ? config.campus_credit ?? null : null;
   const finish = useCallback((id: string) => {
     setPaid(true);
     trackRentalCheckout('payment_completed', { listingId, bookingId: id, flow, provider: 'square' });
+    if (campusCredit) {
+      trackCampus('partner_transaction_completed', { kind: 'booking', targetId: id, listingId, creditCents: campusCredit.credit_cents });
+    }
     onPaid(id);
-  }, [flow, listingId, onPaid]);
+  }, [campusCredit, flow, listingId, onPaid]);
 
   /** Server-verified status polling for a payment Square is still settling. */
   const poll = useCallback(async () => {
@@ -122,6 +162,9 @@ export default function RentalPaymentPanel(props: RentalPaymentPanelProps) {
     setBusy(true);
     setError(null);
     trackRentalCheckout('payment_started', { listingId, bookingId, flow, provider: 'square', totalCents: config.amount_cents });
+    if (config.campus_credit) {
+      trackCampus('partner_checkout_started', { kind: 'booking', targetId: bookingId, listingId, creditCents: config.campus_credit.credit_cents });
+    }
     try {
       const result = await card.current.tokenize({
         amount: (config.amount_cents / 100).toFixed(2),
@@ -148,6 +191,8 @@ export default function RentalPaymentPanel(props: RentalPaymentPanelProps) {
       // A declined card is final for this attempt: the next try is a new charge.
       if (err.code === 'payment_failed' || err.code === 'tokenize_failed') attemptKey.current = newAttemptKey();
       setError(err.message);
+      // The Campus Partner code stopped qualifying: show the updated total.
+      if (err.code === 'partner_code_changed' || err.code === 'quote_changed') void refreshAmount();
     } finally {
       lock.current = false;
       setBusy(false);
@@ -196,6 +241,30 @@ export default function RentalPaymentPanel(props: RentalPaymentPanelProps) {
           Vendibook never sees or stores your card number.
         </p>
       </div>
+
+      <PartnerCodeField
+        kind="booking"
+        targetId={bookingId}
+        listingId={listingId}
+        disabled={busy || verifying}
+        onChange={() => { setError(null); void refreshAmount(); }}
+      />
+      {config.campus_notice && !config.campus_credit ? (
+        <p role="status" className="text-xs text-muted-foreground">{config.campus_notice}</p>
+      ) : null}
+
+      {config.campus_credit ? (
+        <div className="v2-money">
+          <div className="v2-money-row is-credit">
+            <span className="v2-money-label">Campus Partner credit</span>
+            <span className="v2-money-value">−{formatCurrency(config.campus_credit.credit_cents / 100)}</span>
+          </div>
+          <div className="v2-money-total">
+            <span>Total due today</span>
+            <strong>{formatCurrency(config.amount_cents / 100)}</strong>
+          </div>
+        </div>
+      ) : null}
 
       <div ref={container} className="min-h-[96px]" aria-busy={!cardReady} />
       {!cardReady && !error ? <p className="text-xs text-muted-foreground">Loading secure card entry…</p> : null}
