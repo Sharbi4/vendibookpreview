@@ -15,6 +15,7 @@ export type MyPayPalConnection = {
   status_source: string | null;
 };
 const COLUMNS = 'id, onboarding_status, action_reasons, merchant_id, paypal_email, primary_email_confirmed, payments_receivable, last_status_check_at, referral_url, oauth_scopes, consent_granted, acdc_vetting_status, vaulting_status, status_source';
+class NotConnectedError extends Error { constructor() { super('not_connected'); } }
 const activeRefreshes = new Map<string, Promise<void>>();
 async function refreshSeller(userId: string) {
   let pending = activeRefreshes.get(userId);
@@ -22,6 +23,8 @@ async function refreshSeller(userId: string) {
     pending = (async () => {
       const { data, error } = await supabase.functions.invoke('paypal-seller-onboarding', { body: { action: 'refresh_status' } });
       if (error || data?.error) {
+        const body = data?.error ? data : await (error as any)?.context?.clone?.().json?.().catch?.(() => null);
+        if (body?.code === 'not_connected') throw new NotConnectedError();
         const parsed = await parseEdgeError(error, data?.error ? data : null);
         throw new Error(parsed.message);
       }
@@ -64,7 +67,7 @@ export function useMyPayPalConnection() {
         && (row.onboarding_status !== 'ready' || !row.oauth_scopes?.length || !row.consent_granted);
       if (row && !['disconnected', 'revoked'].includes(row.onboarding_status) && Date.now() - checked > (incomplete ? 15_000 : 300_000)) {
         try { await refreshSeller(userId!); row = await readConnection(userId!); void client.invalidateQueries({ queryKey: ['seller-payment-readiness', userId] }); }
-        catch (error) { refreshError = error instanceof Error ? error.message : "Couldn't verify PayPal status."; }
+        catch (error) { if (error instanceof NotConnectedError) row = null; else refreshError = error instanceof Error ? error.message : "Couldn't verify PayPal status."; }
       }
       return { connection: row, refreshError };
     },
@@ -92,6 +95,7 @@ export function useMyPayPalConnection() {
     if (!userId) return null;
     try { await refreshSeller(userId); return await reload(); }
     catch (error) {
+      if (error instanceof NotConnectedError) { client.setQueryData(['my-paypal-connection', userId], { connection: null, refreshError: null }); return null; }
       const message = error instanceof Error ? error.message : "Couldn't verify PayPal status.";
       client.setQueryData(['my-paypal-connection', userId], (old: any) => ({ ...old, refreshError: message }));
       return null;
