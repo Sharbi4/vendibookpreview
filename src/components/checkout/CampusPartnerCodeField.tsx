@@ -89,7 +89,7 @@ export default function CampusPartnerCodeField({ kind, listingId, applied, onApp
   return (
     <div className="space-y-1.5">
       <Label htmlFor={`campus-code-${kind}`} className="text-sm">
-        Campus Partner code <span className="text-muted-foreground font-normal">(optional)</span>
+        School or partner code <span className="text-muted-foreground font-normal">(optional)</span>
       </Label>
       <div className="flex gap-2">
         <Input
