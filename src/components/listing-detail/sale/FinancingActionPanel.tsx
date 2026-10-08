@@ -10,6 +10,7 @@ import { FinancingAvailableBadge } from '@/components/financing/FinancingAvailab
 import { useEquinoxFinancingEnabled } from '@/hooks/useListingFinancing';
 import { useFinancingHandoff } from '@/hooks/useFinancingHandoff';
 import { isFinanceableSaleListing } from '@/lib/financing/disclosure';
+import { financingCalculatorUrl, illustrativeFinancingNote, illustrativeMonthlyPayment } from '@/lib/financing/calculator';
 import { toast } from 'sonner';
 import {
   trackFinancingApplyClick,
@@ -43,6 +44,9 @@ export const FinancingActionPanel = ({
   const enabled = useEquinoxFinancingEnabled(listing);
 
   if (!enabled) return null;
+
+  const salePrice = Number(listing?.price_sale);
+  const estimate = illustrativeMonthlyPayment(salePrice);
 
   const financingBlockedMessage = (error: any, data: any) =>
     (error?.context?.body?.code ?? data?.code) === 'financing_not_available'
@@ -80,8 +84,8 @@ export const FinancingActionPanel = ({
   return (
     <SaleCard padding="lg" className={className}>
       <div className="flex items-start gap-3 mb-4">
-        <div className="shrink-0 w-9 h-9 rounded-full bg-primary/10 ring-1 ring-primary/20 flex items-center justify-center">
-          <Banknote className="h-4 w-4 text-primary" />
+        <div className="shrink-0 w-9 h-9 rounded-full bg-muted ring-1 ring-border flex items-center justify-center">
+          <Banknote className="h-4 w-4 text-foreground" />
         </div>
         <div className="min-w-0">
           <div className="mb-2 flex items-center gap-3 flex-wrap">
@@ -95,6 +99,27 @@ export const FinancingActionPanel = ({
           </p>
         </div>
       </div>
+
+      {estimate !== null && (
+        <div className="mb-4 rounded-2xl border border-border bg-muted/30 px-4 py-3">
+          <p className="text-sm">
+            <span className="text-2xl font-bold tabular-nums">
+              {estimate.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })}
+            </span>
+            <span className="text-muted-foreground">/mo*</span>
+          </p>
+          <p className="mt-1 text-xs text-muted-foreground">
+            Equinox Funding: 0–10% typical down · decisions usually in 24–48 hours · startups considered.
+          </p>
+          <Link
+            to={financingCalculatorUrl(salePrice, listing.id)}
+            className="mt-1 inline-block text-xs font-semibold underline underline-offset-2"
+            onClick={() => trackFinancingLearnMoreClick('listing_price_line', listing.id)}
+          >
+            Adjust the estimate
+          </Link>
+        </div>
+      )}
 
       <div className="grid gap-2 sm:grid-cols-2">
         <Button
@@ -143,6 +168,7 @@ export const FinancingActionPanel = ({
         The purchase summary is a pro forma document, not proof of sale, ownership, or financing
         approval. Financing is subject to Equinox Funding and/or its funding providers&rsquo;
         approval and terms. Vendibook is not a lender.
+        {estimate !== null && <> {illustrativeFinancingNote}</>}
       </p>
       {financingLeadDialog}
     </SaleCard>

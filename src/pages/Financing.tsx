@@ -275,6 +275,14 @@ const Financing = () => {
                     <Link to={financingInventoryUrl(undefined, undefined, params.toString())}>Browse Food Trucks &amp; Trailers</Link>
                   </Button>
                 </div>
+                {/* Terms Equinox Funding publishes on its own site (checked
+                    2026-10-08). No APR range is published, so none is shown. */}
+                <ul className="mt-6 flex flex-wrap gap-2" aria-label="Equinox Funding program highlights">
+                  {['$5K–$10M financing', '0–10% typical down', 'Decisions in 24–48 hrs', 'Startups considered', 'Section 179 eligible'].map(item => (
+                    <li key={item} className="rounded-full border border-border bg-card px-3 py-1.5 text-xs font-semibold text-foreground shadow-sm">{item}</li>
+                  ))}
+                </ul>
+                <p className="mt-2 text-[11px] text-muted-foreground">Program highlights published by Equinox Funding; actual terms depend on approval.</p>
                 <a href="#calculator" className="mt-5 inline-flex text-sm font-semibold underline underline-offset-4 hover:text-primary">Estimate your monthly payment ↓</a>
                 <p className="mt-3.5 max-w-md text-xs leading-relaxed text-muted-foreground">
                   You apply with Equinox Funding, our third-party financing

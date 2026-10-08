@@ -79,7 +79,7 @@ const OptionRow = ({
       className={cn(
         'w-full text-left flex items-start gap-3 rounded-2xl px-4 py-3.5 transition',
         selectable ? 'ring-1 ring-border/70 hover:ring-foreground/25' : '',
-        selected && 'ring-2 ring-primary bg-primary/[0.04]',
+        selected && 'ring-2 ring-foreground bg-muted/40',
         tone === 'muted' && 'opacity-80',
       )}
     >

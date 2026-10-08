@@ -60,11 +60,11 @@ export const FINANCING_FAQ = [
   },
   {
     q: 'How fast are decisions?',
-    a: 'Timing depends on the provider, application completeness, equipment, and underwriting. Ask the provider for a timeline before scheduling a purchase or delivery; an application is not an approval or funding commitment.',
+    a: 'Equinox Funding says most complete applications receive a decision within 24–48 hours, sometimes the same day. Timing still depends on documentation and underwriting, and an application is not an approval or funding commitment.',
   },
   {
     q: 'How much does credit matter?',
-    a: 'Credit is one of several underwriting factors.',
+    a: 'Credit is one of several underwriting factors. Equinox Funding’s published guidance: scores of 650+ generally qualify more easily, 600–649 typically qualify with documentation and a larger down payment (often 10–15%), and scores below 600 may qualify with strong compensating factors such as a larger down payment, a co-signer, or established revenue. Approval is never guaranteed.',
   },
   {
     q: 'Can a startup or first-time operator finance a food truck?',
@@ -76,11 +76,11 @@ export const FINANCING_FAQ = [
   },
   {
     q: 'How much should I put down on a food truck or trailer?',
-    a: 'There is no single down payment that fits every buyer or financing program. A larger down payment reduces the amount financed, but also leaves less cash for permits, inventory, repairs, and operating reserves. Compare several scenarios in the calculator and confirm the provider’s actual requirements.',
+    a: 'Equinox Funding’s published typical ranges: 0–5% down for businesses operating 2+ years, 5–10% for businesses operating 6–24 months, and 10–15% for startups. Your actual requirement depends on credit, the equipment, and your overall profile. A larger down payment lowers the amount financed but leaves less cash for permits, inventory, and reserves, so compare scenarios in the calculator.',
   },
   {
     q: 'What information may I need to apply for equipment financing?',
-    a: 'Be ready to provide business and owner information, the equipment price or seller quote, and details about the truck or trailer. A provider may request financial records, bank statements, identification, or business history. Submit sensitive documents only through the provider’s designated secure process and follow its current checklist.',
+    a: 'Equinox Funding typically asks for the application, the equipment invoice or seller quote (a Vendibook purchase sheet works), 3–6 months of personal or business bank statements, a driver’s license, and a business plan or menu concept for startups; larger deals may need tax returns. Submit sensitive documents only through Equinox’s secure process.',
   },
   {
     q: 'Should I finance or rent a food truck?',

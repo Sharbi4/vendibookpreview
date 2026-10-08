@@ -1,4 +1,5 @@
 import ListingFinancingBadge from '@/components/listing/ListingFinancingBadge';
+import { illustrativeFinancingNote, illustrativeMonthlyPayment } from '@/lib/financing/calculator';
 import { deliveryRateLabel } from '@/lib/fulfillment/delivery';
 import { formatListingPriceLabel, type ListingPriceInput } from '@/lib/listings/rentalPricing';
 import { formatCurrency } from '@/lib/commissions';
@@ -603,6 +604,11 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
             {showHourlyRate && (
               <span className={cn("font-medium text-xs", textFaint)}>
                 {formatCurrency(listing.price_hourly)}/hr
+              </span>
+            )}
+            {financingEnabled && listing.mode === 'sale' && illustrativeMonthlyPayment(Number(listing.price_sale)) && (
+              <span className={cn("text-xs font-medium", textFaint)} title={illustrativeFinancingNote}>
+                or est. {Math.round(illustrativeMonthlyPayment(Number(listing.price_sale))!).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })}/mo*
               </span>
             )}
             {!compact && listing.mode === 'rent' && listing.price_weekly && (

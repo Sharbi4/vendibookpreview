@@ -17,11 +17,18 @@ const fields = [
   { key: 'operatingDays', label: 'Operating days per month', min: 1, max: 31, step: '1' },
 ] as const;
 
+/** A listing link (?price=) pre-fills the price with the illustrative 10% down. */
+function initialValues(search: string) {
+  const price = Number(new URLSearchParams(search).get('price'));
+  if (!Number.isFinite(price) || price <= 0 || price > 25_000_000) return initial;
+  return { ...initial, price: String(Math.round(price)), downPayment: String(Math.round(price * 0.1)) };
+}
+
 export function FinancingCalculator() {
-  const [values, setValues] = useState(initial);
+  const { search } = useLocation();
+  const [values, setValues] = useState(() => initialValues(search));
   const [calculated, setCalculated] = useState(false);
   const started = useRef(false);
-  const { search } = useLocation();
   const input = Object.fromEntries(Object.entries(values).map(([key, value]) => [key, value.trim() === '' ? NaN : Number(value)])) as unknown as FinancingInputs;
   const result = calculateFinancing(input);
   const start = () => {

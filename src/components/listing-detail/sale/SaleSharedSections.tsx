@@ -24,7 +24,7 @@ const TrustItem = ({
   sub,
 }: { icon: any; title: string; sub: string }) => (
   <div className="flex flex-col items-start gap-2">
-    <div className="w-9 h-9 rounded-full ring-1 flex items-center justify-center text-primary bg-primary/10 ring-primary/30">
+    <div className="w-9 h-9 rounded-full ring-1 flex items-center justify-center text-foreground bg-muted ring-border">
       <Icon className="h-4 w-4" />
     </div>
     <div className="leading-tight">

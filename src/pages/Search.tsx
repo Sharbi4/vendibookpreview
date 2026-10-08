@@ -1,3 +1,4 @@
+import { illustrativeFinancingNote } from '@/lib/financing/calculator';
 import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { ImpressionTracker } from '@/components/analytics/ImpressionTracker';
 import { HostSupplyCTA } from '@/components/search/HostSupplyCTA';
@@ -1406,6 +1407,9 @@ const Search = () => {
                         </div>
                       )}
                     </div>
+                    {mode !== 'rent' && listings.some((l: any) => l.mode === 'sale') && (
+                      <p className="mt-6 text-[11px] leading-snug text-muted-foreground">{illustrativeFinancingNote}</p>
+                    )}
                     {totalPages > 1 && (
                       <div className="mt-8 mb-4">
                         <Pagination>
@@ -1490,6 +1494,9 @@ const Search = () => {
                       locationText={debouncedQuery || locationText}
                       activeFiltersCount={activeFiltersCount}
                     />
+                  )}
+                  {mode !== 'rent' && listings.some((l: any) => l.mode === 'sale') && (
+                    <p className="mt-6 text-[11px] leading-snug text-muted-foreground">{illustrativeFinancingNote}</p>
                   )}
                   {totalPages > 1 && (
                     <div className="mt-8">

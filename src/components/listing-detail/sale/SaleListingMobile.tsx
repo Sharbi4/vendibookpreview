@@ -190,7 +190,7 @@ export const SaleListingMobile = ({
           {categoryLabel}s
         </Link>
         <ChevronRight className="h-3 w-3 opacity-60" />
-        <span className="text-primary font-medium truncate max-w-[40vw]">{listing.title}</span>
+        <span className="text-foreground font-medium truncate max-w-[40vw]">{listing.title}</span>
       </nav>
 
       <div className="px-4 space-y-5">
@@ -293,7 +293,7 @@ export const SaleListingMobile = ({
               {categoryLabel}
             </span>
             {host?.identity_verified && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary ring-1 ring-primary/30 text-xs font-medium">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-foreground ring-1 ring-border text-xs font-medium">
                 <ShieldCheck className="h-3.5 w-3.5" />
                 Verified Seller
               </span>
@@ -353,7 +353,7 @@ export const SaleListingMobile = ({
         {/* CONCIERGE CARD */}
         {!isOwner && (
           <SaleCard variant="warm" padding="lg">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary mb-2">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground mb-2">
               Vendibook Concierge
             </div>
             <h2 className="text-lg font-semibold leading-snug text-foreground">
@@ -411,7 +411,7 @@ export const SaleListingMobile = ({
         {/* SELLER SUMMARY */}
         <SaleCard padding="md">
           <div className="flex items-center gap-3">
-            <div className="shrink-0 w-12 h-12 rounded-full bg-primary/10 ring-1 ring-primary/30 flex items-center justify-center text-primary font-bold">
+            <div className="shrink-0 w-12 h-12 rounded-full bg-muted ring-1 ring-border flex items-center justify-center text-foreground font-bold">
               {sellerName.charAt(0).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
@@ -444,7 +444,7 @@ export const SaleListingMobile = ({
                 className="w-16 h-16 rounded-full object-cover ring-2 ring-primary/30"
               />
             ) : (
-              <div className="w-16 h-16 rounded-full bg-primary/10 ring-2 ring-primary/30 flex items-center justify-center text-primary text-xl font-bold">
+              <div className="w-16 h-16 rounded-full bg-muted ring-2 ring-border flex items-center justify-center text-foreground text-xl font-bold">
                 {sellerName.charAt(0).toUpperCase()}
               </div>
             )}
@@ -537,7 +537,7 @@ export const SaleListingMobile = ({
           <SaleCard variant="warm" bronze padding="md">
             <div className="flex items-center gap-4">
               <div className="shrink-0 w-12 h-12 rounded-full bg-background/60 ring-bronze flex items-center justify-center">
-                <CalendarCheck className="h-5 w-5 text-primary" />
+                <CalendarCheck className="h-5 w-5 text-foreground" />
               </div>
               <div className="flex-1">
                 <div className="font-semibold">Pickup available</div>
@@ -546,7 +546,7 @@ export const SaleListingMobile = ({
                   Buyer responsible for pickup or shipping.
                 </div>
               </div>
-              <MapPin className="h-6 w-6 text-primary shrink-0" />
+              <MapPin className="h-6 w-6 text-foreground shrink-0" />
             </div>
           </SaleCard>
         )}
@@ -755,7 +755,7 @@ export const SaleListingMobile = ({
 const TrustItem = ({
   icon: Icon, title, sub, tone = 'primary',
 }: { icon: any; title: string; sub: string; tone?: 'primary' | 'emerald' }) => {
-  const toneCls = tone === 'emerald' ? 'text-emerald-400 bg-emerald-500/10 ring-emerald-500/30' : 'text-primary bg-primary/10 ring-primary/30';
+  const toneCls = 'text-foreground bg-muted ring-border';
   return (
     <div className="flex flex-col items-start gap-2">
       <div className={`w-9 h-9 rounded-full ring-1 flex items-center justify-center ${toneCls}`}>
@@ -784,8 +784,8 @@ const SpecCell = ({
   icon: Icon, label, value, className,
 }: { icon: any; label: string; value: string; className?: string }) => (
   <div className="rounded-xl bg-background/40 ring-hairline p-3 flex items-start gap-3">
-    <div className="shrink-0 w-8 h-8 rounded-lg bg-primary/10 ring-1 ring-primary/20 flex items-center justify-center">
-      <Icon className="h-4 w-4 text-primary" />
+    <div className="shrink-0 w-8 h-8 rounded-lg bg-muted ring-1 ring-border flex items-center justify-center">
+      <Icon className="h-4 w-4 text-foreground" />
     </div>
     <div className="min-w-0">
       <div className="text-[11px] text-muted-foreground">{label}</div>
@@ -798,8 +798,8 @@ const PolicyRow = ({
   icon: Icon, title, body,
 }: { icon: any; title: string; body: string }) => (
   <div className="p-5 flex items-start gap-3">
-    <div className="shrink-0 w-10 h-10 rounded-full bg-primary/10 ring-1 ring-primary/20 flex items-center justify-center">
-      <Icon className="h-4.5 w-4.5 text-primary" />
+    <div className="shrink-0 w-10 h-10 rounded-full bg-muted ring-1 ring-border flex items-center justify-center">
+      <Icon className="h-4.5 w-4.5 text-foreground" />
     </div>
     <div className="flex-1 min-w-0">
       <div className="font-semibold mb-1" dangerouslySetInnerHTML={{ __html: title }} />
@@ -813,10 +813,10 @@ const ProtectionCard = ({
   icon: Icon, title, body, tone,
 }: { icon: any; title: string; body: string; tone: 'primary' | 'emerald' | 'blue' | 'amber' }) => {
   const toneCls: Record<typeof tone, string> = {
-    primary: 'bg-primary/10 ring-primary/30 text-primary',
-    emerald: 'bg-emerald-500/10 ring-emerald-500/30 text-emerald-400',
-    blue: 'bg-blue-500/10 ring-blue-500/30 text-blue-400',
-    amber: 'bg-amber-500/10 ring-amber-500/30 text-amber-400',
+    primary: 'bg-muted ring-border text-foreground',
+    emerald: 'bg-muted ring-border text-foreground',
+    blue: 'bg-muted ring-border text-foreground',
+    amber: 'bg-muted ring-border text-foreground',
   } as any;
   return (
     <SaleCard padding="md">
@@ -836,8 +836,8 @@ const BrowseRow = ({ to, icon: Icon, label }: { to: string; icon: any; label: st
     to={to}
     className="flex items-center gap-3 px-4 py-3.5 hover:bg-white/[0.03] transition-colors"
   >
-    <div className="shrink-0 w-8 h-8 rounded-lg bg-primary/10 ring-1 ring-primary/20 flex items-center justify-center">
-      <Icon className="h-4 w-4 text-primary" />
+    <div className="shrink-0 w-8 h-8 rounded-lg bg-muted ring-1 ring-border flex items-center justify-center">
+      <Icon className="h-4 w-4 text-foreground" />
     </div>
     <span className="flex-1 text-sm font-medium">{label}</span>
     <ChevronRight className="h-4 w-4 text-muted-foreground/60" />

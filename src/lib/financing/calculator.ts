@@ -39,3 +39,39 @@ export function financingInventoryUrl(price?: number, category?: 'food_truck' | 
   for (const [key, value] of Object.entries(parseUtm(search))) if (value) params.set(key, value);
   return `/search?${params.toString()}`;
 }
+
+/**
+ * Illustrative assumptions behind every "Est. $X/mo" shown next to a sale
+ * price. Not an offer, quote or average rate: Equinox Funding sets actual
+ * terms after underwriting. 10% down sits inside Equinox's published 0–10%
+ * typical range (startups usually 10–15%).
+ */
+export const ILLUSTRATIVE_FINANCING = { downPct: 10, annualRate: 10, months: 60 } as const;
+
+/** Monthly payment for a sale price under the illustrative assumptions. */
+export function illustrativeMonthlyPayment(rawPrice: number | string | null | undefined): number | null {
+  // Postgres numeric columns can arrive as strings.
+  const price = Number(rawPrice);
+  if (!rawPrice || !Number.isFinite(price) || price <= 0) return null;
+  const result = calculateFinancing({
+    price,
+    downPayment: Math.round(price * ILLUSTRATIVE_FINANCING.downPct) / 100,
+    annualRate: ILLUSTRATIVE_FINANCING.annualRate,
+    months: ILLUSTRATIVE_FINANCING.months,
+    orderValue: 1,
+    operatingDays: 1,
+  });
+  return result ? result.monthlyPayment : null;
+}
+
+export const illustrativeFinancingNote =
+  `*Estimated payment based on ${ILLUSTRATIVE_FINANCING.downPct}% down, ${ILLUSTRATIVE_FINANCING.months} months and ` +
+  `${ILLUSTRATIVE_FINANCING.annualRate}% APR. Not an offer of credit. Actual rate, term and payment are set by ` +
+  `Equinox Funding after approval.`;
+
+/** Calculator link pre-filled with a listing price. */
+export function financingCalculatorUrl(price: number, listingId?: string) {
+  const params = new URLSearchParams({ price: String(Math.round(price)) });
+  if (listingId) params.set('listing_id', listingId);
+  return `/financing?${params.toString()}#calculator`;
+}

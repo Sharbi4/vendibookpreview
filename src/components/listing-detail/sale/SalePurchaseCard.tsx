@@ -1,3 +1,4 @@
+import { financingCalculatorUrl, illustrativeFinancingNote, illustrativeMonthlyPayment } from '@/lib/financing/calculator';
 import { useCategoryPriceCheck } from '@/hooks/useCategoryPriceCheck';
 import { useCallback, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
@@ -258,21 +259,37 @@ export const SalePurchaseCard = ({
             className="mt-3"
           />
 
-          {/* Primary financing entry point: in the buyer's eyeline, directly
-              under the price. No payment amounts, rates, or down payments. */}
+          {/* The single financing entry point, under the price. The estimate
+              uses the shared assumptions in illustrativeFinancingNote. */}
           {financingEnabled && (
-            <div className="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-xl border border-primary/20 bg-primary/[0.04] px-3 py-2.5">
-              <Banknote className="h-4 w-4 shrink-0 text-primary" aria-hidden />
-              <span className="text-sm font-medium">
-                Financing available for this {financingNoun}
-              </span>
-              <button
-                type="button"
-                onClick={() => handleApplyFinancing('listing_price_line')}
-                className="text-sm font-semibold text-primary underline underline-offset-4 hover:opacity-80"
-              >
-                Check your options
-              </button>
+            <div className="mt-3 rounded-xl border border-border px-3.5 py-3">
+              <div className="flex items-center gap-2 text-sm font-medium text-foreground">
+                <Banknote className="h-4 w-4 shrink-0" aria-hidden />
+                <span>
+                  Financing available for this {financingNoun}
+                  {illustrativeMonthlyPayment(priceSale) !== null && (
+                    <> · est. {Math.round(illustrativeMonthlyPayment(priceSale)!).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })}/mo*</>
+                  )}
+                </span>
+              </div>
+              <div className="mt-2.5 flex flex-wrap gap-2">
+                <Button size="sm" variant="outline" onClick={() => handleApplyFinancing('listing_price_line')}>
+                  Apply with Equinox
+                  <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
+                </Button>
+                <Button size="sm" variant="ghost" asChild>
+                  <Link
+                    to={financingCalculatorUrl(Number(priceSale), listing.id)}
+                    onClick={() => trackFinancingLearnMoreClick('listing_price_line', listing.id)}
+                  >
+                    Estimate payments
+                  </Link>
+                </Button>
+              </div>
+              <p className="mt-2.5 text-[11px] leading-snug text-muted-foreground">
+                {illustrativeMonthlyPayment(priceSale) !== null && <>{illustrativeFinancingNote} </>}
+                Through Equinox Funding. Vendibook is not a lender.
+              </p>
             </div>
           )}
 
@@ -339,38 +356,6 @@ export const SalePurchaseCard = ({
           )}
 
 
-          {/* Financing availability */}
-          {financingEnabled && (
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Banknote className="h-[18px] w-[18px] text-primary" />
-                <span className="text-sm font-medium">Financing available</span>
-              </div>
-              <p className="text-xs text-muted-foreground leading-relaxed">
-                Through Equinox Funding. Vendibook is not a lender; approval and terms are set by
-                the provider.
-              </p>
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => handleApplyFinancing('listing_panel')}
-                >
-                  Apply now
-                  <ExternalLink className="h-3.5 w-3.5 ml-1.5" />
-                </Button>
-
-                <Button size="sm" variant="ghost" asChild>
-                  <Link
-                    to={`/financing?listing_id=${listing.id}`}
-                    onClick={() => trackFinancingLearnMoreClick('listing_panel', listing.id)}
-                  >
-                    Learn more
-                  </Link>
-                </Button>
-              </div>
-            </div>
-          )}
 
           {/* Actions */}
           {alreadySold ? (
