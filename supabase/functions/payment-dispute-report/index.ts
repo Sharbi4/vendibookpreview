@@ -104,6 +104,36 @@ Deno.serve(async (req) => {
       .eq('id', record.id);
     if (updateError) return jsonError(500, 'update_failed', 'We could not open the dispute. Please try again.');
 
+    // Every report becomes a Vendibook case: it reaches the admin Disputes
+    // queue, freezes the seller payment and keeps both sides' statements and
+    // evidence together until an admin refunds or releases.
+    const ISSUE_FOR_REASON: Record<string, string> = {
+      not_received: 'item_not_received',
+      not_as_described: 'not_as_described',
+    };
+    let caseInfo: { id?: string; case_number?: string } | null = null;
+    try {
+      const caseRes = await fetch(`${Deno.env.get('SUPABASE_URL')}/functions/v1/dispute-case-ops`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: authHeader,
+          apikey: Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+        },
+        body: JSON.stringify({
+          action: 'open',
+          payment_record_id: record.id,
+          issue_type: ISSUE_FOR_REASON[reason] ?? 'other',
+          description: `${REASONS[reason]}: ${details}`,
+        }),
+      });
+      const caseBody = await caseRes.json().catch(() => ({}));
+      caseInfo = caseBody?.case ?? null;
+      if (!caseRes.ok) console.error('[payment-dispute-report] case not opened', caseRes.status, caseBody?.error);
+    } catch (err) {
+      console.error('[payment-dispute-report] case open failed', (err as Error)?.message);
+    }
+
     await recordOrderEvent(admin, {
       paymentRecordId: record.id,
       code: 'dispute_opened',
@@ -121,7 +151,7 @@ Deno.serve(async (req) => {
         type: 'buyer_action_required',
         title: 'Dispute opened on a transaction',
         message: `${REASONS[reason]} was reported on order ${record.reference ?? record.id.slice(0, 8).toUpperCase()}. Our team is reviewing and will contact you.`,
-        link: `/orders/${record.id}`,
+        link: caseInfo?.id ? `/cases/${caseInfo.id}` : `/orders/${record.id}`,
         dedupeKey: `dispute-${record.id}-${role}`,
       });
     }
@@ -147,7 +177,12 @@ Deno.serve(async (req) => {
       // Support email is best-effort — the dispute is already recorded.
     }
 
-    return jsonResponse(200, { ok: true, dispute_status: disputeStatus });
+    return jsonResponse(200, {
+      ok: true,
+      dispute_status: disputeStatus,
+      case_id: caseInfo?.id ?? null,
+      case_number: caseInfo?.case_number ?? null,
+    });
   } catch (err) {
     return unknownErrorResponse(err);
   }

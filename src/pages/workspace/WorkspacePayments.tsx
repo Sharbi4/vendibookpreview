@@ -4,6 +4,8 @@ import WorkspaceBookingPayments from '@/components/workspace/WorkspaceBookingPay
 import PayoutCalendar from '@/components/workspace/PayoutCalendar';
 import SellerPayoutBalance from '@/components/workspace/SellerPayoutBalance';
 import SellerEarningsTable from '@/components/workspace/SellerEarningsTable';
+import SellerPayPalConnect from '@/components/account/SellerPayPalConnect';
+import PaymentsDisputesEntry from '@/components/workspace/PaymentsDisputesEntry';
 
 const PayoutsPanel = lazy(() => import('@/components/dashboard/tabs/PayoutsPanel'));
 const TransactionsDisputesTab = lazy(
@@ -29,6 +31,13 @@ export default function WorkspacePayments() {
           <p>Manage PayPal setup, earnings, purchases, receipts, and disputes.</p>
         </header>
 
+        <section className="v2-panel" aria-label="PayPal account">
+          <SellerPayPalConnect showWhenDisabled variant="dark" />
+        </section>
+
+        <section className="v2-panel" aria-label="Disputes and problems">
+          <PaymentsDisputesEntry />
+        </section>
 
         <section className="v2-panel">
           <SellerPayoutBalance />

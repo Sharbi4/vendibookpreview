@@ -81,7 +81,9 @@ export default function SellerPayPalConnect({
         throw new Error(parsed.message);
       }
       await loadConnection();
-      if (data?.status_unavailable) {
+      if (data?.status === 'not_connected') {
+        setFlowMessage({ tone: 'info', text: 'No PayPal account is connected yet. Connect PayPal to get paid directly.' });
+      } else if (data?.status_unavailable) {
         setFlowMessage({ tone: 'info', text: data.message || 'PayPal hasn’t shared your status yet. Check again later.' });
       } else if (data?.status_source === 'webhook') {
         setFlowMessage({

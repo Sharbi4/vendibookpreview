@@ -192,7 +192,9 @@ Deno.serve(async (req) => {
     if (action === "refresh_status") {
       const row = await activeRow();
       if (!row) {
-        return jsonError(404, "not_connected", "Connect your PayPal account first.");
+        // Nothing to refresh (never connected, or a sandbox-era connection
+        // archived after the live switch): the UI shows the Connect button.
+        return jsonResponse(200, { status: "not_connected", connected: false });
       }
       let raw: Record<string, any>;
       try {
@@ -318,7 +320,7 @@ Deno.serve(async (req) => {
 
     if (action === "disconnect") {
       const row = await activeRow();
-      if (!row) return jsonError(404, "not_connected", "PayPal isn't connected.");
+      if (!row) return jsonResponse(200, { status: "disconnected", connected: false });
       const now = new Date().toISOString();
       // Forget the active association only — the archived row keeps the
       // tracking id, merchant id and history for reconciliation. Vendibook

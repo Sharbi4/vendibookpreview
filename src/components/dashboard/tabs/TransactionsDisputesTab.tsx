@@ -85,7 +85,11 @@ const TransactionsDisputesTab = () => {
       if ((data as any)?.already_open) {
         toast.info('A dispute is already open on this transaction.');
       } else {
-        toast.success('Dispute submitted — our team will be in touch.');
+        toast.success(
+          (data as any)?.case_number
+            ? `Dispute opened as case ${(data as any).case_number}. Follow it under Support cases.`
+            : 'Dispute submitted — our team will be in touch.',
+        );
       }
       closeDialog();
       await refresh();
