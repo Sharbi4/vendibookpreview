@@ -35,7 +35,7 @@ export default function PaymentsDisputesEntry() {
         <div className="flex items-start gap-3">
           <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
           <div>
-            <h2 className="text-lg font-semibold">Disputes &amp; problems</h2>
+            <h2 className="text-lg font-semibold">Disputes</h2>
             <p className="mt-1 max-w-xl text-sm text-muted-foreground">
               Something wrong with an order? Open a case from the order. The seller payment is paused while
               Vendibook reviews it, both sides can add statements and photos, and we decide on a refund or release.

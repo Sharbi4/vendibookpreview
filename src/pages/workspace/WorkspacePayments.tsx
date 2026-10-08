@@ -46,10 +46,6 @@ export default function WorkspacePayments() {
           <SellerPayPalConnect showWhenDisabled variant="dark" />
         </section>
 
-        <section className="v2-panel" aria-label="Disputes and problems">
-          <PaymentsDisputesEntry />
-        </section>
-
         <section className="v2-panel">
           <SellerPayoutBalance />
         </section>
@@ -80,6 +76,10 @@ export default function WorkspacePayments() {
               <TransactionsDisputesTab />
             </Suspense>
           </div>
+        </section>
+
+        <section className="v2-panel" aria-label="Disputes">
+          <PaymentsDisputesEntry />
         </section>
       </div>
     </WorkspaceShell>
