@@ -50,6 +50,13 @@
       "when": 1791440671460,
       "tag": "0006_campus_partner_codes",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791441031217,
+      "tag": "0007_campus_partner_sync_never_blocks_payments",
+      "breakpoints": true
     }
   ]
 }
