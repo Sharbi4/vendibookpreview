@@ -419,7 +419,12 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   // The refundable security deposit is charged today alongside the rental and
   // held by the platform; it is refunded (minus any damages/fees) after the
   // rental ends, so it is part of today's charge.
-  const totalChargedToday = fees.customerTotal + taxAmount + (depositAmount ?? 0);
+  const [partnerQuote, setPartnerQuote] = useState<{ amountCents: number; creditCents: number; partnerName: string | null } | null>(null);
+  const partnerCredit = partnerQuote && partnerQuote.creditCents > 0 ? partnerQuote : null;
+  // With a Campus Partner credit the total shown is the server's exact charge.
+  const totalChargedToday = partnerCredit
+    ? partnerCredit.amountCents / 100
+    : fees.customerTotal + taxAmount + (depositAmount ?? 0);
 
   // Always-visible tax row for the payment summary: real amount when
   // quoted, an explicit placeholder while calculating or when the estimate
@@ -1101,6 +1106,9 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
           muted: true,
         }]
       : []),
+    ...(partnerCredit
+      ? [{ label: 'Campus Partner credit', value: `-${formatCurrency(partnerCredit.creditCents / 100)}`, note: partnerCredit.partnerName ?? undefined, credit: true }]
+      : []),
   ];
 
   const summaryMeta = [
@@ -1552,6 +1560,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
                       city: userInfo.city, state: userInfo.state, postalCode: userInfo.zipCode, countryCode: 'US',
                     } : undefined}
                     onPaid={(id) => completeCheckout(id, 'instant')}
+                    onQuoteChange={setPartnerQuote}
                   />
                   <button type="button" className="v2-btn-quiet" onClick={() => setPaymentTarget(null)}>
                     Edit booking details
