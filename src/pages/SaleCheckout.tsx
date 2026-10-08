@@ -1362,6 +1362,7 @@ const SaleCheckout = () => {
                       : null
                   }
                 />
+                </>
               )}            </div>
           ) : null}
         </SaleCheckoutWizard>
