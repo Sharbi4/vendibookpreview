@@ -1,4 +1,6 @@
 import { Suspense, lazy } from 'react';
+import { Link } from 'react-router-dom';
+import { PayPalWordmark } from '@/components/brand/ProviderLogos';
 import WorkspaceShell from '@/components/workspace/WorkspaceShell';
 import WorkspaceBookingPayments from '@/components/workspace/WorkspaceBookingPayments';
 import PayoutCalendar from '@/components/workspace/PayoutCalendar';
@@ -31,7 +33,16 @@ export default function WorkspacePayments() {
           <p>Manage PayPal setup, earnings, purchases, receipts, and disputes.</p>
         </header>
 
-        <section className="v2-panel" aria-label="PayPal account">
+        {/* Same dark PayPal module as the setup page; the dark connect card
+            is only legible on this background. */}
+        <section className="v2-paypal-module" aria-label="PayPal account">
+          <div className="v2-paypal-header">
+            <div>
+              <p>Get paid online</p>
+              <PayPalWordmark className="mt-2 h-6" />
+            </div>
+            <Link className="v2-paypal-ghost" to="/dashboard/payments/setup">Full setup</Link>
+          </div>
           <SellerPayPalConnect showWhenDisabled variant="dark" />
         </section>
 
