@@ -23,6 +23,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
 import { notifyUser } from "../_shared/notify.ts";
+import { restoreSaleAfterDispute } from "../_shared/paypalAccounting.ts";
 import {
   ADMIN_EMAIL, caseUrl, collectEvidenceLinks, fmt, hoursFromNow, ISSUE_LABEL,
   loadParties, logEvent, money, OUTCOME_LABEL, sendCaseEmail, SITE_URL,
@@ -67,7 +68,7 @@ serve(async (req) => {
       case "open": return await openCase(admin, user.id, body);
       case "reply": return await replyToCase(admin, user.id, !!isAdmin, body);
       case "admin_request": return await adminRequest(admin, user.id, !!isAdmin, body);
-      case "admin_resolve": return await adminResolve(admin, user.id, !!isAdmin, body);
+      case "admin_resolve": return await adminResolve(admin, user.id, !!isAdmin, body, authHeader);
       case "frozen_list": return await frozenList(admin, !!isAdmin);
       default: return jsonError(400, "invalid_action", "Unsupported case action.");
     }
@@ -332,7 +333,7 @@ async function adminRequest(admin: any, userId: string, isAdmin: boolean, body: 
 
 // ---------------------------------------------------------- admin resolve
 
-async function adminResolve(admin: any, userId: string, isAdmin: boolean, body: any) {
+async function adminResolve(admin: any, userId: string, isAdmin: boolean, body: any, authHeader: string) {
   if (!isAdmin) return jsonError(403, "forbidden", "Administrator access required.");
   const caseId = body?.case_id as string | undefined;
   const outcome = String(body?.outcome ?? "");
@@ -347,6 +348,48 @@ async function adminResolve(admin: any, userId: string, isAdmin: boolean, body: 
     return jsonError(409, "already_resolved", "This case is already resolved.");
   }
 
+  // Refund outcomes move the money first, through the one refund path
+  // (seller-routed assertion, fee return, ledger, payable, sale close-out).
+  // Nothing is marked resolved unless PayPal accepted the refund.
+  const refunded = outcome === "refunded_full" || outcome === "refunded_partial";
+  if (refunded) {
+    const { data: payment } = await admin.from("payment_records")
+      .select("id, payment_status, gross_amount_cents, refunded_cents").eq("id", c.payment_record_id).maybeSingle();
+    if (!payment) return jsonError(409, "no_payment", "This case has no payment to refund.");
+    const remaining = Number(payment.gross_amount_cents ?? 0) - Number(payment.refunded_cents ?? 0);
+    let amountCents: number | undefined;
+    if (outcome === "refunded_partial") {
+      amountCents = Math.round(Number(body?.refund_amount_cents ?? 0));
+      if (!(amountCents > 0) || amountCents >= remaining) {
+        return jsonError(400, "invalid_amount", "Enter a partial refund amount below the remaining paid amount.");
+      }
+    }
+    if (remaining > 0 && payment.payment_status !== "refunded") {
+      const res = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/paypal-refund`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: authHeader,
+          apikey: Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+        },
+        body: JSON.stringify({
+          payment_record_id: payment.id,
+          amount_cents: amountCents,
+          reason: `Case ${c.case_number}: ${reason}`.slice(0, 255),
+        }),
+      });
+      const refundBody = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        await logEvent(admin, caseId, c.seller_payable_id, "refund_failed", userId, "admin", c.status, c.status,
+          refundBody?.error ?? `HTTP ${res.status}`);
+        return jsonError(res.status, refundBody?.code ?? "refund_failed",
+          refundBody?.error ?? "PayPal could not issue the refund, so the case is still open.");
+      }
+      await logEvent(admin, caseId, c.seller_payable_id, "refund_issued", userId, "admin", c.status, c.status,
+        `Refund ${refundBody?.refund_id ?? ""} ${money(Number(refundBody?.refunded_cents ?? amountCents ?? remaining), c.currency ?? "USD")}`.trim());
+    }
+  }
+
   const resolvedAt = new Date().toISOString();
   await admin.from("dispute_cases").update({
     status: outcome === "closed_no_action" ? "closed" : "resolved",
@@ -357,7 +400,9 @@ async function adminResolve(admin: any, userId: string, isAdmin: boolean, body: 
   // Unfreeze: a refund outcome ends the order, everything else resumes the clock
   // with exactly the time that was left when the case opened.
   let unfroze = false;
-  if (c.seller_payable_id) {
+  // A full refund ends the order: the payable stays closed. Every other
+  // outcome resumes the clock with the time that was left.
+  if (c.seller_payable_id && outcome !== "refunded_full") {
     const { error: unfreezeErr } = await admin.rpc("unfreeze_payable_for_case", { _payable_id: c.seller_payable_id });
     unfroze = !unfreezeErr;
     await logEvent(admin, caseId, c.seller_payable_id,
@@ -373,8 +418,16 @@ async function adminResolve(admin: any, userId: string, isAdmin: boolean, body: 
   await logEvent(admin, caseId, c.seller_payable_id, "case_resolved", userId, "admin", c.status,
     outcome, reason);
 
+  // A disputed sale that wasn't refunded in full goes back to where it was so
+  // the handoff and confirmations can continue (a full refund already closed it).
+  if (c.sale_transaction_id && outcome !== "refunded_full") {
+    const restored = await restoreSaleAfterDispute(admin, c.sale_transaction_id, `Case ${c.case_number} resolved: ${OUTCOME_LABEL[outcome]}`);
+    if (!restored.ok) {
+      await logEvent(admin, caseId, c.seller_payable_id, "sale_restore_failed", userId, "admin", null, null, restored.error ?? null);
+    }
+  }
+
   const parties = await loadParties(admin, { buyer_id: c.buyer_id, seller_id: c.seller_id });
-  const refunded = outcome === "refunded_full" || outcome === "refunded_partial";
   for (const [who, person] of [["buyer", parties.buyer], ["seller", parties.seller]] as const) {
     await sendCaseEmail(admin, person?.email, `case-resolved-${caseId}-${who}`, {
       kicker: `Case ${c.case_number}`,

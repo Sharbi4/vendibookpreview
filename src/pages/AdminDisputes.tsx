@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
@@ -49,6 +50,7 @@ const AdminDisputes = () => {
   const [busy, setBusy] = useState(false);
   const [target, setTarget] = useState<FrozenCase | null>(null);
   const [outcome, setOutcome] = useState('');
+  const [refundAmount, setRefundAmount] = useState('');
   const [reason, setReason] = useState('');
 
   const load = useCallback(async () => {
@@ -67,14 +69,24 @@ const AdminDisputes = () => {
     if (!target || !outcome || reason.trim().length < 5) {
       return toast.error('Choose an outcome and write the reason for the record.');
     }
+    const refundCents = Math.round(Number(refundAmount) * 100);
+    if (outcome === 'refunded_partial' && !(refundCents > 0)) {
+      return toast.error('Enter the partial refund amount.');
+    }
     setBusy(true);
     const { data, error } = await supabase.functions.invoke('dispute-case-ops', {
-      body: { action: 'admin_resolve', case_id: target.id, outcome, reason: reason.trim() },
+      body: {
+        action: 'admin_resolve',
+        case_id: target.id,
+        outcome,
+        reason: reason.trim(),
+        ...(outcome === 'refunded_partial' ? { refund_amount_cents: refundCents } : {}),
+      },
     });
     setBusy(false);
     if (error || (data as any)?.error) return toast.error((data as any)?.error ?? 'Could not resolve.');
     toast.success('Case resolved and both parties notified.');
-    setTarget(null); setOutcome(''); setReason('');
+    setTarget(null); setOutcome(''); setReason(''); setRefundAmount('');
     void load();
   };
 
@@ -166,7 +178,8 @@ const AdminDisputes = () => {
           <DialogHeader>
             <DialogTitle>Resolve {target?.case_number}</DialogTitle>
             <DialogDescription>
-              Recording an outcome unfreezes the order. Refunds are issued separately from the payout page.
+              A refund outcome issues the PayPal refund first and only records the outcome if it succeeds; a full
+              refund closes the order. Any other outcome unfreezes the seller payment and returns the sale to where it was.
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -181,6 +194,21 @@ const AdminDisputes = () => {
                 </SelectContent>
               </Select>
             </div>
+            {outcome === 'refunded_partial' && (
+              <div>
+                <Label className="text-xs">Partial refund amount (USD)</Label>
+                <Input
+                  className="mt-1.5 text-base"
+                  type="number"
+                  inputMode="decimal"
+                  min="0.01"
+                  step="0.01"
+                  value={refundAmount}
+                  onChange={(e) => setRefundAmount(e.target.value)}
+                  placeholder="e.g. 1500.00"
+                />
+              </div>
+            )}
             <div>
               <Label className="text-xs">Reason for the record</Label>
               <Textarea
@@ -193,7 +221,8 @@ const AdminDisputes = () => {
           </div>
           <DialogFooter>
             <Button onClick={resolve} disabled={busy}>
-              {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />} Record outcome
+              {busy && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}{' '}
+              {outcome === 'refunded_full' || outcome === 'refunded_partial' ? 'Refund and resolve' : 'Record outcome'}
             </Button>
           </DialogFooter>
         </DialogContent>

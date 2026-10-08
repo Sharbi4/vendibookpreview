@@ -498,3 +498,32 @@ export async function closeSaleAfterFullRefund(
 
   return { ok: true, saleStatus: target ?? sale.status };
 }
+
+/**
+ * Ends a dispute on a sale without a full refund: the sale returns to where
+ * it was before the dispute (paid, one side confirmed, or completed when both
+ * confirmed), so fulfillment and confirmation can continue. Idempotent; a
+ * sale that is not disputed is left alone.
+ */
+export async function restoreSaleAfterDispute(
+  supabase: any,
+  saleId: string | null | undefined,
+  note: string,
+): Promise<{ ok: boolean; saleStatus?: string; error?: string }> {
+  if (!saleId) return { ok: true };
+  const { data: sale, error: readError } = await supabase.from("sale_transactions")
+    .select("id, status, buyer_confirmed_at, seller_confirmed_at").eq("id", saleId).maybeSingle();
+  if (readError || !sale) return { ok: false, error: readError?.message ?? "sale not found" };
+  if (sale.status !== "disputed") return { ok: true, saleStatus: sale.status };
+  const target = sale.buyer_confirmed_at && sale.seller_confirmed_at
+    ? "completed"
+    : sale.buyer_confirmed_at
+    ? "buyer_confirmed"
+    : sale.seller_confirmed_at
+    ? "seller_confirmed"
+    : "paid";
+  const { error } = await supabase.from("sale_transactions")
+    .update({ status: target, message: note.slice(0, 500) }).eq("id", saleId);
+  if (error) return { ok: false, error: error.message };
+  return { ok: true, saleStatus: target };
+}

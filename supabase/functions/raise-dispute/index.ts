@@ -106,28 +106,40 @@ serve(async (req) => {
 
     logStep("Transaction disputed", { role, transactionId: transaction_id });
 
-    // Pause the seller payment while the dispute is open. Seller-routed
-    // payments already settled at capture, so this only holds payables
-    // Vendibook still controls; admin payout checks also refuse disputed sales.
-    const { data: disputedPayments } = await supabaseClient
+    // Every dispute becomes a Vendibook case: it shows on the admin Disputes
+    // page, both parties can add statements and evidence, and the seller
+    // payment is frozen until an admin resolves it (refund, partial refund or
+    // release). Seller-routed payments already settled at capture; admin
+    // payout checks also refuse disputed sales.
+    let caseInfo: { id?: string; case_number?: string } | null = null;
+    const { data: casePayment } = await supabaseClient
       .from('payment_records')
       .select('id')
-      .eq('sale_transaction_id', transaction_id);
-    const paymentIds = (disputedPayments ?? []).map((p: { id: string }) => p.id);
-    if (paymentIds.length) {
-      const { error: holdError } = await supabaseClient
-        .from('seller_payables')
-        .update({
-          status: 'payout_on_hold',
-          dispute_frozen_at: new Date().toISOString(),
-          conditions_deadline_at: null,
-          hold_reason: 'Seller payment is paused while a dispute is open.',
-        })
-        .in('payment_record_id', paymentIds)
-        .in('status', ['pending_release', 'eligible_for_review', 'payout_approved']);
-      if (holdError) logStep("Warning: payout hold failed", { error: holdError.message });
+      .eq('sale_transaction_id', transaction_id)
+      .in('payment_status', ['completed', 'partially_refunded'])
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (casePayment) {
+      const caseText = reason.length >= 20 ? reason : `Dispute raised on this purchase: ${reason}`;
+      const caseRes = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/dispute-case-ops`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: authHeader,
+          apikey: Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+        },
+        body: JSON.stringify({
+          action: 'open',
+          payment_record_id: casePayment.id,
+          issue_type: 'other',
+          description: caseText,
+        }),
+      });
+      const caseBody = await caseRes.json().catch(() => ({}));
+      caseInfo = caseBody?.case ?? null;
+      if (!caseRes.ok) logStep("Warning: case not opened", { status: caseRes.status, error: caseBody?.error });
     }
-
     // Fetch listing, buyer, and seller info for email
     const { data: listing } = await supabaseClient
       .from('listings')
@@ -269,7 +281,10 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: "Dispute submitted successfully. Our team will review it shortly.",
+        message: caseInfo?.case_number
+          ? `Dispute submitted as case ${caseInfo.case_number}. The seller payment is paused while our team reviews it.`
+          : "Dispute submitted successfully. Our team will review it shortly.",
+        case_id: caseInfo?.id ?? null,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

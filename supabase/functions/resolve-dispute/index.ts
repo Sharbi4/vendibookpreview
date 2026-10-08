@@ -222,6 +222,41 @@ serve(async (req) => {
       );
     }
 
+    // Disputes opened since the case flow was unified have a Vendibook case.
+    // Resolve through it so the refund, payout freeze, case history and both
+    // parties' notices all stay in one place.
+    if (paymentRecord) {
+      const { data: openCase } = await supabaseClient
+        .from("dispute_cases")
+        .select("id")
+        .eq("payment_record_id", paymentRecord.id)
+        .not("status", "in", "(resolved,closed)")
+        .maybeSingle();
+      if (openCase) {
+        const caseRes = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/dispute-case-ops`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: authHeader,
+            apikey: Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+          },
+          body: JSON.stringify({
+            action: "admin_resolve",
+            case_id: openCase.id,
+            outcome: resolution === "refund_buyer" ? "refunded_full" : "released_to_seller",
+            reason: admin_notes && admin_notes.trim().length >= 5
+              ? admin_notes.trim()
+              : resolution === "refund_buyer" ? "Resolved in the buyer's favor." : "Resolved in the seller's favor.",
+          }),
+        });
+        const caseBody = await caseRes.json().catch(() => ({}));
+        return new Response(JSON.stringify(caseRes.ok ? { success: true, via_case: true, ...caseBody } : { error: caseBody?.error ?? "Case resolution failed" }), {
+          status: caseRes.ok ? 200 : caseRes.status,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
+
     let newStatus: string;
     let resultMessage: string;
 
@@ -291,7 +326,15 @@ serve(async (req) => {
         logStep("Warning: failed to release payable", { error: payableError.message });
       }
 
-      newStatus = "completed";
+      // Back to where the sale was before the dispute (completed only when
+      // both parties had already confirmed), so the handoff can continue.
+      newStatus = transaction.buyer_confirmed_at && transaction.seller_confirmed_at
+        ? "completed"
+        : transaction.buyer_confirmed_at
+        ? "buyer_confirmed"
+        : transaction.seller_confirmed_at
+        ? "seller_confirmed"
+        : "paid";
       resultMessage = "Dispute resolved: Payment released to seller for payout";
     }
 
