@@ -1,4 +1,5 @@
 import { parseRentalDate } from '@/lib/rentalDates';
+import { isBookingClosed } from '@/lib/bookingStatus';
 /** Rental request, approval, and payment status. Approval never implies payment. */
 import { rentalBookingView } from '@/lib/rentalCheckoutValidation';
 import { useAuth } from '@/contexts/AuthContext';
@@ -63,9 +64,11 @@ const money = (n: number) =>
 const BookingDocumentsPanel = ({
   listingId,
   bookingId,
+  status,
 }: {
   listingId: string;
   bookingId: string;
+  status: string | null;
 }) => {
   const { data: requiredDocs } = useListingRequiredDocuments(listingId);
   if (!requiredDocs || requiredDocs.length === 0) return null;
@@ -77,7 +80,7 @@ const BookingDocumentsPanel = ({
         Documents the host needs
       </h2>
       <div className="mt-3">
-        <DocumentUploadSection listingId={listingId} bookingId={bookingId} />
+        <DocumentUploadSection listingId={listingId} bookingId={bookingId} readOnly={isBookingClosed(status)} />
       </div>
     </div>
   );
@@ -428,7 +431,7 @@ const BookingConfirmation = ({
             ) : null}
 
             {booking && view !== 'failed' && view !== 'not_found' ? (
-              <BookingDocumentsPanel listingId={booking.listing_id} bookingId={booking.id} />
+              <BookingDocumentsPanel listingId={booking.listing_id} bookingId={booking.id} status={booking.status} />
             ) : null}
 
             {nextSteps.length > 0 ? (

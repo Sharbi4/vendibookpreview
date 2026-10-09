@@ -70,9 +70,10 @@ export function DocumentsCard({
   title = 'Documents',
   /** On a Documents tab the card stays visible and explains the empty state. */
   whenEmpty = 'show',
-}: { scope: DocumentScope; title?: string; whenEmpty?: 'show' | 'hide' }) {
+  readOnly = false,
+}: { scope: DocumentScope; title?: string; whenEmpty?: 'show' | 'hide'; readOnly?: boolean }) {
   const { user } = useAuth();
-  const { docs, preparing, notice, kinds, reload, prepareKind, refreshAfterSigning } = useTransactionDocuments(scope);
+  const { docs, preparing, notice, kinds, reload, prepareKind, refreshAfterSigning } = useTransactionDocuments(scope, readOnly);
   const [session, setSession] = useState<{ url: string; docId: string } | null>(null);
   const [preview, setPreview] = useState<{ url: string; label: string } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
@@ -164,6 +165,7 @@ export function DocumentsCard({
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
+          {readOnly && <p className="text-sm text-muted-foreground">This booking is closed. You can view existing documents; preparation and signing are unavailable.</p>}
           {preparing && !docs.length && (
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
               <Loader2 className="h-4 w-4 animate-spin" /> Preparing your documents…
@@ -203,7 +205,7 @@ export function DocumentsCard({
                     </div>
                   </div>
                   <div className="flex gap-2">
-                    {!complete && me && !mySigned && doc.status !== 'voided' && (
+                    {!readOnly && !complete && me && !mySigned && doc.status !== 'voided' && (
                       <Button size="sm" onClick={() => openSigning(doc)} disabled={busy === doc.id}>
                         {busy === doc.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <><PenLine className="h-4 w-4 mr-1" /> Review & sign</>}
                       </Button>
@@ -234,7 +236,7 @@ export function DocumentsCard({
 
           {(() => {
             const existing = new Set(docs.map((d) => d.document_type));
-            const pending = kinds.filter(
+            const pending = (readOnly ? [] : kinds).filter(
               (k) => ON_DEMAND[k] && !ON_DEMAND[k].types.some((t) => existing.has(t)),
             );
             if (!pending.length) return null;

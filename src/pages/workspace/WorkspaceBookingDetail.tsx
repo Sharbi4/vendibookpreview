@@ -5,6 +5,9 @@
  * booking's signed documents on their own tab.
  */
 import { Link, useParams } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { isBookingClosed } from '@/lib/bookingStatus';
 import WorkspaceShell from '@/components/workspace/WorkspaceShell';
 import BookingConfirmation from '@/pages/BookingConfirmation';
 import { DocumentsCard } from '@/components/documents/DocumentsCard';
@@ -12,6 +15,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 export default function WorkspaceBookingDetail() {
   const { bookingId } = useParams<{ bookingId: string }>();
+  const booking = useQuery({
+    queryKey: ['booking-document-status', bookingId],
+    enabled: !!bookingId,
+    queryFn: async () => {
+      const { data, error } = await supabase.from('booking_requests').select('status').eq('id', bookingId!).single();
+      if (error) throw error;
+      return data;
+    },
+  });
 
   return (
     <WorkspaceShell>
@@ -36,8 +48,8 @@ export default function WorkspaceBookingDetail() {
           </TabsContent>
 
           <TabsContent value="documents" className="mt-6">
-            {bookingId ? (
-              <DocumentsCard scope={{ booking_id: bookingId }} title="Rental documents" />
+            {booking.isError ? <p role="alert">Booking status could not be loaded. <button onClick={() => booking.refetch()}>Retry</button></p> : booking.isLoading ? <p role="status">Loading booking status…</p> : bookingId ? (
+              <DocumentsCard scope={{ booking_id: bookingId }} title="Rental documents" readOnly={isBookingClosed(booking.data?.status)} />
             ) : null}
           </TabsContent>
         </Tabs>

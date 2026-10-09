@@ -53,7 +53,7 @@ const SKIP_COPY: Record<string, string> = {
   template_not_configured: 'This document is still being prepared. Check back shortly.',
 };
 
-export function useTransactionDocuments(scope: DocumentScope) {
+export function useTransactionDocuments(scope: DocumentScope, readOnly = false) {
   const scopeKey = JSON.stringify(scope);
   const kinds = useMemo(() => ('booking_id' in scope ? RENTAL_KINDS : SALE_KINDS), [scopeKey]);
 
@@ -81,6 +81,7 @@ export function useTransactionDocuments(scope: DocumentScope) {
 
   /** Ask the backend to prepare every document due at this stage. */
   const prepare = useCallback(async () => {
+    if (readOnly) return;
     setPreparing(true);
     const skips: string[] = [];
     try {
@@ -106,13 +107,14 @@ export function useTransactionDocuments(scope: DocumentScope) {
     } finally {
       setPreparing(false);
     }
-  }, [kinds, scopeKey, load]);
+  }, [kinds, scopeKey, load, readOnly]);
 
   /**
    * Prepare one specific document on demand (handoff, check-in, check-out).
    * Returns a plain-language reason when the stage is not due yet.
    */
   const prepareKind = useCallback(async (kind: DocumentKind): Promise<string | null> => {
+    if (readOnly) return 'This booking is closed. Existing documents remain available.';
     setPreparing(true);
     try {
       const { data, error } = await supabase.functions.invoke('signnow-ensure-document', {
@@ -128,7 +130,7 @@ export function useTransactionDocuments(scope: DocumentScope) {
     } finally {
       setPreparing(false);
     }
-  }, [scopeKey, load]);
+  }, [scopeKey, load, readOnly]);
 
   useEffect(() => {
     let cancelled = false;
@@ -137,7 +139,7 @@ export function useTransactionDocuments(scope: DocumentScope) {
         if (!cancelled) setNotice('We could not load your documents. Please try again.');
         return;
       }
-      if (cancelled || preparedFor.current === scopeKey) return;
+      if (cancelled || readOnly || preparedFor.current === scopeKey) return;
       preparedFor.current = scopeKey;
       // Documents already exist for every kind that can exist right now? Still
       // ask: later stages (handoff, check-in, check-out) become due over time.
@@ -145,7 +147,7 @@ export function useTransactionDocuments(scope: DocumentScope) {
     })();
     return () => { cancelled = true; };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [scopeKey]);
+  }, [scopeKey, readOnly]);
 
   /** Reload a few times after a signing session so webhook updates show up. */
   const refreshAfterSigning = useCallback(async () => {
