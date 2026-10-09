@@ -184,7 +184,7 @@ export default function SellerPayoutBalance() {
               Connect your PayPal Business account to accept online payments.{' '}
               <Link to="/dashboard/payments/setup">Open payment setup</Link>
             </p>
-            <SellerBusinessAccountHelp className="mt-2" compact />
+
           </div>
         ) : null}
       </div>

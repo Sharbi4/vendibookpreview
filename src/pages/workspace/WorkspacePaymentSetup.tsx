@@ -56,6 +56,7 @@ export default function WorkspacePaymentSetup() {
       .from('listings')
       .select('id, title, status, mode, accept_paypal_checkout, accept_cash_payment')
       .eq('host_id', user.id)
+      .eq('mode', 'sale')
       .neq('status', 'archived')
       .order('created_at', { ascending: false });
     setListings((data as SetupListing[]) ?? []);
@@ -203,9 +204,9 @@ export default function WorkspacePaymentSetup() {
           <p className="v2-eyebrow">Payment setup</p>
           <h1>Get ready to accept payments</h1>
           <p>
-            Three steps to accept secure online payments from buyers and renters on Vendibook.
+            Equipment sales use PayPal. Rental card payments use Square, with a separate connection below.
             {' '}
-            {completed} of 3 complete.
+            {completed} of 3 PayPal sales steps complete.
           </p>
         </header>
 
@@ -213,7 +214,7 @@ export default function WorkspacePaymentSetup() {
         <section className="v2-paypal-module">
           <div className="v2-paypal-header">
             <div>
-              <p>Step 1 · Payment partner</p>
+              <p>Sales · Step 1 · PayPal</p>
               <PayPalWordmark className="mt-2 h-6" />
             </div>
             <span className={`v2-status ${connectState === 'done' ? 'is-ok' : 'is-warn'}`}>
@@ -225,7 +226,7 @@ export default function WorkspacePaymentSetup() {
             <p>
               You&apos;ll sign in at PayPal and approve the connection, then come back here.
             </p>
-            <SellerBusinessAccountHelp className="mt-3" compact />
+            <details className="mt-3"><summary className="cursor-pointer">PayPal Business account help</summary><SellerBusinessAccountHelp compact /></details>
             <p className="mt-3 text-xs text-muted-foreground">
               Pay Later and other funding sources may have different processing rates set and
               charged by PayPal to you as the seller. See PayPal for current pricing.
@@ -234,8 +235,6 @@ export default function WorkspacePaymentSetup() {
           <SellerPayPalConnect showWhenDisabled variant="dark" />
         </section>
 
-        {/* Rentals are paid by card into the host's own Square account. */}
-        <SellerSquareConnect />
 
         {/* Step 2 — account health */}
         <section className="v2-panel">
@@ -357,7 +356,7 @@ export default function WorkspacePaymentSetup() {
           <div className="v2-panel-head">
             <div>
               <p className="v2-eyebrow">Step 3</p>
-              <h2>Turn on online payments for your listings</h2>
+              <h2>Turn on PayPal for your sale listings</h2>
             </div>
             <span className={`v2-status ${listingState === 'done' ? 'is-ok' : listingState === 'blocked' ? 'is-warn' : ''}`}>
               {listingsLoading
@@ -392,7 +391,7 @@ export default function WorkspacePaymentSetup() {
 
             {!listingsLoading && listings.length > 0 && needsOnlineCheckout.length === 0 && (
               <p className="text-sm text-muted-foreground">
-                Every active listing accepts online payments.
+                Every listed sale accepts PayPal checkout.
               </p>
             )}
 
@@ -439,6 +438,8 @@ export default function WorkspacePaymentSetup() {
           </div>
         </section>
 
+        <SellerSquareConnect />
+
         {/* How payouts work */}
         <section className="v2-panel">
           <div className="v2-panel-head">
@@ -449,10 +450,7 @@ export default function WorkspacePaymentSetup() {
           </div>
           <div className="space-y-3 p-5 text-sm text-muted-foreground">
             <p>
-              Vendibook records what you&apos;re owed on every completed transaction. Payouts are
-              reviewed and released by our team — typically within 24 hours of delivery
-              confirmation, and we always strive for 24–48 hours. Rental payouts release 24 hours
-              after the booking start.
+              Orders paid to a connected seller account settle through that payment provider. When Vendibook collects the payment, your proceeds appear under Your payouts for manual review. Check the order and payout status for eligibility, holds, and expected dates; a connection alone does not mean money has been sent.
             </p>
             {readiness.gatingActive && !readiness.ready && (
               <p className="text-amber-700">

@@ -129,7 +129,7 @@ export default function PaymentsPayoutsSection() {
         <div className="min-w-0">
           <span className="text-sm font-semibold text-foreground">Buyer payments</span>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Buyer payments are processed securely through PayPal. PayPal decides which eligible
+            Equipment sale payments use PayPal. Rental card checkout uses Square. PayPal decides which eligible
             wallet, card or payment options to show each buyer at checkout, and no card details are
             stored on Vendibook.
           </p>

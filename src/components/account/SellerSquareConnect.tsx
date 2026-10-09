@@ -88,9 +88,9 @@ export default function SellerSquareConnect() {
       </div>
       <div className="space-y-3 text-sm text-muted-foreground">
         <p>
-          Renters pay by card at checkout and the money goes straight to your Square account. Vendibook&apos;s
+          With a connected Square account, renters pay you directly by card. Transfers to your bank follow your Square payout schedule. Vendibook&apos;s
           service fee, any sales tax and the refundable deposit are taken out automatically at payment, so
-          there&apos;s nothing to invoice. Square charges its standard card processing fee on your side.
+          there&apos;s nothing to invoice. Square charges its standard card processing fee on your side. When checkout instead collects through Vendibook, your proceeds are recorded for manual payout review in the Money center.
         </p>
         {active ? (
           <p className="flex items-center gap-2 text-foreground">
