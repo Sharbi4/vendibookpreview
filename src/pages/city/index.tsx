@@ -29,3 +29,13 @@ export const PhoenixBrowse = () => <CityDemandPage city={CITY_DATA.phoenix} />;
 export const PhoenixListFoodTruck = () => <CitySupplyPage city={CITY_DATA.phoenix} assetType="food-truck" />;
 export const PhoenixListFoodTrailer = () => <CitySupplyPage city={CITY_DATA.phoenix} assetType="food-trailer" />;
 export const PhoenixListVendorSpace = () => <CitySupplyPage city={CITY_DATA.phoenix} assetType="vendor-space" />;
+
+// Any other city in CITY_DATA (Charlotte, Atlanta, Miami, ...). Cities without
+// browse data fall back to their city page instead of a 404.
+import { Navigate, useParams } from 'react-router-dom';
+export const CityBrowseBySlug = () => {
+  const { citySlug = '' } = useParams();
+  const city = (CITY_DATA as Record<string, any>)[citySlug.toLowerCase()];
+  if (!city) return <Navigate to={`/${citySlug}`} replace />;
+  return <CityDemandPage city={city} />;
+};
