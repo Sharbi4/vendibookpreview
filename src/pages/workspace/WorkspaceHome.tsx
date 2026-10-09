@@ -39,7 +39,7 @@ import { useNotifications } from '@/hooks/useNotifications';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useHandoffTasks } from '@/hooks/useHandoffTasks';
 import { useVideoWalkthroughs } from '@/hooks/useVideoWalkthroughs';
-import { formatWalkthroughTime } from '@/lib/videoWalkthroughs';
+import { formatWalkthroughTime, walkthroughDisplayStatus } from '@/lib/videoWalkthroughs';
 
 const money = (cents: number | null | undefined) =>
   cents == null
@@ -69,14 +69,14 @@ export default function WorkspaceHome() {
   const [routeParams] = useSearchParams();
   const { user, profile } = useAuth();
   const { listings, isLoading: listingsLoading, pauseListing, unpauseListing, archiveListing, deleteListing } = useHostListings();
-  const { bookings: buyerBookings } = useShopperBookings();
-  const { bookings: sellerBookings } = useHostBookings();
-  const { transactions } = useUserTransactions(user?.id);
-  const { conversations } = useConversations();
+  const { bookings: buyerBookings, isLoading: buyerLoading } = useShopperBookings();
+  const { bookings: sellerBookings, isLoading: sellerLoading } = useHostBookings();
+  const { transactions, isLoading: transactionsLoading } = useUserTransactions(user?.id);
+  const { conversations, isLoading: conversationsLoading } = useConversations();
   const { isReady: paypalReady } = useMyPayPalConnection();
   const { unreadCount: notificationUnread } = useNotifications(user?.id);
   const { favorites } = useFavorites();
-  const { walkthroughs } = useVideoWalkthroughs();
+  const { walkthroughs, isLoading: walkthroughsLoading } = useVideoWalkthroughs();
   const { data: handoffTasks } = useHandoffTasks();
   const { pendingOffers } = useHostOffers();
 
@@ -100,6 +100,7 @@ export default function WorkspaceHome() {
       items.push({ id: t.id, label: t.label, hint: t.hint, to: t.to, icon: ShieldCheck, tone: t.tone }),
     );
     upcomingWalkthroughs.forEach((w) => items.push({ id:`walkthrough-${w.id}`, label:`Video walkthrough ${formatWalkthroughTime(w.starts_at)}`, hint:w.listing?.title || 'Scheduled walkthrough', to:`/walkthrough/${w.id}`, icon:Video }));
+    walkthroughs.filter(w => walkthroughDisplayStatus(w) === 'needs follow-up').forEach(w => items.push({ id: `followup-${w.id}`, label: 'Walkthrough needs follow-up', hint: w.listing?.title || 'Review the meeting record or reschedule.', to: `/walkthrough/${w.id}`, icon: Video, tone: 'warn' }));
     if (pendingOffers.length)
       items.push({
         id: 'offers',
@@ -204,7 +205,7 @@ export default function WorkspaceHome() {
           amount: null,
           icon: CalendarDays,
         })),
-        ...walkthroughs.map((w) => ({ id:`vw-${w.id}`, href:`/walkthrough/${w.id}`, title:w.listing?.title||'Video walkthrough', detail:`Video walkthrough · ${w.status}`, date:w.created_at, amount:null, icon:Video })),
+        ...walkthroughs.map((w) => ({ id:`vw-${w.id}`, href:`/walkthrough/${w.id}`, title:w.listing?.title||'Video walkthrough', detail:`Video walkthrough · ${walkthroughDisplayStatus(w)}`, date:w.created_at, amount:null, icon:Video })),
       ]
         .sort((a, b) => +new Date(b.date) - +new Date(a.date))
         .slice(0, 3),
@@ -247,7 +248,7 @@ export default function WorkspaceHome() {
 
         {!listingsLoading && live.length > 0 && <FeaturedPromotionBanner listings={listings} />}
 
-        <DashboardNextSteps tasks={tasks} />
+        <DashboardNextSteps tasks={tasks} loading={listingsLoading || transactionsLoading || buyerLoading || sellerLoading || walkthroughsLoading || conversationsLoading} />
 
         {listingsLoading && !listings.length && (
           <section className="v2-panel">

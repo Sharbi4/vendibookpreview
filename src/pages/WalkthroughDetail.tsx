@@ -4,7 +4,7 @@ import { CalendarPlus, CircleDot, Clock, Link2 as LinkIcon, MessageCircle, PlayC
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
-import { downloadWalkthroughIcs, formatWalkthroughTime } from '@/lib/videoWalkthroughs';
+import { downloadWalkthroughIcs, formatWalkthroughTime, walkthroughDisplayStatus } from '@/lib/videoWalkthroughs';
 import { meetingProfile } from '@/lib/meetingTypes';
 import { openRecording, useWalkthroughRecord } from '@/hooks/useWalkthroughRecord';
 import VendibookVideoCall from '@/components/video/VendibookVideoCall';
@@ -123,7 +123,7 @@ export default function WalkthroughDetail() {
           <section className="walkthrough-card walkthrough-meeting-card">
             {w.listing?.cover_image_url && <img src={w.listing.cover_image_url} alt="" />}
             <div>
-              <span className={`v2-status ${active ? 'is-ok' : 'is-alert'}`}>{w.status}</span>
+              <span className={`v2-status ${active ? 'is-ok' : 'is-alert'}`}>{walkthroughDisplayStatus(w)}</span>
               <h2>{formatWalkthroughTime(w.starts_at)}</h2>
               <p><Clock /> {Math.round((+new Date(w.ends_at) - +new Date(w.starts_at)) / 60000)} minutes · {w.timezone_snapshot}</p>
               <p className="walkthrough-meeting-type">{profile.label}</p>
@@ -150,6 +150,7 @@ export default function WalkthroughDetail() {
                 <small>Same link for both of you. It only opens for the {profile.guestLabel.toLowerCase()} and {profile.hostLabel.toLowerCase()} on this meeting.</small>
               </div>
             )}
+            {walkthroughDisplayStatus(w) === 'needs follow-up' && <p>The join window has closed. Review the meeting record below or reschedule with the other participant.</p>}
             <div className="walkthrough-action-list">
               <button onClick={() => downloadWalkthroughIcs(w)}><CalendarPlus />Add to calendar</button>
               {w.conversation_id && <Link to={`/dashboard/messages/${w.conversation_id}`}><MessageCircle />Message</Link>}

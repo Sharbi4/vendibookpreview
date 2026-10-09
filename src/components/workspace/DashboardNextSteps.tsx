@@ -4,7 +4,8 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 
 type NextStep = { id: string; label: string; hint: string; to: string; icon: LucideIcon; tone?: 'warn' | 'neutral' };
 
-export default function DashboardNextSteps({ tasks }: { tasks: NextStep[] }) {
+export default function DashboardNextSteps({ tasks, loading = false }: { tasks: NextStep[]; loading?: boolean }) {
+  if (loading) return <section className="v2-panel p-5" role="status">Loading your next steps…</section>;
   return <section className="v2-panel overflow-hidden" aria-label="Your next steps">
     <div className="v2-panel-head">
       <div><h2>Up next</h2><p>{tasks.length ? 'A few things to keep moving.' : 'You’re up to date.'}</p></div>

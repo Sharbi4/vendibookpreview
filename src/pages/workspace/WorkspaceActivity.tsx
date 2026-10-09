@@ -1,3 +1,4 @@
+import { walkthroughDisplayStatus } from '@/lib/videoWalkthroughs';
 import { useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { CalendarDays, Image as ImageIcon, Receipt, Video } from 'lucide-react';
@@ -127,7 +128,7 @@ export default function WorkspaceActivity() {
         href: `/dashboard/bookings/${b.id}`,
       }));
 
-    const videos: Item[] = walkthroughs.map((w) => { const done = w.status === 'completed'; return ({ id:`walkthrough-${w.id}`, kind:'walkthroughs', title:done?`Video walkthrough completed — ${w.listing?.title||'Listing'}`:(w.listing?.title||'Video walkthrough'), counterparty:w.seller_id===user?.id?'Meeting with buyer':'Meeting with seller', state:w.status, nextAction:done?'View next steps':(['scheduled','rescheduled'].includes(w.status)?'View meeting details':null), date:w.starts_at, amount:null, reference:null, image:w.listing?.cover_image_url||null, href:done?`/walkthrough/${w.id}/next-steps`:`/walkthrough/${w.id}` }); });
+    const videos: Item[] = walkthroughs.map((w) => { const state = walkthroughDisplayStatus(w); const done = state === 'completed'; return ({ id:`walkthrough-${w.id}`, kind:'walkthroughs', title:done?`Video walkthrough completed — ${w.listing?.title||'Listing'}`:(w.listing?.title||'Video walkthrough'), counterparty:w.seller_id===user?.id?'Meeting with buyer':'Meeting with seller', state, nextAction:state === 'needs follow-up' ? 'Review or reschedule' : done?'View next steps':(['scheduled','rescheduled'].includes(w.status)?'View meeting details':null), date:w.starts_at, amount:null, reference:null, image:w.listing?.cover_image_url||null, href:done?`/walkthrough/${w.id}/next-steps`:`/walkthrough/${w.id}` }); });
     return [...payments, ...buyer, ...seller, ...videos].sort(
       (a, b) => +new Date(b.date) - +new Date(a.date),
     );
@@ -147,12 +148,14 @@ export default function WorkspaceActivity() {
   // Group real items into time/state buckets so the page reads as a timeline.
   const groups = useMemo(() => {
     const monthAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
-    const needsAction = shown.filter((i) => i.nextAction || i.kind === 'disputes');
-    const rest = shown.filter((i) => !needsAction.includes(i));
+    const waiting = shown.filter(i => i.nextAction === 'Waiting on the host' || i.nextAction === 'Payment processing');
+    const needsAction = shown.filter((i) => !waiting.includes(i) && (i.nextAction || i.kind === 'disputes')); 
+    const rest = shown.filter((i) => !needsAction.includes(i) && !waiting.includes(i));
     const recent = rest.filter((i) => +new Date(i.date) >= monthAgo);
     const earlier = rest.filter((i) => +new Date(i.date) < monthAgo);
     return [
-      { label: 'Needs action', hint: 'Waiting on you or on the other party.', items: needsAction },
+      { label: 'Needs action', hint: 'Your next steps and follow-ups.', items: needsAction },
+      { label: 'Waiting on others', hint: 'Awaiting a host or payment confirmation.', items: waiting },
       { label: 'Recent', hint: 'The last 30 days.', items: recent },
       { label: 'Earlier', hint: 'Completed and older records.', items: earlier },
     ].filter((g) => g.items.length);

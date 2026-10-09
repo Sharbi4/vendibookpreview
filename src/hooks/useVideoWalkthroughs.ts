@@ -18,6 +18,7 @@ export function useVideoWalkthroughs() {
     if (!user) { setWalkthroughs([]); setIsLoading(false); return; }
     const { data } = await (supabase.from('video_walkthroughs') as any)
       .select('*, listing:listings(title,cover_image_url,mode,city,state)')
+      .or(`seller_id.eq.${user.id},buyer_id.eq.${user.id}`)
       .order('starts_at', { ascending: false });
     setWalkthroughs((data || []) as Walkthrough[]);
     setIsLoading(false);

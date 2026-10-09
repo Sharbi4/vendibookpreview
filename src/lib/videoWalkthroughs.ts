@@ -1,3 +1,11 @@
+import { meetingProfile } from './meetingTypes';
+
+/** An elapsed join window needs follow-up; it does not prove attendance. */
+export function walkthroughDisplayStatus(w: { status: string; ends_at: string; meeting_type?: string | null }, now = Date.now()): string {
+  const closes = Date.parse(w.ends_at) + meetingProfile(w.meeting_type).joinAfterMinutes * 60_000;
+  return ['scheduled', 'rescheduled'].includes(w.status) && now > closes ? 'needs follow-up' : w.status;
+}
+
 export const WALKTHROUGH_TOPICS = [
   'Full walkthrough', 'Exterior', 'Kitchen/equipment', 'Generator/electrical',
   'Plumbing/water system', 'Engine/chassis', 'VIN/title/documentation', 'I just have questions',
