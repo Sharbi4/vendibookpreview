@@ -23,7 +23,10 @@ const tax = (cents: number) => ({ taxCents: cents, ratePct: 8, state: 'NV', sour
 function fakeAdmin(row: Record<string, unknown> | null, used = 0) {
   return {
     from: () => {
-      const q: any = { select: () => q, eq: () => q, maybeSingle: async () => ({ data: row, error: null }) };
+      const q: any = {
+        select: () => q, eq: () => q, maybeSingle: async () => ({ data: row, error: null }),
+        in: async () => ({ count: used, error: null }),
+      };
       return q;
     },
     rpc: async (_name: string) => ({ data: used, error: null }),

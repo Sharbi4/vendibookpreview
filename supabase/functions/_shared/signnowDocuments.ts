@@ -361,7 +361,7 @@ async function loadSaleContext(transactionId: string) {
 
   const { data: payment } = await supabase
     .from('payment_records')
-    .select('reference,payment_provider,amount')
+    .select('reference,provider,amount')
     .eq('sale_transaction_id', transactionId)
     .order('created_at', { ascending: false })
     .limit(1)
@@ -438,7 +438,7 @@ export async function ensurePurchaseSaleAgreement(transactionId: string): Promis
       tx.freight_cost ? `Freight charge: ${money(tx.freight_cost)}` : '',
       tx.tax_amount ? `Tax${tx.tax_jurisdiction ? ` (${tx.tax_jurisdiction})` : ''}: ${money(tx.tax_amount)}` : '',
       `Total transaction amount: ${money(tx.amount)}`,
-      payment?.payment_provider ? `Payment processed through: ${String(payment.payment_provider).toUpperCase()}` : '',
+      payment?.provider ? `Payment processed through: ${String(payment.provider).toUpperCase()}` : '',
       str(snap.financing_provider) && `Financing provider selected by Buyer: ${snap.financing_provider}`,
     ),
 
@@ -476,7 +476,6 @@ export async function ensurePurchaseSaleAgreement(transactionId: string): Promis
       tx.carrier ? `Freight carrier recorded: ${tx.carrier}` : '',
       tx.tracking_number ? `Tracking reference: ${tx.tracking_number}` : '',
     ),
-    transaction_id: transactionId,
     terms_version: str(terms?.terms_version),
   };
 
