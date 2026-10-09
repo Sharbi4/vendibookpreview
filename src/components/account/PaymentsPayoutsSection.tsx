@@ -105,7 +105,7 @@ export default function PaymentsPayoutsSection() {
                 />
               </div>
             ) : (
-              <Button variant="outline" size="sm" className="mt-3" onClick={() => setEditing(true)}>
+              <Button variant="outline" size="sm" className="mt-3" disabled={isLoading} onClick={() => setEditing(true)}>
                 {preference ? 'Change payout method' : 'Add payout method'}
               </Button>
             )}

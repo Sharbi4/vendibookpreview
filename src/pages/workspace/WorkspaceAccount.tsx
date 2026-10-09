@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
+import PaymentsPayoutsSection from '@/components/account/PaymentsPayoutsSection';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import {
   Bell,
@@ -89,6 +90,7 @@ const linkGroups: { title: string; items: Row[] }[] = [
 ];
 
 export default function WorkspaceAccount() {
+  const location = useLocation();
   const { user, refreshProfile } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -100,6 +102,14 @@ export default function WorkspaceAccount() {
   const [openPublic, setOpenPublic] = useState(false);
   const [openPassword, setOpenPassword] = useState(false);
   const [openCloseAccount, setOpenCloseAccount] = useState(false);
+
+  useEffect(() => {
+    if (loading || location.hash !== '#section-payments') return;
+    const section = document.getElementById('section-payments');
+    section?.setAttribute('tabindex', '-1');
+    section?.focus();
+    section?.scrollIntoView({ block: 'start' });
+  }, [loading, location.hash]);
 
   const loadProfile = async () => {
     if (!user) return;
@@ -200,6 +210,7 @@ export default function WorkspaceAccount() {
           </div>
         ) : (
           <>
+            <PaymentsPayoutsSection />
             <section className="v2-account-identity">
               <button type="button" onClick={pickAvatar} aria-label="Change profile photo" className="relative">
                 <Avatar className="h-20 w-20">

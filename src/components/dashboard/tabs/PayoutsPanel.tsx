@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import EmptyState from '../shared/EmptyState';
 
 /** Where sellers manage their manual payout preference. */
-const PAYOUT_SETTINGS_PATH = '/account#section-payments';
+const PAYOUT_SETTINGS_PATH = '/dashboard/account#section-payments';
 
 /** Truthful labels for the internal payable states admins work through. */
 const PAYABLE_STATUS_LABEL: Record<string, string> = {
