@@ -1,3 +1,5 @@
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { MoreHorizontal } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { formatDistanceToNow } from 'date-fns';
@@ -160,25 +162,13 @@ export default function WorkspaceNotifications() {
                           </small>
                         </span>
                       </button>
-                      <div className="flex items-center gap-1 self-start">
-                        {unread && (
-                          <button
-                            type="button"
-                            className="v2-btn-quiet"
-                            onClick={() => markAsRead(n.id)}
-                          >
-                            Mark read
-                          </button>
-                        )}
-                        <button
-                          type="button"
-                          className="v2-btn-quiet"
-                          aria-label="Delete notification"
-                          onClick={() => deleteNotification(n.id)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild><button type="button" className="v2-btn-quiet self-start shrink-0" aria-label={`Actions for ${n.title}`}><MoreHorizontal className="h-5 w-5" /></button></DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {unread && <DropdownMenuItem onSelect={() => markAsRead(n.id)}>Mark read</DropdownMenuItem>}
+                          <DropdownMenuItem onSelect={() => deleteNotification(n.id)}>Delete notification</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </div>
                   );
                 })}
