@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { ArrowUpRight, Receipt, Loader2 } from 'lucide-react';
 import WorkspaceShell from '@/components/workspace/WorkspaceShell';
 import { Button } from '@/components/ui/button';
@@ -19,7 +18,14 @@ export default function WorkspaceTransactions() {
   const seller = useSellerSaleTransactions(user?.id);
   const rentals = useShopperBookings();
   const hosted = useHostBookings();
-  const [filter, setFilter] = useState('All');
+  const [params, setParams] = useSearchParams();
+  const requestedFilter = params.get('filter') || 'All';
+  const filter = ['All', 'Purchases', 'Sales', 'Rentals', 'Other'].includes(requestedFilter) ? requestedFilter : 'All';
+  const setFilter = (value: string) => setParams(previous => {
+    const next = new URLSearchParams(previous);
+    if (value === 'All') next.delete('filter'); else next.set('filter', value);
+    return next;
+  });
   const sales = [...buyer.transactions, ...seller.transactions];
   const bookings = [...rentals.bookings, ...hosted.bookings];
   // One row per transaction, with its latest payment attempt attached. A

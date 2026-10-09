@@ -15,7 +15,8 @@ describe('legacyDashboardRedirect', () => {
   });
 
   it('maps legacy tabs to workspace pages', () => {
-    expect(go('view=host&tab=sales')).toBe('/dashboard/offers');
+    expect(go('view=host&tab=sales')).toBe('/dashboard/transactions?filter=Sales');
+    expect(go('tab=offers')).toBe('/dashboard/offers');
     expect(go('view=host&tab=payouts')).toBe('/dashboard/payments');
     expect(go('view=shopper&tab=orders')).toBe('/dashboard/transactions');
     expect(go('tab=listings')).toBe('/dashboard/listings');

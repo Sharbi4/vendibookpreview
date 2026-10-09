@@ -7,7 +7,7 @@
  * resolves to a real page, and anything unknown lands on the plain home.
  */
 const TAB_TARGETS: Record<string, string> = {
-  sales: '/dashboard/offers',
+  sales: '/dashboard/transactions?filter=Sales',
   offers: '/dashboard/offers',
   payouts: '/dashboard/payments',
   payments: '/dashboard/payments',
