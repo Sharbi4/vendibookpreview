@@ -1,3 +1,4 @@
+import { parseRentalDate } from '@/lib/rentalDates';
 import { useMemo, useState } from 'react';
 import { Calendar, CheckCircle2, Clock, Search, XCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
@@ -146,13 +147,13 @@ const BookingRow = ({ booking, status }: { booking: any; status: string }) => (
         {booking.is_hourly_booking && booking.start_time && booking.end_time ? (
           <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
             <Clock className="h-3 w-3" />
-            {new Date(booking.start_date).toLocaleDateString()} • {booking.start_time} – {booking.end_time}
+            {parseRentalDate(booking.start_date).toLocaleDateString()} • {booking.start_time} – {booking.end_time}
           </div>
         ) : (
           <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
             <Calendar className="h-3 w-3" />
-            {new Date(booking.start_date).toLocaleDateString()} –{' '}
-            {new Date(booking.end_date).toLocaleDateString()}
+            {parseRentalDate(booking.start_date).toLocaleDateString()} –{' '}
+            {parseRentalDate(booking.end_date).toLocaleDateString()}
           </div>
         )}
       </div>

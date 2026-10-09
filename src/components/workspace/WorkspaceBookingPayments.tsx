@@ -1,3 +1,4 @@
+import { rentalDateRange as dateRange } from '@/lib/rentalDates';
 /**
  * Rental bookings in the money center. Shows the renter's booking payments and
  * the host's received bookings straight from booking_requests — no derived or
@@ -12,20 +13,6 @@ const money = (value: number | null | undefined) =>
   value == null
     ? null
     : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(Number(value));
-
-const dateRange = (start: string, end: string) => {
-  try {
-    const s = new Date(start).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-    const e = new Date(end).toLocaleDateString(undefined, {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-    return `${s} – ${e}`;
-  } catch {
-    return null;
-  }
-};
 
 type Row = {
   id: string;

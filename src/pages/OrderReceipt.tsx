@@ -1,3 +1,4 @@
+import { parseRentalDate } from '@/lib/rentalDates';
 import { authPath } from '@/lib/auth/returnTo';
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
@@ -651,7 +652,7 @@ const OrderReceipt = () => {
                     {booking.start_date ? (
                       <p>
                         Starts:{' '}
-                        {new Date(`${booking.start_date}T00:00:00`).toLocaleDateString('en-US', {
+                        {parseRentalDate(booking.start_date).toLocaleDateString('en-US', {
                           dateStyle: 'medium',
                         })}
                         {booking.start_time ? ` at ${booking.start_time}` : ''}
@@ -660,7 +661,7 @@ const OrderReceipt = () => {
                     {booking.end_date ? (
                       <p>
                         Ends:{' '}
-                        {new Date(`${booking.end_date}T00:00:00`).toLocaleDateString('en-US', {
+                        {parseRentalDate(booking.end_date).toLocaleDateString('en-US', {
                           dateStyle: 'medium',
                         })}
                         {booking.end_time ? ` at ${booking.end_time}` : ''}

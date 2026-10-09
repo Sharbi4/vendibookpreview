@@ -1,3 +1,4 @@
+import { parseRentalDate } from '@/lib/rentalDates';
 /** Rental request, approval, and payment status. Approval never implies payment. */
 import { rentalBookingView } from '@/lib/rentalCheckoutValidation';
 import { useAuth } from '@/contexts/AuthContext';
@@ -158,9 +159,9 @@ const BookingConfirmation = ({
     if (!booking) return null;
     try {
       if (booking.start_date === booking.end_date) {
-        return format(parseISO(booking.start_date), 'EEE, MMM d, yyyy');
+        return format(parseRentalDate(booking.start_date), 'EEE, MMM d, yyyy');
       }
-      return `${format(parseISO(booking.start_date), 'MMM d')} – ${format(parseISO(booking.end_date), 'MMM d, yyyy')}`;
+      return `${format(parseRentalDate(booking.start_date), 'MMM d')} – ${format(parseRentalDate(booking.end_date), 'MMM d, yyyy')}`;
     } catch {
       return null;
     }

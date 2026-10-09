@@ -1,3 +1,4 @@
+import { parseRentalDate } from '@/lib/rentalDates';
 import { useState } from 'react';
 import { Calendar, X, Lock, CalendarCheck, Clock, ChevronLeft, ChevronRight, MessageCircle, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -304,7 +305,7 @@ const AvailabilityCalendar = ({ listing, onClose }: AvailabilityCalendarProps) =
                         {/* Date and time */}
                         <div className="mb-2">
                           <p className="text-sm text-foreground">
-                            {format(new Date(booking.start_date), 'MMM d')} - {format(new Date(booking.end_date), 'MMM d')}
+                            {format(parseRentalDate(booking.start_date), 'MMM d')} - {format(parseRentalDate(booking.end_date), 'MMM d')}
                           </p>
                           {booking.is_hourly_booking && booking.hourly_slots && (
                             <p className="text-xs text-muted-foreground flex items-center gap-1">
@@ -374,7 +375,7 @@ const AvailabilityCalendar = ({ listing, onClose }: AvailabilityCalendarProps) =
                         {/* Date and time */}
                         <div className="mb-2">
                           <p className="text-sm text-foreground">
-                            {format(new Date(booking.start_date), 'MMM d')} - {format(new Date(booking.end_date), 'MMM d')}
+                            {format(parseRentalDate(booking.start_date), 'MMM d')} - {format(parseRentalDate(booking.end_date), 'MMM d')}
                           </p>
                           {booking.is_hourly_booking && booking.hourly_slots && (
                             <p className="text-xs text-muted-foreground flex items-center gap-1">

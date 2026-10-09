@@ -1,3 +1,4 @@
+import { parseRentalDate } from '@/lib/rentalDates';
 import { useState } from 'react';
 import { format, isPast, parseISO } from 'date-fns';
 import { Check, X, Calendar, User, MessageSquare, Loader2, MessageCircle, FileText, DollarSign, FileCheck, FileClock, FileWarning, Zap, Shield, AlertTriangle, Undo2, Building2, Users, ChevronDown, ChevronUp } from 'lucide-react';
@@ -183,7 +184,7 @@ const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel, onDeposit
   const hasDeposit = (booking.deposit_amount ?? 0) > 0;
   const depositStatus = booking.deposit_status || 'pending';
   const depositAmount = booking.deposit_amount || 0;
-  const rentalEnded = isPast(parseISO(booking.end_date));
+  const rentalEnded = isPast(parseRentalDate(booking.end_date));
   const canManageDeposit = hasDeposit && 
     (isCompleted || (isApproved && rentalEnded)) && 
     depositStatus === 'charged' && 
@@ -327,7 +328,7 @@ const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel, onDeposit
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                   <Calendar className="h-4 w-4" />
                   <span>
-                    {format(new Date(booking.start_date), 'MMM d')} - {format(new Date(booking.end_date), 'MMM d, yyyy')}
+                    {format(parseRentalDate(booking.start_date), 'MMM d')} - {format(parseRentalDate(booking.end_date), 'MMM d, yyyy')}
                   </span>
                 </div>
                 </div>

@@ -1,3 +1,4 @@
+import { parseRentalDate } from '@/lib/rentalDates';
 import { useEffect, useState, useRef } from 'react';
 import PayPalPaymentFacts from '@/components/checkout/PayPalPaymentFacts';
 import { useSearchParams, Link, Navigate } from 'react-router-dom';
@@ -912,10 +913,10 @@ const PaymentSuccess = () => {
                             <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-1">
                               <Calendar className="h-4 w-4 text-primary" />
                               <span>
-                                {new Date(booking.start_date).toLocaleDateString('en-US', { 
+                                {parseRentalDate(booking.start_date).toLocaleDateString('en-US', {
                                   month: 'short', 
                                   day: 'numeric' 
-                                })} - {new Date(booking.end_date).toLocaleDateString('en-US', { 
+                                })} - {parseRentalDate(booking.end_date).toLocaleDateString('en-US', {
                                   month: 'short', 
                                   day: 'numeric',
                                   year: 'numeric'

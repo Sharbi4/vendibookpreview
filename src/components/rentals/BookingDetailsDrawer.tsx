@@ -1,3 +1,4 @@
+import { parseRentalDate } from '@/lib/rentalDates';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -190,8 +191,8 @@ const BookingDetailsDrawer = ({
   };
 
   const handleAddToCalendar = () => {
-    const startDate = new Date(booking.start_date);
-    const endDate = booking.end_date ? new Date(booking.end_date) : new Date(startDate.getTime() + 24 * 60 * 60 * 1000);
+    const startDate = parseRentalDate(booking.start_date);
+    const endDate = booking.end_date ? parseRentalDate(booking.end_date) : new Date(startDate.getTime() + 24 * 60 * 60 * 1000);
     
     const formatDate = (date: Date) => {
       return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
@@ -300,7 +301,7 @@ END:VCALENDAR`;
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Check-in</span>
                 <span className="font-medium">
-                  {new Date(booking.start_date).toLocaleDateString('en-US', {
+                  {parseRentalDate(booking.start_date).toLocaleDateString('en-US', {
                     weekday: 'short',
                     month: 'short',
                     day: 'numeric',
@@ -312,7 +313,7 @@ END:VCALENDAR`;
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Check-out</span>
                   <span className="font-medium">
-                    {new Date(booking.end_date).toLocaleDateString('en-US', {
+                    {parseRentalDate(booking.end_date).toLocaleDateString('en-US', {
                       weekday: 'short',
                       month: 'short',
                       day: 'numeric',
