@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
-import PaymentsPayoutsSection from '@/components/account/PaymentsPayoutsSection';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import {
   Bell,
@@ -30,7 +30,7 @@ import ChangePasswordSheet from '@/components/account/ChangePasswordSheet';
 import PrivacySharingSection from '@/components/account/PrivacySharingSection';
 import MembershipSummaryCard from '@/components/account/MembershipSummaryCard';
 import { getDisplayInitials } from '@/lib/displayName';
-import WalkthroughSettings from '@/components/video/WalkthroughSettings';
+
 
 interface ProfileRow {
   full_name: string;
@@ -67,7 +67,8 @@ const linkGroups: { title: string; items: Row[] }[] = [
   {
     title: 'Payments',
     items: [
-      [CreditCard, 'Payments & PayPal', 'Connection status, payouts, receipts, and disputes', '/dashboard/payments'],
+      [CreditCard, 'Payout preferences', 'Where Vendibook sends manually reviewed payouts', '/dashboard/account/payouts'],
+      [CreditCard, 'Payments & provider connections', 'Connection status, payouts, receipts, and disputes', '/dashboard/payments'],
       [Receipt, 'Plans, boosts & services', 'Platform purchases and payment attempts', '/account/purchases'],
       [FileText, 'Membership & billing', 'Your plan, renewals, and account charges', '/account/subscription'],
     ],
@@ -91,6 +92,7 @@ const linkGroups: { title: string; items: Row[] }[] = [
 
 export default function WorkspaceAccount() {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, refreshProfile } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -105,11 +107,8 @@ export default function WorkspaceAccount() {
 
   useEffect(() => {
     if (loading || location.hash !== '#section-payments') return;
-    const section = document.getElementById('section-payments');
-    section?.setAttribute('tabindex', '-1');
-    section?.focus();
-    section?.scrollIntoView({ block: 'start' });
-  }, [loading, location.hash]);
+    navigate('/dashboard/account/payouts', { replace: true });
+  }, [loading, location.hash, navigate]);
 
   const loadProfile = async () => {
     if (!user) return;
@@ -211,6 +210,29 @@ export default function WorkspaceAccount() {
         ) : (
           <>
             <PaymentsPayoutsSection />
+            <div className="v2-account-grid">
+              {linkGroups.map((group) => (
+                <section className="v2-panel" key={group.title}>
+                  <div className="v2-panel-head">
+                    <div>
+                      <h2>{group.title}</h2>
+                    </div>
+                  </div>
+                  <div>
+                    {group.items.map(([Icon, label, hint, to]) => (
+                      <Link to={to} className="v2-account-row" key={label}>
+                        <Icon />
+                        <span>
+                          <strong>{label}</strong>
+                          <small>{hint}</small>
+                        </span>
+                        <span aria-hidden>›</span>
+                      </Link>
+                    ))}
+                  </div>
+                </section>
+              ))}
+            </div>
             <section className="v2-account-identity">
               <button type="button" onClick={pickAvatar} aria-label="Change profile photo" className="relative">
                 <Avatar className="h-20 w-20">
@@ -271,7 +293,7 @@ export default function WorkspaceAccount() {
                 <button type="button" className="v2-account-row w-full text-left" onClick={() => setOpenPersonal(true)}>
                   <Lock />
                   <span>
-                    <strong>{maskPhone(row.phone_number)}</strong>
+                    <strong>Phone: {maskPhone(row.phone_number)}</strong>
                     <small>Reveal to view — contact support to change.</small>
                   </span>
                   <span aria-hidden>›</span>
@@ -313,20 +335,11 @@ export default function WorkspaceAccount() {
               </div>
             </section>
 
-            {user && (
-              <section className="v2-panel v2-embedded-section">
-                <WalkthroughSettings />
-              </section>
-            )}
+            <Link to="/dashboard/account/scheduling" className="v2-panel p-5 block"><h2>Walkthrough availability</h2><p>Manage weekly hours, timezone, and blocked dates.</p></Link>
+
 
             {user && (
               <section className="v2-panel v2-embedded-section">
-                <div className="v2-panel-head">
-                  <div>
-                    <h2>Privacy &amp; sharing</h2>
-                    <p>Control exactly what your public storefront shows.</p>
-                  </div>
-                </div>
                 <div className="p-4 pt-0">
                   <PrivacySharingSection userId={user.id} username={row.username} />
                 </div>
@@ -347,29 +360,7 @@ export default function WorkspaceAccount() {
               <button type="button" className="v2-btn-outline mt-4" onClick={() => setOpenCloseAccount(true)}>Close account</button>
             </section>
 
-            <div className="v2-account-grid">
-              {linkGroups.map((group) => (
-                <section className="v2-panel" key={group.title}>
-                  <div className="v2-panel-head">
-                    <div>
-                      <h2>{group.title}</h2>
-                    </div>
-                  </div>
-                  <div>
-                    {group.items.map(([Icon, label, hint, to]) => (
-                      <Link to={to} className="v2-account-row" key={label}>
-                        <Icon />
-                        <span>
-                          <strong>{label}</strong>
-                          <small>{hint}</small>
-                        </span>
-                        <span aria-hidden>›</span>
-                      </Link>
-                    ))}
-                  </div>
-                </section>
-              ))}
-            </div>
+
           </>
         )}
       </div>

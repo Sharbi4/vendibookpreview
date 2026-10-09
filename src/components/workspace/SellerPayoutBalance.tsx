@@ -170,12 +170,12 @@ export default function SellerPayoutBalance() {
           <p>
             Payouts go to your {PAYOUT_METHOD_LABEL[preference.method]} destination
             {preference.masked_destination ? ` (${preference.masked_destination})` : ''}.{' '}
-            <Link to="/dashboard/account#section-payments">Update payout details</Link>
+            <Link to="/dashboard/account/payouts">Update payout details</Link>
           </p>
         ) : (
           <p>
             Add where you want to be paid before requesting a payout.{' '}
-            <Link to="/dashboard/account#section-payments">Add payout details</Link>
+            <Link to="/dashboard/account/payouts">Add payout details</Link>
           </p>
         )}
         {!paypalReady ? (

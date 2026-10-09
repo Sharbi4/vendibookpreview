@@ -12,10 +12,25 @@ export default function WalkthroughSettings() {
   const [settings,setSettings] = useState({ enabled:false, timezone:Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC', default_duration_minutes:20, minimum_notice_minutes:120, buffer_minutes:0 });
   const [windows,setWindows] = useState<Window[]>([]); const [saving,setSaving] = useState(false);
   const [blackout,setBlackout] = useState('');
-  useEffect(() => { if (!user) return; Promise.all([
-    (supabase.from('seller_video_settings') as any).select('*').eq('user_id',user.id).maybeSingle(),
-    (supabase.from('seller_video_availability') as any).select('*').eq('seller_id',user.id).order('weekday'),
-  ]).then(([s,a]) => { if(s.data) setSettings(s.data); setWindows(a.data || []); }); },[user]);
+  const [loading,setLoading] = useState(true);
+  const [loadError,setLoadError] = useState(false);
+  const [retry,setRetry] = useState(0);
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    setLoading(true); setLoadError(false);
+    Promise.all([
+      supabase.from('seller_video_settings').select('*').eq('user_id', user.id).maybeSingle(),
+      supabase.from('seller_video_availability').select('*').eq('seller_id', user.id).order('weekday'),
+    ]).then(([s, a]) => {
+      if (cancelled) return;
+      if (s.error || a.error) { setLoadError(true); return; }
+      if (s.data) setSettings(s.data);
+      setWindows(a.data || []);
+    }).catch(() => { if (!cancelled) setLoadError(true); })
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [user?.id, retry]);
   const save = async () => { if(!user) return; setSaving(true); try {
     const { error } = await (supabase.from('seller_video_settings') as any).upsert({ user_id:user.id,...settings }); if(error) throw error;
     await (supabase.from('seller_video_availability') as any).delete().eq('seller_id',user.id);
@@ -24,8 +39,10 @@ export default function WalkthroughSettings() {
   } catch(e) { toast.error(e instanceof Error?e.message:'Could not save availability.'); } finally { setSaving(false); } };
   const addWindow=(day:number)=>setWindows(v=>[...v,{weekday:day,start_local_time:'09:00',end_local_time:'17:00',active:true}]);
   const addBlackout=async()=>{ if(!user||!blackout)return; const start=new Date(blackout); const end=new Date(start); end.setDate(end.getDate()+1); const {error}=await (supabase.from('seller_video_blackouts') as any).insert({seller_id:user.id,starts_at:start.toISOString(),ends_at:end.toISOString()}); error?toast.error('Could not block that date.'):toast.success('Date blocked.'); setBlackout(''); };
+  if (loading) return <p role="status">Loading saved availability…</p>;
+  if (loadError) return <p role="alert">Saved availability could not be loaded. <button onClick={() => setRetry(n => n + 1)}>Retry</button></p>;
   return <div className="walkthrough-settings">
-    <div className="walkthrough-setting-lead"><Video/><div><h2>Video walkthroughs</h2><p>Meet serious buyers live inside Vendibook.</p></div><label className="walkthrough-switch"><input type="checkbox" checked={settings.enabled} onChange={e=>setSettings(s=>({...s,enabled:e.target.checked}))}/><span/></label></div>
+    <div className="walkthrough-setting-lead"><Video/><div><h2>Video walkthroughs</h2><p>Meet serious buyers live inside Vendibook.</p></div><label className="walkthrough-switch"><input type="checkbox" aria-label="Enable video walkthroughs" checked={settings.enabled} onChange={e=>setSettings(s=>({...s,enabled:e.target.checked}))}/><span/></label></div>
     <div className="walkthrough-setting-grid">
       <label>Timezone<select value={settings.timezone} onChange={e=>setSettings(s=>({...s,timezone:e.target.value}))}><option value={settings.timezone}>{settings.timezone}</option><option value="America/Phoenix">America/Phoenix</option><option value="America/Los_Angeles">America/Los_Angeles</option><option value="America/Denver">America/Denver</option><option value="America/Chicago">America/Chicago</option><option value="America/New_York">America/New_York</option></select></label>
       <label>Duration<select value={settings.default_duration_minutes} onChange={e=>setSettings(s=>({...s,default_duration_minutes:Number(e.target.value)}))}>{[15,20,30].map(v=><option key={v} value={v}>{v} minutes</option>)}</select></label>
