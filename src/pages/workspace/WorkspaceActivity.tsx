@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { CalendarDays, Image as ImageIcon, Receipt, Video } from 'lucide-react';
 import WorkspaceShell from '@/components/workspace/WorkspaceShell';
@@ -50,11 +50,14 @@ export default function WorkspaceActivity() {
   const { bookings: sellerBookings } = useHostBookings();
   const { listings: hostListings } = useHostListings();
   const { walkthroughs } = useVideoWalkthroughs();
-  const [searchParams] = useSearchParams();
-  const initial = (searchParams.get('filter') as Filter) || 'all';
-  const [filter, setFilter] = useState<Filter>(
-    FILTERS.some((f) => f.key === initial) ? initial : 'all',
-  );
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requested = searchParams.get('filter') as Filter;
+  const filter = FILTERS.some(f => f.key === requested) ? requested : 'all';
+  const setFilter = (value: Filter) => setSearchParams(previous => {
+    const next = new URLSearchParams(previous);
+    if (value === 'all') next.delete('filter'); else next.set('filter', value);
+    return next;
+  });
 
   const items = useMemo<Item[]>(() => {
     const payments: Item[] = transactions.map((t) => {

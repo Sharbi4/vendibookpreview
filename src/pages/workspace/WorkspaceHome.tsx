@@ -179,6 +179,7 @@ export default function WorkspaceHome() {
       [
         ...transactions.map((t) => ({
           id: `t-${t.id}`,
+          href: `/dashboard/transactions/${t.id}`,
           title: t.listing?.title || 'Vendibook payment',
           detail: `${t.role === 'buyer' ? 'Purchase' : 'Sale'} · ${t.payment_status || 'recorded'}`,
           date: t.captured_at || t.created_at,
@@ -187,6 +188,7 @@ export default function WorkspaceHome() {
         })),
         ...buyerBookings.map((b) => ({
           id: `bb-${b.id}`,
+          href: `/dashboard/bookings/${b.id}`,
           title: b.listing?.title || 'Rental request',
           detail: `You requested · ${b.status}`,
           date: b.created_at,
@@ -195,13 +197,14 @@ export default function WorkspaceHome() {
         })),
         ...sellerBookings.map((b) => ({
           id: `sb-${b.id}`,
+          href: `/dashboard/bookings/${b.id}`,
           title: b.listing?.title || 'Booking request',
           detail: `Incoming request · ${b.status}`,
           date: b.created_at,
           amount: null,
           icon: CalendarDays,
         })),
-        ...walkthroughs.map((w) => ({ id:`vw-${w.id}`, title:w.listing?.title||'Video walkthrough', detail:`Video walkthrough · ${w.status}`, date:w.created_at, amount:null, icon:Video })),
+        ...walkthroughs.map((w) => ({ id:`vw-${w.id}`, href:`/walkthrough/${w.id}`, title:w.listing?.title||'Video walkthrough', detail:`Video walkthrough · ${w.status}`, date:w.created_at, amount:null, icon:Video })),
       ]
         .sort((a, b) => +new Date(b.date) - +new Date(a.date))
         .slice(0, 3),
@@ -346,7 +349,7 @@ export default function WorkspaceHome() {
             </div>
             {recentActivity.length ? (
               recentActivity.map((item) => (
-                <Link className="v2-activity-row" to="/dashboard/activity" key={item.id}>
+                <Link className="v2-activity-row" to={item.href} key={item.id}>
                   <span className="v2-activity-icon">
                     <item.icon />
                   </span>
@@ -375,8 +378,8 @@ export default function WorkspaceHome() {
                 <h2>Transactions</h2>
                 <p>Track purchases, sales, and payment status.</p>
               </div>
-              <Link to="/dashboard/payments" className="v2-btn-quiet">
-                Open payments
+              <Link to="/dashboard/transactions" className="v2-btn-quiet">
+                Open transactions
               </Link>
             </div>
             <div className="v2-snapshot">
