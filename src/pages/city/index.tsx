@@ -1,3 +1,4 @@
+import { Navigate, useParams } from 'react-router-dom';
 import { CitySupplyPage } from '@/components/city/CitySupplyPage';
 import { CityDemandPage } from '@/components/city/CityDemandPage';
 import { CITY_DATA, ASSET_TYPES } from '@/data/cityData';
@@ -32,7 +33,6 @@ export const PhoenixListVendorSpace = () => <CitySupplyPage city={CITY_DATA.phoe
 
 // Any other city in CITY_DATA (Charlotte, Atlanta, Miami, ...). Cities without
 // browse data fall back to their city page instead of a 404.
-import { Navigate, useParams } from 'react-router-dom';
 export const CityBrowseBySlug = () => {
   const { citySlug = '' } = useParams();
   const city = (CITY_DATA as Record<string, any>)[citySlug.toLowerCase()];
