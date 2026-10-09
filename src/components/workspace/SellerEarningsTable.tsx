@@ -125,9 +125,7 @@ export default function SellerEarningsTable() {
         .order('created_at', { ascending: false })
         .limit(100);
       if (error) throw error;
-      if (isError) return <div role="alert" className="p-5">Order payments could not be loaded. <button className="v2-btn-quiet" onClick={() => refetch()}>Retry</button></div>;
-
-  return (data ?? []) as EarningRow[];
+      return (data ?? []) as EarningRow[];
     },
   });
 
@@ -152,6 +150,8 @@ export default function SellerEarningsTable() {
     }
     return { gross, fees, refunded, net };
   }, [rows]);
+
+  if (isError) return <div role="alert" className="p-5">Order payments could not be loaded. <button className="v2-btn-quiet" onClick={() => refetch()}>Retry</button></div>;
 
   return (
     <div>
