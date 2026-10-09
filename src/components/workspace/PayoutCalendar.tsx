@@ -107,7 +107,7 @@ export default function PayoutCalendar() {
   const dated = Object.entries(monthRows.byDay).sort(([a], [b]) => a.localeCompare(b));
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 v2-embedded-section p-4 sm:p-5">
       <div className="v2-panel-head">
         <div>
           <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
@@ -131,8 +131,8 @@ export default function PayoutCalendar() {
         </button>
         <div className="text-center">
           <div className="text-sm font-semibold text-foreground">{monthLabel}</div>
-          <div className="text-xs text-muted-foreground">
-            {money(monthRows.expected)} expected · {money(monthRows.sent)} sent this month
+          <div className="text-xs text-muted-foreground" aria-live="polite">
+            {isLoading ? 'Loading payout totals…' : isError ? 'Totals unavailable' : `${money(monthRows.expected)} expected · ${money(monthRows.sent)} sent this month`}
           </div>
         </div>
         <button
@@ -177,7 +177,7 @@ export default function PayoutCalendar() {
                     {d.getDate()}
                   </div>
                   {items.length > 0 && (
-                    <div className="mt-1 rounded bg-primary/10 px-1 py-0.5 text-[11px] font-semibold text-foreground">
+                    <div className="mt-1 rounded bg-primary/10 px-1 py-0.5 text-[11px] font-semibold text-foreground hidden sm:block">
                       {money(sum)}
                       {items.length > 1 && (
                         <span className="ml-1 font-normal text-muted-foreground">
@@ -186,6 +186,7 @@ export default function PayoutCalendar() {
                       )}
                     </div>
                   )}
+                  {items.length > 0 && <span className="sm:hidden block mt-2 h-2 w-2 rounded-full bg-primary" aria-label={`${items.length} payouts; details below`} />}
                 </div>
               );
             })}
