@@ -59,9 +59,9 @@ export default function Purchases() {
         <div className="space-y-6">
           <header className="flex items-center justify-between flex-wrap gap-3">
             <div>
-              <h1 className="text-2xl md:text-3xl font-semibold text-foreground">Your purchases</h1>
+              <h1 className="text-2xl md:text-3xl font-semibold text-foreground">Plans, boosts & services</h1>
               <p className="text-sm text-muted-foreground mt-1">
-                Active plans, add-ons, and transaction history in one place.
+                Vendibook subscriptions, boosts, and services. Equipment purchases and rentals are in Transactions.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
@@ -84,6 +84,7 @@ export default function Purchases() {
           </header>
 
 
+          <Link to="/dashboard/transactions" className="v2-btn-outline">Marketplace orders & rental receipts</Link>
           {/* Subscriptions */}
           <Card className="rounded-2xl border border-border shadow-sm bg-card">
             <CardHeader>

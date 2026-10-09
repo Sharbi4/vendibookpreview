@@ -41,6 +41,8 @@ export function PurchaseHistoryCard() {
   const { user } = useAuth();
   const [rows, setRows] = useState<PurchaseRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [failed, setFailed] = useState(false);
+  const [reload, setReload] = useState(0);
 
   useEffect(() => {
     if (!user) return;
@@ -54,24 +56,25 @@ export function PurchaseHistoryCard() {
         .order('created_at', { ascending: false })
         .limit(20);
       if (cancelled) return;
+      setFailed(!!error);
       if (error) console.error('[PurchaseHistoryCard] load failed', error);
       setRows((data ?? []) as PurchaseRow[]);
       setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [user]);
+  }, [user, reload]);
 
   return (
     <Card className="rounded-2xl border border-border shadow-sm bg-card">
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-lg">
           <Receipt className="h-5 w-5" />
-          Purchase history
+          Payment history
         </CardTitle>
-        <CardDescription>Add-ons, boosts, and services you've paid for</CardDescription>
+        <CardDescription>Latest 20 platform payment attempts, including pending and failed attempts</CardDescription>
       </CardHeader>
       <CardContent>
-        {loading ? (
+        {failed ? <p role="alert">Payment history could not be loaded. <button onClick={() => setReload(n => n + 1)}>Retry</button></p> : loading ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground py-4">
             <Loader2 className="h-4 w-4 animate-spin" />
             Loading purchases...
@@ -98,6 +101,12 @@ export function PurchaseHistoryCard() {
                     {formatMoney(r.amount_cents, r.currency)}
                   </div>
                   <Badge variant={variant} className="capitalize">{r.status}</Badge>
+                  <details className="w-full text-sm text-muted-foreground mt-2">
+                    <summary className="cursor-pointer underline">Payment details & help</summary>
+                    <p className="mt-2">{r.status === 'pending' ? 'Payment is not confirmed. If you already approved a payment, contact support before paying again.' : r.status === 'failed' ? 'This payment attempt failed. Contact support if your payment provider shows a charge.' : r.status === 'cancelled' ? 'This attempt was cancelled. It is not confirmation of a completed purchase.' : 'The status above is the current recorded status for this purchase.'}</p>
+                    <p className="break-all mt-2">Purchase reference: {r.id}</p>
+                    <a className="inline-block underline mt-2" href={`mailto:support@vendibook.com?subject=${encodeURIComponent('Payment help: ' + r.id)}`}>Contact payment support</a>
+                  </details>
                   {r.stripe_session_id && (
                     <span className="text-xs text-muted-foreground font-mono">
                       #{r.stripe_session_id.slice(-8)}

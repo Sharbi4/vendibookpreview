@@ -68,7 +68,7 @@ const linkGroups: { title: string; items: Row[] }[] = [
     title: 'Payments',
     items: [
       [CreditCard, 'Payments & PayPal', 'Connection status, payouts, receipts, and disputes', '/dashboard/payments'],
-      [Receipt, 'Purchases & receipts', 'Everything you have bought on Vendibook', '/account/purchases'],
+      [Receipt, 'Plans, boosts & services', 'Platform purchases and payment attempts', '/account/purchases'],
       [FileText, 'Membership & billing', 'Your plan, renewals, and account charges', '/account/subscription'],
     ],
   },
