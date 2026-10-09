@@ -314,10 +314,11 @@ const MyTickets = () => {
         </div>
 
         <div className="mb-8">
-          <h1 className="font-display text-3xl font-semibold tracking-tight">My tickets</h1>
+          <h1 className="font-display text-3xl font-semibold tracking-tight">Technical support & safety reports</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Every issue you've reported, plus the conversation with our team.
+            App issues and user safety reports, plus replies from our team. Order disputes have their own case history.
           </p>
+          <Link to="/dashboard/cases" className="v2-btn-outline mt-4">Order disputes & case history</Link>
         </div>
 
         {loading ? (

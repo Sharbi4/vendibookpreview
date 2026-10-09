@@ -66,7 +66,7 @@ export function GetHelpWithOrder({
           show: !!disputeEligible,
         },
         {
-          key: 'report', icon: MessageSquareWarning, label: 'Report an issue',
+          key: 'report', icon: MessageSquareWarning, label: 'Technical support',
           hint: 'Tell us about a bug or something that seems off.',
           onClick: () => setOpenReport(true),
           show: true,
@@ -86,8 +86,8 @@ export function GetHelpWithOrder({
           show: !!disputeEligible,
         },
         {
-          key: 'report_buyer', icon: MessageSquareWarning, label: 'Report a problem with this buyer',
-          hint: 'Flag suspected fraud, abuse, or no-show.',
+          key: 'report_buyer', icon: MessageSquareWarning, label: 'Report this buyer for safety review',
+          hint: 'Flag suspected fraud, abuse, or no-show. This does not open a payment dispute.',
           onClick: () => setOpenReportBuyer(true),
           show: true,
         },

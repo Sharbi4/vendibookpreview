@@ -76,7 +76,7 @@ const linkGroups: { title: string; items: Row[] }[] = [
     title: 'Trust & security',
     items: [
       [ShieldCheck, 'Identity verification', 'Optional identity trust signal', '/identity-verification'],
-      [Headphones, 'Support & disputes', 'Help center and your support requests', '/account/support'],
+      [Headphones, 'Support & safety reports', 'App support, safety reports, and links to order cases', '/account/support'],
       [FileText, 'Legal', 'Terms, privacy, refunds, and marketplace rules', '/legal'],
     ],
   },

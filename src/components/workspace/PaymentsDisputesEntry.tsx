@@ -44,7 +44,7 @@ export default function PaymentsDisputesEntry() {
         </div>
         <div className="flex flex-wrap gap-2">
           <Link className="v2-btn-outline" to="/dashboard/transactions">Report a problem with an order</Link>
-          <Link className="v2-btn-quiet" to="/dashboard/cases">All support cases</Link>
+          <Link className="v2-btn-quiet" to="/dashboard/cases">Order dispute cases</Link>
         </div>
       </div>
 

@@ -372,12 +372,12 @@ export function ReportIssueDialog({ open, onOpenChange, context }: Props) {
             Report an issue — {AREA_LABEL[context.featureArea]}
           </DialogTitle>
           <DialogDescription>
-            Submitting this won't change your listing, purchase, rental, or Permit Path.
-            Your progress is preserved.
+            {context.featureArea === 'fraud' ? 'Our team will review this safety report. It does not open a payment dispute or pause a payout.' : 'Our team will review this support ticket. Your current progress is preserved.'}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
+          {(context.related?.sale_transaction_id || context.related?.booking_id) && <p className="text-sm break-all">Related {context.related?.booking_id ? 'booking' : 'transaction'}: {context.related?.booking_id || context.related?.sale_transaction_id}</p>}
           <div>
             <Label htmlFor="ri-category">Category</Label>
             <Select value={category} onValueChange={setCategory}>
