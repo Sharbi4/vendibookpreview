@@ -33,58 +33,27 @@ export interface PayPalRuntimeConfig {
 export const PARTNER_ATTRIBUTION_ID = 'VENDIBOOK_SP_PPCP';
 
 let configPromise: Promise<PayPalRuntimeConfig> | null = null;
+let configExpiresAt = 0;
+const CONFIG_TTL_MS = 60_000;
 
-/**
- * The runtime config only changes when the environment is switched, so a short
- * per-tab cache removes a cold-start edge call from every checkout paint. The
- * client id it carries is publishable; nothing secret is stored.
- */
-const CONFIG_CACHE_KEY = 'vb:paypal-config:v2';
-const CONFIG_TTL_MS = 10 * 60 * 1000;
-
-function readCachedConfig(): PayPalRuntimeConfig | null {
-  try {
-    const raw = sessionStorage.getItem(CONFIG_CACHE_KEY);
-    if (!raw) return null;
-    const parsed = JSON.parse(raw) as { at: number; config: PayPalRuntimeConfig };
-    if (!parsed?.at || Date.now() - parsed.at > CONFIG_TTL_MS) return null;
-    if (parsed.config?.intent !== 'CAPTURE' || parsed.config?.user_action !== 'CONTINUE') return null;
-    return parsed.config ?? null;
-  } catch {
-    return null;
-  }
-}
-
+/** Recheck server configuration after a minute and on each new page load.
+ * Never restore an old sandbox configuration from browser storage. */
 export function getPayPalConfig(): Promise<PayPalRuntimeConfig> {
-  if (!configPromise) {
-    const cached = readCachedConfig();
-    if (cached?.client_id) {
-      configPromise = Promise.resolve(cached);
-      return configPromise;
+  if (configPromise && Date.now() < configExpiresAt) return configPromise;
+  configExpiresAt = Date.now() + CONFIG_TTL_MS;
+  configPromise = supabase.functions.invoke('paypal-config').then(({ data, error }) => {
+    if (error) throw error;
+    const config = data as PayPalRuntimeConfig;
+    if (!config?.enabled || !config.client_id) {
+      configPromise = null;
+      configExpiresAt = 0;
     }
-    configPromise = supabase.functions
-      .invoke('paypal-config')
-      .then(({ data, error }) => {
-        if (error) throw error;
-        const config = data as PayPalRuntimeConfig;
-        // Never cache a disabled/unconfigured response — that would keep
-        // checkout switched off for the rest of the session.
-        if (!config?.enabled || !config.client_id) return config;
-        try {
-          sessionStorage.setItem(
-            CONFIG_CACHE_KEY,
-            JSON.stringify({ at: Date.now(), config }),
-          );
-        } catch {
-          /* private mode — fall back to a network fetch next time */
-        }
-        return config;
-      })
-      .catch((err) => {
-        configPromise = null;
-        throw err;
-      });
-  }
+    return config;
+  }).catch(error => {
+    configPromise = null;
+    configExpiresAt = 0;
+    throw error;
+  });
   return configPromise;
 }
 
