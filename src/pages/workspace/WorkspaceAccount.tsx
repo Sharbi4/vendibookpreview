@@ -209,7 +209,6 @@ export default function WorkspaceAccount() {
           </div>
         ) : (
           <>
-            <PaymentsPayoutsSection />
             <div className="v2-account-grid">
               {linkGroups.map((group) => (
                 <section className="v2-panel" key={group.title}>
