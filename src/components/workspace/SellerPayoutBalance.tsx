@@ -1,3 +1,4 @@
+import { useSellerPayables } from '@/hooks/useSellerPayables';
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
@@ -74,22 +75,7 @@ export default function SellerPayoutBalance() {
   const { preference } = usePayoutPreference();
   const { isReady: paypalReady } = useMyPayPalConnection();
 
-  const { data: payables = [], isLoading } = useQuery({
-    queryKey: ['seller-payout-balance', user?.id],
-    enabled: !!user?.id,
-    queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from('seller_payables')
-        .select(
-          'id, status, transaction_type, net_payout_cents, payout_eligible_at, release_due_at, payout_completed_at, created_at',
-        )
-        .eq('seller_id', user!.id)
-        .order('created_at', { ascending: false })
-        .limit(100);
-      if (error) throw error;
-      return (data ?? []) as Payable[];
-    },
-  });
+  const { data: payables = [], isLoading, isError, refetch } = useSellerPayables();
 
   const { data: requestedIds = new Set<string>() } = useQuery({
     queryKey: ['seller-payout-requests', user?.id],
@@ -145,6 +131,8 @@ export default function SellerPayoutBalance() {
   const canRequest = Boolean(preference) || paypalReady;
 
   const open = payables.filter((p) => p.status !== 'payout_completed');
+
+  if (isError) return <div role="alert" className="p-5">Payout records could not be loaded. <button className="v2-btn-quiet" onClick={() => refetch()}>Retry</button></div>;
 
   return (
     <div>

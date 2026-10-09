@@ -1,8 +1,7 @@
 import { useMemo, useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { Link } from 'react-router-dom';
+import { useSellerPayables, type SellerPayable as PayableRow } from '@/hooks/useSellerPayables';
 import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/integrations/supabase/client';
 
 /**
  * Monthly payout calendar.
@@ -30,7 +29,7 @@ const STATUS_LABEL: Record<string, string> = {
   payout_on_hold: 'Held',
   payout_approved: 'Approved',
   payout_processing: 'Processing',
-  payout_completed: 'Paid',
+  payout_completed: 'Payout sent',
   payout_failed: 'Failed — support notified',
   partially_refunded: 'Partially refunded',
   fully_refunded: 'Refunded',
@@ -38,18 +37,6 @@ const STATUS_LABEL: Record<string, string> = {
   reversed: 'Reversed',
   cancelled: 'Cancelled',
 };
-
-interface PayableRow {
-  id: string;
-  seller_id: string;
-  status: string;
-  transaction_type: string | null;
-  net_payout_cents: number | null;
-  release_due_at: string | null;
-  payout_eligible_at: string | null;
-  payout_completed_at: string | null;
-  created_at: string;
-}
 
 const money = (cents: number | null | undefined) =>
   `$${(((cents ?? 0) as number) / 100).toLocaleString(undefined, {
@@ -73,63 +60,27 @@ const settlementDate = (row: PayableRow): Date | null => {
 };
 
 export default function PayoutCalendar() {
-  const { user } = useAuth();
   const [cursor, setCursor] = useState(() => {
     const now = new Date();
     return new Date(now.getFullYear(), now.getMonth(), 1);
   });
 
-  const { data: payables = [], isLoading } = useQuery({
-    queryKey: ['payout-calendar', user?.id],
-    enabled: !!user,
-    queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from('seller_payables')
-        .select(
-          'id, seller_id, status, transaction_type, net_payout_cents, release_due_at, payout_eligible_at, payout_completed_at, created_at',
-        )
-        .order('created_at', { ascending: false })
-        .limit(500);
-      if (error) throw error;
-      return (data ?? []) as PayableRow[];
-    },
-  });
-
-  // Admins can see payables across sellers; label rows when more than one seller appears.
-  const sellerIds = useMemo(
-    () => Array.from(new Set(payables.map((p) => p.seller_id))),
-    [payables],
-  );
-  const multiSeller = sellerIds.length > 1;
-
-  const { data: sellerNames = {} } = useQuery({
-    queryKey: ['payout-calendar-sellers', sellerIds.join(',')],
-    enabled: multiSeller,
-    queryFn: async () => {
-      const { data } = await supabase
-        .from('profiles')
-        .select('id, full_name, business_name')
-        .in('id', sellerIds);
-      const map: Record<string, string> = {};
-      (data ?? []).forEach((p: any) => {
-        map[p.id] = p.business_name || p.full_name || 'Seller';
-      });
-      return map;
-    },
-  });
+  const { data: payables = [], isLoading, isError, refetch } = useSellerPayables();
 
   const monthRows = useMemo(() => {
     const y = cursor.getFullYear();
     const m = cursor.getMonth();
     const byDay: Record<string, { row: PayableRow; date: Date }[]> = {};
-    let total = 0;
+    let expected = 0;
+    let sent = 0;
     payables.forEach((row) => {
       const d = settlementDate(row);
       if (!d || d.getFullYear() !== y || d.getMonth() !== m) return;
       (byDay[dayKey(d)] ||= []).push({ row, date: d });
-      total += row.net_payout_cents ?? 0;
+      if (row.status === 'payout_completed') sent += row.net_payout_cents ?? 0;
+      else expected += row.net_payout_cents ?? 0;
     });
-    return { byDay, total };
+    return { byDay, expected, sent };
   }, [payables, cursor]);
 
   const undated = useMemo(
@@ -163,7 +114,7 @@ export default function PayoutCalendar() {
             <CalendarDays className="h-4 w-4" /> Payout calendar
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
-            Expected settlement dates for recorded proceeds. Every payout is reviewed and sent
+            Your recorded seller proceeds, using the same records as Your payouts. Every payout is reviewed and sent
             manually by our team, so dates are expected rather than guaranteed.
           </p>
         </div>
@@ -181,7 +132,7 @@ export default function PayoutCalendar() {
         <div className="text-center">
           <div className="text-sm font-semibold text-foreground">{monthLabel}</div>
           <div className="text-xs text-muted-foreground">
-            {money(monthRows.total)} expected this month
+            {money(monthRows.expected)} expected · {money(monthRows.sent)} sent this month
           </div>
         </div>
         <button
@@ -194,7 +145,7 @@ export default function PayoutCalendar() {
         </button>
       </div>
 
-      {isLoading ? (
+      {isError ? <div role="alert" className="p-4">Payout records could not be loaded. <button className="v2-btn-quiet" onClick={() => refetch()}>Retry</button></div> : isLoading ? (
         <div className="v2-skeleton h-56 w-full" />
       ) : (
         <>
@@ -259,11 +210,6 @@ export default function PayoutCalendar() {
                           month: 'short',
                           day: 'numeric',
                         })}
-                        {multiSeller && (
-                          <span className="ml-2 text-muted-foreground">
-                            {sellerNames[row.seller_id] ?? 'Seller'}
-                          </span>
-                        )}
                       </div>
                       <div className="text-xs text-muted-foreground">
                         {row.transaction_type === 'rental' ? 'Rental booking' : 'Sale'} ·{' '}
@@ -272,6 +218,7 @@ export default function PayoutCalendar() {
                     </div>
                     <div className="text-sm font-semibold text-foreground">
                       {money(row.net_payout_cents)}
+                      {row.payment_record_id && <Link className="block underline text-xs" to={`/dashboard/transactions/${row.payment_record_id}`}>View order</Link>}
                     </div>
                   </div>
                 )),
@@ -289,7 +236,7 @@ export default function PayoutCalendar() {
                     className="flex items-center justify-between gap-3 text-xs text-muted-foreground"
                   >
                     <span>
-                      {multiSeller ? `${sellerNames[row.seller_id] ?? 'Seller'} · ` : ''}
+
                       {STATUS_LABEL[row.status] ?? row.status}
                     </span>
                     <span className="font-medium text-foreground">

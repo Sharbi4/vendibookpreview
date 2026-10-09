@@ -382,11 +382,11 @@ export default function WorkspaceHome() {
             <div className="v2-snapshot">
               <div>
                 <strong>{sellerEarnings.length}</strong>
-                <span>Seller transactions</span>
+                <span>Seller payment records</span>
               </div>
               <div>
                 <strong>{buyerPayments.length}</strong>
-                <span>Buyer transactions</span>
+                <span>Buyer payment records</span>
               </div>
             </div>
           </section>

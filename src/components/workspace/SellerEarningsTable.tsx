@@ -1,3 +1,4 @@
+import { useSellerPayables } from '@/hooks/useSellerPayables';
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -109,7 +110,7 @@ const shortDate = (raw?: string | null) => {
 export default function SellerEarningsTable() {
   const { user } = useAuth();
 
-  const { data: rows = [], isLoading, refetch } = useQuery({
+  const { data: rows = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['seller-order-earnings', user?.id],
     enabled: !!user?.id,
     queryFn: async () => {
@@ -124,23 +125,13 @@ export default function SellerEarningsTable() {
         .order('created_at', { ascending: false })
         .limit(100);
       if (error) throw error;
-      return (data ?? []) as EarningRow[];
+      if (isError) return <div role="alert" className="p-5">Order payments could not be loaded. <button className="v2-btn-quiet" onClick={() => refetch()}>Retry</button></div>;
+
+  return (data ?? []) as EarningRow[];
     },
   });
 
-  const { data: payables = [] } = useQuery({
-    queryKey: ['seller-order-payables', user?.id],
-    enabled: !!user?.id,
-    queryFn: async () => {
-      const { data, error } = await (supabase as any)
-        .from('seller_payables')
-        .select('payment_record_id, status, net_payout_cents')
-        .eq('seller_id', user!.id)
-        .limit(200);
-      if (error) throw error;
-      return (data ?? []) as PayableRow[];
-    },
-  });
+  const { data: payables = [], isError: payablesError } = useSellerPayables();
 
   const payableByRecord = useMemo(() => {
     const map = new Map<string, PayableRow>();
@@ -168,15 +159,14 @@ export default function SellerEarningsTable() {
         <div>
           <h2>Earnings by order</h2>
           <p>
-            Every order on your listings, with what the buyer paid, Vendibook&apos;s fee, any
-            refunds, your proceeds, and the current PayPal payment status.
+            Your latest 100 payment records, excluding abandoned and cancelled checkout attempts. Amounts include pending payments and holds; check each payment status. Payouts are shown separately above.
           </p>
         </div>
       </div>
 
       <div className="v2-payout-tiles">
         <article>
-          <small>Buyers paid</small>
+          <small>Recorded payment amounts</small>
           <strong>{money(totals.gross)}</strong>
         </article>
         <article>
@@ -188,7 +178,7 @@ export default function SellerEarningsTable() {
           <strong>{money(totals.refunded)}</strong>
         </article>
         <article>
-          <small>Your proceeds</small>
+          <small>Recorded seller proceeds</small>
           <strong>{money(totals.net)}</strong>
         </article>
       </div>
@@ -199,7 +189,7 @@ export default function SellerEarningsTable() {
         </div>
       ) : rows.length === 0 ? (
         <div className="v2-payout-empty">
-          No orders yet. When a buyer pays for one of your listings, its earnings appear here.
+          No eligible payment records yet. Unpaid marketplace orders are listed in Transactions.
         </div>
       ) : (
         <ul className="v2-earnings-list">
@@ -222,7 +212,7 @@ export default function SellerEarningsTable() {
                     <span className={`v2-earnings-chip ${PAYMENT_TONE[status] ?? ''}`}>
                       {PAYMENT_LABEL[status] ?? status.replace(/_/g, ' ')}
                     </span>
-                    {payable ? (
+                    {payablesError ? <span className="v2-earnings-chip">Payout status unavailable</span> : payable ? (
                       <span className="v2-earnings-chip">
                         {PAYOUT_LABEL[payable.status] ?? payable.status.replace(/_/g, ' ')}
                       </span>
