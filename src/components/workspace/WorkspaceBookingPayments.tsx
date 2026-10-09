@@ -33,7 +33,7 @@ export default function WorkspaceBookingPayments() {
     ...renterBookings.map((b) => ({
       id: `renter-${b.id}`,
       title: b.listing?.title || 'Rental booking',
-      side: 'You paid',
+      side: 'Your rental',
       dates: dateRange(b.start_date, b.end_date),
       paymentStatus: b.payment_status || 'pending',
       status: b.status || 'pending',
@@ -66,7 +66,7 @@ export default function WorkspaceBookingPayments() {
       <div className="v2-panel-head">
         <div>
           <h2>Rental bookings</h2>
-          <p>Booking payments you made and bookings paid to you.</p>
+          <p>Your rental requests and hosted bookings. Booking totals do not mean a payment was collected.</p>
         </div>
         <Link to="/dashboard/activity?filter=rentals" className="v2-btn-quiet">
           View all
@@ -94,7 +94,7 @@ export default function WorkspaceBookingPayments() {
                 <small>Booking: {row.status}</small>
               </span>
             </span>
-            {row.amount && <strong>{row.amount}</strong>}
+            {row.amount && <span className="shrink-0 text-right"><small className="block">Booking total</small><strong>{row.amount}</strong></span>}
           </Link>
         ))
       ) : (
