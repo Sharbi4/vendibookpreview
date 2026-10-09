@@ -15,6 +15,7 @@ const HIDDEN_PATTERNS = [
   // Unified workspace ships its own bottom navigation (but not /dashboard/classic).
   /^\/dashboard(?:$|\/(?!classic))/,
   /^\/dashboard-v2(?:\/|$)/,
+  /^\/account(?:\/|$)/,
   /^\/reset-password/,
   /^\/activation/,
   /^\/checkout\//,

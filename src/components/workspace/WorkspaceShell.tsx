@@ -78,6 +78,7 @@ const isMobileDestinationActive = (to: string, pathname: string) => {
   if (to === '/dashboard/messages') return pathname.startsWith('/dashboard/messages');
 
   return [
+    '/account',
     '/dashboard/account',
     '/dashboard/profile',
     '/dashboard/notifications',

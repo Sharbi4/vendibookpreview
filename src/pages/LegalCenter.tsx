@@ -47,6 +47,7 @@ export default function LegalCenter() {
         canonical="https://vendibook.com/legal"
       />
       <main className="container mx-auto max-w-5xl px-4 py-12">
+        <Link to="/dashboard/account" className="inline-block underline mb-5">Back to Account</Link>
         <header className="mb-10">
           <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Legal Center</p>
           <h1 className="mt-2 text-4xl font-semibold tracking-tight">Every Vendibook policy, in one place</h1>
