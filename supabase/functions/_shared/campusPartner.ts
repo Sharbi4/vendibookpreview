@@ -139,9 +139,13 @@ export async function resolvePartnerCredit(
     ? rentalPartnerCredit(row!, opts.eligibleBaseCents)
     : purchasePartnerCredit(row!, opts.eligibleBaseCents);
   if (credit <= 0) return fail(opts.kind === "purchase" ? "below_minimum" : "not_eligible", row!);
-  const { data: used } = await admin.rpc("partner_code_active_uses", {
-    p_code_id: row!.id, p_user: opts.userId, p_kind: opts.kind, p_exclude_record: null,
-  });
+  // Pre-check counts completed uses only. In-flight reservations are enforced by
+  // reserve_partner_redemption, which excludes the current payment record, so a
+  // buyer retrying the same checkout (reused order) is not locked out.
+  const { count: used } = await admin.from("promo_code_uses")
+    .select("id", { count: "exact", head: true })
+    .eq("promo_code_id", row!.id).eq("user_id", opts.userId).eq("redemption_kind", opts.kind)
+    .in("status", ["completed", "partially_refunded"]);
   const limit = opts.kind === "rental" ? row!.rental_uses_per_user : row!.purchase_uses_per_user;
   if (Number(used ?? 0) >= Number(limit ?? 0)) return fail("limit_reached", row!);
   return { ok: true, row: row!, creditCents: credit, eligibleBaseCents: opts.eligibleBaseCents };
