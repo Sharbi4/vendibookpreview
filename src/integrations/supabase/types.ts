@@ -7529,18 +7529,24 @@ export type Database = {
       }
       promo_code_uses: {
         Row: {
+          booking_request_id: string | null
+          code: string | null
           completed_at: string | null
           credit_cents: number | null
           discount_applied: number
           eligible_base_cents: number | null
           gross_cents: number | null
           id: string
+          listing_id: string | null
+          partner_name: string | null
           payment_record_id: string | null
           platform_fee_cents: number | null
           promo_code_id: string
           redemption_kind: string | null
+          refunded_at: string | null
           refunded_cents: number
           released_at: string | null
+          sale_transaction_id: string | null
           status: string
           transaction_id: string | null
           updated_at: string
@@ -7548,18 +7554,24 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          booking_request_id?: string | null
+          code?: string | null
           completed_at?: string | null
           credit_cents?: number | null
           discount_applied: number
           eligible_base_cents?: number | null
           gross_cents?: number | null
           id?: string
+          listing_id?: string | null
+          partner_name?: string | null
           payment_record_id?: string | null
           platform_fee_cents?: number | null
           promo_code_id: string
           redemption_kind?: string | null
+          refunded_at?: string | null
           refunded_cents?: number
           released_at?: string | null
+          sale_transaction_id?: string | null
           status?: string
           transaction_id?: string | null
           updated_at?: string
@@ -7567,18 +7579,24 @@ export type Database = {
           user_id: string
         }
         Update: {
+          booking_request_id?: string | null
+          code?: string | null
           completed_at?: string | null
           credit_cents?: number | null
           discount_applied?: number
           eligible_base_cents?: number | null
           gross_cents?: number | null
           id?: string
+          listing_id?: string | null
+          partner_name?: string | null
           payment_record_id?: string | null
           platform_fee_cents?: number | null
           promo_code_id?: string
           redemption_kind?: string | null
+          refunded_at?: string | null
           refunded_cents?: number
           released_at?: string | null
+          sale_transaction_id?: string | null
           status?: string
           transaction_id?: string | null
           updated_at?: string
@@ -7586,6 +7604,27 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "promo_code_uses_booking_request_id_fkey"
+            columns: ["booking_request_id"]
+            isOneToOne: false
+            referencedRelation: "booking_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promo_code_uses_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promo_code_uses_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "promo_code_uses_payment_record_id_fkey"
             columns: ["payment_record_id"]
@@ -7607,6 +7646,13 @@ export type Database = {
             referencedRelation: "promo_codes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "promo_code_uses_sale_transaction_id_fkey"
+            columns: ["sale_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "sale_transactions"
+            referencedColumns: ["id"]
+          },
         ]
       }
       promo_codes: {
@@ -7626,6 +7672,7 @@ export type Database = {
           min_purchase_amount: number | null
           normalized_code: string | null
           partner_name: string | null
+          partner_state: string | null
           program: string
           purchase_credit_cents: number | null
           purchase_min_cents: number | null
@@ -7652,6 +7699,7 @@ export type Database = {
           min_purchase_amount?: number | null
           normalized_code?: string | null
           partner_name?: string | null
+          partner_state?: string | null
           program?: string
           purchase_credit_cents?: number | null
           purchase_min_cents?: number | null
@@ -7678,6 +7726,7 @@ export type Database = {
           min_purchase_amount?: number | null
           normalized_code?: string | null
           partner_name?: string | null
+          partner_state?: string | null
           program?: string
           purchase_credit_cents?: number | null
           purchase_min_cents?: number | null
@@ -12896,6 +12945,35 @@ export type Database = {
       calculate_booking_end_timestamp: {
         Args: { p_end_date: string; p_hourly_slots: Json }
         Returns: string
+      }
+      campus_partner_report: {
+        Args: { p_from?: string; p_to?: string }
+        Returns: {
+          academic_year: string
+          code: string
+          credits_cents: number
+          expires_at: string
+          id: string
+          is_active: boolean
+          net_platform_revenue_cents: number
+          partner_name: string
+          partner_state: string
+          platform_fee_cents: number
+          purchase_credit_cents: number
+          purchase_gmv_cents: number
+          purchase_min_cents: number
+          purchase_redemptions: number
+          purchase_uses_per_user: number
+          refunded_cents: number
+          refunded_transactions: number
+          rental_cap_cents: number
+          rental_gmv_cents: number
+          rental_percent: number
+          rental_redemptions: number
+          rental_uses_per_user: number
+          starts_at: string
+          unique_users: number
+        }[]
       }
       cancel_video_walkthrough: {
         Args: { _walkthrough_id: string }
