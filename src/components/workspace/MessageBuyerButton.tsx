@@ -8,6 +8,7 @@ import { useToast } from '@/hooks/use-toast';
 interface MessageBuyerButtonProps {
   listingId: string;
   buyerId: string;
+  bookingId?: string;
   className?: string;
   label?: string;
 }
@@ -19,6 +20,7 @@ interface MessageBuyerButtonProps {
 export default function MessageBuyerButton({
   listingId,
   buyerId,
+  bookingId,
   className = '',
   label = 'Message buyer',
 }: MessageBuyerButtonProps) {
@@ -52,7 +54,7 @@ export default function MessageBuyerButton({
         conversationId = created.id as string;
       }
 
-      navigate(`/dashboard/messages/${conversationId}`);
+      navigate(`/dashboard/messages/${conversationId}${bookingId ? `?booking=${encodeURIComponent(bookingId)}` : ''}`);
     } catch {
       toast({
         title: "We couldn't open that conversation",

@@ -1,5 +1,7 @@
 import { parseRentalDate } from '@/lib/rentalDates';
 import { isBookingClosed } from '@/lib/bookingStatus';
+import MessageHostButton from '@/components/messaging/MessageHostButton';
+import MessageBuyerButton from '@/components/workspace/MessageBuyerButton';
 /** Rental request, approval, and payment status. Approval never implies payment. */
 import { rentalBookingView } from '@/lib/rentalCheckoutValidation';
 import { useAuth } from '@/contexts/AuthContext';
@@ -455,12 +457,9 @@ const BookingConfirmation = ({
                 <Link to="/dashboard/activity?filter=rentals">View my bookings</Link>
               </Button>
               {booking?.listing_id ? (
-                <Button asChild variant="outline" className="flex-1 rounded-2xl h-14">
-                  <Link to={`/dashboard/messages?listing=${booking.listing_id}`}>
-                    <MessageSquare className="h-4 w-4 mr-2" />
-                    Message the host
-                  </Link>
-                </Button>
+                user?.id === booking.host_id ?
+                  <MessageBuyerButton listingId={booking.listing_id} buyerId={booking.shopper_id} bookingId={booking.id} label="Message the renter" className="flex-1" /> :
+                  <MessageHostButton listingId={booking.listing_id} hostId={booking.host_id} bookingId={booking.id} label="Message the host" className="flex-1 rounded-2xl h-14" />
               ) : (
                 <Button asChild variant="outline" className="flex-1 rounded-2xl h-14">
                   <Link to="/search">Browse rentals</Link>
