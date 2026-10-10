@@ -10,6 +10,7 @@
  */
 import { writeFileSync, mkdirSync, readFileSync } from "fs";
 import { resolve } from "path";
+import { locationSitemapEntries } from "./lib/sitemapLocations";
 import { LEGAL_DOCUMENTS } from "../src/lib/legal/versions";
 
 const BASE_URL = "https://vendibook.com";
@@ -17,17 +18,11 @@ const SUPABASE_URL = "https://nbrehbwfsmedbelzntqs.supabase.co";
 const ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5icmVoYndmc21lZGJlbHpudHFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgxMDgzMTMsImV4cCI6MjA4MzY4NDMxM30.EkA-lGUmkLQ9rPAO-unLxGGGHVmPDdVR8awlA2ShVpU";
 
-const CATEGORY_SLUGS: Record<string, string> = {
-  food_truck: "food-truck",
-  food_trailer: "food-trailer",
-  ghost_kitchen: "shared-kitchen",
-  vendor_space: "vendor-space",
-};
-
 interface Listing {
   id: string;
   title: string | null;
   category: string | null;
+  mode: string | null;
   city: string | null;
   state: string | null;
   cover_image_url: string | null;
@@ -43,29 +38,17 @@ function xmlEscape(s: string): string {
     .replace(/'/g, "&apos;");
 }
 
-function slugify(s: string): string {
-  return s
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
 async function fetchListings(): Promise<Listing[]> {
-  const url = `${SUPABASE_URL}/rest/v1/listings?select=id,title,category,city,state,cover_image_url,updated_at&status=eq.published&published_at=not.is.null&deleted_at=is.null&moderation_status=eq.clear&title=not.ilike.demo*&limit=10000`;
-  const res = await fetch(url, {
-    headers: {
-      apikey: ANON_KEY,
-      Authorization: `Bearer ${ANON_KEY}`,
-    },
-  });
-  if (!res.ok) {
-    throw new Error(`Supabase fetch failed: ${res.status} ${await res.text()}`);
+  const listings: Listing[] = [];
+  for (let offset = 0; ; offset += 500) {
+    const params = new URLSearchParams({ select: "id,title,category,mode,city,state,cover_image_url,updated_at", status: "eq.published", published_at: "not.is.null", deleted_at: "is.null", moderation_status: "eq.clear", unlisted: "eq.false", title: "not.ilike.demo*", order: "id.asc", limit: "500", offset: String(offset) });
+    const res = await fetch(SUPABASE_URL + "/rest/v1/listings?" + params, { headers: { apikey: ANON_KEY, Authorization: "Bearer " + ANON_KEY } });
+    if (!res.ok) throw new Error("Supabase fetch failed: " + res.status);
+    const batch = await res.json() as Listing[];
+    listings.push(...batch);
+    if (batch.length < 500) return listings;
   }
-  return (await res.json()) as Listing[];
 }
-
 function buildListingsSitemap(listings: Listing[]): string {
   const today = new Date().toISOString().slice(0, 10);
   const urls = listings.map((l) => {
@@ -103,36 +86,10 @@ function buildListingsSitemap(listings: Listing[]): string {
 }
 
 function buildLocationsSitemap(listings: Listing[]): string {
-  const today = new Date().toISOString().slice(0, 10);
-  const citySlugs = new Set<string>();
-  const cityStateCategory = new Set<string>(); // `${categorySlug}|${cityStateSlug}`
-
-  for (const l of listings) {
-    if (!l.city || !l.state) continue;
-    const citySlug = slugify(l.city);
-    const stateSlug = slugify(l.state);
-    if (!citySlug || !stateSlug) continue;
-    citySlugs.add(citySlug);
-    const cityStateSlug = `${citySlug}-${stateSlug}`;
-    const cat = l.category ? CATEGORY_SLUGS[l.category] : null;
-    if (cat) cityStateCategory.add(`${cat}|${cityStateSlug}`);
-  }
-
-  const entries: string[] = [];
-  for (const slug of [...citySlugs].sort()) {
-    entries.push(
-      `  <url><loc>${BASE_URL}/${slug}</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>`,
-    );
-  }
-  for (const combo of [...cityStateCategory].sort()) {
-    const [cat, cityState] = combo.split("|");
-    entries.push(
-      `  <url><loc>${BASE_URL}/rent/${cat}/${cityState}</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>`,
-    );
-    entries.push(
-      `  <url><loc>${BASE_URL}/buy/${cat}/${cityState}</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>`,
-    );
-  }
+  const pagesXml = readFileSync(resolve("public/sitemap_pages.xml"), "utf8");
+  const entries = locationSitemapEntries(listings)
+    .filter(({ path }) => !pagesXml.includes("<loc>" + BASE_URL + path + "</loc>"))
+    .map(({ path, lastmod }) => "  <url><loc>" + BASE_URL + path + "</loc>" + (lastmod ? "<lastmod>" + lastmod + "</lastmod>" : "") + "<changefreq>weekly</changefreq><priority>0.75</priority></url>");
 
   return [
     `<?xml version="1.0" encoding="UTF-8"?>`,

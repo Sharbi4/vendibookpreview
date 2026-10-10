@@ -8,9 +8,7 @@
   <url><loc>https://vendibook.com/list</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/contact</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
   <url><loc>https://vendibook.com/insurance</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
-  <url><loc>https://vendibook.com/privacy</loc><changefreq>yearly</changefreq><priority>0.4</priority></url>
   <url><loc>https://vendibook.com/california-privacy</loc><changefreq>yearly</changefreq><priority>0.4</priority></url>
-  <url><loc>https://vendibook.com/terms</loc><changefreq>yearly</changefreq><priority>0.4</priority></url>
   <url><loc>https://vendibook.com/help</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/blog</loc><changefreq>weekly</changefreq><priority>0.8</priority></url>
   <url><loc>https://vendibook.com/sell-my-food-truck</loc><lastmod>2026-06-12</lastmod><changefreq>monthly</changefreq><priority>0.9</priority></url>
@@ -173,12 +171,4 @@
   <url><loc>https://vendibook.com/raleigh</loc><changefreq>weekly</changefreq><priority>0.85</priority></url>
   <url><loc>https://vendibook.com/jacksonville</loc><changefreq>weekly</changefreq><priority>0.85</priority></url>
   <url><loc>https://vendibook.com/press</loc><lastmod>2026-08-25</lastmod><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>https://vendibook.com/legal</loc><lastmod>2026-09-18</lastmod><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>https://vendibook.com/legal/payments-terms</loc><lastmod>2026-09-18</lastmod><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>https://vendibook.com/legal/handoff-terms</loc><lastmod>2026-09-18</lastmod><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>https://vendibook.com/legal/financing-disclosure</loc><lastmod>2026-09-18</lastmod><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>https://vendibook.com/legal/recording-consent</loc><lastmod>2026-09-18</lastmod><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>https://vendibook.com/legal/location-tracking</loc><lastmod>2026-09-18</lastmod><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>https://vendibook.com/legal/video-walkthrough-terms</loc><lastmod>2026-09-18</lastmod><changefreq>monthly</changefreq><priority>0.4</priority></url>
-  <url><loc>https://vendibook.com/legal/device-permissions-privacy</loc><lastmod>2026-09-18</lastmod><changefreq>monthly</changefreq><priority>0.4</priority></url>
 </urlset>
