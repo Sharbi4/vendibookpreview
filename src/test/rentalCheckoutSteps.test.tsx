@@ -41,7 +41,7 @@ beforeEach(() => {
 });
 function mountDetails() {
   render(<MemoryRouter initialEntries={['/book/listing-a?start=2026-11-01&end=2026-11-02']}><Routes><Route path="/book/:listingId" element={<BookingCheckout />} /></Routes></MemoryRouter>);
-  fireEvent.click(screen.getByRole('button', { name: 'Continue', exact: true }));
+  fireEvent.click(screen.getByRole('button', { name: 'Continue' }));
 }
 function completeContactAndBusiness() {
   fireEvent.click(screen.getByRole('button', { name: 'Save contact' }));
