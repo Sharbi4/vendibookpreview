@@ -21,6 +21,9 @@ export function useSellerPayables() {
   return useQuery({
     queryKey: ['seller-payables', user?.id],
     enabled: !!user?.id,
+    refetchOnWindowFocus: true,
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
     queryFn: async (): Promise<SellerPayable[]> => {
       const rows: SellerPayable[] = [];
       for (let offset = 0; ; offset += 500) {

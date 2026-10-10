@@ -113,6 +113,9 @@ export default function SellerEarningsTable() {
   const { data: rows = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['seller-order-earnings', user?.id],
     enabled: !!user?.id,
+    refetchOnWindowFocus: true,
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
     queryFn: async () => {
       const { data, error } = await (supabase as any)
         .from('payment_records')

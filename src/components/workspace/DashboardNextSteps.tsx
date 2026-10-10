@@ -4,11 +4,11 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetTr
 
 type NextStep = { id: string; label: string; hint: string; to: string; icon: LucideIcon; tone?: 'warn' | 'neutral' };
 
-export default function DashboardNextSteps({ tasks, loading = false }: { tasks: NextStep[]; loading?: boolean }) {
+export default function DashboardNextSteps({ tasks, loading = false, unavailable = false }: { tasks: NextStep[]; loading?: boolean; unavailable?: boolean }) {
   if (loading) return <section className="v2-panel p-5" role="status">Loading your next steps…</section>;
   return <section className="v2-panel overflow-hidden" aria-label="Your next steps">
     <div className="v2-panel-head">
-      <div><h2>Up next</h2><p>{tasks.length ? 'A few things to keep moving.' : 'You’re up to date.'}</p></div>
+      <div><h2>Up next</h2><p>{unavailable ? 'Some payment updates are unavailable. Check Transactions to retry.' : tasks.length ? 'A few things to keep moving.' : 'You’re up to date.'}</p></div>
       {tasks.length > 0 && <Sheet>
         <SheetTrigger asChild><button type="button" className="v2-btn-quiet">View all ({tasks.length})</button></SheetTrigger>
         <SheetContent className="w-full overflow-y-auto bg-[#fffdf9] text-[#29231e] sm:max-w-lg">

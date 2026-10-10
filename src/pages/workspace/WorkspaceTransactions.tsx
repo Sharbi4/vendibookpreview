@@ -13,7 +13,7 @@ const readable = (s: string) => s.replace(/_/g, ' ');
 
 export default function WorkspaceTransactions() {
   const { user } = useAuth();
-  const { transactions, isLoading } = useUserTransactions(user?.id);
+  const { transactions, isLoading, isError, refresh } = useUserTransactions(user?.id);
   const buyer = useBuyerSaleTransactions(user?.id);
   const seller = useSellerSaleTransactions(user?.id);
   const rentals = useShopperBookings();
@@ -57,7 +57,7 @@ export default function WorkspaceTransactions() {
       <div className="flex flex-wrap gap-3 mt-4"><Link className="v2-btn-outline" to="/dashboard/cases">Support cases</Link><Link className="v2-btn-quiet" to="/dashboard/activity">Walkthroughs & activity</Link></div>
     </header>
     <div className="v2-filter-row">{['All', 'Purchases', 'Sales', 'Rentals', 'Other'].map(f => <button key={f} className={`v2-filter${filter === f ? ' is-active' : ''}`} aria-pressed={filter === f} onClick={() => setFilter(f)}>{f}</button>)}</div>
-    {loading ? <div role="status" aria-label="Loading transactions"><Loader2 className="animate-spin" /></div> : !visible.length ? <section className="v2-panel p-8"><h2>No transactions here yet</h2><p className="text-muted-foreground mt-2">Your purchases, sales, and rental requests will appear here.</p><Button asChild variant="cta" className="mt-5"><Link to="/browse">Browse now</Link></Button></section> : visible.map(r => <article className="v2-panel p-5 sm:p-6" key={r.id}>
+    {isError ? <section className="v2-panel p-5" role="alert"><p>Payment records could not be refreshed. Retry to see current payment status.</p><Button variant="outline" className="mt-3" onClick={() => void refresh()}>Retry payments</Button></section> : loading ? <div role="status" aria-label="Loading transactions"><Loader2 className="animate-spin" /></div> : !visible.length ? <section className="v2-panel p-8"><h2>No transactions here yet</h2><p className="text-muted-foreground mt-2">Your purchases, sales, and rental requests will appear here.</p><Button asChild variant="cta" className="mt-5"><Link to="/browse">Browse now</Link></Button></section> : visible.map(r => <article className="v2-panel p-5 sm:p-6" key={r.id}>
       <div className="flex gap-4"><div className="h-16 w-20 shrink-0 rounded-xl overflow-hidden bg-muted">{r.image ? <img src={r.image} alt="" className="h-full w-full object-cover" /> : <Receipt className="m-5 h-6 w-6" />}</div><div className="min-w-0 flex-1"><p className="text-xs text-muted-foreground">{r.kind} · {r.counterpart} · {new Date(r.date).toLocaleDateString()}</p><h2 className="font-semibold mt-1"><Link to={r.href}>{r.title}</Link></h2><p className="text-sm text-muted-foreground mt-1">Payment: {readable(r.payment)}<br />Fulfillment: {r.fulfillment}</p>{r.reference && <p className="text-xs text-muted-foreground mt-2">{r.reference}</p>}</div><strong className="text-sm sm:text-base">{new Intl.NumberFormat('en-US', { style: 'currency', currency: r.currency }).format(r.amount)}</strong></div>
       <div className="flex flex-wrap gap-2 mt-5">
         <Button asChild variant="cta" size="sm"><Link to={r.href}>{r.payment.includes('Pay now') ? 'Pay now' : 'View transaction'}<ArrowUpRight className="ml-2 h-4 w-4" /></Link></Button>

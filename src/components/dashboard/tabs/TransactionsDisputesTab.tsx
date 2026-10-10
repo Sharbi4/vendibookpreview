@@ -54,7 +54,7 @@ const money = (cents?: number | null, currency = 'USD') =>
 
 const TransactionsDisputesTab = () => {
   const { user } = useAuth();
-  const { transactions, isLoading, refresh } = useUserTransactions(user?.id);
+  const { transactions, isLoading, isError, refresh } = useUserTransactions(user?.id);
   const [filter, setFilter] = useState<FilterId>('all');
   const [target, setTarget] = useState<UserTransaction | null>(null);
   const [reason, setReason] = useState('');
@@ -130,7 +130,7 @@ const TransactionsDisputesTab = () => {
         ))}
       </div>
 
-      {isLoading ? (
+      {isError ? <div role="alert"><p>Payment records could not be refreshed.</p><Button onClick={() => void refresh()}>Retry payments</Button></div> : isLoading ? (
         <div className="flex items-center justify-center py-20">
           <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
         </div>

@@ -71,7 +71,7 @@ export default function WorkspaceHome() {
   const { listings, isLoading: listingsLoading, pauseListing, unpauseListing, archiveListing, deleteListing } = useHostListings();
   const { bookings: buyerBookings, isLoading: buyerLoading } = useShopperBookings();
   const { bookings: sellerBookings, isLoading: sellerLoading } = useHostBookings();
-  const { transactions, isLoading: transactionsLoading } = useUserTransactions(user?.id);
+  const { transactions, isLoading: transactionsLoading, isError: transactionsError, refresh: refreshTransactions } = useUserTransactions(user?.id);
   const { conversations, isLoading: conversationsLoading } = useConversations();
   const { isReady: paypalReady } = useMyPayPalConnection();
   const { unreadCount: notificationUnread } = useNotifications(user?.id);
@@ -248,7 +248,7 @@ export default function WorkspaceHome() {
 
         {!listingsLoading && live.length > 0 && <FeaturedPromotionBanner listings={listings} />}
 
-        <DashboardNextSteps tasks={tasks} loading={listingsLoading || transactionsLoading || buyerLoading || sellerLoading || walkthroughsLoading || conversationsLoading} />
+        <DashboardNextSteps unavailable={transactionsError} tasks={tasks} loading={listingsLoading || transactionsLoading || buyerLoading || sellerLoading || walkthroughsLoading || conversationsLoading} />
 
         {listingsLoading && !listings.length && (
           <section className="v2-panel">
@@ -385,11 +385,11 @@ export default function WorkspaceHome() {
             </div>
             <div className="v2-snapshot">
               <div>
-                <strong>{sellerEarnings.length}</strong>
-                <span>Seller payment records</span>
+                <strong>{transactionsLoading || transactionsError ? "—" : sellerEarnings.length}</strong>
+                <span>Seller payment records</span>{transactionsError && <div role="alert"><p>Payment records unavailable.</p><button className="v2-btn-quiet" onClick={() => void refreshTransactions()}>Retry payments</button></div>}
               </div>
               <div>
-                <strong>{buyerPayments.length}</strong>
+                <strong>{transactionsLoading || transactionsError ? "—" : buyerPayments.length}</strong>
                 <span>Buyer payment records</span>
               </div>
             </div>

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 
 export interface UserTransaction {
@@ -28,64 +28,54 @@ export interface UserTransaction {
 }
 
 /**
- * Every PayPal payment the signed-in user is a participant in (as buyer or
+ * The latest 200 payment records the signed-in user participates in (as buyer or
  * seller), with dispute state. RLS on `payment_records` already restricts
- * rows to participants — this hook only shapes them for the dashboard.
+ * rows to participants; the explicit filter also scopes administrator accounts.
  */
 export function useUserTransactions(userId?: string) {
-  const [transactions, setTransactions] = useState<UserTransaction[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const query = useQuery({
+    queryKey: ['user-transactions', userId],
+    enabled: !!userId,
+    refetchOnWindowFocus: true,
+    refetchInterval: 30_000,
+    refetchIntervalInBackground: false,
+    queryFn: async (): Promise<UserTransaction[]> => {
+      const { data, error } = await supabase
+        .from('payment_records')
+        .select(
+          'id, reference, transaction_type, provider, payment_status, internal_status, dispute_status, currency, gross_amount_cents, refunded_cents, seller_proceeds_cents, paypal_order_id, paypal_capture_id, payment_source, created_at, captured_at, listing_id, buyer_id, seller_id, booking_request_id, sale_transaction_id',
+        )
+        .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
+        // `created` rows are checkout attempts that were never approved at PayPal
+        // (no money moved). They are not activity and must never be listed.
+        .not('payment_status', 'in', '("created","cancelled")')
+        .order('created_at', { ascending: false })
+        .limit(200);
 
-  const load = useCallback(async () => {
-    if (!userId) {
-      setTransactions([]);
-      setIsLoading(false);
-      return;
-    }
-    setIsLoading(true);
-    const { data, error } = await supabase
-      .from('payment_records')
-      .select(
-        'id, reference, transaction_type, provider, payment_status, internal_status, dispute_status, currency, gross_amount_cents, refunded_cents, seller_proceeds_cents, paypal_order_id, paypal_capture_id, payment_source, created_at, captured_at, listing_id, buyer_id, seller_id, booking_request_id, sale_transaction_id',
-      )
-      .or(`buyer_id.eq.${userId},seller_id.eq.${userId}`)
-      // `created` rows are checkout attempts that were never approved at PayPal
-      // (no money moved). They are not activity and must never be listed.
-      .not('payment_status', 'in', '("created","cancelled")')
-      .order('created_at', { ascending: false })
-      .limit(200);
+      if (error) throw error;
+      if (!data) return [];
 
-    if (error || !data) {
-      setTransactions([]);
-      setIsLoading(false);
-      return;
-    }
+      const listingIds = Array.from(new Set(data.map((r: any) => r.listing_id).filter(Boolean)));
+      let listings: Record<string, { title: string | null; cover_image_url: string | null }> = {};
+      if (listingIds.length) {
+        const { data: rows } = await supabase
+          .from('listings')
+          .select('id, title, cover_image_url')
+          .in('id', listingIds as string[]);
+        listings = Object.fromEntries(
+          (rows ?? []).map((l: any) => [l.id, { title: l.title, cover_image_url: l.cover_image_url }]),
+        );
+      }
 
-    const listingIds = Array.from(new Set(data.map((r: any) => r.listing_id).filter(Boolean)));
-    let listings: Record<string, { title: string | null; cover_image_url: string | null }> = {};
-    if (listingIds.length) {
-      const { data: rows } = await supabase
-        .from('listings')
-        .select('id, title, cover_image_url')
-        .in('id', listingIds as string[]);
-      listings = Object.fromEntries(
-        (rows ?? []).map((l: any) => [l.id, { title: l.title, cover_image_url: l.cover_image_url }]),
-      );
-    }
-
-    setTransactions(
-      data.map((r: any) => ({
+      return data.map((r: any) => ({
         ...r,
         role: r.buyer_id === userId ? 'buyer' : 'seller',
         listing: r.listing_id ? listings[r.listing_id] ?? null : null,
-      })),
-    );
-    setIsLoading(false);
-  }, [userId]);
+      }));
+    },
+  });
 
-  useEffect(() => { void load(); }, [load]);
-
-  return { transactions, isLoading, refresh: load };
+  return { transactions: query.data ?? [], isLoading: query.isLoading, isError: query.isError, refresh: query.refetch };
 }
 
 export const DISPUTE_REASONS: { value: string; label: string }[] = [
