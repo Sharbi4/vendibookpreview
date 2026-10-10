@@ -29,6 +29,13 @@ Use the existing **Vendibook Marketplace** Lovable project `f4d8586e-de66-4307-b
 5. Verify an unauthenticated request is rejected and an authenticated public sample address returns Google's accept/confirm/fix result. Verify missing unit, corrected postcode, stale input and outage handling. Do not use private customer addresses for smoke tests.
 6. Publish the frontend only after checking the backend deployment and live API response. A Git push alone is not deployment evidence.
 
+## Deployment verification — 2026-10-10
+
+- Implementation `6fb0817f4`, followed by working Google credential precedence in `fc92e946c`, is on `fix/paypal-webhook-config`.
+- Lovable deployed `validate-checkout-address` and `geocode-location` to the Vendibook backend above. Its signed-in public-sample checks returned `accept` for the full Google office address with ZIP+4, `confirm` for an abbreviated address or wrong ZIP, and `fix` for a missing street number. The unauthenticated check returned 401. No customer address or live payment was used.
+- Local verification: 25 focused tests passed across the address component, checkout fields, PayPal card fields and rental steps; application type checking passed. Lovable separately reported 39 tests passing and a successful production build.
+- Published through Lovable deployment `728f291f-355a-4f95-9c1a-1cac89a04a19`. HTTP verification found the same new entry asset (`index-DVZKuqFS.js`) on `vendibook.com` and `vendibook.lovable.app`; rental checkout, sale checkout and PayPal card chunks each import `CheckoutAddressCheck-PA5dIX2X.js`, which contains the live validation endpoint call. These are deployment and API checks, not evidence of a completed customer transaction.
+
 ## Focused verification
 
 Tests cover Google verdict interpretation, corrections, outage confirmation, stale responses, rental-contact save gating, sale delivery/freight gating, pickup, hosted card-field stability and rental Details navigation. Use one test worker on the local Windows machine to avoid unnecessary memory pressure.
