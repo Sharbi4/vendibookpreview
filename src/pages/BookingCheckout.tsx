@@ -243,6 +243,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   const [message, setMessage] = useState(restoredDraft?.message ?? '');
   const [userInfo, setUserInfo] = useState<BookingUserInfo | null>(null);
   const [editingContact, setEditingContact] = useState(false);
+  const [contactStepDone, setContactStepDone] = useState(false);
   const [detailsSection, setDetailsSection] = useState<RentalDetailsSection>('contact');
   const [isSubmitting, setIsSubmitting] = useState(false);
   /** Transaction agreements for this booking. Never pre-ticked. */
@@ -465,7 +466,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   ].filter(Boolean) as Array<{ label: string; value: string }>;
 
   // Each contained Details section must be complete before payment is available.
-  const isStepContactComplete = validRentalContact(userInfo);
+  const isStepContactComplete = contactStepDone && !editingContact && validRentalContact(userInfo);
   const isBusinessInfoComplete = !requiresBusinessInfo || Boolean(
     businessInfo?.licenseType &&
     (businessInfo.licenseType !== 'other' || businessInfo.licenseTypeOther) &&
@@ -487,7 +488,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   const detailsSections: RentalDetailsSectionState[] = [
     { id: 'contact', label: 'Contact', complete: isStepContactComplete && !editingContact },
     ...(requiresBusinessInfo ? [{ id: 'business' as const, label: 'Business', complete: !!isStepBusinessInfoComplete }] : []),
-    ...(hasRequiredDocs || requirementsLoading || requirementsError ? [{ id: 'documents' as const, label: 'Documents', complete: isStepDocsComplete }] : []),
+    ...(hasRequiredDocs || requirementsLoading || requirementsError ? [{ id: 'documents' as const, label: 'Documents', complete: docsStepDone && isStepDocsComplete }] : []),
     { id: 'verification', label: 'Verification', complete: isStepDisclosureComplete },
     { id: 'agreement', label: 'Agreement', complete: legalAccepted },
   ];
@@ -1443,6 +1444,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
                   onPartialChange={(partial) => setUserInfo(partial)}
                   onComplete={(info) => {
                     setUserInfo(info);
+                    setContactStepDone(true);
                     setEditingContact(false);
                     advanceDetails();
                   }}

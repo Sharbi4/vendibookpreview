@@ -20,7 +20,7 @@ vi.mock('@/lib/edge/invokeFunction', () => ({ invokeEdge: vi.fn().mockResolvedVa
 vi.mock('@/lib/rentalCheckoutAnalytics', () => ({ trackRentalCheckout: vi.fn() }));
 vi.mock('@/components/booking', () => ({
   SlotSelector: () => null, TowingHandoffPanel: () => null,
-  ContactInfoWizard: ({ onComplete }: any) => <button onClick={() => onComplete(state.contact)}>Save contact</button>,
+  ContactInfoWizard: ({ onComplete, onPartialChange }: any) => <><button onClick={() => onPartialChange(state.contact)}>Enter valid contact</button><button onClick={() => onComplete(state.contact)}>Save contact</button></>,
   BusinessInfoStep: ({ onBusinessInfoChange, onComplete }: any) => <button onClick={() => { onBusinessInfoChange(state.business); onComplete(); }}>Save business</button>,
 }));
 vi.mock('@/components/booking/RentalVerificationPanel', () => ({ default: ({ onComplete }: any) => <button onClick={() => onComplete({ attestedAt: '2026-10-09', documentVersion: 'v1', insuranceAnswer: 'yes' })}>Save verification</button> }));
@@ -41,7 +41,7 @@ beforeEach(() => {
 });
 function mountDetails() {
   render(<MemoryRouter initialEntries={['/book/listing-a?start=2026-11-01&end=2026-11-02']}><Routes><Route path="/book/:listingId" element={<BookingCheckout />} /></Routes></MemoryRouter>);
-  fireEvent.click(screen.getByRole('button', { name: 'Continue', exact: true }));
+  fireEvent.click(screen.getByRole('button', { name: /^Continue$/ }));
 }
 function completeContactAndBusiness() {
   fireEvent.click(screen.getByRole('button', { name: 'Save contact' }));
@@ -49,6 +49,21 @@ function completeContactAndBusiness() {
   fireEvent.click(screen.getByRole('button', { name: 'Save business' }));
   expect(screen.queryByRole('button', { name: 'Save business' })).not.toBeInTheDocument();
 }
+it('keeps valid contact edits open until Save completes and blocks forward navigation while editing', () => {
+  mountDetails();
+  fireEvent.click(screen.getByRole('button', { name: 'Enter valid contact' }));
+  expect(screen.getByRole('button', { name: 'Save contact' })).toBeInTheDocument();
+  expect(screen.queryByText('Contact details saved')).not.toBeInTheDocument();
+  const nav = screen.getByRole('navigation', { name: 'Rental details sections' });
+  expect(within(nav).getByRole('button', { name: /Business/ })).toBeDisabled();
+  fireEvent.click(screen.getByRole('button', { name: 'Save contact' }));
+  expect(screen.getByRole('button', { name: 'Save business' })).toBeInTheDocument();
+  fireEvent.click(within(nav).getByRole('button', { name: /Contact/ }));
+  fireEvent.click(screen.getByRole('button', { name: /Edit/ }));
+  fireEvent.click(screen.getByRole('button', { name: 'Enter valid contact' }));
+  expect(screen.getByRole('button', { name: 'Save contact' })).toBeInTheDocument();
+  expect(within(nav).getByRole('button', { name: /Business/ })).toBeDisabled();
+});
 it('replaces each Details form, skips documents when none are configured, and preserves back navigation', () => {
   mountDetails();
   expect(screen.queryByRole('button', { name: 'Save business' })).not.toBeInTheDocument();
