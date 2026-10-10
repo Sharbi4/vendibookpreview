@@ -204,12 +204,18 @@ export async function createPackageDocument(input: CreateDocumentInput): Promise
     if (!s.profile?.email) return { skipped: 'missing_party_email' };
   }
 
+  // Essential Purchase & Sale terms must be present and land on the template;
+  // never create or send an agreement missing parties or price.
+  const required = input.kind === 'purchase_sale_agreement' ? PSA_REQUIRED_FIELDS : [];
+  const blank = required.filter((k) => !String(input.prefill?.[k] ?? '').trim());
+  if (blank.length) throw new Error(`Purchase & Sale Agreement missing required values: ${blank.join(', ')}`);
+
   const signnowDocId = await createDocumentFromTemplate(template.templateId, input.documentName);
   await prefillFields(signnowDocId, {
     ...input.prefill,
     agreement_version: template.version,
     generated_at: new Date().toISOString(),
-  });
+  }, required);
 
   const invites = await createEmbeddedInvite(
     signnowDocId,
