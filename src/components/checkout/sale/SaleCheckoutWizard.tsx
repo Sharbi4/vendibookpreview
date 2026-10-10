@@ -25,6 +25,7 @@ interface SaleCheckoutWizardProps {
   nextDisabled?: boolean;
   nextBusy?: boolean;
   hideFooter?: boolean;
+  contentKey?: string;
 }
 
 /** A single contained checkout surface. Only its active step changes. */
@@ -44,13 +45,14 @@ const SaleCheckoutWizard = ({
   nextDisabled = false,
   nextBusy = false,
   hideFooter = false,
+  contentKey,
 }: SaleCheckoutWizardProps) => {
   const active = steps[currentStep - 1];
   const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     contentRef.current?.scrollTo({ top: 0 });
-  }, [currentStep]);
+  }, [currentStep, contentKey]);
 
   return (
     <section className="sale-wizard" aria-labelledby="sale-wizard-title">

@@ -51,6 +51,7 @@ import { buildTerms } from '@/lib/transactionTerms';
 import { cn } from '@/lib/utils';
 import { type BookingUserInfo, SlotSelector, BusinessInfoStep, type BusinessInfoData, ContactInfoWizard, TowingHandoffPanel } from '@/components/booking';
 import RentalVerificationPanel from '@/components/booking/RentalVerificationPanel';
+import { RentalDetailsFlow, type RentalDetailsSection, type RentalDetailsSectionState } from '@/components/booking/RentalDetailsFlow';
 import { BookingDocumentUpload, type StagedDocument } from '@/components/booking/BookingDocumentUpload';
 import { useDocumentsOnFile } from '@/hooks/useDocumentsOnFile';
 import HourlySelectionSummary from '@/components/booking/HourlySelectionSummary';
@@ -145,7 +146,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   const instantConfirm =
     rentalIsInstant(!!listing?.instant_book, hostIdentityVerified, requestedFlow);
   const { data: ratingData } = useListingAverageRating(listingId);
-  const { data: requiredDocs, isLoading: requirementsLoading, isError: requirementsError } = useListingRequiredDocuments(listingId || '');
+  const { data: requiredDocs, isLoading: requirementsLoading, isError: requirementsError, refetch: refetchRequirements } = useListingRequiredDocuments(listingId || '');
   const requiredDocTypes = requiredDocs?.map(d => d.document_type as string);
   const { data: docsOnFileData } = useDocumentsOnFile(requiredDocTypes);
   const docsOnFile = docsOnFileData?.docsOnFile ?? false;
@@ -242,6 +243,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   const [message, setMessage] = useState(restoredDraft?.message ?? '');
   const [userInfo, setUserInfo] = useState<BookingUserInfo | null>(null);
   const [editingContact, setEditingContact] = useState(false);
+  const [detailsSection, setDetailsSection] = useState<RentalDetailsSection>('contact');
   const [isSubmitting, setIsSubmitting] = useState(false);
   /** Transaction agreements for this booking. Never pre-ticked. */
   const rentalAgreement = useLegalDocument(DOCUMENT_TYPES.RENTAL_TRANSACTION_TERMS);
@@ -462,8 +464,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
     towingFields.return_instructions && { label: 'Return', value: towingFields.return_instructions },
   ].filter(Boolean) as Array<{ label: string; value: string }>;
 
-  // Completeness — used to gate the review/payment section. No step wizard:
-  // every section is always visible and each tracks its own completion.
+  // Each contained Details section must be complete before payment is available.
   const isStepContactComplete = validRentalContact(userInfo);
   const isBusinessInfoComplete = !requiresBusinessInfo || Boolean(
     businessInfo?.licenseType &&
@@ -483,6 +484,27 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   const isStepFulfillmentComplete = isFulfillmentComplete;
   // The server records the attestation; this only tracks that the step was passed.
   const isStepDisclosureComplete = disclosureDone && !!disclosureRecord?.attestedAt && !!disclosureRecord?.documentVersion;
+  const detailsSections: RentalDetailsSectionState[] = [
+    { id: 'contact', label: 'Contact', complete: isStepContactComplete && !editingContact },
+    ...(requiresBusinessInfo ? [{ id: 'business' as const, label: 'Business', complete: !!isStepBusinessInfoComplete }] : []),
+    ...(hasRequiredDocs || requirementsLoading || requirementsError ? [{ id: 'documents' as const, label: 'Documents', complete: isStepDocsComplete }] : []),
+    { id: 'verification', label: 'Verification', complete: isStepDisclosureComplete },
+    { id: 'agreement', label: 'Agreement', complete: legalAccepted },
+  ];
+  const advanceDetails = () => {
+    const index = detailsSections.findIndex(section => section.id === detailsSection);
+    setDetailsSection(detailsSections[Math.min(index + 1, detailsSections.length - 1)].id);
+  };
+  const backFromDetails = () => {
+    const index = detailsSections.findIndex(section => section.id === detailsSection);
+    if (index > 0) setDetailsSection(detailsSections[index - 1].id);
+    else goToStep(1);
+  };
+  useEffect(() => {
+    if (detailsSection === 'documents' && !requirementsLoading && !requirementsError && !hasRequiredDocs) {
+      setDetailsSection('verification');
+    }
+  }, [detailsSection, requirementsLoading, requirementsError, hasRequiredDocs]);
 
   const canSubmit = rentalSubmitAllowed({
     contact: isStepContactComplete && !hostIdentityLoading, business: !!isStepBusinessInfoComplete,
@@ -1228,14 +1250,15 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
           furthestStep={furthestStep}
           title={activeStep.heading}
           description={activeStep.description}
-          onStepChange={goToStep}
+          onStepChange={(next) => next === 3 ? continueToPayment() : goToStep(next)}
+          contentKey={step === 2 ? detailsSection : undefined}
           backHref={step === 1 ? listingHref : undefined}
-          onBack={step > 1 ? () => goToStep(step - 1) : undefined}
-          onNext={step === 2 ? continueToPayment : step < 3 ? () => goToStep(step + 1) : undefined}
+          onBack={step === 2 ? backFromDetails : step > 1 ? () => goToStep(step - 1) : undefined}
+          onNext={step === 2 ? (detailsSection === 'agreement' ? continueToPayment : undefined) : step < 3 ? () => goToStep(step + 1) : undefined}
           nextLabel={step === 2 ? 'Continue to payment' : 'Continue'}
           nextDisabled={
             (step === 1 && fulfillmentSelected === 'delivery' && !deliveryAddress.trim()) ||
-            (step === 2 && !(isStepContactComplete && isStepBusinessInfoComplete && isStepDocsComplete && isStepDisclosureComplete
+            (step === 2 && !(isStepContactComplete && !editingContact && isStepBusinessInfoComplete && isStepDocsComplete && isStepDisclosureComplete
               && rentalAgreementAccepted && privacyAccepted))
           }
         >
@@ -1392,8 +1415,9 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
           ) : null}
 
           {step === 2 ? (
-            <div className="space-y-6">
-              {isStepContactComplete && !editingContact ? (
+            <RentalDetailsFlow sections={detailsSections} active={detailsSection} onChange={setDetailsSection}>
+              {detailsSection === 'contact' && (isStepContactComplete && !editingContact ? (
+                <div className="space-y-4">
                 <div className="flex items-center justify-between p-4 bg-emerald-50 dark:bg-emerald-950/30 rounded-xl border border-emerald-200 dark:border-emerald-800/50">
                   <div className="flex items-center gap-3">
                     <CheckCircle2 className="h-5 w-5 text-emerald-600" />
@@ -1410,6 +1434,8 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
                     <Pencil aria-hidden /> Edit
                   </button>
                 </div>
+                <Button type="button" className="w-full" onClick={advanceDetails}>Continue</Button>
+                </div>
               ) : (
                 <ContactInfoWizard
                   listingId={listingId}
@@ -1418,44 +1444,48 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
                   onComplete={(info) => {
                     setUserInfo(info);
                     setEditingContact(false);
+                    advanceDetails();
                   }}
                 />
-              )}
+              ))}
 
-              {requiresBusinessInfo && (
-                <div className="pt-2 border-t border-border">
-                  <p className="text-sm text-muted-foreground mb-4 mt-4">
-                    Help the host understand your business and how you'll use the space.
-                  </p>
+              {detailsSection === 'business' && requiresBusinessInfo && (
+                <div>
                   <BusinessInfoStep
                     businessInfo={businessInfo}
                     onBusinessInfoChange={setBusinessInfo}
-                    onComplete={() => setBusinessInfoDone(true)}
+                    onComplete={() => { setBusinessInfoDone(true); advanceDetails(); }}
                     disabled={isSubmitting}
                     category={listing.category}
                   />
                 </div>
               )}
 
-              {hasRequiredDocs && (
-                <div className="pt-2 border-t border-border">
+              {detailsSection === 'documents' && (
+                <div>
+                  {requirementsLoading ? <p role="status">Loading this host's document requirements…</p> : requirementsError ? (
+                    <div role="alert" className="space-y-3">
+                      <p>We couldn't load this host's document requirements. Please retry before continuing.</p>
+                      <Button type="button" onClick={() => refetchRequirements()}>Retry requirements</Button>
+                    </div>
+                  ) : <>
                   <p className="text-sm font-semibold text-foreground mt-4 mb-4">Documents selected by this host</p>
                   <BookingDocumentUpload
                     requiredDocs={requiredDocs || []}
                     stagedDocuments={stagedDocuments}
                     onDocumentsChange={setStagedDocuments}
-                    onComplete={() => setDocsStepDone(true)}
+                    onComplete={() => { setDocsStepDone(true); advanceDetails(); }}
                     disabled={isSubmitting}
                     docsOnFile={docsOnFile}
                     onFileExpiresAt={docsOnFileData?.expiresAt}
                     isInstantBook={instantConfirm}
                   />
+                  </>}
                 </div>
               )}
 
-              {listing.id ? (
-                <div className="pt-2 border-t border-border">
-                  <p className="text-sm font-semibold text-foreground mt-4 mb-1">Verification</p>
+              {detailsSection === 'verification' && listing.id ? (
+                <div>
                   <p className="text-xs text-muted-foreground mb-4">Answer one insurance question and confirm the rental requirements.</p>
                   <RentalVerificationPanel
                     onValidityChange={(valid) => { if (!valid) setDisclosureDone(false); }}
@@ -1474,16 +1504,13 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
                         insuranceAnswer: state.insuranceAnswer,
                       });
                       setDisclosureDone(true);
+                      advanceDetails();
                     }}
                   />
                 </div>
               ) : null}
-            </div>
-          ) : null}
-
-          {step === 2 ? (
-            <div className="mt-6 space-y-4 border-t border-border pt-6">
-              <h3 className="text-base font-semibold text-foreground">Agreement</h3>
+              {detailsSection === 'agreement' && (
+            <div className="space-y-4">
               <div className="rounded-xl border border-border bg-muted/30 p-4">
                 <div className="flex items-center gap-2 mb-1.5">
                   <Clock className="h-4 w-4 text-foreground" />
@@ -1514,6 +1541,8 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
                 onPrivacyAcceptedChange={setPrivacyAccepted}
               />
             </div>
+              )}
+            </RentalDetailsFlow>
           ) : null}
 
           {step === 3 ? (
