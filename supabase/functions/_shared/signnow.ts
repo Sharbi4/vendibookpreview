@@ -129,18 +129,35 @@ export async function createDocumentFromTemplate(
 export async function prefillFields(
   documentId: string,
   fields: Record<string, string | number | null | undefined>,
+  requiredFields: readonly string[] = [],
 ): Promise<void> {
-  const entries = Object.entries(fields)
+  let entries = Object.entries(fields)
     .filter(([, v]) => v !== undefined && v !== null)
     .map(([field_name, prefilled_text]) => ({
       field_name,
       prefilled_text: String(prefilled_text),
     }));
-  if (!entries.length) return;
-  await apiFetch(`/v2/documents/${documentId}/prefill-texts`, {
-    method: 'PUT',
-    json: { fields: entries },
-  });
+  // A field missing from the template rejects the whole request; drop the
+  // unknown field (logged) and retry so one stale key never blocks a document.
+  for (let attempt = 0; attempt < 10; attempt++) {
+    if (!entries.length) return;
+    try {
+      await apiFetch(`/v2/documents/${documentId}/prefill-texts`, {
+        method: 'PUT',
+        json: { fields: entries },
+      });
+      return;
+    } catch (err) {
+      const missing = /Field (\S+) not found among text fields/.exec(String((err as Error)?.message))?.[1];
+      if (!missing || !entries.some((e) => e.field_name === missing)) throw err;
+      if (requiredFields.includes(missing)) {
+        throw new Error(`SignNow template is missing required field "${missing}"; agreement not sent`);
+      }
+      console.warn(`[signnow] template has no text field "${missing}"; skipping it`);
+      entries = entries.filter((e) => e.field_name !== missing);
+    }
+  }
+  throw new Error('SignNow prefill failed: too many unknown fields');
 }
 
 /**

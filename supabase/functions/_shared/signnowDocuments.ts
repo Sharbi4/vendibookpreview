@@ -32,6 +32,8 @@ import { resolveTemplate, currentTemplateVersion } from './signnowTemplates.ts';
 import type { AssetVariant } from './signnowTemplateSpecs.ts';
 import type { TemplateKind } from './signnowTemplateSpecs.ts';
 import { invokeTransactionalEmail } from './invokeTransactionalEmail.ts';
+
+export const PSA_REQUIRED_FIELDS = ['buyer_name', 'seller_name', 'asset_price', 'transaction_total'];
 import {
   buildRequirementsSnapshot,
   describeRequirements,
@@ -204,12 +206,18 @@ export async function createPackageDocument(input: CreateDocumentInput): Promise
     if (!s.profile?.email) return { skipped: 'missing_party_email' };
   }
 
+  // Essential Purchase & Sale terms must be present and land on the template;
+  // never create or send an agreement missing parties or price.
+  const required = input.kind === 'purchase_sale_agreement' ? PSA_REQUIRED_FIELDS : [];
+  const blank = required.filter((k) => !String(input.prefill?.[k] ?? '').trim());
+  if (blank.length) throw new Error(`Purchase & Sale Agreement missing required values: ${blank.join(', ')}`);
+
   const signnowDocId = await createDocumentFromTemplate(template.templateId, input.documentName);
   await prefillFields(signnowDocId, {
     ...input.prefill,
     agreement_version: template.version,
     generated_at: new Date().toISOString(),
-  });
+  }, required);
 
   const invites = await createEmbeddedInvite(
     signnowDocId,
@@ -478,7 +486,6 @@ export async function ensurePurchaseSaleAgreement(transactionId: string): Promis
       tx.carrier ? `Freight carrier recorded: ${tx.carrier}` : '',
       tx.tracking_number ? `Tracking reference: ${tx.tracking_number}` : '',
     ),
-    terms_version: str(terms?.terms_version),
   };
 
   const result = await createPackageDocument({
