@@ -603,7 +603,7 @@ export const generateListingBreadcrumbSchema = (listing: {
   };
 };
 
-// ItemList schema for search results - helps Google index multiple products
+// Collection references only. Product offers belong on individual listing pages.
 export const generateItemListSchema = (
   listings: ProductListItem[],
   searchParams?: {
@@ -611,6 +611,7 @@ export const generateItemListSchema = (
     category?: string;
     query?: string;
     location?: string;
+    canonicalPath?: string;
   }
 ) => {
   const categoryLabels: Record<string, string> = {
@@ -637,7 +638,7 @@ export const generateItemListSchema = (
   if (searchParams?.mode && searchParams.mode !== 'all') urlParams.set('mode', searchParams.mode);
   if (searchParams?.category && searchParams.category !== 'all') urlParams.set('category', searchParams.category);
   if (searchParams?.query) urlParams.set('q', searchParams.query);
-  const listUrl = `https://vendibook.com/search${urlParams.toString() ? '?' + urlParams.toString() : ''}`;
+  const listUrl = searchParams?.canonicalPath ? new URL(searchParams.canonicalPath, 'https://vendibook.com').href : 'https://vendibook.com/search' + (urlParams.size ? '?' + urlParams.toString() : '');
 
   // Loading, failed, and empty searches have no visible list to mark up.
   // Emit page identity instead of an empty carousel candidate.
@@ -655,33 +656,13 @@ export const generateItemListSchema = (
     '@type': 'ItemList',
     name: listName,
     url: listUrl,
-    numberOfItems: listings.length,
-    itemListElement: listings.slice(0, 50).map((listing, index) => {
-      const price = listing.mode === 'rent'
-        ? (listing.price_daily || listing.price_weekly || 0)
-        : (listing.price_sale || 0);
-
-      return {
-        '@type': 'ListItem',
-        position: index + 1,
-        item: {
-          '@type': 'Product',
-          name: listing.title,
-          url: `https://vendibook.com/listing/${listing.id}`,
-          image: listing.cover_image_url || 'https://vendibook.com/placeholder.svg',
-          description: listing.description?.slice(0, 200) || `${categoryLabels[listing.category] || 'Asset'} ${listing.mode === 'rent' ? 'for rent' : 'for sale'}`,
-          offers: {
-            '@type': 'Offer',
-            url: `https://vendibook.com/listing/${listing.id}`,
-            priceCurrency: 'USD',
-            price: price.toString(),
-            availability: listing.status === 'published'
-              ? 'https://schema.org/InStock'
-              : 'https://schema.org/OutOfStock',
-          },
-        },
-      };
-    }),
+    numberOfItems: Math.min(listings.length, 50),
+    itemListElement: listings.slice(0, 50).map((listing, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: listing.title,
+      url: 'https://vendibook.com/listing/' + listing.id,
+    })),
   };
 };
 

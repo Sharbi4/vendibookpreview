@@ -218,7 +218,7 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
       price_sale: l.price_sale,
       status: l.status,
     })),
-    { mode: dbMode as any, category: dbCategory, location: `${city.name}, ${city.stateCode}` }
+    { mode: dbMode as any, category: dbCategory, location: `${city.name}, ${city.stateCode}`, canonicalPath }
   );
 
   const breadcrumbSchema = generateCityCategoryBreadcrumbSchema(mode, categorySlug!, categoryLabel, cityStateSlug!, city.name, city.stateCode);

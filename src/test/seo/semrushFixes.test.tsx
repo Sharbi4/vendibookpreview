@@ -35,7 +35,8 @@ describe('search structured data', () => {
       { id: 'truck-1', title: 'Coffee truck', category: 'food_truck', mode: 'sale', price_sale: 42000, status: 'published' },
     ], { mode: 'sale' });
     expect(result['@type']).toBe('ItemList');
-    expect(result.itemListElement?.[0].item.url).toBe('https://vendibook.com/listing/truck-1');
-    expect(result.itemListElement?.[0].item.offers.price).toBe('42000');
+    expect(result.itemListElement?.[0].url).toBe('https://vendibook.com/listing/truck-1');
+    expect(result.itemListElement?.[0]).not.toHaveProperty('item');
+    expect(JSON.stringify(result)).not.toContain('Offer');
   });
 });
