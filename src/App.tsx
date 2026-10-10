@@ -264,6 +264,7 @@ import { SPECIALTY_CATEGORY_CONFIGS } from "./data/specialtyCategoryConfigs";
 import {
   HoustonList,
   HoustonBrowse,
+  CityBrowseBySlug,
   HoustonListFoodTruck,
   HoustonListFoodTrailer,
   HoustonListVendorSpace,
@@ -711,6 +712,7 @@ const AnimatedRoutes = () => {
           <Route path="/phoenix/list-vendor-space" element={<PageTransition><PhoenixListVendorSpace /></PageTransition>} />
           
           {/* Dynamic city SEO pages - catches valid city slugs like /houston, /dallas */}
+          <Route path="/:citySlug/browse" element={<PageTransition><CityBrowseBySlug /></PageTransition>} />
           <Route path="/:citySlug" element={<PageTransition><DynamicCityPage /></PageTransition>} />
           
           {/* MCP OAuth consent — must be routable so external clients complete authorization */}
