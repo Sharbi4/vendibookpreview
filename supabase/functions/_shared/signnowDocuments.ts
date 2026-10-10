@@ -478,7 +478,6 @@ export async function ensurePurchaseSaleAgreement(transactionId: string): Promis
       tx.carrier ? `Freight carrier recorded: ${tx.carrier}` : '',
       tx.tracking_number ? `Tracking reference: ${tx.tracking_number}` : '',
     ),
-    terms_version: str(terms?.terms_version),
   };
 
   const result = await createPackageDocument({
