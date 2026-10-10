@@ -819,7 +819,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
 
       // Stop before payment on upload failure. Retry the same booking and skip
       // documents already recorded successfully during this checkout session.
-      for (const stagedDoc of stagedDocuments) {
+      for (const stagedDoc of stagedDocuments.filter(doc => requiredDocs?.some(req => req.document_type === doc.documentType))) {
         if (uploadedDocumentsRef.current.has(stagedDoc)) continue;
         const fileExt = stagedDoc.file.name.split('.').pop();
         const filePath = `${bookingId}/${stagedDoc.documentType}_${crypto.randomUUID()}.${fileExt}`;
@@ -1439,12 +1439,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
 
               {hasRequiredDocs && (
                 <div className="pt-2 border-t border-border">
-                  <p className="text-sm font-semibold text-foreground mt-4">Documents this host requires</p>
-                  <p className="text-xs text-muted-foreground mb-4">
-                    {docsOnFile
-                      ? 'On file'
-                      : `${preBookingBlockers.filter((req) => stagedDocuments.some((doc) => doc.documentType === req.document_type)).length} of ${preBookingBlockers.length} ready`}
-                  </p>
+                  <p className="text-sm font-semibold text-foreground mt-4 mb-4">Documents selected by this host</p>
                   <BookingDocumentUpload
                     requiredDocs={requiredDocs || []}
                     stagedDocuments={stagedDocuments}
@@ -1453,6 +1448,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
                     disabled={isSubmitting}
                     docsOnFile={docsOnFile}
                     onFileExpiresAt={docsOnFileData?.expiresAt}
+                    isInstantBook={instantConfirm}
                   />
                 </div>
               )}
