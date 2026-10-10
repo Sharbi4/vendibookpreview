@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { refundPayment } from "../_shared/paymentOps.ts";
 import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
 import { queueCompletedRentalPayouts } from "../_shared/rentalPayoutEligibility.ts";
+import { confirmedRefundId } from "../_shared/confirmedRefund.ts";
 
 declare const EdgeRuntime: { waitUntil: (promise: Promise<unknown>) => void };
 
@@ -212,13 +213,17 @@ serve(async (req) => {
           }
 
           // Check if there's an active dispute on the booking itself
-          const { data: bookingWithDispute } = await supabaseClient
+          const { data: bookingWithDispute, error: disputeError } = await supabaseClient
             .from('booking_requests')
             .select('dispute_status')
             .eq('id', booking.id)
             .single();
 
-          if (bookingWithDispute?.dispute_status && bookingWithDispute.dispute_status !== 'closed') {
+          if (disputeError || !bookingWithDispute) {
+            results.errors.push(`Cannot verify deposit dispute status for ${booking.id}`);
+            continue;
+          }
+          if (bookingWithDispute.dispute_status && !['none', 'closed', 'resolved'].includes(bookingWithDispute.dispute_status)) {
             logStep("Booking has active dispute - skipping deposit refund", { bookingId: booking.id, disputeStatus: bookingWithDispute.dispute_status });
             continue;
           }
@@ -233,6 +238,10 @@ serve(async (req) => {
           // Refund the deposit through PayPal. Legacy references from the
           // retired processor resolve to a manual outcome for admin settlement.
           let refundId: string | null = null;
+          if (!booking.deposit_charge_id) {
+            results.errors.push(`Deposit ${booking.id} has no payment reference; manual review is required.`);
+            continue;
+          }
           if (booking.deposit_charge_id) {
             try {
               const outcome = await refundPayment({
@@ -241,8 +250,8 @@ serve(async (req) => {
                 reason: 'Automatic deposit release after rental completion',
                 idempotencyKey: `deposit-auto-refund:${booking.id}`,
               });
-              refundId = outcome.refundId ?? null;
-              logStep("Deposit refund outcome", { mode: outcome.mode, refundId, amount: refundAmount });
+              refundId = confirmedRefundId(outcome, Math.round(refundAmount * 100));
+              logStep("Deposit refund completed", { refundId, amount: refundAmount });
             } catch (refundError) {
               const message = refundError instanceof Error ? refundError.message : String(refundError);
               logStep("Deposit refund failed", { error: message });
@@ -252,14 +261,18 @@ serve(async (req) => {
           }
 
           // Update booking
-          await supabaseClient
+          const { data: refundedBooking, error: recordError } = await supabaseClient
             .from('booking_requests')
             .update({ 
               deposit_status: 'refunded',
               deposit_refunded_at: now.toISOString(),
               deposit_refund_notes: 'Auto-refunded 24 hours after rental completion - no issues reported',
             })
-            .eq('id', booking.id);
+            .eq('id', booking.id)
+            .eq('deposit_status', 'charged')
+            .select('id');
+          if (recordError) throw new Error(`Refund ${refundId} completed but could not be recorded: ${recordError.message}`);
+          if (!refundedBooking?.length) continue;
 
           results.depositsRefunded++;
           logStep("Deposit refunded", { bookingId: booking.id, refundId });
