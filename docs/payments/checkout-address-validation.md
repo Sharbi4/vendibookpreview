@@ -24,7 +24,7 @@ Use the existing **Vendibook Marketplace** Lovable project `f4d8586e-de66-4307-b
 
 1. Sync the tested changes from `fix/paypal-webhook-config` while preserving concurrent project changes.
 2. Deploy `validate-checkout-address` and its shared dependencies, and the updated `geocode-location` (structured Google address components, no query-address logs).
-3. Enable Google's Address Validation API for the server credential's Google project. Prefer `GOOGLE_ADDRESS_VALIDATION_API_KEY`; existing `GOOGLE_MAPS_API_KEY` or `GOOGLE_API_KEY` are fallbacks. Restrict the credential appropriately server-side; do not expose it through a frontend environment variable. Google Places/Geocoding permission alone does not enable Address Validation.
+3. Enable Google's Address Validation API for the server credential's Google project. Prefer `GOOGLE_ADDRESS_VALIDATION_API_KEY`; then `GOOGLE_API_KEY` (verified working 2026-10-10), then `GOOGLE_MAPS_API_KEY` (rejected by this API as API_KEY_INVALID). Restrict the credential appropriately server-side; do not expose it through a frontend environment variable. Google Places/Geocoding permission alone does not enable Address Validation.
 4. The new function uses `verify_jwt=false` at the gateway and validates the bearer token using `auth.getUser` inside the handler. Keep this custom authentication in place.
 5. Verify an unauthenticated request is rejected and an authenticated public sample address returns Google's accept/confirm/fix result. Verify missing unit, corrected postcode, stale input and outage handling. Do not use private customer addresses for smoke tests.
 6. Publish the frontend only after checking the backend deployment and live API response. A Git push alone is not deployment evidence.
