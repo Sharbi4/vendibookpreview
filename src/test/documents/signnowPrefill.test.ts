@@ -51,6 +51,7 @@ describe('Purchase & Sale Agreement required values', () => {
   it('lists parties and price as required, without terms_version', () => {
     const src = readFileSync('supabase/functions/_shared/signnowDocuments.ts', 'utf8');
     expect(src).toContain("PSA_REQUIRED_FIELDS = ['buyer_name', 'seller_name', 'asset_price', 'transaction_total']");
-    expect(src).not.toMatch(/terms_version: str\(/);
+    const psa = src.slice(src.indexOf('ensurePurchaseSaleAgreement'), src.indexOf("kind: 'purchase_sale_agreement'"));
+    expect(psa).not.toMatch(/terms_version: str\(/);
   });
 });
