@@ -359,13 +359,15 @@ async function loadSaleContext(transactionId: string) {
     .limit(1)
     .maybeSingle();
 
-  const { data: payment } = await supabase
+  const { data: payment, error: paymentError } = await supabase
     .from('payment_records')
-    .select('reference,provider,amount')
+    .select('reference,provider')
     .eq('sale_transaction_id', transactionId)
     .order('created_at', { ascending: false })
     .limit(1)
     .maybeSingle();
+  // Payment details are optional on the agreement; never block generation on them.
+  if (paymentError) console.warn('[signnowDocuments] payment lookup failed', paymentError.code ?? 'unknown');
 
   const seller = await loadProfile(tx.seller_id);
   const buyer = await loadProfile(tx.buyer_id);
