@@ -391,7 +391,7 @@ const STATE_CONTENT_OVERRIDES: Record<string, {
   'texas:food_trailer': {
     title: 'Food Trailers for Sale in Texas | Used & Owner-Listed | Vendibook',
     description: 'Food trailers for sale in Texas: owner-listed concession and mobile kitchen trailers in Houston, DFW, Austin & San Antonio. Compare prices, sizes, and specs — financing available.',
-    introExtra: 'Texas is one of Vendibook\'s deepest food trailer markets — concession and mobile kitchen trailers list here more often than anywhere else in the country. Buyers typically compare the Houston, Dallas–Fort Worth, Austin, and San Antonio corridors, where everything from compact coffee trailers to full 24-foot kitchens turns over regularly.',
+    introExtra: 'Compare available concession and mobile kitchen trailers across Texas, using Houston, Dallas–Fort Worth, Austin, and San Antonio as starting points for your search. For a trailer outside your area, include the inspection trip and towing or freight cost in your budget. Confirm the loaded trailer weight and tow-vehicle requirements before arranging pickup.',
     extraRelated: [
       { href: '/food-trailers-for-sale/houston-tx', label: 'Food trailers for sale in Houston' },
       { href: '/financing', label: 'Financing options' },
@@ -400,7 +400,7 @@ const STATE_CONTENT_OVERRIDES: Record<string, {
   'arizona:food_truck': {
     title: 'Food Trucks for Sale in Arizona | Used & Owner-Listed | Vendibook',
     description: 'Food trucks for sale in Arizona: owner-listed trucks in Phoenix, Tucson & beyond with real photos, specs, and asking prices. Message sellers directly — financing available.',
-    introExtra: 'Arizona\'s year-round operating season — plus a packed calendar of festivals, spring training, and winter-visitor events — makes it one of the few states where a truck can trade twelve months a year. Most inventory concentrates in the Phoenix metro, with Tucson as a strong secondary market.',
+    introExtra: 'Compare available food trucks in Phoenix, Tucson, and other Arizona locations shown in the listings. Ask for a demonstration of refrigeration and workspace cooling under the conditions in which you plan to operate. Include generator capacity, shade, ventilation, and the inspection trip when comparing equipment and asking prices.',
     extraRelated: [
       { href: '/financing', label: 'Financing options' },
     ],
@@ -408,7 +408,7 @@ const STATE_CONTENT_OVERRIDES: Record<string, {
   'arizona:food_trailer': {
     title: 'Food Trailers for Sale in Arizona | Used & Owner-Listed | Vendibook',
     description: 'Food trailers for sale in Arizona: owner-listed concession and mobile kitchen trailers in Phoenix, Tucson, and statewide. Compare prices and specs — financing available.',
-    introExtra: 'Arizona\'s event circuit — festivals, spring training, and a long winter-visitor season — suits trailer operators who want lower upfront cost than a self-propelled truck. Most Arizona trailer inventory lists out of the Phoenix metro and Tucson.',
+    introExtra: 'Browse available Arizona trailers and compare the seller’s location with your planned pickup route. Ask how refrigeration, ventilation, and power will work at your intended site, and verify loaded weight, hitch requirements, tires, and brakes against your tow vehicle. Confirm the equipment included in the asking price before booking an inspection.',
     extraRelated: [
       { href: '/financing', label: 'Financing options' },
     ],
@@ -426,7 +426,7 @@ const STATE_CONTENT_OVERRIDES: Record<string, {
   'georgia:food_trailer': {
     title: 'Food Trailers for Sale in Georgia | Used & Owner-Listed | Vendibook',
     description: 'Food trailers for sale in Georgia: owner-listed concession and mobile kitchen trailers in Atlanta and statewide. Compare prices, sizes, and specs — financing available.',
-    introExtra: 'Georgia is one of Vendibook\'s most active trailer markets — concession trailers list frequently out of the Atlanta metro, where festival, brewery, and catering demand keeps the asset type moving. Trailers are a popular entry point here because they cost less than a self-propelled truck and tow easily between events.',
+    introExtra: 'Compare available food trailers throughout Georgia, with seller locations and asking prices shown in the inventory. For a statewide search, budget for inspection, pickup, and any delivery alongside the trailer itself. If you need equipment near Atlanta, use the local page to narrow your search and confirm the actual pickup location with the seller.',
     extraRelated: [
       { href: '/financing', label: 'Financing options' },
     ],
@@ -466,7 +466,7 @@ const STATE_CONTENT_OVERRIDES: Record<string, {
   'florida:food_truck': {
     title: 'Food Trucks for Sale in Florida | Used & Owner-Listed | Vendibook',
     description: 'Food trucks for sale in Florida: owner-listed trucks in Miami, Tampa, Orlando & beyond with real photos, specs, and asking prices. Message sellers directly — financing available.',
-    introExtra: 'Florida\'s year-round season and event calendar — beach markets, festivals, and tourism corridors — make it one of the strongest states to operate a food truck. Most Florida inventory on Vendibook lists out of Miami and Tampa, with Orlando and Jacksonville as active secondary markets.',
+    introExtra: 'Compare available food trucks across Florida, including Miami, Tampa, Orlando, and Jacksonville when listings are available. Ask sellers about refrigeration performance, ventilation, roof and window seals, and any corrosion or storm damage. Review maintenance records and include pickup or freight in the total purchase budget.',
     extraRelated: [
       { href: '/financing', label: 'Financing options' },
     ],
@@ -474,7 +474,7 @@ const STATE_CONTENT_OVERRIDES: Record<string, {
   'florida:food_trailer': {
     title: 'Food Trailers for Sale in Florida | Used & Owner-Listed | Vendibook',
     description: 'Food trailers for sale in Florida: owner-listed concession and mobile kitchen trailers in Miami, Tampa, Orlando, and statewide. Compare prices and specs — financing available.',
-    introExtra: 'Florida\'s year-round event calendar suits trailer operators — concession and mobile kitchen trailers serve beach markets, festivals, and tourism corridors without the upfront cost of a self-propelled truck. Most Florida trailer inventory lists out of Miami and Tampa.',
+    introExtra: 'Compare available Florida concession trailers by equipment, asking price, and seller location. Inspect the roof, seals, frame, and electrical connections, and ask about storage and storm-damage history. Check loaded weight and towing requirements before choosing between pickup and freight delivery.',
     extraRelated: [
       { href: '/financing', label: 'Financing options' },
     ],
