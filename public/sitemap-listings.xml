@@ -200,7 +200,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/f13ba587-0d95-48f3-9a18-3bb92e540e05</loc>
-    <lastmod>2026-10-08</lastmod>
+    <lastmod>2026-10-10</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -1058,7 +1058,7 @@
   </url>
   <url>
     <loc>https://vendibook.com/listing/1707a6d0-76e7-4ad0-8a31-403b6a5b047e</loc>
-    <lastmod>2026-10-07</lastmod>
+    <lastmod>2026-10-10</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
     <image:image>
@@ -1516,6 +1516,17 @@
       <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/0deea445-fe00-4aca-bb97-2c820d165943/21480747-bd4e-4dc3-8fea-c14258b9e5f3/1791502664450-ptcdhi.jpg</image:loc>
       <image:title>TURNKEY COMMERCIAL FOOD TRUCK</image:title>
       <image:caption>TURNKEY COMMERCIAL FOOD TRUCK in Watertown, CT on Vendibook</image:caption>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://vendibook.com/listing/80199c47-a1d7-4b4d-b7c5-edad6442d6ee</loc>
+    <lastmod>2026-10-09</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+    <image:image>
+      <image:loc>https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/listing-images/6636472b-46ed-41ae-93ae-24d8853e0f93/80199c47-a1d7-4b4d-b7c5-edad6442d6ee/1791586047500-yf918h.png</image:loc>
+      <image:title>Fully equipped snow cone trailer</image:title>
+      <image:caption>Fully equipped snow cone trailer in Anna, TX on Vendibook</image:caption>
     </image:image>
   </url>
 </urlset>
