@@ -1,0 +1,97 @@
+{
+  "checkedAt": "2026-10-10T01:50:43.125Z",
+  "scope": "Public HTTP response before JavaScript rendering; not a Google URL Inspection result",
+  "records": [
+    {
+      "path": "/food-trucks-for-sale/ohio",
+      "status": 200,
+      "url": "https://vendibook.com/food-trucks-for-sale/ohio",
+      "xRobots": null,
+      "title": "Vendibook | Buy, Sell & Rent Food Trucks & Trailers",
+      "canonical": null,
+      "initialH1": null,
+      "bytes": 9815
+    },
+    {
+      "path": "/food-trucks-for-sale/michigan",
+      "status": 200,
+      "url": "https://vendibook.com/food-trucks-for-sale/michigan",
+      "xRobots": null,
+      "title": "Vendibook | Buy, Sell & Rent Food Trucks & Trailers",
+      "canonical": null,
+      "initialH1": null,
+      "bytes": 9815
+    },
+    {
+      "path": "/buy/food-trucks/miami-fl",
+      "status": 200,
+      "url": "https://vendibook.com/buy/food-trucks/miami-fl",
+      "xRobots": null,
+      "title": "Vendibook | Buy, Sell & Rent Food Trucks & Trailers",
+      "canonical": null,
+      "initialH1": null,
+      "bytes": 9815
+    },
+    {
+      "path": "/food-trucks-for-rent",
+      "status": 200,
+      "url": "https://vendibook.com/food-trucks-for-rent",
+      "xRobots": null,
+      "title": "Vendibook | Buy, Sell & Rent Food Trucks & Trailers",
+      "canonical": null,
+      "initialH1": null,
+      "bytes": 9815
+    },
+    {
+      "path": "/rent/food-trailers/houston-tx",
+      "status": 200,
+      "url": "https://vendibook.com/rent/food-trailers/houston-tx",
+      "xRobots": null,
+      "title": "Vendibook | Buy, Sell & Rent Food Trucks & Trailers",
+      "canonical": null,
+      "initialH1": null,
+      "bytes": 9815
+    },
+    {
+      "path": "/coffee-trucks-trailers-for-sale",
+      "status": 200,
+      "url": "https://vendibook.com/coffee-trucks-trailers-for-sale",
+      "xRobots": null,
+      "title": "Vendibook | Buy, Sell & Rent Food Trucks & Trailers",
+      "canonical": null,
+      "initialH1": null,
+      "bytes": 9815
+    },
+    {
+      "path": "/legal/payments-terms",
+      "status": 200,
+      "url": "https://vendibook.com/legal/payments-terms",
+      "xRobots": null,
+      "title": "Vendibook | Buy, Sell & Rent Food Trucks & Trailers",
+      "canonical": null,
+      "initialH1": null,
+      "bytes": 9815
+    },
+    {
+      "path": "/legal/recording-consent",
+      "status": 200,
+      "url": "https://vendibook.com/legal/recording-consent",
+      "xRobots": null,
+      "title": "Vendibook | Buy, Sell & Rent Food Trucks & Trailers",
+      "canonical": null,
+      "initialH1": null,
+      "bytes": 9815
+    },
+    {
+      "path": "/why-list-on-vendibook",
+      "status": 200,
+      "url": "https://vendibook.com/why-list-on-vendibook",
+      "xRobots": null,
+      "title": "Vendibook | Buy, Sell & Rent Food Trucks & Trailers",
+      "canonical": null,
+      "initialH1": null,
+      "bytes": 9815
+    }
+  ],
+  "robots": "User-agent: *\nAllow: /\nDisallow: /dashboard\nDisallow: /admin\nDisallow: /messages\nDisallow: /checkout\nDisallow: /book\nDisallow: /account\nDisallow: /auth\nDisallow: /reset-password\nDisallow: /create-listing\nDisallow: /list$\nDisallow: /list/\nDisallow: /host/\nDisallow: /notification-preferences\nDisallow: /favorites\nDisallow: /transactions\nDisallow: /identity-verification\nDisallow: /verification-complete\nDisallow: /unsubscribe\nDisallow: /email-unsubscribe\n\nSitemap: https://vendibook.com/sitemap.xml\nSitemap: https://vendibook.com/sitemap_pages.xml\nSitemap: https://vendibook.com/sitemap-listings.xml\nSitemap: https://vendibook.com/sitemap-locations.xml\nSitemap: https://vendibook.com/sitemap-legal.xml\n"
+}
