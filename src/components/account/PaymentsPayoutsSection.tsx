@@ -12,13 +12,13 @@ import {
   type PayoutPreferenceInput,
 } from '@/lib/payouts/methods';
 import PayoutMethodForm from './PayoutMethodForm';
-import SellerPayPalConnect from './SellerPayPalConnect';
+
 import { SectionCard } from './RowLink';
 
 /**
  * Payments & payouts.
  *
- * Buyer payments run through PayPal. Seller earnings are reviewed and paid
+ * Vendibook-collected seller earnings are reviewed and paid
  * MANUALLY by Vendibook — this screen collects a payout preference for those
  * manual payouts. It is not a connected merchant account and it never gates
  * publishing or checkout.
@@ -74,7 +74,7 @@ export default function PaymentsPayoutsSection() {
             </div>
 
             <p className="text-xs text-muted-foreground mt-0.5">
-              Seller earnings are reviewed and paid manually by Vendibook according to the
+              Funds collected by Vendibook are reviewed and paid manually according to the
               transaction timeline. {PAYOUT_PREFERENCE_DISCLOSURE}
             </p>
 
@@ -119,7 +119,7 @@ export default function PaymentsPayoutsSection() {
         </div>
       </div>
 
-      <SellerPayPalConnect />
+      <div className="p-5"><Link className="text-primary underline underline-offset-4" to="/dashboard/payments/setup">Manage PayPal sales and Square rental connections</Link></div>
 
       {/* How buyers pay */}
       <div className="p-5 flex items-start gap-4">
@@ -144,13 +144,14 @@ export default function PaymentsPayoutsSection() {
         <div className="min-w-0 space-y-1">
           <span className="text-sm font-semibold text-foreground">Receipts & records</span>
           <p className="text-xs text-muted-foreground">
-            Every purchase and membership charge is recorded in your Vendibook account, alongside
-            the PayPal transaction receipt.
+            View marketplace payment status and receipts in Transactions. Plans, boosts, and services
+            have a separate purchase history.
           </p>
           <div className="flex flex-wrap gap-3 pt-1 text-xs">
-            <Link to="/account/purchases" className="text-primary underline underline-offset-4">Purchases &amp; receipts</Link>
+            <Link to="/dashboard/transactions" className="text-primary underline underline-offset-4">Marketplace transactions &amp; receipts</Link>
+            <Link to="/account/purchases" className="text-primary underline underline-offset-4">Plans, boosts &amp; services</Link>
             <Link to="/account/subscription" className="text-primary underline underline-offset-4">Manage membership</Link>
-            <Link to="/dashboard?tab=payouts" className="text-primary underline underline-offset-4">Earnings &amp; payouts</Link>
+            <Link to="/dashboard/payments" className="text-primary underline underline-offset-4">Earnings &amp; payouts</Link>
           </div>
         </div>
       </div>

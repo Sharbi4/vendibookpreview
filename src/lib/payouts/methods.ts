@@ -276,4 +276,4 @@ export function normalizePayoutPreference(
 
 /** Copy shown next to a saved preference. Never promises automated payouts. */
 export const PAYOUT_PREFERENCE_DISCLOSURE =
-  'This is a payout preference for Vendibook operations — not a connected merchant account. Vendibook reviews and sends every payout manually.';
+  'This preference applies to funds collected and paid out by Vendibook after review. Payments sent directly to your connected PayPal or Square account follow that provider’s settlement process.';
