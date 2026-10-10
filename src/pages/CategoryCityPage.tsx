@@ -1,7 +1,8 @@
 import { trackEvent } from '@/lib/analytics';
 import { filterPubliclyVisible } from '@/lib/listings/publicVisibility';
 import { useParams, Link } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, MapPin, ArrowRight } from 'lucide-react';
 import Header from '@/components/layout/Header';
@@ -101,8 +102,6 @@ const RENTAL_CITY_OVERRIDES: Record<string, RentalCityOverride> = {
 
 const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
   const { categorySlug, cityStateSlug } = useParams<{ categorySlug: string; cityStateSlug: string }>();
-  const [listings, setListings] = useState<ListingRow[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   const city = cityStateSlug ? getCityFromStateSlug(cityStateSlug) : null;
   const dbCategory = categorySlug ? CATEGORY_SLUG_MAP[categorySlug] : null;
@@ -110,14 +109,11 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
   const modeLabel = mode === 'rent' ? 'for Rent' : 'for Sale';
   const dbMode = mode === 'buy' ? 'sale' : 'rent';
 
-  useEffect(() => {
-    const fetchListings = async () => {
-      if (!city || !dbCategory) {
-        setIsLoading(false);
-        return;
-      }
-
-      const { data } = await supabase
+  const { data: listings = [], isLoading, isError, refetch } = useQuery({
+    queryKey: ['city-inventory', cityStateSlug, dbCategory, dbMode],
+    enabled: !!city && !!dbCategory,
+    queryFn: async (): Promise<ListingRow[]> => {
+      const { data, error } = await supabase
         .from('listings')
         .select('id, title, description, cover_image_url, price_hourly, price_daily, price_weekly, price_monthly, price_sale, mode, category, address, status, published_at, deleted_at, moderation_status, instant_book')
         .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear').eq('unlisted', false)
@@ -126,12 +122,12 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
         .or(`city.eq.${city.name},address.ilike.%${city.name}%`)
         .limit(50);
 
-      setListings(filterPubliclyVisible(data || []));
-      setIsLoading(false);
-    };
+      if (error) throw error;
+      return filterPubliclyVisible(data ?? []);
+    },
+  });
 
-    fetchListings();
-
+  useEffect(() => {
     if (city && dbCategory) {
       trackEvent({
         category: 'SEO City Page',
@@ -144,7 +140,7 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
 
   // Low-inventory freight funnel (thin city pages must never dead-end).
   const localCount = listings.length;
-  const isLowInventory = !isLoading && localCount < LOW_INVENTORY_THRESHOLD;
+  const isLowInventory = !isLoading && !isError && localCount < LOW_INVENTORY_THRESHOLD;
   const nationwide = useNationwideInventory({
     categories: [(dbCategory as InventoryCategory) ?? 'food_truck'],
     mode: dbMode as 'rent' | 'sale',
@@ -264,8 +260,8 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
   return (
     <div className="sale-light commerce-readable seo-marketplace min-h-screen flex flex-col bg-background">
       {/* Zero live listings = thin page; the expand-search module adds user value but not indexability. */}
-      <SEO title={seoTitle} description={metaDescription} canonical={canonicalPath} noindex={!isLoading && listings.length === 0} />
-      <JsonLd schema={[itemListSchema, breadcrumbSchema, faqSchema]} />
+      <SEO title={seoTitle} description={metaDescription} canonical={canonicalPath} noindex={!isLoading && !isError && listings.length === 0} />
+      <JsonLd schema={[...(!isError ? [itemListSchema] : []), breadcrumbSchema, faqSchema]} />
       <ExitIntentCapture category={dbCategory || undefined} city={city.name} />
       <Header />
 
@@ -323,7 +319,9 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
           </div>
 
           {/* Listings Grid */}
-          {isLoading ? (
+          {isError ? (
+            <section role="alert" className="rounded-xl border border-border p-6 space-y-3"><h2 className="text-lg font-semibold">Listings are temporarily unavailable</h2><p>We could not check inventory for this area. Try again to see current availability.</p><Button onClick={() => void refetch()}>Retry listings</Button></section>
+          ) : isLoading ? (
             <div className="flex justify-center py-16">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
