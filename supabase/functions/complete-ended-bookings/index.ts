@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { refundPayment } from "../_shared/paymentOps.ts";
 import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
+import { queueCompletedRentalPayouts } from "../_shared/rentalPayoutEligibility.ts";
 
 declare const EdgeRuntime: { waitUntil: (promise: Promise<unknown>) => void };
 
@@ -40,7 +41,7 @@ serve(async (req) => {
 
     const results = {
       markedCompleted: 0,
-      payoutsProcessed: 0,
+      payoutsQueued: 0,
       depositsRefunded: 0,
       errors: [] as string[],
     };
@@ -136,111 +137,36 @@ serve(async (req) => {
     }
 
     // ========================================
-    // STEP 2: Process RENTAL payouts 24 hours after booking_end_timestamp (if no dispute or manual hold)
-    // NOTE: For SALES, payouts are handled by confirm-sale (both parties confirm) or 
-    // auto-release-sale-payouts (25 days after payment if not both confirmed)
+    // STEP 2: Queue completed rentals for manual payout review after 24 hours.
+    // Eligibility is not a transfer and must never appear as "payout sent".
     // ========================================
-    logStep("Step 2: Processing RENTAL payouts for bookings ended 24+ hours ago");
-
     const { data: payoutEligibleBookings, error: payoutFetchError } = await supabaseClient
       .from('booking_requests')
-      .select(`
-        id,
-        listing_id,
-        shopper_id,
-        host_id,
-        end_date,
-        booking_end_timestamp,
-        total_price,
-        payment_intent_id,
-        payout_processed,
-        payout_hold_until,
-        payout_hold_reason
-      `)
+      .select('id, host_id, status, payment_status, dispute_status, payout_hold_until, payout_hold_reason')
       .eq('status', 'completed')
       .eq('payment_status', 'paid')
-      .is('payout_processed', null) // Only bookings that haven't had payout processed
-      .lt('booking_end_timestamp', twentyFourHoursAgo.toISOString()); // 24+ hours since actual end
+      .lt('booking_end_timestamp', twentyFourHoursAgo.toISOString());
 
     if (payoutFetchError) {
-      logStep("Error fetching payout eligible bookings", { error: payoutFetchError.message });
-    } else if (payoutEligibleBookings && payoutEligibleBookings.length > 0) {
-      for (const booking of payoutEligibleBookings) {
+      results.errors.push(`Unable to check rental payout eligibility: ${payoutFetchError.message}`);
+    } else {
+      for (const booking of payoutEligibleBookings ?? []) {
         try {
-          // Check if manual hold is set and not yet expired
-          if (booking.payout_hold_until && new Date(booking.payout_hold_until) > now) {
-            logStep("Booking has manual hold - skipping payout", { 
-              bookingId: booking.id, 
-              holdUntil: booking.payout_hold_until,
-              reason: booking.payout_hold_reason 
-            });
-            continue;
-          }
-
-          // Check if there's an active dispute on the booking itself
-          const { data: bookingWithDispute } = await supabaseClient
-            .from('booking_requests')
-            .select('dispute_status')
-            .eq('id', booking.id)
-            .single();
-
-          if (bookingWithDispute?.dispute_status && bookingWithDispute.dispute_status !== 'closed') {
-            logStep("Booking has active dispute - skipping payout", { bookingId: booking.id, disputeStatus: bookingWithDispute.dispute_status });
-            continue;
-          }
-
-          // Vendibook settles host payouts manually. Mark the payable eligible
-          // for release; an administrator records the actual transfer.
-          const platformFeePercent = 0.10;
-          const payoutAmount = Math.round(Number(booking.total_price) * (1 - platformFeePercent) * 100);
-
-          logStep("Marking host payout eligible", {
-            bookingId: booking.id,
-            amount: payoutAmount / 100,
+          const queued = await queueCompletedRentalPayouts(supabaseClient, booking);
+          if (!queued.count) continue;
+          results.payoutsQueued += queued.count;
+          // No payout_processed flag or sent email: an administrator must record
+          // the confirmed external transfer before the payout is completed.
+          const { error: notificationError } = await supabaseClient.from('notifications').insert({
+            user_id: booking.host_id,
+            type: 'payout_pending',
+            title: 'Rental payout ready for review',
+            message: `Your rental proceeds of $${(queued.amountCents / 100).toFixed(2)} are ready for payout review. Payment has not been sent yet.`,
+            data: { booking_id: booking.id, amount: queued.amountCents / 100 },
           });
-
-          await supabaseClient
-            .from('seller_payables')
-            .update({ payout_eligible_at: now.toISOString() })
-            .eq('seller_id', booking.host_id)
-            .eq('listing_id', booking.listing_id)
-            .eq('status', 'pending_release');
-
-          await supabaseClient
-            .from('booking_requests')
-            .update({
-              payout_processed: true,
-              payout_processed_at: now.toISOString(),
-            })
-            .eq('id', booking.id);
-
-          results.payoutsProcessed++;
-          logStep("Payout marked eligible for manual settlement", { bookingId: booking.id });
-
-          // Notify host
-          EdgeRuntime.waitUntil(
-            (async () => {
-              await supabaseClient.from('notifications').insert({
-                user_id: booking.host_id,
-                type: 'payout_completed',
-                title: 'Payout Received! 💰',
-                message: `Your payout of $${(payoutAmount / 100).toFixed(2)} has been sent to your bank account.`,
-                data: { booking_id: booking.id, transfer_id: transfer.id, amount: payoutAmount / 100 },
-              });
-            })()
-          );
-
-          // Send payout notification email
-          EdgeRuntime.waitUntil(
-            supabaseClient.functions.invoke('send-payout-notification', {
-              body: { booking_id: booking.id, amount: payoutAmount / 100 },
-            }).catch(err => logStep("Payout email failed", { error: err }))
-          );
-
+          if (notificationError) logStep('Payout review notification failed', { bookingId: booking.id });
         } catch (err) {
-          const msg = err instanceof Error ? err.message : String(err);
-          results.errors.push(`Payout failed for booking ${booking.id}: ${msg}`);
-          logStep("Payout error", { bookingId: booking.id, error: msg });
+          results.errors.push(`Payout review failed for booking ${booking.id}: ${err instanceof Error ? err.message : String(err)}`);
         }
       }
     }
@@ -399,7 +325,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: `Completed: ${results.markedCompleted} marked, ${results.payoutsProcessed} payouts, ${results.depositsRefunded} deposits refunded`,
+        message: `Completed: ${results.markedCompleted} marked, ${results.payoutsQueued} payouts queued, ${results.depositsRefunded} deposits refunded`,
         ...results
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
