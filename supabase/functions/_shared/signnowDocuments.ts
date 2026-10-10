@@ -32,6 +32,8 @@ import { resolveTemplate, currentTemplateVersion } from './signnowTemplates.ts';
 import type { AssetVariant } from './signnowTemplateSpecs.ts';
 import type { TemplateKind } from './signnowTemplateSpecs.ts';
 import { invokeTransactionalEmail } from './invokeTransactionalEmail.ts';
+
+export const PSA_REQUIRED_FIELDS = ['buyer_name', 'seller_name', 'asset_price', 'transaction_total'];
 import {
   buildRequirementsSnapshot,
   describeRequirements,
