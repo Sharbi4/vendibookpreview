@@ -400,7 +400,11 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
               <img
                 src={l.cover_image_url}
                 alt={`${l.title}${cityState ? ` in ${cityState}` : ''} on Vendibook`}
-                loading="lazy"
+                loading={l.id === primary[0]?.id ? "eager" : "lazy"}
+                fetchPriority={l.id === primary[0]?.id ? "high" : "auto"}
+                decoding="async"
+                width={640}
+                height={480}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
             ) : (

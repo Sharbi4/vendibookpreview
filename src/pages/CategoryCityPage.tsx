@@ -331,7 +331,7 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
               <LowInventoryInlineLine pageSlug={canonicalPath} resultCount={localCount} nationwide={nationwide} />
             )}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {listings.map((l) => {
+              {listings.map((l, index) => {
                 const priceText = formatListingPriceLabel(l);
                 const locationShort = l.address?.split(',').slice(-2).join(',').trim();
 
@@ -346,7 +346,11 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
                         src={l.cover_image_url || '/placeholder.svg'}
                         alt={`${l.title} - ${categoryLabel?.slice(0, -1)} ${modeLabel} in ${city.name}, ${city.stateCode}`}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        loading="lazy"
+                        loading={index === 0 ? "eager" : "lazy"}
+                        fetchPriority={index === 0 ? "high" : "auto"}
+                        decoding="async"
+                        width={640}
+                        height={480}
                       />
                       {l.instant_book && (
                         <span className="absolute top-2 right-2 bg-primary text-primary-foreground text-xs font-medium px-2 py-0.5 rounded-full">

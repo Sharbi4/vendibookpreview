@@ -1,8 +1,8 @@
 import { MessageCircle, X } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
-import TicketFormDialog from './home/TicketFormDialog';
+const TicketFormDialog = lazy(() => import('./home/TicketFormDialog'));
 
 const HIDDEN_ROUTES = ['/help', '/faq', '/list-with-vendi', '/list/vendi', '/onboarding', '/welcome', '/onboarding-v2', '/dashboard', '/dashboard-v2', '/account'];
 
@@ -140,7 +140,7 @@ const FloatingConciergeButton = () => {
         )}
       </motion.div>
 
-      <TicketFormDialog open={isTicketOpen} onOpenChange={setIsTicketOpen} />
+      {isTicketOpen && <Suspense fallback={<span role="status" className="sr-only">Opening support…</span>}><TicketFormDialog open={isTicketOpen} onOpenChange={setIsTicketOpen} /></Suspense>}
     </>
   );
 };
