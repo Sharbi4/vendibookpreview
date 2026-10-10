@@ -3,7 +3,7 @@ import { queueCompletedRentalPayouts } from '../../../supabase/functions/_shared
 
 const booking = { id: 'booking-a', status: 'completed', payment_status: 'paid' };
 const row = { id: 'payable-a', status: 'pending_release', net_payout_cents: 8200, payment: { transaction_type: 'rental', booking_request_id: 'booking-a', payment_status: 'completed' } };
-function fakeDb(rows = [row], error: any = null, alreadyQueued = false) {
+function fakeDb(rows: Array<typeof row & { dispute_frozen_at?: string }> = [row], error: any = null, alreadyQueued = false) {
   const calls: { table: string; patch?: any; filters: unknown[][] }[] = [];
   const db = { from(table: string) {
     const call: typeof calls[number] = { table, filters: [] }; calls.push(call);

@@ -189,6 +189,7 @@ serve(async (req) => {
         deposit_amount,
         deposit_status,
         deposit_charge_id,
+        payment_provider,
         payout_hold_until,
         payout_hold_reason
       `)
@@ -238,6 +239,10 @@ serve(async (req) => {
           // Refund the deposit through PayPal. Legacy references from the
           // retired processor resolve to a manual outcome for admin settlement.
           let refundId: string | null = null;
+          if (booking.payment_provider !== 'paypal') {
+            results.errors.push(`Deposit ${booking.id} requires review through its original payment provider.`);
+            continue;
+          }
           if (!booking.deposit_charge_id) {
             results.errors.push(`Deposit ${booking.id} has no payment reference; manual review is required.`);
             continue;
