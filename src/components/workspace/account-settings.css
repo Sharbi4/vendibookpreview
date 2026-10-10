@@ -1,3 +1,4 @@
+.v2-account-settings { --foreground: var(--v2-ink); --background: var(--v2-surface); --card: var(--v2-surface); --card-foreground: var(--v2-ink); --muted: var(--v2-paper); --muted-foreground: var(--v2-stone); --border: var(--v2-line); --input: var(--v2-line); }
 .v2-workspace .walkthrough-setting-lead > div { min-width: 0; }
 .v2-workspace .walkthrough-setting-lead > svg,
 .v2-workspace .walkthrough-switch { flex-shrink: 0; }

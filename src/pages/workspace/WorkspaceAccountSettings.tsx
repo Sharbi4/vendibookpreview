@@ -6,7 +6,7 @@ import '@/components/workspace/account-settings.css';
 
 export default function WorkspaceAccountSettings() {
   const scheduling = useLocation().pathname.endsWith('/scheduling');
-  return <WorkspaceShell><div className="v2-page-stack v2-embedded-section">
+  return <WorkspaceShell><div className="v2-page-stack v2-embedded-section v2-account-settings">
     <header className="v2-page-heading">
       <Link to="/dashboard/account" className="v2-btn-quiet">Back to Account</Link>
       <h1>{scheduling ? 'Walkthrough availability' : 'Payout preferences'}</h1>
