@@ -369,6 +369,8 @@ const AnimatedRoutes = () => {
           <Route path="/onboarding-v2" element={<Navigate to="/welcome" replace />} />
           <Route path="/dashboard-v2" element={<Navigate to="/dashboard" replace />} />
           <Route path="/dashboard-v2/listings" element={<PreserveQueryRedirect to="/dashboard/listings" />} />
+          {/* Legacy "my listings" path used by older emails/links → workspace listings */}
+          <Route path="/dashboard/my-listings" element={<PreserveQueryRedirect to="/dashboard/listings" />} />
           <Route path="/dashboard-v2/activity" element={<PreserveQueryRedirect to="/dashboard/activity" />} />
           <Route path="/dashboard-v2/messages" element={<PreserveQueryRedirect to="/dashboard/messages" />} />
           <Route path="/dashboard-v2/payments" element={<Navigate to="/dashboard/payments" replace />} />
