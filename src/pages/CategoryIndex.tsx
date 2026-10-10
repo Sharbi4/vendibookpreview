@@ -359,7 +359,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
     const amounts = primary
       .map((l) =>
         config.mode === 'rent'
-          ? (l.price_daily ?? l.price_weekly ?? l.price_monthly ?? l.price_hourly)
+          ? l.price_daily
           : l.price_sale,
       )
       .filter((n): n is number => typeof n === 'number' && n > 0);
@@ -588,7 +588,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
               {inventoryStats.priceRange && (
                 <div>
                   <p className="text-xs uppercase tracking-wide text-muted-foreground">
-                    {config.mode === 'rent' ? 'Rates from' : 'Price range'}
+                    {config.mode === 'rent' ? 'Listed daily rates' : 'Price range'}
                   </p>
                   <p className="text-xl md:text-2xl font-semibold text-foreground">{inventoryStats.priceRange}</p>
                 </div>

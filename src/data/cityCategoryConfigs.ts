@@ -416,8 +416,10 @@ const STATE_CONTENT_OVERRIDES: Record<string, {
   'georgia:food_truck': {
     title: 'Food Trucks for Sale in Georgia | Used & Owner-Listed | Vendibook',
     description: 'Food trucks for sale in Georgia: owner-listed trucks in Atlanta and statewide with real photos, specs, and asking prices. Message sellers directly — financing available.',
-    introExtra: 'Georgia\'s mobile food market centers on metro Atlanta — one of the busiest food truck scenes in the Southeast, with year-round festivals, brewery events, and corporate catering demand. Inventory turns over regularly as operators upgrade or exit, which keeps used truck pricing competitive for buyers.',
+    introExtra: 'Compare available food trucks across Georgia, including Atlanta and other cities shown in the inventory. For a statewide search, consider the inspection trip, pickup or transport cost, and equipment needs alongside the asking price. Trailer buyers can compare Georgia concession trailers separately; buyers focused on Atlanta can use the local trailer page.',
     extraRelated: [
+      { href: '/food-trailers-for-sale/georgia', label: 'Food trailers across Georgia' },
+      { href: '/buy/food-trailers/atlanta-ga', label: 'Atlanta-area food trailers for sale' },
       { href: '/financing', label: 'Financing options' },
     ],
   },

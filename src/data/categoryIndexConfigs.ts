@@ -134,7 +134,7 @@ export const CATEGORY_INDEX_CONFIGS: CategoryIndexConfig[] = [
       {
         heading: 'Food trailers for rent',
         paragraphs: [
-          'Food trailers and concession trailers are a lower-cost way to launch or expand. They tow behind a standard vehicle, fit festivals, breweries, and commissary-based operations, and often rent for less than a self-propelled truck. Browse trailer listings for towing requirements, equipment, and delivery options.',
+          'Compare food trailers and concession trailers when you have a suitable tow vehicle or can arrange delivery. Confirm loaded trailer weight, hitch compatibility, braking requirements, equipment, and the pickup or delivery plan with the owner. Compare the complete rental cost with a self-propelled truck for the same dates.',
         ],
         links: [
           { href: '/food-trailers-for-rent', label: 'Browse food trailers for rent' },
@@ -143,9 +143,10 @@ export const CATEGORY_INDEX_CONFIGS: CategoryIndexConfig[] = [
         ],
       },
       {
-        heading: 'Monthly food truck rentals',
+        heading: 'Daily, weekly, or monthly: compare the full rental cost',
         paragraphs: [
-          'Many owners on Vendibook offer monthly food truck rental terms alongside daily and weekly rates. Rental periods are set by each owner, so review the terms on the individual listing or message the host to structure a monthly arrangement that fits your operating schedule.',
+          'Compare rates for the same rental period: a daily asking rate is not a monthly quote. Daily rentals can fit a short event; weekly or monthly arrangements can fit a concept test or seasonal schedule. Check the available dates and minimum rental period on the listing, then ask the owner to confirm the full cost for your dates.',
+          'Before reserving, confirm included equipment, pickup and return times, delivery availability and charges, cleaning, fuel, mileage, insurance requirements, and any security deposit. These vary by listing. Review the booking total and cancellation terms before paying; a message about dates is not a confirmed reservation.',
         ],
       },
       {
@@ -296,7 +297,7 @@ export const CATEGORY_INDEX_CONFIGS: CategoryIndexConfig[] = [
       {
         heading: 'Food trailer rental terms: daily, weekly, and monthly',
         paragraphs: [
-          'Owners set their own rental terms, and most trailers on Vendibook are offered on more than one. Daily rates suit single festivals, weddings, and weekend markets. Weekly terms cover multi-day events and short seasonal runs. Monthly food trailer rental is common for operators covering a full season, bridging a build-out, or testing a new market before buying — message the owner through the listing to structure a longer term.',
+          'Owners set rental periods and minimum stays. Compare available daily, weekly, or monthly terms for your dates rather than multiplying one advertised rate. Confirm the total with the host, including any delivery, setup, cleaning, or deposit requirements. Availability and included services vary by listing.',
           'Every rate shown on a listing is the owner\'s own asking rate. There is no generic price sheet: compare the live listings on this page rather than an industry average.',
         ],
         links: [

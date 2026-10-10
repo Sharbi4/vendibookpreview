@@ -390,6 +390,14 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
             />
           )}
 
+          {mode === 'buy' && categorySlug === 'food-trailers' && cityStateSlug === 'atlanta-ga' && (
+            <section className="space-y-3 pt-4 border-t border-border">
+              <h2 className="text-lg font-semibold">Buying a food trailer in the Atlanta area</h2>
+              <p className="text-muted-foreground">Confirm the seller’s actual pickup location before planning an inspection. Ask for the loaded weight, tow requirements, equipment list, service records, and a working demonstration. Delivery availability and the service radius depend on the seller and transport provider; request a quote for your destination before committing.</p>
+              <p className="text-muted-foreground">Expanding your search beyond Atlanta? Compare <Link className="underline" to="/food-trailers-for-sale/georgia">food trailers throughout Georgia</Link> or <Link className="underline" to="/food-trucks-for-sale/georgia">Georgia food trucks for sale</Link>. For budgeting, <Link className="underline" to="/financing#calculator">estimate an equipment payment</Link> before applying.</p>
+            </section>
+          )}
+
           {/* Internal Linking: Related Categories */}
           <section className="space-y-3 pt-4 border-t border-border">
             <h2 className="text-lg font-semibold text-foreground">

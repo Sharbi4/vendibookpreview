@@ -63,6 +63,14 @@ const coffee: CategoryIndexConfig = {
       ],
     },
     {
+      heading: 'Coffee carts, coffee vans, and compact espresso layouts',
+      paragraphs: [
+        'A coffee cart, small coffee trailer, and espresso truck solve different space and transport problems. A cart needs a plan for moving and storing it; a van combines the vehicle and workspace; a trailer needs compatible towing or delivery. Availability changes, so use the seller’s photos and dimensions to identify the actual format rather than relying on the listing title alone.',
+        'Ask the seller for the espresso-machine model, voltage and current requirements, grinder details, water filtration, tank capacities, and included refrigeration. Request a demonstration with the machine and refrigerator running together. Map the order, payment, drink preparation, and pickup workflow before choosing a compact layout.',
+      ],
+      links: [{ href: '/tools/pricepilot', label: 'Research asking prices with PricePilot' }, { href: '/vendibook-freight', label: 'Plan equipment pickup or freight delivery' }],
+    },
+    {
       heading: 'Financing a coffee truck or trailer',
       paragraphs: [
         'Coffee trucks and trailers are business assets, and many buyers spread the cost with equipment financing. Vendibook\'s financing page connects you with financing options for qualified buyers — applications, approval, rates, and terms are handled by the financing provider, not by Vendibook.',
