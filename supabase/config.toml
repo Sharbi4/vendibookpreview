@@ -1,5 +1,8 @@
 project_id = "nbrehbwfsmedbelzntqs"
 
+[functions.validate-checkout-address]
+verify_jwt = false
+
 [functions]
   [functions.verified-seller-webhook]
     verify_jwt = false

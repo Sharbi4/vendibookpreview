@@ -18,6 +18,7 @@ interface GeocodeResult {
   context?: string;
   city?: string;
   state?: string;
+  address?: { street: string | null; city: string | null; state: string | null; zipCode: string | null; country: string | null };
 }
 
 // Multiple Google keys exist across environments (legacy, current, browser).
@@ -136,7 +137,6 @@ const handler = async (req: Request): Promise<Response> => {
     const trimmedQuery = query.trim();
     const zipMatch = trimmedQuery.match(/^(\d{5})$/);
 
-    console.log("Geocoding query:", trimmedQuery);
 
     if (zipMatch) {
       const zip = zipMatch[1];
@@ -216,7 +216,6 @@ const handler = async (req: Request): Promise<Response> => {
           }]
         : [];
 
-      console.log(`Found ${results.length} results for "${trimmedQuery}" (reverse geocode)`);
       return buildJsonResponse({ results });
     }
 
@@ -241,11 +240,16 @@ const handler = async (req: Request): Promise<Response> => {
     for (const prediction of predictions) {
       try {
         const detailsData = await googleJson(
-          (key) => `https://maps.googleapis.com/maps/api/place/details/json?place_id=${prediction.place_id}&fields=geometry,formatted_address&key=${key}`,
+          (key) => `https://maps.googleapis.com/maps/api/place/details/json?place_id=${prediction.place_id}&fields=geometry,formatted_address,address_components&key=${key}`,
         );
 
         if (detailsData?.status === "OK" && detailsData.result) {
           const location = detailsData.result.geometry?.location;
+          const components = detailsData.result.address_components ?? [];
+          const component = (type: string, short = false) => {
+            const c = components.find((c: any) => c.types?.includes(type));
+            return (short ? c?.short_name : c?.long_name) || null;
+          };
           if (location) {
             results.push({
               id: prediction.place_id,
@@ -253,6 +257,13 @@ const handler = async (req: Request): Promise<Response> => {
               center: [location.lng, location.lat],
               text: prediction.structured_formatting?.main_text || prediction.description.split(',')[0],
               context: prediction.structured_formatting?.secondary_text || prediction.description.split(',').slice(1).join(',').trim(),
+              address: {
+                street: [component('street_number'), component('route')].filter(Boolean).join(' ') || null,
+                city: component('locality') || component('postal_town') || component('sublocality'),
+                state: component('administrative_area_level_1', true),
+                zipCode: [component('postal_code'), component('postal_code_suffix')].filter(Boolean).join('-') || null,
+                country: component('country', true),
+              },
             });
           }
         }
@@ -261,7 +272,6 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    console.log(`Found ${results.length} results for "${trimmedQuery}"`);
     return buildJsonResponse({ results });
   } catch (error: any) {
     console.error("Error in geocode-location function:", error);

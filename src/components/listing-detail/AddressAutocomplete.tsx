@@ -30,6 +30,7 @@ interface GeocodeResult {
   center: [number, number]; // [lng, lat]
   text: string;
   context?: string;
+  address?: ParsedAddress;
 }
 
 interface ParsedAddress {
@@ -64,8 +65,9 @@ interface AddressAutocompleteProps {
   showSavedAddresses?: boolean;
 }
 
-// Parse address components from Mapbox result
-const parseAddressFromMapbox = (placeName: string, context?: string): ParsedAddress => {
+// Compatibility fallback for older geocode deployments. Google structured
+// components are preferred; formatted text alone is never provider validation.
+const parseFormattedAddress = (placeName: string, context?: string): ParsedAddress => {
   const parsed: ParsedAddress = {
     street: null,
     city: null,
@@ -268,7 +270,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
     setHasSelectedAddress(true);
     
     // Parse and validate the selected address
-    const parsed = parseAddressFromMapbox(fullAddress, suggestion.context);
+    const parsed = suggestion.address ?? parseFormattedAddress(fullAddress, suggestion.context);
     const addressValidation = validateAddress(parsed);
     setValidation(addressValidation);
     onValidationChange?.(addressValidation);
@@ -459,7 +461,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
       {showValidationStatus && isAddressValid && (
         <p className="text-xs text-emerald-600 mt-1 flex items-center gap-1">
           <CheckCircle2 className="h-3 w-3" />
-          Complete address verified
+          Address details filled in
         </p>
       )}
 
@@ -486,6 +488,7 @@ export const AddressAutocomplete: React.FC<AddressAutocompleteProps> = ({
               </div>
             </button>
           ))}
+          <p className="px-4 py-2 text-xs text-muted-foreground">Powered by Google</p>
         </div>
       )}
 

@@ -1,10 +1,11 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Truck, Package, Check, Loader2, AlertCircle, CheckCircle2, AlertTriangle, Info, CalendarClock } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { AddressAutocomplete } from '@/components/listing-detail/AddressAutocomplete';
+import CheckoutAddressCheck, { addressText } from '@/components/checkout/CheckoutAddressCheck';
 import NextStepHint from '@/components/shared/NextStepHint';
 import { FreightLink, linkifyFreight } from '@/components/shared/FreightLink';
 import { FreightInfoPopover } from '@/components/shared/InfoPopover';
@@ -309,6 +310,9 @@ const PurchaseStepDelivery = ({
   onSiteContact,
   setOnSiteContact,
 }: PurchaseStepDeliveryProps) => {
+  const [approvedAddress, setApprovedAddress] = useState('');
+  const postalAddress = { addressLines: [deliveryAddress], regionCode: 'US' };
+  const addressChecked = !!approvedAddress && approvedAddress === addressText(postalAddress);
   // A delivery the seller can't legally perform must never reach payment.
   const outsideRadius =
     fulfillmentSelected === 'delivery' && deliveryDistanceInfo.isOutsideRadius;
@@ -317,9 +321,10 @@ const PurchaseStepDelivery = ({
     fulfillmentSelected === 'pickup' ||
     (fulfillmentSelected === 'delivery' &&
       Boolean(deliveryAddress.trim()) &&
+      addressChecked &&
       Boolean(preferredDate) &&
       !outsideRadius) ||
-    (fulfillmentSelected === 'vendibook_freight' && hasValidEstimate);
+    (fulfillmentSelected === 'vendibook_freight' && hasValidEstimate && addressChecked);
 
   // Let an embedding page (light sale checkout) drive its own footer state.
   useEffect(() => {
@@ -393,8 +398,9 @@ const PurchaseStepDelivery = ({
             showRadio={showRadios}
           >
             <div>
-              <Label className="text-sm font-medium mb-2 block">Delivery address *</Label>
+              <Label htmlFor="sale-delivery-address" className="text-sm font-medium mb-2 block">Delivery address *</Label>
               <AddressAutocomplete
+                id="sale-delivery-address"
                 value={deliveryAddress}
                 onChange={(value) => {
                   setDeliveryAddress(value);
@@ -406,6 +412,15 @@ const PurchaseStepDelivery = ({
                 }}
                 placeholder="Start typing your delivery address"
               />
+              <CheckoutAddressCheck address={postalAddress} onApproved={(checked, _address, coordinates) => {
+                setApprovedAddress(checked);
+                if (coordinates) setDeliveryCoords(coordinates);
+              }}
+                onUseSuggestion={result => {
+                  setDeliveryAddress(result.formattedAddress);
+                  setDeliveryCoords(result.coordinates);
+                  return { addressLines: [result.formattedAddress], regionCode: 'US' };
+                }} />
               {deliveryRateText && (
                 <p className="text-xs text-muted-foreground mt-2">
                   {deliveryFeeType === 'per_mile'
@@ -472,8 +487,9 @@ const PurchaseStepDelivery = ({
             showRadio={showRadios}
           >
             <div>
-              <Label className="text-sm font-medium mb-2 block">Delivery address *</Label>
+              <Label htmlFor="sale-freight-address" className="text-sm font-medium mb-2 block">Delivery address *</Label>
               <AddressAutocomplete
+                id="sale-freight-address"
                 value={deliveryAddress}
                 onChange={(value) => {
                   setDeliveryAddress(value);
@@ -489,6 +505,17 @@ const PurchaseStepDelivery = ({
                 placeholder="Enter delivery address for a live freight quote"
                 requireComplete
               />
+              <CheckoutAddressCheck address={postalAddress} onApproved={(checked, storedAddress) => {
+                setApprovedAddress(checked);
+                setIsAddressComplete(true);
+                clearEstimate();
+                fetchFreightEstimate(storedAddress.addressLines[0]);
+              }}
+                onUseSuggestion={result => {
+                  setDeliveryAddress(result.formattedAddress);
+                  setDeliveryCoords(result.coordinates);
+                  return { addressLines: [result.formattedAddress], regionCode: 'US' };
+                }} />
             </div>
 
             {isEstimating && (
