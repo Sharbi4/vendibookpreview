@@ -26,7 +26,9 @@ serve(async (req) => {
       if (value[field]?.trim()) address[field] = value[field].trim();
     }
     if (address.regionCode && !/^[A-Z]{2}$/.test(String(address.regionCode))) return jsonError(400, 'invalid_country', 'Choose a country.');
-    const key = Deno.env.get('GOOGLE_ADDRESS_VALIDATION_API_KEY') || Deno.env.get('GOOGLE_MAPS_API_KEY') || Deno.env.get('GOOGLE_API_KEY');
+    // GOOGLE_API_KEY is the server key with Address Validation enabled; the
+    // connector-managed GOOGLE_MAPS_API_KEY is rejected by this API.
+    const key = Deno.env.get('GOOGLE_ADDRESS_VALIDATION_API_KEY') || Deno.env.get('GOOGLE_API_KEY') || Deno.env.get('GOOGLE_MAPS_API_KEY');
     if (!key) return jsonError(503, 'validation_unavailable', 'Address checking is temporarily unavailable.');
     const response = await fetch('https://addressvalidation.googleapis.com/v1:validateAddress', {
       method: 'POST', headers: { 'Content-Type': 'application/json', 'X-Goog-Api-Key': key },
