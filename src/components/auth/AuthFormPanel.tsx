@@ -124,7 +124,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
       if (mode === 'signup') {
         authSchema.parse({ email, password, firstName, lastName });
       } else if (mode === 'forgot' || mode === 'verify') {
-        authSchema.pick({ email: true }).parse({ email });
+        authBaseSchema.pick({ email: true }).parse({ email });
       } else {
         authBaseSchema.omit({ firstName: true, lastName: true }).parse({ email, password });
       }
@@ -151,7 +151,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
     }
     
     try {
-      authSchema.pick({ email: true }).parse({ email });
+      authBaseSchema.pick({ email: true }).parse({ email });
     } catch {
       setErrors({ email: 'Please enter a valid email address' });
       return;
