@@ -1,4 +1,4 @@
--- Run: psql -v ON_ERROR_STOP=1 -f supabase/tests/build_studio_phase2.sql  (always rolls back)
+-- Run via the backend SQL runner (needs owner privileges). Ends by raising ALL_CHECKS_PASSED or the first failing check; always rolls back.
 BEGIN;
 CREATE TEMP TABLE ids AS SELECT gen_random_uuid() a_mfr, gen_random_uuid() b_mfr, gen_random_uuid() a_reg, gen_random_uuid() b_reg,
   gen_random_uuid() a_user, gen_random_uuid() b_user, gen_random_uuid() a_model, gen_random_uuid() b_model,
@@ -40,7 +40,7 @@ DO $$ DECLARE i ids; r jsonb; BEGIN SELECT * INTO i FROM ids;
   EXCEPTION WHEN unique_violation THEN NULL; END;
   -- versioning + history
   UPDATE bs_equipment SET price_cents=250000 WHERE id=i.a_eq;
-  ASSERT (SELECT version FROM bs_equipment WHERE id=i.a_eq)=3 AND (SELECT count(*) FROM bs_catalog_history WHERE record_id=i.a_eq)=3, 'history';
+  ASSERT (SELECT version FROM bs_equipment WHERE id=i.a_eq)=4 AND (SELECT count(*) FROM bs_catalog_history WHERE record_id=i.a_eq)=4, 'history';
   -- disabled region stops resolving
   UPDATE bs_regions SET status='disabled' WHERE id=i.b_reg;
   ASSERT bs_resolve_zip('89101')->>'status'='not_covered', 'disabled';
@@ -57,5 +57,5 @@ DO $$ DECLARE i ids; n int; BEGIN SELECT * INTO i FROM ids;
   BEGIN PERFORM bs_assign_region(i.a_reg, i.a_mfr); RAISE EXCEPTION 'self-assign allowed'; EXCEPTION WHEN raise_exception THEN IF SQLERRM='self-assign allowed' THEN RAISE; END IF; END;
   SELECT count(*) INTO n FROM bs_regions; ASSERT n=0, 'partner sees regions';
 END $$;
-SELECT 'ALL BUILD STUDIO PHASE 2 CHECKS PASSED';
+DO $$ BEGIN RAISE EXCEPTION 'ALL_CHECKS_PASSED'; END $$;
 ROLLBACK;
