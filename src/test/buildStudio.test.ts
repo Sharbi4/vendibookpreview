@@ -4,7 +4,7 @@ import { TRAILER, findFreeSpot, placementIssues, priceBuild, type BuildConfig } 
 describe('Build Studio', () => {
   it('prices base, color and equipment together', () => {
     const c: BuildConfig = { color: 'orange', items: [{ uid: 'a', id: 'griddle36', wall: 'back', x: 0 }] };
-    expect(priceBuild(c).total).toBe(TRAILER.basePrice + 900 + 2400);
+    expect(priceBuild(c).total).toBe(TRAILER.basePrice! + 900 + 2400);
   });
   it('flags overlap, door blocking and out-of-bounds', () => {
     const c: BuildConfig = { color: 'white', items: [

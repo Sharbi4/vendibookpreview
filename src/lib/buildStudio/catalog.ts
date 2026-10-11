@@ -11,7 +11,7 @@ export const TRAILER = {
   length: 4.88, // 16 ft
   width: 2.29,  // ~7.5 ft interior
   height: 2.29,
-  basePrice: 28000,
+  basePrice: 28000 as number | null,
   // Keep-clear zones on each wall, as [start, end] along X.
   door: { wall: 'back' as Wall, from: 1.3, to: 2.44 },
   window: { from: -1.6, to: 0.8 },
