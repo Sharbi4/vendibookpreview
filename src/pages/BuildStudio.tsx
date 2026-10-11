@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { DELIVERY_LABELS } from '@/lib/buildStudio/partnerCatalog';
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -21,7 +22,6 @@ type ServerPrice = { status: string; lines?: { id?: string; label: string; amoun
   subtotal_cents?: number; quote_required?: boolean; delivery_options?: { method: string; fee_cents: number | null; notes: string | null }[]; problems?: { id: string; name?: string; issue: string }[]; lead_time_weeks?: number | null };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const rpc = (fn: string, args: Record<string, unknown>) => (supabase as any).rpc(fn, args);
-export const DELIVERY_LABELS: Record<string, string> = { factory_pickup: 'Pick up at factory', delivered: 'Delivered', towed: 'Towed to you', flatbed: 'Flatbed delivery', other: 'Other' };
 const money = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 type Saved = { name: string; savedAt: string; config: BuildConfig };
 const readSaves = (): Saved[] => { try { return JSON.parse(localStorage.getItem(SAVE_KEY) || '[]'); } catch { return []; } };

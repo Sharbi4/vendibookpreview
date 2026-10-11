@@ -10,8 +10,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import SEO from '@/components/SEO';
 import PartnerReviewPanel from '@/components/buildStudio/PartnerReviewPanel';
-import { DELIVERY_LABELS } from '@/pages/BuildStudio';
-import { EQUIPMENT_CATEGORIES, parseEquipmentCsv, toCents } from '@/lib/buildStudio/partnerCatalog';
+
+import { DELIVERY_LABELS, EQUIPMENT_CATEGORIES, parseEquipmentCsv, toCents } from '@/lib/buildStudio/partnerCatalog';
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const db = supabase as any;
