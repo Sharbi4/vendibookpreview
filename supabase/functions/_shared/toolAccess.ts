@@ -24,8 +24,14 @@ type Tier = 'free' | 'starter' | 'pro' | 'premium';
 const TIER_RANK: Record<Tier, number> = { free: 0, starter: 1, pro: 2, premium: 3 };
 const ACTIVE_STATUSES = new Set(['active', 'trialing', 'past_due']);
 
+/**
+ * PermitPath note: the Basic checklist is free and never calls this resolver.
+ * `permitpath` here means the PLUS layer (save, track, documents, reminders,
+ * PDF export), which needs an active PermitPath Plus subscription or
+ * Vendibook Pro. Keep in lockstep with src/lib/permits/permitPathAccess.ts.
+ */
 const TOOL_TIER: Record<ToolSlug, Tier> = {
-  'permitpath': 'free',
+  'permitpath': 'pro',
   'startup-guide': 'free',
   'regulations-hub': 'free',
   'pricepilot': 'pro',
@@ -33,17 +39,23 @@ const TOOL_TIER: Record<ToolSlug, Tier> = {
   'marketing-studio': 'pro',
   'concept-lab': 'pro',
   'market-radar': 'pro',
-  'buildkit': 'premium',
+  'buildkit': 'pro',
 };
 
 const TOOL_UNLOCK_SLUG: Partial<Record<ToolSlug, string>> = {
-  'permitpath': 'permit_path_plus',
+  'permitpath': 'permit_path_plus_monthly',
   'pricepilot': 'tool_pricepilot',
   'listing-studio': 'tool_listing_studio',
   'marketing-studio': 'tool_marketing_studio',
   'concept-lab': 'tool_concept_lab',
   'market-radar': 'tool_market_radar',
   'buildkit': 'tool_buildkit',
+};
+
+// All product slugs that unlock a tool, including retired SKUs kept for
+// grandfathering. TOOL_UNLOCK_SLUG above is the slug we sell today.
+const TOOL_UNLOCK_SLUGS: Partial<Record<ToolSlug, string[]>> = {
+  'permitpath': ['permit_path_plus_monthly', 'permit_path_plus'],
 };
 
 export type ToolAccessReason =
@@ -56,7 +68,7 @@ export function resolveTierFromSub(raw: string | null | undefined): Tier {
   const k = raw.toLowerCase().replace(/_annual$/, '').replace(/_monthly$/, '');
   if (k === 'starter' || k === 'seller_plus' || k === 'seller-plus' || k === 'host_starter' || k === 'host-starter') return 'starter';
   // `host_pro` is a legacy alias from before the catalog was renamed to host_growth.
-  if (k === 'pro' || k === 'host_pro' || k === 'host-pro' || k === 'host_growth' || k === 'host-growth') return 'pro';
+  if (k === 'pro' || k === 'vendibook_pro' || k === 'vendibook-pro' || k === 'host_pro' || k === 'host-pro' || k === 'host_growth' || k === 'host-growth') return 'pro';
   if (k === 'premium' || k === 'host_operator' || k === 'host-operator') return 'premium';
   return 'free';
 }
@@ -79,46 +91,61 @@ export async function resolveToolAccess(userId: string, tool: ToolSlug): Promise
     return { unlocked: true, reason: 'free', tier: 'free', userId, tool };
   }
 
-  // 1) Subscription
-  const { data: sub } = await admin
+  // 1) Subscription — read every row: a member can hold Vendibook Pro and a
+  // product subscription (e.g. PermitPath Plus) at the same time.
+  const { data: subs } = await admin
     .from('host_subscriptions')
     .select('tier,status')
     .eq('user_id', userId)
-    .order('updated_at', { ascending: false })
-    .limit(1)
-    .maybeSingle();
+    .order('updated_at', { ascending: false });
+
+  const activeSubs = (subs ?? []).filter((s: { status?: string | null }) =>
+    ACTIVE_STATUSES.has(s.status ?? ''),
+  );
+
+  // A standalone PermitPath Plus subscription unlocks PermitPath only.
+  if (
+    tool === 'permitpath' &&
+    activeSubs.some((s: { tier?: string | null }) =>
+      String(s.tier ?? '').toLowerCase().startsWith('permit_path_plus'),
+    )
+  ) {
+    return { unlocked: true, reason: 'subscription', tier: 'free', userId, tool };
+  }
 
   let tier: Tier = 'free';
-  if (sub && ACTIVE_STATUSES.has(sub.status ?? '')) {
-    tier = resolveTierFromSub(sub.tier);
-    if (TIER_RANK[tier] >= TIER_RANK[minTier]) {
-      return { unlocked: true, reason: 'subscription', tier, userId, tool };
-    }
+  for (const s of activeSubs) {
+    const t = resolveTierFromSub((s as { tier?: string | null }).tier);
+    if (TIER_RANK[t] > TIER_RANK[tier]) tier = t;
+  }
+  if (TIER_RANK[tier] >= TIER_RANK[minTier]) {
+    return { unlocked: true, reason: 'subscription', tier, userId, tool };
   }
 
   // 2) One-time unlock purchase
-  const unlockSlug = TOOL_UNLOCK_SLUG[tool];
-  if (unlockSlug) {
+  const unlockSlugs = TOOL_UNLOCK_SLUGS[tool] ??
+    (TOOL_UNLOCK_SLUG[tool] ? [TOOL_UNLOCK_SLUG[tool]!] : []);
+  if (unlockSlugs.length) {
     const { data: purchase } = await admin
       .from('monetization_purchases')
       .select('id,status,monetization_products!inner(slug)')
       .eq('user_id', userId)
-      .eq('monetization_products.slug', unlockSlug)
+      .in('monetization_products.slug', unlockSlugs)
       .in('status', ['paid', 'fulfilled'])
       .limit(1)
       .maybeSingle();
     if (purchase) return { unlocked: true, reason: 'purchase', tier, userId, tool };
   }
 
-  // 3) PermitPath grandfathering
+  // 3) PermitPath grandfathering — durable entitlement row written when
+  // Basic/Plus gating shipped. Never inferred from data timestamps.
   if (tool === 'permitpath') {
-    const [{ count: c1 }, { count: c2 }] = await Promise.all([
-      admin.from('saved_permit_roadmaps').select('id', { count: 'exact', head: true }).eq('user_id', userId),
-      admin.from('permit_items').select('id', { count: 'exact', head: true }).eq('user_id', userId),
-    ]);
-    if ((c1 ?? 0) + (c2 ?? 0) > 0) {
-      return { unlocked: true, reason: 'grandfathered', tier, userId, tool };
-    }
+    const { data: gf } = await admin
+      .from('permit_path_grandfathered')
+      .select('user_id')
+      .eq('user_id', userId)
+      .maybeSingle();
+    if (gf) return { unlocked: true, reason: 'grandfathered', tier, userId, tool };
   }
 
   return { unlocked: false, reason: 'locked', tier, userId, tool };

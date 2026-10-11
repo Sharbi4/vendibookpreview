@@ -1,70 +1,79 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Loader2, CheckCircle2, Stamp, AlertCircle as AlertCircleIcon } from 'lucide-react';
+import {
+  ArrowLeft,
+  Loader2,
+  CheckCircle2,
+  Stamp,
+  AlertCircle as AlertCircleIcon,
+  ExternalLink,
+  Share2,
+  Wrench,
+} from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { Button } from '@/components/ui/button';
+import VerifiedSellerCTA from '@/components/verification/VerifiedSellerCTA';
 import { ShareKit, ShareKitListing } from '@/components/listing-wizard/ShareKit';
 import { ListingCategory, ListingMode } from '@/types/listing';
 import { useToast } from '@/hooks/use-toast';
-import BoostListingPrompt from '@/components/dashboard/BoostListingPrompt';
-import { UpgradePackageCards } from '@/components/monetization/UpgradePackageCards';
 import { PromoteListingPanel } from '@/components/monetization/PromoteListingPanel';
-import { RecommendedAddOns } from '@/components/monetization/RecommendedAddOns';
-import PublishStatusSummary from '@/components/listing-wizard/PublishStatusSummary';
-import PackagesIntro from '@/components/monetization/PackagesIntro';
 import FeatureThisListingCTA from '@/components/dashboard/FeatureThisListingCTA';
 import { reportError } from '@/lib/errorReporter';
+import ListingReadinessCard from '@/components/listing/ListingReadinessCard';
+import ReadinessDisclaimer from '@/components/listing/ReadinessDisclaimer';
+import { publishListingIdempotent } from '@/lib/listings/publishListing';
+import { authPath } from '@/lib/auth/returnTo';
+import socialBubbleAsset from '@/assets/social-bubble.webm.asset.json';
 
 const ListingPublished: React.FC = () => {
   const [searchParams] = useSearchParams();
   const listingIdFromParams = useParams<{ listingId: string }>().listingId;
-  // Support both route param and query param for listing_id
   const listingId = listingIdFromParams || searchParams.get('listing_id');
   const notaryPaid = searchParams.get('notary_paid') === 'true';
   const featuredPaid = searchParams.get('featured_paid') === 'true';
+  const featuredCancelled = searchParams.get('featured_cancelled') === 'true';
+
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
-  
+
   const [listing, setListing] = useState<ShareKitListing | null>(null);
-  const [boostCandidate, setBoostCandidate] = useState<any | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [featuredSyncing, setFeaturedSyncing] = useState(featuredPaid);
   const [featuredActive, setFeaturedActive] = useState(false);
   const [isPublished, setIsPublished] = useState(false);
+  // Open by default: right after publishing is when sellers are most likely to post
+  // their listing where they already sell (Facebook Marketplace, groups), and the
+  // listing-live email's "Share your listing" link lands here.
+  const [showShare, setShowShare] = useState(true);
 
   useEffect(() => {
-    // Show toast for notary payment success
     if (notaryPaid) {
       toast({
-        title: "Notary Fee Paid",
-        description: "Your $45 Proof Notary add-on has been activated. Your listing is now live!",
+        title: 'Notary fee paid',
+        description: 'Your $45 Proof Notary add-on has been activated. Your listing is live.',
       });
-      
-      // Broadcast to other tabs that notary checkout is complete
-      // This allows the original wizard tab to navigate to this page
       try {
         const channel = new BroadcastChannel('notary-checkout');
         channel.postMessage({
           type: 'notary-checkout-complete',
-          listingId: listingId,
+          listingId,
           url: window.location.href,
         });
         channel.close();
-      } catch (e) {
-        // BroadcastChannel not supported in some browsers, silently fail
-        console.log('BroadcastChannel not supported');
+      } catch {
+        /* BroadcastChannel unsupported */
       }
     }
   }, [notaryPaid, listingId, toast]);
 
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate('/auth');
+      navigate(authPath());
       return;
     }
-
     if (!listingId) {
       navigate('/dashboard');
       return;
@@ -79,33 +88,29 @@ const ListingPublished: React.FC = () => {
           .single();
 
         if (fetchError) throw fetchError;
-        
         if (!data) {
           setError('Listing not found');
           return;
         }
-
-        // Check ownership
         if (data.host_id !== user?.id) {
           setError('You do not have access to this listing');
           return;
         }
 
-        // If returning from Stripe boost and listing is still a draft, self-heal: publish it.
+        // Returning from a paid add-on while the draft never flipped live:
+        // publish idempotently so a payment return can never create a second
+        // listing or a duplicate first-publish notification.
         if (featuredPaid && data.status !== 'published') {
-          const nowIso = new Date().toISOString();
-          const { error: pubErr } = await supabase
-            .from('listings')
-            .update({ status: 'published', published_at: data.published_at ?? nowIso })
-            .eq('id', listingId);
-          if (!pubErr) {
+          try {
+            const result = await publishListingIdempotent(listingId);
             data.status = 'published';
-            data.published_at = data.published_at ?? nowIso;
+            data.published_at = result.publishedAt;
+          } catch {
+            /* moderation hold or transient error — leave status untouched */
           }
         }
 
         setIsPublished(data.status === 'published');
-
         setListing({
           id: data.id,
           title: data.title,
@@ -120,20 +125,9 @@ const ListingPublished: React.FC = () => {
           availableFrom: data.available_from,
           availableTo: data.available_to,
         });
-        setBoostCandidate({
-          id: data.id,
-          title: data.title,
-          status: data.status,
-          featured_enabled: (data as any).featured_enabled,
-          featured_expires_at: (data as any).featured_expires_at,
-        });
-        if ((data as any).featured_enabled) {
+        if ((data as { featured_enabled?: boolean }).featured_enabled) {
           setFeaturedActive(true);
           setFeaturedSyncing(false);
-        }
-        // Always offer boost right after a fresh publish — clear any prior suppression
-        if (user?.id) {
-          try { localStorage.removeItem(`vendi_boost_prompt_dismissed_${user.id}`); } catch {}
         }
       } catch (err) {
         console.error('Error fetching listing:', err);
@@ -143,12 +137,10 @@ const ListingPublished: React.FC = () => {
       }
     };
 
-    if (user) {
-      fetchListing();
-    }
+    if (user) fetchListing();
   }, [listingId, user, authLoading, navigate, featuredPaid]);
 
-  // Poll for featured activation after returning from Stripe (webhook may lag)
+  // Poll for featured activation after returning from PayPal (webhook may lag).
   const [featuredWebhookStuck, setFeaturedWebhookStuck] = useState(false);
   const [featuredStuckRef, setFeaturedStuckRef] = useState<string | null>(null);
   useEffect(() => {
@@ -170,27 +162,26 @@ const ListingPublished: React.FC = () => {
         setFeaturedSyncing(false);
         setIsPublished(data.status === 'published');
         toast({
-          title: 'Featured Boost Activated ⭐',
-          description: 'Your listing is now featured for 30 days.',
+          title: 'Featured boost activated',
+          description: 'Your listing is featured for 30 days.',
         });
         return;
       }
       if (attempts >= maxAttempts) {
         setFeaturedSyncing(false);
-        // Webhook didn't update within 30s — surface actionable error state.
         const { referenceCode } = await reportError({
           action: 'boost.webhook.timeout',
-          endpoint: '/functions/v1/stripe-webhook',
+          endpoint: '/functions/v1/paypal-webhook',
           errorType: 'FeaturedActivationTimeout',
-          errorMessage: 'featured_enabled did not become true within 30s after Stripe redirect',
+          errorMessage: 'featured_enabled did not become true within 30s after PayPal redirect',
           listingId,
           metadata: { pollAttempts: attempts },
         });
         setFeaturedStuckRef(referenceCode);
         setFeaturedWebhookStuck(true);
         toast({
-          title: "Payment received, activation delayed",
-          description: `Stripe confirmed your payment but your boost hasn't activated yet. Our team was notified — no need to pay again. Reference: ${referenceCode}`,
+          title: 'Payment received, activation delayed',
+          description: `PayPal confirmed your payment but your boost hasn't activated yet. Our team was notified — no need to pay again. Reference: ${referenceCode}`,
           variant: 'destructive',
         });
         return;
@@ -198,201 +189,212 @@ const ListingPublished: React.FC = () => {
       setTimeout(tick, 2000);
     };
     tick();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [featuredPaid, featuredActive, listingId, user?.id, toast]);
-
-
-  const handleClose = () => {
-    navigate('/dashboard');
-  };
 
   if (authLoading || isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background px-4">
-        <p className="text-muted-foreground mb-4">{error}</p>
-        <button
-          onClick={() => navigate('/dashboard')}
-          className="text-primary hover:underline"
-        >
+      <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4">
+        <p className="mb-4 text-muted-foreground">{error}</p>
+        <button onClick={() => navigate('/dashboard')} className="text-primary hover:underline">
           Go to dashboard
         </button>
       </div>
     );
   }
 
-  if (!listing) {
-    return null;
-  }
+  if (!listing || !listingId) return null;
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Minimal Header */}
       <div className="border-b bg-card">
-        <div className="container max-w-4xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <button
-              onClick={() => navigate('/dashboard')}
-              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <ArrowLeft className="w-4 h-4" />
-              Dashboard
-            </button>
-            <h1 className="font-semibold">Share your listing</h1>
-            <div className="w-16" />
-          </div>
+        <div className="container mx-auto flex max-w-3xl items-center justify-between px-4 py-4">
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="flex items-center gap-2 text-muted-foreground transition-colors hover:text-foreground"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Dashboard
+          </button>
+          {isPublished && (
+            <span className="rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs text-emerald-500">
+              Live
+            </span>
+          )}
         </div>
       </div>
 
-      <div className="container max-w-4xl mx-auto px-4 pt-6">
-        <PackagesIntro variant="compact" />
-      </div>
-
-
-
-      {/* Notary Payment Success Banner */}
       {notaryPaid && (
-        <div className="bg-emerald-50 dark:bg-emerald-950/30 border-b border-emerald-200 dark:border-emerald-800">
-          <div className="container max-w-2xl mx-auto px-4 py-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2 rounded-full bg-emerald-100 dark:bg-emerald-900">
-                <Stamp className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
-              </div>
-              <div>
-                <p className="font-medium text-emerald-800 dark:text-emerald-200">
-                  Proof Notary Add-On Activated
-                </p>
-                <p className="text-sm text-emerald-600 dark:text-emerald-400">
-                  Your $45 notary fee has been charged. Both parties will receive notarization links when the sale completes.
-                </p>
-              </div>
-              <CheckCircle2 className="w-5 h-5 text-emerald-600 dark:text-emerald-400 ml-auto" />
-            </div>
+        <div className="border-b border-emerald-500/30 bg-emerald-500/10">
+          <div className="container mx-auto flex max-w-3xl items-center gap-3 px-4 py-4">
+            <Stamp className="h-5 w-5 text-emerald-500" />
+            <p className="text-sm text-foreground">
+              <strong>Proof Notary add-on activated.</strong> Both parties receive notarization
+              links when the sale completes.
+            </p>
+            <CheckCircle2 className="ml-auto h-5 w-5 text-emerald-500" />
           </div>
         </div>
       )}
 
-      {/* Featured Boost Success / Syncing / Stuck Banner */}
+      {featuredCancelled && (
+        <div className="border-b border-border bg-muted/40">
+          <div className="container mx-auto max-w-3xl px-4 py-4">
+            <p className="text-sm text-foreground">
+              <strong>Your listing is live.</strong> The Featured boost wasn't purchased — you can
+              add it anytime from your dashboard.
+            </p>
+          </div>
+        </div>
+      )}
+
       {featuredPaid && (
         <div
           className={`border-b ${
-            featuredActive
-              ? 'bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800'
-              : featuredWebhookStuck
-                ? 'bg-red-50 dark:bg-red-950/30 border-red-200 dark:border-red-800'
-                : 'bg-muted/40 border-border'
+            featuredWebhookStuck ? 'border-red-500/30 bg-red-500/10' : 'border-border bg-muted/40'
           }`}
         >
-          <div className="container max-w-2xl mx-auto px-4 py-4">
-            <div className="flex items-start gap-3">
-              <div
-                className={`p-2 rounded-full ${
-                  featuredActive
-                    ? 'bg-amber-100 dark:bg-amber-900'
-                    : featuredWebhookStuck
-                      ? 'bg-red-100 dark:bg-red-900'
-                      : 'bg-muted'
-                }`}
-              >
-                {featuredSyncing ? (
-                  <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
-                ) : featuredWebhookStuck ? (
-                  <AlertCircleIcon className="w-5 h-5 text-red-600 dark:text-red-400" />
-                ) : (
-                  <CheckCircle2 className="w-5 h-5 text-amber-600 dark:text-amber-400" />
-                )}
-              </div>
-              <div className="flex-1">
-                <p className="font-medium">
-                  {featuredActive
-                    ? 'Featured Boost Activated ⭐'
-                    : featuredWebhookStuck
-                      ? 'Payment received — activation delayed'
-                      : featuredSyncing
-                        ? 'Finalizing your Featured Boost…'
-                        : 'Payment received — boost will activate shortly'}
-                </p>
-                <p className="text-sm text-muted-foreground">
-                  {featuredActive
-                    ? `Your listing is now published and featured at the top of search for 30 days.`
-                    : featuredWebhookStuck
-                      ? `Stripe confirmed your payment, but your boost hasn't activated yet. You haven't been charged twice — our team was notified and will finish activation.`
-                      : 'Your payment was successful. Your listing is published and the boost will appear within a minute.'}
-                </p>
-                {featuredWebhookStuck && (
-                  <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
-                    {featuredStuckRef && (
-                      <span className="font-mono px-2 py-0.5 rounded bg-red-100 dark:bg-red-900 text-red-800 dark:text-red-200">
-                        Reference: {featuredStuckRef}
-                      </span>
-                    )}
-                    <a
-                      href="tel:+17257559598"
-                      className="underline text-red-700 dark:text-red-300 hover:no-underline"
-                    >
-                      Call (725) 755-9598
-                    </a>
-                    <a
-                      href={`mailto:support@vendibook.com?subject=Featured%20boost%20not%20active%20${
-                        featuredStuckRef ?? ''
-                      }&body=Listing%20ID%3A%20${listingId}`}
-                      className="underline text-red-700 dark:text-red-300 hover:no-underline"
-                    >
-                      Email support
-                    </a>
-                  </div>
-                )}
-              </div>
-              {isPublished && (
-                <span className="text-xs px-2 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900 text-emerald-700 dark:text-emerald-300 whitespace-nowrap">
-                  Listing live
-                </span>
+          <div className="container mx-auto flex max-w-3xl items-start gap-3 px-4 py-4">
+            {featuredSyncing ? (
+              <Loader2 className="mt-0.5 h-5 w-5 animate-spin text-muted-foreground" />
+            ) : featuredWebhookStuck ? (
+              <AlertCircleIcon className="mt-0.5 h-5 w-5 text-red-500" />
+            ) : (
+              <CheckCircle2 className="mt-0.5 h-5 w-5 text-amber-500" />
+            )}
+            <div className="flex-1">
+              <p className="font-medium">
+                {featuredActive
+                  ? 'Featured boost activated'
+                  : featuredWebhookStuck
+                    ? 'Payment received — activation delayed'
+                    : 'Finalizing your featured boost'}
+              </p>
+              <p className="text-sm text-muted-foreground">
+                {featuredActive
+                  ? 'Your listing is featured at the top of search for 30 days.'
+                  : featuredWebhookStuck
+                    ? "PayPal confirmed your payment, but your boost hasn't activated yet. You haven't been charged twice — our team was notified."
+                    : 'Your payment went through. The boost appears within a minute.'}
+              </p>
+              {featuredWebhookStuck && (
+                <div className="mt-2 flex flex-wrap items-center gap-3 text-xs">
+                  {featuredStuckRef && (
+                    <span className="rounded bg-red-500/15 px-2 py-0.5 font-mono text-red-400">
+                      Reference: {featuredStuckRef}
+                    </span>
+                  )}
+                  <a href="tel:+17257559598" className="underline">
+                    Call (725) 755-9598
+                  </a>
+                  <a
+                    href={`mailto:support@vendibook.com?subject=Featured%20boost%20not%20active%20${
+                      featuredStuckRef ?? ''
+                    }&body=Listing%20ID%3A%20${listingId}`}
+                    className="underline"
+                  >
+                    Email support
+                  </a>
+                </div>
               )}
             </div>
           </div>
         </div>
       )}
 
-      {/* Share Kit */}
-      <div className="container max-w-2xl mx-auto px-4 py-12 space-y-6">
-        {isPublished && listingId && !featuredActive && !featuredPaid && (
-          <FeatureThisListingCTA listingId={listingId} priceLabel="$29 for 30 days" />
-        )}
-        {user?.id && listingId && (
-          <PublishStatusSummary listingId={listingId} hostId={user.id} />
-        )}
-        <ShareKit listing={listing} onClose={handleClose} />
-      </div>
+      <div className="container mx-auto max-w-3xl space-y-8 px-4 py-10">
+        {/* Success */}
+        <header className="space-y-3">
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 text-emerald-500">
+              <CheckCircle2 className="h-6 w-6" />
+            </div>
+            <video
+              src={socialBubbleAsset.url}
+              autoPlay
+              loop
+              muted
+              playsInline
+              aria-hidden="true"
+              className="h-10 w-auto rounded-lg"
+            />
+          </div>
+          <h1 className="text-3xl font-semibold text-foreground">Your listing is live</h1>
+          <p className="text-muted-foreground">
+            Buyers can now discover and contact you about your listing. Add more equipment and
+            operating details to help the right buyers understand exactly what you're offering.
+          </p>
+          <div className="flex flex-wrap gap-2 pt-1">
+            <Button onClick={() => navigate(`/listing/${listingId}`)}>
+              <ExternalLink className="mr-2 h-4 w-4" />
+              View my listing
+            </Button>
+            <Button variant="outline" onClick={() => navigate(`/listings/${listingId}/improve`)}>
+              <Wrench className="mr-2 h-4 w-4" />
+              Improve my listing
+            </Button>
+            <Button variant="outline" onClick={() => setShowShare((s) => !s)}>
+              <Share2 className="mr-2 h-4 w-4" />
+              Share listing
+            </Button>
+          </div>
+          <button
+            onClick={() => navigate('/dashboard')}
+            className="text-sm text-muted-foreground underline-offset-4 hover:underline"
+          >
+            Return to dashboard
+          </button>
+        </header>
 
-      {/* Post-publish: offer 30-day boost */}
-      {boostCandidate && (
-        <BoostListingPrompt listings={[boostCandidate]} userId={user?.id} />
-      )}
+        {showShare && <ShareKit listing={listing} onClose={() => setShowShare(false)} />}
 
-      {/* Optional seller upgrades — every listing on Vendibook is free; these are optional tools. */}
-      {listingId && (
-        <div className="container max-w-4xl mx-auto px-4 pb-16 space-y-10">
-          <UpgradePackageCards
-            listingId={listingId}
-            onSkip={() => navigate('/dashboard')}
-            skipLabel="Continue with free listing"
-          />
+        {/* Optional trust upsell — secondary to the core success actions. */}
+        <VerifiedSellerCTA variant="success" />
+
+
+        {/* Buyer readiness */}
+        <section className="rounded-xl border border-border/60 bg-card/60 p-5">
+          <h2 className="text-lg font-semibold text-foreground">
+            Help the right buyer understand your equipment
+          </h2>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Your listing is live with the essential information. Add equipment, utility, inspection,
+            and operating details to answer common buyer questions and make your listing easier to
+            evaluate.
+          </p>
+          <Button className="mt-4" onClick={() => navigate(`/listings/${listingId}/improve`)}>
+            Improve my listing
+          </Button>
+          <ReadinessDisclaimer className="mt-4" />
+        </section>
+
+        <ListingReadinessCard
+          listingId={listingId}
+          category={listing.category}
+          mode={listing.mode}
+        />
+
+        {/* Optional products, kept separate from publishing success. */}
+        <section className="space-y-6 border-t border-border/60 pt-8">
+          <p className="text-sm text-muted-foreground">
+            Optional extras — publishing is always free.
+          </p>
+          {isPublished && !featuredActive && !featuredPaid && (
+            <FeatureThisListingCTA listingId={listingId} />
+          )}
           <PromoteListingPanel listingId={listingId} />
-          <RecommendedAddOns
-            context="listing_published"
-            listingId={listingId}
-            heading="Give your new listing a running start"
-            subheading="Hand-picked services and boosts based on what converts best in the first 7 days."
-          />
-        </div>
-      )}
+        </section>
+      </div>
     </div>
   );
 };

@@ -10,6 +10,7 @@
  */
 import * as React from 'react';
 import { buildListingHighlights, type HighlightsListing } from '@/lib/transactionTerms';
+import { linkifyFreight } from '@/components/shared/FreightLink';
 
 interface Props {
   listing: HighlightsListing;
@@ -40,7 +41,7 @@ export const ListingHighlightsCard: React.FC<Props> = ({
         {bullets.map((b, i) => (
           <li key={i} className="flex gap-2">
             <span aria-hidden="true" className="mt-[7px] h-1 w-1 rounded-full bg-muted-foreground/60 shrink-0" />
-            <span>{b}</span>
+            <span>{linkifyFreight(b)}</span>
           </li>
         ))}
       </ul>

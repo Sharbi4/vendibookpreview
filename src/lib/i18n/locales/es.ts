@@ -273,7 +273,7 @@ export default {
     joinMarketplace: 'Únete al',
     marketplace: 'mercado',
     forFoodBusiness: 'para negocios de comida',
-    marketingSubtitle: 'Conecta con arrendatarios verificados, publica tus activos y haz crecer tu negocio de comida hoy.',
+    marketingSubtitle: 'Conecta con arrendatarios, publica tus activos y haz crecer tu negocio de comida hoy.',
     welcomeBackSubtitle: 'Continúa donde lo dejaste. Tus anuncios y reservas te esperan.',
   },
 

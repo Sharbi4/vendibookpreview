@@ -2,7 +2,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { ChevronDown, Facebook, Instagram, Twitter, Linkedin } from 'lucide-react';
 import vendibookFavicon from '@/assets/vendibook-favicon.png';
-import { StripeLogo } from '@/components/ui/StripeLogo';
+import {
+  PayPalMonogram,
+  PayPalWordmark,
+  EquinoxFundingLogo,
+} from '@/components/brand/ProviderLogos';
 import { cn } from '@/lib/utils';
 import { trackFooterCitiesClicked } from '@/lib/analytics';
 
@@ -23,6 +27,7 @@ const footerSections: FooterSection[] = [
       { label: 'Food Truck Selling FAQ', href: '/resources/food-truck-selling-faq' },
       { label: 'Help Center', href: '/help' },
       { label: 'Contact Us', href: '/contact' },
+      { label: 'Press & Media', href: '/press' },
       { label: 'Blog', href: '/blog' },
     ],
   },
@@ -31,7 +36,15 @@ const footerSections: FooterSection[] = [
     links: [
       { label: 'Food Trucks for Sale', href: '/food-trucks-for-sale' },
       { label: 'Food Trailers for Sale', href: '/food-trailers-for-sale' },
-      { label: 'Food Trucks for Rent', href: '/food-trucks-for-rent' },
+      { label: 'Used Food Trucks for Sale', href: '/used-food-trucks-for-sale' },
+      { label: 'How to Buy a Food Truck', href: '/how-to-buy-a-food-truck' },
+      { label: 'Coffee Trucks & Trailers', href: '/coffee-trucks-trailers-for-sale' },
+      { label: 'Ice Cream Trucks & Trailers', href: '/ice-cream-trucks-trailers-for-sale' },
+      { label: 'Pizza Trucks & Trailers', href: '/pizza-trucks-trailers-for-sale' },
+      { label: 'BBQ Trucks & Trailers', href: '/bbq-trucks-trailers-for-sale' },
+      { label: 'Food Trucks & Trailers for Rent', href: '/food-trucks-for-rent' },
+      { label: 'Food Trailers for Rent', href: '/food-trailers-for-rent' },
+      { label: 'Food Truck Financing', href: '/financing' },
       { label: 'Shared Kitchens', href: '/shared-kitchens' },
       { label: 'Browse by City', href: '/cities' },
       { label: 'All Listings', href: '/search' },
@@ -42,11 +55,11 @@ const footerSections: FooterSection[] = [
     links: [
       { label: 'List Food Truck for Sale', href: '/list-food-truck-for-sale' },
       { label: 'Rent Out My Food Truck', href: '/rent-out-my-food-truck' },
-      { label: 'Sell a Food Truck', href: '/sell-food-truck' },
+      { label: 'Sell a Food Truck', href: '/sell-my-food-truck' },
       { label: 'Sell a Food Trailer', href: '/sell-food-trailer' },
       { label: 'Sell a Concession Trailer', href: '/sell-concession-trailer' },
       { label: 'Rent My Kitchen', href: '/rent-my-commercial-kitchen' },
-      { label: 'Pricing & Plans', href: '/pricing' },
+      { label: 'Pricing', href: '/pricing' },
       { label: 'Payment Options', href: '/payments' },
       { label: 'Insurance Info', href: '/insurance' },
       { label: 'Refer & Earn', href: '/referral' },
@@ -55,11 +68,13 @@ const footerSections: FooterSection[] = [
   {
     title: 'By State',
     links: [
-      { label: 'Arizona Food Trucks', href: '/food-trucks-for-sale/arizona' },
       { label: 'Texas Food Trucks', href: '/food-trucks-for-sale/texas' },
+      { label: 'Texas Food Trailers', href: '/food-trailers-for-sale/texas' },
+      { label: 'Arizona Food Trucks', href: '/food-trucks-for-sale/arizona' },
       { label: 'Florida Food Trucks', href: '/food-trucks-for-sale/florida' },
       { label: 'Georgia Food Trucks', href: '/food-trucks-for-sale/georgia' },
-      { label: 'North Carolina', href: '/food-trucks-for-sale/north-carolina' },
+      { label: 'Michigan Food Trucks', href: '/food-trucks-for-sale/michigan' },
+      { label: 'Ohio Food Trucks', href: '/food-trucks-for-sale/ohio' },
       { label: 'California', href: '/food-trucks-for-sale/california' },
     ],
   },
@@ -69,8 +84,9 @@ const footerSections: FooterSection[] = [
       { label: 'All Tools', href: '/tools' },
       { label: 'Startup Guide', href: '/tools/startup-guide' },
       { label: 'Price Pilot', href: '/tools/pricepilot' },
-      { label: 'Listing Studio', href: '/tools/listing-studio' },
+      { label: 'Food Truck Prices', href: '/food-truck-prices' },
       { label: 'Permit Path', href: '/tools/permitpath' },
+      { label: 'Regulations Hub', href: '/tools/regulations-hub' },
     ],
   },
   {
@@ -79,6 +95,13 @@ const footerSections: FooterSection[] = [
       { label: 'Legal Center', href: '/legal' },
       { label: 'Terms of Service', href: '/terms' },
       { label: 'Privacy Policy', href: '/privacy' },
+      { label: 'Payments Terms', href: '/legal/payments-terms' },
+      { label: 'Seller Payment Terms', href: '/legal/seller-payment-terms' },
+      { label: 'Electronic Records Consent', href: '/legal/esign' },
+      { label: 'Handoff Terms', href: '/legal/handoff-terms' },
+      { label: 'Financing Disclosure', href: '/legal/financing-disclosure' },
+      { label: 'Recording Notice', href: '/legal/recording-consent' },
+      { label: 'Location Tracking', href: '/legal/location-tracking' },
       { label: 'California Privacy', href: '/california-privacy' },
       { label: 'Do Not Sell My Info', href: '/california-privacy#do-not-sell' },
       { label: 'Text message preferences', href: '/sms-opt-in' },
@@ -155,7 +178,7 @@ const FooterAccordion = ({ section }: { section: FooterSection }) => {
 
 const Footer = () => {
   return (
-    <footer className="bg-card text-foreground border-t border-border">
+    <footer data-site-chrome="" className="bg-card text-foreground border-t border-border">
       {/* Main Footer Content */}
       <div className="container py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-7 gap-0 md:gap-8">
@@ -204,14 +227,22 @@ const Footer = () => {
               </span>
               <span className="flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-green-400" />
-                24/7 Support
+                Support Mon&ndash;Fri, 9am&ndash;5pm AZ
               </span>
+
             </div>
 
-            {/* Stripe Badge */}
-            <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              <span>Payments by</span>
-              <StripeLogo className="h-5 opacity-70" />
+            {/* Payments badge */}
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span>Payments by</span>
+                <PayPalMonogram className="h-4" />
+                <PayPalWordmark className="h-3.5" />
+              </div>
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <span>Financing by</span>
+                <EquinoxFundingLogo className="h-5" />
+              </div>
             </div>
           </div>
         </div>

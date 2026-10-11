@@ -2,8 +2,6 @@ import { Calendar, Clock, CheckCircle2, ArrowRight, Wallet, Info, Loader2 } from
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { StripeLogo } from '@/components/ui/StripeLogo';
-import { StripeTrustBadge } from '@/components/trust/StripeTrustBadge';
 import { cn } from '@/lib/utils';
 import { format, addDays, isAfter, isBefore, startOfDay } from 'date-fns';
 import { PayoutRecord } from '@/hooks/useRevenueAnalytics';
@@ -17,7 +15,7 @@ import {
 interface PayoutScheduleCardProps {
   pendingPayout: number;
   payoutHistory: PayoutRecord[];
-  onOpenStripeDashboard?: () => void;
+  onOpenPayoutHistory?: () => void;
   isOpeningDashboard?: boolean;
 }
 
@@ -33,12 +31,12 @@ const formatCurrency = (value: number) => {
 export const PayoutScheduleCard = ({
   pendingPayout,
   payoutHistory,
-  onOpenStripeDashboard,
+  onOpenPayoutHistory,
   isOpeningDashboard,
 }: PayoutScheduleCardProps) => {
   const today = startOfDay(new Date());
-  
-  // Estimate next payout date (Stripe typically pays out on a rolling basis, usually 2-7 days after transaction)
+
+  // Estimated release date. Vendibook reviews and releases seller payouts manually.
   // For demo purposes, we'll show the next business day + 2 days
   const estimatedNextPayout = addDays(today, 2);
   
@@ -63,19 +61,18 @@ export const PayoutScheduleCard = ({
             Payout Schedule
           </CardTitle>
           <div className="flex items-center gap-2">
-            <StripeTrustBadge context="payouts" surface="light" size="sm" withCopy={false} />
-            {onOpenStripeDashboard && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={onOpenStripeDashboard}
+            {onOpenPayoutHistory && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onOpenPayoutHistory}
                 disabled={isOpeningDashboard}
                 className="text-xs rounded-xl"
               >
                 {isOpeningDashboard ? (
-                  <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                  <Loader2 className="h-3 w-3 animate-spin mr-1" aria-hidden />
                 ) : null}
-                View in Stripe
+                View payout history
               </Button>
             )}
           </div>
@@ -101,7 +98,7 @@ export const PayoutScheduleCard = ({
                         </TooltipTrigger>
                         <TooltipContent>
                           <p className="text-xs max-w-[200px]">
-                            Payout timing depends on your Stripe settings. Typically 2-7 business days after transaction completion.
+                            Vendibook reviews and releases seller payouts manually, typically within a few business days of the release window.
                           </p>
                         </TooltipContent>
                       </Tooltip>
@@ -111,7 +108,7 @@ export const PayoutScheduleCard = ({
                 </div>
               </div>
               <div className="text-right">
-                <Badge variant="outline" className="bg-[#635bff]/10 text-[#635bff] border-[#635bff]/20 rounded-xl">
+                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 rounded-xl">
                   <Clock className="h-3 w-3 mr-1" />
                   Est. {format(estimatedNextPayout, 'MMM d')}
                 </Badge>
@@ -223,19 +220,19 @@ export const PayoutScheduleCard = ({
           )}
         </div>
 
-        {/* Stripe Dashboard Link */}
-        {onOpenStripeDashboard && (
+        {/* Full payout history */}
+        {onOpenPayoutHistory && (
           <div className="p-4 pt-0">
-            <Button 
-              variant="outline" 
-              className="w-full group hover:bg-[#635bff]/5 hover:border-[#635bff]/30 rounded-xl"
-              onClick={onOpenStripeDashboard}
+            <Button
+              variant="outline"
+              className="w-full group rounded-xl"
+              onClick={onOpenPayoutHistory}
               disabled={isOpeningDashboard}
             >
               {isOpeningDashboard ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                <Loader2 className="h-4 w-4 animate-spin mr-2" aria-hidden />
               ) : (
-                <StripeLogo size="sm" className="mr-2" />
+                <Wallet className="h-4 w-4 mr-2" aria-hidden />
               )}
               View Full Payout History
               <ArrowRight className="h-4 w-4 ml-auto group-hover:translate-x-1 transition-transform" />

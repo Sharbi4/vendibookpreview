@@ -1,7 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
+import { refundPayment } from "../_shared/paymentOps.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { resolveSaleTerms, formatTermsForEmail } from "../_shared/resolveSaleTerms.ts";
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 
 const corsHeaders = {
@@ -125,8 +126,6 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
 
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -187,7 +186,7 @@ serve(async (req) => {
     // Get the transaction with listing info
     const { data: transaction, error: txError } = await supabaseClient
       .from("sale_transactions")
-      .select("*, buyer:profiles!sale_transactions_buyer_id_fkey(email, full_name), seller:profiles!sale_transactions_seller_id_fkey(email, full_name, stripe_account_id), listing:listings!sale_transactions_listing_id_fkey(title)")
+      .select("*, buyer:profiles!sale_transactions_buyer_id_fkey(email, full_name), seller:profiles!sale_transactions_seller_id_fkey(email, full_name), listing:listings!sale_transactions_listing_id_fkey(title)")
       .eq("id", transaction_id)
       .single();
 
@@ -206,79 +205,137 @@ serve(async (req) => {
       );
     }
 
-    if (!transaction.payment_intent_id) {
+    // The PayPal payment behind this sale. Refunds and payout holds key off it.
+    const { data: paymentRecord } = await supabaseClient
+      .from("payment_records")
+      .select("id, payment_status")
+      .eq("sale_transaction_id", transaction.id)
+      .in("payment_status", ["completed", "partially_refunded", "refunded"])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (!paymentRecord && !transaction.payment_intent_id) {
       return new Response(
-        JSON.stringify({ error: "No payment intent found for this transaction" }),
+        JSON.stringify({ error: "No payment found for this transaction" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+    // Disputes opened since the case flow was unified have a Vendibook case.
+    // Resolve through it so the refund, payout freeze, case history and both
+    // parties' notices all stay in one place.
+    if (paymentRecord) {
+      const { data: openCase } = await supabaseClient
+        .from("dispute_cases")
+        .select("id")
+        .eq("payment_record_id", paymentRecord.id)
+        .not("status", "in", "(resolved,closed)")
+        .maybeSingle();
+      if (openCase) {
+        const caseRes = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/dispute-case-ops`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: authHeader,
+            apikey: Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+          },
+          body: JSON.stringify({
+            action: "admin_resolve",
+            case_id: openCase.id,
+            outcome: resolution === "refund_buyer" ? "refunded_full" : "released_to_seller",
+            reason: admin_notes && admin_notes.trim().length >= 5
+              ? admin_notes.trim()
+              : resolution === "refund_buyer" ? "Resolved in the buyer's favor." : "Resolved in the seller's favor.",
+          }),
+        });
+        const caseBody = await caseRes.json().catch(() => ({}));
+        return new Response(JSON.stringify(caseRes.ok ? { success: true, via_case: true, ...caseBody } : { error: caseBody?.error ?? "Case resolution failed" }), {
+          status: caseRes.ok ? 200 : caseRes.status,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    }
 
     let newStatus: string;
     let resultMessage: string;
 
     if (resolution === "refund_buyer") {
-      // Refund the payment intent
-      logStep("Refunding payment intent", { paymentIntentId: transaction.payment_intent_id });
-      
-      try {
-        await stripe.refunds.create({
-          payment_intent: transaction.payment_intent_id,
-        });
-        
-        newStatus = "refunded";
-        resultMessage = "Dispute resolved: Full refund issued to buyer";
-        logStep("Refund successful");
-      } catch (refundError: any) {
-        logStep("Refund error", { error: refundError.message });
-        return new Response(
-          JSON.stringify({ error: `Refund failed: ${refundError.message}` }),
-          { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
-    } else {
-      // Release payment to seller
-      if (!transaction.seller?.stripe_account_id) {
-        return new Response(
-          JSON.stringify({ error: "Seller has no connected Stripe account" }),
-          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-        );
-      }
+      // Vendibook refunds through PayPal only.
+      logStep("Refunding buyer", { paymentReference: transaction.payment_intent_id });
 
-      logStep("Creating transfer to seller", { stripeAccountId: transaction.seller.stripe_account_id });
-      
-      try {
-        const transfer = await stripe.transfers.create({
-          amount: Math.round(transaction.seller_payout * 100),
-          currency: "usd",
-          destination: transaction.seller.stripe_account_id,
-          transfer_group: `sale_${transaction.id}`,
-          metadata: {
-            transaction_id: transaction.id,
-            dispute_resolution: "released_to_seller",
+      // PayPal payments go through paypal-refund, which refunds as the seller
+      // when the payment was routed to them, records the ledger, payable and
+      // audit trail, and closes the sale. Older payments without a payment
+      // record keep the legacy path.
+      let refund: { success: boolean; error?: string; manual?: boolean; id?: string; status?: string };
+      if (paymentRecord && paymentRecord.payment_status !== "refunded") {
+        const res = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/paypal-refund`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: authHeader,
+            apikey: Deno.env.get("SUPABASE_ANON_KEY") ?? "",
           },
+          body: JSON.stringify({ payment_record_id: paymentRecord.id, reason: "Dispute resolved in the buyer's favor" }),
         });
+        const body = await res.json().catch(() => ({}));
+        refund = res.ok
+          ? { success: true, id: body?.refund_id, status: body?.refund_status }
+          : { success: false, error: body?.error ?? `HTTP ${res.status}` };
+      } else if (paymentRecord) {
+        refund = { success: true, status: "already_refunded" };
+      } else {
+        refund = await refundPayment({
+          paymentReference: transaction.payment_intent_id,
+          provider: (transaction as any).payment_provider,
+          reason: "Dispute resolved in buyer's favor",
+          idempotencyKey: `dispute-refund-${transaction.id}`,
+        });
+      }
 
-        newStatus = "completed";
-        resultMessage = "Dispute resolved: Payment released to seller";
-        logStep("Transfer successful", { transferId: transfer.id });
-
-        // Update with transfer info
-        await supabaseClient
-          .from("sale_transactions")
-          .update({
-            transfer_id: transfer.id,
-            payout_completed_at: new Date().toISOString(),
-          })
-          .eq("id", transaction_id);
-      } catch (transferError: any) {
-        logStep("Transfer error", { error: transferError.message });
+      if (!refund.success) {
+        logStep("Refund not completed", { error: refund.error, manual: refund.manual });
         return new Response(
-          JSON.stringify({ error: `Transfer failed: ${transferError.message}` }),
+          JSON.stringify({ error: `Refund failed: ${refund.error}`, manual: refund.manual ?? false }),
           { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
+
+      newStatus = "refunded";
+      resultMessage = "Dispute resolved: Full refund issued to buyer";
+      logStep("Refund successful", { id: refund.id, status: refund.status });
+    } else {
+      // Vendibook pays sellers manually: releasing a dispute marks the seller's
+      // payable eligible so an administrator can settle it. No transfer API runs.
+      logStep("Releasing seller payable for manual payout", { transactionId: transaction.id });
+
+      let payableQuery = supabaseClient
+        .from("seller_payables")
+        .update({
+          payout_eligible_at: new Date().toISOString(),
+          hold_reason: null,
+        })
+        .in("status", ["pending_release", "payout_on_hold", "disputed"]);
+      payableQuery = paymentRecord
+        ? payableQuery.eq("payment_record_id", paymentRecord.id)
+        : payableQuery.eq("seller_id", transaction.seller_id).eq("listing_id", transaction.listing_id);
+      const { error: payableError } = await payableQuery;
+
+      if (payableError) {
+        logStep("Warning: failed to release payable", { error: payableError.message });
+      }
+
+      // Back to where the sale was before the dispute (completed only when
+      // both parties had already confirmed), so the handoff can continue.
+      newStatus = transaction.buyer_confirmed_at && transaction.seller_confirmed_at
+        ? "completed"
+        : transaction.buyer_confirmed_at
+        ? "buyer_confirmed"
+        : transaction.seller_confirmed_at
+        ? "seller_confirmed"
+        : "paid";
+      resultMessage = "Dispute resolved: Payment released to seller for payout";
     }
 
     // Update transaction status
@@ -367,8 +424,7 @@ serve(async (req) => {
             resolutionText,
             ...(termsBlock ? [termsBlock] : []),
           ];
-          const { error } = await supabaseClient.functions.invoke("send-transactional-email", {
-            body: {
+          const { error } = await invokeTransactionalEmail({
               templateName: "generic-notice",
               recipientEmail: to,
               idempotencyKey: `dispute-resolved-${transaction_id}-${audience}`,
@@ -390,8 +446,7 @@ serve(async (req) => {
                 ctaUrl: dashboardUrl,
                 footnote: "Questions? Email support@vendibook.com or call (725) 755-9598.",
               },
-            },
-          });
+            });
           if (error) throw error;
         } catch (e) {
           logStep("Failed to enqueue dispute email", { audience, error: String(e) });

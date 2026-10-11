@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
+import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -27,6 +29,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+  if (!(await isAdminOrBackendCaller(req))) return forbiddenResponse();
 
   try {
     const supabaseClient = createClient(
@@ -70,11 +73,6 @@ serve(async (req) => {
         listings!inner (
           id,
           title
-        ),
-        profiles!booking_requests_shopper_id_fkey (
-          id,
-          email,
-          full_name
         )
       `)
       .eq("is_instant_book", true)
@@ -86,6 +84,17 @@ serve(async (req) => {
     if (bookingsError) {
       logStep("Error fetching bookings", { error: bookingsError });
       throw bookingsError;
+    }
+
+    // shopper_id references auth.users, not profiles — fetch profiles separately.
+    const shopperIds = Array.from(new Set((bookings || []).map((b: any) => b.shopper_id).filter(Boolean)));
+    const profilesById = new Map<string, { id: string; email: string | null; full_name: string | null }>();
+    if (shopperIds.length > 0) {
+      const { data: profileRows } = await supabaseClient
+        .from("profiles")
+        .select("id, email, full_name")
+        .in("id", shopperIds);
+      (profileRows || []).forEach((p: any) => profilesById.set(p.id, p));
     }
 
     logStep("Found bookings to check", { count: bookings?.length || 0 });
@@ -167,8 +176,7 @@ serve(async (req) => {
         });
 
         // Get renter info
-        const profileData = booking.profiles as unknown as { id: string; email: string | null; full_name: string | null }[] | null;
-        const profile = profileData?.[0] ?? null;
+        const profile = profilesById.get(booking.shopper_id) ?? null;
         const renterEmail = profile?.email;
         const renterName = profile?.full_name || "Renter";
 
@@ -196,8 +204,7 @@ serve(async (req) => {
           .join(", ");
 
         // Send the email via Lovable Email
-        const { error: emailError } = await supabaseClient.functions.invoke("send-transactional-email", {
-          body: {
+        const { error: emailError } = await invokeTransactionalEmail({
             templateName: "document-status",
             recipientEmail: renterEmail,
             idempotencyKey: `doc-reminder-${booking.id}-${isUrgent ? "urgent" : "normal"}-${new Date().toISOString().slice(0,10)}`,
@@ -210,8 +217,7 @@ serve(async (req) => {
               rejectedDocuments: rejectedDocsList,
               ctaUrl: "https://vendibook.com/dashboard",
             },
-          },
-        });
+          });
 
         if (emailError) {
           logStep("Email send failed", { bookingId: booking.id, error: emailError.message });

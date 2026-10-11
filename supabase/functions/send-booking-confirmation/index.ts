@@ -2,6 +2,8 @@
 // queue (send-transactional-email) so they get suppression checks, retries,
 // unsubscribe footers, and email_send_log tracking.
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
+import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -22,6 +24,7 @@ function fmtDate(d?: string) {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders });
+  if (!(await isAdminOrBackendCaller(req))) return forbiddenResponse();
   try {
     const b = await req.json();
     const supabase = createClient(Deno.env.get('SUPABASE_URL')!, Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!);
@@ -53,6 +56,24 @@ Deno.serve(async (req) => {
       console.warn('[send-booking-confirmation] terms lookup failed', e);
     }
 
+    // The email is state-aware: payment is captured, but the booking may still
+    // be awaiting host approval. Read the live status rather than assuming.
+    let bookingStatus: string | null = b.bookingStatus ?? null;
+    let isInstantBook = false;
+    try {
+      const { data: bookingRow } = await supabase
+        .from('booking_requests')
+        .select('status, is_instant_book')
+        .eq('id', b.bookingId)
+        .maybeSingle();
+      if (bookingRow) {
+        bookingStatus = bookingStatus ?? (bookingRow as any).status ?? null;
+        isInstantBook = Boolean((bookingRow as any).is_instant_book);
+      }
+    } catch (e) {
+      console.warn('[send-booking-confirmation] status lookup failed', e);
+    }
+
     const templateData = {
       guestName: b.fullName?.split(' ')[0] || b.fullName,
       listingTitle: b.listingTitle,
@@ -61,6 +82,9 @@ Deno.serve(async (req) => {
       totalPrice: fmtMoney(b.totalPrice),
       orderNumber: `VB-${String(b.bookingId).slice(0, 8).toUpperCase()}`,
       hostName: b.hostName,
+      bookingId: b.bookingId,
+      bookingStatus,
+      isInstantBook,
       fulfillmentType: b.fulfillmentType,
       address: b.address,
       deliveryAddress: b.deliveryAddress,
@@ -69,14 +93,12 @@ Deno.serve(async (req) => {
       termsVersion,
     };
 
-    const { error } = await supabase.functions.invoke('send-transactional-email', {
-      body: {
+    const { error } = await invokeTransactionalEmail({
         templateName: 'booking-confirmation',
         recipientEmail: b.email,
         idempotencyKey: `booking-confirm-${b.bookingId}`,
         templateData,
-      },
-    });
+      });
     if (error) throw error;
     return new Response(JSON.stringify({ success: true, termsIncluded: Boolean(termsSnapshot) }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

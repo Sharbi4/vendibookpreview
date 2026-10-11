@@ -31,12 +31,12 @@ import { Badge } from '@/components/ui/badge';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import { useRevenueAnalytics } from '@/hooks/useRevenueAnalytics';
-import { useStripeConnect } from '@/hooks/useStripeConnect';
+import { MANUAL_PAYOUT_SETTINGS_PATH } from '@/hooks/useManualPayout';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Legend } from 'recharts';
 
-const HostReporting = () => {
+const HostReporting = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const { analytics, isLoading } = useRevenueAnalytics();
-  const { openStripeDashboard, isOpeningDashboard } = useStripeConnect();
+
   const [timeRange, setTimeRange] = useState('30d');
   const [isExporting, setIsExporting] = useState(false);
 
@@ -106,10 +106,10 @@ const HostReporting = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <Header />
-      
-      <main className="flex-1 container max-w-7xl py-8">
+    <div className={embedded ? 'flex flex-col' : 'min-h-screen bg-background flex flex-col'}>
+      {!embedded && <Header />}
+
+      <main className={embedded ? 'flex-1' : 'flex-1 container max-w-7xl py-8'}>
         {/* Header with Dark Shine Design */}
         <div className="p-6 rounded-2xl bg-card border border-border mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
@@ -126,7 +126,7 @@ const HostReporting = () => {
                   Back to Dashboard
                 </Link>
                 <h1 className="text-2xl font-bold tracking-tight">Performance Reporting</h1>
-                <p className="text-sm text-muted-foreground">Track your Stripe earnings and payouts.</p>
+                <p className="text-sm text-muted-foreground">Track your Vendibook earnings and PayPal payouts.</p>
               </div>
             </div>
             
@@ -145,11 +145,10 @@ const HostReporting = () => {
               <Button 
                 variant="outline" 
                 className="gap-2 rounded-xl border-border hover:bg-foreground hover:text-background hover:border-foreground transition-all duration-200"
-                onClick={() => openStripeDashboard()}
-                disabled={isOpeningDashboard}
+                onClick={() => window.location.assign(MANUAL_PAYOUT_SETTINGS_PATH)}
               >
-                {isOpeningDashboard ? <Loader2 className="h-4 w-4 animate-spin" /> : <CreditCard className="h-4 w-4" />}
-                Stripe Dashboard
+                <CreditCard className="h-4 w-4" />
+                Payout settings
               </Button>
               <Button variant="outline" className="gap-2 rounded-xl border-border hover:bg-foreground hover:text-background hover:border-foreground transition-all duration-200">
                 <Download className="h-4 w-4" />
@@ -369,11 +368,9 @@ const HostReporting = () => {
                     </div>
                     <Button 
                       className="bg-foreground text-background hover:bg-foreground/90 rounded-xl"
-                      onClick={() => openStripeDashboard()}
-                      disabled={isOpeningDashboard}
+                      onClick={() => window.location.assign(MANUAL_PAYOUT_SETTINGS_PATH)}
                     >
-                      {isOpeningDashboard ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-                      View in Stripe
+                      View payout settings
                     </Button>
                   </div>
                 </CardContent>
@@ -382,7 +379,7 @@ const HostReporting = () => {
           </>
         )}
       </main>
-      <Footer />
+      {!embedded && <Footer />}
     </div>
   );
 };

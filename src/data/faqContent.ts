@@ -3,16 +3,24 @@
  *
  * Rules enforced here:
  *  - Every fee, tier price, and window matches the live config.
- *    Commission: 12.9% (src/lib/commissions.ts).
- *    Tiers: Free / Starter $39 / Growth $89 / Operator $149
- *      (src/components/monetization/tierCatalog.ts).
- *    Weekly Pass: $29 for 7 days.
- *    Payout: rentals 24h after start, sales 25d after buyer confirms.
+ *    Commission: 12.9% (src/lib/commissions.ts); Vendibook Pro seller/host
+ *      side 10.9%, savings capped at $500 per completed transaction
+ *      (src/lib/fees/proFee.ts).
+ *    Plans: Free / Vendibook Pro $79/mo (monetization_products.vendibook_pro).
+ *      Retired Starter / Growth / Operator / Weekly Pass tiers must never appear.
+ *    Payout: Vendibook reviews and issues payouts after the transaction
+ *      completes. Never describe general payouts as automatic, instant, or
+ *      24-hour. The only 24-hour claim allowed is for a successfully completed
+ *      FINANCED purchase (released within 24h after delivery + confirmation).
  *    Support: (725) 755-9598 · support@vendibook.com · Mon–Fri 9a–5p AZ.
- *  - Never say "payment protection" — say "payment protection" or "funds are held".
+ *  - Never imply Vendibook holds funds — say "payment protection" or "funds are held".
+ *  - Payments run on PayPal. No Stripe / Affirm / Klarna / Afterpay language.
+ *  - Identity verification is optional; never imply everyone is verified.
  *  - Anything not shipped is marked "coming soon".
  *  - Answers link to real routes; long legalese defers to policy pages.
  */
+
+import { PRICING_FAQ } from "./pricingFaq";
 
 export interface FaqAction {
   label: string;
@@ -41,7 +49,7 @@ export interface FaqCategory {
 // -------- Reusable action shortcuts --------
 const A = {
   createListing: { label: "Create a listing", href: "/list", requiresAuth: true },
-  viewTransactions: { label: "View transactions", href: "/transactions", requiresAuth: true },
+  viewTransactions: { label: "View transactions", href: "/dashboard/activity", requiresAuth: true },
   dashboard: { label: "Open dashboard", href: "/dashboard", requiresAuth: true },
   verify: { label: "Verify identity", href: "/verify-identity", requiresAuth: true },
   notifPrefs: { label: "Notification preferences", href: "/notification-preferences", requiresAuth: true },
@@ -49,8 +57,8 @@ const A = {
   browseRentals: { label: "Browse rentals", href: "/search?mode=rent" },
   browseSales: { label: "Browse for sale", href: "/search?mode=sale" },
   permitPath: { label: "Open PermitPath", href: "/tools/permitpath" },
-  messages: { label: "Open messages", href: "/messages", requiresAuth: true },
-  account: { label: "Account settings", href: "/account", requiresAuth: true },
+  messages: { label: "Open messages", href: "/dashboard/messages", requiresAuth: true },
+  account: { label: "Account settings", href: "/dashboard/account", requiresAuth: true },
   pricing: { label: "See plans", href: "/pricing" },
   subscription: { label: "Manage subscription", href: "/account/subscription", requiresAuth: true },
   tools: { label: "Open Premium Tools", href: "/dashboard/tools", requiresAuth: true },
@@ -61,7 +69,24 @@ const A = {
   terms: { label: "Terms of service", href: "/legal/terms" },
 } satisfies Record<string, FaqAction>;
 
+const PRICING_CATEGORY: FaqCategory = {
+  id: "pricing-fees",
+  title: "Pricing, fees & financing",
+  blurb:
+    "Free to list. 12.9% only when a transaction runs through Vendibook — and $0 when a sale is paid in person.",
+  // Namespaced: several pricing FAQ ids (e.g. "payout-timing") also exist as
+  // full entries in the selling category. Prefixing keeps entry ids unique.
+  entries: PRICING_FAQ.map((e) => ({
+    id: `pricing-${e.id}`,
+    question: e.question,
+    answer: e.answer,
+    keywords: ["fees", "pricing", "commission", "cost", "paypal", "financing"],
+    actions: e.cta ? [{ label: e.cta.label, href: e.cta.href }] : undefined,
+  })),
+};
+
 export const faqCategories: FaqCategory[] = [
+  PRICING_CATEGORY,
   // ── 1. Getting started ─────────────────────────────────────────
   {
     id: "getting-started",
@@ -94,15 +119,15 @@ export const faqCategories: FaqCategory[] = [
         id: "identity-verification",
         question: "What is identity verification and who needs it?",
         answer:
-          "We run identity checks through Stripe Identity to fight fraud and keep payouts flowing. Everyone selling, hosting, or making a high-ticket purchase gets verified. You upload a government photo ID (driver's license, passport, or state ID) and take a quick selfie. Most checks complete in a few minutes; manual review takes 1–2 business days. Verified users get the checkmark badge, unlock high-value payments and payouts, and rank higher in search.",
-        keywords: ["kyc", "identity", "stripe identity", "badge", "verified"],
+          "Identity verification is an optional paid add-on ($19.99, one time) powered by Plaid. It is never required to buy, sell, rent, publish a listing, or get paid. What it does is put the Identity Verified badge on your profile and listings — sellers who carry it typically get more replies and faster offers because buyers know a real person is behind the truck.",
+        keywords: ["kyc", "identity", "verification", "badge", "verified"],
         actions: [A.verify],
       },
       {
         id: "verification-fails",
         question: "My identity check failed — what now?",
         answer:
-          "You'll see the exact reason on the verification page and can retry with a clearer photo or a different document. After two failed attempts, email support@vendibook.com and we'll review manually.",
+          "You'll see the exact reason on the verification page and can retry with a clearer document. Nothing on your account is blocked in the meantime — verification is optional, so you can keep listing, selling, and getting paid. If a retry still fails, email support@vendibook.com and we'll review manually.",
         actions: [A.verify, A.contactSupport],
       },
       {
@@ -135,7 +160,7 @@ export const faqCategories: FaqCategory[] = [
         id: "how-buying-works",
         question: "How does buying work start to finish?",
         answer:
-          "Browse listings, message the seller with any questions, and either buy at the asking price or make an offer. When the seller accepts, you check out with card, ACH, or financing. Funds sit in payment protection until you confirm you got the truck and everything you were promised. Once you confirm — or 7 days after delivery if you don't — the seller is paid out 25 days later (Stripe's dispute window). You get a bill of sale, e-signed by both sides, in your dashboard.",
+          "Browse listings, message the seller with any questions, and either buy at the asking price or make an offer. When the seller accepts, you either pay in person (if the seller offers it) or check out online through PayPal — card, bank, or PayPal balance. Funds are held rather than sent straight to the seller until you confirm you received exactly what was listed. If you never confirm, we auto-complete 7 days after delivery. Vendibook then reviews and issues the seller's payout. You get a bill of sale, e-signed by both sides, in your dashboard.",
         actions: [A.browseSales],
       },
       {
@@ -155,33 +180,34 @@ export const faqCategories: FaqCategory[] = [
         id: "payment-methods",
         question: "What payment methods do you accept?",
         answer:
-          "Credit and debit cards, Apple Pay, and Google Pay for every transaction. ACH bank transfer for eligible sales above $5,000. Financing (Affirm, Klarna, Afterpay) on eligible listings. Pay in Person (cash) when the seller has enabled it.",
+          "Vendibook checkout runs on PayPal Business: pay with your PayPal balance, a linked bank account, or any major debit/credit card through PayPal — no PayPal account required to use a card. Buyer financing through our financing partner is available on eligible for-sale listings, and Pay in Person is available when the seller has enabled it. Vendibook never sees or stores your card number.",
       },
       {
         id: "financing",
-        question: "Can I finance a purchase with Affirm, Klarna, or Afterpay?",
+        question: "Can I finance a food truck or trailer instead of paying cash?",
         answer:
-          "Yes, on eligible listings. Affirm handles $35–$30,000 with monthly plans up to 36 months. Klarna splits into 4 interest-free payments or a longer plan. Afterpay covers up to $4,000 in 4 payments. You pick your plan at checkout, see your exact rate before committing, and Affirm/Klarna/Afterpay handle collection — Vendibook is paid in full up front.",
-        keywords: ["financing", "monthly", "bnpl", "affirm", "klarna", "afterpay"],
+          "Yes. Buyer financing is available on eligible published for-sale listings through the third-party financing partner Vendibook surfaces — currently Equinox Funding. You apply directly from the listing and can download a Pro Forma Invoice (with the VIN/serial) to submit with the application. The seller does not manage your application or make the lending decision. Vendibook is not a lender: we do not approve applicants, set rates or terms, or guarantee funding or timing. See /financing for the current provider details.",
+        keywords: ["financing", "monthly", "loan", "equinox", "equipment financing"],
+        actions: [{ label: "Explore financing", href: "/financing" }],
       },
       {
         id: "payment-protection",
         question: "How does payment protection work?",
         answer:
-          "When you pay through Vendibook, your money is held by our payment processor — not sent to the seller yet. The seller only gets paid after you confirm you received exactly what was listed. If you never confirm, we auto-complete 7 days after delivery; the seller's payout still doesn't release for a full 25 days after that (Stripe's dispute window), so you have time to raise an issue. This replaces the old-school payment protection model with something faster and integrated with your card's chargeback rights.",
+          "When you pay through Vendibook, your money is held by our payment processor, PayPal — not sent to the seller yet. The seller only gets paid after you confirm you received exactly what was listed. If you never confirm, we auto-complete 7 days after delivery. Vendibook reviews the transaction and then issues the seller's payout, so raise any issue before you confirm receipt.",
         keywords: ["payment protection", "protection", "hold", "safe"],
       },
       {
         id: "delivery-options",
         question: "How does delivery, pickup, or freight work?",
         answer:
-          "Every for-sale listing supports three options: (1) pickup by you, (2) freight you arrange yourself, or (3) Vendibook-facilitated freight (roughly $4.50/mile, quoted with a carrier before scheduling). You pick your option at checkout. Freight is scheduled after payment clears and tracked on the transaction page.",
+          "It depends on what the seller offers. Common options are local pickup by you, seller-arranged delivery when the seller offers it, freight you arrange yourself, or Vendibook-coordinated freight where it is available. Where the delivery checker is enabled on a listing, it returns an estimate for your address before you commit — not every listing has nationwide delivery or a guaranteed quote. The buyer is generally responsible for delivery cost.",
       },
       {
         id: "confirm-delivery",
         question: "When and how do I confirm delivery?",
         answer:
-          "After the truck arrives and you've done a full walkaround with the title and keys in hand, open the transaction and tap Confirm receipt. This starts the 25-day payout clock for the seller. Don't confirm until documents and any promised extras are physically with you — confirmation cannot be reversed once the payout releases.",
+          "After the truck arrives and you've done a full walkaround with the title and keys in hand, open the transaction and tap Confirm receipt. This completes the sale and starts Vendibook's payout review. Don't confirm until documents and any promised extras are physically with you — confirmation cannot be reversed once the payout is released.",
         actions: [A.viewTransactions],
       },
       {
@@ -195,7 +221,7 @@ export const faqCategories: FaqCategory[] = [
         id: "refund-window",
         question: "How long do I have to request a refund?",
         answer:
-          "Up to 7 days after delivery to auto-complete, and up to 25 days after that if a dispute is opened (Stripe's chargeback window). The listing's cancellation policy governs pre-delivery cancellations — you'll see the exact refund amount before you confirm any cancellation.",
+          "Up to 7 days after delivery, at which point the sale auto-completes. Once you confirm receipt, the payout moves into release, so open any dispute before confirming. The listing's cancellation policy governs pre-delivery cancellations — you'll see the exact refund amount before you confirm any cancellation.",
         actions: [A.refundPolicy],
       },
       {
@@ -276,14 +302,14 @@ export const faqCategories: FaqCategory[] = [
         id: "list-for-free",
         question: "Is it free to list on Vendibook?",
         answer:
-          "Yes. Creating an account and publishing a standard listing are always free. You only pay when a transaction happens on-platform (12.9% seller commission) or when you buy an optional upgrade like Featured Boost.",
+          "Yes. Creating an account and publishing a standard listing are free, subject to the active-listing limit on your plan. Identity verification is not required to publish. You only pay when a sale or booking completes on-platform (12.9% seller/host commission, 10.9% with active Vendibook Pro) or when you buy an optional upgrade like Featured Boost.",
         actions: [A.createListing],
       },
       {
         id: "listing-limits",
         question: "How many listings can I have?",
         answer:
-          "Free: 2 active listings. Starter ($39/mo): up to 5. Growth ($89/mo) and Operator ($149/mo): unlimited. Founding-member accounts keep unlimited listings on the Free plan as thanks for early support.",
+          "Free: 2 active listings. Vendibook Pro ({{price:vendibook_pro}}): unlimited. Founding-member accounts keep unlimited listings on the Free plan as thanks for early support.",
         actions: [A.pricing],
         keywords: ["limit", "cap", "how many", "founding"],
       },
@@ -291,8 +317,8 @@ export const faqCategories: FaqCategory[] = [
         id: "good-listing",
         question: "What makes a great listing?",
         answer:
-          "Ten or more sharp daylight photos including the interior, equipment, and exterior from all angles. A clear title that includes year/make/model. A description that covers equipment, condition, service history, and what's included. Accurate specs (year, mileage, dimensions, generator hours, permits). Firm pricing. Fast replies to messages. Growth+ members can auto-generate a polished description via Listing Studio.",
-        actions: [{ label: "Try Listing Studio", href: "/tools/listing-studio" }],
+          "Ten or more sharp daylight photos including the interior, equipment, and exterior from all angles. A clear title that includes year/make/model. A description that covers equipment, condition, service history, and what's included. Accurate specs (year, mileage, dimensions, generator hours, permits). Firm pricing. Fast replies to messages. Not sure what to charge? PricePilot benchmarks your price against real comparable listings.",
+        actions: [{ label: "Try PricePilot", href: "/tools/pricepilot" }],
       },
       {
         id: "offers-negotiation",
@@ -304,20 +330,20 @@ export const faqCategories: FaqCategory[] = [
         id: "seller-fees",
         question: "What are the seller fees?",
         answer:
-          "12.9% platform commission on sales paid through Vendibook. Buyers pay $0 in platform fees — a very buyer-friendly structure. Pay-in-Person cash sales are 100% free (no commission, no fee) since we're not processing payment. Rentals: 12.9% host commission + 12.9% renter service fee.",
+          "12.9% platform commission on sales paid through Vendibook checkout. Buyers pay $0 in platform fees. Pay-in-Person equipment sales are 100% free (no commission, no fee) since we're not processing payment. Rentals: 12.9% host commission + 12.9% renter service fee. Active Vendibook Pro members pay 10.9% on the seller/host side, with savings capped at $500 per completed transaction.",
         actions: [A.pricing],
       },
       {
         id: "payout-timing",
         question: "When do I get paid?",
         answer:
-          "Sale payouts release 25 days after the buyer confirms receipt (matches Stripe's dispute window). If the buyer doesn't confirm within 7 days of delivery, we auto-complete and the 25-day clock starts. Rental payouts release 24 hours after the booking's scheduled start. Once released, funds land in your bank within 1–2 business days via Stripe.",
+          "Vendibook reviews and issues your payout after the transaction completes — for a sale that means after delivery or handoff is confirmed (or 7 days after delivery if the buyer never confirms), and for a rental after the booking has started and completed as agreed. Payouts are not automatic or instant. Payouts are sent to the destination you have on file: PayPal, Venmo, Cash App, or bank transfer. One exception: on a successfully completed financed purchase, seller payment is released within 24 hours after successful delivery and confirmation.",
       },
       {
-        id: "connect-stripe",
+        id: "payout-setup",
         question: "How do I get paid — how do I connect my bank?",
         answer:
-          "The first time you publish a for-sale or for-rent listing, you'll be prompted to connect Stripe Express. It takes 3–5 minutes: identity, business info, and routing + account numbers. Stripe stores your bank details — Vendibook never sees them. Update your bank later from Account → Payments & payouts.",
+          "After you publish, save your payout details from your dashboard or Account → Payments & payouts. Choose PayPal, Venmo, Cash App, or bank transfer. Payout details are never required to publish — only to get paid. Vendibook reviews and releases seller payouts manually.",
         actions: [A.account],
       },
       {
@@ -365,7 +391,7 @@ export const faqCategories: FaqCategory[] = [
         id: "host-fees",
         question: "What does hosting cost?",
         answer:
-          "Publishing is free. When a booking pays, Vendibook takes 12.9% commission from your payout and adds a separate 12.9% service fee to the renter's total. Growth members save more via reduced service fees — see the pricing page for tier benefits.",
+          "Publishing is free. When a booking pays, Vendibook takes 12.9% commission from your payout and adds a separate 12.9% service fee to the renter's total. Vendibook Pro members pay a reduced 10.9% commission on their side (up to $500 saved per transaction) — see the pricing page.",
         actions: [A.pricing],
       },
       {
@@ -382,41 +408,28 @@ export const faqCategories: FaqCategory[] = [
   {
     id: "memberships-billing",
     title: "Memberships & billing",
-    blurb: "Free, Starter, Growth, Operator, the 7-day Pro trial, and the Weekly Pass.",
+    blurb: "Free, Vendibook Pro, billing, renewals, and cancellations.",
     entries: [
       {
         id: "tiers-overview",
         question: "What plans are available?",
         answer:
-          "Free (2 listings, core buying/selling/renting), Starter $39/mo (5 listings, enhanced tools, AI descriptions, priority email support), Growth $89/mo (unlimited listings, full Premium Tools bundle including PricePilot / Listing Studio / Marketing Studio, PermitPath Plus, advanced analytics, high-priority support), and Operator $149/mo (everything in Growth + portfolio dashboards, BuildKit, dedicated support). See the full comparison on the pricing page.",
+          "Two: Free (2 active listings, core buying, selling and renting) and Vendibook Pro at {{price:vendibook_pro}} (unlimited listings, the Premium Tools bundle including PricePilot and PermitPath Plus, advanced seller analytics, one Featured Boost credit each paid billing period, and a reduced 10.9% seller/host fee capped at $500 saved per completed transaction). PermitPath Plus is also available on its own for {{price:permit_path_plus_monthly}}. See the full comparison on the pricing page.",
         actions: [A.pricing],
       },
       {
-        id: "trial",
-        question: "How does the 7-day Pro trial work?",
+        id: "pro-benefits",
+        question: "What exactly do I get with Vendibook Pro?",
         answer:
-          "New members can start a 7-day trial of Growth (Pro). You get full Growth access immediately and aren't charged until day 8. Cancel anytime during the trial from Account → Membership and you won't be billed. Trials are one per account and can only be started once.",
+          "Vendibook Pro is {{price:vendibook_pro}}, billed monthly in advance, cancel anytime. It includes: a reduced 10.9% seller/host transaction fee instead of 12.9% (savings capped at $500 per completed transaction); one Featured Boost credit each paid billing period (unused credits do not roll over, and an activated boost finishes its 30-day run even if Pro later ends); unlimited active listings; the Premium Tools bundle and advanced seller analytics; and PermitPath Plus included. Cancelling stops the next renewal and your benefits stay active through the period you already paid for — there is no prorated refund simply for cancelling early.",
+        keywords: ["pro", "membership", "benefits", "10.9", "boost credit"],
         actions: [A.pricing, A.subscription],
-      },
-      {
-        id: "cancel-trial",
-        question: "How do I cancel before the trial converts?",
-        answer:
-          "Open Account → Membership (or /account/subscription), tap Cancel, and confirm. Cancellation is immediate for trials — no charge, no waiting. You keep trial access until day 7 ends.",
-        actions: [A.subscription],
-      },
-      {
-        id: "weekly-pass",
-        question: "What is the Weekly Pass?",
-        answer:
-          "A $29 one-time purchase that unlocks 7 days of Growth-tier features — no subscription, no auto-renew. Perfect if you're prepping a listing, running a short campaign, or want to try Premium Tools before committing to monthly. Buy from the pricing page; access starts the moment payment clears and expires automatically after 7 days.",
-        actions: [A.pricing],
       },
       {
         id: "upgrade-downgrade",
         question: "How do I upgrade or downgrade my plan?",
         answer:
-          "Open Account → Membership. Pick a new tier — upgrades take effect immediately with a prorated charge; downgrades take effect at the end of your current billing period so you don't lose anything you've paid for.",
+          "Open Account → Membership. Starting Vendibook Pro takes effect immediately; cancelling takes effect at the end of your current billing period so you don't lose anything you've paid for.",
         actions: [A.subscription],
       },
       {
@@ -430,35 +443,35 @@ export const faqCategories: FaqCategory[] = [
         id: "auto-renew",
         question: "Do subscriptions auto-renew?",
         answer:
-          "Yes. Monthly plans renew monthly, annual plans renew annually, at the price you signed up at. We email a receipt with every renewal. Cancel anytime online — see above.",
+          "Yes. Vendibook Pro and PermitPath Plus are billed monthly in advance and renew each month at the price you signed up at. We email a receipt with every renewal. Cancel anytime online — cancellation stops the next renewal and your benefits stay active through the period you already paid for. There is no prorated refund simply for cancelling early.",
         actions: [A.subTerms],
       },
       {
         id: "refund-policy",
         question: "What's the refund policy on subscriptions?",
         answer:
-          "Trial cancellations aren't charged, so there's nothing to refund. After the trial, monthly subscription fees are non-refundable but you can cancel anytime to stop future charges. Weekly Pass is non-refundable once activated. We refund upgrade purchases (Featured Boost, tools) if the feature never delivered — email support with your receipt.",
+          "Monthly subscription fees are non-refundable, but you can cancel anytime to stop future charges and you keep access through the period you already paid for. We refund one-time upgrade purchases (Featured Boost, Pro Listing, tools) if the feature never delivered — email support with your receipt.",
         actions: [A.refundPolicy, A.contactSupport],
       },
       {
         id: "receipts-invoices",
         question: "Where do I get receipts and invoices?",
         answer:
-          "Every payment sends a receipt email. Invoices for subscription charges are also available from Stripe's Billing Portal — open Account → Payments & payouts → Manage billing. Download PDFs of every past invoice from there.",
+          "Every payment sends a receipt email. Subscription charges also appear in your PayPal account activity, and every Vendibook receipt is stored under Account → Payments & payouts.",
         actions: [A.account],
       },
       {
         id: "payment-method-update",
         question: "How do I update my card?",
         answer:
-          "Account → Payments & payouts → Manage billing opens the Stripe Billing Portal. Add or remove cards, set a default, and update your billing address there. Stripe handles it; Vendibook never sees your card details.",
+          "Payment methods for Vendibook memberships are managed inside your PayPal account. Vendibook never sees or stores your card details.",
         actions: [A.account],
       },
       {
         id: "sub-payment-failed",
         question: "My subscription payment failed — what happens?",
         answer:
-          "Stripe retries automatically for up to a week. You'll get an email with a one-click link to update your card. During retry, you keep full access. If every retry fails, access pauses and you drop to Free — nothing on your account is deleted; upgrade again anytime to restore everything.",
+          "PayPal retries a failed subscription payment automatically for up to a week. You'll get an email with a link to fix the payment method. During retry, you keep full access. If every retry fails, access pauses and you drop to Free — nothing on your account is deleted; upgrade again anytime to restore everything.",
       },
     ],
   },
@@ -473,64 +486,57 @@ export const faqCategories: FaqCategory[] = [
         id: "permit-path",
         question: "What is PermitPath?",
         answer:
-          "PermitPath is our guided compliance tool. Enter your city, business type, and equipment; it maps out the health, business, and vending permits you need — with links, price estimates, and expiration tracking. Basic PermitPath is free for every account. Founding members keep full Plus access free as thanks for early support.",
+          "PermitPath is our guided compliance tool. Enter your location and business type and it generates a roadmap of the health, business, and vending permits you need — requirements, the agencies involved, official links, estimated costs and timelines, and a basic checklist. Generating and viewing a roadmap is free for every account. Founding members keep full Plus access free as thanks for early support.",
         actions: [A.permitPath],
       },
       {
         id: "permit-path-plus",
         question: "What does PermitPath Plus add?",
         answer:
-          "Plus adds multi-city roadmaps (compare requirements across markets), saved permit progress with reminders, downloadable checklists, and the concierge document assist. Included with Growth and Operator subscriptions. Standalone Plus is available for founding-member accounts free.",
+          "Plus is the save-and-track layer: save and manage multiple roadmaps, track progress and completion, store permit numbers, details and notes, record expiration dates, watch what's expiring on the renewal dashboard, refresh saved requirements, and export. It does not send automated regulation alerts or renewal reminders. Included with Vendibook Pro. Standalone PermitPath Plus is {{price:permit_path_plus_monthly}}, and founding-member accounts keep it free.",
         actions: [A.permitPath, A.pricing],
       },
       {
         id: "pricepilot",
         question: "What is PricePilot?",
         answer:
-          "PricePilot analyzes comparable listings in your market and recommends a competitive sale or rental price. Included with Growth and above.",
+          "PricePilot analyzes comparable listings in your market and recommends a competitive sale or rental price. Included with Vendibook Pro.",
         actions: [{ label: "See PricePilot", href: "/plans/tools/pricepilot" }],
-      },
-      {
-        id: "listing-studio",
-        question: "What is Listing Studio?",
-        answer:
-          "Listing Studio uses AI to rewrite your listing — title, description, and highlights — for higher conversion. Generates in seconds, editable to your voice. Included with Growth and above.",
-        actions: [{ label: "See Listing Studio", href: "/plans/tools/listing-studio" }],
-      },
-      {
-        id: "marketing-studio",
-        question: "What is Marketing Studio?",
-        answer:
-          "Marketing Studio generates ad copy, social captions, and email blurbs for your listing — sized for Instagram, Facebook, and Google. Included with Growth and above.",
-        actions: [{ label: "See Marketing Studio", href: "/plans/tools/marketing-studio" }],
-      },
-      {
-        id: "market-radar",
-        question: "What is Market Radar?",
-        answer:
-          "Market Radar tracks demand, supply, and average pricing by city and category so you know where to buy, sell, or expand. Included with Growth and above.",
-        actions: [{ label: "See Market Radar", href: "/plans/tools/market-radar" }],
-      },
-      {
-        id: "concept-lab",
-        question: "What is Concept Lab?",
-        answer:
-          "Concept Lab helps you validate a food concept — menu ideas, pricing, target market, break-even math — before you buy a truck. Included with Growth and above.",
-        actions: [{ label: "See Concept Lab", href: "/plans/tools/concept-lab" }],
-      },
-      {
-        id: "buildkit",
-        question: "What is BuildKit?",
-        answer:
-          "BuildKit is the Operator-tier planner for building or converting your own truck: layout templates, equipment lists, generator sizing, budget calculator, and vendor referrals.",
-        actions: [{ label: "See BuildKit", href: "/plans/tools/buildkit" }],
       },
       {
         id: "featured-boost",
         question: "What is Featured Boost?",
         answer:
-          "Featured Boost pins your listing to the top of relevant search and category pages for 30 days, adds a Featured badge, and shows on the home page's featured strip. Fair rotation: featured slots rotate so no one listing dominates every page load. One-time purchase (does not auto-renew).",
+          "Featured Boost pins your listing to the top of relevant search and category pages for 30 days, adds a Featured badge, and shows on the home page's featured strip. Featured slots rotate so no one listing dominates every page load. It's a one-time purchase and does not auto-renew. Vendibook Pro includes one Featured Boost credit each paid billing period; unused credits don't roll over, and a boost you've already activated finishes its 30-day run even if Pro later ends.",
         actions: [{ label: "Buy Featured Boost", href: "/pricing?product=featured-boost", requiresAuth: true }],
+      },
+      {
+        id: "pro-listing-upgrade",
+        question: "What is the Pro Listing upgrade?",
+        answer:
+          "Pro Listing is a one-time listing-level upgrade ({{price:pro_listing_30}}, 30 days) that gives a single listing premium presentation and priority placement treatment on Vendibook for the duration of the run. It is bought per listing and does not auto-renew. It is separate from a Vendibook Pro membership.",
+        actions: [A.pricing],
+      },
+      {
+        id: "concierge-listing",
+        question: "What is Concierge Listing?",
+        answer:
+          "Concierge Listing ({{price:listing_concierge}}, one time) is an optional service where the Vendibook team builds and polishes the listing for you from the details and photos you provide. Self-service listing stays free — Concierge just hands the work to us. We do not publish a guaranteed turnaround time.",
+        actions: [{ label: "See Concierge", href: "/list/concierge" }],
+      },
+      {
+        id: "listing-rewrite",
+        question: "What is the Listing Rewrite service?",
+        answer:
+          "Listing Rewrite ({{price:listing_rewrite}}, one time) improves the title, description, and spec copy on a listing you have already published. It is a copy improvement only — pricing, photos, and availability stay yours to manage.",
+        actions: [A.tools],
+      },
+      {
+        id: "addon-differences",
+        question: "What's the difference between Featured Boost, Pro Listing, and Vendibook Pro?",
+        answer:
+          "Featured Boost buys visibility for one listing for 30 days. Pro Listing is a premium upgrade applied to one listing for 30 days. Vendibook Pro is an account-level monthly membership: unlimited listings, the reduced 10.9% seller/host fee, premium tools, PermitPath Plus, and a Featured Boost credit each paid billing period.",
+        actions: [A.pricing],
       },
       {
         id: "notarization",
@@ -559,13 +565,13 @@ export const faqCategories: FaqCategory[] = [
         id: "how-protection-works",
         question: "How does payment protection actually work?",
         answer:
-          "When you pay on Vendibook, your money is held by our payment processor (Stripe) — not sent to the seller. The seller only gets paid after you confirm you got exactly what was listed. For sales, the seller's payout is held a further 25 days (Stripe's chargeback window) so we can reverse the payment if there's a dispute. This gives you strong buyer protection without the friction of traditional payment protection companies.",
+          "When you pay on Vendibook, your money is held by our payment processor (PayPal) — not sent to the seller. The seller only gets paid after you confirm you got exactly what was listed, and Vendibook reviews the transaction before issuing the payout. Raise any issue before you confirm receipt. Pay-in-person deals happen directly between the two parties and are not covered by this hold.",
       },
       {
         id: "verified-badges",
         question: "What does the verified badge mean?",
         answer:
-          "The green checkmark means we've verified the person's government ID through Stripe Identity. Sellers and hosts also verify their bank/payout details. It's a strong signal — but not a guarantee of behavior. Always keep messages on-platform and follow the safety tips.",
+          "It means that person paid for the optional Plaid identity check and it passed, so their legal identity is confirmed. Most Vendibook members are not verified — it's a voluntary paid add-on, so its absence doesn't mean someone is unsafe, and its presence isn't a guarantee of behavior. Either way, keep messages and payment on-platform.",
       },
       {
         id: "avoid-scams",
@@ -591,7 +597,7 @@ export const faqCategories: FaqCategory[] = [
         id: "fee-transparency",
         question: "What are Vendibook's fees, exactly?",
         answer:
-          "Sales through Vendibook: 12.9% commission from the seller, $0 from the buyer. Rentals: 12.9% commission from the host + 12.9% service fee on the renter. Pay-in-Person cash sales: 100% free (no commission, no fee). Subscriptions and one-time upgrades are separate — see the pricing page. We publish these numbers openly because a healthy marketplace depends on trust.",
+          "Sales through Vendibook checkout: 12.9% commission from the seller, $0 from the buyer. Rentals: 12.9% commission from the host + 12.9% service fee on the renter. Pay-in-Person equipment sales: 100% free (no commission, no fee). Active Vendibook Pro members pay 10.9% on the seller/host side, capped at $500 saved per completed transaction. Subscriptions and one-time upgrades are separate — see the pricing page.",
         actions: [A.pricing],
       },
       {
@@ -633,14 +639,14 @@ export const faqCategories: FaqCategory[] = [
         id: "update-bank",
         question: "How do I update my bank / payout account?",
         answer:
-          "Account → Payments & payouts → Update payout details opens Stripe Express, where you can change routing/account numbers, add a debit card for instant payouts, and see payout history. Vendibook never touches these details — Stripe manages them directly.",
+          "Account → Payments & payouts → Update payout details lets you change your payout destination (PayPal, Venmo, Cash App, or bank transfer) and see your payout history. Bank details are stored encrypted and are only used to send your payout.",
         actions: [A.account],
       },
       {
         id: "update-card",
         question: "How do I update my card on file?",
         answer:
-          "Account → Payments & payouts → Manage billing opens Stripe's Billing Portal for card updates, saved payment methods, and past invoices.",
+          "Account → Payments & payouts shows your Vendibook receipts. Saved payment methods and card updates are managed in your PayPal account.",
         actions: [A.account],
       },
       {
@@ -689,6 +695,20 @@ export const faqCategories: FaqCategory[] = [
     ],
   },
 ];
+
+/**
+ * Product slugs referenced with a `{{price:slug}}` token inside answers.
+ * The renderer swaps them for the live catalog price so Help/FAQ copy can
+ * never drift from what checkout actually charges.
+ */
+export const PRICE_TOKEN_PATTERN = /\{\{price:([a-z0-9_\-]+)\}\}/g;
+
+/** Replace every `{{price:slug}}` token using a slug → label lookup. */
+export const resolvePriceTokens = (
+  text: string,
+  priceFor: (slug: string) => string | undefined,
+): string =>
+  text.replace(PRICE_TOKEN_PATTERN, (match, slug) => priceFor(slug) ?? match);
 
 /** Flat list of every entry (useful for search + related). */
 export const allFaqEntries = faqCategories.flatMap((c) => c.entries);

@@ -37,12 +37,23 @@ export interface ToolDef {
   screenshot: string;
   /** Minimum subscription tier that unlocks this tool. */
   minTier: ToolTier;
+  /**
+   * Tool has a free layer: the route stays open to everyone and only the
+   * paid features inside are gated (PermitPath Basic vs Plus).
+   */
+  hasFreeTier?: boolean;
   /** One-time unlock product slug (undefined for always-free tools). */
   unlockProductSlug?: string;
   /** Marketing price for the one-time unlock (display only). */
   unlockPrice?: string;
   /** Flame accent for the highest-value / lead tool. */
   flame?: boolean;
+  /**
+   * Set to false to park a tool "on the back burner": it stays in code for
+   * a future relaunch but is hidden from every surface (tools grid, upgrades
+   * hub, cross-links, routes). Default true.
+   */
+  enabled?: boolean;
 }
 
 export const TOOLS: ToolDef[] = [
@@ -52,34 +63,38 @@ export const TOOLS: ToolDef[] = [
     tagline: 'Every license, permit, and inspection required to operate legally — in one roadmap.',
     bullets: [
       'City, county, and state requirements matched to your address',
-      'Deadline reminders so you never miss a renewal',
-      'Save progress, upload documents, export a PDF checklist',
+      'Free roadmap: costs, timelines, agencies and official links',
+      'Plus: save roadmaps, track progress, store documents, export a PDF',
       'Health-department and fire-marshal contacts included',
     ],
     icon: FileCheck,
     href: '/tools/permitpath',
     screenshot: permitpathShot,
-    minTier: 'free',
-    unlockProductSlug: 'permit_path_plus',
-    unlockPrice: '$29 per state',
+    minTier: 'pro',
+    hasFreeTier: true,
+    unlockProductSlug: 'permit_path_plus_monthly',
     flame: true,
   },
   {
     slug: 'pricepilot',
     name: 'PricePilot',
-    tagline: 'Set nightly, weekly, and monthly rates that beat your local market.',
+    tagline: 'A defensible appraisal for your truck or trailer — priced from real market evidence.',
     bullets: [
-      'Pricing model powered by Spark trained on live marketplace data',
-      'Compares your rates to comparable listings in your metro',
-      'Recommends event-week and seasonal premiums',
+      'Deterministic valuation from observed comparables — never an AI guess',
+      'Estimated market range plus quick-sale and premium pricing strategies',
+      'Rental daily, weekly, and monthly rates benchmarked from real listings',
+      'Comparable evidence table with confidence score and methodology',
     ],
     icon: DollarSign,
     href: '/tools/pricepilot',
     screenshot: pricepilotShot,
     minTier: 'pro',
+    unlockProductSlug: 'tool_pricepilot',
+    unlockPrice: '$19',
   },
   {
     slug: 'listing-studio',
+    enabled: false, // PARKED 2026-08-25 — relaunch later; hidden from all surfaces
     name: 'Listing Studio',
     tagline: 'Write listings that convert browsers into paid bookings.',
     bullets: [
@@ -94,6 +109,7 @@ export const TOOLS: ToolDef[] = [
   },
   {
     slug: 'marketing-studio',
+    enabled: false, // PARKED 2026-08-25 — relaunch later; hidden from all surfaces
     name: 'Marketing Studio',
     tagline: 'Ad copy, social posts, and launch kits — ready to publish.',
     bullets: [
@@ -108,6 +124,7 @@ export const TOOLS: ToolDef[] = [
   },
   {
     slug: 'concept-lab',
+    enabled: false, // PARKED 2026-08-25 — relaunch later; hidden from all surfaces
     name: 'Concept Lab',
     tagline: 'Validate menu, truck, and business concepts before you invest.',
     bullets: [
@@ -122,6 +139,7 @@ export const TOOLS: ToolDef[] = [
   },
   {
     slug: 'market-radar',
+    enabled: false, // PARKED 2026-08-25 — relaunch later; hidden from all surfaces
     name: 'Market Radar',
     tagline: 'See demand, competition, and opportunity gaps in any metro.',
     bullets: [
@@ -136,6 +154,7 @@ export const TOOLS: ToolDef[] = [
   },
   {
     slug: 'buildkit',
+    enabled: false, // PARKED 2026-08-25 — relaunch later; hidden from all surfaces
     name: 'BuildKit',
     tagline: 'Blueprints, equipment specs, and vetted vendor sourcing.',
     bullets: [
@@ -146,7 +165,7 @@ export const TOOLS: ToolDef[] = [
     icon: Wrench,
     href: '/tools/buildkit',
     screenshot: buildkitShot,
-    minTier: 'premium',
+    minTier: 'pro',
   },
 
   {
@@ -181,3 +200,10 @@ export const TOOLS: ToolDef[] = [
 
 export const getToolBySlug = (slug: string): ToolDef | undefined =>
   TOOLS.find((t) => t.slug === slug);
+
+/** Tools currently live on the site. Parked tools (enabled: false) stay in
+ * TOOLS for a future relaunch but are filtered out of every UI surface. */
+export const ACTIVE_TOOLS: ToolDef[] = TOOLS.filter((t) => t.enabled !== false);
+
+export const isToolEnabled = (slug: string): boolean =>
+  getToolBySlug(slug)?.enabled !== false;

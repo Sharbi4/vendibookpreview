@@ -201,7 +201,7 @@ export default function AdminMonetizationOps() {
             Monetization Ops
           </h1>
           <p className="text-sm text-muted-foreground">
-            Stripe webhook trail, stuck purchases, and refund audit log.
+            Payment webhook trail, stuck purchases, and refund audit log.
           </p>
         </div>
         <div className="flex gap-2">

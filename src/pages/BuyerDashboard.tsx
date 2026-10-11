@@ -204,7 +204,7 @@ const BuyerDashboard = () => {
             label="Buyer services"
             value={purchasedServices.length}
             href="/buyer/services"
-            helper="Readiness Pass, Purchase Review"
+            helper="Your purchased services"
           />
         </div>
 
@@ -294,7 +294,7 @@ const BuyerDashboard = () => {
             </div>
             {purchasedServices.length === 0 ? (
               <p className="text-xs text-muted-foreground">
-                Buy with more confidence. Get a Readiness Pass or a professional Purchase Review before you commit.
+                Buy with more confidence — financing options, inspection partners, and payment protection on every purchase.
               </p>
             ) : (
               <ul className="space-y-2 mb-4">

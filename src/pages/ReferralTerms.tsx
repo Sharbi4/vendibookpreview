@@ -9,7 +9,7 @@ const SECTIONS = [
       "Listing must be approved and verified by Vendibook before qualifying.",
       "Listing must remain active and in good standing for 30 days post-publication.",
       "First transaction must occur within 90 days of listing going live or the referral expires.",
-      "Referrer must have a verified Stripe Connect account to receive payout.",
+      "Referrer must have valid payout details saved to receive a payout.",
       "Payout releases 7 days after the first transaction clears.",
       "If listing is removed for policy violations, referral is voided regardless of current status.",
       "Vendibook reserves the right to audit any referral before releasing payment.",
@@ -21,7 +21,7 @@ const SECTIONS = [
     items: [
       "Referred buyer must be new to Vendibook with no prior account.",
       "Purchase must be a food truck, trailer, or commercial equipment listed on Vendibook — not a rental.",
-      "Transaction must fully clear Stripe with no disputes, chargebacks, or reversals.",
+      "Transaction must fully clear with no disputes, chargebacks, or reversals.",
       "14-day hold from transaction completion before payout releases.",
       "If buyer opens a dispute within 14 days, referral is placed on hold until resolved.",
       "If dispute is found in buyer's favor, referral reward is forfeited.",

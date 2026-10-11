@@ -1,0 +1,259 @@
+import { walkthroughDisplayStatus } from '@/lib/videoWalkthroughs';
+import { useMemo } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { CalendarDays, Image as ImageIcon, Receipt, Video } from 'lucide-react';
+import WorkspaceShell from '@/components/workspace/WorkspaceShell';
+import { useAuth } from '@/contexts/AuthContext';
+import { useUserTransactions } from '@/hooks/useUserTransactions';
+import { useShopperBookings } from '@/hooks/useShopperBookings';
+import { useHostBookings } from '@/hooks/useHostBookings';
+import { useHostListings } from '@/hooks/useHostListings';
+import WorkspaceHostBookings from '@/components/workspace/WorkspaceHostBookings';
+import WorkspaceListingActivity from '@/components/workspace/WorkspaceListingActivity';
+import { useVideoWalkthroughs } from '@/hooks/useVideoWalkthroughs';
+
+type Filter = 'all' | 'purchases' | 'sales' | 'rentals' | 'requests' | 'disputes' | 'listings' | 'walkthroughs';
+
+const FILTERS: { key: Filter; label: string }[] = [
+  { key: 'all', label: 'All' },
+  { key: 'listings', label: 'Listings' },
+  { key: 'walkthroughs', label: 'Video walkthroughs' },
+  { key: 'purchases', label: 'Purchases' },
+  { key: 'sales', label: 'Sales' },
+  { key: 'rentals', label: 'Rentals' },
+  { key: 'requests', label: 'Booking requests' },
+  { key: 'disputes', label: 'Disputes' },
+];
+
+const money = (cents: number | null | undefined) =>
+  cents == null
+    ? null
+    : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(cents / 100);
+
+type Item = {
+  id: string;
+  kind: Exclude<Filter, 'all'>;
+  title: string;
+  counterparty: string | null;
+  state: string;
+  nextAction: string | null;
+  date: string;
+  amount: string | null;
+  reference: string | null;
+  image: string | null;
+  href: string;
+};
+
+export default function WorkspaceActivity() {
+  const { user } = useAuth();
+  const { transactions } = useUserTransactions(user?.id);
+  const { bookings: buyerBookings } = useShopperBookings();
+  const { bookings: sellerBookings } = useHostBookings();
+  const { listings: hostListings } = useHostListings();
+  const { walkthroughs } = useVideoWalkthroughs();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const requested = searchParams.get('filter') as Filter;
+  const filter = FILTERS.some(f => f.key === requested) ? requested : 'all';
+  const setFilter = (value: Filter) => setSearchParams(previous => {
+    const next = new URLSearchParams(previous);
+    if (value === 'all') next.delete('filter'); else next.set('filter', value);
+    return next;
+  });
+
+  const items = useMemo<Item[]>(() => {
+    const payments: Item[] = transactions.map((t) => {
+      const disputed = !!t.dispute_status && t.dispute_status !== 'none';
+      return {
+        id: `payment-${t.id}`,
+        kind: disputed ? 'disputes' : t.role === 'buyer' ? 'purchases' : 'sales',
+        title: t.listing?.title || 'Vendibook payment',
+        counterparty: t.role === 'buyer' ? 'Buyer payment' : 'Seller payment',
+        state: disputed ? `Dispute: ${t.dispute_status}` : t.payment_status || 'recorded',
+        nextAction: disputed ? 'Respond with evidence' : null,
+        date: t.captured_at || t.created_at,
+        amount: money(t.gross_amount_cents),
+        reference: t.reference,
+        image: t.listing?.cover_image_url ?? null,
+        href: `/orders/${t.id}`,
+      };
+    });
+
+    const bookingMoney = (value: number | null | undefined) =>
+      value == null
+        ? null
+        : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(
+            Number(value),
+          );
+
+    const buyer: Item[] = buyerBookings.map((b) => ({
+      id: `buyer-${b.id}`,
+      kind: b.status === 'pending' ? 'requests' : 'rentals',
+      title: b.listing?.title || 'Rental request',
+      counterparty: 'You requested',
+      state:
+        b.payment_status && b.payment_status !== 'paid'
+          ? `${b.status} · payment ${b.payment_status}`
+          : b.status,
+      nextAction:
+        b.status === 'pending'
+          ? 'Waiting on the host'
+          : b.status === 'approved'
+            ? b.payment_status === 'paid' ? 'Confirmed — check your dates' : b.payment_status === 'pending' ? 'Payment processing' : 'Approved — Pay now'
+            : null,
+      date: b.created_at,
+      amount: bookingMoney(b.total_price),
+      reference: null,
+      image: b.listing?.cover_image_url ?? null,
+      href: `/dashboard/bookings/${b.id}${b.status === 'approved' && !['paid', 'pending'].includes(b.payment_status ?? '') ? '?step=payment' : ''}`,
+    }));
+
+    // Pending host requests are handled in the booking manager panel above,
+    // so they are not repeated as timeline rows.
+    const seller: Item[] = sellerBookings
+      .filter((b) => b.status !== 'pending')
+      .map((b) => ({
+        id: `seller-${b.id}`,
+        kind: 'rentals' as const,
+        title: b.listing?.title || 'Booking',
+        counterparty: b.shopper?.full_name || 'Renter',
+        state:
+          b.payment_status && b.payment_status !== 'paid'
+            ? `${b.status} · payment ${b.payment_status}`
+            : b.status,
+        nextAction: null,
+        date: b.created_at,
+        amount: bookingMoney(b.total_price),
+        reference: null,
+        image: b.listing?.cover_image_url ?? null,
+        href: `/dashboard/bookings/${b.id}`,
+      }));
+
+    const videos: Item[] = walkthroughs.map((w) => { const state = walkthroughDisplayStatus(w); const done = state === 'completed'; return ({ id:`walkthrough-${w.id}`, kind:'walkthroughs', title:done?`Video walkthrough completed — ${w.listing?.title||'Listing'}`:(w.listing?.title||'Video walkthrough'), counterparty:w.seller_id===user?.id?'Meeting with buyer':'Meeting with seller', state, nextAction:state === 'needs follow-up' ? 'Review or reschedule' : done?'View next steps':(['scheduled','rescheduled'].includes(w.status)?'View meeting details':null), date:w.starts_at, amount:null, reference:null, image:w.listing?.cover_image_url||null, href:done?`/walkthrough/${w.id}/next-steps`:`/walkthrough/${w.id}` }); });
+    return [...payments, ...buyer, ...seller, ...videos].sort(
+      (a, b) => +new Date(b.date) - +new Date(a.date),
+    );
+  }, [transactions, buyerBookings, sellerBookings, walkthroughs, user?.id]);
+
+  const hasHostBookings = sellerBookings.length > 0;
+  const hasPublishedListings = hostListings.some((l) => l.status === 'published');
+  const available = FILTERS.filter(
+    (f) =>
+      f.key === 'all' ||
+      (f.key === 'requests' && hasHostBookings) ||
+      (f.key === 'listings' && hasPublishedListings) ||
+      items.some((item) => item.kind === f.key),
+  );
+  const shown = filter === 'all' ? items : items.filter((item) => item.kind === filter);
+
+  // Group real items into time/state buckets so the page reads as a timeline.
+  const groups = useMemo(() => {
+    const monthAgo = Date.now() - 30 * 24 * 60 * 60 * 1000;
+    const waiting = shown.filter(i => i.nextAction === 'Waiting on the host' || i.nextAction === 'Payment processing');
+    const needsAction = shown.filter((i) => !waiting.includes(i) && (i.nextAction || i.kind === 'disputes')); 
+    const rest = shown.filter((i) => !needsAction.includes(i) && !waiting.includes(i));
+    const recent = rest.filter((i) => +new Date(i.date) >= monthAgo);
+    const earlier = rest.filter((i) => +new Date(i.date) < monthAgo);
+    return [
+      { label: 'Needs action', hint: 'Your next steps and follow-ups.', items: needsAction },
+      { label: 'Waiting on others', hint: 'Awaiting a host or payment confirmation.', items: waiting },
+      { label: 'Recent', hint: 'The last 30 days.', items: recent },
+      { label: 'Earlier', hint: 'Completed and older records.', items: earlier },
+    ].filter((g) => g.items.length);
+  }, [shown]);
+
+  return (
+    <WorkspaceShell>
+      <div className="v2-page-stack">
+        <header className="v2-page-heading">
+          <p className="v2-eyebrow">Marketplace timeline</p>
+          <h1>Activity</h1>
+          <p>Purchases, sales, rentals, booking requests, and disputes in one place.</p>
+        </header>
+
+        <div className="v2-filter-row">
+          {available.map((f) => (
+            <button
+              key={f.key}
+              type="button"
+              className={`v2-filter${filter === f.key ? ' is-active' : ''}`}
+              onClick={() => setFilter(f.key)}
+            >
+              {f.label}
+            </button>
+          ))}
+        </div>
+
+        {(filter === 'all' || filter === 'requests') && <WorkspaceHostBookings />}
+
+        {(filter === 'all' || filter === 'sales' || filter === 'listings') && (
+          <WorkspaceListingActivity />
+        )}
+
+        {groups.length ? (
+          groups.map((group) => (
+            <section className="v2-panel" key={group.label}>
+              <div className="v2-panel-head">
+                <div>
+                  <h2>{group.label}</h2>
+                  <p>{group.hint}</p>
+                </div>
+              </div>
+              {group.items.map((item) => (
+                <Link className="v2-activity-row" to={item.href} key={item.id}>
+                  <span className="v2-activity-thumb">
+                    {item.image ? (
+                      <img src={item.image} alt="" loading="lazy" />
+                    ) : item.kind === 'walkthroughs' ? (
+                      <Video />
+                    ) : item.kind === 'rentals' || item.kind === 'requests' ? (
+                      <CalendarDays />
+                    ) : (
+                      <Receipt />
+                    )}
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <strong className="truncate">{item.title}</strong>
+                    <small className="truncate">
+                      {item.counterparty} · {new Date(item.date).toLocaleDateString()}
+                      {item.reference ? ` · ${item.reference}` : ''}
+                    </small>
+                    <span className="mt-1.5 flex flex-wrap items-center gap-2">
+                      <span
+                        className={`v2-status${
+                          item.kind === 'disputes'
+                            ? ' is-alert'
+                            : item.nextAction
+                              ? ' is-warn'
+                              : ' is-ok'
+                        }`}
+                      >
+                        {item.state}
+                      </span>
+                      {item.nextAction && <small>{item.nextAction}</small>}
+                    </span>
+                  </span>
+                  {item.amount && <strong>{item.amount}</strong>}
+                </Link>
+              ))}
+            </section>
+          ))
+        ) : (hasHostBookings && (filter === 'all' || filter === 'requests')) ||
+          (hasPublishedListings && (filter === 'all' || filter === 'sales' || filter === 'listings')) ? null : (
+          <div className="v2-panel v2-empty">
+            <ImageIcon className="opacity-40" />
+            <p>
+              No{' '}
+              {filter === 'all'
+                ? 'activity'
+                : FILTERS.find((f) => f.key === filter)?.label.toLowerCase()}{' '}
+              yet.
+            </p>
+            <Link to="/search" className="v2-btn-quiet">
+              Browse the marketplace
+            </Link>
+          </div>
+        )}
+      </div>
+    </WorkspaceShell>
+  );
+}

@@ -132,7 +132,7 @@ const Account = () => {
     setUploadingAvatar(true);
     try {
       const ext = file.name.split('.').pop();
-      const path = `avatars/${user.id}-${Date.now()}.${ext}`;
+      const path = `${user.id}/avatars/${Date.now()}.${ext}`;
       const up = await supabase.storage.from('listing-images').upload(path, file);
       if (up.error) throw up.error;
       const url = supabase.storage.from('listing-images').getPublicUrl(path).data.publicUrl;
@@ -311,15 +311,15 @@ const Account = () => {
                 <RowLink
                   icon={ShieldCheck}
                   label="Identity verification"
-                  hint={row.identity_verified ? 'Verified — manage or re-run at any time.' : 'Verify your ID to unlock trust badges.'}
-                  to="/verify-identity"
+                  hint={row.identity_verified ? 'Verified — manage or re-run at any time.' : 'Identity verification by Plaid.* Optional paid add-on — never required to buy, sell, or publish.'}
+                  to="/identity-verification"
                   rightSlot={row.identity_verified ? (
                     <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/15 text-emerald-600 text-[10px] font-semibold px-2 py-0.5 border border-emerald-500/30">
                       Verified
                     </span>
                   ) : (
                     <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/15 text-amber-600 text-[10px] font-semibold px-2 py-0.5 border border-amber-500/30">
-                      Recommended
+                      Optional
                     </span>
                   )}
                 />

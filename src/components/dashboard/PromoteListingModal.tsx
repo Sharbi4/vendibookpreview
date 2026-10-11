@@ -1,3 +1,4 @@
+import { productCheckoutUrl, hostedCheckoutUrl } from '@/lib/payments/hostedCheckout';
 import { useMemo, useState } from 'react';
 import { format, addDays, differenceInDays, isBefore, startOfDay } from 'date-fns';
 import {
@@ -33,6 +34,8 @@ import {
   useListingBoostHistory,
   type BoostHistoryEntry,
 } from '@/hooks/useListingBoostHistory';
+import { useCatalogPrice } from '@/hooks/useCatalogPrices';
+import { ACTIVE_PRODUCT_SLUGS } from '@/lib/monetization/catalogPricing';
 
 interface PromoteListingModalProps {
   open: boolean;
@@ -42,7 +45,6 @@ interface PromoteListingModalProps {
 }
 
 const BOOST_DURATION_DAYS = 30;
-const BOOST_PRICE_USD = 30;
 const MAX_SCHEDULE_DAYS = 60;
 
 const benefits = [
@@ -86,6 +88,7 @@ export const PromoteListingModal = ({
   listingTitle,
 }: PromoteListingModalProps) => {
   const { toast } = useToast();
+  const boostPrice = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.featuredBoost);
   const { data, isLoading: historyLoading } = useListingBoostHistory(
     open ? listingId : null,
   );
@@ -124,45 +127,13 @@ export const PromoteListingModal = ({
   const handleCheckout = async () => {
     setIsSubmitting(true);
     try {
-      const { data: resp, error } = await supabase.functions.invoke(
-        'create-featured-checkout',
-        {
-          body: {
-            listing_id: listingId,
-            starts_at: effectiveStart.toISOString(),
-          },
-        },
-      );
-
-      if (error) {
-        const { referenceCode } = await reportError({
-          action: 'boost.checkout.init',
-          endpoint: '/functions/v1/create-featured-checkout',
-          errorType: 'StripeCheckoutInitFailed',
-          errorMessage: (error as { message?: string })?.message ?? String(error),
-          listingId,
-        });
-        toast({
-          title: "Couldn't start Stripe Checkout",
-          description: `Please try again in a moment, or contact support at (725) 755-9598. Reference: ${referenceCode}`,
-          variant: 'destructive',
-        });
-        return;
-      }
-      if (!resp?.url) {
-        toast({
-          title: 'Checkout unavailable',
-          description: "Stripe didn't return a checkout link. Please try again.",
-          variant: 'destructive',
-        });
-        return;
-      }
+      const resp = { url: productCheckoutUrl(ACTIVE_PRODUCT_SLUGS.featuredBoost, listingId) };
       const popup = window.open(resp.url as string, '_blank');
       if (!popup || popup.closed) {
         toast({
           title: 'Popup blocked',
           description:
-            'Your browser blocked the Stripe Checkout tab. Allow popups for Vendibook, then click "Promote listing" again.',
+            'Your browser blocked the PayPal Checkout tab. Allow popups for Vendibook, then click "Promote listing" again.',
           variant: 'destructive',
         });
         return;
@@ -313,10 +284,15 @@ export const PromoteListingModal = ({
                     {BOOST_DURATION_DAYS} days · no auto-renew
                   </p>
                 </div>
-                <span className="text-2xl font-bold text-foreground">
-                  ${BOOST_PRICE_USD}
-                </span>
+                <div className="text-right">
+                  <span className="text-2xl font-bold text-foreground">
+                    {boostPrice.label}
+                  </span>
+                  {/* Tax is computed server-side at checkout, so this is pre-tax. */}
+                  <p className="text-[11px] text-muted-foreground">+ sales tax</p>
+                </div>
               </div>
+
               <Button
                 variant="dark-shine"
                 className="w-full rounded-xl h-12"

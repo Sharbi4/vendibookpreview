@@ -69,6 +69,8 @@ export type NormalizedPaymentStatus =
 // ------------------------------------------------------------------ orders
 
 export interface CreateOrderRequest {
+  /** Hosted Advanced Card Fields; never accepts raw card details. */
+  cardFields?: boolean;
   /** Server-derived amount. Callers must never pass a browser-supplied value. */
   amount: Money;
   /** Internal reference. Doubles as invoice id and idempotency key. */
@@ -84,6 +86,44 @@ export interface CreateOrderRequest {
   /** Overrides the default reference-derived idempotency key. */
   idempotencyKey?: string;
   metadata?: Record<string, unknown>;
+  /**
+   * CAPTURE (default) charges on payer approval. AUTHORIZE places a temporary
+   * hold that must later be captured or voided explicitly.
+   */
+  intent?: "CAPTURE" | "AUTHORIZE";
+  /**
+   * Marketplace routing: when set, funds settle into this connected seller's
+   * account and the platform fee below is disbursed to Vendibook. Server-
+   * resolved only — never accepted from a client request.
+   */
+  payeeMerchantId?: string | null;
+  /** Vendibook's cut, in cents, on a routed order. */
+  platformFeeCents?: number;
+  /** Line items sent to the provider. Required by PayPal certification. */
+  items?: {
+    name: string;
+    unitAmountCents: number;
+    quantity?: number;
+    description?: string;
+    sku?: string;
+    category?: "DIGITAL_GOODS" | "PHYSICAL_GOODS" | "DONATION";
+  }[];
+  /** Buyer shipping address for orders that ship. */
+  shipping?: {
+    fullName?: string;
+    addressLine1: string;
+    addressLine2?: string;
+    adminArea2: string;
+    adminArea1: string;
+    postalCode: string;
+    countryCode?: string;
+  } | null;
+  /** Buyer contact PayPal uses to prefill login / Contact Module. */
+  buyerEmail?: string | null;
+  buyerPhone?: string | null;
+  returnUrl?: string | null;
+  cancelUrl?: string | null;
+  sellerId?: string | null;
 }
 
 export interface ProviderOrder {
@@ -104,12 +144,72 @@ export interface CaptureResult {
   raw: unknown;
 }
 
+/** Normalized lifecycle of a temporary hold (PayPal authorization). */
+export type NormalizedAuthorizationStatus =
+  | "created"
+  | "pending"
+  | "partially_captured"
+  | "captured"
+  | "voided"
+  | "expired"
+  | "denied";
+
+export interface ProviderAuthorization {
+  providerOrderId: string;
+  authorizationId: string;
+  status: NormalizedAuthorizationStatus;
+  amount: Money;
+  /** Last moment this hold may still be captured, ISO. */
+  expiresAt: string | null;
+  payerId?: string | null;
+  paymentSource?: string | null;
+  raw: unknown;
+}
+
+/**
+ * Optional provider capability. A provider that cannot place temporary holds
+ * simply does not implement this, and the policy layer falls back to capture.
+ */
+export interface AuthorizationCapableProvider {
+  /** Turn an approved AUTHORIZE order into a temporary hold. */
+  authorizeOrder(
+    providerOrderId: string,
+    idempotencyKey: string,
+  ): Promise<ProviderAuthorization>;
+  getAuthorization(authorizationId: string): Promise<ProviderAuthorization>;
+  /** Capture (all or part of) an existing hold. Money moves here, not before. */
+  captureAuthorization(
+    authorizationId: string,
+    idempotencyKey: string,
+    amount?: Money,
+  ): Promise<CaptureResult>;
+  /** Release a hold without charging. */
+  voidAuthorization(authorizationId: string): Promise<void>;
+}
+
+export function supportsAuthorization(
+  provider: unknown,
+): provider is PaymentProvider & AuthorizationCapableProvider {
+  const p = provider as Partial<AuthorizationCapableProvider> | null;
+  return (
+    typeof p?.authorizeOrder === "function" &&
+    typeof p?.captureAuthorization === "function" &&
+    typeof p?.voidAuthorization === "function"
+  );
+}
+
+
 export interface RefundRequest {
   captureId: string;
   /** Omit for a full refund. */
   amount?: Money;
   reason?: string;
   idempotencyKey: string;
+  /**
+   * Set when the original capture was routed to a connected seller account;
+   * the provider then refunds on that seller's behalf.
+   */
+  sellerMerchantId?: string | null;
 }
 
 export interface RefundResult {
@@ -270,3 +370,4 @@ export function defaultMarketplaceFees(input: MarketplaceFeeInput): MarketplaceF
   );
   return { grossCents, platformFeeCents, taxCents, refundReserveCents, sellerProceedsCents };
 }
+

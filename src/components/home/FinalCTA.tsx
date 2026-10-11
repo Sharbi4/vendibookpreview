@@ -41,31 +41,32 @@ const FinalCTA = () => {
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.6 }}
-          className="glass-premium rounded-3xl p-8 sm:p-12"
+          className="sale-light rounded-3xl bg-background p-8 sm:p-14 shadow-[0_24px_60px_-30px_rgba(0,0,0,0.65)]"
         >
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-foreground mb-8 leading-tight">
-            Ready to find or list a{' '}
-            <span className="gradient-text-warm">food truck or trailer?</span>
+          <h2 className="text-3xl sm:text-4xl md:text-[44px] font-semibold tracking-tight text-foreground mb-4 leading-[1.1]">
+            Find it, list it, or tell us what you need.
           </h2>
+          <p className="mx-auto mb-8 max-w-md text-muted-foreground leading-relaxed">
+            Food trucks, trailers, and commissary kitchens — free to browse, free to list.
+          </p>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
             <Button
               size="lg"
-              variant="dark-shine"
+              variant="cta"
               onClick={handleConcierge}
-              className="rounded-full px-8 gap-2"
+              className="rounded-2xl px-8 gap-2"
             >
-              
-              Tell Vendibook What You Need
+              Tell Vendibook what you need
             </Button>
             <Button
-              variant="glass-cta"
+              variant="outline"
               size="lg"
               onClick={handleBrowse}
-              className="rounded-full px-8 gap-2"
+              className="rounded-2xl border-border bg-transparent px-8 gap-2 text-foreground hover:bg-foreground/[0.04] hover:text-foreground"
             >
               <Search className="h-4 w-4" />
-              Browse Listings
+              Browse listings
             </Button>
           </div>
         </motion.div>

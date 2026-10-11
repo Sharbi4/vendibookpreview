@@ -23,25 +23,25 @@ const VerificationComplete = () => {
     }
 
     const check = async () => {
+      const pull = async (action: 'refresh' | 'status') => {
+        const { data, error } = await supabase.functions.invoke('verified-seller', {
+          body: { action },
+        });
+        if (error) return null;
+        return data as { badge_active?: boolean } | null;
+      };
+
       try {
-        const { data, error } = await supabase.functions.invoke(
-          'check-identity-verification',
-        );
-        if (error) {
-          setStatus('failed');
-          return;
-        }
-        if (data?.verified) {
+        const data = await pull('refresh');
+        if (data?.badge_active) {
           await refreshProfile();
           setStatus('verified');
           return;
         }
-        // Retry once — Stripe often needs a beat
+        // Retry once — the provider often needs a beat to settle.
         setTimeout(async () => {
-          const { data: retry } = await supabase.functions.invoke(
-            'check-identity-verification',
-          );
-          if (retry?.verified) {
+          const retry = await pull('status');
+          if (retry?.badge_active) {
             await refreshProfile();
             setStatus('verified');
           } else {

@@ -26,8 +26,7 @@ import {
   Inbox,
   ShieldCheck,
 } from 'lucide-react';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
+import WorkspaceShell from '@/components/workspace/WorkspaceShell';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
@@ -306,20 +305,20 @@ const MyTickets = () => {
   const canReply = selected && selected.status !== 'closed';
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <Header />
-      <main className="flex-1 max-w-6xl w-full mx-auto px-4 py-8">
+    <WorkspaceShell>
+      <div className="v2-page-stack v2-embedded-section">
         <div className="flex items-center gap-2 mb-6">
           <Button variant="ghost" size="sm" asChild>
-            <Link to="/account"><ArrowLeft className="h-4 w-4 mr-1" /> Account</Link>
+            <Link to="/dashboard/account"><ArrowLeft className="h-4 w-4 mr-1" /> Account</Link>
           </Button>
         </div>
 
         <div className="mb-8">
-          <h1 className="font-display text-3xl font-semibold tracking-tight">My tickets</h1>
+          <h1 className="font-display text-3xl font-semibold tracking-tight">Technical support & safety reports</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Every issue you've reported, plus the conversation with our team.
+            App issues and user safety reports, plus replies from our team. Order disputes have their own case history.
           </p>
+          <Link to="/dashboard/cases" className="v2-btn-outline mt-4">Order disputes & case history</Link>
         </div>
 
         {loading ? (
@@ -538,9 +537,8 @@ const MyTickets = () => {
             </div>
           </div>
         )}
-      </main>
-      <Footer />
-    </div>
+      </div>
+    </WorkspaceShell>
   );
 };
 

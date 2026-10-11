@@ -273,7 +273,7 @@ export default {
     joinMarketplace: 'Join the',
     marketplace: 'marketplace',
     forFoodBusiness: 'for food business',
-    marketingSubtitle: 'Connect with verified renters, list your assets, and grow your food business today.',
+    marketingSubtitle: 'Connect with renters, list your assets, and grow your food business today.',
     welcomeBackSubtitle: 'Pick up where you left off. Your listings and bookings are waiting for you.',
   },
 

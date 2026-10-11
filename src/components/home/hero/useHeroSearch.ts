@@ -24,30 +24,101 @@ export const useHeroSearch = () => {
   const [isRecording, setIsRecording] = useState(false);
   const [isConnectingMic, setIsConnectingMic] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const nativeRecognitionRef = useRef<any>(null);
   const { toast } = useToast();
+
+  const appendTranscript = useCallback((text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed) return;
+    setLocation((prev) => (prev ? prev + ' ' : '') + trimmed);
+  }, []);
+
+  // Spoken query: show words live while the shopper talks, then run the
+  // search automatically once ElevenLabs finalizes the sentence.
+  const [partialTranscript, setPartialTranscript] = useState('');
+  const pendingVoiceSearchRef = useRef<string | null>(null);
+  const [voiceSearchTick, setVoiceSearchTick] = useState(0);
 
   const scribe = useScribe({
     modelId: 'scribe_v2_realtime',
     commitStrategy: 'vad' as any,
+    onPartialTranscript: (data: any) => setPartialTranscript(data?.text ?? ''),
     onCommittedTranscript: (data: any) => {
-      if (data.text?.trim()) {
-        setLocation((prev) => (prev ? prev + ' ' : '') + data.text.trim());
-      }
+      const text = (data?.text ?? '').trim();
+      setPartialTranscript('');
+      if (!text) return;
+      setLocation(text);
+      pendingVoiceSearchRef.current = text;
+      setVoiceSearchTick((t) => t + 1);
     },
   });
 
+  // Fallback: browser-native speech recognition (Chrome/Edge/Safari) so voice
+  // search keeps working when the hosted transcription token is unavailable.
+  const startNativeRecognition = useCallback(() => {
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) return false;
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = navigator.language || 'en-US';
+    recognition.interimResults = false;
+    recognition.continuous = false;
+    recognition.onresult = (event: any) => {
+      const transcript = Array.from(event.results as any[])
+        .map((r: any) => r[0]?.transcript ?? '')
+        .join(' ').trim();
+      if (!transcript) return;
+      setLocation(transcript);
+      pendingVoiceSearchRef.current = transcript;
+      setVoiceSearchTick((t) => t + 1);
+    };
+    recognition.onerror = () => {
+      setIsRecording(false);
+      nativeRecognitionRef.current = null;
+    };
+    recognition.onend = () => {
+      setIsRecording(false);
+      nativeRecognitionRef.current = null;
+    };
+
+    recognition.start();
+    nativeRecognitionRef.current = recognition;
+    setIsRecording(true);
+    return true;
+  }, [appendTranscript]);
+
   const toggleVoiceSearch = useCallback(async () => {
     if (isRecording) {
-      scribe.disconnect();
+      if (nativeRecognitionRef.current) {
+        nativeRecognitionRef.current.stop();
+        nativeRecognitionRef.current = null;
+      } else {
+        scribe.disconnect();
+      }
       setIsRecording(false);
       return;
     }
 
     setIsConnectingMic(true);
     try {
-      await navigator.mediaDevices.getUserMedia({ audio: true });
+      const probe = await navigator.mediaDevices.getUserMedia({ audio: true });
+      probe.getTracks().forEach((t) => t.stop());
+    } catch {
+      setIsConnectingMic(false);
+      toast({
+        title: 'Microphone blocked',
+        description: 'Allow microphone access in your browser to use voice search.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
       const { data, error } = await supabase.functions.invoke('elevenlabs-scribe-token');
       if (error || !data?.token) throw new Error('Failed to get voice token');
+      setLocation('');
+      setPartialTranscript('');
 
       await scribe.connect({
         token: data.token,
@@ -56,24 +127,42 @@ export const useHeroSearch = () => {
       setIsRecording(true);
     } catch (err) {
       console.error('Voice search error:', err);
-      toast({ title: 'Could not start voice search', description: 'Please check microphone permissions', variant: 'destructive' });
+      if (!startNativeRecognition()) {
+        toast({
+          title: 'Voice search unavailable',
+          description: 'Try Chrome or Safari, or type your search instead.',
+          variant: 'destructive',
+        });
+      }
     } finally {
       setIsConnectingMic(false);
     }
-  }, [isRecording, scribe, toast]);
+  }, [isRecording, scribe, toast, startNativeRecognition]);
 
   useEffect(() => {
+    return () => {
+      if (nativeRecognitionRef.current) {
+        try { nativeRecognitionRef.current.stop(); } catch { /* noop */ }
+      }
+    };
+  }, []);
+
+  // Rotating placeholders are decorative motion. Users who ask for reduced
+  // motion get a single, stable placeholder instead of a moving one.
+  useEffect(() => {
+    const mq = window.matchMedia?.('(prefers-reduced-motion: reduce)');
+    if (mq?.matches) return;
     const interval = setInterval(() => {
       setPlaceholderIndex(prev => (prev + 1) % AI_PLACEHOLDERS.length);
     }, 3500);
     return () => clearInterval(interval);
   }, []);
 
-  const handleAISearch = async () => {
-    const query = location.trim();
+  const handleAISearch = async (override?: string) => {
+    const query = (typeof override === 'string' ? override : location).trim();
     if (!query) {
       trackLeadEvent('search_performed', { query: '', source: 'home_hero' });
-      navigate('/search?mode=rent');
+      navigate('/search');
       return;
     }
 
@@ -87,13 +176,15 @@ export const useHeroSearch = () => {
         if (error) throw error;
         const params = new URLSearchParams();
         if (data.location) params.set('q', data.location);
-        if (data.mode) params.set('mode', data.mode === 'sale' ? 'sale' : 'rent');
+        // Only scope to a mode when the parser is confident the shopper
+        // explicitly said rent vs buy — ambiguous searches browse everything.
+        if (data.mode === 'rent' || data.mode === 'sale') params.set('mode', data.mode);
         if (data.category) params.set('category', data.category);
         trackLeadEvent('search_performed', {
           query,
           city: data.location,
           category: data.category,
-          intent: data.mode,
+          intent: data.mode ?? 'all',
           source: 'home_hero_ai',
         });
         navigate(`/search?${params.toString()}`);
@@ -112,6 +203,18 @@ export const useHeroSearch = () => {
       navigate(`/search?${params.toString()}`);
     }
   };
+
+  // Auto-run the search after a spoken query is finalized.
+  useEffect(() => {
+    const q = pendingVoiceSearchRef.current;
+    if (!q) return;
+    pendingVoiceSearchRef.current = null;
+    try { scribe.disconnect(); } catch { /* noop */ }
+    setIsRecording(false);
+    trackLeadEvent('homepage_search_submit', { route: '/', query: q, source: 'home_hero_voice' });
+    void handleAISearch(q);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [voiceSearchTick]);
 
   const handleGeolocation = () => {
     if (!navigator.geolocation) return;
@@ -147,6 +250,7 @@ export const useHeroSearch = () => {
     setIsInputFocused,
     isRecording,
     isConnectingMic,
+    partialTranscript,
     inputRef,
     toggleVoiceSearch,
     handleAISearch,

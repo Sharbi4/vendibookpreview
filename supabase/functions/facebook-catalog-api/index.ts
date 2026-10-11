@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -130,6 +131,7 @@ serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+  if (!(await isAdminOrBackendCaller(req))) return forbiddenResponse();
 
   try {
     const accessToken = Deno.env.get("FB_CONVERSIONS_API_TOKEN");
@@ -159,7 +161,7 @@ serve(async (req) => {
       const { data: listings, error } = await supabaseClient
         .from("listings")
         .select("*")
-        .eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear")
+        .eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear").eq("unlisted", false)
         .eq("mode", "sale")
         .not("price_sale", "is", null);
 
@@ -223,7 +225,7 @@ serve(async (req) => {
         throw new Error(error.message);
       }
 
-      if (!listing || listing.status !== 'published' || listing.mode !== 'sale' || !listing.price_sale) {
+      if (!listing || listing.status !== 'published' || listing.unlisted === true || listing.mode !== 'sale' || !listing.price_sale) {
         return new Response(JSON.stringify({
           success: false,
           message: "Listing not eligible for catalog (must be published sale listing with price)",

@@ -3,7 +3,7 @@ import { Body, Container, Head, Heading, Html, Preview, Section, Text } from 'np
 import type { TemplateEntry } from './registry.ts'
 import { s } from './_styles.ts'
 
-import { BrandHeader } from './_blocks.tsx'
+import { BrandFooter, BrandHeader } from './_blocks.tsx'
 interface Props { recipientName?: string; listingTitle?: string; cancelledBy?: 'host' | 'guest' | string; reason?: string; coverImageUrl?: string }
 
 const E = ({ recipientName, listingTitle, cancelledBy, reason, coverImageUrl }: Props) => (
@@ -16,7 +16,7 @@ const E = ({ recipientName, listingTitle, cancelledBy, reason, coverImageUrl }: 
         <Text style={s.lede}>{cancelledBy === 'host' ? 'The host' : cancelledBy === 'guest' ? 'The guest' : 'The booking'}{listingTitle ? ` for “${listingTitle}”` : ''} was cancelled. If a payment was held, it will be released within 5–10 business days.</Text>
         {reason ? <Section style={s.accentRow}><Text style={s.accentLabel}>REASON</Text><Text style={s.accentValuePlain}>{reason}</Text></Section> : null}
       </Section>
-    </Container></Body></Html>
+    <BrandFooter /></Container></Body></Html>
 )
 
 export const template = {

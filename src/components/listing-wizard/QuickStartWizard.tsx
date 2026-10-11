@@ -1,5 +1,5 @@
-import React, { useState, useCallback, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Truck, Store, Building2, MapPin, Tag, ShoppingBag, MapPinned, Loader2, Check, CheckCircle2, AlertCircle} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -7,9 +7,18 @@ import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
+import { invokeEdge } from '@/lib/edge/invokeFunction';
 import { ListingCategory, ListingMode, CATEGORY_LABELS } from '@/types/listing';
 import { cn } from '@/lib/utils';
 import { trackDraftCreated, trackEvent } from '@/lib/analytics';
+import {
+  createOrResumeListingDraft,
+  CreationSessionRetiredError,
+  rotateCreationSessionKey,
+} from '@/lib/listings/creationSession';
+
+
+const LIST_GATEWAY = '/list';
 
 type QuickStartStep = 'category' | 'mode' | 'location' | 'created';
 
@@ -34,6 +43,20 @@ const modeOptions = [
   { value: 'rent' as ListingMode, label: 'For Rent', icon: Tag, description: 'Rent by day or week' },
   { value: 'sale' as ListingMode, label: 'For Sale', icon: ShoppingBag, description: 'Sell to a new owner' }];
 
+const VALID_MODES: ListingMode[] = ['rent', 'sale'];
+const VALID_CATEGORIES = categoryOptions.map((o) => o.value);
+
+/** Reads `?mode=` / `?category=` deep-link intent. Unknown values are ignored. */
+const readDeepLinkIntent = (params: URLSearchParams) => {
+  const rawMode = (params.get('mode') || '').toLowerCase();
+  const rawCategory = (params.get('category') || '').toLowerCase();
+  const mode = (VALID_MODES as string[]).includes(rawMode) ? (rawMode as ListingMode) : null;
+  const category = (VALID_CATEGORIES as string[]).includes(rawCategory)
+    ? (rawCategory as ListingCategory)
+    : null;
+  return { mode, category };
+};
+
 const QUICKSTART_STORAGE_KEY = 'vendibook_quickstart_draft';
 const QUICKSTART_RESUME_KEY = 'vendibook_quickstart_resume';
 
@@ -49,24 +72,99 @@ const loadPersistedQuickStart = (): { data: QuickStartData; step: QuickStartStep
   }
 };
 
-export const QuickStartWizard: React.FC = () => {
+const QUICKSTART_STEPS: QuickStartStep[] = ['category', 'mode', 'location', 'created'];
+const isQuickStartStep = (v: string | null): v is QuickStartStep =>
+  !!v && (QUICKSTART_STEPS as string[]).includes(v);
+
+export interface QuickStartWizardProps {
+  /** Where the seller lands after the draft exists (defaults to the standalone wizard route). */
+  resumeTo?: (listingId: string) => string;
+  /** Where "Back" from the first question goes. */
+  gatewayTo?: string;
+  /** Where "Save for later" goes. */
+  saveForLaterTo?: string;
+}
+
+export const QuickStartWizard: React.FC<QuickStartWizardProps> = ({
+  resumeTo = (id) => `/create-listing/${id}`,
+  gatewayTo = LIST_GATEWAY,
+  saveForLaterTo = '/dashboard',
+}) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user, refreshProfile } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const persisted = typeof window !== 'undefined' ? loadPersistedQuickStart() : null;
 
-  const [step, setStep] = useState<QuickStartStep>(persisted?.step ?? 'category');
-  const [data, setData] = useState<QuickStartData>(persisted?.data ?? {
-    category: null,
-    mode: null,
+  // Deep-link intent from landing pages (`?mode=sale&category=food_truck`).
+  // Invalid values fall back to asking the question normally.
+  const intentRef = useRef(readDeepLinkIntent(searchParams));
+  const intent = intentRef.current;
+
+  const seededCategory = intent.category ?? persisted?.data?.category ?? null;
+  const seededMode = intent.mode ?? persisted?.data?.mode ?? null;
+
+  /** First screen that still needs an answer. */
+  const firstUnansweredStep = (): QuickStartStep => {
+    if (!seededCategory) return 'category';
+    if (!seededMode) return 'mode';
+    return 'location';
+  };
+
+  // The step lives in the URL (?qs=) so browser back/forward moves between
+  // wizard screens instead of leaving the flow entirely.
+  const urlStep = searchParams.get('qs');
+  const [step, setStepState] = useState<QuickStartStep>(
+    isQuickStartStep(urlStep) ? urlStep : (persisted?.step ?? firstUnansweredStep()),
+  );
+
+  const goToStep = useCallback(
+    (next: QuickStartStep, replace = false) => {
+      setStepState(next);
+      const params = new URLSearchParams(window.location.search);
+      if (params.get('qs') === next) return;
+      params.set('qs', next);
+      setSearchParams(params, { replace });
+    },
+    [setSearchParams],
+  );
+
+  // Write the initial step into the URL without adding a history entry.
+  const didSeedUrl = useRef(false);
+  useEffect(() => {
+    if (didSeedUrl.current) return;
+    didSeedUrl.current = true;
+    if (!isQuickStartStep(searchParams.get('qs'))) goToStep(step, true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // URL → state (browser back / forward).
+  useEffect(() => {
+    const s = searchParams.get('qs');
+    if (isQuickStartStep(s) && s !== step) setStepState(s);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  const setStep = goToStep;
+
+  const [data, setData] = useState<QuickStartData>({
+    ...(persisted?.data ?? {
     location: '',
     zipCode: '',
     city: '',
     state: '',
-    latitude: null,
-    longitude: null});
+      latitude: null,
+      longitude: null,
+    }),
+    // Deep-link intent wins over stale session values.
+    category: seededCategory,
+    mode: seededMode,
+  });
   const [isCreating, setIsCreating] = useState(false);
+  /** Synchronous in-flight guard (state updates are async and race-prone). */
+  const creatingRef = useRef(false);
+
   const [isLookingUpZip, setIsLookingUpZip] = useState(false);
   const [zipError, setZipError] = useState<string | null>(null);
   const [zipConfirmed, setZipConfirmed] = useState(!!persisted?.data?.latitude);
@@ -91,10 +189,10 @@ export const QuickStartWizard: React.FC = () => {
     setZipConfirmed(false);
 
     try {
-      const { data: geoData, error } = await supabase.functions.invoke('geocode-location', {
-        body: { query: zip, limit: 1 }});
+      const { data: geoData, error } = await invokeEdge<{ results?: any[] }>('geocode-location', {
+        body: { query: zip, limit: 1 }}, { retries: 2 });
 
-      if (error) throw error;
+      if (error) throw new Error(error);
 
       const result = geoData?.results?.[0];
       if (!result) {
@@ -152,6 +250,18 @@ export const QuickStartWizard: React.FC = () => {
 
   const handleCategorySelect = (category: ListingCategory) => {
     setData(prev => ({ ...prev, category }));
+    // Mode already answered by the deep link — don't ask again.
+    setStep(intent.mode ? 'location' : 'mode');
+  };
+
+  /** Back target that respects skipped (pre-answered) screens. */
+  const backFromMode = () => (intent.category ? navigate(gatewayTo) : setStep('category'));
+  const backFromLocation = () => {
+    if (intent.mode) {
+      if (intent.category) navigate(gatewayTo);
+      else setStep('category');
+      return;
+    }
     setStep('mode');
   };
 
@@ -205,6 +315,9 @@ export const QuickStartWizard: React.FC = () => {
 
   const handleCreateDraft = async () => {
     if (!data.category || !data.mode) return;
+    // In-flight guard: a double click, a remount-triggered resume and the
+    // click handler must never issue two create calls.
+    if (creatingRef.current) return;
 
     // User must be authenticated to create a listing
     if (!user) {
@@ -213,17 +326,14 @@ export const QuickStartWizard: React.FC = () => {
       toast({
         title: 'Almost there — sign in to save your listing',
         description: "We saved your progress. Sign in and we'll finish creating your draft."});
-      navigate('/auth?redirect=/list');
+      navigate(`/auth?redirect=${encodeURIComponent(`/list/start${window.location.search}`)}`);
       return;
     }
 
+    creatingRef.current = true;
     setIsCreating(true);
 
     try {
-      // Use coordinates from ZIP lookup (already geocoded)
-      const latitude = data.latitude;
-      const longitude = data.longitude;
-
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData.session) {
         // User exists but has no active session — most commonly they just
@@ -237,27 +347,28 @@ export const QuickStartWizard: React.FC = () => {
         return;
       }
 
-      // Create draft through the backend so new users receive the host role safely.
-      const { data: listing, error } = await supabase.functions.invoke('create-listing-draft', {
-        headers: { Authorization: `Bearer ${sessionData.session.access_token}` },
-        body: {
-          mode: data.mode,
-          category: data.category,
-          location: data.location || null,
-          city: data.city || null,
-          state: data.state || null,
-          zipCode: data.zipCode || null,
-          latitude,
-          longitude,
-        },
+      // Idempotent: the durable creation-session key means remounts, retries,
+      // the post-sign-in auto-resume effect and duplicate clicks all resolve
+      // to the SAME draft row instead of inserting another one.
+      const listingId = await createOrResumeListingDraft({
+        userId: user.id,
+        flow: 'manual',
+        mode: data.mode,
+        category: data.category,
+        location: data.location || null,
+        city: data.city || null,
+        state: data.state || null,
+        zipCode: data.zipCode || null,
+        latitude: data.latitude,
+        longitude: data.longitude,
       });
-
-      if (error) throw error;
-      if (!listing?.id) throw new Error('Draft was not created. Please try again.');
       await refreshProfile();
 
-      setCreatedListingId(listing.id);
-      setStep('created');
+      // Draft now has its own identity; retire the key so the seller's NEXT
+      // quick start creates a genuinely new listing.
+      rotateCreationSessionKey(user.id, 'manual');
+      setCreatedListingId(listingId);
+      setStep('created', true);
 
       // Clear persisted quick-start progress now that the draft is safely on the server.
       try {
@@ -270,15 +381,22 @@ export const QuickStartWizard: React.FC = () => {
 
     } catch (error) {
       console.error('Error creating draft:', error);
+      if (error instanceof CreationSessionRetiredError) {
+        // The previous session's listing already went live — mint a fresh key
+        // so the seller can start a genuinely new listing.
+        rotateCreationSessionKey(user.id, 'manual');
+      }
       const raw = error instanceof Error ? error.message : String(error);
       toast({
         title: 'Error creating draft',
         description: raw || 'Please try again — your progress is saved.',
         variant: 'destructive'});
     } finally {
+      creatingRef.current = false;
       setIsCreating(false);
     }
   };
+
 
   // Auto-resume draft creation after user returns from sign-in with progress intact.
   useEffect(() => {
@@ -297,15 +415,23 @@ export const QuickStartWizard: React.FC = () => {
 
   const handleContinueSetup = () => {
     if (createdListingId) {
-      navigate(`/create-listing/${createdListingId}`);
+      navigate(resumeTo(createdListingId));
     }
   };
 
   const handleSaveForLater = () => {
-    navigate('/dashboard');
+    navigate(saveForLaterTo);
   };
 
-  const stepNumber = step === 'category' ? 1 : step === 'mode' ? 2 : step === 'location' ? 3 : 3;
+  // Only count screens the visitor actually sees — deep-linked answers are skipped.
+  const visibleSteps: QuickStartStep[] = [
+    ...(intent.category ? [] : (['category'] as QuickStartStep[])),
+    ...(intent.mode ? [] : (['mode'] as QuickStartStep[])),
+    'location',
+  ];
+  const totalSteps = visibleSteps.length;
+  const stepNumber = Math.max(1, visibleSteps.indexOf(step) + 1);
+  const minutesLeft = Math.max(1, totalSteps - stepNumber + 1);
 
   // Created confirmation screen
   if (step === 'created') {
@@ -319,10 +445,10 @@ export const QuickStartWizard: React.FC = () => {
           Now add photos and pricing to publish your listing.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 w-full max-w-sm">
-          <Button onClick={handleContinueSetup} variant="dark-shine" className="flex-1" size="lg">
+          <Button onClick={handleContinueSetup} variant="cta" className="flex-1" size="lg">
             Continue setup
           </Button>
-          <Button onClick={handleSaveForLater} variant="dark-shine" className="flex-1" size="lg">
+          <Button onClick={handleSaveForLater} variant="outline" className="flex-1 rounded-2xl" size="lg">
             Save for later
           </Button>
         </div>
@@ -332,40 +458,46 @@ export const QuickStartWizard: React.FC = () => {
 
   return (
     <div className="max-w-2xl mx-auto">
-      {/* Progress indicator */}
-      <div className="flex items-center gap-2 mb-6 sm:mb-8">
-        {[1, 2, 3].map((num) => (
-          <React.Fragment key={num}>
-            <div
-              className={cn(
-                "w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-medium transition-colors",
-                num < stepNumber
-                  ? "bg-primary text-primary-foreground"
-                  : num === stepNumber
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-muted text-muted-foreground"
-              )}
-            >
-              {num < stepNumber ? <Check className="w-3.5 h-3.5 sm:w-4 sm:h-4" /> : num}
-            </div>
-            {num < 3 && (
-              <div
-                className={cn(
-                  "flex-1 h-1 rounded-full transition-colors",
-                  num < stepNumber ? "bg-primary" : "bg-muted"
-                )}
-              />
-            )}
-          </React.Fragment>
-        ))}
+      {/* Entry header + compact progress */}
+      <div className="mb-6 sm:mb-8">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">
+          Create a listing
+        </p>
+        <h1 className="mt-2 text-2xl font-bold tracking-tight text-foreground sm:text-3xl">
+          A few quick questions to get started
+        </h1>
+        <p className="mt-2 text-sm text-muted-foreground">
+          Free to publish. Your progress saves as you go, so you can come back anytime.
+        </p>
+
+        <div className="mt-5 flex items-center justify-between gap-3 text-xs text-muted-foreground">
+          <span className="font-medium text-foreground">
+            Step {stepNumber} of {totalSteps}
+          </span>
+          <span>About {minutesLeft} min left</span>
+        </div>
+        <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted">
+          <div
+            className="h-full rounded-full bg-primary transition-[width] duration-500 ease-out"
+            style={{ width: `${Math.round((stepNumber / totalSteps) * 100)}%` }}
+          />
+        </div>
       </div>
 
       {/* Step: Category */}
       {step === 'category' && (
         <div className="space-y-6">
-          <div className="relative overflow-hidden rounded-2xl border-0 shadow-xl bg-card/80 backdrop-blur-sm">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => navigate(gatewayTo)}
+            className="pl-0 text-xs sm:text-sm text-muted-foreground"
+          >
+            ← Back
+          </Button>
+          <div className="relative overflow-hidden rounded-3xl border border-border bg-card shadow-[0_1px_2px_rgba(24,20,16,0.04),0_18px_40px_-30px_rgba(24,20,16,0.35)]">
             {/* Header */}
-            <div className="relative bg-muted/30 border-b border-border px-4 sm:px-6 py-4 sm:py-5">
+            <div className="relative border-b border-border bg-secondary/60 px-4 sm:px-6 py-4 sm:py-5">
               <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-1">What are you listing?</h1>
               <p className="text-sm sm:text-base text-muted-foreground">Choose one to get started.</p>
             </div>
@@ -380,10 +512,10 @@ export const QuickStartWizard: React.FC = () => {
                       key={option.value}
                       onClick={() => handleCategorySelect(option.value)}
                       className={cn(
-                        "relative overflow-hidden p-4 sm:p-5 rounded-2xl border-0 shadow-xl text-center transition-all bg-card/80 backdrop-blur-sm",
+                        "relative overflow-hidden p-4 sm:p-5 rounded-2xl border border-border bg-card text-center transition-all",
                         isSelected
-                          ? "ring-2 ring-primary"
-                          : "hover:shadow-2xl"
+                          ? "border-primary ring-2 ring-primary/30"
+                          : "hover:border-foreground/20 hover:shadow-[0_10px_30px_-24px_rgba(24,20,16,0.5)]"
                       )}
                     >
                       <div className={cn(
@@ -410,9 +542,9 @@ export const QuickStartWizard: React.FC = () => {
       {/* Step: Mode */}
       {step === 'mode' && (
         <div className="space-y-6">
-          <div className="relative overflow-hidden rounded-2xl border-0 shadow-xl bg-card/80 backdrop-blur-sm">
+          <div className="relative overflow-hidden rounded-3xl border border-border bg-card shadow-[0_1px_2px_rgba(24,20,16,0.04),0_18px_40px_-30px_rgba(24,20,16,0.35)]">
             {/* Header */}
-            <div className="relative bg-muted/30 border-b border-border px-4 sm:px-6 py-4 sm:py-5">
+            <div className="relative border-b border-border bg-secondary/60 px-4 sm:px-6 py-4 sm:py-5">
               <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-1">Rent or sell?</h1>
               <p className="text-sm sm:text-base text-muted-foreground">You can change this later.</p>
             </div>
@@ -427,10 +559,10 @@ export const QuickStartWizard: React.FC = () => {
                       key={option.value}
                       onClick={() => handleModeSelect(option.value)}
                       className={cn(
-                        "relative overflow-hidden p-4 sm:p-5 rounded-2xl border-0 shadow-xl text-center transition-all bg-card/80 backdrop-blur-sm",
+                        "relative overflow-hidden p-4 sm:p-5 rounded-2xl border border-border bg-card text-center transition-all",
                         isSelected
-                          ? "ring-2 ring-primary"
-                          : "hover:shadow-2xl"
+                          ? "border-primary ring-2 ring-primary/30"
+                          : "hover:border-foreground/20 hover:shadow-[0_10px_30px_-24px_rgba(24,20,16,0.5)]"
                       )}
                     >
                       <div className={cn(
@@ -452,17 +584,18 @@ export const QuickStartWizard: React.FC = () => {
               </div>
             </div>
           </div>
-          <Button variant="ghost" onClick={() => setStep('category')} className="mt-2">
+          <Button type="button" variant="outline" onClick={backFromMode} className="mt-2 min-w-[96px] rounded-2xl">
             ← Back
           </Button>
+
         </div>
       )}
 
       {/* Step: Location (ZIP Code → City/State confirmation) */}
       {step === 'location' && (
         <div className="space-y-6">
-          <div className="relative overflow-hidden rounded-2xl border-0 shadow-xl bg-card/80 backdrop-blur-sm">
-            <div className="relative bg-muted/30 border-b border-border px-4 sm:px-6 py-4 sm:py-5">
+          <div className="relative overflow-hidden rounded-3xl border border-border bg-card shadow-[0_1px_2px_rgba(24,20,16,0.04),0_18px_40px_-30px_rgba(24,20,16,0.35)]">
+            <div className="relative border-b border-border bg-secondary/60 px-4 sm:px-6 py-4 sm:py-5">
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <h1 className="text-xl sm:text-2xl font-bold text-foreground mb-1">Where is it located?</h1>
@@ -555,14 +688,20 @@ export const QuickStartWizard: React.FC = () => {
 
           <div className="flex flex-col gap-3 pt-2">
             <div className="flex items-center gap-2 sm:gap-3">
-              <Button variant="ghost" onClick={() => setStep('mode')} size="sm" className="text-xs sm:text-sm">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={backFromLocation}
+                className="min-w-[96px] rounded-2xl"
+              >
                 ← Back
               </Button>
+
               <Button 
-                variant="dark-shine"
+                variant="cta"
                 onClick={handleCreateDraft} 
                 disabled={isCreating || !zipConfirmed}
-                className="flex-1 shadow-lg"
+                className="flex-1 rounded-2xl"
               >
                 {isCreating ? (
                   <>

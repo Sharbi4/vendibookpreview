@@ -1,30 +1,28 @@
 /**
  * Generates sitemap-listings.xml and sitemap-locations.xml from live Supabase data.
+ * public/sitemap_pages.xml is hand-maintained and is NEVER written here (so manual
+ * entries survive rebuilds); this script only verifies the buyer SEO pages are in it.
  * Runs at predev + prebuild. Uses the public anon key (data is already public).
  *
  * Output:
  *   public/sitemap-listings.xml  — one <url> per active published listing, with <image:image>
  *   public/sitemap-locations.xml — city + category/city combo pages derived from real listing inventory
  */
-import { writeFileSync, mkdirSync } from "fs";
+import { writeFileSync, mkdirSync, readFileSync } from "fs";
 import { resolve } from "path";
+import { locationSitemapEntries } from "./lib/sitemapLocations";
+import { LEGAL_DOCUMENTS } from "../src/lib/legal/versions";
 
 const BASE_URL = "https://vendibook.com";
 const SUPABASE_URL = "https://nbrehbwfsmedbelzntqs.supabase.co";
 const ANON_KEY =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5icmVoYndmc21lZGJlbHpudHFzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjgxMDgzMTMsImV4cCI6MjA4MzY4NDMxM30.EkA-lGUmkLQ9rPAO-unLxGGGHVmPDdVR8awlA2ShVpU";
 
-const CATEGORY_SLUGS: Record<string, string> = {
-  food_truck: "food-truck",
-  food_trailer: "food-trailer",
-  ghost_kitchen: "shared-kitchen",
-  vendor_space: "vendor-space",
-};
-
 interface Listing {
   id: string;
   title: string | null;
   category: string | null;
+  mode: string | null;
   city: string | null;
   state: string | null;
   cover_image_url: string | null;
@@ -40,29 +38,17 @@ function xmlEscape(s: string): string {
     .replace(/'/g, "&apos;");
 }
 
-function slugify(s: string): string {
-  return s
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "-")
-    .replace(/^-+|-+$/g, "");
-}
-
 async function fetchListings(): Promise<Listing[]> {
-  const url = `${SUPABASE_URL}/rest/v1/listings?select=id,title,category,city,state,cover_image_url,updated_at&status=eq.published&published_at=not.is.null&title=not.ilike.demo*&limit=10000`;
-  const res = await fetch(url, {
-    headers: {
-      apikey: ANON_KEY,
-      Authorization: `Bearer ${ANON_KEY}`,
-    },
-  });
-  if (!res.ok) {
-    throw new Error(`Supabase fetch failed: ${res.status} ${await res.text()}`);
+  const listings: Listing[] = [];
+  for (let offset = 0; ; offset += 500) {
+    const params = new URLSearchParams({ select: "id,title,category,mode,city,state,cover_image_url,updated_at", status: "eq.published", published_at: "not.is.null", deleted_at: "is.null", moderation_status: "eq.clear", unlisted: "eq.false", title: "not.ilike.demo*", order: "id.asc", limit: "500", offset: String(offset) });
+    const res = await fetch(SUPABASE_URL + "/rest/v1/listings?" + params, { headers: { apikey: ANON_KEY, Authorization: "Bearer " + ANON_KEY } });
+    if (!res.ok) throw new Error("Supabase fetch failed: " + res.status);
+    const batch = await res.json() as Listing[];
+    listings.push(...batch);
+    if (batch.length < 500) return listings;
   }
-  return (await res.json()) as Listing[];
 }
-
 function buildListingsSitemap(listings: Listing[]): string {
   const today = new Date().toISOString().slice(0, 10);
   const urls = listings.map((l) => {
@@ -100,36 +86,10 @@ function buildListingsSitemap(listings: Listing[]): string {
 }
 
 function buildLocationsSitemap(listings: Listing[]): string {
-  const today = new Date().toISOString().slice(0, 10);
-  const citySlugs = new Set<string>();
-  const cityStateCategory = new Set<string>(); // `${categorySlug}|${cityStateSlug}`
-
-  for (const l of listings) {
-    if (!l.city || !l.state) continue;
-    const citySlug = slugify(l.city);
-    const stateSlug = slugify(l.state);
-    if (!citySlug || !stateSlug) continue;
-    citySlugs.add(citySlug);
-    const cityStateSlug = `${citySlug}-${stateSlug}`;
-    const cat = l.category ? CATEGORY_SLUGS[l.category] : null;
-    if (cat) cityStateCategory.add(`${cat}|${cityStateSlug}`);
-  }
-
-  const entries: string[] = [];
-  for (const slug of [...citySlugs].sort()) {
-    entries.push(
-      `  <url><loc>${BASE_URL}/${slug}</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.8</priority></url>`,
-    );
-  }
-  for (const combo of [...cityStateCategory].sort()) {
-    const [cat, cityState] = combo.split("|");
-    entries.push(
-      `  <url><loc>${BASE_URL}/rent/${cat}/${cityState}</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>`,
-    );
-    entries.push(
-      `  <url><loc>${BASE_URL}/buy/${cat}/${cityState}</loc><lastmod>${today}</lastmod><changefreq>weekly</changefreq><priority>0.75</priority></url>`,
-    );
-  }
+  const pagesXml = readFileSync(resolve("public/sitemap_pages.xml"), "utf8");
+  const entries = locationSitemapEntries(listings)
+    .filter(({ path }) => !pagesXml.includes("<loc>" + BASE_URL + path + "</loc>"))
+    .map(({ path, lastmod }) => "  <url><loc>" + BASE_URL + path + "</loc>" + (lastmod ? "<lastmod>" + lastmod + "</lastmod>" : "") + "<changefreq>weekly</changefreq><priority>0.75</priority></url>");
 
   return [
     `<?xml version="1.0" encoding="UTF-8"?>`,
@@ -140,8 +100,50 @@ function buildLocationsSitemap(listings: Listing[]): string {
   ].join("\n");
 }
 
-async function main() {
+/**
+ * public/sitemap-legal.xml — one <url> per versioned legal document, derived
+ * from the LEGAL_DOCUMENTS registry so a new document is never forgotten.
+ */
+function buildLegalSitemap(): string {
+  const routes = Array.from(new Set(["/legal", ...LEGAL_DOCUMENTS.map((d) => d.route)]));
+  const entries = routes.map(
+    (route) =>
+      `  <url><loc>${BASE_URL}${route}</loc><changefreq>monthly</changefreq><priority>0.4</priority></url>`,
+  );
+  return [
+    `<?xml version="1.0" encoding="UTF-8"?>`,
+    `<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">`,
+    ...entries,
+    `</urlset>`,
+    "",
+  ].join("\n");
+}
+
+/** Buyer SEO pages that must be listed in the hand-maintained sitemap_pages.xml. */
+export const REQUIRED_PAGE_PATHS = [
+  "/food-trucks-for-sale",
+  "/food-trailers-for-sale",
+  "/used-food-trucks-for-sale",
+  "/how-to-buy-a-food-truck",
+  "/financing",
+  "/food-truck-prices",
+];
+
+function verifyPagesSitemap() {
   try {
+    const xml = readFileSync(resolve("public/sitemap_pages.xml"), "utf8");
+    const missing = REQUIRED_PAGE_PATHS.filter((p) => !xml.includes(`<loc>${BASE_URL}${p}</loc>`));
+    if (missing.length) console.warn(`[sitemaps] sitemap_pages.xml is missing: ${missing.join(", ")}`);
+  } catch (err) {
+    console.warn(`[sitemaps] could not read sitemap_pages.xml: ${(err as Error).message}`);
+  }
+}
+
+async function main() {
+  verifyPagesSitemap();
+  try {
+    mkdirSync(resolve("public"), { recursive: true });
+    writeFileSync(resolve("public/sitemap-legal.xml"), buildLegalSitemap());
     const listings = await fetchListings();
     const listingsXml = buildListingsSitemap(listings);
     const locationsXml = buildLocationsSitemap(listings);
@@ -154,13 +156,18 @@ async function main() {
       `[sitemaps] wrote sitemap-listings.xml (${listings.length} listings) + sitemap-locations.xml`,
     );
   } catch (err) {
-    // Never fail the build/dev start over sitemap generation — write empty valid files
-    console.warn(`[sitemaps] generation failed, writing empty sitemaps: ${(err as Error).message}`);
+    // A failed query must not erase the last successful inventory sitemap.
+    console.warn(`[sitemaps] generation failed, preserving existing sitemaps: ${(err as Error).message}`);
     const empty = `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"></urlset>\n`;
     try {
       mkdirSync(resolve("public"), { recursive: true });
-      writeFileSync(resolve("public/sitemap-listings.xml"), empty);
-      writeFileSync(resolve("public/sitemap-locations.xml"), empty);
+      for (const file of ["sitemap-listings.xml", "sitemap-locations.xml"]) {
+        try {
+          writeFileSync(resolve("public", file), empty, { flag: "wx" });
+        } catch (writeError) {
+          if ((writeError as NodeJS.ErrnoException).code !== "EEXIST") throw writeError;
+        }
+      }
     } catch {
       /* ignore */
     }

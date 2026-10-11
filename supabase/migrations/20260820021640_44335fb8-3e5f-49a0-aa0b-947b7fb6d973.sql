@@ -1,0 +1,2 @@
+DELETE FROM public.spotlight_submission_media WHERE submission_id IN (SELECT id FROM public.spotlight_submissions WHERE business_name = 'QA Test Truck');
+DELETE FROM public.spotlight_submissions WHERE business_name = 'QA Test Truck';

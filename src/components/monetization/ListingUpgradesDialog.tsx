@@ -22,7 +22,7 @@ interface Props {
 
 /**
  * Dashboard entry point that opens all three seller upgrades (Featured, Seller Pro,
- * White Glove) for a specific listing. Each card's CTA hits Stripe Checkout via
+ * White Glove) for a specific listing. Each card's CTA hits PayPal Checkout via
  * create-monetization-checkout and returns to the dashboard.
  */
 export function ListingUpgradesDialog({

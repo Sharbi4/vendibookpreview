@@ -180,24 +180,8 @@ export default function AdminSupportTickets() {
     // If it's a user-visible reply, email them via generic-notice.
     if (!isInternal && selected.reply_email) {
       try {
-        await supabase.functions.invoke("send-transactional-email", {
-          body: {
-            templateName: "generic-notice",
-            recipientEmail: selected.reply_email,
-            idempotencyKey: `support-reply-${selected.id}-${Date.now()}`,
-            templateData: {
-              subject: `Update on your report — ${selected.reference_code}`,
-              kicker: "Customer Success",
-              heading: "New update from Vendibook Customer Success",
-              paragraphs: [reply.trim()],
-              details: [
-                { label: "Reference", value: selected.reference_code, mono: true },
-                { label: "Your report", value: selected.title },
-              ],
-              ctaLabel: "Reply from your dashboard",
-              ctaUrl: "https://vendibook.com/dashboard",
-            },
-          },
+        await supabase.functions.invoke("send-support-ticket-reply", {
+          body: { ticketId: selected.id, reply: reply.trim() },
         });
       } catch (e) { console.error("reply email failed", e); }
     }

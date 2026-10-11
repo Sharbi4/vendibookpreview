@@ -72,52 +72,19 @@ vi.mock('@/integrations/supabase/client', () => ({
 
 import { startMonetizationCheckout, checkoutOperationKey } from '@/lib/monetization/products';
 
-describe('subscription checkout routing', () => {
-  beforeEach(() => {
-    invoke.mockReset();
-    maybeSingle.mockReset();
-    maybeSingle.mockResolvedValue({ data: { billing_type: 'recurring' } });
-    invoke.mockResolvedValue({ data: { approve_url: 'https://paypal/approve' }, error: null });
+describe('Square subscription checkout routing', () => {
+  beforeEach(() => invoke.mockReset());
+  it('routes memberships to secure checkout with consent and selected interval', async () => {
+    const result = await startMonetizationCheckout({productSlug:'host_growth_annual',billingInterval:'annual',consentId:'consent-1'});
+    const url = new URL(result.url);
+    expect(url.pathname).toBe('/checkout/product/host_growth_annual');
+    expect(url.searchParams.get('consent_id')).toBe('consent-1');
+    expect(url.searchParams.get('interval')).toBe('annual');
+    expect(invoke).not.toHaveBeenCalled();
   });
-
-  it('routes recurring plans to PayPal, never Stripe', async () => {
-    const { url } = await startMonetizationCheckout({ productSlug: 'host_growth', billingInterval: 'monthly' });
-    expect(url).toBe('https://paypal/approve');
-    expect(invoke).toHaveBeenCalledWith('paypal-subscription-create', expect.anything());
-    expect(invoke).not.toHaveBeenCalledWith('create-monetization-checkout', expect.anything());
-  });
-
-  it('forwards the selected billing interval', async () => {
-    await startMonetizationCheckout({ productSlug: 'host_growth_annual', billingInterval: 'annual' });
-    expect(invoke.mock.calls[0][1].body.billing_interval).toBe('annual');
-  });
-
-  it('repeated clicks with identical params reuse one in-flight request', async () => {
-    const p1 = startMonetizationCheckout({ productSlug: 'host_growth', billingInterval: 'monthly' });
-    const p2 = startMonetizationCheckout({ productSlug: 'host_growth', billingInterval: 'monthly' });
-    await Promise.all([p1, p2]);
-    expect(invoke).toHaveBeenCalledTimes(1);
-  });
-
-  it('changed plan selection starts a fresh checkout operation', async () => {
-    await startMonetizationCheckout({ productSlug: 'host_growth', billingInterval: 'monthly' });
-    await startMonetizationCheckout({ productSlug: 'host_operator', billingInterval: 'monthly' });
-    expect(invoke).toHaveBeenCalledTimes(2);
-    expect(checkoutOperationKey({ productSlug: 'host_growth', billingInterval: 'monthly' }))
-      .not.toBe(checkoutOperationKey({ productSlug: 'host_growth', billingInterval: 'annual' }));
-  });
-
-  it('falls back to PayPal subscriptions when the catalog row is missing', async () => {
-    maybeSingle.mockResolvedValue({ data: null });
-    await startMonetizationCheckout({ productSlug: 'host_starter' });
-    expect(invoke).toHaveBeenCalledWith('paypal-subscription-create', expect.anything());
-  });
-
-  it('surfaces an existing-subscription error from the server', async () => {
-    invoke.mockResolvedValue({ data: { error: 'You already have an active membership.' }, error: null });
-    await expect(startMonetizationCheckout({ productSlug: 'host_growth' })).rejects.toThrow(
-      /already have an active membership/,
-    );
+  it('preserves listing ownership context for an add-on', async () => {
+    const {url}=await startMonetizationCheckout({productSlug:'featured_7',listingId:'listing-1'});
+    expect(new URL(url).searchParams.get('listing_id')).toBe('listing-1');
   });
 });
 

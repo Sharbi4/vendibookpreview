@@ -1,0 +1,383 @@
+import { useRef, useCallback, useEffect, useState } from 'react';
+import {
+  BadgeCheck,
+  FileText,
+  Loader2,
+  ScrollText,
+  ShieldCheck,
+  TriangleAlert,
+} from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { InsuranceEducationCard } from '@/components/booking/InsuranceEducationCard';
+import { supabase } from '@/integrations/supabase/client';
+import { cn } from '@/lib/utils';
+import { parseEdgeError } from '@/lib/edgeErrors';
+import { authPath } from '@/lib/auth/returnTo';
+
+/**
+ * Rental disclosure — insurance answer and the current terms, before payment.
+ *
+ * Everything shown here is server-resolved: the ACTIVE legal document versions
+ * and the renter's recorded attestation. The client never chooses a version.
+ * There is no identity check in rental checkout (owner decision 2026-10-06).
+ * No payment is initiated on this step.
+ */
+
+const INSURANCE_ANSWERS = [
+  { value: 'yes', label: 'Yes' },
+  { value: 'no', label: 'No' },
+  { value: 'unsure', label: 'Not sure' },
+] as const;
+
+type InsuranceAnswer = (typeof INSURANCE_ANSWERS)[number]['value'];
+
+interface LegalDoc {
+  id: string;
+  document_type: string;
+  version: string;
+  title: string | null;
+  slug: string | null;
+  summary: string | null;
+}
+
+interface Attestation {
+  attested_at: string;
+  document_version: string | null;
+  stale: boolean;
+  insurance_answer: InsuranceAnswer | null;
+}
+
+interface IdentityState {
+  status: string;
+  verified: boolean;
+  pending_review: boolean;
+  can_retry: boolean;
+  reused: boolean;
+  available: boolean;
+}
+
+interface DisclosureStepProps {
+  listingId: string;
+  /** Bubbles the renter's insurance answer up so the booking payload keeps it. */
+  onInsuranceAnswer?: (answer: InsuranceAnswer) => void;
+  /** Fires once the attestation is recorded and identity is settled. */
+  onValidityChange?: (valid: boolean) => void;
+  onComplete: (state: {
+    attested: boolean;
+    identityStatus: string;
+    attestedAt: string | null;
+    documentVersion: string | null;
+    insuranceAnswer: InsuranceAnswer | null;
+  }) => void;
+  disabled?: boolean;
+  compact?: boolean;
+}
+
+const DOC_LABELS: Record<string, string> = {
+  renter_terms: 'Renter Terms',
+  refund_cancellation_policy: 'Refund & Cancellation Policy',
+  marketplace_rules: 'Marketplace Rules',
+};
+
+export function DisclosureStep({
+  listingId,
+  onInsuranceAnswer,
+  onComplete,
+  onValidityChange,
+  disabled,
+  compact = false,
+}: DisclosureStepProps) {
+  const [loading, setLoading] = useState(true);
+  const [working, setWorking] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [documents, setDocuments] = useState<LegalDoc[]>([]);
+  const [attestation, setAttestation] = useState<Attestation | null>(null);
+  const [identity, setIdentity] = useState<IdentityState | null>(null);
+  const [insurance, setInsurance] = useState<InsuranceAnswer | ''>('');
+  const [agreed, setAgreed] = useState(false);
+  const [needsSignIn, setNeedsSignIn] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  /** Calls booking-verification and turns any failure into a plain sentence. */
+  const invoke = useCallback(async (body: Record<string, unknown>) => {
+    const send = () => supabase.functions.invoke('booking-verification', {
+      body: { listingId, route: window.location.pathname, ...body },
+    });
+    let { data, error: fnErr } = await send();
+    let parsed = fnErr || data?.error ? await parseEdgeError(fnErr, data?.error ? data : null) : null;
+    // An expired access token: refresh the session once and retry before
+    // asking the renter to sign in again.
+    if (parsed && (parsed.status === 401 || parsed.code === 'unauthenticated')) {
+      const { data: refreshed } = await supabase.auth.refreshSession();
+      if (refreshed.session) {
+        ({ data, error: fnErr } = await send());
+        parsed = fnErr || data?.error ? await parseEdgeError(fnErr, data?.error ? data : null) : null;
+      }
+    }
+    if (parsed) {
+      if (parsed.status === 401 || parsed.code === 'unauthenticated') {
+        setNeedsSignIn(true);
+        throw new Error('Your session expired. Please sign in again.');
+      }
+      const generic = !parsed.message || /non-2xx|Failed to send|fetch/i.test(parsed.message);
+      throw new Error(generic
+        ? "We couldn't load this step right now. Nothing was charged. Please try again."
+        : parsed.message);
+    }
+    return data as {
+      documents?: LegalDoc[];
+      attestation?: Attestation | null;
+      identity?: IdentityState;
+    };
+  }, [listingId]);
+
+  const applyState = useCallback(
+    (data: { documents?: LegalDoc[]; attestation?: Attestation | null; identity?: IdentityState }) => {
+      if (data.documents) setDocuments(data.documents);
+      if (data.identity) setIdentity(data.identity);
+      if (data.attestation !== undefined) {
+        setAttestation(data.attestation ?? null);
+        if (data.attestation && !data.attestation.stale) {
+          setAgreed(true);
+          if (data.attestation.insurance_answer) setInsurance(data.attestation.insurance_answer);
+        }
+      }
+    },
+    [],
+  );
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setError(null);
+    (async () => {
+      try {
+        // Guests sign in first (the checkout shows the sign-in prompt above).
+        const { data: session } = await supabase.auth.getSession();
+        if (!session.session) {
+          if (!cancelled) setNeedsSignIn(true);
+          return;
+        }
+        setNeedsSignIn(false);
+        const data = await invoke({ action: 'status' });
+        if (!cancelled) applyState(data);
+      } catch (err) {
+        if (!cancelled) {
+          setError(
+            err instanceof Error ? err.message : 'We could not load the terms. Please try again.',
+          );
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [invoke, applyState, reloadKey]);
+
+  const attested = Boolean(attestation && !attestation.stale);
+  // Owner decision 2026-10-06: rental checkout has no identity check.
+  // Renters confirm insurance and the current terms only.
+  const identityDone = true;
+  const currentlyValid = attested && identityDone && !!insurance && insurance === attestation?.insurance_answer;
+  const validityCallback = useRef(onValidityChange);
+  validityCallback.current = onValidityChange;
+  useEffect(() => { validityCallback.current?.(currentlyValid); }, [currentlyValid]);
+
+  /** One action: record the answer (when it changed) and move on. */
+  const handleSaveAndContinue = async () => {
+    if (!insurance || !agreed) return;
+    setWorking(true);
+    setError(null);
+    try {
+      let current = attestation;
+      if (!currentlyValid) {
+        const data = await invoke({
+          action: 'attest',
+          insuranceAnswer: insurance,
+          agreed: true,
+          locale: navigator.language,
+        });
+        applyState(data);
+        current = data.attestation ?? null;
+      }
+      onInsuranceAnswer?.(insurance);
+      onComplete({
+        attested: true,
+        identityStatus: identity?.status ?? 'not_available',
+        attestedAt: current?.attested_at ?? null,
+        documentVersion: current?.document_version ?? null,
+        insuranceAnswer: insurance,
+      });
+    } catch (err) {
+      // Recoverable: the step stays on screen with the retry affordance.
+      setError(err instanceof Error ? err.message : 'We could not record your agreement.');
+    } finally {
+      setWorking(false);
+    }
+  };
+
+  if (needsSignIn) {
+    return (
+      <div className="rounded-2xl border border-border p-4 text-sm text-muted-foreground">
+        <p>Sign in to confirm your insurance answer for this rental. Your other details are kept.</p>
+        <a
+          href={authPath(`${window.location.pathname}${window.location.search}`, 'signin')}
+          className="mt-3 inline-flex font-medium text-foreground underline underline-offset-4"
+        >
+          Sign in to continue
+        </a>
+      </div>
+    );
+  }
+
+  if (loading) {
+    return (
+      <div className="flex items-center gap-2 py-10 text-sm text-muted-foreground">
+        <Loader2 className="h-4 w-4 animate-spin" />
+        Loading the latest terms…
+      </div>
+    );
+  }
+
+  return (
+    <div className={compact ? 'rental-verification-panel' : 'space-y-6'}>
+      {!compact ? <p className="text-sm text-muted-foreground">
+        A quick review before payment: confirm your insurance and the current terms for this
+        booking.
+      </p> : null}
+
+      {error && (
+        <Alert variant="destructive">
+          <TriangleAlert className="h-4 w-4" />
+          <AlertDescription className="flex flex-wrap items-center gap-3">
+            <span>{error}</span>
+            {documents.length === 0 ? (
+              <Button type="button" size="sm" variant="outline" onClick={() => setReloadKey((k) => k + 1)}>
+                Try again
+              </Button>
+            ) : null}
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* Terms */}
+      {!compact ? <div className="space-y-3 rounded-2xl border border-border p-4">
+        <div className="flex items-center gap-2">
+          <ScrollText className="h-4 w-4 text-primary" />
+          <h3 className="text-base font-semibold">What you're agreeing to</h3>
+        </div>
+        <ul className="space-y-2">
+          {documents.map((doc) => (
+            <li key={doc.id} className="flex items-start gap-2 text-sm">
+              <FileText className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+              <span>
+                {doc.slug ? (
+                  <a
+                    href={`/legal/${doc.slug}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="font-medium underline underline-offset-4"
+                  >
+                    {doc.title || DOC_LABELS[doc.document_type] || doc.document_type}
+                  </a>
+                ) : (
+                  <span className="font-medium">
+                    {doc.title || DOC_LABELS[doc.document_type] || doc.document_type}
+                  </span>
+                )}
+                <span className="text-muted-foreground"> · version {doc.version}</span>
+                {doc.summary && (
+                  <span className="block text-muted-foreground">{doc.summary}</span>
+                )}
+              </span>
+            </li>
+          ))}
+          {documents.length === 0 && (
+            <li className="text-sm text-muted-foreground">Terms are being updated — try again shortly.</li>
+          )}
+        </ul>
+      </div> : null}
+
+      {/* Insurance disclosure — moved here so it sits with the other disclosures */}
+      <div className="space-y-3 rounded-2xl border border-border p-4">
+        <Label className="flex items-center gap-2 text-base font-semibold">
+          <ShieldCheck className="h-4 w-4 text-primary" />
+          Do you currently have Commercial General Liability Insurance?
+        </Label>
+        <RadioGroup
+          value={insurance}
+          onValueChange={(val) => {
+            setInsurance(val as InsuranceAnswer);
+            onInsuranceAnswer?.(val as InsuranceAnswer);
+            if (attested) setAgreed(false);
+          }}
+          className="grid grid-cols-3 gap-2"
+          disabled={disabled || working}
+        >
+          {INSURANCE_ANSWERS.map((opt) => (
+            <div key={opt.value} className="relative">
+              <RadioGroupItem value={opt.value} id={`disc-ins-${opt.value}`} className="peer sr-only" />
+              <Label
+                htmlFor={`disc-ins-${opt.value}`}
+                className={cn(
+                  'flex cursor-pointer items-center justify-center rounded-xl border border-border p-3.5 text-sm transition-all',
+                  'peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5',
+                  'hover:border-primary/50',
+                )}
+              >
+                {opt.label}
+              </Label>
+            </div>
+          ))}
+        </RadioGroup>
+        {(insurance === 'no' || insurance === 'unsure') && <InsuranceEducationCard />}
+      </div>
+
+      {/* Attestation */}
+      <div className="space-y-3 rounded-2xl border border-border p-4">
+        <div className="flex items-start gap-3">
+          <Checkbox
+            id="disclosure-agree"
+            checked={agreed}
+            disabled={disabled || working}
+            onCheckedChange={(checked) => setAgreed(checked === true)}
+          />
+          <Label htmlFor="disclosure-agree" className="cursor-pointer text-sm leading-relaxed">
+            {compact
+              ? 'I confirm my insurance answer and intended-use information are accurate, and acknowledge the current rental requirements.'
+              : 'I have read and agree to the renter terms, refund and cancellation policy, and marketplace rules above, and my answers about insurance and intended use are accurate.'}
+          </Label>
+        </div>
+        {attested ? (
+          <p className="flex items-center gap-2 text-sm text-muted-foreground">
+            <BadgeCheck className="h-4 w-4 text-primary" />
+            Recorded {new Date(attestation!.attested_at).toLocaleString()} · version{' '}
+            {attestation!.document_version}
+          </p>
+        ) : null}
+        {attestation?.stale && (
+          <p className="text-sm text-amber-600">
+            Our terms were updated since you last agreed. Please confirm again.
+          </p>
+        )}
+      </div>
+
+      <Button
+        className="h-12 w-full"
+        disabled={disabled || working || !insurance || !agreed || documents.length === 0}
+        onClick={handleSaveAndContinue}
+      >
+        {working ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+        {compact ? 'Save and continue' : 'Continue to review'}
+      </Button>
+    </div>
+  );
+}
+
+export default DisclosureStep;

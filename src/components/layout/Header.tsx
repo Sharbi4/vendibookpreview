@@ -1,5 +1,8 @@
+import './navigation-contrast.css';
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { VoiceMicButton } from '@/components/voice/VoiceMicButton';
+import { useVoiceDictation } from '@/hooks/useVoiceDictation';
 import { Menu, X, Search, User, LogOut, Shield, MessageCircle, HelpCircle, ShieldCheck, Clock, TrendingUp, Mic, MicOff, ChevronDown, CheckCircle2, Heart, CalendarDays, Home, Bell, Globe, Settings, Gift, LayoutDashboard, PlusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
@@ -14,6 +17,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import vendibookFavicon from '@/assets/vendibook-favicon.png';
+import vendibookWordmark from '@/assets/vendibook-wordmark-light.png';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
 import { ConciergeInbox } from '@/components/concierge/ConciergeInbox';
 import { Input } from '@/components/ui/input';
@@ -237,6 +241,11 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
     }
   }, [navigate]);
 
+  const headerVoice = useVoiceDictation({
+    onPartial: (text) => { if (text) setMobileSearchQuery(text); },
+    onFinal: (text) => { setMobileSearchQuery(text); executeSearch(text); },
+  });
+
   const handleMobileSearch = (e: React.FormEvent) => {
     e.preventDefault();
     executeSearch(mobileSearchQuery);
@@ -273,8 +282,8 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
 
   return (
     <>
-    <header
-      className="sticky top-0 z-50 w-full border-b border-border/30 shadow-sm"
+    <header data-site-chrome=""
+      className="marketplace-header sticky top-0 z-50 w-full border-b border-border/30 shadow-sm"
       style={{
         // Near-opaque charcoal instead of backdrop-filter: blur(24px).
         // backdrop-filter over animated/scrolling content re-samples every frame
@@ -285,20 +294,29 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
         willChange: 'transform',
       }}
     >
-      <div className="container max-w-7xl mx-auto pl-4 pr-3 sm:px-4 flex h-[72px] items-center justify-between gap-3">
-        {/* Logo - hide when mobile search is open */}
+      <div className="container max-w-7xl mx-auto pl-3 pr-2 sm:px-4 flex h-[72px] items-center justify-between gap-2 sm:gap-3">
+        {/* Brand — compact bird mark on mobile, full wordmark lockup from md up */}
         <Link 
           to="/" 
-          className={`flex items-center shrink-0 transition-opacity duration-200 ${isMobileSearchOpen ? 'opacity-0 pointer-events-none absolute' : 'opacity-100'} md:opacity-100 md:pointer-events-auto md:relative`}
+          aria-label="Vendibook home"
+          className={`group flex items-center shrink-0 transition-opacity duration-200 ${isMobileSearchOpen ? 'opacity-0 pointer-events-none absolute' : 'opacity-100'} md:opacity-100 md:pointer-events-auto md:relative`}
         >
-          <div className="flex items-center justify-center w-11 h-11">
+          <div className="flex items-center justify-center h-11 w-11 shrink-0 sm:h-12 sm:w-12 md:hidden">
             <img 
               src={vendibookFavicon} 
               alt="Vendibook" 
-              className="h-8 w-auto brightness-125 object-contain"
+              className="h-9 w-auto object-contain brightness-125 transition-transform duration-300 group-hover:scale-105 sm:h-10"
             />
           </div>
+          <img
+            src={vendibookWordmark}
+            alt="Vendibook"
+            width={1000}
+            height={293}
+            className="hidden h-9 w-auto object-contain transition-transform duration-300 group-hover:scale-[1.02] md:block lg:h-10"
+          />
         </Link>
+
 
         {/* Mobile Expandable Search */}
         {!hideSearch && <div 
@@ -321,9 +339,17 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
                     setShowSuggestions(true);
                   }}
                   onFocus={() => setShowSuggestions(true)}
-                  placeholder={isListening ? t('header.listening') : t('header.mobileSearchPlaceholder')}
-                  className={`pl-9 pr-4 py-2 w-full rounded-full border-border bg-muted/50 focus-visible:ring-primary ${isListening ? 'border-primary ring-2 ring-primary/20' : ''}`}
+                  placeholder={headerVoice.isRecording ? 'Listening…' : t('header.mobileSearchPlaceholder')}
+                  className={`pl-9 pr-10 py-2 w-full rounded-full border-border bg-muted/50 text-base focus-visible:ring-primary ${headerVoice.isRecording ? 'border-success ring-2 ring-success/20' : ''}`}
                   autoComplete="off"
+                />
+                <VoiceMicButton
+                  isRecording={headerVoice.isRecording}
+                  isBusy={headerVoice.isConnecting}
+                  onClick={headerVoice.toggle}
+                  size="sm"
+                  label="Voice search"
+                  className="absolute right-1 top-1/2 -translate-y-1/2 rounded-full"
                 />
               </form>
               
@@ -335,6 +361,7 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
                 size="icon"
                 onClick={closeMobileSearch}
                 className="shrink-0"
+                aria-label="Close search"
               >
                 <X className="h-5 w-5" />
               </Button>
@@ -384,15 +411,15 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
           ) : (
             <button
               onClick={() => setIsMobileSearchOpen(true)}
-              className="flex items-center gap-2 px-4 h-[46px] rounded-full text-sm font-medium text-white/70 transition-all flex-1 mx-3"
+              className="flex items-center gap-2 px-3 sm:px-4 h-[44px] rounded-full text-sm font-medium text-white/70 transition-all flex-1 mx-1.5 sm:mx-3 min-w-0"
               style={{
                 background: 'rgba(18,18,18,0.92)',
                 border: '1px solid rgba(255,255,255,0.08)',
                 boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04), 0 4px 18px rgba(0,0,0,0.35)',
               }}
             >
-              <Search className="h-4 w-4 text-white/55 shrink-0" />
-              <span className="truncate text-white/55 text-left flex-1">Search food trucks, trailers...</span>
+              <Search className="h-4 w-4 text-white/80 shrink-0" />
+              <span className="truncate text-white/80 text-left flex-1 min-w-0">Search food trucks, trailers...</span>
             </button>
           )}
         </div>}
@@ -402,33 +429,35 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
           <div className="hidden md:flex flex-1 justify-center max-w-2xl mx-6">
             <button
               onClick={() => navigate('/search')}
-              className="w-full flex items-center gap-4 px-6 h-[52px] rounded-full text-[15px] font-medium text-white/70 transition-all group"
+              className="group flex h-[52px] w-full items-center gap-3.5 rounded-full px-6 text-[15px] font-medium text-white/70 transition-all duration-300 hover:-translate-y-px"
               style={{
-                background: 'rgba(18,18,18,0.92)',
-                border: '1px solid rgba(255,255,255,0.08)',
-                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04), 0 4px 18px rgba(0,0,0,0.35)',
+                background: 'rgba(255,255,255,0.045)',
+                border: '1px solid rgba(255,255,255,0.10)',
+                boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.05), 0 6px 22px rgba(0,0,0,0.30)',
+                backdropFilter: 'blur(14px)',
               }}
             >
-              <Search className="h-5 w-5 text-primary transition-transform duration-200 group-hover:scale-105" />
-              <span className="text-white/55 group-hover:text-white/85 transition-colors">Search food trucks, trailers, tools...</span>
+              <Search className="h-[18px] w-[18px] text-primary transition-transform duration-200 group-hover:scale-105" />
+              <span className="text-white/80 transition-colors group-hover:text-white/85">Search food trucks, trailers, or a city</span>
+              <span className="ml-auto rounded-full border border-white/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/75 transition-colors group-hover:text-white/60">Search</span>
             </button>
           </div>
         )}
 
         {/* Desktop Navigation */}
-        <nav className="hidden lg:flex items-center gap-3">
+        <nav className="hidden lg:flex items-center gap-3 shrink-0">
           {!user && (
             <Link 
               to="/become-a-host" 
               className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
-              Become a Host
+              List your equipment
             </Link>
           )}
         </nav>
 
         {/* Desktop Actions */}
-        <div className="hidden lg:flex items-center gap-2 ml-4">
+        <div className="hidden lg:flex items-center gap-2 ml-4 shrink-0">
           {user && (
             <Button 
               variant="dark-shine"
@@ -442,7 +471,7 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
             <>
               <ConciergeInbox userId={user.id} />
               <NotificationCenter />
-              <AppDropdownMenu variant="light" />
+              <AppDropdownMenu variant="dark" />
             </>
           ) : (
             <>
@@ -453,7 +482,7 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
               >
                 Sign Up / Login
               </Button>
-              <AppDropdownMenu variant="light" />
+              <AppDropdownMenu variant="dark" />
             </>
           )}
           {/* Language Switcher - Far Right */}
@@ -461,10 +490,10 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
         </div>
 
         {/* Mobile & Tablet Actions - hide when search is open */}
-        <div className={`flex lg:hidden items-center gap-1 transition-opacity duration-200 ${isMobileSearchOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'}`}> 
+        <div className={`flex lg:hidden items-center gap-1 shrink-0 ${isMobileSearchOpen ? 'hidden' : 'flex'}`}> 
           {user && <ConciergeInbox userId={user.id} />}
           {user && <NotificationCenter />}
-          <AppDropdownMenu variant="light" />
+          <AppDropdownMenu variant="dark" />
           <div className="hidden sm:block">
             <LanguageSwitcher />
           </div>

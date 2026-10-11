@@ -1,13 +1,21 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
+import { maskContactDetails } from '../../../supabase/functions/_shared/contactPatterns';
 
 interface CollapsibleDescriptionProps {
   description: string;
   maxLines?: number;
+  /**
+   * Hide phone numbers, emails, links and payment/chat handles (default on).
+   * The listing owner sees their own text unmasked. Keeps first contact on
+   * Vendibook, where members are verified and messages are risk-scanned.
+   */
+  maskContacts?: boolean;
 }
 
-const CollapsibleDescription = ({ description, maxLines = 4 }: CollapsibleDescriptionProps) => {
+const CollapsibleDescription = ({ description: rawDescription, maxLines = 4, maskContacts = true }: CollapsibleDescriptionProps) => {
   const [isExpanded, setIsExpanded] = useState(false);
+  const description = maskContacts ? maskContactDetails(rawDescription, '[contact via Vendibook]') : rawDescription;
   
   // Check if content needs collapsing
   const needsCollapse = description.length > 300 || description.split('\n').length > maxLines;

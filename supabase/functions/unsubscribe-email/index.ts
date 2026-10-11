@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { verifyUnsubToken } from "../_shared/unsubscribeToken.ts";
+import { getCaller } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,7 +10,6 @@ const corsHeaders = {
 };
 
 const handler = async (req: Request): Promise<Response> => {
-  console.log("unsubscribe-email function invoked");
 
   // Handle CORS preflight requests
   if (req.method === "OPTIONS") {
@@ -20,7 +21,7 @@ const handler = async (req: Request): Promise<Response> => {
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    const { email } = await req.json();
+    const { email, token } = await req.json();
 
     if (!email) {
       return new Response(
@@ -32,7 +33,16 @@ const handler = async (req: Request): Promise<Response> => {
       );
     }
 
-    console.log(`Processing unsubscribe request for: ${email}`);
+    // Only the address owner may unsubscribe: a signed link token, or the
+    // signed-in member's own email.
+    const caller = await getCaller(req);
+    const ownEmail = caller?.email && caller.email.toLowerCase() === String(email).toLowerCase();
+    if (!ownEmail && !verifyUnsubToken(String(email), token)) {
+      return new Response(
+        JSON.stringify({ error: "This unsubscribe link is invalid. Sign in and manage email settings, or use the link from your latest email." }),
+        { status: 403, headers: { "Content-Type": "application/json", ...corsHeaders } },
+      );
+    }
 
     // Check if already in newsletter_subscribers
     const { data: existing } = await supabase
@@ -43,7 +53,6 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (existing) {
       if (existing.unsubscribed_at) {
-        console.log(`${email} is already unsubscribed`);
         return new Response(
           JSON.stringify({ message: "Already unsubscribed" }),
           {
@@ -86,13 +95,13 @@ const handler = async (req: Request): Promise<Response> => {
     await Promise.all([
       supabase
         .from("suppressed_emails")
-        .upsert({ email: lower, reason: "unsubscribe" }, { onConflict: "email" }),
+        // scope 'marketing' — essential account email is unaffected.
+        .upsert({ email: lower, reason: "unsubscribe", scope: "marketing" }, { onConflict: "email" }),
       supabase
         .from("email_unsubscribes")
         .upsert({ email: lower, unsubscribed_at: now }, { onConflict: "email" }),
     ]);
 
-    console.log(`Successfully unsubscribed: ${email}`);
 
     return new Response(
       JSON.stringify({ message: "Successfully unsubscribed" }),

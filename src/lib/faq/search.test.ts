@@ -84,12 +84,15 @@ describe("faq search", () => {
     expect(buying?.answer).toBeDefined();
   });
 
-  it("tier prices reflect live config: Starter $39, Growth $89, Operator $149", () => {
+  it("plan prices are rendered from live catalog tokens, never hardcoded", () => {
     const tiers = findFaqEntry("tiers-overview");
-    expect(tiers?.answer).toMatch(/\$39/);
-    expect(tiers?.answer).toMatch(/\$89/);
-    expect(tiers?.answer).toMatch(/\$149/);
+    // Prices come from the monetization catalog at render time via
+    // {{price:slug}} tokens, so the copy must not bake in stale dollar amounts.
+    expect(tiers?.answer).toMatch(/\{\{price:vendibook_pro\}\}/);
+    expect(tiers?.answer).toMatch(/\{\{price:permit_path_plus_monthly\}\}/);
+    expect(tiers?.answer).not.toMatch(/\$39|\$89|\$149/);
   });
+
 
   it("uses 'payment protection' language, not 'escrow'", () => {
     // Buyer-facing explainer must exist and avoid the word 'escrow'.

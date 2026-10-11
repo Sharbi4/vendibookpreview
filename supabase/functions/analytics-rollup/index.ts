@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { isInternalCaller } from "../_shared/internalAuth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -10,10 +11,13 @@ const corsHeaders = {
 /**
  * analytics-rollup
  * Aggregates listing_views + booking_requests + sale_transactions into
- * listing_analytics_daily for one host (auth required) or all listings
- * (when called by a scheduled cron via service role).
+ * listing_analytics_daily for one host.
  *
  * POST { host_id?: string, days?: number = 30 }
+ *
+ * Authorization: the host ID is always derived from the caller's verified
+ * session. A client-supplied host_id override is honored only for internal
+ * service-role callers (cron) or signed-in admins — never for public traffic.
  */
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -33,18 +37,40 @@ serve(async (req) => {
     }
     const days = Math.min(Math.max(body.days || 30, 1), 365);
 
-    let hostId = body.host_id;
     const authHeader = req.headers.get("Authorization");
-    if (!hostId && authHeader) {
+    let hostId: string | undefined;
+
+    if (isInternalCaller(req)) {
+      // Trusted backend caller (cron / service role) may target any host.
+      hostId = body.host_id;
+    } else if (authHeader) {
       const userClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
         global: { headers: { Authorization: authHeader } },
       });
       const { data: u } = await userClient.auth.getUser();
-      hostId = u?.user?.id;
+      const userId = u?.user?.id;
+      if (!userId) {
+        return new Response(JSON.stringify({ error: "unauthorized" }), {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+      hostId = userId;
+      // A host_id different from the caller's own ID requires admin role.
+      if (body.host_id && body.host_id !== userId) {
+        const { data: isAdmin } = await supabase.rpc("has_role", {
+          _user_id: userId,
+          _role: "admin",
+        });
+        if (isAdmin) {
+          hostId = body.host_id;
+        }
+      }
     }
+
     if (!hostId) {
-      return new Response(JSON.stringify({ error: "host_id required" }), {
-        status: 400,
+      return new Response(JSON.stringify({ error: "unauthorized" }), {
+        status: 401,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }

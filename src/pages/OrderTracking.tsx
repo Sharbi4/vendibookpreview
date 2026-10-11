@@ -1,7 +1,11 @@
+import { isPickupLocationRevealed, PICKUP_LOCKED_MESSAGE } from '@/lib/fulfillment/pickupReveal';
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link, useSearchParams } from 'react-router-dom';
 import OrderPaymentLink from '@/components/orders/OrderPaymentLink';
+import { FreightLink, linkifyFreight } from '@/components/shared/FreightLink';
 import { format } from 'date-fns';
+import { formatDeliveryWindow } from '@/lib/sale/handoff';
+import { isSellerCoveredFreightOrder } from '@/lib/freight/presentation';
 import { 
   Package, Truck, CheckCircle2, Clock, MapPin, 
   ExternalLink, ArrowLeft, AlertCircle, PackageCheck,
@@ -20,6 +24,9 @@ import { useToast } from '@/hooks/use-toast';
 import SEO from '@/components/SEO';
 import { ReportIssueButton } from '@/components/support/ReportIssueButton';
 import { GetHelpWithOrder } from '@/components/trust/GetHelpWithOrder';
+import OrderChargesSummary from '@/components/orders/OrderChargesSummary';
+import PayPalEmbeddedPayment from '@/components/transaction/checkout/PayPalEmbeddedPayment';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 
 const SHIPPING_STATUS_CONFIG = {
@@ -147,6 +154,8 @@ interface CashFreightTimelineProps {
   onBuyerConfirm: () => void;
   isConfirming: boolean;
   isPayingFreight: boolean;
+  /** Seller-covered Vendibook Freight: no freight payment step, never show the cost. */
+  sellerCoversFreight?: boolean;
 }
 
 const CashFreightTimeline = ({ 
@@ -163,8 +172,10 @@ const CashFreightTimeline = ({
   onPayFreight,
   onBuyerConfirm,
   isConfirming,
-  isPayingFreight
+  isPayingFreight,
+  sellerCoversFreight = false,
 }: CashFreightTimelineProps) => {
+  const freightSettled = sellerCoversFreight || freightPaymentStatus === 'paid';
   const steps = [
     { 
       key: 'requested', 
@@ -182,10 +193,10 @@ const CashFreightTimeline = ({
     },
     { 
       key: 'freight_paid', 
-      label: 'Freight Paid', 
+      label: sellerCoversFreight ? 'Free Shipping' : 'Freight Paid',
       icon: CreditCard,
-      description: 'Shipping cost paid',
-      completedAt: freightPaidAt
+      description: sellerCoversFreight ? 'Seller covers shipping' : 'Shipping cost paid',
+      completedAt: sellerCoversFreight ? sellerConfirmedAt : freightPaidAt
     },
     { 
       key: 'buyer_confirmed', 
@@ -206,14 +217,14 @@ const CashFreightTimeline = ({
   // Determine current step
   let currentStep = 1;
   if (sellerConfirmedAt) currentStep = 2;
-  if (freightPaymentStatus === 'paid') currentStep = 3;
+  if (freightSettled && sellerConfirmedAt) currentStep = 3;
   if (buyerConfirmedAt) currentStep = 4;
   if (status === 'completed') currentStep = 5;
 
   // Determine available actions
   const canSellerConfirm = isSeller && !sellerConfirmedAt && status === 'pending_cash';
-  const canPayFreight = isBuyer && sellerConfirmedAt && freightPaymentStatus !== 'paid';
-  const canBuyerConfirm = isBuyer && freightPaymentStatus === 'paid' && !buyerConfirmedAt;
+  const canPayFreight = isBuyer && sellerConfirmedAt && !freightSettled;
+  const canBuyerConfirm = isBuyer && freightSettled && !!sellerConfirmedAt && !buyerConfirmedAt;
 
   return (
     <div className="space-y-4">
@@ -281,13 +292,13 @@ const CashFreightTimeline = ({
           </div>
         )}
 
-        {sellerConfirmedAt && freightPaymentStatus !== 'paid' && (
+        {sellerConfirmedAt && !freightSettled && (
           <div className="text-center">
             <CreditCard className="h-8 w-8 text-primary mx-auto mb-2" />
             <p className="font-medium text-foreground">Freight Payment Required</p>
             <p className="text-sm text-muted-foreground mt-1">
-              {isBuyer 
-                ? `Pay $${freightCost.toLocaleString()} for VendiBook Freight shipping to proceed.`
+              {isBuyer
+                ? <>Pay ${freightCost.toLocaleString()} for <FreightLink /> shipping to proceed.</>
                 : 'Waiting for the buyer to pay for freight shipping.'}
             </p>
             {canPayFreight && (
@@ -303,10 +314,12 @@ const CashFreightTimeline = ({
           </div>
         )}
 
-        {freightPaymentStatus === 'paid' && !buyerConfirmedAt && status !== 'completed' && (
+        {freightSettled && !!sellerConfirmedAt && !buyerConfirmedAt && status !== 'completed' && (
           <div className="text-center">
             <Truck className="h-8 w-8 text-blue-500 mx-auto mb-2" />
-            <p className="font-medium text-foreground">Freight Paid — Awaiting Delivery</p>
+            <p className="font-medium text-foreground">
+              {sellerCoversFreight ? 'Free Shipping — Awaiting Delivery' : 'Freight Paid — Awaiting Delivery'}
+            </p>
             <p className="text-sm text-muted-foreground mt-1">
               {isBuyer 
                 ? 'Once you receive the item and have paid the seller, confirm receipt below.'
@@ -509,10 +522,11 @@ const OrderTracking = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { user, isLoading: authLoading } = useAuth();
-  const { transaction, isLoading, error, refetch } = useOrderTracking(transactionId);
+  const { transaction, paymentRecord, isLoading, error, refetch } = useOrderTracking(transactionId);
   const { toast } = useToast();
   const [isConfirming, setIsConfirming] = useState(false);
   const [isPayingFreight, setIsPayingFreight] = useState(false);
+  const [freightPaymentOpen, setFreightPaymentOpen] = useState(false);
 
   // Handle freight payment success/cancel from URL params
   useEffect(() => {
@@ -531,33 +545,14 @@ const OrderTracking = () => {
   }, [user, authLoading, transactionId, navigate]);
 
   // Handle freight payment for cash + freight transactions
-  const handlePayFreight = async () => {
+  /**
+   * Freight is paid through the same PayPal lifecycle as the rest of the
+   * order (server-created order, server-verified capture) — no external
+   * hosted checkout and no separate provider.
+   */
+  const handlePayFreight = () => {
     if (!transaction || !user) return;
-    
-    setIsPayingFreight(true);
-    try {
-      const { data, error: fnError } = await supabase.functions.invoke('create-freight-checkout', {
-        body: { transaction_id: transaction.id },
-      });
-
-      if (fnError) throw fnError;
-      if (data.error) throw new Error(data.error);
-
-      // Open Stripe checkout
-      const stripeWindow = window.open(data.url, '_blank');
-      if (!stripeWindow) {
-        window.location.href = data.url;
-      }
-    } catch (err) {
-      console.error('Freight payment error:', err);
-      toast({ 
-        title: 'Error', 
-        description: err instanceof Error ? err.message : 'Failed to start freight payment.',
-        variant: 'destructive'
-      });
-    } finally {
-      setIsPayingFreight(false);
-    }
+    setFreightPaymentOpen(true);
   };
 
   // Handle confirmation for cash transactions.
@@ -651,13 +646,104 @@ const OrderTracking = () => {
     || SHIPPING_STATUS_CONFIG.pending;
   const StatusIcon = statusConfig.icon;
 
+  /**
+   * A sale_transaction row is created BEFORE the buyer pays. Without this
+   * guard an unpaid, declined or abandoned attempt renders the shipping
+   * timeline and reads as "Order confirmed". Only a settled payment (or a
+   * pay-in-person sale, which has no online payment at all) may do that.
+   */
+  const paymentState = paymentRecord?.payment_status ?? null;
+  const isPaidOnline = paymentState === 'completed';
+  const isPaymentPending = paymentState === 'pending' || paymentState === 'approved';
+  const isPartiallyRefunded = paymentState === 'partially_refunded' || transaction.status === 'partially_refunded';
+  const isRefunded = !isPartiallyRefunded && (paymentState === 'refunded' || transaction.status === 'refunded');
+  const isCancelled = transaction.status === 'cancelled';
+  const declineReason = (() => {
+    const err = paymentRecord?.last_error as { issue?: string; message?: string } | null;
+    if (!err) return null;
+    return err.message ?? err.issue ?? null;
+  })();
+
+  if (!isCashTransaction && !isPaidOnline && !isRefunded && !isPartiallyRefunded) {
+    const amountDue = Number(transaction.amount ?? 0);
+    return (
+      <div className="v2-order min-h-screen flex flex-col">
+        <SEO title="Payment required | VendiBook" description="Complete payment for your order" noindex />
+        <Header />
+        <main className="flex-1 container py-12">
+          <div className="max-w-xl mx-auto">
+            <Button variant="ghost" className="mb-6" onClick={() => navigate('/dashboard')}>
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Dashboard
+            </Button>
+            {isCancelled ? (
+              <Card>
+                <CardContent className="pt-6 space-y-3">
+                  <h1 className="text-2xl font-semibold">Order cancelled</h1>
+                  <p className="text-muted-foreground">
+                    This order was cancelled before payment, so nothing was charged.
+                  </p>
+                  <Button variant="outline" asChild>
+                    <Link to="/dashboard">Back to dashboard</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : isPaymentPending ? (
+              <Card>
+                <CardContent className="pt-6 space-y-3">
+                  <h1 className="text-2xl font-semibold">Payment is being reviewed</h1>
+                  <p className="text-muted-foreground">
+                    PayPal is still clearing this payment. Nothing else is needed from you — we'll
+                    update this order and email you the moment it settles.
+                  </p>
+                  <Button variant="outline" onClick={() => refetch()}>Check again</Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <Card>
+                <CardContent className="pt-6 space-y-4">
+                  <h1 className="text-2xl font-semibold">Payment required</h1>
+                  {declineReason ? (
+                    <p className="text-sm font-medium text-destructive">{declineReason}</p>
+                  ) : null}
+                  <p className="text-muted-foreground">
+                    This order isn't paid yet, so nothing has been confirmed or scheduled.
+                    {amountDue > 0 ? ` Amount due: $${amountDue.toLocaleString()}.` : ''}
+                  </p>
+                  <div className="flex flex-wrap gap-3">
+                    <Button asChild>
+                      <Link to={`/checkout/${transaction.listing_id}`}>Complete payment</Link>
+                    </Button>
+                    <Button variant="outline" asChild>
+                      <Link to="/dashboard">Back to dashboard</Link>
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </main>
+        <Footer />
+      </div>
+    );
+  }
+
   const isVendibookFreight = transaction.fulfillment_type === 'vendibook_freight';
+  // Seller-covered freight: buyers see "Free shipping" and never the freight cost.
+  const sellerCoversFreight = isSellerCoveredFreightOrder(transaction.fulfillment_type, transaction.listing);
+  const etaLabel = formatDeliveryWindow(transaction.estimated_delivery_date, transaction.estimated_delivery_end);
+  const headerTitle = isRefunded ? 'Order refunded'
+    : isPartiallyRefunded ? 'Order partially refunded'
+    : isCancelled ? 'Order cancelled'
+    : transaction.status === 'disputed' ? 'Order under review'
+    : ['completed', 'paid_out', 'payout_failed'].includes(transaction.status) ? 'Order complete'
+    : 'Order confirmed';
   const hasTracking = !!transaction.tracking_number;
   const isBuyer = user?.id === transaction.buyer_id;
   const isSeller = user?.id === transaction.seller_id;
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="v2-order min-h-screen flex flex-col">
       <SEO 
         title="Order Tracking | VendiBook"
         description="Track your order status and delivery"
@@ -678,8 +764,9 @@ const OrderTracking = () => {
 
           {/* Order Header */}
           <div className="mb-8">
-            <div className="flex items-center gap-3 mb-2 flex-wrap">
-              <h1 className="text-2xl font-bold text-foreground">Order Tracking</h1>
+            <p className="v2-order-eyebrow">Order #{String(transaction.id).slice(0, 8).toUpperCase()}</p>
+            <div className="flex items-center gap-3 mb-2 mt-2 flex-wrap">
+              <h1 className="v2-order-title">{headerTitle}</h1>
               {isCashTransaction && (
                 <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">
                   <Banknote className="h-3 w-3 mr-1" />
@@ -689,7 +776,7 @@ const OrderTracking = () => {
               {isCashFreightTransaction && (
                 <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
                   <Truck className="h-3 w-3 mr-1" />
-                  VendiBook Freight
+                  <FreightLink className="text-inherit decoration-current" />
                 </Badge>
               )}
             </div>
@@ -702,7 +789,9 @@ const OrderTracking = () => {
                 context={{
                   featureArea: "purchase",
                   transactionStatus: transaction.status,
-                  paymentMethod: isCashTransaction ? "pay_in_person" : "stripe",
+                  paymentMethod: isCashTransaction
+                    ? "pay_in_person"
+                    : (paymentRecord?.provider ?? "paypal"),
                   related: {
                     sale_transaction_id: transaction.id,
                     listing_id: transaction.listing_id,
@@ -712,6 +801,22 @@ const OrderTracking = () => {
             </div>
           </div>
 
+
+          {(isRefunded || isPartiallyRefunded) && (
+            <Card className="mb-6 border-amber-200 bg-amber-50/60">
+              <CardContent className="pt-6">
+                <p className="font-medium text-foreground">
+                  {isRefunded ? 'This order was refunded' : 'This order was partially refunded'}
+                </p>
+                <p className="text-sm text-muted-foreground mt-1">
+                  {isRefunded
+                    ? 'The payment was returned to the original payment method. No further action is needed.'
+                    : 'Part of the payment was returned to the original payment method.'}
+                  {' '}Refunds can take 3–5 business days to appear.
+                </p>
+              </CardContent>
+            </Card>
+          )}
 
           {/* Status Card */}
           <Card className="mb-6">
@@ -726,6 +831,7 @@ const OrderTracking = () => {
                   buyerConfirmedAt={transaction.buyer_confirmed_at}
                   createdAt={transaction.created_at}
                   freightCost={transaction.freight_cost || 0}
+                  sellerCoversFreight={sellerCoversFreight}
                   isBuyer={isBuyer}
                   isSeller={isSeller}
                   onSellerConfirm={handleCashConfirm}
@@ -794,12 +900,10 @@ const OrderTracking = () => {
                         </p>
                       </div>
                     )}
-                    {transaction.estimated_delivery_date && (
+                    {etaLabel && (
                       <div>
                         <p className="text-sm text-muted-foreground">Estimated Delivery</p>
-                        <p className="font-medium">
-                          {format(new Date(transaction.estimated_delivery_date), 'MMM d, yyyy')}
-                        </p>
+                        <p className="font-medium">{etaLabel}</p>
                       </div>
                     )}
                     {transaction.delivered_at && (
@@ -833,14 +937,21 @@ const OrderTracking = () => {
                     <div className="flex gap-3">
                       <Truck className="h-5 w-5 text-primary flex-shrink-0 mt-0.5" />
                       <div>
-                        <p className="font-medium text-foreground">VendiBook Freight</p>
+                        <p className="font-medium text-foreground"><FreightLink /></p>
                         <p className="text-sm text-muted-foreground mt-1">
-                          Your order is being coordinated through VendiBook Freight. You'll receive 
-                          an email with tracking information and instructions to schedule your 
+                          Your order is being coordinated through {linkifyFreight('Vendibook Freight')}. You'll receive
+                          an email with tracking information and instructions to schedule your
                           delivery time once the item ships.
                         </p>
+                        {sellerCoversFreight && (
+                          <p className="text-sm text-muted-foreground mt-2">
+                            <span className="font-medium">Free shipping</span> — the seller covers freight on this order.
+                          </p>
+                        )}
                         <p className="text-sm text-muted-foreground mt-2">
-                          <span className="font-medium">Estimated transit:</span> 72 hours to 10 days
+                          {etaLabel
+                            ? <><span className="font-medium">Estimated delivery:</span> {etaLabel}</>
+                            : <><span className="font-medium">Estimated transit:</span> 72 hours to 10 days</>}
                         </p>
                       </div>
                     </div>
@@ -860,6 +971,22 @@ const OrderTracking = () => {
               )}
             </CardContent>
           </Card>
+
+          {/* Charges */}
+          <div className="mb-6">
+            <OrderChargesSummary
+              amount={transaction.amount}
+              deliveryFee={transaction.delivery_fee}
+              freightCost={transaction.freight_cost}
+              freightChargedToBuyer={Boolean(
+                isVendibookFreight &&
+                  !sellerCoversFreight &&
+                  (transaction.freight_payment_status === 'paid' || !isCashTransaction),
+              )}
+              taxAmount={transaction.tax_amount}
+              isCash={Boolean(isCashTransaction)}
+            />
+          </div>
 
           {/* Order Details */}
           <Card>
@@ -907,9 +1034,17 @@ const OrderTracking = () => {
                   <MapPin className="h-4 w-4 text-muted-foreground mt-1" />
                   <div>
                     <p className="text-sm text-muted-foreground">Pickup Location</p>
-                    <p className="text-sm font-medium">
-                      {transaction.listing?.pickup_location_text || 'Contact seller for pickup details'}
-                    </p>
+                    {isPickupLocationRevealed({
+                      fulfillmentType: transaction.fulfillment_type,
+                      status: transaction.status,
+                      paymentStatus: (transaction as any).payment_status,
+                    }) ? (
+                      <p className="text-sm font-medium">
+                        {transaction.listing?.pickup_location_text || 'Contact seller for pickup details'}
+                      </p>
+                    ) : (
+                      <p className="text-sm text-muted-foreground">{PICKUP_LOCKED_MESSAGE}</p>
+                    )}
                   </div>
                 </div>
               )}
@@ -940,7 +1075,28 @@ const OrderTracking = () => {
           )}
         </div>
       </main>
-      
+
+      <Dialog open={freightPaymentOpen} onOpenChange={setFreightPaymentOpen}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>Pay for freight</DialogTitle>
+          </DialogHeader>
+          {transaction ? (
+            <PayPalEmbeddedPayment
+              target={{ kind: 'freight', id: transaction.id }}
+              listingHref={`/listing/${transaction.listing_id}`}
+              totalUsd={Number(transaction.freight_cost ?? 0)}
+              heading="Pay securely with PayPal"
+              intent="Your payment details are handled by PayPal. Freight details stay with this order."
+              onSuccess={() => {
+                setFreightPaymentOpen(false);
+                toast({ title: 'Freight payment received', description: 'Your order has been updated.' });
+              }}
+            />
+          ) : null}
+        </DialogContent>
+      </Dialog>
+
       <Footer />
     </div>
   );

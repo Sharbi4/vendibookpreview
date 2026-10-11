@@ -8,6 +8,87 @@
 import { createClient } from 'npm:@supabase/supabase-js@2.45.0';
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from '../_shared/jsonError.ts';
 import { downloadDocumentPdf, getDocument, verifyWebhookSignature } from '../_shared/signnow.ts';
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts';
+
+const SITE_URL = 'https://vendibook.com';
+
+async function notify(
+  to: string | null | undefined,
+  idempotencyKey: string,
+  data: Record<string, unknown>,
+) {
+  if (!to) return;
+  try {
+    await invokeTransactionalEmail({
+      templateName: 'generic-notice',
+      recipientEmail: to,
+      idempotencyKey,
+      templateData: { preview: String(data.heading ?? 'Purchase agreement update'), ...data },
+      metadata: { category: 'purchase_agreement' },
+    });
+  } catch (e) {
+    console.error('[signnow-webhook] email failed', (e as Error).message);
+  }
+}
+
+/**
+ * A completed sale agreement is recorded against the order. Signing never
+ * moves money: seller payouts remain a manual administrator action, and this
+ * handler only refreshes internal review state and notifies both parties.
+ */
+async function onSaleAgreementSigned(svc: any, transactionId: string, allSigned: boolean) {
+  const { data: payment } = await svc
+    .from('payment_records')
+    .select('id, buyer_id, seller_id, reference')
+    .eq('sale_transaction_id', transactionId)
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+  if (!payment) return;
+
+  if (allSigned) {
+    try {
+      await svc.rpc('refresh_sale_release_requirements', { _payment_record_id: payment.id });
+    } catch (e) {
+      console.error('[signnow-webhook] release refresh failed', (e as Error).message);
+    }
+  }
+
+  const { data: profiles } = await svc
+    .from('profiles')
+    .select('id, email')
+    .in('id', [payment.buyer_id, payment.seller_id].filter(Boolean));
+  const buyer = (profiles ?? []).find((p: any) => p.id === payment.buyer_id);
+  const seller = (profiles ?? []).find((p: any) => p.id === payment.seller_id);
+  const link = `${SITE_URL}/transaction/${transactionId}`;
+
+  if (!allSigned) {
+    // One party signed — nudge whoever is still outstanding is handled by the
+    // generic reminder below to both, which is safe and idempotent per event.
+    return;
+  }
+
+  const paragraphs = [
+    'Both parties have signed. A completed copy is saved with your transaction. Follow the order page for the remaining handoff or transaction steps.',
+  ];
+
+  await notify(buyer?.email, `sale-agreement-complete-buyer-${transactionId}`, {
+    kicker: 'Purchase agreement',
+    heading: 'Both parties have signed',
+    paragraphs,
+    ctaLabel: 'View your order', ctaUrl: link,
+  });
+
+  await notify(seller?.email, `sale-agreement-complete-seller-${transactionId}`, {
+    kicker: 'Purchase agreement',
+    heading: 'Both parties have signed',
+    paragraphs,
+    ctaLabel: 'View the order', ctaUrl: link,
+  });
+}
+
+/** Sale agreement kinds, including the historical bill_of_sale rows. */
+const SALE_AGREEMENT_TYPES = new Set(['bill_of_sale', 'purchase_sale_agreement', 'purchase_agreement']);
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response('ok', { headers: corsHeaders });
@@ -16,17 +97,23 @@ Deno.serve(async (req) => {
   const raw = await req.text();
   const secret = Deno.env.get('SIGNNOW_WEBHOOK_SECRET');
   const sig = req.headers.get('x-neap-signature') ?? req.headers.get('X-Neap-Signature');
-  if (secret) {
-    const ok = await verifyWebhookSignature(raw, sig, secret);
-    if (!ok) return jsonError(401, 'invalid_signature', 'signature mismatch');
+  if (!secret) {
+    console.error('[signnow-webhook] SIGNNOW_WEBHOOK_SECRET not configured — rejecting');
+    return jsonError(503, 'not_configured', 'webhook secret not configured');
   }
+  const ok = await verifyWebhookSignature(raw, sig, secret);
+  if (!ok) return jsonError(401, 'invalid_signature', 'signature mismatch');
 
   let payload: any;
   try { payload = JSON.parse(raw); } catch { return jsonError(400, 'invalid_json', 'bad body'); }
 
   const eventId: string = payload?.event_id ?? payload?.id ?? crypto.randomUUID();
   const eventType: string = payload?.event ?? payload?.event_type ?? 'unknown';
-  const signnowDocId: string | undefined = payload?.meta?.document_id ?? payload?.document_id ?? payload?.data?.document_id;
+  // SignNow v2 puts the id in different places by event version; the
+  // subscription also appends ?document_id= to the callback URL.
+  const signnowDocId: string | undefined = payload?.meta?.document_id ?? payload?.document_id ??
+    payload?.data?.document_id ?? payload?.content?.document_id ??
+    new URL(req.url).searchParams.get('document_id') ?? undefined;
 
   const svc = createClient(
     Deno.env.get('SUPABASE_URL')!,
@@ -44,20 +131,35 @@ Deno.serve(async (req) => {
   if (idemErr && !String(idemErr.message).toLowerCase().includes('duplicate')) {
     console.error('[signnow-webhook] idempotency insert error', idemErr);
   }
-  // If it was a duplicate insert (23505), acknowledge without reprocessing.
+  // A duplicate is only skipped once the first delivery finished. If that
+  // attempt failed (SignNow API down, storage error), SignNow's retry must
+  // run again or the agreement would be stuck forever.
   if (idemErr && (idemErr as any).code === '23505') {
-    return jsonResponse(200, { ok: true, duplicate: true });
+    const { data: prior } = await svc.from('signnow_webhook_events')
+      .select('processed_at').eq('event_id', eventId).maybeSingle();
+    if (prior?.processed_at) return jsonResponse(200, { ok: true, duplicate: true });
   }
+  const markEvent = async (error: string | null) => {
+    await svc.from('signnow_webhook_events')
+      .update({ processed_at: error ? null : new Date().toISOString(), error })
+      .eq('event_id', eventId);
+  };
 
   try {
-    if (!signnowDocId) return jsonResponse(200, { ok: true, note: 'no document_id in payload' });
+    if (!signnowDocId) {
+      await markEvent('no document_id in payload');
+      return jsonResponse(200, { ok: true, note: 'no document_id in payload' });
+    }
 
     const { data: doc } = await svc
       .from('documents')
-      .select('id,document_type,transaction_id,booking_id,signers,status')
+      .select('id,document_type,transaction_id,booking_id,signers,status,signed_pdf_path,renter_signed_at,host_signed_at,partially_signed_at,completed_at')
       .eq('signnow_document_id', signnowDocId)
       .maybeSingle();
-    if (!doc) return jsonResponse(200, { ok: true, note: 'unknown document' });
+    if (!doc) {
+      await markEvent(null);
+      return jsonResponse(200, { ok: true, note: 'unknown document' });
+    }
 
     // Pull the current SignNow document to figure out which invites have signed.
     const remote = await getDocument(signnowDocId);
@@ -77,14 +179,33 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Status only ever moves forward — a replayed or out-of-order webhook must
+    // never regress a completed document back to partially_signed.
+    const rank: Record<string, number> = { draft: 0, sent: 1, partially_signed: 2, completed: 3, voided: 3 };
     let nextStatus: string = doc.status;
     if (allSigned) nextStatus = 'completed';
     else if (anySigned) nextStatus = 'partially_signed';
+    if ((rank[nextStatus] ?? 0) < (rank[doc.status] ?? 0)) nextStatus = doc.status;
 
-    const updates: Record<string, unknown> = { signers, status: nextStatus, updated_at: new Date().toISOString() };
+    const nowIso = new Date().toISOString();
+    const updates: Record<string, unknown> = { signers, status: nextStatus, updated_at: nowIso };
+    // Lifecycle stamps are written once and never rewritten by a replay.
+    if (nextStatus === 'partially_signed' && !(doc as any).partially_signed_at) updates.partially_signed_at = nowIso;
+    if (nextStatus === 'completed' && !(doc as any).completed_at) updates.completed_at = nowIso;
 
-    // On completion, pull PDF and stash it in private storage.
-    if (allSigned && doc.status !== 'completed') {
+    // Denormalized per-party timestamps for dashboards + dispute records.
+    // Written once and never cleared by a replayed webhook.
+    const renterSigned = signers.find((s: any) => s.role === 'renter' || s.role === 'buyer')?.signed_at;
+    const hostSigned = signers.find((s: any) => s.role === 'host' || s.role === 'seller')?.signed_at;
+    if (renterSigned && !(doc as any).renter_signed_at) updates.renter_signed_at = renterSigned;
+    if (hostSigned && !(doc as any).host_signed_at) updates.host_signed_at = hostSigned;
+
+
+    // On completion, pull PDF and stash it in private storage. Retried on
+    // every later event until the PDF is stored, even if the document was
+    // already marked completed by an earlier delivery whose upload failed.
+    let pdfError: string | null = null;
+    if (allSigned && !(doc as any).signed_pdf_path) {
       try {
         const pdf = await downloadDocumentPdf(signnowDocId);
         const path = `${doc.id}.pdf`;
@@ -96,9 +217,10 @@ Deno.serve(async (req) => {
         updates.signed_pdf_path = path;
       } catch (e) {
         console.error('[signnow-webhook] pdf download/upload failed', e);
+        pdfError = `signed PDF not stored: ${(e as Error)?.message ?? String(e)}`.slice(0, 500);
       }
 
-      if (doc.document_type === 'bill_of_sale' && doc.transaction_id) {
+      if (SALE_AGREEMENT_TYPES.has(doc.document_type) && doc.transaction_id && doc.status !== 'completed') {
         await svc
           .from('sale_transactions')
           .update({ bill_of_sale_completed_at: new Date().toISOString() })
@@ -108,9 +230,17 @@ Deno.serve(async (req) => {
 
     await svc.from('documents').update(updates).eq('id', doc.id);
 
+    if (SALE_AGREEMENT_TYPES.has(doc.document_type) && doc.transaction_id && allSigned && doc.status !== 'completed') {
+      await onSaleAgreementSigned(svc, doc.transaction_id, true);
+    }
+
+    await markEvent(pdfError);
+    // A missing PDF answers 500 so SignNow retries the delivery.
+    if (pdfError) return jsonError(500, 'pdf_not_stored', 'Signed PDF could not be stored yet.');
     return jsonResponse(200, { ok: true, status: nextStatus });
   } catch (e) {
     console.error('[signnow-webhook] handler error', e);
+    await markEvent(`handler error: ${(e as Error)?.message ?? String(e)}`.slice(0, 500)).catch(() => {});
     return unknownErrorResponse(e);
   }
 });

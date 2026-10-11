@@ -15,6 +15,7 @@ export interface TrackingTransaction {
   delivery_instructions: string | null;
   delivery_fee: number | null;
   freight_cost: number | null;
+  tax_amount: number | null;
   created_at: string;
   // Tracking fields
   shipping_status: string | null;
@@ -23,6 +24,7 @@ export interface TrackingTransaction {
   tracking_url: string | null;
   shipped_at: string | null;
   estimated_delivery_date: string | null;
+  estimated_delivery_end?: string | null;
   delivered_at: string | null;
   shipping_notes: string | null;
   // Cash transaction confirmation fields
@@ -37,7 +39,23 @@ export interface TrackingTransaction {
     title: string;
     cover_image_url: string | null;
     pickup_location_text: string | null;
+    freight_payer?: string | null;
   };
+}
+
+/**
+ * The payment attempt behind a sale transaction. A transaction row is created
+ * BEFORE payment, so this is what decides whether an order is real money or an
+ * abandoned/declined attempt.
+ */
+export interface TrackingPayment {
+  reference: string;
+  provider: string | null;
+  payment_status: string | null;
+  payment_intent: string | null;
+  last_error: unknown;
+  created_at: string;
+  gross_amount_cents: number | null;
 }
 
 export const useOrderTracking = (transactionId: string | undefined) => {
@@ -63,6 +81,7 @@ export const useOrderTracking = (transactionId: string | undefined) => {
           delivery_instructions,
           delivery_fee,
           freight_cost,
+          tax_amount,
           created_at,
           shipping_status,
           tracking_number,
@@ -70,13 +89,14 @@ export const useOrderTracking = (transactionId: string | undefined) => {
           tracking_url,
           shipped_at,
           estimated_delivery_date,
+          estimated_delivery_end,
           delivered_at,
           shipping_notes,
           buyer_confirmed_at,
           seller_confirmed_at,
           freight_payment_status,
           freight_paid_at,
-          listing:listings(id, title, cover_image_url, pickup_location_text)
+          listing:listings(id, title, cover_image_url, pickup_location_text, freight_payer)
         `)
         .eq('id', transactionId)
         .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`)
@@ -86,6 +106,33 @@ export const useOrderTracking = (transactionId: string | undefined) => {
       return data as TrackingTransaction;
     },
     enabled: !!transactionId && !!user,
+  });
+
+  // Latest payment attempt for this transaction. RLS limits rows to the
+  // buyer/seller, so nothing extra is exposed here.
+  const { data: paymentRecord } = useQuery({
+    queryKey: ['order-tracking-payment', transactionId],
+    enabled: !!transactionId && !!user,
+    queryFn: async () => {
+      if (!transactionId) return null;
+      const { data } = await supabase
+        .from('payment_records')
+        .select(
+          'reference, provider, payment_status, payment_intent, last_error, created_at, gross_amount_cents',
+        )
+        .eq('sale_transaction_id', transactionId)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      const rows = (data ?? []) as unknown as TrackingPayment[];
+      // A settled (or since refunded) payment always wins over a later abandoned attempt.
+      return (
+        rows.find((r) => r.payment_status === 'completed') ??
+        rows.find((r) => r.payment_status === 'refunded' || r.payment_status === 'partially_refunded') ??
+        rows.find((r) => r.payment_status === 'approved' || r.payment_status === 'pending') ??
+        rows[0] ??
+        null
+      );
+    },
   });
 
   // Set up real-time subscription for tracking updates
@@ -119,6 +166,7 @@ export const useOrderTracking = (transactionId: string | undefined) => {
 
   return {
     transaction,
+    paymentRecord: paymentRecord ?? null,
     isLoading,
     error,
     refetch,

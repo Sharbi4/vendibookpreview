@@ -1,5 +1,8 @@
+import { trackEvent } from '@/lib/analytics';
+import { filterPubliclyVisible } from '@/lib/listings/publicVisibility';
 import { useParams, Link } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, MapPin, ArrowRight } from 'lucide-react';
 import Header from '@/components/layout/Header';
@@ -24,6 +27,10 @@ import {
   getCityStateSlug,
   CITY_DATA,
 } from '@/data/cityData';
+import { useNationwideInventory, type InventoryCategory } from '@/hooks/useNationwideInventory';
+import { formatListingPriceLabel, PRICE_TBD } from '@/lib/listings/rentalPricing';
+import ExpandSearchModule, { LowInventoryInlineLine, LOW_INVENTORY_THRESHOLD, NEAR_EMPTY_THRESHOLD } from '@/components/seo/ExpandSearchModule';
+import TransactionConfidenceSection from '@/components/seo/TransactionConfidenceSection';
 
 interface CategoryCityPageProps {
   mode: 'rent' | 'buy';
@@ -34,8 +41,10 @@ interface ListingRow {
   title: string;
   description: string;
   cover_image_url: string | null;
+  price_hourly: number | null;
   price_daily: number | null;
   price_weekly: number | null;
+  price_monthly: number | null;
   price_sale: number | null;
   mode: string;
   category: string;
@@ -44,10 +53,55 @@ interface ListingRow {
   instant_book: boolean | null;
 }
 
+/**
+ * Custom SEO copy for the rental city pages Google is already testing
+ * (GSC baseline 2026-08-25). Only override where we have real traction —
+ * every other city keeps the templated copy.
+ */
+interface RentalCityOverride {
+  h1: string;
+  title: string;
+  description: string;
+  intro: string;
+}
+
+const RENTAL_CITY_OVERRIDES: Record<string, RentalCityOverride> = {
+  'food-trailers/miami-fl': {
+    h1: 'Food Trailers for Rent in Miami, FL',
+    title: 'Food Trailers for Rent in Miami, FL | Concession Trailer Rentals | Vendibook',
+    description:
+      'Rent a food trailer in Miami, FL for your business. Compare owner-listed concession trailers with photos, equipment, rates, and daily, weekly, or monthly terms.',
+    intro:
+      'Miami is one of Vendibook\'s most active trailer rental markets. Browse food trailers and concession trailers available to rent for events, pop-ups, markets, and full-time operations across Miami-Dade. Every listing is owner-managed with photos, equipment details, and transparent rates — daily, weekly, and monthly terms are set per listing.',
+  },
+  'food-trailers/los-angeles-ca': {
+    h1: 'Food Trailers for Rent in Los Angeles, CA',
+    title: 'Food Trailers for Rent in Los Angeles, CA | Vendibook',
+    description:
+      'Rent a food trailer in Los Angeles, CA. Owner-listed concession trailers with photos, equipment, transparent rates, and flexible daily to monthly terms.',
+    intro:
+      'Rent a food trailer in Los Angeles for your next market, pop-up, or full-time operation. LA\'s year-round event calendar makes trailer rentals a practical way to test or expand a mobile food concept. Compare owner-listed trailers with equipment details and rates before you message a host.',
+  },
+  'food-trucks/los-angeles-ca': {
+    h1: 'Food Trucks for Rent in Los Angeles, CA',
+    title: 'Food Trucks for Rent in Los Angeles, CA | Vendibook',
+    description:
+      'Rent a food truck in Los Angeles, CA for your business. Browse owner-listed trucks with kitchen equipment, rates, and daily, weekly, or monthly rental terms.',
+    intro:
+      'Los Angeles is the birthplace of modern food truck culture and one of Vendibook\'s strongest rental markets. Rent a fully equipped food truck to test a concept, cover a seasonal rush, or operate while your build is completed. Terms are set by each owner — review the listing or message the host about monthly arrangements.',
+  },
+  'food-trucks/houston-tx': {
+    h1: 'Food Trucks for Rent in Houston, TX',
+    title: 'Food Trucks for Rent in Houston, TX | Vendibook',
+    description:
+      'Rent a food truck in Houston, TX for your business. Owner-listed trucks with kitchen equipment, transparent rates, and daily, weekly, or monthly terms.',
+    intro:
+      'Houston is a food truck capital and one of Vendibook\'s most active rental markets. Rent a fully equipped truck to test a concept, cover events, or run a monthly arrangement — and since July 1, 2026, Texas mobile food vendors operate under a single statewide DSHS license, so a truck rented in Houston can trade across Texas with far less paperwork.',
+  },
+};
+
 const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
   const { categorySlug, cityStateSlug } = useParams<{ categorySlug: string; cityStateSlug: string }>();
-  const [listings, setListings] = useState<ListingRow[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   const city = cityStateSlug ? getCityFromStateSlug(cityStateSlug) : null;
   const dbCategory = categorySlug ? CATEGORY_SLUG_MAP[categorySlug] : null;
@@ -55,32 +109,49 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
   const modeLabel = mode === 'rent' ? 'for Rent' : 'for Sale';
   const dbMode = mode === 'buy' ? 'sale' : 'rent';
 
-  useEffect(() => {
-    const fetchListings = async () => {
-      if (!city || !dbCategory) {
-        setIsLoading(false);
-        return;
-      }
-
-      const { data } = await supabase
+  const { data: listings = [], isLoading, isError, refetch } = useQuery({
+    queryKey: ['city-inventory', cityStateSlug, dbCategory, dbMode],
+    enabled: !!city && !!dbCategory,
+    queryFn: async (): Promise<ListingRow[]> => {
+      const { data, error } = await supabase
         .from('listings')
-        .select('id, title, description, cover_image_url, price_daily, price_weekly, price_sale, mode, category, address, status, instant_book')
-        .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
+        .select('id, title, description, cover_image_url, price_hourly, price_daily, price_weekly, price_monthly, price_sale, mode, category, address, status, published_at, deleted_at, moderation_status, instant_book')
+        .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear').eq('unlisted', false)
         .eq('category', dbCategory as any)
         .eq('mode', dbMode)
         .or(`city.eq.${city.name},address.ilike.%${city.name}%`)
         .limit(50);
 
-      setListings(data || []);
-      setIsLoading(false);
-    };
+      if (error) throw error;
+      return filterPubliclyVisible(data ?? []);
+    },
+  });
 
-    fetchListings();
+  useEffect(() => {
+    if (city && dbCategory) {
+      trackEvent({
+        category: 'SEO City Page',
+        action: mode === 'rent' ? 'rental_city_page_view' : 'sale_city_page_view',
+        label: `${mode}/${categorySlug}/${cityStateSlug}`,
+        metadata: { city: city.name, state: city.stateCode, category: dbCategory, mode },
+      });
+    }
   }, [city?.name, dbCategory, dbMode]);
+
+  // Low-inventory freight funnel (thin city pages must never dead-end).
+  const localCount = listings.length;
+  const isLowInventory = !isLoading && !isError && localCount < LOW_INVENTORY_THRESHOLD;
+  const nationwide = useNationwideInventory({
+    categories: [(dbCategory as InventoryCategory) ?? 'food_truck'],
+    mode: dbMode as 'rent' | 'sale',
+    enabled: isLowInventory && Boolean(dbCategory),
+  });
+
+
 
   if (!city || !categoryLabel || !dbCategory) {
     return (
-      <div className="min-h-screen flex flex-col bg-background">
+      <div className="sale-light commerce-readable seo-marketplace min-h-screen flex flex-col bg-background">
         <Header />
         <div className="flex-1 container py-16 text-center">
           <h1 className="text-2xl font-bold text-foreground mb-4">Page not found</h1>
@@ -93,15 +164,26 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
     );
   }
 
-  const seoTitle = mode === 'buy'
+  const override = mode === 'rent'
+    ? RENTAL_CITY_OVERRIDES[`${categorySlug}/${cityStateSlug}`]
+    : undefined;
+
+  const seoTitle = override?.title ?? (mode === 'buy'
     ? `${categoryLabel} for Sale in ${city.name}, ${city.stateCode} | Used & New | Vendibook`
-    : `${categoryLabel} for Rent in ${city.name}, ${city.stateCode} | Daily, Weekly, Monthly | Vendibook`;
-  const metaDescription = mode === 'buy'
+    : `${categoryLabel} for Rent in ${city.name}, ${city.stateCode} | Daily, Weekly, Monthly | Vendibook`);
+  const metaDescription = override?.description ?? (mode === 'buy'
     ? `Buy ${categoryLabel.toLowerCase()} in ${city.name}, ${city.stateCode}. Browse verified used and new listings from local sellers. Financing & inspection support. List price, photos, specs upfront.`
-    : `Rent ${categoryLabel.toLowerCase()} in ${city.name}, ${city.stateCode} by the day, week, or month. Instant booking, verified hosts, transparent pricing — start serving in days, not months.`;
+    : `Rent ${categoryLabel.toLowerCase()} in ${city.name}, ${city.stateCode} by the day, week, or month. Instant booking, verified hosts, transparent pricing — start serving in days, not months.`);
   const canonicalPath = `/${mode}/${categorySlug}/${cityStateSlug}`;
 
-  const seoIntro = city.seoIntros?.[dbCategory] || '';
+  const seoIntro = override?.intro ?? (city.seoIntros?.[dbCategory] || '');
+
+  // State rental hub (Phase 2 SEO): exists for the states where we built
+  // /food-trucks-for-rent/<state> pages — TX, FL, CA.
+  const stateRentHubPath =
+    mode === 'rent' && ['TX', 'FL', 'CA'].includes(city.stateCode)
+      ? `/food-trucks-for-rent/${city.stateCode === 'TX' ? 'texas' : city.stateCode === 'FL' ? 'florida' : 'california'}`
+      : null;
 
   // Related categories for internal linking
   const otherCategories = Object.entries(CATEGORY_SLUG_MAP)
@@ -136,22 +218,50 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
       price_sale: l.price_sale,
       status: l.status,
     })),
-    { mode: dbMode as any, category: dbCategory, location: `${city.name}, ${city.stateCode}` }
+    { mode: dbMode as any, category: dbCategory, location: `${city.name}, ${city.stateCode}`, canonicalPath }
   );
 
   const breadcrumbSchema = generateCityCategoryBreadcrumbSchema(mode, categorySlug!, categoryLabel, cityStateSlug!, city.name, city.stateCode);
-  const faqSchema = generateCityCategoryFAQSchema(city.name, city.stateCode, categoryLabel, mode);
+  const baseFaqSchema = generateCityCategoryFAQSchema(city.name, city.stateCode, categoryLabel, mode);
 
-  // 6 high-intent FAQs surfaced in the UI (mirrors the JSON-LD)
+  // Extra rental FAQs for the business-equipment intent (kept in sync with
+  // the visible FAQ section below — JSON-LD and UI render the same list).
+  const rentalExtraFaqs = mode === 'rent' ? [
+    {
+      q: `Can I rent a ${categoryLabel.toLowerCase().replace(/s$/, '')} monthly in ${city.name}?`,
+      a: `Often, yes. Rental terms are set by each owner, and many ${city.name} listings offer weekly and monthly arrangements alongside daily rates. Review the terms on the individual listing or message the owner to discuss a monthly rental.`,
+    },
+    {
+      q: 'Is this a catering rental or equipment rental?',
+      a: `The listings on this page are equipment rentals — you rent the ${categoryLabel.toLowerCase().replace(/s$/, '')} and operate it yourself for your own food business. If you want a staffed unit for an event, message the owner through their listing to ask about staffed services.`,
+    },
+  ] : [];
+
+  const faqSchema = rentalExtraFaqs.length
+    ? {
+        ...baseFaqSchema,
+        mainEntity: [
+          ...(baseFaqSchema.mainEntity as any[]),
+          ...rentalExtraFaqs.map((f) => ({
+            '@type': 'Question',
+            name: f.q,
+            acceptedAnswer: { '@type': 'Answer', text: f.a },
+          })),
+        ],
+      }
+    : baseFaqSchema;
+
+  // High-intent FAQs surfaced in the UI (mirrors the JSON-LD)
   const faqs = (faqSchema.mainEntity as any[]).map((m) => ({
     q: m.name as string,
     a: m.acceptedAnswer.text as string,
   }));
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <SEO title={seoTitle} description={metaDescription} canonical={canonicalPath} />
-      <JsonLd schema={[itemListSchema, breadcrumbSchema, faqSchema]} />
+    <div className="sale-light commerce-readable seo-marketplace min-h-screen flex flex-col bg-background">
+      {/* Zero live listings = thin page; the expand-search module adds user value but not indexability. */}
+      <SEO title={seoTitle} description={metaDescription} canonical={canonicalPath} noindex={!isLoading && !isError && listings.length === 0} />
+      <JsonLd schema={[...(!isError ? [itemListSchema] : []), breadcrumbSchema, faqSchema]} />
       <ExitIntentCapture category={dbCategory || undefined} city={city.name} />
       <Header />
 
@@ -175,6 +285,20 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
                   <Link to={`/search?mode=${dbMode}&category=${dbCategory}`}>{categoryLabel}</Link>
                 </BreadcrumbLink>
               </BreadcrumbItem>
+              {mode === 'rent' && (
+                <>
+                  <BreadcrumbSeparator />
+                  <BreadcrumbItem>
+                    <BreadcrumbLink asChild>
+                      <Link to={stateRentHubPath ?? '/food-trucks-for-rent'}>
+                        {stateRentHubPath
+                          ? `${city.stateCode === 'TX' ? 'Texas' : city.stateCode === 'FL' ? 'Florida' : 'California'} Rentals`
+                          : 'Rentals Nationwide'}
+                      </Link>
+                    </BreadcrumbLink>
+                  </BreadcrumbItem>
+                </>
+              )}
               <BreadcrumbSeparator />
               <BreadcrumbItem>
                 <BreadcrumbPage>{city.name}, {city.stateCode}</BreadcrumbPage>
@@ -183,9 +307,9 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
           </Breadcrumb>
 
           {/* H1 */}
-          <div className="space-y-4">
+          <div className="seo-marketplace-hero space-y-4">
             <h1 className="text-3xl md:text-4xl font-bold text-foreground">
-              {categoryLabel} {modeLabel} in {city.name}, {city.stateCode}
+              {override?.h1 ?? `${categoryLabel} ${modeLabel} in ${city.name}, ${city.stateCode}`}
             </h1>
             {seoIntro && (
               <p className="text-muted-foreground text-base md:text-lg max-w-3xl leading-relaxed">
@@ -195,29 +319,38 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
           </div>
 
           {/* Listings Grid */}
-          {isLoading ? (
+          {isError ? (
+            <section role="alert" className="rounded-xl border border-border p-6 space-y-3"><h2 className="text-lg font-semibold">Listings are temporarily unavailable</h2><p>We could not check inventory for this area. Try again to see current availability.</p><Button onClick={() => void refetch()}>Retry listings</Button></section>
+          ) : isLoading ? (
             <div className="flex justify-center py-16">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
           ) : listings.length > 0 ? (
+            <div className="space-y-8">
+            {localCount <= NEAR_EMPTY_THRESHOLD && (
+              <LowInventoryInlineLine pageSlug={canonicalPath} resultCount={localCount} nationwide={nationwide} />
+            )}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-              {listings.map((l) => {
-                const price = l.mode === 'rent' ? (l.price_daily || l.price_weekly) : l.price_sale;
-                const priceLabel = l.mode === 'rent' ? (l.price_daily ? '/day' : '/week') : '';
+              {listings.map((l, index) => {
+                const priceText = formatListingPriceLabel(l);
                 const locationShort = l.address?.split(',').slice(-2).join(',').trim();
 
                 return (
                   <Link
                     key={l.id}
                     to={`/listing/${l.id}`}
-                    className="group rounded-xl overflow-hidden border border-border hover:shadow-lg transition-shadow bg-card"
+                    className="seo-marketplace-card group rounded-xl overflow-hidden border border-border hover:shadow-lg transition-shadow bg-card"
                   >
                     <div className="aspect-[4/3] overflow-hidden bg-muted relative">
                       <img
                         src={l.cover_image_url || '/placeholder.svg'}
                         alt={`${l.title} - ${categoryLabel?.slice(0, -1)} ${modeLabel} in ${city.name}, ${city.stateCode}`}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                        loading="lazy"
+                        loading={index === 0 ? "eager" : "lazy"}
+                        fetchPriority={index === 0 ? "high" : "auto"}
+                        decoding="async"
+                        width={640}
+                        height={480}
                       />
                       {l.instant_book && (
                         <span className="absolute top-2 right-2 bg-primary text-primary-foreground text-xs font-medium px-2 py-0.5 rounded-full">
@@ -235,28 +368,38 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
                           {locationShort}
                         </p>
                       )}
-                      {price != null && (
-                        <p className="text-base font-bold text-foreground">
-                          ${price.toLocaleString()}{priceLabel}
-                        </p>
+                      {priceText !== PRICE_TBD && (
+                        <p className="text-base font-bold text-foreground">{priceText}</p>
                       )}
                     </div>
                   </Link>
                 );
               })}
             </div>
-          ) : (
-            <div className="text-center py-16 space-y-4">
-              <p className="text-lg text-muted-foreground">
-                No {categoryLabel.toLowerCase()} {modeLabel.toLowerCase()} in {city.name} yet.
-              </p>
-              <p className="text-muted-foreground">
-                Be the first to list — or browse other cities below.
-              </p>
-              <Button variant="dark-shine" asChild>
-                <Link to="/list">List Your Asset <ArrowRight className="h-4 w-4 ml-1" /></Link>
-              </Button>
+            {isLowInventory && (
+              <ExpandSearchModule pageSlug={canonicalPath} resultCount={localCount} nationwide={nationwide} />
+            )}
             </div>
+          ) : (
+            <ExpandSearchModule
+              pageSlug={canonicalPath}
+              resultCount={0}
+              nationwide={nationwide}
+              zeroResults
+              sellCta={{
+                label: 'List free',
+                href: dbCategory === 'food_trailer' ? '/sell-food-trailer' : '/sell-my-food-truck',
+              }}
+              alertContext={{ category: dbCategory, mode: dbMode }}
+            />
+          )}
+
+          {mode === 'buy' && categorySlug === 'food-trailers' && cityStateSlug === 'atlanta-ga' && (
+            <section className="space-y-3 pt-4 border-t border-border">
+              <h2 className="text-lg font-semibold">Buying a food trailer in the Atlanta area</h2>
+              <p className="text-muted-foreground">Confirm the seller’s actual pickup location before planning an inspection. Ask for the loaded weight, tow requirements, equipment list, service records, and a working demonstration. Delivery availability and the service radius depend on the seller and transport provider; request a quote for your destination before committing.</p>
+              <p className="text-muted-foreground">Expanding your search beyond Atlanta? Compare <Link className="underline" to="/food-trailers-for-sale/georgia">food trailers throughout Georgia</Link> or <Link className="underline" to="/food-trucks-for-sale/georgia">Georgia food trucks for sale</Link>. For budgeting, <Link className="underline" to="/financing#calculator">estimate an equipment payment</Link> before applying.</p>
+            </section>
           )}
 
           {/* Internal Linking: Related Categories */}
@@ -310,6 +453,55 @@ const CategoryCityPage = ({ mode }: CategoryCityPageProps) => {
               ))}
             </div>
           </section>
+
+          {/* Rental hub links */}
+          {mode === 'rent' && (
+            <section className="space-y-3 pt-4 border-t border-border">
+              <h2 className="text-lg font-semibold text-foreground">
+                Explore more rental options
+              </h2>
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  to="/food-trucks-for-rent"
+                  className="px-4 py-2 rounded-full border border-border text-sm text-foreground hover:bg-muted transition-colors"
+                >
+                  Food Trucks & Trailers for Rent Nationwide
+                </Link>
+                {stateRentHubPath && (
+                  <Link
+                    to={stateRentHubPath}
+                    className="px-4 py-2 rounded-full border border-border text-sm text-foreground hover:bg-muted transition-colors"
+                  >
+                    Rentals in {city.stateCode === 'TX' ? 'Texas' : city.stateCode === 'FL' ? 'Florida' : 'California'}
+                  </Link>
+                )}
+                {dbCategory === 'food_truck' && (
+                  <Link
+                    to={`/rent/food-trailers/${cityStateSlug}`}
+                    className="px-4 py-2 rounded-full border border-border text-sm text-foreground hover:bg-muted transition-colors"
+                  >
+                    Food Trailers for Rent in {city.name}
+                  </Link>
+                )}
+                {dbCategory === 'food_trailer' && (
+                  <Link
+                    to={`/rent/food-trucks/${cityStateSlug}`}
+                    className="px-4 py-2 rounded-full border border-border text-sm text-foreground hover:bg-muted transition-colors"
+                  >
+                    Food Trucks for Rent in {city.name}
+                  </Link>
+                )}
+                <Link
+                  to="/rent-out-my-food-truck"
+                  className="px-4 py-2 rounded-full border border-border text-sm text-foreground hover:bg-muted transition-colors"
+                >
+                  Rent Out Your Equipment
+                </Link>
+              </div>
+            </section>
+          )}
+
+          <TransactionConfidenceSection audience={mode === 'rent' ? 'renter' : 'buyer'} source={`city_${mode}`} />
 
           {/* FAQ Section — visible content matching FAQPage JSON-LD for rich results */}
           <section className="space-y-4 pt-6 border-t border-border">

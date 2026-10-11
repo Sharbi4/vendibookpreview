@@ -86,7 +86,7 @@ const TERMS: Term[] = [
     term: 'Verified seller',
     slug: 'verified-seller',
     definition:
-      'A seller who has confirmed their identity through Stripe Identity. Verified status appears as a badge on their profile and listings to raise buyer confidence.',
+      'A seller who has confirmed their identity through Vendibook identity verification. Verified status appears as a badge on their profile and listings to raise buyer confidence.',
   },
   {
     term: 'Buyer offer',

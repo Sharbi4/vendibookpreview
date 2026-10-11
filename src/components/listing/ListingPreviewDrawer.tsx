@@ -12,6 +12,7 @@ import {
 import { MapPin, Calendar, ExternalLink, Navigation } from 'lucide-react';
 import VerificationBadge from '@/components/verification/VerificationBadge';
 import { CategoryTooltip } from '@/components/categories/CategoryGuide';
+import { formatCurrency } from '@/lib/commissions';
 
 interface ListingWithDistance extends Listing {
   distance_miles?: number;
@@ -36,8 +37,8 @@ const ListingPreviewDrawer = ({
 
   const price =
     listing.mode === 'rent'
-      ? `$${listing.price_daily}/day`
-      : `$${listing.price_sale?.toLocaleString()}`;
+      ? listing.price_daily ? `${formatCurrency(listing.price_daily)}/day` : 'Price TBD'
+      : listing.price_sale ? formatCurrency(listing.price_sale) : 'Price TBD';
 
   const locationDisplay = listing.address
     ?.split(',')
@@ -92,7 +93,7 @@ const ListingPreviewDrawer = ({
             <p className="text-2xl font-bold text-primary mt-1">{price}</p>
             {listing.mode === 'rent' && listing.price_weekly && (
               <p className="text-sm text-muted-foreground">
-                ${listing.price_weekly}/week
+                {formatCurrency(listing.price_weekly)}/week
               </p>
             )}
           </div>

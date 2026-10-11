@@ -76,6 +76,7 @@ export default {
           gray: "hsl(var(--vendibook-gray))",
           "light-gray": "hsl(var(--vendibook-light-gray))",
           cream: "hsl(var(--vendibook-cream))",
+          success: "hsl(var(--status-success-text))",
         },
       },
       borderRadius: {

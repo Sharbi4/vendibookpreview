@@ -1,3 +1,4 @@
+import { saleDisclosures } from '@/lib/listings/disclosures';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
@@ -25,6 +26,7 @@ import {
   Building2,
   Box,
   Hash,
+  EyeOff,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -36,7 +38,6 @@ import ListingExplainerVideo from '@/components/listing-detail/ListingExplainerV
 import { AmenitiesSection } from '@/components/listing-detail/AmenitiesSection';
 import ListingLocationMap from '@/components/listing-detail/ListingLocationMap';
 import CollapsibleDescription from '@/components/listing-detail/CollapsibleDescription';
-import AudioListingPlayer from '@/components/listing/AudioListingPlayer';
 import PromoVideoPlayer from '@/components/listing/PromoVideoPlayer';
 import MessageHostForm from '@/components/messaging/MessageHostForm';
 import RelatedListings from '@/components/listing-detail/RelatedListings';
@@ -47,11 +48,16 @@ import { AuthGateOfferModal } from '@/components/offers/AuthGateOfferModal';
 import { useAuth } from '@/contexts/AuthContext';
 import { CATEGORY_LABELS, type ListingCategory } from '@/types/listing';
 import { isListingFeatured } from '@/lib/featured';
+import { FeaturedBadge } from '@/components/listing/FeaturedBadge';
 import { getPublicDisplayName } from '@/lib/displayName';
 import { formatLastActive } from '@/hooks/useActivityTracker';
 import { trackLeadEvent } from '@/lib/leadTracking';
+import { fulfillmentLabel } from '@/components/listing-detail/FulfillmentTypeBadge';
+import { buyerFreightRangeLabel } from '@/lib/freight/presentation';
 import { resolveListingBrand, getBrandFieldLabel } from '@/lib/resolveListingBrand';
 import { SaleCard } from './SaleCard';
+import { FinancingActionPanel } from './FinancingActionPanel';
+import { ListingPaymentMethods } from '@/components/listing-detail/ListingPaymentMethods';
 import { SaleStickyActionBar } from './SaleStickyActionBar';
 import ListingHowItWorks from '@/components/listing-detail/ListingHowItWorks';
 
@@ -112,18 +118,10 @@ export const SaleListingMobile = ({
   const lastActiveLabel = host?.last_active_at ? formatLastActive(host.last_active_at) : null;
   const respondsQuickly = lastActiveLabel === 'Active now' || /min|hour/i.test(lastActiveLabel || '');
 
-  const fulfillmentLabel = useMemo(() => {
-    switch (listing.fulfillment_type) {
-      case 'pickup':
-        return 'Pickup only';
-      case 'delivery':
-        return 'Delivery available';
-      case 'both':
-        return 'Pickup or delivery';
-      default:
-        return null;
-    }
-  }, [listing.fulfillment_type]);
+  const fulfillmentLabelText = useMemo(
+    () => fulfillmentLabel(listing.fulfillment_type),
+    [listing.fulfillment_type],
+  );
 
   const brandValue = resolveListingBrand({
     category: listing.category,
@@ -143,8 +141,8 @@ export const SaleListingMobile = ({
     return true;
   };
 
+  // Checkout shows the order before asking guests to sign in.
   const handleBuyNow = () => {
-    if (!requireAuth('buy')) return;
     navigate(`/checkout/${listing.id}`);
   };
 
@@ -192,7 +190,7 @@ export const SaleListingMobile = ({
           {categoryLabel}s
         </Link>
         <ChevronRight className="h-3 w-3 opacity-60" />
-        <span className="text-primary font-medium truncate max-w-[40vw]">{listing.title}</span>
+        <span className="text-foreground font-medium truncate max-w-[40vw]">{listing.title}</span>
       </nav>
 
       <div className="px-4 space-y-5">
@@ -203,10 +201,7 @@ export const SaleListingMobile = ({
           </div>
           {isFeatured && (
             <div className="absolute top-3 left-3 z-10">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full chip-accent backdrop-blur-md text-xs font-semibold">
-                <Star className="h-3.5 w-3.5 fill-current" />
-                Featured
-              </span>
+              <FeaturedBadge listing={listing} size="md" />
             </div>
           )}
 
@@ -287,10 +282,10 @@ export const SaleListingMobile = ({
                 In stock
               </span>
             )}
-            {fulfillmentLabel && (
+            {fulfillmentLabelText && (
               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card/60 ring-hairline text-xs font-medium">
                 <Truck className="h-3.5 w-3.5 text-muted-foreground" />
-                {fulfillmentLabel}
+                {fulfillmentLabelText}
               </span>
             )}
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-card/60 ring-hairline text-xs font-medium">
@@ -298,7 +293,7 @@ export const SaleListingMobile = ({
               {categoryLabel}
             </span>
             {host?.identity_verified && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 text-primary ring-1 ring-primary/30 text-xs font-medium">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted text-foreground ring-1 ring-border text-xs font-medium">
                 <ShieldCheck className="h-3.5 w-3.5" />
                 Verified Seller
               </span>
@@ -310,9 +305,9 @@ export const SaleListingMobile = ({
         <SaleCard variant="default" padding="md">
 
           <div className="grid grid-cols-3 gap-3">
-            <TrustItem icon={ShieldCheck} title="Verified Listing" sub="Reviewed for quality" tone="primary" />
-            <TrustItem icon={Lock} title="Secure Payments" sub="Protected checkout" tone="primary" />
-            <TrustItem icon={Zap} title="Responsive Seller" sub="Typically replies fast" tone="primary" />
+            <TrustItem icon={ShieldCheck} title="Detailed Listing" sub="Specs and documents" tone="primary" />
+            <TrustItem icon={Lock} title="PayPal Checkout" sub="Processed by PayPal" tone="primary" />
+            <TrustItem icon={MessageSquare} title="Screened Messages" sub="Checked for scam risk" tone="primary" />
           </div>
         </SaleCard>
 
@@ -325,7 +320,8 @@ export const SaleListingMobile = ({
                 onClick={handleBuyNow}
                 disabled={!isAvailable}
                 data-testid="sale-mobile-buy-now"
-                className="h-14 gap-2 rounded-2xl bg-cta-primary hover:opacity-95 shadow-cta-primary text-base font-bold text-white border-0"
+                variant="cta"
+                className="h-14 gap-2 text-base"
               >
                 <ShoppingCart className="h-5 w-5" />
                 Buy Now
@@ -357,7 +353,7 @@ export const SaleListingMobile = ({
         {/* CONCIERGE CARD */}
         {!isOwner && (
           <SaleCard variant="warm" padding="lg">
-            <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary mb-2">
+            <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground mb-2">
               Vendibook Concierge
             </div>
             <h2 className="text-lg font-semibold leading-snug text-foreground">
@@ -415,7 +411,7 @@ export const SaleListingMobile = ({
         {/* SELLER SUMMARY */}
         <SaleCard padding="md">
           <div className="flex items-center gap-3">
-            <div className="shrink-0 w-12 h-12 rounded-full bg-primary/10 ring-1 ring-primary/30 flex items-center justify-center text-primary font-bold">
+            <div className="shrink-0 w-12 h-12 rounded-full bg-muted ring-1 ring-border flex items-center justify-center text-foreground font-bold">
               {sellerName.charAt(0).toUpperCase()}
             </div>
             <div className="flex-1 min-w-0">
@@ -425,7 +421,7 @@ export const SaleListingMobile = ({
             <div className="flex flex-col gap-1 text-[11px] text-muted-foreground items-end">
               {respondsQuickly && (
                 <span className="inline-flex items-center gap-1 text-emerald-400">
-                  <Zap className="h-3 w-3" /> Responds quickly
+                  <Zap className="h-3 w-3" /> {lastActiveLabel}
                 </span>
               )}
               {memberYear && (
@@ -448,7 +444,7 @@ export const SaleListingMobile = ({
                 className="w-16 h-16 rounded-full object-cover ring-2 ring-primary/30"
               />
             ) : (
-              <div className="w-16 h-16 rounded-full bg-primary/10 ring-2 ring-primary/30 flex items-center justify-center text-primary text-xl font-bold">
+              <div className="w-16 h-16 rounded-full bg-muted ring-2 ring-border flex items-center justify-center text-foreground text-xl font-bold">
                 {sellerName.charAt(0).toUpperCase()}
               </div>
             )}
@@ -472,7 +468,7 @@ export const SaleListingMobile = ({
               )}
               {lastActiveLabel && (
                 <div className="text-xs text-emerald-400 mt-1 inline-flex items-center gap-1">
-                  <Zap className="h-3 w-3" /> Typically responds within 1 hour
+                  <Zap className="h-3 w-3" /> {lastActiveLabel}
                 </div>
               )}
             </div>
@@ -482,9 +478,9 @@ export const SaleListingMobile = ({
             {host?.identity_verified ? (
               <VerificationRow label="ID verified" verified />
             ) : (
-              <VerificationRow label="ID verification pending" verified={false} />
+              <VerificationRow label="ID verification not completed" verified={false} />
             )}
-            <VerificationRow label="Vendibook Protected" verified />
+            <VerificationRow label="PayPal checkout supported" verified />
           </div>
         </SaleCard>
 
@@ -494,14 +490,14 @@ export const SaleListingMobile = ({
           <div className="grid grid-cols-2 gap-2.5">
             <SpecCell icon={Box} label="Category" value={categoryLabel} />
             <SpecCell icon={Tag} label="Listing Type" value="For Sale" />
-            {listing.condition && (
-              <SpecCell icon={ShieldCheck} label="Condition" value={String(listing.condition)} className="capitalize" />
-            )}
+            {saleDisclosures(listing).map((d) => (
+              <SpecCell key={d.key} icon={ShieldCheck} label={d.label} value={d.value} />
+            ))}
             {brandValue && (
               <SpecCell icon={Building2} label={getBrandFieldLabel(listing.category)} value={brandValue} />
             )}
-            {fulfillmentLabel && (
-              <SpecCell icon={Truck} label="Pickup type" value={fulfillmentLabel} />
+            {fulfillmentLabelText && (
+              <SpecCell icon={Truck} label="Fulfillment" value={fulfillmentLabelText} />
             )}
             {locationShort && (
               <SpecCell icon={MapPin} label="Location" value={locationShort} />
@@ -520,7 +516,13 @@ export const SaleListingMobile = ({
           <PolicyRow
             icon={Truck}
             title="Pickup &amp; Transfer"
-            body="Pickup, delivery, or title transfer will be coordinated directly with the seller after purchase."
+            body={
+              !listing.vendibook_freight_enabled
+                ? 'Pickup, delivery, or title transfer will be coordinated directly with the seller after purchase.'
+                : listing.freight_payer === 'seller'
+                  ? 'Free shipping nationwide: the seller covers Vendibook Freight. Title transfer is coordinated with the seller after purchase.'
+                  : `Nationwide freight available: ${buyerFreightRangeLabel()}. Your exact quote is shown at checkout.`
+            }
           />
           <div className="h-px bg-white/[0.06] mx-5" />
           <PolicyRow
@@ -535,7 +537,7 @@ export const SaleListingMobile = ({
           <SaleCard variant="warm" bronze padding="md">
             <div className="flex items-center gap-4">
               <div className="shrink-0 w-12 h-12 rounded-full bg-background/60 ring-bronze flex items-center justify-center">
-                <CalendarCheck className="h-5 w-5 text-primary" />
+                <CalendarCheck className="h-5 w-5 text-foreground" />
               </div>
               <div className="flex-1">
                 <div className="font-semibold">Pickup available</div>
@@ -544,7 +546,7 @@ export const SaleListingMobile = ({
                   Buyer responsible for pickup or shipping.
                 </div>
               </div>
-              <MapPin className="h-6 w-6 text-primary shrink-0" />
+              <MapPin className="h-6 w-6 text-foreground shrink-0" />
             </div>
           </SaleCard>
         )}
@@ -555,10 +557,9 @@ export const SaleListingMobile = ({
             <h2 className="text-base font-semibold">About this listing</h2>
             <PromoVideoPlayer listingId={listing.id} />
           </div>
-          <AudioListingPlayer listingId={listing.id} />
           {listing.description && (
             <div className="text-sm leading-relaxed text-foreground/90">
-              <CollapsibleDescription description={listing.description} />
+              <CollapsibleDescription description={listing.description} maskContacts={!isOwner} />
             </div>
           )}
         </SaleCard>
@@ -621,8 +622,11 @@ export const SaleListingMobile = ({
               </span>
             </div>
             <div className="text-sm">{locationShort}{listing.zip_code ? ` ${listing.zip_code}` : ''}</div>
-            <div className="text-xs text-muted-foreground">
-              Exact location provided after purchase confirmation.
+            <div className="flex items-start gap-2 text-xs text-muted-foreground">
+              <EyeOff className="h-3.5 w-3.5 shrink-0 mt-0.5" />
+              <span>
+                Only city, state, and ZIP are shown publicly. The exact street address and pickup details stay private until your purchase is confirmed.
+              </span>
             </div>
             <div className="rounded-xl overflow-hidden ring-hairline" style={{ height: 200 }}>
               <ListingLocationMap
@@ -645,11 +649,15 @@ export const SaleListingMobile = ({
             <div>
               <div className="text-sm font-medium">All sales are final. Please review all details and ask questions before purchasing.</div>
               <div className="text-xs text-muted-foreground mt-1">
-                Your payment is only released to the seller once you confirm delivery or pickup.
+                Payment disputes are handled through PayPal&rsquo;s buyer protection process and Vendibook support.
               </div>
             </div>
           </div>
         </SaleCard>
+
+        {/* PAYMENT METHODS + FINANCING */}
+        <ListingPaymentMethods listing={listing} />
+        <FinancingActionPanel listing={listing} host={host} />
 
         {/* SIMILAR LISTINGS */}
         <div>
@@ -660,16 +668,17 @@ export const SaleListingMobile = ({
             address={listing.address}
             latitude={listing.latitude}
             longitude={listing.longitude}
+            subcategory={listing.subcategory}
           />
         </div>
 
         {/* PURCHASE PROTECTION */}
         <div>
-          <h2 className="text-base font-semibold mb-3">Your purchase is protected</h2>
+          <h2 className="text-base font-semibold mb-3">How Vendibook supports your purchase</h2>
           <div className="grid grid-cols-2 gap-2.5">
-            <ProtectionCard icon={ShieldCheck} title="Verified Users" body="All users are verified to keep our marketplace safe." tone="emerald" />
-            <ProtectionCard icon={Lock} title="Secure Payments" body="Your payment is protected with industry-standard encryption." tone="primary" />
-            <ProtectionCard icon={FileText} title="Document Workflow" body="We help verify documents and important information." tone="blue" />
+            <ProtectionCard icon={ShieldCheck} title="Identity Verification*" body="Sellers can complete identity verification with Plaid and display a badge. Optional paid add-on." tone="emerald" />
+            <ProtectionCard icon={Lock} title="PayPal Checkout" body="Supported payments are processed by PayPal, not handled on Vendibook." tone="primary" />
+            <ProtectionCard icon={FileText} title="Document Workflow" body="We help collect and organize documents and important information." tone="blue" />
             <ProtectionCard icon={HeadphonesIcon} title="Dispute Support" body="Our team is here to help if something doesn't go as planned." tone="amber" />
           </div>
         </div>
@@ -746,7 +755,7 @@ export const SaleListingMobile = ({
 const TrustItem = ({
   icon: Icon, title, sub, tone = 'primary',
 }: { icon: any; title: string; sub: string; tone?: 'primary' | 'emerald' }) => {
-  const toneCls = tone === 'emerald' ? 'text-emerald-400 bg-emerald-500/10 ring-emerald-500/30' : 'text-primary bg-primary/10 ring-primary/30';
+  const toneCls = 'text-foreground bg-muted ring-border';
   return (
     <div className="flex flex-col items-start gap-2">
       <div className={`w-9 h-9 rounded-full ring-1 flex items-center justify-center ${toneCls}`}>
@@ -775,8 +784,8 @@ const SpecCell = ({
   icon: Icon, label, value, className,
 }: { icon: any; label: string; value: string; className?: string }) => (
   <div className="rounded-xl bg-background/40 ring-hairline p-3 flex items-start gap-3">
-    <div className="shrink-0 w-8 h-8 rounded-lg bg-primary/10 ring-1 ring-primary/20 flex items-center justify-center">
-      <Icon className="h-4 w-4 text-primary" />
+    <div className="shrink-0 w-8 h-8 rounded-lg bg-muted ring-1 ring-border flex items-center justify-center">
+      <Icon className="h-4 w-4 text-foreground" />
     </div>
     <div className="min-w-0">
       <div className="text-[11px] text-muted-foreground">{label}</div>
@@ -789,8 +798,8 @@ const PolicyRow = ({
   icon: Icon, title, body,
 }: { icon: any; title: string; body: string }) => (
   <div className="p-5 flex items-start gap-3">
-    <div className="shrink-0 w-10 h-10 rounded-full bg-primary/10 ring-1 ring-primary/20 flex items-center justify-center">
-      <Icon className="h-4.5 w-4.5 text-primary" />
+    <div className="shrink-0 w-10 h-10 rounded-full bg-muted ring-1 ring-border flex items-center justify-center">
+      <Icon className="h-4.5 w-4.5 text-foreground" />
     </div>
     <div className="flex-1 min-w-0">
       <div className="font-semibold mb-1" dangerouslySetInnerHTML={{ __html: title }} />
@@ -804,10 +813,10 @@ const ProtectionCard = ({
   icon: Icon, title, body, tone,
 }: { icon: any; title: string; body: string; tone: 'primary' | 'emerald' | 'blue' | 'amber' }) => {
   const toneCls: Record<typeof tone, string> = {
-    primary: 'bg-primary/10 ring-primary/30 text-primary',
-    emerald: 'bg-emerald-500/10 ring-emerald-500/30 text-emerald-400',
-    blue: 'bg-blue-500/10 ring-blue-500/30 text-blue-400',
-    amber: 'bg-amber-500/10 ring-amber-500/30 text-amber-400',
+    primary: 'bg-muted ring-border text-foreground',
+    emerald: 'bg-muted ring-border text-foreground',
+    blue: 'bg-muted ring-border text-foreground',
+    amber: 'bg-muted ring-border text-foreground',
   } as any;
   return (
     <SaleCard padding="md">
@@ -827,8 +836,8 @@ const BrowseRow = ({ to, icon: Icon, label }: { to: string; icon: any; label: st
     to={to}
     className="flex items-center gap-3 px-4 py-3.5 hover:bg-white/[0.03] transition-colors"
   >
-    <div className="shrink-0 w-8 h-8 rounded-lg bg-primary/10 ring-1 ring-primary/20 flex items-center justify-center">
-      <Icon className="h-4 w-4 text-primary" />
+    <div className="shrink-0 w-8 h-8 rounded-lg bg-muted ring-1 ring-border flex items-center justify-center">
+      <Icon className="h-4 w-4 text-foreground" />
     </div>
     <span className="flex-1 text-sm font-medium">{label}</span>
     <ChevronRight className="h-4 w-4 text-muted-foreground/60" />

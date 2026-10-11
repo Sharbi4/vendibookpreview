@@ -1,12 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
-import { Loader2, MapPin, ArrowRight, Tag } from 'lucide-react';
+import { Loader2, MapPin, ArrowRight, Tag, Info } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
 import { Button } from '@/components/ui/button';
+import { trackEvent } from '@/lib/analytics';
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -16,13 +17,39 @@ import {
   BreadcrumbSeparator,
 } from '@/components/ui/breadcrumb';
 import { CITY_DATA, getCityStateSlug } from '@/data/cityData';
+import { PRICE_TBD, formatListingPriceLabel } from '@/lib/listings/rentalPricing';
+import { SPECIALTY_DEFS, specialtyOrFilter, specialtyBrowseLinks, specialtyVehicleHref, SPECIALTY_VEHICLE_LABELS, type SpecialtyKey } from '@/lib/listings/specialty';
+import BrowseByBusinessType from '@/components/marketplace/BrowseByBusinessType';
+import { useNationwideInventory } from '@/hooks/useNationwideInventory';
+import ExpandSearchModule, { LowInventoryInlineLine, LOW_INVENTORY_THRESHOLD, NEAR_EMPTY_THRESHOLD } from '@/components/seo/ExpandSearchModule';
+import TransactionConfidenceSection from '@/components/seo/TransactionConfidenceSection';
+import { useBuyerSeoTracking } from '@/hooks/useBuyerSeoTracking';
+import { Compass, Store, Hammer, Handshake } from 'lucide-react';
 
 export type CategoryKey = 'food_truck' | 'food_trailer' | 'ghost_kitchen' | 'vendor_space';
 export type ModeFilter = 'rent' | 'sale' | 'any';
 
+export interface CategoryIndexSection {
+  heading: string;
+  paragraphs: string[];
+  links?: { href: string; label: string }[];
+}
+
+/** Answer-first comparison block rendered directly after the inventory grid. */
+export interface CategoryIndexAnswerBlock {
+  id: string;
+  heading: string;
+  lead: string;
+  options: { name: string; goodFor: string; tradeoffs: string }[];
+  footnote?: string;
+  links?: { href: string; label: string }[];
+}
+
 export interface CategoryIndexConfig {
   path: string;
   category: CategoryKey;
+  /** Multi-category pages (e.g. the national rental hub shows trucks + trailers). */
+  categories?: CategoryKey[];
   mode: ModeFilter;
   /** Optional city filter. When listings are short, page falls back to state then nationwide. */
   city?: { name: string; stateCode: string };
@@ -32,8 +59,38 @@ export interface CategoryIndexConfig {
   title: string;
   description: string;
   intro: string;
+  /** One-line intent clarification rendered directly under the intro. */
+  clarification?: string;
+  /** Mid-page content sections rendered after the inventory grid. */
+  sections?: CategoryIndexSection[];
   faqs: { q: string; a: string }[];
   related: { href: string; label: string }[];
+  /** Overrides the default seller cross-link strip. */
+  sellerCta?: { heading: string; body: string; ctaLabel: string; ctaHref: string };
+  /** Specialty collection (coffee / ice cream). Filters inventory to the
+   *  specialty and disables geographic fallback tiers so unrelated listings
+   *  are never shown as specialty matches. */
+  specialty?: SpecialtyKey;
+  /** Optional structured subcategory filter (e.g. ['coffee_beverage']).
+   *  Applied on top of category/mode. Like `specialty`, it disables the
+   *  geographic fallback tiers so an unrelated listing can never be shown
+   *  as a match for a filtered collection. */
+  subcategories?: string[];
+  /** Breadcrumb parent between Home and the page (specialty hubs). */
+  breadcrumbParent?: { name: string; href: string };
+  /** Overrides the hero search CTA href. */
+  searchHrefOverride?: string;
+  /** Absolute https URL used for og:image / twitter:image (per-category social preview). */
+  ogImage?: string;
+  /** Render the cross-category "Browse by business type" navigation band (Phase 6). */
+  businessTypeNav?: boolean;
+  /** Seller-declared condition filter (e.g. used-only). Like `subcategories`,
+   *  disables geographic fallback so unfiltered inventory is never shown. */
+  conditions?: string[];
+  /** Answer-first block (e.g. "Where to buy a food truck"), linked from the hero. */
+  answerBlock?: CategoryIndexAnswerBlock;
+  /** Label for the primary inventory heading noun (e.g. "used food trucks"). */
+  inventoryNoun?: string;
 }
 
 interface ListingRow {
@@ -43,21 +100,47 @@ interface ListingRow {
   cover_image_url: string | null;
   price_daily: number | null;
   price_weekly: number | null;
+  price_hourly: number | null;
+  price_monthly: number | null;
   price_sale: number | null;
   mode: string;
   category: string;
   city: string | null;
   state: string | null;
   address: string | null;
+  condition?: string | null;
 }
 
 const MIN_TIER = 6;
 
+// States with a live state-level page, for breadcrumb parent links.
+const STATE_NAME_BY_CODE: Record<string, string> = {
+  TX: 'Texas', AZ: 'Arizona', GA: 'Georgia', FL: 'Florida', MI: 'Michigan',
+  OH: 'Ohio', NC: 'North Carolina', OR: 'Oregon', CA: 'California', TN: 'Tennessee',
+};
+const STATE_SALE_PAGE_CODES: Record<CategoryKey, Set<string>> = {
+  food_truck: new Set(['TX', 'AZ', 'GA', 'FL', 'MI', 'OH', 'NC', 'OR', 'CA']),
+  food_trailer: new Set(['TX', 'GA', 'FL', 'MI', 'OH', 'AZ']),
+  ghost_kitchen: new Set(),
+  vendor_space: new Set(),
+};
+const STATE_RENT_PAGE_CODES: Record<CategoryKey, Set<string>> = {
+  food_truck: new Set(['TX', 'FL', 'CA']),
+  food_trailer: new Set(['TN']),
+  ghost_kitchen: new Set(),
+  vendor_space: new Set(),
+};
+
 const formatPrice = (l: ListingRow): string => {
-  if (l.mode === 'sale' && l.price_sale) return `$${Number(l.price_sale).toLocaleString()}`;
-  if (l.price_daily) return `$${Number(l.price_daily).toLocaleString()}/day`;
-  if (l.price_weekly) return `$${Number(l.price_weekly).toLocaleString()}/week`;
-  return 'Contact for price';
+  const label = formatListingPriceLabel({
+    mode: l.mode,
+    price_sale: l.price_sale,
+    price_hourly: l.price_hourly,
+    price_daily: l.price_daily,
+    price_weekly: l.price_weekly,
+    price_monthly: l.price_monthly,
+  });
+  return label === PRICE_TBD ? 'Contact for price' : label;
 };
 
 const categoryLabel = (c: CategoryKey): string =>
@@ -66,19 +149,29 @@ const categoryLabel = (c: CategoryKey): string =>
     : c === 'ghost_kitchen' ? 'Shared Kitchen'
     : 'Vendor Space';
 
-const baseSelect = 'id, title, description, cover_image_url, price_daily, price_weekly, price_sale, mode, category, city, state, address';
+const baseSelect = 'id, title, description, cover_image_url, price_hourly, price_daily, price_weekly, price_monthly, price_sale, mode, category, city, state, address, condition';
 
-const baseQuery = (category: CategoryKey, mode: ModeFilter, limit: number) => {
+const baseQuery = (
+  categories: CategoryKey[],
+  mode: ModeFilter,
+  limit: number,
+  orFilter?: string,
+  subcategories?: string[],
+  conditions?: string[],
+) => {
   let q = supabase
     .from('listings')
     .select(baseSelect)
-    .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
-    .eq('category', category as any)
+    .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear').eq('unlisted', false)
+    .in('category', categories as any[])
     .not('published_at', 'is', null)
     .not('title', 'ilike', 'demo%')
     .order('updated_at', { ascending: false })
     .limit(limit);
   if (mode !== 'any') q = q.eq('mode', mode);
+  if (subcategories?.length) q = q.in('subcategory', subcategories as any[]);
+  if (conditions?.length) q = q.in('condition', conditions);
+  if (orFilter) q = q.or(orFilter);
   return q;
 };
 
@@ -87,55 +180,87 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
   const [stateFallback, setStateFallback] = useState<ListingRow[]>([]);
   const [nationwideFallback, setNationwideFallback] = useState<ListingRow[]>([]);
   const [loading, setLoading] = useState(true);
+  // A failed inventory query is NOT "no stock": we keep the page indexable,
+  // skip empty-state messaging, and offer a retry instead.
+  const [loadError, setLoadError] = useState(false);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  const categories = config.categories ?? [config.category];
+  const multiCategory = categories.length > 1;
+  const onTrackedClick = useBuyerSeoTracking(config.path, config.category);
+
+  useEffect(() => {
+    if (config.specialty) {
+      trackEvent({ category: 'SEO', action: 'specialty_hub_viewed', label: config.path });
+    } else if (config.mode === 'rent') {
+      trackEvent({
+        category: 'SEO',
+        action: config.city ? 'rental_city_index_viewed' : config.state ? 'rental_state_viewed' : 'rental_hub_viewed',
+        label: config.path,
+      });
+    }
+  }, [config.mode, config.path, config.city, config.state, config.specialty]);
 
   useEffect(() => {
     let cancelled = false;
     (async () => {
       setLoading(true);
+      setLoadError(false);
       setPrimary([]);
       setStateFallback([]);
       setNationwideFallback([]);
 
-      // Tier 1: city OR state OR all
-      let q1 = baseQuery(config.category, config.mode, 48);
+      // Tier 1: city OR state OR specialty/subcategory OR all
+      const specialtyFilter = config.specialty ? specialtyOrFilter(config.specialty) : undefined;
+      let q1 = baseQuery(categories, config.mode, 48, specialtyFilter, config.subcategories, config.conditions);
       if (config.city) {
         q1 = q1.or(`city.ilike.${config.city.name},address.ilike.%${config.city.name}%`);
       } else if (config.state) {
         q1 = q1.or(`state.eq.${config.state.code},state.ilike.${config.state.name}`);
       }
-      const { data: d1 } = await q1;
-      const primaryRows = (d1 as ListingRow[]) || [];
+      const { data: d1, error: e1 } = await q1;
       if (cancelled) return;
+      if (e1) {
+        console.warn('[CategoryIndex] inventory query failed', e1.message);
+        setLoadError(true);
+        setLoading(false);
+        return;
+      }
+      const primaryRows = (d1 as ListingRow[]) || [];
       setPrimary(primaryRows);
 
       const excludeIds = new Set(primaryRows.map((r) => r.id));
 
-      // Tier 2: state fallback (only when city is set AND primary is thin)
-      if (config.city && primaryRows.length < MIN_TIER) {
-        let q2 = baseQuery(config.category, config.mode, 24);
-        q2 = q2.or(`state.eq.${config.city.stateCode},state.ilike.${config.city.stateCode}`);
-        const { data: d2 } = await q2;
-        const stateRows = ((d2 as ListingRow[]) || []).filter((r) => !excludeIds.has(r.id));
-        if (cancelled) return;
-        setStateFallback(stateRows);
-        stateRows.forEach((r) => excludeIds.add(r.id));
-      }
+      // Specialty / subcategory pages never fall back to unrelated inventory —
+      // only real matches may appear on the collection.
+      if (!config.specialty && !config.subcategories?.length && !config.conditions?.length) {
+        // Tier 2: state fallback (only when city is set AND primary is thin)
+        if (config.city && primaryRows.length < MIN_TIER) {
+          let q2 = baseQuery(categories, config.mode, 24);
+          q2 = q2.or(`state.eq.${config.city.stateCode},state.ilike.${config.city.stateCode}`);
+          const { data: d2 } = await q2;
+          const stateRows = ((d2 as ListingRow[]) || []).filter((r) => !excludeIds.has(r.id));
+          if (cancelled) return;
+          setStateFallback(stateRows);
+          stateRows.forEach((r) => excludeIds.add(r.id));
+        }
 
-      // Tier 3: nationwide fallback (when primary + state still thin, or state-only page is thin)
-      const tier2Count = config.city && primaryRows.length < MIN_TIER ? -1 : 0;
-      const enoughSoFar = primaryRows.length + (tier2Count === -1 ? MIN_TIER : 0);
-      if (enoughSoFar < MIN_TIER) {
-        const q3 = baseQuery(config.category, config.mode, 24);
-        const { data: d3 } = await q3;
-        const natRows = ((d3 as ListingRow[]) || []).filter((r) => !excludeIds.has(r.id));
-        if (cancelled) return;
-        setNationwideFallback(natRows);
+        // Tier 3: nationwide fallback (when primary + state still thin, or state-only page is thin)
+        const tier2Count = config.city && primaryRows.length < MIN_TIER ? -1 : 0;
+        const enoughSoFar = primaryRows.length + (tier2Count === -1 ? MIN_TIER : 0);
+        if (enoughSoFar < MIN_TIER) {
+          const q3 = baseQuery(categories, config.mode, 24);
+          const { data: d3 } = await q3;
+          const natRows = ((d3 as ListingRow[]) || []).filter((r) => !excludeIds.has(r.id));
+          if (cancelled) return;
+          setNationwideFallback(natRows);
+        }
       }
 
       setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [config.category, config.mode, config.city?.name, config.state?.code]);
+  }, [config.category, config.mode, config.city?.name, config.state?.code, config.specialty, config.subcategories?.join(','), config.conditions?.join(','), categories.join(','), reloadKey]);
 
   const canonical = config.path;
   const totalListings = primary.length + stateFallback.length + nationwideFallback.length;
@@ -147,14 +272,51 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
       : config.category === 'ghost_kitchen' ? 'commercial-kitchens'
       : 'vendor-spaces';
 
+  // Breadcrumb hierarchy: Home → National category → State → City.
+  const crumbCategoryPlural = multiCategory ? 'Food Trucks & Food Trailers' : `${categoryLabel(config.category)}s`;
+  const crumbNationalLabel = config.mode === 'any'
+    ? crumbCategoryPlural
+    : `${crumbCategoryPlural} ${config.mode === 'sale' ? 'for Sale' : 'for Rent'}`;
+  const crumbNationalPath =
+    config.mode === 'rent'
+      ? (config.category === 'food_trailer' ? '/food-trailers-for-rent' : '/food-trucks-for-rent')
+      : config.mode === 'sale'
+        ? (config.category === 'food_trailer' ? '/food-trailers-for-sale' : '/food-trucks-for-sale')
+        : (config.category === 'food_truck' ? '/food-trucks'
+          : config.category === 'food_trailer' ? '/food-trailers'
+          : config.category === 'ghost_kitchen' ? '/shared-kitchens' : '/vendor-spaces');
+
+  const cityStateName = config.city ? STATE_NAME_BY_CODE[config.city.stateCode] : undefined;
+  const cityStateSlug = cityStateName ? cityStateName.toLowerCase().replace(/[^a-z0-9]+/g, '-') : undefined;
+  const statePageExists = !!(config.city && config.city.stateCode && cityStateSlug && (
+    config.mode === 'sale'
+      ? STATE_SALE_PAGE_CODES[config.category]?.has(config.city.stateCode)
+      : config.mode === 'rent'
+        ? !!STATE_RENT_PAGE_CODES[config.category]?.has(config.city.stateCode)
+        : false
+  ));
+
+  const crumbs: { name: string; href?: string }[] = [{ name: 'Home', href: '/' }];
+  if (config.breadcrumbParent) {
+    crumbs.push(config.breadcrumbParent);
+  } else if (config.city || config.state) {
+    crumbs.push({ name: crumbNationalLabel, href: crumbNationalPath });
+  }
+  if (statePageExists && cityStateName && cityStateSlug) {
+    crumbs.push({ name: cityStateName, href: `${crumbNationalPath}/${cityStateSlug}` });
+  }
+  crumbs.push({ name: config.h1 });
+
   // Schemas
   const breadcrumbSchema = {
     '@context': 'https://schema.org',
     '@type': 'BreadcrumbList',
-    itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://vendibook.com/' },
-      { '@type': 'ListItem', position: 2, name: config.h1, item: `https://vendibook.com${canonical}` },
-    ],
+    itemListElement: crumbs.map((c, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: c.name,
+      item: `https://vendibook.com${c.href ?? canonical}`,
+    })),
   };
   const faqSchema = {
     '@context': 'https://schema.org',
@@ -177,8 +339,50 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
     })),
   };
 
-  // noindex if zero across all tiers (extreme edge case)
-  const noindex = !loading && totalListings === 0;
+  // Thin-page guard. A collection page is only indexable when it has real
+  // on-topic inventory in its primary tier — nationwide fallback rows keep the
+  // page useful for a visitor but do not make a specialty/state/city page
+  // worth indexing on its own. This applies to every hub, including specialty
+  // hubs and the coffee/ice-cream vehicle landing pages.
+  const noindex = !loading && !loadError && (primary.length === 0 || totalListings === 0);
+
+  // Low-inventory freight funnel. Triggered by the page's OWN on-topic
+  // inventory (primary tier) — geographic fallback rows are not local supply.
+  const localCount = primary.length;
+  const isLowInventory = !loading && !loadError && localCount < LOW_INVENTORY_THRESHOLD;
+
+  // Live inventory signals shown above the fold. Real numbers only — when a
+  // page has no on-topic inventory the whole block is withheld rather than
+  // rendering zeros or an invented range.
+  const inventoryStats = useMemo(() => {
+    if (primary.length === 0) return null;
+    const amounts = primary
+      .map((l) =>
+        config.mode === 'rent'
+          ? l.price_daily
+          : l.price_sale,
+      )
+      .filter((n): n is number => typeof n === 'number' && n > 0);
+    const money = (n: number) => `$${Math.round(n).toLocaleString('en-US')}`;
+    let priceRange: string | null = null;
+    if (amounts.length >= 3) {
+      const min = Math.min(...amounts);
+      const max = Math.max(...amounts);
+      priceRange = min === max ? money(min) : `${money(min)} – ${money(max)}`;
+    }
+    const locationCount = new Set(
+      primary.map((l) => [l.city, l.state].filter(Boolean).join(', ')).filter(Boolean),
+    ).size;
+    return { count: primary.length, priceRange, locationCount };
+  }, [primary, config.mode]);
+  const nationwide = useNationwideInventory({
+    categories,
+    mode: config.mode,
+    specialty: config.specialty,
+    enabled: isLowInventory,
+  });
+
+
 
   const cityLabel = config.city ? `${config.city.name}, ${config.city.stateCode}` : null;
   const stateLabel = config.city ? config.city.stateCode : config.state?.name ?? null;
@@ -189,14 +393,18 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
       <li key={l.id}>
         <Link
           to={`/listing/${l.id}`}
-          className="group block h-full rounded-xl border border-border bg-card overflow-hidden hover:border-primary transition-colors"
+          className="seo-marketplace-card group block h-full rounded-xl border border-border bg-card overflow-hidden hover:border-primary transition-colors"
         >
           <div className="aspect-[4/3] bg-muted overflow-hidden">
             {l.cover_image_url ? (
               <img
                 src={l.cover_image_url}
                 alt={`${l.title}${cityState ? ` in ${cityState}` : ''} on Vendibook`}
-                loading="lazy"
+                loading={l.id === primary[0]?.id ? "eager" : "lazy"}
+                fetchPriority={l.id === primary[0]?.id ? "high" : "auto"}
+                decoding="async"
+                width={640}
+                height={480}
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
               />
             ) : (
@@ -227,6 +435,16 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
                 {l.description}
               </p>
             )}
+            {config.specialty && (l.category === 'food_truck' || l.category === 'food_trailer') && (
+              <Link
+                to={specialtyVehicleHref(config.specialty, l.category === 'food_truck' ? 'truck' : 'trailer')}
+                onClick={(e) => e.stopPropagation()}
+                className="relative z-10 inline-flex w-fit items-center gap-1 text-xs font-medium text-primary hover:underline"
+              >
+                {SPECIALTY_VEHICLE_LABELS[config.specialty][l.category === 'food_truck' ? 'truck' : 'trailer']}
+                <ArrowRight className="h-3 w-3" />
+              </Link>
+            )}
             <div className="pt-1 flex items-center justify-between">
               <span className="font-semibold text-foreground">{formatPrice(l)}</span>
               <span className="text-xs text-primary inline-flex items-center gap-1">
@@ -252,8 +470,37 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
       </section>
     );
 
-  const catPluralLower = categoryLabel(config.category).toLowerCase() + 's';
+  const labelPlural = config.specialty
+    ? SPECIALTY_DEFS[config.specialty].pluralTitle
+    : multiCategory
+      ? 'Food Trucks & Food Trailers'
+      : categoryLabel(config.category) + 's';
+  const catPluralLower = config.inventoryNoun ? config.inventoryNoun : config.specialty
+    ? SPECIALTY_DEFS[config.specialty].pluralLower
+    : multiCategory
+      ? 'food trucks & food trailers'
+      : categoryLabel(config.category).toLowerCase() + 's';
   const intentLabel = config.mode === 'sale' ? 'for sale' : config.mode === 'rent' ? 'for rent' : '';
+
+  const searchHref = config.searchHrefOverride ?? (multiCategory
+    ? `/search?mode=${config.mode}`
+    : `/search?category=${config.category}${config.mode !== 'any' ? `&mode=${config.mode}` : ''}`);
+
+  const sellerCta = config.sellerCta ?? (config.mode === 'rent'
+    ? {
+        heading: multiCategory
+          ? 'Have a food truck or trailer available for rent?'
+          : `Have a ${categoryLabel(config.category).toLowerCase()} available for rent?`,
+        body: 'List free on Vendibook — set your own daily, weekly, or monthly rates and terms, and receive booking requests from verified operators.',
+        ctaLabel: multiCategory ? 'List My Food Truck for Rent' : `List Your ${categoryLabel(config.category)} for Rent`,
+        ctaHref: config.category === 'ghost_kitchen' ? '/rent-my-commercial-kitchen' : '/rent-out-my-food-truck',
+      }
+    : {
+        heading: `Have a ${categoryLabel(config.category).toLowerCase()} to sell?`,
+        body: 'List free on Vendibook — photos, video, equipment, offers, and optional secure transaction tools.',
+        ctaLabel: `List Your ${categoryLabel(config.category)} Free`,
+        ctaHref: config.category === 'food_trailer' ? '/sell-food-trailer' : '/sell-my-food-truck',
+      });
 
   const primaryHeading = config.city
     ? `${catPluralLower.charAt(0).toUpperCase() + catPluralLower.slice(1)}${intentLabel ? ` ${intentLabel}` : ''} in ${cityLabel}`
@@ -262,68 +509,163 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
       : `${primary.length} ${catPluralLower}${intentLabel ? ` ${intentLabel}` : ''} available`;
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="sale-light commerce-readable seo-marketplace min-h-screen flex flex-col bg-background">
       <SEO
         title={config.title}
         description={config.description}
         canonical={canonical}
+        image={config.ogImage}
         noindex={noindex}
       />
       <JsonLd schema={[breadcrumbSchema, faqSchema, ...(totalListings > 0 ? [itemListSchema] : [])]} />
       <Header />
 
-      <main className="flex-1">
+      <main className="flex-1" onClickCapture={onTrackedClick}>
         <div className="container py-6 md:py-10 space-y-10">
           <Breadcrumb>
             <BreadcrumbList>
-              <BreadcrumbItem>
-                <BreadcrumbLink asChild><Link to="/">Home</Link></BreadcrumbLink>
-              </BreadcrumbItem>
-              <BreadcrumbSeparator />
-              <BreadcrumbItem>
-                <BreadcrumbPage>{config.h1}</BreadcrumbPage>
-              </BreadcrumbItem>
+              {crumbs.map((c, i) => (
+                <BreadcrumbItem key={`${c.name}-${i}`}>
+                  {i > 0 && <BreadcrumbSeparator />}
+                  {c.href ? (
+                    <BreadcrumbLink asChild><Link to={c.href}>{c.name}</Link></BreadcrumbLink>
+                  ) : (
+                    <BreadcrumbPage>{c.name}</BreadcrumbPage>
+                  )}
+                </BreadcrumbItem>
+              ))}
             </BreadcrumbList>
           </Breadcrumb>
 
-          <header className="space-y-4 max-w-3xl">
+          <header className="seo-marketplace-hero space-y-5" data-cta-location="hero">
+            <p className="v2-home-eyebrow">
+              {config.mode === 'sale' ? 'Vendibook marketplace · For sale' : config.mode === 'rent' ? 'Vendibook marketplace · For rent' : 'Vendibook marketplace'}
+            </p>
             <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-foreground">
               {config.h1}
             </h1>
             <p className="text-base md:text-lg text-muted-foreground leading-relaxed">
               {config.intro}
             </p>
-            <div className="flex flex-wrap gap-2 pt-2">
-              <Button asChild variant="dark-shine">
-                <Link to={`/search?category=${config.category}${config.mode !== 'any' ? `&mode=${config.mode}` : ''}`}>
-                  Open advanced search
+            {config.clarification && (
+              <p className="flex items-start gap-2 text-sm text-muted-foreground leading-relaxed rounded-xl border border-border bg-card px-4 py-3">
+                <Info className="h-4 w-4 mt-0.5 shrink-0 text-primary" aria-hidden="true" />
+                <span>{config.clarification}</span>
+              </p>
+            )}
+            <div className="flex flex-col sm:flex-row sm:flex-wrap gap-3 pt-2">
+              <Button asChild variant="cta" size="cta" className="w-full sm:w-auto">
+                <Link to={searchHref} data-cta-id="hero_search">
+                  Search {catPluralLower} {intentLabel}
+                  <ArrowRight className="h-5 w-5" aria-hidden="true" />
                 </Link>
               </Button>
-              <Button asChild variant="outline">
-                <Link to="/list">List your {categoryLabel(config.category).toLowerCase()}</Link>
+              <Button asChild variant="cta-outline" size="cta" className="w-full sm:w-auto">
+                <Link to={sellerCta.ctaHref} data-cta-id="hero_sell">{sellerCta.ctaLabel}</Link>
               </Button>
             </div>
+            {config.answerBlock && (
+              <a href={`#${config.answerBlock.id}`} className="inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+                {config.answerBlock.heading} <ArrowRight className="h-4 w-4" aria-hidden="true" />
+              </a>
+            )}
+            {config.specialty && (
+              <div className="flex flex-wrap gap-2 pt-1">
+                {specialtyBrowseLinks(config.specialty).map((l) => (
+                  <Button key={l.href} asChild variant="outline" size="sm">
+                    <Link to={l.href}>{l.label}</Link>
+                  </Button>
+                ))}
+              </div>
+            )}
           </header>
+
+          {!loading && inventoryStats && (
+            <section
+              aria-label="Current inventory"
+              className="grid grid-cols-2 gap-3 sm:grid-cols-4 rounded-2xl border border-border bg-card p-4 md:p-5"
+            >
+              <div>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Listings available</p>
+                <p className="text-xl md:text-2xl font-semibold text-foreground">{inventoryStats.count}</p>
+              </div>
+              {inventoryStats.priceRange && (
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">
+                    {config.mode === 'rent' ? 'Listed daily rates' : 'Price range'}
+                  </p>
+                  <p className="text-xl md:text-2xl font-semibold text-foreground">{inventoryStats.priceRange}</p>
+                </div>
+              )}
+              {inventoryStats.locationCount > 0 && (
+                <div>
+                  <p className="text-xs uppercase tracking-wide text-muted-foreground">Locations</p>
+                  <p className="text-xl md:text-2xl font-semibold text-foreground">{inventoryStats.locationCount}</p>
+                </div>
+              )}
+              <div>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">Updated</p>
+                <p className="text-xl md:text-2xl font-semibold text-foreground">Daily</p>
+              </div>
+            </section>
+          )}
 
           {loading ? (
             <div className="flex items-center justify-center py-16 text-muted-foreground">
               <Loader2 className="h-6 w-6 animate-spin" />
             </div>
-          ) : totalListings === 0 ? (
-            <div className="rounded-lg border border-border bg-card p-8 text-center space-y-4">
-              <p className="text-muted-foreground">
-                No active listings in this category right now. Browse related categories or list yours.
+          ) : loadError ? (
+            <div role="alert" className="rounded-2xl border border-border bg-card p-6 space-y-3">
+              <p className="font-medium text-foreground">We couldn't load listings right now.</p>
+              <p className="text-sm text-muted-foreground">
+                This is a temporary loading problem, not an empty marketplace. Try again, or use search.
               </p>
-              <div className="flex flex-wrap gap-2 justify-center">
+              <div className="flex flex-wrap gap-2">
+                <Button variant="default" className="v2-btn" onClick={() => setReloadKey((k) => k + 1)}>Try again</Button>
+                <Button asChild variant="outline"><Link to={searchHref}>Open search</Link></Button>
+              </div>
+            </div>
+          ) : localCount === 0 ? (
+            <div className="space-y-6" data-cta-location="inventory_empty">
+              <ExpandSearchModule
+                pageSlug={canonical}
+                resultCount={0}
+                nationwide={nationwide}
+                zeroResults
+                sellCta={{ label: sellerCta.ctaLabel, href: sellerCta.ctaHref }}
+                alertContext={{ category: config.category, mode: config.mode === 'any' ? undefined : config.mode }}
+              />
+              <div className="flex flex-wrap gap-2">
                 {config.related.map((r) => (
                   <Button key={r.href} asChild variant="outline" size="sm">
                     <Link to={r.href}>{r.label}</Link>
                   </Button>
                 ))}
               </div>
+              {(stateFallback.length > 0 || nationwideFallback.length > 0) && (
+                <div className="space-y-10">
+                  {renderTier(
+                    `More ${catPluralLower}${intentLabel ? ` ${intentLabel}` : ''} across ${stateLabel ?? 'nearby states'}`,
+                    stateFallback,
+                  )}
+                  {renderTier(
+                    `Additional ${catPluralLower}${intentLabel ? ` ${intentLabel}` : ''} available nationwide`,
+                    nationwideFallback,
+                    'Vendibook ships and connects across the US — these listings are open to buyers from other states.',
+                  )}
+                </div>
+              )}
             </div>
+
           ) : (
-            <div className="space-y-10">
+            <div className="space-y-10" data-cta-location="inventory">
+              {localCount > 0 && localCount <= NEAR_EMPTY_THRESHOLD && (
+                <LowInventoryInlineLine
+                  pageSlug={canonical}
+                  resultCount={localCount}
+                  nationwide={nationwide}
+                />
+              )}
               {renderTier(primaryHeading, primary)}
               {stateFallback.length > 0 && renderTier(
                 `More ${catPluralLower}${intentLabel ? ` ${intentLabel}` : ''} across ${stateLabel ?? 'nearby states'}`,
@@ -337,11 +679,93 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
                 nationwideFallback,
                 'Vendibook ships and connects across the US — these listings are open to buyers from other states.',
               )}
+              {isLowInventory && (
+                <ExpandSearchModule
+                  pageSlug={canonical}
+                  resultCount={localCount}
+                  nationwide={nationwide}
+                />
+              )}
             </div>
           )}
 
+          {config.answerBlock && (
+            <section
+              id={config.answerBlock.id}
+              aria-labelledby={`${config.answerBlock.id}-heading`}
+              data-cta-location="answer_block"
+              className="scroll-mt-24 rounded-3xl border border-border bg-card p-5 md:p-10 space-y-6 shadow-sm"
+            >
+              <div className="space-y-3 max-w-3xl">
+                <p className="v2-home-eyebrow flex items-center gap-2"><Compass className="h-3.5 w-3.5" aria-hidden="true" /> Buyer's guide</p>
+                <h2 id={`${config.answerBlock.id}-heading`} className="text-2xl md:text-4xl font-bold tracking-tight text-foreground">
+                  {config.answerBlock.heading}
+                </h2>
+                <p className="text-base md:text-lg text-foreground leading-relaxed">{config.answerBlock.lead}</p>
+              </div>
+              <ul className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {config.answerBlock.options.map((o, idx) => {
+                  const Icon = [Store, Hammer, Handshake][idx % 3];
+                  return (
+                  <li key={o.name} className="rounded-2xl border border-border bg-background p-5 md:p-6 space-y-3">
+                    <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      <Icon className="h-5 w-5" aria-hidden="true" />
+                    </span>
+                    <h3 className="text-lg font-semibold text-foreground">{o.name}</h3>
+                    <p className="text-sm text-foreground"><span className="font-medium">Good for: </span>{o.goodFor}</p>
+                    <p className="text-sm text-muted-foreground"><span className="font-medium text-foreground">Trade-offs: </span>{o.tradeoffs}</p>
+                  </li>
+                  );
+                })}
+              </ul>
+              {config.answerBlock.footnote && (
+                <p className="text-sm text-muted-foreground max-w-3xl">{config.answerBlock.footnote}</p>
+              )}
+              {config.answerBlock.links && config.answerBlock.links.length > 0 && (
+                <div className="flex flex-col sm:flex-row sm:items-center gap-4 pt-2 border-t border-border">
+                  <Button asChild variant="cta" size="cta" className="w-full sm:w-auto mt-4 sm:mt-6">
+                    <Link to={config.answerBlock.links[0].href} data-cta-id="answer_primary">
+                      {config.answerBlock.links[0].label}
+                      <ArrowRight className="h-5 w-5" aria-hidden="true" />
+                    </Link>
+                  </Button>
+                  <div className="flex flex-wrap gap-2 sm:mt-6">
+                  {config.answerBlock.links.slice(1).map((l) => (
+                    <Link key={l.href + l.label} to={l.href} className="inline-block px-3 py-1.5 rounded-full border border-border bg-card text-sm text-foreground hover:border-primary hover:text-primary transition-colors">
+                      {l.label}
+                    </Link>
+                  ))}
+                  </div>
+                </div>
+              )}
+            </section>
+          )}
+
+          {/* Editorial / commercial sections (SEO rental hub, state pages, etc.) */}
+          {config.sections?.map((s, si) => (
+            <section key={s.heading} data-cta-location={`section_${si + 1}`} className="space-y-3 max-w-3xl border-l-2 border-primary/30 pl-5 md:pl-6">
+              <h2 className="text-xl md:text-2xl font-semibold tracking-tight text-foreground">{s.heading}</h2>
+              {s.paragraphs.map((p, i) => (
+                <p key={i} className="text-muted-foreground leading-relaxed">{p}</p>
+              ))}
+              {s.links && s.links.length > 0 && (
+                <div className="flex flex-wrap gap-2 pt-1">
+                  {s.links.map((l) => (
+                    <Link
+                      key={l.href + l.label}
+                      to={l.href}
+                      className="inline-block px-3 py-1.5 rounded-full border border-border bg-card text-sm text-foreground hover:border-primary hover:text-primary transition-colors"
+                    >
+                      {l.label}
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </section>
+          ))}
+
           {/* Related categories */}
-          <section aria-labelledby="related-heading" className="space-y-3">
+          <section aria-labelledby="related-heading" data-cta-location="related" className="space-y-3">
             <h2 id="related-heading" className="text-xl font-semibold text-foreground">
               Related on Vendibook
             </h2>
@@ -359,30 +783,35 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
             </ul>
           </section>
 
+          <TransactionConfidenceSection audience={config.mode === 'rent' ? 'renter' : 'buyer'} source={`category_${config.path}`} />
+
           {/* Seller cross-link strip */}
           <section className="rounded-2xl border border-border bg-card p-6 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
             <div>
-              <h2 className="text-lg font-semibold text-foreground">Have a {categoryLabel(config.category).toLowerCase()} to sell?</h2>
+              <h2 className="text-lg font-semibold text-foreground">{sellerCta.heading}</h2>
               <p className="text-sm text-muted-foreground">
-                List free on Vendibook — photos, video, equipment, offers, and optional secure transaction tools.
+                {sellerCta.body}
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
-              <Button asChild variant="dark-shine">
-                <Link to={config.category === 'food_trailer' ? '/sell-food-trailer' : '/sell-food-truck'}>
-                  List Your {categoryLabel(config.category)} Free
+              <Button asChild variant="default" className="v2-btn">
+                <Link to={sellerCta.ctaHref}>
+                  {sellerCta.ctaLabel}
                 </Link>
               </Button>
               <Button asChild variant="outline">
-                <Link to="/how-it-works-seller">Learn How Selling Works</Link>
+                <Link to={config.mode === 'rent' ? '/how-it-works-host' : '/how-it-works-seller'}>
+                  {config.mode === 'rent' ? 'Learn How Renting Works' : 'Learn How Selling Works'}
+                </Link>
               </Button>
             </div>
           </section>
 
-          {/* City links */}
+          {/* City links (hidden on specialty hubs — those links are not specialty-filtered) */}
+          {!config.specialty && (
           <section aria-labelledby="cities-heading" className="space-y-3">
             <h2 id="cities-heading" className="text-xl font-semibold text-foreground">
-              Browse {categoryLabel(config.category).toLowerCase()}s by city
+              Browse {catPluralLower} by city
             </h2>
             <ul className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
               {cityLinks.map((c) => {
@@ -403,9 +832,13 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
               })}
             </ul>
           </section>
+          )}
+
+          {/* Cross-specialty navigation (national hubs + specialty pages) */}
+          {config.businessTypeNav && <BrowseByBusinessType exclude={config.specialty} />}
 
           {/* FAQ */}
-          <section aria-labelledby="faq-heading" className="space-y-4 max-w-3xl">
+          <section aria-labelledby="faq-heading" data-cta-location="faq" className="space-y-4 max-w-3xl">
             <h2 id="faq-heading" className="text-2xl font-semibold text-foreground">
               Frequently asked questions
             </h2>

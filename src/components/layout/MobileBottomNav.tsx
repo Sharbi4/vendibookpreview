@@ -10,6 +10,12 @@ import { useAuth } from '@/contexts/AuthContext';
  */
 const HIDDEN_PATTERNS = [
   /^\/auth/,
+  /^\/onboarding/,
+  /^\/welcome(?:$|\/(?!classic))/,
+  // Unified workspace ships its own bottom navigation (but not /dashboard/classic).
+  /^\/dashboard(?:$|\/(?!classic))/,
+  /^\/dashboard-v2(?:\/|$)/,
+  /^\/account(?:\/|$)/,
   /^\/reset-password/,
   /^\/activation/,
   /^\/checkout\//,
@@ -29,13 +35,16 @@ const MobileBottomNav = () => {
 
   // Hide on specific flows
   if (HIDDEN_PATTERNS.some((p) => p.test(location.pathname))) return null;
+  // The quick-start listing wizard renders at /list?start=true — hide the nav
+  // there too so it can't cover the wizard's actions.
+  if (location.pathname === '/list' && new URLSearchParams(location.search).get('start') === 'true') return null;
 
   const items = [
     { to: '/search', label: 'Search', icon: Search },
-    { to: '/favorites', label: 'Saved', icon: Heart },
-    { to: '/messages', label: 'Inbox', icon: MessageSquare },
+    { to: user ? '/dashboard/saved' : '/favorites', label: 'Saved', icon: Heart },
+    { to: user ? '/dashboard/messages' : '/messages', label: 'Inbox', icon: MessageSquare },
     { to: user ? '/dashboard' : '/list', label: user ? 'Dashboard' : 'List', icon: LayoutGrid },
-    { to: user ? '/account' : '/auth', label: user ? 'Account' : 'Sign in', icon: User },
+    { to: user ? '/dashboard/account' : '/auth', label: user ? 'Account' : 'Sign in', icon: User },
   ];
 
   return (
@@ -61,8 +70,8 @@ const MobileBottomNav = () => {
                 cn(
                   'flex flex-col items-center justify-center gap-0.5 py-2.5 text-[10px] font-medium transition-colors no-tap-highlight active:bg-muted/40',
                   isActive
-                    ? 'text-foreground'
-                    : 'text-muted-foreground hover:text-foreground'
+                    ? 'text-white'
+                    : 'text-white/80 hover:text-white'
                 )
               }
             >

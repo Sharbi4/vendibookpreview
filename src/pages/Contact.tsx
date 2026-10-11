@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import SEO from '@/components/SEO';
 import { z } from 'zod';
 import { Phone, Mail, Clock, Send, Loader2, CheckCircle, Ticket, Headphones, CalendarClock, ArrowRight } from 'lucide-react';
 import Header from '@/components/layout/Header';
@@ -18,6 +19,7 @@ import SocialContactOptions from '@/components/support/SocialContactOptions';
 import FeaturedArticles from '@/components/support/FeaturedArticles';
 import { trackFormSubmit } from '@/lib/analytics';
 import { trackFormSubmitConversion } from '@/lib/gtagConversions';
+import contactPaperPlane from '@/assets/contact-paper-plane.svg.asset.json';
 
 const contactSchema = z.object({
   name: z.string().trim().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
@@ -96,6 +98,11 @@ const Contact = () => {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
+      <SEO
+        title="Contact Vendibook Support | Buying, Selling & Rentals"
+        description="Contact Vendibook support for help with listings, buying, selling, rentals, payments, and your account. Send a support request or schedule a callback."
+        canonical="/contact"
+      />
       <Header />
       
       <main className="flex-1">
@@ -114,6 +121,15 @@ const Contact = () => {
           
           <div className="container relative z-10">
             <div className="text-center mb-12">
+              {/* Animated paper plane artwork */}
+              <img
+                src={contactPaperPlane.url}
+                alt=""
+                aria-hidden="true"
+                className="mx-auto w-40 md:w-52 h-auto -mb-2 md:-mb-4 drop-shadow-xl animate-in fade-in zoom-in-95 duration-700"
+                draggable={false}
+              />
+
               {/* Badge */}
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 text-primary text-sm font-medium mb-6">
                 

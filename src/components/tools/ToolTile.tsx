@@ -10,8 +10,8 @@ interface Props {
   className?: string;
 }
 
-const tierChip = (t: string) =>
-  t === 'starter' ? 'Starter' : t === 'pro' ? 'Growth' : t === 'premium' ? 'Operator' : 'Free';
+// Current catalog only sells Vendibook Pro; retired tier names are not shown.
+const tierChip = (t: string) => (t === 'free' ? 'Free' : 'Vendibook Pro');
 
 
 /**
@@ -69,7 +69,7 @@ const ToolTile = ({ tool, access, className }: Props) => {
           <span className="inline-flex items-center gap-1 rounded-md border border-emerald-500/35 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-medium text-emerald-500">
             <Check className="h-3 w-3" /> Unlocked
           </span>
-        ) : tool.minTier === 'free' ? null : (
+        ) : tool.minTier === 'free' || tool.hasFreeTier ? null : (
           <span
             className={cn(
               'inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-[10px] font-medium',

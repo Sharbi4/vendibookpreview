@@ -1,0 +1,133 @@
+{
+  "date": "2026-10-04",
+  "scope": "US; bounded Semrush reports, not a complete keyword gap. Search volumes are estimates.",
+  "reports": {
+    "deepCompetitors": {
+      "data": "Domain;Competitor Relevance;Common Keywords;Organic Keywords;Organic Traffic;Organic Cost;Adwords Keywords\nonlyfoodtrucks.com;0.12;3;269;2;0;0\natxfoodtrailers.com;0.11;6;126;470;465;0\nculinarycoachworks.com;0.10;7;154;311;324;0\nawesomefoodtrailers.com;0.09;6;175;120;92;0\nnationwideautogroup.com;0.08;6;602;1024;1095;0\nranchotrailers.com;0.08;5;78;35;10;0\nfoodtruckbuildersofphoenix.com;0.08;7;363;72;125;0\nrent2owntrailers.com;0.08;7;341;4863;6005;0\n",
+      "metadata": {
+        "format": "csv",
+        "pagination": {
+          "limit": 8,
+          "sort": "competition_level_desc"
+        },
+        "url": "https://www.semrush.com/analytics/organic/competitors/?db=us&display_limit=8&display_sort=competition_level_desc&q=vendibook.com",
+        "usage": {
+          "api_units": 320
+        }
+      }
+    },
+    "deepAuthority": {
+      "data": "target;ascore;backlinks_num;domains_num;follows_num;nofollows_num\nvendibook.com;7;209;191;185;23\nusedvending.com;30;22732127;3515;14245553;8558220\nonlyfoodtrucks.com;7;406;273;339;67\nusedfoodtrucks.com;34;2672;887;1812;863\n",
+      "metadata": {
+        "format": "csv",
+        "url": "https://www.semrush.com/analytics/backlinks/bulk-analysis/?export_columns=target%2Cauthority_score%2Cbacklinks_num%2Cdomains_num%2Cfollows_num%2Cnofollows_num&q=vendibook.com%2Cusedvending.com%2Conlyfoodtrucks.com%2Cusedfoodtrucks.com&target_types=root_domain%2Croot_domain%2Croot_domain%2Croot_domain",
+        "usage": {
+          "api_units": 480
+        }
+      }
+    },
+    "deepLinkGap": {
+      "data": "domain;domain_ascore;domain_score;matches_num;vendibook.com;usedvending.com;usedfoodtrucks.com\npinterest.com;100;100;1;0;17;0\nyahoo.com;100;100;2;0;72;57\nbing.com;94;94;3;1;33;33\nlinktr.ee;89;89;1;0;1;0\nihg.com;87;87;2;0;3;3\nsubstack.com;87;87;1;0;1;0\nya.ru;86;86;1;0;1;0\nshopify.com;84;84;1;0;17;0\nwindy.com;80;80;1;0;1;0\nalibaba.com;79;79;2;0;7;1\nbbb.org;78;78;1;0;1;0\nsquareup.com;77;77;1;0;0;1\nhuffpost.com;75;75;1;0;1;0\ntoasttab.com;75;75;1;0;0;6\nwikidot.com;72;72;1;0;4;0\ngrokipedia.com;69;69;1;0;6;0\nmawdoo3.com;68;68;1;0;1;0\nrumble.com;68;68;1;0;35;0\ntinyurl.com;68;68;1;0;1;0\nsch.gr;67;67;1;0;1;0\nudg.mx;66;66;1;0;1;0\nbrandfetch.com;59;59;1;0;1;0\nbusinessnewsdaily.com;56;56;1;0;1;0\ngeocaching.com;55;55;1;0;2;0\naccio.com;54;54;2;0;9;14\nbeamng.com;54;54;1;0;1;0\napify.com;51;51;1;0;1;0\nchinaz.com;51;51;1;0;1;0\nchron.com;51;51;1;0;2;0\nescoffier.edu;51;51;1;0;2;0\nbeehiiv.com;49;49;1;0;1;0\necwid.com;49;49;1;0;62;0\nforumotion.com;48;48;1;0;1;0\npartstown.com;48;48;1;0;0;1\ndeputy.com;47;47;1;0;3;0\neinpresswire.com;46;46;1;0;1;0\nsitelike.org;46;46;2;0;38;15\nezilon.com;45;45;1;0;2;0\nimcdb.org;44;44;1;0;3;0\nmetafilter.com;44;44;1;0;2;0\n",
+      "metadata": {
+        "format": "csv",
+        "pagination": {
+          "limit": 40,
+          "sort": "domain_score_desc"
+        },
+        "url": "https://www.semrush.com/analytics/gap/backlinks/?display_limit=40&display_sort=domain_score_desc&q=vendibook.com%2Cusedvending.com%2Cusedfoodtrucks.com&target_types=root_domain%2Croot_domain%2Croot_domain",
+        "usage": {
+          "api_units": 1600
+        }
+      }
+    },
+    "deepCompetitorKeywords": {
+      "data": "Keyword;Position;Search Volume;Url;Keyword Difficulty\nfood truck for sale;70;22200;https://www.usedvending.com/?t=public/1000&is_p=161;25.00\nfood truck for sale;53;22200;https://www.usedvending.com/used-mobile-food-trucks/california/;25.00\nfood truck for sale;41;22200;https://www.usedvending.com/used-mobile-food-trucks/california/;25.00\nfood truck for sale;36;22200;https://www.usedvending.com/used-mobile-food-trucks/california/;25.00\nfood truck for sale;29;22200;https://www.usedvending.com/used-mobile-food-trucks/missouri/;25.00\nfood truck for sale;26;22200;https://www.usedvending.com/used-mobile-food-trucks/georgia/;25.00\nfood truck for sale;16;22200;https://www.usedvending.com/used-mobile-food-trucks/georgia/;25.00\nfood truck for sale;11;22200;https://www.usedvending.com/used-mobile-food-trucks/ohio/;25.00\nfood truck for sale;5;22200;https://www.usedvending.com/used-mobile-food-trucks/illinois/;25.00\nfood trucks for sale;69;14800;https://www.usedvending.com/?t=public/1000&is_p=161;31.00\nfood trucks for sale;66;14800;https://www.usedvending.com/?t=public/1000&is_p=161;31.00\nfood trucks for sale;56;14800;https://www.usedvending.com/used-mobile-food-trucks/texas/;31.00\nfood trucks for sale;51;14800;https://www.usedvending.com/;31.00\nfood trucks for sale;42;14800;https://www.usedvending.com/used-mobile-food-trucks/illinois/;31.00\nfood trucks for sale;36;14800;https://www.usedvending.com/used-mobile-food-trucks/illinois/;31.00\nfood trucks for sale;27;14800;https://www.usedvending.com/used-mobile-food-trucks/illinois/;31.00\nfood trucks for sale;22;14800;https://www.usedvending.com/used-mobile-food-trucks/missouri/;31.00\nfood trucks for sale;16;14800;https://www.usedvending.com/used-mobile-food-trucks/ohio/;31.00\nfood trucks for sale;11;14800;https://www.usedvending.com/used-mobile-food-trucks/georgia/;31.00\nfood trucks for sale;5;14800;https://www.usedvending.com/used-mobile-food-trucks/;31.00\nfood trailer;73;12100;https://www.usedvending.com/blog/best-food-concession-trailers-america/;12.00\nfood trailer;18;12100;https://www.usedvending.com/used-food-concession-trailers/california/moreno-valley/;12.00\nfood trailer;4;12100;https://www.usedvending.com/used-food-concession-trailers/illinois/joliet/;12.00\nfood trailer for sale;82;6600;https://www.usedvending.com/used-food-concession-trailers/indiana/;37.00\nfood trailer for sale;70;6600;https://www.usedvending.com/used-food-concession-trailers/;37.00\nfood trailer for sale;64;6600;https://www.usedvending.com/used-food-concession-trailers/georgia/;37.00\nfood trailer for sale;56;6600;https://www.usedvending.com/used-food-concession-trailers/missouri/;37.00\nfood trailer for sale;50;6600;https://www.usedvending.com/used-food-concession-trailers/indiana/;37.00\nfood trailer for sale;37;6600;https://www.usedvending.com/used-food-concession-trailers/ohio/;37.00\nfood trailer for sale;25;6600;https://www.usedvending.com/used-food-concession-trailers/louisiana/;37.00\nfood trailer for sale;7;6600;https://www.usedvending.com/;37.00\nused food trucks for sale;82;5400;https://www.usedvending.com/?is_p=113;49.00\nused food trucks for sale;76;5400;https://www.usedvending.com/used-food-concession-trailers/;49.00\nused food trucks for sale;74;5400;https://www.usedvending.com/used-mobile-food-trucks/georgia/;49.00\nused food trucks for sale;72;5400;https://www.usedvending.com/used-mobile-food-trucks/illinois/;49.00\nused food trucks for sale;70;5400;https://www.usedvending.com/used-mobile-food-trucks/south-carolina/;49.00\nused food trucks for sale;68;5400;https://www.usedvending.com/used-mobile-food-trucks/missouri/;49.00\nused food trucks for sale;65;5400;https://www.usedvending.com/used-mobile-food-trucks/massachusetts/;49.00\nused food trucks for sale;64;5400;https://www.usedvending.com/used-mobile-food-trucks/massachusetts/;49.00\nused food trucks for sale;61;5400;https://www.usedvending.com/used-mobile-food-trucks/indiana/;49.00\nused food trucks for sale;58;5400;https://www.usedvending.com/used-mobile-food-trucks/texas/dallas/;49.00\nused food trucks for sale;52;5400;https://www.usedvending.com/used-mobile-food-trucks/maryland/;49.00\nused food trucks for sale;47;5400;https://www.usedvending.com/used-mobile-food-trucks/north-carolina/;49.00\nused food trucks for sale;38;5400;https://www.usedvending.com/used-mobile-food-trucks/michigan/;49.00\nused food trucks for sale;22;5400;https://www.usedvending.com/used-mobile-food-trucks/florida/;49.00\n",
+      "metadata": {
+        "format": "csv",
+        "pagination": {
+          "limit": 45,
+          "sort": "volume_desc"
+        },
+        "url": "https://www.semrush.com/analytics/organic/positions/?db=us&display_limit=45&display_sort=volume_desc&export_columns=keyword%2Cposition%2Cvolume%2Curl%2Ckeyword_difficulty&q=usedvending.com",
+        "usage": {
+          "api_units": 450
+        }
+      }
+    },
+    "deepTopics": {
+      "data": "Keyword;Search Volume;Keyword Difficulty Index;Intent\nfood truck financing;1600;29;1\nfood truck rental;5400;18;0\ncoffee trailer for sale;2400;17;3\nfood truck inspection;210;12;1\nrent to own food truck;210;20;1\nfood truck commissary;1300;19;0\nfood truck vs trailer;110;1;0\nused food trucks for sale;6600;32;3\nfood truck startup costs;720;20;1\nfood trailer financing;390;12;1\n",
+      "metadata": {
+        "format": "csv",
+        "url": "https://www.semrush.com/analytics/keywordoverview/?db=us&export_columns=keyword%2Cvolume%2Ckeyword_difficulty%2Cintent&q=food+truck+financing%3Bfood+truck+rental%3Bcoffee+trailer+for+sale%3Bfood+truck+inspection%3Brent+to+own+food+truck%3Bfood+truck+commissary%3Bfood+truck+vs+trailer%3Bused+food+trucks+for+sale%3Bfood+truck+startup+costs%3Bfood+trailer+financing",
+        "usage": {
+          "api_units": 100
+        }
+      }
+    },
+    "link-businessnewsdaily.com": {
+      "data": "source_url;source_title;target_url;anchor;nofollow;lostlink;last_seen\nhttps://www.businessnewsdaily.com/9237-how-to-start-food-truck-business.html;How to Start a Food Truck Business in 2026;https://www.usedvending.com/used-food-trucks-for-sale.php;Used Vending;false;false;1790986478\n",
+      "metadata": {
+        "format": "csv",
+        "pagination": {
+          "limit": 4
+        },
+        "url": "https://www.semrush.com/analytics/backlinks/backlinks/?display_limit=4&export_columns=source_url%2Csource_title%2Ctarget_url%2Canchor%2Cnofollow%2Clostlink%2Clast_seen&q=usedvending.com&searchType=root_domain",
+        "usage": {
+          "api_units": 200
+        }
+      }
+    },
+    "link-escoffier.edu": {
+      "data": "source_url;source_title;target_url;anchor;nofollow;lostlink;last_seen\nhttps://www.escoffier.edu/blog/food-entrepreneurship/how-to-start-your-own-food-truck/;How to Start a Food Truck: The Essential Guide - Escoffier;https://www.usedvending.com/;Used Vending;false;false;1790512561\nhttps://www.escoffier.edu/blog/food-entrepreneurship/how-to-buy-a-food-truck/;How to Buy a Food Truck - Escoffier;https://www.usedvending.com/;Used Vending;false;false;1790283915\n",
+      "metadata": {
+        "format": "csv",
+        "pagination": {
+          "limit": 4
+        },
+        "url": "https://www.semrush.com/analytics/backlinks/backlinks/?display_limit=4&export_columns=source_url%2Csource_title%2Ctarget_url%2Canchor%2Cnofollow%2Clostlink%2Clast_seen&q=usedvending.com&searchType=root_domain",
+        "usage": {
+          "api_units": 80
+        }
+      }
+    },
+    "link-toasttab.com": {
+      "data": "source_url;source_title;target_url;anchor;nofollow;lostlink;last_seen\nhttps://pos.toasttab.com/blog/on-the-line/selling-a-food-truck;Selling a Food Truck: How to Sell a Food Truck Business;https://www.usedfoodtrucks.com/;UsedFoodTrucks.com;false;false;1790278202\nhttps://pos.toasttab.com/es-us/blog/on-the-line/selling-a-food-truck;Selling a Food Truck: How to Sell a Food Truck Business;https://www.usedfoodtrucks.com/;UsedFoodTrucks.com;false;false;1789994915\nhttps://pos.toasttab.com/ko-us/blog/on-the-line/selling-a-food-truck;Selling a Food Truck: How to Sell a Food Truck Business;https://www.usedfoodtrucks.com/;UsedFoodTrucks.com;false;false;1789842932\nhttps://pos.toasttab.com/th-us/blog/on-the-line/selling-a-food-truck;Selling a Food Truck: How to Sell a Food Truck Business;https://www.usedfoodtrucks.com/;UsedFoodTrucks.com;false;false;1789813365\n",
+      "metadata": {
+        "format": "csv",
+        "pagination": {
+          "limit": 4
+        },
+        "url": "https://www.semrush.com/analytics/backlinks/backlinks/?display_limit=4&export_columns=source_url%2Csource_title%2Ctarget_url%2Canchor%2Cnofollow%2Clostlink%2Clast_seen&q=usedfoodtrucks.com&searchType=root_domain",
+        "usage": {
+          "api_units": 440
+        }
+      }
+    },
+    "link-shopify.com": {
+      "data": "source_url;source_title;target_url;anchor;nofollow;lostlink;last_seen\nhttps://www.shopify.com/blog/how-to-start-a-vending-machine-business;How to Start a Vending Machine Business in 2026 - Shopify;https://www.usedvending.com/used-vending-machines/;Starting from $1,000;true;false;1790243714\nhttps://www.shopify.com/au/blog/how-to-start-a-vending-machine-business;How to Start a Vending Machine Business in 2026 - Shopify Australia;https://www.usedvending.com/used-vending-machines/;Starting from $1,000;true;false;1788925568\nhttps://www.shopify.com/il/blog/how-to-start-a-vending-machine-business;How to Start a Vending Machine Business in 2026 - Shopify Israel;https://www.usedvending.com/used-vending-machines/;Starting from $1,000;true;false;1788504136\nhttps://www.shopify.com/id/blog/how-to-start-a-vending-machine-business;How to Start a Vending Machine Business in 2026 - Shopify Indonesia;https://www.usedvending.com/used-vending-machines/;Starting from $1,000;true;false;1788603108\n",
+      "metadata": {
+        "format": "csv",
+        "pagination": {
+          "limit": 4
+        },
+        "url": "https://www.semrush.com/analytics/backlinks/backlinks/?display_limit=4&export_columns=source_url%2Csource_title%2Ctarget_url%2Canchor%2Cnofollow%2Clostlink%2Clast_seen&q=usedvending.com&searchType=root_domain",
+        "usage": {
+          "api_units": 200
+        }
+      }
+    },
+    "link-squareup.com": {
+      "data": "source_url;source_title;target_url;anchor;nofollow;lostlink;last_seen\nhttps://squareup.com/ca/en/the-bottom-line/operating-your-business/food-truck-cost;How Much Does It Cost To Start a Food Truck? Here Are 10 Ways To Save | Square;https://www.usedfoodtrucks.com/food-trucks-for-sale/canada/;used truck;false;true;1787917489\n",
+      "metadata": {
+        "format": "csv",
+        "pagination": {
+          "limit": 4
+        },
+        "url": "https://www.semrush.com/analytics/backlinks/backlinks/?display_limit=4&export_columns=source_url%2Csource_title%2Ctarget_url%2Canchor%2Cnofollow%2Clostlink%2Clast_seen&q=usedfoodtrucks.com&searchType=root_domain",
+        "usage": {
+          "api_units": 480
+        }
+      }
+    }
+  }
+}

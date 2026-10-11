@@ -1,5 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
+import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
 
 
 const corsHeaders = {
@@ -44,6 +46,7 @@ const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+  if (!(await isAdminOrBackendCaller(req))) return forbiddenResponse();
 
   console.log("Starting admin daily digest generation...");
 
@@ -274,7 +277,7 @@ const handler = async (req: Request): Promise<Response> => {
     });
 
     const totalItems = enrichedBookings.length + enrichedDocs.length + enrichedDisputes.length;
-    const logoUrl = 'https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png';
+    const logoUrl = 'https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png?v=2026-08';
 
     const emailHtml = `
       <!DOCTYPE html>
@@ -437,8 +440,7 @@ const handler = async (req: Request): Promise<Response> => {
     const dateStamp = new Date().toISOString().slice(0, 10);
     const sendResults: any[] = [];
     for (const adminEmail of adminEmails as string[]) {
-      const { error: emailError } = await supabase.functions.invoke("send-transactional-email", {
-        body: {
+      const { error: emailError } = await invokeTransactionalEmail({
           templateName: "admin-daily-digest",
           recipientEmail: adminEmail,
           idempotencyKey: `admin-digest-${adminEmail}-${dateStamp}`,
@@ -450,8 +452,7 @@ const handler = async (req: Request): Promise<Response> => {
             activeDisputes: enrichedDisputes,
             totalItems,
           },
-        },
-      });
+        });
       sendResults.push({ admin: adminEmail, ok: !emailError, error: emailError?.message });
     }
 

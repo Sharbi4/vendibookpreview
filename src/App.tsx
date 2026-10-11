@@ -1,8 +1,12 @@
+import { NativePushLifecycle } from '@/hooks/useNativePushNotifications';
+import { useNativeNavigation } from '@/hooks/useNativeNavigation';
 import React, { Suspense, lazy, useEffect } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { useListingsLiveSync } from "@/lib/listings/liveSync";
+
 import { BrowserRouter, Routes, Route, useLocation, Navigate, useParams } from "react-router-dom";
 
 // Redirects /listings/:id (plural) to the canonical /listing/:id, preserving querystring + hash
@@ -16,19 +20,21 @@ import CookieConsent from "@/components/CookieConsent";
 import ScrollToTop from "@/components/ScrollToTop";
 
 import PageTransition from "@/components/PageTransition";
+import PreserveQueryRedirect from "@/components/routing/PreserveQueryRedirect";
+import LegacyMessageThreadRedirect from "@/components/routing/LegacyMessageThreadRedirect";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import { usePageTracking } from "@/hooks/usePageTracking";
 import { usePendingMessage } from "@/hooks/usePendingMessage";
 import { AnimatePresence } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import GoogleOneTap from "@/components/auth/GoogleOneTap";
+import PhoneVerificationPrompt from "@/components/comms/PhoneVerificationPrompt";
 import TawkIdentity from "@/components/support/TawkIdentity";
 
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import OfflineBanner from "@/components/system/OfflineBanner";
 import { useOfflineQueueSync } from "@/hooks/useOfflineQueue";
 import { ReferralCapture } from "@/components/referrals/ReferralCapture";
-const LiveActivityFeed = lazy(() => import("@/components/social-proof/LiveActivityFeed").then(m => ({ default: m.LiveActivityFeed })));
 import { toast } from "sonner";
 
 
@@ -42,13 +48,60 @@ const LegalDocumentPage = lazy(() => import("./pages/LegalDocumentPage"));
 const LegalCenter = lazy(() => import("./pages/LegalCenter"));
 const SmsTerms = lazy(() => import("./pages/legal/SmsTerms"));
 const SmsOptInProof = lazy(() => import("./pages/legal/SmsOptInProof"));
+const VideoWalkthroughTerms = lazy(() => import("./pages/legal/VideoWalkthroughTerms"));
+const DevicePermissionsPrivacy = lazy(() => import("./pages/legal/DevicePermissionsPrivacy"));
+const LocationTracking = lazy(() => import("./pages/legal/LocationTracking"));
+const HandoffTerms = lazy(() => import("./pages/legal/HandoffTerms"));
+const PaymentsTermsPage = lazy(() => import("./pages/legal/PaymentsTerms"));
+const FinancingDisclosure = lazy(() => import("./pages/legal/FinancingDisclosure"));
+const RecordingConsent = lazy(() => import("./pages/legal/RecordingConsent"));
+const SellerPaymentTerms = lazy(() => import("./pages/legal/SellerPaymentTerms"));
+const EsignConsent = lazy(() => import("./pages/legal/EsignConsent"));
+const AdminLegalAcceptances = lazy(() => import("./pages/AdminLegalAcceptances"));
+const AdminPayPalApiSamples = lazy(() => import("./pages/AdminPayPalApiSamples"));
+const AdminDisputes = lazy(() => import("./pages/AdminDisputes"));
 const SmsEnrollment = lazy(() => import("./pages/SmsEnrollment"));
 const SmsOptIn = lazy(() => import("./pages/SmsOptIn"));
-const Dashboard = lazy(() => import("./pages/Dashboard"));
-const CreateListing = lazy(() => import("./pages/CreateListing"));
+// Unified Vendibook workspace (primary logged-in experience)
+const WorkspaceOnboarding = lazy(() => import("./pages/workspace/WorkspaceOnboarding"));
+const WorkspaceHome = lazy(() => import("./pages/workspace/WorkspaceHome"));
+const WorkspaceListings = lazy(() => import("./pages/workspace/WorkspaceListings"));
+const WorkspaceListingNew = lazy(() => import("./pages/workspace/WorkspaceListingNew"));
+const WorkspaceListingEditor = lazy(() => import("./pages/workspace/WorkspaceListingEditor"));
+const WorkspaceActivity = lazy(() => import("./pages/workspace/WorkspaceActivity"));
+const WorkspaceTransactions = lazy(() => import("./pages/workspace/WorkspaceTransactions"));
+const WorkspaceCases = lazy(() => import("./pages/workspace/WorkspaceCases"));
+const WorkspacePayments = lazy(() => import("./pages/workspace/WorkspacePayments"));
+const WorkspacePaymentSetup = lazy(() => import("./pages/workspace/WorkspacePaymentSetup"));
+const SquareConnectCallback = lazy(() => import("./pages/workspace/SquareConnectCallback"));
+const WorkspaceSellerOnboarding = lazy(() => import("./pages/workspace/WorkspaceSellerOnboarding"));
+const WorkspaceBookingNew = lazy(() => import("./pages/workspace/WorkspaceBookingNew"));
+const WorkspaceBookingDetail = lazy(() => import("./pages/workspace/WorkspaceBookingDetail"));
+const WorkspaceReporting = lazy(() => import("./pages/workspace/WorkspaceReporting"));
+const WorkspaceAnalytics = lazy(() => import("./pages/workspace/WorkspaceAnalytics"));
+const WorkspaceAccount = lazy(() => import("./pages/workspace/WorkspaceAccount"));
+const WorkspaceAccountSettings = lazy(() => import("./pages/workspace/WorkspaceAccountSettings"));
+const WorkspaceProfile = lazy(() => import("./pages/workspace/WorkspaceProfile"));
+const WorkspaceMessages = lazy(() => import("./pages/workspace/WorkspaceMessages"));
+const WorkspaceNotifications = lazy(() => import("./pages/workspace/WorkspaceNotifications"));
+const WorkspaceSaved = lazy(() => import("./pages/workspace/WorkspaceSaved"));
+const WorkspaceOffers = lazy(() => import("./pages/workspace/WorkspaceOffers"));
+const WalkthroughSchedule = lazy(() => import("./pages/WalkthroughSchedule"));
+const WalkthroughDetail = lazy(() => import("./pages/WalkthroughDetail"));
+const WalkthroughNextSteps = lazy(() => import("./pages/WalkthroughNextSteps"));
 const EditListing = lazy(() => import("./pages/EditListing"));
+const RentItOut = lazy(() => import("./pages/RentItOut"));
+const ListingPaymentsFinancing = lazy(() => import("./pages/ListingPaymentsFinancing"));
+const ListingStart = lazy(() => import("./pages/ListingStart"));
+const ListStart = lazy(() => import("./pages/ListStart"));
+const ListingFinish = lazy(() => import("./pages/ListingFinish"));
+const ConciergeIntro = lazy(() => import("./pages/ConciergeIntro"));
+const ConciergeOrderPage = lazy(() => import("./pages/ConciergeOrder"));
+
+
 const ListPage = lazy(() => import("./pages/List"));
 const AIListingCreator = lazy(() => import("./pages/AIListingCreator"));
+const ListWithVendi = lazy(() => import("./pages/ListWithVendi"));
 const ListingDetail = lazy(() => import("./pages/ListingDetail"));
 const Account = lazy(() => import("./pages/Account"));
 const Favorites = lazy(() => import("./pages/Favorites"));
@@ -58,10 +111,17 @@ const Terms = lazy(() => import("./pages/Terms"));
 const Insurance = lazy(() => import("./pages/Insurance"));
 const Search = lazy(() => import("./pages/Search"));
 const HowItWorks = lazy(() => import("./pages/HowItWorks"));
+const HowPurchasingWorks = lazy(() => import("./pages/HowPurchasingWorks"));
+const VendibookFreight = lazy(() => import("./pages/VendibookFreight"));
+const ShipYourFoodTruck = lazy(() => import("./pages/ShipYourFoodTruck"));
 const Contact = lazy(() => import("./pages/Contact"));
 const IdentityVerification = lazy(() => import("./pages/IdentityVerification"));
+const IdentityVerificationInfo = lazy(() => import("./pages/IdentityVerificationInfo"));
 const VerificationComplete = lazy(() => import("./pages/VerificationComplete"));
 const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
+const BookingConfirmation = lazy(() => import("./pages/BookingConfirmation"));
+const OrderReceipt = lazy(() => import("./pages/OrderReceipt"));
+const PaymentReturn = lazy(() => import("./pages/PaymentReturn"));
 const PaymentCancelled = lazy(() => import("./pages/PaymentCancelled"));
 const Messages = lazy(() => import("./pages/Messages"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
@@ -70,7 +130,15 @@ const AdminListings = lazy(() => import("./pages/AdminListings"));
 const AdminRisk = lazy(() => import("./pages/AdminRisk"));
 const AdminFinance = lazy(() => import("./pages/AdminFinance"));
 const AdminPayouts = lazy(() => import("./pages/AdminPayouts"));
+const AdminFreightRequests = lazy(() => import("./pages/AdminFreightRequests"));
+const AdminUsers = lazy(() => import("./pages/AdminUsers"));
+const AdminMessages = lazy(() => import("./pages/AdminMessages"));
+const AdminVerifiedSellers = lazy(() => import("./pages/AdminVerifiedSellers"));
 const OrderDetail = lazy(() => import("./pages/OrderDetail"));
+const HandoffPage = lazy(() => import("./pages/HandoffPage"));
+const DriverHandoff = lazy(() => import("./pages/DriverHandoff"));
+const DeliveryMode = lazy(() => import("./pages/DeliveryMode"));
+
 
 const AdminDigest = lazy(() => import("./pages/AdminDigest"));
 const AdminOrchestration = lazy(() => import("./pages/AdminOrchestration"));
@@ -78,12 +146,12 @@ const AdminErrors = lazy(() => import("./pages/AdminErrors"));
 const AdminQA = lazy(() => import("./pages/AdminQA"));
 const AdminSupportTickets = lazy(() => import("./pages/AdminSupportTickets"));
 const AdminRevenue = lazy(() => import("./pages/AdminRevenue"));
+const AdminCampusPartners = lazy(() => import("./pages/AdminCampusPartners"));
 const AdminMonetizationOps = lazy(() => import("./pages/AdminMonetizationOps"));
 const AdminBilling = lazy(() => import("./pages/AdminBilling"));
 const ServicesHub = lazy(() => import("./pages/ServicesHub"));
 const BuyerServicesHub = lazy(() => import("./pages/BuyerServicesHub"));
 const BuyerDashboard = lazy(() => import("./pages/BuyerDashboard"));
-const HostProPlans = lazy(() => import("./pages/HostProPlans"));
 const AccountSubscription = lazy(() => import("./pages/AccountSubscription"));
 const ProductCheckout = lazy(() => import("./pages/ProductCheckout"));
 const HostedPayment = lazy(() => import("./pages/HostedPayment"));
@@ -91,6 +159,9 @@ const Pricing = lazy(() => import("./pages/Pricing"));
 const Purchases = lazy(() => import("./pages/Purchases"));
 const PermitPathUpgrades = lazy(() => import("./pages/PermitPathUpgrades"));
 const Partners = lazy(() => import("./pages/Partners"));
+const Press = lazy(() => import("./pages/Press"));
+const AdminAuthority = lazy(() => import("./pages/AdminAuthority"));
+const Financing = lazy(() => import("./pages/Financing"));
 const ListingPurchaseReviewIntake = lazy(() => import("./pages/ListingPurchaseReviewIntake"));
 const ProtectedSalePage = lazy(() => import("./pages/ProtectedSale"));
 const TransactionDetail = lazy(() => import("./pages/TransactionDetail"));
@@ -103,11 +174,14 @@ const CaliforniaPrivacy = lazy(() => import("./pages/CaliforniaPrivacy"));
 const ToolsIndex = lazy(() => import("./pages/tools/Index"));
 const PricePilot = lazy(() => import("./pages/tools/PricePilot"));
 const PermitPath = lazy(() => import("./pages/tools/PermitPath"));
-const BuildKit = lazy(() => import("./pages/tools/BuildKit"));
-const ListingStudio = lazy(() => import("./pages/tools/ListingStudio"));
-const ConceptLab = lazy(() => import("./pages/tools/ConceptLab"));
-const MarketRadar = lazy(() => import("./pages/tools/MarketRadar"));
-const MarketingStudio = lazy(() => import("./pages/tools/MarketingStudio"));
+// PARKED 2026-08-25: BuildKit, Listing Studio, Concept Lab, Market Radar, and
+// Marketing Studio are disabled site-wide (back burner for a future project).
+// Their pages stay in src/pages/tools/ — restore the imports + routes to relaunch.
+// const BuildKit = lazy(() => import("./pages/tools/BuildKit"));
+// const ListingStudio = lazy(() => import("./pages/tools/ListingStudio"));
+// const ConceptLab = lazy(() => import("./pages/tools/ConceptLab"));
+// const MarketRadar = lazy(() => import("./pages/tools/MarketRadar"));
+// const MarketingStudio = lazy(() => import("./pages/tools/MarketingStudio"));
 const StartupGuide = lazy(() => import("./pages/tools/StartupGuide"));
 const FoodTruckStartupCosts2026 = lazy(() => import("./pages/tools/FoodTruckStartupCosts2026"));
 const RegulationsHub = lazy(() => import("./pages/tools/RegulationsHub"));
@@ -121,27 +195,31 @@ const VendorLots = lazy(() => import("./pages/VendorLots"));
 const Wanted = lazy(() => import("./pages/Wanted"));
 const FAQ = lazy(() => import("./pages/FAQ"));
 const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
-const EmailUnsubscribe = lazy(() => import("./pages/EmailUnsubscribe"));
+
 const Feedback = lazy(() => import("./pages/Feedback"));
 const VendiAISuite = lazy(() => import("./pages/VendiAISuite"));
 const Browse = lazy(() => import("./pages/Browse"));
 const SellMyFoodTruck = lazy(() => import("./pages/SellMyFoodTruck"));
-const SellFoodTruck = lazy(() => import("./pages/sell/SellFoodTruck"));
+
 const SellFoodTrailer = lazy(() => import("./pages/sell/SellFoodTrailer"));
 const SellConcessionTrailer = lazy(() => import("./pages/sell/SellConcessionTrailer"));
 const RentMyCommercialKitchen = lazy(() => import("./pages/RentMyCommercialKitchen"));
 const WhatIsVendibook = lazy(() => import("./pages/seo/WhatIsVendibook"));
 const WhyListOnVendibook = lazy(() => import("./pages/seo/WhyListOnVendibook"));
 const BestPlaceToSellAFoodTruck = lazy(() => import("./pages/seo/BestPlaceToSellAFoodTruck"));
+const HowToBuyAFoodTruck = lazy(() => import("./pages/seo/HowToBuyAFoodTruck"));
 const ListFoodTruckForSale = lazy(() => import("./pages/seo/ListFoodTruckForSale"));
 const RentOutMyFoodTruck = lazy(() => import("./pages/seo/RentOutMyFoodTruck"));
 const MobileFoodMarketplaceGlossary = lazy(() => import("./pages/resources/MobileFoodMarketplaceGlossary"));
 const FoodTruckSellingFaq = lazy(() => import("./pages/resources/FoodTruckSellingFaq"));
+const MeetupInspectionGuide = lazy(() => import("./pages/MeetupInspectionGuide"));
 const PricingCalculator = lazy(() => import("./pages/PricingCalculator"));
 const KitchenEarningsCalculator = lazy(() => import("./pages/KitchenEarningsCalculator"));
 const ListingPublished = lazy(() => import("./pages/ListingPublished"));
+const ListingImprove = lazy(() => import("./pages/ListingImprove"));
 const Cities = lazy(() => import("./pages/Cities"));
 const SaleCheckout = lazy(() => import("./pages/SaleCheckout"));
+const MetaCheckout = lazy(() => import("./pages/MetaCheckout"));
 const BookingCheckout = lazy(() => import("./pages/BookingCheckout"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 const OAuthConsent = lazy(() => import("./pages/OAuthConsent"));
@@ -152,10 +230,6 @@ const DynamicCityPage = lazy(() => import("./pages/DynamicCityPage"));
 const Payments = lazy(() => import("./pages/Payments"));
 const Rentals = lazy(() => import("./pages/Rentals"));
 const EnterpriseOnboarding = lazy(() => import("./pages/EnterpriseOnboarding"));
-const HostBookings = lazy(() => import("./pages/HostBookings"));
-const HostListings = lazy(() => import("./pages/HostListings"));
-const HostReporting = lazy(() => import("./pages/HostReporting"));
-const HostAnalytics = lazy(() => import("./pages/HostAnalytics"));
 const HowItWorksHost = lazy(() => import("./pages/HowItWorksHost"));
 const HowItWorksSeller = lazy(() => import("./pages/HowItWorksSeller"));
 const BecomeAHost = lazy(() => import("./pages/BecomeAHost"));
@@ -170,18 +244,27 @@ const ReferralAdmin = lazy(() => import("./pages/ReferralAdmin"));
 const RHandler = lazy(() => import("./pages/RHandler"));
 const AdminEmailDashboard = lazy(() => import("./pages/AdminEmailDashboard"));
 const AdminCampaignNewExitPlan = lazy(() => import("./pages/AdminCampaignNewExitPlan"));
+const AdminCampaignEquinoxPartnership = lazy(() => import("./pages/AdminCampaignEquinoxPartnership"));
+const AdminCampaignSpotlightInvite = lazy(() => import("./pages/AdminCampaignSpotlightInvite"));
+const AdminCampaignFeatureYourListing = lazy(() => import("./pages/AdminCampaignFeatureYourListing"));
+const AdminSpotlights = lazy(() => import("./pages/AdminSpotlights"));
+const CommunitySpotlight = lazy(() => import("./pages/CommunitySpotlight"));
+const FinancingEnable = lazy(() => import("./pages/FinancingEnable"));
 const Subscribe = lazy(() => import("./pages/Subscribe"));
 const EmailFeedbackThanks = lazy(() => import("./pages/EmailFeedbackThanks"));
 const CategoryCityPage = lazy(() => import("./pages/CategoryCityPage"));
 const CategoryIndex = lazy(() => import("./pages/CategoryIndex"));
+const FoodTruckPrices = lazy(() => import("./pages/FoodTruckPrices"));
 const BlogShareRedirect = lazy(() => import("./pages/BlogShareRedirect"));
 import { CATEGORY_INDEX_CONFIGS } from "./data/categoryIndexConfigs";
 import { CITY_CATEGORY_CONFIGS } from "./data/cityCategoryConfigs";
+import { SPECIALTY_CATEGORY_CONFIGS } from "./data/specialtyCategoryConfigs";
 
 // City landing pages - direct imports since they're lightweight wrappers
 import {
   HoustonList,
   HoustonBrowse,
+  CityBrowseBySlug,
   HoustonListFoodTruck,
   HoustonListFoodTrailer,
   HoustonListVendorSpace,
@@ -238,33 +321,96 @@ const AnimatedRoutes = () => {
           <Route path="/browse" element={<PageTransition><Browse /></PageTransition>} />
           <Route path="/search" element={<PageTransition><Search /></PageTransition>} />
           <Route path="/auth" element={<PageTransition><Auth /></PageTransition>} />
-          <Route path="/welcome" element={<PageTransition><Welcome /></PageTransition>} />
+          {/* Post-signup intent step → unified workspace */}
+          <Route path="/welcome" element={<PageTransition><WorkspaceOnboarding /></PageTransition>} />
+          <Route path="/onboarding" element={<PageTransition><WorkspaceOnboarding /></PageTransition>} />
+          <Route path="/welcome/classic" element={<PageTransition><Welcome /></PageTransition>} />
           <Route path="/activation" element={<PageTransition><Activation /></PageTransition>} />
           <Route path="/reset-password" element={<PageTransition><ResetPassword /></PageTransition>} />
-          <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />
+
+          {/* Unified workspace — one Vendibook experience for every signed-in user */}
+          <Route path="/dashboard" element={<PageTransition><WorkspaceHome /></PageTransition>} />
+          <Route path="/dashboard/listings" element={<PageTransition><WorkspaceListings /></PageTransition>} />
+          <Route path="/dashboard/listings/new" element={<PageTransition><WorkspaceListingNew /></PageTransition>} />
+          <Route path="/dashboard/listings/:listingId/edit" element={<PageTransition><WorkspaceListingEditor /></PageTransition>} />
+          <Route path="/dashboard/activity" element={<PageTransition><WorkspaceActivity /></PageTransition>} />
+          <Route path="/dashboard/transactions" element={<PageTransition><WorkspaceTransactions /></PageTransition>} />
+          <Route path="/dashboard/transactions/:orderId" element={<PageTransition><OrderDetail /></PageTransition>} />
+          <Route path="/dashboard/transactions/:orderId/case/:caseId" element={<PageTransition><WorkspaceCases /></PageTransition>} />
+          <Route path="/dashboard/cases" element={<PageTransition><WorkspaceCases /></PageTransition>} />
+          <Route path="/cases/:caseId" element={<PageTransition><WorkspaceCases /></PageTransition>} />
+          <Route path="/dashboard/messages" element={<PageTransition><WorkspaceMessages /></PageTransition>} />
+          <Route path="/dashboard/messages/:conversationId" element={<PageTransition><WorkspaceMessages /></PageTransition>} />
+          <Route path="/dashboard/inbox" element={<PreserveQueryRedirect to="/dashboard/messages" />} />
+          <Route path="/dashboard/notifications" element={<PageTransition><WorkspaceNotifications /></PageTransition>} />
+          <Route path="/dashboard/notifications/settings" element={<PageTransition><NotificationPreferences /></PageTransition>} />
+          <Route path="/dashboard/saved" element={<PageTransition><WorkspaceSaved /></PageTransition>} />
+          <Route path="/dashboard/offers" element={<PageTransition><WorkspaceOffers /></PageTransition>} />
+          <Route path="/dashboard/payments" element={<PageTransition><WorkspacePayments /></PageTransition>} />
+          <Route path="/dashboard/payments/setup" element={<PageTransition><WorkspacePaymentSetup /></PageTransition>} />
+          <Route path="/dashboard/payments/square/callback" element={<PageTransition><SquareConnectCallback /></PageTransition>} />
+          <Route path="/dashboard/seller-setup" element={<PageTransition><WorkspaceSellerOnboarding /></PageTransition>} />
+          <Route path="/dashboard/account" element={<PageTransition><WorkspaceAccount /></PageTransition>} />
+          <Route path="/dashboard/account/scheduling" element={<PageTransition><WorkspaceAccountSettings /></PageTransition>} />
+          <Route path="/dashboard/account/payouts" element={<PageTransition><WorkspaceAccountSettings /></PageTransition>} />
+          <Route path="/dashboard/profile" element={<PageTransition><WorkspaceProfile /></PageTransition>} />
+          <Route path="/dashboard/bookings" element={<PreserveQueryRedirect to="/dashboard/activity?filter=requests" />} />
+          <Route path="/dashboard/bookings/new" element={<PageTransition><WorkspaceBookingNew /></PageTransition>} />
+          <Route path="/dashboard/bookings/new/:listingId" element={<PageTransition><WorkspaceBookingNew /></PageTransition>} />
+          <Route path="/dashboard/bookings/:bookingId" element={<PageTransition><WorkspaceBookingDetail /></PageTransition>} />
+          <Route path="/dashboard/reporting" element={<PageTransition><WorkspaceReporting /></PageTransition>} />
+          <Route path="/dashboard/analytics" element={<PageTransition><WorkspaceAnalytics /></PageTransition>} />
+          <Route path="/walkthrough/schedule/:listingId" element={<PageTransition><WalkthroughSchedule /></PageTransition>} />
+          <Route path="/walkthrough/next-steps" element={<PageTransition><WalkthroughNextSteps /></PageTransition>} />
+          <Route path="/walkthrough/:walkthroughId/next-steps" element={<PageTransition><WalkthroughNextSteps /></PageTransition>} />
+          <Route path="/walkthrough/:walkthroughId" element={<PageTransition><WalkthroughDetail /></PageTransition>} />
+          <Route path="/dashboard/classic" element={<PreserveQueryRedirect to="/dashboard" />} />
+          {/* Legacy workspace aliases */}
+          <Route path="/onboarding-v2" element={<Navigate to="/welcome" replace />} />
+          <Route path="/dashboard-v2" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/dashboard-v2/listings" element={<PreserveQueryRedirect to="/dashboard/listings" />} />
+          {/* Legacy "my listings" path used by older emails/links → workspace listings */}
+          <Route path="/dashboard/my-listings" element={<PreserveQueryRedirect to="/dashboard/listings" />} />
+          <Route path="/dashboard-v2/activity" element={<PreserveQueryRedirect to="/dashboard/activity" />} />
+          <Route path="/dashboard-v2/messages" element={<PreserveQueryRedirect to="/dashboard/messages" />} />
+          <Route path="/dashboard-v2/payments" element={<Navigate to="/dashboard/payments" replace />} />
+          <Route path="/dashboard-v2/account" element={<Navigate to="/dashboard/account" replace />} />
           <Route path="/sale/:transactionId/protection" element={<PageTransition><ProtectedSalePage /></PageTransition>} />
           <Route path="/transaction/:transactionId" element={<PageTransition><TransactionDetail /></PageTransition>} />
-          <Route path="/host/bookings" element={<PageTransition><HostBookings /></PageTransition>} />
-          <Route path="/host/listings" element={<PageTransition><HostListings /></PageTransition>} />
-          <Route path="/host/reporting" element={<PageTransition><HostReporting /></PageTransition>} />
-          <Route path="/host/analytics" element={<PageTransition><HostAnalytics /></PageTransition>} />
+          <Route path="/host/bookings" element={<PreserveQueryRedirect to="/dashboard/activity?filter=requests" />} />
+          {/* Campaign deep-link alias — keeps ?boost= and UTMs intact */}
+          <Route path="/host/listings" element={<PreserveQueryRedirect to="/dashboard/listings" />} />
+          <Route path="/host/listings/classic" element={<PreserveQueryRedirect to="/dashboard/listings" />} />
+          <Route path="/host/reporting" element={<PreserveQueryRedirect to="/dashboard/reporting" />} />
+          <Route path="/host/analytics" element={<PreserveQueryRedirect to="/dashboard/analytics" />} />
+          <Route path="/host/dashboard" element={<PreserveQueryRedirect to="/dashboard" />} />
+          <Route path="/host/payments" element={<PreserveQueryRedirect to="/dashboard/payments" />} />
+          <Route path="/host/messages" element={<PreserveQueryRedirect to="/dashboard/messages" />} />
+          <Route path="/host/account" element={<PreserveQueryRedirect to="/dashboard/account" />} />
+          {/* Legacy listing-creation entries → canonical opening gateway */}
           <Route path="/create-listing" element={<Navigate to="/list" replace />} />
+          <Route path="/new-listing" element={<Navigate to="/list" replace />} />
+          <Route path="/listing-wizard" element={<Navigate to="/list" replace />} />
+
           <Route path="/host" element={<Navigate to="/list" replace />} />
           <Route path="/listing/:id" element={<PageTransition><ListingDetail /></PageTransition>} />
+          <Route path="/listings/:listingId/rent-it-out" element={<PageTransition><RentItOut /></PageTransition>} />
           {/* Common typo/plural alias — redirect to canonical singular route */}
           <Route path="/listings/:id" element={<ListingPluralRedirect />} />
           {/* Share route: pretty URL for social sharing, redirects to /listing/:id */}
           <Route path="/share/listing/:id" element={<ShareRedirect />} />
           <Route path="/share/:source/:slug" element={<BlogShareRedirect />} />
           {/* Profile routes */}
-          <Route path="/profile" element={<Navigate to="/account" replace />} />
-          <Route path="/profile/edit" element={<Navigate to="/account" replace />} />
-          <Route path="/settings" element={<Navigate to="/account" replace />} />
+          <Route path="/profile" element={<Navigate to="/dashboard/account" replace />} />
+          <Route path="/profile/edit" element={<Navigate to="/dashboard/account" replace />} />
+          <Route path="/settings" element={<Navigate to="/dashboard/account" replace />} />
           <Route path="/profile/:id" element={<Navigate to={`/u/${window.location.pathname.split('/').pop()}`} replace />} />
-          {/* Private account route - owner only */}
-          <Route path="/account" element={<PageTransition><Account /></PageTransition>} />
-          <Route path="/favorites" element={<PageTransition><Favorites /></PageTransition>} />
-          <Route path="/account/profile" element={<Navigate to="/account" replace />} />
+          {/* Private account routes — consolidated into the dashboard workspace */}
+          <Route path="/account" element={<PreserveQueryRedirect to="/dashboard/account" />} />
+          <Route path="/account/classic" element={<PageTransition><Account /></PageTransition>} />
+          <Route path="/favorites" element={<PreserveQueryRedirect to="/dashboard/saved" />} />
+          <Route path="/favorites/classic" element={<PageTransition><Favorites /></PageTransition>} />
+          <Route path="/account/profile" element={<Navigate to="/dashboard/account" replace />} />
           {/* Public profile route - accessible to all */}
           <Route path="/u/:userId" element={<PageTransition><PublicProfile /></PageTransition>} />
           <Route path="/privacy" element={<PageTransition><Privacy /></PageTransition>} />
@@ -273,6 +419,17 @@ const AnimatedRoutes = () => {
           {/* Static legal pages take precedence over the /legal/:slug DB catch-all */}
           <Route path="/legal/sms" element={<PageTransition><SmsTerms /></PageTransition>} />
           <Route path="/legal/sms-opt-in-proof" element={<PageTransition><SmsOptInProof /></PageTransition>} />
+          <Route path="/legal/video-walkthrough-terms" element={<PageTransition><VideoWalkthroughTerms /></PageTransition>} />
+          <Route path="/legal/device-permissions-privacy" element={<PageTransition><DevicePermissionsPrivacy /></PageTransition>} />
+          <Route path="/legal/location-tracking" element={<PageTransition><LocationTracking /></PageTransition>} />
+          <Route path="/legal/handoff-terms" element={<PageTransition><HandoffTerms /></PageTransition>} />
+          <Route path="/legal/payments-terms" element={<PageTransition><PaymentsTermsPage /></PageTransition>} />
+          <Route path="/legal/financing-disclosure" element={<PageTransition><FinancingDisclosure /></PageTransition>} />
+          <Route path="/legal/seller-payment-terms" element={<PageTransition><SellerPaymentTerms /></PageTransition>} />
+          <Route path="/legal/esign" element={<PageTransition><EsignConsent /></PageTransition>} />
+          <Route path="/legal/recording-consent" element={<PageTransition><RecordingConsent /></PageTransition>} />
+          <Route path="/admin/legal" element={<PageTransition><AdminLegalAcceptances /></PageTransition>} />
+          <Route path="/admin/paypal/api-samples" element={<PageTransition><AdminPayPalApiSamples /></PageTransition>} />
           <Route path="/sms" element={<PageTransition><SmsEnrollment /></PageTransition>} />
           <Route path="/sms-opt-in" element={<PageTransition><SmsOptIn /></PageTransition>} />
           <Route path="/legal" element={<PageTransition><LegalCenter /></PageTransition>} />
@@ -282,6 +439,10 @@ const AnimatedRoutes = () => {
           <Route path="/support" element={<Navigate to="/help" replace />} />
           <Route path="/legal/:slug" element={<PageTransition><LegalDocumentPage /></PageTransition>} />
           <Route path="/how-it-works" element={<PageTransition><HowItWorks /></PageTransition>} />
+          <Route path="/how-purchasing-works" element={<PageTransition><HowPurchasingWorks /></PageTransition>} />
+          <Route path="/guides/meetup-inspection" element={<PageTransition><MeetupInspectionGuide /></PageTransition>} />
+          <Route path="/vendibook-freight" element={<PageTransition><VendibookFreight /></PageTransition>} />
+          <Route path="/ship-your-food-truck" element={<PageTransition><ShipYourFoodTruck /></PageTransition>} />
           <Route path="/how-it-works-host" element={<PageTransition><HowItWorksHost /></PageTransition>} />
           <Route path="/how-it-works-seller" element={<PageTransition><HowItWorksSeller /></PageTransition>} />
           {/* Legacy inbound-link redirects — external sites/emails may have linked the slash forms */}
@@ -292,10 +453,18 @@ const AnimatedRoutes = () => {
           <Route path="/contact" element={<PageTransition><Contact /></PageTransition>} />
           <Route path="/verify-identity" element={<PageTransition><IdentityVerification /></PageTransition>} />
           <Route path="/verification-complete" element={<PageTransition><VerificationComplete /></PageTransition>} />
+          <Route path="/booking-confirmation" element={<PageTransition><BookingConfirmation /></PageTransition>} />
+          <Route path="/receipt/:reference" element={<PageTransition><OrderReceipt /></PageTransition>} />
+          <Route path="/receipt" element={<PageTransition><OrderReceipt /></PageTransition>} />
+          <Route path="/order-confirmation" element={<PageTransition><OrderReceipt /></PageTransition>} />
+          <Route path="/order-confirmation/:reference" element={<PageTransition><OrderReceipt /></PageTransition>} />
+          <Route path="/payment/return" element={<PageTransition><PaymentReturn /></PageTransition>} />
+          <Route path="/payment/cancelled" element={<PageTransition><PaymentCancelled /></PageTransition>} />
           <Route path="/payment-success" element={<PageTransition><PaymentSuccess /></PageTransition>} />
           <Route path="/payment-cancelled" element={<PageTransition><PaymentCancelled /></PageTransition>} />
-          <Route path="/messages" element={<PageTransition><Messages /></PageTransition>} />
-          <Route path="/messages/:conversationId" element={<PageTransition><Messages /></PageTransition>} />
+          <Route path="/messages" element={<PreserveQueryRedirect to="/dashboard/messages" />} />
+          <Route path="/messages/classic" element={<PageTransition><Messages /></PageTransition>} />
+          <Route path="/messages/:conversationId" element={<LegacyMessageThreadRedirect />} />
           <Route path="/admin" element={<PageTransition><AdminDashboard /></PageTransition>} />
           <Route path="/admin/metrics" element={<PageTransition><AdminMetrics /></PageTransition>} />
           <Route path="/admin/listings" element={<PageTransition><AdminListings /></PageTransition>} />
@@ -303,21 +472,34 @@ const AnimatedRoutes = () => {
           <Route path="/admin/finance" element={<PageTransition><AdminFinance /></PageTransition>} />
           <Route path="/orders/:orderId" element={<PageTransition><OrderDetail /></PageTransition>} />
           <Route path="/orders/:orderId/payment" element={<PageTransition><OrderDetail /></PageTransition>} />
+          <Route path="/handoff/:kind/:id" element={<PageTransition><HandoffPage /></PageTransition>} />
+          <Route path="/driver/:token" element={<PageTransition><DriverHandoff /></PageTransition>} />
+          <Route path="/delivery/:kind/:id" element={<PageTransition><DeliveryMode /></PageTransition>} />
+
           <Route path="/admin/payouts" element={<PageTransition><AdminPayouts /></PageTransition>} />
+          <Route path="/admin/disputes" element={<PageTransition><AdminDisputes /></PageTransition>} />
+          <Route path="/admin/freight" element={<PageTransition><AdminFreightRequests /></PageTransition>} />
+          <Route path="/admin/users" element={<PageTransition><AdminUsers /></PageTransition>} />
+          <Route path="/admin/messages" element={<PageTransition><AdminMessages /></PageTransition>} />
+          <Route path="/admin/verified-sellers" element={<PageTransition><AdminVerifiedSellers /></PageTransition>} />
+
 
           <Route path="/admin/digest" element={<PageTransition><AdminDigest /></PageTransition>} />
+          <Route path="/admin/authority" element={<PageTransition><AdminAuthority /></PageTransition>} />
           <Route path="/admin/orchestration" element={<PageTransition><AdminOrchestration /></PageTransition>} />
           <Route path="/admin/errors" element={<PageTransition><AdminErrors /></PageTransition>} />
           <Route path="/admin/qa" element={<PageTransition><AdminQA /></PageTransition>} />
           <Route path="/admin/support" element={<PageTransition><AdminSupportTickets /></PageTransition>} />
           <Route path="/admin/revenue" element={<PageTransition><AdminRevenue /></PageTransition>} />
+          <Route path="/admin/campus-partners" element={<PageTransition><AdminCampusPartners /></PageTransition>} />
           <Route path="/admin/monetization-ops" element={<PageTransition><AdminMonetizationOps /></PageTransition>} />
           <Route path="/admin/billing" element={<PageTransition><AdminBilling /></PageTransition>} />
           <Route path="/services" element={<PageTransition><ServicesHub /></PageTransition>} />
-          <Route path="/buyer" element={<PageTransition><BuyerDashboard /></PageTransition>} />
+          <Route path="/buyer" element={<PreserveQueryRedirect to="/dashboard" />} />
+          <Route path="/buyer/classic" element={<PageTransition><BuyerDashboard /></PageTransition>} />
           <Route path="/buyer/services" element={<PageTransition><BuyerServicesHub /></PageTransition>} />
           <Route path="/buyer/services/review/:listingId" element={<PageTransition><ListingPurchaseReviewIntake /></PageTransition>} />
-          <Route path="/host/plans" element={<PageTransition><HostProPlans /></PageTransition>} />
+          <Route path="/host/plans" element={<Navigate to="/pricing" replace />} />
           <Route path="/checkout/product/:slug" element={<PageTransition><ProductCheckout /></PageTransition>} />
           <Route path="/checkout/pay" element={<PageTransition><HostedPayment /></PageTransition>} />
           <Route path="/account/subscription" element={<PageTransition><AccountSubscription /></PageTransition>} />
@@ -327,11 +509,17 @@ const AnimatedRoutes = () => {
           <Route path="/account/purchases" element={<PageTransition><Purchases /></PageTransition>} />
           <Route path="/tools/permitpath/upgrades" element={<PageTransition><PermitPathUpgrades /></PageTransition>} />
           <Route path="/partners" element={<PageTransition><Partners /></PageTransition>} />
+          <Route path="/press" element={<PageTransition><Press /></PageTransition>} />
+          <Route path="/financing" element={<PageTransition><Financing /></PageTransition>} />
+          <Route path="/financing/enable" element={<PageTransition><FinancingEnable /></PageTransition>} />
 
           <Route path="/admin/email/dashboard" element={<PageTransition><AdminEmailDashboard /></PageTransition>} />
           <Route path="/admin/campaigns/new-exit-plan" element={<PageTransition><AdminCampaignNewExitPlan /></PageTransition>} />
+          <Route path="/admin/campaigns/equinox-partnership" element={<PageTransition><AdminCampaignEquinoxPartnership /></PageTransition>} />
+          <Route path="/admin/campaigns/feature-your-listing" element={<PageTransition><AdminCampaignFeatureYourListing /></PageTransition>} />
           <Route path="/email/thanks" element={<PageTransition><EmailFeedbackThanks /></PageTransition>} />
-          <Route path="/notification-preferences" element={<PageTransition><NotificationPreferences /></PageTransition>} />
+          <Route path="/notification-preferences" element={<PreserveQueryRedirect to="/dashboard/notifications/settings" />} />
+          <Route path="/notifications" element={<PreserveQueryRedirect to="/dashboard/notifications" />} />
           <Route path="/account/support" element={<PageTransition><MyTickets /></PageTransition>} />
           <Route path="/help" element={<PageTransition><HelpCenter /></PageTransition>} />
           <Route path="/help/:slug" element={<PageTransition><HelpArticle /></PageTransition>} />
@@ -339,14 +527,19 @@ const AnimatedRoutes = () => {
           
           {/* Tools - /tools is the canonical hub */}
           <Route path="/tools" element={<PageTransition><ToolsIndex /></PageTransition>} />
-          <Route path="/tools/pricepilot" element={<PageTransition><ToolAccessGate slug="pricepilot"><PricePilot /></ToolAccessGate></PageTransition>} />
+          {/* PricePilot is a public product page — the access wall lives at the appraisal entry point inside the page, not on the route. */}
+          <Route path="/tools/pricepilot" element={<PageTransition><PricePilot /></PageTransition>} />
+          <Route path="/pricepilot" element={<Navigate to="/tools/pricepilot" replace />} />
+          <Route path="/tools/pricepilot/preview" element={<Navigate to="/tools/pricepilot" replace />} />
           <Route path="/tools/:slug/preview" element={<PageTransition><ToolPreview /></PageTransition>} />
           <Route path="/tools/permitpath" element={<PageTransition><ToolAccessGate slug="permitpath"><PermitPath /></ToolAccessGate></PageTransition>} />
+          {/* PARKED tools — routes disabled; direct visits fall through to NotFound.
           <Route path="/tools/buildkit" element={<PageTransition><ToolAccessGate slug="buildkit"><BuildKit /></ToolAccessGate></PageTransition>} />
           <Route path="/tools/listing-studio" element={<PageTransition><ToolAccessGate slug="listing-studio"><ListingStudio /></ToolAccessGate></PageTransition>} />
           <Route path="/tools/concept-lab" element={<PageTransition><ToolAccessGate slug="concept-lab"><ConceptLab /></ToolAccessGate></PageTransition>} />
           <Route path="/tools/market-radar" element={<PageTransition><ToolAccessGate slug="market-radar"><MarketRadar /></ToolAccessGate></PageTransition>} />
           <Route path="/tools/marketing-studio" element={<PageTransition><ToolAccessGate slug="marketing-studio"><MarketingStudio /></ToolAccessGate></PageTransition>} />
+          */}
           <Route path="/tools/startup-guide" element={<PageTransition><StartupGuide /></PageTransition>} />
           <Route path="/tools/food-truck-startup-costs-2026" element={<PageTransition><FoodTruckStartupCosts2026 /></PageTransition>} />
           <Route path="/tools/regulations-hub" element={<PageTransition><RegulationsHub /></PageTransition>} />
@@ -355,13 +548,24 @@ const AnimatedRoutes = () => {
           <Route path="/ai-tools" element={<Navigate to="/tools" replace />} />
           
           {/* Supply flow: /list is quick start, then /create-listing/:id for publish wizard */}
-          <Route path="/list" element={<PageTransition><ListPage /></PageTransition>} />
+          <Route path="/list" element={<PageTransition><ListingStart /></PageTransition>} />
+          <Route path="/list/start" element={<PageTransition><ListStart /></PageTransition>} />
+          <Route path="/list/concierge" element={<PageTransition><ConciergeIntro /></PageTransition>} />
+          <Route path="/list/finish/:listingId" element={<PageTransition><ListingFinish /></PageTransition>} />
+          <Route path="/list/concierge/:orderId" element={<PageTransition><ConciergeOrderPage /></PageTransition>} />
+
+
           <Route path="/list/ai" element={<PageTransition><AIListingCreator /></PageTransition>} />
+          <Route path="/list-with-vendi" element={<PageTransition><ListWithVendi /></PageTransition>} />
+          <Route path="/list/vendi" element={<PageTransition><ListWithVendi /></PageTransition>} />
           <Route path="/create-listing/:listingId" element={<PageTransition><EditListing /></PageTransition>} />
           <Route path="/edit-listing/:listingId" element={<PageTransition><EditListing /></PageTransition>} />
+          <Route path="/listings/:listingId/payments-financing" element={<PageTransition><ListingPaymentsFinancing /></PageTransition>} />
 
           <Route path="/listing-published" element={<PageTransition><ListingPublished /></PageTransition>} />
           <Route path="/listing-published/:listingId" element={<PageTransition><ListingPublished /></PageTransition>} />
+          <Route path="/listings/:listingId/improve" element={<PageTransition><ListingImprove /></PageTransition>} />
+          <Route path="/meta-checkout" element={<PageTransition><MetaCheckout /></PageTransition>} />
           <Route path="/checkout/:listingId" element={<PageTransition><SaleCheckout /></PageTransition>} />
           <Route path="/book/:listingId" element={<PageTransition><BookingCheckout /></PageTransition>} />
 
@@ -374,7 +578,8 @@ const AnimatedRoutes = () => {
 
           
           <Route path="/order-tracking/:transactionId" element={<PageTransition><OrderTracking /></PageTransition>} />
-          <Route path="/transactions" element={<PageTransition><Transactions /></PageTransition>} />
+          <Route path="/transactions" element={<PreserveQueryRedirect to="/dashboard/transactions" />} />
+          <Route path="/transactions/classic" element={<PageTransition><Transactions /></PageTransition>} />
           
           <Route path="/install" element={<PageTransition><Install /></PageTransition>} />
           <Route path="/vendor-lots" element={<PageTransition><VendorLots /></PageTransition>} />
@@ -382,15 +587,22 @@ const AnimatedRoutes = () => {
           <Route path="/faq" element={<PageTransition><FAQ /></PageTransition>} />
           <Route path="/signage-request" element={<PageTransition><SignageRequest /></PageTransition>} />
           <Route path="/unsubscribe" element={<PageTransition><Unsubscribe /></PageTransition>} />
-          <Route path="/email-unsubscribe" element={<PageTransition><EmailUnsubscribe /></PageTransition>} />
+          <Route path="/email-unsubscribe" element={<Navigate to="/unsubscribe" replace />} />
           <Route path="/feedback" element={<PageTransition><Feedback /></PageTransition>} />
+          <Route path="/community/spotlight" element={<PageTransition><CommunitySpotlight /></PageTransition>} />
+          <Route path="/spotlight" element={<PageTransition><CommunitySpotlight /></PageTransition>} />
+          <Route path="/admin/spotlights" element={<PageTransition><AdminSpotlights /></PageTransition>} />
+          <Route path="/admin/campaigns/business-spotlight" element={<PageTransition><AdminCampaignSpotlightInvite /></PageTransition>} />
           
           {/* SEO article page - separate purpose from tools hub */}
           <Route path="/vendi-ai-suite" element={<PageTransition><VendiAISuite /></PageTransition>} />
           
           {/* Seller landing pages */}
           <Route path="/sell-my-food-truck" element={<PageTransition><SellMyFoodTruck /></PageTransition>} />
-          <Route path="/sell-food-truck" element={<PageTransition><SellFoodTruck /></PageTransition>} />
+          {/* Consolidated: /sell-food-truck redirects to the canonical seller page.
+              public/_redirects also declares a server 301; this keeps campaign/
+              search query strings intact when the SPA handles the hop. */}
+          <Route path="/sell-food-truck" element={<PreserveQueryRedirect to="/sell-my-food-truck" />} />
           <Route path="/sell-food-trailer" element={<PageTransition><SellFoodTrailer /></PageTransition>} />
           <Route path="/sell-concession-trailer" element={<PageTransition><SellConcessionTrailer /></PageTransition>} />
 
@@ -398,6 +610,7 @@ const AnimatedRoutes = () => {
           <Route path="/what-is-vendibook" element={<PageTransition><WhatIsVendibook /></PageTransition>} />
           <Route path="/why-list-on-vendibook" element={<PageTransition><WhyListOnVendibook /></PageTransition>} />
           <Route path="/best-place-to-sell-a-food-truck" element={<PageTransition><BestPlaceToSellAFoodTruck /></PageTransition>} />
+          <Route path="/how-to-buy-a-food-truck" element={<PageTransition><HowToBuyAFoodTruck /></PageTransition>} />
           <Route path="/list-food-truck-for-sale" element={<PageTransition><ListFoodTruckForSale /></PageTransition>} />
           <Route path="/rent-out-my-food-truck" element={<PageTransition><RentOutMyFoodTruck /></PageTransition>} />
           <Route path="/resources/mobile-food-marketplace-glossary" element={<PageTransition><MobileFoodMarketplaceGlossary /></PageTransition>} />
@@ -417,6 +630,7 @@ const AnimatedRoutes = () => {
           
           {/* Payments & Protection */}
           <Route path="/payments" element={<PageTransition><Payments /></PageTransition>} />
+          <Route path="/identity-verification" element={<PageTransition><IdentityVerificationInfo /></PageTransition>} />
           
           
           {/* Renter Landing Page */}
@@ -434,10 +648,24 @@ const AnimatedRoutes = () => {
           
           {/* Programmatic SEO: category + city + mode pages */}
           <Route path="/rent/:categorySlug/:cityStateSlug" element={<PageTransition><CategoryCityPage mode="rent" /></PageTransition>} />
+          {/* Legacy duplicate rental path → canonical city rental page */}
+          <Route path="/houston/food-trucks-for-rent" element={<Navigate to="/rent/food-trucks/houston-tx" replace />} />
           <Route path="/buy/:categorySlug/:cityStateSlug" element={<PageTransition><CategoryCityPage mode="buy" /></PageTransition>} />
+
+          {/* Food truck prices data hub — evergreen buyer research asset */}
+          <Route path="/food-truck-prices" element={<PageTransition><FoodTruckPrices /></PageTransition>} />
 
           {/* SEO category index pages — crawlable listing grids */}
           {CATEGORY_INDEX_CONFIGS.map((cfg) => (
+            <Route
+              key={cfg.path}
+              path={cfg.path}
+              element={<PageTransition><CategoryIndex config={cfg} /></PageTransition>}
+            />
+          ))}
+
+          {/* SEO specialty category hubs (coffee / ice cream) */}
+          {SPECIALTY_CATEGORY_CONFIGS.map((cfg) => (
             <Route
               key={cfg.path}
               path={cfg.path}
@@ -453,6 +681,12 @@ const AnimatedRoutes = () => {
               element={<PageTransition><CategoryIndex config={cfg} /></PageTransition>}
             />
           ))}
+
+          {/* Fallbacks for old/unknown location links: send to the closest real page instead of a 404 */}
+          <Route path="/food-trailers-for-sale/:slug" element={<Navigate to="/food-trailers-for-sale" replace />} />
+          <Route path="/food-trucks-for-sale/:slug" element={<Navigate to="/food-trucks-for-sale" replace />} />
+          <Route path="/:citySlug/list" element={<Navigate to="/list" replace />} />
+          <Route path="/dashboard/home" element={<Navigate to="/dashboard" replace />} />
 
           {/* Cities hub page */}
           <Route path="/cities" element={<PageTransition><Cities /></PageTransition>} />
@@ -480,6 +714,7 @@ const AnimatedRoutes = () => {
           <Route path="/phoenix/list-vendor-space" element={<PageTransition><PhoenixListVendorSpace /></PageTransition>} />
           
           {/* Dynamic city SEO pages - catches valid city slugs like /houston, /dallas */}
+          <Route path="/:citySlug/browse" element={<PageTransition><CityBrowseBySlug /></PageTransition>} />
           <Route path="/:citySlug" element={<PageTransition><DynamicCityPage /></PageTransition>} />
           
           {/* MCP OAuth consent — must be routable so external clients complete authorization */}
@@ -522,9 +757,13 @@ const FloatingConciergeButton = lazy(() => import("@/components/FloatingConcierg
 const AppContent = () => {
   useGlobalErrorHandler();
   useOfflineQueueSync();
+  useListingsLiveSync();
+  useNativeNavigation();
+
 
   return (
     <>
+      <NativePushLifecycle />
       <ScrollToTop />
       <OfflineBanner />
       <Toaster />
@@ -538,7 +777,6 @@ const AppContent = () => {
       <AnimatedRoutes />
       <MobileBottomNav />
       <Suspense fallback={null}>
-        <LiveActivityFeed />
       </Suspense>
       <Suspense fallback={null}>
         <FloatingConciergeButton />
@@ -553,7 +791,7 @@ const App = () => (
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <AuthProvider>
-            <AppContent />
+            <PhoneVerificationPrompt><AppContent /></PhoneVerificationPrompt>
           </AuthProvider>
         </TooltipProvider>
       </QueryClientProvider>

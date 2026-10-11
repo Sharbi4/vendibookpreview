@@ -1,0 +1,37 @@
+import { Link } from 'react-router-dom';
+import { motion, useReducedMotion } from 'framer-motion';
+import { TrustStrip } from '@/components/brand/TrustStrip';
+import { usePublicFeatureFlag } from '@/hooks/usePublicFeatureFlag';
+
+/**
+ * Single consolidated trust / payments rail for the homepage.
+ * Factual only — describes what is actually implemented: PayPal-processed
+ * online checkout, optional Plaid identity verification, and pay-in-person
+ * where the seller supports it. No custodial-funds, guarantee, or protection claims.
+ */
+const HomeTrustRail = () => {
+  const verifiedSellerEnabled = usePublicFeatureFlag('verified_seller_enabled');
+  const reduced = useReducedMotion();
+
+  return (
+    <section className="pb-8 pt-6 sm:pb-10" aria-label="Payments and verification">
+      <div className="container mx-auto max-w-6xl px-5 sm:px-6">
+        <motion.p
+          initial={reduced ? { opacity: 0 } : { opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: '-60px' }}
+          transition={{ duration: 0.45 }}
+          className="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-foreground/45"
+        >
+          <Link to="/payments" className="transition-colors hover:text-foreground/70">
+            Checkout by PayPal · Optional Plaid verification · Pay in person where offered
+          </Link>
+        </motion.p>
+        <TrustStrip showPlaid={verifiedSellerEnabled} />
+      </div>
+    </section>
+
+  );
+};
+
+export default HomeTrustRail;

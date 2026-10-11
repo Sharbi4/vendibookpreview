@@ -22,7 +22,7 @@ const ToolPreview = () => {
     if (tool) trackLeadEvent('tool_preview_viewed', { tool_slug: tool.slug, surface: 'preview_page' });
   }, [tool]);
 
-  if (!tool) return <Navigate to="/tools" replace />;
+  if (!tool || tool.enabled === false) return <Navigate to="/tools" replace />;
   const acc = access.bySlug[tool.slug];
   const openTool = () => nav(tool.href);
   const Icon = tool.icon;
@@ -105,7 +105,7 @@ const ToolPreview = () => {
                       Open {tool.name} <ArrowRight className="ml-1.5 h-4 w-4" />
                     </Button>
                   </div>
-                ) : tool.minTier === 'free' ? (
+                ) : tool.minTier === 'free' || tool.hasFreeTier ? (
                   <div className="space-y-3">
                     <p className="text-sm text-foreground/80">This tool is free — sign in to start using it.</p>
                     <Button asChild size="lg" variant="glass-cta" className="w-full">

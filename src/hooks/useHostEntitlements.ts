@@ -40,6 +40,10 @@ export function resolveTier(raw: string | null | undefined): { tier: HostTier; l
     case 'host_pro':
     case 'host-pro':
       return { tier: 'pro', label: 'Pro' };
+    // 2026 catalog
+    case 'vendibook_pro':
+    case 'vendibook-pro':
+      return { tier: 'pro', label: 'Vendibook Pro' };
     // New catalog
     case 'seller_plus':
     case 'seller-plus':
@@ -65,6 +69,7 @@ export interface HostEntitlements {
   isPastDue: boolean;
   cancelAtPeriodEnd: boolean;
   currentPeriodEnd: string | null;
+  currentPeriodStart: string | null;
   // Feature flags
   canAdvancedAnalytics: boolean;
   canPriorityPlacement: boolean;
@@ -82,6 +87,7 @@ const FREE: HostEntitlements = {
   isPastDue: false,
   cancelAtPeriodEnd: false,
   currentPeriodEnd: null,
+  currentPeriodStart: null,
   canAdvancedAnalytics: false,
   canPriorityPlacement: false,
   canBulkListings: false,
@@ -101,7 +107,7 @@ export function useHostEntitlements(): HostEntitlements & { isLoading: boolean }
       // 1) Real Stripe subscription (monthly / annual)
       const { data: sub } = await supabase
         .from('host_subscriptions')
-        .select('tier, status, current_period_end, cancel_at_period_end')
+        .select('tier, status, current_period_end, current_period_start, cancel_at_period_end')
         .eq('user_id', user!.id)
         .order('updated_at', { ascending: false })
         .limit(1)
@@ -149,6 +155,7 @@ export function useHostEntitlements(): HostEntitlements & { isLoading: boolean }
         isPastDue: !usePass && status === 'past_due',
         cancelAtPeriodEnd: !usePass && !!sub?.cancel_at_period_end,
         currentPeriodEnd: usePass ? (passEndsAt ?? null) : (sub?.current_period_end ?? null),
+        currentPeriodStart: usePass ? null : (sub?.current_period_start ?? null),
         canAdvancedAnalytics: rank >= TIER_RANK.pro,
         canPriorityPlacement: rank >= TIER_RANK.pro,
         canBulkListings: rank >= TIER_RANK.pro,

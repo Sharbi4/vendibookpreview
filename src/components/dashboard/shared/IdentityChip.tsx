@@ -1,60 +1,51 @@
 import { Link } from 'react-router-dom';
-import { ShieldCheck, ShieldAlert } from 'lucide-react';
+import { ShieldCheck, BadgeCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useAuth } from '@/contexts/AuthContext';
+import { useSellerVerifiedBadge } from '@/hooks/useSellerVerifiedBadge';
 
 interface IdentityChipProps {
   verified: boolean;
   className?: string;
-  /** Prominent (filled amber, 13px) variant for the sidebar profile block. */
+  /** Prominent (13px) variant for the sidebar profile block. */
   prominent?: boolean;
 }
 
 /**
- * Verification state chip. When verified: quiet green. When unverified: prominent
- * amber CTA that reads "Verify now".
+ * Verification state chip. Verified sellers see the high-end metallic Identity
+ * Verified badge. Everyone else sees a neutral, optional invitation — identity
+ * verification is a paid add-on and is NEVER required to publish, sell, or buy.
  */
 const IdentityChip = ({ verified, className, prominent }: IdentityChipProps) => {
-  if (verified) {
+  const { user } = useAuth();
+  // Authoritative, server-derived badge state (paid + Plaid success + not revoked).
+  const { verified: badgeActive } = useSellerVerifiedBadge(user?.id);
+  const isVerified = verified || badgeActive;
+
+  if (isVerified) {
     return (
       <span
         className={cn(
-          'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-medium bg-emerald-500/12 text-emerald-400 border border-emerald-500/30',
+          'verified-metallic inline-flex items-center rounded-full font-semibold tracking-tight',
+          prominent ? 'gap-1.5 px-2.5 py-1 text-[12px]' : 'gap-1 px-2 py-[3px] text-[10px]',
           className,
         )}
+        title="Identity Verified seller"
       >
-        <ShieldCheck className="h-3 w-3" />
-        Verified
+        <BadgeCheck
+          className={prominent ? 'h-3.5 w-3.5' : 'h-3 w-3'}
+          strokeWidth={2.4}
+          aria-hidden="true"
+        />
+        Identity Verified
       </span>
     );
   }
 
-  if (prominent) {
-    return (
-      <Link
-        to="/verify-identity"
-        className={cn(
-          'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[13px] font-semibold bg-amber-500 text-amber-950 border border-amber-400 hover:bg-amber-400 transition-colors shadow-[0_2px_8px_-2px_rgba(245,158,11,0.55)]',
-          className,
-        )}
-      >
-        <ShieldAlert className="h-3.5 w-3.5" strokeWidth={2.4} />
-        Verify now
-      </Link>
-    );
-  }
-
-  return (
-    <Link
-      to="/verify-identity"
-      className={cn(
-        'inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/40 hover:bg-amber-500/25 transition-colors',
-        className,
-      )}
-    >
-      <ShieldAlert className="h-3 w-3" />
-      Verify now
-    </Link>
-  );
+  // Unverified users are never nagged: identity verification is an optional
+  // paid add-on discoverable from the Account nav, not a dashboard prompt.
+  return null;
 };
+
 
 export default IdentityChip;

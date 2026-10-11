@@ -25,6 +25,9 @@ import {
   type SavedRoadmap,
 } from '@/lib/permitsApi';
 import SaveRoadmapDialog from '@/components/tools/permit-path/SaveRoadmapDialog';
+import { usePermitPathAccess } from '@/hooks/usePermitPathAccess';
+import { PermitPlusUpsellDialog } from '@/components/tools/permit-path/PermitPlusUpsell';
+import PermitPlusStatusCard from '@/components/tools/permit-path/PermitPlusStatusCard';
 
 import { toast as sonnerToast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -42,11 +45,10 @@ import VendorProfileChips, { type VendorProfile } from '@/components/tools/permi
 
 const pageJsonLd = {
   '@context': 'https://schema.org',
-  '@type': 'SoftwareApplication',
+  // No published app reviews: describe the page without claiming app rich-result eligibility.
+  '@type': 'WebPage',
+  url: 'https://vendibook.com/tools/permitpath',
   name: 'Vendi PermitPath — Food Truck Permit & License Finder',
-  applicationCategory: 'BusinessApplication',
-  operatingSystem: 'Web',
-  offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
   description: 'Find every license, permit, and inspection required for your mobile food business. Mapped to your city and setup.',
 };
 
@@ -144,6 +146,8 @@ const PermitPath = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const permitAccess = usePermitPathAccess();
+  const [plusUpsellOpen, setPlusUpsellOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   const [form, setForm] = useState({ city: '', state: '', businessType: 'food_truck' });
@@ -203,6 +207,11 @@ const PermitPath = () => {
 
   const handleSaveToDashboard = useCallback(async () => {
     if (!result) return;
+    // Saving is the PermitPath Plus layer — Basic keeps the on-screen roadmap.
+    if (user && !permitAccess.isLoading && !permitAccess.isPlus) {
+      setPlusUpsellOpen(true);
+      return;
+    }
     if (!user) {
       stashPendingSave(result);
       navigate(`/auth?redirect=${encodeURIComponent('/tools/permitpath?resumeSave=1')}`);
@@ -234,17 +243,25 @@ const PermitPath = () => {
       // If match lookup fails, fall through to a plain save.
     }
     await persistSaveNew(result);
-  }, [result, user, navigate, persistSaveNew, persistRefresh, searchParams, setSearchParams]);
+  }, [result, user, permitAccess.isPlus, permitAccess.isLoading, navigate, persistSaveNew, persistRefresh, searchParams, setSearchParams]);
 
   // Resume save after sign-in
   useEffect(() => {
     if (resumeRanRef.current) return;
     if (searchParams.get('resumeSave') !== '1') return;
-    if (!user) return;
+    if (!user || permitAccess.isLoading) return;
     const pending = takePendingSave();
     if (!pending) return;
     resumeRanRef.current = true;
     setResult(pending);
+    if (!permitAccess.isPlus) {
+      // Signed in but Basic — show the roadmap and offer Plus instead of saving.
+      const next = new URLSearchParams(searchParams);
+      next.delete('resumeSave');
+      setSearchParams(next, { replace: true });
+      setPlusUpsellOpen(true);
+      return;
+    }
     (async () => {
       // Same dialog flow now runs post-auth — defer one tick so result is in state.
       const next = new URLSearchParams(searchParams);
@@ -263,7 +280,7 @@ const PermitPath = () => {
         navigate(`/dashboard?view=host&tab=permits&roadmap=${saved.id}`);
       }
     })();
-  }, [user, searchParams, persistSaveNew, navigate, setSearchParams]);
+  }, [user, permitAccess.isPlus, permitAccess.isLoading, searchParams, persistSaveNew, navigate, setSearchParams]);
 
 
   const updateField = <K extends keyof typeof form>(key: K, value: string) => {
@@ -510,7 +527,7 @@ const PermitPath = () => {
                 {[
                   { n: 1, icon: MapPin,     accent: 'sky'     as const, hover: 'bounce' as const, title: 'Enter your location',     body: 'Tell us your state, city, and business type.' },
                   { n: 2, icon: ListChecks, accent: 'emerald' as const, hover: 'draw'   as const, title: 'We map your roadmap',     body: 'A sequenced checklist branched to your specific setup.' },
-                  { n: 3, icon: Download,   accent: 'sky'     as const, hover: 'nudge'  as const, title: 'Track & apply',           body: 'Check items off, set reminders, and apply on official sites.' },
+                  { n: 3, icon: Download,   accent: 'sky'     as const, hover: 'nudge'  as const, title: 'Track & apply',           body: 'Check items off, track expirations, and apply on official sites.' },
                 ].map((s, i) => (
                   <motion.div
                     key={s.n}
@@ -537,6 +554,7 @@ const PermitPath = () => {
           {/* Tool */}
           <section id="tool-section" className="py-12 md:py-16">
             <div className="container max-w-3xl">
+              <PermitPlusStatusCard className="mb-6" />
               <div className="rounded-2xl border border-white/10 bg-[#0d0d10] p-6 md:p-8 shadow-2xl">
                 <div className="flex items-center gap-3 mb-6">
                   <PremiumIcon icon={Route} accent="sky" size="md" hover="lift" />
@@ -675,6 +693,11 @@ const PermitPath = () => {
         }}
       />
 
+      <PermitPlusUpsellDialog
+        open={plusUpsellOpen}
+        onOpenChange={setPlusUpsellOpen}
+        returnPath="/tools/permitpath"
+      />
     </>
   );
 };

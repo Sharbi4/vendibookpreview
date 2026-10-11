@@ -5,6 +5,8 @@ interface TabPill {
   label: string;
   href: string;
   tab: string | null;
+  /** Pills that navigate to a real route instead of a ?tab= value. */
+  path?: string;
 }
 
 interface Props {
@@ -22,9 +24,11 @@ const DashboardMobileTabs = ({ mode }: Props) => {
   const pills: TabPill[] = mode === 'host'
     ? [
         { label: 'Overview', href: '/dashboard?view=host', tab: null },
+        { label: 'Listings', href: '/host/listings', tab: null, path: '/host/listings' },
+        { label: 'My Account', href: '/account', tab: null, path: '/account' },
         { label: 'Sales', href: '/dashboard?view=host&tab=sales', tab: 'sales' },
         { label: 'Insights', href: '/dashboard?view=host&tab=insights', tab: 'insights' },
-        { label: 'Promote', href: '/dashboard?view=host&tab=promote', tab: 'promote' },
+        { label: 'Premium tools', href: '/dashboard?view=host&tab=promote', tab: 'promote' },
         { label: 'Membership', href: '/dashboard?view=host&tab=membership', tab: 'membership' },
         { label: 'Payouts', href: '/dashboard?view=host&tab=payouts', tab: 'payouts' },
         { label: 'Notifications', href: '/dashboard?view=host&tab=notifications', tab: 'notifications' },
@@ -32,6 +36,7 @@ const DashboardMobileTabs = ({ mode }: Props) => {
       ]
     : [
         { label: 'Overview', href: '/dashboard?view=shopper', tab: null },
+        { label: 'My Account', href: '/account', tab: null, path: '/account' },
         { label: 'Orders', href: '/dashboard?view=shopper&tab=orders', tab: 'orders' },
         { label: 'Bookings', href: '/dashboard?view=shopper&tab=bookings', tab: 'bookings' },
         { label: 'Favorites', href: '/dashboard?view=shopper&tab=favorites', tab: 'favorites' },
@@ -42,19 +47,22 @@ const DashboardMobileTabs = ({ mode }: Props) => {
       ];
 
   return (
-    <div className="md:hidden -mx-4 px-4 mb-4 relative">
-      <div className="no-scrollbar overflow-x-auto flex gap-2 py-1">
+    <div className="md:hidden mb-4">
+      {/* Wrap into rows so every tab is visible at once — no swiping required. */}
+      <div className="flex flex-wrap gap-2">
         {pills.map((p) => {
-          const active = (p.tab ?? null) === (currentTab ?? null);
+          const active = p.path
+            ? location.pathname === p.path
+            : location.pathname === '/dashboard' && (p.tab ?? null) === (currentTab ?? null);
           return (
             <Link
               key={p.label}
               to={p.href}
               className={cn(
-                'shrink-0 px-3.5 py-1.5 rounded-full text-[13px] font-medium border transition-all',
+                'px-4 py-2 rounded-full text-[13px] font-semibold border transition-all',
                 active
-                  ? 'bg-primary text-primary-foreground border-primary shadow-[0_0_16px_-4px_rgba(255,81,36,0.6)]'
-                  : 'border-white/10 text-[rgb(var(--dash-text-2))] bg-white/[0.03] hover:text-[rgb(var(--dash-text-1))]',
+                  ? 'bg-cta-primary text-white border-transparent shadow-cta-primary'
+                  : 'border-white/[0.12] text-[rgb(var(--dash-text-2))] bg-white/[0.03] hover:text-[rgb(var(--dash-text-1))] hover:border-white/20',
               )}
             >
               {p.label}
@@ -62,9 +70,6 @@ const DashboardMobileTabs = ({ mode }: Props) => {
           );
         })}
       </div>
-      {/* edge-fade hint that the row scrolls */}
-      <div className="pointer-events-none absolute top-0 bottom-0 right-0 w-8 bg-gradient-to-l from-background to-transparent" />
-      <div className="pointer-events-none absolute top-0 bottom-0 left-0 w-4 bg-gradient-to-r from-background to-transparent" />
     </div>
   );
 };

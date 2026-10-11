@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { resolveSaleTerms, formatTermsForEmail } from "../_shared/resolveSaleTerms.ts";
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 
 
@@ -105,6 +106,40 @@ serve(async (req) => {
 
     logStep("Transaction disputed", { role, transactionId: transaction_id });
 
+    // Every dispute becomes a Vendibook case: it shows on the admin Disputes
+    // page, both parties can add statements and evidence, and the seller
+    // payment is frozen until an admin resolves it (refund, partial refund or
+    // release). Seller-routed payments already settled at capture; admin
+    // payout checks also refuse disputed sales.
+    let caseInfo: { id?: string; case_number?: string } | null = null;
+    const { data: casePayment } = await supabaseClient
+      .from('payment_records')
+      .select('id')
+      .eq('sale_transaction_id', transaction_id)
+      .in('payment_status', ['completed', 'partially_refunded'])
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (casePayment) {
+      const caseText = reason.length >= 20 ? reason : `Dispute raised on this purchase: ${reason}`;
+      const caseRes = await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/dispute-case-ops`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: authHeader,
+          apikey: Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+        },
+        body: JSON.stringify({
+          action: 'open',
+          payment_record_id: casePayment.id,
+          issue_type: 'other',
+          description: caseText,
+        }),
+      });
+      const caseBody = await caseRes.json().catch(() => ({}));
+      caseInfo = caseBody?.case ?? null;
+      if (!caseRes.ok) logStep("Warning: case not opened", { status: caseRes.status, error: caseBody?.error });
+    }
     // Fetch listing, buyer, and seller info for email
     const { data: listing } = await supabaseClient
       .from('listings')
@@ -166,14 +201,13 @@ serve(async (req) => {
     const raiserParagraphs = [
       `Your dispute for ${listingTitle} has been submitted and is under review.`,
       `Your reason: ${reason}`,
-      `Payment will remain in escrow until the dispute is resolved. We've notified ${otherParty} and our team will review within 3–5 business days.`,
+      `Any seller payout for this transaction is placed on hold until the dispute is resolved. We've notified ${otherParty} and our team will review within 3–5 business days.`,
       ...(termsBlock ? [termsBlock] : []),
     ];
 
     if (raiserEmail) {
       emailPromises.push(
-        supabaseClient.functions.invoke("send-transactional-email", {
-          body: {
+        invokeTransactionalEmail({
             templateName: "support-reply",
             recipientEmail: raiserEmail,
             idempotencyKey: `dispute-raiser-${transaction_id}`,
@@ -182,8 +216,7 @@ serve(async (req) => {
               subject: `Dispute Submitted - ${listingTitle}`,
               bodyParagraphs: raiserParagraphs,
             },
-          },
-        }).catch(err => logStep("Raiser email failed", { error: err.message }))
+          }).catch(err => logStep("Raiser email failed", { error: err.message }))
       );
     }
 
@@ -196,8 +229,7 @@ serve(async (req) => {
 
     if (otherEmail) {
       emailPromises.push(
-        supabaseClient.functions.invoke("send-transactional-email", {
-          body: {
+        invokeTransactionalEmail({
             templateName: "support-reply",
             recipientEmail: otherEmail,
             idempotencyKey: `dispute-other-${transaction_id}`,
@@ -206,8 +238,7 @@ serve(async (req) => {
               subject: `Dispute Raised - ${listingTitle}`,
               bodyParagraphs: otherParagraphs,
             },
-          },
-        }).catch(err => logStep("Other party email failed", { error: err.message }))
+          }).catch(err => logStep("Other party email failed", { error: err.message }))
       );
     }
 
@@ -226,8 +257,7 @@ serve(async (req) => {
 
     for (const adminTo of ["support@vendibook.com"]) {
       emailPromises.push(
-        supabaseClient.functions.invoke("send-transactional-email", {
-          body: {
+        invokeTransactionalEmail({
             templateName: "support-reply",
             recipientEmail: adminTo,
             idempotencyKey: `dispute-admin-${transaction_id}-${adminTo}`,
@@ -236,8 +266,7 @@ serve(async (req) => {
               subject: `[ACTION REQUIRED] New Dispute - ${listingTitle}`,
               bodyParagraphs: adminParagraphs,
             },
-          },
-        }).catch(err => logStep("Admin email failed", { error: err.message, adminTo }))
+          }).catch(err => logStep("Admin email failed", { error: err.message, adminTo }))
       );
     }
 
@@ -252,7 +281,10 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: "Dispute submitted successfully. Our team will review it shortly.",
+        message: caseInfo?.case_number
+          ? `Dispute submitted as case ${caseInfo.case_number}. The seller payment is paused while our team reviews it.`
+          : "Dispute submitted successfully. Our team will review it shortly.",
+        case_id: caseInfo?.id ?? null,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

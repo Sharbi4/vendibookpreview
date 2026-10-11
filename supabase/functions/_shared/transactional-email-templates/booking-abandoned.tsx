@@ -3,7 +3,7 @@ import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } 
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
-import { BrandHeader } from './_blocks.tsx'
+import { BrandFooter, BrandHeader } from './_blocks.tsx'
 interface Props {
   shopperName?: string
   listingTitle?: string
@@ -40,7 +40,7 @@ const E = ({ shopperName, listingTitle, startDate, endDate, resumeUrl, variant =
               No payment is taken until you confirm. Need help? Reply to this email.
             </Text>
           </Section>
-        </Container>
+        <BrandFooter /></Container>
       </Body>
     </Html>
   )

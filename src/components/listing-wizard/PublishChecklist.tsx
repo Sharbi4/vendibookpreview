@@ -64,7 +64,7 @@ export const PublishChecklist: React.FC<PublishChecklistProps> = ({
   onPublishClick,
   hidePublishButton = false,
   className,
-  defaultExpanded = false}) => {
+  defaultExpanded = true}) => {
   const [expanded, setExpanded] = useState(defaultExpanded);
   const completedCount = items.filter(i => i.completed).length;
   const requiredItems = items.filter(i => i.required);
@@ -93,8 +93,8 @@ export const PublishChecklist: React.FC<PublishChecklistProps> = ({
 
   return (
     <div className={cn(
-      "rounded-2xl border border-border/60 shadow-xl backdrop-blur-md bg-card/70",
-      "bg-gradient-to-br from-background/80 via-card/60 to-muted/30",
+      "rounded-2xl border border-border bg-card",
+      "shadow-[0_1px_2px_rgba(24,20,16,0.04),0_10px_28px_-18px_rgba(24,20,16,0.28)]",
       className
     )}>
       {/* Collapsible Header */}
@@ -138,7 +138,7 @@ export const PublishChecklist: React.FC<PublishChecklistProps> = ({
             {items.map((item) => (
               <button
                 key={item.id}
-                onClick={() => { onItemClick?.(item.id); setExpanded(false); }}
+                onClick={() => onItemClick?.(item.id)}
                 className={cn(
                   "w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-all",
                   item.current
@@ -192,13 +192,13 @@ export const createChecklistItems = (
     hasAvailability: boolean;
     hasDescription: boolean;
     hasLocation: boolean;
-    hasStripe: boolean;
+    hasBasics?: boolean;
     isRental: boolean;
     photoCount?: number;
     priceSet?: string;
     descriptionLength?: number;
     locationSet?: string;
-    requiresStripe?: boolean; // true if card payment is enabled
+
     hasDocuments?: boolean; // true if documents step was configured
     documentsCount?: number; // number of required documents set
   },
@@ -251,6 +251,15 @@ export const createChecklistItems = (
   };
 
   const items: ChecklistItem[] = [
+    {
+      id: 'basics',
+      label: 'The Basics',
+      icon: <Check className="w-4 h-4" />,
+      completed: formState.hasBasics ?? true,
+      required: true,
+      current: currentStep === 'basics',
+      statusHint: (formState.hasBasics ?? true) ? 'Complete' : 'Not started',
+      progress: (formState.hasBasics ?? true) ? 1 : 0},
     {
       id: 'photos',
       label: 'Photos & Media',
@@ -323,19 +332,6 @@ export const createChecklistItems = (
       progress: (formState.hasDocuments ?? true) ? 1 : 0});
   }
 
-  // Only add Stripe requirement if card payment is enabled
-  const stripeRequired = formState.requiresStripe !== false;
-  if (stripeRequired) {
-    items.push({
-      id: 'stripe',
-      label: 'Payout Setup (Stripe)',
-      icon: <CreditCard className="w-4 h-4" />,
-      completed: formState.hasStripe,
-      required: true,
-      current: currentStep === 'stripe',
-      statusHint: formState.hasStripe ? 'Connected' : 'Not connected',
-      progress: formState.hasStripe ? 1 : 0});
-  }
 
   // Add review step at the end - always shown, required, completed when all other required items are done
   const allOtherRequiredComplete = items.filter(i => i.required).every(i => i.completed);

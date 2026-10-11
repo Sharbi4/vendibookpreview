@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { getCaller, isAdminUser, unauthorizedResponse, forbiddenResponse } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -27,16 +28,19 @@ const knowledgeBase = `
 - Browse "For Sale" listings with detailed photos and specs
 - Contact seller through the platform with questions
 - Arrange inspection (in-person or via mobile mechanic)
-- Pay through Vendibook's secure escrow system
+- Pay securely through Vendibook's PayPal checkout (card or PayPal balance)
 - Receive title, bill of sale, and documentation
-- Confirm receipt to release funds to seller
+- Confirm receipt so the seller's payout can be released
 
 ## Payments & Security
-- All payments processed through Stripe (secure, PCI compliant)
-- Funds held in escrow until transaction completes
-- Vendibook charges a platform fee (typically 10-15%)
-- Sellers receive payouts after buyer confirms receipt
+- Card and PayPal payments are processed through PayPal (secure, PCI compliant)
+- Vendibook records the transaction and releases the seller payout after delivery is confirmed — typically within 24 hours, and always within 24–48 hours
+- Payouts are sent by PayPal, ACH, or Venmo depending on the seller's payout account
+- Seller commission is 12.9% (10.9% for Vendibook Pro members). Buyers pay no fee on sales
+- Pay-in-person cash sales are completely free — no commission, no buyer fee
+- Rentals: 12.9% host commission plus a 12.9% renter fee
 - Disputes can be raised within 48 hours of issues
+
 
 ## Documents & Requirements
 - Hosts may require documents like driver's license, business license, food handler certificate
@@ -64,8 +68,8 @@ const knowledgeBase = `
 
 ## Account & Verification
 - Create account with email
-- Verify identity through Stripe Identity
-- Hosts need to complete Stripe Connect onboarding
+- Verify identity through Vendibook's optional Verified Seller check (Plaid)
+- Hosts add payout details in the dashboard; Vendibook pays out manually
 - Identity verification increases trust and booking approval rates
 
 ## Delivery & Freight
@@ -84,6 +88,7 @@ const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+  if (!(await getCaller(req))) return unauthorizedResponse(corsHeaders);
 
   try {
     logStep("FAQ chatbot started");

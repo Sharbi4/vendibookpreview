@@ -69,7 +69,7 @@ const ACTION_META: Record<
   },
   mark_paid_manual: {
     title: "Mark as paid manually",
-    description: "Record a manual payout outside of the automated batch. Requires a note for audit trail.",
+    description: "Record a manual payout. Requires a note for the audit trail.",
     confirmLabel: "Mark paid",
     requiresNote: true,
     noteLabel: "Payout reference / note (required)",
@@ -215,23 +215,6 @@ const ReferralAdmin = () => {
     a.click();
   };
 
-  const triggerPayout = async () => {
-    if (!flagValue("referral_auto_payout_enabled")) {
-      const proceed = confirm(
-        "Auto-payout is currently DISABLED. The batch will exit early without paying. Run anyway?",
-      );
-      if (!proceed) return;
-    }
-    const { data, error } = await supabase.functions.invoke("referral-payout-batch", {
-      body: { manual: true },
-    });
-    if (error) {
-      toast.error("Payout failed");
-      return;
-    }
-    toast.success(`Processed ${(data as any)?.processed ?? 0} payouts`);
-  };
-
   const openDialog = (action: ActionKind, referral: any) => {
     setDialogAction(action);
     setDialogReferral(referral);
@@ -283,7 +266,6 @@ const ReferralAdmin = () => {
     );
 
   const programEnabled = flagValue("referral_program_enabled");
-  const autoPayoutEnabled = flagValue("referral_auto_payout_enabled");
   const meta = dialogAction ? ACTION_META[dialogAction] : null;
 
   return (
@@ -295,9 +277,6 @@ const ReferralAdmin = () => {
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" onClick={exportCsv}>
               <FileDown className="h-4 w-4 mr-1" /> Export CSV
-            </Button>
-            <Button onClick={triggerPayout}>
-              <PlayCircle className="h-4 w-4 mr-1" /> Run payout batch
             </Button>
           </div>
         </div>
@@ -323,21 +302,15 @@ const ReferralAdmin = () => {
             </div>
             <div className="flex items-start justify-between gap-4 p-4 border rounded-lg">
               <div>
-                <p className="font-medium">Auto payouts enabled</p>
+                <p className="font-medium">Referral payouts</p>
                 <p className="text-xs text-muted-foreground mt-1">
-                  When off, the payout batch exits early. Use Mark paid manually until verified.
+                  Payouts are reviewed and recorded manually. Export the ledger, send the
+                  payment, then use Mark paid to record it with an audit note.
                 </p>
-                <Badge
-                  variant={autoPayoutEnabled ? "default" : "secondary"}
-                  className={autoPayoutEnabled ? "mt-2 bg-green-600" : "mt-2"}
-                >
-                  {autoPayoutEnabled ? "Automated" : "Manual only"}
+                <Badge variant="secondary" className="mt-2">
+                  Manual only
                 </Badge>
               </div>
-              <Switch
-                checked={autoPayoutEnabled}
-                onCheckedChange={(v) => setFlag("referral_auto_payout_enabled", v)}
-              />
             </div>
           </div>
         </Card>

@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
+import { refundPayment } from "../_shared/paymentOps.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { getCaller, isAdminUser, isBackendCaller, forbiddenResponse, unauthorizedResponse } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -43,6 +44,19 @@ serve(async (req) => {
     if (bookingError || !booking) {
       throw new Error(`Booking not found: ${bookingError?.message}`);
     }
+
+    // Only the listing's host, an admin, or a backend job may refund a deposit.
+    if (!(await isBackendCaller(req))) {
+      const caller = await getCaller(req);
+      if (!caller) return unauthorizedResponse(corsHeaders);
+      const isHost = (booking as any).listings?.host_id === caller.id || (booking as any).host_id === caller.id;
+      if (!isHost && !(await isAdminUser(caller.id))) return forbiddenResponse(corsHeaders);
+    }
+    const deposit = Number(booking.deposit_amount ?? 0);
+    const deduction = Number(deduction_amount);
+    if (!['full', 'partial', 'forfeit'].includes(String(refund_type)) || !Number.isFinite(deduction) || deduction < 0 || deduction > deposit) {
+      return new Response(JSON.stringify({ error: 'Invalid refund amount.' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
     logStep("Found booking", { bookingId: booking.id, depositAmount: booking.deposit_amount, depositStatus: booking.deposit_status });
 
     // Get renter profile
@@ -81,27 +95,25 @@ serve(async (req) => {
     }
     logStep("Calculated refund amount", { original: booking.deposit_amount, refundAmount, deduction: deduction_amount });
 
-    // Initialize Stripe
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
-    
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-
-    // Process refund if there's an amount to refund and we have a charge ID
+    // Process refund if there's an amount to refund and we have a capture reference
     let refundId = null;
     if (refundAmount > 0 && booking.deposit_charge_id) {
-      try {
-        const refund = await stripe.refunds.create({
-          charge: booking.deposit_charge_id,
-          amount: Math.round(refundAmount * 100), // Convert to cents
-          reason: 'requested_by_customer',
-        });
-        refundId = refund.id;
-        logStep("Stripe refund processed", { refundId, amount: refundAmount });
-      } catch (stripeError: any) {
-        logStep("Stripe refund failed", { error: stripeError.message });
-        throw new Error(`Failed to process refund: ${stripeError.message}`);
+      // Vendibook refunds through PayPal only.
+      const refund = await refundPayment({
+        paymentReference: booking.deposit_charge_id,
+        provider: booking.payment_provider,
+        amountCents: Math.round(refundAmount * 100),
+        reason: notes || 'Security deposit refund',
+        idempotencyKey: `deposit-refund-${booking.id}-${Math.round(refundAmount * 100)}`,
+      });
+
+      if (!refund.success) {
+        logStep("Deposit refund failed", { error: refund.error, manual: refund.manual });
+        throw new Error(`Failed to process refund: ${refund.error}`);
       }
+
+      refundId = refund.id ?? null;
+      logStep("Deposit refund processed", { refundId, amount: refundAmount });
     }
 
     // Update booking record

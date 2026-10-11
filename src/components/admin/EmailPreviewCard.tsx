@@ -187,9 +187,9 @@ const emailTemplates = {
         },
       },
       {
-        id: 'stripe_onboarding_reminder',
-        name: 'Stripe Onboarding Reminder',
-        description: 'Sent to hosts who started but haven\'t completed Stripe setup',
+        id: 'payout_setup_reminder',
+        name: 'Payout Setup Reminder',
+        description: 'Sent to hosts who started but haven\'t completed payout setup',
         sampleData: {
           fullName: 'Sarah Wilson',
         },
@@ -532,7 +532,7 @@ const generateEmailHtml = (templateId: string, data: Record<string, unknown>): s
             ${isHost ? `
               <li>Complete your profile</li>
               <li>Add your first listing</li>
-              <li>Set up Stripe to receive payments</li>
+              <li>Set up your payout method to receive funds</li>
             ` : `
               <li>Complete your profile</li>
               <li>Browse available listings</li>

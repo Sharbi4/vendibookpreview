@@ -18,6 +18,8 @@ import { DOCUMENT_TYPE_LABELS, DOCUMENT_TYPE_DESCRIPTIONS } from '@/types/docume
 import type { DocumentType } from '@/types/documents';
 import type { ListingRequiredDocument } from '@/hooks/useRequiredDocuments';
 import { TrustModule, DOCUMENT_TRUST_POINTS, DOCUMENT_DISCLAIMER } from '@/components/journey';
+import { InsuranceEducationCard } from '@/components/booking/InsuranceEducationCard';
+import { dueLabelFor, requirementLabel } from '@/lib/documents/requirements';
 
 export interface StagedDocument {
   documentType: DocumentType;
@@ -32,6 +34,7 @@ interface DocumentUploadItemProps {
   onRemove: () => void;
   isUploading?: boolean;
   disabled?: boolean;
+  isInstantBook?: boolean;
 }
 
 const DocumentUploadItem = ({
@@ -41,6 +44,7 @@ const DocumentUploadItem = ({
   onRemove,
   isUploading = false,
   disabled = false,
+  isInstantBook = false,
 }: DocumentUploadItemProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [dragActive, setDragActive] = useState(false);
@@ -110,31 +114,45 @@ const DocumentUploadItem = ({
           <div className="flex items-center gap-2 mb-1">
             <FileText className="h-4 w-4 text-primary shrink-0" />
             <h4 className="font-medium text-foreground text-sm">
-              {DOCUMENT_TYPE_LABELS[requirement.document_type]}
+              {requirementLabel(requirement)}
             </h4>
           </div>
           <p className="text-xs text-muted-foreground">
-            {requirement.description || DOCUMENT_TYPE_DESCRIPTIONS[requirement.document_type]}
+            {requirement.instructions ||
+              requirement.description ||
+              DOCUMENT_TYPE_DESCRIPTIONS[requirement.document_type]}
           </p>
         </div>
         <Badge 
           variant="outline" 
           className={cn(
             'gap-1',
-            stagedFile 
-              ? 'bg-emerald-100 text-emerald-700 border-emerald-200' 
-              : 'bg-amber-100 text-amber-700 border-amber-200'
+            stagedFile
+              ? 'bg-emerald-100 text-emerald-700 border-emerald-200'
+              : requirement.is_required && requirement.deadline_type === 'before_booking_request'
+                ? 'bg-amber-100 text-amber-700 border-amber-200'
+                : 'bg-muted text-muted-foreground border-border'
           )}
         >
           {stagedFile ? (
             <>
               <Clock className="h-3 w-3" />
-              Ready
+              Selected
+            </>
+          ) : !requirement.is_required ? (
+            <>
+              <Info className="h-3 w-3" />
+              Optional
+            </>
+          ) : requirement.deadline_type === 'before_booking_request' ? (
+            <>
+              <AlertTriangle className="h-3 w-3" />
+              Due before booking
             </>
           ) : (
             <>
-              <AlertTriangle className="h-3 w-3" />
-              Required
+              <Clock className="h-3 w-3" />
+              {dueLabelFor(requirement, isInstantBook)}
             </>
           )}
         </Badge>
@@ -151,6 +169,8 @@ const DocumentUploadItem = ({
             size="sm"
             className="h-7 w-7 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
             onClick={onRemove}
+            disabled={disabled || isUploading}
+            aria-label={`Remove ${requirementLabel(requirement)} file`}
           >
             <Trash2 className="h-3.5 w-3.5" />
           </Button>
@@ -166,6 +186,7 @@ const DocumentUploadItem = ({
             accept=".pdf,.jpg,.jpeg,.png,.webp"
             onChange={handleInputChange}
             className="hidden"
+            aria-label={`Upload ${requirementLabel(requirement)}`}
             disabled={disabled || isUploading}
           />
 
@@ -200,6 +221,7 @@ const DocumentUploadItem = ({
           variant="outline"
           size="sm"
           onClick={() => fileInputRef.current?.click()}
+          disabled={disabled || isUploading}
           className="w-full"
         >
           <Upload className="h-4 w-4 mr-2" />
@@ -215,6 +237,7 @@ const DocumentUploadItem = ({
           accept=".pdf,.jpg,.jpeg,.png,.webp"
           onChange={handleInputChange}
           className="hidden"
+          aria-label={`Replace ${requirementLabel(requirement)}`}
           disabled={disabled || isUploading}
         />
       )}
@@ -230,6 +253,7 @@ interface BookingDocumentUploadProps {
   disabled?: boolean;
   docsOnFile?: boolean;
   onFileExpiresAt?: string | null;
+  isInstantBook?: boolean;
 }
 
 export const BookingDocumentUpload = ({
@@ -240,6 +264,7 @@ export const BookingDocumentUpload = ({
   disabled = false,
   docsOnFile = false,
   onFileExpiresAt,
+  isInstantBook = false,
 }: BookingDocumentUploadProps) => {
   const handleUpload = (docType: DocumentType, file: File) => {
     const newDocs = stagedDocuments.filter(d => d.documentType !== docType);
@@ -251,12 +276,29 @@ export const BookingDocumentUpload = ({
     onDocumentsChange(stagedDocuments.filter(d => d.documentType !== docType));
   };
 
-  const allDocsStaged = requiredDocs.every(req =>
-    stagedDocuments.some(doc => doc.documentType === req.document_type)
+  // Only host-configured pre-booking requirements gate the Continue button.
+  const blockers = requiredDocs.filter(
+    (req) => req.is_required && req.deadline_type === 'before_booking_request',
+  );
+  const missingBlockers = blockers.filter(
+    (req) => !stagedDocuments.some((doc) => doc.documentType === req.document_type),
+  );
+  const allDocsStaged = missingBlockers.length === 0;
+
+  /** Host requires proof of commercial liability / COI. */
+  const requiresInsuranceDoc = requiredDocs.some(
+    (req) =>
+      req.is_required && (req.document_type === 'commercial_liability_insurance' ||
+      req.document_type === 'certificate_of_insurance'),
   );
 
-  const stagedCount = stagedDocuments.length;
-  const totalRequired = requiredDocs.length;
+  const stagedCount = requiredDocs.filter(req => stagedDocuments.some(doc => doc.documentType === req.document_type)).length;
+  const totalDocuments = requiredDocs.length;
+  const groups = [
+    { title: 'Required before booking', documents: blockers },
+    { title: 'Required later', documents: requiredDocs.filter(req => req.is_required && req.deadline_type !== 'before_booking_request') },
+    { title: 'Optional documents', documents: requiredDocs.filter(req => !req.is_required) },
+  ].filter(group => group.documents.length > 0);
 
   // If all docs are on file, show bypass UI
   if (docsOnFile) {
@@ -278,7 +320,7 @@ export const BookingDocumentUpload = ({
             {requiredDocs.map((req) => (
               <div key={req.id} className="flex items-center gap-2 text-sm text-emerald-700 dark:text-emerald-300">
                 <CheckCircle2 className="h-4 w-4 text-emerald-500 shrink-0" />
-                <span>{DOCUMENT_TYPE_LABELS[req.document_type]}</span>
+                <span>{requirementLabel(req)}</span>
                 <Badge variant="outline" className="text-[10px] bg-emerald-100 text-emerald-700 border-emerald-200 ml-auto">
                   On file
                 </Badge>
@@ -307,25 +349,29 @@ export const BookingDocumentUpload = ({
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground">
-        This host requires the following documents. Please upload them to proceed with your booking.
+        {totalDocuments === 0
+          ? 'This host has not requested any documents for this listing.'
+          : 'These are the documents selected by this host for this listing. Only documents marked due before booking are needed to continue. You can provide later documents from your booking.'}
       </p>
 
       {/* Progress indicator */}
-      <div className="flex items-center gap-2 text-sm">
+      {totalDocuments > 0 && <div className="flex items-center gap-2 text-sm">
         <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
           <div 
             className="h-full bg-primary transition-all duration-300"
-            style={{ width: `${(stagedCount / totalRequired) * 100}%` }}
+            style={{ width: `${(stagedCount / totalDocuments) * 100}%` }}
           />
         </div>
         <span className="text-muted-foreground font-medium">
-          {stagedCount}/{totalRequired}
+          {stagedCount} of {totalDocuments} files selected
         </span>
-      </div>
+      </div>}
 
       {/* Document upload cards */}
       <div className="space-y-3">
-        {requiredDocs.map((requirement) => (
+        {groups.map(group => <section key={group.title} className="space-y-3" aria-label={group.title}>
+          <h4 className="text-sm font-semibold">{group.title}</h4>
+          {group.documents.map((requirement) => (
           <DocumentUploadItem
             key={requirement.id}
             requirement={requirement}
@@ -333,8 +379,10 @@ export const BookingDocumentUpload = ({
             onUpload={(file) => handleUpload(requirement.document_type, file)}
             onRemove={() => handleRemove(requirement.document_type)}
             disabled={disabled}
+            isInstantBook={isInstantBook}
           />
-        ))}
+          ))}
+        </section>)}
       </div>
 
       {/* Review notice */}
@@ -344,16 +392,20 @@ export const BookingDocumentUpload = ({
           <div className="text-xs text-blue-700 dark:text-blue-300 space-y-1">
             <p className="font-medium">Document Review Process</p>
             <p>
-              Documents will be sent to admin for review. Typically reviewed within 30 minutes, 
-              though some cases may take longer. You'll be notified once your documents have been reviewed.
+              Selected files are submitted with your booking for review against the host's requirements.
+              Selecting a file does not mean it has been approved. You'll be notified when review is complete.
             </p>
           </div>
         </div>
       </div>
 
+      {requiresInsuranceDoc && (
+        <InsuranceEducationCard reason="This host requires proof of commercial general liability insurance for this booking." />
+      )}
+
       <TrustModule
         variant="compact"
-        title="Your documents stay private"
+        title="Private document storage"
         points={DOCUMENT_TRUST_POINTS}
         disclaimer={DOCUMENT_DISCLAIMER}
       />
@@ -365,7 +417,9 @@ export const BookingDocumentUpload = ({
         className="w-full"
         variant="dark-shine"
       >
-        {allDocsStaged ? 'Continue' : `Upload ${totalRequired - stagedCount} more document${totalRequired - stagedCount > 1 ? 's' : ''}`}
+        {allDocsStaged
+          ? (stagedCount === 0 && !docsOnFile ? 'Continue without uploads' : 'Continue')
+          : `Upload ${missingBlockers.length} more document${missingBlockers.length > 1 ? 's' : ''}`}
       </Button>
     </div>
   );

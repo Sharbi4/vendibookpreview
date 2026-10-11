@@ -49,7 +49,7 @@ const PUBLIC_ROUTES = [
   "/how-it-works/host",
   "/how-it-works/seller",
   "/become-a-host",
-  "/sell-food-truck",
+  "/sell-my-food-truck",
   "/sell-food-trailer",
   "/sell-concession-trailer",
   "/rent-out-my-food-truck",

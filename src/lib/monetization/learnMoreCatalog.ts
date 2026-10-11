@@ -14,13 +14,8 @@ import {
 
 import permitpathShot from '@/assets/tool-previews/permitpath.jpg';
 import pricepilotShot from '@/assets/tool-previews/pricepilot.jpg';
-import listingStudioShot from '@/assets/tool-previews/listing-studio.jpg';
-import marketingStudioShot from '@/assets/tool-previews/marketing-studio.jpg';
-import buildkitShot from '@/assets/tool-previews/buildkit.jpg';
-import marketRadarShot from '@/assets/tool-previews/market-radar.jpg';
 import startupGuideShot from '@/assets/tool-previews/startup-guide.jpg';
 import regulationsHubShot from '@/assets/tool-previews/regulations-hub.jpg';
-import conceptLabShot from '@/assets/tool-previews/concept-lab.jpg';
 
 export interface LearnMoreOutcome {
   icon: LucideIcon;
@@ -76,7 +71,7 @@ const CATALOG: Record<string, LearnMoreEntry> = {
       { icon: Users, title: 'Unlimited inquiries', body: 'Buyers and renters can message you as much as they need — no reply caps.' },
     ],
     screenshots: [
-      { src: listingStudioShot, alt: 'Free listing editor', caption: 'Build a real listing in minutes — no card required.' },
+      { src: permitpathShot, alt: 'PermitPath roadmap', caption: 'Free PermitPath roadmap — no card required.' },
       { src: pricepilotShot, alt: 'Inquiry inbox', caption: 'One inbox for buyer and renter conversations.' },
     ],
   },
@@ -91,7 +86,7 @@ const CATALOG: Record<string, LearnMoreEntry> = {
       { icon: DollarSign, title: 'Lower marketplace commission', body: 'Starter members keep more of every sale versus free-tier hosts.' },
     ],
     screenshots: [
-      { src: listingStudioShot, alt: 'Listing studio editor', caption: 'Rich listing editor — photos, pricing, availability.' },
+      { src: startupGuideShot, alt: 'Startup Guide checklist', caption: 'Startup Guide — every milestone to opening day.' },
       { src: pricepilotShot, alt: 'Bookings and calendar view', caption: 'Booking calendar with inquiries in one inbox.' },
     ],
   },
@@ -108,8 +103,8 @@ const CATALOG: Record<string, LearnMoreEntry> = {
     ],
     screenshots: [
       { src: pricepilotShot, alt: 'PricePilot dashboard', caption: 'PricePilot — see comps and set winning rates.' },
-      { src: marketingStudioShot, alt: 'Marketing studio', caption: 'Spark-written listing copy and email pushes.' },
-      { src: marketRadarShot, alt: 'Analytics dashboard', caption: 'Views, saves, offers, and revenue at a glance.' },
+      { src: startupGuideShot, alt: 'Startup Guide', caption: 'Startup Guide — the launch checklist, step by step.' },
+      { src: regulationsHubShot, alt: 'Regulations Hub', caption: 'State-by-state rules, certifications, and inspections.' },
     ],
   },
   host_operator: {
@@ -119,13 +114,13 @@ const CATALOG: Record<string, LearnMoreEntry> = {
     outcomes: [
       { icon: Layers, title: 'Multi-location portfolio', body: 'Manage every unit, kitchen, or lot from one dashboard with roll-up reporting.' },
       { icon: Users, title: 'Team member access', body: 'Invite managers with scoped permissions — no shared logins.' },
-      { icon: Wrench, title: 'Every premium tool unlocked', body: 'PermitPath, BuildKit, Concept Lab, Market Radar — no per-tool paywalls.' },
+      { icon: Wrench, title: 'Every premium tool unlocked', body: 'PermitPath Plus, PricePilot, and everything we ship next — no per-tool paywalls.' },
       { icon: BarChart3, title: 'Portfolio analytics', body: 'Cross-listing revenue, occupancy, and demand insights.' },
       { icon: Flame, title: 'Priority support', body: 'Human help in hours, not days, from our founding team.' },
     ],
     screenshots: [
-      { src: marketRadarShot, alt: 'Portfolio analytics', caption: 'Portfolio analytics across every listing.' },
-      { src: buildkitShot, alt: 'BuildKit', caption: 'BuildKit — spec, source, and cost every build.' },
+      { src: regulationsHubShot, alt: 'Regulations Hub', caption: 'Compliance library across all 50 states.' },
+      { src: pricepilotShot, alt: 'PricePilot appraisal', caption: 'PricePilot — defensible appraisals from real comparables.' },
       { src: permitpathShot, alt: 'PermitPath', caption: 'PermitPath — city-by-city permit roadmaps.' },
     ],
   },
@@ -140,7 +135,7 @@ const CATALOG: Record<string, LearnMoreEntry> = {
     ],
     screenshots: [
       { src: pricepilotShot, alt: 'PricePilot dashboard', caption: 'PricePilot pricing intelligence.' },
-      { src: marketingStudioShot, alt: 'Marketing studio', caption: 'AI listing rewrite tool.' },
+      { src: regulationsHubShot, alt: 'Regulations Hub', caption: 'Regulations Hub — free forever, all 50 states.' },
     ],
   },
   'boost-featured-30': {
@@ -152,8 +147,8 @@ const CATALOG: Record<string, LearnMoreEntry> = {
       { icon: BarChart3, title: 'Track the lift in real time', body: 'Views, saves, and messages from the boost are broken out in your analytics tab.' },
     ],
     screenshots: [
-      { src: marketRadarShot, alt: 'Featured placement analytics', caption: 'Boost analytics — see the lift over standard placement.' },
-      { src: listingStudioShot, alt: 'Featured card treatment', caption: 'Your listing with the Featured badge.' },
+      { src: pricepilotShot, alt: 'Boost performance', caption: 'Boost analytics — see the lift over standard placement.' },
+      { src: permitpathShot, alt: 'Featured placement', caption: 'Your listing riding above standard results.' },
     ],
   },
   permit_path_plus: {
@@ -178,8 +173,8 @@ const CATALOG: Record<string, LearnMoreEntry> = {
       { icon: BarChart3, title: 'Highlights buyers care about', body: 'Trust and utility highlights auto-selected from your listing data.' },
     ],
     screenshots: [
-      { src: marketingStudioShot, alt: 'Marketing studio rewrite', caption: 'One-click listing rewrite in Marketing Studio.' },
-      { src: listingStudioShot, alt: 'Listing editor', caption: 'The rewritten listing landing back in your editor.' },
+      { src: pricepilotShot, alt: 'Listing rewrite', caption: 'One-click listing rewrite, powered by Spark.' },
+      { src: startupGuideShot, alt: 'Listing guidance', caption: 'The rewritten listing landing back in your editor.' },
     ],
   },
 };

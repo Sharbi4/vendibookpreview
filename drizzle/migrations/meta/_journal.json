@@ -1,0 +1,69 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1791155124229,
+      "tag": "0000_block_contact_info_in_messages",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791156899502,
+      "tag": "0001_scope_public_feature_flag_reads",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791157350087,
+      "tag": "0002_require_phone_all_users",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791157773636,
+      "tag": "0003_ai_message_risk_scan",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791158262426,
+      "tag": "0004_require_identity_verification",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791188168642,
+      "tag": "0005_internal_cron_secret_and_spotlight_uploads",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791440671460,
+      "tag": "0006_campus_partner_codes",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791441031217,
+      "tag": "0007_campus_partner_sync_never_blocks_payments",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791672484281,
+      "tag": "0008_sync_verified_phone_to_profile",
+      "breakpoints": true
+    }
+  ]
+}

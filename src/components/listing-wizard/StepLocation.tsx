@@ -8,6 +8,7 @@ import { Switch } from '@/components/ui/switch';
 import { cn } from '@/lib/utils';
 import { GpsLocationButton } from './GpsLocationButton';
 import { supabase } from '@/integrations/supabase/client';
+import { invokeEdge } from '@/lib/edge/invokeFunction';
 
 interface StepLocationProps {
   formData: ListingFormData;
@@ -47,11 +48,11 @@ const ZipCodeLookup: React.FC<{
     setConfirmed(false);
 
     try {
-      const { data, error: fnError } = await supabase.functions.invoke('geocode-location', {
+      const { data, error: fnError } = await invokeEdge<{ results?: any[] }>('geocode-location', {
         body: { query: zip, limit: 1 },
-      });
+      }, { retries: 2 });
 
-      if (fnError) throw fnError;
+      if (fnError) throw new Error(fnError);
 
       const result = data?.results?.[0];
       if (!result) {

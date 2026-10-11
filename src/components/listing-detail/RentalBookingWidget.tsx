@@ -1,12 +1,14 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+
 import { 
   format, 
   differenceInDays, 
   addDays, 
   isBefore, 
   startOfDay, 
-  parseISO, 
+  parseISO,
+  addHours,
   isSameDay,
   addYears,
   isAfter,
@@ -18,20 +20,13 @@ import {
   isToday} from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Calendar, 
   Zap, 
-  ArrowRight, 
-  Shield, 
   Clock, 
-  Sun,
-  CalendarRange,
   Minus,
   Plus,
   ChevronLeft,
   ChevronRight,
-  Users,
-  MapPin,
-  CheckCircle,
+  CalendarClock,
   Info} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -42,9 +37,14 @@ import {
   TooltipProvider,
   TooltipTrigger} from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { calculateRentalFees, formatCurrency } from '@/lib/commissions';
+import WalkthroughCta from '@/components/video/WalkthroughCta';
+import { calculateRentalFees } from '@/lib/commissions';
+import { supabase } from '@/integrations/supabase/client';
+import { quoteRentalPeriod, resolveRentalRate, formatAmount } from '@/lib/listings/rentalPricing';
 import { useBlockedDates } from '@/hooks/useBlockedDates';
+import { useToast } from '@/hooks/use-toast';
 import { useHourlyAvailability } from '@/hooks/useHourlyAvailability';
+import { todayInTimeZone, currentHourInTimeZone } from '@/lib/listingTimezone';
 import { trackCTAClick } from '@/lib/analytics';
 import { trackLeadEvent } from '@/lib/leadTracking';
 import type { ListingCategory, FulfillmentType } from '@/types/listing';
@@ -66,52 +66,92 @@ interface RentalBookingWidgetProps {
   hourlyEnabled?: boolean;
   dailyEnabled?: boolean;
   instantBook?: boolean;
+  /** Instant Book only stays instant when the host is identity verified. */
+  hostIdentityVerified?: boolean;
+  // Host-defined minimums
+  minHours?: number | null;
+  minDays?: number | null;
+  minNoticeHours?: number | null;
   // Multi-slot support
   totalSlots?: number;
   slotNames?: string[] | null;
   // Fulfillment
   fulfillmentType?: FulfillmentType;
   deliveryFee?: number | null;
+  // Refundable security deposit (charged today, held, refunded after rental)
+  depositAmount?: number | null;
 }
 
-// Calculate tiered pricing (7 days = weekly, 30 days = monthly)
-const calculateTieredPrice = (
-  days: number,
-  priceDaily: number | null,
-  priceWeekly?: number | null,
-  priceMonthly?: number | null
-): { total: number; breakdown: string } => {
-  if (!priceDaily || days <= 0) return { total: 0, breakdown: '' };
+// ─────────────────────────────────────────────────────────────────────────────
+// MODULE-SCOPE DATE STATUS HELPERS
+// Pure functions parameterized by an explicit context object, so no useMemo
+// inside the component can ever reference a helper declared later in the
+// render body (temporal-dead-zone / render-ordering hazard).
+// ─────────────────────────────────────────────────────────────────────────────
+export type DayStatus = 'available' | 'partial' | 'full' | 'past' | 'outside';
 
-  let remaining = days;
-  let total = 0;
-  const parts: string[] = [];
+export interface DayStatusContext {
+  today: Date;
+  maxDate: Date;
+  availableFrom?: string | null;
+  availableTo?: string | null;
+  isDateUnavailable: (date: Date) => boolean;
+  getUnavailabilityReason: (date: Date) => { label: string } | null;
+  getDayAvailabilityInfo: (date: Date) => { isUnavailable: boolean; isLimited: boolean };
+}
 
-  // Apply monthly rate for 30+ day chunks
-  if (priceMonthly && remaining >= 30) {
-    const months = Math.floor(remaining / 30);
-    total += months * priceMonthly;
-    parts.push(`${months} month${months > 1 ? 's' : ''} @ $${priceMonthly.toLocaleString()}`);
-    remaining = remaining % 30;
+export function isBookableDateDisabled(date: Date, ctx: DayStatusContext): boolean {
+  if (isBefore(date, ctx.today)) return true;
+  if (isAfter(date, ctx.maxDate)) return true;
+
+  if (ctx.availableFrom) {
+    const from = parseISO(ctx.availableFrom);
+    if (isBefore(date, startOfDay(from))) return true;
+  }
+  if (ctx.availableTo) {
+    const to = parseISO(ctx.availableTo);
+    if (isBefore(startOfDay(to), date)) return true;
   }
 
-  // Apply weekly rate for 7+ day chunks
-  if (priceWeekly && remaining >= 7) {
-    const weeks = Math.floor(remaining / 7);
-    total += weeks * priceWeekly;
-    parts.push(`${weeks} week${weeks > 1 ? 's' : ''} @ $${priceWeekly.toLocaleString()}`);
-    remaining = remaining % 7;
+  return ctx.isDateUnavailable(date);
+}
+
+/**
+ * Plain-language explanation of why a day can't be picked.
+ * Returns null when the day is selectable.
+ */
+export function getBookableDayBlockReason(date: Date, ctx: DayStatusContext): string | null {
+  if (isBefore(date, ctx.today)) return 'This date has already passed.';
+  if (isAfter(date, ctx.maxDate)) return 'Bookings open up to 12 months ahead.';
+  if (ctx.availableFrom && isBefore(date, startOfDay(parseISO(ctx.availableFrom)))) {
+    return `This rental becomes available ${format(startOfDay(parseISO(ctx.availableFrom)), 'MMM d, yyyy')}.`;
   }
-
-  // Apply daily rate for remaining days
-  if (remaining > 0) {
-    total += remaining * priceDaily;
-    parts.push(`${remaining} day${remaining > 1 ? 's' : ''} @ $${priceDaily.toLocaleString()}`);
+  if (ctx.availableTo && isBefore(startOfDay(parseISO(ctx.availableTo)), date)) {
+    return `This rental is only available through ${format(startOfDay(parseISO(ctx.availableTo)), 'MMM d, yyyy')}.`;
   }
+  const reason = ctx.getUnavailabilityReason(date);
+  if (reason) return reason.label;
+  const info = ctx.getDayAvailabilityInfo(date);
+  if (info.isUnavailable) return 'Fully booked — no spots left.';
+  return null;
+}
 
-  return { total, breakdown: parts.join(' + ') };
-};
+export function getBookableDayStatus(date: Date, ctx: DayStatusContext): DayStatus {
+  if (isBefore(date, ctx.today)) return 'past';
+  if (isAfter(date, ctx.maxDate)) return 'outside';
 
+  if (isBookableDateDisabled(date, ctx)) return 'full';
+
+  const info = ctx.getDayAvailabilityInfo(date);
+  if (info.isUnavailable) return 'full';
+  if (info.isLimited) return 'partial';
+  return 'available';
+}
+
+/**
+ * Period pricing now lives in `@/lib/listings/rentalPricing` so the widget,
+ * the checkout summary and the server quote can never disagree.
+ */
 export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   listingId,
   listingTitle,
@@ -127,12 +167,18 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   hourlyEnabled: hourlyEnabledProp = false,
   dailyEnabled: dailyEnabledProp = true,
   instantBook = false,
+  hostIdentityVerified = false,
+  minHours,
+  minDays,
+  minNoticeHours,
   totalSlots = 1,
   slotNames,
   fulfillmentType = 'pickup',
-  deliveryFee}) => {
+  deliveryFee,
+  depositAmount = null}) => {
   const navigate = useNavigate();
-  const { blockedDates, isDateUnavailable } = useBlockedDates({ listingId });
+  const { toast } = useToast();
+  const { blockedDates, isDateUnavailable, getUnavailabilityReason, timeZone, isLoading: availabilityLoading } = useBlockedDates({ listingId });
   const { 
     settings: hourlySettings, 
     getDayAvailabilityInfo,
@@ -145,7 +191,12 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   // If priceDaily is set, treat listing as daily-capable regardless of flag
   // ─────────────────────────────────────────────────────────────────────────────
   const hasHourlyPricing = !!priceHourly && priceHourly > 0;
-  const hasDailyPricing = !!priceDaily && priceDaily > 0;
+  // A listing priced only weekly or only monthly is still date-bookable —
+  // gating on `price_daily` alone hid the whole calendar for long-term leases.
+  const hasDailyPricing =
+    (!!priceDaily && priceDaily > 0) ||
+    (!!priceWeekly && priceWeekly > 0) ||
+    (!!priceMonthly && priceMonthly > 0);
   
   // Effective enabled states: explicit flag OR has pricing
   const hourlyEnabled = hourlyEnabledProp || hasHourlyPricing;
@@ -155,6 +206,16 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   // STATE: Duration Mode
   // ─────────────────────────────────────────────────────────────────────────────
   const [mode, setMode] = useState<'hourly' | 'daily'>('daily');
+
+  /** Shortest bookable rate the host configured — drives the headline price. */
+  const headlineRate = useMemo(
+    () => resolveRentalRate({
+      price_daily: priceDaily,
+      price_weekly: priceWeekly,
+      price_monthly: priceMonthly,
+    }),
+    [priceDaily, priceWeekly, priceMonthly],
+  );
   
   // ─────────────────────────────────────────────────────────────────────────────
   // STATE: Date Selection
@@ -175,11 +236,6 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   // ─────────────────────────────────────────────────────────────────────────────
   const [selectedSlotCount, setSelectedSlotCount] = useState(1);
   const [selectedSlotNumber, setSelectedSlotNumber] = useState<number | null>(null);
-
-  // ─────────────────────────────────────────────────────────────────────────────
-  // STATE: UI
-  // ─────────────────────────────────────────────────────────────────────────────
-  const [isHovered, setIsHovered] = useState(false);
 
   // ─────────────────────────────────────────────────────────────────────────────
   // EFFECTS
@@ -214,7 +270,9 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   // ─────────────────────────────────────────────────────────────────────────────
   // CALENDAR HELPERS
   // ─────────────────────────────────────────────────────────────────────────────
-  const today = startOfDay(new Date());
+  // "Today" follows the listing's local calendar, so the first selectable day
+  // matches the host's timezone rather than the shopper's browser clock.
+  const today = startOfDay(parseISO(todayInTimeZone(timeZone)));
   const maxDate = addYears(today, 1);
   const minMonth = startOfMonth(today);
   const maxMonth = startOfMonth(maxDate);
@@ -228,38 +286,149 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   const canGoPrev = isAfter(monthStart, minMonth);
   const canGoNext = isBefore(monthStart, maxMonth);
 
-  const handlePrevMonth = () => canGoPrev && setCurrentMonth(subMonths(currentMonth, 1));
-  const handleNextMonth = () => canGoNext && setCurrentMonth(addMonths(currentMonth, 1));
+  // Month slide direction drives the transition animation
+  const [monthDirection, setMonthDirection] = useState<1 | -1>(1);
+  const handlePrevMonth = () => {
+    if (!canGoPrev) return;
+    setMonthDirection(-1);
+    setCurrentMonth(subMonths(currentMonth, 1));
+  };
+  const handleNextMonth = () => {
+    if (!canGoNext) return;
+    setMonthDirection(1);
+    setCurrentMonth(addMonths(currentMonth, 1));
+  };
+
+  // ── Keyboard navigation: roving tabindex across the calendar grid ──────────
+  const gridRef = React.useRef<HTMLDivElement | null>(null);
+  const [focusedDate, setFocusedDate] = useState<Date>(() => startOfDay(new Date()));
+  const [shouldFocusDay, setShouldFocusDay] = useState(false);
+
+  const clampToRange = (d: Date) => {
+    if (isBefore(d, today)) return today;
+    if (isAfter(d, maxDate)) return maxDate;
+    return d;
+  };
+
+  const moveFocus = (next: Date) => {
+    const target = clampToRange(startOfDay(next));
+    setFocusedDate(target);
+    setShouldFocusDay(true);
+    const targetMonth = startOfMonth(target);
+    if (!isSameDay(targetMonth, monthStart)) {
+      setMonthDirection(isAfter(targetMonth, monthStart) ? 1 : -1);
+      setCurrentMonth(targetMonth);
+    }
+  };
+
+  const handleGridKeyDown = (e: React.KeyboardEvent) => {
+    const keys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Home', 'End', 'PageUp', 'PageDown'];
+    if (!keys.includes(e.key)) return;
+    e.preventDefault();
+    switch (e.key) {
+      case 'ArrowLeft': moveFocus(addDays(focusedDate, -1)); break;
+      case 'ArrowRight': moveFocus(addDays(focusedDate, 1)); break;
+      case 'ArrowUp': moveFocus(addDays(focusedDate, -7)); break;
+      case 'ArrowDown': moveFocus(addDays(focusedDate, 7)); break;
+      case 'Home': moveFocus(addDays(focusedDate, -focusedDate.getDay())); break;
+      case 'End': moveFocus(addDays(focusedDate, 6 - focusedDate.getDay())); break;
+      case 'PageUp': moveFocus(subMonths(focusedDate, 1)); break;
+      case 'PageDown': moveFocus(addMonths(focusedDate, 1)); break;
+    }
+  };
+
+  // Move DOM focus after the grid re-renders (including month changes)
+  useEffect(() => {
+    if (!shouldFocusDay) return;
+    const key = format(focusedDate, 'yyyy-MM-dd');
+    const el = gridRef.current?.querySelector<HTMLButtonElement>(`[data-day-key="${key}"]`);
+    el?.focus();
+    setShouldFocusDay(false);
+  }, [shouldFocusDay, focusedDate, currentMonth]);
+
+  // Keep the roving focus inside the visible month when navigating by header/swipe
+  useEffect(() => {
+    if (isSameDay(startOfMonth(focusedDate), monthStart)) return;
+    setFocusedDate(clampToRange(monthStart));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentMonth]);
+
+  // Touch swipe to switch months on mobile
+  const swipeRef = React.useRef<{ x: number; y: number } | null>(null);
+  const handleTouchStart = (e: React.TouchEvent) => {
+    const t = e.touches[0];
+    swipeRef.current = { x: t.clientX, y: t.clientY };
+  };
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (!swipeRef.current) return;
+    const t = e.changedTouches[0];
+    const dx = t.clientX - swipeRef.current.x;
+    const dy = t.clientY - swipeRef.current.y;
+    swipeRef.current = null;
+    // Horizontal swipe only — ignore mostly-vertical scroll gestures
+    if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+      if (dx < 0) handleNextMonth();
+      else handlePrevMonth();
+    }
+  };
+
 
   // ─────────────────────────────────────────────────────────────────────────────
   // DATE VALIDATION
+  // All status logic lives in module-scope pure helpers (see DayStatusContext
+  // above). This memoized context is the single input, so useMemos below can
+  // never depend on a function declared later in the render body.
   // ─────────────────────────────────────────────────────────────────────────────
-  const isDateDisabled = (date: Date): boolean => {
-    if (isBefore(date, today)) return true;
-    if (isAfter(date, maxDate)) return true;
-    
-    if (availableFrom) {
-      const from = parseISO(availableFrom);
-      if (isBefore(date, startOfDay(from))) return true;
-    }
-    if (availableTo) {
-      const to = parseISO(availableTo);
-      if (isBefore(startOfDay(to), date)) return true;
-    }
-    
-    return isDateUnavailable(date);
-  };
+  const dayStatusCtx = useMemo<DayStatusContext>(
+    () => ({
+      today,
+      maxDate,
+      availableFrom,
+      availableTo,
+      isDateUnavailable,
+      getUnavailabilityReason,
+      getDayAvailabilityInfo,
+    }),
+    // today/maxDate are derived from timeZone; blockedDates invalidates the hook fns
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [timeZone, availableFrom, availableTo, isDateUnavailable, getUnavailabilityReason, getDayAvailabilityInfo, blockedDates],
+  );
 
-  const getDayStatus = (date: Date): 'available' | 'partial' | 'full' | 'past' | 'outside' => {
-    if (isBefore(date, today)) return 'past';
-    if (isAfter(date, maxDate)) return 'outside';
-    
-    if (isDateDisabled(date)) return 'full';
+  // Thin delegating wrappers — used only in event handlers and JSX below,
+  // never inside a useMemo, so declaration order cannot cause a TDZ crash.
+  const isDateDisabled = (date: Date): boolean => isBookableDateDisabled(date, dayStatusCtx);
+  const getDayBlockReason = (date: Date): string | null => getBookableDayBlockReason(date, dayStatusCtx);
+  const getDayStatus = (date: Date): DayStatus => getBookableDayStatus(date, dayStatusCtx);
 
-    const info = getDayAvailabilityInfo(date);
-    if (info.isUnavailable) return 'full';
-    if (info.isLimited) return 'partial';
-    return 'available';
+  /**
+   * First unavailable day after the chosen start date. A stay can never span
+   * it, so every day from here on is locked while an end date is being picked.
+   */
+  const rangeLimit = useMemo(() => {
+    if (mode !== 'daily' || !startDate) return null;
+    for (let i = 1; i <= 400; i += 1) {
+      const candidate = addDays(startDate, i);
+      if (isAfter(candidate, dayStatusCtx.maxDate)) return null;
+      if (isBookableDateDisabled(candidate, dayStatusCtx)) return candidate;
+    }
+    return null;
+  }, [mode, startDate, dayStatusCtx]);
+
+  /** True when no day in the visible month is bookable — drives the empty state. */
+  const monthFullyUnavailable = useMemo(() => {
+    if (availabilityLoading) return false;
+    return daysInMonth.every(d => {
+      const s = getBookableDayStatus(d, dayStatusCtx);
+      return s !== 'available' && s !== 'partial';
+    });
+    // daysInMonth is derived from currentMonth
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [availabilityLoading, currentMonth, dayStatusCtx]);
+
+  /** True when the day sits past the first blocked day after the start date. */
+  const isBeyondRangeLimit = (date: Date): boolean => {
+    if (mode !== 'daily' || !startDate || endDate || !rangeLimit) return false;
+    return isAfter(date, startDate) && !isBefore(date, rangeLimit);
   };
 
   const getAvailability = (date: Date) => {
@@ -296,7 +465,25 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
   // ─────────────────────────────────────────────────────────────────────────────
   const handleDateClick = (date: Date) => {
     const status = getDayStatus(date);
-    if (status === 'past' || status === 'outside' || status === 'full') return;
+    if (status === 'past' || status === 'outside' || status === 'full') {
+      const reason = getDayBlockReason(date);
+      if (reason) {
+        toast({
+          title: `${format(date, 'MMM d')} is unavailable`,
+          description: reason,
+        });
+      }
+      return;
+    }
+    if (isBeyondRangeLimit(date)) {
+      toast({
+        title: 'Your stay would cross an unavailable day',
+        description: rangeLimit
+          ? `${format(rangeLimit, 'MMM d')} is unavailable — ${getDayBlockReason(rangeLimit) ?? 'pick an earlier end date.'}`
+          : 'Pick an earlier end date.',
+      });
+      return;
+    }
 
     if (mode === 'hourly') {
       // Multi-day hourly: set active date to show time slots (preserve existing selections)
@@ -417,41 +604,215 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
         duration: hours,
         durationLabel: `${hours} hour${hours > 1 ? 's' : ''}${daysLabel}`,
         breakdown: `$${priceHourly}/hr × ${hours} hrs${selectedSlotCount > 1 ? ` × ${selectedSlotCount} slots` : ''}`,
+        lines: [
+          {
+            key: 'hourly',
+            label: `${hours} hour${hours > 1 ? 's' : ''} @ ${formatAmount(priceHourly)}/hr`,
+            amount: hours * priceHourly * selectedSlotCount,
+          },
+        ],
+        perDay: null as number | null,
+        roundedUpNote: null,
         basePrice,
         serviceFee: fees.renterFee,
         total: fees.customerTotal};
+
     } else {
-      if (!startDate || !priceDaily) return null;
-      
+      if (!startDate) return null;
+
       // Inclusive day counting: same start/end = 1 day
       const days = endDate ? differenceInDays(endDate, startDate) + 1 : 1;
       if (days <= 0) return null;
-      
-      const { total: baseBeforeSlots, breakdown } = calculateTieredPrice(days, priceDaily, priceWeekly, priceMonthly);
-      const basePrice = baseBeforeSlots * selectedSlotCount;
+
+      const quote = quoteRentalPeriod(days, {
+        price_daily: priceDaily,
+        price_weekly: priceWeekly,
+        price_monthly: priceMonthly,
+      });
+      if (!quote) return null;
+
+      const basePrice = quote.subtotal * selectedSlotCount;
       const fees = calculateRentalFees(basePrice);
-      
+
       return {
         type: 'daily' as const,
         duration: days,
         durationLabel: `${days} day${days > 1 ? 's' : ''}`,
-        breakdown: selectedSlotCount > 1 ? `${breakdown} × ${selectedSlotCount} slots` : breakdown,
+        breakdown: selectedSlotCount > 1 ? `${quote.breakdown} × ${selectedSlotCount} slots` : quote.breakdown,
+        lines: quote.lines.map((l) => ({
+          key: l.unit,
+          label: `${l.count} ${l.unit === 'monthly' ? 'month' : l.unit === 'weekly' ? 'week' : 'day'}${l.count > 1 ? 's' : ''} × ${formatAmount(l.rate)}${l.unit === 'monthly' ? '/mo' : l.unit === 'weekly' ? '/week' : '/day'}${selectedSlotCount > 1 ? ` × ${selectedSlotCount} slots` : ''}`,
+          amount: l.amount * selectedSlotCount,
+        })),
+        perDay: days > 0 ? (quote.subtotal * selectedSlotCount) / days : null,
+        roundedUpNote: quote.roundedUp
+          ? `This host bills in full ${quote.lines[0]?.unit === 'monthly' ? 'months' : 'weeks'}, so ${quote.billedDays} days are billed for your ${days}-day dates.`
+          : null,
         basePrice,
         serviceFee: fees.renterFee,
         total: fees.customerTotal};
+
     }
   }, [mode, totalSelectedHours, selectedDatesCount, startDate, endDate, priceHourly, priceDaily, priceWeekly, priceMonthly, selectedSlotCount]);
 
   // ─────────────────────────────────────────────────────────────────────────────
+  // LIVE TAX ESTIMATE
+  // Same `tax-quote` source the checkout summary uses, so the renter never sees
+  // the total jump between this widget and checkout. Cosmetic only — the
+  // authoritative amount is re-locked server-side at order creation.
+  // ─────────────────────────────────────────────────────────────────────────────
+  const [taxEstimate, setTaxEstimate] = useState<{ tax_cents: number; label: string } | null>(null);
+  const [taxState, setTaxState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
+  const quotedTotal = pricingInfo?.total ?? 0;
+
+  useEffect(() => {
+    if (!listingId || quotedTotal <= 0) {
+      setTaxEstimate(null);
+      setTaxState('idle');
+      return;
+    }
+    const controller = new AbortController();
+    setTaxState('loading');
+    const t = setTimeout(() => {
+      supabase.functions
+        .invoke('tax-quote', {
+          body: { kind: 'rental', listing_id: listingId, total_cents: Math.round(quotedTotal * 100) },
+        })
+        .then(({ data, error }) => {
+          if (controller.signal.aborted) return;
+          if (!error && data) {
+            setTaxEstimate(data as { tax_cents: number; label: string });
+            setTaxState('ready');
+          } else {
+            setTaxEstimate(null);
+            setTaxState('error');
+          }
+        })
+        .catch(() => {
+          if (!controller.signal.aborted) {
+            setTaxEstimate(null);
+            setTaxState('error');
+          }
+        });
+    }, 400);
+    return () => { clearTimeout(t); controller.abort(); };
+  }, [listingId, quotedTotal]);
+
+  const taxAmount = (taxEstimate?.tax_cents ?? 0) / 100;
+  // The refundable security deposit is charged today and held; it is part of
+  // the total the renter sees here so it matches the PayPal capture amount.
+  const depositValue = depositAmount ?? 0;
+  const estimatedTotal = quotedTotal + taxAmount + depositValue;
+
+  // ─────────────────────────────────────────────────────────────────────────────
   // CAN CONTINUE CHECK
   // ─────────────────────────────────────────────────────────────────────────────
-  const canContinue = useMemo(() => {
+  // Host-defined minimums (normalized)
+  const requiredHours = Math.max(1, Number(minHours) > 0 ? Number(minHours) : 1);
+  const requiredDays = Math.max(1, Number(minDays) > 0 ? Number(minDays) : 1);
+  const noticeHours = Number(minNoticeHours) > 0 ? Number(minNoticeHours) : 0;
+
+  const selectedDays = useMemo(() => {
+    if (mode !== 'daily' || !startDate) return 0;
+    return endDate ? differenceInDays(endDate, startDate) + 1 : 1;
+  }, [mode, startDate, endDate]);
+
+  const noticeViolation = useMemo(() => {
+    if (noticeHours <= 0) return false;
+    // Minimum notice measured from the listing's local clock.
+    const localNow = addHours(parseISO(todayInTimeZone(timeZone)), currentHourInTimeZone(timeZone));
+    const earliest = addHours(localNow, noticeHours);
+    const firstDate = mode === 'hourly'
+      ? (sortedSelectedDates[0] ? parseISO(sortedSelectedDates[0]) : undefined)
+      : startDate;
+    if (!firstDate) return false;
+    // Compare against end of the selected day so same-day notice windows still work
+    return isBefore(addDays(startOfDay(firstDate), 1), earliest);
+  }, [noticeHours, mode, sortedSelectedDates, startDate, timeZone]);
+
+  const minimumMessage = useMemo(() => {
     if (mode === 'hourly') {
-      return totalSelectedHours > 0;
+      if (totalSelectedHours > 0 && totalSelectedHours < requiredHours) {
+        return `This host requires a minimum of ${requiredHours} hour${requiredHours > 1 ? 's' : ''}.`;
+      }
+    } else if (startDate && selectedDays < requiredDays) {
+      return `This host requires a minimum of ${requiredDays} day${requiredDays > 1 ? 's' : ''}.`;
     }
-    // Daily mode: need at least a start date
-    return startDate !== undefined;
-  }, [mode, totalSelectedHours, startDate]);
+    if (noticeViolation) {
+      return `This host requires at least ${noticeHours} hour${noticeHours > 1 ? 's' : ''} advance notice.`;
+    }
+    return null;
+  }, [mode, totalSelectedHours, requiredHours, startDate, selectedDays, requiredDays, noticeViolation, noticeHours]);
+
+  const canContinue = useMemo(() => {
+    if (noticeViolation) return false;
+    if (mode === 'hourly') {
+      return totalSelectedHours >= requiredHours;
+    }
+    // Daily mode: need a start date meeting the host's minimum stay
+    return startDate !== undefined && selectedDays >= requiredDays;
+  }, [mode, totalSelectedHours, requiredHours, startDate, selectedDays, requiredDays, noticeViolation]);
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // BOOKING FLOW: instant book vs request to book
+  // Instant Book is a host setting, but it only holds when the host is verified
+  // and the selected dates are cleanly available. Anything else falls back to a
+  // request the host must approve — the same rule checkout enforces.
+  // ─────────────────────────────────────────────────────────────────────────────
+  const bookingFlow = useMemo(() => {
+    if (!instantBook) {
+      return {
+        instant: false as const,
+        reason: 'This host reviews every request before confirming.',
+      };
+    }
+    if (!hostIdentityVerified) {
+      return {
+        instant: false as const,
+        reason: 'Instant Book turns on once this host finishes identity verification.',
+      };
+    }
+
+    const selectedDates = mode === 'hourly'
+      ? sortedSelectedDates.map(key => parseISO(key))
+      : startDate
+        ? eachDayOfInterval({ start: startDate, end: endDate ?? startDate })
+        : [];
+
+    // Multi-slot: instant confirmation needs the full requested capacity free.
+    if (totalSlots > 1 && selectedDates.length > 0) {
+      const tight = selectedDates.find(day => getAvailability(day).available < selectedSlotCount);
+      if (tight) {
+        return {
+          instant: false as const,
+          reason: `Limited spots left on ${format(tight, 'MMM d')} — the host confirms this one manually.`,
+        };
+      }
+    }
+
+    // Partially booked days (hourly listings) always need host review.
+    if (mode === 'hourly' && selectedDates.some(day => getDayAvailabilityInfo(day).isLimited)) {
+      return {
+        instant: false as const,
+        reason: 'Part of your selected time is already booked — the host will confirm.',
+      };
+    }
+
+    return { instant: true as const, reason: null };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    instantBook,
+    hostIdentityVerified,
+    mode,
+    sortedSelectedDates,
+    startDate,
+    endDate,
+    totalSlots,
+    selectedSlotCount,
+    blockedDates,
+  ]);
+
+  const isInstant = bookingFlow.instant;
 
   // ─────────────────────────────────────────────────────────────────────────────
   // CONTINUE TO BOOKING HANDLER
@@ -483,10 +844,24 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
         params.set('slotCount', selectedSlotCount.toString());
       }
       
+      if (!isInstant) params.set('flow', 'request');
       navigate(`/book/${listingId}?${params.toString()}`);
     } else {
       if (!startDate) return;
-      
+
+      // Final guard: never send a range that crosses an unavailable day.
+      const conflict = eachDayOfInterval({ start: startDate, end: endDate ?? startDate })
+        .find(day => isDateDisabled(day));
+      if (conflict) {
+        toast({
+          title: 'Those dates are not available',
+          description: `${format(conflict, 'MMM d')} is unavailable — ${getDayBlockReason(conflict) ?? 'please choose different dates.'}`,
+          variant: 'destructive',
+        });
+        setEndDate(undefined);
+        return;
+      }
+
       const startStr = format(startDate, 'yyyy-MM-dd');
       const endStr = endDate ? format(endDate, 'yyyy-MM-dd') : startStr;
       
@@ -502,6 +877,7 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
         params.set('slotCount', selectedSlotCount.toString());
       }
       
+      if (!isInstant) params.set('flow', 'request');
       navigate(`/book/${listingId}?${params.toString()}`);
     }
   };
@@ -575,181 +951,195 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ type: 'spring', stiffness: 100, damping: 20 }}
-      onHoverStart={() => setIsHovered(true)}
-      onHoverEnd={() => setIsHovered(false)}
-      className="rounded-2xl border border-border shadow-xl bg-card overflow-hidden relative"
+      className="rounded-xl border border-border bg-card overflow-hidden relative shadow-sm"
     >
-      {/* Glow effect */}
-      <motion.div
-        className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 opacity-0 pointer-events-none"
-        animate={{ opacity: isHovered ? 1 : 0 }}
-        transition={{ duration: 0.3 }}
-      />
-
       {/* ═══════════════════════════════════════════════════════════════════════ */}
-      {/* HEADER - PRICE DISPLAY */}
+      {/* HEADER - PRICE DISPLAY (compact, Airbnb-style) */}
       {/* ═══════════════════════════════════════════════════════════════════════ */}
-      <div className="p-5 bg-gradient-to-br from-muted/50 to-muted/30 border-b border-border relative">
-        <div className="flex items-start justify-between gap-3">
-          <div>
+      <div className="px-4 pt-4 pb-3 border-b border-border/60">
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-baseline gap-1.5">
             {mode === 'hourly' && priceHourly ? (
               <>
-                <div className="flex items-baseline gap-2">
-                  <motion.span 
-                    className="text-3xl font-bold text-foreground"
-                    initial={{ scale: 1 }}
-                    whileHover={{ scale: 1.02 }}
-                  >
-                    ${priceHourly?.toLocaleString() || '—'}
-                  </motion.span>
-                  <span className="text-muted-foreground text-lg">/hour</span>
-                </div>
-                {priceDaily && (
-                  <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
-                    <Sun className="h-3.5 w-3.5 text-primary" />
-                    Full day from ${priceDaily.toLocaleString()}
-                  </p>
-                )}
+                <span className="text-xl font-semibold text-foreground">
+                  ${priceHourly?.toLocaleString() || '—'}
+                </span>
+                <span className="text-sm text-muted-foreground">/ hour</span>
               </>
             ) : (
               <>
-                <div className="flex items-baseline gap-2">
-                  <motion.span 
-                    className="text-3xl font-bold text-foreground"
-                    initial={{ scale: 1 }}
-                    whileHover={{ scale: 1.02 }}
-                  >
-                    ${priceDaily?.toLocaleString() || '—'}
-                  </motion.span>
-                  <span className="text-muted-foreground text-lg">/day</span>
-                </div>
-                
-                {/* Tiered pricing indicators */}
-                <div className="mt-1 space-y-0.5">
-                  {priceHourly && hourlyEnabled && (
-                    <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-                      <Clock className="h-3.5 w-3.5 text-primary" />
-                      ${priceHourly.toLocaleString()}/hr for hourly
-                    </p>
-                  )}
-                  {priceWeekly && (
-                    <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-                      
-                      ${priceWeekly.toLocaleString()}/week for 7+ days
-                    </p>
-                  )}
-                  {priceMonthly && (
-                    <p className="text-sm text-muted-foreground flex items-center gap-1.5">
-                      <CalendarRange className="h-3.5 w-3.5 text-primary" />
-                      ${priceMonthly.toLocaleString()}/month for 30+ days
-                    </p>
-                  )}
-                </div>
+                <span className="text-xl font-semibold text-foreground">
+                  {headlineRate ? formatAmount(headlineRate.amount) : '—'}
+                </span>
+                <span className="text-sm text-muted-foreground">
+                  {headlineRate ? headlineRate.suffix.replace('/', '/ ').trim() : '/ day'}
+                </span>
               </>
             )}
           </div>
 
           {/* Badges */}
-          <div className="flex flex-col gap-2 items-end">
-            {instantBook && (
-              <Badge className="bg-emerald-500 text-white border-0 shadow-md">
-                <Zap className="h-3 w-3 mr-1" />
+          <div className="flex gap-1.5 items-center">
+            {isInstant && (
+              <Badge className="bg-emerald-500 text-white border-0 text-[10px] px-1.5 py-0.5">
+                <Zap className="h-2.5 w-2.5 mr-0.5" />
                 Instant
               </Badge>
             )}
             {totalSlots > 1 && (
-              <Badge variant="secondary" className="text-xs">
-                <MapPin className="h-3 w-3 mr-1" />
-                {totalSlots} Spots
+              <Badge variant="secondary" className="text-[10px] px-1.5 py-0.5">
+                {totalSlots} spots
               </Badge>
             )}
           </div>
         </div>
+
+        {/* Rate strip — every published rate in one compact line */}
+        {mode !== 'hourly' && (priceDaily || priceWeekly || priceMonthly) ? (
+          <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-xs text-muted-foreground">
+            {priceDaily ? <span><span className="font-medium text-foreground">${priceDaily.toLocaleString()}</span> /day</span> : null}
+            {priceWeekly ? <span><span className="font-medium text-foreground">${priceWeekly.toLocaleString()}</span> /week</span> : null}
+            {priceMonthly ? <span><span className="font-medium text-foreground">${priceMonthly.toLocaleString()}</span> /month</span> : null}
+          </div>
+        ) : null}
+        {mode === 'hourly' && priceDaily ? (
+          <p className="mt-1 text-xs text-muted-foreground">
+            Full day from ${priceDaily.toLocaleString()}
+          </p>
+        ) : null}
       </div>
 
       {/* ═══════════════════════════════════════════════════════════════════════ */}
       {/* BODY - BOOKING FLOW */}
       {/* ═══════════════════════════════════════════════════════════════════════ */}
-      <div className="p-5 space-y-4 relative z-10">
+      <div className="p-4 space-y-3 relative z-10">
         
         {/* ─────────────────────────────────────────────────────────────────────── */}
         {/* STEP 1: MODE TOGGLE (Only if both modes enabled) */}
         {/* ─────────────────────────────────────────────────────────────────────── */}
         {hourlyEnabled && dailyEnabled && (
-          <div className="flex rounded-lg bg-muted/50 p-1">
+          <div className="flex rounded-full bg-muted/60 p-0.5" role="group" aria-label="Booking rate type">
             <button
+              type="button"
+              aria-pressed={mode === 'hourly'}
               onClick={() => { setMode('hourly'); handleReset(); }}
               className={cn(
-                "flex-1 py-2 px-3 text-sm font-medium rounded-md transition-all duration-200 flex items-center justify-center gap-1.5",
+                "flex-1 py-1.5 px-3 text-xs font-medium rounded-full transition-all duration-200",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                 mode === 'hourly' 
                   ? "bg-background text-foreground shadow-sm" 
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <Clock className="h-4 w-4" />
               Hourly
             </button>
             <button
+              type="button"
+              aria-pressed={mode === 'daily'}
               onClick={() => { setMode('daily'); handleReset(); }}
               className={cn(
-                "flex-1 py-2 px-3 text-sm font-medium rounded-md transition-all duration-200 flex items-center justify-center gap-1.5",
+                "flex-1 py-1.5 px-3 text-xs font-medium rounded-full transition-all duration-200",
+                "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background",
                 mode === 'daily' 
                   ? "bg-background text-foreground shadow-sm" 
                   : "text-muted-foreground hover:text-foreground"
               )}
             >
-              <Sun className="h-4 w-4" />
               Daily / Weekly
             </button>
           </div>
         )}
 
         {/* ─────────────────────────────────────────────────────────────────────── */}
-        {/* STEP 2: CALENDAR */}
+        {/* STEP 2: CALENDAR (compact Airbnb-style) */}
         {/* ─────────────────────────────────────────────────────────────────────── */}
-        <div className="bg-muted/30 rounded-xl p-3">
+        <div
+          className="rounded-xl border border-border/60 p-2.5 overflow-hidden"
+          onTouchStart={handleTouchStart}
+          onTouchEnd={handleTouchEnd}
+        >
           {/* Calendar Header */}
-          <div className="flex items-center justify-between mb-3">
+          <div className="flex items-center justify-between mb-1.5">
             <button
               onClick={handlePrevMonth}
               disabled={!canGoPrev}
-              className="p-1.5 rounded-full hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
+              aria-label="Previous month"
+              className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-muted active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
-            <span className="font-medium text-sm">
-              {format(currentMonth, 'MMMM yyyy')}
-            </span>
+            <AnimatePresence mode="wait" initial={false} custom={monthDirection}>
+              <motion.span
+                key={format(currentMonth, 'yyyy-MM')}
+                initial={{ opacity: 0, y: monthDirection * 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: monthDirection * -6 }}
+                transition={{ duration: 0.18, ease: 'easeOut' }}
+                className="font-medium text-xs"
+              >
+                {format(currentMonth, 'MMMM yyyy')}
+              </motion.span>
+            </AnimatePresence>
             <button
               onClick={handleNextMonth}
               disabled={!canGoNext}
-              className="p-1.5 rounded-full hover:bg-muted disabled:opacity-30 disabled:cursor-not-allowed"
+              aria-label="Next month"
+              className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-muted active:scale-95 transition-all disabled:opacity-30 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
             >
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>
 
           {/* Weekday Headers */}
-          <div className="grid grid-cols-7 gap-0.5 mb-1">
-            {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map(day => (
-              <div key={day} className="text-center text-[10px] font-medium text-muted-foreground py-1">
+          <div className="grid grid-cols-7 mb-0.5">
+            {['S', 'M', 'T', 'W', 'T', 'F', 'S'].map((day, i) => (
+              <div key={`${day}-${i}`} className="text-center text-[9px] font-medium text-muted-foreground py-0.5">
                 {day}
               </div>
             ))}
           </div>
 
-          {/* Calendar Grid */}
-          <div className="grid grid-cols-7 gap-0.5">
+          {/* Calendar Grid — skeleton while availability loads, slide on month change */}
+          {availabilityLoading ? (
+            <div className="grid grid-cols-7 gap-y-1 animate-pulse" aria-busy="true" aria-label="Loading availability">
+              {paddingDays.map((_, i) => (
+                <div key={`pad-${i}`} />
+              ))}
+              {daysInMonth.map(date => (
+                <div key={`skel-${date.toISOString()}`} className="h-9 w-9 mx-auto rounded-full bg-muted/70" />
+              ))}
+            </div>
+          ) : (
+          <AnimatePresence mode="popLayout" initial={false} custom={monthDirection}>
+          <motion.div
+            key={format(currentMonth, 'yyyy-MM')}
+            custom={monthDirection}
+            initial={{ opacity: 0, x: monthDirection * 40 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: monthDirection * -40 }}
+            transition={{ duration: 0.22, ease: [0.32, 0.72, 0, 1] }}
+            className="grid grid-cols-7 gap-y-0.5"
+            ref={gridRef}
+            role="group"
+            aria-label={`Availability calendar for ${format(currentMonth, 'MMMM yyyy')}. Use arrow keys to move between days, Page Up and Page Down to change months, Enter to select.`}
+            onKeyDown={handleGridKeyDown}
+          >
+
             {paddingDays.map((_, i) => (
               <div key={`pad-${i}`} />
             ))}
             {daysInMonth.map(date => {
               const status = getDayStatus(date);
               const isSelected = isInSelectedRange(date);
-              const isStart = startDate && isSameDay(date, startDate);
-              const isEnd = endDate && isSameDay(date, endDate);
+              const isStart = !!(startDate && isSameDay(date, startDate));
+              const isEnd = !!(endDate && isSameDay(date, endDate));
+              const isRangeMiddle = isSelected && !isStart && !isEnd;
               const { available } = getAvailability(date);
-              const isDisabled = status === 'past' || status === 'outside' || status === 'full';
+              const beyondLimit = isBeyondRangeLimit(date);
+              const isDisabled = status === 'past' || status === 'outside' || status === 'full' || beyondLimit;
+              const blockReason = beyondLimit
+                ? `Your stay can't continue past ${rangeLimit ? format(rangeLimit, 'MMM d') : 'this date'} — ${rangeLimit ? (getDayBlockReason(rangeLimit) ?? 'that day is unavailable.') : 'a later day is unavailable.'}`
+                : getDayBlockReason(date);
               const isActiveHourly = isActiveHourlyDate(date);
               const hasHourly = mode === 'hourly' && hasHourlySelection(date);
               const dateKey = format(date, 'yyyy-MM-dd');
@@ -760,31 +1150,51 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <button
+                        type="button"
                         onClick={() => handleDateClick(date)}
-                        disabled={isDisabled}
+                        onFocus={() => setFocusedDate(startOfDay(date))}
+                        tabIndex={isSameDay(date, focusedDate) ? 0 : -1}
                         data-testid="rental-calendar-day"
                         data-day-key={dateKey}
                         data-day-status={status}
                         data-day-disabled={isDisabled ? 'true' : 'false'}
+                        aria-disabled={isDisabled}
+                        aria-pressed={!isDisabled ? isSelected : undefined}
+                        aria-current={isToday(date) ? 'date' : undefined}
+                        aria-label={
+                          isDisabled
+                            ? `${format(date, 'EEEE, MMMM d, yyyy')} — unavailable. ${blockReason ?? ''}`.trim()
+                            : [
+                                format(date, 'EEEE, MMMM d, yyyy'),
+                                isStart ? 'selected check-in' : isEnd ? 'selected check-out' : isSelected ? 'in selected stay' : 'available',
+                                mode !== 'hourly' && totalSlots > 1 ? `${available} of ${totalSlots} spots available` : '',
+                                mode === 'hourly' && hasHourly ? `${hoursOnDate} hour${hoursOnDate > 1 ? 's' : ''} selected` : '',
+                              ].filter(Boolean).join(', ')
+                        }
                         className={cn(
-                          "aspect-square p-0.5 rounded-md text-xs font-medium transition-all relative",
-                          "flex flex-col items-center justify-center",
-                          isDisabled && "opacity-30 cursor-not-allowed",
-                          !isDisabled && !isSelected && !isActiveHourly && "hover:bg-muted",
-                          isSelected && "bg-primary text-primary-foreground",
-                          isActiveHourly && !isSelected && "ring-2 ring-primary bg-primary/10",
-                          isStart && "rounded-l-md",
-                          isEnd && "rounded-r-md",
-                          status === 'partial' && !isSelected && !isActiveHourly && "bg-amber-50 dark:bg-amber-950/30",
-                          isToday(date) && !isSelected && !isActiveHourly && "ring-1 ring-primary/50",
+                          // Larger tap target on touch screens, tighter on desktop
+                          "h-9 w-9 sm:h-8 sm:w-8 mx-auto rounded-full text-[12px] sm:text-[11px] font-medium transition-all duration-150 relative",
+                          "flex flex-col items-center justify-center active:scale-90",
+                          "focus:outline-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background focus-visible:z-10",
+                          isDisabled && "opacity-30 cursor-not-allowed line-through",
+                          beyondLimit && "opacity-40 no-underline",
+                          !isDisabled && !isSelected && !isActiveHourly && "hover:ring-1 hover:ring-foreground",
+                          (isStart || isEnd) && "bg-foreground text-background shadow-sm scale-[1.06]",
+                          isStart && endDate && !isSameDay(startDate!, endDate) && "rounded-r-none w-full",
+                          isEnd && startDate && !isSameDay(startDate, endDate) && "rounded-l-none w-full",
+                          isRangeMiddle && "rounded-none w-full bg-muted text-foreground",
+                          isActiveHourly && !isSelected && "ring-1 ring-foreground bg-muted",
+                          status === 'partial' && !isSelected && !isActiveHourly && "bg-muted/60",
+                          isToday(date) && !isSelected && !isActiveHourly && "ring-1 ring-foreground/40",
                         )}
                       >
+
                         <span>{format(date, 'd')}</span>
                         {/* Slot availability indicator for multi-slot OR hourly selection indicator */}
                         {mode === 'hourly' && hasHourly && (
                           <span className={cn(
                             "text-[8px] leading-none font-bold",
-                            isSelected ? "text-primary-foreground" : "text-primary"
+                            (isStart || isEnd) ? "text-background" : "text-foreground"
                           )}>
                             {hoursOnDate}h
                           </span>
@@ -792,51 +1202,87 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
                         {mode !== 'hourly' && totalSlots > 1 && status !== 'past' && status !== 'outside' && (
                           <span className={cn(
                             "text-[8px] leading-none",
-                            isSelected ? "text-primary-foreground/80" : "text-muted-foreground"
+                            (isStart || isEnd) ? "text-background/80" : "text-muted-foreground"
                           )}>
                             {available}/{totalSlots}
                           </span>
                         )}
                       </button>
                     </TooltipTrigger>
-                    <TooltipContent side="top" className="text-xs">
-                      {mode === 'hourly' && hasHourly && `${hoursOnDate} hour${hoursOnDate > 1 ? 's' : ''} selected`}
-                      {mode === 'hourly' && !hasHourly && status === 'available' && 'Tap to select hours'}
-                      {mode !== 'hourly' && status === 'available' && `${available} spot${available > 1 ? 's' : ''} available`}
-                      {status === 'partial' && `${available} of ${totalSlots} spots available`}
-                      {status === 'full' && 'Fully booked'}
-                      {status === 'past' && 'Past date'}
-                      {status === 'outside' && 'Outside availability'}
+                    <TooltipContent side="top" className="max-w-[220px] text-xs">
+                      {isDisabled ? (
+                        <span className="block">
+                          <span className="block font-medium">{format(date, 'EEE, MMM d')} · Unavailable</span>
+                          <span className="block text-muted-foreground">{blockReason ?? 'Not available for booking.'}</span>
+                        </span>
+                      ) : (
+                        <>
+                          {mode === 'hourly' && hasHourly && `${hoursOnDate} hour${hoursOnDate > 1 ? 's' : ''} selected`}
+                          {mode === 'hourly' && !hasHourly && 'Tap to select hours'}
+                          {mode !== 'hourly' && status === 'partial' && `${available} of ${totalSlots} spots available`}
+                          {mode !== 'hourly' && status === 'available' && `${available} spot${available > 1 ? 's' : ''} available`}
+                        </>
+                      )}
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
               );
             })}
-          </div>
+          </motion.div>
+          </AnimatePresence>
+          )}
+
+          {/* Empty state: nothing bookable in this month */}
+          {!availabilityLoading && monthFullyUnavailable && (
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mt-2 flex items-center justify-center gap-1.5 text-[11px] text-muted-foreground text-center"
+            >
+              <CalendarClock className="h-3.5 w-3.5 shrink-0" />
+              No open dates in {format(currentMonth, 'MMMM')} — try the next month.
+            </motion.p>
+          )}
+
+          {/* Range selection hint (daily mode) */}
+          {mode === 'daily' && !availabilityLoading && (
+            <p className="mt-1.5 text-[11px] text-muted-foreground text-center" aria-live="polite">
+              {!startDate
+                ? 'Tap a date to start your stay'
+                : !endDate
+                  ? 'Now tap your end date — or continue for a 1-day rental'
+                  : null}
+            </p>
+          )}
 
           {/* Date Selection Summary */}
           {mode === 'daily' && startDate && (
-            <div className="mt-3 pt-3 border-t border-border text-sm text-center">
+            <div className="mt-2 pt-2 border-t border-border/60 text-xs text-center">
               <span className="text-muted-foreground">
                 {endDate 
-                  ? `${format(startDate, 'MMM d')} → ${format(endDate, 'MMM d')} (${pricingInfo?.durationLabel})`
-                  : `${format(startDate, 'MMM d')} (tap end date or continue for 1 day)`
+                  ? `${format(startDate, 'MMM d')} → ${format(endDate, 'MMM d')} · ${pricingInfo?.durationLabel}`
+                  : `${format(startDate, 'MMM d')} · tap an end date (or continue for 1 day)`
                 }
               </span>
+              {!endDate && rangeLimit && (
+                <p className="mt-1 text-[11px] text-muted-foreground/90">
+                  Available through {format(addDays(rangeLimit, -1), 'MMM d')} — {getDayBlockReason(rangeLimit)?.toLowerCase()} on {format(rangeLimit, 'MMM d')}.
+                </p>
+              )}
             </div>
           )}
           
           {mode === 'hourly' && totalSelectedHours > 0 && (
-            <div className="mt-3 pt-3 border-t border-border text-sm text-center">
+            <div className="mt-2 pt-2 border-t border-border/60 text-xs text-center">
               <span className="text-muted-foreground">
-                {selectedDatesCount} day{selectedDatesCount > 1 ? 's' : ''} • {totalSelectedHours} hour{totalSelectedHours > 1 ? 's' : ''} total
+                {selectedDatesCount} day{selectedDatesCount > 1 ? 's' : ''} · {totalSelectedHours} hour{totalSelectedHours > 1 ? 's' : ''} total
               </span>
             </div>
           )}
           
           {mode === 'hourly' && activeHourlyDate && (
-            <div className="mt-2 text-sm text-center">
-              <span className="font-medium text-primary">
+            <div className="mt-1.5 text-xs text-center">
+              <span className="font-medium text-foreground">
                 {format(activeHourlyDate, 'EEEE, MMMM d')}
               </span>
             </div>
@@ -901,14 +1347,14 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
         {/* STEP 3: SLOT COUNTER (Multi-slot listings only) */}
         {/* ─────────────────────────────────────────────────────────────────────── */}
         {totalSlots > 1 && (startDate || totalSelectedHours > 0) && (
-          <div className="flex items-center justify-between p-3 bg-muted/30 rounded-xl">
+          <div className="flex items-center justify-between p-2.5 bg-muted/30 rounded-lg">
             <div>
-              <span className="text-sm font-medium text-foreground">Spots needed</span>
-              <p className="text-xs text-muted-foreground">
+              <span className="text-xs font-medium text-foreground">Spots needed</span>
+              <p className="text-[11px] text-muted-foreground">
                 {totalSlots - selectedSlotCount} remaining
               </p>
             </div>
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5">
               <Button
                 variant="outline"
                 size="icon"
@@ -932,6 +1378,16 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
           </div>
         )}
 
+        {/* Screen-reader status: selection + live total */}
+        <p className="sr-only" role="status" aria-live="polite">
+          {startDate
+            ? `${format(startDate, 'MMMM d, yyyy')}${endDate ? ` to ${format(endDate, 'MMMM d, yyyy')}` : ''} selected.`
+            : mode === 'hourly'
+              ? `${totalSelectedHours} hour${totalSelectedHours === 1 ? '' : 's'} selected.`
+              : 'No dates selected yet.'}
+          {pricingInfo ? ` Estimated total ${formatAmount(estimatedTotal)}.` : ''}
+        </p>
+
         {/* ─────────────────────────────────────────────────────────────────────── */}
         {/* PRICE BREAKDOWN */}
         {/* ─────────────────────────────────────────────────────────────────────── */}
@@ -942,27 +1398,73 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: 'auto' }}
               exit={{ opacity: 0, height: 0 }}
-              className="p-4 bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl border border-primary/20 space-y-2"
+              className="pt-1 space-y-1.5"
+              role="region"
+              aria-label="Price breakdown"
+              aria-live="polite"
             >
-              <div className="flex items-center justify-between text-sm text-muted-foreground">
-                <span>{pricingInfo.breakdown}</span>
-                <span>${pricingInfo.basePrice.toLocaleString()}</span>
-              </div>
-              <div className="flex items-center justify-between text-sm text-muted-foreground">
-                <span>Service fee</span>
-                <span>${pricingInfo.serviceFee.toLocaleString()}</span>
-              </div>
-              <Separator className="bg-primary/20" />
-              <div className="flex items-center justify-between pt-1">
-                <span className="font-semibold text-foreground">Est. total</span>
-                <motion.span 
-                  className="text-xl font-bold text-foreground"
-                  initial={{ scale: 1 }}
-                  whileHover={{ scale: 1.05 }}
+              {pricingInfo.lines.map((line) => (
+                <div
+                  key={line.key}
+                  className="flex items-center justify-between text-xs text-muted-foreground"
                 >
-                  ${pricingInfo.total.toLocaleString()}
-                </motion.span>
+                  <span className="underline decoration-dotted underline-offset-2">{line.label}</span>
+                  <span className="tabular-nums">{formatAmount(line.amount)}</span>
+                </div>
+              ))}
+              {pricingInfo.lines.length > 1 && (
+                <div className="flex items-center justify-between text-xs text-foreground/80">
+                  <span>Rental subtotal</span>
+                  <span className="tabular-nums">{formatAmount(pricingInfo.basePrice)}</span>
+                </div>
+              )}
+              {pricingInfo.perDay !== null && pricingInfo.duration > 1 && (
+                <p className="text-[11px] text-muted-foreground">
+                  Works out to {formatAmount(Math.round(pricingInfo.perDay * 100) / 100)}/day
+                </p>
+              )}
+              {pricingInfo.roundedUpNote && (
+                <p className="text-[11px] text-muted-foreground">{pricingInfo.roundedUpNote}</p>
+              )}
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>Service fee</span>
+                <span className="tabular-nums">{formatAmount(pricingInfo.serviceFee)}</span>
               </div>
+
+              {depositValue > 0 && (
+                <div className="flex items-center justify-between text-xs text-muted-foreground">
+                  <span>Security deposit (refundable)</span>
+                  <span>${depositValue.toLocaleString()}</span>
+                </div>
+              )}
+              <div className="flex items-center justify-between text-xs text-muted-foreground">
+                <span>{taxEstimate?.label || 'Estimated sales tax'}</span>
+                <span>
+                  {taxAmount > 0
+                    ? formatAmount(taxAmount)
+                    : taxState === 'loading'
+                      ? 'Calculating…'
+                      : 'At payment'}
+                </span>
+              </div>
+              <Separator className="bg-border/60" />
+              <div className="flex items-center justify-between">
+                <span className="text-sm font-semibold text-foreground">
+                  {isInstant ? 'Est. total' : 'Est. total to authorize'}
+                </span>
+                <span 
+                  className="text-base font-semibold text-foreground"
+                  data-testid="rental-widget-total"
+                  aria-label={`${isInstant ? 'Estimated total' : 'Estimated total to authorize'}: ${formatAmount(estimatedTotal)}`}
+                >
+                  {formatAmount(estimatedTotal)}
+                </span>
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                {isInstant
+                  ? 'Charged when your booking is confirmed. Any security deposit is charged today and held — refunded (minus damages/fees) after your rental.'
+                  : 'Authorized now, not charged. Only charged if the host approves. Any security deposit is held and refunded (minus damages/fees) after your rental.'}
+              </p>
             </motion.div>
           )}
         </AnimatePresence>
@@ -970,60 +1472,65 @@ export const RentalBookingWidget: React.FC<RentalBookingWidgetProps> = ({
         {/* ─────────────────────────────────────────────────────────────────────── */}
         {/* CTA BUTTON */}
         {/* ─────────────────────────────────────────────────────────────────────── */}
-        <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
-          <Button
-            variant={instantBook ? 'dark-shine' : 'outline'}
-            className={cn(
-              'w-full h-14 text-base font-semibold',
-              instantBook ? 'shadow-lg' : 'border-primary/40 hover:bg-primary/5'
-            )}
-            size="lg"
-            onClick={() => {
-              trackLeadEvent('check_availability_click', {
-                listing_id: listingId,
-                source: 'rental_booking_widget',
-                instant_book: instantBook});
-              handleContinue();
-            }}
-            disabled={!canContinue}
-            data-testid="rental-widget-cta"
-            data-instant-book={instantBook ? 'true' : 'false'}
+        {minimumMessage && (
+          <motion.div
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, ease: 'easeOut' }}
+            className="relative rounded-xl p-px bg-gradient-to-r from-primary/70 via-orange-400/80 to-primary/70 shadow-[0_0_20px_-4px_hsl(var(--primary)/0.45)]"
           >
-            {instantBook ? (
-              <>
-                <Zap className="h-5 w-5 mr-2" />
-                Book Now
-              </>
-            ) : (
-              'Request to Book'
-            )}
-            {pricingInfo && (
-              <span className="ml-2 opacity-80">
-                · {pricingInfo.durationLabel}
-              </span>
-            )}
-            <ArrowRight className="h-5 w-5 ml-2" />
-          </Button>
-        </motion.div>
-
-        {!instantBook && (
-          <p className="text-xs text-center text-muted-foreground flex items-center justify-center gap-1.5">
-            <Shield className="h-3.5 w-3.5" />
-            Your card will be authorized now and only charged if approved
-          </p>
+            <div className="flex items-center gap-2.5 rounded-[11px] bg-background/90 backdrop-blur-sm px-3.5 py-2.5">
+              <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30">
+                <CalendarClock className="h-3.5 w-3.5 text-primary" />
+              </div>
+              <span className="text-xs font-medium tracking-wide text-foreground/90">{minimumMessage}</span>
+            </div>
+          </motion.div>
         )}
 
-        {/* Trust indicators */}
-        <div className="flex items-center justify-center gap-4 text-xs text-muted-foreground pt-2">
-          <span className="flex items-center gap-1.5">
-            <Shield className="h-3.5 w-3.5" />
-            Secure booking
-          </span>
-          <span className="flex items-center gap-1.5">
-            <Clock className="h-3.5 w-3.5" />
-            Free cancellation
-          </span>
-        </div>
+        <WalkthroughCta listingId={listingId} />
+        <Button
+          variant={isInstant ? 'dark-shine' : 'outline'}
+          className={cn(
+            'w-full h-11 text-sm font-semibold rounded-lg',
+            !isInstant && 'border-foreground/60 hover:bg-muted/50'
+          )}
+          onClick={() => {
+            trackLeadEvent('check_availability_click', {
+              listing_id: listingId,
+              source: 'rental_booking_widget',
+              instant_book: isInstant,
+              instant_book_setting: instantBook});
+            handleContinue();
+          }}
+          disabled={!canContinue}
+          data-testid="rental-widget-cta"
+          data-instant-book={isInstant ? 'true' : 'false'}
+          data-booking-flow={isInstant ? 'instant' : 'request'}
+        >
+          {isInstant ? 'Continue to book' : 'Continue to request'}
+          {pricingInfo && (
+            <span className="ml-1.5 opacity-80 font-normal">
+              · {pricingInfo.durationLabel}
+            </span>
+          )}
+        </Button>
+
+        <p className="text-[11px] text-center text-muted-foreground">
+          {isInstant
+            ? "You won't be charged until your booking is confirmed."
+            : 'Payment authorized now — only charged if the host approves.'}
+        </p>
+        {!isInstant && bookingFlow.reason && (
+          <p className="text-[11px] text-center text-muted-foreground/90">
+            {bookingFlow.reason}
+          </p>
+        )}
+        {depositValue > 0 && (
+          <p className="text-[11px] text-center text-muted-foreground">
+            Security deposit charged today and held; refunded (minus damages/fees) after your rental.
+          </p>
+        )}
       </div>
     </motion.div>
   );

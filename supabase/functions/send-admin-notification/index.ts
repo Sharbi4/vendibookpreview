@@ -1,4 +1,5 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { sendTransactionalEmailInternal } from "../_shared/invokeTransactionalEmail.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -6,11 +7,22 @@ const corsHeaders = {
 };
 
 interface NotificationRequest {
-  type: "new_user" | "new_booking" | "booking_paid" | "sale_payment" | "newsletter_signup" | "new_listing" | "featured_purchase";
+  type: string;
   data: Record<string, any>;
 }
 
-const ADMIN_EMAILS = ["support@vendibook.com"];
+// Server-only recipient list. Override with the ADMIN_ALERT_EMAILS secret
+// (comma separated). Never expose these addresses to the browser.
+const DEFAULT_ADMIN_EMAILS = [
+  "support@vendibook.com",
+  "shawnnaharbin@vendibook.com",
+  "atlasmom421@gmail.com",
+];
+const ADMIN_EMAILS = (() => {
+  const raw = Deno.env.get("ADMIN_ALERT_EMAILS") ?? "";
+  const list = raw.split(",").map((e) => e.trim()).filter(Boolean);
+  return [...new Set(list.length ? list : DEFAULT_ADMIN_EMAILS)];
+})();
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
@@ -25,6 +37,13 @@ serve(async (req) => {
       newsletter_signup: "New newsletter signup",
       new_listing: "New Vendibook listing published",
       featured_purchase: "Featured listing purchased ⭐",
+      addon_purchase: "Add-on / upgrade purchased 💳",
+      subscription_started: "New membership subscription 🎉",
+      subscription_renewed: "Membership renewed 🔁",
+      freight_quote_request: "New Vendibook Freight quote request 🚚",
+      message_risk: "High-risk message flagged — review now",
+      payments_alert: "Payment needs admin action",
+      handoff_issue: "Handoff issue reported — review now",
     };
 
     const labelMap: Record<string, string> = {
@@ -54,6 +73,32 @@ serve(async (req) => {
       end_date: "End date",
       stripe_payment_id: "Stripe payment ID",
       featured_source: "Source",
+      product_name: "Product",
+      product_slug: "Product slug",
+      promo_type: "Promotion",
+      duration_days: "Duration (days)",
+      purchase_id: "Purchase ID",
+      tier: "Membership tier",
+      billing_interval: "Billing interval",
+      paypal_subscription_id: "PayPal subscription ID",
+      paypal_order_id: "PayPal order ID",
+      provider: "Payment provider",
+      next_billing_time: "Next billing",
+      pickup_location: "Pickup",
+      delivery_location: "Delivery",
+      equipment_type: "Equipment",
+      year: "Year",
+      dimensions: "Dimensions",
+      weight: "Approx. weight",
+      runs_and_drives: "Runs and drives",
+      preferred_pickup: "Preferred pickup",
+      deliver_by: "Deliver by",
+      contact_name: "Contact name",
+      contact_email: "Contact email",
+      contact_phone: "Contact phone",
+      account: "Account",
+      notes: "Notes",
+      source_page: "Source page",
     };
 
     const details = Object.entries(data || {})
@@ -61,39 +106,30 @@ serve(async (req) => {
       .map(([k, v]) => ({
         label: labelMap[k] || k.replace(/_/g, " "),
         value: typeof v === "object" ? JSON.stringify(v) : String(v),
-        mono: k.endsWith("_id") || k === "email" || k === "host_email",
+        mono: k.endsWith("_id") || k === "email" || k === "host_email" || k === "contact_email",
       }));
 
-    const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
-    const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
-
     const results = await Promise.all(ADMIN_EMAILS.map(async (recipient) => {
-      const r = await fetch(`${SUPABASE_URL}/functions/v1/send-transactional-email`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${ANON_KEY}`,
-          apikey: ANON_KEY,
+      const r = await sendTransactionalEmailInternal({
+        templateName: "generic-notice",
+        recipientEmail: recipient,
+        idempotencyKey: `admin-notify-${type}-${recipient}-${Date.now()}`,
+        templateData: {
+          subject: subjectMap[type] || `Admin notification: ${type}`,
+          preview: subjectMap[type] || type,
+          kicker: "Admin alert",
+          heading: subjectMap[type] || type,
+          paragraphs: ["This is a real-time Vendibook event notification."],
+          details,
+          ctaLabel: "Open admin",
+          ctaUrl:
+            type === "freight_quote_request"
+              ? "https://vendibook.com/admin/freight"
+              : "https://vendibook.com/admin",
         },
-        body: JSON.stringify({
-          templateName: "generic-notice",
-          recipientEmail: recipient,
-          idempotencyKey: `admin-notify-${type}-${recipient}-${Date.now()}`,
-          templateData: {
-            subject: subjectMap[type] || `Admin notification: ${type}`,
-            preview: subjectMap[type] || type,
-            kicker: "Admin alert",
-            heading: subjectMap[type] || type,
-            paragraphs: ["This is a real-time Vendibook event notification."],
-            details,
-            ctaLabel: "Open admin",
-            ctaUrl: "https://vendibook.com/admin",
-          },
-        }),
       });
       if (!r.ok) {
-        const errText = await r.text();
-        throw new Error(`send-transactional-email failed for ${recipient} (${r.status}): ${errText}`);
+        throw new Error(`transactional email send failed for ${recipient} (${r.status}): ${r.body}`);
       }
     }));
 

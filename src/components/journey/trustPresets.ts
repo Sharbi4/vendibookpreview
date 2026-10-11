@@ -1,30 +1,35 @@
 import { ShieldCheck, Lock, FileCheck, Eye, CreditCard, RefreshCcw, BadgeCheck, Server } from 'lucide-react';
 import type { TrustPoint } from '@/components/journey/TrustModule';
 
-/** Trust points to render next to Stripe Identity verification CTAs. */
+/** Trust points to render next to Identity verification CTAs. */
 export const IDENTITY_TRUST_POINTS: TrustPoint[] = [
-  { icon: BadgeCheck, label: 'Stripe Identity', detail: 'Government-grade document + selfie match.' },
+  { icon: BadgeCheck, label: 'Vendibook identity verification', detail: 'Government-grade document + selfie match.' },
   { icon: Lock, label: 'Encrypted end-to-end', detail: 'We never see or store your ID image.' },
   { icon: Eye, label: 'Never public', detail: 'Only a "Verified" badge appears on your profile.' },
   { icon: ShieldCheck, label: 'Fraud protection', detail: 'Keeps bad actors off the marketplace.' },
 ];
 
 export const IDENTITY_DISCLAIMER =
-  'Verification is powered by Stripe Identity. Vendibook does not receive, store, or share your document images.';
+  'Verification is powered by Vendibook identity verification. Vendibook does not receive, store, or share your document images.';
 
 /** Trust points to render next to document upload widgets. */
 export const DOCUMENT_TRUST_POINTS: TrustPoint[] = [
-  { icon: Server, label: 'Private storage', detail: 'Files live in access-controlled storage — only you and your host can see them.' },
-  { icon: FileCheck, label: 'Reviewed manually', detail: 'A real person checks each document before approval.' },
-  { icon: Lock, label: 'Never shared', detail: 'Documents are never sold, ranked by AI, or shown to advertisers.' },
+  {
+    icon: Server,
+    label: 'Access-controlled storage',
+    detail:
+      'Files are stored in access-controlled storage and are available only to authorized Vendibook document review personnel and other parties authorized for the booking workflow as applicable.',
+  },
+  { icon: FileCheck, label: 'Reviewed before approval', detail: 'Each document is checked against the host requirement before it is marked approved.' },
+  { icon: Lock, label: 'Not sold or advertised', detail: 'Documents are never sold or shared with advertisers.' },
 ];
 
 export const DOCUMENT_DISCLAIMER =
-  'Vendibook stores documents only for the length of your booking cycle and any required audit window.';
+  'Vendibook retains documents for the booking cycle and any required audit or legal retention window.';
 
 /** Trust points to render next to payment/checkout CTAs. */
 export const PAYMENT_TRUST_POINTS: TrustPoint[] = [
-  { icon: CreditCard, label: 'Stripe-secured checkout', detail: 'PCI DSS Level 1 processing — we never see card numbers.' },
+  { icon: CreditCard, label: 'PayPal-secured checkout', detail: 'PCI DSS Level 1 processing — we never see card numbers.' },
   { icon: ShieldCheck, label: 'Held, not spent', detail: 'Funds stay in payment protection until both parties confirm.' },
   { icon: RefreshCcw, label: 'Dispute support', detail: 'Open a case anytime — our team reviews within 1 business day.' },
   { icon: Lock, label: 'Address masked', detail: 'Exact pickup location is only shared after payment.' },

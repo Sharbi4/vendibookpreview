@@ -1,15 +1,16 @@
 /**
  * useSubscriptionManagement — provider-aware subscription state + controls.
  *
- * Vendibook bills new memberships through PayPal; legacy members may still be
- * on Stripe. This hook resolves the row in `host_subscriptions`, detects which
- * provider owns it, and exposes the right management action for that provider:
+ * Vendibook bills new memberships through PayPal; a small number of legacy
+ * members remain on a retired processor. This hook resolves the row in
+ * `host_subscriptions`, detects which provider owns it, and exposes the right
+ * management action for that provider:
  *
  *   PayPal  → cancel via `paypal-subscription-cancel` (cancels at PayPal first,
  *             access continues through the paid period). Payment-method changes
  *             happen in the member's PayPal automatic-payments settings.
- *   Stripe  → legacy: `manage-subscription` (cancel / reactivate scheduling)
- *             and the Stripe Customer Portal.
+ *   Legacy  → read-only: cancellations and billing changes are handled by
+ *             support; no provider API is ever called.
  *
  * No money logic lives here — every mutation is an edge-function call.
  */
@@ -20,7 +21,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { parseEdgeError } from '@/lib/edgeErrors';
 
-export type SubscriptionProvider = 'paypal' | 'stripe' | 'none';
+export type SubscriptionProvider = 'square' | 'paypal' | 'legacy' | 'none';
 
 /** Where PayPal members manage the funding source for a recurring plan. */
 export const PAYPAL_AUTOPAY_URL = 'https://www.paypal.com/myaccount/autopay/';
@@ -47,33 +48,61 @@ export function fmtSubDate(iso?: string | null): string {
   } catch { return '—'; }
 }
 
-export function useSubscriptionManagement() {
+/** Recurring products that can own a `host_subscriptions` row. */
+export type SubscriptionProduct = 'pro' | 'permit_path_plus' | 'any';
+
+const PRO_SLUGS = new Set(['vendibook_pro', 'vendibook-pro', 'pro', 'host_pro', 'host-pro', 'host_growth']);
+const PERMIT_SLUGS = new Set(['permit_path_plus', 'permit-path-plus', 'permitpath_plus']);
+
+const normalizeSlug = (raw?: string | null) =>
+  String(raw ?? '').toLowerCase().replace(/_(monthly|annual)$/, '').replace(/-(monthly|annual)$/, '');
+
+export function matchesProduct(row: SubscriptionRow | null, product: SubscriptionProduct): boolean {
+  if (!row) return false;
+  if (product === 'any') return true;
+  const key = normalizeSlug(row.tier);
+  if (product === 'permit_path_plus') return PERMIT_SLUGS.has(key);
+  // Pro: explicit slugs, `*_pro` variants, and legacy rows with no tier
+  // recorded (those predate multi-product billing and were always Pro).
+  if (!key) return !PERMIT_SLUGS.has(key);
+  return PRO_SLUGS.has(key) || key.endsWith('_pro');
+}
+
+/**
+ * @param product Which recurring product this surface manages. Defaults to
+ * Vendibook Pro so a future PermitPath Plus row can never replace the Pro row
+ * or cause the wrong PayPal subscription to be cancelled.
+ */
+export function useSubscriptionManagement(product: SubscriptionProduct = 'pro') {
   const { user } = useAuth();
   const { toast } = useToast();
   const [busy, setBusy] = useState<'cancel' | 'reactivate' | 'portal' | null>(null);
 
   const query = useQuery({
-    queryKey: ['subscription-management', user?.id],
+    queryKey: ['subscription-management', user?.id, product],
     enabled: !!user?.id,
     queryFn: async (): Promise<SubscriptionRow | null> => {
       const { data } = await supabase
         .from('host_subscriptions')
         .select('*')
         .eq('user_id', user!.id)
-        .order('updated_at', { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      return (data as SubscriptionRow) ?? null;
+        .order('updated_at', { ascending: false });
+      const rows = (data as SubscriptionRow[] | null) ?? [];
+      const scoped = rows.filter((row) => matchesProduct(row, product));
+      // Prefer a live row over a lapsed one of the same product.
+      return (
+        scoped.find((r) => (r.status ?? 'canceled') !== 'canceled') ?? scoped[0] ?? null
+      );
     },
   });
 
   const sub = query.data ?? null;
 
   const provider: SubscriptionProvider =
-    sub?.payment_provider === 'paypal' || sub?.paypal_subscription_id
+    sub?.payment_provider === 'square' ? 'square' : sub?.payment_provider === 'paypal' || sub?.paypal_subscription_id
       ? 'paypal'
       : sub?.stripe_subscription_id
-      ? 'stripe'
+      ? 'legacy'
       : 'none';
 
   const hasSubscription =
@@ -82,6 +111,7 @@ export function useSubscriptionManagement() {
   const scheduledCancel = !!sub?.cancel_at_period_end && sub?.status !== 'canceled';
   const isPastDue = sub?.status === 'past_due' || sub?.status === 'unpaid';
   const accessEndsAt = sub?.cancel_at ?? sub?.current_period_end ?? null;
+
 
   /** Poll until the webhook mirror lands (both providers sync async). */
   const refetchUntilSynced = useCallback(
@@ -98,10 +128,23 @@ export function useSubscriptionManagement() {
   const cancel = useCallback(async () => {
     setBusy('cancel');
     try {
-      if (provider === 'paypal') {
+      if (provider === 'square') {
+        const attemptId = (sub?.metadata as {square_attempt_id?:string} | undefined)?.square_attempt_id;
+        if (!attemptId) throw new Error('This Square subscription needs a billing refresh.');
+        const {error}=await supabase.functions.invoke('square-billing',{body:{action:'cancel',attempt_id:attemptId}});
+        if(error) throw error;
+        await query.refetch();
+        toast({title:'Cancellation scheduled',description:'Your paid access remains available through the end of the current billing period.'});
+      } else if (provider === 'paypal') {
         const { data, error } = await supabase.functions.invoke('paypal-subscription-cancel', {
-          body: { reason: 'Member requested cancellation' },
+          body: {
+            reason: 'Member requested cancellation',
+            // Pin the exact subscription so a second recurring product can
+            // never be cancelled by mistake.
+            paypal_subscription_id: sub?.paypal_subscription_id ?? undefined,
+          },
         });
+
         if (error) throw error;
         toast({
           title: 'Membership cancelled',
@@ -109,24 +152,18 @@ export function useSubscriptionManagement() {
             (data as { message?: string })?.message ??
             'Access continues until the end of your paid period.',
         });
+        await refetchUntilSynced(
+          (row) => row?.status === 'canceled' || !!row?.cancel_at_period_end,
+        );
       } else {
-        const { data, error } = await supabase.functions.invoke('manage-subscription', {
-          body: { action: 'cancel' },
-        });
-        if (error) throw error;
-        const at = (data as { cancel_at?: number })?.cancel_at;
+        // Legacy memberships are read-only — the old processor is retired and
+        // must never be called. Support cancels these by hand.
         toast({
-          title: 'Cancellation scheduled',
-          description: `Access continues through ${fmtSubDate(
-            at ? new Date(at * 1000).toISOString() : accessEndsAt,
-          )}.`,
+          title: 'Contact support to cancel',
+          description:
+            'This legacy membership is managed by our team. Email support@vendibook.com or call (725) 755-9598 and we’ll cancel it right away.',
         });
       }
-      await refetchUntilSynced((row) =>
-        provider === 'paypal'
-          ? row?.status === 'canceled' || !!row?.cancel_at_period_end
-          : !!row?.cancel_at_period_end,
-      );
     } catch (err) {
       const parsed = await parseEdgeError(err);
       toast({
@@ -137,61 +174,38 @@ export function useSubscriptionManagement() {
     } finally {
       setBusy(null);
     }
-  }, [provider, accessEndsAt, refetchUntilSynced, toast]);
+  }, [provider, sub?.paypal_subscription_id, sub?.metadata, refetchUntilSynced, toast]);
 
-  /** Stripe-only: un-schedule a pending cancellation. */
+  /** Legacy memberships can no longer be resumed self-serve. */
   const reactivate = useCallback(async () => {
-    setBusy('reactivate');
-    try {
-      const { error } = await supabase.functions.invoke('manage-subscription', {
-        body: { action: 'reactivate' },
-      });
-      if (error) throw error;
-      toast({
-        title: 'Subscription resumed',
-        description: 'Your plan will renew normally at the end of the current period.',
-      });
-      await refetchUntilSynced((row) => !row?.cancel_at_period_end);
-    } catch (err) {
-      const parsed = await parseEdgeError(err);
-      toast({
-        title: 'Could not resume subscription',
-        description: parsed?.message ?? (err instanceof Error ? err.message : 'Please try again.'),
-        variant: 'destructive',
-      });
-    } finally {
-      setBusy(null);
-    }
-  }, [refetchUntilSynced, toast]);
+    toast({
+      title: 'Contact support',
+      description:
+        'This legacy membership is managed by our team. Email support@vendibook.com and we’ll resume it for you.',
+    });
+  }, [toast]);
 
   /**
-   * Opens the billing surface for the owning provider. PayPal members manage
-   * their funding source in PayPal's automatic-payments settings; legacy
-   * Stripe members get the Customer Portal.
+   * Opens the billing surface. PayPal members manage their funding source in
+   * PayPal's automatic-payments settings; legacy members are pointed at
+   * support because the old billing portal is retired.
    */
   const openBilling = useCallback(async () => {
+    if (provider === 'square') {
+      toast({title:'Square billing',description:'Square emails your invoices. You can cancel here; contact support for a payment-method change.'});
+      return;
+    }
     if (provider === 'paypal') {
       window.open(PAYPAL_AUTOPAY_URL, '_blank', 'noopener,noreferrer');
       return;
     }
-    setBusy('portal');
-    try {
-      const { data, error } = await supabase.functions.invoke('customer-portal');
-      if (error) throw error;
-      const url = (data as { url?: string })?.url;
-      if (!url) throw new Error('Portal URL missing');
-      window.open(url, '_blank', 'noopener,noreferrer');
-    } catch (err) {
-      const parsed = await parseEdgeError(err);
-      toast({
-        title: 'Could not open billing portal',
-        description: parsed?.message ?? (err instanceof Error ? err.message : 'Please try again.'),
-        variant: 'destructive',
-      });
-    } finally {
-      setBusy(null);
-    }
+    toast({
+      title: 'Billing managed by support',
+      description:
+        'This legacy membership predates PayPal billing. Email support@vendibook.com for invoices or payment changes.',
+    });
   }, [provider, toast]);
+
 
   return {
     sub,
@@ -201,7 +215,7 @@ export function useSubscriptionManagement() {
     isPastDue,
     accessEndsAt,
     /** PayPal cancellations are immediate-at-provider, so there's no resume. */
-    canReactivate: provider === 'stripe' && scheduledCancel,
+    canReactivate: false,
     isLoading: query.isLoading,
     isFetching: query.isFetching,
     refetch: query.refetch,

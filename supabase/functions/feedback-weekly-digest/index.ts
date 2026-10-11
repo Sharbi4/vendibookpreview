@@ -2,6 +2,7 @@
 // Sends a themed summary + suggested fixes to support@vendibook.com.
 // Triggered by pg_cron weekly or on-demand via POST.
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -84,14 +85,12 @@ Deno.serve(async (req) => {
 
   let sendErr: any = null;
   for (const adminTo of ['support@vendibook.com']) {
-    const { error } = await supabase.functions.invoke('send-transactional-email', {
-      body: {
+    const { error } = await invokeTransactionalEmail({
         templateName: 'feedback-weekly-digest',
         recipientEmail: adminTo,
         idempotencyKey: `feedback-digest-${new Date().toISOString().slice(0, 10)}-${adminTo}`,
         templateData: { weekLabel, totalSubmissions: valid.length, avgNps, promoters, detractors, themes, highlightQuotes, rawSummary },
-      },
-    });
+      });
     if (error) sendErr = error;
   }
 

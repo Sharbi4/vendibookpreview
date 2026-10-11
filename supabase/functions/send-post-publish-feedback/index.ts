@@ -2,6 +2,7 @@
 // one-time feedback request. Idempotent via feedback_email_sent. Triggered
 // by pg_cron hourly.
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -67,8 +68,7 @@ Deno.serve(async (req) => {
 
       const recipientName = profile?.first_name || profile?.full_name?.split(' ')[0];
 
-      const { error } = await supabase.functions.invoke('send-transactional-email', {
-        body: {
+      const { error } = await invokeTransactionalEmail({
           templateName: 'feedback-request',
           recipientEmail: email,
           idempotencyKey: `feedback-publish-${l.id}`,
@@ -79,8 +79,7 @@ Deno.serve(async (req) => {
             feedbackToken: token,
             aiIntro: `You just published${l.title ? ` "${l.title}"` : ' your listing'} — 30 seconds of honest feedback helps us make publishing dramatically smoother for the next host.`,
           },
-        },
-      });
+        });
       if (error) errors.push({ listing: l.id, error: error.message });
       else sent.push({ listing: l.id, email });
     }

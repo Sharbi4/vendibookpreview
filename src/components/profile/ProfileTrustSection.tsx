@@ -48,14 +48,14 @@ const ProfileTrustSection = ({
       icon: Shield,
       label: 'Identity Verified',
       status: isVerified,
-      description: 'Government ID verified via Stripe Identity',
+      description: 'Government ID verified by Vendibook',
     },
     {
       id: 'payouts',
       icon: CreditCard,
       label: 'Payouts Enabled',
       status: stripeConnected,
-      description: 'Connected to Stripe for secure payments',
+      description: 'Payout details saved for secure payouts',
       hideIfNotHost: true,
     },
     {
@@ -159,14 +159,14 @@ const ProfileTrustSection = ({
               <div>
                 <h4 className="font-medium text-sm mb-1">Identity Verification</h4>
                 <p className="text-sm text-muted-foreground">
-                  Users can verify their identity through Stripe Identity, which checks 
+                  Users can verify their identity through Vendibook identity verification, which checks 
                   government-issued IDs to confirm their identity.
                 </p>
               </div>
               <div>
                 <h4 className="font-medium text-sm mb-1">Secure Payments</h4>
                 <p className="text-sm text-muted-foreground">
-                  All payments are processed through Stripe, providing industry-leading 
+                  All payments are processed through PayPal, providing industry-leading 
                   security and fraud protection.
                 </p>
               </div>

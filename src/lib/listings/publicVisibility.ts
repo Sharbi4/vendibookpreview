@@ -9,6 +9,11 @@
  * Use `applyPublicListingFilter(query)` on EVERY public listing query:
  * homepage, search, category pages, maps, recommendations, related listings,
  * public profiles, favorites, saved searches, recently viewed, feeds, sitemap.
+ *
+ * Unlisted (admin-only `listings.unlisted`): publicly viewable by direct link
+ * and purchasable, but never in discovery. Lists use
+ * `applyDiscoveryListingFilter` / `filterPubliclyVisible`; single-listing
+ * views and checkout keep `isListingPubliclyVisible` / `applyPublicListingFilter`.
  */
 
 export const PUBLIC_LISTING_STATUS = "published" as const;
@@ -47,11 +52,17 @@ export function applyPublicListingFilter<T extends AnyQuery>(query: T): T {
     .eq("moderation_status", "clear") as T;
 }
 
+/** Public filter for discovery lists: also drops admin-unlisted listings. */
+export function applyDiscoveryListingFilter<T extends AnyQuery>(query: T): T {
+  return applyPublicListingFilter(query).eq("unlisted", false) as T;
+}
+
 export type VisibilityShape = {
   status?: string | null;
   published_at?: string | null;
   deleted_at?: string | null;
   moderation_status?: string | null;
+  unlisted?: boolean | null;
 };
 
 /** Row-level mirror of the same rule, for already-fetched listings. */
@@ -64,6 +75,18 @@ export function isListingPubliclyVisible(
   if (listing.deleted_at) return false;
   if ((listing.moderation_status ?? "clear") !== "clear") return false;
   return true;
+}
+
+/**
+ * Render-time guard for lists of listings. Query filters already exclude
+ * non-public rows, but cached React Query payloads, edge-cached responses and
+ * long-lived tabs can still hold rows that were paused/deleted after fetch.
+ * Run every public collection through this before rendering.
+ */
+export function filterPubliclyVisible<T extends VisibilityShape>(
+  listings: T[] | null | undefined,
+): T[] {
+  return (listings ?? []).filter((l) => isListingPubliclyVisible(l) && l.unlisted !== true);
 }
 
 /** Purchase/booking/boost eligibility mirrors public visibility exactly. */

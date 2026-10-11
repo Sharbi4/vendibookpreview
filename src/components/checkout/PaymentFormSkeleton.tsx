@@ -1,36 +1,9 @@
-/**
- * Shimmer skeleton that mimics the Express Checkout row + tabs +
- * input rows Stripe will render, so the modal never shows an empty
- * spinner while Stripe.js boots.
- */
-const shimmer = 'bg-muted/30 animate-pulse';
+import { Loader2 } from 'lucide-react';
 
 const PaymentFormSkeleton = () => (
-  <div className="space-y-4" aria-busy="true" aria-live="polite">
-    <div className="grid grid-cols-3 gap-2">
-      <div className={`h-11 rounded-xl ${shimmer}`} />
-      <div className={`h-11 rounded-xl ${shimmer}`} />
-      <div className={`h-11 rounded-xl ${shimmer}`} />
-    </div>
-    <div className="flex items-center gap-3 py-1">
-      <div className="h-px flex-1 bg-border/60" />
-      <span className="text-[11px] uppercase tracking-wide text-muted-foreground">
-        or pay with card
-      </span>
-      <div className="h-px flex-1 bg-border/60" />
-    </div>
-    <div className="grid grid-cols-3 gap-2">
-      <div className={`h-9 rounded-lg ${shimmer}`} />
-      <div className={`h-9 rounded-lg ${shimmer}`} />
-      <div className={`h-9 rounded-lg ${shimmer}`} />
-    </div>
-    <div className={`h-12 rounded-xl ${shimmer}`} />
-    <div className="grid grid-cols-2 gap-3">
-      <div className={`h-12 rounded-xl ${shimmer}`} />
-      <div className={`h-12 rounded-xl ${shimmer}`} />
-    </div>
-    <div className={`h-12 rounded-xl ${shimmer}`} />
-    <span className="sr-only">Loading secure payment form…</span>
+  <div className="flex min-h-24 w-full items-center justify-center py-6" aria-busy="true" role="status">
+    <Loader2 className="h-6 w-6 animate-spin text-muted-foreground motion-reduce:animate-none" aria-hidden="true" />
+    <span className="sr-only">Loading secure payment options</span>
   </div>
 );
 

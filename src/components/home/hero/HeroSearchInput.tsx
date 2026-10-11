@@ -1,5 +1,5 @@
-import { Navigation, Wand2, Mic, MicOff, Search } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Navigation, Wand2, Mic, Search, Loader2 } from 'lucide-react';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { trackLeadEvent } from '@/lib/leadTracking';
 
 interface HeroSearchInputProps {
@@ -12,9 +12,10 @@ interface HeroSearchInputProps {
   setIsInputFocused: (v: boolean) => void;
   isRecording: boolean;
   isConnectingMic: boolean;
+  partialTranscript?: string;
   inputRef: React.RefObject<HTMLInputElement>;
   toggleVoiceSearch: () => void;
-  handleAISearch: () => void;
+  handleAISearch: (q?: string) => void;
   handleGeolocation: () => void;
   placeholders: string[];
   className?: string;
@@ -30,6 +31,7 @@ const HeroSearchInput = ({
   setIsInputFocused,
   isRecording,
   isConnectingMic,
+  partialTranscript,
   inputRef,
   toggleVoiceSearch,
   handleAISearch,
@@ -37,13 +39,14 @@ const HeroSearchInput = ({
   placeholders,
   className,
 }: HeroSearchInputProps) => {
+  const reduced = useReducedMotion();
   const onSubmit = () => {
     trackLeadEvent('homepage_search_submit', {
       route: '/',
       query: location.trim(),
       source: 'home_hero_search_button',
     });
-    handleAISearch();
+    handleAISearch(location);
   };
 
   return (
@@ -53,13 +56,16 @@ const HeroSearchInput = ({
         isInputFocused ? 'border-foreground/30 shadow-lg shadow-foreground/5' : 'border-border/80 group-hover:border-foreground/25'
       }`}>
         {isAIParsing && (
-          <Wand2 className="absolute left-4 w-5 h-5 text-foreground/60 animate-pulse z-10" />
+          <Wand2
+            aria-hidden="true"
+            className={`absolute left-4 w-5 h-5 text-foreground/60 z-10 ${reduced ? '' : 'animate-pulse'}`}
+          />
         )}
         <div className="relative flex-1 min-w-0">
           <input
             ref={inputRef}
             type="text"
-            value={location}
+            value={isRecording && partialTranscript ? partialTranscript : location}
             onChange={(e) => setLocation(e.target.value)}
             onKeyDown={(e) => {
               if (e.key === 'Enter') {
@@ -68,7 +74,7 @@ const HeroSearchInput = ({
                   query: location.trim(),
                   source: 'home_hero_enter_key',
                 });
-                handleAISearch();
+                handleAISearch(location);
               }
             }}
             onFocus={() => setIsInputFocused(true)}
@@ -76,18 +82,24 @@ const HeroSearchInput = ({
             aria-label="Search food trucks and trailers"
             className={`w-full h-14 ${isAIParsing ? 'pl-12' : 'pl-5'} pr-2 bg-transparent text-foreground text-[16px] sm:text-sm focus:outline-none`}
           />
-          {!location && !isInputFocused && (
+          {isRecording && !location && !partialTranscript && (
+            <div className="absolute inset-0 flex items-center pl-5 pr-2 pointer-events-none overflow-hidden">
+              <span className="text-success text-[16px] sm:text-sm whitespace-nowrap truncate">Listening…</span>
+            </div>
+          )}
+          {!isRecording && !location && !isInputFocused && (
             <div className={`absolute inset-0 flex items-center ${isAIParsing ? 'pl-12' : 'pl-5'} pr-2 pointer-events-none overflow-hidden`}>
-              <AnimatePresence mode="wait">
+              <AnimatePresence mode="wait" initial={false}>
                 <motion.span
-                  key={placeholderIndex}
+                  key={reduced ? 'static' : placeholderIndex}
+                  aria-hidden="true"
                   className="text-muted-foreground text-[16px] sm:text-sm truncate"
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -8 }}
-                  transition={{ duration: 0.3, ease: 'easeInOut' }}
+                  initial={reduced ? false : { opacity: 0, y: 8 }}
+                  animate={reduced ? { opacity: 1 } : { opacity: 1, y: 0 }}
+                  exit={reduced ? { opacity: 1 } : { opacity: 0, y: -8 }}
+                  transition={{ duration: reduced ? 0 : 0.3, ease: 'easeInOut' }}
                 >
-                  {placeholders[placeholderIndex]}
+                  {placeholders[reduced ? 0 : placeholderIndex]}
                 </motion.span>
               </AnimatePresence>
             </div>
@@ -100,25 +112,47 @@ const HeroSearchInput = ({
             type="button"
             onClick={toggleVoiceSearch}
             disabled={isConnectingMic}
-            className={`p-2 rounded-lg transition-colors ${
-              isRecording
-                ? 'text-destructive bg-destructive/10 hover:bg-destructive/20 animate-pulse'
-                : 'text-muted-foreground/70 hover:text-foreground hover:bg-accent'
+            aria-pressed={isRecording}
+            className={`inline-flex h-11 w-11 items-center justify-center rounded-lg transition-colors ${
+              isAIParsing || isConnectingMic
+                ? `text-success bg-success/10 ${reduced ? '' : 'animate-pulse'}`
+                : isRecording
+                  ? `text-success bg-success/10 hover:bg-success/20 ${reduced ? '' : 'animate-pulse'}`
+                  : 'text-muted-foreground/70 hover:text-foreground hover:bg-accent'
             } disabled:opacity-50`}
             aria-label={isRecording ? 'Stop voice search' : 'Voice search'}
           >
-            {isRecording ? <MicOff className="w-4 h-4" /> : <Mic className="w-4 h-4" />}
+            {isAIParsing || isConnectingMic ? (
+              <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
+            ) : isRecording ? (
+              <Mic className="w-4 h-4" aria-hidden="true" />
+            ) : (
+              <Mic className="w-4 h-4" aria-hidden="true" />
+            )}
           </button>
           <button
             type="button"
             onClick={handleGeolocation}
             disabled={isLocating}
-            className="p-2 text-muted-foreground/70 hover:text-foreground transition-colors rounded-lg hover:bg-accent disabled:opacity-50"
+            className="inline-flex h-11 w-11 items-center justify-center text-muted-foreground/70 hover:text-foreground transition-colors rounded-lg hover:bg-accent disabled:opacity-50"
             aria-label="Use current location"
           >
-            <Navigation className={`w-4 h-4 ${isLocating ? 'animate-pulse' : ''}`} />
+            <Navigation aria-hidden="true" className={`w-4 h-4 ${isLocating && !reduced ? 'animate-pulse' : ''}`} />
           </button>
         </div>
+
+        {/* Status announcements for assistive tech (voice + location + parsing) */}
+        <span className="sr-only" role="status" aria-live="polite">
+          {isRecording
+            ? 'Listening for voice search'
+            : isConnectingMic
+              ? 'Starting microphone'
+              : isLocating
+                ? 'Detecting your location'
+                : isAIParsing
+                  ? 'Interpreting your search'
+                  : ''}
+        </span>
 
         {/* Primary submit */}
         <button

@@ -95,9 +95,9 @@ export const AIInsightsCard = () => {
                 ⭐ {dataSnapshot.avgRating.toFixed(1)} rating
               </div>
             )}
-            {dataSnapshot.stripeBalance > 0 && (
+            {dataSnapshot.pendingPayoutBalance > 0 && (
               <div className="text-xs bg-purple-500/10 text-purple-700 dark:text-purple-300 px-2.5 py-1 rounded-full border border-purple-500/20">
-                💳 ${dataSnapshot.stripeBalance.toFixed(2)} available
+                💳 ${dataSnapshot.pendingPayoutBalance.toFixed(2)} awaiting payout
               </div>
             )}
           </div>

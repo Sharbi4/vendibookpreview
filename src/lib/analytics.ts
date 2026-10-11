@@ -1,4 +1,6 @@
 // Analytics utility for tracking user interactions
+import { toGa4EventParams } from '@/lib/ga4Params';
+import { getBuyerSeoAttribution, trackBuyerSeoDownstream } from '@/lib/buyerSeoTracking';
 // Integrates with Google Analytics 4, Facebook CAPI, and custom event tracking
 
 import { hasAnalyticsConsent } from '@/lib/cookieConsent';
@@ -20,6 +22,7 @@ import {
   trackPurchase,
   trackContact,
 } from '@/lib/facebookCAPI';
+import { trackLeadEvent } from '@/lib/leadTracking';
 
 type AnalyticsEvent = {
   category: string;
@@ -57,7 +60,7 @@ const trackEvent = (event: AnalyticsEvent): void => {
       event_category: event.category,
       event_label: event.label,
       value: event.value,
-      ...event.metadata,
+      ...toGa4EventParams(event.metadata),
     });
   }
 
@@ -131,6 +134,7 @@ export const trackSignupCompleted = (role?: string): void => {
     category: 'Activation',
     action: 'signup_completed',
     label: role || 'unknown',
+    metadata: hasAnalyticsConsent() ? { ...getBuyerSeoAttribution() } : undefined,
   });
 
   // Fire Facebook CAPI CompleteRegistration event
@@ -751,6 +755,7 @@ export const trackHostContacted = (listingId: string, contentName?: string): voi
     action: 'host_contacted',
     metadata: { listing_id: listingId },
   });
+  trackBuyerSeoDownstream('inquiry_submitted', listingId, { inquiry_type: 'message' });
 
   // Fire Facebook CAPI Lead event
   trackLead({
@@ -825,3 +830,135 @@ export {
 // Generic analytics exports for other parts of the app
 export { trackEvent };
 export type { AnalyticsEvent };
+
+// ========== Equipment financing (Equinox) ==========
+export type FinancingSource =
+  | 'home_banner'
+  | 'financing_page_hero'
+  | 'financing_page_mid'
+  | 'financing_page_footer'
+  | 'financing_page_context'
+  | 'financing_page_sticky'
+  | 'listing_panel'
+  | 'listing_price_line'
+  | 'checkout_banner'
+  | 'listing_card';
+
+
+export const trackFinancingBannerImpression = (): void => {
+  trackEvent({
+    category: 'Financing',
+    action: 'financing_banner_impression',
+    label: 'home_banner',
+  });
+};
+
+/** Financing page view — recorded internally (analytics_events) and in GA4. */
+export const trackFinancingPageViewed = (listingId?: string): void => {
+  trackEvent({
+    category: 'Financing',
+    action: 'financing_page_viewed',
+    label: '/financing',
+    metadata: { listing_id: listingId ?? null },
+  });
+  trackLeadEvent('financing_page_view', {
+    source: 'financing_page',
+    listing_id: listingId,
+  });
+};
+
+/**
+ * Placement-level financing CTA click. Emitted for every financing entry
+ * point so placements can be compared directly (the near-price line on a
+ * listing vs the detail panel vs the home banner vs the /financing hub).
+ */
+export const trackFinancingCtaClick = (
+  source: FinancingSource,
+  listingId?: string,
+): void => {
+  trackEvent({
+    category: 'Financing',
+    action: 'financing_cta_click',
+    label: source,
+    metadata: { source, listing_id: listingId ?? null, provider: 'equinox' },
+  });
+};
+
+/** Click on any "Apply now for financing" CTA. */
+export const trackFinancingApplyClick = (
+  source: FinancingSource,
+  listingId?: string,
+): void => {
+  trackFinancingCtaClick(source, listingId);
+  trackEvent({
+    category: 'Financing',
+    action: 'financing_apply_click',
+    label: source,
+    metadata: { source, listing_id: listingId ?? null, provider: 'equinox' },
+  });
+  trackLeadEvent('financing_apply_click', {
+    source,
+    listing_id: listingId,
+    provider: 'equinox',
+  });
+  trackGA4GenerateLead({ value: 0, currency: 'USD', lead_source: `financing_${source}` });
+};
+
+/**
+ * Vendibook captured the buyer's contact details before the Equinox handoff.
+ * `identified` distinguishes a signed-in silent capture from a form submit.
+ */
+export const trackFinancingLeadCaptured = (
+  source: FinancingSource,
+  listingId: string | undefined,
+  mode: 'signed_in' | 'form',
+): void => {
+  trackEvent({
+    category: 'Financing',
+    action: 'lead_captured',
+    label: source,
+    metadata: { source, listing_id: listingId ?? null, capture_mode: mode, provider: 'equinox' },
+  });
+  trackLeadEvent('lead_captured', {
+    source,
+    listing_id: listingId,
+    capture_mode: mode,
+    provider: 'equinox',
+  });
+};
+
+
+/** Seller toggled buyer financing on/off for one listing. */
+export const trackSellerFinancingToggled = (listingId: string, enabled: boolean): void => {
+  trackEvent({
+    category: 'Financing',
+    action: enabled ? 'seller_financing_enabled' : 'seller_financing_disabled',
+    label: listingId,
+    metadata: { listing_id: listingId, provider: 'equinox' },
+  });
+  trackLeadEvent(enabled ? 'seller_financing_enabled' : 'seller_financing_disabled', {
+    listing_id: listingId,
+    source: 'host_listings',
+    provider: 'equinox',
+  });
+};
+
+
+/** Click on the CTA that routes to the /financing information page. */
+export const trackFinancingLearnMoreClick = (source: FinancingSource, listingId?: string): void => {
+  trackEvent({
+    category: 'Financing',
+    action: 'financing_learn_more_click',
+    label: source,
+    metadata: { source, listing_id: listingId ?? null },
+  });
+};
+
+export const trackFinancingSheetDownloaded = (listingId: string, success: boolean): void => {
+  trackEvent({
+    category: 'Financing',
+    action: 'financing_purchase_sheet_download',
+    label: success ? 'success' : 'error',
+    metadata: { listing_id: listingId, success },
+  });
+};

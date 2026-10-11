@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { isAdminOrInternalCaller, internalOnlyResponse } from "../_shared/internalAuth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -33,6 +34,11 @@ interface ZendeskUser {
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Bulk-exports lead contact PII to Zendesk — internal scheduler or signed-in admin only.
+  if (!(await isAdminOrInternalCaller(req))) {
+    return internalOnlyResponse(corsHeaders);
   }
 
   try {

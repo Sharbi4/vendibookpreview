@@ -16,6 +16,7 @@ import {
   Settings,
   Search,
   X,
+  Landmark,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -30,6 +31,7 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications, Notification } from '@/hooks/useNotifications';
 import { cn } from '@/lib/utils';
+import { toDashboardTarget } from '@/lib/navigation/dashboardTargets';
 
 const NOTIFICATION_ICONS: Record<string, typeof Bell> = {
   booking_request: Calendar,
@@ -42,6 +44,7 @@ const NOTIFICATION_ICONS: Record<string, typeof Bell> = {
   document: FileText,
   review: Star,
   verification: ShieldCheck,
+  product_update: Landmark,
   default: Bell,
 };
 
@@ -100,6 +103,7 @@ const NotificationItem = ({
       <Button
         variant="ghost"
         size="icon"
+        aria-label="Delete notification"
         className="h-8 w-8 flex-shrink-0 opacity-0 group-hover:opacity-100 hover:opacity-100"
         onClick={(e) => {
           e.stopPropagation();
@@ -141,15 +145,23 @@ const NotificationCenter = () => {
   const handleNavigate = (link: string | null) => {
     setOpen(false);
     setSearchQuery('');
-    if (link) {
-      navigate(link);
+    const target = toDashboardTarget(link);
+    if (target) {
+      navigate(target);
+    } else {
+      navigate('/dashboard/notifications');
     }
   };
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="relative"
+          aria-label={unreadCount > 0 ? `Notifications, ${unreadCount} unread` : 'Notifications'}
+        >
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
             <Badge 
@@ -168,10 +180,11 @@ const NotificationCenter = () => {
             <Button
               variant="ghost"
               size="icon"
+              aria-label="Notification preferences"
               className="h-7 w-7"
               onClick={() => {
                 setOpen(false);
-                navigate('/notification-preferences');
+                navigate('/dashboard/notifications/settings');
               }}
               title="Notification preferences"
             >
@@ -206,6 +219,7 @@ const NotificationCenter = () => {
                 <Button
                   variant="ghost"
                   size="icon"
+                  aria-label="Clear search"
                   className="absolute right-0.5 top-1/2 -translate-y-1/2 h-7 w-7"
                   onClick={() => setSearchQuery('')}
                 >
@@ -246,6 +260,21 @@ const NotificationCenter = () => {
             </div>
           )}
         </ScrollArea>
+
+        <Separator />
+        <div className="p-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="w-full text-xs font-medium"
+            onClick={() => {
+              setOpen(false);
+              navigate('/dashboard/notifications');
+            }}
+          >
+            View all notifications
+          </Button>
+        </div>
 
         {notifications.length > 0 && (
           <>

@@ -109,52 +109,77 @@ const PermitPathSample = () => {
 };
 
 // ─── PricePilot ──────────────────────────────────────────────────────────────
-const PricePilotSample = () => (
-  <Card
-    title="PricePilot — Pricing Report"
-    tag={<ExampleTag />}
-  >
-    <div className="mb-3 flex items-center gap-2 text-xs text-muted-foreground">
-      <DollarSign className="h-3.5 w-3.5" /> 18 ft food truck · Austin metro
-    </div>
-    <div className="grid grid-cols-3 gap-2 mb-4">
-      {[
-        { label: 'Median sale', value: '$67,500' },
-        { label: 'Median rent / day', value: '$385' },
-        { label: 'Comps analyzed', value: '42' },
-      ].map((s) => (
-        <div key={s.label} className="rounded-md border-[1.5px] border-white/10 bg-black/30 p-3">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{s.label}</p>
-          <p className="mt-0.5 text-lg font-bold tabular-nums text-foreground">{s.value}</p>
-        </div>
-      ))}
-    </div>
-    <div className="mb-3">
-      <p className="mb-2 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-        Suggested list price
-      </p>
-      <div className="rounded-md border-[1.5px] border-orange-500/50 bg-orange-500/[0.08] p-3">
-        <div className="flex items-baseline justify-between">
-          <span className="text-xl font-bold tabular-nums text-foreground">$69,900 – $74,500</span>
-          <Chip tone="ember">+9% vs median</Chip>
+const PricePilotSample = () => {
+  const comps = [
+    { title: '2019 Ford E-450 · 20 ft · Austin', price: '$74,500', tag: 'Observed sold status' },
+    { title: '2018 Chevy P30 · 18 ft · San Antonio', price: '$62,000', tag: 'Asking price' },
+    { title: '2021 Freightliner MT45 · Dallas', price: '$81,900', tag: 'Observed sold status' },
+  ];
+  return (
+    <Card title="PricePilot — Appraisal Report" tag={<ExampleTag />}>
+      <div className="mb-3 flex items-center gap-2 text-xs text-muted-foreground">
+        <DollarSign className="h-3.5 w-3.5" /> 2019 food truck · 18 ft · Austin, TX
+      </div>
+
+      {/* Range + recommendation */}
+      <div className="mb-3 rounded-md border-[1.5px] border-orange-500/50 bg-orange-500/[0.08] p-3">
+        <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Recommended list price</p>
+        <div className="mt-0.5 flex items-baseline justify-between">
+          <span className="text-xl font-bold tabular-nums text-foreground">$69,900</span>
+          <Chip tone="ok">Confidence 82 / 100</Chip>
         </div>
         <p className="mt-1 text-[11px] text-foreground/75">
-          Your equipment package (flat top, 6-burner, hood) is 12% above median. Buyers in
-          Austin pay premiums for turnkey trucks — pricing at $72k lists in the top quartile
-          without repelling comps browsers.
+          Estimated market range $61,500 – $78,000 based on 23 weighted comparables.
         </p>
+        {/* Range bar */}
+        <div className="relative mt-3 h-2 rounded-full bg-white/[0.06]">
+          <div className="absolute inset-y-0 left-[18%] right-[14%] rounded-full bg-orange-500/50" />
+          <div className="absolute top-1/2 left-[46%] h-3.5 w-[2.5px] -translate-y-1/2 rounded bg-orange-400" />
+        </div>
+        <div className="mt-1 flex justify-between text-[10px] tabular-nums text-muted-foreground">
+          <span>$48k</span><span>low – high</span><span>$92k</span>
+        </div>
       </div>
-    </div>
-    <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-      Comparable listings
-    </p>
-    <ul className="text-xs text-foreground/80 space-y-1.5">
-      <li className="flex justify-between"><span>2019 Ford E-450 · 20 ft · Austin</span><span className="tabular-nums text-muted-foreground">$74,500</span></li>
-      <li className="flex justify-between"><span>2018 Chevy P30 · 18 ft · San Antonio</span><span className="tabular-nums text-muted-foreground">$62,000</span></li>
-      <li className="flex justify-between text-muted-foreground/70"><span>+ 40 more comps</span><TrendingUp className="h-3.5 w-3.5" /></li>
-    </ul>
-  </Card>
-);
+
+      {/* Strategy prices */}
+      <div className="mb-3 grid grid-cols-3 gap-2">
+        {[
+          { label: 'Quick sale', value: '$61,500' },
+          { label: 'Recommended', value: '$69,900' },
+          { label: 'Premium', value: '$75,900' },
+        ].map((s) => (
+          <div key={s.label} className="rounded-md border-[1.5px] border-white/10 bg-black/30 p-2.5 text-center">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{s.label}</p>
+            <p className="mt-0.5 text-sm font-bold tabular-nums text-foreground">{s.value}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Evidence comps */}
+      <p className="mb-1 text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+        Comparable evidence
+      </p>
+      <ul className="space-y-1.5 text-xs text-foreground/80">
+        {comps.map((c) => (
+          <li key={c.title} className="flex items-center justify-between gap-2">
+            <span className="truncate">{c.title}</span>
+            <span className="flex shrink-0 items-center gap-2">
+              <Chip tone={c.tag.includes('sold') ? 'ok' : 'muted'}>{c.tag}</Chip>
+              <span className="tabular-nums text-muted-foreground">{c.price}</span>
+            </span>
+          </li>
+        ))}
+        <li className="flex justify-between text-muted-foreground/70">
+          <span>+ 20 more comps, outliers filtered</span>
+          <TrendingUp className="h-3.5 w-3.5" />
+        </li>
+      </ul>
+      <p className="mt-3 rounded-md border-[1.5px] border-orange-500/30 bg-orange-500/[0.06] px-3 py-2 text-[11px] text-orange-200">
+        Unlock to run YOUR appraisal — adjustment breakdown, methodology, and rental rate benchmarks included.
+      </p>
+    </Card>
+  );
+};
 
 // ─── Market Radar ────────────────────────────────────────────────────────────
 const MarketRadarSample = () => {

@@ -22,8 +22,13 @@ import type { TierFeatureGroups, TierRole } from './tierCatalog';
 import { useAuth } from '@/contexts/AuthContext';
 
 interface Props {
-  /** Required for paid tiers; ignored for free tier. */
+  /** Required for paid tiers; ignored for free tier. Undefined when the
+   *  selected cadence has no purchasable product. */
   product?: MonetizationProduct;
+  /** Used only for price display when `product` is missing for this cadence. */
+  priceReference?: MonetizationProduct;
+  /** True when the selected billing cadence isn't available for this tier. */
+  cadenceUnavailable?: boolean;
   role: TierRole;
   /** Grouped feature copy (For sellers / For hosts / shared). */
   groups: TierFeatureGroups;
@@ -59,29 +64,29 @@ function useCountUp(target: number, active: boolean, duration = 700) {
   return value;
 }
 
-const roleStyles: Record<TierRole, { badge: string; ring: string; cta: string; accent: string }> = {
+const roleStyles: Record<TierRole, { badge: string; ring: string; cta: 'cta' | 'cta-outline'; accent: string }> = {
   free: {
     badge: '',
     ring: 'border-white/10 bg-white/[0.02] hover:bg-white/[0.04]',
-    cta: 'bg-white/[0.06] hover:bg-white/[0.10] text-foreground border border-white/12',
+    cta: 'cta-outline',
     accent: 'text-foreground/70',
   },
   starter: {
     badge: '',
     ring: 'border-white/12 bg-white/[0.03] hover:bg-white/[0.05]',
-    cta: 'bg-white/[0.06] hover:bg-white/[0.1] text-foreground border border-white/12',
+    cta: 'cta-outline',
     accent: 'text-foreground/80',
   },
   pro: {
     badge: 'bg-gradient-to-r from-orange-500 to-orange-400 text-white',
     ring: 'border-orange-400/60 bg-gradient-to-b from-orange-500/[0.06] to-transparent shadow-[0_0_0_1.5px_rgba(251,146,60,0.25),0_20px_60px_-20px_rgba(251,146,60,0.45)]',
-    cta: 'bg-orange-500 hover:bg-orange-500/90 text-white',
+    cta: 'cta',
     accent: 'text-orange-300',
   },
   premium: {
     badge: '',
     ring: 'border-white/15 bg-white/[0.04] hover:bg-white/[0.06]',
-    cta: 'bg-white text-black hover:bg-white/90',
+    cta: 'cta-outline',
     accent: 'text-foreground/90',
   },
 };
@@ -133,7 +138,7 @@ function FeatureGroup({
 }
 
 export function PremiumTierCard({
-  product, role, groups, interval,
+  product, priceReference, cadenceUnavailable = false, role, groups, interval,
   successPath, cancelPath, index = 0, breakEven,
 }: Props) {
   const [busy, setBusy] = useState(false);
@@ -141,7 +146,8 @@ export function PremiumTierCard({
   const cardRef = useRef<HTMLDivElement>(null);
   const { user } = useAuth();
   const isFree = role === 'free';
-  const priceCents = product ? effectivePriceCents(product) : 0;
+  const priceSource = product ?? priceReference;
+  const priceCents = priceSource ? effectivePriceCents(priceSource) : 0;
   const perMonthCents = interval === 'annual' ? Math.round(priceCents / 12) : priceCents;
   const animatedDollars = useCountUp(Math.round(perMonthCents / 100), visible);
   const { requestCheckout, dialog: consentDialog, pendingSlug } = useSubscriptionConsent();
@@ -170,7 +176,10 @@ export function PremiumTierCard({
   const location = useLocation();
 
   const handleClick = async () => {
-    if (isFree || !product) return;
+    if (isFree || !product || cadenceUnavailable) return;
+    // Rapid double-click protection: one checkout attempt at a time.
+    if (busy || pendingSlug === product.slug) return;
+    setBusy(true);
     // Signed-out: preserve plan intent through auth. Consent RPC + edge fn
     // both require an authenticated user, so opening the consent dialog first
     // would fail with an opaque error.
@@ -183,6 +192,7 @@ export function PremiumTierCard({
           search: location.search,
         }),
       );
+      setBusy(false);
       return;
     }
 
@@ -290,7 +300,7 @@ export function PremiumTierCard({
       <div className="mt-6 flex-1" />
 
       {isFree ? (
-        <Button asChild className={cn('w-full h-11 rounded-md text-sm font-semibold', styles.cta)}>
+        <Button asChild variant={styles.cta} className="w-full h-12 whitespace-normal px-4 text-center text-sm">
           <Link to={freeHref}>
             {groups.ctaLabel} <ArrowRight className="ml-1.5 h-4 w-4" />
           </Link>
@@ -298,11 +308,14 @@ export function PremiumTierCard({
       ) : (
         <Button
           onClick={handleClick}
-          disabled={activeBusy || !product}
-          className={cn('w-full h-11 rounded-md text-sm font-semibold', styles.cta)}
+          disabled={activeBusy || !product || cadenceUnavailable}
+          variant={styles.cta}
+          className="w-full h-12 whitespace-normal px-4 text-center text-sm"
         >
           {activeBusy ? (
-            <Loader2 className="h-4 w-4 animate-spin" />
+            <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Opening PayPal…</>
+          ) : cadenceUnavailable ? (
+            <>{interval === 'annual' ? 'Annual billing unavailable' : 'Monthly billing unavailable'}</>
           ) : (
             <>{groups.ctaLabel} <ArrowRight className="ml-1.5 h-4 w-4" /></>
           )}
@@ -317,8 +330,16 @@ export function PremiumTierCard({
         Learn more about {groups.name}
       </button>
 
-      {!isFree && (
+      {!isFree && cadenceUnavailable && (
+        <p className="mt-3 text-[11px] text-amber-300/90 text-center">
+          This plan isn't offered on {interval === 'annual' ? 'annual' : 'monthly'} billing right now.
+          Switch the toggle above to continue.
+        </p>
+      )}
+      {!isFree && !cadenceUnavailable && (
         <p className="mt-3 text-[11px] text-muted-foreground text-center">
+          You'll continue securely with PayPal to approve recurring billing.
+          <br />
           Cancel anytime online. Auto-renews at {formatUsd(priceCents)} / {interval === 'annual' ? 'yr' : 'mo'} until canceled.
         </p>
       )}

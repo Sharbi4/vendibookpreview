@@ -8,6 +8,7 @@ import HostDashboard from '@/components/dashboard/HostDashboard';
 import ShopperDashboard from '@/components/dashboard/ShopperDashboard';
 
 import EmailVerificationBanner from '@/components/auth/EmailVerificationBanner';
+import VerifyEmailGate from '@/components/auth/VerifyEmailGate';
 import PurchaseReturnBanner from '@/components/monetization/PurchaseReturnBanner';
 import { Loader2 } from 'lucide-react';
 
@@ -22,6 +23,9 @@ const FavoritesTab = lazy(() => import('@/components/dashboard/tabs/FavoritesTab
 const InsightsReportingTab = lazy(() => import('@/components/dashboard/tabs/InsightsReportingTab'));
 const PromoteUpgradesTab = lazy(() => import('@/components/dashboard/tabs/PromoteUpgradesTab'));
 const PayoutsPanel = lazy(() => import('@/components/dashboard/tabs/PayoutsPanel'));
+const TransactionsDisputesTab = lazy(() => import('@/components/dashboard/tabs/TransactionsDisputesTab'));
+const PermitsTab = lazy(() => import('@/components/dashboard/PermitsTab'));
+const KitchenProSuite = lazy(() => import('@/components/dashboard/KitchenProSuite'));
 
 const DASHBOARD_MODE_KEY = 'vendibook_dashboard_mode';
 
@@ -88,11 +92,16 @@ const Dashboard = () => {
 
   if (!user) return null;
 
+  // Email verification is required before any dashboard content is shown.
+  // Users who signed in through an OAuth provider are already verified.
+  if (!user.email_confirmed_at) return <VerifyEmailGate />;
+
   const renderTab = () => {
     // Buying-side tabs
     if (currentMode === 'shopper') {
       switch (tab) {
         case 'orders': return <BuyerOrdersTab />;
+        case 'transactions': return <TransactionsDisputesTab />;
         case 'bookings': return <BuyerBookingsTab />;
         case 'favorites': return <FavoritesTab />;
         case 'notifications': return <NotificationsTab />;
@@ -106,11 +115,15 @@ const Dashboard = () => {
     // Hosting-side tabs
     switch (tab) {
       case 'sales': return <HostSalesTab />;
+      case 'transactions': return <TransactionsDisputesTab />;
       case 'notifications': return <NotificationsTab />;
       case 'membership': return <MembershipTab />;
       case 'payouts': return <PayoutsPanel />;
       case 'insights': return <InsightsReportingTab />;
       case 'promote': return <PromoteUpgradesTab />;
+      case 'permits': return <PermitsTab />;
+      case 'tools': return <PremiumToolsTab />;
+      case 'kitchen': return <KitchenProSuite />;
       default: return <HostDashboard />;
     }
   };

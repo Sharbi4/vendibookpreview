@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { motion, AnimatePresence } from 'framer-motion';
 import { AuthWalkthrough } from '@/components/auth/AuthWalkthrough';
 import { useAuth } from '@/contexts/AuthContext';
-import { lovable } from '@/integrations/lovable/index';
+import { startGoogleSignIn } from '@/lib/auth/oauthIntent';
 import vendibookLogo from '@/assets/vendibook-logo.png';
 
 const GoogleIcon = ({ className }: { className?: string }) => (
@@ -22,10 +22,18 @@ const HeroRentalSearch = () => {
   const { user } = useAuth();
   const [showWalkthrough, setShowWalkthrough] = useState(false);
 
+  const [googleLoading, setGoogleLoading] = useState(false);
+
   const handleGoogleLogin = async () => {
-    const { error } = await lovable.auth.signInWithOAuth("google", {
-      redirect_uri: window.location.origin});
-    if (error) console.error('Google login error:', error);
+    if (googleLoading) return;
+    setGoogleLoading(true);
+    const result = await startGoogleSignIn(
+      window.location.pathname + window.location.search,
+    );
+    if (!result.ok) {
+      console.error('Google login error:', result.error);
+      setGoogleLoading(false);
+    }
   };
 
   return (
@@ -124,10 +132,12 @@ const HeroRentalSearch = () => {
                 size="lg"
                 className="w-full h-11 lg:h-14 text-sm lg:text-lg rounded-xl bg-background hover:bg-muted/60 border-border"
                 onClick={handleGoogleLogin}
+                disabled={googleLoading}
               >
                 <GoogleIcon className="mr-2 h-5 w-5" />
-                Continue with Google
+                {googleLoading ? 'Opening Google…' : 'Continue with Google'}
               </Button>
+
             )}
           </motion.div>
 

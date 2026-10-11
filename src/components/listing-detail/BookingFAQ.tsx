@@ -5,6 +5,7 @@ import {
   AccordionTrigger,
 } from '@/components/ui/accordion';
 import { HelpCircle } from 'lucide-react';
+import { FreightLink } from '@/components/shared/FreightLink';
 
 interface BookingFAQProps {
   isRental: boolean;
@@ -34,7 +35,7 @@ const BookingFAQ = ({ isRental }: BookingFAQProps) => {
     },
     {
       question: "How is payment protected?",
-      answer: "All payments are processed securely through Stripe. Your payment information is never shared with the host, and funds are protected until you receive the rental."
+      answer: "All payments are processed securely through PayPal. Your payment information is never shared with the host, and funds are protected until you receive the rental."
     }
   ];
 
@@ -45,11 +46,11 @@ const BookingFAQ = ({ isRental }: BookingFAQProps) => {
     },
     {
       question: "When will I receive my item?",
-      answer: "Timing depends on the fulfillment method you choose. For pickup, you'll coordinate directly with the seller. For delivery or Vendibook Freight, you'll receive tracking information once shipped."
+      answer: <>Timing depends on the fulfillment method you choose. For pickup, you'll coordinate directly with the seller. For delivery or <FreightLink />, you'll receive tracking information once shipped.</>
     },
     {
       question: "Is my payment secure?",
-      answer: "Yes, all payments are processed securely through Stripe. Your payment information is never shared with the seller."
+      answer: "Yes, all payments are processed securely through PayPal. Your payment information is never shared with the seller."
     },
     {
       question: "What if the item isn't as described?",
@@ -61,7 +62,7 @@ const BookingFAQ = ({ isRental }: BookingFAQProps) => {
     },
     {
       question: "What fulfillment options are available?",
-      answer: "Options vary by listing but may include local pickup, seller delivery within a radius, or Vendibook Freight for larger items shipped nationwide."
+      answer: <>Options vary by listing but may include local pickup, seller delivery within a radius, or <FreightLink /> for larger items shipped nationwide.</>
     }
   ];
 

@@ -1,6 +1,8 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { resolveListingBrand } from "../_shared/resolveListingBrand.ts";
+import { renderBuyerSeoPage, isBuyerSeoPrerenderPath, type PrerenderListing } from "../_shared/buyerSeoPrerender.ts";
+import { BUYER_HUB_INVENTORY } from "../_shared/buyerSeoContent.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -100,7 +102,7 @@ const BLOG_POSTS: BlogPostMeta[] = [
     slug: "how-to-start-food-truck-business-2025",
     title: "How to Start a Food Truck Business in 2025: Complete Guide",
     description: "Everything you need to know about starting a food truck business in 2025, from initial planning to your first day of sales.",
-    image: "/images/taco-truck-hero.png",
+    image: "/images/blog/food-truck-editorial-hero.jpg",
     author: "Vendibook Team",
     datePublished: "2025-01-15",
     category: "getting-started",
@@ -160,7 +162,7 @@ const BLOG_POSTS: BlogPostMeta[] = [
     slug: "sell-my-food-truck-valuation-guide-2026",
     title: "How to Sell Your Food Truck in 2026: The Ultimate Valuation & Exit Guide",
     description: "Stop guessing your truck's value. Discover the 2026 resale market trends, calculate your truck's true worth, and learn why listing on specialized platforms like Vendibook gets you 20% higher offers.",
-    image: "/images/taco-truck-hero.png",
+    image: "/images/blog/food-truck-editorial-hero.jpg",
     author: "Vendibook Team",
     datePublished: "2026-01-15",
     category: "equipment-guides",
@@ -170,7 +172,7 @@ const BLOG_POSTS: BlogPostMeta[] = [
     slug: "sell-my-food-trailer-vs-truck-resale-value",
     title: "Food Truck vs. Food Trailer: Which Sells Faster? (And How to Price Yours)",
     description: "Selling a food trailer? It might sell faster than a truck. Learn the pros/cons of selling trailers vs. trucks, specific resale tips for 2026, and how to list on Vendibook.",
-    image: "/images/taco-truck-hero.png",
+    image: "/images/blog/food-truck-editorial-hero.jpg",
     author: "Vendibook Team",
     datePublished: "2026-01-18",
     category: "equipment-guides",
@@ -220,7 +222,7 @@ const BLOG_POSTS: BlogPostMeta[] = [
     slug: "rise-food-truck-fleet-owner",
     title: "The Rise of the Food Truck Fleet Owner",
     description: "Food trucks are becoming rentable mobile business infrastructure. Learn how fleet owners, remote access, tracking, maintenance workflows, and platforms like Vendibook are changing food entrepreneurship.",
-    image: "/__l5e/assets-v1/361dd7e0-9a47-45ed-b87f-9578bf539ccb/rise-food-truck-fleet-owner.png",
+    image: "/images/blog/food-truck-fleet-owner.jpg",
     author: "Vendibook",
     datePublished: "2026-06-11",
     category: "industry-insights",
@@ -474,8 +476,9 @@ function generateFAQSchema(listing: any) {
   };
 }
 
-function buildListingHTML(listing: any, reviews: any[] = []): string {
+function buildListingHTML(listing: any, reviews: any[] = [], redirectHumans = false): string {
   const isPhysical = PHYSICAL_CATEGORIES.includes(listing.category);
+  const isRental = listing.mode === "rent";
 
   const schemas: object[] = [];
   if (isPhysical) schemas.push(generateLocalBusinessSchema(listing));
@@ -496,19 +499,41 @@ function buildListingHTML(listing: any, reviews: any[] = []): string {
     : listing.price_sale ? `$${Number(listing.price_sale).toLocaleString()}`
       : "";
 
-  const title = [listing.title, `${categoryLabel} ${modeLabel}`, locationShort ? `in ${locationShort}` : ""]
+  const title = [listing.title, `${categoryLabel} ${modeLabel}${locationShort ? ` in ${locationShort}` : ""}`]
     .filter(Boolean)
-    .join(" ");
+    .join(" — ");
 
-  const description = [
-    `${listing.mode === "rent" ? "Rent" : "Buy"} this ${categoryLabel.toLowerCase()}`,
-    locationShort ? `in ${locationShort}` : "",
-    priceText ? `starting at ${priceText}` : "",
-    "— on Vendibook.",
-  ].filter(Boolean).join(" ").slice(0, 160);
+  // Social description: lead with the REAL listing description (cleaned to one
+  // line, truncated), then append sale/rent + location + price context only as a
+  // short tail so it never displaces the seller's own words.
+  const cleanDescription = String(listing.description || "").replace(/\s+/g, " ").trim();
+  const contextBits = [
+    `${categoryLabel} ${modeLabel}`,
+    locationShort,
+    priceText,
+  ].filter(Boolean).join(" · ");
+  let description: string;
+  if (cleanDescription) {
+    const excerpt = cleanDescription.length > 150
+      ? `${cleanDescription.slice(0, 150).replace(/\s+\S*$/, "")}…`
+      : cleanDescription;
+    description = contextBits ? `${excerpt} · ${contextBits} — Vendibook` : `${excerpt} — Vendibook`;
+  } else {
+    description = `${contextBits} — on Vendibook.`;
+  }
 
   const canonicalUrl = `${SITE_URL}/listing/${listing.id}`;
-  const imageUrl = listing.cover_image_url || `${SITE_URL}/placeholder.svg`;
+  // Image: cover photo → first gallery image → branded Vendibook default OG.
+  const toAbsoluteImageUrl = (u: string): string =>
+    u.startsWith("http") ? u : `${SITE_URL}${u.startsWith("/") ? u : `/${u}`}`;
+  const firstGalleryImage = Array.isArray(listing.image_urls)
+    ? listing.image_urls.find((u: unknown) => typeof u === "string" && (u as string).trim().length > 0)
+    : "";
+  const rawImageUrl = (listing.cover_image_url && String(listing.cover_image_url).trim()) || firstGalleryImage || "";
+  const imageUrl = rawImageUrl
+    ? toAbsoluteImageUrl(rawImageUrl)
+    : `${SITE_URL}/images/social/vendibook-og-default.jpg`;
+  const imageAlt = String(listing.title || `${categoryLabel} ${modeLabel} on Vendibook`);
 
   // IMPORTANT: JSON-LD is in its own <script> tag with pure JSON only.
   // Redirect is in a SEPARATE <script> tag.
@@ -520,7 +545,7 @@ function buildListingHTML(listing: any, reviews: any[] = []): string {
   <meta name="viewport" content="width=device-width,initial-scale=1" />
 
   <title>${escapeHtml(title)} | Vendibook</title>
-  <meta name="description" content="${escapeHtml(description)}" />
+  <meta name="description" content="${escapeHtml(description)}" />${(listing as { unlisted?: boolean }).unlisted === true ? '\n  <meta name="robots" content="noindex, nofollow" />' : ""}
   <link rel="canonical" href="${canonicalUrl}" />
 
   <!-- Open Graph -->
@@ -528,8 +553,11 @@ function buildListingHTML(listing: any, reviews: any[] = []): string {
   <meta property="og:title" content="${escapeHtml(title)}" />
   <meta property="og:description" content="${escapeHtml(description)}" />
   <meta property="og:url" content="${canonicalUrl}" />
-  <meta property="og:image" content="${imageUrl}" />
+  <meta property="og:image" content="${escapeHtml(imageUrl)}" />
+  <meta property="og:image:secure_url" content="${escapeHtml(imageUrl)}" />
+  <meta property="og:image:alt" content="${escapeHtml(imageAlt)}" />
   <meta property="og:site_name" content="Vendibook" />
+  <meta property="og:locale" content="en_US" />
   ${!isPhysical && priceText ? `
   <meta property="product:price:amount" content="${String(listing.price_sale || listing.price_daily || listing.price_weekly || 0)}" />
   <meta property="product:price:currency" content="USD" />
@@ -542,16 +570,18 @@ function buildListingHTML(listing: any, reviews: any[] = []): string {
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${escapeHtml(title)}" />
   <meta name="twitter:description" content="${escapeHtml(description)}" />
-  <meta name="twitter:image" content="${imageUrl}" />
+  <meta name="twitter:image" content="${escapeHtml(imageUrl)}" />
+  <meta name="twitter:image:alt" content="${escapeHtml(imageAlt)}" />
+  <meta name="twitter:site" content="@vendibook" />
 
   <!-- JSON-LD (pure JSON, no other content) -->
   <script type="application/ld+json">${JSON.stringify(schemas)}</script>
 
-  <!-- Redirect humans to SPA (separate script tag) -->
+  ${redirectHumans ? `<!-- Share alias only: send humans to the canonical listing page (different URL, no loop) -->
   <script>window.location.replace(${JSON.stringify(canonicalUrl)});</script>
   <noscript>
     <meta http-equiv="refresh" content="0; url=${canonicalUrl}" />
-  </noscript>
+  </noscript>` : "<!-- Served at the canonical URL: no redirect (would loop) -->"}
 </head>
 <body>
   <h1>${escapeHtml(listing.title)}</h1>
@@ -574,7 +604,7 @@ function buildBlogHTML(post: BlogPostMeta): string {
     ? post.image
     : post.image
     ? `${SITE_URL}${post.image}`
-    : `${SITE_URL}/images/vendibook-og-image.jpg`;
+    : `${SITE_URL}/images/social/vendibook-og-default.jpg`;
 
   const schema = {
     "@context": "https://schema.org",
@@ -621,7 +651,9 @@ function buildBlogHTML(post: BlogPostMeta): string {
   <meta property="og:title" content="${escapeHtml(post.title)}" />
   <meta property="og:description" content="${escapeHtml(post.description)}" />
   <meta property="og:url" content="${canonicalUrl}" />
-  <meta property="og:image" content="${imageUrl}" />
+  <meta property="og:image" content="${escapeHtml(imageUrl)}" />
+  <meta property="og:image:secure_url" content="${escapeHtml(imageUrl)}" />
+  <meta property="og:image:alt" content="${escapeHtml(post.title)}" />
   <meta property="og:site_name" content="Vendibook" />
   <meta property="og:locale" content="en_US" />
   <meta property="article:published_time" content="${post.datePublished}" />
@@ -632,16 +664,13 @@ function buildBlogHTML(post: BlogPostMeta): string {
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="${escapeHtml(post.title)}" />
   <meta name="twitter:description" content="${escapeHtml(post.description)}" />
-  <meta name="twitter:image" content="${imageUrl}" />
+  <meta name="twitter:image" content="${escapeHtml(imageUrl)}" />
+  <meta name="twitter:image:alt" content="${escapeHtml(post.title)}" />
+  <meta name="twitter:site" content="@vendibook" />
 
   <!-- JSON-LD -->
   <script type="application/ld+json">${JSON.stringify(schema)}</script>
-
-  <!-- Redirect humans to SPA -->
-  <script>window.location.replace(${JSON.stringify(canonicalUrl)});</script>
-  <noscript>
-    <meta http-equiv="refresh" content="0; url=${canonicalUrl}" />
-  </noscript>
+  <!-- No redirect: this HTML is served at the canonical URL itself; a redirect would loop. -->
 </head>
 <body>
   <h1>${escapeHtml(post.title)}</h1>
@@ -709,7 +738,9 @@ serve(async (req) => {
       }
 
       const reviews = reviewsResult.data || [];
-      const html = buildListingHTML(listingResult.data, reviews);
+      // Redirect only for the /share alias (or legacy ?share=1 proxy); never at the canonical URL.
+      const isShareAlias = /^\/share\//i.test(path) || url.searchParams.get("share") === "1";
+      const html = buildListingHTML(listingResult.data, reviews, isShareAlias);
       return new Response(html, {
         headers: {
           ...corsHeaders,
@@ -744,6 +775,45 @@ serve(async (req) => {
           "CDN-Cache-Control": "public, max-age=86400",
           "Vercel-CDN-Cache-Control": "public, max-age=86400",
           "Surrogate-Control": "public, max-age=86400",
+          Vary: "Accept-Encoding",
+        },
+      });
+    }
+
+    // Buyer SEO pages (shared copy with the React app — see _shared/buyerSeoContent.ts)
+    if (isBuyerSeoPrerenderPath(path)) {
+      const inv = BUYER_HUB_INVENTORY[path];
+      let listings: PrerenderListing[] = [];
+      let inventoryError = false;
+      if (inv) {
+        let q = supabase
+          .from("listings")
+          .select("id,title,city,state,price_sale,condition,cover_image_url")
+          .eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear").eq("unlisted", false)
+          .eq("category", inv.category)
+          .eq("mode", "sale")
+          .not("title", "ilike", "demo%")
+          .order("updated_at", { ascending: false })
+          .limit(48);
+        if (inv.conditions?.length) q = q.in("condition", inv.conditions);
+        const { data, error } = await q;
+        if (error) {
+          console.error("seo-prerender buyer inventory error:", error.message);
+          inventoryError = true;
+        } else {
+          listings = (data ?? []) as PrerenderListing[];
+        }
+      }
+      const result = renderBuyerSeoPage(path, { listings, inventoryError })!;
+      return new Response(result.html, {
+        status: result.status,
+        headers: {
+          ...corsHeaders,
+          "Content-Type": "text/html; charset=utf-8",
+          // Short cache when inventory failed so a transient error isn't pinned.
+          "Cache-Control": inventoryError
+            ? "public, max-age=60, s-maxage=60"
+            : "public, max-age=1800, s-maxage=3600, stale-while-revalidate=86400",
           Vary: "Accept-Encoding",
         },
       });

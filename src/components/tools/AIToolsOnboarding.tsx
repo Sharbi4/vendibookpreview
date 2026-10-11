@@ -6,10 +6,6 @@ import { Badge } from '@/components/ui/badge';
 import { 
   DollarSign, 
   FileCheck, 
-  Wrench, 
-  FileText, 
-  Lightbulb, 
-  Search,
   ChevronRight,
   ChevronLeft,
   X,
@@ -47,28 +43,10 @@ const onboardingSteps: OnboardingStep[] = [
     tip: 'We cover all 50 states'
   },
   {
-    title: 'BuildKit',
-    description: 'Get equipment recommendations and maintenance tips to keep your kitchen running smoothly.',
-    icon: <Wrench className="h-8 w-8" />,
-    tip: 'Includes cleaning schedules & troubleshooting'
-  },
-  {
-    title: 'Listing Studio',
-    description: 'Write a listing that actually gets bookings. Just enter your details and we do the rest.',
-    icon: <FileText className="h-8 w-8" />,
-    tip: 'Copy & paste directly into your listing'
-  },
-  {
-    title: 'Concept Lab',
-    description: 'Brainstorm food truck ideas tailored to your budget, location, and what you love to cook.',
-    icon: <Lightbulb className="h-8 w-8" />,
-    tip: 'Great for new entrepreneurs'
-  },
-  {
-    title: 'Market Radar',
-    description: 'Research your local market, see what competitors are doing, and find opportunities.',
-    icon: <Search className="h-8 w-8" />,
-    tip: 'Market research powered by Spark in seconds'
+    title: 'Startup Guide & Regulations Hub',
+    description: 'Follow the step-by-step launch checklist and look up the operating rules for your state.',
+    icon: <Rocket className="h-8 w-8" />,
+    tip: 'Both are free — always'
   }
 ];
 

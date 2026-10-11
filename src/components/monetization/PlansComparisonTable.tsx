@@ -21,10 +21,9 @@ const ROWS: Row[] = [
   { label: 'Custom deposits & cancellation rules', free: false, starter: false, pro: true, premium: true },
   { label: 'Storage add-ons, cleaning fees', free: false, starter: false, pro: true, premium: true },
   { label: 'Featured Boost included', free: false, starter: false, pro: '1 credit', premium: '1 credit' },
-  { label: 'Premium tools bundle (PricePilot, Studios, Radar, Concept Lab)', free: false, starter: false, pro: true, premium: true },
+  { label: 'Premium tools bundle (PricePilot, PermitPath Plus)', free: false, starter: false, pro: true, premium: true },
   { label: '$10 off notarization', free: false, starter: false, pro: true, premium: true },
   { label: 'Portfolio dashboard across every listing', free: false, starter: false, pro: false, premium: true },
-  { label: 'BuildKit included', free: false, starter: false, pro: false, premium: true },
   { label: 'Custom intake questions per booking', free: false, starter: false, pro: false, premium: true },
   { label: 'Support priority', free: 'Standard', starter: 'Standard', pro: 'High', premium: 'Urgent' },
 ];

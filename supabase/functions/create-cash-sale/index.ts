@@ -13,6 +13,7 @@
 //
 // Legacy row 7c95ac1c-5163-45cd-a48f-b6ec50747cda predates this contract
 // and is grandfathered at the DB level via `legacy_terms_unavailable`.
+import { priceFulfillment } from '../_shared/salePricing.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.4';
 
 const corsHeaders = {
@@ -32,6 +33,11 @@ interface Body {
   buyer_name: string;
   buyer_email: string;
   buyer_phone?: string | null;
+  buyer_address1?: string | null;
+  buyer_address2?: string | null;
+  buyer_city?: string | null;
+  buyer_state?: string | null;
+  buyer_zip?: string | null;
   // REQUIRED: id of a pre-created transaction_terms row (draft or active).
   terms_id: string;
   // Optional dedupe key so retries/double-clicks reuse the same row pair.
@@ -91,7 +97,7 @@ Deno.serve(async (req) => {
     const { data: listing, error: listingErr } = await supabase
       .from('listings')
       .select(
-        'id, host_id, title, cover_image_url, mode, category, cancellation_policy, city, state, price_sale, deposit_amount, accept_cash_payment, accept_card_payment',
+        'id, host_id, title, cover_image_url, mode, category, cancellation_policy, city, state, price_sale, deposit_amount, accept_cash_payment, accept_paypal_checkout, fulfillment_type, delivery_fee, delivery_fee_type, delivery_radius_miles, latitude, longitude, address, pickup_location_text, vendibook_freight_enabled',
       )
       .eq('id', body.listing_id)
       .maybeSingle();
@@ -143,15 +149,35 @@ Deno.serve(async (req) => {
 
     // Pay-in-Person is 100% free: no commission, no buyer fee.
     const isFreight = body.fulfillment_type === 'vendibook_freight';
+
+    // Price, delivery and freight are resolved here, never taken from the
+    // browser: they feed the purchase agreement, the seller's emails and any
+    // later freight charge. An accepted offer is the agreed price.
+    const { data: acceptedOffer } = await supabase
+      .from('offers')
+      .select('offer_amount, counter_amount')
+      .eq('listing_id', listing.id)
+      .eq('buyer_id', user.id)
+      .eq('status', 'accepted')
+      .order('updated_at', { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    const agreed = acceptedOffer
+      ? Number(acceptedOffer.counter_amount ?? acceptedOffer.offer_amount)
+      : Number(listing.price_sale);
+    const saleAmount = Number.isFinite(agreed) && agreed > 0 ? agreed : Number(listing.price_sale);
+    if (!Number.isFinite(saleAmount) || saleAmount <= 0) return json({ error: 'not_for_sale' }, 409);
+    const pricing = await priceFulfillment(listing, String(body.fulfillment_type ?? 'pickup'), body.delivery_address);
+    if ('error' in pricing) return json({ error: pricing.code, message: pricing.error }, 409);
     const { data: tx, error: txErr } = await supabase
       .from('sale_transactions')
       .insert({
         listing_id: listing.id,
         buyer_id: user.id,
         seller_id: listing.host_id,
-        amount: body.amount,
-        delivery_fee: body.fulfillment_type === 'delivery' ? (body.delivery_fee ?? 0) : 0,
-        freight_cost: isFreight ? (body.freight_cost ?? 0) : 0,
+        amount: saleAmount,
+        delivery_fee: pricing.deliveryFee,
+        freight_cost: pricing.freightCost,
         fulfillment_type: isFreight ? 'vendibook_freight' : body.fulfillment_type,
         delivery_address:
           body.fulfillment_type === 'delivery' || isFreight
@@ -164,9 +190,19 @@ Deno.serve(async (req) => {
         buyer_name: body.buyer_name,
         buyer_email: body.buyer_email,
         buyer_phone: body.buyer_phone ?? null,
+        // Buyer's own contact address. Never a delivery destination.
+        buyer_address1: body.buyer_address1 ?? null,
+        buyer_address2: body.buyer_address2 ?? null,
+        buyer_city: body.buyer_city ?? null,
+        buyer_state: body.buyer_state ?? null,
+        buyer_zip: body.buyer_zip ?? null,
         status: 'pending_cash',
-        platform_fee: 0,
-        seller_payout: body.amount,
+        platform_fee: 0, // Pay in person is 100% free — no Pro discount applies
+        fee_rate_pct: 0,
+        pro_discount: 0,
+        pro_fee_applied: false,
+        fee_locked_at: new Date().toISOString(),
+        seller_payout: saleAmount,
         // terms_id set at insert time so the enforcement trigger sees it
         // atomically — no window where the sale exists without a terms link.
         terms_id: terms.id,
@@ -202,7 +238,7 @@ Deno.serve(async (req) => {
         user_id: listing.host_id,
         type: 'sale',
         title: '💵 New Cash Purchase Request',
-        message: `${body.buyer_name || 'A buyer'} wants to buy "${listing.title}" for $${Number(body.amount).toFixed(2)} in cash.`,
+        message: `${body.buyer_name || 'A buyer'} wants to buy "${listing.title}" for $${saleAmount.toFixed(2)} in cash.`,
         link: `/order-tracking/${tx.id}`,
       });
     } catch (_) { /* non-fatal */ }

@@ -8,7 +8,7 @@ import { useSubscriptionManagement } from '@/hooks/useSubscriptionManagement';
 import { useEntitlements, type Entitlement } from '@/hooks/useEntitlements';
 import { PurchaseHistoryCard } from '@/components/monetization/PurchaseHistoryCard';
 import PackagesIntro from '@/components/monetization/PackagesIntro';
-import Header from '@/components/layout/Header';
+import WorkspaceShell from '@/components/workspace/WorkspaceShell';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -50,25 +50,23 @@ export default function Purchases() {
   const services = all.filter((e) => e.kind === 'one_time' && (e.status === 'paid' || e.status === 'pending'));
   const completed = all.filter((e) => e.kind === 'one_time' && (e.status === 'fulfilled' || e.status === 'refunded'));
 
-  // Provider-aware billing management (PayPal autopay vs legacy Stripe portal).
+  // Provider-aware billing management (PayPal autopay vs legacy support-managed).
   const { openBilling, busy } = useSubscriptionManagement();
-  const openStripePortal = openBilling;
 
   return (
-    <>
-      <Header />
-      <main className="min-h-screen bg-background">
-        <div className="mx-auto max-w-4xl px-4 py-8 md:py-12 space-y-6">
+    <WorkspaceShell>
+      <div className="v2-page-stack v2-embedded-section">
+        <div className="space-y-6">
           <header className="flex items-center justify-between flex-wrap gap-3">
             <div>
-              <h1 className="text-2xl md:text-3xl font-semibold text-foreground">Your purchases</h1>
+              <h1 className="text-2xl md:text-3xl font-semibold text-foreground">Plans, boosts & services</h1>
               <p className="text-sm text-muted-foreground mt-1">
-                Active plans, add-ons, and transaction history in one place.
+                Vendibook subscriptions, boosts, and services. Equipment purchases and rentals are in Transactions.
               </p>
             </div>
             <div className="flex flex-wrap gap-2">
               {hasActiveSubscription && (
-                <Button onClick={openStripePortal} variant="outline" size="sm" disabled={busy === 'portal'}>
+                <Button onClick={openBilling} variant="outline" size="sm" disabled={busy === 'portal'}>
                   {busy === 'portal' ? (
                     <Loader2 className="mr-1.5 h-3.5 w-3.5 animate-spin" />
                   ) : (
@@ -86,6 +84,7 @@ export default function Purchases() {
           </header>
 
 
+          <Link to="/dashboard/transactions" className="v2-btn-outline">Marketplace orders & rental receipts</Link>
           {/* Subscriptions */}
           <Card className="rounded-2xl border border-border shadow-sm bg-card">
             <CardHeader>
@@ -255,7 +254,7 @@ export default function Purchases() {
             </CardContent>
           </Card>
         </div>
-      </main>
-    </>
+      </div>
+    </WorkspaceShell>
   );
 }

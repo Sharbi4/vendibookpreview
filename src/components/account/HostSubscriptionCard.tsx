@@ -63,7 +63,7 @@ export function HostSubscriptionCard() {
   }, [sub]);
 
   // Billing management is provider-aware: PayPal members go to PayPal's
-  // automatic payments, legacy Stripe members get the Customer Portal.
+  // automatic payments; legacy members are routed to support.
   const { provider, openBilling, busy } = useSubscriptionManagement();
   const openPortal = openBilling;
 
@@ -105,7 +105,7 @@ export function HostSubscriptionCard() {
               You're on the free tier. Upgrade to Host Pro for featured placement, advanced analytics, and priority support.
             </p>
             <Button asChild size="sm">
-              <Link to="/host/plans">
+              <Link to="/pricing">
                 <Crown className="h-3.5 w-3.5 mr-1.5" />
                 Explore Host Pro plans
               </Link>

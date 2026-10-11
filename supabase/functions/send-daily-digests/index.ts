@@ -2,6 +2,9 @@
 // One email per user. Activity-gated: skips users with nothing to report.
 // Triggered by pg_cron daily at 13:00 UTC.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
+import { isRealListingView } from '../_shared/realListingViews.ts'
+import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -55,6 +58,7 @@ const firstNameOf = (p: any) => p?.first_name || p?.display_name || p?.full_name
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (!(await isAdminOrBackendCaller(req))) return forbiddenResponse();
 
   try {
     const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -77,9 +81,7 @@ Deno.serve(async (req) => {
 
     const send = async (templateName: string, email: string, idemp: string, data: any) => {
       if (dryRun) { previews.push({ templateName, email, data }); return true; }
-      const { error } = await supabase.functions.invoke("send-transactional-email", {
-        body: { templateName, recipientEmail: email, idempotencyKey: idemp, templateData: { ...data, aiSubject: true } },
-      });
+      const { error } = await invokeTransactionalEmail({ templateName, recipientEmail: email, idempotencyKey: idemp, templateData: { ...data, aiSubject: true } });
       return !error;
     };
 
@@ -95,12 +97,14 @@ Deno.serve(async (req) => {
         const listingIds = (hostListings || []).map((l: any) => l.id);
         if (listingIds.length === 0) { summary.skipped++; continue; }
 
-        const [{ count: viewsCount }, { data: bookings }, { count: inquiriesCount }, { data: viewRows }] = await Promise.all([
-          supabase.from("listing_views").select("id", { count: "exact", head: true }).in("listing_id", listingIds).gte("viewed_at", yIso).lt("viewed_at", tIso),
+        const [{ data: bookings }, { count: inquiriesCount }, { data: rawViewRows }] = await Promise.all([
           supabase.from("booking_requests").select("id,total_price,status,listing_id").eq("host_id", hostId).gte("created_at", yIso).lt("created_at", tIso),
           supabase.from("listing_leads").select("id", { count: "exact", head: true }).eq("host_id", hostId).gte("created_at", yIso).lt("created_at", tIso),
-          supabase.from("listing_views").select("listing_id").in("listing_id", listingIds).gte("viewed_at", yIso).lt("viewed_at", tIso),
+          supabase.from("listing_views").select("listing_id,viewer_id,user_agent").in("listing_id", listingIds).gte("viewed_at", yIso).lt("viewed_at", tIso),
         ]);
+        // Real buyer views only (no bots, scrapers or self-views).
+        const viewRows = (rawViewRows || []).filter((v: any) => isRealListingView(v, hostId));
+        const viewsCount = viewRows.length;
 
         const paid = (bookings || []).filter((b: any) => ["approved", "completed", "paid"].includes(b.status));
         const earnings = paid.reduce((acc: number, b: any) => acc + Number(b.total_price || 0), 0);
@@ -132,13 +136,13 @@ Deno.serve(async (req) => {
 
         const city = profile.public_city || profile.city;
         const state = profile.public_state || profile.state;
-        let q = supabase.from("listings").select("id,title,city,state,price_daily,price_sale,cover_image_url,published_at").eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear").gte("published_at", yIso).lt("published_at", tIso).not("title", "ilike", "demo%").order("published_at", { ascending: false }).limit(5);
+        let q = supabase.from("listings").select("id,title,city,state,price_daily,price_sale,cover_image_url,published_at").eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear").eq("unlisted", false).gte("published_at", yIso).lt("published_at", tIso).not("title", "ilike", "demo%").order("published_at", { ascending: false }).limit(5);
         if (city) q = q.eq("city", city);
         const { data: nearby } = await q;
         let listings = nearby || [];
         // Fallback: state-only if city yielded nothing
         if (listings.length === 0 && state) {
-          const { data: stateListings } = await supabase.from("listings").select("id,title,city,state,price_daily,price_sale,cover_image_url,published_at").eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear").eq("state", state).gte("published_at", yIso).lt("published_at", tIso).not("title", "ilike", "demo%").order("published_at", { ascending: false }).limit(5);
+          const { data: stateListings } = await supabase.from("listings").select("id,title,city,state,price_daily,price_sale,cover_image_url,published_at").eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear").eq("unlisted", false).eq("state", state).gte("published_at", yIso).lt("published_at", tIso).not("title", "ilike", "demo%").order("published_at", { ascending: false }).limit(5);
           listings = stateListings || [];
         }
         if (listings.length === 0) { summary.skipped++; continue; }

@@ -1,8 +1,10 @@
 import { excludeTestListings } from '@/lib/excludeTestListings';
 import { useRef } from 'react';
+import { filterPubliclyVisible } from '@/lib/listings/publicVisibility';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
+import { useSellerVerifiedMap } from '@/hooks/useSellerIdentityBadgeMap';
 import ListingCard from '@/components/listing/ListingCard';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Button } from '@/components/ui/button';
@@ -165,33 +167,15 @@ const CategoryCarousels = () => {
       ).order('published_at', { ascending: false });
 
       if (error) throw error;
-      return data;
+      return filterPubliclyVisible(data ?? []);
     },
   });
 
   // Get unique host IDs
   const hostIds = [...new Set(allListings.map((l) => l.host_id).filter(Boolean))] as string[];
 
-  // Fetch host verification status
-  const { data: hostProfiles = [] } = useQuery({
-    queryKey: ['category-carousel-hosts', hostIds],
-    queryFn: async () => {
-      if (hostIds.length === 0) return [];
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, identity_verified')
-        .in('id', hostIds);
-      if (error) throw error;
-      return data;
-    },
-    enabled: hostIds.length > 0,
-  });
-
-  // Create verification map
-  const hostVerificationMap: Record<string, boolean> = {};
-  hostProfiles.forEach((profile) => {
-    hostVerificationMap[profile.id] = profile.identity_verified ?? false;
-  });
+  // Authoritative paid Identity Verified badges, batched into one request.
+  const hostVerificationMap = useSellerVerifiedMap(hostIds);
 
   // Group listings by category
   const listingsByCategory = CATEGORIES.reduce((acc, config) => {

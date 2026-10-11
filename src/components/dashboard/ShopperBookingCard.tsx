@@ -1,3 +1,5 @@
+import { parseRentalDate } from '@/lib/rentalDates';
+import { hostedCheckoutUrl } from '@/lib/payments/hostedCheckout';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { format, isPast, parseISO } from 'date-fns';
@@ -181,7 +183,7 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
   const depositStatus = ((booking as any).deposit_status as string) || 'pending';
   const depositRefundNotes = (booking as any).deposit_refund_notes as string | null;
   const hasDeposit = (depositAmount ?? 0) > 0;
-  const rentalEnded = isPast(parseISO(booking.end_date));
+  const rentalEnded = isPast(parseRentalDate(booking.end_date));
 
   // Confirmation tracking
   const hostConfirmedAt = (booking as any).host_confirmed_at as string | null;
@@ -221,20 +223,13 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
     setShowCheckoutOverlay(true);
 
     try {
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: {
-          booking_id: booking.id,
-          listing_id: listing.id,
-          mode: 'rent',
-          amount: booking.total_price,
-          delivery_fee: booking.delivery_fee_snapshot || 0,
-        },
-      });
-
-      if (error) throw error;
-      if (data?.error) throw new Error(data.error);
-
-      if (!data?.url) throw new Error('Failed to create checkout session');
+      const data = {
+        url: hostedCheckoutUrl('booking', booking.id, {
+          success: '/payment-success',
+          cancel: '/dashboard',
+          label: 'Rental booking',
+        }),
+      };
 
       onPaymentInitiated?.();
 
@@ -352,7 +347,7 @@ const ShopperBookingCard = ({ booking, onCancel, onPaymentInitiated }: ShopperBo
             <div className="flex items-center gap-1.5 text-foreground">
               <Calendar className="h-4 w-4 text-primary" />
               <span>
-                {format(new Date(booking.start_date), 'MMM d')} - {format(new Date(booking.end_date), 'MMM d, yyyy')}
+                {format(parseRentalDate(booking.start_date), 'MMM d')} - {format(parseRentalDate(booking.end_date), 'MMM d, yyyy')}
               </span>
             </div>
             {listing?.category && (

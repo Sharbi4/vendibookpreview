@@ -47,7 +47,7 @@ const CONTEXT_MAP: Record<RecommendationContext, string[]> = {
     'featured-listing-30',
   ],
   dashboard_home: [
-    'host_growth_annual',
+    'vendibook_pro',
     'seller_plus_monthly',
     'boost-email-campaign',
   ],

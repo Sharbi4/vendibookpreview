@@ -14,7 +14,7 @@ import {
 /**
  * Selling on Vendibook — 8 scenes. Shows scattered social posts vs a
  * Vendibook listing, the listing wizard, publishing for free, the seller
- * dashboard, payment options for eligible buyers (Stripe / Affirm / pay in
+ * dashboard, payment options for eligible buyers (PayPal / financing / pay in
  * person), sale tracking with payment status and payout timing, and the
  * handoff confirmations for both sides.
  */
@@ -47,7 +47,7 @@ export const sellingScenes = [
   () => (
     <SceneShell caption="Build a professional listing step by step.">
       <div className="flex h-full w-full items-center justify-center px-4">
-        <ListingWizardStrip steps={['Photos', 'Headline', 'Includes', 'Pricing', 'Location', 'Docs', 'Stripe', 'Review']} />
+        <ListingWizardStrip steps={['Photos', 'Headline', 'Includes', 'Pricing', 'Location', 'Docs', 'PayPal', 'Review']} />
       </div>
     </SceneShell>
   ),
@@ -101,23 +101,23 @@ export const sellingScenes = [
         <PaymentOptionsPanel price="$34,000" fees="Buyer's fee shown at checkout" />
         <div className="max-w-[200px] rounded-xl border border-dashed border-muted-foreground/40 bg-background/70 p-3 text-[10px] leading-relaxed text-muted-foreground">
           <div className="font-bold text-foreground">Disclosure</div>
-          Affirm is subject to eligibility and approval. Vendibook and Stripe are not lenders. Sellers can also enable pay-in-person.
+          Equipment financing is offered by a third-party lender and is subject to approval. Vendibook and PayPal are not lenders. Sellers can also enable pay-in-person.
         </div>
       </div>
     </SceneShell>
   ),
 
-  // 6. Track the sale (online) — Stripe payout hold shown explicitly
+  // 6. Track the sale (online) — PayPal payout hold shown explicitly
   () => (
     <SceneShell caption="Follow the sale from purchase to completion.">
       <div className="flex h-full w-full items-center justify-center px-6">
         <DashboardMock
           role="Seller"
           title="Sale · 2018 Ford E-450"
-          subtitle="Buyer: Maya R. · Paid via Stripe"
+          subtitle="Buyer: Maya R. · Paid via PayPal"
           statuses={[
             { label: 'Payment Completed', intent: 'success' },
-            { label: 'Payout Scheduled · releases 25 days after buyer confirms', intent: 'info' },
+            { label: 'Payout Scheduled · typically within 24 hours of delivery confirmation', intent: 'info' },
           ]}
           timeline={[
             { label: 'Purchase created', state: 'done' },
@@ -129,7 +129,7 @@ export const sellingScenes = [
           nextAction={{ label: 'Confirm the handoff at pickup', cta: 'Confirm' }}
           footer={
             <div className="text-[11px]">
-              <span className="font-semibold">Payout timing:</span> released 25 days after the buyer confirms receipt (standard payment protection hold).
+              <span className="font-semibold">Payout timing:</span> typically released within 24 hours of delivery confirmation, and always within our 24 to 48 hour target.
             </div>
           }
         />

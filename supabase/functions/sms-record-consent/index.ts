@@ -153,6 +153,13 @@ Deno.serve(async (req) => {
     .eq('phone_e164', phoneE164)
     .maybeSingle();
 
+  if (existing && existing.user_id && existing.user_id !== userId) {
+    // This number belongs to another member; only they can change it.
+    return new Response(JSON.stringify({ error: 'phone_in_use' }), {
+      status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+
   if (existing) {
     const { error: updErr } = await admin
       .from('sms_preferences')

@@ -6,6 +6,7 @@
  * ecommerce event names for better integration with Google's reporting.
  */
 
+import { toGa4EventParams } from '@/lib/ga4Params';
 import { hasAnalyticsConsent } from '@/lib/cookieConsent';
 
 declare global {
@@ -24,7 +25,7 @@ const sendGA4Event = (eventName: string, params?: Record<string, unknown>) => {
   if (typeof window !== 'undefined' && window.gtag) {
     window.gtag('event', eventName, {
       send_to: GA4_MEASUREMENT_ID,
-      ...params,
+      ...toGa4EventParams(params),
     });
   }
 };
@@ -246,15 +247,6 @@ export const trackGA4ListingPublished = (params: {
     listing_mode: params.listing_mode,
     value: params.listing_price,
     currency: 'USD',
-  });
-};
-
-/**
- * Track Stripe Connect completion (for hosts)
- */
-export const trackGA4StripeConnected = () => {
-  sendGA4Event('stripe_connected', {
-    method: 'stripe_connect',
   });
 };
 

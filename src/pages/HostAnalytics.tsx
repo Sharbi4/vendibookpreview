@@ -15,7 +15,7 @@ import { toast } from '@/hooks/use-toast';
 import { ProFeatureGate } from '@/components/host/ProFeatureGate';
 
 
-const HostAnalytics = () => {
+const HostAnalytics = ({ embedded = false }: { embedded?: boolean } = {}) => {
   const { user, isLoading } = useAuth();
   usePageTracking();
   const { rollup } = useHostAnalytics(30);
@@ -48,9 +48,8 @@ const HostAnalytics = () => {
     toast({ title: 'PDF downloaded' });
   };
 
-  return (
-    <DashboardLayout mode="host" onModeChange={() => {}} isHost={true}>
-      <div className="space-y-6">
+  const body = (
+    <div className="space-y-6">
         <HostPlanRibbon />
         <div className="flex items-center justify-between">
           <div>
@@ -92,7 +91,14 @@ const HostAnalytics = () => {
           </ProFeatureGate>
         </div>
 
-      </div>
+    </div>
+  );
+
+  if (embedded) return body;
+
+  return (
+    <DashboardLayout mode="host" onModeChange={() => {}} isHost={true}>
+      {body}
     </DashboardLayout>
   );
 };

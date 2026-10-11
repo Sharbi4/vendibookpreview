@@ -1,4 +1,4 @@
-import type { CategoryIndexConfig, CategoryKey, ModeFilter } from '@/pages/CategoryIndex';
+import type { CategoryIndexConfig, CategoryIndexSection, CategoryKey, ModeFilter } from '@/pages/CategoryIndex';
 
 // City/category landing pages — only created where Vendibook has active inventory
 // or a meaningful market focus. Thin pages with no inventory will auto-noindex
@@ -13,10 +13,11 @@ type CityCatSpec = {
 };
 
 const SPECS: CityCatSpec[] = [
-  // Houston (food truck capital, all 3 modes)
+  // Houston (food truck capital). NOTE: the rental city page lives at
+  // /rent/food-trucks/houston-tx (CategoryCityPage, proven GSC traction) —
+  // /houston/food-trucks-for-rent 301s there to avoid duplicate rent intent.
   { citySlug: 'houston', cityName: 'Houston', stateCode: 'TX', category: 'food_truck', mode: 'any' },
   { citySlug: 'houston', cityName: 'Houston', stateCode: 'TX', category: 'food_truck', mode: 'sale' },
-  { citySlug: 'houston', cityName: 'Houston', stateCode: 'TX', category: 'food_truck', mode: 'rent' },
 
   // Phoenix
   { citySlug: 'phoenix', cityName: 'Phoenix', stateCode: 'AZ', category: 'food_truck', mode: 'any' },
@@ -160,7 +161,8 @@ CITY_CATEGORY_CONFIGS.push(
       intro: `Looking for ${plural} ${intentLabel.toLowerCase()} in ${s.cityName}? Vendibook is the dedicated marketplace for mobile food assets — every listing is owner-managed, with full specs, photos, and a clean inquiry flow. No tire-kickers, no scams, no losing your listing in a Marketplace feed.`,
       faqs: cityFaqs(s.cityName, s.category),
       related: [
-        { href: `/${s.citySlug}/${catSlug(s.category)}${modeSuffix(s.mode)}`, label: `${pluralTitle} ${intentLabel} in ${s.cityName} (alt URL)` },
+        // NOTE: the parallel /<city>/<category><mode> URL is intentionally not
+        // linked here — advertising two URLs for one intent splits authority.
         { href: `/${s.citySlug}/${catSlug(s.category)}${modeSuffix('rent')}`, label: `${pluralTitle} for Rent in ${s.cityName}` },
         { href: `/${catSlug(s.category)}${modeSuffix(s.mode)}`, label: `All ${pluralTitle.toLowerCase()} ${intentLabel.toLowerCase()}` },
         { href: '/sell-my-food-truck', label: `Sell your ${s.category === 'food_trailer' ? 'food trailer' : 'food truck'}` },
@@ -201,6 +203,7 @@ const CITY_SALE_SPECS: CitySaleSpec[] = [
   { citySlug: 'tucson-az',       cityName: 'Tucson',       stateCode: 'AZ', stateName: 'Arizona',       category: 'food_trailer' },
   { citySlug: 'phoenix-az',      cityName: 'Phoenix',      stateCode: 'AZ', stateName: 'Arizona',       category: 'food_trailer' },
   { citySlug: 'houston-tx',      cityName: 'Houston',      stateCode: 'TX', stateName: 'Texas',         category: 'food_trailer' },
+  { citySlug: 'mesa-az',         cityName: 'Mesa',         stateCode: 'AZ', stateName: 'Arizona',       category: 'food_trailer' },
 ];
 
 const citySaleSlug = (c: CategoryKey): string =>
@@ -253,7 +256,7 @@ CITY_CATEGORY_CONFIGS.push(
       related: [
         { href: `/${citySaleSlug(s.category)}`, label: `All ${pluralTitle.toLowerCase()} for sale` },
         { href: `/${citySaleSlug(s.category)}/${slugify(s.stateName)}`, label: `${pluralTitle} for sale in ${s.stateName}` },
-        { href: s.category === 'food_trailer' ? '/sell-food-trailer' : '/sell-food-truck', label: `Sell your ${s.category === 'food_trailer' ? 'food trailer' : 'food truck'}` },
+        { href: s.category === 'food_trailer' ? '/sell-food-trailer' : '/sell-my-food-truck', label: `Sell your ${s.category === 'food_trailer' ? 'food trailer' : 'food truck'}` },
         { href: `/${citySaleSlug(s.category === 'food_trailer' ? 'food_truck' : 'food_trailer')}/${s.citySlug}`, label: `${s.category === 'food_trailer' ? 'Food trucks' : 'Food trailers'} for sale in ${s.cityName}` },
       ],
     };
@@ -261,19 +264,222 @@ CITY_CATEGORY_CONFIGS.push(
 );
 
 // ============================================================================
-// /food-trucks-for-sale/<state-name>  state-level SEO pages with state→nationwide fallback
+// /food-trucks-for-sale/<state-name> and /food-trailers-for-sale/<state-name>
+// State-level SEO pages with state→nationwide fallback. Trucks and trailers are
+// separate pages because Semrush shows materially different demand/difficulty
+// by asset type (e.g. "food trailers for sale in Texas" KD 1 vs trucks KD 12).
+// Tier 1 (TX, AZ, GA, MI, OH, FL): existing GSC visibility + low KD + demand.
 // ============================================================================
-type StateSaleSpec = { stateName: string; stateCode: string; category: CategoryKey };
+type StateSaleSpec = {
+  stateName: string;
+  stateCode: string;
+  category: CategoryKey;
+  /** Existing city pages this state should prominently link to. */
+  metros?: { slug: string; name: string }[];
+};
 
 const STATE_SALE_SPECS: StateSaleSpec[] = [
-  { stateName: 'Arizona',        stateCode: 'AZ', category: 'food_truck' },
-  { stateName: 'Texas',          stateCode: 'TX', category: 'food_truck' },
-  { stateName: 'Florida',        stateCode: 'FL', category: 'food_truck' },
-  { stateName: 'Georgia',        stateCode: 'GA', category: 'food_truck' },
+  // ---- Tier 1 trucks ----
+  {
+    stateName: 'Texas', stateCode: 'TX', category: 'food_truck',
+    metros: [
+      { slug: 'houston-tx', name: 'Houston' },
+      { slug: 'dallas-tx', name: 'Dallas' },
+      { slug: 'austin-tx', name: 'Austin' },
+      { slug: 'san-antonio-tx', name: 'San Antonio' },
+    ],
+  },
+  {
+    stateName: 'Arizona', stateCode: 'AZ', category: 'food_truck',
+    metros: [
+      { slug: 'phoenix-az', name: 'Phoenix' },
+      { slug: 'tucson-az', name: 'Tucson' },
+    ],
+  },
+  {
+    stateName: 'Georgia', stateCode: 'GA', category: 'food_truck',
+    metros: [{ slug: 'atlanta-ga', name: 'Atlanta' }],
+  },
+  { stateName: 'Michigan', stateCode: 'MI', category: 'food_truck' },
+  { stateName: 'Ohio', stateCode: 'OH', category: 'food_truck' },
+  {
+    stateName: 'Florida', stateCode: 'FL', category: 'food_truck',
+    metros: [
+      { slug: 'miami-fl', name: 'Miami' },
+      { slug: 'tampa-fl', name: 'Tampa' },
+    ],
+  },
+  // ---- Tier 1 trailers (KD 1–5 cluster; real inventory exists in each state) ----
+  {
+    stateName: 'Texas', stateCode: 'TX', category: 'food_trailer',
+    metros: [{ slug: 'houston-tx', name: 'Houston' }],
+  },
+  { stateName: 'Georgia', stateCode: 'GA', category: 'food_trailer' },
+  { stateName: 'Florida', stateCode: 'FL', category: 'food_trailer' },
+  { stateName: 'Michigan', stateCode: 'MI', category: 'food_trailer' },
+  { stateName: 'Ohio', stateCode: 'OH', category: 'food_trailer' },
+  { stateName: 'Arizona', stateCode: 'AZ', category: 'food_trailer' },
+  // California: 6 live trailers for sale and the #3 state for real buyer
+  // views (2026-10-05), but no trailer page — 'food truck for sale california'
+  // alone is 210 searches/mo.
+  { stateName: 'California', stateCode: 'CA', category: 'food_trailer' },
+  // ---- Tier 2 trucks (already live — keep, no expansion) ----
   { stateName: 'North Carolina', stateCode: 'NC', category: 'food_truck' },
-  { stateName: 'Oregon',         stateCode: 'OR', category: 'food_truck' },
-  { stateName: 'California',     stateCode: 'CA', category: 'food_truck' },
+  { stateName: 'Oregon', stateCode: 'OR', category: 'food_truck' },
+  { stateName: 'California', stateCode: 'CA', category: 'food_truck' },
 ];
+
+// Per-state, per-category content overrides keyed by `${stateSlug}:${category}`.
+// Texas gets the richest copy: Search Console shows high impressions but low
+// CTR for "food truck for sale in texas", so the snippet and body name real
+// inventory corridors, owner-listed positioning, and the 2026 statewide
+// licensing change buyers are researching.
+const STATE_CONTENT_OVERRIDES: Record<string, {
+  title?: string;
+  description?: string;
+  introExtra?: string;
+  sections?: CategoryIndexSection[];
+  extraFaqs?: { q: string; a: string }[];
+  extraRelated?: { href: string; label: string }[];
+}> = {
+  'texas:food_truck': {
+    title: 'Food Trucks for Sale in Texas — Houston, Dallas, Austin, San Antonio',
+    description: 'Browse used food trucks for sale in Texas with real photos, full equipment specs, and the owner\'s asking price. Message sellers directly — financing and statewide delivery available.',
+    introExtra: 'Texas is one of the strongest mobile food markets in the country, and buyers here typically shop the Houston, Dallas–Fort Worth, Austin, and San Antonio corridors. It is also getting easier to operate statewide: as of July 1, 2026, Texas mobile food vendors move to a single statewide DSHS license, replacing the patchwork of county-by-county permits — so a truck bought in one metro can trade across the state with far less paperwork.',
+    sections: [
+      {
+        heading: 'Buying a food truck in Texas',
+        paragraphs: [
+          'Most Texas buyers compare asking price against equipment package first — a well-maintained truck with a working generator, refrigeration, and a compliant hood system is worth more than a newer shell that needs a build-out. On Vendibook you can message the seller directly to ask for service records, inspection history, and equipment lists before you drive out to see a truck.',
+          'If the right truck is not in your metro, Vendibook surfaces statewide and nationwide options below the local inventory, and freight delivery is available on many purchases.',
+        ],
+      },
+      {
+        heading: 'Texas permits, licensing, and local rules',
+        paragraphs: [
+          'Before you buy, check what your city and county require for commissary agreements, fire suppression inspections, and mobile vending zones — those rules decide whether a specific truck can start earning right away or needs work first. PermitPath builds a checklist for your Texas city, and the Regulations Hub covers the statewide license change and health-department basics.',
+        ],
+        links: [
+          { href: '/tools/permitpath', label: 'Texas permit checklist (PermitPath)' },
+          { href: '/tools/regulations-hub', label: 'Mobile food regulations hub' },
+          { href: '/blog/texas-mobile-food-vendor-law-2026', label: 'Texas 2026 statewide license explained' },
+        ],
+      },
+      {
+        heading: 'Financing a food truck in Texas',
+        paragraphs: [
+          'Qualified Texas buyers can explore equipment financing on eligible listings instead of paying the full asking price up front. Financing availability, terms, and approval are determined by the financing partner — check any listing for the financing option or start with our financing overview.',
+        ],
+        links: [
+          { href: '/financing', label: 'Explore food truck financing' },
+          { href: '/ship-your-food-truck', label: 'Freight delivery for purchases' },
+          { href: '/food-truck-prices', label: 'What food trucks actually sell for' },
+        ],
+      },
+    ],
+    extraFaqs: [
+      {
+        q: 'What changed for Texas food truck permits in 2026?',
+        a: 'Starting July 1, 2026, Texas mobile food vendors operate under a statewide DSHS license instead of separate county permits. That makes buying a truck anywhere in Texas more flexible, since you are no longer tied to one county\'s rules.',
+      },
+    ],
+    extraRelated: [
+      { href: '/blog/texas-mobile-food-vendor-law-2026', label: 'Texas 2026 mobile food vendor law explained' },
+      { href: '/financing', label: 'Financing options' },
+    ],
+  },
+  'texas:food_trailer': {
+    title: 'Food Trailers for Sale in Texas | Used & Owner-Listed | Vendibook',
+    description: 'Food trailers for sale in Texas: owner-listed concession and mobile kitchen trailers in Houston, DFW, Austin & San Antonio. Compare prices, sizes, and specs — financing available.',
+    introExtra: 'Compare available concession and mobile kitchen trailers across Texas, using Houston, Dallas–Fort Worth, Austin, and San Antonio as starting points for your search. For a trailer outside your area, include the inspection trip and towing or freight cost in your budget. Confirm the loaded trailer weight and tow-vehicle requirements before arranging pickup.',
+    extraRelated: [
+      { href: '/food-trailers-for-sale/houston-tx', label: 'Food trailers for sale in Houston' },
+      { href: '/financing', label: 'Financing options' },
+    ],
+  },
+  'arizona:food_truck': {
+    title: 'Food Trucks for Sale in Arizona | Used & Owner-Listed | Vendibook',
+    description: 'Food trucks for sale in Arizona: owner-listed trucks in Phoenix, Tucson & beyond with real photos, specs, and asking prices. Message sellers directly — financing available.',
+    introExtra: 'Compare available food trucks in Phoenix, Tucson, and other Arizona locations shown in the listings. Ask for a demonstration of refrigeration and workspace cooling under the conditions in which you plan to operate. Include generator capacity, shade, ventilation, and the inspection trip when comparing equipment and asking prices.',
+    extraRelated: [
+      { href: '/financing', label: 'Financing options' },
+    ],
+  },
+  'arizona:food_trailer': {
+    title: 'Food Trailers for Sale in Arizona | Used & Owner-Listed | Vendibook',
+    description: 'Food trailers for sale in Arizona: owner-listed concession and mobile kitchen trailers in Phoenix, Tucson, and statewide. Compare prices and specs — financing available.',
+    introExtra: 'Browse available Arizona trailers and compare the seller’s location with your planned pickup route. Ask how refrigeration, ventilation, and power will work at your intended site, and verify loaded weight, hitch requirements, tires, and brakes against your tow vehicle. Confirm the equipment included in the asking price before booking an inspection.',
+    extraRelated: [
+      { href: '/financing', label: 'Financing options' },
+    ],
+  },
+  'georgia:food_truck': {
+    title: 'Food Trucks for Sale in Georgia | Used & Owner-Listed | Vendibook',
+    description: 'Food trucks for sale in Georgia: owner-listed trucks in Atlanta and statewide with real photos, specs, and asking prices. Message sellers directly — financing available.',
+    introExtra: 'Compare available food trucks across Georgia, including Atlanta and other cities shown in the inventory. For a statewide search, consider the inspection trip, pickup or transport cost, and equipment needs alongside the asking price. Trailer buyers can compare Georgia concession trailers separately; buyers focused on Atlanta can use the local trailer page.',
+    extraRelated: [
+      { href: '/food-trailers-for-sale/georgia', label: 'Food trailers across Georgia' },
+      { href: '/buy/food-trailers/atlanta-ga', label: 'Atlanta-area food trailers for sale' },
+      { href: '/financing', label: 'Financing options' },
+    ],
+  },
+  'georgia:food_trailer': {
+    title: 'Food Trailers for Sale in Georgia | Used & Owner-Listed | Vendibook',
+    description: 'Food trailers for sale in Georgia: owner-listed concession and mobile kitchen trailers in Atlanta and statewide. Compare prices, sizes, and specs — financing available.',
+    introExtra: 'Compare available food trailers throughout Georgia, with seller locations and asking prices shown in the inventory. For a statewide search, budget for inspection, pickup, and any delivery alongside the trailer itself. If you need equipment near Atlanta, use the local page to narrow your search and confirm the actual pickup location with the seller.',
+    extraRelated: [
+      { href: '/financing', label: 'Financing options' },
+    ],
+  },
+  'michigan:food_truck': {
+    title: 'Food Trucks for Sale in Michigan | Used & Owner-Listed | Vendibook',
+    description: 'Food trucks for sale in Michigan: owner-listed trucks in Detroit, Grand Rapids, Ann Arbor & beyond. Compare photos, specs, and prices — message sellers directly.',
+    introExtra: 'Michigan\'s season runs roughly May through October, built around festivals, fairs, and lakefront events — which means used trucks often list in late fall and early spring as operators reset for the season. Buyers shopping off-season frequently find better pricing than at the spring peak.',
+    extraRelated: [
+      { href: '/financing', label: 'Financing options' },
+    ],
+  },
+  'michigan:food_trailer': {
+    title: 'Food Trailers for Sale in Michigan | Used & Owner-Listed | Vendibook',
+    description: 'Food trailers for sale in Michigan: owner-listed concession and mobile kitchen trailers across Detroit, Grand Rapids, and statewide. Compare prices and specs — financing available.',
+    introExtra: 'Trailers are a natural fit for Michigan\'s fair and festival circuit — lower upfront cost than a truck, easy to tow between summer events, and simple to store over the winter off-season. Inventory concentrates around Detroit and Grand Rapids, with statewide and nationwide options shown below when local listings are limited.',
+    extraRelated: [
+      { href: '/financing', label: 'Financing options' },
+    ],
+  },
+  'ohio:food_truck': {
+    title: 'Food Trucks for Sale in Ohio | Used & Owner-Listed | Vendibook',
+    description: 'Food trucks for sale in Ohio: owner-listed trucks in Columbus, Cleveland, Cincinnati & beyond. Compare photos, specs, and prices — message sellers directly.',
+    introExtra: 'Ohio buyers benefit from three major metros within a few hours of each other — Columbus, Cleveland, and Cincinnati — plus one of the strongest county-fair circuits in the Midwest. That density means more used inventory within driving distance and more events to book once you own the truck.',
+    extraRelated: [
+      { href: '/financing', label: 'Financing options' },
+    ],
+  },
+  'ohio:food_trailer': {
+    title: 'Food Trailers for Sale in Ohio | Used & Owner-Listed | Vendibook',
+    description: 'Food trailers for sale in Ohio: owner-listed concession and mobile kitchen trailers in Columbus, Cleveland, Cincinnati, and statewide. Compare prices and specs — financing available.',
+    introExtra: 'Ohio\'s county-fair and festival circuit makes concession trailers a workhorse asset — lower cost than a self-propelled truck and easy to move between Columbus, Cleveland, and Cincinnati events. When Ohio inventory is limited, this page also surfaces nationwide trailers so you can compare more options.',
+    extraRelated: [
+      { href: '/financing', label: 'Financing options' },
+    ],
+  },
+  'florida:food_truck': {
+    title: 'Food Trucks for Sale in Florida | Used & Owner-Listed | Vendibook',
+    description: 'Food trucks for sale in Florida: owner-listed trucks in Miami, Tampa, Orlando & beyond with real photos, specs, and asking prices. Message sellers directly — financing available.',
+    introExtra: 'Compare available food trucks across Florida, including Miami, Tampa, Orlando, and Jacksonville when listings are available. Ask sellers about refrigeration performance, ventilation, roof and window seals, and any corrosion or storm damage. Review maintenance records and include pickup or freight in the total purchase budget.',
+    extraRelated: [
+      { href: '/financing', label: 'Financing options' },
+    ],
+  },
+  'florida:food_trailer': {
+    title: 'Food Trailers for Sale in Florida | Used & Owner-Listed | Vendibook',
+    description: 'Food trailers for sale in Florida: owner-listed concession and mobile kitchen trailers in Miami, Tampa, Orlando, and statewide. Compare prices and specs — financing available.',
+    introExtra: 'Compare available Florida concession trailers by equipment, asking price, and seller location. Inspect the roof, seals, frame, and electrical connections, and ask about storage and storm-damage history. Check loaded weight and towing requirements before choosing between pickup and freight delivery.',
+    extraRelated: [
+      { href: '/financing', label: 'Financing options' },
+    ],
+  },
+};
 
 function slugify(s: string): string {
   return s.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
@@ -301,25 +507,271 @@ const stateSaleFaqs = (stateName: string, cat: CategoryKey) => {
   ];
 };
 
+// State slugs that have BOTH a truck and a trailer page (safe cross-links).
+const TRAILER_STATE_SLUGS = new Set(['texas', 'georgia', 'florida', 'michigan', 'ohio', 'arizona', 'california']);
+
 CITY_CATEGORY_CONFIGS.push(
   ...STATE_SALE_SPECS.map((s): CategoryIndexConfig => {
     const plural = catLabelPlural(s.category);
     const pluralTitle = citySaleLabel(s.category);
-    const path = `/${citySaleSlug(s.category)}/${slugify(s.stateName)}`;
+    const stateSlug = slugify(s.stateName);
+    const path = `/${citySaleSlug(s.category)}/${stateSlug}`;
+    const override = STATE_CONTENT_OVERRIDES[`${stateSlug}:${s.category}`];
+    const counterpartExists = s.category === 'food_truck'
+      ? TRAILER_STATE_SLUGS.has(stateSlug)
+      : true; // every trailer state also has a truck page
+    const metroSection: CategoryIndexSection[] = s.metros?.length
+      ? [{
+          heading: `Browse ${plural} for sale across ${s.stateName}`,
+          paragraphs: [
+            `${s.stateName} inventory on Vendibook is organized by market. Browse the ${s.stateName} metros below for city-level listings, or compare statewide inventory on this page — with nationwide options shown automatically when local supply is limited.`,
+          ],
+          links: s.metros.map((m) => ({
+            href: `/${citySaleSlug(s.category)}/${m.slug}`,
+            label: `${pluralTitle} for sale in ${m.name}`,
+          })),
+        }]
+      : [];
     return {
       path,
       category: s.category,
       mode: 'sale',
       state: { name: s.stateName, code: s.stateCode },
       h1: `${pluralTitle} for Sale in ${s.stateName}`,
-      title: `${pluralTitle} for Sale in ${s.stateName} | Vendibook`,
-      description: `Browse ${plural} for sale across ${s.stateName} on Vendibook. Statewide inventory from owners, with nationwide fallback when local listings are limited.`,
-      intro: `Browse ${plural} for sale across ${s.stateName}. Each listing is owner-managed with photos, equipment specs, and direct messaging. When statewide inventory is limited, Vendibook also surfaces nationwide listings so you can compare more options.`,
-      faqs: stateSaleFaqs(s.stateName, s.category),
+      title: override?.title ?? `${pluralTitle} for Sale in ${s.stateName} | Vendibook`,
+      description: override?.description ?? `Browse ${plural} for sale across ${s.stateName} on Vendibook. Owner-listed inventory with photos and specs, with nationwide options when local listings are limited.`,
+      intro: `Browse ${plural} for sale across ${s.stateName}, listed by independent sellers. Each listing includes photos, equipment specs, and direct messaging with the owner. When statewide inventory is limited, Vendibook also surfaces nationwide listings so you can compare more options.${override?.introExtra ? ` ${override.introExtra}` : ''}`,
+      sections: [...metroSection, ...(override?.sections ?? [])],
+      faqs: [...stateSaleFaqs(s.stateName, s.category), ...(override?.extraFaqs ?? [])],
       related: [
         { href: `/${citySaleSlug(s.category)}`, label: `All ${pluralTitle.toLowerCase()} for sale` },
-        { href: s.category === 'food_trailer' ? '/sell-food-trailer' : '/sell-food-truck', label: `Sell your ${s.category === 'food_trailer' ? 'food trailer' : 'food truck'}` },
-        { href: `/${citySaleSlug(s.category === 'food_trailer' ? 'food_truck' : 'food_trailer')}/${slugify(s.stateName)}`, label: `${s.category === 'food_trailer' ? 'Food trucks' : 'Food trailers'} for sale in ${s.stateName}` },
+        { href: s.category === 'food_trailer' ? '/sell-food-trailer' : '/sell-my-food-truck', label: `Sell your ${s.category === 'food_trailer' ? 'food trailer' : 'food truck'} in ${s.stateName}` },
+        ...(counterpartExists
+          ? [{ href: `/${citySaleSlug(s.category === 'food_trailer' ? 'food_truck' : 'food_trailer')}/${stateSlug}`, label: `${s.category === 'food_trailer' ? 'Food trucks' : 'Food trailers'} for sale in ${s.stateName}` }]
+          : []),
+        ...(override?.extraRelated ?? []),
+      ],
+    };
+  })
+);
+
+// ============================================================================
+// /food-trucks-for-rent/<state-name>  state-level RENTAL pages (hub-and-spoke).
+// Created only where Search Console shows Google already testing our rental
+// pages (TX: Houston pos ~10, FL: Miami pos ~4-9, CA: LA pos ~3-15).
+// Dual-category (trucks + trailers) like the national rental hub.
+// ============================================================================
+type StateRentSpec = {
+  stateName: string;
+  stateCode: string;
+  metros: { slug: string; name: string }[];
+  context: string;
+};
+
+const STATE_RENT_SPECS: StateRentSpec[] = [
+  {
+    stateName: 'Texas',
+    stateCode: 'TX',
+    metros: [
+      { slug: 'houston-tx', name: 'Houston' },
+      { slug: 'dallas-tx', name: 'Dallas' },
+      { slug: 'austin-tx', name: 'Austin' },
+      { slug: 'san-antonio-tx', name: 'San Antonio' },
+    ],
+    context:
+      'Texas is one of the strongest mobile food markets in the country, and rental demand concentrates in the Houston, Dallas–Fort Worth, Austin, and San Antonio corridors. As of July 1, 2026, Texas mobile food vendors operate under a single statewide DSHS license instead of county-by-county permits — so equipment rented in one Texas metro can trade across the state with far less paperwork.',
+  },
+  {
+    stateName: 'Florida',
+    stateCode: 'FL',
+    metros: [
+      { slug: 'miami-fl', name: 'Miami' },
+      { slug: 'tampa-fl', name: 'Tampa' },
+    ],
+    context:
+      'Florida\'s year-round event and tourism calendar makes it a natural market for renting a food truck or trailer — operators commonly rent equipment for seasonal peaks, festivals, and beach-market pop-ups before committing to a purchase. Miami and Tampa are the state\'s most active rental corridors on Vendibook.',
+  },
+  {
+    stateName: 'California',
+    stateCode: 'CA',
+    metros: [{ slug: 'los-angeles-ca', name: 'Los Angeles' }],
+    context:
+      'California is the birthplace of modern food truck culture, and Los Angeles is one of Vendibook\'s most active rental markets. Operators rent trucks and trailers to test concepts, cover events, and run monthly arrangements while permanent builds are completed. California operators should confirm county health permits and commissary agreements before booking.',
+  },
+];
+
+const stateRentFaqs = (stateName: string) => [
+  {
+    q: `Can I rent a food truck in ${stateName} for my business?`,
+    a: `Yes. Vendibook lists owner-managed food trucks and food trailers for rent across ${stateName}. Browse available equipment on this page, compare rates and terms, and book directly with the owner for your own business use.`,
+  },
+  {
+    q: `Can I rent a food truck monthly in ${stateName}?`,
+    a: `Often, yes. Rental terms are set by each owner, and many ${stateName} listings offer weekly and monthly arrangements alongside daily rates. Review the terms on the individual listing or message the owner to discuss a monthly rental.`,
+  },
+  {
+    q: `How much does it cost to rent a food truck in ${stateName}?`,
+    a: `Cost depends on the vehicle or trailer type, location within ${stateName}, rental term, equipment, and condition. Each listing shows the owner's current rates so you can compare real options side by side.`,
+  },
+  {
+    q: `Do I need permits to operate a rented food truck in ${stateName}?`,
+    a: `Yes — operating permits are tied to you as the operator, not to the equipment. Most ${stateName} operators need a mobile food vendor permit, health-department certification, and a commissary agreement. Vendibook's PermitPath tool walks through the steps for your city.`,
+  },
+  {
+    q: `Can I list my food truck for rent in ${stateName}?`,
+    a: `Yes — listing on Vendibook is free. Add photos, your daily/weekly/monthly rates, and availability, and receive booking requests from ${stateName} operators.`,
+  },
+];
+
+CITY_CATEGORY_CONFIGS.push(
+  ...STATE_RENT_SPECS.map((s): CategoryIndexConfig => ({
+    path: `/food-trucks-for-rent/${slugify(s.stateName)}`,
+    category: 'food_truck',
+    categories: ['food_truck', 'food_trailer'],
+    mode: 'rent',
+    state: { name: s.stateName, code: s.stateCode },
+    h1: `Food Trucks & Food Trailers for Rent in ${s.stateName}`,
+    title: `Food Trucks & Food Trailers for Rent in ${s.stateName} | Vendibook`,
+    description: `Browse food trucks and food trailers for rent in ${s.stateName}. Compare available rental listings, rates, equipment, and monthly terms from owners on Vendibook.`,
+    intro: `Find food trucks and food trailers available to rent across ${s.stateName} for business use — short-term, monthly, and long-term rentals listed directly by owners. ${s.context} When statewide inventory is limited, this page also surfaces nationwide rental listings so you can compare more options.`,
+    clarification:
+      'This is equipment rental: you rent the truck or trailer and operate it yourself for your own food business. Rental terms are set by each owner and shown on the listing.',
+    sections: [
+      {
+        heading: `Rent by metro in ${s.stateName}`,
+        paragraphs: [
+          `Rental inventory on Vendibook is organized by market. Browse the ${s.stateName} metros below for city-level availability, or search statewide listings on this page.`,
+        ],
+        links: s.metros.flatMap((m) => [
+          { href: `/rent/food-trucks/${m.slug}`, label: `Food trucks for rent in ${m.name}` },
+          { href: `/rent/food-trailers/${m.slug}`, label: `Food trailers for rent in ${m.name}` },
+        ]),
+      },
+      {
+        heading: 'Should you rent or buy?',
+        paragraphs: [
+          `Renting fits operators testing a concept, covering a seasonal rush, or reducing upfront investment. Buying fits long-term operators who want to customize equipment and build equity in the asset. Many ${s.stateName} operators rent first and buy once the concept is proven.`,
+        ],
+        links: [
+          { href: `/food-trucks-for-sale/${slugify(s.stateName)}`, label: `Food trucks for sale in ${s.stateName}` },
+          { href: '/financing', label: 'Explore financing options' },
+        ],
+      },
+    ],
+    faqs: stateRentFaqs(s.stateName),
+    related: [
+      { href: '/food-trucks-for-rent', label: 'All food trucks for rent' },
+      { href: '/food-trailers-for-rent', label: 'Food trailers for rent' },
+      ...s.metros.map((m) => ({ href: `/rent/food-trucks/${m.slug}`, label: `Rentals in ${m.name}` })),
+      { href: '/rent-out-my-food-truck', label: 'Rent out your food truck' },
+    ],
+  }))
+);
+
+// ============================================================================
+// Trailer-specific RENTAL spokes. Created only where real rental inventory
+// exists, so the page is never a thin/empty doorway. Tennessee is live because
+// Vendibook carries owner-listed monthly trailer rental inventory in the
+// Nashville / Spring Hill corridor.
+//   /food-trailers-for-rent/tennessee   → state spoke of /food-trailers-for-rent
+//   /food-trailers-for-rent/spring-hill-tn → exact-match local page
+// ============================================================================
+type TrailerRentSpec = {
+  stateName: string;
+  stateCode: string;
+  city?: { name: string; slug: string };
+  context: string;
+};
+
+const TRAILER_RENT_SPECS: TrailerRentSpec[] = [
+  {
+    stateName: 'Tennessee',
+    stateCode: 'TN',
+    context:
+      'Tennessee rental demand concentrates in the Nashville metro and the fast-growing Williamson and Maury County corridor south of the city, where operators lease trailers monthly for markets, breweries, and event calendars.',
+  },
+  {
+    stateName: 'Tennessee',
+    stateCode: 'TN',
+    city: { name: 'Spring Hill', slug: 'spring-hill-tn' },
+    context:
+      'Spring Hill sits in the Nashville–Columbia corridor, where monthly food trailer leases are a practical way to start operating without buying equipment outright.',
+  },
+];
+
+const trailerRentFaqs = (place: string) => [
+  {
+    q: `Can I rent a food trailer in ${place}?`,
+    a: `Yes. Vendibook lists owner-managed food trailers for rent in and around ${place}. Compare the listings on this page, review the owner's rates and terms, and book directly through Vendibook.`,
+  },
+  {
+    q: `Can I lease a food trailer monthly in ${place}?`,
+    a: `Often, yes. Monthly leases are common for trailers — the term and rate are set by each owner and shown on the listing, so check the individual listing or message the owner.`,
+  },
+  {
+    q: `How much does it cost to rent a food trailer in ${place}?`,
+    a: `Cost depends on trailer size, equipment, condition, and rental term. Each Vendibook listing shows the owner's current rate so you can compare real options rather than averages.`,
+  },
+  {
+    q: `Do I need permits to operate a rented food trailer in ${place}?`,
+    a: `Yes — permits follow you as the operator, not the equipment. Most operators need a mobile food vendor permit, health-department certification, and a commissary agreement. Vendibook's PermitPath tool walks through the steps for your city.`,
+  },
+  {
+    q: `Can I list my food trailer for rent in ${place}?`,
+    a: `Yes — listing on Vendibook is free. Add photos, your rates, and availability, and start receiving booking requests from operators near ${place}.`,
+  },
+];
+
+CITY_CATEGORY_CONFIGS.push(
+  ...TRAILER_RENT_SPECS.map((s): CategoryIndexConfig => {
+    const place = s.city ? `${s.city.name}, ${s.stateCode}` : s.stateName;
+    const path = s.city
+      ? `/food-trailers-for-rent/${s.city.slug}`
+      : `/food-trailers-for-rent/${slugify(s.stateName)}`;
+    return {
+      path,
+      category: 'food_trailer',
+      mode: 'rent',
+      ...(s.city
+        ? { city: { name: s.city.name, stateCode: s.stateCode } }
+        : { state: { name: s.stateName, code: s.stateCode } }),
+      h1: `Food Trailers for Rent in ${place}`,
+      title: `Food Trailers for Rent in ${place} | Concession Trailer Rentals | Vendibook`,
+      description: `Rent a food trailer in ${place}. Compare owner-listed concession trailers with photos, equipment details, and monthly, weekly, or daily rates on Vendibook.`,
+      intro: `Browse food trailers available to rent in ${place}. ${s.context} Every listing is owner-managed with photos, equipment details, and transparent rates, and you message the owner directly before booking.`,
+      clarification:
+        'This is equipment rental: you rent the trailer and operate it yourself. Terms — daily, weekly, or monthly — are set by each owner and shown on the listing.',
+      sections: [
+        {
+          heading: `Monthly food trailer leases in ${place}`,
+          paragraphs: [
+            `Monthly leases are the most common arrangement for trailers in ${place}: you take the trailer for a full operating month instead of paying daily event rates. Confirm towing requirements, utility hookups, and commissary arrangements with the owner before you book.`,
+          ],
+          links: [
+            { href: '/tools/permitpath', label: 'Permit & licensing checklist' },
+            { href: '/food-trailers-for-rent', label: 'All food trailers for rent' },
+          ],
+        },
+        {
+          heading: 'Rent now, buy later',
+          paragraphs: [
+            'Many operators lease a trailer first and buy once the concept is proven. When you are ready to own, compare trailers for sale and financing options for qualifying purchases.',
+          ],
+          links: [
+            { href: '/food-trailers-for-sale', label: 'Food trailers for sale' },
+            { href: '/financing', label: 'Equipment financing options' },
+          ],
+        },
+      ],
+      faqs: trailerRentFaqs(place),
+      related: [
+        { href: '/food-trailers-for-rent', label: 'All food trailers for rent' },
+        { href: '/food-trucks-for-rent', label: 'Food trucks for rent' },
+        ...(s.city
+          ? [{ href: `/food-trailers-for-rent/${slugify(s.stateName)}`, label: `Food trailers for rent in ${s.stateName}` }]
+          : [{ href: '/food-trailers-for-rent/spring-hill-tn', label: 'Food trailers for rent in Spring Hill, TN' }]),
+        { href: '/food-trailers-for-sale', label: 'Food trailers for sale' },
+        { href: '/rent-out-my-food-truck', label: 'Rent out your trailer' },
       ],
     };
   })

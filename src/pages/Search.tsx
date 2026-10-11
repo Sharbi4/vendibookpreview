@@ -1,8 +1,9 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import { illustrativeFinancingNote } from '@/lib/financing/calculator';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { ImpressionTracker } from '@/components/analytics/ImpressionTracker';
 import { HostSupplyCTA } from '@/components/search/HostSupplyCTA';
 import { useSearchParams, useNavigate } from 'react-router-dom';
-import { Search as SearchIcon, SlidersHorizontal, X, MapPin, Tag, DollarSign, CalendarIcon, Navigation, CheckCircle2, Plug, Zap, Refrigerator, Flame, Wind, Wifi, Car, Shield, Droplet, Truck, LayoutGrid, Map, Columns, Rows3, Star, Heart } from 'lucide-react';
+import { Search as SearchIcon, SlidersHorizontal, X, MapPin, Tag, DollarSign, CalendarIcon, Navigation, CheckCircle2, Plug, Zap, Refrigerator, Flame, Wind, Wifi, Car, Shield, Droplet, Truck, LayoutGrid, Map, Columns, Rows3, Star, Heart, ArrowUpDown, ChevronDown, Check } from 'lucide-react';
 import { DateRange } from 'react-day-picker';
 import { format, parseISO } from 'date-fns';
 import Header from '@/components/layout/Header';
@@ -26,6 +27,7 @@ import ReferralBrowseStrip from '@/components/referrals/ReferralBrowseStrip';
 import MobileStickyBar from '@/components/search/MobileStickyBar';
 import SaveSearchButton from '@/components/search/SaveSearchButton';
 import { CategoryPillStrip } from '@/components/search/CategoryPillStrip';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { CategoryInfoModal } from '@/components/categories/CategoryGuide';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,8 +51,11 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination';
 import { supabase } from '@/integrations/supabase/client';
+import { filterPubliclyVisible } from '@/lib/listings/publicVisibility';
 import { useQuery } from '@tanstack/react-query';
 import { Listing, CATEGORY_LABELS, ListingCategory, ListingMode, AMENITIES_BY_CATEGORY } from '@/types/listing';
+import { SPECIALTY_DEFS, SPECIALTY_SEARCH_QUERIES, SPECIALTY_SEARCH_SEO, specialtyVehicleHref, type SpecialtyKey, type SpecialtyVehicle } from '@/lib/listings/specialty';
+import { trackEvent } from '@/lib/analytics';
 import { cn } from '@/lib/utils';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useGoogleMapsToken } from '@/hooks/useGoogleMapsToken';
@@ -67,12 +72,24 @@ interface SearchListing extends Listing {
   can_deliver?: boolean;
 }
 
+interface SearchMeta {
+  requested_radius_miles: number;
+  effective_radius_miles: number;
+  radius_expanded: boolean;
+  location_label: string | null;
+  result_count: number;
+  text_fallback_used: boolean;
+  state_only_search: boolean;
+}
+
 interface SearchResponse {
   listings: SearchListing[];
+  sponsored?: SearchListing[];
   total_count: number;
   page: number;
   page_size: number;
   total_pages: number;
+  search_meta?: SearchMeta;
 }
 
 const Search = () => {
@@ -92,37 +109,58 @@ const Search = () => {
   const initialLat = searchParams.get('lat');
   const initialLng = searchParams.get('lng');
   const initialRadius = searchParams.get('radius');
-  const initialSort = searchParams.get('sort') as 'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance' || 'newest';
+  // Accept both hyphenated (UI contract) and snake_case (backend contract)
+  // sort values so shared/refreshed links never land on a blank control.
+  const rawSortParam = searchParams.get('sort');
+  const normalizedSortParam = rawSortParam === 'price_low' ? 'price-low' : rawSortParam === 'price_high' ? 'price-high' : rawSortParam;
+  const initialSort = (['featured', 'newest', 'price-low', 'price-high', 'distance', 'relevance'].includes(normalizedSortParam || '')
+    ? normalizedSortParam
+    : 'featured') as 'featured' | 'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance';
   const initialInstantBook = searchParams.get('instant') === 'true';
   const initialPage = parseInt(searchParams.get('page') || '1', 10);
   
   const [searchQuery, setSearchQuery] = useState(initialQuery);
+  // Debounced twin of searchQuery. The input renders searchQuery immediately,
+  // but fetches/URL updates only use debouncedQuery — firing both per keystroke
+  // replaced the result list on every character, causing image flicker and
+  // scroll jank on mobile.
+  const [debouncedQuery, setDebouncedQuery] = useState(initialQuery);
   const [mode, setMode] = useState<ListingMode | 'all'>(initialMode);
   const [category, setCategory] = useState<ListingCategory | 'all'>(initialCategory);
   const [locationText, setLocationText] = useState(searchParams.get('location') || '');
+  // Debounced twin of locationText — the input renders locationText immediately,
+  // but search requests use debouncedLocationText so typing "Atlanta" fires one
+  // fetch instead of one per character (which blanked results to skeletons).
+  const [debouncedLocationText, setDebouncedLocationText] = useState(searchParams.get('location') || '');
   const [locationCoords, setLocationCoords] = useState<[number, number] | null>(
     initialLat && initialLng ? [parseFloat(initialLng), parseFloat(initialLat)] : null
   );
-  const [searchRadius, setSearchRadius] = useState(initialRadius ? parseInt(initialRadius) : 100);
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, Infinity]);
+  const [searchRadius, setSearchRadius] = useState(initialRadius ? parseInt(initialRadius) : 50);
+  const [priceRange, setPriceRange] = useState<[number, number]>([
+    searchParams.get('min_price') ? Number(searchParams.get('min_price')) : 0,
+    searchParams.get('max_price') ? Number(searchParams.get('max_price')) : Infinity,
+  ]);
   const [dateRange, setDateRange] = useState<DateRange | undefined>(
     initialStartDate && initialEndDate
       ? { from: parseISO(initialStartDate), to: parseISO(initialEndDate) }
       : undefined
   );
-  const [selectedAmenities, setSelectedAmenities] = useState<string[]>([]);
-  const [deliveryFilterEnabled, setDeliveryFilterEnabled] = useState(false);
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>(
+    searchParams.get('amenities')?.split(',').filter(Boolean) ?? []
+  );
+  const [deliveryFilterEnabled, setDeliveryFilterEnabled] = useState(searchParams.get('delivery') === '1');
   const [fulfillmentTypes, setFulfillmentTypes] = useState<Array<'pickup' | 'delivery' | 'on_site'>>(
     (searchParams.get('fulfillment')?.split(',').filter(Boolean) as Array<'pickup' | 'delivery' | 'on_site'>) || []
   );
 
   const [instantBookOnly, setInstantBookOnly] = useState(initialInstantBook);
   const [verifiedHostsOnly, setVerifiedHostsOnly] = useState(searchParams.get('verified') === 'true');
-  const [featuredOnly, setFeaturedOnly] = useState(
-    searchParams.get('featured') === '1' || searchParams.get('featured') === 'true'
-  );
   const [isFiltersOpen, setIsFiltersOpen] = useState(false);
-  const [sortBy, setSortBy] = useState<'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance'>(initialSort);
+  const [sortBy, setSortBy] = useState<'featured' | 'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance'>(initialSort);
+  // True when the text query was auto-geocoded into a place — tells the
+  // backend to skip the city-name text filter so metro suburbs inside the
+  // radius aren't excluded for not name-matching the searched city.
+  const [queryIsLocation, setQueryIsLocation] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'map' | 'split' | 'list'>('list');
   const [hoveredListingId, setHoveredListingId] = useState<string | null>(null);
   const [page, setPage] = useState(initialPage);
@@ -132,7 +170,11 @@ const Search = () => {
 
   // Auto-geocode the search query if it looks like a location and no coordinates are set
   useEffect(() => {
-    const shouldGeocode = initialQuery && !initialLat && !initialLng && !locationCoords;
+    // Specialty keywords ("coffee", "ice cream") are equipment searches, not
+    // places — the geocoder otherwise resolves "coffee" to Coffeeville, MS
+    // and wrongly location-scopes the deep links.
+    const shouldGeocode = initialQuery && !initialLat && !initialLng && !locationCoords
+      && !SPECIALTY_SEARCH_QUERIES.has(initialQuery.trim().toLowerCase());
     if (!shouldGeocode) return;
 
     const geocodeQuery = async () => {
@@ -145,6 +187,7 @@ const Search = () => {
           const coords: [number, number] = result.center; // [lng, lat]
           setLocationCoords(coords);
           setLocationText(result.text);
+          setQueryIsLocation(true);
           // Update URL with coordinates
           const params = new URLSearchParams(searchParams);
           params.set('lat', coords[1].toString());
@@ -169,7 +212,10 @@ const Search = () => {
 
   // Build search request params for edge function
   const searchRequestParams = useMemo(() => ({
-    query: searchQuery.trim() || undefined,
+    query: debouncedQuery.trim() || undefined,
+    location_scoped: queryIsLocation || undefined,
+    location_text: debouncedLocationText?.trim() || undefined,
+    auto_expand_radius: true,
     mode: mode !== 'all' ? mode : undefined,
     category: category !== 'all' ? category : undefined,
     latitude: locationCoords?.[1],
@@ -182,17 +228,16 @@ const Search = () => {
     max_price: priceRange[1] !== Infinity ? priceRange[1] : undefined,
     instant_book_only: instantBookOnly || undefined,
     verified_hosts_only: verifiedHostsOnly || undefined,
-    featured_only: featuredOnly || undefined,
     delivery_capable: deliveryFilterEnabled || undefined,
     fulfillment_types: fulfillmentTypes.length > 0 ? fulfillmentTypes : undefined,
     page,
     page_size: 20,
     sort_by: sortBy === 'price-low' ? 'price_low' : sortBy === 'price-high' ? 'price_high' : sortBy,
-  }), [searchQuery, mode, category, locationCoords, searchRadius, dateRange, selectedAmenities, priceRange, instantBookOnly, verifiedHostsOnly, featuredOnly, deliveryFilterEnabled, fulfillmentTypes, page, sortBy]);
+  }), [debouncedQuery, queryIsLocation, debouncedLocationText, mode, category, locationCoords, searchRadius, dateRange, selectedAmenities, priceRange, instantBookOnly, verifiedHostsOnly, deliveryFilterEnabled, fulfillmentTypes, page, sortBy]);
 
 
   // Fetch listings from edge function
-  const { data: searchResults, isLoading: isLoadingListings } = useQuery({
+  const { data: searchResults, isLoading: isLoadingListings, isFetching } = useQuery({
     queryKey: ['search-listings', searchRequestParams],
     queryFn: async (): Promise<SearchResponse> => {
       const { data, error } = await supabase.functions.invoke('search-listings', {
@@ -202,23 +247,78 @@ const Search = () => {
       if (error) throw error;
       return data as SearchResponse;
     },
-    placeholderData: (previousData) => previousData, // Keep previous data while loading
+    // Keep previous results ONLY when nothing but the page changed. Any
+    // meaningful search change (location, filters, sort, keyword) must show a
+    // loading state instead of presenting stale inventory as the new result.
+    placeholderData: (previousData, previousQuery) => {
+      if (!previousData || !previousQuery) return undefined;
+      const prevParams = (previousQuery.queryKey as [string, typeof searchRequestParams])[1];
+      if (!prevParams) return undefined;
+      const stripPage = ({ page: _page, ...rest }: typeof searchRequestParams) => JSON.stringify(rest);
+      return stripPage(prevParams) === stripPage(searchRequestParams) ? previousData : undefined;
+    },
   });
 
-  const listings = searchResults?.listings ?? [];
+
+  // Defensive: drop rows that stopped being publicly visible after the fetch
+  // (paused/deleted/unpublished) so cached payloads can't surface dead links.
+  const listings = filterPubliclyVisible(searchResults?.listings ?? []);
   const totalCount = searchResults?.total_count ?? 0;
   const totalPages = searchResults?.total_pages ?? 0;
+  // Anchor for the search button so results are always the visual priority.
+  const resultsRef = useRef<HTMLDivElement>(null);
 
-  // Debounced search_performed funnel event — fires ~600ms after results settle so we
+  // Featured inventory returned separately for the labeled "Sponsored" strip
+  // when the shopper picks an explicit sort — the main list honors it strictly.
+  const sponsoredListings = useMemo(
+    () => filterPubliclyVisible(searchResults?.sponsored ?? []),
+    [searchResults?.sponsored]
+  );
+
+  // Sort options shown to the shopper. Price sorts only exist in a single-mode
+  // context (sale $ vs rent $/day are incompatible units); Distance requires a
+  // selected location; Relevance requires a text query.
+  const sortOptions = useMemo(() => [
+    { value: 'featured', label: 'Featured' },
+    ...(debouncedQuery.trim() ? [{ value: 'relevance', label: 'Relevance' }] : []),
+    { value: 'newest', label: 'Newest' },
+    ...(mode !== 'all' ? [
+      { value: 'price-low', label: 'Price: Low → High' },
+      { value: 'price-high', label: 'Price: High → Low' },
+    ] : []),
+    ...(locationCoords ? [{ value: 'distance', label: 'Distance' }] : []),
+  ], [debouncedQuery, mode, locationCoords]);
+
+  // Server-side search metadata: effective radius after sparse-inventory
+  // auto-expansion, plus whether coordinate-less city/state matches were used.
+  const searchMeta = searchResults?.search_meta;
+  const effectiveRadius = searchMeta?.effective_radius_miles ?? searchRadius;
+  const radiusAutoExpanded = !!searchMeta?.radius_expanded;
+
+  // Manual CTA only when the server did NOT already widen the search.
+  const showExpandRadiusCta =
+    !!locationCoords && searchRadius < 100 && page === 1 && !isFetching &&
+    !radiusAutoExpanded && totalCount < 5;
+
+  // Debounced search_performed funnel event — fires ~1.5s after results settle so we
   // don't double-count while the user is still typing or toggling filters.
+  // Only report what was actually searched: skip while the location box is
+  // still mid-typing (raw text ahead of the debounced value) and report the
+  // debounced text, so pauses on fragments like "new" aren't logged as dead
+  // ends.
   useEffect(() => {
-    if (isLoadingListings) return;
+    // isFetching too: placeholderData keeps the previous search's count on
+    // screen while the new one loads, which would log the wrong result_count.
+    if (isLoadingListings || isFetching) return;
+    if (locationText.trim() !== debouncedLocationText.trim()) return;
+    const searchedLocation = debouncedLocationText.trim();
+    if (searchedLocation && searchedLocation.length < 3 && !locationCoords) return;
     const t = setTimeout(() => {
       const payload = {
-        query: searchQuery.trim() || undefined,
+        query: debouncedQuery.trim() || undefined,
         mode: mode !== 'all' ? mode : 'all',
         category: category !== 'all' ? category : 'all',
-        locationText: locationText || undefined,
+        locationText: searchedLocation || undefined,
         result_count: totalCount,
         page,
         source: 'search_page',
@@ -231,36 +331,83 @@ const Search = () => {
       } else {
         trackLeadEvent('search_results_returned', payload);
       }
-    }, 600);
+    }, 1500);
     return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery, mode, category, locationText, totalCount, page, isLoadingListings]);
+  }, [debouncedQuery, mode, category, locationText, debouncedLocationText, locationCoords, totalCount, page, isLoadingListings, isFetching]);
 
 
 
-  // Update URL params
+  // Typing updates the input immediately (cheap); the expensive side effects
+  // (edge-function fetch, URL rewrite, sort switch) are debounced below so a
+  // full word costs one fetch instead of one per character.
   const handleSearch = (value: string) => {
     setSearchQuery(value);
-    setPage(1); // Reset to page 1 on new search
-    const params = new URLSearchParams(searchParams);
-    if (value.trim()) {
-      params.set('q', value);
-      // Auto-select relevance sort when searching
-      if (sortBy !== 'relevance') {
-        setSortBy('relevance');
-        params.set('sort', 'relevance');
-      }
-    } else {
-      params.delete('q');
-      // Reset to newest when clearing search
-      if (sortBy === 'relevance') {
-        setSortBy('newest');
-        params.delete('sort');
-      }
-    }
-    params.delete('page');
-    setSearchParams(params);
   };
+
+  // Debounce the actual search request + URL update until typing pauses.
+  useEffect(() => {
+    if (searchQuery === debouncedQuery) return;
+    const t = setTimeout(() => {
+      const value = searchQuery;
+      setDebouncedQuery(value);
+      // Freshly typed text is keyword search, not the auto-geocoded place.
+      setQueryIsLocation(false);
+      setPage(1); // Reset to page 1 on new search
+      setSortBy(prev => {
+        if (value.trim() && prev !== 'relevance') return 'relevance';
+        if (!value.trim() && prev === 'relevance') return 'featured';
+        return prev;
+      });
+      setSearchParams(prev => {
+        const params = new URLSearchParams(prev);
+        if (value.trim()) {
+          params.set('q', value);
+          params.set('sort', 'relevance');
+        } else {
+          params.delete('q');
+          if (sortBy === 'relevance') params.delete('sort');
+        }
+        params.delete('page');
+        return params;
+      }, { replace: true });
+    }, 400);
+    return () => clearTimeout(t);
+    // Only re-run when the typed value changes; URL/sort are read functionally
+    // or as point-in-time snapshots to avoid clobbering concurrent filter taps.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchQuery]);
+
+  // Debounce location text the same way: the input stays responsive, but the
+  // edge-function request only fires once typing pauses, so partial strings
+  // like "Atl" never blank the results to skeletons.
+  useEffect(() => {
+    if (locationText === debouncedLocationText) return;
+    const t = setTimeout(() => {
+      setDebouncedLocationText(locationText);
+      setPage(1);
+    }, 400);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [locationText]);
+
+  // Deep links (specialty "Browse coffee trucks" chips, hub CTAs) can change
+  // the URL while /search is already mounted — re-sync the core filters from
+  // the params. Only applies values that differ from current state so the
+  // user's own typing/filter taps (which write the same params) never loop.
+  useEffect(() => {
+    const q = searchParams.get('q') || '';
+    const m = (searchParams.get('mode') as ListingMode | 'all') || 'all';
+    const c = (searchParams.get('category') as ListingCategory | 'all') || 'all';
+    if (q !== searchQuery && q !== debouncedQuery) {
+      setSearchQuery(q);
+      setDebouncedQuery(q);
+      setQueryIsLocation(false);
+    }
+    if (m !== mode) setMode(m);
+    if (c !== category) setCategory(c);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
 
   const handleModeChange = (value: string) => {
     const newMode = value as ListingMode | 'all';
@@ -271,10 +418,71 @@ const Search = () => {
       params.set('mode', newMode);
     } else {
       params.delete('mode');
+      // Price sorts/filters only exist in a single-mode context (sale price vs
+      // rental $/day are incompatible units) — reset them when returning to All.
+      if (sortBy === 'price-low' || sortBy === 'price-high') {
+        setSortBy('featured');
+        params.delete('sort');
+      }
+      if (priceRange[0] > 0 || priceRange[1] !== Infinity) {
+        setPriceRange([0, Infinity]);
+        params.delete('min_price');
+        params.delete('max_price');
+      }
     }
     params.delete('page');
     setSearchParams(params);
   };
+
+  // Clears an applied specialty filter — back to a neutral marketplace search.
+  const handleSpecialtyClear = () => {
+    setSearchQuery('');
+    setDebouncedQuery('');
+    setQueryIsLocation(false);
+    setCategory('all');
+    setMode('all');
+    setPage(1);
+    const params = new URLSearchParams(searchParams);
+    params.delete('q');
+    params.delete('category');
+    params.delete('mode');
+    params.delete('page');
+    setSearchParams(params);
+    trackEvent({ category: 'Search', action: 'specialty_filter_cleared', label: activeSpecialty?.key });
+  };
+
+  // Specialty browse deep links (coffee/ice cream × truck/trailer) — sets the
+  // exact same state the hub-header and listing-card links navigate to.
+  // Re-tapping the active specialty pill toggles the filter off.
+  const handleSpecialtySelect = (key: SpecialtyKey, vehicle: SpecialtyVehicle) => {
+    if (activeSpecialty?.key === key && activeSpecialty?.vehicle === vehicle) {
+      handleSpecialtyClear();
+      return;
+    }
+    const def = SPECIALTY_DEFS[key];
+    const newCategory: ListingCategory = vehicle === 'truck' ? 'food_truck' : 'food_trailer';
+    setSearchQuery(def.searchQuery);
+    setDebouncedQuery(def.searchQuery);
+    setQueryIsLocation(false);
+    setCategory(newCategory);
+    setMode('sale');
+    setPage(1);
+    const params = new URLSearchParams(searchParams);
+    params.set('q', def.searchQuery);
+    params.set('category', newCategory);
+    params.set('mode', 'sale');
+    params.delete('page');
+    setSearchParams(params);
+  };
+
+  // Highlights the matching specialty pill when the current search state is
+  // exactly a specialty browse deep link.
+  const activeSpecialty = useMemo(() => {
+    if (mode !== 'sale' || (category !== 'food_truck' && category !== 'food_trailer')) return null;
+    const q = debouncedQuery.trim().toLowerCase();
+    const key = (Object.keys(SPECIALTY_DEFS) as SpecialtyKey[]).find((k) => SPECIALTY_DEFS[k].searchQuery === q);
+    return key ? { key, vehicle: (category === 'food_truck' ? 'truck' : 'trailer') as SpecialtyVehicle } : null;
+  }, [debouncedQuery, category, mode]);
 
   const handleCategoryChange = (value: string) => {
     const newCategory = value as ListingCategory | 'all';
@@ -290,6 +498,24 @@ const Search = () => {
     setSearchParams(params);
   };
 
+  // Typed location text is part of the shareable search state even before a
+  // suggestion is picked, so it is persisted to the URL as `location`.
+  const handleLocationTextChange = (text: string) => {
+    setLocationText(text);
+    setSearchParams(prev => {
+      const params = new URLSearchParams(prev);
+      if (text.trim()) params.set('location', text);
+      else {
+        params.delete('location');
+        params.delete('lat');
+        params.delete('lng');
+        params.delete('radius');
+      }
+      params.delete('page');
+      return params;
+    }, { replace: true });
+  };
+
   const handleLocationSelect = (location: { name: string; coordinates: [number, number] } | null) => {
     setPage(1);
     if (location) {
@@ -302,14 +528,20 @@ const Search = () => {
       setSearchParams(params);
     } else {
       setLocationCoords(null);
+      // Radius / "delivers to me" are meaningless without coordinates.
+      setDeliveryFilterEnabled(false);
+      setSortBy(prev => (prev === 'distance' ? 'featured' : prev));
       const params = new URLSearchParams(searchParams);
       params.delete('lat');
       params.delete('lng');
       params.delete('radius');
+      params.delete('delivery');
+      if (params.get('sort') === 'distance') params.delete('sort');
       params.delete('page');
       setSearchParams(params);
     }
   };
+
 
   const handleRadiusChange = (radius: number) => {
     setSearchRadius(radius);
@@ -339,11 +571,13 @@ const Search = () => {
 
   const clearFilters = () => {
     setSearchQuery('');
+    setDebouncedQuery('');
     setMode('all');
     setCategory('all');
     setLocationText('');
     setLocationCoords(null);
-    setSearchRadius(100);
+    setSearchRadius(50);
+    setQueryIsLocation(false);
     setPriceRange([0, Infinity]);
     setDateRange(undefined);
     setSelectedAmenities([]);
@@ -352,17 +586,17 @@ const Search = () => {
 
     setInstantBookOnly(false);
     setVerifiedHostsOnly(false);
-    setSortBy('newest');
+    setSortBy('featured');
     setPage(1);
     setSearchParams({});
   };
 
   const handleSortChange = (value: string) => {
-    const newSort = value as 'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance';
+    const newSort = value as 'featured' | 'newest' | 'price-low' | 'price-high' | 'distance' | 'relevance';
     setSortBy(newSort);
     setPage(1);
     const params = new URLSearchParams(searchParams);
-    if (newSort !== 'newest') {
+    if (newSort !== 'featured') {
       params.set('sort', newSort);
     } else {
       params.delete('sort');
@@ -373,11 +607,17 @@ const Search = () => {
 
   const toggleAmenity = (amenityId: string) => {
     setPage(1);
-    setSelectedAmenities(prev =>
-      prev.includes(amenityId)
+    setSelectedAmenities(prev => {
+      const next = prev.includes(amenityId)
         ? prev.filter(a => a !== amenityId)
-        : [...prev, amenityId]
-    );
+        : [...prev, amenityId];
+      const params = new URLSearchParams(searchParams);
+      if (next.length > 0) params.set('amenities', next.join(','));
+      else params.delete('amenities');
+      params.delete('page');
+      setSearchParams(params);
+      return next;
+    });
   };
 
   const handleInstantBookChange = (enabled: boolean) => {
@@ -419,6 +659,28 @@ const Search = () => {
     });
   };
 
+  const handlePriceRangeChange = (value: [number, number]) => {
+    setPriceRange(value);
+    setPage(1);
+    const params = new URLSearchParams(searchParams);
+    if (value[0] > 0) params.set('min_price', String(value[0]));
+    else params.delete('min_price');
+    if (value[1] !== Infinity && Number.isFinite(value[1])) params.set('max_price', String(value[1]));
+    else params.delete('max_price');
+    params.delete('page');
+    setSearchParams(params);
+  };
+
+  const handleDeliveryFilterChange = (enabled: boolean) => {
+    setDeliveryFilterEnabled(enabled);
+    setPage(1);
+    const params = new URLSearchParams(searchParams);
+    if (enabled) params.set('delivery', '1');
+    else params.delete('delivery');
+    params.delete('page');
+    setSearchParams(params);
+  };
+
 
   const handlePageChange = (newPage: number) => {
     setPage(newPage);
@@ -451,7 +713,8 @@ const Search = () => {
   const activeFiltersCount = [
     mode !== 'all',
     category !== 'all',
-    locationCoords !== null,
+    // Typed location text counts even before a suggestion resolves coordinates.
+    locationCoords !== null || !!locationText.trim(),
     priceRange[0] > 0 || priceRange[1] !== Infinity,
     dateRange?.from && dateRange?.to,
     selectedAmenities.length > 0,
@@ -461,6 +724,12 @@ const Search = () => {
     instantBookOnly,
     verifiedHostsOnly,
   ].filter(Boolean).length;
+
+  // "Clear all" must be reachable whenever ANY non-default search state exists —
+  // including a keyword or a non-default sort, which aren't filter chips.
+  const hasActiveSearchState =
+    activeFiltersCount > 0 || !!searchQuery.trim() || !!debouncedQuery.trim() || sortBy !== 'featured';
+
 
   // Generate structured data for Google Shopping / Search indexing
   const itemListSchema = useMemo(() => {
@@ -480,18 +749,40 @@ const Search = () => {
     return generateItemListSchema(productItems, {
       mode: mode as 'rent' | 'sale' | 'all',
       category: category !== 'all' ? category : undefined,
-      query: searchQuery || undefined,
+      query: debouncedQuery || undefined,
       location: locationText || undefined,
     });
-  }, [listings, mode, category, searchQuery, locationText]);
+  }, [listings, mode, category, debouncedQuery, locationText]);
 
-  const breadcrumbSchema = useMemo(() => generateSearchBreadcrumbSchema({
-    mode: mode as 'rent' | 'sale' | 'all',
-    category: category !== 'all' ? category : undefined,
-  }), [mode, category]);
+  // Dedicated breadcrumb for specialty filtered-search URLs
+  // (Home → specialty hub → vehicle landing page); generic otherwise.
+  const breadcrumbSchema = useMemo(() => {
+    if (activeSpecialty) {
+      const def = SPECIALTY_DEFS[activeSpecialty.key];
+      const seo = SPECIALTY_SEARCH_SEO[activeSpecialty.key][activeSpecialty.vehicle];
+      const landingPath = specialtyVehicleHref(activeSpecialty.key, activeSpecialty.vehicle);
+      return {
+        '@context': 'https://schema.org',
+        '@type': 'BreadcrumbList',
+        itemListElement: [
+          { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://vendibook.com/' },
+          { '@type': 'ListItem', position: 2, name: `${def.pluralTitle} for Sale`, item: `https://vendibook.com${def.hubPath}` },
+          { '@type': 'ListItem', position: 3, name: seo.crumb, item: `https://vendibook.com${landingPath}` },
+        ],
+      };
+    }
+    return generateSearchBreadcrumbSchema({
+      mode: mode as 'rent' | 'sale' | 'all',
+      category: category !== 'all' ? category : undefined,
+    });
+  }, [activeSpecialty, mode, category]);
 
-  // Build dynamic SEO title and description
+  // Build dynamic SEO title and description. Specialty filtered-search URLs
+  // get dedicated editorial metadata instead of the generic pattern.
   const seoTitle = useMemo(() => {
+    if (activeSpecialty) {
+      return SPECIALTY_SEARCH_SEO[activeSpecialty.key][activeSpecialty.vehicle].title;
+    }
     const parts: string[] = [];
     if (category !== 'all') {
       parts.push(CATEGORY_LABELS[category as keyof typeof CATEGORY_LABELS] || 'Listings');
@@ -505,18 +796,31 @@ const Search = () => {
       parts.push(`in ${locationText}`);
     }
     return `${parts.join(' ')} | Vendibook`;
-  }, [category, mode, locationText]);
+  }, [activeSpecialty, category, mode, locationText]);
 
   const seoDescription = useMemo(() => {
-    const categoryLabel = category !== 'all' 
-      ? CATEGORY_LABELS[category as keyof typeof CATEGORY_LABELS]?.toLowerCase() 
+    if (activeSpecialty) {
+      return SPECIALTY_SEARCH_SEO[activeSpecialty.key][activeSpecialty.vehicle].description;
+    }
+    const categoryLabel = category !== 'all'
+      ? CATEGORY_LABELS[category as keyof typeof CATEGORY_LABELS]?.toLowerCase()
       : 'food trucks, trailers, and shared kitchens';
-    const modeLabel = mode !== 'all' 
-      ? (mode === 'rent' ? 'rent' : 'buy') 
+    const modeLabel = mode !== 'all'
+      ? (mode === 'rent' ? 'rent' : 'buy')
       : 'rent or buy';
     const locationLabel = locationText ? ` in ${locationText}` : '';
-    return `Browse ${totalCount}+ ${categoryLabel} available to ${modeLabel}${locationLabel}. Verified listings with secure payments on Vendibook.`;
-  }, [category, mode, locationText, totalCount]);
+    return `Browse ${totalCount}+ ${categoryLabel} available to ${modeLabel}${locationLabel}. Compare listings and book with payment protection on Vendibook.`;
+  }, [activeSpecialty, category, mode, locationText, totalCount]);
+
+  // Specialty filtered-search URLs canonicalize to their dedicated landing
+  // page where one exists (coffee / ice cream) so the two surfaces never
+  // compete for the same query; the rest self-canonicalize with their full
+  // query string as a distinct, indexable search state.
+  const seoCanonical = useMemo(() => {
+    if (!activeSpecialty) return '/search';
+    return specialtyVehicleHref(activeSpecialty.key, activeSpecialty.vehicle);
+  }, [activeSpecialty]);
+
 
   // Generate page numbers for pagination
   const getPageNumbers = () => {
@@ -551,11 +855,15 @@ const Search = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    // `sale-light` is the same warm-ivory theme scope the For Sale listing
+    // detail page uses — white surfaces, charcoal type, soft hairlines, orange
+    // reserved for actions. Search now reads as the same product family.
+    <div className="sale-light min-h-screen flex flex-col bg-background">
+
       <SEO
         title={seoTitle}
         description={seoDescription}
-        canonical="/search"
+        canonical={seoCanonical}
       />
       <JsonLd schema={[itemListSchema, breadcrumbSchema]} />
       <Header hideSearch />
@@ -563,88 +871,124 @@ const Search = () => {
       <main className="flex-1">
       {/* Spacer - logo/tagline removed */}
 
-        {/* Search Header — Premium hero with layered gradients */}
-        <div className="relative border-b border-border/40 overflow-hidden">
-          {/* Layered ambient background */}
-          <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.04] via-background to-background" />
-          <div className="absolute -top-32 -left-32 w-96 h-96 rounded-full bg-primary/10 blur-3xl pointer-events-none" />
-          <div className="absolute -top-20 right-0 w-80 h-80 rounded-full bg-primary/5 blur-3xl pointer-events-none" />
-          {/* Grid texture */}
-          <div
-            className="absolute inset-0 opacity-[0.015] pointer-events-none"
-            style={{
-              backgroundImage: 'linear-gradient(hsl(var(--foreground)) 1px, transparent 1px), linear-gradient(90deg, hsl(var(--foreground)) 1px, transparent 1px)',
-              backgroundSize: '32px 32px',
-            }}
-          />
-          {/* Bottom glow line */}
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-2/3 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/3 h-[2px] bg-gradient-to-r from-transparent via-primary/25 to-transparent blur-sm" />
-
-          <div className="container relative py-5 sm:py-6">
-            {/* Title row — micro headline + live result chip */}
-            <div className="flex items-center justify-between mb-3 sm:mb-4">
-              <div className="flex items-center gap-2.5">
-                <div className="h-8 w-8 rounded-lg bg-foreground flex items-center justify-center shadow-sm">
-                  <SearchIcon className="h-4 w-4 text-background" />
-                </div>
-                <div>
-                  <h1 className="text-base sm:text-lg font-semibold text-foreground leading-tight">
-                    {category !== 'all' ? CATEGORY_LABELS[category] : 'Browse the marketplace'}
-                  </h1>
-                  <p className="text-[11px] sm:text-xs text-muted-foreground leading-tight">
-                    {locationText ? `Near ${locationText}` : 'Trucks, trailers, kitchens & vendor spaces nationwide'}
-                  </p>
-                </div>
-              </div>
+        {/* ------------------------------------------------------------ */}
+        {/* Search header — warm ivory band, one premium What / Where     */}
+        {/* control, dark confident action. No gradients or grid texture. */}
+        {/* ------------------------------------------------------------ */}
+        <div className="border-b border-[#1b1714]/[0.08] bg-[#faf8f5]">
+          <div className="container py-4 sm:py-6">
+            {/* Page title — quiet, editorial */}
+            <div className="mb-3 sm:mb-4">
+              <h1 className="text-xl sm:text-2xl font-semibold tracking-[-0.015em] text-foreground leading-tight">
+                {category !== 'all' ? CATEGORY_LABELS[category] : 'Browse the marketplace'}
+              </h1>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {locationText
+                  ? `Trucks, trailers, kitchens and vendor spaces near ${locationText}`
+                  : 'Food trucks, trailers, commercial kitchens and vendor spaces'}
+              </p>
             </div>
 
-            {/* Row 1: Premium search input + filters */}
-            <div className="flex gap-2 sm:gap-3">
-              <div className="relative flex-1 group">
-                {/* Glow halo on focus */}
-                <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 opacity-0 group-focus-within:opacity-100 blur-sm transition-opacity pointer-events-none" />
-                <div className="relative flex items-center bg-card/90 backdrop-blur-md border border-border/60 rounded-2xl shadow-sm group-focus-within:border-primary/60 group-focus-within:shadow-md transition-all">
-                  <SearchIcon className="absolute left-4 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+            {/* Unified search control: What / Where / action.
+                One surface on desktop, cleanly stacked on mobile so both
+                fields stay reachable one-handed (location is never buried). */}
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-stretch sm:gap-3">
+              <div className="flex-1 overflow-visible rounded-2xl border border-[#1b1714]/[0.10] bg-card shadow-[0_1px_2px_rgba(24,20,16,0.04),0_14px_34px_-26px_rgba(24,20,16,0.45)] transition-shadow duration-200 focus-within:border-[#1b1714]/20 focus-within:shadow-[0_2px_6px_rgba(24,20,16,0.07),0_18px_40px_-26px_rgba(24,20,16,0.5)] sm:flex sm:items-center">
+                {/* What */}
+                <div className="relative flex items-center sm:flex-[1.15]">
+                  <SearchIcon className="pointer-events-none absolute left-4 h-4 w-4 text-muted-foreground" />
                   <Input
                     type="text"
-                    placeholder="Search trucks, trailers, kitchens, locations…"
+                    placeholder="What are you looking for?"
+                    aria-label="Search inventory by keyword"
                     value={searchQuery}
                     onChange={(e) => handleSearch(e.target.value)}
-                    className="pl-11 pr-10 h-12 text-sm rounded-2xl border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 shadow-none"
+                    className="h-12 rounded-2xl border-0 bg-transparent pl-11 pr-9 text-base shadow-none placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0 sm:text-sm"
                   />
                   {searchQuery && (
                     <button
+                      type="button"
                       onClick={() => handleSearch('')}
-                      className="absolute right-3.5 h-6 w-6 rounded-full hover:bg-muted flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-                      aria-label="Clear search"
+                      className="absolute right-3 flex h-6 w-6 items-center justify-center rounded-full text-muted-foreground transition-colors hover:bg-foreground/[0.06] hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30"
+                      aria-label="Clear keyword"
                     >
                       <X className="h-3.5 w-3.5" />
                     </button>
                   )}
                 </div>
+
+                {/* Divider — hairline between the two questions */}
+                <div className="mx-4 h-px bg-[#1b1714]/[0.08] sm:mx-0 sm:h-7 sm:w-px" aria-hidden />
+
+                {/* Where */}
+                <div className="relative flex items-center sm:flex-1">
+                  <MapPin className="pointer-events-none absolute left-4 z-10 h-4 w-4 text-muted-foreground" />
+                  <LocationSearchInput
+                    value={locationText}
+                    onChange={handleLocationTextChange}
+                    onLocationSelect={handleLocationSelect}
+                    selectedCoordinates={locationCoords}
+                    placeholder="Where? City, state, or ZIP"
+                    className="w-full [&>div:first-child]:w-full [&_input]:h-12 [&_input]:rounded-2xl [&_input]:border-0 [&_input]:bg-transparent [&_input]:pl-11 [&_input]:text-base [&_input]:shadow-none [&_input]:focus-visible:ring-0 [&_input]:focus-visible:ring-offset-0 sm:[&_input]:text-sm"
+                  />
+                </div>
+
+                {/* Dark action — the confident charcoal element */}
+                <div className="hidden sm:block sm:pr-1.5">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      (document.activeElement as HTMLElement | null)?.blur();
+                      resultsRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }}
+                    className="flex h-10 w-10 items-center justify-center rounded-full bg-foreground text-background transition-transform duration-200 hover:scale-[1.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/40 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+                    aria-label="Search"
+                  >
+                    <SearchIcon className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
 
-              {/* Filter Button */}
+              {/* Filters */}
               <Sheet open={isFiltersOpen} onOpenChange={setIsFiltersOpen}>
                 <SheetTrigger asChild>
-                  <Button variant="dark-shine" size="default" className="rounded-2xl relative shrink-0 h-12 px-4 sm:px-5 shadow-sm">
-                    <SlidersHorizontal className="h-4 w-4 sm:mr-2" />
-                    <span className="hidden sm:inline">Filters</span>
+                  <Button
+                    variant="outline"
+                    className="relative h-12 shrink-0 rounded-2xl border-[#1b1714]/[0.14] bg-card px-5 text-foreground shadow-[0_1px_2px_rgba(24,20,16,0.04)] transition-colors hover:bg-secondary md:hidden"
+                  >
+                    <SlidersHorizontal className="mr-2 h-4 w-4" />
+                    Filters
                     {activeFiltersCount > 0 && (
-                      <span className="absolute -top-1.5 -right-1.5 h-5 min-w-[20px] px-1 bg-primary text-primary-foreground text-[10px] rounded-full flex items-center justify-center font-bold shadow-lg ring-2 ring-background">
+                      <span className="ml-2 inline-flex h-5 min-w-[20px] items-center justify-center rounded-full bg-foreground px-1 text-[11px] font-semibold text-background">
                         {activeFiltersCount}
                       </span>
                     )}
                   </Button>
                 </SheetTrigger>
-                <SheetContent side="bottom" className="h-[85vh] flex flex-col">
-                  <SheetHeader className="shrink-0">
-                    <SheetTitle>Filters</SheetTitle>
-                  </SheetHeader>
-                  <ScrollArea className="flex-1 mt-4 -mx-6 px-6">
+                <SheetContent
+                  side="bottom"
+                  className="sale-light flex h-[85vh] flex-col rounded-t-3xl border-t-0 p-0 shadow-[0_-18px_60px_-24px_rgba(24,20,16,0.45)] data-[state=open]:duration-300 data-[state=closed]:duration-200"
+                >
+                  <div className="shrink-0 border-b border-[#1b1714]/[0.08] px-6 pb-3 pt-3">
+                    <div className="mx-auto mb-3 h-1 w-10 rounded-full bg-[#1b1714]/15" aria-hidden />
+                    <SheetHeader className="flex-row items-center justify-between space-y-0 text-left">
+                      <SheetTitle className="text-base tracking-tight">Filters</SheetTitle>
+                      {hasActiveSearchState && (
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={clearFilters}
+                          className="h-8 px-2 text-xs text-primary hover:text-primary"
+                        >
+                          Clear all
+                        </Button>
+                      )}
+                    </SheetHeader>
+                  </div>
+                  <ScrollArea className="flex-1 scroll-smooth px-6 pt-4">
                     <div className="pb-6">
                       <FilterContent
+                        locationFirst
                         mode={mode}
                         category={category}
                         locationText={locationText}
@@ -660,13 +1004,13 @@ const Search = () => {
                         verifiedHostsOnly={verifiedHostsOnly}
                         onModeChange={handleModeChange}
                         onCategoryChange={handleCategoryChange}
-                        onLocationTextChange={setLocationText}
+                        onLocationTextChange={handleLocationTextChange}
                         onLocationSelect={handleLocationSelect}
                         onRadiusChange={handleRadiusChange}
-                        onPriceRangeChange={setPriceRange}
+                        onPriceRangeChange={handlePriceRangeChange}
                         onDateRangeChange={handleDateRangeChange}
                         onAmenityToggle={toggleAmenity}
-                        onDeliveryFilterChange={setDeliveryFilterEnabled}
+                        onDeliveryFilterChange={handleDeliveryFilterChange}
                         onFulfillmentToggle={handleFulfillmentToggle}
 
                         onInstantBookChange={handleInstantBookChange}
@@ -675,12 +1019,72 @@ const Search = () => {
                       />
                     </div>
                   </ScrollArea>
+                  <div className="flex shrink-0 items-center gap-3 border-t border-[#1b1714]/[0.08] px-6 py-3 pb-[calc(env(safe-area-inset-bottom,0px)+12px)]">
+                    <Button
+                      variant="ghost"
+                      className="h-12 shrink-0 rounded-2xl px-3 text-sm text-primary hover:text-primary"
+                      onClick={clearFilters}
+                      disabled={!hasActiveSearchState}
+                    >
+                      Clear all
+                    </Button>
+                    <Button
+                      variant="cta"
+                      className="h-12 flex-1 rounded-2xl"
+                      onClick={() => setIsFiltersOpen(false)}
+                    >
+                      Show results
+                    </Button>
+                  </div>
                 </SheetContent>
               </Sheet>
             </div>
 
-            {/* Airbnb-style category pill strip */}
-            <div className="mt-3 -mx-1">
+            {/* Marketplace mode — All is the default unless the URL says otherwise */}
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <div
+                className="inline-flex items-center gap-0.5 rounded-full border border-[#1b1714]/[0.10] bg-card p-1"
+                role="tablist"
+                aria-label="Listing type"
+              >
+                {([
+                  { value: 'all', label: 'All' },
+                  { value: 'sale', label: 'For Sale' },
+                  { value: 'rent', label: 'For Rent' },
+                ] as const).map((option) => (
+                  <button
+                    key={option.value}
+                    type="button"
+                    role="tab"
+                    aria-selected={mode === option.value}
+                    onClick={() => handleModeChange(option.value)}
+                    className={cn(
+                      'no-tap-highlight h-9 rounded-full px-4 text-sm font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30',
+                      mode === option.value
+                        ? 'bg-foreground text-background'
+                        : 'text-muted-foreground hover:text-foreground'
+                    )}
+                  >
+                    {option.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Clear all is never hidden while a filter is on */}
+              {hasActiveSearchState && (
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="inline-flex h-9 items-center gap-1.5 rounded-full border border-[#1b1714]/[0.12] bg-card px-3.5 text-sm font-medium text-foreground transition-colors hover:bg-secondary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30"
+                >
+                  <X className="h-3.5 w-3.5" />
+                  Clear all filters
+                </button>
+              )}
+            </div>
+
+            {/* Category pills */}
+            <div className="-mx-1 mt-3">
               <CategoryPillStrip
                 activeCategory={category}
                 onCategoryChange={handleCategoryChange}
@@ -688,91 +1092,30 @@ const Search = () => {
                 onInstantBookToggle={handleInstantBookChange}
                 verifiedHostsOnly={verifiedHostsOnly}
                 onVerifiedToggle={handleVerifiedHostsChange}
+                activeSpecialty={activeSpecialty}
+                onSpecialtySelect={handleSpecialtySelect}
+                onSpecialtyClear={handleSpecialtyClear}
               />
-            </div>
-
-            {/* Row 2: Results count + Sort + View toggle + Save Search */}
-            <div className="mt-4 flex items-center justify-between gap-3">
-              <div className="flex items-center gap-2 min-w-0">
-                <p className="text-sm text-muted-foreground truncate">
-                  {isLoadingListings ? (
-                    <span className="inline-flex items-center gap-1.5">
-                      <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                      Searching marketplace…
-                    </span>
-                  ) : (
-                    <>
-                      <span className="font-bold text-foreground tabular-nums">{totalCount.toLocaleString()}</span>
-                      {' '}listing{totalCount !== 1 ? 's' : ''}
-                      {searchQuery && (
-                        <span className="hidden sm:inline"> matching <span className="font-medium text-foreground">"{searchQuery}"</span></span>
-                      )}
-                      {totalPages > 1 && (
-                        <span className="hidden md:inline text-muted-foreground/70"> · pg {page}/{totalPages}</span>
-                      )}
-                    </>
-                  )}
-                </p>
-              </div>
-              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
-                <SaveSearchButton
-                  category={category !== 'all' ? category : undefined}
-                  mode={mode !== 'all' ? mode : undefined}
-                  locationText={locationText}
-                  latitude={locationCoords?.[1]}
-                  longitude={locationCoords?.[0]}
-                  radiusMiles={searchRadius}
-                  instantBookOnly={instantBookOnly}
-                  amenities={selectedAmenities}
-                />
-
-                <ToggleGroup
-                  type="single"
-                  value={viewMode}
-                  onValueChange={(value) => value && setViewMode(value as 'grid' | 'map' | 'split' | 'list')}
-                  className="bg-card/80 backdrop-blur-sm border border-border/60 rounded-xl p-0.5 shadow-sm"
-                >
-                  <ToggleGroupItem value="grid" aria-label="Grid view" title="Grid view" className="h-8 px-2.5 rounded-lg data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm transition-all">
-                    <LayoutGrid className="h-3.5 w-3.5" />
-                  </ToggleGroupItem>
-                  <ToggleGroupItem value="list" aria-label="List view" title="List view" className="h-8 px-2.5 rounded-lg data-[state=on]:bg-foreground data-[state=on]:text-background data-[state=on]:shadow-sm transition-all">
-                    <Rows3 className="h-3.5 w-3.5" />
-                  </ToggleGroupItem>
-                </ToggleGroup>
-
-                <div className="relative">
-                  <select
-                    value={sortBy}
-                    onChange={(e) => handleSortChange(e.target.value)}
-                    className="appearance-none text-xs font-medium border border-border/60 rounded-xl pl-3 pr-7 py-2 h-9 bg-card/80 backdrop-blur-sm shadow-sm hover:bg-muted/50 hover:border-border transition-all cursor-pointer focus:outline-none focus:border-primary/60"
-                  >
-                    <option value="newest">Newest</option>
-                    {searchQuery.trim() && <option value="relevance">Relevance</option>}
-                    <option value="price_low">Price: Low → High</option>
-                    <option value="price_high">Price: High → Low</option>
-                    {locationCoords && <option value="distance">Distance</option>}
-                  </select>
-                  <svg className="absolute right-2 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" /></svg>
-                </div>
-              </div>
             </div>
           </div>
         </div>
+
         {/* Results */}
         <div className="container py-6">
           <div className="flex gap-8">
             {/* Desktop Sidebar Filters - Enhanced card styling */}
-            <aside className="hidden md:block w-64 shrink-0">
+            <aside className="hidden md:block w-[15rem] lg:w-[16rem] shrink-0 self-start sticky top-24">
               <div
-                className="sticky top-24 space-y-6 p-5 rounded-2xl border border-border/50 bg-card/50 backdrop-blur-sm"
+                className="sale-light space-y-5 p-4 rounded-2xl border border-[#1b1714]/[0.07] shadow-[0_1px_2px_rgba(24,20,16,0.04),0_14px_34px_-26px_rgba(0,0,0,0.45)] max-h-[calc(100vh-7.5rem)] overflow-y-auto overscroll-contain scroll-smooth scrollbar-quiet"
               >
                 <div className="flex items-center justify-between">
-                  <h2 className="font-semibold text-foreground">Filters</h2>
-                  {activeFiltersCount > 0 && (
+                  <h2 className="text-sm font-semibold tracking-tight text-foreground">Filters</h2>
+                  {hasActiveSearchState && (
                     <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs text-primary hover:text-primary">
                       Clear all
                     </Button>
                   )}
+
                 </div>
                 <FilterContent
                   mode={mode}
@@ -789,13 +1132,13 @@ const Search = () => {
                   verifiedHostsOnly={verifiedHostsOnly}
                   onModeChange={handleModeChange}
                   onCategoryChange={handleCategoryChange}
-                  onLocationTextChange={setLocationText}
+                  onLocationTextChange={handleLocationTextChange}
                   onLocationSelect={handleLocationSelect}
                   onRadiusChange={handleRadiusChange}
-                  onPriceRangeChange={setPriceRange}
+                  onPriceRangeChange={handlePriceRangeChange}
                   onDateRangeChange={handleDateRangeChange}
                   onAmenityToggle={toggleAmenity}
-                  onDeliveryFilterChange={setDeliveryFilterEnabled}
+                  onDeliveryFilterChange={handleDeliveryFilterChange}
                   onFulfillmentToggle={handleFulfillmentToggle}
 
                   onInstantBookChange={handleInstantBookChange}
@@ -806,10 +1149,113 @@ const Search = () => {
             </aside>
 
             {/* Results Grid */}
-            <div className="flex-1">
+            <div className="flex-1" ref={resultsRef}>
+
+              {/* Results header — confident context, then sort / view / save.
+                  Fixed min-height so the row never jumps between fetches. */}
+              <div className="mb-4 flex min-h-[2.75rem] flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="min-w-0" aria-live="polite">
+                  {isLoadingListings || isFetching ? (
+                    <span className="inline-flex items-center gap-2 text-sm text-muted-foreground">
+                      <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-primary" />
+                      Searching the marketplace…
+                    </span>
+                  ) : (
+                    <>
+                      <p className="text-[15px] font-semibold tracking-[-0.01em] text-foreground">
+                        {locationText ? `Listings near ${locationText}` : 'Listings nationwide'}
+                        {debouncedQuery ? ` for “${debouncedQuery}”` : ''}
+                      </p>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        {locationCoords ? (
+                          radiusAutoExpanded ? (
+                            <>Only a few listings nearby — expanded to {effectiveRadius} miles.</>
+                          ) : (
+                            <>Showing results within {effectiveRadius} miles.</>
+                          )
+                        ) : (
+                          'Add a location to see what’s closest to you.'
+                        )}
+                        {searchMeta?.text_fallback_used && ' Includes nearby city matches.'}
+                        {totalPages > 1 && (
+                          <span className="text-muted-foreground/70"> · Page {page} of {totalPages}</span>
+                        )}
+                        {showExpandRadiusCta && (
+                          <button
+                            type="button"
+                            onClick={() => handleRadiusChange(100)}
+                            className="ml-2 font-medium text-primary underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
+                          >
+                            Expand to 100 miles
+                          </button>
+                        )}
+                      </p>
+                    </>
+                  )}
+                </div>
+
+                <div className="flex shrink-0 items-center gap-2">
+                  <SaveSearchButton
+                    category={category !== 'all' ? category : undefined}
+                    mode={mode !== 'all' ? mode : undefined}
+                    locationText={locationText}
+                    latitude={locationCoords?.[1]}
+                    longitude={locationCoords?.[0]}
+                    radiusMiles={searchRadius}
+                    instantBookOnly={instantBookOnly}
+                    amenities={selectedAmenities}
+                  />
+                  <SortControl sortBy={sortBy} options={sortOptions} onChange={handleSortChange} />
+                  <ToggleGroup
+                    type="single"
+                    value={viewMode}
+                    onValueChange={(value) => value && setViewMode(value as 'grid' | 'map' | 'split' | 'list')}
+                    className="rounded-xl border border-[#1b1714]/[0.12] bg-card p-0.5"
+                  >
+                    <ToggleGroupItem value="grid" aria-label="Grid view" title="Grid view" className="h-8 rounded-lg px-2 text-muted-foreground transition-colors data-[state=on]:bg-foreground data-[state=on]:text-background">
+                      <LayoutGrid className="h-3.5 w-3.5" />
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="list" aria-label="List view" title="List view" className="h-8 rounded-lg px-2 text-muted-foreground transition-colors data-[state=on]:bg-foreground data-[state=on]:text-background">
+                      <Rows3 className="h-3.5 w-3.5" />
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="split" aria-label="Split view" title="Split view (list + map)" className="hidden h-8 rounded-lg px-2 text-muted-foreground transition-colors data-[state=on]:bg-foreground data-[state=on]:text-background md:flex">
+                      <Columns className="h-3.5 w-3.5" />
+                    </ToggleGroupItem>
+                    <ToggleGroupItem value="map" aria-label="Map view" title="Map view" className="h-8 rounded-lg px-2 text-muted-foreground transition-colors data-[state=on]:bg-foreground data-[state=on]:text-background">
+                      <Map className="h-3.5 w-3.5" />
+                    </ToggleGroupItem>
+                  </ToggleGroup>
+                </div>
+              </div>
+
+              {/* Radius selector — "search closer" or widen, without hunting
+                  through the filter sheet. Only meaningful with coordinates. */}
+              {locationCoords && (
+                <div className="mb-4 flex flex-wrap items-center gap-1.5">
+                  <span className="text-xs text-muted-foreground">Within</span>
+                  {[10, 25, 50, 100, 250].map((r) => (
+                    <button
+                      key={r}
+                      type="button"
+                      onClick={() => handleRadiusChange(r)}
+                      aria-pressed={searchRadius === r}
+                      className={cn(
+                        'rounded-full border px-2.5 py-1 text-xs font-medium transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-foreground/30',
+                        searchRadius === r
+                          ? 'border-foreground bg-foreground text-background'
+                          : 'border-[#1b1714]/[0.12] bg-card text-muted-foreground hover:text-foreground'
+                      )}
+                    >
+                      {r} mi
+                    </button>
+                  ))}
+                  <span className="text-xs text-muted-foreground">of {locationText || 'selected location'}</span>
+                </div>
+              )}
+
 
               {/* Active Filters Badges */}
-              {(mode !== 'all' || category !== 'all' || locationCoords || dateRange?.from || selectedAmenities.length > 0 || instantBookOnly || verifiedHostsOnly) && (
+              {(mode !== 'all' || category !== 'all' || locationCoords || locationText.trim() || dateRange?.from || selectedAmenities.length > 0 || instantBookOnly || verifiedHostsOnly) && (
                 <div className="flex flex-wrap gap-2 mb-6">
                   {mode !== 'all' && (
                     <Badge variant="secondary" className="gap-1">
@@ -840,13 +1286,13 @@ const Search = () => {
                   {verifiedHostsOnly && (
                     <Badge variant="secondary" className="gap-1 bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400">
                       <Shield className="h-3 w-3" />
-                      Verified Hosts
+                      Identity Verified
                       <button onClick={() => handleVerifiedHostsChange(false)}>
                         <X className="h-3 w-3 ml-1" />
                       </button>
                     </Badge>
                   )}
-                  {locationCoords && (
+                  {locationCoords ? (
                     <Badge variant="secondary" className="gap-1">
                       <Navigation className="h-3 w-3" />
                       {locationText || 'Selected location'} ({searchRadius} mi)
@@ -857,7 +1303,23 @@ const Search = () => {
                         <X className="h-3 w-3 ml-1" />
                       </button>
                     </Badge>
-                  )}
+                  ) : locationText.trim() ? (
+                    // Typed-but-unresolved location still filters server-side via location_text.
+                    <Badge variant="secondary" className="gap-1">
+                      <MapPin className="h-3 w-3" />
+                      {locationText}
+                      <button
+                        aria-label="Clear location"
+                        onClick={() => {
+                          setLocationText('');
+                          handleLocationSelect(null);
+                        }}
+                      >
+                        <X className="h-3 w-3 ml-1" />
+                      </button>
+                    </Badge>
+                  ) : null}
+
                   {dateRange?.from && dateRange?.to && (
                     <Badge variant="secondary" className="gap-1">
                       <CalendarIcon className="h-3 w-3" />
@@ -921,6 +1383,7 @@ const Search = () => {
                               showQuickBook
                               onQuickBook={handleQuickBook}
                               canDeliverToUser={listing.can_deliver ?? false}
+                              variant="search"
                               compact
                             />
                             {listing.distance_miles !== null && listing.distance_miles !== undefined && (
@@ -938,12 +1401,15 @@ const Search = () => {
                             onClearFilters={clearFilters}
                             category={category !== 'all' ? category : undefined}
                             mode={mode !== 'all' ? mode : undefined}
-                            locationText={searchQuery || locationText}
+                            locationText={debouncedQuery || locationText}
                             activeFiltersCount={activeFiltersCount}
                           />
                         </div>
                       )}
                     </div>
+                    {mode !== 'rent' && listings.some((l: any) => l.mode === 'sale') && (
+                      <p className="mt-6 text-[11px] leading-snug text-muted-foreground">{illustrativeFinancingNote}</p>
+                    )}
                     {totalPages > 1 && (
                       <div className="mt-8 mb-4">
                         <Pagination>
@@ -972,7 +1438,32 @@ const Search = () => {
               {/* List View — compact horizontal rows */}
               {viewMode === 'list' && (
                 <>
-                  {listings.length > 0 ? (
+                  {sponsoredListings.length > 0 && (
+                    <div className="mb-5">
+                      <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Sponsored</p>
+                      <div className="space-y-3">
+                        {sponsoredListings.map((listing) => (
+                          <ListingCard
+                            key={`sponsored-${listing.id}`}
+                            listing={listing}
+                            hostVerified={listing.host_verified ?? false}
+                            showQuickBook
+                            onQuickBook={handleQuickBook}
+                            canDeliverToUser={listing.can_deliver ?? false}
+                            variant="search"
+                            horizontal
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {isLoadingListings && listings.length === 0 ? (
+                    <div className="space-y-3">
+                      {Array.from({ length: 4 }).map((_, i) => (
+                        <SkeletonCard key={i} variant="row" />
+                      ))}
+                    </div>
+                  ) : listings.length > 0 ? (
                     <div className="space-y-3">
                       {listings.map((listing) => (
                         <div key={listing.id} className="relative">
@@ -982,7 +1473,8 @@ const Search = () => {
                             showQuickBook
                             onQuickBook={handleQuickBook}
                             canDeliverToUser={listing.can_deliver ?? false}
-                            compact
+                            variant="search"
+                            horizontal
                           />
                           {listing.distance_miles !== null && listing.distance_miles !== undefined && (
                             <div className="absolute top-3 left-3 bg-background/95 backdrop-blur-sm px-2 py-1 rounded-full text-[11px] font-semibold flex items-center gap-1 z-10 shadow-sm border border-border/40">
@@ -999,9 +1491,12 @@ const Search = () => {
                       onClearFilters={clearFilters}
                       category={category !== 'all' ? category : undefined}
                       mode={mode !== 'all' ? mode : undefined}
-                      locationText={searchQuery || locationText}
+                      locationText={debouncedQuery || locationText}
                       activeFiltersCount={activeFiltersCount}
                     />
+                  )}
+                  {mode !== 'rent' && listings.some((l: any) => l.mode === 'sale') && (
+                    <p className="mt-6 text-[11px] leading-snug text-muted-foreground">{illustrativeFinancingNote}</p>
                   )}
                   {totalPages > 1 && (
                     <div className="mt-8">
@@ -1069,6 +1564,24 @@ const Search = () => {
                     </div>
                   ) : listings.length > 0 ? (
                     <>
+                    {sponsoredListings.length > 0 && (
+                      <div className="mb-6">
+                        <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground mb-2">Sponsored</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                          {sponsoredListings.map((listing) => (
+                            <ListingCard
+                              key={`sponsored-${listing.id}`}
+                              listing={listing}
+                              hostVerified={listing.host_verified ?? false}
+                              showQuickBook
+                              onQuickBook={handleQuickBook}
+                              canDeliverToUser={listing.can_deliver ?? false}
+                              variant="search"
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
 
                       {listings.map((listing, index) => (
@@ -1091,6 +1604,7 @@ const Search = () => {
                               showQuickBook
                               onQuickBook={handleQuickBook}
                               canDeliverToUser={listing.can_deliver ?? false}
+                              variant="search"
                             />
                             {listing.distance_miles !== null && listing.distance_miles !== undefined && (
                               <div className="absolute top-3 left-3 bg-background/90 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-medium flex items-center gap-1 z-10">
@@ -1121,7 +1635,7 @@ const Search = () => {
                       onClearFilters={clearFilters}
                       category={category !== 'all' ? category : undefined}
                       mode={mode !== 'all' ? mode : undefined}
-                      locationText={searchQuery || locationText}
+                      locationText={debouncedQuery || locationText}
                       activeFiltersCount={activeFiltersCount}
                     />
                   )}
@@ -1194,7 +1708,17 @@ const Search = () => {
         initialEndDate={dateRange?.to}
       />
 
-      {/* Mobile floating Map/List toggle temporarily disabled while Maps API is offline */}
+      {/* Mobile floating Map/List toggle */}
+      <button
+        type="button"
+        onClick={() => setViewMode(viewMode === 'map' ? 'list' : 'map')}
+        className="md:hidden fixed bottom-24 left-1/2 -translate-x-1/2 z-40 flex items-center gap-2 rounded-full bg-foreground text-background px-4 py-2.5 text-xs font-semibold shadow-lg"
+        aria-label={viewMode === 'map' ? 'Show list' : 'Show map'}
+      >
+        {viewMode === 'map' ? <Rows3 className="h-4 w-4" /> : <Map className="h-4 w-4" />}
+        {viewMode === 'map' ? 'List' : 'Map'}
+      </button>
+
 
       {/* Mobile Sticky Bar */}
       <MobileStickyBar
@@ -1204,13 +1728,55 @@ const Search = () => {
         onFiltersClick={() => setIsFiltersOpen(true)}
         hasLocation={!!locationCoords}
         hasSearchQuery={!!searchQuery.trim()}
+        showPriceSorts={mode !== 'all'}
       />
     </div>
   );
 };
 
+// Labeled Sort control rendered directly above results (desktop + mobile).
+const SortControl = ({ sortBy, options, onChange }: {
+  sortBy: string;
+  options: { value: string; label: string }[];
+  onChange: (value: string) => void;
+}) => {
+  const current = options.find((o) => o.value === sortBy)?.label ?? 'Featured';
+  return (
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          type="button"
+          aria-label={`Sort results, currently ${current}`}
+          className="inline-flex items-center gap-2 h-9 pl-3.5 pr-3 rounded-full border border-border/50 bg-background/70 backdrop-blur text-sm text-foreground hover:border-border transition-colors duration-200 shrink-0"
+        >
+          <ArrowUpDown className="h-3.5 w-3.5 text-muted-foreground" />
+          <span className="whitespace-nowrap">
+            <span className="text-muted-foreground">Sort:</span>{' '}
+            <span className="font-semibold">{current}</span>
+          </span>
+          <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
+        </button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-56 rounded-xl">
+        {options.map((o) => (
+          <DropdownMenuItem
+            key={o.value}
+            onClick={() => onChange(o.value)}
+            className="flex items-center justify-between gap-2"
+          >
+            {o.label}
+            {sortBy === o.value && <Check className="h-4 w-4 text-primary" />}
+          </DropdownMenuItem>
+        ))}
+      </DropdownMenuContent>
+    </DropdownMenu>
+  );
+};
+
 // Filter Content Component
 interface FilterContentProps {
+  /** Render the Location block above Category (mobile filter sheet). */
+  locationFirst?: boolean;
   mode: ListingMode | 'all';
   category: ListingCategory | 'all';
   locationText: string;
@@ -1240,7 +1806,75 @@ interface FilterContentProps {
   onClear: () => void;
 }
 
+// Min/max price inputs that commit on blur or Enter, so typing doesn't fire
+// a search per keystroke. Re-syncs when the parent value resets (Clear all).
+const PriceRangeInputs = ({
+  value,
+  onChange,
+}: {
+  value: [number, number];
+  onChange: (next: [number, number]) => void;
+}) => {
+  const formatMax = (v: number) => (Number.isFinite(v) && v > 0 ? String(v) : '');
+  const [minText, setMinText] = useState(value[0] > 0 ? String(value[0]) : '');
+  const [maxText, setMaxText] = useState(formatMax(value[1]));
+
+  useEffect(() => {
+    setMinText(value[0] > 0 ? String(value[0]) : '');
+    setMaxText(formatMax(value[1]));
+  }, [value]);
+
+  const commit = () => {
+    const min = minText.trim() === '' ? 0 : Math.max(0, Math.floor(Number(minText)) || 0);
+    let max = maxText.trim() === '' ? Infinity : Math.floor(Number(maxText)) || 0;
+    if (max <= 0) max = Infinity;
+    if (max !== Infinity && max < min) max = min;
+    onChange([min, max]);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') (e.target as HTMLInputElement).blur();
+  };
+
+  return (
+    <div className="flex items-center gap-2 max-w-xs">
+      <div className="relative flex-1">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+        <Input
+          type="number"
+          inputMode="numeric"
+          min={0}
+          placeholder="Min"
+          value={minText}
+          onChange={(e) => setMinText(e.target.value)}
+          onBlur={commit}
+          onKeyDown={handleKeyDown}
+          className="pl-7 h-9 text-base"
+          aria-label="Minimum price"
+        />
+      </div>
+      <span className="text-muted-foreground text-sm">–</span>
+      <div className="relative flex-1">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">$</span>
+        <Input
+          type="number"
+          inputMode="numeric"
+          min={0}
+          placeholder="Max"
+          value={maxText}
+          onChange={(e) => setMaxText(e.target.value)}
+          onBlur={commit}
+          onKeyDown={handleKeyDown}
+          className="pl-7 h-9 text-base"
+          aria-label="Maximum price"
+        />
+      </div>
+    </div>
+  );
+};
+
 const FilterContent = ({
+  locationFirst = false,
   mode,
   category,
   locationText,
@@ -1254,7 +1888,7 @@ const FilterContent = ({
 
   instantBookOnly,
   verifiedHostsOnly,
-  onModeChange,
+  
   onCategoryChange,
   onLocationTextChange,
   onLocationSelect,
@@ -1278,43 +1912,40 @@ const FilterContent = ({
   };
 
   const availableAmenities = getAvailableAmenities();
-  return (
-    <div className="space-y-5">
-      {/* Type Filter - First */}
-      <div className="space-y-2">
-        <Label className="text-sm font-medium flex items-center gap-2">
-          <Tag className="h-4 w-4" />
-          Listing Type
-        </Label>
-        <div className="flex flex-wrap gap-2">
-          {[
-            { value: 'all', label: 'All' },
-            { value: 'rent', label: 'For Rent' },
-            { value: 'sale', label: 'For Sale' },
-          ].map((option) => (
-            <label 
-              key={option.value} 
-              className={cn(
-                "flex items-center gap-1.5 cursor-pointer px-3 py-1.5 rounded-full border text-sm transition-colors",
-                mode === option.value 
-                  ? "bg-primary text-primary-foreground border-primary" 
-                  : "border-border hover:bg-muted"
-              )}
-            >
-              <input
-                type="radio"
-                name="mode"
-                checked={mode === option.value}
-                onChange={() => onModeChange(option.value)}
-                className="sr-only"
-              />
-              <span>{option.label}</span>
-            </label>
-          ))}
-        </div>
-      </div>
 
+  // Location is the primary search axis — rendered first on mobile (locationFirst),
+  // and after Category on desktop where the header already carries a location field.
+  const locationBlock = (
+    <div className="space-y-2">
+      <Label className="text-sm font-medium flex items-center gap-2">
+        <MapPin className="h-4 w-4" />
+        Location
+      </Label>
+      <div className="max-w-xs">
+        <LocationSearchInput
+          value={locationText}
+          onChange={onLocationTextChange}
+          onLocationSelect={onLocationSelect}
+          selectedCoordinates={locationCoords}
+          placeholder="City, state, or ZIP"
+          showRadiusSelector
+          radius={searchRadius}
+          onRadiusChange={onRadiusChange}
+        />
+      </div>
+      {!locationCoords && (
+        <div className="max-w-xs pt-1">
+          <RadiusFilter radius={searchRadius} onChange={onRadiusChange} disabled={!locationCoords} />
+        </div>
+      )}
+    </div>
+  );
+
+  return (
+    <div className="space-y-5 [&>div+div]:pt-5 [&>div+div]:border-t [&>div+div]:border-foreground/[0.06]">
+      {locationFirst && locationBlock}
       {/* Category Filter */}
+
       <div className="space-y-2">
         <Label className="text-sm font-medium flex items-center">
           Category
@@ -1323,10 +1954,10 @@ const FilterContent = ({
         <div className="flex flex-wrap gap-2 md:justify-center">
           <label 
             className={cn(
-              "flex items-center cursor-pointer px-3 py-1.5 rounded-full border text-sm transition-colors",
+              "flex items-center cursor-pointer px-3 py-1.5 rounded-full border text-sm transition-colors duration-200",
               category === 'all' 
                 ? "bg-primary text-primary-foreground border-primary" 
-                : "border-border hover:bg-muted"
+                : "border-transparent bg-foreground/[0.04] text-foreground/80 hover:bg-foreground/[0.08]"
             )}
           >
             <input
@@ -1344,10 +1975,10 @@ const FilterContent = ({
             <label 
               key={key} 
               className={cn(
-                "flex items-center cursor-pointer px-3 py-1.5 rounded-full border text-sm transition-colors",
+                "flex items-center cursor-pointer px-3 py-1.5 rounded-full border text-sm transition-colors duration-200",
                 category === key 
                   ? "bg-primary text-primary-foreground border-primary" 
-                  : "border-border hover:bg-muted"
+                  : "border-transparent bg-foreground/[0.04] text-foreground/80 hover:bg-foreground/[0.08]"
               )}
             >
               <input
@@ -1363,34 +1994,21 @@ const FilterContent = ({
         </div>
       </div>
 
-      {/* Location Filter with Geocoding - Second */}
-      <div className="space-y-2">
-        <Label className="text-sm font-medium flex items-center gap-2">
-          <MapPin className="h-4 w-4" />
-          Location
-        </Label>
-        <div className="max-w-xs">
-          <LocationSearchInput
-            value={locationText}
-            onChange={onLocationTextChange}
-            onLocationSelect={onLocationSelect}
-            selectedCoordinates={locationCoords}
-            placeholder="City, state, or zip code"
-            showRadiusSelector
-            radius={searchRadius}
-            onRadiusChange={onRadiusChange}
-          />
-        </div>
-      </div>
+      {!locationFirst && locationBlock}
 
-      {/* Radius Filter - only show when no inline radius (i.e. no location selected) */}
-      {!locationCoords && (
-        <div className="max-w-xs">
-          <RadiusFilter
-            radius={searchRadius}
-            onChange={onRadiusChange}
-            disabled={!locationCoords}
-          />
+
+      {/* Price Filter — only in a single-mode context (sale $ vs rent $/day
+          are incompatible units, so All mode intentionally has no price filter) */}
+      {mode !== 'all' && (
+        <div className="space-y-2">
+          <Label className="text-sm font-medium flex items-center gap-2">
+            <DollarSign className="h-4 w-4" />
+            Price
+          </Label>
+          <PriceRangeInputs value={priceRange} onChange={onPriceRangeChange} />
+          {mode === 'rent' && (
+            <p className="text-xs text-muted-foreground">Filters the listing's primary rental price (daily when set, otherwise hourly).</p>
+          )}
         </div>
       )}
 
@@ -1425,10 +2043,10 @@ const FilterContent = ({
                 aria-pressed={active}
                 data-fulfillment-option={key}
                 className={cn(
-                  'px-3 py-1.5 rounded-full text-xs font-medium border transition-colors',
+                  'px-3 py-1.5 rounded-full text-xs font-medium border transition-colors duration-200',
                   active
                     ? 'bg-primary text-primary-foreground border-primary'
-                    : 'bg-card border-border text-foreground hover:bg-muted/60',
+                    : 'border-transparent bg-foreground/[0.04] text-foreground/80 hover:bg-foreground/[0.08]',
                 )}
               >
                 {label}
@@ -1446,7 +2064,7 @@ const FilterContent = ({
           <Truck className="h-4 w-4" />
           Delivery Options
         </Label>
-        <label className="flex items-start gap-3 cursor-pointer p-2.5 rounded-lg border border-border hover:bg-muted/50 transition-colors max-w-xs">
+        <label className="flex items-start gap-3 cursor-pointer py-2 pr-1 rounded-xl hover:bg-foreground/[0.03] transition-colors duration-200 max-w-xs">
           <Checkbox
             checked={deliveryFilterEnabled}
             onCheckedChange={(checked) => onDeliveryFilterChange(checked === true)}
@@ -1471,7 +2089,7 @@ const FilterContent = ({
           Booking Options
         </Label>
         <div className="space-y-2">
-          <label className="flex items-start gap-3 cursor-pointer p-2.5 rounded-lg border border-border hover:bg-muted/50 transition-colors max-w-xs">
+          <label className="flex items-start gap-3 cursor-pointer py-2 pr-1 rounded-xl hover:bg-foreground/[0.03] transition-colors duration-200 max-w-xs">
             <Checkbox
               checked={instantBookOnly}
               onCheckedChange={(checked) => onInstantBookChange(checked === true)}
@@ -1486,18 +2104,18 @@ const FilterContent = ({
               </p>
             </div>
           </label>
-          <label className="flex items-start gap-3 cursor-pointer p-2.5 rounded-lg border border-border hover:bg-muted/50 transition-colors max-w-xs">
+          <label className="flex items-start gap-3 cursor-pointer py-2 pr-1 rounded-xl hover:bg-foreground/[0.03] transition-colors duration-200 max-w-xs">
             <Checkbox
               checked={verifiedHostsOnly}
               onCheckedChange={(checked) => onVerifiedHostsChange(checked === true)}
             />
             <div className="space-y-0.5">
               <span className="text-sm font-medium flex items-center gap-1.5">
-                <Shield className="h-3.5 w-3.5 text-amber-500" />
-                Verified Hosts only
+                <Shield className="h-3.5 w-3.5 text-emerald-500" />
+                Identity Verified only
               </span>
               <p className="text-xs text-muted-foreground">
-                ID verified via Stripe Identity
+                Optional Plaid identity check completed. Does not verify ownership, title, condition, value, or listing accuracy.
               </p>
             </div>
           </label>
@@ -1523,10 +2141,10 @@ const FilterContent = ({
                       <label
                         key={amenity.id}
                         className={cn(
-                          "flex items-center gap-1.5 cursor-pointer px-2.5 py-1 rounded-full border text-xs transition-colors",
+                          "flex items-center gap-1.5 cursor-pointer px-2.5 py-1 rounded-full border text-xs transition-colors duration-200",
                           selectedAmenities.includes(amenity.id)
                             ? "bg-primary text-primary-foreground border-primary"
-                            : "border-border hover:bg-muted"
+                            : "border-transparent bg-foreground/[0.04] text-foreground/80 hover:bg-foreground/[0.08]"
                         )}
                       >
                         <input

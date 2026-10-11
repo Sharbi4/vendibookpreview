@@ -16,6 +16,7 @@
 
 import { createClient } from 'npm:@supabase/supabase-js@2'
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 const SUPABASE_URL = Deno.env.get('SUPABASE_URL')!
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -295,8 +296,7 @@ Deno.serve(async (req) => {
       // Best-effort customer acknowledgment
       if (n.customerEmail) {
         try {
-          await admin.functions.invoke('send-transactional-email', {
-            body: {
+          await invokeTransactionalEmail({
               templateName: 'support-reply',
               recipientEmail: n.customerEmail,
               idempotencyKey: `tawk-ack-${ticketId}`,
@@ -313,8 +313,7 @@ Deno.serve(async (req) => {
                 signedBy: 'The Vendibook Team',
                 signedTitle: 'Customer Support',
               },
-            },
-          })
+            })
         } catch (e) {
           console.error('ack email invoke failed', e)
         }

@@ -163,7 +163,7 @@ const AdminDashboard = () => {
                 <DollarSign className="h-4 w-4 text-primary" />
                 <span className="text-sm text-muted-foreground">In Payment Protection</span>
               </div>
-              <p className="text-2xl font-bold">{stats.inEscrow}</p>
+              <p className="text-2xl font-bold">{stats.inPaymentProtection}</p>
             </CardContent>
           </Card>
           <Card>
@@ -644,7 +644,7 @@ const AdminDashboard = () => {
                   </Card>
                   <Card>
                     <CardContent className="pt-4 pb-4">
-                      <p className="text-sm text-muted-foreground">Stripe Connected</p>
+                      <p className="text-sm text-muted-foreground">Payout method on file</p>
                       <p className="text-2xl font-bold text-blue-600">{userStats.stripeConnected}</p>
                     </CardContent>
                   </Card>

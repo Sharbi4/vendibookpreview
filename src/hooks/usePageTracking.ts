@@ -17,9 +17,9 @@ const ROUTE_TITLES: Record<string, string> = {
   '/activation': 'Account Activation',
   '/reset-password': 'Reset Password',
   '/dashboard': 'Dashboard',
-  '/host/bookings': 'Host Bookings',
-  '/host/listings': 'Host Listings',
-  '/host/reporting': 'Host Reporting',
+  '/dashboard/listings': 'Host Listings',
+  '/dashboard/reporting': 'Host Reporting',
+  '/dashboard/analytics': 'Host Analytics',
   '/list': 'List Your Asset',
   '/list/ai': 'AI Listing Creator',
   '/account': 'My Account',
@@ -48,11 +48,6 @@ const ROUTE_TITLES: Record<string, string> = {
   '/tools': 'Vendor Tools',
   '/tools/pricepilot': 'PricePilot Tool',
   '/tools/permitpath': 'PermitPath Tool',
-  '/tools/buildkit': 'BuildKit Tool',
-  '/tools/listing-studio': 'Listing Studio',
-  '/tools/concept-lab': 'Concept Lab',
-  '/tools/market-radar': 'Market Radar',
-  '/tools/marketing-studio': 'Marketing Studio',
   '/tools/startup-guide': 'Startup Guide',
   '/tools/regulations-hub': 'Regulations Hub',
   '/listing-published': 'Listing Published',
@@ -116,6 +111,40 @@ const getPageTitle = (pathname: string): string => {
   return 'Vendibook';
 };
 
+const DEFAULT_TITLE = 'Vendibook | Buy, Sell & Rent Food Trucks & Trailers';
+
+/**
+ * Waits for a route's own <SEO> component to set a real document title before
+ * reporting to GA. Dynamic routes (listing detail, city pages) resolve their
+ * title only after data loads, so a fixed short timeout used to report generic
+ * fallbacks like "Listing Detail | Vendibook".
+ */
+const waitForSettledTitle = (timeoutMs: number): Promise<void> =>
+  new Promise((resolve) => {
+    const titleEl = document.querySelector('title');
+    if (!titleEl) {
+      resolve();
+      return;
+    }
+    if (document.title && document.title !== DEFAULT_TITLE) {
+      resolve();
+      return;
+    }
+    let done = false;
+    const finish = () => {
+      if (done) return;
+      done = true;
+      observer.disconnect();
+      clearTimeout(timer);
+      resolve();
+    };
+    const observer = new MutationObserver(() => {
+      if (document.title && document.title !== DEFAULT_TITLE) finish();
+    });
+    observer.observe(titleEl, { childList: true, characterData: true, subtree: true });
+    const timer = setTimeout(finish, timeoutMs);
+  });
+
 /**
  * Hook to track page views with Google Analytics on route changes.
  * Sets document.title for pages that don't have their own <SEO> component,
@@ -125,34 +154,30 @@ export const usePageTracking = () => {
   const location = useLocation();
 
   useEffect(() => {
-    // Set a fallback page title if the current page hasn't set one via <SEO>
-    // We use a small delay to let <SEO> components set the title first
-    const titleTimeout = setTimeout(() => {
-      const defaultTitle = 'Vendibook | Food Truck & Mobile Vendor Marketplace';
-      if (document.title === defaultTitle || !document.title) {
-        const pageTitle = getPageTitle(location.pathname);
-        document.title = `${pageTitle} | Vendibook`;
+    let cancelled = false;
+
+    (async () => {
+      // Give the route's own <SEO> component (including async/dynamic titles)
+      // a chance to land before we read or replace document.title.
+      await waitForSettledTitle(2500);
+      if (cancelled) return;
+
+      // Only fall back for routes that never set their own title.
+      if (!document.title || document.title === DEFAULT_TITLE) {
+        document.title = `${getPageTitle(location.pathname)} | Vendibook`;
       }
-    }, 50);
 
-    // Only track if user has consented to analytics
-    if (!hasAnalyticsConsent()) {
-      return () => clearTimeout(titleTimeout);
-    }
-
-    // Fire GA pageview after title is set
-    const gaTimeout = setTimeout(() => {
+      if (!hasAnalyticsConsent()) return;
       if (typeof window !== 'undefined' && window.gtag) {
         window.gtag('config', GA_MEASUREMENT_ID, {
           page_path: location.pathname + location.search,
           page_title: document.title,
         });
       }
-    }, 100);
+    })();
 
     return () => {
-      clearTimeout(titleTimeout);
-      clearTimeout(gaTimeout);
+      cancelled = true;
     };
   }, [location.pathname, location.search]);
 };

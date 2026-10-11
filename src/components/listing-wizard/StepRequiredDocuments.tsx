@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { FileText, Shield, Clock, Info, ChevronDown, ChevronUp } from 'lucide-react';
-import { ListingFormData, ListingCategory } from '@/types/listing';
+import { ListingFormData } from '@/types/listing';
 import {
   DocumentType,
   DocumentDeadlineType,
@@ -16,9 +16,16 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { cn } from '@/lib/utils';
+
+const INSURANCE_TYPES: DocumentType[] = [
+  'commercial_liability_insurance',
+  'vehicle_insurance',
+  'certificate_of_insurance',
+];
 
 interface StepRequiredDocumentsProps {
   formData: ListingFormData;
@@ -29,7 +36,6 @@ export const StepRequiredDocuments: React.FC<StepRequiredDocumentsProps> = ({
   formData,
   updateField,
 }) => {
-  // Initialize with defaults based on category
   const [documents, setDocuments] = useState<RequiredDocumentSetting[]>([]);
   const [globalDeadline, setGlobalDeadline] = useState<DocumentDeadlineType>('before_approval');
   const [deadlineHours, setDeadlineHours] = useState<number>(48);
@@ -39,86 +45,78 @@ export const StepRequiredDocuments: React.FC<StepRequiredDocumentsProps> = ({
   useEffect(() => {
     if (formData.category && formData.mode === 'rent') {
       const defaults = DEFAULT_DOCUMENTS_BY_CATEGORY[formData.category] || [];
-      
-      // Create settings for all document types
-      const allDocTypes: DocumentType[] = DOCUMENT_GROUPS.flatMap(g => g.documents);
-      const initialDocs: RequiredDocumentSetting[] = allDocTypes.map(docType => ({
-        document_type: docType,
-        is_required: defaults.includes(docType),
-        deadline_type: globalDeadline,
-        deadline_offset_hours: globalDeadline === 'after_approval_deadline' ? deadlineHours : undefined,
-      }));
-      
-      setDocuments(initialDocs);
+      const allDocTypes: DocumentType[] = DOCUMENT_GROUPS.flatMap((g) => g.documents);
+      setDocuments(
+        allDocTypes.map((docType) => ({
+          document_type: docType,
+          enabled: defaults.includes(docType),
+          is_required: true,
+          deadline_type: globalDeadline,
+          deadline_offset_hours: globalDeadline === 'after_approval_deadline' ? deadlineHours : undefined,
+        })),
+      );
     }
   }, [formData.category]);
 
-  // Sync documents to form data when they change
+  // Sync enabled requirements (required AND optional) to form data
   useEffect(() => {
     const enabledDocs = documents
-      .filter(d => d.is_required)
-      .map(d => ({
+      .filter((d) => d.enabled)
+      .map((d) => ({
         document_type: d.document_type as string,
         is_required: d.is_required,
         deadline_type: d.deadline_type as string,
         deadline_offset_hours: d.deadline_offset_hours,
         description: d.description,
+        title: d.title,
+        instructions: d.instructions,
+        requirement_config: d.requirement_config,
       }));
-    updateField('required_documents', enabledDocs);
+    updateField('required_documents', enabledDocs as ListingFormData['required_documents']);
   }, [documents, updateField]);
 
+  const patchDoc = (docType: DocumentType, patch: Partial<RequiredDocumentSetting>) => {
+    setDocuments((prev) => prev.map((d) => (d.document_type === docType ? { ...d, ...patch } : d)));
+  };
+
   const toggleDocument = (docType: DocumentType) => {
-    setDocuments(prev =>
-      prev.map(d =>
-        d.document_type === docType
-          ? { ...d, is_required: !d.is_required }
-          : d
-      )
+    setDocuments((prev) =>
+      prev.map((d) => (d.document_type === docType ? { ...d, enabled: !d.enabled } : d)),
     );
   };
 
   const updateGlobalDeadline = (deadline: DocumentDeadlineType) => {
     setGlobalDeadline(deadline);
-    setDocuments(prev =>
-      prev.map(d => ({
+    setDocuments((prev) =>
+      prev.map((d) => ({
         ...d,
         deadline_type: deadline,
         deadline_offset_hours: deadline === 'after_approval_deadline' ? deadlineHours : undefined,
-      }))
+      })),
     );
   };
 
   const updateDeadlineHours = (hours: number) => {
     setDeadlineHours(hours);
     if (globalDeadline === 'after_approval_deadline') {
-      setDocuments(prev =>
-        prev.map(d => ({
-          ...d,
-          deadline_offset_hours: hours,
-        }))
-      );
+      setDocuments((prev) => prev.map((d) => ({ ...d, deadline_offset_hours: hours })));
     }
   };
 
   const toggleGroup = (groupLabel: string) => {
-    setOpenGroups(prev =>
-      prev.includes(groupLabel)
-        ? prev.filter(g => g !== groupLabel)
-        : [...prev, groupLabel]
+    setOpenGroups((prev) =>
+      prev.includes(groupLabel) ? prev.filter((g) => g !== groupLabel) : [...prev, groupLabel],
     );
   };
 
-  const enabledCount = documents.filter(d => d.is_required).length;
+  const enabledCount = documents.filter((d) => d.enabled).length;
 
-  // Only show for rental listings
   if (formData.mode !== 'rent') {
     return (
       <div className="space-y-6">
         <div className="text-center py-12">
           <FileText className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
-          <h3 className="text-lg font-semibold text-foreground mb-2">
-            Document Requirements
-          </h3>
+          <h3 className="text-lg font-semibold text-foreground mb-2">Document Requirements</h3>
           <p className="text-muted-foreground">
             Document verification is only available for rental listings.
           </p>
@@ -129,39 +127,37 @@ export const StepRequiredDocuments: React.FC<StepRequiredDocumentsProps> = ({
 
   return (
     <div className="space-y-6">
-      {/* Header */}
       <div>
         <div className="flex items-center gap-2 mb-2">
           <Shield className="w-5 h-5 text-primary" />
-          <h3 className="text-lg font-semibold">Required Documents & Verification</h3>
+          <h3 className="text-lg font-semibold">Documents & insurance (optional)</h3>
         </div>
         <p className="text-muted-foreground text-sm">
-          Specify which documents renters must provide and when they must be submitted.
+          Add only what you actually need. Many hosts require nothing at all — renters see a clean
+          checkout when you leave this empty.
         </p>
       </div>
 
-      {/* Info Banner */}
       <div className="bg-card rounded-xl p-4 border border-border">
         <div className="flex items-start gap-3">
           <Info className="w-5 h-5 text-muted-foreground shrink-0 mt-0.5" />
           <div className="text-sm">
             <p className="text-foreground font-medium mb-1">
               {enabledCount === 0
-                ? 'No documents required'
-                : `${enabledCount} document${enabledCount > 1 ? 's' : ''} required`}
+                ? 'No documents requested'
+                : `${enabledCount} requirement${enabledCount > 1 ? 's' : ''} added`}
             </p>
             <p className="text-muted-foreground">
-              These documents are required from renters to complete or confirm a booking. You choose what's required and when.
+              Each requirement can be required or optional, and you choose when it's due.
             </p>
           </div>
         </div>
       </div>
 
-      {/* Deadline Selection */}
       <div className="bg-card border border-border rounded-xl p-4 space-y-4">
         <div className="flex items-center gap-2">
           <Clock className="w-5 h-5 text-primary" />
-          <h4 className="font-medium">When are documents required?</h4>
+          <h4 className="font-medium">When are documents due?</h4>
         </div>
 
         <RadioGroup
@@ -203,32 +199,25 @@ export const StepRequiredDocuments: React.FC<StepRequiredDocumentsProps> = ({
         )}
       </div>
 
-      {/* Document Categories */}
       <div className="space-y-3">
         <h4 className="font-medium flex items-center gap-2">
           <FileText className="w-5 h-5 text-primary" />
-          Select Required Documents
+          Choose requirements
         </h4>
 
         {DOCUMENT_GROUPS.map((group) => {
-          const groupDocs = documents.filter(d =>
-            group.documents.includes(d.document_type)
-          );
-          const enabledInGroup = groupDocs.filter(d => d.is_required).length;
+          const groupDocs = documents.filter((d) => group.documents.includes(d.document_type));
+          const enabledInGroup = groupDocs.filter((d) => d.enabled).length;
           const isOpen = openGroups.includes(group.label);
 
           return (
-            <Collapsible
-              key={group.label}
-              open={isOpen}
-              onOpenChange={() => toggleGroup(group.label)}
-            >
+            <Collapsible key={group.label} open={isOpen} onOpenChange={() => toggleGroup(group.label)}>
               <CollapsibleTrigger asChild>
                 <Button
                   variant="ghost"
                   className={cn(
                     'w-full justify-between p-4 h-auto rounded-xl border',
-                    isOpen ? 'bg-muted border-border' : 'border-border bg-card hover:bg-muted/50'
+                    isOpen ? 'bg-muted border-border' : 'border-border bg-card hover:bg-muted/50',
                   )}
                 >
                   <div className="flex items-center gap-3">
@@ -250,35 +239,138 @@ export const StepRequiredDocuments: React.FC<StepRequiredDocumentsProps> = ({
               <CollapsibleContent className="pt-2">
                 <div className="space-y-2 pl-2">
                   {group.documents.map((docType) => {
-                    const doc = documents.find(d => d.document_type === docType);
-                    const isEnabled = doc?.is_required || false;
+                    const doc = documents.find((d) => d.document_type === docType);
+                    const isEnabled = !!doc?.enabled;
+                    const isInsurance = INSURANCE_TYPES.includes(docType);
+                    const insurance = doc?.requirement_config?.insurance ?? {};
 
                     return (
                       <div
                         key={docType}
                         className={cn(
-                          'flex items-start gap-3 p-3 rounded-lg border transition-colors',
+                          'p-3 rounded-lg border transition-colors',
                           isEnabled
                             ? 'bg-primary/10 border-primary shadow-sm'
-                            : 'border-border bg-card hover:border-primary/50'
+                            : 'border-border bg-card hover:border-primary/50',
                         )}
                       >
-                        <Switch
-                          id={docType}
-                          checked={isEnabled}
-                          onCheckedChange={() => toggleDocument(docType)}
-                        />
-                        <div className="flex-1">
-                          <Label
-                            htmlFor={docType}
-                            className="font-medium cursor-pointer"
-                          >
-                            {DOCUMENT_TYPE_LABELS[docType]}
-                          </Label>
-                          <p className="text-sm text-muted-foreground">
-                            {DOCUMENT_TYPE_DESCRIPTIONS[docType]}
-                          </p>
+                        <div className="flex items-start gap-3">
+                          <Switch
+                            id={docType}
+                            checked={isEnabled}
+                            onCheckedChange={() => toggleDocument(docType)}
+                          />
+                          <div className="flex-1">
+                            <Label htmlFor={docType} className="font-medium cursor-pointer">
+                              {DOCUMENT_TYPE_LABELS[docType]}
+                            </Label>
+                            <p className="text-sm text-muted-foreground">
+                              {DOCUMENT_TYPE_DESCRIPTIONS[docType]}
+                            </p>
+                          </div>
                         </div>
+
+                        {isEnabled && doc && (
+                          <div className="mt-4 space-y-3 border-t border-border/60 pt-3">
+                            {docType === 'custom_requirement' && (
+                              <div className="space-y-1.5">
+                                <Label className="text-xs">Requirement name</Label>
+                                <Input
+                                  value={doc.title ?? ''}
+                                  placeholder="e.g. Signed event vendor form"
+                                  onChange={(e) => patchDoc(docType, { title: e.target.value })}
+                                />
+                              </div>
+                            )}
+
+                            <div className="flex flex-wrap items-center gap-2">
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant={doc.is_required ? 'default' : 'outline'}
+                                onClick={() => patchDoc(docType, { is_required: true })}
+                              >
+                                Required
+                              </Button>
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant={!doc.is_required ? 'default' : 'outline'}
+                                onClick={() => patchDoc(docType, { is_required: false })}
+                              >
+                                Optional
+                              </Button>
+                              <span className="text-xs text-muted-foreground">
+                                Optional requirements never block a booking.
+                              </span>
+                            </div>
+
+                            <div className="space-y-1.5">
+                              <Label className="text-xs">Instructions for the renter</Label>
+                              <Textarea
+                                rows={2}
+                                value={doc.instructions ?? ''}
+                                placeholder="Anything the renter should know about this document"
+                                onChange={(e) => patchDoc(docType, { instructions: e.target.value })}
+                              />
+                            </div>
+
+                            {isInsurance && (
+                              <div className="space-y-3 rounded-lg bg-background/60 p-3 border border-border/60">
+                                <p className="text-xs font-medium text-foreground">
+                                  Your insurance requirements
+                                </p>
+                                <div className="space-y-1.5">
+                                  <Label className="text-xs">Minimum general liability (USD)</Label>
+                                  <Input
+                                    type="number"
+                                    min="0"
+                                    value={insurance.minimum_general_liability ?? ''}
+                                    placeholder="Leave blank if you don't specify one"
+                                    onChange={(e) =>
+                                      patchDoc(docType, {
+                                        requirement_config: {
+                                          ...doc.requirement_config,
+                                          insurance: {
+                                            ...insurance,
+                                            insurance_required: true,
+                                            minimum_general_liability: e.target.value
+                                              ? Number(e.target.value)
+                                              : null,
+                                          },
+                                        },
+                                      })
+                                    }
+                                  />
+                                </div>
+                                {[
+                                  ['additional_insured_required', 'List me as additional insured'],
+                                  ['coi_required', 'Certificate of insurance (COI) required'],
+                                  ['must_span_booking_dates', 'Coverage must span the booking dates'],
+                                ].map(([key, label]) => (
+                                  <div key={key} className="flex items-center gap-3">
+                                    <Switch
+                                      checked={!!(insurance as Record<string, unknown>)[key]}
+                                      onCheckedChange={(checked) =>
+                                        patchDoc(docType, {
+                                          requirement_config: {
+                                            ...doc.requirement_config,
+                                            insurance: {
+                                              ...insurance,
+                                              insurance_required: true,
+                                              [key]: checked,
+                                            },
+                                          },
+                                        })
+                                      }
+                                    />
+                                    <span className="text-xs text-muted-foreground">{label}</span>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     );
                   })}
@@ -289,7 +381,6 @@ export const StepRequiredDocuments: React.FC<StepRequiredDocumentsProps> = ({
         })}
       </div>
 
-      {/* Renter Message Preview */}
       {enabledCount > 0 && (
         <div className="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-xl p-4">
           <h4 className="font-medium text-amber-900 dark:text-amber-100 mb-2 flex items-center gap-2">
@@ -297,10 +388,11 @@ export const StepRequiredDocuments: React.FC<StepRequiredDocumentsProps> = ({
             Message shown to renters
           </h4>
           <p className="text-sm text-amber-800 dark:text-amber-200">
-            "This rental requires document verification. Please be prepared to upload the required documents
-            {globalDeadline === 'before_booking_request' && ' before submitting your booking request'}
-            {globalDeadline === 'before_approval' && ' before your booking can be approved'}
-            {globalDeadline === 'after_approval_deadline' && ` at least ${deadlineHours} hours before your booking starts`}
+            "This host asks for a few documents
+            {globalDeadline === 'before_booking_request' && ' before you book'}
+            {globalDeadline === 'before_approval' && ' before your booking is approved'}
+            {globalDeadline === 'after_approval_deadline' &&
+              ` at least ${deadlineHours} hours before your booking starts`}
             ."
           </p>
         </div>
@@ -308,3 +400,5 @@ export const StepRequiredDocuments: React.FC<StepRequiredDocumentsProps> = ({
     </div>
   );
 };
+
+export default StepRequiredDocuments;

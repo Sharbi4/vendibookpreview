@@ -51,7 +51,7 @@ const FAQS = [
   {
     question: 'Does Vendibook verify buyers and sellers?',
     answer:
-      'Yes. Buyers and sellers can verify their identity through Stripe Identity, and verified badges appear on profiles and listings.',
+      'Yes. Buyers and sellers can verify their identity through Vendibook identity verification, and verified badges appear on profiles and listings.',
   },
   {
     question: 'Does Vendibook offer secure transactions?',
@@ -87,6 +87,9 @@ const FoodTruckSellingFaq = () => (
       <div className="flex flex-wrap gap-3 justify-center">
         <Button asChild size="lg" variant="dark-shine">
           <Link to="/list">List Your Food Truck Free</Link>
+        </Button>
+        <Button asChild size="lg" variant="outline">
+          <Link to="/sell-my-food-truck">Sell my food truck</Link>
         </Button>
         <Button asChild size="lg" variant="outline">
           <Link to="/best-place-to-sell-a-food-truck">Compare ways to sell</Link>

@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils';
+import { formatCurrency } from '@/lib/commissions';
 
 export interface CostLine {
   label: string;
@@ -14,9 +15,6 @@ interface CostBreakdownProps {
   totalDueNow: number;
   balanceDue?: { amount: number; whenLabel: string } | null;
 }
-
-const money = (n: number) =>
-  `$${n.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 2 })}`;
 
 const num = { fontVariantNumeric: 'tabular-nums' as const };
 
@@ -52,7 +50,7 @@ const CostBreakdown = ({
               )}
               style={num}
             >
-              {l.free ? 'FREE' : money(l.amount)}
+               {l.free ? 'FREE' : formatCurrency(l.amount)}
             </dd>
           </div>
         ))}
@@ -62,7 +60,7 @@ const CostBreakdown = ({
         <div className="flex justify-between text-sm">
           <span className="text-muted-foreground">Total price</span>
           <span className="font-medium text-foreground" style={num}>
-            {money(totalPrice)}
+             {formatCurrency(totalPrice)}
           </span>
         </div>
         <div className="flex justify-between">
@@ -73,7 +71,7 @@ const CostBreakdown = ({
             className="font-display text-xl font-bold text-primary"
             style={num}
           >
-            {money(totalDueNow)}
+             {formatCurrency(totalDueNow)}
           </span>
         </div>
         {balanceDue ? (
@@ -82,7 +80,7 @@ const CostBreakdown = ({
               Balance ({balanceDue.whenLabel})
             </span>
             <span className="font-medium text-foreground" style={num}>
-              {money(balanceDue.amount)}
+              {formatCurrency(balanceDue.amount)}
             </span>
           </div>
         ) : null}

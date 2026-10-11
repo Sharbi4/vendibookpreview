@@ -140,6 +140,9 @@ const ListFoodTruckForSale = () => (
           <Link to="/list">List Your Food Truck Free</Link>
         </Button>
         <Button asChild size="lg" variant="outline">
+          <Link to="/sell-my-food-truck">Sell my food truck</Link>
+        </Button>
+        <Button asChild size="lg" variant="outline">
           <Link to="/best-place-to-sell-a-food-truck">Compare where to sell</Link>
         </Button>
       </div>

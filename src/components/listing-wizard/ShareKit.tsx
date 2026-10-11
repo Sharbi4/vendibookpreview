@@ -17,6 +17,7 @@ import {
   Send,
   Image as ImageIcon,
   Wand2,
+  Globe,
   Camera} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -29,6 +30,8 @@ import {
   trackShareImageDownloaded,
   trackShareKitDismissed} from '@/lib/analytics';
 import { useShareKit as useShareKitHook, type ShareChannel } from '@/hooks/useShareKit';
+import { useSharePreflight } from '@/hooks/useSharePreflight';
+import SharePreviewCard from '@/components/share/SharePreviewCard';
 
 export interface ShareKitListing {
   id: string;
@@ -131,6 +134,7 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
   const [captionCopied, setCaptionCopied] = useState(false);
   const [emailLinkCopied, setEmailLinkCopied] = useState(false);
   const [smsLinkCopied, setSmsLinkCopied] = useState(false);
+  const [websiteSnippetCopied, setWebsiteSnippetCopied] = useState(false);
   const [captionVariant, setCaptionVariant] = useState(0);
   const [shareWithImageBusy, setShareWithImageBusy] = useState(false);
 
@@ -187,7 +191,21 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
       color: { dark: '#111111', light: '#FFFFFF' }}).then(setQrCodeDataUrl).catch(console.error);
   }, [listingUrl, withUtm]);
 
+  // Verify image, title and destination link before anything is copied or posted.
+  const preflight = useSharePreflight({
+    listingId: listing.id,
+    title: listing.title,
+    imageUrl: listing.coverImageUrl,
+    shareUrl: listingUrl,
+  });
+  const shareBlocked = preflight.blocked;
+
   const copy = useCallback(async (text: string, setFlag: (b: boolean) => void, msg: string) => {
+    if (shareBlocked) {
+      toast({ title: 'Resolve the share preview issues first', variant: 'destructive' });
+      return;
+    }
+
     try {
       await navigator.clipboard.writeText(text);
       setFlag(true);
@@ -196,7 +214,7 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
     } catch {
       toast({ title: 'Failed to copy', variant: 'destructive' });
     }
-  }, [toast]);
+  }, [toast, shareBlocked]);
 
   const handleCopyLink = () => {
     const url = withUtm('copy_link', 'clipboard');
@@ -215,8 +233,18 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
     const sms = `${listing.title} — book now: ${withUtm('sms', 'message')}`;
     copy(sms, setSmsLinkCopied, 'SMS message copied!');
   };
+  const handleCopyWebsiteSnippet = () => {
+    const anchorText = listing.mode === 'sale' ? 'View this listing on Vendibook' : 'Book on Vendibook';
+    const html = `<a href="${withUtm('seller_website', 'referral')}" target="_blank" rel="noopener">${anchorText}</a>`;
+    copy(html, setWebsiteSnippetCopied, 'Website link copied — paste it into your site');
+    logShare('copy' as ShareChannel, { share_url: listingUrl, content_type: 'website_snippet' });
+  };
 
   const handleNativeShare = async () => {
+    if (shareBlocked) {
+      toast({ title: 'Resolve the share preview issues first', variant: 'destructive' });
+      return;
+    }
     if (navigator.share) {
       try {
         const url = withUtm('native', 'share');
@@ -288,6 +316,10 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
   };
 
   const openShare = (platform: string) => {
+    if (shareBlocked) {
+      toast({ title: 'Resolve the share preview issues first', variant: 'destructive' });
+      return;
+    }
     const url = withUtm(platform);
     const u = encodeURIComponent(url);
     const t = encodeURIComponent(currentCaption);
@@ -677,42 +709,23 @@ const generateStoryImageBlob = (
         </p>
       </div>
 
-      {/* LISTING PREVIEW CARD */}
+      {/* LISTING PREVIEW CARD — verified before copy/post */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.15 }}
-        className="rounded-2xl border bg-card overflow-hidden shadow-sm"
       >
-        <div className="flex gap-3 p-3">
-          <div className="w-20 h-20 rounded-xl overflow-hidden bg-muted shrink-0 ring-1 ring-border">
-            {listing.coverImageUrl ? (
-              <img src={listing.coverImageUrl} alt={listing.title} className="w-full h-full object-cover" />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-muted to-muted-foreground/10" />
-            )}
-          </div>
-          <div className="flex-1 min-w-0 py-0.5">
-            <div className="flex items-center gap-1.5 text-[11px] text-muted-foreground uppercase tracking-wide font-medium">
-              <span>{categoryLabel}</span>
-              <span>·</span>
-              <span>{listing.mode === 'sale' ? 'For Sale' : 'For Rent'}</span>
-            </div>
-            <h3 className="font-semibold text-[15px] mt-0.5 line-clamp-1">{listing.title}</h3>
-            {city && (
-              <div className="flex items-center gap-1 text-xs text-muted-foreground mt-1">
-                <MapPin className="w-3 h-3" />
-                <span>{city}</span>
-              </div>
-            )}
-            {price && (
-              <div className="text-sm font-semibold mt-1">
-                ${price.toLocaleString()}
-                <span className="text-xs font-normal text-muted-foreground ml-1">{priceLabel}</span>
-              </div>
-            )}
-          </div>
-        </div>
+        <SharePreviewCard
+          title={listing.title}
+          imageUrl={listing.coverImageUrl}
+          shareUrl={listingUrl}
+          subtitle={[categoryLabel, city, priceText].filter(Boolean).join(' · ')}
+          checks={preflight.checks}
+          running={preflight.running}
+          verified={preflight.verified}
+          blocked={shareBlocked}
+          onRecheck={preflight.recheck}
+        />
       </motion.div>
 
       {/* SHARE LINK + PRIMARY ACTIONS */}
@@ -959,6 +972,36 @@ const generateStoryImageBlob = (
           {emailLinkCopied ? 'Copied' : 'Copy'}
         </div>
       </button>
+
+      {/* YOUR WEBSITE — transparent link snippet for sellers with their own sites */}
+      <div className="rounded-2xl border bg-card p-4 space-y-3">
+        <div className="flex items-start gap-3">
+          <div className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center shrink-0">
+            <Globe className="w-5 h-5 text-muted-foreground" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="font-semibold text-sm">Link from your own website</div>
+            <div className="text-xs text-muted-foreground">
+              Have a business site? A visible link to your Vendibook listing sends your visitors
+              straight to a page with photos, pricing, and secure checkout.
+            </div>
+          </div>
+        </div>
+        <button
+          onClick={handleCopyWebsiteSnippet}
+          className="w-full flex items-center justify-between gap-3 rounded-xl bg-muted/60 px-3 py-2.5 text-left hover:bg-muted transition-colors"
+        >
+          <code className="text-[11px] text-muted-foreground truncate">
+            &lt;a href="{prettyUrl}"&gt;{listing.mode === 'sale' ? 'View this listing on Vendibook' : 'Book on Vendibook'}&lt;/a&gt;
+          </code>
+          <span className={cn(
+            'shrink-0 text-xs font-medium px-3 py-1.5 rounded-lg',
+            websiteSnippetCopied ? 'bg-emerald-500 text-white' : 'bg-background text-foreground'
+          )}>
+            {websiteSnippetCopied ? 'Copied' : 'Copy HTML'}
+          </span>
+        </button>
+      </div>
 
       {/* SECONDARY ACTIONS */}
       <div className="grid grid-cols-2 gap-2">

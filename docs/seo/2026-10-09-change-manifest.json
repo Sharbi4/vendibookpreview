@@ -1,0 +1,365 @@
+{
+  "date": "2026-10-09",
+  "targetBranch": "fix/paypal-webhook-config",
+  "scope": "Selected task commits, excluding unrelated remote changes. Existing SEO is identified separately.",
+  "groups": {
+    "dashboard": [
+      {
+        "commit": "aee68e361a054f3e65fee0ea33d3599ffb7d1881",
+        "subject": "Fix sale dashboard return route and retain transaction filters",
+        "files": [
+          "src/lib/workspace/legacyDashboardRedirect.test.ts",
+          "src/lib/workspace/legacyDashboardRedirect.ts",
+          "src/pages/workspace/WorkspaceTransactions.tsx"
+        ]
+      },
+      {
+        "commit": "5cee54c0362f34898fb7ad64e0c8999a369e3379",
+        "subject": "Preserve rental calendar dates across payment and booking screens",
+        "files": [
+          "src/components/dashboard/AvailabilityCalendar.tsx",
+          "src/components/dashboard/BookingRequestCard.tsx",
+          "src/components/dashboard/ShopperBookingCard.tsx",
+          "src/components/rentals/BookingDetailsDrawer.tsx",
+          "src/components/workspace/WorkspaceBookingPayments.tsx",
+          "src/components/workspace/WorkspaceHostBookings.tsx",
+          "src/lib/rentalDates.test.ts",
+          "src/lib/rentalDates.ts",
+          "src/pages/BookingConfirmation.tsx",
+          "src/pages/OrderReceipt.tsx",
+          "src/pages/PaymentSuccess.tsx"
+        ]
+      },
+      {
+        "commit": "5cd30e7f4e30e1bf758158fe73525802528b06ae",
+        "subject": "Label rental totals without implying unpaid bookings were charged",
+        "files": [
+          "src/components/workspace/WorkspaceBookingPayments.tsx"
+        ]
+      },
+      {
+        "commit": "e6d3e26dde8bee801e5d75faee21bd048a94af56",
+        "subject": "Restore payout preference form and focus payment settings links",
+        "files": [
+          "src/components/account/PaymentsPayoutsSection.tsx",
+          "src/components/dashboard/tabs/PayoutsPanel.tsx",
+          "src/pages/workspace/WorkspaceAccount.tsx"
+        ]
+      },
+      {
+        "commit": "8dd9e6c5f38191625f3710a0456acd2cf9f6b563",
+        "subject": "Scope payout summaries to one seller and separate expected from sent funds",
+        "files": [
+          "src/components/workspace/PayoutCalendar.tsx",
+          "src/components/workspace/SellerEarningsTable.tsx",
+          "src/components/workspace/SellerPayoutBalance.tsx",
+          "src/hooks/useSellerPayables.test.ts",
+          "src/hooks/useSellerPayables.ts",
+          "src/pages/workspace/WorkspaceHome.tsx"
+        ]
+      },
+      {
+        "commit": "b52cc742dc35f01922cab0b2f23dd073af535d60",
+        "subject": "Refresh PayPal runtime configuration after live environment changes",
+        "files": [
+          "src/lib/paypalClient.ts",
+          "src/test/payments/paypalRuntimeConfig.test.ts"
+        ]
+      },
+      {
+        "commit": "24c768394a726089e2c92468ead7bec7aea43ce0",
+        "subject": "Keep closed booking documents historical and disable preparation actions",
+        "files": [
+          "src/components/documents/DocumentUploadSection.tsx",
+          "src/components/documents/DocumentsCard.test.tsx",
+          "src/components/documents/DocumentsCard.tsx",
+          "src/hooks/useTransactionDocuments.ts",
+          "src/lib/bookingStatus.ts",
+          "src/pages/BookingConfirmation.tsx",
+          "src/pages/workspace/WorkspaceBookingDetail.tsx"
+        ]
+      },
+      {
+        "commit": "3b84d8a974f4ccb4da0f6a2cd933aced9ca66068",
+        "subject": "Open booking conversations with the correct participant and retained context",
+        "files": [
+          "src/components/messaging/MessageHostButton.tsx",
+          "src/components/messaging/__tests__/MessageHostButton.test.tsx",
+          "src/components/workspace/MessageBuyerButton.tsx",
+          "src/pages/BookingConfirmation.tsx",
+          "src/pages/workspace/WorkspaceMessages.tsx"
+        ]
+      },
+      {
+        "commit": "1e2b7ebe3bcb2aa01e9ac6ccca76e93e4883a46b",
+        "subject": "Link dashboard activity to its records and retain activity filters",
+        "files": [
+          "src/pages/workspace/WorkspaceActivity.tsx",
+          "src/pages/workspace/WorkspaceHome.tsx"
+        ]
+      },
+      {
+        "commit": "475f674bcf1904f32917b69925e50ca8d029126a",
+        "subject": "Show expired walkthroughs as follow-ups consistently across the workspace",
+        "files": [
+          "src/components/workspace/DashboardNextSteps.tsx",
+          "src/hooks/useVideoWalkthroughs.ts",
+          "src/lib/videoWalkthroughs.test.ts",
+          "src/lib/videoWalkthroughs.ts",
+          "src/pages/WalkthroughDetail.tsx",
+          "src/pages/workspace/WorkspaceActivity.tsx",
+          "src/pages/workspace/WorkspaceHome.tsx"
+        ]
+      },
+      {
+        "commit": "f5f94cde57f4a2f5f7129357c8b05524cc933f86",
+        "subject": "Distinguish safety reports, technical support, and order dispute cases",
+        "files": [
+          "src/components/support/ReportIssueDialog.tsx",
+          "src/components/trust/GetHelpWithOrder.tsx",
+          "src/components/workspace/PaymentsDisputesEntry.tsx",
+          "src/pages/MyTickets.tsx",
+          "src/pages/workspace/WorkspaceAccount.tsx",
+          "src/pages/workspace/WorkspaceCases.tsx"
+        ]
+      },
+      {
+        "commit": "a87bb375c8d674cf565d5960ac3914494c6e81ec",
+        "subject": "Clarify platform purchase history and add payment attempt details",
+        "files": [
+          "src/components/monetization/PurchaseHistoryCard.tsx",
+          "src/pages/Purchases.tsx",
+          "src/pages/workspace/WorkspaceAccount.tsx"
+        ]
+      },
+      {
+        "commit": "8e1d662a057f554d0bcd2a5230d9be88b8c51703",
+        "subject": "Hide notification replay tags and move secondary actions into a menu",
+        "files": [
+          "src/hooks/useNotifications.ts",
+          "src/lib/notificationCopy.test.ts",
+          "src/lib/notificationCopy.ts",
+          "src/pages/workspace/WorkspaceNotifications.tsx"
+        ]
+      },
+      {
+        "commit": "a0858a483ff878b068dd909e9bf012b2f218d62d",
+        "subject": "Separate PayPal sales setup from Square rental settlement",
+        "files": [
+          "src/components/account/PaymentsPayoutsSection.tsx",
+          "src/components/account/SellerSquareConnect.tsx",
+          "src/components/workspace/SellerPayoutBalance.tsx",
+          "src/pages/workspace/WorkspacePaymentSetup.tsx"
+        ]
+      },
+      {
+        "commit": "5e7d8df137275a84e07f077a8ca945ce60f90605",
+        "subject": "Simplify account overview and move scheduling and payouts to dedicated pages",
+        "files": [
+          "src/App.tsx",
+          "src/components/dashboard/tabs/PayoutsPanel.tsx",
+          "src/components/video/WalkthroughSettings.tsx",
+          "src/components/workspace/SellerPayoutBalance.tsx",
+          "src/components/workspace/account-settings.css",
+          "src/pages/workspace/WorkspaceAccount.tsx",
+          "src/pages/workspace/WorkspaceAccountSettings.tsx"
+        ]
+      },
+      {
+        "commit": "0247ddf24c1ab656185f4f1ca578e9f684051520",
+        "subject": "Render earnings query failures outside the data loader",
+        "files": [
+          "src/components/workspace/SellerEarningsTable.test.tsx",
+          "src/components/workspace/SellerEarningsTable.tsx"
+        ]
+      },
+      {
+        "commit": "948f1d4bb55877dc2a49078876f9e3b45efee098",
+        "subject": "Remove payout form left behind in the account overview",
+        "files": [
+          "src/pages/workspace/WorkspaceAccount.tsx"
+        ]
+      },
+      {
+        "commit": "888030e7de911c750e14250ee7b825309b7ac18c",
+        "subject": "Use one account navigation and keep mobile controls clear",
+        "files": [
+          "src/components/FloatingConciergeButton.tsx",
+          "src/components/layout/MobileBottomNav.tsx",
+          "src/components/workspace/WorkspaceShell.tsx",
+          "src/components/workspace/workspace-navigation.css",
+          "src/pages/LegalCenter.tsx",
+          "src/pages/SmsEnrollment.tsx"
+        ]
+      },
+      {
+        "commit": "e17650cfa152bfd92ed43e53a24e7944f828f7c1",
+        "subject": "Apply readable workspace colors and mobile spacing to payout calendar",
+        "files": [
+          "src/components/workspace/PayoutCalendar.tsx"
+        ]
+      },
+      {
+        "commit": "6f839753c5d95f344e324738698915860d9869d3",
+        "subject": "Refresh dashboard payment records and expose failed queries",
+        "files": [
+          "src/components/dashboard/tabs/TransactionsDisputesTab.tsx",
+          "src/components/workspace/DashboardNextSteps.tsx",
+          "src/components/workspace/SellerEarningsTable.tsx",
+          "src/hooks/useSellerPayables.ts",
+          "src/hooks/useUserTransactions.test.tsx",
+          "src/hooks/useUserTransactions.ts",
+          "src/pages/workspace/WorkspaceHome.tsx",
+          "src/pages/workspace/WorkspaceTransactions.tsx"
+        ]
+      },
+      {
+        "commit": "06bfafa4fc72b972074f5693acd35892864225d6",
+        "subject": "Clarify collected-funds payout preferences and receipt destinations",
+        "files": [
+          "src/components/account/PaymentsPayoutsSection.tsx",
+          "src/lib/payouts/methods.ts"
+        ]
+      },
+      {
+        "commit": "9c266ce4b7cdb6990a5b0f1cba0a3690a1eaf184",
+        "subject": "Keep payout form text readable on light account pages",
+        "files": [
+          "src/components/workspace/account-settings.css",
+          "src/pages/workspace/WorkspaceAccountSettings.tsx"
+        ]
+      }
+    ],
+    "seo": [
+      {
+        "commit": "ac649000e488ae6bac322f783d06069455fd26ec",
+        "subject": "Keep city SEO pages indexable during inventory failures",
+        "files": [
+          "src/pages/CategoryCityPage.tsx",
+          "src/test/seo/cityInventoryFailure.test.tsx"
+        ]
+      },
+      {
+        "commit": "3e492519c5fbc0994a3066268fa66f19d76bbd2c",
+        "subject": "Describe search collections without fabricated product offers",
+        "files": [
+          "src/components/JsonLd.tsx",
+          "src/pages/CategoryCityPage.tsx",
+          "src/test/seo/semrushFixes.test.tsx"
+        ]
+      },
+      {
+        "commit": "d4b279ec50c62989b6e1d027d7e873f8c0866385",
+        "subject": "Generate canonical inventory-backed sitemap routes and omit unlisted assets",
+        "files": [
+          "public/sitemap-listings.xml",
+          "public/sitemap-locations.xml",
+          "public/sitemap_pages.xml",
+          "scripts/generate-sitemaps.ts",
+          "scripts/lib/sitemapLocations.ts",
+          "src/test/seo/sitemapLocations.test.ts"
+        ]
+      },
+      {
+        "commit": "058e38c2ba03c9610734494dcc516776a6b31071",
+        "subject": "Strengthen rental and coffee buying guidance and Georgia intent links",
+        "files": [
+          "src/data/categoryIndexConfigs.ts",
+          "src/data/cityCategoryConfigs.ts",
+          "src/data/specialtyCategoryConfigs.ts",
+          "src/pages/CategoryCityPage.tsx",
+          "src/pages/CategoryIndex.tsx"
+        ]
+      },
+      {
+        "commit": "56cf96feb137128ebfce003adc0ebd93ad16b61a",
+        "subject": "Prioritize visible inventory images and defer the support form",
+        "files": [
+          "src/components/FloatingConciergeButton.tsx",
+          "src/pages/CategoryCityPage.tsx",
+          "src/pages/CategoryIndex.tsx"
+        ]
+      },
+      {
+        "commit": "ed54a38d7d8365b88a97aca07b8c2a4b1a377723",
+        "subject": "Replace unsupported state inventory claims with practical buying checks",
+        "files": [
+          "src/data/cityCategoryConfigs.ts"
+        ]
+      }
+    ],
+    "completionAndRefunds": [
+      {
+        "commit": "97e2320e8a8aa44d739c7729848dbaf3fcc0e86f",
+        "subject": "Require completion evidence before manual payout approval and retry",
+        "files": [
+          "src/test/payments/payoutReleasePolicy.test.ts",
+          "supabase/functions/_shared/payoutReleasePolicy.ts",
+          "supabase/functions/admin-payout-action/index.ts",
+          "supabase/migrations/20261010010000_manual_payout_completion_guard.sql"
+        ]
+      },
+      {
+        "commit": "468d39874818b88ea87e3e2ce2d4ea5fdc4887c1",
+        "subject": "Queue rental proceeds by booking without claiming a payout was sent",
+        "files": [
+          "src/test/payments/rentalPayoutEligibility.test.ts",
+          "supabase/functions/_shared/rentalPayoutEligibility.ts",
+          "supabase/functions/complete-ended-bookings/index.ts"
+        ]
+      },
+      {
+        "commit": "340c386f3745262aa7f9c971a468805cb720e1bf",
+        "subject": "Only report deposit refunds after confirmed provider completion",
+        "files": [
+          "src/test/payments/confirmedRefund.test.ts",
+          "supabase/functions/_shared/confirmedRefund.ts",
+          "supabase/functions/complete-ended-bookings/index.ts"
+        ]
+      },
+      {
+        "commit": "c70e732a5be7fc319542c075a9168cedc6bf129f",
+        "subject": "Keep refund checks portable and route non-PayPal deposits to review",
+        "files": [
+          "src/test/payments/rentalPayoutEligibility.test.ts",
+          "supabase/functions/_shared/confirmedRefund.ts",
+          "supabase/functions/complete-ended-bookings/index.ts"
+        ]
+      }
+    ],
+    "inspectedExistingSeo": [
+      {
+        "commit": "e359d15495fd5182736d06db7ce8b491991e4dba",
+        "subject": "Fix audited SEO issues and strengthen coffee and pricing assets",
+        "files": [
+          "docs/analytics/buyer-seo-events.md",
+          "docs/semrush-growth-evidence-2026-10-04.json",
+          "docs/semrush-growth-plan-2026-10-04.md",
+          "docs/semrush-seo-audit-2026-10-04.json",
+          "scripts/generate-sitemaps.ts",
+          "src/components/JsonLd.tsx",
+          "src/components/SEO.tsx",
+          "src/data/backlinkOpportunities.ts",
+          "src/data/specialtyCategoryConfigs.ts",
+          "src/lib/buyerSeoTracking.ts",
+          "src/lib/market-data/exportSnapshot.ts",
+          "src/pages/Contact.tsx",
+          "src/pages/FoodTruckPrices.tsx",
+          "src/pages/tools/PermitPath.tsx",
+          "src/pages/tools/PricePilot.tsx",
+          "src/test/seo/buyerSeoPrerender.test.ts",
+          "src/test/seo/buyerSeoTracking.test.ts",
+          "src/test/seo/marketSnapshot.test.ts",
+          "src/test/seo/semrushFixes.test.tsx"
+        ]
+      }
+    ]
+  },
+  "documentationArtifacts": [
+    "docs/seo/2026-10-09-sprint-report.md",
+    "docs/seo/2026-10-09-payment-follow-up.md",
+    "docs/seo/2026-10-09-change-manifest.json",
+    "docs/seo/2026-10-09-semrush-baseline.json",
+    "docs/seo/2026-10-09-http-audit.json"
+  ]
+}

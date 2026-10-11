@@ -5,10 +5,13 @@
  * payment interface. Callers depend on `PaymentProvider`, never on this file.
  */
 import {
+  authorizePayPalOrder,
   cancelPayPalSubscription,
+  capturePayPalAuthorization,
   capturePayPalOrder,
   centsFromPayPalAmount,
   createPayPalOrder,
+  getPayPalAuthorization,
   getPayPalOrder,
   getPayPalSubscription,
   paypalConfigStatus,
@@ -18,6 +21,7 @@ import {
   refundPayPalCapture,
   suspendPayPalSubscription,
   verifyPayPalWebhook,
+  voidPayPalAuthorization,
 } from "../paypal.ts";
 import {
   activateBillingPlan,
@@ -36,11 +40,14 @@ import {
   type CreateSubscriptionRequest,
   defaultMarketplaceFees,
   type MarketplaceFeeInput,
+  type AuthorizationCapableProvider,
+  type NormalizedAuthorizationStatus,
   type NormalizedPaymentStatus,
   type PaymentLinkRequest,
   type PaymentLinkResult,
   type PaymentProvider,
   PaymentProviderError,
+  type ProviderAuthorization,
   type ProviderOrder,
   type ProviderSubscription,
   type QueuePayoutInput,
@@ -92,7 +99,31 @@ function wrap(err: unknown): never {
   throw err;
 }
 
-export class PayPalProvider implements PaymentProvider {
+/** PayPal authorization states → normalized hold lifecycle. */
+function normalizeAuthorizationStatus(
+  status: string | undefined,
+): NormalizedAuthorizationStatus {
+  switch ((status ?? "").toUpperCase()) {
+    case "CREATED":
+      return "created";
+    case "PENDING":
+      return "pending";
+    case "PARTIALLY_CAPTURED":
+      return "partially_captured";
+    case "CAPTURED":
+      return "captured";
+    case "VOIDED":
+      return "voided";
+    case "EXPIRED":
+      return "expired";
+    case "DENIED":
+      return "denied";
+    default:
+      return "pending";
+  }
+}
+
+export class PayPalProvider implements PaymentProvider, AuthorizationCapableProvider {
   readonly name = "paypal" as const;
 
   get environment() {
@@ -100,8 +131,11 @@ export class PayPalProvider implements PaymentProvider {
   }
 
   isConfigured(): boolean {
+    // paypalConfigStatus() reports snake_case flags — read those directly.
+    // (An older camelCase lookup here silently evaluated to false and made
+    // every subscription attempt return "provider_unavailable".)
     const status = paypalConfigStatus();
-    return status.client_id_configured && status.client_secret_configured;
+    return Boolean(status.client_id_configured && status.client_secret_configured);
   }
 
   // ------------------------------------------------------------- orders
@@ -109,13 +143,25 @@ export class PayPalProvider implements PaymentProvider {
   async createOrder(req: CreateOrderRequest): Promise<ProviderOrder> {
     try {
       const order = await createPayPalOrder({
+        cardFields: req.cardFields === true,
         amountCents: req.amount.amountCents,
-        currency: req.amount.currency,
+        currency: (req.amount.currency || "USD").toUpperCase(),
         reference: req.reference,
         description: req.description,
         breakdown: req.breakdown,
         softDescriptor: req.softDescriptor,
         idempotencyKey: req.idempotencyKey ?? `order:${req.reference}`,
+        intent: req.intent,
+        // Connected Path routing — resolved server-side by the caller.
+        payeeMerchantId: req.payeeMerchantId ?? null,
+        platformFeeCents: req.platformFeeCents ?? 0,
+        items: req.items,
+        shipping: req.shipping ?? null,
+        buyerEmail: req.buyerEmail ?? null,
+        buyerPhone: req.buyerPhone ?? null,
+        returnUrl: req.returnUrl ?? null,
+        cancelUrl: req.cancelUrl ?? null,
+        sellerId: req.sellerId ?? null,
       });
       return {
         providerOrderId: order.id,
@@ -177,19 +223,129 @@ export class PayPalProvider implements PaymentProvider {
     }
   }
 
+  // ----------------------------------------------- authorizations (holds)
+
+  /**
+   * Converts an approved AUTHORIZE order into a temporary hold. No money
+   * moves here — the payer's funds are reserved by PayPal until we capture
+   * or void. Never described to buyers as escrow.
+   */
+  async authorizeOrder(
+    providerOrderId: string,
+    idempotencyKey: string,
+  ): Promise<ProviderAuthorization> {
+    try {
+      const order = await authorizePayPalOrder(providerOrderId, idempotencyKey);
+      const auth = order?.purchase_units?.[0]?.payments?.authorizations?.[0];
+      if (!auth?.id) {
+        throw new PaymentProviderError({
+          provider: "paypal",
+          message: "PayPal did not return an authorization. Nothing was charged.",
+          code: "authorization_unverified",
+          status: 502,
+        });
+      }
+      return {
+        providerOrderId,
+        authorizationId: auth.id,
+        status: normalizeAuthorizationStatus(auth.status),
+        amount: {
+          amountCents: centsFromPayPalAmount(auth.amount?.value),
+          currency: auth.amount?.currency_code ?? "USD",
+        },
+        expiresAt: auth.expiration_time ?? null,
+        payerId: order?.payer?.payer_id ?? order?.payment_source?.paypal?.account_id ?? null,
+        paymentSource: order?.payment_source ? Object.keys(order.payment_source)[0] : null,
+        raw: order,
+      };
+    } catch (err) {
+      wrap(err);
+    }
+  }
+
+  async getAuthorization(authorizationId: string): Promise<ProviderAuthorization> {
+    try {
+      const auth = await getPayPalAuthorization(authorizationId);
+      return {
+        providerOrderId: auth?.supplementary_data?.related_ids?.order_id ?? "",
+        authorizationId: auth.id,
+        status: normalizeAuthorizationStatus(auth.status),
+        amount: {
+          amountCents: centsFromPayPalAmount(auth.amount?.value),
+          currency: auth.amount?.currency_code ?? "USD",
+        },
+        expiresAt: auth.expiration_time ?? null,
+        raw: auth,
+      };
+    } catch (err) {
+      wrap(err);
+    }
+  }
+
+  async captureAuthorization(
+    authorizationId: string,
+    idempotencyKey: string,
+    amount?: { amountCents: number; currency?: string },
+    invoiceId?: string,
+  ): Promise<CaptureResult> {
+    try {
+      const current = amount ?? (await this.getAuthorization(authorizationId)).amount;
+      const capture = await capturePayPalAuthorization({
+        authorizationId,
+        amountCents: current.amountCents,
+        currency: (current.currency || "USD").toUpperCase(),
+        invoiceId,
+        idempotencyKey,
+      });
+      if (!capture?.id) {
+        throw new PaymentProviderError({
+          provider: "paypal",
+          message: "PayPal returned no capture record for this hold.",
+          code: "capture_unverified",
+          status: 502,
+        });
+      }
+      return {
+        providerOrderId: capture?.supplementary_data?.related_ids?.order_id ?? "",
+        captureId: capture.id,
+        status: normalizeStatus(capture.status),
+        amount: {
+          amountCents: centsFromPayPalAmount(capture.amount?.value),
+          currency: capture.amount?.currency_code ?? "USD",
+        },
+        raw: capture,
+      };
+    } catch (err) {
+      wrap(err);
+    }
+  }
+
+  /** Releases a hold. Safe to call twice — an already-voided hold resolves. */
+  async voidAuthorization(authorizationId: string): Promise<void> {
+    try {
+      await voidPayPalAuthorization(authorizationId, `void:${authorizationId}`);
+    } catch (err) {
+      if (err instanceof PayPalError && (err.status === 404 || err.status === 422)) return;
+      wrap(err);
+    }
+  }
+
   async cancelOrder(_providerOrderId: string, _reason?: string): Promise<void> {
     // PayPal orders expire on their own; there is no void endpoint for an
     // uncaptured Orders v2 order. Intentionally a no-op.
   }
+
 
   async refundOrder(req: RefundRequest): Promise<RefundResult> {
     try {
       const refund = await refundPayPalCapture({
         captureId: req.captureId,
         amountCents: req.amount?.amountCents,
-        currency: req.amount?.currency,
+        currency: (req.amount?.currency || "USD").toUpperCase(),
         reason: req.reason,
         idempotencyKey: req.idempotencyKey,
+        // Routed captures must be refunded on the seller's behalf.
+        actAsMerchantId: req.sellerMerchantId ?? null,
       });
       return {
         refundId: refund.id,
@@ -285,7 +441,7 @@ export class PayPalProvider implements PaymentProvider {
         description: req.description,
         interval: req.interval,
         priceCents: req.price.amountCents,
-        currency: req.price.currency,
+        currency: (req.price.currency || "USD").toUpperCase(),
         trialDays: req.trialDays,
         taxable: req.taxable,
         idempotencyKey: req.idempotencyKey,
@@ -318,7 +474,7 @@ export class PayPalProvider implements PaymentProvider {
     try {
       const inv = await ppCreateInvoice({
         amountCents: req.amount.amountCents,
-        currency: req.amount.currency,
+        currency: (req.amount.currency || "USD").toUpperCase(),
         reference: req.reference,
         description: req.description,
         buyerEmail: req.buyerEmail,
@@ -373,7 +529,7 @@ export class PayPalProvider implements PaymentProvider {
         id: input.paymentRecordId,
         seller_id: input.sellerId,
         seller_proceeds_cents: input.netPayoutCents,
-        currency: input.currency,
+        currency: (input.currency || "USD").toUpperCase(),
       } as any,
       input.releaseAt,
     );
@@ -390,3 +546,4 @@ export class PayPalProvider implements PaymentProvider {
     return paypalRequest<T>(path, init);
   }
 }
+

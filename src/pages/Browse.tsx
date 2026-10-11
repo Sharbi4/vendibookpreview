@@ -69,7 +69,7 @@ const Browse = () => {
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="lg" className="text-lg px-8 py-6">
-                  <Link to="/how-it-works">Learn More</Link>
+                  <Link to="/how-it-works">How Vendibook works</Link>
                 </Button>
               </div>
               <p className="text-sm text-muted-foreground mb-4">Free to browse · No hidden fees · Pay only when you book</p>
@@ -122,7 +122,7 @@ const Browse = () => {
                 icon={<MapPin className="h-8 w-8" />}
                 title="Vendor Spaces"
                 description="Prime vending locations"
-                href="/search?category=vendor_lot"
+                href="/search?category=vendor_space"
               />
             </div>
           </div>

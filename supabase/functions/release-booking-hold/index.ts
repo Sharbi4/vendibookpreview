@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
+import { releaseHeldPayment } from "../_shared/paymentOps.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
@@ -20,8 +20,6 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
 
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -47,13 +45,20 @@ serve(async (req) => {
     // Fetch booking
     const { data: booking, error: bookingError } = await supabaseClient
       .from('booking_requests')
-      .select('*, listing:listings(title), shopper:profiles!booking_requests_shopper_id_fkey(email, full_name)')
+      .select('*, listing:listings(title)')
       .eq('id', booking_id)
       .single();
 
     if (bookingError || !booking) {
       throw new Error("Booking not found");
     }
+
+    // shopper_id references auth.users, not profiles — fetch the profile separately.
+    const { data: shopperProfile } = await supabaseClient
+      .from('profiles')
+      .select('email, full_name')
+      .eq('id', booking.shopper_id)
+      .maybeSingle();
 
     // Verify caller is the host or admin
     if (booking.host_id !== user.id) {
@@ -93,26 +98,19 @@ serve(async (req) => {
       throw new Error("Cannot release hold - payment was already captured. Use refund instead.");
     }
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
+    // Vendibook releases authorizations through PayPal only.
+    const release = await releaseHeldPayment({
+      authorizationId: booking.payment_intent_id,
+      provider: booking.payment_provider,
+      idempotencyKey: `booking-release-${booking.id}`,
+    });
 
-    // Get the payment intent to check its status
-    const paymentIntent = await stripe.paymentIntents.retrieve(booking.payment_intent_id);
-    logStep("PaymentIntent retrieved", { status: paymentIntent.status });
-
-    // Cancel the payment intent to release the hold
-    if (paymentIntent.status === 'requires_capture') {
-      const canceledIntent = await stripe.paymentIntents.cancel(booking.payment_intent_id, {
-        cancellation_reason: 'requested_by_customer',
-      });
-      logStep("Payment hold released", { 
-        id: canceledIntent.id, 
-        status: canceledIntent.status,
-      });
-    } else if (paymentIntent.status === 'canceled') {
-      logStep("Payment was already canceled");
-    } else {
-      logStep("Warning: Unexpected payment status", { status: paymentIntent.status });
+    if (!release.success) {
+      logStep("Release not completed", { error: release.error, manual: release.manual });
+      throw new Error(release.error ?? "Failed to release payment hold");
     }
+
+    logStep("Payment hold released", { id: release.id, status: release.status });
 
     // Update booking status
     const { error: updateError } = await supabaseClient
@@ -128,7 +126,7 @@ serve(async (req) => {
     }
 
     // Send notification to shopper that their hold was released
-    if (booking.shopper?.email) {
+    if (shopperProfile?.email) {
       await supabaseClient.functions.invoke('send-booking-notification', {
         body: { 
           booking_id, 

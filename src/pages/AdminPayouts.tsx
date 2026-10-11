@@ -7,7 +7,9 @@ import {
   Loader2,
   PauseCircle,
   RefreshCw,
+  RotateCcw,
   Search,
+  XCircle,
 } from 'lucide-react';
 
 import Header from '@/components/layout/Header';
@@ -47,6 +49,13 @@ interface Payable {
   dispute_status: string | null;
   external_payout_reference: string | null;
   payout_method: string | null;
+  payout_provider: string | null;
+  payout_completed_at: string | null;
+  payment_record_id: string;
+  release_state: string | null;
+  conditions_deadline_at: string | null;
+  walkthrough_recorded_at: string | null;
+  agreement_completed_at: string | null;
   failure_reason: string | null;
   admin_notes: string | null;
   created_at: string;
@@ -80,6 +89,10 @@ export default function AdminPayouts() {
   const [payoutTarget, setPayoutTarget] = useState<Payable | null>(null);
   const [reference, setReference] = useState('');
   const [note, setNote] = useState('');
+  const [refundTarget, setRefundTarget] = useState<Payable | null>(null);
+  const [refundReason, setRefundReason] = useState('');
+  const [cancelTarget, setCancelTarget] = useState<Payable | null>(null);
+  const [cancelReason, setCancelReason] = useState('');
 
   const statuses = useMemo(() => TABS.find((t) => t.value === tab)?.statuses ?? [], [tab]);
 
@@ -88,14 +101,25 @@ export default function AdminPayouts() {
     const { data, error } = await supabase
       .from('seller_payables')
       .select(
-        '*, payment:payment_records(reference, payment_status, buyer_email), seller:profiles!seller_payables_seller_id_fkey(full_name, email)',
+        '*, payment:payment_records(reference, payment_status, buyer_email)',
       )
       .in('status', statuses)
       .order('release_due_at', { ascending: true })
       .limit(200);
 
-    if (error) toast.error('Could not load the payout queue.');
-    setRows((data as unknown as Payable[]) ?? []);
+    if (error) {
+      toast.error('Could not load the payout queue.');
+      setRows([]);
+      setLoading(false);
+      return;
+    }
+    const rawRows = (data as unknown as Payable[]) ?? [];
+    const sellerIds = [...new Set(rawRows.map((row) => row.seller_id).filter(Boolean))];
+    const sellers = sellerIds.length
+      ? await supabase.from('profiles').select('id, full_name, email').in('id', sellerIds)
+      : { data: [] };
+    const byId = new Map((sellers.data ?? []).map((seller) => [seller.id, seller]));
+    setRows(rawRows.map((row) => ({ ...row, seller: byId.get(row.seller_id) ?? null })));
     setLoading(false);
   }, [statuses]);
 
@@ -134,6 +158,46 @@ export default function AdminPayouts() {
 
   const totalDue = filtered.reduce((sum, r) => sum + (r.net_payout_cents ?? 0), 0);
 
+  const refund = async () => {
+    if (!refundTarget || !refundReason.trim()) return;
+    setBusyId(refundTarget.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('paypal-refund', {
+        body: { payment_record_id: refundTarget.payment_record_id, reason: refundReason.trim() },
+      });
+      if (error || data?.error) {
+        toast.error(data?.message || error?.message || 'PayPal could not issue this refund.');
+        return;
+      }
+      toast.success('Full PayPal refund issued and recorded.');
+      setRefundTarget(null);
+      setRefundReason('');
+      await load();
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const cancelOrder = async () => {
+    if (!cancelTarget || cancelReason.trim().length < 5) return;
+    setBusyId(cancelTarget.id);
+    try {
+      const { data, error } = await supabase.functions.invoke('admin-cancel-order', {
+        body: { payment_record_id: cancelTarget.payment_record_id, reason: cancelReason.trim() },
+      });
+      if (error || data?.error) {
+        toast.error(data?.error || error?.message || 'The order was not cancelled.');
+        return;
+      }
+      toast.success('Order cancelled, buyer refunded in full, both parties notified.');
+      setCancelTarget(null);
+      setCancelReason('');
+      await load();
+    } finally {
+      setBusyId(null);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-background">
       <SEO title="Payout queue — Vendibook admin" description="Manual seller payout queue." noindex />
@@ -147,7 +211,7 @@ export default function AdminPayouts() {
               Payout queue
             </h1>
             <p className="text-sm text-muted-foreground mt-1">
-              Seller proceeds collected through PayPal, released manually. Approve, then record the
+              Seller proceeds collected through PayPal and paid manually. Approve, then record the
               external transfer reference once the money is sent.
             </p>
           </div>
@@ -202,6 +266,11 @@ export default function AdminPayouts() {
                       </span>
                       <Badge variant="outline" className="text-[10px]">{row.transaction_type}</Badge>
                       <StatusBadge status={row.status} />
+                      {row.payout_provider === 'paypal' && row.status === 'payout_completed' ? (
+                        <Badge className="bg-emerald-500/15 text-emerald-500 border-emerald-500/30 text-[10px]">
+                          Auto-settled by PayPal
+                        </Badge>
+                      ) : null}
                       {row.dispute_status && row.dispute_status !== 'none' ? (
                         <Badge className="bg-destructive/15 text-destructive border-destructive/30 text-[10px]">
                           <AlertTriangle className="h-3 w-3 mr-1" />
@@ -216,9 +285,18 @@ export default function AdminPayouts() {
                     </p>
                     <p className="text-xs text-muted-foreground flex items-center gap-1.5">
                       <Clock className="h-3 w-3" />
-                      Release due {when(row.release_due_at)}
+                      {row.payout_provider === 'paypal' && row.status === 'payout_completed'
+                        ? `Settled by PayPal at capture ${when(row.payout_completed_at)} — no manual payout needed`
+                        : `Review date ${when(row.conditions_deadline_at ?? row.release_due_at)}`}
                       {row.external_payout_reference ? ` · transfer ${row.external_payout_reference}` : ''}
                     </p>
+                    {row.release_state && (
+                      <div className="mt-3 grid gap-1 text-xs text-muted-foreground sm:grid-cols-3">
+                        <span>Video: {row.walkthrough_recorded_at ? 'Complete' : 'Waiting'}</span>
+                        <span>Signatures: {row.agreement_completed_at ? 'Complete' : 'Waiting'}</span>
+                        <span>Deadline: {when(row.conditions_deadline_at)}</span>
+                      </div>
+                    )}
                     {row.hold_reason ? (
                       <p className="text-xs text-amber-500">Hold: {row.hold_reason}</p>
                     ) : null}
@@ -237,14 +315,14 @@ export default function AdminPayouts() {
 
                     <div className="flex flex-wrap gap-2">
                       {row.status === 'pending_release' ? (
-                        <Button size="sm" variant="outline" disabled={busyId === row.id}
+                        <Button size="sm" variant="outline" disabled={busyId === row.id || row.release_state !== 'ready_for_review'}
                           onClick={() => act(row, 'mark_eligible')}>
                           Move to review
                         </Button>
                       ) : null}
 
                       {['eligible_for_review', 'pending_release'].includes(row.status) ? (
-                        <Button size="sm" disabled={busyId === row.id} onClick={() => act(row, 'approve')}>
+                        <Button size="sm" disabled={busyId === row.id || row.release_state !== 'ready_for_review'} onClick={() => act(row, 'approve')}>
                           {busyId === row.id ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
                           Approve payout
                         </Button>
@@ -272,7 +350,7 @@ export default function AdminPayouts() {
                       {row.status === 'payout_on_hold' ? (
                         <Button size="sm" variant="outline" disabled={busyId === row.id}
                           onClick={() => act(row, 'release_hold')}>
-                          Release hold
+                          Resume review
                         </Button>
                       ) : row.status !== 'payout_completed' ? (
                         <Button size="sm" variant="outline" disabled={busyId === row.id}
@@ -282,6 +360,26 @@ export default function AdminPayouts() {
                           }}>
                           <PauseCircle className="h-4 w-4 mr-2" />
                           Hold
+                        </Button>
+                      ) : null}
+                      {row.release_state && !['payout_recorded', 'auto_refunded', 'cancelled'].includes(row.release_state) ? (
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          disabled={busyId === row.id}
+                          onClick={() => { setRefundTarget(row); setRefundReason(''); }}
+                        >
+                          <RotateCcw className="mr-2 h-4 w-4" /> Full refund
+                        </Button>
+                      ) : null}
+                      {row.release_state && !['payout_recorded', 'auto_refunded', 'cancelled'].includes(row.release_state) ? (
+                        <Button
+                          size="sm"
+                          variant="destructive"
+                          disabled={busyId === row.id}
+                          onClick={() => { setCancelTarget(row); setCancelReason(''); }}
+                        >
+                          <XCircle className="mr-2 h-4 w-4" /> Cancel &amp; refund order
                         </Button>
                       ) : null}
                     </div>
@@ -330,6 +428,63 @@ export default function AdminPayouts() {
               }}
             >
               Save transfer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!refundTarget} onOpenChange={(open) => !open && setRefundTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Issue a full PayPal refund?</DialogTitle>
+            <DialogDescription>
+              This sends the remaining captured amount back through PayPal and stops the seller payout.
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={refundReason}
+            onChange={(event) => setRefundReason(event.target.value)}
+            placeholder="Required reason for the audit record"
+            className="text-base"
+          />
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setRefundTarget(null)}>Keep order</Button>
+            <Button
+              variant="destructive"
+              disabled={!refundReason.trim() || busyId === refundTarget?.id}
+              onClick={refund}
+            >
+              {busyId === refundTarget?.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Refund in full
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!cancelTarget} onOpenChange={(open) => !open && setCancelTarget(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Cancel this order and refund the buyer?</DialogTitle>
+            <DialogDescription>
+              PayPal refunds the buyer in full first. Only if that succeeds is the sale cancelled and the
+              seller payment closed out. Both parties are emailed the reason you write here.
+            </DialogDescription>
+          </DialogHeader>
+          <Textarea
+            value={cancelReason}
+            onChange={(event) => setCancelReason(event.target.value)}
+            placeholder="Required reason for the audit record and for both parties"
+            className="text-base"
+          />
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setCancelTarget(null)}>Keep order</Button>
+            <Button
+              variant="destructive"
+              disabled={cancelReason.trim().length < 5 || busyId === cancelTarget?.id}
+              onClick={cancelOrder}
+            >
+              {busyId === cancelTarget?.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
+              Cancel &amp; refund
             </Button>
           </DialogFooter>
         </DialogContent>

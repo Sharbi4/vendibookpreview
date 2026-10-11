@@ -63,3 +63,19 @@ describe('public listing visibility', () => {
     ]);
   });
 });
+
+describe('unlisted listings', () => {
+  const live = { status: 'published', published_at: '2026-10-06T00:00:00Z', deleted_at: null, moderation_status: 'clear' };
+
+  it('stay viewable and purchasable by direct link', async () => {
+    const { isListingPubliclyVisible, isListingPurchasable } = await import('@/lib/listings/publicVisibility');
+    expect(isListingPubliclyVisible({ ...live, unlisted: true })).toBe(true);
+    expect(isListingPurchasable({ ...live, unlisted: true })).toBe(true);
+  });
+
+  it('never appear in discovery lists', async () => {
+    const { filterPubliclyVisible } = await import('@/lib/listings/publicVisibility');
+    const rows = [{ id: 'a', ...live }, { id: 'b', ...live, unlisted: true }, { id: 'c', ...live, unlisted: false }];
+    expect(filterPubliclyVisible(rows).map((r) => r.id)).toEqual(['a', 'c']);
+  });
+});

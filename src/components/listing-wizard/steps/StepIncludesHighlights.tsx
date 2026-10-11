@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { Plus, X, CheckCircle2, Star, Package } from 'lucide-react';
+import { Plus, X, CheckCircle2, Zap, Package } from 'lucide-react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import { AMENITIES_BY_CATEGORY, ListingCategory } from '@/types/listing';
+import { VisibilityLabel } from '@/components/common/VisibilityLabel';
 
 interface StepIncludesHighlightsProps {
   category: ListingCategory | null;
@@ -65,6 +66,11 @@ export const StepIncludesHighlights: React.FC<StepIncludesHighlightsProps> = ({
         <p className="text-muted-foreground text-sm max-w-sm mx-auto">
           Help renters understand exactly what they're getting.
         </p>
+        <p className="text-xs text-muted-foreground max-w-sm mx-auto">
+          <span aria-hidden="true" className="font-semibold text-destructive">*</span> marks a field
+          required to publish. Nothing on this page is required — it all makes your listing more
+          detailed, and everything here is shown publicly.
+        </p>
       </div>
 
       {/* Amenities */}
@@ -74,6 +80,7 @@ export const StepIncludesHighlights: React.FC<StepIncludesHighlightsProps> = ({
             <div className="flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 text-primary" />
               <Label className="text-sm font-semibold text-foreground">Equipment & Features</Label>
+              <VisibilityLabel kind="optional" />
             </div>
             {amenities.length > 0 && (
               <span className="text-xs font-medium text-primary bg-primary/10 px-2 py-1 rounded-full">
@@ -117,9 +124,9 @@ export const StepIncludesHighlights: React.FC<StepIncludesHighlightsProps> = ({
       {/* Key Highlights */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
-          <Star className="w-4 h-4 text-primary" />
+          <Zap className="w-4 h-4 text-primary" />
           <Label className="text-sm font-semibold text-foreground">Key Highlights</Label>
-          <span className="text-xs text-muted-foreground">(Optional)</span>
+          <VisibilityLabel kind="optional" />
         </div>
         <p className="text-xs text-muted-foreground">
           Add up to 6 bullet points to showcase the best features.
@@ -132,7 +139,7 @@ export const StepIncludesHighlights: React.FC<StepIncludesHighlightsProps> = ({
                 key={index}
                 className="flex items-center gap-3 p-3 bg-card rounded-xl border border-border"
               >
-                <Star className="w-4 h-4 text-primary shrink-0" />
+                <Zap className="w-4 h-4 text-primary shrink-0" />
                 <span className="flex-1 text-sm font-medium text-foreground">{highlight}</span>
                 <button
                   type="button"

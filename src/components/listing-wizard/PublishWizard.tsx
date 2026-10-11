@@ -1,4 +1,6 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { inchesToFeet, feetToInches, formatDimensionSummary } from '@/lib/listings/dimensions';
+import { productCheckoutUrl, hostedCheckoutUrl } from '@/lib/payments/hostedCheckout';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { useNavigate, useParams, useSearchParams, Link } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import { ArrowLeft, Loader2, Send, ExternalLink, Check, Camera, DollarSign, FileText, Calendar, CreditCard, ChevronRight, Save, TrendingUp, TrendingDown, Target, Wallet, Info, Banknote, Zap, RotateCcw, Plus, X, Package, Scale, Ruler, MapPin, Truck, Building2, Eye, AlertCircle, Shield, Clock, ChevronDown, ChevronUp, GripVertical, Type, ListChecks } from 'lucide-react';
@@ -19,12 +21,23 @@ import {
   AlertDialogTitle} from '@/components/ui/alert-dialog';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/contexts/AuthContext';
-import { useStripeConnect } from '@/hooks/useStripeConnect';
 import { supabase } from '@/integrations/supabase/client';
+import { publishListingIdempotent } from '@/lib/listings/publishListing';
+import {
+  buildLocationColumns,
+  structuredLocationChanged,
+  resolveListingCoordinates,
+  type GeoCandidate,
+  type StructuredLocationInput,
+} from '@/lib/listings/locationPersistence';
+import { saveWizardDraft, loadWizardDraft, clearWizardDraft, hasContent, mergeCached } from '@/lib/listings/wizardDraftCache';
+
 import { reportError } from '@/lib/errorReporter';
 import { parseEdgeError } from '@/lib/edgeErrors';
 import { usePremiumUpsell, isPremiumError, featureFromParsed } from '@/hooks/usePremiumUpsell';
 import { PremiumChip } from '@/components/monetization/PremiumChip';
+import { useHostEntitlements } from '@/hooks/useHostEntitlements';
+import { useProBoostCredit, useRedeemProBoostCredit } from '@/hooks/useProBoostCredit';
 
 import { CATEGORY_LABELS, ListingCategory, FreightPayer, AMENITIES_BY_CATEGORY, FREIGHT_CATEGORY_LABELS, FreightCategory, FulfillmentType, isMobileAsset, isStaticLocation as isStaticLocationFn, MODE_LABELS } from '@/types/listing';
 import {
@@ -56,8 +69,10 @@ import { FeaturedListingCard } from './FeaturedListingCard';
 import { ListingQualityGate } from './ListingQualityGate';
 import { ListingHealthScoreCard } from './ListingHealthScoreCard';
 import { AdditionalSellerSupportCards } from '@/components/monetization/AdditionalSellerSupportCards';
+import VerifiedSellerCTA from '@/components/verification/VerifiedSellerCTA';
+
+
 import { InfoTooltip } from '@/components/ui/info-tooltip';
-import stripeIcon from '@/assets/stripe-icon.png';
 import { ConsentModal } from '@/components/consent/ConsentModal';
 import { DOCUMENT_TYPES, CONSENT_TRIGGERS } from '@/lib/legalDocuments';
 import {
@@ -67,10 +82,41 @@ import {
   RENTAL_HOST_FEE_PERCENT,
   SALE_SELLER_FEE_PERCENT} from '@/lib/commissions';
 import { isListingFeatured } from '@/lib/featured';
+import { useCatalogPrice } from '@/hooks/useCatalogPrices';
+import { ACTIVE_PRODUCT_SLUGS } from '@/lib/monetization/catalogPricing';
 import { trackLeadEvent } from '@/lib/leadTracking';
-import { JourneyProgress, PrimaryActionBar, type JourneyStep } from '@/components/journey';
+import { PrimaryActionBar } from '@/components/journey';
+import {
+  getStageRequirements,
+  parseKnownProblems,
+  isTitledAsset,
+  requiresSaleDimensions,
+  MIN_GUIDED_PHOTOS,
+} from '@/lib/listings/stages';
+import { StepWhat, type StepWhatValues } from './stages/StepWhat';
+import { ListingDisclosures, type DisclosureValues } from './stages/ListingDisclosures';
+import { PhotoGuidance } from './stages/PhotoGuidance';
+import { PrivacySummary } from './stages/PrivacySummary';
+import { MissingRequirementsAlert } from './MissingRequirementsAlert';
 
-type PublishStep = 'photos' | 'headline' | 'includes' | 'pricing' | 'details' | 'location' | 'availability' | 'documents' | 'stripe' | 'review';
+import {
+  PublishAttestations,
+  emptyAttestations,
+  allAttested,
+  publishAcceptanceText,
+  type AttestationKey,
+} from './stages/PublishAttestations';
+
+import { PayPalMonogram, EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
+import SellerBusinessAccountHelp from '@/components/payments/SellerBusinessAccountHelp';
+import {
+  EQUINOX_DISCLOSURE_TEXT,
+  EQUINOX_DISCLOSURE_VERSION,
+  isFinanceableSaleListing,
+} from '@/lib/financing/disclosure';
+
+type PublishStep = 'basics' | 'photos' | 'headline' | 'includes' | 'pricing' | 'details' | 'location' | 'availability' | 'documents' | 'review';
+
 
 interface ListingData {
   id: string;
@@ -94,8 +140,9 @@ interface ListingData {
   deposit_amount: number | null;
   vendibook_freight_enabled: boolean;
   freight_payer: FreightPayer;
-  accept_card_payment: boolean;
+  accept_card_payment: boolean; // Legacy Stripe column — read-only history, never written here
   accept_cash_payment: boolean;
+  accept_paypal_checkout: boolean;
   proof_notary_enabled: boolean;
   highlights: string[] | null;
   amenities: string[] | null;
@@ -139,26 +186,76 @@ interface SaleSuggestions {
   reasoning: string;
 }
 
+/**
+ * Categories where a VIN / serial is meaningful. Used only to decide whether
+ * to show the optional VIN control — it never gates publishing.
+ */
+/** Where "Save & exit" returns the seller: the start of their listings. */
+const LISTING_EXIT_PATH = '/dashboard/listings';
+
+const TITLED_SALE_CATEGORIES = ['food_truck', 'food_trailer'];
+const isTitledSaleCategory = (l: { mode?: string | null; category?: string | null } | null) =>
+  !!l && l.mode === 'sale' && TITLED_SALE_CATEGORIES.includes(String(l.category));
+
 export const PublishWizard: React.FC = () => {
   const { listingId } = useParams<{ listingId: string }>();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { user } = useAuth();
   const premiumUpsell = usePremiumUpsell();
+  // Canonical Vendibook Pro entitlement — AI writing/pricing assistance is a
+  // Pro benefit. Publishing itself NEVER depends on this.
+  const hostEntitlements = useHostEntitlements();
+  const aiAssistUnlocked = hostEntitlements.hasAtLeast('pro');
+  const { data: proBoostCredit } = useProBoostCredit();
+  const redeemBoostCredit = useRedeemProBoostCredit();
   const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
 
-  const { isOnboardingComplete, isLoading: isStripeLoading, connectStripe, isConnecting } = useStripeConnect();
+  // Payouts are manual (Vendibook pays sellers directly), so there is no
+  // seller payment-account onboarding and nothing here can block publishing.
+  const isOnboardingComplete = true;
+  const isConnecting = false;
 
-  const VALID_STEPS: PublishStep[] = ['photos', 'headline', 'includes', 'pricing', 'details', 'location', 'availability', 'documents', 'stripe', 'review'];
+  const VALID_STEPS: PublishStep[] = ['basics', 'photos', 'headline', 'includes', 'pricing', 'details', 'location', 'availability', 'documents', 'review'];
   const initialStep = (() => {
     const s = searchParams.get('step');
-    return s && (VALID_STEPS as string[]).includes(s) ? (s as PublishStep) : 'photos';
+    return s && (VALID_STEPS as string[]).includes(s) ? (s as PublishStep) : 'basics';
   })();
   const [step, setStep] = useState<PublishStep>(initialStep);
+  const [stageValues, setStageValues] = useState<StepWhatValues>({
+    modelYear: '',
+    kitchenBuildYear: '',
+    kitchenBuildYearUnknown: false,
+    condition: '',
+    operationalStatus: '',
+    lengthInches: '',
+    widthInches: '',
+    heightInches: '',
+  });
+  const [disclosures, setDisclosures] = useState<DisclosureValues>({
+    titleStatus: '',
+    hasLien: '',
+    noKnownProblems: false,
+    knownProblems: [],
+    includedItems: '',
+    photosExclusionsAnswered: false,
+    photosExclusionsNote: '',
+    priceNegotiable: false,
+    acceptsOffers: false,
+    minOfferAmount: '',
+  });
+  const [attestations, setAttestations] = useState<Record<AttestationKey, boolean>>(emptyAttestations());
   const [listing, setListing] = useState<ListingData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSaveExiting, setIsSaveExiting] = useState(false);
+  // Re-entrancy guards: double-clicks and the periodic guest auto-save must
+  // never stack concurrent writes — queued requests contend on the client
+  // connection and duplicate network calls, compounding the "Saving…" stall.
+  const saveInFlightRef = useRef(false);
+  const guestSaveBusyRef = useRef(false);
+
   const [showSuccessModal, setShowSuccessModal] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [isGuestDraft, setIsGuestDraft] = useState(false);
@@ -166,12 +263,65 @@ export const PublishWizard: React.FC = () => {
   const [showLimitModal, setShowLimitModal] = useState(false);
   const quota = useListingQuota();
 
+  // Turns on inline red validation after a failed "Continue" attempt.
+  const [showStepErrors, setShowStepErrors] = useState(false);
+  // Every requirement still missing on the current step, surfaced at the top
+  // of the card after a failed Continue/Publish attempt.
+  const [stepBlockers, setStepBlockers] = useState<string[]>([]);
+
   // Scroll to top when step changes
   useEffect(() => {
+    setShowStepErrors(false);
+    setStepBlockers([]);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [step]);
 
-  // Handle returns from Stripe Checkout (featured / notary / membership).
+  /**
+   * Blocks navigation when a step still has required answers missing:
+   * lists them at the top of the step, highlights the fields in red,
+   * scrolls to the summary and toasts.
+   */
+  const guardNext = (blockers: string[], firstFieldId: string | null, proceed: () => void) => () => {
+    if (blockers.length > 0) {
+      setShowStepErrors(true);
+      setStepBlockers(blockers);
+      toast({
+        title:
+          blockers.length === 1
+            ? '1 required field is missing'
+            : `${blockers.length} required fields are missing`,
+        description: blockers.join(' · '),
+        variant: 'destructive',
+      });
+      requestAnimationFrame(() => {
+        const summary = document.getElementById('wizard-missing-required');
+        if (summary) {
+          summary.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        } else if (firstFieldId) {
+          document
+            .getElementById(firstFieldId)
+            ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      });
+      return;
+    }
+    setStepBlockers([]);
+    proceed();
+  };
+
+
+
+  // Keep ?step= in sync with the wizard position so leaving for an upgrade
+  // (or a refresh) always returns the seller to the exact same screen.
+  useEffect(() => {
+    const next = new URLSearchParams(window.location.search);
+    if (next.get('step') === step) return;
+    next.set('step', step);
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step]);
+
+  // Handle returns from PayPal Checkout (featured / membership).
   // - Restore the step the user was on via ?step= (validated above).
   // - Show cancel/success toasts.
   // - Invalidate entitlement caches so any newly-unlocked features go live in
@@ -180,10 +330,9 @@ export const PublishWizard: React.FC = () => {
   useEffect(() => {
     const unlocked = searchParams.get('unlocked');
     const featuredCancelled = searchParams.get('featured_cancelled') === 'true';
-    const notaryCancelled = searchParams.get('notary_cancelled') === 'true';
     const membershipCancelled = searchParams.get('membership_cancelled') === 'true';
 
-    if (!unlocked && !featuredCancelled && !notaryCancelled && !membershipCancelled) return;
+    if (!unlocked && !featuredCancelled && !membershipCancelled) return;
 
     const refreshEntitlements = () => {
       queryClient.invalidateQueries({ queryKey: ['host-entitlements'] });
@@ -212,12 +361,7 @@ export const PublishWizard: React.FC = () => {
         description: 'Your listing is still saved. You can add the Featured boost later.',
       });
     }
-    if (notaryCancelled) {
-      toast({
-        title: 'Notary cancelled',
-        description: 'Your listing is still saved. You can add Proof Notary later.',
-      });
-    }
+
     if (membershipCancelled) {
       toast({
         title: 'Membership cancelled',
@@ -227,13 +371,14 @@ export const PublishWizard: React.FC = () => {
 
     // Strip handled params but preserve ?step= so a refresh keeps position.
     const next = new URLSearchParams(searchParams);
-    ['unlocked', 'featured_cancelled', 'notary_cancelled', 'membership_cancelled'].forEach((k) => next.delete(k));
+    ['unlocked', 'featured_cancelled', 'notary_cancelled', 'membership_cancelled'] // notary_cancelled cleaned for legacy links
+      .forEach((k) => next.delete(k));
     setSearchParams(next, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchParams]);
 
   // Refetch entitlements when the tab regains focus — covers the new-tab
-  // Stripe Checkout pattern where success lands in the other tab.
+  // Checkout pattern where success lands in the other tab.
   useEffect(() => {
     const onFocus = () => {
       queryClient.invalidateQueries({ queryKey: ['host-entitlements'] });
@@ -265,10 +410,121 @@ export const PublishWizard: React.FC = () => {
   // New pricing fields
   const [vendibookFreightEnabled, setVendibookFreightEnabled] = useState(false);
   const [freightPayer, setFreightPayer] = useState<FreightPayer>('buyer');
-  const [acceptCardPayment, setAcceptCardPayment] = useState(true);
+  const [acceptPayPalCheckout, setAcceptPayPalCheckout] = useState(true);
   const [acceptCashPayment, setAcceptCashPayment] = useState(false);
-  const [proofNotaryEnabled, setProofNotaryEnabled] = useState(false);
   const [featuredEnabled, setFeaturedEnabled] = useState(false);
+  const featuredBoostPrice = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.featuredBoost);
+
+  // ─── Buyer financing is automatic on every published for-sale listing ───
+  // (no seller opt-in, no disclosure checkbox)
+  // Separate, always-unchecked-by-default consent to put the full VIN/serial on
+  // the private, server-generated purchase sheet.
+  // VIN / serial lives only in the private listing_ownership_details row.
+  const [vinSerial, setVinSerial] = useState('');
+  const [vinUnavailable, setVinUnavailable] = useState(false);
+  // Seller phone lives on the private profile — never in public listing text.
+  const [sellerPhone, setSellerPhone] = useState('');
+
+
+  /**
+   * VIN / serial is private data: it is stored only on
+   * listing_ownership_details, never on `listings`, and never blocks publish.
+   * The row's NOT NULL title_status is filled from the already-selected
+   * listing title status so the existing DB constraint is satisfied.
+   */
+  const persistVinSerial = useCallback(async () => {
+    if (!user?.id || !listing?.id) return;
+    if (!isTitledSaleCategory(listing)) return;
+    const normalized = vinUnavailable ? null : vinSerial.trim().toUpperCase() || null;
+    try {
+      const { data: existing, error: readError } = await supabase
+        .from('listing_ownership_details')
+        .select('id, title_status')
+        .eq('listing_id', listing.id)
+        .maybeSingle();
+      if (readError) throw readError;
+
+      if (existing?.id) {
+        const { error: updateError } = await supabase
+          .from('listing_ownership_details')
+          .update({ vin_serial: normalized })
+          .eq('id', existing.id);
+        if (updateError) throw updateError;
+        return;
+      }
+
+      // The row's title_status is NOT NULL and constrained. Never invent an
+      // invalid "unknown"; if the seller hasn't answered yet there is simply
+      // nothing to insert — VIN is optional and must never block anything.
+      const titleStatus = disclosures.titleStatus?.trim();
+      if (!titleStatus) return;
+
+      const { error: insertError } = await supabase.from('listing_ownership_details').insert({
+        listing_id: listing.id,
+        host_id: user.id,
+        title_status: titleStatus,
+        vin_serial: normalized,
+      });
+      if (insertError) throw insertError;
+    } catch (err) {
+      console.error('Failed to save VIN / serial', err);
+      toast({
+        title: "We couldn't save your VIN / serial",
+        description:
+          'It is optional and does not block publishing — you can add it later from the listing editor.',
+      });
+    }
+  }, [user?.id, listing, vinSerial, vinUnavailable, disclosures.titleStatus, toast]);
+
+
+  const saveSellerPhone = useCallback(async () => {
+    if (!user?.id) return;
+    const phone = sellerPhone.trim();
+    if (!phone) return;
+    try {
+      await supabase.from('profiles').update({ phone_number: phone }).eq('id', user.id);
+    } catch (err) {
+      console.error('Failed to save seller phone', err);
+    }
+  }, [user?.id, sellerPhone]);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('profiles')
+        .select('phone_number')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (!cancelled && data?.phone_number) setSellerPhone((prev) => prev || data.phone_number || '');
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
+
+
+  // Hydrate the private VIN / serial from the owner-only ownership row.
+  useEffect(() => {
+    if (!listing?.id || !isTitledSaleCategory(listing)) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from('listing_ownership_details')
+        .select('vin_serial')
+        .eq('listing_id', listing.id)
+        .maybeSingle();
+      if (cancelled || !data) return;
+      const vin = (data.vin_serial ?? '').trim();
+      setVinSerial(vin);
+      setVinUnavailable(!vin);
+    })();
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [listing?.id]);
   
   // AI suggestions state
   const [isLoadingSuggestions, setIsLoadingSuggestions] = useState(false);
@@ -304,16 +560,33 @@ export const PublishWizard: React.FC = () => {
   const [locCity, setLocCity] = useState('');
   const [locState, setLocState] = useState('');
   const [locZipCode, setLocZipCode] = useState('');
-  const [locPhoneNumber, setLocPhoneNumber] = useState('');
+  
   const [deliveryFee, setDeliveryFee] = useState('');
   const [deliveryRadiusMiles, setDeliveryRadiusMiles] = useState('');
+  const [deliveryFeeType, setDeliveryFeeType] = useState<'flat' | 'per_mile'>('flat');
   const [pickupInstructions, setPickupInstructions] = useState('');
+  // Towing & handoff (rental mobile assets)
+  const [hitchBallSize, setHitchBallSize] = useState('');
+  const [couplerType, setCouplerType] = useState('');
+  const [trailerPlugType, setTrailerPlugType] = useState('');
+  const [renterProvidesTowVehicle, setRenterProvidesTowVehicle] = useState<'yes' | 'no' | ''>('');
+  const [towVehicleRequirement, setTowVehicleRequirement] = useState('');
+  const [returnInstructions, setReturnInstructions] = useState('');
+  /** Host-stated towing/handoff columns saved on `listings`. Explicit facts only. */
+  const towingHandoffColumns = () => ({
+    hitch_ball_size: hitchBallSize.trim() || null,
+    coupler_type: couplerType.trim() || null,
+    trailer_plug_type: trailerPlugType.trim() || null,
+    renter_provides_tow_vehicle:
+      renterProvidesTowVehicle === 'yes' ? true : renterProvidesTowVehicle === 'no' ? false : null,
+    tow_vehicle_requirement: towVehicleRequirement.trim() || null,
+    return_instructions: returnInstructions.trim() || null,
+  });
   const [deliveryInstructions, setDeliveryInstructions] = useState('');
   const [accessInstructions, setAccessInstructions] = useState('');
   const [hoursOfAccess, setHoursOfAccess] = useState('');
   const [locationNotes, setLocationNotes] = useState('');
   const [isStaticLocation, setIsStaticLocation] = useState(false);
-  const [pickupCoordinates, setPickupCoordinates] = useState<[number, number] | null>(null);
 
   // Availability step state
   const [availableFrom, setAvailableFrom] = useState<string | null>(null);
@@ -338,14 +611,214 @@ export const PublishWizard: React.FC = () => {
   const [deadlineHours, setDeadlineHours] = useState<number>(48);
   const [openDocGroups, setOpenDocGroups] = useState<string[]>(['Identity & Legal']);
 
+  // ─── Never lose typed input ───────────────────────────────────────────────
+  // Everything the seller types is mirrored to a local per-listing cache, so
+  // stepping back and forth, refreshing, or returning from a payment page
+  // always restores the exact answers they already gave.
+  const [draftRestored, setDraftRestored] = useState(false);
+
+  const draftSnapshot = useMemo(
+    () => ({
+      stageValues,
+      disclosures,
+      attestations,
+      title,
+      description,
+      priceDaily,
+      priceWeekly,
+      priceMonthly,
+      priceSale,
+      priceHourly,
+      depositAmount,
+      instantBook,
+      highlights,
+      amenities,
+      weightLbs,
+      lengthInches,
+      widthInches,
+      heightInches,
+      totalSlots,
+      slotNames,
+      freightCategory,
+      vendibookFreightEnabled,
+      freightPayer,
+      acceptPayPalCheckout,
+      acceptCashPayment,
+      vinSerial,
+      vinUnavailable,
+      sellerPhone,
+      fulfillmentType,
+      pickupLocationText,
+      address,
+      streetAddress,
+      aptSuite,
+      locCity,
+      locState,
+      locZipCode,
+      deliveryFee,
+      deliveryRadiusMiles,
+      deliveryFeeType,
+      pickupInstructions,
+      hitchBallSize,
+      couplerType,
+      trailerPlugType,
+      renterProvidesTowVehicle,
+      towVehicleRequirement,
+      returnInstructions,
+      deliveryInstructions,
+      accessInstructions,
+      hoursOfAccess,
+      locationNotes,
+      isStaticLocation,
+      availableFrom,
+      availableTo,
+      hourlyEnabled,
+      dailyEnabled,
+      minHours,
+      maxHours,
+      bufferTimeMins,
+      minNoticeHours,
+      hourlySchedule,
+      rentalMinDays,
+      hourlySpecialPricing,
+      requiredDocuments,
+      globalDeadline,
+      deadlineHours,
+    }),
+    [
+      stageValues, disclosures, attestations, title, description, priceDaily, priceWeekly,
+      priceMonthly, priceSale, priceHourly, depositAmount, instantBook, highlights, amenities,
+      weightLbs, lengthInches, widthInches, heightInches, totalSlots, slotNames, freightCategory,
+      vendibookFreightEnabled, freightPayer, acceptPayPalCheckout, acceptCashPayment,
+      vinSerial, vinUnavailable, sellerPhone, fulfillmentType,
+      pickupLocationText, address, streetAddress, aptSuite, locCity, locState, locZipCode,
+      deliveryFee, deliveryRadiusMiles, deliveryFeeType, pickupInstructions, deliveryInstructions,
+      hitchBallSize, couplerType, trailerPlugType, renterProvidesTowVehicle, towVehicleRequirement,
+      returnInstructions,
+      accessInstructions, hoursOfAccess, locationNotes, isStaticLocation, availableFrom, availableTo,
+      hourlyEnabled, dailyEnabled, minHours, maxHours, bufferTimeMins, minNoticeHours, hourlySchedule,
+      rentalMinDays, hourlySpecialPricing, requiredDocuments, globalDeadline, deadlineHours,
+    ],
+  );
+
+  type WizardDraftSnapshot = typeof draftSnapshot;
+
+  // Restore once, right after the listing row finished loading.
+  useEffect(() => {
+    if (isLoading || draftRestored || !listingId) return;
+    setDraftRestored(true);
+    const cached = loadWizardDraft<Partial<WizardDraftSnapshot>>(listingId);
+    if (!cached) return;
+
+    const apply = <T,>(value: T | undefined, setter: (v: T) => void) => {
+      if (hasContent(value)) setter(value as T);
+    };
+
+    if (cached.stageValues) setStageValues((prev) => mergeCached(prev, cached.stageValues));
+    if (cached.disclosures) setDisclosures((prev) => mergeCached(prev, cached.disclosures));
+    if (cached.attestations) setAttestations((prev) => mergeCached(prev, cached.attestations));
+
+    apply(cached.title, setTitle);
+    apply(cached.description, setDescription);
+    apply(cached.priceDaily, setPriceDaily);
+    apply(cached.priceWeekly, setPriceWeekly);
+    apply(cached.priceMonthly, setPriceMonthly);
+    apply(cached.priceSale, setPriceSale);
+    apply(cached.priceHourly, setPriceHourly);
+    apply(cached.depositAmount, setDepositAmount);
+    apply(cached.instantBook, setInstantBook);
+    apply(cached.highlights, setHighlights);
+    apply(cached.amenities, setAmenities);
+    apply(cached.weightLbs, setWeightLbs);
+    apply(cached.lengthInches, setLengthInches);
+    apply(cached.widthInches, setWidthInches);
+    apply(cached.heightInches, setHeightInches);
+    apply(cached.slotNames, setSlotNames);
+    apply(cached.freightCategory, setFreightCategory);
+    apply(cached.vendibookFreightEnabled, setVendibookFreightEnabled);
+    apply(cached.freightPayer, setFreightPayer);
+    apply(cached.vinSerial, setVinSerial);
+    apply(cached.vinUnavailable, setVinUnavailable);
+    apply(cached.sellerPhone, setSellerPhone);
+    apply(cached.fulfillmentType, setFulfillmentType);
+    apply(cached.pickupLocationText, setPickupLocationText);
+    apply(cached.address, setAddress);
+    apply(cached.streetAddress, setStreetAddress);
+    apply(cached.aptSuite, setAptSuite);
+    apply(cached.locCity, setLocCity);
+    apply(cached.locState, setLocState);
+    apply(cached.locZipCode, setLocZipCode);
+    apply(cached.deliveryFee, setDeliveryFee);
+    apply(cached.deliveryRadiusMiles, setDeliveryRadiusMiles);
+    apply(cached.deliveryFeeType, setDeliveryFeeType);
+    apply(cached.pickupInstructions, setPickupInstructions);
+    apply(cached.hitchBallSize, setHitchBallSize);
+    apply(cached.couplerType, setCouplerType);
+    apply(cached.trailerPlugType, setTrailerPlugType);
+    apply(cached.renterProvidesTowVehicle, setRenterProvidesTowVehicle);
+    apply(cached.towVehicleRequirement, setTowVehicleRequirement);
+    apply(cached.returnInstructions, setReturnInstructions);
+    apply(cached.deliveryInstructions, setDeliveryInstructions);
+    apply(cached.accessInstructions, setAccessInstructions);
+    apply(cached.hoursOfAccess, setHoursOfAccess);
+    apply(cached.locationNotes, setLocationNotes);
+    apply(cached.availableFrom, setAvailableFrom);
+    apply(cached.availableTo, setAvailableTo);
+    apply(cached.hourlyEnabled, setHourlyEnabled);
+    apply(cached.hourlySchedule, setHourlySchedule);
+    apply(cached.hourlySpecialPricing, setHourlySpecialPricing);
+    apply(cached.requiredDocuments, setRequiredDocuments);
+    apply(cached.globalDeadline, setGlobalDeadline);
+    if (typeof cached.dailyEnabled === 'boolean') setDailyEnabled(cached.dailyEnabled);
+    if (typeof cached.isStaticLocation === 'boolean') setIsStaticLocation(cached.isStaticLocation);
+    if (typeof cached.acceptPayPalCheckout === 'boolean') setAcceptPayPalCheckout(cached.acceptPayPalCheckout);
+    if (typeof cached.acceptCashPayment === 'boolean') setAcceptCashPayment(cached.acceptCashPayment);
+    if (typeof cached.totalSlots === 'number' && cached.totalSlots > 0) setTotalSlots(cached.totalSlots);
+    if (typeof cached.minHours === 'number') setMinHours(cached.minHours);
+    if (typeof cached.maxHours === 'number') setMaxHours(cached.maxHours);
+    if (typeof cached.bufferTimeMins === 'number') setBufferTimeMins(cached.bufferTimeMins);
+    if (typeof cached.minNoticeHours === 'number') setMinNoticeHours(cached.minNoticeHours);
+    if (typeof cached.rentalMinDays === 'number') setRentalMinDays(cached.rentalMinDays);
+    if (typeof cached.deadlineHours === 'number') setDeadlineHours(cached.deadlineHours);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading, draftRestored, listingId]);
+
+  // Mirror every change to the cache (debounced) once restore has happened.
+  useEffect(() => {
+    if (!draftRestored || !listingId) return;
+    const t = window.setTimeout(() => saveWizardDraft(listingId, draftSnapshot), 400);
+    return () => window.clearTimeout(t);
+  }, [draftSnapshot, draftRestored, listingId]);
+
+  // Flush immediately if the tab is hidden or closed mid-edit.
+  useEffect(() => {
+    if (!draftRestored || !listingId) return;
+    const flush = () => saveWizardDraft(listingId, draftSnapshot);
+    window.addEventListener('pagehide', flush);
+    document.addEventListener('visibilitychange', flush);
+    return () => {
+      window.removeEventListener('pagehide', flush);
+      document.removeEventListener('visibilitychange', flush);
+    };
+  }, [draftSnapshot, draftRestored, listingId]);
+
+
+
   // Auto-save guest draft fields (title, description, pricing) periodically
   // This uses RLS policy "Allow guest draft updates with token"
-  const saveGuestDraftFields = async () => {
-    if (!isGuestDraft || !listing || !listingId) return;
-    
-    const guestDraft = getGuestDraft();
-    if (!guestDraft || guestDraft.listingId !== listingId) return;
+  // Returns true when the draft row was actually persisted — Save & exit
+  // relies on this to avoid leaving with unsaved changes.
+  const saveGuestDraftFields = async (): Promise<boolean> => {
+    if (!isGuestDraft || !listing || !listingId) return false;
+    // Skip overlapping saves: the step-change effect, the 30s interval,
+    // beforeunload and the Continue click can otherwise stack concurrent
+    // invokes that duplicate writes and contend on the client connection.
+    if (guestSaveBusyRef.current) return false;
 
+    const guestDraft = getGuestDraft();
+    if (!guestDraft || guestDraft.listingId !== listingId) return false;
+
+    guestSaveBusyRef.current = true;
     try {
       const safeParsePrice = (value: string): number | null => {
         if (!value || !value.trim()) return null;
@@ -371,10 +844,12 @@ export const PublishWizard: React.FC = () => {
         updateData.price_sale = safeParsePrice(priceSale);
         updateData.vendibook_freight_enabled = vendibookFreightEnabled;
         updateData.freight_payer = freightPayer;
-        updateData.accept_card_payment = acceptCardPayment;
+        updateData.accept_paypal_checkout = acceptPayPalCheckout;
         updateData.accept_cash_payment = acceptCashPayment;
-        updateData.proof_notary_enabled = proofNotaryEnabled;
-        updateData.featured_enabled = featuredEnabled;
+        // Paid entitlements (Featured boost) are NEVER written from the
+        // browser. They are granted only by a verified PayPal capture or an
+        // admin/complimentary path. The seller's selection lives in wizard state
+        // and only decides whether checkout is offered after publishing.
       } else {
         updateData.price_daily = safeParsePrice(priceDaily);
         updateData.price_weekly = safeParsePrice(priceWeekly);
@@ -391,7 +866,6 @@ export const PublishWizard: React.FC = () => {
         updateData.rental_min_days = rentalMinDays;
         updateData.instant_book = instantBook;
         updateData.deposit_amount = safeParsePrice(depositAmount);
-        updateData.featured_enabled = featuredEnabled;
       }
 
       // Add location fields
@@ -403,7 +877,9 @@ export const PublishWizard: React.FC = () => {
       updateData.address = address || listing.address || null;
       updateData.delivery_fee = parseFloat(deliveryFee) || listing.delivery_fee || null;
       updateData.delivery_radius_miles = parseFloat(deliveryRadiusMiles) || listing.delivery_radius_miles || null;
+      (updateData as any).delivery_fee_type = deliveryFeeType;
       updateData.pickup_instructions = pickupInstructions || listing.pickup_instructions || null;
+      Object.assign(updateData as any, towingHandoffColumns());
       updateData.delivery_instructions = deliveryInstructions || listing.delivery_instructions || null;
       updateData.access_instructions = accessInstructions || listing.access_instructions || null;
       updateData.hours_of_access = hoursOfAccess || listing.hours_of_access || null;
@@ -430,11 +906,15 @@ export const PublishWizard: React.FC = () => {
 
       if (error) {
         console.warn('Guest draft auto-save failed:', (error as any).message);
-      } else {
-        console.log('Guest draft auto-saved successfully');
+        return false;
       }
+      console.log('Guest draft auto-saved successfully');
+      return true;
     } catch (err) {
       console.warn('Guest draft auto-save error:', err);
+      return false;
+    } finally {
+      guestSaveBusyRef.current = false;
     }
   };
 
@@ -506,6 +986,35 @@ export const PublishWizard: React.FC = () => {
       setListing(data as unknown as ListingData);
       setTitle(data.title || '');
       setDescription(data.description || '');
+      // Phase 2 — six-stage fields (all additive; legacy drafts hydrate to empty)
+      setStageValues({
+        modelYear: (data as any).year_built?.toString() || '',
+        kitchenBuildYear: (data as any).kitchen_build_year?.toString() || '',
+        kitchenBuildYearUnknown: (data as any).kitchen_build_year_unknown ?? false,
+        condition: (data as any).condition || '',
+        operationalStatus: (data as any).operational_status || '',
+        lengthInches: data.length_inches?.toString() || '',
+        widthInches: data.width_inches?.toString() || '',
+        heightInches: data.height_inches?.toString() || '',
+      });
+      setDisclosures({
+        titleStatus: (data as any).title_status || '',
+        hasLien: (data as any).has_lien || '',
+        noKnownProblems: (data as any).no_known_problems ?? false,
+        knownProblems: parseKnownProblems((data as any).known_problems),
+        includedItems: (data as any).included_items || '',
+        photosExclusionsAnswered: (data as any).photos_exclusions_answered ?? false,
+        photosExclusionsNote: (data as any).photos_exclusions_note || '',
+        priceNegotiable: (data as any).price_negotiable ?? false,
+        // Sale drafts that haven't completed disclosures default to accepting offers:
+        // negotiation is the norm for used equipment, and listings without offers get
+        // fewer buyer contacts. The seller can still switch it off.
+        acceptsOffers: data.mode === 'sale' && !(data as any).title_status && !(data as any).photos_exclusions_answered
+          ? true
+          : (data as any).accepts_offers ?? false,
+        minOfferAmount: (data as any).min_offer_amount?.toString() || '',
+      });
+
       setPriceDaily(data.price_daily?.toString() || '');
       setPriceWeekly(data.price_weekly?.toString() || '');
       setPriceMonthly(data.price_monthly?.toString() || '');
@@ -516,9 +1025,8 @@ export const PublishWizard: React.FC = () => {
       setExistingVideos(((data as any).video_urls as string[] | null) || []);
       setVendibookFreightEnabled(data.vendibook_freight_enabled || false);
       setFreightPayer((data.freight_payer as FreightPayer) || 'buyer');
-      setAcceptCardPayment(data.accept_card_payment ?? true);
+      setAcceptPayPalCheckout(data.accept_paypal_checkout ?? true);
       setAcceptCashPayment(data.accept_cash_payment ?? false);
-      setProofNotaryEnabled(data.proof_notary_enabled ?? false);
       setFeaturedEnabled((data as any).featured_enabled ?? false);
       // Set details step fields
       setHighlights(data.highlights || []);
@@ -533,32 +1041,62 @@ export const PublishWizard: React.FC = () => {
       setSlotNames((data as any).slot_names || []);
       // Set location step fields
       setFulfillmentType((data.fulfillment_type as FulfillmentType) || null);
-      setPickupLocationText(data.pickup_location_text || '');
+      // Legacy drafts sometimes stored a phone number in the public pickup text.
+      // Never hydrate that back into a public field.
+      const legacyPickupText = data.pickup_location_text || '';
+      const pickupLooksLikePhone = /^\(?\d{3}/.test(legacyPickupText.trim());
+      setPickupLocationText(pickupLooksLikePhone ? '' : legacyPickupText);
       setAddress(data.address || '');
-      // Parse structured address from address field if available
+
+      // Prefer the structured columns; fall back to parsing legacy address text.
+      const cityCol = ((data as any).city || '').trim();
+      const stateCol = ((data as any).state || '').trim();
+      const zipCol = ((data as any).postal_code || '').trim();
+      if (cityCol) setLocCity(cityCol);
+      if (stateCol) setLocState(stateCol);
+      if (zipCol) setLocZipCode(zipCol);
+
       if (data.address) {
         const parts = data.address.split(',').map((p: string) => p.trim());
-        if (parts.length >= 3) {
+        // Last part might be "STATE ZIP" (ZIP optional for locality strings)
+        const lastPart = parts[parts.length - 1] || '';
+        const stateZipMatch = lastPart.match(/^([A-Z]{2})(?:\s+(\d{5}))?$/);
+        if (parts.length === 2 && stateZipMatch) {
+          // Quick Start locality like "Houston, TX" — hydrate city/state/ZIP
+          // but NEVER treat the first segment as a street address.
+          if (!cityCol) setLocCity(parts[0] || '');
+          if (!stateCol) setLocState(stateZipMatch[1]);
+          if (!zipCol && stateZipMatch[2]) setLocZipCode(stateZipMatch[2]);
+        } else if (parts.length === 2) {
+          // Legacy "Street, City" — keep the street, add a city fallback.
           setStreetAddress(parts[0] || '');
-          setLocCity(parts[parts.length - 2] || '');
-          // Last part might be "STATE ZIP"
-          const lastPart = parts[parts.length - 1] || '';
-          const stateZipMatch = lastPart.match(/^([A-Z]{2})\s+(\d{5})/);
+          if (!cityCol) setLocCity(parts[1] || '');
+        } else if (parts.length >= 3) {
+          setStreetAddress(parts[0] || '');
+          if (!cityCol) setLocCity(parts[parts.length - 2] || '');
           if (stateZipMatch) {
-            setLocState(stateZipMatch[1]);
-            setLocZipCode(stateZipMatch[2]);
-          } else {
+            if (!stateCol) setLocState(stateZipMatch[1]);
+            if (!zipCol && stateZipMatch[2]) setLocZipCode(stateZipMatch[2]);
+          } else if (!stateCol) {
             setLocState(lastPart);
           }
+        } else if (parts[0]) {
+          setStreetAddress(parts[0]);
         }
-      }
-      // Load phone number from pickup_location_text if it looks like a phone
-      if (data.pickup_location_text && /^\(?\d{3}/.test(data.pickup_location_text)) {
-        setLocPhoneNumber(data.pickup_location_text);
       }
       setDeliveryFee(data.delivery_fee?.toString() || '');
       setDeliveryRadiusMiles(data.delivery_radius_miles?.toString() || '');
+      setDeliveryFeeType(((data as any).delivery_fee_type === 'per_mile') ? 'per_mile' : 'flat');
       setPickupInstructions(data.pickup_instructions || '');
+      const towSrc = data as any;
+      setHitchBallSize(towSrc.hitch_ball_size || '');
+      setCouplerType(towSrc.coupler_type || '');
+      setTrailerPlugType(towSrc.trailer_plug_type || '');
+      setRenterProvidesTowVehicle(
+        towSrc.renter_provides_tow_vehicle === true ? 'yes' : towSrc.renter_provides_tow_vehicle === false ? 'no' : ''
+      );
+      setTowVehicleRequirement(towSrc.tow_vehicle_requirement || '');
+      setReturnInstructions(towSrc.return_instructions || '');
       setDeliveryInstructions(data.delivery_instructions || '');
       setAccessInstructions(data.access_instructions || '');
       setHoursOfAccess(data.hours_of_access || '');
@@ -593,7 +1131,11 @@ export const PublishWizard: React.FC = () => {
           // Map existing documents
           const loadedDocs: RequiredDocumentSetting[] = docsData.map(d => ({
             document_type: d.document_type as DocumentType,
+            enabled: true,
             is_required: d.is_required,
+            title: (d as any).title || undefined,
+            instructions: (d as any).instructions || undefined,
+            requirement_config: ((d as any).requirement_config ?? undefined),
             deadline_type: d.deadline_type as DocumentDeadlineType,
             deadline_offset_hours: d.deadline_offset_hours || undefined,
             description: d.description || undefined}));
@@ -616,6 +1158,36 @@ export const PublishWizard: React.FC = () => {
             deadline_offset_hours: undefined}));
           setRequiredDocuments(initialDocs);
         }
+      }
+
+      // Resume where the seller left off. Only when the URL does not already
+      // pin a step (deep links and post-payment returns keep their target).
+      if (!searchParams.get('step')) {
+        const d: any = data;
+        const isRent = d.mode === 'rent';
+        const hasBasics = !!d.condition && !!d.operational_status;
+        const hasPhotos = Array.isArray(d.image_urls) && d.image_urls.length >= 3;
+        const hasHeadline = !!d.title && !!d.description;
+        const hasIncludes =
+          typeof d.included_items === 'string' && d.included_items.trim().length >= 3;
+        const hasPrice = isRent
+          ? !!(d.price_daily || d.price_hourly || d.price_weekly || d.price_monthly)
+          : !!d.price_sale;
+        const hasLocation = !!(d.city && d.postal_code);
+        const resume: PublishStep = !hasBasics
+          ? 'basics'
+          : !hasPhotos
+            ? 'photos'
+            : !hasHeadline
+              ? 'headline'
+              : !hasIncludes
+                ? 'includes'
+                : !hasPrice
+                  ? 'pricing'
+                  : !hasLocation
+                    ? 'location'
+                    : 'review';
+        if (resume !== 'basics') setStep(resume);
       }
 
       setIsLoading(false);
@@ -699,11 +1271,19 @@ export const PublishWizard: React.FC = () => {
         address: address || listing.address || null,
         delivery_fee: parseFloat(deliveryFee) || listing.delivery_fee || null,
         delivery_radius_miles: parseFloat(deliveryRadiusMiles) || listing.delivery_radius_miles || null,
+        delivery_fee_type: deliveryFeeType,
         pickup_instructions: pickupInstructions || listing.pickup_instructions || null,
+        ...towingHandoffColumns(),
         delivery_instructions: deliveryInstructions || listing.delivery_instructions || null,
         access_instructions: accessInstructions || listing.access_instructions || null,
         hours_of_access: hoursOfAccess || listing.hours_of_access || null,
         location_notes: locationNotes || listing.location_notes || null,
+
+        // Structured location columns — persisted whenever the guest provided
+        // them pre-auth so claiming the draft never drops the verified location.
+        ...(locCity.trim() ? { city: locCity.trim() } : {}),
+        ...(locState.trim() ? { state: locState.trim() } : {}),
+        ...(locZipCode.trim() ? { postal_code: locZipCode.trim() } : {}),
 
         // Availability
         available_from: availableFrom || listing.available_from || null,
@@ -718,10 +1298,12 @@ export const PublishWizard: React.FC = () => {
         updateData.price_sale = safeParsePrice(priceSale) || listing.price_sale || null;
         updateData.vendibook_freight_enabled = vendibookFreightEnabled;
         updateData.freight_payer = freightPayer;
-        updateData.accept_card_payment = acceptCardPayment;
+        updateData.accept_paypal_checkout = acceptPayPalCheckout;
         updateData.accept_cash_payment = acceptCashPayment;
-        updateData.proof_notary_enabled = proofNotaryEnabled;
-        updateData.featured_enabled = featuredEnabled;
+        // Paid entitlements (Featured boost) are NEVER written from the
+        // browser. They are granted only by a verified PayPal capture or an
+        // admin/complimentary path. The seller's selection lives in wizard state
+        // and only decides whether checkout is offered after publishing.
       } else {
         updateData.price_daily = safeParsePrice(priceDaily) || listing.price_daily || null;
         updateData.price_weekly = safeParsePrice(priceWeekly) || listing.price_weekly || null;
@@ -738,7 +1320,6 @@ export const PublishWizard: React.FC = () => {
         updateData.rental_min_days = rentalMinDays;
         updateData.instant_book = instantBook;
         updateData.deposit_amount = safeParsePrice(depositAmount) || listing.deposit_amount || null;
-        updateData.featured_enabled = featuredEnabled;
       }
 
       // Claim the draft via the token-validated edge function. host_id and
@@ -788,23 +1369,90 @@ export const PublishWizard: React.FC = () => {
   // Allow guests to navigate steps freely; auth is gated at publish
   const handleDetailsSave = async () => {
     if (isGuestDraft && !user) {
-      // Save guest draft data and proceed to next step
-      await saveGuestDraftFields();
+      // Save guest draft data and proceed to next step. Show progress on the
+      // button and cap the wait so a stalled network call can never leave
+      // Continue unresponsive — the local draft cache keeps every answer and
+      // the 30s auto-save retries in the background.
+      setIsSaving(true);
+      try {
+        await Promise.race([
+          saveGuestDraftFields(),
+          new Promise<never>((_, reject) =>
+            window.setTimeout(() => reject(new Error('guest-save-timeout')), 25000),
+          ),
+        ]);
+      } catch (err) {
+        console.warn('Guest save did not complete before continuing:', err);
+      } finally {
+        setIsSaving(false);
+      }
       // Move to next step manually
       const isRentalListing = listing?.mode === 'rent';
-      const skipStripeStep = listing?.mode === 'sale' && !acceptCardPayment;
-      const baseSteps: PublishStep[] = isRentalListing
-        ? ['photos', 'headline', 'includes', 'pricing', 'availability', 'location', 'documents', 'stripe', 'review']
-        : ['photos', 'headline', 'includes', 'pricing', 'location', 'stripe', 'review'];
-      const steps = skipStripeStep ? baseSteps.filter(s => s !== 'stripe') : baseSteps;
+      const steps: PublishStep[] = isRentalListing
+        ? ['basics', 'photos', 'headline', 'includes', 'pricing', 'availability', 'location', 'documents', 'review']
+        : ['basics', 'photos', 'headline', 'includes', 'pricing', 'location', 'review'];
       const currentIndex = steps.indexOf(step);
-      if (currentIndex < steps.length - 1) {
+      if (currentIndex === -1) {
+        // Orphaned/legacy step (e.g. ?step=details): continue forward.
+        setStep('includes');
+      } else if (currentIndex < steps.length - 1) {
         setStep(steps[currentIndex + 1]);
       }
       return;
     }
     // Proceed with normal save for authenticated users
     await saveStep();
+  };
+
+  // Save & exit: persist the current wizard state BEFORE leaving. Authed
+  // drafts reuse saveStep (current-step fields + media uploads via the
+  // existing upload path); guest drafts reuse saveGuestDraftFields. On
+  // failure we stay on the page — the save helpers already surface why.
+  const handleSaveAndExit = async () => {
+    if (isSaveExiting) return;
+    setIsSaveExiting(true);
+    // Where the seller lands after leaving the wizard: the start of their
+    // listings, not the dashboard home.
+    const exitTo = LISTING_EXIT_PATH;
+    try {
+      // A stalled background save must never leave the button dead — cap the
+      // wait, then leave with an honest message about the last step's changes.
+      const guard = new Promise<'timeout'>((resolve) =>
+        window.setTimeout(() => resolve('timeout'), 15000),
+      );
+
+      if (isGuestDraft && !user) {
+        const waitStart = Date.now();
+        while (guestSaveBusyRef.current && Date.now() - waitStart < 10000) {
+          await new Promise((r) => window.setTimeout(r, 250));
+        }
+        const result = await Promise.race([saveGuestDraftFields(), guard]);
+        if (result !== true) {
+          toast({
+            title: 'Some changes may not have saved',
+            description:
+              "We couldn't confirm the last step was saved. Open your draft again to check those answers.",
+            variant: 'destructive',
+          });
+        }
+        navigate(exitTo);
+        return;
+      }
+
+      const result = await Promise.race([saveStep({ advance: false }), guard]);
+      if (result !== true) {
+        // saveStep surfaces its own error detail; add the exit context.
+        toast({
+          title: 'Some changes may not have saved',
+          description:
+            "We couldn't confirm the last step was saved. Open your draft again to check those answers.",
+          variant: 'destructive',
+        });
+      }
+      navigate(exitTo);
+    } finally {
+      setIsSaveExiting(false);
+    }
   };
 
   // Calculate payout estimates
@@ -828,8 +1476,71 @@ export const PublishWizard: React.FC = () => {
       .join(', ');
   }, [streetAddress, aptSuite, locCity, locState, locZipCode]);
 
+  // Canonical geocoder (existing geocode-location edge function). Returns a
+  // normalized candidate or null — confidence gating lives in
+  // resolveListingCoordinates (result must anchor to the seller's ZIP/state).
+  const geocodeListingAddress = useCallback(async (query: string): Promise<GeoCandidate | null> => {
+    try {
+      // Hard timeout: this call is awaited inside the location step's save
+      // path, so a stalled geocode must never leave Continue stuck on
+      // "Saving…". A timeout returns null → coords cleared, step still saves.
+      const { data } = await Promise.race([
+        supabase.functions.invoke('geocode-location', {
+          body: { query, limit: 1 },
+        }),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error('geocode-location timed out')), 15000)
+        ),
+      ]);
+      const r = data?.results?.[0];
+      if (!r || !Array.isArray(r.center)) return null;
+      return {
+        lat: Number(r.center[1]),
+        lng: Number(r.center[0]),
+        placeName: String(r.placeName || ''),
+        city: r.city,
+        state: r.state,
+      };
+    } catch (err) {
+      console.warn('[PublishWizard] geocode-location failed:', err);
+      return null;
+    }
+  }, []);
+
+  // Location columns for save/publish payloads. Structured fields always
+  // persist; coordinates are only re-resolved and written when the location
+  // actually changed (stale coords get cleared, never silently kept).
+  const resolveLocationColumns = useCallback(async () => {
+    const locInput: StructuredLocationInput = {
+      streetAddress,
+      aptSuite,
+      city: locCity,
+      state: locState,
+      zipCode: locZipCode,
+    };
+    const changed = structuredLocationChanged(locInput, listing ?? {});
+    const coords = changed ? await resolveListingCoordinates(locInput, geocodeListingAddress) : undefined;
+    if (changed && !coords) {
+      console.warn('[PublishWizard] location changed but no confident geocode — clearing stale coordinates');
+    }
+    return buildLocationColumns(locInput, listing ?? {}, {
+      fallbackAddress: address,
+      fallbackPickupText: pickupLocationText,
+      coords: coords ?? null,
+    });
+  }, [streetAddress, aptSuite, locCity, locState, locZipCode, listing, address, pickupLocationText, geocodeListingAddress]);
+
+  // For-sale listings that are delivery-only don't need a public pickup street address.
+  const needsFullAddressForSale =
+    listing?.mode !== 'sale' || fulfillmentType !== 'delivery';
+  const streetAddressRequired =
+    listing?.mode !== 'sale' ||
+    isStaticLocationFn((listing?.category ?? '') as ListingCategory) ||
+    isStaticLocation ||
+    needsFullAddressForSale;
+
   const hasCompleteStructuredAddress = !!(
-    streetAddress.trim() &&
+    (streetAddress.trim() || !streetAddressRequired) &&
     locCity.trim() &&
     locState.trim() &&
     locZipCode.trim()
@@ -841,10 +1552,10 @@ export const PublishWizard: React.FC = () => {
     
     const isSellerPaidFreight = vendibookFreightEnabled && freightPayer === 'seller';
     const freightCost = vendibookFreightEnabled ? estimatedFreightCost : 0;
-    const isCashOnlySale = listing?.mode === 'sale' && acceptCashPayment && !acceptCardPayment;
+    const isCashOnlySale = listing?.mode === 'sale' && acceptCashPayment && !acceptPayPalCheckout;
     
     return calculateSaleFees(salePriceNum, freightCost, isSellerPaidFreight, isCashOnlySale);
-  }, [priceSale, vendibookFreightEnabled, freightPayer, listing?.mode, acceptCashPayment, acceptCardPayment]);
+  }, [priceSale, vendibookFreightEnabled, freightPayer, listing?.mode, acceptCashPayment, acceptPayPalCheckout]);
 
   const getLocation = () => {
     if (listing?.address) return listing.address;
@@ -853,6 +1564,10 @@ export const PublishWizard: React.FC = () => {
   };
 
   const handleGetSuggestions = async () => {
+    if (!aiAssistUnlocked) {
+      premiumUpsell.show('pricepilot', 'wizard_pricing');
+      return;
+    }
     if (!title || !listing?.category) {
       toast({
         title: 'Missing information',
@@ -946,6 +1661,10 @@ export const PublishWizard: React.FC = () => {
 
   // AI Description Optimization
   const optimizeDescription = async () => {
+    if (!aiAssistUnlocked) {
+      premiumUpsell.show('ai-description', 'wizard_description');
+      return;
+    }
     if (!description || description.trim().length < 10) {
       toast({
         title: 'Description too short',
@@ -989,10 +1708,15 @@ export const PublishWizard: React.FC = () => {
       }
     } catch (error) {
       console.error('Error optimizing description:', error);
-      toast({
-        title: 'Optimization failed',
-        description: error instanceof Error ? error.message : 'Please try again later.',
-        variant: 'destructive'});
+      const parsed = await parseEdgeError(error);
+      if (isPremiumError(parsed)) {
+        premiumUpsell.show(featureFromParsed(parsed) ?? 'ai-description', 'wizard_description');
+      } else {
+        toast({
+          title: 'Optimization failed',
+          description: parsed.message || 'Please try again later.',
+          variant: 'destructive'});
+      }
     } finally {
       setIsOptimizing(false);
     }
@@ -1253,14 +1977,52 @@ export const PublishWizard: React.FC = () => {
     return urls;
   };
 
-  const saveStep = async () => {
-    if (!listing) return;
+  // Returns true when this step's fields were persisted (or nothing needed
+  // writing), false on any failure — Save & exit uses this to avoid
+  // navigating away with unsaved changes.
+  const saveStep = async (opts?: { advance?: boolean }): Promise<boolean> => {
+    if (!listing || saveInFlightRef.current) return false;
+    saveInFlightRef.current = true;
     setIsSaving(true);
 
     try {
+      // Pre-flight session check with a hard cap. supabase-js serializes
+      // every request through the auth token-refresh lock, and the
+      // AbortSignal on the PATCH below only cancels the fetch itself — not
+      // the lock wait — so a stalled token refresh would pin Continue on
+      // "Saving…" for minutes (the reported ~2 minute stall). Surface it in
+      // 10s as a retryable error; on success the token is freshly cached, so
+      // the PATCH no longer queues behind a refresh.
+      await Promise.race([
+        supabase.auth.getSession(),
+        new Promise<never>((_, reject) =>
+          window.setTimeout(
+            () =>
+              reject(
+                new Error('Your session check timed out. Tap Continue again — your answers are still on this page.'),
+              ),
+            10000,
+          ),
+        ),
+      ]);
+
       let updateData: any = {};
 
+      if (step === 'basics') {
+        updateData = {
+          year_built: stageValues.modelYear ? parseInt(stageValues.modelYear, 10) : null,
+          kitchen_build_year: stageValues.kitchenBuildYear ? parseInt(stageValues.kitchenBuildYear, 10) : null,
+          kitchen_build_year_unknown: stageValues.kitchenBuildYearUnknown,
+          condition: stageValues.condition || null,
+          operational_status: stageValues.operationalStatus || null,
+          length_inches: stageValues.lengthInches ? parseFloat(stageValues.lengthInches) : null,
+          width_inches: stageValues.widthInches ? parseFloat(stageValues.widthInches) : null,
+          height_inches: stageValues.heightInches ? parseFloat(stageValues.heightInches) : null,
+        };
+      }
+
       if (step === 'photos') {
+
         const hasNewImages = images.length > 0;
         const hasNewVideos = videos.length > 0;
 
@@ -1272,7 +2034,7 @@ export const PublishWizard: React.FC = () => {
               description: 'Please sign in to continue.',
               variant: 'destructive'});
             setIsSaving(false);
-            return;
+            return false;
           }
 
           let imageUrls = existingImages;
@@ -1302,10 +2064,29 @@ export const PublishWizard: React.FC = () => {
           title,
           description};
       } else if (step === 'includes') {
-        // Save amenities and highlights
+        // Save amenities, highlights and the Stage 3 disclosures
         updateData = {
           amenities,
-          highlights};
+          highlights,
+          title_status: disclosures.titleStatus || null,
+          has_lien: disclosures.hasLien || null,
+          no_known_problems: disclosures.noKnownProblems,
+          // known_problems is NOT NULL in the database — always write an array.
+          known_problems: disclosures.knownProblems ?? [],
+          included_items: disclosures.includedItems || null,
+          photos_exclusions_answered: disclosures.photosExclusionsAnswered,
+          photos_exclusions_note: disclosures.photosExclusionsNote || null,
+          price_negotiable: disclosures.priceNegotiable,
+          accepts_offers: disclosures.acceptsOffers,
+          min_offer_amount: disclosures.minOfferAmount ? parseFloat(disclosures.minOfferAmount) : null,
+          // Required sale dimensions are collected on this step for mobile
+          // assets, so they must persist here too.
+          length_inches: parseFloat(lengthInches) || null,
+          width_inches: parseFloat(widthInches) || null,
+          height_inches: parseFloat(heightInches) || null,
+        };
+
+
       } else if (step === 'pricing') {
         // Helper function to safely parse price values
         const safeParsePrice = (value: string): number | null => {
@@ -1320,18 +2101,17 @@ export const PublishWizard: React.FC = () => {
             price_sale: safeParsePrice(priceSale),
             vendibook_freight_enabled: vendibookFreightEnabled,
             freight_payer: freightPayer,
-            accept_card_payment: acceptCardPayment,
-            accept_cash_payment: acceptCashPayment,
-            proof_notary_enabled: proofNotaryEnabled,
-            featured_enabled: featuredEnabled};
+            accept_paypal_checkout: acceptPayPalCheckout,
+            accept_cash_payment: acceptCashPayment};
+
+          await persistVinSerial();
         } else {
           updateData = {
             price_daily: safeParsePrice(priceDaily),
             price_weekly: safeParsePrice(priceWeekly),
             price_monthly: safeParsePrice(priceMonthly),
             instant_book: instantBook,
-            deposit_amount: safeParsePrice(depositAmount),
-            featured_enabled: featuredEnabled};
+            deposit_amount: safeParsePrice(depositAmount)};
         }
       } else if (step === 'details') {
         updateData = {
@@ -1349,20 +2129,22 @@ export const PublishWizard: React.FC = () => {
         const categoryIsStatic = isStaticLocationFn(listing.category);
         const effectiveFulfillmentType = (categoryIsStatic || isStaticLocation) ? 'on_site' : (fulfillmentType || 'pickup');
 
-        // Build structured address string
-        const fullAddress = buildStructuredAddress();
-
         updateData = {
           fulfillment_type: effectiveFulfillmentType,
-          pickup_location_text: locPhoneNumber || pickupLocationText || null,
-          address: fullAddress || address || null,
+          // Structured city/state/ZIP always persist; coordinates are
+          // re-geocoded (or cleared) only when the location actually changed.
+          ...(await resolveLocationColumns()),
           delivery_fee: parseFloat(deliveryFee) || null,
           delivery_radius_miles: parseFloat(deliveryRadiusMiles) || null,
+          delivery_fee_type: deliveryFeeType,
           pickup_instructions: pickupInstructions || null,
+          ...towingHandoffColumns(),
           delivery_instructions: deliveryInstructions || null,
           access_instructions: accessInstructions || null,
           hours_of_access: hoursOfAccess || null,
           location_notes: locationNotes || null};
+
+        await saveSellerPhone();
       } else if (step === 'availability') {
         // Validate hourly schedule if hourly is enabled
         if (hourlyEnabled && !availabilityStepValid) {
@@ -1371,7 +2153,7 @@ export const PublishWizard: React.FC = () => {
             description: 'Please add operating hours for at least one day when hourly bookings are enabled.',
             variant: 'destructive'});
           setIsSaving(false);
-          return;
+          return false;
         }
 
         updateData = {
@@ -1392,23 +2174,31 @@ export const PublishWizard: React.FC = () => {
           hourly_special_pricing: hourlySpecialPricing};
       } else if (step === 'documents') {
         // Save required documents to the database
-        const enabledDocs = requiredDocuments.filter(d => d.is_required);
+        // Enabled requirements include host-marked OPTIONAL ones — is_required
+        // now means "blocks per its deadline rule", not "listed at all".
+        const enabledDocs = requiredDocuments.filter(d => d.enabled ?? d.is_required);
         
-        // Delete existing documents first
-        await supabase
+        // Delete existing documents first — a failed delete must surface as
+        // an error instead of silently stacking duplicate requirement rows.
+        const { error: deleteDocsError } = await supabase
           .from('listing_required_documents')
           .delete()
           .eq('listing_id', listing.id);
+
+        if (deleteDocsError) throw deleteDocsError;
 
         // Insert new documents
         if (enabledDocs.length > 0) {
           const docsToInsert = enabledDocs.map(doc => ({
             listing_id: listing.id,
             document_type: doc.document_type,
-            is_required: true,
+            is_required: doc.is_required !== false,
             deadline_type: doc.deadline_type,
             deadline_offset_hours: doc.deadline_offset_hours || null,
-            description: doc.description || null}));
+            description: doc.description || null,
+            title: doc.title?.trim() || null,
+            instructions: doc.instructions?.trim() || null,
+            requirement_config: (doc.requirement_config ?? {}) as unknown as Record<string, never>}));
 
           const { error: insertError } = await supabase
             .from('listing_required_documents')
@@ -1420,43 +2210,88 @@ export const PublishWizard: React.FC = () => {
       }
 
       if (Object.keys(updateData).length > 0) {
-        const { error } = await supabase
+        // Hard timeout: a stalled request (flaky network, auth token-refresh
+        // lock contention across tabs) must never leave the Continue button
+        // stuck on "Saving…" forever.
+        const controller = new AbortController();
+        let savedCount = 0;
+        const patchPromise = supabase
           .from('listings')
           .update(updateData)
-          .eq('id', listing.id);
+          .eq('id', listing.id)
+          .abortSignal(controller.signal)
+          .select('id');
+        let saveTimeoutId: number | undefined;
+        const saveTimeoutPromise = new Promise<never>((_, reject) => {
+          saveTimeoutId = window.setTimeout(() => {
+            controller.abort();
+            reject(new Error('Saving timed out. Check your connection and tap Continue again — your answers are still on this page.'));
+          }, 25000);
+        });
+        // Promise.race is the guaranteed cap — AbortSignal alone cannot
+        // interrupt supabase-js's internal token-refresh lock wait.
+        let res: Awaited<typeof patchPromise>;
+        try {
+          res = await Promise.race([patchPromise, saveTimeoutPromise]);
+        } finally {
+          if (saveTimeoutId) window.clearTimeout(saveTimeoutId);
+        }
+        if (res.error) {
+          throw res.error;
+        }
+        savedCount = Array.isArray(res.data) ? res.data.length : 0;
 
-        if (error) throw error;
+        if (savedCount === 0) {
+          // PostgREST answered with zero rows: RLS silently rejected the write
+          // (e.g. the session expired mid-wizard). With the old return=minimal
+          // call this looked like a success and the wizard advanced without
+          // saving — exactly the "Saving… but nothing saves" report.
+          throw new Error('Your session may have expired. Sign in again, then tap Continue — your answers are still on this page.');
+        }
 
         // Update local state
         setListing(prev => prev ? { ...prev, ...updateData } : null);
       }
 
       // Move to next step - rental listings have availability and documents steps
-      // Skip stripe step if card payment is not enabled (cash-only sales)
       const isRentalListing = listing.mode === 'rent';
-      const skipStripeStep = listing.mode === 'sale' && !acceptCardPayment;
-      const baseSteps: PublishStep[] = isRentalListing
-        ? ['photos', 'headline', 'includes', 'pricing', 'availability', 'location', 'documents', 'stripe', 'review']
-        : ['photos', 'headline', 'includes', 'pricing', 'location', 'stripe', 'review'];
-      const steps = skipStripeStep ? baseSteps.filter(s => s !== 'stripe') : baseSteps;
+      const steps: PublishStep[] = isRentalListing
+        ? ['basics', 'photos', 'headline', 'includes', 'pricing', 'availability', 'location', 'documents', 'review']
+        : ['basics', 'photos', 'headline', 'includes', 'pricing', 'location', 'review'];
       const currentIndex = steps.indexOf(step);
-      if (currentIndex < steps.length - 1) {
-        setStep(steps[currentIndex + 1]);
+      // Save & exit calls saveStep({ advance: false }) — advancing here would
+      // fire the ?step= sync effect after the exit navigation and bounce the
+      // seller back into the wizard at the next step.
+      if (opts?.advance !== false) {
+        if (currentIndex === -1) {
+          // Orphaned/legacy step (e.g. ?step=details): continue forward.
+          setStep('includes');
+        } else if (currentIndex < steps.length - 1) {
+          setStep(steps[currentIndex + 1]);
+        }
       }
+      return true;
     } catch (error) {
       console.error('Error saving:', error);
+      // Surface the real reason (constraint, policy, network) instead of a
+      // generic message — sellers were stuck with no way to know what failed.
+      const err = error as { message?: string; details?: string; hint?: string; code?: string } | null;
+      const reason = [err?.message, err?.details, err?.hint].filter(Boolean).join(' — ');
       toast({
-        title: 'Error saving',
-        description: error instanceof Error ? error.message : 'Please try again.',
+        title: "We couldn't save this step",
+        description: reason
+          ? `${reason}${err?.code ? ` (${err.code})` : ''}`
+          : 'Your changes were not saved. Check your connection and try again.',
         variant: 'destructive'});
+      return false;
     } finally {
+      saveInFlightRef.current = false;
       setIsSaving(false);
     }
   };
 
   const handlePublish = async () => {
     if (!listing) return;
-    const stripeRequired = listing.mode === 'rent' || (listing.mode === 'sale' && acceptCardPayment);
 
     // Validate all required fields before publishing
     const validationErrors = getValidationErrors();
@@ -1468,22 +2303,6 @@ export const PublishWizard: React.FC = () => {
       return;
     }
 
-    if (stripeRequired && !isOnboardingComplete) {
-      toast({
-        title: 'Connect Stripe to accept card payments',
-        description: 'Or switch to cash-only (Pay in Person) on the Pricing step to publish now and add Stripe later.',
-        variant: 'destructive',
-        action: (
-          <button
-            onClick={() => { void connectStripe(); }}
-            className="inline-flex items-center rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background hover:bg-foreground/90"
-          >
-            Connect Stripe
-          </button>
-        ) as any,
-      });
-      return;
-    }
 
     // Identity verification is optional — it no longer blocks publishing.
 
@@ -1555,8 +2374,15 @@ export const PublishWizard: React.FC = () => {
       const effectiveFulfillmentType = (categoryIsStatic || isStaticLocation)
         ? 'on_site'
         : (fulfillmentType || 'pickup');
+      // Structured location columns (city/state/ZIP always persist;
+      // coordinates re-resolved only when the location changed).
+      const locationColumns = await resolveLocationColumns();
+      // Display-only address for notification emails (never persisted).
       const fullAddress = buildStructuredAddress() || address;
-      const pickupText = locPhoneNumber || pickupLocationText;
+
+      // Seller phone belongs on the private profile, never on the listing.
+      await saveSellerPhone();
+      await persistVinSerial();
 
       const baseUpdateData: any = {
         // Media
@@ -1575,13 +2401,38 @@ export const PublishWizard: React.FC = () => {
         height_inches: parseFloat(heightInches) || null,
         freight_category: freightCategory,
 
+        // Stage 1 basics (Review must never discard unsaved wizard state)
+        year_built: stageValues.modelYear ? parseInt(stageValues.modelYear, 10) : null,
+        kitchen_build_year: stageValues.kitchenBuildYear
+          ? parseInt(stageValues.kitchenBuildYear, 10)
+          : null,
+        kitchen_build_year_unknown: stageValues.kitchenBuildYearUnknown,
+        condition: stageValues.condition || null,
+        operational_status: stageValues.operationalStatus || null,
+
+        // Disclosures
+        title_status: disclosures.titleStatus || null,
+        has_lien: disclosures.hasLien || null,
+        no_known_problems: disclosures.noKnownProblems,
+        // known_problems is NOT NULL in the database — always write an array.
+        known_problems: disclosures.knownProblems ?? [],
+        included_items: disclosures.includedItems || null,
+        photos_exclusions_answered: disclosures.photosExclusionsAnswered,
+        photos_exclusions_note: disclosures.photosExclusionsNote || null,
+        price_negotiable: disclosures.priceNegotiable,
+        accepts_offers: disclosures.acceptsOffers,
+        min_offer_amount: disclosures.minOfferAmount
+          ? parseFloat(disclosures.minOfferAmount)
+          : null,
+
         // Location
         fulfillment_type: effectiveFulfillmentType,
-        pickup_location_text: pickupText || null,
-        address: fullAddress || null,
+        ...locationColumns,
         delivery_fee: parseFloat(deliveryFee) || null,
         delivery_radius_miles: parseFloat(deliveryRadiusMiles) || null,
+        delivery_fee_type: deliveryFeeType,
         pickup_instructions: pickupInstructions || null,
+        ...towingHandoffColumns(),
         delivery_instructions: deliveryInstructions || null,
         access_instructions: accessInstructions || null,
         hours_of_access: hoursOfAccess || null,
@@ -1596,10 +2447,8 @@ export const PublishWizard: React.FC = () => {
             price_sale: safeParsePrice(priceSale),
             vendibook_freight_enabled: vendibookFreightEnabled,
             freight_payer: freightPayer,
-            accept_card_payment: acceptCardPayment,
-            accept_cash_payment: acceptCashPayment,
-            proof_notary_enabled: proofNotaryEnabled,
-            featured_enabled: featuredEnabled}
+            accept_paypal_checkout: acceptPayPalCheckout,
+            accept_cash_payment: acceptCashPayment}
         : {
             price_daily: safeParsePrice(priceDaily),
             price_weekly: safeParsePrice(priceWeekly),
@@ -1615,85 +2464,12 @@ export const PublishWizard: React.FC = () => {
             hourly_special_pricing: hourlySpecialPricing,
             rental_min_days: rentalMinDays,
             instant_book: instantBook,
-            deposit_amount: safeParsePrice(depositAmount),
-            featured_enabled: featuredEnabled};
+            deposit_amount: safeParsePrice(depositAmount)};
 
-      // If Proof Notary is enabled for a sale listing, redirect to checkout for the $45 fee.
-      // MIRRORS THE FEATURED BOOST PATTERN: publish FIRST so cancelling the notary
-      // checkout does NOT strand the listing in draft. Notary is a protection
-      // add-on — the listing itself should go live regardless. Webhook flips
-      // the notary flag once payment clears.
-      if (listing.mode === 'sale' && proofNotaryEnabled) {
-        const isFirstTimePublishForNotary = !listing.published_at;
-        const { error: persistError } = await supabase
-          .from('listings')
-          .update({
-            ...baseUpdateData,
-            ...pricingUpdateData,
-            status: 'published',
-            ...(isFirstTimePublishForNotary ? { published_at: new Date().toISOString() } : {}),
-          })
-          .eq('id', listing.id);
+      // Proof Notary is a retired product — it is no longer sold from the
+      // publish wizard. Legacy listings keep their historical flag read-only.
 
-        if (persistError) {
-          if (typeof persistError.message === 'string' && persistError.message.includes('listing_publish_limit_reached')) {
-            setShowLimitModal(true);
-            setIsSaving(false);
-            return;
-          }
-          throw persistError;
-        }
-
-        // Get session for auth
-        const { data: sessionData } = await supabase.auth.getSession();
-        if (!sessionData.session) {
-          toast({ title: 'Please sign in to continue', variant: 'destructive' });
-          return;
-        }
-
-        const { data, error } = await supabase.functions.invoke('create-notary-checkout', {
-          headers: {
-            Authorization: `Bearer ${sessionData.session.access_token}`},
-          body: { listing_id: listing.id }});
-
-        if (error) throw error;
-        if (!data?.url) {
-          // Listing already published — surface a clear success even if notary failed.
-          toast({
-            title: 'Listing published',
-            description: "We couldn't start the Proof Notary checkout. You can add it later from your listing.",
-          });
-          window.location.href = `/listing-published?listing_id=${listing.id}`;
-          return;
-        }
-
-        // Set up listener for cross-tab communication before opening checkout
-        const handleCheckoutComplete = (event: MessageEvent) => {
-          if (event.data?.type === 'notary-checkout-complete' && event.data?.listingId === listing.id) {
-            // Navigate to the success page
-            window.location.href = event.data.url || `/listing-published?listing_id=${listing.id}&notary_paid=true`;
-          }
-        };
-
-        try {
-          const channel = new BroadcastChannel('notary-checkout');
-          channel.onmessage = handleCheckoutComplete;
-          // Store channel reference to clean up later if needed
-          (window as any).__notaryCheckoutChannel = channel;
-        } catch (e) {
-          console.log('BroadcastChannel not supported');
-        }
-
-        const newWindow = window.open(data.url, '_blank');
-        if (!newWindow) window.location.href = data.url;
-
-        // Listing is live; the user is on the published listing while notary settles.
-        window.location.href = `/listing-published?listing_id=${listing.id}&notary_pending=true`;
-        return;
-      }
-
-
-      // If Featured Listing is enabled and not already active/comped, redirect to checkout for the $30 fee.
+      // If Featured Listing is enabled and not already active/comped, redirect to the catalog-priced Featured Boost checkout.
       // Pending complimentary boosts are applied by the database trigger when status changes to published.
       const listingHasPendingFeatured = !!listing.pending_featured_payment;
       const listingAlreadyFeatured = isListingFeatured(listing);
@@ -1702,18 +2478,15 @@ export const PublishWizard: React.FC = () => {
         // listing) succeeds. If the user abandons payment the listing stays
         // published without the boost — correct fallback. Webhook flips
         // featured_enabled once payment clears.
-        const isFirstTimePublishForBoost = !listing.published_at;
-        const { error: persistError } = await supabase
-          .from('listings')
-          .update({
+        let isFirstTimePublishForBoost = false;
+        try {
+          const publishResult = await publishListingIdempotent(listing.id, {
             ...baseUpdateData,
             ...pricingUpdateData,
-            status: 'published',
-            ...(isFirstTimePublishForBoost ? { published_at: new Date().toISOString() } : {})})
-          .eq('id', listing.id);
-
-        if (persistError) {
-          if (typeof persistError.message === 'string' && persistError.message.includes('listing_publish_limit_reached')) {
+          });
+          isFirstTimePublishForBoost = publishResult.firstPublish;
+        } catch (persistError: any) {
+          if (typeof persistError?.message === 'string' && persistError.message.includes('listing_publish_limit_reached')) {
             setShowLimitModal(true);
             setIsSaving(false);
             return;
@@ -1728,111 +2501,101 @@ export const PublishWizard: React.FC = () => {
           return;
         }
 
-        const { data, error } = await supabase.functions.invoke('create-featured-checkout', {
-          headers: {
-            Authorization: `Bearer ${sessionData.session.access_token}`},
-          body: { listing_id: listing.id }});
+        // The listing is live now — send the same first-publish confirmation
+        // + admin alert the standard path sends, so the host is never left
+        // wondering whether publishing worked while payment settles.
+        if (isFirstTimePublishForBoost) {
+          const boostPrice = priceSale
+            ? `$${parseFloat(String(priceSale).replace(/[^0-9.]/g, '')).toLocaleString()}`
+            : priceDaily ? `$${priceDaily}/day`
+            : priceHourly ? `$${priceHourly}/hr`
+            : 'Contact for price';
 
-        if (error) {
-          const { referenceCode } = await reportError({
-            action: 'publish.boost.checkout.init',
-            endpoint: '/functions/v1/create-featured-checkout',
-            errorType: 'StripeCheckoutInitFailed',
-            errorMessage: (error as any)?.message ?? String(error),
-            status: (error as any)?.status,
-            listingId: listing.id,
-          });
-          toast({
-            title: "Couldn't start Stripe Checkout",
-            description: `Your listing is saved. Payments are temporarily unreachable — try publishing again in a moment, or contact support at (725) 755-9598. Reference: ${referenceCode}`,
-            variant: 'destructive',
-          });
-          return;
-        }
-        if (!data?.url) {
-          const { referenceCode } = await reportError({
-            action: 'publish.boost.checkout.init',
-            endpoint: '/functions/v1/create-featured-checkout',
-            errorType: 'StripeCheckoutMissingUrl',
-            errorMessage: 'No checkout URL returned',
-            listingId: listing.id,
-          });
-          toast({
-            title: 'Checkout unavailable',
-            description: `Stripe didn't return a checkout link. Please try again. Reference: ${referenceCode}`,
-            variant: 'destructive',
-          });
-          return;
+          supabase.functions.invoke('send-listing-live-email', {
+            body: {
+              hostEmail: user?.email,
+              hostName: user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'there',
+              listingTitle: title,
+              listingId: listing.id,
+              listingImageUrl: imageUrlsToSave?.[0],
+              coverImageUrl: imageUrlsToSave?.[0],
+              listingPrice: boostPrice,
+              category: listing.category,
+              address: fullAddress,
+              listingType:
+                listing.mode === 'rent' ? 'rental' :
+                listing.mode === 'sale' ? 'sale' :
+                listing.mode === 'both' ? 'both' : 'rental',
+            },
+          }).catch(err => console.error('Listing live email error:', err));
+
+          supabase.functions.invoke('send-admin-notification', {
+            body: {
+              type: 'new_listing',
+              data: {
+                listing_id: listing.id,
+                title: listing.title,
+                category: listing.category,
+                mode: listing.mode,
+                address: fullAddress,
+                host_id: user?.id,
+                host_name: user?.user_metadata?.full_name || user?.email?.split('@')[0],
+                host_email: user?.email,
+              },
+            },
+          }).catch(err => console.error('Admin notification error:', err));
         }
 
-        // Set up listener for cross-tab communication before opening checkout
-        const handleCheckoutComplete = (event: MessageEvent) => {
-          if (event.data?.type === 'featured-checkout-complete' && event.data?.listingId === listing.id) {
-            window.location.href = event.data.url || `/listing-published?listing_id=${listing.id}&featured_paid=true`;
+        // Send the payer straight to checkout in THIS tab, and route both
+        // outcomes back to the published-listing page so they always land on
+        // a clear "your listing is live / boost is activating" confirmation.
+        const publishedUrl = `/listing-published?listing_id=${listing.id}`;
+
+        // Vendibook Pro members with an unused Featured Boost credit for the
+        // current billing period redeem it instead of paying again.
+        if (proBoostCredit) {
+          try {
+            await redeemBoostCredit.mutateAsync(listing.id);
+            toast({
+              title: 'Your listing is live 🎉',
+              description: 'We applied your included Vendibook Pro Featured Boost.',
+            });
+            window.location.href = `${publishedUrl}&featured_paid=true`;
+            return;
+          } catch (creditError) {
+            console.error('Boost credit redemption failed', creditError);
+            // Fall through to the paid checkout — the listing is already live.
           }
-        };
-        
-        try {
-          const channel = new BroadcastChannel('featured-checkout');
-          channel.onmessage = handleCheckoutComplete;
-          (window as any).__featuredCheckoutChannel = channel;
-        } catch (e) {
-          console.log('BroadcastChannel not supported');
-        }
-        
-        const newWindow = window.open(data.url, '_blank');
-        if (!newWindow) {
-          toast({
-            title: 'Opening Stripe Checkout…',
-            description: 'Your browser blocked the popup, so we\'re redirecting this tab instead.',
-          });
-          window.location.href = data.url;
         }
 
-        return; // Exit early - webhook will handle publishing after payment
+        const checkoutUrl = productCheckoutUrl(ACTIVE_PRODUCT_SLUGS.featuredBoost, listing.id, {
+          success: `${publishedUrl}&featured_paid=true`,
+          cancel: `${publishedUrl}&featured_cancelled=true`,
+        });
+
+        toast({
+          title: 'Your listing is live 🎉',
+          description: 'Finish the Featured boost checkout to pin it to the top of search.',
+        });
+
+        window.location.href = checkoutUrl;
+
+        return; // Exit early - boost activates on payment capture
+
       }
 
       // Standard publish flow (no add-on fees)
       // Check if this is a first-time publish or an update to an existing published listing
-      const isFirstTimePublish = !listing.published_at;
-      
-      const { error } = await supabase
-        .from('listings')
-        .update({
+      let isFirstTimePublish = false;
+      {
+        const publishResult = await publishListingIdempotent(listing.id, {
           ...baseUpdateData,
           ...pricingUpdateData,
-          ...(listingHasPendingFeatured ? { featured_enabled: false } : {}),
-          status: 'published',
-          // Only set published_at if this is the first time publishing
-          ...(isFirstTimePublish ? { published_at: new Date().toISOString() } : {})})
-        .eq('id', listing.id);
-
-      if (error) {
-        if (typeof error.message === 'string' && error.message.includes('listing_publish_limit_reached')) {
-          setShowLimitModal(true);
-          setIsSaving(false);
-          return;
-        }
-        // D1: server-enforced Stripe Connect eligibility for card-enabled publishing.
-        if (typeof error.message === 'string' && error.message.includes('STRIPE_CONNECT_REQUIRED')) {
-          setIsSaving(false);
-          toast({
-            title: 'Connect Stripe to accept card payments',
-            description: 'Or switch to cash-only (Pay in Person) on the Pricing step to publish now and add Stripe later.',
-            variant: 'destructive',
-            action: (
-              <button
-                onClick={() => { void connectStripe(); }}
-                className="inline-flex items-center rounded-md bg-foreground px-3 py-1.5 text-xs font-medium text-background hover:bg-foreground/90"
-              >
-                Connect Stripe
-              </button>
-            ) as any,
-          });
-          return;
-        }
-        throw error;
+        });
+        isFirstTimePublish = publishResult.firstPublish;
       }
+
+
 
       // Track analytics - differentiate between new publish and update
       console.log(`[ANALYTICS] Listing ${isFirstTimePublish ? 'published' : 'updated'}`, { listingId: listing.id });
@@ -1882,7 +2645,10 @@ export const PublishWizard: React.FC = () => {
       }
 
 
+      // Published — the saved row is now the source of truth.
+      clearWizardDraft(listingId);
       setShowSuccessModal(true);
+
     } catch (error) {
       console.error('Error publishing:', error);
       const raw = error instanceof Error ? error.message : String(error);
@@ -1912,13 +2678,6 @@ export const PublishWizard: React.FC = () => {
     }
   };
 
-  const handleStripeConnect = async () => {
-    try {
-      await connectStripe();
-    } catch (error) {
-      toast({ title: 'Error connecting Stripe', variant: 'destructive' });
-    }
-  };
 
   // Publish confirmation + terms consent modal state
   const [showPublishDialog, setShowPublishDialog] = useState(false);
@@ -1927,8 +2686,6 @@ export const PublishWizard: React.FC = () => {
 
   // Checklist state - with proper validation
   const totalPhotoCount = existingImages.length + images.length;
-  // Stripe is required for rentals and for sale listings that accept card payment.
-  const requiresStripe = listing?.mode === 'rent' || (listing?.mode === 'sale' && acceptCardPayment);
   const enabledDocsCount = requiredDocuments.filter(d => d.is_required).length;
 
   // Helper to properly validate price input
@@ -1943,7 +2700,7 @@ export const PublishWizard: React.FC = () => {
   const MIN_DESCRIPTION_LENGTH = 50;
   const MIN_TITLE_LENGTH = 5;
 
-  const hasSalePaymentMethod = listing?.mode !== 'sale' || acceptCardPayment || acceptCashPayment;
+  const hasSalePaymentMethod = listing?.mode !== 'sale' || acceptPayPalCheckout || acceptCashPayment;
   const hasPriceAmount = listing?.mode === 'sale'
     ? isValidPrice(priceSale)
     : isValidPrice(priceDaily);
@@ -1955,6 +2712,7 @@ export const PublishWizard: React.FC = () => {
   const hasValidDescription = description.trim().length >= MIN_DESCRIPTION_LENGTH;
   const hasDescription = hasValidTitle && hasValidDescription;
 
+
   const checklistState = {
     hasPhotos: totalPhotoCount >= 3,
     hasPricing,
@@ -1965,10 +2723,8 @@ export const PublishWizard: React.FC = () => {
         ? !!(hasCompleteStructuredAddress && accessInstructions)
         : !!(hasCompleteStructuredAddress && fulfillmentType)
     ) : false,
-    hasStripe: isOnboardingComplete,
     isRental: listing?.mode === 'rent',
     photoCount: totalPhotoCount,
-    requiresStripe, // Pass whether Stripe is required
     hasDocuments: true, // Documents step is optional, always "complete"
     documentsCount: enabledDocsCount,
     descriptionLength: description.trim().length,
@@ -1976,8 +2732,52 @@ export const PublishWizard: React.FC = () => {
       ? (isValidPrice(priceSale) ? `$${parseFloat(priceSale.replace(/[^0-9.]/g, '')).toLocaleString()}` : undefined)
       : (isValidPrice(priceDaily) ? `$${parseFloat(priceDaily.replace(/[^0-9.]/g, ''))}/day` : undefined)};
 
-  const checklistItems = createChecklistItems(checklistState, step);
-  const canPublish = checklistItems.filter(i => i.required).every(i => i.completed);
+  // Content requirements (single source of truth for the Phase 2 fields).
+  // This never contains identity-verification, payout or merchant-onboarding gates.
+  const stageMissing = listing
+    ? getStageRequirements({
+        mode: listing.mode,
+        category: listing.category,
+        condition: stageValues.condition || null,
+        operationalStatus: stageValues.operationalStatus || null,
+        titleStatus: disclosures.titleStatus || null,
+        hasLien: disclosures.hasLien || null,
+        noKnownProblems: disclosures.noKnownProblems,
+        knownProblems: disclosures.knownProblems,
+        includedItems: disclosures.includedItems || null,
+        photosExclusionsAnswered: disclosures.photosExclusionsAnswered,
+        lengthInches: parseFloat(lengthInches) || null,
+        heightInches: parseFloat(heightInches) || null,
+      })
+    : [];
+
+  // Per-step required answers. Steps can't be skipped while these are missing.
+  const basicsMissing = stageMissing.filter((r) => r.step === 'basics');
+  // Disclosure requirements are collected on the "What's included" step.
+  const includesMissing = stageMissing.filter((r) => r.step === 'includes');
+
+  // Launch Checklist is the single progress/navigation system; 'basics'
+  // completion feeds its first item so sellers can jump back freely.
+  const checklistItems = createChecklistItems(
+    { ...checklistState, hasBasics: basicsMissing.length === 0 },
+    step,
+  );
+
+  const stageRequirementsMet =
+    checklistItems.filter(i => i.required).every(i => i.completed) && stageMissing.length === 0;
+  const canPublish = stageRequirementsMet && allAttested(attestations);
+
+  // Everything still standing between this draft and publishing, in plain
+  // language, so the review step never shows an unexplained disabled button.
+  const publishBlockers: string[] = [
+    ...checklistItems
+      .filter((i) => i.required && !i.completed)
+      .map((i) => (i as any).label ?? (i as any).title ?? 'Incomplete step'),
+    ...stageMissing.map((r) => r.label),
+    ...(allAttested(attestations) ? [] : ['Confirm the statements at the bottom of this page']),
+  ];
+
+
   const displayAddress = buildStructuredAddress() || address;
 
   // Collect validation errors for publish attempt
@@ -1985,17 +2785,17 @@ export const PublishWizard: React.FC = () => {
     const errors: string[] = [];
     if (totalPhotoCount < 3) errors.push(`Add at least 3 photos (currently ${totalPhotoCount})`);
     if (!hasPriceAmount) errors.push(listing?.mode === 'sale' ? 'Set a sale price greater than $0' : 'Set a daily rate greater than $0');
-    if (listing?.mode === 'sale' && !hasSalePaymentMethod) errors.push('Select at least one payment method: Pay by Card or Pay in Person');
+    if (listing?.mode === 'sale' && !hasSalePaymentMethod) errors.push('Select at least one payment method: PayPal Checkout or Pay in Person');
     if (!hasValidTitle) errors.push(`Title must be at least ${MIN_TITLE_LENGTH} characters`);
     if (!hasValidDescription) errors.push(`Description must be at least ${MIN_DESCRIPTION_LENGTH} characters (currently ${description.trim().length})`);
     if (!checklistState.hasLocation) errors.push('Complete the location and logistics section');
-    if (requiresStripe && !isOnboardingComplete) errors.push('Connect Stripe to accept card payments — or switch to cash-only (Pay in Person) on the Pricing step to publish now and add Stripe later.');
+    for (const req of stageMissing) errors.push(req.label);
     return errors;
   };
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
+      <div className="sale-light min-h-screen flex items-center justify-center bg-background">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
@@ -2003,51 +2803,9 @@ export const PublishWizard: React.FC = () => {
 
   if (!listing) return null;
 
-  // ─── Journey progress (single source of truth) ───
-  // Mirrors the step order used by saveStep()/handleDetailsSave() so the
-  // indicator, the "Continue" primary action, and the actual navigation
-  // can't drift apart.
-  const isRentalListing = listing.mode === 'rent';
-  const skipStripeStep = listing.mode === 'sale' && !acceptCardPayment;
-  const baseWizardSteps: PublishStep[] = isRentalListing
-    ? ['photos', 'headline', 'includes', 'pricing', 'availability', 'location', 'documents', 'stripe', 'review']
-    : ['photos', 'headline', 'includes', 'pricing', 'location', 'stripe', 'review'];
-  const wizardStepOrder: PublishStep[] = skipStripeStep
-    ? baseWizardSteps.filter((s) => s !== 'stripe')
-    : baseWizardSteps;
-
-  const stepMeta: Record<PublishStep, { label: string; hint?: string; optional?: boolean }> = {
-    photos: { label: 'Media', hint: 'At least 3 photos — drag to reorder' },
-    headline: { label: 'Headline', hint: 'Title & description' },
-    includes: { label: "What's included", hint: 'Highlights & amenities' },
-    pricing: {
-      label: 'Pricing',
-      hint: listing.mode === 'sale' ? 'Set your asking price' : 'Daily & weekly rates',
-    },
-    availability: { label: 'Availability', hint: 'When renters can book' },
-    details: { label: 'Details' },
-    location: { label: 'Location', hint: 'Where & how it changes hands' },
-    documents: { label: 'Documents', hint: 'Required rental paperwork' },
-    stripe: {
-      label: 'Payouts',
-      hint: 'Connect Stripe to accept card payments',
-      optional: listing.mode === 'sale' && !acceptCardPayment,
-    },
-    review: { label: 'Review & publish', hint: 'Preview and go live' },
-  };
-
-  const journeySteps: JourneyStep[] = wizardStepOrder.map((id) => ({
-    id,
-    label: stepMeta[id].label,
-    hint: stepMeta[id].hint,
-    optional: stepMeta[id].optional,
-  }));
-  // 'details' is an off-path step (not in the linear order); pin the
-  // indicator to the closest linear step (photos) if that's the current view.
-  const currentJourneyIndex = Math.max(0, wizardStepOrder.indexOf(step));
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="sale-light min-h-screen bg-background">
       {/* Claiming draft overlay */}
       {isClaimingDraft && (
         <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-[100] flex flex-col items-center justify-center gap-4">
@@ -2057,19 +2815,28 @@ export const PublishWizard: React.FC = () => {
         </div>
       )}
       {/* Header */}
-      <div className="border-b bg-card sticky top-0 z-10">
-        <div className="container max-w-4xl mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
+      <div className="sticky top-0 z-10 border-b border-border/80 bg-background/85 backdrop-blur-xl">
+        <div className="container max-w-4xl mx-auto px-4">
+          <div className="h-14 flex items-center justify-between gap-4">
             <button
-              onClick={() => navigate('/dashboard')}
-              className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-colors"
+              onClick={handleSaveAndExit}
+              disabled={isSaveExiting}
+              className="inline-flex items-center gap-2 rounded-lg -ml-1 px-1 py-1 text-sm text-muted-foreground hover:text-foreground transition-colors disabled:opacity-60 disabled:pointer-events-none"
             >
-              <ArrowLeft className="w-4 h-4" />
-              Save & exit
+              {isSaveExiting || isSaving ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <ArrowLeft className="w-4 h-4" />
+              )}
+              {isSaveExiting || isSaving ? 'Saving…' : 'Save & exit'}
             </button>
-            <h1 className="font-semibold">
+            <h1 className="text-sm font-semibold text-foreground truncate">
               {CATEGORY_LABELS[listing.category]} · {listing.mode === 'rent' ? 'For Rent' : 'For Sale'}
             </h1>
+            <span className="hidden sm:inline-flex items-center gap-1.5 text-xs text-muted-foreground">
+              <Shield className="h-3.5 w-3.5" />
+              Free to publish
+            </span>
           </div>
         </div>
       </div>
@@ -2088,12 +2855,6 @@ export const PublishWizard: React.FC = () => {
 
           {/* Main Content */}
           <div className="lg:col-span-2">
-            {/* Persistent journey progress — visible on every step, every breakpoint */}
-            <JourneyProgress
-              steps={journeySteps}
-              currentIndex={currentJourneyIndex}
-              className="mb-6"
-            />
 
             {/* Mobile Checklist - hide publish button when on review step to avoid duplicate */}
             <div className="lg:hidden mb-6">
@@ -2105,17 +2866,64 @@ export const PublishWizard: React.FC = () => {
               />
             </div>
 
+            <div className="bg-sale-card rounded-3xl p-6 md:p-8">
+              <MissingRequirementsAlert blockers={stepBlockers} className="mb-6" />
 
-            <div className="bg-card rounded-2xl shadow-sm border p-6 md:p-8">
-              {/* Step: Media */}
-              {step === 'photos' && (
+              {/* Stage 1: What are you listing? */}
+              {step === 'basics' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-xl font-bold text-foreground mb-2">Add media</h2>
+                    <h2 className="text-2xl font-bold tracking-tight text-foreground mb-2">The basics</h2>
+                    <p className="text-muted-foreground">
+                      A few essentials so buyers can tell at a glance what this is.
+                    </p>
+                  </div>
+
+                  <StepWhat
+                    category={listing.category}
+                    mode={listing.mode}
+                    values={stageValues}
+                    onChange={(patch) => setStageValues((prev) => ({ ...prev, ...patch }))}
+                    showErrors={showStepErrors}
+                  />
+
+
+                  <PrimaryActionBar
+                    sticky
+                    primary={{
+                      label: isSaving ? 'Saving…' : 'Continue',
+                      onClick: guardNext(
+                        basicsMissing.map((r) => r.label),
+                        basicsMissing[0]?.fieldId ?? null,
+                        handleDetailsSave,
+                      ),
+                      disabled: isSaving,
+                    }}
+                    blockers={basicsMissing.map((r) => r.label)}
+                  />
+
+                </div>
+              )}
+
+              {/* Step: Media */}
+              {step === 'photos' && (
+
+                <div className="space-y-6">
+                  <div>
+                    <h2 className="text-2xl font-bold tracking-tight text-foreground mb-2">Add media</h2>
                     <p className="text-muted-foreground">
                       Upload at least 3 photos. Videos are optional. <span className="font-medium text-foreground">Drag to reorder</span> — first image is your cover.
                     </p>
                   </div>
+
+                  <PhotoGuidance
+                    category={listing.category}
+                    photoCount={totalPhotoCount}
+                    hasDisclosedProblems={disclosures.knownProblems.length > 0}
+                  />
+
+
+
 
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                     {allPhotos.map((item, globalIndex) => {
@@ -2151,20 +2959,20 @@ export const PublishWizard: React.FC = () => {
 
                           {/* Saved badge for existing images */}
                           {item.type === 'existing' && !isCover && (
-                            <div className="absolute top-2 left-2 px-2 py-0.5 bg-black/50 text-white rounded text-xs">
+                            <div className="absolute top-2 left-2 px-2 py-0.5 bg-black/50 text-white rounded-md text-xs">
                               Saved
                             </div>
                           )}
 
                           {/* Drag handle */}
-                          <div className="absolute top-2 right-10 p-1.5 rounded-lg bg-black/50 text-white opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="absolute top-2 right-10 p-1.5 rounded-lg bg-black/50 text-white opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity">
                             <GripVertical className="w-4 h-4" />
                           </div>
 
                           {/* Remove button */}
                           <button
                             onClick={() => removePhotoByGlobalIndex(globalIndex)}
-                            className="absolute top-2 right-2 w-7 h-7 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute top-2 right-2 w-7 h-7 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                           >
                             <X className="w-4 h-4" />
                           </button>
@@ -2173,7 +2981,7 @@ export const PublishWizard: React.FC = () => {
                           {!isCover && (
                             <button
                               onClick={() => movePhotoToFirst(globalIndex)}
-                              className="absolute bottom-2 left-2 px-2 py-1 bg-black/60 text-white rounded-md text-xs font-medium opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/80 flex items-center gap-1"
+                              className="absolute bottom-2 left-2 px-2 py-1 bg-black/60 text-white rounded-md text-xs font-medium opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity hover:bg-black/80 flex items-center gap-1"
                             >
                               <Camera className="w-3 h-3" />
                               Cover
@@ -2222,7 +3030,7 @@ export const PublishWizard: React.FC = () => {
                             <button
                               type="button"
                               onClick={() => removeExistingVideo(index)}
-                              className="absolute top-2 right-2 w-7 h-7 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity"
+                              className="absolute top-2 right-2 w-7 h-7 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                             >
                               <X className="w-4 h-4" />
                             </button>
@@ -2236,7 +3044,7 @@ export const PublishWizard: React.FC = () => {
                               <button
                                 type="button"
                                 onClick={() => removeVideo(index)}
-                                className="absolute top-2 right-2 w-7 h-7 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 opacity-0 group-hover:opacity-100 transition-opacity"
+                                className="absolute top-2 right-2 w-7 h-7 bg-black/50 text-white rounded-full flex items-center justify-center hover:bg-black/70 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity"
                               >
                                 <X className="w-4 h-4" />
                               </button>
@@ -2250,13 +3058,21 @@ export const PublishWizard: React.FC = () => {
                   </div>
 
                   <PrimaryActionBar
+                    sticky
                     helper="At least 3 photos are required to continue."
                     primary={{
                       label: isSaving ? 'Saving…' : 'Continue',
-                      onClick: isGuestDraft && !user ? handleDetailsSave : saveStep,
-                      disabled: isSaving || allPhotos.length < 3,
+                      onClick: guardNext(
+                        allPhotos.length < 3
+                          ? [`Add at least 3 photos (currently ${allPhotos.length})`]
+                          : [],
+                        null,
+                        isGuestDraft && !user ? handleDetailsSave : saveStep,
+                      ),
+                      disabled: isSaving,
                     }}
                   />
+
                 </div>
               )}
 
@@ -2268,7 +3084,7 @@ export const PublishWizard: React.FC = () => {
                     <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-primary/10 mb-2">
                       <Type className="w-6 h-6 text-primary" />
                     </div>
-                    <h2 className="text-2xl font-bold">Let's create your listing</h2>
+                    <h2 className="text-2xl font-bold tracking-tight text-foreground">Let's create your listing</h2>
                     <p className="text-muted-foreground max-w-md mx-auto">
                       Start with a catchy headline and detailed description that will attract {listing.mode === 'rent' ? 'renters' : 'buyers'}.
                     </p>
@@ -2351,15 +3167,20 @@ export const PublishWizard: React.FC = () => {
                           
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-foreground mb-1">AI Writing Assistant</h4>
+                          <h4 className="font-semibold text-foreground mb-1 flex items-center gap-2">
+                            AI Writing Assistant
+                            <PremiumChip />
+                          </h4>
                           <p className="text-sm text-muted-foreground mb-3">
-                            Let AI polish your description into professional, engaging copy.
+                            {aiAssistUnlocked
+                              ? 'Polish your description into professional, engaging copy you can still edit.'
+                              : 'Included with Vendibook Pro. You can always write your description yourself — it is never required.'}
                           </p>
                           <Button
                             type="button"
                             size="sm"
                             onClick={optimizeDescription}
-                            disabled={isOptimizing || !description || description.length < 10}
+                            disabled={isOptimizing || (aiAssistUnlocked && (!description || description.length < 10))}
                             variant="dark-shine"
                           >
                             {isOptimizing ? (
@@ -2375,7 +3196,7 @@ export const PublishWizard: React.FC = () => {
                             ) : (
                               <>
                                 
-                                Write it for me
+                                {aiAssistUnlocked ? 'Write it for me' : 'Unlock with Pro'}
                               </>
                             )}
                           </Button>
@@ -2385,16 +3206,24 @@ export const PublishWizard: React.FC = () => {
                   </div>
 
                   <PrimaryActionBar
+                    sticky
                     secondary={{ label: 'Back', onClick: () => setStep('photos') }}
                     primary={{
                       label: isSaving ? 'Saving…' : 'Continue',
-                      onClick: saveStep,
-                      disabled:
-                        isSaving ||
-                        title.trim().length < MIN_TITLE_LENGTH ||
-                        description.trim().length < MIN_DESCRIPTION_LENGTH,
+                      onClick: guardNext(
+                        [
+                          title.trim().length < MIN_TITLE_LENGTH &&
+                            `Title must be at least ${MIN_TITLE_LENGTH} characters`,
+                          description.trim().length < MIN_DESCRIPTION_LENGTH &&
+                            `Description must be at least ${MIN_DESCRIPTION_LENGTH} characters`,
+                        ].filter(Boolean) as string[],
+                        null,
+                        saveStep,
+                      ),
+                      disabled: isSaving,
                     }}
                   />
+
                 </div>
               )}
 
@@ -2406,7 +3235,7 @@ export const PublishWizard: React.FC = () => {
                     <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-primary/10 mb-2">
                       <ListChecks className="w-6 h-6 text-primary" />
                     </div>
-                    <h2 className="text-2xl font-bold">What's Included?</h2>
+                    <h2 className="text-2xl font-bold tracking-tight text-foreground">What's Included?</h2>
                     <p className="text-muted-foreground max-w-md mx-auto">
                       Select features and add highlights to showcase what makes your listing special.
                     </p>
@@ -2521,14 +3350,112 @@ export const PublishWizard: React.FC = () => {
                     )}
                   </div>
 
+                  {/* Required size for mobile assets sold on Vendibook.
+                      These requirements are enforced on this step, so the
+                      fields have to live here or Continue blocks with no
+                      visible field to fix. */}
+                  {requiresSaleDimensions(listing.mode, listing.category) && (
+                    <div className="space-y-4 pt-6 border-t">
+                      <div>
+                        <Label className="text-lg font-semibold">Size</Label>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Buyers use these to plan towing, parking and freight quotes.
+                        </p>
+                      </div>
+
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="length_ft" className="flex items-center gap-1.5 text-sm">
+                            <Ruler className="h-3.5 w-3.5" />
+                            Length (ft) <span className="text-destructive">*</span>
+                          </Label>
+                          <Input
+                            id="length_ft"
+                            type="number"
+                            min="0"
+                            step="0.5"
+                            value={inchesToFeet(parseFloat(lengthInches) || null)}
+                            onChange={(e) => setLengthInches(String(feetToInches(e.target.value) ?? ''))}
+                            placeholder="e.g., 20"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="width_ft" className="flex items-center gap-1.5 text-sm">
+                            <Ruler className="h-3.5 w-3.5" />
+                            Width (ft) <span className="text-muted-foreground font-normal">(optional)</span>
+                          </Label>
+                          <Input
+                            id="width_ft"
+                            type="number"
+                            min="0"
+                            step="0.5"
+                            value={inchesToFeet(parseFloat(widthInches) || null)}
+                            onChange={(e) => setWidthInches(String(feetToInches(e.target.value) ?? ''))}
+                            placeholder="e.g., 8"
+                          />
+                        </div>
+                        <div className="space-y-2">
+                          <Label htmlFor="height_ft" className="flex items-center gap-1.5 text-sm">
+                            <Ruler className="h-3.5 w-3.5" />
+                            Height (ft) <span className="text-destructive">*</span>
+                          </Label>
+                          <Input
+                            id="height_ft"
+                            type="number"
+                            min="0"
+                            step="0.5"
+                            value={inchesToFeet(parseFloat(heightInches) || null)}
+                            onChange={(e) => setHeightInches(String(feetToInches(e.target.value) ?? ''))}
+                            placeholder="e.g., 10"
+                          />
+                        </div>
+                      </div>
+
+                      <p className="text-xs text-muted-foreground">
+                        Shown to buyers as {formatDimensionSummary(
+                          parseFloat(lengthInches) || null,
+                          parseFloat(widthInches) || null,
+                          parseFloat(heightInches) || null,
+                        ) ?? 'Length × Width × Height once you fill these in'}.
+                      </p>
+                    </div>
+                  )}
+
+
+
+                  <ListingDisclosures
+                    category={listing.category}
+                    mode={listing.mode}
+                    values={disclosures}
+                    onChange={(patch) => setDisclosures((prev) => ({ ...prev, ...patch }))}
+                    vinSerial={vinSerial}
+                    vinUnavailable={vinUnavailable}
+                    onVinChange={
+                      isTitledSaleCategory(listing)
+                        ? (patch) => {
+                            if (patch.vinSerial !== undefined) setVinSerial(patch.vinSerial);
+                            if (patch.vinUnavailable !== undefined) setVinUnavailable(patch.vinUnavailable);
+                          }
+                        : undefined
+                    }
+                    showErrors={showStepErrors}
+                  />
+
                   <PrimaryActionBar
+                    sticky
                     secondary={{ label: 'Back', onClick: () => setStep('headline') }}
                     primary={{
                       label: isSaving ? 'Saving…' : 'Continue',
-                      onClick: saveStep,
+                      onClick: guardNext(
+                        includesMissing.map((r) => r.label),
+                        includesMissing[0]?.fieldId ?? null,
+                        saveStep,
+                      ),
                       disabled: isSaving,
                     }}
+                    blockers={includesMissing.map((r) => r.label)}
                   />
+
                 </div>
               )}
 
@@ -2536,7 +3463,7 @@ export const PublishWizard: React.FC = () => {
               {step === 'pricing' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-xl font-bold text-foreground mb-2">Set your price</h2>
+                    <h2 className="text-2xl font-bold tracking-tight text-foreground mb-2">Set your price</h2>
                     <p className="text-muted-foreground">
                       {listing.mode === 'sale' ? 'Enter your asking price.' : 'Set daily and weekly rates.'}
                     </p>
@@ -2555,7 +3482,9 @@ export const PublishWizard: React.FC = () => {
                           <PremiumChip />
                         </h4>
                         <p className="text-sm text-muted-foreground mb-3">
-                          Pro sellers auto-generate optimized pricing from category, title, and location. See the example.
+                          {aiAssistUnlocked
+                            ? 'Generate suggested pricing from category, title, and location. Suggestions are editable.'
+                            : 'Included with Vendibook Pro. You can enter your price manually at any time.'}
                         </p>
 
                         <Button
@@ -2573,7 +3502,7 @@ export const PublishWizard: React.FC = () => {
                           ) : (
                             <>
                               
-                              Get Suggestions
+                              {aiAssistUnlocked ? 'Get Suggestions' : 'Unlock with Pro'}
                             </>
                           )}
                         </Button>
@@ -2711,9 +3640,9 @@ export const PublishWizard: React.FC = () => {
                               <div className="flex items-start gap-1.5 mt-3 text-xs text-muted-foreground">
                                 <Info className="w-3 h-3 mt-0.5 shrink-0" />
                                 <span>
-                                  {acceptCashPayment && !acceptCardPayment
+                                  {acceptCashPayment && !acceptPayPalCheckout
                                     ? 'Pay in Person sales have no platform commission.'
-                                    : `Platform fee is ${SALE_SELLER_FEE_PERCENT}% of the sale price for card payments`}
+                                    : `Platform fee is ${SALE_SELLER_FEE_PERCENT}% of the sale price for online PayPal payments`}
                                 </span>
                               </div>
                             </div>
@@ -2724,42 +3653,65 @@ export const PublishWizard: React.FC = () => {
                       {/* Payment Method Options */}
                       <div className="pt-6 border-t">
                         <div className="flex items-center gap-2 mb-4">
-                          <CreditCard className="w-5 h-5 text-primary" />
-                          <h3 className="text-lg font-semibold">Accepted Payment Methods</h3>
+                          <PayPalMonogram className="h-5 w-5" />
+                          <h3 className="text-lg font-semibold">How buyers can pay</h3>
+                          <InfoTooltip
+                            side="top"
+                            align="start"
+                            content={
+                              <span className="block space-y-2">
+                                <span className="block">
+                                  <span className="font-medium">PayPal / Online Checkout:</span> Buyers
+                                  pay securely through Vendibook. The applicable Vendibook seller fee is
+                                  handled as part of the online transaction, and payout follows
+                                  Vendibook's completion/payout process.
+                                </span>
+                                <span className="block">
+                                  <span className="font-medium">Pay in Person:</span> You arrange payment
+                                  directly with the buyer at pickup or delivery; Vendibook does not charge
+                                  the online-sale commission on that pay-in-person transaction.
+                                </span>
+                              </span>
+                            }
+                          />
                         </div>
                         <p className="text-sm text-muted-foreground mb-4">
                           Select how buyers can pay for your item. You can enable both options.
                         </p>
 
                         <div className="space-y-4">
-                          <div className="flex items-start space-x-3 p-4 rounded-lg border border-border bg-card hover:border-primary/30 transition-colors">
+                          <div className="flex items-start space-x-3 p-4 rounded-2xl border border-border bg-card hover:border-primary/30 transition-colors">
                             <Checkbox
-                              id="accept_card_payment"
-                              checked={acceptCardPayment}
-                              onCheckedChange={(checked) => setAcceptCardPayment(!!checked)}
+                              id="accept_paypal_checkout"
+                              checked={acceptPayPalCheckout}
+                              onCheckedChange={(checked) => setAcceptPayPalCheckout(!!checked)}
                               className="mt-0.5"
                             />
                             <div className="flex-1">
                               <Label
-                                htmlFor="accept_card_payment"
+                                htmlFor="accept_paypal_checkout"
                                 className="flex items-center gap-2 text-base font-medium cursor-pointer"
                               >
-                                <CreditCard className="w-4 h-4 text-primary" />
-                                Pay by Card (Online)
+                                <PayPalMonogram className="h-4 w-4" />
+                                Pay online with PayPal
                               </Label>
                               <p className="text-sm text-muted-foreground mt-1">
-                                Accept secure online payments via Stripe. Funds are deposited to your connected Stripe account after sale confirmation.
+                                Buyers check out securely with PayPal. Your sale proceeds are recorded to
+                                your account and paid out to your payout details after the sale is confirmed.
                               </p>
-                              {acceptCardPayment && (
-                                <div className="mt-2 p-2 bg-primary/5 rounded text-xs text-muted-foreground">
-                                  <Info className="w-3 h-3 inline mr-1" />
-                                  Requires Stripe Connect setup to receive payments.
+                              {acceptPayPalCheckout && (
+                                <div className="mt-2 space-y-2 rounded-lg bg-primary/5 p-3">
+                                  <p className="text-xs text-muted-foreground">
+                                    <Info className="mr-1 inline h-3 w-3" />
+                                    Connect PayPal in Payment setup before buyers can check out online.
+                                  </p>
+                                  <SellerBusinessAccountHelp compact />
                                 </div>
                               )}
                             </div>
                           </div>
 
-                          <div className="flex items-start space-x-3 p-4 rounded-lg border border-border bg-card hover:border-primary/30 transition-colors">
+                          <div className="flex items-start space-x-3 p-4 rounded-2xl border border-border bg-card hover:border-primary/30 transition-colors">
                             <Checkbox
                               id="accept_cash_payment"
                               checked={acceptCashPayment}
@@ -2780,8 +3732,8 @@ export const PublishWizard: React.FC = () => {
                             </div>
                           </div>
 
-                          {!acceptCardPayment && !acceptCashPayment && (
-                            <div className="p-3 bg-muted/50 border border-border rounded-lg">
+                          {!acceptPayPalCheckout && !acceptCashPayment && (
+                            <div className="p-3 bg-muted/50 border border-border rounded-xl">
                               <p className="text-sm text-muted-foreground flex items-center gap-2">
                                 <Info className="w-4 h-4" />
                                 Please select at least one payment method.
@@ -2790,6 +3742,30 @@ export const PublishWizard: React.FC = () => {
                           )}
                         </div>
                       </div>
+
+                      {/* Buyer financing — included on every published for-sale listing */}
+                      {isFinanceableSaleListing({ ...listing, status: 'published' }) && (
+                        <div className="pt-6 border-t">
+                          <div className="flex items-center gap-2 mb-3">
+                            <EquinoxFundingLogo className="h-6 w-auto" />
+                            <h3 className="text-lg font-semibold">Buyer financing included</h3>
+                          </div>
+                          <div className="rounded-xl border border-border bg-card p-4 space-y-3">
+                            <p className="text-sm text-muted-foreground">
+                              Buyers can apply for equipment financing through Equinox Funding on
+                              every published for-sale listing. Nothing to turn on, and it never
+                              changes how you get paid.
+                            </p>
+                            <div className="flex items-start gap-2 text-sm text-foreground">
+                              <Clock className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                              <span>Get paid within 24 hours once the financed sale is confirmed.</span>
+                            </div>
+                            <p className="text-xs leading-relaxed text-muted-foreground">
+                              {EQUINOX_DISCLOSURE_TEXT}
+                            </p>
+                          </div>
+                        </div>
+                      )}
 
                       {/* Freight Settings */}
                       <div className="pt-6 border-t">
@@ -3017,11 +3993,11 @@ export const PublishWizard: React.FC = () => {
                               <div className="flex items-center gap-2 mb-1">
                                 <h4 className="font-semibold text-foreground">Security Deposit</h4>
                                 <InfoTooltip 
-                                  content="A refundable security deposit is charged at booking and returned after the rental ends without damage or delays." 
+                                  content="A refundable security deposit is arranged directly between you and the renter — it isn't charged through Vendibook checkout. Set the amount here so renters know what to expect before they book." 
                                 />
                               </div>
                               <p className="text-sm text-muted-foreground mb-3">
-                                Protect your equipment with a refundable deposit. Returned in full if no damage or late returns.
+                                Protect your equipment with a refundable deposit you collect and return directly with the renter.
                               </p>
                               
                               <div className="space-y-2">
@@ -3045,10 +4021,10 @@ export const PublishWizard: React.FC = () => {
                               </div>
 
                               {parseFloat(depositAmount) > 0 && (
-                                <div className="mt-4 p-3 bg-muted rounded-lg border border-border">
+                                <div className="mt-4 p-3 bg-muted rounded-xl border border-border">
                                   <p className="text-xs text-muted-foreground">
-                                    <strong className="text-primary">How it works:</strong> The ${parseFloat(depositAmount).toLocaleString()} deposit is charged when the booking is confirmed. 
-                                    After the rental ends, you can release the deposit in full or deduct for any damage/late fees.
+                                    <strong className="text-primary">How it works:</strong> The ${parseFloat(depositAmount).toLocaleString()} deposit is shown on your listing so renters know the expectation up front. 
+                                    It isn't part of the Vendibook payment — you collect and refund it directly with the renter.
                                   </p>
                                 </div>
                               )}
@@ -3061,16 +4037,31 @@ export const PublishWizard: React.FC = () => {
 
                   <div className="pt-4">
                     <PrimaryActionBar
+                      sticky
                       secondary={{ label: 'Back', onClick: () => setStep('includes') }}
                       primary={{
                         label: isSaving ? 'Saving…' : 'Continue',
-                        onClick: saveStep,
-                        disabled:
-                          isSaving ||
-                          (listing.mode === 'sale'
-                            ? !isValidPrice(priceSale) || (!acceptCardPayment && !acceptCashPayment)
-                            : !isValidPrice(priceDaily)),
+                        onClick: guardNext(
+                          listing.mode === 'sale'
+                            ? ([
+                                !isValidPrice(priceSale) && 'An asking price',
+                                !acceptPayPalCheckout && !acceptCashPayment && 'At least one way to get paid',
+                              ].filter(Boolean) as string[])
+                            : ([!isValidPrice(priceDaily) && 'A daily rate'].filter(Boolean) as string[]),
+                          null,
+                          saveStep,
+                        ),
+                        disabled: isSaving,
                       }}
+                      blockers={
+                        listing.mode === 'sale'
+                          ? ([
+                              !isValidPrice(priceSale) && 'An asking price',
+                              !acceptPayPalCheckout && !acceptCashPayment && 'At least one way to get paid',
+                            ].filter(Boolean) as string[])
+                          : ([!isValidPrice(priceDaily) && 'A daily rate'].filter(Boolean) as string[])
+                      }
+
                     />
                   </div>
                 </div>
@@ -3080,7 +4071,7 @@ export const PublishWizard: React.FC = () => {
               {step === 'availability' && listing.mode === 'rent' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-xl font-bold text-foreground mb-2">Set availability</h2>
+                    <h2 className="text-2xl font-bold tracking-tight text-foreground mb-2">Set availability</h2>
                     <p className="text-muted-foreground">
                       Control when your listing is available for bookings.
                     </p>
@@ -3188,6 +4179,7 @@ export const PublishWizard: React.FC = () => {
 
                   <div className="pt-4">
                     <PrimaryActionBar
+                      sticky
                       secondary={{ label: 'Back', onClick: () => setStep('pricing') }}
                       primary={{
                         label: isSaving ? 'Saving…' : 'Continue',
@@ -3203,7 +4195,7 @@ export const PublishWizard: React.FC = () => {
               {step === 'details' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-xl font-bold text-foreground mb-2">Add details</h2>
+                    <h2 className="text-2xl font-bold tracking-tight text-foreground mb-2">Add details</h2>
                     <p className="text-muted-foreground">
                       {listing.mode === 'rent' ? 'Help renters understand your listing.' : 'Help buyers understand your listing.'}
                     </p>
@@ -3267,7 +4259,7 @@ export const PublishWizard: React.FC = () => {
                           variant="dark-shine"
                           size="sm"
                           onClick={optimizeDescription}
-                          disabled={isOptimizing || !description || description.length < 10}
+                          disabled={isOptimizing || (aiAssistUnlocked && (!description || description.length < 10))}
                         >
                           {isOptimizing ? (
                             <>
@@ -3282,7 +4274,7 @@ export const PublishWizard: React.FC = () => {
                           ) : (
                             <>
                               
-                              Write it for me
+                              {aiAssistUnlocked ? 'Write it for me' : 'Write it for me · Pro'}
                             </>
                           )}
                         </Button>
@@ -3326,7 +4318,9 @@ export const PublishWizard: React.FC = () => {
                     
                     {!showOptimized && description.length >= 10 && description.trim().length >= MIN_DESCRIPTION_LENGTH && (
                       <p className="text-xs text-muted-foreground/70">
-                        Tip: tap “Write it for me” for a polished rewrite you can edit
+                        {aiAssistUnlocked
+                          ? 'Tip: tap “Write it for me” for a polished rewrite you can edit'
+                          : 'Optional: “Write it for me” is a Vendibook Pro feature. Your own description publishes just fine.'}
                       </p>
                     )}
                   </div>
@@ -3385,7 +4379,8 @@ export const PublishWizard: React.FC = () => {
                         <InfoTooltip content="Provide accurate dimensions for freight cost estimates. This helps buyers understand shipping costs." />
                       </div>
                       <p className="text-sm text-muted-foreground">
-                        These dimensions are used to calculate accurate freight estimates for buyers.
+                        Length and height are required for trucks, trailers and carts — buyers use
+                        them to check clearance and we use them for freight estimates. Width is optional.
                       </p>
                       
                       <div className="grid grid-cols-2 gap-4">
@@ -3431,59 +4426,73 @@ export const PublishWizard: React.FC = () => {
                       <div className="grid grid-cols-3 gap-4">
                         {/* Length */}
                         <div className="space-y-2">
-                          <Label htmlFor="length_inches" className="flex items-center gap-1.5 text-sm">
+                          <Label htmlFor="length_ft" className="flex items-center gap-1.5 text-sm">
                             <Ruler className="h-3.5 w-3.5" />
-                            Length (in)
+                            Length (ft) <span className="text-destructive">*</span>
                           </Label>
                           <Input
-                            id="length_inches"
+                            id="length_ft"
                             type="number"
                             min="0"
-                            step="1"
-                            value={lengthInches}
-                            onChange={(e) => setLengthInches(e.target.value)}
-                            placeholder="e.g., 240"
+                            step="0.5"
+                            value={inchesToFeet(parseFloat(lengthInches) || null)}
+                            onChange={(e) => setLengthInches(String(feetToInches(e.target.value) ?? ''))}
+                            placeholder="e.g., 20"
                           />
                         </div>
 
                         {/* Width */}
                         <div className="space-y-2">
-                          <Label htmlFor="width_inches" className="flex items-center gap-1.5 text-sm">
+                          <Label htmlFor="width_ft" className="flex items-center gap-1.5 text-sm">
                             <Ruler className="h-3.5 w-3.5" />
-                            Width (in)
+                            Width (ft) <span className="text-muted-foreground font-normal">(optional)</span>
                           </Label>
                           <Input
-                            id="width_inches"
+                            id="width_ft"
                             type="number"
                             min="0"
-                            step="1"
-                            value={widthInches}
-                            onChange={(e) => setWidthInches(e.target.value)}
-                            placeholder="e.g., 96"
+                            step="0.5"
+                            value={inchesToFeet(parseFloat(widthInches) || null)}
+                            onChange={(e) => setWidthInches(String(feetToInches(e.target.value) ?? ''))}
+                            placeholder="e.g., 8"
                           />
                         </div>
 
                         {/* Height */}
                         <div className="space-y-2">
-                          <Label htmlFor="height_inches" className="flex items-center gap-1.5 text-sm">
+                          <Label htmlFor="height_ft" className="flex items-center gap-1.5 text-sm">
                             <Ruler className="h-3.5 w-3.5" />
-                            Height (in)
+                            Height (ft) <span className="text-destructive">*</span>
                           </Label>
                           <Input
-                            id="height_inches"
+                            id="height_ft"
                             type="number"
                             min="0"
-                            step="1"
-                            value={heightInches}
-                            onChange={(e) => setHeightInches(e.target.value)}
-                            placeholder="e.g., 120"
+                            step="0.5"
+                            value={inchesToFeet(parseFloat(heightInches) || null)}
+                            onChange={(e) => setHeightInches(String(feetToInches(e.target.value) ?? ''))}
+                            placeholder="e.g., 10"
                           />
                         </div>
                       </div>
 
+                      {(!(parseFloat(lengthInches) > 0) || !(parseFloat(heightInches) > 0)) && (
+                        <p className="text-xs text-destructive">
+                          Add the {[
+                            !(parseFloat(lengthInches) > 0) ? 'length' : null,
+                            !(parseFloat(heightInches) > 0) ? 'height' : null,
+                          ].filter(Boolean).join(' and ')} in feet before publishing.
+                        </p>
+                      )}
+
                       <p className="text-xs text-muted-foreground">
-                        💡 Tip: Typical food truck dimensions are 16-26 ft long (192-312 in), 7-8 ft wide (84-96 in), and 8-10 ft tall (96-120 in).
+                        Shown to buyers as {formatDimensionSummary(
+                          parseFloat(lengthInches) || null,
+                          parseFloat(widthInches) || null,
+                          parseFloat(heightInches) || null,
+                        ) ?? 'Length × Width × Height once you fill these in'}. Typical food trucks are 16–26 ft long, 7–8 ft wide and 8–10 ft tall.
                       </p>
+
                     </div>
                   )}
 
@@ -3537,6 +4546,7 @@ export const PublishWizard: React.FC = () => {
                   </div>
 
                   <PrimaryActionBar
+                    sticky
                     helper={
                       !user && isGuestDraft
                         ? 'Sign-in required to save your details.'
@@ -3558,16 +4568,20 @@ export const PublishWizard: React.FC = () => {
 
               {/* Step: Location */}
               {step === 'location' && (
-                <div className="space-y-6">
-                  <div>
-                    <h2 className="text-xl font-bold text-foreground mb-2">Full Address & Fulfillment</h2>
+                <div className="flex flex-col gap-6">
+                  <div className="order-1">
+                    <h2 className="text-2xl font-bold tracking-tight text-foreground mb-2">
+                      {listing.mode === 'sale' ? 'Pickup & delivery details' : 'Full Address & Fulfillment'}
+                    </h2>
                     <p className="text-muted-foreground">
-                      Provide your complete address. It will only be shared after a booking is confirmed.
+                      {listing.mode === 'sale'
+                        ? 'Tell buyers how this changes hands. Only the city, state and ZIP are public — your full address stays private until a sale is confirmed.'
+                        : 'Provide your complete address. It will only be shared after a booking is confirmed.'}
                     </p>
                   </div>
 
-                  {/* Static Location Toggle - Only for mobile assets */}
-                  {isMobileAsset(listing.category) && (
+                  {/* Static Location Toggle - Only for mobile rentals */}
+                  {isMobileAsset(listing.category) && listing.mode !== 'sale' && (
                     <div className="p-4 bg-muted/50 rounded-xl border">
                       <div className="flex items-center justify-between">
                         <div className="flex items-start gap-3">
@@ -3595,17 +4609,30 @@ export const PublishWizard: React.FC = () => {
                   )}
 
                   {/* Structured Address Form */}
-                  <div className="space-y-4">
-                    <Label className="text-base font-semibold">Address *</Label>
+                  <div className="space-y-4 order-3">
+                    <Label className="text-base font-semibold">
+                      {listing.mode === 'sale'
+                        ? (needsFullAddressForSale ? 'Pickup address *' : 'Where it is located *')
+                        : 'Address *'}
+                    </Label>
+                    {listing.mode === 'sale' && !needsFullAddressForSale && (
+                      <p className="text-sm text-muted-foreground -mt-2">
+                        Delivery only — just the city, state and ZIP where the unit sits today.
+                      </p>
+                    )}
                     <div className="space-y-3">
                       <div className="space-y-2">
-                        <Label htmlFor="street_address" className="text-sm font-medium">Address Line 1</Label>
+                        <Label htmlFor="street_address" className="text-sm font-medium">
+                          {listing.mode === 'sale'
+                            ? (needsFullAddressForSale ? 'Street address' : 'Street address (optional)')
+                            : 'Address Line 1'}
+                        </Label>
                         <Input
                           id="street_address"
                           value={streetAddress}
                           onChange={(e) => setStreetAddress(e.target.value)}
                           placeholder="123 Main Street"
-                          className={cn(!streetAddress.trim() && "border-destructive/50")}
+                          className={cn(!streetAddress.trim() && streetAddressRequired && "border-destructive/50")}
                         />
                       </div>
                       <div className="space-y-2">
@@ -3657,16 +4684,19 @@ export const PublishWizard: React.FC = () => {
                           <Input
                             id="loc_phone"
                             type="tel"
-                            value={locPhoneNumber}
-                            onChange={(e) => setLocPhoneNumber(e.target.value)}
+                            value={sellerPhone}
+                            onChange={(e) => setSellerPhone(e.target.value)}
                             placeholder="(555) 123-4567"
                           />
+                          <p className="text-xs text-muted-foreground">
+                            Saved privately to your account — never shown on your public listing.
+                          </p>
                         </div>
                       </div>
                     </div>
 
                     {/* Validation */}
-                    {(!streetAddress.trim() || !locCity.trim() || !locState.trim() || !locZipCode.trim()) && (
+                    {((streetAddressRequired && !streetAddress.trim()) || !locCity.trim() || !locState.trim() || !locZipCode.trim()) && (
                       <p className="text-sm text-destructive flex items-center gap-1.5">
                         <AlertCircle className="w-4 h-4" />
                         Please fill in all required address fields
@@ -3677,14 +4707,16 @@ export const PublishWizard: React.FC = () => {
                     <div className="p-3 rounded-lg bg-muted/50 border border-border space-y-1">
                       <p className="text-xs text-muted-foreground flex items-center gap-1.5">
                         <Info className="w-3.5 h-3.5 shrink-0" />
-                        Your full address and phone number are kept private until a booking is confirmed.
+                        {listing.mode === 'sale'
+                          ? 'Buyers only see your city, state and ZIP. Your street address and phone number stay private until a sale is confirmed.'
+                          : 'Your full address and phone number are kept private until a booking is confirmed.'}
                       </p>
                     </div>
                   </div>
 
                   {/* Static Location extras */}
                   {(isStaticLocationFn(listing.category) || isStaticLocation) && (
-                    <div className="space-y-4">
+                    <div className="space-y-4 order-4">
                       <div className="space-y-2">
                         <Label htmlFor="access_instructions" className="text-base font-medium">Access Instructions *</Label>
                         <Textarea
@@ -3719,14 +4751,16 @@ export const PublishWizard: React.FC = () => {
 
                   {/* Fulfillment - for non-static mobile assets */}
                   {!(isStaticLocationFn(listing.category) || isStaticLocation) && (
-                    <div className="space-y-6">
+                    <div className="space-y-6 order-2">
                       <div className="space-y-3">
-                        <Label className="text-base font-medium">Fulfillment Options *</Label>
+                        <Label className="text-base font-medium">
+                          {listing.mode === 'sale' ? 'How does the buyer get it? *' : 'Fulfillment Options *'}
+                        </Label>
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                           {[
-                            { value: 'pickup' as FulfillmentType, label: 'Pickup Only', icon: <MapPin className="w-5 h-5" />, description: 'Buyer/renter picks up from your location' },
-                            { value: 'delivery' as FulfillmentType, label: 'Delivery Only', icon: <Truck className="w-5 h-5" />, description: 'You deliver to their location' },
-                            { value: 'both' as FulfillmentType, label: 'Pickup + Delivery', icon: <Package className="w-5 h-5" />, description: 'Offer both options' }].map((option) => (
+                            { value: 'pickup' as FulfillmentType, label: listing.mode === 'sale' ? 'Buyer picks up' : 'Pickup Only', icon: <MapPin className="w-5 h-5" />, description: listing.mode === 'sale' ? 'Buyer collects it from your address' : 'Buyer/renter picks up from your location' },
+                            { value: 'delivery' as FulfillmentType, label: listing.mode === 'sale' ? 'I deliver it' : 'Delivery Only', icon: <Truck className="w-5 h-5" />, description: listing.mode === 'sale' ? 'You deliver to the buyer' : 'You deliver to their location' },
+                            { value: 'both' as FulfillmentType, label: listing.mode === 'sale' ? 'Either one' : 'Pickup + Delivery', icon: <Package className="w-5 h-5" />, description: listing.mode === 'sale' ? 'Buyer chooses pickup or delivery' : 'Offer both options' }].map((option) => (
                             <button
                               key={option.value}
                               type="button"
@@ -3758,21 +4792,149 @@ export const PublishWizard: React.FC = () => {
 
                       {(fulfillmentType === 'pickup' || fulfillmentType === 'both') && (
                         <div className="space-y-2">
-                          <Label className="text-base font-medium">Pickup Instructions (Optional)</Label>
+                          <Label className="text-base font-medium">
+                            {listing.mode === 'sale' ? 'Pickup notes (optional)' : 'Pickup Instructions (Optional)'}
+                          </Label>
                           <Textarea
                             value={pickupInstructions}
                             onChange={(e) => setPickupInstructions(e.target.value)}
-                            placeholder="Any special instructions for pickup?"
+                            placeholder={listing.mode === 'sale'
+                              ? 'Gate code, best hours, towing or loading help, what to bring…'
+                              : 'Any special instructions for pickup?'}
                             rows={2}
                           />
+                          <p className="text-xs text-muted-foreground">
+                            Private. Your exact pickup address and these notes stay hidden — buyers only see the city, state and ZIP until they pay. The address unlocks for the buyer right after payment, when the next step is confirming pickup.
+                          </p>
                         </div>
                       )}
 
+                      {/* Towing & handoff — rental mobile assets */}
+                      {listing.mode !== 'sale' &&
+                        (listing.category === 'food_trailer' || listing.category === 'food_truck') &&
+                        (fulfillmentType === 'pickup' || fulfillmentType === 'both') && (
+                        <div className="space-y-4 rounded-xl border border-border p-4">
+                          <div>
+                            <Label className="text-base font-medium">Towing &amp; handoff (optional)</Label>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              Renters see these before they book. Only fill in what you know — blanks show as
+                              &ldquo;Ask host&rdquo;.
+                            </p>
+                          </div>
+
+                          {listing.category === 'food_trailer' && (
+                            <div className="grid gap-3 sm:grid-cols-3">
+                              <div className="space-y-1.5">
+                                <Label className="text-sm">Coupler / hitch type</Label>
+                                <Input
+                                  value={couplerType}
+                                  onChange={(e) => setCouplerType(e.target.value)}
+                                  placeholder="Bumper pull"
+                                />
+                              </div>
+                              <div className="space-y-1.5">
+                                <Label className="text-sm">Hitch ball size</Label>
+                                <Input
+                                  value={hitchBallSize}
+                                  onChange={(e) => setHitchBallSize(e.target.value)}
+                                  placeholder={'2 5/16"'}
+                                />
+                              </div>
+                              <div className="space-y-1.5">
+                                <Label className="text-sm">Trailer plug</Label>
+                                <Input
+                                  value={trailerPlugType}
+                                  onChange={(e) => setTrailerPlugType(e.target.value)}
+                                  placeholder="7-pin"
+                                />
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="space-y-2">
+                            <Label className="text-sm">Does the renter bring their own tow vehicle?</Label>
+                            <div className="flex gap-2">
+                              {([
+                                { value: 'yes' as const, label: 'Yes, renter tows' },
+                                { value: 'no' as const, label: 'No, I tow or deliver' },
+                              ]).map((opt) => (
+                                <button
+                                  key={opt.value}
+                                  type="button"
+                                  onClick={() =>
+                                    setRenterProvidesTowVehicle(
+                                      renterProvidesTowVehicle === opt.value ? '' : opt.value
+                                    )
+                                  }
+                                  className={cn(
+                                    'px-4 py-2 rounded-lg border-2 text-sm transition-all',
+                                    renterProvidesTowVehicle === opt.value
+                                      ? 'border-primary bg-primary/5 text-primary'
+                                      : 'border-border text-muted-foreground hover:border-muted-foreground'
+                                  )}
+                                >
+                                  {opt.label}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+
+                          {renterProvidesTowVehicle === 'yes' && (
+                            <div className="space-y-1.5">
+                              <Label className="text-sm">Tow vehicle requirement (optional)</Label>
+                              <Input
+                                value={towVehicleRequirement}
+                                onChange={(e) => setTowVehicleRequirement(e.target.value)}
+                                placeholder="3/4 ton truck or better, 10,000 lb tow rating"
+                              />
+                            </div>
+                          )}
+
+                          <div className="space-y-1.5">
+                            <Label className="text-sm">Return instructions (optional)</Label>
+                            <Textarea
+                              value={returnInstructions}
+                              onChange={(e) => setReturnInstructions(e.target.value)}
+                              placeholder="Return by 6pm, cleaned out, tanks emptied, park in the same spot…"
+                              rows={2}
+                            />
+                          </div>
+                        </div>
+                      )}
+
+
+
                       {(fulfillmentType === 'delivery' || fulfillmentType === 'both') && (
                         <>
+                          <div className="space-y-2">
+                            <Label className="text-base font-medium">How do you charge for delivery?</Label>
+                            <div className="grid grid-cols-2 gap-3">
+                              {([
+                                { value: 'flat' as const, label: 'Flat fee', hint: 'One price per delivery' },
+                                { value: 'per_mile' as const, label: 'Per mile', hint: 'Rate × miles to the buyer' },
+                              ]).map((opt) => (
+                                <button
+                                  key={opt.value}
+                                  type="button"
+                                  onClick={() => setDeliveryFeeType(opt.value)}
+                                  className={cn(
+                                    'rounded-xl border p-3 text-left transition-all',
+                                    deliveryFeeType === opt.value
+                                      ? 'border-primary bg-primary/5 ring-1 ring-primary/30'
+                                      : 'border-border hover:border-primary/40'
+                                  )}
+                                >
+                                  <span className="block text-sm font-medium text-foreground">{opt.label}</span>
+                                  <span className="block text-xs text-muted-foreground mt-0.5">{opt.hint}</span>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div className="space-y-2">
-                              <Label className="text-base font-medium">Delivery Fee (Optional)</Label>
+                              <Label className="text-base font-medium">
+                                {deliveryFeeType === 'per_mile' ? 'Rate per mile (optional)' : (listing.mode === 'sale' ? 'Delivery charge (optional)' : 'Delivery Fee (Optional)')}
+                              </Label>
                               <div className="relative">
                                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
                                 <Input
@@ -3781,13 +4943,18 @@ export const PublishWizard: React.FC = () => {
                                   step="0.01"
                                   value={deliveryFee}
                                   onChange={(e) => setDeliveryFee(e.target.value)}
-                                  placeholder="0.00"
-                                  className="pl-7"
+                                  placeholder={deliveryFeeType === 'per_mile' ? '4.50' : '0.00'}
+                                  className={deliveryFeeType === 'per_mile' ? 'pl-7 pr-16' : 'pl-7'}
                                 />
+                                {deliveryFeeType === 'per_mile' && (
+                                  <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground text-sm">/mile</span>
+                                )}
                               </div>
                             </div>
                             <div className="space-y-2">
-                              <Label className="text-base font-medium">Delivery Radius (Optional)</Label>
+                              <Label className="text-base font-medium">
+                                {listing.mode === 'sale' ? 'Delivery radius (optional)' : 'Delivery Radius (Optional)'}
+                              </Label>
                               <div className="relative">
                                 <Input
                                   type="number"
@@ -3802,7 +4969,7 @@ export const PublishWizard: React.FC = () => {
                             </div>
                           </div>
                           <div className="space-y-2">
-                            <Label className="text-base font-medium">Delivery Instructions (Optional)</Label>
+                            <Label className="text-base font-medium">Delivery instructions (optional)</Label>
                             <Textarea
                               value={deliveryInstructions}
                               onChange={(e) => setDeliveryInstructions(e.target.value)}
@@ -3810,30 +4977,54 @@ export const PublishWizard: React.FC = () => {
                               rows={2}
                             />
                           </div>
+                          <p className="text-xs text-muted-foreground">
+                            The buyer enters their own delivery address at checkout. We measure the distance from your location and
+                            {deliveryFeeType === 'per_mile' ? ' multiply it by your per-mile rate.' : ' apply your flat delivery charge.'}
+                            {' '}Addresses beyond your radius are flagged so you can approve or decline.
+                          </p>
+
                         </>
                       )}
+
                     </div>
                   )}
 
-                  <PrimaryActionBar
-                    secondary={{
-                      label: 'Back',
-                      onClick: () => setStep(listing.mode === 'rent' ? 'availability' : 'pricing'),
-                    }}
-                    primary={{
-                      label: isSaving ? 'Saving…' : 'Continue',
-                      onClick: saveStep,
-                      disabled:
-                        isSaving ||
-                        !streetAddress.trim() ||
-                        !locCity.trim() ||
-                        !locState.trim() ||
-                        !locZipCode.trim() ||
-                        (isStaticLocationFn(listing.category) || isStaticLocation
-                          ? !accessInstructions
-                          : !fulfillmentType),
-                    }}
-                  />
+                  <div className="order-last">
+                    <PrimaryActionBar
+                      sticky
+                      secondary={{
+                        label: 'Back',
+                        onClick: () => setStep(listing.mode === 'rent' ? 'availability' : 'pricing'),
+                      }}
+                      primary={{
+                        label: isSaving ? 'Saving…' : 'Continue',
+                        onClick: guardNext(
+                          [
+                            streetAddressRequired && !streetAddress.trim() && 'Street address',
+                            !locCity.trim() && 'City',
+                            !locState.trim() && 'State',
+                            !locZipCode.trim() && 'ZIP code',
+                            isStaticLocationFn(listing.category) || isStaticLocation
+                              ? !accessInstructions && 'Access instructions'
+                              : !fulfillmentType && 'How it changes hands (pickup or delivery)',
+                          ].filter(Boolean) as string[],
+                          null,
+                          saveStep,
+                        ),
+                        disabled: isSaving,
+                      }}
+
+                      blockers={[
+                        streetAddressRequired && !streetAddress.trim() && 'Street address',
+                        !locCity.trim() && 'City',
+                        !locState.trim() && 'State',
+                        !locZipCode.trim() && 'ZIP code',
+                        isStaticLocationFn(listing.category) || isStaticLocation
+                          ? !accessInstructions && 'Access instructions'
+                          : !fulfillmentType && 'How it changes hands (pickup or delivery)',
+                      ].filter(Boolean) as string[]}
+                    />
+                  </div>
                 </div>
               )}
 
@@ -3843,7 +5034,7 @@ export const PublishWizard: React.FC = () => {
                   <div>
                     <div className="flex items-center gap-2 mb-2">
                       <Shield className="w-5 h-5 text-primary" />
-                      <h2 className="text-xl font-bold text-foreground">Required Documents</h2>
+                      <h2 className="text-2xl font-bold tracking-tight text-foreground">Required Documents</h2>
                     </div>
                     <p className="text-muted-foreground">
                       Specify which documents renters must provide and when they must be submitted.
@@ -4014,6 +5205,7 @@ export const PublishWizard: React.FC = () => {
                   </div>
 
                   <PrimaryActionBar
+                    sticky
                     secondary={{ label: 'Back', onClick: () => setStep('location') }}
                     primary={{
                       label: isSaving ? 'Saving…' : 'Continue',
@@ -4024,89 +5216,11 @@ export const PublishWizard: React.FC = () => {
                 </div>
               )}
 
-              {/* Step: Stripe - Only shown if card payment is enabled */}
-              {step === 'stripe' && (
-                <div className="space-y-6">
-                  <div>
-                    <h2 className="text-xl font-bold text-foreground mb-2">Connect Stripe</h2>
-                    <p className="text-muted-foreground">
-                      {acceptCardPayment ? 'Required to receive card payments.' : 'Optional for cash-only listings.'}
-                    </p>
-                  </div>
-
-                  {!acceptCardPayment && (
-                    <div className="relative overflow-hidden rounded-xl p-4 border-2 border-muted bg-muted/30">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2.5 bg-muted rounded-xl flex items-center justify-center">
-                          <Banknote className="w-5 h-5 text-foreground" />
-                        </div>
-                        <div>
-                          <p className="font-semibold text-foreground">Cash-only listing</p>
-                          <p className="text-sm text-muted-foreground">Stripe is not required since you're only accepting in-person payments.</p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-
-                  {acceptCardPayment && (
-                    isOnboardingComplete ? (
-                      <div className="relative overflow-hidden rounded-xl p-4 border border-border bg-muted/30">
-                        <div className="relative flex items-center gap-3">
-                          <div className="p-1 rounded-lg flex items-center justify-center">
-                            <Check className="w-5 h-5 text-foreground" />
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <img src={stripeIcon} alt="Stripe" className="h-6 w-6 object-cover rounded-md" />
-                            <span className="font-semibold text-foreground">connected</span>
-                          </div>
-                          <p className="text-sm text-muted-foreground ml-auto">You're ready to receive payments</p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="relative overflow-hidden rounded-xl p-6 border border-border bg-muted/30 text-center">
-                        <div className="relative">
-                          <img src={stripeIcon} alt="Stripe" className="w-14 h-14 mx-auto mb-4 rounded-xl object-cover" />
-                          <h3 className="font-semibold text-foreground mb-2">Set up payouts</h3>
-                          <p className="text-sm text-muted-foreground mb-4">
-                            Connect to get paid from your listings when you receive bookings or sales.
-                          </p>
-                          <Button 
-                            variant="dark-shine"
-                            onClick={handleStripeConnect} 
-                            disabled={isConnecting}
-                          >
-                            {isConnecting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                            <img src={stripeIcon} alt="" className="h-5 w-5 object-cover rounded mr-2" />
-                            Connect Stripe
-                            <ExternalLink className="w-4 h-4 ml-2" />
-                          </Button>
-                          <p className="text-xs text-muted-foreground mt-2">
-                            ⚠️ Stripe opens in a new tab — please disable your pop-up blocker if it doesn't open.
-                          </p>
-                        </div>
-                      </div>
-                    )
-                  )}
-
-                  <PrimaryActionBar
-                    secondary={{
-                      label: 'Back',
-                      onClick: () => setStep(listing.mode === 'rent' ? 'documents' : 'location'),
-                    }}
-                    primary={{
-                      label: 'Continue',
-                      onClick: () => setStep('review'),
-                      disabled: acceptCardPayment && !isOnboardingComplete,
-                    }}
-                  />
-                </div>
-              )}
-
               {/* Step: Review */}
               {step === 'review' && (
                 <div className="space-y-6">
                   <div>
-                    <h2 className="text-xl font-bold text-foreground mb-2">Review your listing</h2>
+                    <h2 className="text-2xl font-bold tracking-tight text-foreground mb-2">Review your listing</h2>
                     <p className="text-muted-foreground">Here's how your listing will appear to shoppers.</p>
                     <p className="mt-2 text-sm text-emerald-600 dark:text-emerald-400 font-medium">
                       ✓ Every sale and rental includes free online signatures — agreements handled for you.
@@ -4224,71 +5338,67 @@ export const PublishWizard: React.FC = () => {
                     mode={listing.mode as 'rent' | 'sale' | null}
                   />
 
+                  {/* Missing listing details — actionable, jumps to the exact step */}
+                  {stageMissing.length > 0 && (
+                    <div className="rounded-xl border border-destructive/40 bg-destructive/5 p-4 space-y-3">
+                      <div className="flex items-center gap-2">
+                        <AlertCircle className="w-4 h-4 text-destructive" />
+                        <p className="font-medium text-foreground">
+                          {stageMissing.length === 1
+                            ? '1 detail still needs an answer'
+                            : `${stageMissing.length} details still need answers`}
+                        </p>
+                      </div>
+                      <ul className="space-y-2">
+                        {stageMissing.map((req) => (
+                          <li key={req.fieldId} className="flex items-center justify-between gap-3">
+                            <span className="text-sm text-muted-foreground">{req.label}</span>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="outline"
+                              onClick={() => setStep(req.step as PublishStep)}
+                            >
+                              Fix this
+                            </Button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
                   {/* Persisted AI health score */}
                   <ListingHealthScoreCard listingId={listing?.id} />
 
-                  {/* Missing Requirements Warning */}
+                  {/* Missing Requirements Warning — names every outstanding item */}
                   {!canPublish && (
-                    <div className="p-4 rounded-xl border border-border bg-muted/30">
+                    <div className="p-4 rounded-xl border border-destructive/40 bg-destructive/10">
                       <div className="flex items-start gap-3">
-                        <AlertCircle className="w-5 h-5 text-foreground mt-0.5" />
-                        <div>
-                          <p className="font-medium text-foreground">Cannot publish yet</p>
-                          <p className="text-sm text-muted-foreground mt-0.5">
-                            Complete all required checklist items before publishing.
+                        <AlertCircle className="w-5 h-5 text-destructive mt-0.5 shrink-0" />
+                        <div className="min-w-0">
+                          <p className="font-medium text-foreground">
+                            Cannot publish yet — {publishBlockers.length}{' '}
+                            {publishBlockers.length === 1 ? 'item is' : 'items are'} still required
                           </p>
+                          <ul className="mt-2 space-y-1">
+                            {publishBlockers.map((blocker) => (
+                              <li key={blocker} className="flex items-start gap-2 text-sm text-foreground">
+                                <span
+                                  aria-hidden="true"
+                                  className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-destructive"
+                                />
+                                <span>{blocker}</span>
+                              </li>
+                            ))}
+                          </ul>
                         </div>
                       </div>
                     </div>
                   )}
 
-                  {/* Stripe Connect Panel - Only show if card payments are enabled */}
-                  {requiresStripe && !isOnboardingComplete && (
-                    <div className="p-5 rounded-xl border border-border bg-muted/30">
-                      <div className="flex items-start gap-3">
-                        <img src={stripeIcon} alt="Stripe" className="w-12 h-12 object-cover rounded-xl mt-0.5" />
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-foreground mb-1">
-                            Connect to get paid from your listings
-                          </h3>
-                          <p className="text-sm text-muted-foreground mb-3">
-                            To accept card payments, connect Stripe (about 2 minutes). Or switch to cash-only (Pay in Person) and publish now — you can add Stripe later.
-                          </p>
-                          <div className="flex flex-wrap gap-2">
-                            <Button size="sm" variant="dark-shine" onClick={handleStripeConnect} disabled={isConnecting}>
-                              {isConnecting ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : null}
-                              Connect Stripe (2 min)
-                            </Button>
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              onClick={() => {
-                                setAcceptCardPayment(false);
-                                setAcceptCashPayment(true);
-                                toast({
-                                  title: 'Switched to cash-only',
-                                  description: 'You can publish now and add Stripe later from your dashboard.'});
-                              }}
-                            >
-                              Switch to cash-only & publish
-                            </Button>
-                          </div>
-                          <p className="text-xs text-muted-foreground mt-2">
-                            ⚠️ Stripe opens in a new tab — please disable your pop-up blocker if it doesn't open.
-                          </p>
-                          <div className="flex flex-wrap gap-2 mt-2">
-                            <Button size="sm" variant="dark-shine" onClick={() => navigate('/dashboard')}>
-                              <Save className="w-4 h-4 mr-1" />
-                              Save Draft
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
 
                   {/* Ready to Publish Message */}
-                  {canPublish && (!requiresStripe || isOnboardingComplete) && (
+                  {canPublish && (
                     <div className="relative overflow-hidden rounded-xl p-4 border border-border bg-gradient-to-br from-primary/5 via-primary/3 to-background">
                       <div className="absolute inset-0 bg-gradient-to-r from-primary/5 to-primary/3 animate-pulse" />
                       <div className="relative flex items-center gap-3">
@@ -4303,8 +5413,28 @@ export const PublishWizard: React.FC = () => {
                     </div>
                   )}
 
+                  {/* Optional add-ons — never required to publish */}
+                  <div className="space-y-3">
+                    <p className="text-xs font-semibold uppercase tracking-[0.16em] text-muted-foreground">
+                      Optional upgrades
+                    </p>
+                    <VerifiedSellerCTA variant="success" />
+                  </div>
+
+                  {/* Public vs private summary + mandatory attestations */}
+
+                  <PrivacySummary />
+
+                  <PublishAttestations
+                    value={attestations}
+                    onChange={(key, checked) =>
+                      setAttestations((prev) => ({ ...prev, [key]: checked }))
+                    }
+                  />
+
                   {/* Featured Listing upsell — final publish step (highest-conversion placement) */}
-                  {canPublish && !((listing as any)?.featured_at) && (
+                  {stageRequirementsMet && !((listing as any)?.featured_at) && (
+
                     <FeaturedListingCard
                       enabled={featuredEnabled}
                       onEnabledChange={setFeaturedEnabled}
@@ -4323,7 +5453,7 @@ export const PublishWizard: React.FC = () => {
                     sticky
                     secondary={{
                       label: 'Back',
-                      onClick: () => setStep(requiresStripe ? 'stripe' : 'location'),
+                      onClick: () => setStep('location'),
                     }}
                     tertiary={{
                       label: 'Preview as Shopper',
@@ -4331,9 +5461,11 @@ export const PublishWizard: React.FC = () => {
                     }}
                     primary={{
                       label: 'Publish Listing',
-                      onClick: () => setShowPublishDialog(true),
-                      disabled: isSaving || !canPublish || (requiresStripe && !isOnboardingComplete),
+                      onClick: guardNext(publishBlockers, null, () => setShowPublishDialog(true)),
+                      disabled: isSaving,
                     }}
+                    blockers={publishBlockers}
+
                   />
                 </div>
               )}
@@ -4344,7 +5476,7 @@ export const PublishWizard: React.FC = () => {
 
       {/* Publish Confirmation Dialog */}
       <AlertDialog open={showPublishDialog} onOpenChange={setShowPublishDialog}>
-        <AlertDialogContent className="max-w-md">
+        <AlertDialogContent className="sale-light max-w-md">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-xl">Publish your listing?</AlertDialogTitle>
             <AlertDialogDescription asChild>
@@ -4359,7 +5491,9 @@ export const PublishWizard: React.FC = () => {
                   <div className="rounded-xl border border-amber-500/40 bg-amber-500/10 p-3 text-sm text-amber-700 dark:text-amber-300 flex items-start gap-2">
                     <TrendingUp className="w-4 h-4 mt-0.5 shrink-0" />
                     <div>
-                      You'll be redirected to Stripe to pay <strong>$30</strong> for the Featured add-on.
+                      You'll be redirected to PayPal to pay{' '}
+                      <strong>{featuredBoostPrice.label}</strong> for the Featured add-on
+                      ({featuredBoostPrice.durationDays ?? 30} days).
                       Your listing publishes automatically the moment payment clears.
                     </div>
                   </div>
@@ -4395,11 +5529,8 @@ export const PublishWizard: React.FC = () => {
         onOpenChange={setShowConsentModal}
         documentType={listing?.mode === 'rent' ? DOCUMENT_TYPES.RENTER_TERMS : DOCUMENT_TYPES.SELLER_TERMS}
         trigger={CONSENT_TRIGGERS.PUBLISH_LISTING}
-        acceptanceText={
-          listing?.mode === 'rent'
-            ? "I agree to VendiBook's Host / Renter Terms and confirm this listing accurately represents my asset."
-            : "I agree to VendiBook's Seller Terms and confirm this listing accurately represents my asset."
-        }
+        acceptanceText={publishAcceptanceText(listing?.mode)}
+
         relatedIds={listing?.id ? { listing_id: listing.id } : undefined}
         intro="Review the terms that govern this listing. Your acceptance is recorded and dated."
         primaryLabel={isSaving ? 'Publishing…' : 'Accept and publish'}
@@ -4425,6 +5556,18 @@ export const PublishWizard: React.FC = () => {
           priceDaily: parseFloat(priceDaily) || null,
           priceWeekly: parseFloat(priceWeekly) || null,
           priceSale: parseFloat(priceSale) || null} : null}
+        paymentMethods={listing?.mode === 'sale' ? {
+          paypalCheckout: acceptPayPalCheckout,
+          payInPerson: acceptCashPayment} : null}
+        readiness={[
+          { label: 'Photos requirement met', met: checklistState.hasPhotos },
+          { label: 'Title & description complete', met: hasDescription },
+          { label: listing?.mode === 'sale' ? 'Valid sale price' : 'Valid daily rate', met: hasPriceAmount },
+          { label: 'Location & logistics complete', met: checklistState.hasLocation },
+          ...(listing?.mode === 'sale'
+            ? [{ label: 'Payment method selected', met: hasSalePaymentMethod }]
+            : []),
+        ]}
         onViewListing={() => navigate(`/listing/${listing?.id}`)}
       />
 
@@ -4476,7 +5619,7 @@ export const PublishWizard: React.FC = () => {
             hoursOfAccess,
             availableFrom: availableFrom || undefined,
             availableTo: availableTo || undefined,
-            acceptCardPayment,
+            acceptPayPalCheckout,
             acceptCashPayment}}
           host={user ? {
             name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'You',

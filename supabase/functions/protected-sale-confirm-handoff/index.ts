@@ -70,7 +70,10 @@ serve(async (req) => {
       (role === "buyer" ? true : Boolean(ps.handoff_confirmed_by_buyer_at)) &&
       (role === "seller" ? true : Boolean(ps.handoff_confirmed_by_seller_at));
 
-    if (bothConfirmed && ps.status !== "funds_released" && ps.status !== "completed") {
+    // Funds can only be released on a sale whose deposit was actually paid.
+    const releasable = ["deposit_paid", "balance_authorized", "handoff_scheduled"].includes(ps.status) &&
+      Boolean(ps.deposit_paid_at);
+    if (bothConfirmed && releasable) {
       patch.status = "funds_released";
       patch.funds_released_at = now;
     }

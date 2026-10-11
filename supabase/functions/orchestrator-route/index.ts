@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getCaller, isAdminUser, isBackendCaller, forbiddenResponse, unauthorizedResponse } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -7,7 +8,7 @@ const corsHeaders = {
 
 // Phase 4 — Central AI Orchestrator
 // Body: { user_id, event_type, entity_id?, payload? }
-// Decides channel + timing + content, then dispatches via concierge-orchestrator (in-app/SMS) or send-transactional-email.
+// Decides channel + timing + content, then dispatches via concierge-orchestrator (in-app/SMS) or the transactional email helper.
 
 interface RouteRequest {
   user_id: string;
@@ -49,6 +50,11 @@ Deno.serve(async (req) => {
     const body = (await req.json()) as RouteRequest;
     const { user_id, event_type, entity_id, payload = {}, force = false } = body;
 
+    if (!(await isBackendCaller(req))) {
+      const routeCaller = await getCaller(req);
+      if (!routeCaller) return unauthorizedResponse(corsHeaders);
+      if (routeCaller.id !== user_id && !(await isAdminUser(routeCaller.id))) return forbiddenResponse(corsHeaders);
+    }
     if (!user_id || !event_type) {
       return new Response(JSON.stringify({ error: "user_id and event_type required" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" },

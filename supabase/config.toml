@@ -1,11 +1,12 @@
 project_id = "nbrehbwfsmedbelzntqs"
 
+[functions.validate-checkout-address]
+verify_jwt = false
+
 [functions]
-  [functions.monetization-webhook]
+  [functions.verified-seller-webhook]
     verify_jwt = false
   [functions.paypal-webhook]
-    verify_jwt = false
-  [functions.paypal-subscription-create]
     verify_jwt = false
   [functions.ai-equipment-guide]
     verify_jwt = false
@@ -27,11 +28,7 @@ project_id = "nbrehbwfsmedbelzntqs"
     verify_jwt = false
   [functions.cancel-booking]
     verify_jwt = false
-  [functions.check-identity-verification]
-    verify_jwt = false
   [functions.check-promo-eligibility]
-    verify_jwt = false
-  [functions.check-stripe-connect]
     verify_jwt = false
   [functions.check-ticket-status]
     verify_jwt = false
@@ -43,18 +40,16 @@ project_id = "nbrehbwfsmedbelzntqs"
     verify_jwt = false
   [functions.create-checkout]
     verify_jwt = false
-  [functions.create-identity-verification]
-    verify_jwt = false
   [functions.create-notary-checkout]
     verify_jwt = false
   [functions.create-notification]
     verify_jwt = false
   [functions.create-sale-transaction]
     verify_jwt = false
-  [functions.create-stripe-connect]
-    verify_jwt = false
   [functions.create-zendesk-ticket]
     verify_jwt = false
+  [functions.elevenlabs-agent-token]
+    verify_jwt = true
   [functions.elevenlabs-scribe-token]
     verify_jwt = false
   [functions.estimate-freight]
@@ -105,17 +100,15 @@ project_id = "nbrehbwfsmedbelzntqs"
     verify_jwt = true
   [functions.predictive-booking-insights]
     verify_jwt = false
-  [functions.process-email-queue]
-    verify_jwt = true
-  [functions.send-transactional-email]
-    verify_jwt = false
   [functions.preview-transactional-email]
     verify_jwt = false
-  [functions.handle-email-unsubscribe]
+  [functions.handle-email-events]
     verify_jwt = false
-  [functions.handle-email-suppression]
+  [functions.send-feedback-admin-notification]
     verify_jwt = false
-  [functions.process-promo-payout]
+  [functions.send-lead-confirmation]
+    verify_jwt = false
+  [functions.send-support-ticket-reply]
     verify_jwt = false
   [functions.process-refund]
     verify_jwt = false
@@ -179,8 +172,6 @@ project_id = "nbrehbwfsmedbelzntqs"
     verify_jwt = false
   [functions.tawk-webhook]
     verify_jwt = false
-  [functions.send-stripe-onboarding-reminder]
-    verify_jwt = false
   [functions.send-welcome-email]
     verify_jwt = false
   [functions.send-host-weekly-digests]
@@ -191,8 +182,6 @@ project_id = "nbrehbwfsmedbelzntqs"
     verify_jwt = false
   [functions.seo-prerender]
     verify_jwt = false
-  [functions.stripe-webhook]
-    verify_jwt = false
   [functions.suggest-pricing]
     verify_jwt = false
   [functions.upload-email-assets]
@@ -202,19 +191,19 @@ project_id = "nbrehbwfsmedbelzntqs"
   [functions.zendesk-webhook]
     verify_jwt = false
 
-[functions.process-email-queue]
-verify_jwt = true
-
-[functions.send-transactional-email]
-verify_jwt = false
-
 [functions.preview-transactional-email]
 verify_jwt = false
 
-[functions.handle-email-unsubscribe]
+[functions.handle-email-events]
 verify_jwt = false
 
-[functions.handle-email-suppression]
+[functions.send-feedback-admin-notification]
+verify_jwt = false
+
+[functions.send-lead-confirmation]
+verify_jwt = false
+
+[functions.send-support-ticket-reply]
 verify_jwt = false
 
 [functions.marketing-fetch-content]
@@ -257,3 +246,157 @@ verify_jwt = false
 verify_jwt = true
   [functions.monetization-reconciler]
     verify_jwt = false
+
+[functions.send-digest-catchup]
+verify_jwt = false
+
+[functions.send-renewal-reminders]
+verify_jwt = false
+
+[functions.admin-send-test-email]
+verify_jwt = false
+
+[functions.auth-email-hook]
+verify_jwt = false
+
+[functions.signnow-webhook]
+verify_jwt = false
+
+[functions.signnow-bootstrap]
+verify_jwt = false
+
+[functions.admin-send-account-access]
+verify_jwt = false
+
+[functions.paypal-authorize-order]
+verify_jwt = false
+
+[functions.paypal-settle-authorization]
+verify_jwt = false
+
+[functions.mcp-elevenlabs]
+verify_jwt = false
+
+[functions.admin-checkout-recovery-notify]
+verify_jwt = false
+
+[functions.send-freight-quote]
+verify_jwt = false
+
+[functions.google-merchant-sheet-sync]
+verify_jwt = false
+
+[functions.send-feature-your-listing]
+verify_jwt = false
+
+[functions.send-listing-fix-nudges]
+verify_jwt = false
+
+[functions.send-request-matches]
+verify_jwt = false
+
+[functions.paypal-seller-onboarding]
+verify_jwt = false
+
+[functions.dispute-case-ops]
+verify_jwt = false
+
+[functions.release-deadline-sweep]
+verify_jwt = false
+
+[functions.admin-cancel-order]
+verify_jwt = false
+
+[functions.square-billing]
+verify_jwt = false
+
+[functions.square-webhook]
+verify_jwt = false
+
+[functions.square-reconcile]
+verify_jwt = false
+
+[functions.square-setup]
+verify_jwt = false
+
+# Rental payments on hosts' Square accounts. JWT checked inside via auth.getUser;
+# the webhook authenticates with Square's HMAC signature instead.
+[functions.square-seller-oauth]
+verify_jwt = false
+
+[functions.square-rental-payment]
+verify_jwt = false
+
+[functions.square-rental-webhook]
+verify_jwt = false
+
+# JWT validated through auth.getUser inside the handler (supports current signing keys).
+[functions.signnow-ensure-document]
+verify_jwt = false
+
+# JWT validated through auth.getUser inside the handler (supports current signing keys).
+[functions.signnow-ensure-bill-of-sale]
+verify_jwt = false
+
+# JWT validated through auth.getUser inside the handler (supports current signing keys).
+[functions.signnow-create-embedded-session]
+verify_jwt = false
+
+# JWT validated through auth.getUser inside the handler (supports current signing keys).
+[functions.signnow-download-signed]
+verify_jwt = false
+
+# JWT validated through auth.getUser inside the handler (supports current signing keys).
+[functions.signnow-create-amendment]
+verify_jwt = false
+
+# JWT validated through auth.getUser inside the handler (supports current signing keys).
+[functions.signnow-ensure-rental-agreement]
+verify_jwt = false
+
+# Authenticated inside the handler: Daily signature/secret or verified user token.
+[functions.daily-webhook]
+verify_jwt = false
+
+# Authenticated inside the handler: Daily signature/secret or verified user token.
+[functions.daily-meeting-join-hook]
+verify_jwt = false
+
+# Authenticated inside the handler: Daily signature/secret or verified user token.
+[functions.video-walkthrough-access]
+verify_jwt = false
+
+# Authenticated inside the handler: Daily signature/secret or verified user token.
+[functions.video-walkthrough-recording-access]
+verify_jwt = false
+
+# Authenticated inside the handler: Daily signature/secret or verified user token.
+[functions.video-walkthrough-exit]
+verify_jwt = false
+
+# Authenticated inside the handler: Daily signature/secret or verified user token.
+[functions.video-walkthrough-notify]
+verify_jwt = false
+
+# The bootstrap handler verifies the user and requires administrator role.
+[functions.daily-webhook-bootstrap]
+verify_jwt = false
+
+[functions.signup-phone-verification]
+verify_jwt = false
+
+[functions.send-native-push]
+verify_jwt = false
+
+[functions.send-message-removed-notice]
+verify_jwt = false
+
+[functions.notify-listing-lead]
+verify_jwt = false
+
+[functions.send-seller-concierge]
+verify_jwt = false
+
+# Campus Partner codes at checkout. JWT validated through auth.getUser inside the handler.
+[functions.campus-partner-code]
+verify_jwt = false

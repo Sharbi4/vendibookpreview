@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -33,8 +34,7 @@ serve(async (req) => {
     const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
     // Confirmation to the user
-    await admin.functions.invoke("send-transactional-email", {
-      body: {
+    await invokeTransactionalEmail({
         templateName: "support-reply",
         recipientEmail: body.email,
         idempotencyKey: `contact-confirm-${body.email}-${Date.now()}`,
@@ -43,13 +43,11 @@ serve(async (req) => {
           subject: body.subject || "Your message to Vendibook",
           message: "Thanks for reaching out. Our team will get back to you shortly.",
         },
-      },
-    });
+      });
 
     // Notify support (also silently forwarded to owner)
     for (const adminTo of ["support@vendibook.com"]) {
-      await admin.functions.invoke("send-transactional-email", {
-        body: {
+      await invokeTransactionalEmail({
           templateName: "support-reply",
           recipientEmail: adminTo,
           idempotencyKey: `contact-internal-${body.email}-${adminTo}-${Date.now()}`,
@@ -58,8 +56,7 @@ serve(async (req) => {
             subject: `New contact form: ${body.subject || "(no subject)"}`,
             message: `From: ${body.name} <${body.email}>${body.phone ? ` (${body.phone})` : ""}\n\n${body.message}`,
           },
-        },
-      });
+        });
     }
 
     // Trigger Vapi outbound callback if phone provided

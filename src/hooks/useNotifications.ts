@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { playNotificationSound } from '@/lib/notificationSound';
+import { notificationMessage } from '@/lib/notificationCopy';
 
 export interface Notification {
   id: string;
@@ -30,7 +31,7 @@ export const useNotifications = (userId: string | undefined) => {
         .limit(50);
 
       if (error) throw error;
-      return data as Notification[];
+      return (data as Notification[]).map(n => ({ ...n, message: notificationMessage(n.message) }));
     },
     enabled: !!userId,
   });

@@ -39,7 +39,7 @@ export function ProtectionOptInCard({ salePriceCents, saleTransactionId }: Props
           </p>
 
           <ul className="mt-3 grid gap-1.5 text-sm text-white/80 sm:grid-cols-2">
-            <li className="flex items-center gap-2"><Check className="h-4 w-4 text-orange-400" /> Stripe Identity verification</li>
+            <li className="flex items-center gap-2"><Check className="h-4 w-4 text-orange-400" /> Identity verification</li>
             <li className="flex items-center gap-2"><Check className="h-4 w-4 text-orange-400" /> Signed digital agreement</li>
             <li className="flex items-center gap-2"><Check className="h-4 w-4 text-orange-400" /> Secure deposit & held balance</li>
             <li className="flex items-center gap-2"><Check className="h-4 w-4 text-orange-400" /> Dual-confirmed handoff</li>

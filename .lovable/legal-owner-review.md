@@ -113,3 +113,39 @@ Latest owner direction: **owner direction, chat, 2026-07-27** — decisions #1�
 ---
 
 Add new rows as they surface during Phase 3. Do not delete rows; mark them `CONFIRMED` with date + source when resolved.
+
+## Shipped legal suite — September 18, 2026
+
+| Document | Route | Version |
+| --- | --- | --- |
+| Terms of Service | /terms | 2026-09-18 |
+| Privacy Policy | /privacy | 2026-09-18 |
+| Payments Terms | /legal/payments-terms | 2026-09-18 |
+| Verified Handoff Terms | /legal/handoff-terms | 2026-09-18 |
+| Financing Disclosure | /legal/financing-disclosure | 2026-09-18 |
+| Video Walkthrough Terms | /legal/video-walkthrough-terms | 2026-09-18b |
+| Recording & Monitoring Notice | /legal/recording-consent | 2026-09-18 |
+| Device Permissions Notice | /legal/device-permissions-privacy | 2026-09-18b |
+| Location Tracking Disclosure | /legal/location-tracking | 2026-09-18 |
+
+Acceptances are stored in `public.legal_acceptances` (user, slug, version, time,
+surface, route, related entity, user agent, granted permissions) and viewable at
+/admin/legal.
+
+### Items still requiring attorney review before activation
+1. Dispute resolution: arbitration and class-action waiver remain drafted-but-inactive.
+2. Arizona governing law and venue wording.
+3. Financing Disclosure: confirm referral-compensation language matches the actual
+   lender agreements.
+4. Payments Terms: confirm the description of PayPal's buyer/seller protection and
+   of Vendibook's manually reviewed payout process.
+5. Recording notice: two-party consent states — confirm the user-responsibility framing.
+6. Handoff Terms: media licence scope and evidence retention period.
+
+## Business-policy defaults chosen (2026-09-18 suite, owner to confirm)
+1. Commission on refunds: refunded in full **before** delivery/pickup/rental start -> commission refunded; after that point, or partial refunds -> commission retained. Drafted as the default in /legal/payments-terms s6.
+2. Statement descriptor described as "PAYPAL *" + seller business name. Confirm this matches live descriptors.
+3. Evidence retention stated as "a defined period" (not a number) for handoff media and delivery checkpoints. Pick a number before an attorney signs off.
+4. Financing partner compensation disclosed as "may receive compensation". Confirm whether compensation actually exists.
+5. Seller Payment Terms + E-SIGN are now REQUIRED before a PayPal partner referral link is generated (server-enforced). Existing connected sellers are not retro-prompted; they will be prompted only on reconnect.
+6. Document versions: payments-terms bumped to 2026-09-18b (forces re-acceptance at checkout). All others unchanged.

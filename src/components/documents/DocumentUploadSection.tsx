@@ -17,12 +17,14 @@ interface DocumentUploadSectionProps {
   listingId: string;
   bookingId: string;
   onComplianceChange?: (isCompliant: boolean) => void;
+  readOnly?: boolean;
 }
 
 export const DocumentUploadSection = ({
   listingId,
   bookingId,
   onComplianceChange,
+  readOnly = false,
 }: DocumentUploadSectionProps) => {
   const [uploadingDocType, setUploadingDocType] = useState<DocumentType | null>(null);
   
@@ -83,8 +85,8 @@ export const DocumentUploadSection = ({
       <Alert className="bg-muted/50 border-border">
         <Info className="h-4 w-4" />
         <AlertDescription className="text-sm">
-          This rental requires document verification.{' '}
-          {deadlineType && (
+          {readOnly ? 'This booking is closed. Documents remain available as a historical record.' : 'This rental requires document verification.'}{' '}
+          {!readOnly && deadlineType && (
             <span className="font-medium">
               {DEADLINE_TYPE_LABELS[deadlineType]}
               {deadlineType === 'after_approval_deadline' && deadlineHours && (
@@ -129,7 +131,8 @@ export const DocumentUploadSection = ({
               requirement={requirement}
               uploadedDocument={uploaded || null}
               onUpload={(file) => handleUpload(requirement.document_type, file)}
-              onDelete={uploaded ? () => handleDelete(uploaded.id) : undefined}
+              onDelete={!readOnly && uploaded ? () => handleDelete(uploaded.id) : undefined}
+              disabled={readOnly}
               isUploading={uploadingDocType === requirement.document_type}
             />
           );
@@ -137,7 +140,7 @@ export const DocumentUploadSection = ({
       </div>
 
       {/* Compliance message */}
-      {!compliance.allSubmitted && (
+      {!readOnly && !compliance.allSubmitted && (
         <Alert className="bg-amber-50 dark:bg-amber-950/30 border-amber-200 dark:border-amber-800">
           <AlertTriangle className="h-4 w-4 text-amber-600" />
           <AlertDescription className="text-amber-800 dark:text-amber-200 text-sm">
@@ -150,7 +153,7 @@ export const DocumentUploadSection = ({
         <Alert className="bg-emerald-50 dark:bg-emerald-950/30 border-emerald-200 dark:border-emerald-800">
           <CheckCircle2 className="h-4 w-4 text-emerald-600" />
           <AlertDescription className="text-emerald-800 dark:text-emerald-200 text-sm">
-            All documents have been verified. Your booking is ready!
+            {readOnly ? 'Documents verified. This booking is closed.' : 'All documents have been verified. Check your booking and payment status before attending.'}
           </AlertDescription>
         </Alert>
       )}

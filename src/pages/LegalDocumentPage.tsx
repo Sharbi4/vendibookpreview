@@ -102,7 +102,7 @@ const LegalDocumentPage = () => {
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                 <span>Version {doc.version}</span>
                 <span>
-                  Effective {new Date(doc.effective_at).toLocaleDateString()}
+                  Effective {new Date(doc.effective_at).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric', timeZone: 'UTC' })}
                 </span>
                 <span className="font-mono truncate max-w-[240px]">
                   hash {doc.content_hash.slice(0, 12)}…

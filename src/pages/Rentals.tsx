@@ -1,3 +1,4 @@
+import FlipInsuranceSection from '@/components/booking/FlipInsuranceSection';
 import { useState } from 'react';
 import { Link, useNavigate, Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -240,7 +241,7 @@ const Rentals = () => {
                       </Link>
                     </Button>
                     <Button asChild variant="outline">
-                      <Link to="/help/rentals">
+                      <Link to="/help/rentals-end-to-end">
                         Learn how rentals work
                       </Link>
                     </Button>
@@ -499,6 +500,7 @@ const Rentals = () => {
             )}
           </div>
         </section>
+        <FlipInsuranceSection source="host_dashboard" owner />
       </main>
 
       <Footer />

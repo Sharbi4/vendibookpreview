@@ -1,3 +1,4 @@
+import { parseRentalDate } from '@/lib/rentalDates';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { 
@@ -9,10 +10,13 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
 import { triggerOrchestrator } from '@/lib/orchestrator';
 import { DocumentsCard } from '@/components/documents/DocumentsCard';
+import { DocumentsInsurancePanel } from '@/components/booking/DocumentsInsurancePanel';
+import { useRequirementEvaluation } from '@/hooks/useRequiredDocuments';
 import {
   User,
   Calendar,
@@ -75,6 +79,13 @@ const BookingDetailsDrawer = ({
   const [isApproving, setIsApproving] = useState(false);
   const [isDeclining, setIsDeclining] = useState(false);
   const [isCompleting, setIsCompleting] = useState(false);
+
+  const requirementEvaluation = useRequirementEvaluation({
+    listingId: (booking as any).listing_id ?? undefined,
+    bookingId: booking.id,
+    isInstantBook: !!(booking as any).is_instant_book,
+  });
+
 
   // Calculate host payout (total minus platform fee)
   const platformFeePercent = 0.10; // 10% platform fee
@@ -180,8 +191,8 @@ const BookingDetailsDrawer = ({
   };
 
   const handleAddToCalendar = () => {
-    const startDate = new Date(booking.start_date);
-    const endDate = booking.end_date ? new Date(booking.end_date) : new Date(startDate.getTime() + 24 * 60 * 60 * 1000);
+    const startDate = parseRentalDate(booking.start_date);
+    const endDate = booking.end_date ? parseRentalDate(booking.end_date) : new Date(startDate.getTime() + 24 * 60 * 60 * 1000);
     
     const formatDate = (date: Date) => {
       return date.toISOString().replace(/[-:]/g, '').split('.')[0] + 'Z';
@@ -237,7 +248,17 @@ END:VCALENDAR`;
           </div>
         </SheetHeader>
 
-        <div className="mt-6 space-y-6">
+        <Tabs defaultValue="details" className="mt-6">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="details">Details</TabsTrigger>
+            <TabsTrigger value="documents">Documents</TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="documents" className="mt-6 space-y-6">
+            <DocumentsCard scope={{ booking_id: booking.id }} title="Rental documents" />
+          </TabsContent>
+
+          <TabsContent value="details" className="mt-6 space-y-6">
           {/* Customer Section */}
           <div>
             <h3 className="text-sm font-medium text-muted-foreground mb-3 flex items-center gap-2">
@@ -280,7 +301,7 @@ END:VCALENDAR`;
               <div className="flex justify-between">
                 <span className="text-sm text-muted-foreground">Check-in</span>
                 <span className="font-medium">
-                  {new Date(booking.start_date).toLocaleDateString('en-US', {
+                  {parseRentalDate(booking.start_date).toLocaleDateString('en-US', {
                     weekday: 'short',
                     month: 'short',
                     day: 'numeric',
@@ -292,7 +313,7 @@ END:VCALENDAR`;
                 <div className="flex justify-between">
                   <span className="text-sm text-muted-foreground">Check-out</span>
                   <span className="font-medium">
-                    {new Date(booking.end_date).toLocaleDateString('en-US', {
+                    {parseRentalDate(booking.end_date).toLocaleDateString('en-US', {
                       weekday: 'short',
                       month: 'short',
                       day: 'numeric',
@@ -412,9 +433,11 @@ END:VCALENDAR`;
               </Link>
             </Button>
 
-            <DocumentsCard scope={{ booking_id: booking.id }} title="Rental agreement" />
+            {/* C. Documents & insurance — only rendered when the host asked for any. */}
+            <DocumentsInsurancePanel evaluation={requirementEvaluation} />
           </div>
-        </div>
+          </TabsContent>
+        </Tabs>
       </SheetContent>
     </Sheet>
   );

@@ -8,18 +8,25 @@ export type FulfillmentType = 'pickup' | 'delivery' | 'both' | 'on_site';
 export type ListingStatus = 'draft' | 'published' | 'paused' | 'archived';
 
 // Subcategory types for each main category
-export type FoodTruckSubcategory = 
-  | 'full_service_kitchen' 
-  | 'coffee_beverage' 
-  | 'bbq_smoker' 
-  | 'pizza_truck' 
-  | 'ice_cream_dessert';
+export type FoodTruckSubcategory =
+  | 'full_service_kitchen'
+  | 'coffee_beverage'
+  | 'bbq_smoker'
+  | 'pizza_truck'
+  | 'ice_cream_dessert'
+  | 'snowcone_shaved_ice'
+  | 'mobile_bar';
 
-export type FoodTrailerSubcategory = 
-  | 'concession_trailer' 
-  | 'catering_trailer' 
-  | 'bbq_pit_trailer' 
-  | 'mobile_bar' 
+export type FoodTrailerSubcategory =
+  | 'concession_trailer'
+  | 'catering_trailer'
+  | 'bbq_pit_trailer'
+  | 'mobile_bar'
+  | 'coffee_beverage'
+  | 'ice_cream_dessert'
+  | 'pizza_trailer'
+  | 'snowcone_shaved_ice'
+  | 'beverage_trailer'
   | 'specialty_food';
 
 export type GhostKitchenSubcategory = 
@@ -55,12 +62,19 @@ export const SUBCATEGORIES_BY_CATEGORY: Record<ListingCategory, {
     { value: 'bbq_smoker', label: 'BBQ & Smoker', description: 'Built-in smoker and grill setup' },
     { value: 'pizza_truck', label: 'Pizza Truck', description: 'Wood-fired or deck oven for pizza' },
     { value: 'ice_cream_dessert', label: 'Ice Cream & Dessert', description: 'Freezers and soft-serve equipment' },
+    { value: 'snowcone_shaved_ice', label: 'Snow Cone & Shaved Ice', description: 'Ice shavers, freezers, and syrup service' },
+    { value: 'mobile_bar', label: 'Mobile Bar & Beverage', description: 'Taps, keg storage, and beverage service' },
   ],
   food_trailer: [
     { value: 'concession_trailer', label: 'Concession Trailer', description: 'Classic fair-style food service' },
     { value: 'catering_trailer', label: 'Catering Trailer', description: 'High-volume event catering setup' },
     { value: 'bbq_pit_trailer', label: 'BBQ Pit Trailer', description: 'Dedicated smoker and BBQ pit' },
     { value: 'mobile_bar', label: 'Mobile Bar', description: 'Beverage service with bar setup' },
+    { value: 'beverage_trailer', label: 'Beverage Trailer', description: 'Lemonade, smoothie, juice, or specialty drinks' },
+    { value: 'coffee_beverage', label: 'Coffee & Beverage', description: 'Espresso, smoothie, or specialty drink build' },
+    { value: 'ice_cream_dessert', label: 'Ice Cream & Dessert', description: 'Freezers and soft-serve equipment' },
+    { value: 'pizza_trailer', label: 'Pizza Trailer', description: 'Wood-fired, deck, or conveyor oven build' },
+    { value: 'snowcone_shaved_ice', label: 'Snow Cone & Shaved Ice', description: 'Ice shavers, freezers, and syrup service' },
     { value: 'specialty_food', label: 'Specialty Food Trailer', description: 'Unique cuisine or concept builds' },
   ],
   ghost_kitchen: [
@@ -102,6 +116,9 @@ export const SUBCATEGORY_LABELS: Record<string, string> = {
   catering_trailer: 'Catering Trailer',
   bbq_pit_trailer: 'BBQ Pit Trailer',
   mobile_bar: 'Mobile Bar',
+  pizza_trailer: 'Pizza Trailer',
+  snowcone_shaved_ice: 'Snow Cone & Shaved Ice',
+  beverage_trailer: 'Beverage Trailer',
   specialty_food: 'Specialty Food Trailer',
   // Ghost Kitchen
   commercial_kitchen: 'Commercial Kitchen',
@@ -163,7 +180,8 @@ export interface Listing {
   freight_payer?: FreightPayer | string;
   // Payment method preferences (for sales)
   accept_cash_payment?: boolean;
-  accept_card_payment?: boolean;
+  accept_card_payment?: boolean; // Legacy Stripe flag; prefer accept_paypal_checkout
+  accept_paypal_checkout?: boolean;
   // Multi-slot capacity for Vendor Spaces
   total_slots?: number;
   slot_names?: string[] | null;
@@ -609,7 +627,8 @@ export interface ListingFormData {
   }[];
   // Payment method preferences (for sales)
   accept_cash_payment: boolean;
-  accept_card_payment: boolean;
+  accept_card_payment: boolean; // Legacy Stripe flag; prefer accept_paypal_checkout
+  accept_paypal_checkout: boolean;
   // Proof Notary add-on (for sales)
   proof_notary_enabled: boolean;
   // Featured Listing add-on (for both rentals and sales)

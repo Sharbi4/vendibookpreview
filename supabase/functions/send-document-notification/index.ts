@@ -1,6 +1,9 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
-import Stripe from "https://esm.sh/stripe@18.5.0";
+import { getCaller, isAdminUser, isBackendCaller, forbiddenResponse, unauthorizedResponse } from "../_shared/callerGuard.ts";
+import { refundPayment } from "../_shared/paymentOps.ts";
+import { refundSquareRental } from "../_shared/squareRentalRefund.ts";
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 // Emails are sent via the Lovable Emails queue (send-transactional-email),
 // using the premium Satin Lux `generic-notice` template. No direct Resend usage.
@@ -53,32 +56,33 @@ async function processInstantBookRefund(
   listingTitle: string,
   rejectionReason: string
 ): Promise<{ success: boolean; refundId?: string; error?: string }> {
-  const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-  if (!stripeKey) {
-    logStep("Cannot process refund - STRIPE_SECRET_KEY not set");
-    return { success: false, error: "Stripe key not configured" };
-  }
-
-  if (!booking.payment_intent_id) {
-    logStep("Cannot process refund - no payment intent found");
-    return { success: false, error: "No payment intent found" };
+  const isSquare = booking.payment_provider === 'square';
+  if (!isSquare && !booking.payment_intent_id) {
+    logStep("Cannot process refund - no payment reference found");
+    return { success: false, error: "No payment reference found" };
   }
 
   try {
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-    
-    // Create full refund
-    const refund = await stripe.refunds.create({
-      payment_intent: booking.payment_intent_id,
-      reason: 'requested_by_customer',
-      metadata: {
-        booking_id: booking.id,
-        reason: 'instant_book_document_rejected',
-        rejection_reason: rejectionReason,
-      },
+    // Rentals are paid through Square; older bookings may be PayPal.
+    const refund = isSquare
+      ? await refundSquareRental(supabaseClient, {
+          bookingId: booking.id,
+          reason: `Instant Book document rejected: ${rejectionReason}`.slice(0, 190),
+          idempotencyKey: `doc-reject-refund-${booking.id}`,
+        })
+      : await refundPayment({
+      paymentReference: booking.payment_intent_id,
+      provider: booking.payment_provider,
+      reason: `Instant Book document rejected: ${rejectionReason}`.slice(0, 200),
+      idempotencyKey: `doc-reject-refund-${booking.id}`,
     });
 
-    logStep("Instant Book refund created", { refundId: refund.id, amount: refund.amount });
+    if (!refund.success) {
+      logStep("Refund not completed automatically", { error: refund.error, manual: (refund as { manual?: boolean }).manual });
+      return { success: false, error: refund.error };
+    }
+
+    logStep("Instant Book refund created", { refundId: refund.id, amountCents: refund.amountCents });
 
     // Update booking status
     await supabaseClient
@@ -153,6 +157,18 @@ serve(async (req) => {
       throw new Error(`Failed to fetch booking: ${bookingError?.message}`);
     }
     logStep("Booking fetched", { booking_id: booking.id, is_instant_book: booking.is_instant_book });
+
+    // Renters may only announce uploads on their own booking; review outcomes
+    // (approve/reject, which can confirm or refund) are host/admin only.
+    if (!(await isBackendCaller(req))) {
+      const caller = await getCaller(req);
+      if (!caller) return unauthorizedResponse(corsHeaders);
+      const admin = await isAdminUser(caller.id);
+      const isHost = caller.id === booking.host_id;
+      const isRenter = caller.id === booking.shopper_id;
+      const allowed = admin || isHost || (isRenter && event_type === "uploaded" && !check_all_approved && !is_bulk_approval);
+      if (!allowed) return forbiddenResponse(corsHeaders);
+    }
 
     // Fetch listing details including instant_book flag
     const { data: listing, error: listingError } = await supabaseClient
@@ -526,14 +542,12 @@ serve(async (req) => {
     const results: { success: boolean; to: string; error?: string }[] = [];
     for (const email of emails) {
       try {
-        const { error } = await supabaseClient.functions.invoke("send-transactional-email", {
-          body: {
+        const { error } = await invokeTransactionalEmail({
             templateName: "generic-notice",
             recipientEmail: email.to,
             idempotencyKey: email.idempotencyKey,
             templateData: email.payload,
-          },
-        });
+          });
         if (error) throw error;
         logStep("Email enqueued via Lovable Emails", { to: email.to });
         results.push({ success: true, to: email.to });

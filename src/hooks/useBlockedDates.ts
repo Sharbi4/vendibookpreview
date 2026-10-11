@@ -1,7 +1,15 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { format, parseISO, eachDayOfInterval, addDays, subDays } from 'date-fns';
 import { useToast } from '@/hooks/use-toast';
+import { resolveListingTimeZone, todayInTimeZone } from '@/lib/listingTimezone';
+
+export type UnavailabilityKind = 'blocked' | 'booked' | 'buffer';
+
+export interface UnavailabilityReason {
+  kind: UnavailabilityKind;
+  label: string;
+}
 
 interface UseBlockedDatesOptions {
   listingId: string;
@@ -37,6 +45,7 @@ const useBlockedDatesInternal = (listingId: string) => {
   const [bufferDates, setBufferDates] = useState<Date[]>([]);
   const [upcomingBookings, setUpcomingBookings] = useState<BookingInfo[]>([]);
   const [bufferDays, setBufferDays] = useState<number>(0);
+  const [timeZone, setTimeZone] = useState<string>(() => resolveListingTimeZone(null));
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -48,12 +57,19 @@ const useBlockedDatesInternal = (listingId: string) => {
         // Fetch listing to get buffer days
         const { data: listingData } = await supabase
           .from('listings')
-          .select('rental_buffer_days')
+          .select('rental_buffer_days, state, longitude')
           .eq('id', listingId)
           .single();
 
         const buffer = (listingData as any)?.rental_buffer_days || 0;
         setBufferDays(buffer);
+
+        // Availability dates are wall-clock dates at the listing's location.
+        const listingTz = resolveListingTimeZone({
+          state: (listingData as any)?.state,
+          longitude: (listingData as any)?.longitude,
+        });
+        setTimeZone(listingTz);
 
         // Fetch blocked dates
         const { data: blockedData } = await supabase
@@ -70,11 +86,12 @@ const useBlockedDatesInternal = (listingId: string) => {
         // - Pending bookings (awaiting approval/payment) should block to prevent double-booking
         // - Approved bookings that are paid (confirmed)
         // - Completed bookings
-        const { data: bookingData } = await supabase
-          .from('booking_requests')
-          .select('start_date, end_date, status, payment_status')
-          .eq('listing_id', listingId)
-          .in('status', ['pending', 'approved', 'completed']);
+        // Uses a security-definer RPC so shoppers (who cannot read other users'
+        // booking rows under RLS) still see which dates are already taken.
+        const { data: bookingData, error: bookingError } = await supabase
+          .rpc('get_listing_busy_slots', { _listing_id: listingId });
+
+        if (bookingError) console.error('Error loading busy slots:', bookingError);
 
         if (bookingData) {
           const dates: Date[] = [];
@@ -108,7 +125,7 @@ const useBlockedDatesInternal = (listingId: string) => {
           setBufferDates(buffers);
           
           // Store upcoming bookings for display
-          const today = format(new Date(), 'yyyy-MM-dd');
+          const today = todayInTimeZone(listingTz);
           const upcoming = bookingData.filter(b => b.end_date >= today);
           setUpcomingBookings(upcoming.sort((a, b) => a.start_date.localeCompare(b.start_date)));
         }
@@ -122,15 +139,56 @@ const useBlockedDatesInternal = (listingId: string) => {
     fetchUnavailableDates();
   }, [listingId]);
 
-  const isDateUnavailable = (date: Date): boolean => {
+  // Fast lookup maps so calendars can resolve a day's status in O(1).
+  const blockedReasonByDate = useMemo(() => {
+    const map = new Map<string, string | null>();
+    blockedDates.forEach(record => map.set(record.blocked_date, record.reason ?? null));
+    return map;
+  }, [blockedDates]);
+
+  const bookedDateKeys = useMemo(
+    () => new Set(bookedDates.map(d => format(d, 'yyyy-MM-dd'))),
+    [bookedDates],
+  );
+
+  const bufferDateKeys = useMemo(
+    () => new Set(bufferDates.map(d => format(d, 'yyyy-MM-dd'))),
+    [bufferDates],
+  );
+
+  /**
+   * Why a specific day cannot be booked. Returns null when the day is open.
+   * `kind` drives styling; `label` is the short human reason shown in the UI.
+   */
+  const getUnavailabilityReason = useCallback((date: Date): UnavailabilityReason | null => {
     const dateStr = format(date, 'yyyy-MM-dd');
-    
-    const isBlocked = blockedDateObjects.some(d => format(d, 'yyyy-MM-dd') === dateStr);
-    const isBooked = bookedDates.some(d => format(d, 'yyyy-MM-dd') === dateStr);
-    const isBuffer = bufferDates.some(d => format(d, 'yyyy-MM-dd') === dateStr);
-    
-    return isBlocked || isBooked || isBuffer;
-  };
+
+    if (blockedReasonByDate.has(dateStr)) {
+      const reason = blockedReasonByDate.get(dateStr);
+      return {
+        kind: 'blocked',
+        label: reason ? `Blocked by host — ${reason}` : 'Blocked by the host',
+      };
+    }
+    if (bookedDateKeys.has(dateStr)) {
+      return { kind: 'booked', label: 'Already booked' };
+    }
+    if (bufferDateKeys.has(dateStr)) {
+      return {
+        kind: 'buffer',
+        label: bufferDays > 0
+          ? `Turnaround day (${bufferDays}-day buffer between bookings)`
+          : 'Turnaround day between bookings',
+      };
+    }
+    return null;
+  }, [blockedReasonByDate, bookedDateKeys, bufferDateKeys, bufferDays]);
+
+  const isDateUnavailable = useCallback(
+    (date: Date): boolean => getUnavailabilityReason(date) !== null,
+    [getUnavailabilityReason],
+  );
+
 
   const addBlockedDates = useCallback(async (dates: Date[], reason?: string) => {
     if (!listingId || dates.length === 0) return;
@@ -218,9 +276,11 @@ const useBlockedDatesInternal = (listingId: string) => {
     bookedDates,
     bufferDates,
     bufferDays,
+    timeZone,
     upcomingBookings,
     allUnavailableDates,
     isDateUnavailable,
+    getUnavailabilityReason,
     isLoading,
     addBlockedDates,
     removeBlockedDate,

@@ -14,45 +14,58 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     
     <!-- Primary Meta Tags -->
-    <title>Vendibook | The Shared Kitchen & Food Truck Marketplace</title>
-    <meta name="description" content="Rent or buy shared kitchens, food trucks, food trailers, and vendor spaces. Verified listings, secure payments, and 24/7 support.">
+    <title>Vendibook | Buy, Sell & Rent Food Trucks & Trailers</title>
+    <meta name="description" content="Buy, rent, and sell food trucks, food trailers, commercial kitchens, and vendor spaces nationwide on Vendibook, with PayPal checkout and financing options where available.">
     <meta name="author" content="Vendibook" />
     <meta name="robots" content="index, follow" />
+
+    <!-- Facebook Business Manager domain verification (static shell so the
+         crawler sees it without executing JavaScript). -->
+    <meta name="facebook-domain-verification" content="i90iewh1puplkren09z569nqawscvp" />
+
     
-    <!-- Canonical URL (prevents duplicate content issues) -->
-    <link rel="canonical" href="https://vendibook.com/" />
+    <!-- Canonical URL is emitted per route by src/components/SEO.tsx.
+         A hardcoded canonical here would tell crawlers every route is a copy
+         of the homepage, so it is intentionally NOT set in the static shell. -->
     
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://vendibook.com/" />
     <meta property="og:site_name" content="Vendibook" />
-    <meta property="og:title" content="Vendibook | The Shared Kitchen & Food Truck Marketplace" />
-    <meta property="og:description" content="Rent or buy shared kitchens, food trucks, food trailers, and vendor spaces. Verified listings, secure payments, and 24/7 support." />
-    <meta property="og:image" content="https://vendibook.com/images/vendibook-og-image.jpg" />
-    <meta property="og:image:width" content="1200" />
-    <meta property="og:image:height" content="630" />
+    <meta property="og:title" content="Vendibook | Buy, Sell & Rent Food Trucks & Trailers" />
+    <meta property="og:description" content="Buy, rent, and sell food trucks, food trailers, commercial kitchens, and vendor spaces nationwide on Vendibook, with PayPal checkout and financing options where available." />
+    <meta property="og:image" content="https://vendibook.com/images/vendibook-logo.png" />
+    <meta property="og:image:secure_url" content="https://vendibook.com/images/vendibook-logo.png" />
+    <meta property="og:image:type" content="image/png" />
+    <meta property="og:image:alt" content="Vendibook logo" />
     <meta property="og:locale" content="en_US" />
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:site" content="@vendibook" />
     <meta name="twitter:url" content="https://vendibook.com/" />
-    <meta name="twitter:title" content="Vendibook | The Shared Kitchen & Food Truck Marketplace" />
-    <meta name="twitter:description" content="Rent or buy shared kitchens, food trucks, food trailers, and vendor spaces. Verified listings, secure payments, and 24/7 support." />
-    <meta name="twitter:image" content="https://vendibook.com/images/vendibook-og-image.jpg" />
+    <meta name="twitter:title" content="Vendibook | Buy, Sell & Rent Food Trucks & Trailers" />
+    <meta name="twitter:description" content="Buy, rent, and sell food trucks, food trailers, commercial kitchens, and vendor spaces nationwide on Vendibook, with PayPal checkout and financing options where available." />
+    <meta name="twitter:image" content="https://vendibook.com/images/vendibook-logo.png" />
+    <meta name="twitter:image:alt" content="Vendibook logo" />
     
     <!-- Preload brand font (display) + Manrope (UI, variable, latin subset) -->
     <link rel="preload" as="font" type="font/otf" crossorigin href="/__l5e/assets-v1/5c9bc164-9241-46f4-98fa-bc6ea22ce45e/SofiaProSoftLight.otf" />
+    <link rel="preconnect" href="https://www.paypal.com" crossorigin>
+    <link rel="preconnect" href="https://www.paypalobjects.com" crossorigin>
+    <link rel="dns-prefetch" href="https://www.sandbox.paypal.com">
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap" />
     
     <!-- Favicon & PWA -->
-    <link rel="icon" type="image/png" href="/favicon.png?v=2" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/app-icon-512.png?v=2" />
-    <link rel="apple-touch-icon" sizes="512x512" href="/app-icon-512.png?v=2" />
-    <link rel="mask-icon" href="/app-icon.png" color="#FF5124" />
+    <link rel="icon" type="image/png" href="/favicon.png?v=5" sizes="64x64" />
+    <link rel="icon" type="image/png" href="/favicon-32x32.png?v=4" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/favicon-16x16.png?v=4" sizes="16x16" />
+    <link rel="icon" type="image/png" href="/app-icon-192.png?v=4" sizes="192x192" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon-180.png?v=4" />
+    <link rel="manifest" href="/site.webmanifest?v=4" />
     <meta name="theme-color" content="#FF5124" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -69,7 +82,7 @@
       "name": "Vendibook",
       "url": "https://vendibook.com",
       "logo": "https://vendibook.com/images/vendibook-logo.png",
-      "description": "Rent or buy food trucks, food trailers, ghost kitchens, and vendor lots. The trusted marketplace for mobile food vendors.",
+      "description": "Buy, rent, and sell food trucks, food trailers, commercial kitchens, and vendor spaces nationwide on Vendibook, with PayPal checkout and financing options where available.",
       "contactPoint": {
         "@type": "ContactPoint",
         "contactType": "customer service",

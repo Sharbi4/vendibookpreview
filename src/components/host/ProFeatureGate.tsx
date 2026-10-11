@@ -62,7 +62,7 @@ export function ProFeatureGate({
             <p className="mt-1 text-sm text-muted-foreground">{description}</p>
           )}
           <Button asChild size="sm" className="mt-3">
-            <Link to="/host/plans">
+            <Link to="/pricing">
               Unlock with {tierLabel}
               <ArrowRight className="ml-1.5 h-3.5 w-3.5" aria-hidden />
             </Link>

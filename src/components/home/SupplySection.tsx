@@ -162,14 +162,14 @@ const SupplySection = () => {
             </div>
             
             <p className="text-muted-foreground mb-6">
-              Get an edge with our Spark-powered tools—optimize pricing, find permits, and write listings that convert.
+              Get an edge with our Spark-powered tools—optimize pricing, find permits, and launch with confidence.
             </p>
 
             <ul className="space-y-3 mb-6">
               {[
                 'PricePilot — Data-backed pricing suggestions',
                 'PermitPath — Find permits for any city',
-                'Listing Studio — Generate pro descriptions'].map((tool, index) => (
+                'Regulations Hub — Rules for all 50 states'].map((tool, index) => (
                 <motion.li 
                   key={index} 
                   className="flex items-start gap-2 text-sm text-foreground"

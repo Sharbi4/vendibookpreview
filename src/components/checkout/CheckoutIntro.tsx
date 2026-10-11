@@ -14,8 +14,6 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import SmartImage from '@/components/ui/SmartImage';
-import { StripeLogo } from '@/components/ui/StripeLogo';
-import { AffirmBadge } from '@/components/ui/AffirmBadge';
 import {
   trackCheckoutIntroViewed,
   trackCheckoutIntroContinued,
@@ -78,8 +76,8 @@ const CheckoutIntro = ({
             },
             {
               icon: UserCheck,
-              title: 'Confirm your details',
-              body: 'Only what we need for the bill of sale and to coordinate handoff.',
+              title: 'Verify and confirm details',
+              body: 'Optional identity verification, plus only what we need for the bill of sale.',
             },
             {
               icon: ClipboardCheck,
@@ -108,15 +106,15 @@ const CheckoutIntro = ({
   );
 
   const trustPoints = useMemo(() => {
-    const points: Array<{ icon: typeof ShieldCheck; label: string; kind?: 'stripe' }> = [
+    const points: Array<{ icon: typeof ShieldCheck; label: string; kind?: 'paypal' }> = [
       {
         icon: ShieldCheck,
         label:
           flow === 'sale'
-            ? 'Your payment is protected until you confirm delivery'
-            : 'Your payment is protected until check-in is confirmed',
+            ? 'Payment processed through PayPal'
+            : 'Payment processed through PayPal',
       },
-      { icon: Lock, label: 'Secured by Stripe', kind: 'stripe' },
+      { icon: Lock, label: 'Secure checkout powered by PayPal', kind: 'paypal' },
       { icon: FileSignature, label: 'Bill of sale e-signed free' },
     ];
     if (sellerVerified) {
@@ -204,10 +202,10 @@ const CheckoutIntro = ({
       >
         <h2 className="font-display text-2xl sm:text-3xl font-semibold text-foreground leading-tight">
           Let&rsquo;s get your{' '}
-          <span className="text-primary">{heroTitleNoun}</span>
+          <span className="text-foreground">{heroTitleNoun}</span>
         </h2>
         <p className="mt-2 text-sm sm:text-base text-muted-foreground">
-          {flow === 'sale' ? 'Five' : 'Four'} quick steps. We&rsquo;ll explain everything before you pay.
+          A few quick steps. We&rsquo;ll explain everything before you pay.
         </p>
       </motion.div>
 
@@ -247,18 +245,14 @@ const CheckoutIntro = ({
         initial={{ opacity: 0, y: reduce ? 0 : 6 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: dur, delay: stagger * (2 + beats.length) }}
-        className="mt-6 sm:mt-8 rounded-xl border-[1.5px] border-white/10 bg-[rgba(11,15,18,0.5)] p-4"
+        className="mt-6 sm:mt-8 rounded-xl border border-border bg-card p-4"
       >
         <ul className="grid gap-2.5 sm:grid-cols-2">
           {trustPoints.map((p) => {
             const Icon = p.icon;
             return (
-              <li key={p.label} className="flex items-start gap-2 text-[13px] text-foreground/85">
-                {p.kind === 'stripe' ? (
-                  <StripeLogo size="xs" className="mt-0.5" />
-                ) : (
-                  <Icon className="mt-0.5 h-4 w-4 text-primary" strokeWidth={1.75} />
-                )}
+              <li key={p.label} className="flex items-start gap-2 text-[13px] text-foreground/90">
+                <Icon className="mt-0.5 h-4 w-4 text-muted-foreground" strokeWidth={1.75} aria-hidden />
                 <span className="leading-relaxed">{p.label}</span>
               </li>
             );
@@ -266,19 +260,6 @@ const CheckoutIntro = ({
         </ul>
       </motion.div>
 
-      {/* FINANCING LINE */}
-      {financingEligible && flow === 'sale' && (
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: dur, delay: stagger * (3 + beats.length) }}
-          className="mt-4 flex items-center justify-center gap-2 text-[12px] text-muted-foreground"
-        >
-          <span>Or pay monthly with</span>
-          <AffirmBadge price={price} className="h-4" showTooltip={false} />
-          <span>&mdash; we&rsquo;ll show options at payment.</span>
-        </motion.p>
-      )}
 
       {/* CTA ROW */}
       <motion.div
@@ -297,7 +278,8 @@ const CheckoutIntro = ({
         </Button>
         <Button
           size="lg"
-          className="h-12 rounded-lg px-6 font-semibold gap-2 shadow-cta-primary"
+          variant="default"
+          className="h-12 px-6 gap-2"
           onClick={handleContinue}
         >
           {ctaLabel}

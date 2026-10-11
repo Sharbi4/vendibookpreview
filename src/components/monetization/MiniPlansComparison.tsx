@@ -1,6 +1,8 @@
 import React from 'react';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useCatalogPrice } from '@/hooks/useCatalogPrices';
+import { ACTIVE_PRODUCT_SLUGS } from '@/lib/monetization/catalogPricing';
 
 /**
  * Compact 3-column plan comparison used in the post-signup Welcome screen
@@ -18,24 +20,13 @@ export interface MiniPlansComparisonProps {
   compact?: boolean;
 }
 
-const ROWS: Array<{
-  label: string;
-  free: string;
-  starter: string;
-  growth: string;
-}> = [
-  { label: 'Active listings',    free: 'Up to 2',        starter: 'Up to 5',        growth: 'Unlimited' },
-  { label: 'Featured placement', free: 'Standard',       starter: 'Priority basics', growth: 'Featured credit' },
-  { label: 'AI listing tools',   free: 'Basic templates', starter: 'AI descriptions', growth: 'Full tools bundle' },
-  { label: 'PermitPath',         free: 'Free checklist',  starter: 'Plus tracker',    growth: 'Plus tracker' },
-  { label: 'Fees',               free: '12.9%',           starter: '12.9%',           growth: '12.9%' },
-  { label: 'Support',            free: 'Standard',        starter: 'Priority',        growth: 'Priority' },
-];
-
-const COLS: Array<{ id: 'free' | 'starter' | 'growth'; name: string; price: string; recommended?: boolean }> = [
-  { id: 'free',    name: 'Free',    price: '$0' },
-  { id: 'starter', name: 'Starter', price: '$39/mo' },
-  { id: 'growth',  name: 'Growth',  price: '$89/mo', recommended: true },
+const ROWS: Array<{ label: string; free: string; growth: string }> = [
+  { label: 'Active listings',    free: 'Up to 2',         growth: 'Unlimited' },
+  { label: 'Featured placement', free: 'Standard',        growth: 'Monthly Featured Boost credit' },
+  { label: 'AI listing tools',   free: 'Basic templates', growth: 'Full tools bundle' },
+  { label: 'PermitPath',         free: 'Free checklist',  growth: 'Plus tracker' },
+  { label: 'Fees',               free: '12.9%',           growth: '10.9% your side' },
+  { label: 'Support',            free: 'Standard',        growth: 'Priority' },
 ];
 
 export const MiniPlansComparison: React.FC<MiniPlansComparisonProps> = ({
@@ -43,6 +34,11 @@ export const MiniPlansComparison: React.FC<MiniPlansComparisonProps> = ({
   className,
   compact = false,
 }) => {
+  const proPrice = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.vendibookPro);
+  const COLS: Array<{ id: 'free' | 'growth'; name: string; price: string; recommended?: boolean }> = [
+    { id: 'free', name: 'Free', price: '$0' },
+    { id: 'growth', name: 'Vendibook Pro', price: proPrice.labelWithCadence, recommended: true },
+  ];
   return (
     <div
       className={cn(
@@ -50,7 +46,7 @@ export const MiniPlansComparison: React.FC<MiniPlansComparisonProps> = ({
         className,
       )}
     >
-      <div className="grid grid-cols-4">
+      <div className="grid grid-cols-3">
         <div className={cn('p-3 text-xs uppercase tracking-wider text-muted-foreground', compact && 'p-2.5')}>
           Compare
         </div>
@@ -76,7 +72,7 @@ export const MiniPlansComparison: React.FC<MiniPlansComparisonProps> = ({
       </div>
 
       {ROWS.map((row, idx) => (
-        <div key={row.label} className="grid grid-cols-4 border-t border-border/70 text-sm">
+        <div key={row.label} className="grid grid-cols-3 border-t border-border/70 text-sm">
           <div className={cn('p-3 text-muted-foreground', compact && 'p-2.5 text-xs')}>{row.label}</div>
           {COLS.map((c) => {
             let value = row[c.id];

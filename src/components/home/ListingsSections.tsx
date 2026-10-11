@@ -1,19 +1,23 @@
 import { excludeTestListings } from '@/lib/excludeTestListings';
 import { useMemo, useRef, useState, useCallback, useEffect } from 'react';
+import { filterPubliclyVisible } from '@/lib/listings/publicVisibility';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import { ArrowRight, ChevronLeft, ChevronRight } from 'lucide-react';
 import ListingCard from '@/components/listing/ListingCard';
 import { supabase } from '@/integrations/supabase/client';
+import { useSellerVerifiedMap } from '@/hooks/useSellerIdentityBadgeMap';
 import { Skeleton } from '@/components/ui/skeleton';
 import { motion } from 'framer-motion';
 import { trackLeadEvent } from '@/lib/leadTracking';
-import { isListingFeatured, sortFeaturedFirstFair } from '@/lib/featured';
+import { isListingFeatured, sortNewFirstThenFeatured } from '@/lib/featured';
 
-// Featured-first, with fair daily rotation among featured listings (see src/lib/featured.ts).
-const sortFeaturedFirst = <T extends { id: string; featured_enabled?: boolean | null; featured_expires_at?: string | null }>(
+// Brand-new listings (published in the last 48h) lead the row, then
+// featured-first with fair daily rotation (see src/lib/featured.ts).
+const sortFeaturedFirst = <T extends { id: string; published_at?: string | null; featured_enabled?: boolean | null; featured_expires_at?: string | null }>(
   items: T[],
-): T[] => sortFeaturedFirstFair(items as any) as T[];
+): T[] => sortNewFirstThenFeatured(items as any) as T[];
+
 
 type RowKey = 'rent' | 'sale' | 'trucks' | 'trailers';
 
@@ -28,7 +32,7 @@ const ROW_META: Record<RowKey, {
 }> = {
   rent: {
     title: 'Recently Added for Rent',
-    subtitle: 'Food trucks, trailers, and shared commercial kitchens from verified owners.',
+    subtitle: 'Food trucks, trailers, and shared commercial kitchens listed by owners and sellers.',
     viewMorePath: '/search?mode=rent&utm_source=homepage&utm_medium=listing_row&utm_campaign=homepage_browse&utm_content=recent_for_rent_view_more',
   },
   sale: {
@@ -65,7 +69,7 @@ const ListingsSections = () => {
         .order('published_at', { ascending: false })
         .limit(ROW_LIMIT);
       if (error) throw error;
-      return data;
+      return filterPubliclyVisible(data ?? []);
     },
     staleTime: 60000,
   });
@@ -84,7 +88,7 @@ const ListingsSections = () => {
         .order('published_at', { ascending: false })
         .limit(ROW_LIMIT);
       if (error) throw error;
-      return data;
+      return filterPubliclyVisible(data ?? []);
     },
     staleTime: 60000,
   });
@@ -102,7 +106,7 @@ const ListingsSections = () => {
         .order('published_at', { ascending: false })
         .limit(ROW_LIMIT);
       if (error) throw error;
-      return data;
+      return filterPubliclyVisible(data ?? []);
     },
     staleTime: 60000,
   });
@@ -120,7 +124,7 @@ const ListingsSections = () => {
         .order('published_at', { ascending: false })
         .limit(ROW_LIMIT);
       if (error) throw error;
-      return data;
+      return filterPubliclyVisible(data ?? []);
     },
     staleTime: 60000,
   });
@@ -135,27 +139,12 @@ const ListingsSections = () => {
     return [...new Set(ids)] as string[];
   }, [allListings]);
 
-  const { data: hostProfiles = [] } = useQuery({
-    queryKey: ['home-host-profiles', hostIds],
-    queryFn: async () => {
-      if (hostIds.length === 0) return [];
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, identity_verified')
-        .in('id', hostIds);
-      if (error) throw error;
-      return data;
-    },
-    enabled: hostIds.length > 0,
-  });
+  /**
+   * Authoritative paid Identity Verified badges, batched. The legacy
+   * profiles.identity_verified column is history, not a badge source.
+   */
+  const hostVerificationMap = useSellerVerifiedMap(hostIds);
 
-  const hostVerificationMap = useMemo(() => {
-    const map: Record<string, boolean> = {};
-    hostProfiles.forEach((p) => {
-      map[p.id] = p.identity_verified ?? false;
-    });
-    return map;
-  }, [hostProfiles]);
 
   const isLoading = rentLoading || saleLoading || trucksLoading || trailersLoading;
 

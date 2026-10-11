@@ -1,59 +1,25 @@
 import { useParams, Link } from 'react-router-dom';
-import { 
-  ArrowLeft, 
-  MapPin, 
-  Loader2,
-  Star,
-  Edit,
-  Share2,
-} from 'lucide-react';
-import { useState } from 'react';
+import { trackBuyerSeoDownstream } from '@/lib/buyerSeoTracking';
+import { ArrowLeft, Loader2 } from 'lucide-react';
+
 import { toast } from '@/hooks/use-toast';
 import { trackEventToDb } from '@/hooks/useAnalyticsEvents';
 import { usePageTracking } from '@/hooks/usePageTracking';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
-import EnhancedPhotoGallery from '@/components/listing-detail/EnhancedPhotoGallery';
-import EnhancedHostCard from '@/components/listing-detail/EnhancedHostCard';
-import MessageHostForm from '@/components/messaging/MessageHostForm';
-import ReviewsSection from '@/components/reviews/ReviewsSection';
-import RequirementsModal from '@/components/listing-detail/RequirementsModal';
-import CollapsibleDescription from '@/components/listing-detail/CollapsibleDescription';
-import AudioListingPlayer from '@/components/listing/AudioListingPlayer';
-import PromoVideoPlayer from '@/components/listing/PromoVideoPlayer';
-import EnhancedQuickHighlights from '@/components/listing-detail/EnhancedQuickHighlights';
-import PricingSection from '@/components/listing-detail/PricingSection';
-import { AmenitiesSection } from '@/components/listing-detail/AmenitiesSection';
+
 import { ReportIssueButton } from '@/components/support/ReportIssueButton';
 
-import { StickyMobileCTA } from '@/components/listing-detail/StickyMobileCTA';
-import ListingConciergeBox from '@/components/listing-detail/ListingConciergeBox';
-import { FavoriteButton } from '@/components/listing/FavoriteButton';
-import CompactTrustSection from '@/components/trust/CompactTrustSection';
-import CancellationPolicyCard from '@/components/trust/CancellationPolicyCard';
-import { ListingEventsSection } from '@/components/storefront';
-import ListingLocationMap from '@/components/listing-detail/ListingLocationMap';
-import RelatedListings from '@/components/listing-detail/RelatedListings';
-import { TechSpecsGrid } from '@/components/listing-detail/TechSpecsGrid';
-import CommercialProductBar from '@/components/listing-detail/CommercialProductBar';
-import SellerTrustPanel from '@/components/listing-detail/SellerTrustPanel';
-import KeySpecsStrip from '@/components/listing-detail/KeySpecsStrip';
-import SaleListingMobile from '@/components/listing-detail/sale/SaleListingMobile';
-import { SaleTrustStrip, SaleProtectionSection, SaleLocationCard, SaleBrowseMore } from '@/components/listing-detail/sale/SaleSharedSections';
+import SaleListingLayout from '@/components/listing-detail/sale/SaleListingLayout';
+import RentalListingLayout from '@/components/listing-detail/rental/RentalListingLayout';
 
-import { VendorSlotAvailability } from '@/components/listing-detail/VendorSlotAvailability';
-import { WeeklyHoursDisplay } from '@/components/listing-detail/WeeklyHoursDisplay';
-import { RentalBookingWidget } from '@/components/listing-detail/RentalBookingWidget';
-import { BookingWidget } from '@/components/listing-detail/BookingWidget';
-import ListingHowItWorks from '@/components/listing-detail/ListingHowItWorks';
-import ListingExplainerVideo from '@/components/listing-detail/ListingExplainerVideo';
 
-import { ListingHighlightsCard } from '@/components/transaction';
 import OwnerBanner from '@/components/listing-detail/OwnerBanner';
 import { useQuery } from '@tanstack/react-query';
+
 import { supabase } from '@/integrations/supabase/client';
+import { useSellerIdentityBadgeMap } from '@/hooks/useSellerIdentityBadgeMap';
 import { useListing } from '@/hooks/useListing';
 import ListingUnavailable from '@/components/listing-detail/ListingUnavailable';
 import { isListingPubliclyVisible } from '@/lib/listings/publicVisibility';
@@ -63,18 +29,29 @@ import { useAuth } from '@/contexts/AuthContext';
 import { CATEGORY_LABELS } from '@/types/listing';
 import { useEffect, useMemo } from 'react';
 import { trackListingViewed } from '@/lib/analytics';
-import { CategoryTooltip } from '@/components/categories/CategoryGuide';
 import SEO from '@/components/SEO';
+import { listingShareUrl, listingShareText, shareOrCopy } from '@/lib/share';
 import JsonLd, { generateProductSchema, generateListingBreadcrumbSchema, generateListingLocalBusinessSchema, generateListingFAQSchema } from '@/components/JsonLd';
 import { getPublicDisplayName } from '@/lib/displayName';
-import { formatLastActive } from '@/hooks/useActivityTracker';
-import { resolveListingBrand, getBrandFieldLabel } from '@/lib/resolveListingBrand';
+import { resolveListingBrand } from '@/lib/resolveListingBrand';
 import { isListingFeatured } from '@/lib/featured';
+import { useSellerPaymentReadiness } from '@/hooks/useSellerPaymentReadiness';
 
 const ListingDetail = () => {
   const { id } = useParams<{ id: string }>();
   const { user } = useAuth();
   const { listing, host, isLoading, error } = useListing(id);
+
+  /**
+   * Paid Identity Verified state for the seller/host, read from the sanitized
+   * server function — never the legacy profiles.identity_verified column.
+   */
+  const sellerBadges = useSellerIdentityBadgeMap([listing?.host_id]);
+  const sellerIdentityVerified = !!(listing?.host_id && sellerBadges[listing.host_id]?.verified);
+  // This is the same backend readiness result used to render or block PayPal
+  // checkout. It includes PayPal email, receivability, merchant and permission checks.
+  const sellerPaymentReadiness = useSellerPaymentReadiness(listing?.host_id);
+  const paypalBusinessVerified = sellerPaymentReadiness.ready;
   
   // Track page views with Google Analytics
   usePageTracking();
@@ -95,34 +72,25 @@ const ListingDetail = () => {
     },
   });
 
-  // Share URL uses a pretty route on vendibook.com
-  // The /share/listing/:id route redirects humans to the SPA
-  // Social bots get routed to the edge function for rich OG tags + JSON-LD
-  const shareUrl = `https://vendibook.com/share/listing/${id}`;
+  // Share URL uses a pretty, query-free public route on vendibook.com.
+  // Social bots hitting /share/listing/:id get prerendered listing OG tags;
+  // humans are redirected to the canonical /listing/:id SPA route.
+  const shareUrl = listingShareUrl(id || '');
 
   // Handle share listing
   const handleShare = async () => {
     trackEventToDb('share_listing', 'listing_detail', { listing_id: id });
-    
-    // Try native share on mobile
-    if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) {
-      try {
-        await navigator.share({
-          title: listing?.title || 'Check out this listing on Vendibook',
-          url: shareUrl,
-        });
-        return;
-      } catch {
-        // User cancelled or share failed, fallback to copy
-      }
-    }
-    
-    // Fallback to clipboard copy
-    try {
-      await navigator.clipboard.writeText(shareUrl);
-      toast({ title: 'Link copied!' });
-    } catch {
-      toast({ title: 'Failed to copy link', variant: 'destructive' });
+
+    const outcome = await shareOrCopy({
+      url: shareUrl,
+      title: listing?.title || 'Vendibook listing',
+      text: listingShareText(listing?.title),
+    });
+
+    if (outcome === 'copied') {
+      toast({ title: 'Link copied', description: 'Public listing link copied to your clipboard.' });
+    } else if (outcome === 'failed') {
+      toast({ title: 'Could not copy link', description: shareUrl, variant: 'destructive' });
     }
   };
 
@@ -211,8 +179,9 @@ const ListingDetail = () => {
   // Track page view when listing loads
   useEffect(() => {
     if (id && listing && !isLoading) {
-      trackView(id);
+      trackView(id, listing.host_id);
       trackListingViewed(id, listing.category);
+      trackBuyerSeoDownstream('listing_view', id, { asset_category: listing.category, listing_mode: (listing as { mode?: string }).mode ?? null });
     }
   }, [id, listing, isLoading, trackView]);
 
@@ -347,7 +316,7 @@ const ListingDetail = () => {
   if (faqSchema) schemas.push(faqSchema);
 
   return (
-    <div className={`min-h-screen flex flex-col ${!isRental ? 'bg-sale-page text-foreground' : 'bg-background'}`}>
+    <div className="min-h-screen flex flex-col bg-sale-page text-foreground">
 
       <SEO
         title={seoTitle}
@@ -355,6 +324,8 @@ const ListingDetail = () => {
         canonical={`/listing/${listing.id}`}
         image={listing.cover_image_url || undefined}
         type="product"
+        // Admin-unlisted (sandbox certification) listings: reachable by link only.
+        noindex={(listing as { unlisted?: boolean }).unlisted === true}
         product={listingPrice ? {
           price: listingPrice,
           currency: 'USD',
@@ -369,568 +340,42 @@ const ListingDetail = () => {
       )}
       <Header />
 
-      {/* Commercial product bar — Amazon/Best Buy style.
-          Hidden on sale mobile because SaleListingMobile mounts its own breadcrumb + share/favorite row
-          (prevents duplicate breadcrumb, duplicate Save button, and clipped content under the sticky header). */}
-      <div className={!isRental ? 'hidden lg:block' : ''}>
-        <CommercialProductBar
-          listingId={listing.id}
-          category={listing.category}
-          mode={listing.mode as 'rent' | 'sale'}
-          title={listing.title}
-          rating={ratingData?.average}
-          reviewCount={ratingData?.count}
-          onShare={handleShare}
-        />
-      </div>
-
-      {!isRental && (
-        <SaleListingMobile
+      {/* Rentals now use the same simplified premium layout as for-sale. */}
+      {isRental && (
+        <RentalListingLayout
           listing={listing}
           host={host}
           images={images}
           videos={videos}
           isOwner={!!isOwner}
+          hostVerified={sellerIdentityVerified}
+          paypalBusinessVerified={paypalBusinessVerified}
+          paypalMerchantId={sellerPaymentReadiness.merchantId}
           ratingData={ratingData}
           onShare={handleShare}
         />
       )}
 
-      <main className={`flex-1 ${!isRental ? 'hidden lg:block' : ''}`}>
-        {/* Photo Gallery - Full bleed on mobile, contained on desktop */}
-        <div className="md:container md:pt-4">
-          <div className="md:px-0">
-            <EnhancedPhotoGallery images={images} videos={videos} title={listing.title} />
-          </div>
-          <div className="px-4 md:px-0">
-            <ListingExplainerVideo mode={listing.mode as 'rent' | 'sale'} listingId={listing.id} />
-          </div>
-        </div>
 
-
-        {/* Main Content */}
-        <div className="container pt-4 pb-24 lg:pb-16">
-          {/* Owner Banner - Show prominently if owner is viewing */}
-          {isOwner && (
-            <div className="mb-6">
-              <OwnerBanner listingId={listing.id} variant="inline" status={listing.status as any} />
-            </div>
-          )}
-
-          {/* Mobile-only: contextual How-It-Works guidance for rentals.
-              (Sale mobile mounts its own copy inside SaleListingMobile.) */}
-          {isRental && (
-            <div className="lg:hidden mb-5" id="howitworks-mobile-anchor">
-              <ListingHowItWorks listing={listing as any} isOwner={!!isOwner} />
-            </div>
-          )}
-
-          <div className="grid lg:grid-cols-3 gap-6 lg:gap-10">
-            {/* Left Column - Details */}
-            <div className="lg:col-span-2 space-y-5">
-
-              {/* Title Section - Airbnb Style */}
-              <div className="space-y-2">
-                {/* Title */}
-                <div className="flex items-start justify-between gap-4">
-                  <h1 className="text-2xl md:text-3xl font-semibold text-foreground leading-tight">
-                    {listing.title}
-                    {locationShort && (
-                      <span className="text-muted-foreground font-normal text-lg md:text-xl block mt-1">
-                        {categoryLabel} {modeLabel} in {locationShort}
-                      </span>
-                    )}
-                  </h1>
-                  {isOwner && (
-                    <Button asChild size="sm" variant="outline" className="shrink-0">
-                      <Link to={`/edit-listing/${listing.id}`}>
-                        <Edit className="h-4 w-4 mr-1.5" />
-                        Edit
-                      </Link>
-                    </Button>
-                  )}
-                </div>
-
-                {/* Meta Info Row */}
-                <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
-                  {ratingData && (
-                    <div className="flex items-center gap-1">
-                      <Star className="h-4 w-4 fill-foreground text-foreground" />
-                      <span className="font-medium">{ratingData.average}</span>
-                      <span className="text-muted-foreground">
-                        ({ratingData.count} review{ratingData.count !== 1 ? 's' : ''})
-                      </span>
-                    </div>
-                  )}
-                  
-                  {ratingData && locationShort && (
-                    <span className="text-muted-foreground">·</span>
-                  )}
-                  
-                  {locationShort && (
-                    <button className="flex items-center gap-1 text-foreground underline underline-offset-2 hover:text-primary transition-colors">
-                      <MapPin className="h-4 w-4" />
-                      <span>{locationShort}</span>
-                    </button>
-                  )}
-
-                  {/* Host Last Active */}
-                  {host?.last_active_at && (
-                    <>
-                      {(ratingData || locationShort) && (
-                        <span className="text-muted-foreground">·</span>
-                      )}
-                      <div className="flex items-center gap-1.5">
-                        <span className={`h-2 w-2 rounded-full ${
-                          formatLastActive(host.last_active_at) === 'Active now' 
-                            ? 'bg-green-500 animate-pulse' 
-                            : 'bg-muted-foreground/50'
-                        }`} />
-                        <span className="text-muted-foreground">
-                          {formatLastActive(host.last_active_at)}
-                        </span>
-                      </div>
-                    </>
-                  )}
-                </div>
-
-                {/* Key specs at-a-glance — commercial style */}
-                <KeySpecsStrip
-                  category={listing.category}
-                  mode={listing.mode as 'rent' | 'sale'}
-                  fulfillmentType={listing.fulfillment_type}
-                  instantBook={listing.instant_book || false}
-                  deliveryFee={listing.delivery_fee}
-                  inStock={listing.status === 'published'}
-                />
-
-                {/* Action Buttons Row */}
-                <div className="flex items-center gap-2">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="text-foreground gap-2 underline underline-offset-2 hover:bg-muted/50 px-2"
-                    onClick={handleShare}
-                  >
-                    <Share2 className="h-4 w-4" />
-                    Share
-                  </Button>
-                  {!isOwner && (
-                    <Link
-                      to={`/referral?source=listing_share&listing=${id}`}
-                      className="text-xs text-muted-foreground hover:text-foreground underline underline-offset-2 ml-1"
-                    >
-                      Share & earn a referral reward →
-                    </Link>
-                  )}
-                  <FavoriteButton 
-                    listingId={id!} 
-                    category={listing.category}
-                    size="sm"
-                    variant="underline"
-                  />
-                  
-                  {/* Badges - More subtle placement */}
-                  <div className="ml-auto flex items-center gap-2">
-                    {isFeatured && (
-                      <Badge className="text-xs bg-amber-500 text-white border-0 flex items-center gap-1">
-                        <Star className="h-3 w-3 fill-current" />
-                        Featured
-                      </Badge>
-                    )}
-                    <CategoryTooltip category={listing.category} side="bottom">
-                      <Badge variant="secondary" className="text-xs cursor-help font-normal">
-                        {CATEGORY_LABELS[listing.category]}
-                      </Badge>
-                    </CategoryTooltip>
-                    <Badge variant={isRental ? 'default' : 'secondary'} className="text-xs font-normal">
-                      For {isRental ? 'Rent' : 'Sale'}
-                    </Badge>
-                    {listing.instant_book && isRental && (
-                      <Badge variant="outline" className="text-xs bg-emerald-50 text-emerald-700 border-emerald-200 font-normal">
-                        ⚡ Instant Book
-                      </Badge>
-                    )}
-                  </div>
-                </div>
-                </div>
-
-                {/* Trust strip — premium glass, sale listings */}
-                {!isRental && <SaleTrustStrip />}
-
-                {/* Vendibook Concierge Box — soft-conversion above the fold.
-                    "Check Availability" opens the TellVendibook concierge modal (low-friction lead);
-                    the booking widget further down remains the high-intent secondary path. */}
-                {!isOwner && (
-                  <ListingConciergeBox
-                    listingId={listing.id}
-                    listingTitle={listing.title}
-                    city={listing.city || undefined}
-                    category={listing.category}
-                    isOwner={isOwner || false}
-                  />
-                )}
-
-                {/* Inline Message Form */}
-                {!isOwner && (
-                  <div className={saleGlass || undefined}>
-                    <MessageHostForm
-                      listingId={listing.id}
-                      hostId={listing.host_id}
-                      listingTitle={listing.title}
-                    />
-                  </div>
-                )}
-
-                {/* Divider */}
-                {isRental && <div className="border-t border-border" />}
-
-                {/* Seller Trust Panel — Why buy from this seller */}
-                <div className={saleGlass || undefined}>
-                  <SellerTrustPanel
-                    hostId={listing.host_id}
-                    hostName={host ? getPublicDisplayName(host) : null}
-                    isVerified={host?.identity_verified || false}
-                    memberSince={host?.created_at}
-                    lastActiveAt={host?.last_active_at}
-                    city={listing.city || (host as any)?.public_city}
-                    state={listing.state || (host as any)?.public_state}
-                    averageRating={ratingData?.average}
-                    reviewCount={ratingData?.count}
-                    isRental={isRental}
-                  />
-                </div>
-
-                {/* Host/Seller Detailed Section */}
-                <div className={saleGlass || undefined}>
-                  <EnhancedHostCard
-                    hostId={listing.host_id}
-                    listingId={listing.id}
-                    hostName={host ? getPublicDisplayName(host) : null}
-                    hostAvatar={host?.avatar_url}
-                    isVerified={host?.identity_verified || false}
-                    memberSince={host?.created_at}
-                    lastActiveAt={host?.last_active_at}
-                    isRental={isRental}
-                    listingTitle={listing.title}
-                  />
-                </div>
-
-                {/* Divider */}
-                {isRental && <div className="border-t border-border" />}
-
-
-              {/* Technical Specifications - NEW */}
-              <div className={`${saleGlass} ${!isRental ? 'space-y-5' : 'space-y-5'}`.trim()}>
-              <TechSpecsGrid
-                category={listing.category}
-                lengthInches={listing.length_inches}
-                widthInches={listing.width_inches}
-                heightInches={listing.height_inches}
-                weightLbs={listing.weight_lbs}
-                amenities={listing.amenities}
-              />
-
-              {/* Listing Details — visible schema-matching info for Google compliance */}
-              <div className="space-y-3">
-                <h2 className="text-lg font-semibold text-foreground">Listing Details</h2>
-                <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm">
-                  <div>
-                    <dt className="text-muted-foreground">{getBrandFieldLabel(listing.category)}</dt>
-                    <dd className="font-medium text-foreground">
-                      {resolveListingBrand({
-                        category: listing.category,
-                        brand: (listing as any).brand,
-                        make: (listing as any).make,
-                        manufacturer: (listing as any).manufacturer,
-                        host_business_name: host?.business_name,
-                        host_display_name: getPublicDisplayName(host, 'Host'),
-                      })}
-                    </dd>
-                  </div>
-                  <div>
-                    <dt className="text-muted-foreground">Category</dt>
-                    <dd className="font-medium text-foreground">{categoryLabel}</dd>
-                  </div>
-                  <div>
-                    <dt className="text-muted-foreground">Listing Type</dt>
-                    <dd className="font-medium text-foreground">{isRental ? 'For Rent' : 'For Sale'}</dd>
-                  </div>
-                  {!isRental && (
-                    <div>
-                      <dt className="text-muted-foreground">Condition</dt>
-                      <dd className="font-medium text-foreground capitalize">
-                        {(listing as any).condition || 'Used'}
-                      </dd>
-                    </div>
-                  )}
-                  {locationShort && (
-                    <div>
-                      <dt className="text-muted-foreground">Location</dt>
-                      <dd className="font-medium text-foreground">{locationShort}</dd>
-                    </div>
-                  )}
-                  {!isRental && ['food_truck', 'food_trailer'].includes(listing.category) && (
-                    <div className="col-span-2">
-                      <dt className="text-muted-foreground">Pickup & Transfer</dt>
-                      <dd className="text-foreground">
-                        Pickup, delivery, or transfer details are coordinated directly with the seller and may vary by listing.
-                      </dd>
-                    </div>
-                  )}
-                  {!isRental && (
-                    <div className="col-span-2">
-                      <dt className="text-muted-foreground">Return Policy</dt>
-                      <dd className="text-foreground">
-                        All asset sales are final. Review listing details and confirm terms with the seller before purchase.
-                      </dd>
-                    </div>
-                  )}
-                </dl>
-              </div>
-              </div>
-
-              {isRental && <div className="border-t border-border" />}
-
-              {/* Quick Highlights - Clean grid */}
-              <div className={saleGlass || undefined}>
-                <EnhancedQuickHighlights
-                  fulfillmentType={listing.fulfillment_type}
-                  category={listing.category}
-                  highlights={listing.highlights}
-                  instantBook={listing.instant_book || false}
-                  deliveryFee={listing.delivery_fee}
-                  hoursOfAccess={listing.hours_of_access}
-                  weightLbs={listing.weight_lbs}
-                  lengthInches={listing.length_inches}
-                  widthInches={listing.width_inches}
-                  heightInches={listing.height_inches}
-                  isRental={isRental}
-                />
-              </div>
-
-              {/* Divider */}
-              {isRental && <div className="border-t border-border" />}
-
-              {/* About Section */}
-              <div className={`${saleGlass} space-y-3`.trim()}>
-                <div className="flex items-center justify-between gap-2 flex-wrap">
-                  <h2 className="text-lg font-semibold text-foreground">About this listing</h2>
-                  <PromoVideoPlayer listingId={listing.id} />
-                </div>
-                <AudioListingPlayer listingId={listing.id} />
-                <CollapsibleDescription description={listing.description} />
-              </div>
-
-              {/* Divider */}
-              {isRental && <div className="border-t border-border" />}
-
-              {/* Amenities / What's Included */}
-              {listing.amenities && listing.amenities.length > 0 && (
-                <>
-                  <div className={saleGlass || undefined}>
-                    <AmenitiesSection
-                      category={listing.category}
-                      amenities={listing.amenities}
-                    />
-                  </div>
-                  {isRental && <div className="border-t border-border" />}
-                </>
-              )}
-
-              {/* Pricing Section */}
-              <div className={saleGlass || undefined}>
-                <PricingSection
-                  isRental={isRental}
-                  priceHourly={listing.price_hourly}
-                  priceDaily={listing.price_daily}
-                  priceWeekly={listing.price_weekly}
-                  priceMonthly={listing.price_monthly}
-                  priceSale={listing.price_sale}
-                  deliveryFee={listing.delivery_fee}
-                  fulfillmentType={listing.fulfillment_type}
-                  vendibookFreightEnabled={(listing as any).vendibook_freight_enabled}
-                />
-                <ListingHighlightsCard listing={listing as any} />
-              </div>
-
-              {/* Divider */}
-              {isRental && <div className="border-t border-border" />}
-
-              {/* Requirements - Rentals only */}
-              {isRental && (
-                <>
-                  <RequirementsModal listingId={listing.id} />
-                  <div className="border-t border-border" />
-                </>
-              )}
-
-
-              {/* Weekly Operating Hours - Show for hourly listings */}
-              {isRental && (listing as any).hourly_enabled && (listing as any).hourly_schedule && (
-                <>
-                  <WeeklyHoursDisplay schedule={(listing as any).hourly_schedule} />
-                  <div className="border-t border-border" />
-                </>
-              )}
-
-              {/* Slot Availability - Show for categories with multiple slots */}
-              {['vendor_lot', 'vendor_space', 'ghost_kitchen', 'food_truck', 'food_trailer'].includes(listing.category) && 
-               listing.total_slots && listing.total_slots > 1 && (
-                <>
-                  <VendorSlotAvailability
-                    listingId={listing.id}
-                    totalSlots={listing.total_slots}
-                    slotNames={listing.slot_names}
-                  />
-                  <div className="border-t border-border" />
-                </>
-              )}
-
-              {/* Events & Updates Section - Vendor Spaces / Locations */}
-              {(listing.category === 'vendor_lot' || listing.category === 'vendor_space' || listing.category === 'ghost_kitchen') && (
-                <ListingEventsSection
-                  listingId={listing.id}
-                  hostId={listing.host_id}
-                  isOwner={isOwner || false}
-                />
-              )}
-
-              {/* Divider */}
-              {isRental && <div className="border-t border-border" />}
-
-              {/* Reviews Section */}
-              <div className={`${saleGlass} space-y-2`.trim()}>
-                <h2 className="text-lg font-semibold text-foreground">Reviews</h2>
-                <ReviewsSection listingId={listing.id} />
-              </div>
-
-              {/* Location */}
-              {!isRental ? (
-                <SaleLocationCard
-                  city={listing.city}
-                  state={listing.state}
-                  zipCode={(listing as any).zip_code}
-                  latitude={listing.latitude}
-                  longitude={listing.longitude}
-                />
-              ) : (
-                location && locationShort && (
-                  <>
-                    <div className="border-t border-border" />
-                    <div className="space-y-1">
-                      <h2 className="text-lg font-semibold text-foreground">Where you'll be</h2>
-                      <p className="text-muted-foreground text-sm flex items-center gap-1.5">
-                        <MapPin className="h-4 w-4" />
-                        {locationShort}
-                      </p>
-                    </div>
-                    <div className="border-t border-border" />
-                  </>
-                )
-              )}
-
-              {/* Policies */}
-              <CancellationPolicyCard isRental={isRental} />
-
-              {/* Related Listings - Internal Linking for SEO */}
-              <RelatedListings
-                listingId={listing.id}
-                category={listing.category}
-                mode={listing.mode}
-                address={listing.address}
-                latitude={listing.latitude}
-                longitude={listing.longitude}
-              />
-
-              {/* Purchase protection + browse — sale listings */}
-              {!isRental && (
-                <>
-                  <SaleProtectionSection />
-                  <SaleBrowseMore />
-                </>
-              )}
-
-              {/* Trust Section */}
-              {isRental && <CompactTrustSection />}
-            </div>
-
-            {/* Right Column - Booking/Inquiry Widget (Desktop) - Sticky */}
-            <div id="booking-widget" className="hidden lg:block">
-              <div className="sticky top-24 space-y-6">
-                <ListingHowItWorks listing={listing as any} isOwner={!!isOwner} />
-                {isRental ? (
-                  <RentalBookingWidget
-                    listingId={listing.id}
-                    listingTitle={listing.title}
-                    hostId={listing.host_id}
-                    isOwner={isOwner || false}
-                    category={listing.category}
-                    priceDaily={listing.price_daily}
-                    priceWeekly={listing.price_weekly}
-                    priceMonthly={listing.price_monthly}
-                    priceHourly={(listing as any).price_hourly}
-                    availableFrom={listing.available_from}
-                    availableTo={listing.available_to}
-                    instantBook={listing.instant_book || false}
-                    hourlyEnabled={(listing as any).hourly_enabled || false}
-                    dailyEnabled={(listing as any).daily_enabled !== false}
-                    totalSlots={listing.total_slots || 1}
-                    slotNames={listing.slot_names}
-                    fulfillmentType={listing.fulfillment_type}
-                    deliveryFee={listing.delivery_fee}
-                  />
-                ) : (
-                  <BookingWidget
-                    listingId={listing.id}
-                    listingTitle={listing.title}
-                    hostId={listing.host_id}
-                    isOwner={isOwner || false}
-                    isRental={false}
-                    priceSale={listing.price_sale}
-                    fulfillmentType={listing.fulfillment_type}
-                    deliveryFee={listing.delivery_fee}
-                    vendibookFreightEnabled={listing.vendibook_freight_enabled || false}
-                    freightPayer={(listing.freight_payer === 'seller' ? 'seller' : 'buyer') as 'buyer' | 'seller'}
-                  />
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      </main>
-
-      {/* Sticky Mobile CTA Bar */}
-      {/* Sticky Mobile CTA Bar (rental only — sale uses SaleStickyActionBar inside SaleListingMobile) */}
-      {isRental && (
-      <StickyMobileCTA
-        listingId={listing.id}
-        hostId={listing.host_id}
-        isRental={isRental}
-        priceDaily={listing.price_daily}
-        priceSale={listing.price_sale}
-        status={listing.status}
-        instantBook={listing.instant_book || false}
-        category={listing.category}
-        fulfillmentType={listing.fulfillment_type}
-        priceWeekly={listing.price_weekly}
-        priceMonthly={listing.price_monthly}
-        priceHourly={(listing as any).price_hourly}
-        hourlyEnabled={(listing as any).hourly_enabled || false}
-        dailyEnabled={(listing as any).daily_enabled !== false}
-        availableFrom={listing.available_from}
-        availableTo={listing.available_to}
-        pickupLocation={listing.pickup_location_text}
-        deliveryFee={listing.delivery_fee}
-        deliveryRadiusMiles={listing.delivery_radius_miles}
-        listingTitle={listing.title}
-        totalSlots={listing.total_slots || 1}
-        slotNames={listing.slot_names}
-      />
+      {/* For-sale listings use one simplified layout at every breakpoint. */}
+      {!isRental && (
+        <SaleListingLayout
+          listing={listing}
+          host={host}
+          images={images}
+          videos={videos}
+          isOwner={!!isOwner}
+          sellerVerified={sellerIdentityVerified}
+          paypalBusinessVerified={paypalBusinessVerified}
+          paypalMerchantId={sellerPaymentReadiness.merchantId}
+          ratingData={ratingData}
+          onShare={handleShare}
+        />
       )}
 
+
       {/* SEO: Crawlable internal links for deep crawl paths */}
-      <nav className={`container py-8 border-t border-border ${!isRental ? 'hidden lg:block' : ''}`} aria-label="Browse more listings">
+      <nav className={`container py-8 border-t border-border ${!isRental ? 'hidden' : ''}`} aria-label="Browse more listings">
         <h2 className="text-lg font-semibold text-foreground mb-4">Browse More on Vendibook</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-sm">
           <Link to="/search?category=food_truck&mode=sale" className="text-muted-foreground hover:text-primary underline underline-offset-2">Food Trucks for Sale</Link>

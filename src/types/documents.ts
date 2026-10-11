@@ -11,14 +11,15 @@ export type DocumentType =
   | 'vehicle_insurance'
   | 'certificate_of_insurance'
   | 'work_history_proof'
-  | 'prior_experience_proof';
+  | 'prior_experience_proof'
+  | 'custom_requirement';
 
 export type DocumentDeadlineType =
   | 'before_booking_request'
   | 'before_approval'
   | 'after_approval_deadline';
 
-export type DocumentStatus = 'pending' | 'approved' | 'rejected';
+export type DocumentStatus = 'pending' | 'under_review' | 'approved' | 'rejected' | 'waived';
 
 // Human-readable labels for document types
 export const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
@@ -32,6 +33,7 @@ export const DOCUMENT_TYPE_LABELS: Record<DocumentType, string> = {
   certificate_of_insurance: 'Certificate of Insurance (COI)',
   work_history_proof: 'Relevant Work History Proof',
   prior_experience_proof: 'Prior Event/Kitchen Experience',
+  custom_requirement: 'Custom Requirement',
 };
 
 export const DOCUMENT_TYPE_DESCRIPTIONS: Record<DocumentType, string> = {
@@ -45,6 +47,7 @@ export const DOCUMENT_TYPE_DESCRIPTIONS: Record<DocumentType, string> = {
   certificate_of_insurance: 'Certificate showing active insurance coverage',
   work_history_proof: 'Resume or proof of relevant work experience',
   prior_experience_proof: 'Documentation of prior event or kitchen experience',
+  custom_requirement: 'A document requirement defined by the host',
 };
 
 export const DEADLINE_TYPE_LABELS: Record<DocumentDeadlineType, string> = {
@@ -81,6 +84,10 @@ export const DOCUMENT_GROUPS: DocumentGroup[] = [
   {
     label: 'Experience & Credentials',
     documents: ['work_history_proof', 'prior_experience_proof'],
+  },
+  {
+    label: 'Custom',
+    documents: ['custom_requirement'],
   },
 ];
 
@@ -119,10 +126,31 @@ export const DEFAULT_DOCUMENTS_BY_CATEGORY: Record<ListingCategory, DocumentType
 // Interface for a required document setting
 export interface RequiredDocumentSetting {
   document_type: DocumentType;
+  /** Host turned this requirement on for the listing. */
+  enabled?: boolean;
+  /** Required (blocks per its deadline rule) vs optional (never blocks). */
   is_required: boolean;
   deadline_type: DocumentDeadlineType;
   deadline_offset_hours?: number;
   description?: string;
+  title?: string;
+  instructions?: string;
+  requirement_config?: RequirementConfigInput;
+}
+
+/** Host-authored insurance detail. Never a platform-wide rule. */
+export interface InsuranceRequirementInput {
+  insurance_required?: boolean;
+  minimum_general_liability?: number | null;
+  additional_insured_required?: boolean;
+  coi_required?: boolean;
+  must_span_booking_dates?: boolean;
+  instructions?: string | null;
+}
+
+export interface RequirementConfigInput {
+  insurance?: InsuranceRequirementInput;
+  accept_on_upload?: boolean;
 }
 
 // Interface for an uploaded document

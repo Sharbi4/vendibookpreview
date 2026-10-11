@@ -1,15 +1,20 @@
 import { useState, useEffect } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { triggerOrchestrator } from '@/lib/orchestrator';
+import { broadcastListingChanged, invalidateListingQueries } from '@/lib/listings/liveSync';
 import type { Tables } from '@/integrations/supabase/types';
+
 
 type Listing = Tables<'listings'>;
 
 export const useHostListings = () => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const queryClient = useQueryClient();
+
   const [listings, setListings] = useState<Listing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -22,6 +27,7 @@ export const useHostListings = () => {
         .from('listings')
         .select('*')
         .eq('host_id', user.id)
+        .is('deleted_at', null)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -73,6 +79,12 @@ export const useHostListings = () => {
 
       if (error) throw error;
 
+      // Drop it from (or add it back to) every public surface immediately.
+      invalidateListingQueries(queryClient);
+      broadcastListingChanged(id);
+
+
+
       if (status === 'published' && user?.id) {
         triggerOrchestrator({
           user_id: user.id,
@@ -112,13 +124,17 @@ export const useHostListings = () => {
     try {
       const { error } = await supabase
         .from('listings')
-        .delete()
+        .update({ deleted_at: new Date().toISOString(), status: 'archived' })
         .eq('id', id)
         .eq('host_id', user?.id);
 
       if (error) throw error;
 
+      invalidateListingQueries(queryClient);
+      broadcastListingChanged(id);
+
       toast({ title: 'Deleted', description: 'Listing has been removed' });
+
     } catch (error) {
       console.error('Error deleting listing:', error);
       setListings(snapshot); // rollback

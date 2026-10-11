@@ -1,86 +1,68 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
-import { 
-  ChefHat, 
-  DollarSign, 
-  Shield, 
-  FileCheck, 
-  ArrowRight, 
-  TrendingUp, 
-  Users, 
-  Truck, 
-  Building2, 
-  CheckCircle2,
-  Clock,
-  Zap,
-  Lock,
-  QrCode,
-  Smartphone,
-  ClipboardCheck
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Card, CardContent } from '@/components/ui/card';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
-import Header from '@/components/layout/Header';
-import Footer from '@/components/layout/Footer';
-import SEO from '@/components/SEO';
-import JsonLd from '@/components/JsonLd';
+import { CalendarClock, Check, ClipboardCheck, CreditCard, FileSignature, MessageSquareLock, QrCode, ShieldCheck } from 'lucide-react';
+import RentalHostLanding from '@/components/rentals/RentalHostLanding';
 import { TellVendibookButton } from '@/components/lead/TellVendibookButton';
+import { FEE_CONFIG } from '../../supabase/functions/_shared/feeConfig';
 
-// --- Modular Components ---
+const LIST_URL = '/list/start?mode=rent&category=ghost_kitchen';
 
-const KitchenHero = () => {
-  const shouldReduceMotion = useReducedMotion();
-  
+const FAQS = [
+  {
+    question: 'What kinds of kitchens can I list?',
+    answer:
+      'Licensed commercial kitchens: restaurants with downtime, commissaries, shared and ghost kitchens, church and community kitchens, and caterers with spare prep space. Listing is free.',
+  },
+  {
+    question: 'Can I rent by the hour or by the shift?',
+    answer:
+      'Yes. Set hourly, daily, weekly or monthly rates and block the hours you need for your own service. Renters only see the time you open up.',
+  },
+  {
+    question: 'Can I require insurance, permits or certifications?',
+    answer:
+      'Yes. Ask renters for documents such as liability insurance, a food handler or manager certificate and their business license. You review them before you approve the booking.',
+  },
+  {
+    question: 'How do renters pay, and how do I get paid?',
+    answer:
+      `Renters pay by card through Square at checkout. A booking is only marked paid after Square confirms the payment. Connect your own Square account to be paid directly, or Vendibook pays you your share. Vendibook's host fee is ${FEE_CONFIG.rentalHostFeePct}% of the booking.`,
+  },
+  {
+    question: 'Can I restrict what equipment they use?',
+    answer:
+      'Yes. Describe exactly what’s included, such as prep tables only or the full hot line, and add house rules and access instructions that renters accept before they book.',
+  },
+  {
+    question: 'Is renting my kitchen allowed in my city?',
+    answer:
+      'Many health departments let permitted commercial kitchens serve as commissaries or shared kitchens, but rules vary. Check with your local health department and keep your own permits current.',
+  },
+];
+
+/** Printable QR that sends walk-ins straight to the kitchen's listing (Share kit). */
+function QrSignage() {
+  const reduced = useReducedMotion();
   return (
-    <section className="relative min-h-[85vh] flex items-center justify-center overflow-hidden bg-background">
-      {/* Subtle animated background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-br from-foreground/[0.03] via-background to-foreground/[0.02]" aria-hidden="true" />
-
-      <div className="container relative z-10 py-20 md:py-28">
-        <motion.div 
-          className="max-w-3xl mx-auto text-center"
-          initial={shouldReduceMotion ? {} : { opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-        >
-          <Badge variant="outline" className="mb-6 px-4 py-2 text-sm font-medium border-foreground/20 bg-foreground/5">
-            <ChefHat className="h-4 w-4 mr-2 inline" />
-            For Commercial Kitchens
-          </Badge>
-          
-          <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold tracking-tight text-foreground mb-6">
-            Your kitchen.{' '}
-            <span className="text-muted-foreground">
-              Fully booked.
-            </span>
-          </h1>
-
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10 leading-relaxed">
-            Turn your downtime into a second revenue stream. We connect you with vetted food businesses and handle the payments and compliance automatically.
+    <section className="px-5 pb-20 sm:pb-24">
+      <div className="mx-auto grid max-w-5xl items-center gap-10 rounded-[32px] border border-border bg-card p-7 sm:p-12 md:grid-cols-[1fr_auto]">
+        <div>
+          <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">Share kit</p>
+          <h2 className="text-balance text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+            Turn foot traffic into booked shifts
+          </h2>
+          <p className="mt-4 max-w-lg text-base leading-relaxed text-muted-foreground">
+            Download a QR code and share link for your listing. Post it by the back door, at your local
+            food truck meetup or in your bio, and renters land on your live availability.
           </p>
-
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mb-4">
-            <Button asChild size="lg" variant="glass-cta" className="h-14 px-8 text-lg">
-              <Link to="/list?category=ghost_kitchen">
-                List Your Kitchen
-                <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
-            <Button asChild size="lg" variant="outline" className="h-14 px-8 text-lg border-2">
-              <Link to="/kitchen-earnings-calculator">
-                Calculate Earnings
-              </Link>
-            </Button>
-          </div>
-          <div className="flex justify-center mb-8">
+          <ul className="mt-6 space-y-2.5">
+            {['Print-ready QR code', 'One link to your calendar and rates', 'Share anywhere, anytime'].map((item) => (
+              <li key={item} className="flex items-center gap-2.5 text-sm text-foreground">
+                <Check className="h-4 w-4 text-primary" aria-hidden="true" />
+                {item}
+              </li>
+            ))}
+          </ul>
+          <div className="mt-7">
             <TellVendibookButton
               variant="ghost"
               size="default"
@@ -88,548 +70,92 @@ const KitchenHero = () => {
               defaultCategory="commercial_kitchen"
               sourcePage="rent_my_commercial_kitchen"
             >
-              Not ready? Tell Vendibook what you have →
+              Not ready to list? Tell Vendibook what you have →
             </TellVendibookButton>
           </div>
-
-          <div className="flex items-center justify-center gap-6 text-sm text-muted-foreground">
-            <span className="flex items-center gap-1.5">
-              <CheckCircle2 className="h-4 w-4 text-foreground/50" />
-              Free to list
-            </span>
-            <span className="flex items-center gap-1.5">
-              <DollarSign className="h-4 w-4 text-foreground/50" />
-              $2M+ host earnings
-            </span>
-          </div>
-        </motion.div>
-      </div>
-    </section>
-  );
-};
-
-const ValueGrid = () => {
-  const shouldReduceMotion = useReducedMotion();
-  
-  const values = [
-    {
-      icon: Clock,
-      title: "Fill the 'Dead' Hours",
-      desc: "Monetize the graveyard shift (12 AM - 6 AM) or slow Mondays. You set the schedule; we fill the slots."
-    },
-    {
-      icon: ClipboardCheck,
-      title: "Know Who's Cooking",
-      desc: "Review each renter's business info, equipment needs, and intended use in our app before approving any booking."
-    },
-    {
-      icon: Shield,
-      title: "Protect Your Facility",
-      desc: "We collect liability insurance, ServSafe certs, and business licenses. Get the documentation you need upfront."
-    },
-    {
-      icon: DollarSign,
-      title: "Guaranteed Payouts",
-      desc: "Renters pay upfront. Funds are held in payment protection and released to you automatically. No chasing invoices."
-    },
-    {
-      icon: Users,
-      title: "Your Own Storefront",
-      desc: "Get a shareable profile page with reviews, photos, and availability. Send the link to renters or let them discover you."
-    },
-    {
-      icon: QrCode,
-      title: "Free QR Signage",
-      desc: "We send you professional signage with a QR code linking to your listing. Capture walk-in leads effortlessly."
-    }
-  ];
-
-  return (
-    <section className="py-20 md:py-28 bg-muted/30">
-      <div className="container">
-        <motion.div 
-          className="text-center mb-16"
-          initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
+        </div>
+        <motion.div
+          className="mx-auto flex h-44 w-44 items-center justify-center rounded-[28px] bg-foreground text-background shadow-[0_24px_60px_-30px_rgba(28,25,23,0.6)]"
+          initial={reduced ? undefined : { opacity: 0, scale: 0.94 }}
+          whileInView={reduced ? undefined : { opacity: 1, scale: 1 }}
           viewport={{ once: true }}
+          transition={{ duration: 0.5 }}
+          aria-hidden="true"
         >
-          <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-            Why list on Vendibook?
-          </h2>
-          <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-            We aren't just a directory. We are an operating system designed to protect your facility while maximizing revenue.
-          </p>
-        </motion.div>
-
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 max-w-6xl mx-auto">
-          {values.map((item, i) => (
-            <motion.div
-              key={item.title}
-              initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: i * 0.1 }}
-            >
-              <Card className="h-full border-2 border-border shadow-lg bg-card/80 backdrop-blur-xl hover:shadow-xl hover:border-foreground/20 transition-all">
-                <CardContent className="p-8">
-                  <div className="w-14 h-14 rounded-2xl bg-foreground flex items-center justify-center mb-6">
-                    <item.icon className="h-7 w-7 text-background" />
-                  </div>
-                  <h3 className="text-xl font-semibold text-foreground mb-3">{item.title}</h3>
-                  <p className="text-muted-foreground leading-relaxed">{item.desc}</p>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-    </section>
-  );
-};
-
-const QRSignageSection = () => {
-  const shouldReduceMotion = useReducedMotion();
-  
-  return (
-    <section className="py-20 md:py-28 bg-background overflow-hidden">
-      <div className="container">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center max-w-6xl mx-auto">
-          {/* Left: Phone Mockup with QR Animation */}
-          <motion.div
-            className="relative flex justify-center order-2 lg:order-1"
-            initial={shouldReduceMotion ? {} : { opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-          >
-            <div className="relative">
-              {/* Phone Frame */}
-              <div className="relative w-64 h-[500px] bg-foreground rounded-[3rem] p-3 shadow-2xl">
-                <div className="absolute top-6 left-1/2 -translate-x-1/2 w-20 h-6 bg-foreground rounded-full z-10" />
-                <div className="w-full h-full bg-background rounded-[2.25rem] overflow-hidden flex flex-col items-center justify-center p-6">
-                  {/* QR Code with Scan Animation */}
-                  <motion.div
-                    className="relative"
-                    initial={shouldReduceMotion ? {} : { scale: 0.9 }}
-                    whileInView={{ scale: 1 }}
-                    viewport={{ once: true }}
-                    transition={{ duration: 0.5 }}
-                  >
-                    <div className="w-40 h-40 bg-card border-2 border-border rounded-2xl p-4 relative overflow-hidden">
-                      {/* QR Pattern */}
-                      <div className="grid grid-cols-5 gap-1 w-full h-full">
-                        {Array.from({ length: 25 }).map((_, i) => (
-                          <motion.div
-                            key={i}
-                            className={`rounded-sm ${[0, 1, 2, 4, 5, 6, 9, 10, 14, 15, 18, 19, 20, 22, 23, 24].includes(i) ? 'bg-foreground' : 'bg-transparent'}`}
-                            initial={shouldReduceMotion ? {} : { opacity: 0 }}
-                            whileInView={{ opacity: 1 }}
-                            viewport={{ once: true }}
-                            transition={{ delay: i * 0.02 }}
-                          />
-                        ))}
-                      </div>
-                      {/* Scan Line Animation */}
-                      <motion.div
-                        className="absolute left-0 right-0 h-0.5 bg-foreground/60"
-                        initial={{ top: 0 }}
-                        animate={{ top: ['0%', '100%', '0%'] }}
-                        transition={{ 
-                          duration: 2, 
-                          repeat: Infinity, 
-                          ease: "easeInOut",
-                          repeatDelay: 1
-                        }}
-                      />
-                    </div>
-                    {/* Corner Brackets */}
-                    <div className="absolute -top-2 -left-2 w-6 h-6 border-t-4 border-l-4 border-foreground/40 rounded-tl-lg" />
-                    <div className="absolute -top-2 -right-2 w-6 h-6 border-t-4 border-r-4 border-foreground/40 rounded-tr-lg" />
-                    <div className="absolute -bottom-2 -left-2 w-6 h-6 border-b-4 border-l-4 border-foreground/40 rounded-bl-lg" />
-                    <div className="absolute -bottom-2 -right-2 w-6 h-6 border-b-4 border-r-4 border-foreground/40 rounded-br-lg" />
-                  </motion.div>
-                  
-                  <p className="mt-6 text-sm font-medium text-foreground text-center">Scan to Book</p>
-                  <p className="text-xs text-muted-foreground text-center mt-1">Your Kitchen Name</p>
-                </div>
-              </div>
-              
-              {/* Floating Badge */}
-              <motion.div
-                className="absolute -right-4 top-20 bg-card border-2 border-border rounded-xl p-3 shadow-lg"
-                initial={shouldReduceMotion ? {} : { opacity: 0, x: 20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.3 }}
-              >
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-full bg-foreground/10 flex items-center justify-center">
-                    <CheckCircle2 className="h-4 w-4 text-foreground/60" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-medium text-foreground">New Lead!</p>
-                    <p className="text-[10px] text-muted-foreground">Just now</p>
-                  </div>
-                </div>
-              </motion.div>
-            </div>
-          </motion.div>
-          
-          {/* Right: Copy */}
-          <motion.div
-            className="order-1 lg:order-2"
-            initial={shouldReduceMotion ? {} : { opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-          >
-            <Badge variant="outline" className="mb-4 px-3 py-1.5 text-xs font-medium border-foreground/20 bg-foreground/5 text-foreground">
-              <QrCode className="h-3.5 w-3.5 mr-1.5 inline" />
-              Free Signage
-            </Badge>
-
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4 leading-tight">
-              Turn foot traffic
-              <br />
-              <span className="text-muted-foreground">into booked shifts.</span>
-            </h2>
-
-            <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-              We mail you professional signage with a QR code that links directly to your listing. 
-              Hang it in your window or by the door—renters scan, browse your availability, and book instantly.
-            </p>
-
-            <ul className="space-y-4">
-              {[
-                "Free printed signage shipped to you",
-                "QR links to your live booking calendar",
-                "Capture leads even when you're closed",
-                "Track scans in your dashboard"
-              ].map((item, i) => (
-                <motion.li
-                  key={item}
-                  className="flex items-center gap-3 text-foreground"
-                  initial={shouldReduceMotion ? {} : { opacity: 0, x: -10 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
-                >
-                  <div className="w-6 h-6 rounded-full bg-foreground/10 flex items-center justify-center flex-shrink-0">
-                    <CheckCircle2 className="h-4 w-4 text-foreground/50" />
-                  </div>
-                  {item}
-                </motion.li>
-              ))}
-            </ul>
-          </motion.div>
-        </div>
-      </div>
-    </section>
-  );
-};
-
-const ComplianceFeature = () => {
-  const shouldReduceMotion = useReducedMotion();
-  
-  const requirements = [
-    "General Liability Insurance ($1M+)",
-    "ServSafe / Food Manager Certification",
-    "Business License & Permits",
-    "Stripe Identity Verification"
-  ];
-
-  return (
-    <section className="py-20 md:py-28 bg-background">
-      <div className="container">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center max-w-6xl mx-auto">
-          {/* Left: Copy */}
-          <motion.div
-            initial={shouldReduceMotion ? {} : { opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-          >
-            <Badge variant="outline" className="mb-4 px-3 py-1.5 text-xs font-medium border-foreground/20 bg-foreground/5 text-foreground">
-              <Shield className="h-3.5 w-3.5 mr-1.5 inline" />
-              Safety First
-            </Badge>
-
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4 leading-tight">
-              We chase the paperwork,
-              <br />
-              <span className="text-muted-foreground">so you don't have to.</span>
-            </h2>
-
-            <p className="text-lg text-muted-foreground mb-8 leading-relaxed">
-              Managing external renters usually means chasing down expired PDFs. We automated it.
-              Our system locks the booking flow until the renter provides:
-            </p>
-
-            <ul className="space-y-4">
-              {requirements.map((req, i) => (
-                <motion.li
-                  key={req}
-                  className="flex items-center gap-3 text-foreground"
-                  initial={shouldReduceMotion ? {} : { opacity: 0, x: -10 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
-                >
-                   <div className="w-6 h-6 rounded-full bg-foreground/10 flex items-center justify-center flex-shrink-0">
-                    <CheckCircle2 className="h-4 w-4 text-foreground/50" />
-                  </div>
-                  {req}
-                </motion.li>
-              ))}
-            </ul>
-          </motion.div>
-
-          {/* Right: Abstract UI "Vault" representation */}
-          <motion.div
-            className="relative"
-            initial={shouldReduceMotion ? {} : { opacity: 0, x: 20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-          >
-            <div className="relative bg-card rounded-3xl border border-border shadow-2xl p-8 overflow-hidden">
-              {/* Header */}
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-foreground flex items-center justify-center">
-                    <Lock className="h-5 w-5 text-background" />
-                  </div>
-                  <div>
-                    <p className="font-semibold text-foreground">Document Vault</p>
-                    <p className="text-sm text-muted-foreground">3 of 3 verified</p>
-                  </div>
-                </div>
-                <Badge className="bg-foreground/10 text-foreground/70 border-foreground/15">
-                  Verified
-                </Badge>
-              </div>
-
-              {/* Document rows */}
-              <div className="space-y-4 mb-8">
-                {[
-                  { name: "Liability Insurance", status: "Verified" },
-                  { name: "ServSafe Certificate", status: "Verified" },
-                  { name: "Business License", status: "Verified" }
-                ].map((doc, i) => (
-                  <div key={i} className="flex items-center justify-between p-4 bg-muted/50 rounded-xl">
-                    <div className="flex items-center gap-3">
-                      <FileCheck className="h-5 w-5 text-muted-foreground" />
-                      <span className="text-sm font-medium text-foreground">{doc.name}</span>
-                    </div>
-                    <CheckCircle2 className="h-5 w-5 text-foreground/40" />
-                  </div>
-                ))}
-              </div>
-
-              {/* Action button */}
-              <Button className="w-full" variant="glass-cta">
-                Approve Booking
-              </Button>
-
-              {/* Decorative blurred background elements */}
-              <div className="absolute -top-20 -right-20 w-40 h-40 bg-foreground/[0.05] rounded-full blur-3xl" aria-hidden="true" />
-              <div className="absolute -bottom-20 -left-20 w-40 h-40 bg-foreground/[0.03] rounded-full blur-3xl" aria-hidden="true" />
-            </div>
-          </motion.div>
-        </div>
-      </div>
-    </section>
-  );
-};
-
-const RevenuePreview = () => {
-  const shouldReduceMotion = useReducedMotion();
-  
-  const audiences = [
-    { icon: Truck, title: "Food Trucks", desc: "Need prep space for code compliance." },
-    { icon: Building2, title: "Ghost Brands", desc: "Delivery-only concepts needing production lines." },
-    { icon: Users, title: "Caterers", desc: "Large event prep requiring walk-in space." }
-  ];
-
-  return (
-    <section className="relative py-20 md:py-28 bg-muted/30 overflow-hidden">
-      <div className="container relative z-10">
-        <motion.div 
-          className="max-w-3xl mx-auto text-center"
-          initial={shouldReduceMotion ? {} : { opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-        >
-          <Badge variant="outline" className="mb-4 px-3 py-1.5 text-xs font-medium border-foreground/20 bg-foreground/5 text-foreground">
-            Revenue Potential
-          </Badge>
-          
-          <p className="text-5xl md:text-6xl font-bold text-foreground mb-4">
-            $2,000/mo
-          </p>
-
-          <p className="text-lg text-muted-foreground mb-10 max-w-xl mx-auto">
-            That's the average earnings for kitchens renting out just 3 shifts per week. Your idle equipment is an asset—put it to work.
-          </p>
-
-          <div className="grid sm:grid-cols-3 gap-6 mb-10">
-            {audiences.map((item, i) => (
-              <motion.div
-                key={item.title}
-                className="p-6 bg-card rounded-2xl border border-border shadow-sm"
-                initial={shouldReduceMotion ? {} : { opacity: 0, y: 10 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-              >
-                <item.icon className="h-8 w-8 text-foreground/60 mx-auto mb-3" />
-                <h4 className="font-semibold text-foreground mb-1">{item.title}</h4>
-                <p className="text-sm text-muted-foreground">{item.desc}</p>
-              </motion.div>
-            ))}
-          </div>
-
-          <Button asChild size="lg" variant="glass-cta" className="h-14 px-8 text-lg">
-            <Link to="/list?category=ghost_kitchen">
-              Start Earning
-            </Link>
-          </Button>
+          <QrCode className="h-24 w-24" strokeWidth={1.25} />
         </motion.div>
       </div>
-
-      {/* Ambient Glow */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-foreground/[0.04] rounded-full blur-3xl" aria-hidden="true" />
-      <div className="absolute bottom-0 right-0 w-[400px] h-[400px] bg-foreground/[0.03] rounded-full blur-3xl" aria-hidden="true" />
     </section>
   );
-};
+}
 
-const KitchenFAQ = () => {
-  const faqs = [
-    {
-      q: "Do I have to review the legal documents myself?",
-      a: "No. You set the requirements (e.g., '$1M Liability Insurance'). Vendibook collects and verifies the dates on these documents automatically. You simply see a green 'Verified' checkmark."
-    },
-    {
-      q: "Can I restrict what equipment they use?",
-      a: "Absolutely. You can list your space as 'Prep Tables Only' or 'Full Hot Line.' You can also explicitly mark specific equipment (like a specialized mixer) as off-limits in your house rules."
-    },
-    {
-      q: "When is payment collected?",
-      a: "We charge the renter's card the moment they send a booking request. The funds are held securely in payment protection and released to you 24 hours after the booking starts."
-    },
-    {
-      q: "Is this legal in my city?",
-      a: "Most health departments allow permitted commercial kitchens to act as 'commissaries.' Our document tracking is specifically designed to help you and your renters stay compliant with local codes."
-    }
-  ];
-
-  return (
-    <section className="py-20 md:py-28 bg-background">
-      <div className="container max-w-3xl">
-        <h2 className="text-3xl md:text-4xl font-bold text-foreground text-center mb-12">
-          Common Questions
-        </h2>
-        <Accordion type="single" collapsible className="space-y-4">
-          {faqs.map((faq, i) => (
-            <AccordionItem key={i} value={`faq-${i}`} className="border border-border rounded-xl px-6 bg-card">
-              <AccordionTrigger className="text-left font-medium text-foreground hover:no-underline py-5">
-                {faq.q}
-              </AccordionTrigger>
-              <AccordionContent className="text-muted-foreground pb-5">
-                {faq.a}
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
-      </div>
-    </section>
-  );
-};
-
-// --- Main Page ---
-
-const RentMyCommercialKitchen = () => {
-  const faqSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: [
+const RentMyCommercialKitchen = () => (
+  <RentalHostLanding
+    seo={{
+      title: 'Rent Out Your Commercial Kitchen | Vendibook',
+      description:
+        'Turn kitchen downtime into income. List your commercial or shared kitchen free, set hourly or daily rates, require insurance and permits, and get paid by card through Square.',
+      canonical: '/rent-my-commercial-kitchen',
+    }}
+    source="rent_my_commercial_kitchen"
+    eyebrow="For commercial & shared kitchens"
+    headline={{ highlight: 'Your kitchen.', rest: 'Booked in the hours you’re closed.' }}
+    subhead="Fill slow mornings, late nights and off days with food trucks, caterers and delivery brands that need licensed space. You set the hours, the rules and who gets the keys."
+    primaryCta={{ label: 'List your kitchen', to: LIST_URL }}
+    secondaryCta={{ label: 'Calculate earnings', to: '/kitchen-earnings-calculator' }}
+    proofChips={['Free to list', 'Hourly or daily rates', 'Your rules, your calendar']}
+    audience={{
+      title: 'Who books kitchen time on Vendibook',
+      items: ['Food trucks needing a commissary', 'Caterers prepping big events', 'Delivery-only brands', 'Bakers & meal-prep startups', 'Cottage food makers scaling up'],
+    }}
+    steps={[
+      { title: 'List your space free', body: 'Add photos, equipment, hours and your hourly or daily rate. Block the time you need for your own service.' },
+      { title: 'Approve who cooks', body: 'See the renter’s business, intended use and documents, message them, then approve the shifts that work for you.' },
+      { title: 'Get paid by card', body: 'Renters pay upfront through Square and sign your agreement before their first shift.' },
+    ]}
+    estimator={{
+      title: 'See what your downtime is worth',
+      unit: 'day',
+      rateLabel: 'Rate per shift',
+      rate: { min: 50, max: 600, step: 10, initial: 150 },
+      periods: { label: 'Shifts booked per month', min: 1, max: 30, initial: 12, suffix: 'shifts' },
+      note: 'Estimates only; your rate and bookings set your earnings.',
+    }}
+    features={[
+      { icon: CalendarClock, title: 'Hours that fit your service', body: 'Rent by the hour, shift, day, week or month. Block your own prep and service times so renters never overlap.' },
+      { icon: ClipboardCheck, title: 'Documents before approval', body: 'Ask for liability insurance, certifications and a business license, and review them before you say yes.' },
+      { icon: CreditCard, title: 'Card payments through Square', body: 'Renters pay upfront by card. Connect your own Square account to be paid directly, or let Vendibook pay out your share.' },
+      { icon: ShieldCheck, title: 'Deposits and screened renters', body: 'Collect a refundable security deposit at checkout. Renters answer an insurance question before paying, and you decide whether to approve each request or use Instant Book.' },
+      { icon: FileSignature, title: 'Signed agreement and house rules', body: 'Each booking comes with an electronically signed rental agreement plus your equipment rules and access instructions.' },
+      { icon: MessageSquareLock, title: 'Safe messaging', body: 'Talk to renters inside Vendibook, where every message is scanned for scams and the whole conversation stays on record.' },
+    ]}
+    spotlight={{
+      eyebrow: 'Know your numbers',
+      title: 'How much could your idle hours earn?',
+      body: 'Plug in your open hours and local rates to see a monthly estimate before you list.',
+      cta: { label: 'Open the earnings calculator', to: '/kitchen-earnings-calculator' },
+    }}
+    faqs={FAQS}
+    finalCta={{
+      title: 'Ready to fill your kitchen’s quiet hours?',
+      body: 'Listing is free and takes a few minutes. You only pay the host fee when a booking is completed.',
+      primary: { label: 'List your kitchen', to: LIST_URL },
+      secondary: { label: 'Browse shared kitchens', to: '/search?category=ghost_kitchen&mode=rent' },
+    }}
+    extraSchema={[
       {
-        '@type': 'Question',
-        name: 'Do I have to review the legal documents myself?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: "No. You set the requirements. Vendibook collects and verifies the dates on these documents automatically."
-        }
+        '@context': 'https://schema.org',
+        '@type': 'Service',
+        name: 'Commercial kitchen rental listings',
+        provider: { '@type': 'Organization', name: 'Vendibook', url: 'https://vendibook.com' },
+        description: 'List a commercial or shared kitchen for hourly or daily rental to food trucks, caterers and delivery brands.',
+        areaServed: 'United States',
+        serviceType: 'Kitchen rental marketplace',
       },
-      {
-        '@type': 'Question',
-        name: 'When is payment collected?',
-        acceptedAnswer: {
-          '@type': 'Answer',
-          text: "We charge the renter's card the moment they send a booking request. The funds are held securely in payment protection."
-        }
-      }
-    ],
-  };
-
-  const serviceSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'Service',
-    name: 'Commercial Kitchen Rental Platform',
-    provider: {
-      '@type': 'Organization',
-      name: 'Vendibook',
-      url: 'https://vendibook.com',
-    },
-    description: 'Monetize your restaurant\'s unused hours. Safely rent your commercial kitchen to vetted ghost brands and caterers.',
-    areaServed: 'United States',
-    serviceType: 'Kitchen Rental Marketplace',
-  };
-
-  return (
-    <div className="min-h-screen flex flex-col bg-background">
-      <SEO
-        title="Rent Out Your Commercial Kitchen | Vendibook"
-        description="Turn restaurant downtime into profit. Rent your commercial kitchen to vetted ghost brands & caterers. We handle paperwork, payments, and screening."
-        canonical="/rent-my-commercial-kitchen"
-      />
-      <JsonLd schema={[faqSchema, serviceSchema]} />
-
-      <Header />
-
-      <main className="flex-1">
-        <KitchenHero />
-        <ValueGrid />
-        <QRSignageSection />
-        <ComplianceFeature />
-        <RevenuePreview />
-        <KitchenFAQ />
-        
-        {/* Final CTA Bar */}
-        <section className="py-16 md:py-20 bg-foreground">
-          <div className="container">
-            <div className="max-w-2xl mx-auto text-center">
-              <h2 className="text-3xl md:text-4xl font-bold text-background mb-8">
-                Ready to list?
-              </h2>
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
-                <Button asChild size="lg" variant="secondary" className="h-14 px-8 text-lg">
-                  <Link to="/list?category=ghost_kitchen">
-                    Create Free Listing
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Link>
-                </Button>
-                <Button asChild size="lg" variant="outline" className="h-14 px-8 text-lg border-background/20 text-background hover:bg-background/10 hover:text-background">
-                  <Link to="/contact">
-                    Contact Sales
-                  </Link>
-                </Button>
-              </div>
-            </div>
-          </div>
-        </section>
-      </main>
-
-      <Footer />
-    </div>
-  );
-};
+    ]}
+  >
+    <QrSignage />
+  </RentalHostLanding>
+);
 
 export default RentMyCommercialKitchen;

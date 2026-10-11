@@ -1,9 +1,14 @@
 import * as React from 'npm:react@18.3.1'
-import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { Body, Button, Container, Head, Heading, Html, Link, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
-import { BrandHeader } from './_blocks.tsx'
+import { BrandFooter, BrandHeader } from './_blocks.tsx'
+// Opens /dashboard/offers focused on this offer; the seller still confirms there.
+const offerLink = (offerId: string | undefined, action: 'accept' | 'counter' | 'decline') =>
+  `${SITE_URL}/dashboard/offers?offer=${encodeURIComponent(offerId || '')}&action=${action}`
+const secondaryLink = { color: '#1f2937', fontWeight: 600, textDecoration: 'underline' } as const
+
 interface Props { sellerName?: string; buyerName?: string; listingTitle?: string; offerAmount?: number; askingPrice?: number; message?: string; offerId?: string; expiresAt?: string; coverImageUrl?: string }
 
 const E = ({ sellerName, buyerName, listingTitle, offerAmount, askingPrice, message, offerId, expiresAt, coverImageUrl }: Props) => (
@@ -18,9 +23,17 @@ const E = ({ sellerName, buyerName, listingTitle, offerAmount, askingPrice, mess
         {askingPrice ? <Section style={s.accentRow}><Text style={s.accentLabel}>YOUR ASKING</Text><Text style={s.accentValuePlain}>${askingPrice.toLocaleString()}</Text></Section> : null}
         {message ? <><Text style={s.smallHeader}>MESSAGE</Text><Text style={s.text}>“{message}”</Text></> : null}
         {expiresAt ? <Text style={s.small}>Expires {expiresAt}.</Text> : null}
-        <Section style={s.ctaWrap}><Button href={`${SITE_URL}/dashboard?offer=${offerId || ''}`} style={s.button}>Review offer</Button></Section>
+        <Section style={s.ctaWrap}>
+          <Button href={offerLink(offerId, 'accept')} style={s.button}>{offerAmount ? `Accept $${offerAmount.toLocaleString()}` : 'Accept'}</Button>
+        </Section>
+        <Text style={s.small}>
+          <Link href={offerLink(offerId, 'counter')} style={secondaryLink}>Counter</Link>
+          {'   ·   '}
+          <Link href={offerLink(offerId, 'decline')} style={secondaryLink}>Decline</Link>
+        </Text>
+        <Text style={s.small}>Buyers who hear back quickly are far more likely to close. You’ll confirm before anything is sent.</Text>
       </Section>
-    </Container></Body></Html>
+    <BrandFooter /></Container></Body></Html>
 )
 
 export const template = {

@@ -2,18 +2,19 @@ import { useMemo } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   Clock,
-  ShieldAlert,
   Inbox,
 } from 'lucide-react';
+
 import PermitsTab from './PermitsTab';
 import ActionRequiredStack, { type ActionItem } from './shared/ActionRequiredStack';
 import OverviewGreeting from './overview/OverviewGreeting';
 import { KpiCard } from './overview/KpiCard';
 import RecentActivityStrip, { ActivityItem } from './overview/RecentActivityStrip';
-import PremiumSpotlight from './overview/PremiumSpotlight';
+import MembershipCard from './MembershipCard';
 import { useShopperBookings } from '@/hooks/useShopperBookings';
 import { useUnreadMessageCount } from '@/hooks/useUnreadMessageCount';
 import { useFavorites } from '@/hooks/useFavorites';
+import { useSellerVerification } from '@/hooks/useSellerVerification';
 import { useAuth } from '@/contexts/AuthContext';
 
 /**
@@ -28,6 +29,12 @@ import { useAuth } from '@/contexts/AuthContext';
 const ShopperDashboard = () => {
   const { bookings, stats } = useShopperBookings();
   const { profile, isVerified } = useAuth();
+  const sellerVerification = useSellerVerification();
+  // Authoritative badge state — the offer disappears once verified.
+  const verified =
+    isVerified ||
+    sellerVerification.state?.badge_active === true ||
+    sellerVerification.offer.enabled === false;
   const { count: unreadMessageCount } = useUnreadMessageCount();
   const { favorites } = useFavorites();
   const [searchParams] = useSearchParams();
@@ -48,12 +55,8 @@ const ShopperDashboard = () => {
 
   const actionItems: ActionItem[] = useMemo(() => {
     const items: ActionItem[] = [];
-    if (!isVerified) items.push({
-      id: 'verify-identity', icon: ShieldAlert,
-      title: 'Verify your identity',
-      description: 'One tap unlocks publishing and higher-trust checkout.',
-      href: '/verify-identity', cta: 'Verify', tone: 'warning',
-    });
+
+
     if (stats.pending > 0) items.push({
       id: 'pending', icon: Clock,
       title: `${stats.pending} booking request${stats.pending > 1 ? 's' : ''} awaiting host`,
@@ -66,7 +69,7 @@ const ShopperDashboard = () => {
       href: '/messages', cta: 'Open',
     });
     return items;
-  }, [isVerified, stats.pending, unreadMessageCount]);
+  }, [verified, stats.pending, unreadMessageCount]);
 
   const activity: ActivityItem[] = useMemo(() => {
     return bookings.slice(0, 3).map((b) => {
@@ -157,7 +160,7 @@ const ShopperDashboard = () => {
 
       <hr className="section-divider" />
 
-      <PremiumSpotlight />
+      <MembershipCard />
     </div>
   );
 };

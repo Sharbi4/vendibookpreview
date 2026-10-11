@@ -2,7 +2,7 @@ import * as React from 'npm:react@18.3.1'
 import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
-import {BrandHeader, BlogHighlights, ToolsBlock} from './_blocks.tsx'
+import { BlogHighlights, BrandFooter, BrandHeader, ToolsBlock } from './_blocks.tsx'
 
 interface Props { sellerName?: string; listingTitle?: string; salePrice?: number; buyerName?: string; orderNumber?: string; coverImageUrl?: string }
 
@@ -16,12 +16,12 @@ const E = ({ sellerName, listingTitle, salePrice, buyerName, orderNumber, coverI
         <Text style={s.lede}>{listingTitle ? `“${listingTitle}”` : 'Your listing'} sold to {buyerName || 'the buyer'}.</Text>
         {salePrice ? <Section style={s.accentRow}><Text style={s.accentLabel}>SALE PRICE</Text><Text style={s.accentValue}>${salePrice.toLocaleString()}</Text></Section> : null}
         {orderNumber ? <Section style={s.accentRow}><Text style={s.accentLabel}>ORDER</Text><Text style={s.accentValuePlain}>{orderNumber}</Text></Section> : null}
-        <Text style={s.text}>Funds are released to your Stripe account after fulfillment confirmation.</Text>
+        <Text style={s.text}>Your payout is released once delivery is confirmed — typically within 24 hours, and always within 24–48 hours. It's sent by PayPal, ACH, or Venmo depending on the payout account on file.</Text>
         <Section style={s.ctaWrap}><Button href={`${SITE_URL}/dashboard`} style={s.button}>View transaction</Button></Section>
         <ToolsBlock role="seller" />
         <BlogHighlights role="seller" />
       </Section>
-    </Container></Body></Html>
+    <BrandFooter /></Container></Body></Html>
 )
 
 export const template = {

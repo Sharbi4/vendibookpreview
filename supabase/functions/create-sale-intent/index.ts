@@ -2,8 +2,10 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
 import { assertListingPurchasable } from "../_shared/listingGuard.ts";
-
-const SELLER_COMMISSION = 0.129;
+import { resolveProStatus } from "../_shared/proEligibility.ts";
+import { computeProSellerFee } from "../_shared/proFee.ts";
+import { hasCurrentLegalAcceptance } from "../_shared/legalVersions.ts";
+import { priceFulfillment } from "../_shared/salePricing.ts";
 
 /**
  * Creates (or reuses) the PENDING sale_transactions row a PayPal order is
@@ -26,13 +28,25 @@ serve(async (req) => {
     const user = userData?.user;
     if (!user) return jsonError(401, "unauthenticated", "Your session expired. Please sign in again.");
 
+    // Legal gate at the execution layer: no purchase intent without a current
+    // Terms of Service and Payments Terms acceptance on file for this buyer.
+    for (const slug of ["terms-of-service", "payments-terms"] as const) {
+      if (!(await hasCurrentLegalAcceptance(admin, user.id, slug))) {
+        return jsonError(
+          403,
+          "legal_acceptance_required",
+          "Please tick the box agreeing to the Terms of Service, Payments Terms, and Privacy Policy before paying.",
+        );
+      }
+    }
+
     const body = await req.json().catch(() => ({}));
     const listingId = body?.listing_id ? String(body.listing_id) : null;
     if (!listingId) return jsonError(400, "missing_fields", "Missing listing id.");
 
     const { data: listing } = await admin
       .from("listings")
-      .select("id, title, host_id, price_sale, status, listing_mode")
+      .select("id, title, host_id, price_sale, status, mode, fulfillment_type, delivery_fee, delivery_fee_type, delivery_radius_miles, latitude, longitude, address, pickup_location_text, vendibook_freight_enabled")
       .eq("id", listingId)
       .maybeSingle();
 
@@ -46,40 +60,123 @@ serve(async (req) => {
       return jsonError(403, "self_transaction", "You can't purchase your own listing.");
     }
 
-    // Reuse any pending intent for this buyer + listing so a double click or a
-    // refresh can never create two transactions.
-    const { data: existing } = await admin
-      .from("sale_transactions")
-      .select("id, status")
+    // AGREED PRICE: an accepted offer (or accepted counter) is the price both
+    // sides agreed to. Resolved server-side — the browser never sets price.
+    const { data: acceptedOffer } = await admin
+      .from("offers")
+      .select("offer_amount, counter_amount, updated_at")
       .eq("listing_id", listingId)
       .eq("buyer_id", user.id)
-      .in("status", ["pending"])
-      .gt("created_at", new Date(Date.now() - 60 * 60_000).toISOString())
+      .eq("status", "accepted")
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    const agreedAmount = acceptedOffer
+      ? Number(acceptedOffer.counter_amount ?? acceptedOffer.offer_amount)
+      : Number(listing.price_sale);
+    const amount = Number.isFinite(agreedAmount) && agreedAmount > 0
+      ? agreedAmount
+      : Number(listing.price_sale);
+
+    const fulfillmentTypeIn = String(body?.fulfillment_type ?? "pickup");
+    const needsAddressIn = fulfillmentTypeIn === "delivery" ||
+      fulfillmentTypeIn === "vendibook_freight";
+
+    // Delivery and freight are priced here, never taken from the browser:
+    // they are added to what the buyer pays, so a client-sent value could
+    // shrink the charge while the seller is still owed full proceeds.
+    const pricing = await priceFulfillment(listing, fulfillmentTypeIn, body?.delivery_address);
+    if ("error" in pricing) return jsonError(409, pricing.code, pricing.error);
+
+    /** Fulfillment/contact fields are re-synced on reuse; money never is. */
+    const mutableFields = {
+      fulfillment_type: fulfillmentTypeIn,
+      delivery_fee: pricing.deliveryFee,
+      freight_cost: pricing.freightCost,
+      delivery_address: needsAddressIn ? (body?.delivery_address ?? null) : null,
+      delivery_instructions: needsAddressIn ? (body?.delivery_instructions ?? null) : null,
+      buyer_name: body?.buyer_name ?? null,
+      buyer_email: body?.buyer_email ?? user.email ?? null,
+      buyer_phone: body?.buyer_phone ?? null,
+      // Buyer's own contact address. Never a delivery destination.
+      buyer_address1: body?.buyer_address1 ?? null,
+      buyer_address2: body?.buyer_address2 ?? null,
+      buyer_city: body?.buyer_city ?? null,
+      buyer_state: body?.buyer_state ?? null,
+      buyer_zip: body?.buyer_zip ?? null,
+      referral_code: body?.referral_code ?? null,
+      terms_id: body?.terms_id ?? null,
+    };
+
+    // A sale listing is one unit. Once another buyer's purchase is committed,
+    // nobody can start or resume checkout on it (the buyer who owns that sale
+    // falls through to the "already paid" answer below).
+    const { data: committedSale } = await admin.rpc("listing_committed_sale", { _listing_id: listingId });
+    if (committedSale) {
+      const { data: owner } = await admin.from("sale_transactions")
+        .select("buyer_id").eq("id", committedSale).maybeSingle();
+      if (owner?.buyer_id !== user.id) {
+        return jsonError(409, "listing_sold", "This item has already been purchased by another buyer.");
+      }
+    }
+
+    // Reuse a pending or failed purchase for this buyer + listing so a retry or
+    // refresh can never create two transactions. The fulfillment selection can
+    // legitimately have changed since that row was created, so re-sync it —
+    // otherwise the buyer would pay against a stale delivery amount.
+    const { data: existing } = await admin
+      .from("sale_transactions")
+      .select("id, status, amount")
+      .eq("listing_id", listingId)
+      .eq("buyer_id", user.id)
+      .in("status", ["pending", "payment_failed"])
+      .or(`status.eq.payment_failed,created_at.gt.${new Date(Date.now() - 60 * 60_000).toISOString()}`)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
 
     if (existing) {
-      return jsonResponse(200, { transaction_id: existing.id, reused: true });
+      const { data: updated, error: updateError } = await admin
+        .from("sale_transactions")
+        .update(mutableFields)
+        .eq("id", existing.id)
+        .in("status", ["pending", "payment_failed"])
+        .select("id").maybeSingle();
+      if (updateError || !updated) return jsonError(409, "purchase_changed", "This purchase changed. Refresh its status before trying again.");
+      return jsonResponse(200, { transaction_id: existing.id, reused: true, amount: Number(existing.amount) });
     }
 
+    // Buyer-scoped on purpose: this only blocks the SAME buyer from paying
+    // twice for the same listing. A listing that is sold out / unpublished is
+    // stopped earlier by `assertListingPurchasable`, which is listing-scoped.
     const { data: alreadyPaid } = await admin
       .from("sale_transactions")
-      .select("id")
+      .select("id, status")
       .eq("listing_id", listingId)
       .eq("buyer_id", user.id)
       .in("status", ["paid", "buyer_confirmed", "seller_confirmed", "completed"])
+      .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
     if (alreadyPaid) {
-      return jsonError(409, "already_paid", "You've already completed a purchase for this listing.");
+      return jsonError(
+        409,
+        "already_paid",
+        "You already have a completed purchase for this listing. Open that order to track it.",
+        { transaction_id: alreadyPaid.id, transaction_status: alreadyPaid.status },
+      );
     }
 
-    const amount = Number(listing.price_sale);
-    const platformFee = Math.round(amount * SELLER_COMMISSION * 100) / 100;
-
-    const fulfillmentType = body?.fulfillment_type ?? "pickup";
-    const needsAddress = fulfillmentType === "delivery" || fulfillmentType === "vendibook_freight";
+    // COMMITMENT POINT: snapshot the seller fee that both sides agreed to.
+    // Vendibook Pro eligibility is resolved here once; a later cancellation,
+    // downgrade or upgrade never reprices this transaction.
+    const proStatus = await resolveProStatus(admin, listing.host_id);
+    const feeQuote = computeProSellerFee({
+      baseCents: Math.round(amount * 100),
+      isPro: proStatus.isPro,
+    });
+    const platformFee = feeQuote.feeCents / 100;
 
     const { data: created, error: insertErr } = await admin
       .from("sale_transactions")
@@ -90,18 +187,13 @@ serve(async (req) => {
         amount,
         platform_fee: platformFee,
         seller_payout: Math.round((amount - platformFee) * 100) / 100,
+        fee_rate_pct: feeQuote.effectiveRatePct,
+        pro_discount: feeQuote.discountCents / 100,
+        pro_fee_applied: feeQuote.proApplied,
+        fee_locked_at: new Date().toISOString(),
         status: "pending",
         payment_provider: "paypal",
-        fulfillment_type: fulfillmentType,
-        delivery_fee: Number(body?.delivery_fee ?? 0) || 0,
-        freight_cost: Number(body?.freight_cost ?? 0) || 0,
-        delivery_address: needsAddress ? (body?.delivery_address ?? null) : null,
-        delivery_instructions: needsAddress ? (body?.delivery_instructions ?? null) : null,
-        buyer_name: body?.buyer_name ?? null,
-        buyer_email: body?.buyer_email ?? user.email ?? null,
-        buyer_phone: body?.buyer_phone ?? null,
-        referral_code: body?.referral_code ?? null,
-        terms_id: body?.terms_id ?? null,
+        ...mutableFields,
       })
       .select("id")
       .single();
@@ -110,7 +202,14 @@ serve(async (req) => {
       return jsonError(500, "intent_failed", "We couldn't start this purchase. Please try again.");
     }
 
-    return jsonResponse(200, { transaction_id: created.id });
+    return jsonResponse(200, {
+      transaction_id: created.id,
+      amount,
+      delivery_fee: pricing.deliveryFee,
+      freight_cost: pricing.freightCost,
+    });
+
+
   } catch (err) {
     return unknownErrorResponse(err);
   }

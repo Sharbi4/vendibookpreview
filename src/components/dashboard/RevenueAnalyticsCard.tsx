@@ -1,8 +1,6 @@
 import { DollarSign, TrendingUp, Wallet, Clock, ArrowUpRight, CheckCircle2 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { AnimatedCounter } from './AnimatedCounter';
-import { StripeLogo } from '@/components/ui/StripeLogo';
-import { StripeTrustBadge } from '@/components/trust/StripeTrustBadge';
 import { cn } from '@/lib/utils';
 import { RevenueAnalytics } from '@/hooks/useRevenueAnalytics';
 import { format } from 'date-fns';
@@ -21,7 +19,7 @@ import {
 
 interface RevenueAnalyticsCardProps {
   analytics: RevenueAnalytics;
-  onOpenStripeDashboard?: () => void;
+  onOpenPayoutHistory?: () => void;
   isOpeningDashboard?: boolean;
 }
 
@@ -43,7 +41,7 @@ const formatCurrencyFull = (value: number) => {
   }).format(value / 100);
 };
 
-export const RevenueAnalyticsCard = ({ analytics, onOpenStripeDashboard, isOpeningDashboard }: RevenueAnalyticsCardProps) => {
+export const RevenueAnalyticsCard = ({ analytics, onOpenPayoutHistory, isOpeningDashboard }: RevenueAnalyticsCardProps) => {
   const getStatusColor = (status: string) => {
     switch (status) {
       case 'completed':
@@ -77,7 +75,7 @@ export const RevenueAnalyticsCard = ({ analytics, onOpenStripeDashboard, isOpeni
 
   return (
     <div className="space-y-6">
-      {/* Revenue Header with Stripe */}
+      {/* Revenue Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center shadow-lg">
@@ -85,13 +83,9 @@ export const RevenueAnalyticsCard = ({ analytics, onOpenStripeDashboard, isOpeni
           </div>
           <div>
             <h3 className="text-lg font-semibold">Revenue Analytics</h3>
-            <StripeTrustBadge
-              context="payouts"
-              surface="light"
-              size="sm"
-              withCopy={false}
-              className="mt-1"
-            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              Payments via PayPal. Seller payouts are reviewed and released by Vendibook.
+            </p>
           </div>
         </div>
       </div>
@@ -289,7 +283,7 @@ export const RevenueAnalyticsCard = ({ analytics, onOpenStripeDashboard, isOpeni
       <PayoutScheduleCard
         pendingPayout={analytics.pendingPayout}
         payoutHistory={analytics.payoutHistory}
-        onOpenStripeDashboard={onOpenStripeDashboard}
+        onOpenPayoutHistory={onOpenPayoutHistory}
         isOpeningDashboard={isOpeningDashboard}
       />
 

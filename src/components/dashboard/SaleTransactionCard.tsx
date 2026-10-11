@@ -1,8 +1,10 @@
+import { isPickupLocationRevealed, PICKUP_LOCKED_MESSAGE } from '@/lib/fulfillment/pickupReveal';
 import { useState } from 'react';
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { CheckCircle2, Clock, DollarSign, ShieldCheck, AlertCircle, Loader2, Flag, MapPin, Truck, Package, ExternalLink } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { FreightLink } from '@/components/shared/FreightLink';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -21,6 +23,8 @@ import { SaleTransaction } from '@/hooks/useSaleTransactions';
 import { CATEGORY_LABELS } from '@/types/listing';
 import SecurePaymentStrip from '@/components/trust/SecurePaymentStrip';
 import { getCounterpartyName, getDisplayInitials } from '@/lib/displayName';
+import { isSellerCoveredFreightOrder } from '@/lib/freight/presentation';
+import { formatDeliveryWindow } from '@/lib/sale/handoff';
 
 /** Map sale-transaction status into a short, plain-language next-action line. */
 const getSaleNextAction = (
@@ -32,29 +36,41 @@ const getSaleNextAction = (
   if (role === 'buyer') {
     switch (status) {
       case 'pending': return 'Complete checkout to secure your purchase. Your card is not charged until you finish.';
+      case 'payment_failed': return 'Your payment attempt failed. Open the purchase to retry payment.';
       case 'paid':
         if (hasShipping && !tx.shipped_at) return 'Payment secured. The seller will ship your item shortly.';
         if (hasShipping && tx.shipped_at && !tx.delivered_at) return 'Your item is on the way. Confirm receipt once it arrives.';
         return 'Payment is securely held. Confirm receipt to release funds to the seller.';
       case 'seller_confirmed': return 'Seller confirmed. Confirm receipt to release funds.';
       case 'buyer_confirmed': return 'You confirmed receipt. Funds release once the seller confirms.';
-      case 'completed': return 'All done — funds were released to the seller.';
+      case 'completed':
+      case 'paid_out':
+      case 'payout_failed': return 'All done — this purchase is complete.';
+      case 'pending_cash': return 'Pay the seller in person at handoff, then confirm receipt here.';
+      case 'payment_authorized': return 'Your payment is processing. We will update this order when it completes.';
       case 'disputed': return 'Payment is on hold while Vendibook mediates. We will be in touch.';
       case 'refunded': return 'This purchase was refunded to your account.';
+      case 'cancelled': return 'This purchase was cancelled.';
       default: return null;
     }
   }
   switch (status) {
     case 'pending': return 'Waiting on the buyer to complete payment.';
+    case 'payment_failed': return 'The buyer’s payment attempt failed. Wait for confirmed payment before handoff.';
     case 'paid':
       if (hasShipping && !tx.shipped_at) return 'Payment secured. Ship the item and mark as shipped.';
       if (hasShipping && tx.shipped_at && !tx.delivered_at) return 'Item in transit — buyer will confirm on delivery.';
       return 'Payment is securely held. Confirm handoff to release your payout.';
     case 'buyer_confirmed': return 'Buyer confirmed. Confirm to release funds.';
     case 'seller_confirmed': return 'Awaiting buyer confirmation before funds release.';
-    case 'completed': return 'Funds released to your payout account.';
+    case 'completed':
+    case 'paid_out':
+    case 'payout_failed': return 'Sale complete. Your payout is handled by Vendibook per your payout method.';
+    case 'pending_cash': return 'The buyer pays you in person at handoff. Confirm once paid and handed off.';
+    case 'payment_authorized': return 'The buyer’s payment is processing. Wait for confirmed payment before handoff.';
     case 'disputed': return 'Payment on hold pending resolution. Our team is reviewing.';
     case 'refunded': return 'This sale was refunded to the buyer.';
+    case 'cancelled': return 'This sale was cancelled.';
     default: return null;
   }
 };
@@ -70,6 +86,7 @@ interface SaleTransactionCardProps {
 
 // Role-specific status labels for clarity
 const getStatusConfig = (status: string, role: 'buyer' | 'seller', transaction: SaleTransaction) => {
+  if (status === 'payment_failed') return { label: 'Payment failed', variant: 'destructive' as const, icon: AlertCircle };
   const hasShipping = transaction.fulfillment_type === 'delivery' || transaction.fulfillment_type === 'vendibook_freight';
   
   // Role-specific labels for better clarity
@@ -90,7 +107,15 @@ const getStatusConfig = (status: string, role: 'buyer' | 'seller', transaction: 
       case 'buyer_confirmed':
         return { label: 'Awaiting Seller Confirmation', variant: 'default' as const, icon: Clock };
       case 'completed':
+      case 'paid_out':
+      case 'payout_failed':
         return { label: 'Complete', variant: 'default' as const, icon: CheckCircle2 };
+      case 'pending_cash':
+        return { label: 'Pay in Person', variant: 'secondary' as const, icon: DollarSign };
+      case 'confirmed':
+        return { label: 'Payment Confirmed', variant: 'default' as const, icon: ShieldCheck };
+      case 'payment_authorized':
+        return { label: 'Payment Processing', variant: 'secondary' as const, icon: Clock };
       case 'disputed':
         return { label: 'Under Review', variant: 'destructive' as const, icon: AlertCircle };
       case 'refunded':
@@ -98,7 +123,7 @@ const getStatusConfig = (status: string, role: 'buyer' | 'seller', transaction: 
       case 'cancelled':
         return { label: 'Cancelled', variant: 'secondary' as const, icon: AlertCircle };
       default:
-        return { label: 'Unknown', variant: 'secondary' as const, icon: Clock };
+        return { label: status ? status.replace(/_/g, ' ') : 'Pending', variant: 'secondary' as const, icon: Clock };
     }
   } else {
     // Seller labels
@@ -118,7 +143,17 @@ const getStatusConfig = (status: string, role: 'buyer' | 'seller', transaction: 
       case 'seller_confirmed':
         return { label: 'Awaiting Buyer Confirmation', variant: 'default' as const, icon: Clock };
       case 'completed':
-        return { label: 'Funds Released', variant: 'default' as const, icon: CheckCircle2 };
+        return { label: 'Sale Complete', variant: 'default' as const, icon: CheckCircle2 };
+      case 'paid_out':
+        return { label: 'Paid Out', variant: 'default' as const, icon: CheckCircle2 };
+      case 'payout_failed':
+        return { label: 'Payout Issue', variant: 'destructive' as const, icon: AlertCircle };
+      case 'pending_cash':
+        return { label: 'Collect in Person', variant: 'secondary' as const, icon: DollarSign };
+      case 'confirmed':
+        return { label: 'Payment Confirmed', variant: 'default' as const, icon: ShieldCheck };
+      case 'payment_authorized':
+        return { label: 'Payment Processing', variant: 'secondary' as const, icon: Clock };
       case 'disputed':
         return { label: 'Under Review', variant: 'destructive' as const, icon: AlertCircle };
       case 'refunded':
@@ -126,7 +161,7 @@ const getStatusConfig = (status: string, role: 'buyer' | 'seller', transaction: 
       case 'cancelled':
         return { label: 'Cancelled', variant: 'secondary' as const, icon: AlertCircle };
       default:
-        return { label: 'Unknown', variant: 'secondary' as const, icon: Clock };
+        return { label: status ? status.replace(/_/g, ' ') : 'Pending', variant: 'secondary' as const, icon: Clock };
     }
   }
 };
@@ -179,6 +214,8 @@ const SaleTransactionCard = ({
     : transaction.seller_confirmed_at && !transaction.buyer_confirmed_at;
 
   const actionLabel = getActionLabel(role, transaction);
+  // Seller-covered Vendibook Freight: buyers see "Free shipping", never the cost.
+  const sellerCoversFreight = isSellerCoveredFreightOrder(transaction.fulfillment_type, transaction.listing);
 
   const handleSubmitDispute = () => {
     if (onDispute && disputeReason.length >= 10) {
@@ -188,7 +225,7 @@ const SaleTransactionCard = ({
     }
   };
 
-  const showTrackingSection = role === 'buyer' && 
+  const showTrackingSection = role === 'buyer' && ['paid', 'buyer_confirmed', 'seller_confirmed', 'completed'].includes(transaction.status) &&
     (transaction.fulfillment_type === 'delivery' || transaction.fulfillment_type === 'vendibook_freight');
 
   const getShippingStatusLabel = () => {
@@ -274,7 +311,7 @@ const SaleTransactionCard = ({
                     <p className="text-muted-foreground">Platform Fee</p>
                     <p className="font-medium text-destructive">-${transaction.platform_fee.toLocaleString()}</p>
                   </div>
-                  {transaction.freight_cost && transaction.freight_cost > 0 && (
+                  {sellerCoversFreight && !!transaction.freight_cost && transaction.freight_cost > 0 && (
                     <div>
                       <p className="text-muted-foreground">Freight (Seller-Paid)</p>
                       <p className="font-medium text-destructive">-${transaction.freight_cost.toLocaleString()}</p>
@@ -286,9 +323,9 @@ const SaleTransactionCard = ({
                   </div>
                 </>
               )}
-              {role === 'buyer' && transaction.freight_cost && transaction.freight_cost > 0 && (
+              {role === 'buyer' && sellerCoversFreight && (
                 <div>
-                  <p className="text-muted-foreground">Freight Included</p>
+                  <p className="text-muted-foreground">Shipping</p>
                   <p className="font-medium text-emerald-600">Free Shipping</p>
                 </div>
               )}
@@ -309,7 +346,7 @@ const SaleTransactionCard = ({
                   )}
                   <div className="flex-1">
                     <p className="text-sm font-medium text-foreground">
-                      {transaction.fulfillment_type === 'vendibook_freight' ? 'VendiBook Freight' :
+                      {transaction.fulfillment_type === 'vendibook_freight' ? <FreightLink /> :
                        transaction.fulfillment_type === 'delivery' ? 'Delivery' : 'Pickup'}
                     </p>
                     {(transaction.fulfillment_type === 'delivery' || transaction.fulfillment_type === 'vendibook_freight') ? (
@@ -332,16 +369,29 @@ const SaleTransactionCard = ({
                       </>
                     ) : (
                       <>
-                        {transaction.listing?.pickup_location_text && (
-                          <p className="text-sm text-muted-foreground mt-1">
-                            {transaction.listing.pickup_location_text}
-                          </p>
+                        {isPickupLocationRevealed({
+                          fulfillmentType: transaction.fulfillment_type,
+                          status: transaction.status,
+                          paymentStatus: (transaction as any).payment_status,
+                        }) ? (
+                          transaction.listing?.pickup_location_text && (
+                            <p className="text-sm text-muted-foreground mt-1">
+                              {transaction.listing.pickup_location_text}
+                            </p>
+                          )
+                        ) : (
+                          <p className="text-xs text-muted-foreground mt-1">{PICKUP_LOCKED_MESSAGE}</p>
                         )}
-                        {transaction.listing?.pickup_instructions && (
+                        {isPickupLocationRevealed({
+                          fulfillmentType: transaction.fulfillment_type,
+                          status: transaction.status,
+                          paymentStatus: (transaction as any).payment_status,
+                        }) && transaction.listing?.pickup_instructions && (
                           <p className="text-xs text-muted-foreground mt-1 italic">
                             "{transaction.listing.pickup_instructions}"
                           </p>
                         )}
+
                       </>
                     )}
                   </div>
@@ -406,7 +456,7 @@ const SaleTransactionCard = ({
                       )}
                       {transaction.estimated_delivery_date && !transaction.delivered_at && (
                         <p className="text-xs text-muted-foreground">
-                          Est. delivery: {format(new Date(transaction.estimated_delivery_date), 'MMM d, yyyy')}
+                          Est. delivery: {formatDeliveryWindow(transaction.estimated_delivery_date, transaction.estimated_delivery_end)}
                         </p>
                       )}
                     </div>
@@ -489,6 +539,9 @@ const SaleTransactionCard = ({
             
             {/* Actions with clearer labels */}
             <div className="flex flex-wrap gap-2">
+              {role === 'buyer' && transaction.status === 'payment_failed' && (
+                <Button asChild><Link to={`/order-tracking/${transaction.id}`}>Retry payment</Link></Button>
+              )}
               {canConfirm && (
                 <Button 
                   onClick={() => onConfirm(transaction.id)}

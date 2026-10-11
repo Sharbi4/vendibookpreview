@@ -4,6 +4,7 @@ import {
 } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
+import { BrandFooter, BrandHeader } from './_blocks.tsx'
 
 interface FeaturedAdminAlertProps {
   hostName?: string
@@ -46,7 +47,7 @@ const FeaturedPaymentAdminAlert = ({ hostName,
             {receiptId && (
               <>
                 <Hr style={s.hrThin} />
-                <Text style={s.detailLabel}>STRIPE PAYMENT</Text>
+                <Text style={s.detailLabel}>PAYMENT REFERENCE</Text>
                 <Text style={s.detailMono}>{receiptId}</Text>
               </>
             )}
@@ -62,7 +63,7 @@ const FeaturedPaymentAdminAlert = ({ hostName,
         </Section>
 
         <Text style={s.footnote}>Internal alert · Vendibook</Text>
-      </Container>
+      <BrandFooter /></Container>
     </Body>
   </Html>
 )

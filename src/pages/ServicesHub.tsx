@@ -32,7 +32,7 @@ const CATEGORIES: Category[] = [
   {
     icon: ShieldCheck,
     title: 'Buy with confidence',
-    copy: 'Buyer Readiness Pass and Listing Purchase Reviews.',
+    copy: 'Payment protection, financing options, and inspection partners.',
     to: '/buyer/services',
     cta: 'Browse buyer tools',
   },
@@ -68,7 +68,7 @@ const CATEGORIES: Category[] = [
     icon: Store,
     title: 'Grow as a professional host',
     copy: 'Host Pro plans for kitchens, commissaries, and multi-listing operators.',
-    to: '/host/plans',
+    to: '/pricing',
     cta: 'Compare Host Pro plans',
   },
   {

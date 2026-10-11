@@ -40,14 +40,16 @@ type Sub = {
 };
 type Evt = {
   id: string;
-  stripe_event_id: string;
+  event_id: string;
   event_type: string;
-  status: string;
-  error_message: string | null;
-  retry_count: number;
-  last_retry_at: string | null;
-  processed_at: string;
+  processed: boolean | null;
+  processing_error: string | null;
+  verification_status: string | null;
+  processed_at: string | null;
+  received_at: string | null;
 };
+
+const evtStatus = (e: Evt) => (e.processed ? 'processed' : e.processing_error ? 'failed' : 'pending');
 
 function fmt(iso?: string | null) {
   if (!iso) return '—';
@@ -77,7 +79,7 @@ export default function AdminBilling() {
     setLoading(true);
     const [subsRes, evRes] = await Promise.all([
       supabase.from('host_subscriptions').select('*').order('updated_at', { ascending: false }).limit(500),
-      supabase.from('stripe_webhook_events').select('*').order('processed_at', { ascending: false }).limit(200),
+      supabase.from('paypal_webhook_events').select('*').order('received_at', { ascending: false }).limit(200),
     ]);
     setSubs((subsRes.data as Sub[]) ?? []);
     setEvents((evRes.data as Evt[]) ?? []);
@@ -138,7 +140,7 @@ export default function AdminBilling() {
   if (!user) return <Navigate to="/auth" replace />;
   if (!isAdmin) return <Navigate to="/" replace />;
 
-  const failedCount = events.filter(e => e.status === 'failed').length;
+  const failedCount = events.filter(e => evtStatus(e) === 'failed').length;
   const activeCount = subs.filter(s => s.status === 'active' || s.status === 'trialing').length;
   const flaggedCount = subs.filter(s => s.flagged_at).length;
 
@@ -150,7 +152,7 @@ export default function AdminBilling() {
           <header className="flex items-center justify-between flex-wrap gap-3">
             <div>
               <h1 className="text-2xl md:text-3xl font-semibold">Billing operations</h1>
-              <p className="text-sm text-muted-foreground mt-1">Subscribers, webhook health, and support tools driven by Stripe.</p>
+              <p className="text-sm text-muted-foreground mt-1">Subscribers, webhook health, and support tools for PayPal billing.</p>
             </div>
             <Button variant="outline" size="sm" onClick={load} disabled={loading}>
               <RefreshCw className={`h-3.5 w-3.5 mr-1.5 ${loading ? 'animate-spin' : ''}`} /> Refresh
@@ -204,7 +206,7 @@ export default function AdminBilling() {
                           <TableHead>Tier</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead>Renews / Ends</TableHead>
-                          <TableHead>Stripe IDs</TableHead>
+                          <TableHead>Provider IDs</TableHead>
                           <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -249,7 +251,7 @@ export default function AdminBilling() {
 
             <TabsContent value="webhooks">
               <Card>
-                <CardHeader className="pb-3"><CardTitle className="text-base">Stripe webhook events</CardTitle>
+                <CardHeader className="pb-3"><CardTitle className="text-base">Billing webhook events</CardTitle>
                   <CardDescription>Latest 200 events. Retry failed events after fixing the underlying issue.</CardDescription>
                 </CardHeader>
                 <CardContent className="p-0">
@@ -261,7 +263,7 @@ export default function AdminBilling() {
                           <TableHead>Type</TableHead>
                           <TableHead>Status</TableHead>
                           <TableHead>Processed</TableHead>
-                          <TableHead>Retries</TableHead>
+                          <TableHead>Verification</TableHead>
                           <TableHead className="text-right">Actions</TableHead>
                         </TableRow>
                       </TableHeader>
@@ -270,14 +272,14 @@ export default function AdminBilling() {
                           <TableRow><TableCell colSpan={6} className="text-center py-8 text-muted-foreground">No events yet.</TableCell></TableRow>
                         ) : events.map(e => (
                           <TableRow key={e.id}>
-                            <TableCell className="font-mono text-[11px]">{e.stripe_event_id}</TableCell>
+                            <TableCell className="font-mono text-[11px]">{e.event_id}</TableCell>
                             <TableCell className="text-xs">{e.event_type}</TableCell>
                             <TableCell>
-                              <Badge variant="outline" className={e.status === 'processed' ? STATUS_TONE.active : e.status === 'failed' ? STATUS_TONE.unpaid : STATUS_TONE.incomplete}>{e.status}</Badge>
-                              {e.error_message && <div className="text-[11px] text-red-500 mt-1 max-w-xs truncate" title={e.error_message}>{e.error_message}</div>}
+                              <Badge variant="outline" className={evtStatus(e) === 'processed' ? STATUS_TONE.active : evtStatus(e) === 'failed' ? STATUS_TONE.unpaid : STATUS_TONE.incomplete}>{evtStatus(e)}</Badge>
+                              {e.processing_error && <div className="text-[11px] text-red-500 mt-1 max-w-xs truncate" title={e.processing_error}>{e.processing_error}</div>}
                             </TableCell>
                             <TableCell className="text-xs">{fmt(e.processed_at)}</TableCell>
-                            <TableCell className="text-xs">{e.retry_count ?? 0}{e.last_retry_at ? ` · ${fmt(e.last_retry_at)}` : ''}</TableCell>
+                            <TableCell className="text-xs">{e.verification_status ?? '—'}</TableCell>
                             <TableCell className="text-right">
                               <Button size="sm" variant="outline" onClick={() => retryEvent(e.id)} disabled={busy === `retry:${e.id}`}>
                                 {busy === `retry:${e.id}` ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <><RotateCw className="h-3.5 w-3.5 mr-1.5" />Retry</>}
@@ -296,7 +298,7 @@ export default function AdminBilling() {
           </Tabs>
 
           <p className="text-xs text-muted-foreground">
-            Feature access is driven by Stripe webhooks writing to <code>host_subscriptions</code>. If a user reports "I paid but nothing unlocked", use <strong>Re-sync</strong> on their row — never edit tier/status by hand.
+            Feature access is driven by billing webhooks writing to <code>host_subscriptions</code>. If a user reports "I paid but nothing unlocked", use <strong>Re-sync</strong> on their row — never edit tier/status by hand.
             <Link to="/admin/monetization-ops" className="ml-2 text-primary underline">Monetization ops →</Link>
           </p>
         </div>
@@ -324,19 +326,19 @@ function BillingRunbook() {
     {
       title: '💳 Payment failed (past_due)',
       steps: [
-        'Stripe automatically retries the card 3–4 times over ~2 weeks. During that window `status = past_due` and access continues.',
+        'PayPal automatically retries the funding source over ~2 weeks. During that window `status = past_due` and access continues.',
         'Confirm the user got the payment-failed email (search Resend logs for their address).',
-        'Tell the user to open Account → Manage billing to update their card (opens Stripe portal).',
+        'Tell the user to open Account → Manage billing to update their funding source (opens PayPal automatic payments).',
         'If retries succeed, `invoice.paid` flips status back to `active` automatically. No admin action needed.',
-        'If all retries fail, Stripe cancels the subscription; access drops on the next webhook.',
+        'If all retries fail, the subscription cancels at the provider; access drops on the next webhook.',
       ],
     },
     {
       title: '🔓 "I paid but nothing unlocked"',
       steps: [
         'Find the user in the Subscribers tab (search by email → user id → paste here).',
-        'Click **Re-sync** on their row. This pulls the live subscription state from Stripe and rewrites their entitlement.',
-        'If Re-sync says "No Stripe customer found," the checkout never completed. Ask them to try again from /pricing.',
+        'Click **Re-sync** on their row. This pulls the live subscription state from the provider and rewrites their entitlement.',
+        'If Re-sync says "No subscription found," the checkout never completed. Ask them to try again from /pricing.',
         'If the row is Active but the UI still shows Free, ask them to hard-refresh — the client caches entitlements for 60s.',
       ],
     },
@@ -344,27 +346,27 @@ function BillingRunbook() {
       title: '↩️ Refund request',
       steps: [
         'Open the user in `/admin/monetization-ops` and issue the refund there for one-time upgrades.',
-        'For subscription refunds, issue the refund directly in the Stripe dashboard (Payments → find charge → Refund).',
+        'For subscription refunds, issue the refund directly in the PayPal dashboard (Activity → find transaction → Refund).',
         'The `charge.refunded` webhook flags the account and sets `revoke_at_period_end = true`. Access ends at `current_period_end`.',
-        'To revoke immediately instead, cancel the subscription in Stripe with `Cancel immediately` — the `customer.subscription.deleted` event downgrades them on receipt.',
+        'To revoke immediately instead, cancel the subscription at the provider — the cancellation webhook downgrades them on receipt.',
       ],
     },
     {
       title: '⚠️ Chargeback / dispute received',
       steps: [
-        'Stripe fires `charge.dispute.created`. Our webhook flags the account (`flag_reason = charge.dispute.created`) and sets `revoke_at_period_end = true`.',
-        'Review the dispute in the Stripe dashboard. Submit evidence within 7 days if the charge was legitimate.',
-        'If we lose the dispute, Stripe cancels the subscription automatically. Nothing else to do here.',
-        'If we win, un-flag the account from this page by re-syncing (state will match Stripe and clear `revoke_at_period_end` if the charge is no longer disputed).',
+        'The provider fires a dispute event. Our webhook flags the account (`flag_reason = dispute.created`) and sets `revoke_at_period_end = true`.',
+        'Review the dispute in the PayPal Resolution Center. Submit evidence within 7 days if the charge was legitimate.',
+        'If we lose the dispute, the subscription cancels automatically. Nothing else to do here.',
+        'If we win, un-flag the account from this page by re-syncing (state will match the provider and clear `revoke_at_period_end` if the charge is no longer disputed).',
       ],
     },
     {
       title: '💲 Price change',
       steps: [
-        'Create the new Price in the Stripe dashboard under the existing Product. Never delete old prices — grandfathered subscribers stay on them.',
-        'Update the price ID reference in code / env so new checkouts use the new price.',
-        'Existing subscribers stay on the old price until you migrate them via Stripe (Subscriptions → Update items → new price).',
-        'On the next `customer.subscription.updated` webhook, their `stripe_price_id` and tier will refresh automatically.',
+        'Create the new plan in the PayPal dashboard under the existing product. Never delete old plans — grandfathered subscribers stay on them.',
+        'Update the plan ID reference in code / env so new checkouts use the new price.',
+        'Existing subscribers stay on the old price until support migrates them to the new plan.',
+        'On the next subscription-updated webhook, their plan and tier will refresh automatically.',
       ],
     },
   ];

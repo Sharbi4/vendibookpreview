@@ -214,12 +214,12 @@ export default function ProtectedSalePage() {
                 icon={<ShieldCheck className="h-5 w-5" />}
                 title="Verify identity"
                 done={role === 'buyer' ? !!ps.buyer_identity_verified_at : !!ps.seller_identity_verified_at}
-                description="Confirms you are who you say you are. Handled through Stripe Identity."
+                description="Confirms you are who you say you are. Handled through Vendibook identity verification."
               >
                 {role && !(role === 'buyer' ? ps.buyer_identity_verified_at : ps.seller_identity_verified_at) ? (
                   <div className="flex flex-wrap gap-2">
                     <Button variant="outline" onClick={() => navigate('/verify-identity')}>
-                      Verify with Stripe Identity
+                      Verify with Vendibook identity verification
                     </Button>
                     <Button
                       variant="ghost"
@@ -321,7 +321,7 @@ export default function ProtectedSalePage() {
                   icon={<PartyPopper className="h-5 w-5" />}
                   title="Funds released"
                   done
-                  description={`Released ${new Date(ps.funds_released_at).toLocaleString()}. Seller payout follows the standard 25-day sale window.`}
+                  description={`Released ${new Date(ps.funds_released_at).toLocaleString()}. Seller payout is typically released within 24 hours of delivery confirmation (24 to 48 hours at the outside).`}
                 />
               ) : null}
             </div>

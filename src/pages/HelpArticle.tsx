@@ -1,4 +1,4 @@
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, Navigate } from 'react-router-dom';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO, { generateArticleSchema, generateBreadcrumbSchema } from '@/components/SEO';
@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ChevronLeft, ChevronRight, ArrowLeft, List } from 'lucide-react';
 import { getArticleBySlug, getAdjacentArticles, getRelatedArticles } from '@/data/helpArticles';
+import ContentFeedback from '@/components/support/ContentFeedback';
+import { linkifyFreight } from '@/components/shared/FreightLink';
 
 const HelpArticle = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -15,6 +17,11 @@ const HelpArticle = () => {
   const article = slug ? getArticleBySlug(slug) : undefined;
   const { prev, next } = slug ? getAdjacentArticles(slug) : { prev: null, next: null };
   const relatedArticles = article ? getRelatedArticles(article) : [];
+
+  // Slug resolved via alias/near-miss — send the reader to the canonical URL.
+  if (article && slug && article.slug !== slug) {
+    return <Navigate to={`/help/${article.slug}`} replace />;
+  }
 
   if (!article) {
     return (
@@ -172,21 +179,31 @@ const HelpArticle = () => {
                           return <h3 key={i} className="text-lg font-semibold text-foreground mt-6 mb-2">{paragraph.replace(/\*\*/g, '')}</h3>;
                         }
                         if (paragraph.startsWith('- [ ]')) {
-                          return <div key={i} className="flex items-start gap-2 ml-4"><input type="checkbox" className="mt-1" readOnly /><span>{paragraph.replace('- [ ] ', '')}</span></div>;
+                          return <div key={i} className="flex items-start gap-2 ml-4"><input type="checkbox" className="mt-1" readOnly /><span>{linkifyFreight(paragraph.replace('- [ ] ', ''))}</span></div>;
                         }
                         if (paragraph.startsWith('- ')) {
-                          return <li key={i} className="ml-6 list-disc">{paragraph.replace('- ', '')}</li>;
+                          return <li key={i} className="ml-6 list-disc">{linkifyFreight(paragraph.replace('- ', ''))}</li>;
                         }
                         if (paragraph.match(/^\d+\./)) {
-                          return <li key={i} className="ml-6 list-decimal">{paragraph.replace(/^\d+\.\s*/, '')}</li>;
+                          return <li key={i} className="ml-6 list-decimal">{linkifyFreight(paragraph.replace(/^\d+\.\s*/, ''))}</li>;
                         }
                         if (paragraph.trim() === '') return <br key={i} />;
-                        return <p key={i} className="mb-3">{paragraph.replace(/\*\*(.*?)\*\*/g, '$1')}</p>;
+                        return <p key={i} className="mb-3">{linkifyFreight(paragraph.replace(/\*\*(.*?)\*\*/g, '$1'))}</p>;
                       })}
                     </div>
                   </section>
                 ))}
               </div>
+
+              {/* Article feedback — tracks outdated help content */}
+              <ContentFeedback
+                variant="card"
+                className="mt-10"
+                contentId={article.slug}
+                contentTitle={article.title}
+                contentType="help_article"
+                categoryId={article.categorySlug}
+              />
 
               {/* Related Articles */}
               {relatedArticles.length > 0 && (

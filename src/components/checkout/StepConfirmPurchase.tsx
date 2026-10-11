@@ -1,5 +1,6 @@
 import { ShieldCheck, MapPin, BadgeCheck, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { formatCurrency } from '@/lib/commissions';
 
 interface StepConfirmPurchaseProps {
   listing: {
@@ -19,9 +20,6 @@ interface StepConfirmPurchaseProps {
   onContinue: () => void;
   onBack?: () => void;
 }
-
-const money = (n: number) =>
-  `$${n.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 
 const StepConfirmPurchase = ({
   listing,
@@ -76,7 +74,7 @@ const StepConfirmPurchase = ({
                 className="font-display text-2xl font-bold text-primary"
                 style={{ fontVariantNumeric: 'tabular-nums' }}
               >
-                {money(priceSale)}
+                 {formatCurrency(priceSale)}
               </div>
             </div>
           </div>
@@ -137,8 +135,8 @@ const StepConfirmPurchase = ({
       <div className="rounded-xl border border-primary/25 bg-primary/[0.05] p-4 flex items-start gap-3">
         <ShieldCheck className="h-5 w-5 text-primary shrink-0 mt-0.5" />
         <p className="text-sm text-foreground">
-          Your payment is protected. We hold funds until the item is confirmed
-          delivered — no cost to you.
+          Your payment is processed through PayPal. Vendibook keeps the order,
+          agreement, and fulfillment details together.
         </p>
       </div>
 
@@ -154,7 +152,7 @@ const StepConfirmPurchase = ({
             Back
           </Button>
         ) : <span />}
-        <Button onClick={onContinue} size="lg" className="sm:min-w-[280px]">
+        <Button onClick={onContinue} variant="cta" size="lg" className="sm:min-w-[280px]">
           Looks right — choose delivery
         </Button>
       </div>

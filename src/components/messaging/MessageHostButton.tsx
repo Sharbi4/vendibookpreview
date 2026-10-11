@@ -10,6 +10,7 @@ import { trackHostContacted } from '@/lib/analytics';
 interface MessageHostButtonProps {
   listingId: string;
   hostId: string;
+  bookingId?: string;
   variant?: 'default' | 'outline' | 'secondary' | 'ghost';
   size?: 'default' | 'sm' | 'lg' | 'icon';
   className?: string;
@@ -20,6 +21,7 @@ interface MessageHostButtonProps {
 const MessageHostButton = ({
   listingId,
   hostId,
+  bookingId,
   variant = 'outline',
   size = 'default',
   className = '',
@@ -58,7 +60,7 @@ const MessageHostButton = ({
       const conversationId = await getOrCreateConversation(listingId, hostId);
       if (conversationId) {
         trackHostContacted(listingId);
-        navigate(`/messages/${conversationId}`);
+        navigate(`/dashboard/messages/${conversationId}${bookingId ? `?booking=${encodeURIComponent(bookingId)}` : ''}`);
       }
     } finally {
       setIsLoading(false);

@@ -46,7 +46,7 @@ export default function EditPublicProfileSheet({ open, onOpenChange, userId, ini
 
   const uploadImage = async (file: File, prefix: string): Promise<string> => {
     const ext = file.name.split('.').pop();
-    const path = `${prefix}/${userId}-${Date.now()}.${ext}`;
+    const path = `${userId}/${prefix}/${Date.now()}.${ext}`;
     const { error } = await supabase.storage.from('listing-images').upload(path, file);
     if (error) throw error;
     return supabase.storage.from('listing-images').getPublicUrl(path).data.publicUrl;

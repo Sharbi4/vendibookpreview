@@ -10,6 +10,7 @@ type FilterId = 'all' | 'in_progress' | 'completed' | 'cancelled';
 
 const STATUS_MAP: Record<string, { label: string; tone: 'success' | 'warning' | 'muted' | 'info'; body: string; next?: string }> = {
   pending: { label: 'Awaiting payment', tone: 'warning', body: 'Your checkout is not yet complete.', next: 'Finish payment to reserve the item.' },
+  payment_failed: { label: 'Payment failed', tone: 'warning', body: 'Your latest payment attempt was declined or failed. This purchase is unpaid.', next: 'Open the purchase to retry with another payment method.' },
   pending_cash: { label: 'Cash pending', tone: 'warning', body: 'Cash / Pay-in-Person hold — the seller has been notified.', next: "Meet the seller to hand over payment. We'll mark it paid on confirmation." },
   paid: { label: 'Paid — awaiting delivery', tone: 'info', body: 'Payment is safe with payment protection.', next: 'Confirm delivery once you receive the item — funds release to the seller after that.' },
   buyer_confirmed: { label: 'You confirmed', tone: 'success', body: 'Thanks — you confirmed delivery.', next: 'Payout to the seller runs on Vendibook\'s schedule.' },
@@ -18,12 +19,17 @@ const STATUS_MAP: Record<string, { label: string; tone: 'success' | 'warning' | 
   disputed: { label: 'Disputed', tone: 'warning', body: 'A dispute is open on this order.', next: 'Our team is mediating — check the order for next steps.' },
   refunded: { label: 'Refunded', tone: 'muted', body: 'Funds have been returned.', next: 'The refund lands on your original payment method within 5–10 business days.' },
   cancelled: { label: 'Cancelled', tone: 'muted', body: 'This order was cancelled.' },
+  confirmed: { label: 'Paid', tone: 'info', body: 'Your payment was received.', next: 'Coordinate pickup or delivery with the seller from the order page.' },
+  payment_authorized: { label: 'Payment processing', tone: 'warning', body: 'Your payment is authorized and being finalized.', next: 'Nothing to do yet — we\'ll update this order when it completes.' },
+  paid_out: { label: 'Completed', tone: 'success', body: 'This order is fully closed.' },
+  payout_failed: { label: 'Completed', tone: 'success', body: 'This order is complete.' },
+  partially_refunded: { label: 'Partially refunded', tone: 'muted', body: 'Part of your payment was returned.', next: 'The refund lands on your original payment method within 5–10 business days.' },
 };
 
 const FILTERS: { id: FilterId; label: string; match: (s: string) => boolean }[] = [
   { id: 'all', label: 'All', match: () => true },
-  { id: 'in_progress', label: 'In progress', match: (s) => ['pending', 'pending_cash', 'paid', 'buyer_confirmed', 'seller_confirmed', 'disputed'].includes(s) },
-  { id: 'completed', label: 'Completed', match: (s) => s === 'completed' },
+  { id: 'in_progress', label: 'In progress', match: (s) => ['pending', 'payment_failed', 'payment_authorized', 'pending_cash', 'paid', 'confirmed', 'buyer_confirmed', 'seller_confirmed', 'disputed'].includes(s) },
+  { id: 'completed', label: 'Completed', match: (s) => ['completed', 'paid_out', 'payout_failed'].includes(s) },
   { id: 'cancelled', label: 'Cancelled', match: (s) => ['cancelled', 'refunded'].includes(s) },
 ];
 

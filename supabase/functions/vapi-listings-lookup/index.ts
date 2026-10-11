@@ -1,4 +1,5 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { escapeHtml } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -149,7 +150,7 @@ async function searchListings(supabase: any, args: any) {
   let qb = supabase
     .from('listings')
     .select('id, title, description, category, mode, address, city, state, price_daily, price_hourly, price_sale, price_weekly, price_monthly, cover_image_url, instant_book, fulfillment_type, amenities, highlights')
-    .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
+    .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear').eq('unlisted', false)
     .not('title', 'ilike', 'Demo %')
     .limit(Math.min(limit, 10));
 
@@ -202,7 +203,7 @@ async function getListingDetails(supabase: any, args: any) {
     .from('listings')
     .select('*')
     .eq('id', listing_id)
-    .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
+    .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear').eq('unlisted', false)
     .maybeSingle();
 
   if (error) throw error;
@@ -319,7 +320,7 @@ async function createListingDraft(supabase: any, args: any) {
     rental_min_days,
     // Sale pricing
     price_sale,
-    accept_card_payment,
+    accept_paypal_checkout,
     accept_cash_payment,
     // Dimensions
     weight_lbs,
@@ -372,7 +373,7 @@ async function createListingDraft(supabase: any, args: any) {
     instant_book: instant_book ?? false,
     rental_min_days: rental_min_days || null,
     // Payment preferences
-    accept_card_payment: accept_card_payment ?? true,
+    accept_paypal_checkout: accept_paypal_checkout ?? true,
     accept_cash_payment: accept_cash_payment ?? false,
     // Dimensions
     weight_lbs: weight_lbs || null,
@@ -407,7 +408,7 @@ async function createListingDraft(supabase: any, args: any) {
     title: data.title,
     status: data.status,
     draft_token: guest_draft_token,
-    message: `Draft listing "${data.title}" created with all details! The user just needs to add photos and connect Stripe to publish.`,
+    message: `Draft listing "${data.title}" created with all details! The user just needs to add photos to publish.`,
     url: `https://vendibook.com/create-listing/${data.id}`,
   };
 }
@@ -751,11 +752,11 @@ async function sendBookingLink(supabase: any, args: any) {
   // Send SMS via Zendesk ticket (which triggers SMS)
   if (phone) {
     try {
-      const smsBody = `Hi${name ? ' ' + name : ''}! 🚚 Here's the listing you asked about on Vendibook:\n\n` +
+      const smsBody = `Hi${name ? ' ' + escapeHtml(name) : ''}! 🚚 Here's the listing you asked about on Vendibook:\n\n` +
         `📋 ${listing.title}\n` +
         (location ? `📍 ${location}\n` : '') +
         (listing.price_daily ? `💰 $${listing.price_daily}/day\n` : '') +
-        (dateRange ? `📅 ${dateRange}\n` : '') +
+        (dateRange ? `📅 ${escapeHtml(dateRange)}\n` : '') +
         `\n👉 Book now: ${bookingUrl}\n\n` +
         `Questions? Reply to this text or call us!`;
 
@@ -806,27 +807,27 @@ async function sendBookingLink(supabase: any, args: any) {
         const emailHtml = `
           <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
             <div style="background: linear-gradient(135deg, #FF5124, #FF7A52); padding: 32px 24px; text-align: center; border-radius: 12px 12px 0 0;">
-              <img src="https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/logo.png" alt="Vendibook" style="height: 48px; margin-bottom: 16px;" />
+              <img src="https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/logo.png?v=2026-08" alt="Vendibook" style="height: 48px; margin-bottom: 16px;" />
               <h1 style="color: white; margin: 0; font-size: 24px; font-weight: 700;">Your Booking Link is Ready! 🎉</h1>
             </div>
             
             <div style="padding: 32px 24px;">
               <p style="font-size: 16px; color: #333; margin-bottom: 24px;">
-                Hi${name ? ' ' + name : ''}! Thanks for chatting with Vendi. Here's the listing you were interested in:
+                Hi${name ? ' ' + escapeHtml(name) : ''}! Thanks for chatting with Vendi. Here's the listing you were interested in:
               </p>
               
               <div style="border: 1px solid #e5e7eb; border-radius: 12px; overflow: hidden; margin-bottom: 24px;">
-                ${listing.cover_image_url ? `<img src="${listing.cover_image_url}" alt="${listing.title}" style="width: 100%; height: 200px; object-fit: cover;" />` : ''}
+                ${listing.cover_image_url ? `<img src="${escapeHtml(listing.cover_image_url)}" alt="${escapeHtml(listing.title)}" style="width: 100%; height: 200px; object-fit: cover;" />` : ''}
                 <div style="padding: 20px;">
-                  <h2 style="margin: 0 0 8px; font-size: 20px; color: #111;">${listing.title}</h2>
-                  <p style="margin: 0 0 4px; color: #666; font-size: 14px;">${categoryLabels[listing.category] || listing.category}${location ? ' • ' + location : ''}</p>
+                  <h2 style="margin: 0 0 8px; font-size: 20px; color: #111;">${escapeHtml(listing.title)}</h2>
+                  <p style="margin: 0 0 4px; color: #666; font-size: 14px;">${escapeHtml(categoryLabels[listing.category] || listing.category)}${location ? ' • ' + escapeHtml(location) : ''}</p>
                   ${listing.price_daily ? `<p style="margin: 8px 0 0; font-size: 18px; font-weight: 700; color: #FF5124;">$${listing.price_daily}/day</p>` : ''}
                   ${listing.deposit_amount ? `<p style="margin: 4px 0 0; font-size: 13px; color: #888;">Refundable deposit: $${listing.deposit_amount}</p>` : ''}
-                  ${dateRange ? `<p style="margin: 8px 0 0; font-size: 14px; color: #555;">📅 ${dateRange}</p>` : ''}
+                  ${dateRange ? `<p style="margin: 8px 0 0; font-size: 14px; color: #555;">📅 ${escapeHtml(dateRange)}</p>` : ''}
                 </div>
               </div>
               
-              <a href="${bookingUrl}" style="display: block; background: #FF5124; color: white; text-align: center; padding: 16px 32px; border-radius: 8px; text-decoration: none; font-size: 16px; font-weight: 600; margin-bottom: 24px;">
+              <a href="${escapeHtml(bookingUrl)}" style="display: block; background: #FF5124; color: white; text-align: center; padding: 16px 32px; border-radius: 8px; text-decoration: none; font-size: 16px; font-weight: 600; margin-bottom: 24px;">
                 View Listing & Book Now →
               </a>
               

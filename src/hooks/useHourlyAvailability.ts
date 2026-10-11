@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { format, parseISO, isBefore, startOfDay, addHours, isAfter, setHours, setMinutes, differenceInHours } from 'date-fns';
 import { normalizeScheduleKeys } from '@/lib/scheduleUtils';
+import { resolveListingTimeZone, todayInTimeZone, currentHourInTimeZone } from '@/lib/listingTimezone';
 
 interface HourlyAvailabilityOptions {
   listingId: string;
@@ -63,6 +64,7 @@ interface ListingHourlySettings {
   priceWeekly: number | null;
   totalSlots: number; // Total capacity slots for this listing
   hourlySchedule: WeeklySchedule | null; // Per-day operating hours from wizard
+  timeZone: string; // Listing's local IANA timezone — availability is wall-clock local
 }
 
 interface DayAvailabilityInfo {
@@ -91,6 +93,7 @@ export const useHourlyAvailability = ({ listingId, selectedDate }: HourlyAvailab
     priceWeekly: null,
     totalSlots: 1,
     hourlySchedule: null,
+    timeZone: resolveListingTimeZone(null),
   });
   const [existingBookings, setExistingBookings] = useState<BookingSlot[]>([]);
   const [blockedDates, setBlockedDates] = useState<string[]>([]);
@@ -120,7 +123,9 @@ export const useHourlyAvailability = ({ listingId, selectedDate }: HourlyAvailab
             price_daily,
             price_weekly,
             total_slots,
-            hourly_schedule
+            hourly_schedule,
+            state,
+            longitude
           `)
           .eq('id', listingId)
           .single();
@@ -156,6 +161,10 @@ export const useHourlyAvailability = ({ listingId, selectedDate }: HourlyAvailab
             priceWeekly: listingData.price_weekly,
             totalSlots: listingData.total_slots || 1,
             hourlySchedule,
+            timeZone: resolveListingTimeZone({
+              state: (listingData as any).state,
+              longitude: (listingData as any).longitude,
+            }),
           });
         }
 
@@ -164,12 +173,12 @@ export const useHourlyAvailability = ({ listingId, selectedDate }: HourlyAvailab
         // 1. Approved/completed AND paid (confirmed bookings)
         // 2. Pending status AND paid (instant book paid, awaiting host confirmation)
         // This ensures unpaid requests don't block availability
-        const { data: bookings } = await supabase
-          .from('booking_requests')
-          .select('start_date, end_date, start_time, end_time, is_hourly_booking, slot_number, hourly_slots, status, payment_status, is_instant_book')
-          .eq('listing_id', listingId)
-          .eq('payment_status', 'paid')
-          .in('status', ['approved', 'completed', 'pending']);
+        // Uses a security-definer RPC: RLS hides other users' booking rows from
+        // shoppers, which previously made every date look available to them.
+        const { data: bookings, error: bookingsError } = await supabase
+          .rpc('get_listing_busy_slots', { _listing_id: listingId });
+
+        if (bookingsError) console.error('Error loading busy slots:', bookingsError);
 
         if (bookings) {
           setExistingBookings(bookings.map(b => ({
@@ -423,9 +432,10 @@ export const useHourlyAvailability = ({ listingId, selectedDate }: HourlyAvailab
     });
 
     // Check minimum notice for today
-    const now = new Date();
-    if (format(date, 'yyyy-MM-dd') === format(now, 'yyyy-MM-dd')) {
-      const currentHour = now.getHours();
+    // Compare against the listing's local clock, not the shopper's browser clock,
+    // so blocked/available hours match what the host published.
+    if (dateStr === todayInTimeZone(settings.timeZone)) {
+      const currentHour = currentHourInTimeZone(settings.timeZone);
       const minStartHour = currentHour + settings.minNoticeHours;
       for (let h = 0; h <= minStartHour; h++) {
         availableSlotsPerHour[h] = 0;

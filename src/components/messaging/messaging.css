@@ -1,0 +1,25 @@
+/* Explicit paired colors keep chat readable in both legacy and V2 dashboard shells. */
+.message-thread { background: #fcfaf7; color: #25221e; color-scheme: light; }
+.message-thread .text-muted-foreground { color: #625a52; }
+.message-thread .text-foreground { color: #25221e; }
+.message-thread .bg-background { background-color: #fcfaf7; }
+.message-thread .bg-muted { background-color: #ede8e1; }
+textarea.message-composer, .message-thread textarea.message-composer {
+  background: #fffdfa !important; color: #25221e !important; -webkit-text-fill-color: #25221e;
+  caret-color: #25221e; border: 1px solid #a79c90; border-radius: 12px; opacity: 1;
+}
+textarea.message-composer::placeholder { color: #6b6259 !important; -webkit-text-fill-color: #6b6259; opacity: 1; }
+textarea.message-composer:focus-visible { outline: 2px solid #b84720; outline-offset: 2px; }
+textarea.message-composer:disabled { background: #f0ece6 !important; }
+.message-thread .message-bubble { background: #ede8e1; color: #25221e; overflow-wrap: anywhere; }
+.message-thread .message-bubble.is-own { background: #29241f; color: #fffaf3; }
+.message-thread .message-bubble p, .message-thread .message-bubble a,
+.message-thread .message-bubble span { color: inherit !important; }
+.message-thread .message-bubble a { background: transparent; text-decoration: underline; }
+.message-safety { margin: 12px 16px; padding: 12px; border: 1px solid #d7c8ab; border-radius: 12px; background: #fff7e7; color: #443625; font-size: 12px; line-height: 1.6; }
+.message-safety p, .message-safety strong { color: #443625 !important; }
+.message-safety button { color: #443625; background: #fffdfa; border-color: #b9aa90; }
+.message-staff { display:flex; align-items:center; gap:6px; margin-bottom:8px; }
+.message-report { background: #fffdfa; color: #25221e; }
+.message-report p, .message-report label { color: #51483f; }
+.message-report select { background: #fffdfa; color: #25221e; border: 1px solid #a79c90; padding: 10px; border-radius: 8px; }

@@ -1,8 +1,24 @@
+import { captureFailure, captureFromOrder } from "../_shared/paypalCaptureOutcome.ts";
+import { cardAuthenticationReady } from "../_shared/paypalCardPolicy.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
 import { capturePayPalOrder, getPayPalOrder, PayPalError, safeLog } from "../_shared/paypal.ts";
-import { extractCaptureFacts, finalizeCapture } from "../_shared/paypalFinalize.ts";
+import { routedMerchantId } from "../_shared/paypalMultiparty.ts";
+import {
+  CaptureRejectedError,
+  extractCaptureFacts,
+  finalizeCapture,
+} from "../_shared/paypalFinalize.ts";
+
+const CLOSED_PAYMENT_STATES = new Set([
+  "refunded",
+  "partially_refunded",
+  "reversed",
+  "cancelled",
+  "chargeback",
+  "disputed_lost",
+]);
 import { auditPayment, requestIp } from "../_shared/paymentAudit.ts";
 import { getListingPurchaseState, LISTING_UNAVAILABLE_MESSAGE } from "../_shared/listingGuard.ts";
 import { recordOrderEvent } from "../_shared/orders/orderEvents.ts";
@@ -42,6 +58,20 @@ serve(async (req) => {
     if (record.buyer_id !== user.id) {
       return jsonError(403, "forbidden", "This payment belongs to another account.");
     }
+    // Orders routed to the seller must be read and captured as that seller.
+    const asSeller = { actAsMerchantId: routedMerchantId(record) };
+
+    // Refunded, reversed or cancelled orders are never re-captured or
+    // rewritten. An old PayPal return URL lands here harmlessly. Declined and
+    // failed captures are not included: PayPal lets the buyer retry them.
+    if (CLOSED_PAYMENT_STATES.has(String(record.payment_status))) {
+      return jsonResponse(200, {
+        status: record.payment_status,
+        already_closed: true,
+        reference: record.reference,
+        capture_id: record.paypal_capture_id,
+      });
+    }
 
     // Already finalised (capture endpoint raced the webhook) — return success.
     if (record.payment_status === "completed") {
@@ -59,15 +89,36 @@ serve(async (req) => {
     // the canonical state immediately before capturing.
     if (record.listing_id) {
       const state = await getListingPurchaseState(admin, record.listing_id);
-      if (!state.purchasable) {
+      let blockReason: string | null = state.purchasable ? null : state.reason;
+      if (!blockReason && record.sale_transaction_id) {
+        // Another buyer already secured this listing, or this buyer already
+        // paid for this sale through a different PayPal order: do not take
+        // a second payment.
+        const { data: otherSale } = await admin.rpc("listing_committed_sale", {
+          _listing_id: record.listing_id,
+          _exclude_sale: record.sale_transaction_id,
+        });
+        if (otherSale) blockReason = "sold";
+        else {
+          const { data: paidAttempt } = await admin.from("payment_records")
+            .select("id").eq("sale_transaction_id", record.sale_transaction_id)
+            .eq("payment_status", "completed").neq("id", record.id).limit(1).maybeSingle();
+          if (paidAttempt) blockReason = "duplicate_payment";
+        }
+      }
+      if (blockReason) {
         // Reconcile the ambiguous provider state before deciding.
         let providerOrder: any = null;
         try {
-          providerOrder = await getPayPalOrder(order_id);
+          providerOrder = await getPayPalOrder(order_id, asSeller);
         } catch (_err) {
           providerOrder = null;
         }
-        const alreadyCaptured = providerOrder?.status === "COMPLETED";
+        const providerFacts = extractCaptureFacts(providerOrder);
+        if (!providerOrder || providerFacts?.status === "PENDING") {
+          return jsonResponse(200, { status: "pending", pending: true, reference: record.reference, message: "Payment verification is pending. Do not submit another payment." });
+        }
+        const alreadyCaptured = providerFacts?.status === "COMPLETED";
 
         await admin.from("payment_records").update({
           // `paypal_payment_status` stays factual; fulfillment is blocked via
@@ -78,7 +129,7 @@ serve(async (req) => {
             : "cancelled_listing_unavailable",
           last_error: {
             reason: "listing_unavailable",
-            listing_reason: state.reason,
+            listing_reason: blockReason,
             listing_status: state.status,
           },
         }).eq("id", record.id);
@@ -128,34 +179,91 @@ serve(async (req) => {
       }
     }
 
+    if (record.fee_breakdown?.checkout_source === "card_fields") {
+      // Read the actual card authentication result; never trust SDK callbacks
+      // or a browser-supplied liabilityShift when deciding whether to capture.
+      const approvedOrder = await getPayPalOrder(order_id, asSeller);
+      const capture = captureFromOrder(approvedOrder);
+      if (!capture && (approvedOrder.status !== "APPROVED" ||
+        !approvedOrder.payment_source?.card || !cardAuthenticationReady(approvedOrder.payment_source.card))) {
+        return jsonError(409, "card_verification_required", "Card verification is incomplete or was not successful. Use a different payment method or try the card again.", {
+          reference: record.reference,
+          recoverable: true,
+        });
+      }
+    }
+
+    if (record.booking_request_id) {
+      const { error: lockError } = await admin.rpc("claim_rental_capture", { p_record: record.id });
+      if (lockError) return jsonError(409, "rental_payment_not_ready", lockError.message);
+    }
     let order: any;
     try {
-      order = await capturePayPalOrder(order_id, `capture:${record.reference}`);
+      order = await capturePayPalOrder(order_id, `capture:${record.reference}`, asSeller);
     } catch (err) {
       if (err instanceof PayPalError && err.issue === "ORDER_ALREADY_CAPTURED") {
-        order = await getPayPalOrder(order_id);
-      } else if (err instanceof PayPalError && err.status < 500) {
+        order = await getPayPalOrder(order_id, asSeller).catch(() => null);
+      } else if (err instanceof PayPalError && err.status < 500 && err.status !== 429) {
+        const failure = captureFailure(err.issue, err.status);
         await admin.from("payment_records").update({
-          payment_status: "declined",
-          internal_status: "declined",
-          last_error: { issue: err.issue ?? "declined" },
-        }).eq("id", record.id);
-        return jsonError(402, "payment_declined", declineMessage(err.issue));
+          payment_status: failure.status,
+          internal_status: failure.code,
+          last_error: { issue: err.issue ?? null, reason: failure.message, debug_id: err.debugId ?? null },
+        }).eq("id", record.id).neq("payment_status", "completed");
+        if (record.booking_request_id) {
+          // Definitive provider refusal: no capture. Ambiguous errors retain the lock.
+          await admin.from("booking_requests").update({ payment_lock_record_id: null })
+            .eq("id", record.booking_request_id).eq("payment_lock_record_id", record.id).neq("payment_status", "paid");
+        }
+        // PAYER_ACTION_REQUIRED: PayPal returns a HATEOAS `payer-action` link
+        // the buyer must complete. Hand it to the client instead of dead-ending.
+        let payerActionUrl: string | null = null;
+        if (err.issue === "PAYER_ACTION_REQUIRED") {
+          const pending = await getPayPalOrder(order_id, asSeller).catch(() => null);
+          payerActionUrl =
+            (pending?.links ?? []).find((l: any) => l?.rel === "payer-action")?.href ?? null;
+        }
+        // INSTRUMENT_DECLINED is recoverable on a Buttons checkout: the payer
+        // can pick another funding source via actions.restart().
+        return jsonError(failure.status === "declined" ? 402 : 409, failure.code, failure.message, {
+          reference: record.reference,
+          issue: err.issue ?? null,
+          debug_id: err.debugId ?? null,
+          recoverable: err.issue === "INSTRUMENT_DECLINED",
+          ...(payerActionUrl ? { payer_action_url: payerActionUrl } : {}),
+        });
+
       } else {
-        throw err;
+        {
+          await admin.from("payment_records").update({ payment_status: "pending", internal_status: "capture_verification_pending" }).eq("id", record.id).neq("payment_status", "completed");
+          if (record.booking_request_id) await admin.from("booking_requests").update({ payment_status: "pending" }).eq("id", record.booking_request_id).eq("payment_lock_record_id", record.id).neq("payment_status", "paid");
+          return jsonResponse(200, { status: "pending", pending: true, reference: record.reference, message: "PayPal confirmation is pending. Do not submit another payment." });
+        }
       }
     }
 
     const facts = extractCaptureFacts(order);
     if (!facts) {
-      return jsonError(
-        502,
-        "capture_unverified",
-        `We couldn't verify the payment. Contact support with reference ${record.reference}.`,
-      );
+      {
+        await admin.from("payment_records").update({ payment_status: "pending", internal_status: "capture_verification_pending" }).eq("id", record.id).neq("payment_status", "completed");
+        if (record.booking_request_id) await admin.from("booking_requests").update({ payment_status: "pending" }).eq("id", record.booking_request_id).eq("payment_lock_record_id", record.id).neq("payment_status", "paid");
+        return jsonResponse(200, { status: "pending", pending: true, reference: record.reference, message: "Payment verification is pending. Check this payment before trying again." });
+      }
+
     }
 
-    const updated = await finalizeCapture(admin, record, facts, "capture_endpoint");
+    let updated;
+    try {
+      updated = await finalizeCapture(admin, record, facts, "capture_endpoint");
+    } catch (err) {
+      if (err instanceof CaptureRejectedError) {
+        // Money may have moved at PayPal, but nothing was fulfilled and the
+        // record is flagged for review. Never report this as a success.
+        safeLog("capture_rejected", { reference: record.reference, reason: err.reason });
+        return jsonError(409, err.reason, err.message);
+      }
+      throw err;
+    }
     safeLog("capture_finalized", { reference: record.reference, status: facts.status });
 
     await auditPayment(admin, {
@@ -183,7 +291,8 @@ serve(async (req) => {
       capture_id: facts.captureId,
       amount_cents: updated.gross_amount_cents,
       currency: updated.currency,
-      pending: facts.status === "PENDING",
+      pending: updated.payment_status === "pending",
+      ...(updated.payment_status === "declined" || updated.payment_status === "failed" ? { message: `PayPal reported capture status ${facts.status}. Choose another payment method.`, issue: facts.status } : {}),
     });
   } catch (err) {
     if (err instanceof PayPalError) {
@@ -192,16 +301,3 @@ serve(async (req) => {
     return unknownErrorResponse(err);
   }
 });
-
-function declineMessage(issue?: string): string {
-  switch (issue) {
-    case "INSTRUMENT_DECLINED":
-      return "That payment method was declined. Please choose another one in PayPal.";
-    case "PAYER_ACTION_REQUIRED":
-      return "PayPal needs one more step from you. Please complete it and try again.";
-    case "ORDER_NOT_APPROVED":
-      return "Your payment was not completed. Nothing has been confirmed.";
-    default:
-      return "Your payment was not completed. No booking or order has been confirmed.";
-  }
-}

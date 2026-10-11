@@ -1,13 +1,24 @@
-import { useState } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowRight, Loader2, LifeBuoy, RefreshCw } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { useParams, useNavigate, useLocation, useSearchParams, Link } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import { ArrowRight, CheckCircle2, Circle, Clock3, FileSignature, Loader2, LifeBuoy, RefreshCw, SearchCheck, Truck, Video } from 'lucide-react';
 import { useOrderDetail, recoverOrderPayment } from '@/hooks/useOrderDetail';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import SEO from '@/components/SEO';
+import OrderEvidenceSection from '@/components/handoff/OrderEvidenceSection';
+import OrderMeetupCard from '@/components/handoff/OrderMeetupCard';
+import DeliveryTrackingPanel from '@/components/delivery/DeliveryTrackingPanel';
+import PayPalPaymentFacts from '@/components/checkout/PayPalPaymentFacts';
+import OrderCaseSection from '@/components/disputes/OrderCaseSection';
+import { DocumentsCard } from '@/components/documents/DocumentsCard';
+import CampusPartnerBenefit from '@/components/checkout/CampusPartnerBenefit';
+
+
 
 const money = (cents: number, currency = 'USD') =>
   new Intl.NumberFormat('en-US', { style: 'currency', currency }).format((cents ?? 0) / 100);
@@ -23,8 +34,24 @@ const toneClass: Record<string, string> = {
 const OrderDetailPage = () => {
   const { orderId } = useParams<{ orderId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [params, setParams] = useSearchParams();
   const { data: order, isLoading, error, refetch } = useOrderDetail(orderId);
   const [working, setWorking] = useState<string | null>(null);
+  useEffect(() => {
+    if (order && location.hash === '#report-issue') document.getElementById('report-issue')?.scrollIntoView();
+  }, [order, location.hash]);
+  const messageParty = async () => {
+    if (!orderId) return;
+    const { data: payment } = await supabase.from('payment_records').select('listing_id, buyer_id, seller_id').eq('id', orderId).single();
+    if (!payment?.listing_id || !payment.buyer_id || !payment.seller_id) return toast.error('Messaging is unavailable for this transaction.');
+    const { data: conversation, error } = await supabase.from('conversations').select('id').eq('listing_id', payment.listing_id).eq('shopper_id', payment.buyer_id).eq('host_id', payment.seller_id).maybeSingle();
+    if (error) return toast.error('Could not open the conversation. Please try again.');
+    if (conversation) return navigate(`/messages/${conversation.id}`);
+    const { data: created, error: createError } = await supabase.from('conversations').insert({ listing_id: payment.listing_id, shopper_id: payment.buyer_id, host_id: payment.seller_id }).select('id').single();
+    if (createError) return toast.error('Could not start the conversation. Please use your inbox or contact support.');
+    navigate(`/messages/${created.id}`);
+  };
 
   const run = async (action: 'status' | 'retry') => {
     if (!orderId || working) return;
@@ -63,6 +90,19 @@ const OrderDetailPage = () => {
   }
 
   const a = order.amounts;
+  const nextAction = order.viewer_role === 'seller'
+    ? (order.seller_next_action ?? order.next_action)
+    : order.next_action;
+  const orderClosed = ['refunded', 'cancelled'].includes(order.order_status.code);
+  const deadline = order.release?.deadline_at ? new Date(order.release.deadline_at) : null;
+  const msLeft = deadline ? deadline.getTime() - Date.now() : null;
+  const daysRemaining = msLeft != null ? Math.max(0, Math.ceil(msLeft / 86_400_000)) : null;
+  const hoursRemaining = msLeft != null ? Math.max(0, Math.ceil(msLeft / 3_600_000)) : null;
+  const countdownLabel =
+    msLeft == null ? null
+      : msLeft <= 0 ? 'Deadline passed'
+        : hoursRemaining != null && hoursRemaining <= 24 ? `${hoursRemaining} hour${hoursRemaining === 1 ? '' : 's'} left`
+          : `${daysRemaining} day${daysRemaining === 1 ? '' : 's'} left`;
 
   return (
     <div className="mx-auto w-full max-w-4xl px-4 py-10 sm:py-14">
@@ -93,13 +133,13 @@ const OrderDetailPage = () => {
         <div className="flex items-start gap-3">
           <ArrowRight className="mt-0.5 h-4 w-4 flex-shrink-0 text-primary" />
           <div className="flex-1">
-            <p className="font-medium">{order.next_action.next_action_title}</p>
+            <p className="font-medium">{nextAction.next_action_title}</p>
             <p className="mt-1 text-sm text-muted-foreground">
-              {order.next_action.next_action_description}
+              {nextAction.next_action_description}
             </p>
           </div>
         </div>
-        {(order.payment.is_payable || order.next_action.next_action_code === 'retry_payment') && (
+        {order.viewer_role !== 'seller' && (order.payment.is_payable || order.next_action.next_action_code === 'retry_payment') && (
           <div className="mt-4 flex flex-wrap gap-2">
             <Button size="sm" disabled={!!working} onClick={() => run('retry')}>
               {working ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : null}
@@ -115,8 +155,99 @@ const OrderDetailPage = () => {
 
       <p className="mt-3 text-sm text-muted-foreground">{order.payment.description}</p>
 
-      <div className="mt-8 grid gap-6 md:grid-cols-[1.4fr_1fr]">
+      <div className="flex flex-wrap gap-3 mt-5"><Button asChild variant="outline"><Link to="/dashboard/transactions">All transactions</Link></Button><Button variant="outline" onClick={() => void messageParty()}>Message {order.viewer_role === 'buyer' ? 'seller' : 'buyer'}</Button></div>
+      <Tabs value={params.get('tab') === 'documents' ? 'documents' : 'overview'} onValueChange={tab => setParams(previous => { const next = new URLSearchParams(previous); next.set('tab', tab); return next; })} className="mt-8">
+        <TabsList>
+          <TabsTrigger value="overview">Overview</TabsTrigger>
+          <TabsTrigger value="documents">Documents</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="documents" className="mt-6 space-y-6">
+          {(order as any).links?.sale_transaction_id && (
+            <DocumentsCard
+              scope={{ transaction_id: String((order as any).links.sale_transaction_id) }}
+              title="Transaction documents"
+            />
+          )}
+          {(order as any).links?.booking_request_id && (
+            <DocumentsCard
+              scope={{ booking_id: String((order as any).links.booking_request_id) }}
+              title="Rental documents"
+            />
+          )}
+          {!(order as any).links?.sale_transaction_id && !(order as any).links?.booking_request_id && (
+            <Card className="p-4 sm:p-5 text-sm text-muted-foreground">
+              No documents are attached to this order.
+            </Card>
+          )}
+        </TabsContent>
+
+        <TabsContent value="overview" className="mt-6">
+      <div className="grid gap-6 md:grid-cols-[1.4fr_1fr]">
         <div className="space-y-6">
+          {order.release && (
+            <Card className="border-primary/25 p-4 sm:p-5">
+              <div className="flex flex-wrap items-start justify-between gap-3">
+                <div>
+                  <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                    Seller payment checklist
+                  </h2>
+                  <p className="mt-2 text-sm text-foreground">
+                    The seller can be approved for payment after both items below are complete.
+                  </p>
+                </div>
+                {deadline && !order.release.conditions_completed_at && (
+                  <Badge
+                    variant="outline"
+                    className={`gap-1.5 ${msLeft != null && msLeft <= 0
+                      ? 'border-destructive/40 text-destructive'
+                      : msLeft != null && msLeft <= 3 * 86_400_000
+                        ? 'border-amber-500/40 text-amber-600'
+                        : ''}`}
+                  >
+                    <Clock3 className="h-3.5 w-3.5" /> {countdownLabel}
+                  </Badge>
+                )}
+              </div>
+              <div className="mt-5 space-y-4">
+                <ReleaseCondition
+                  complete={order.release.walkthrough_complete}
+                  icon={Video}
+                  title="Walkthrough video saved"
+                  detail={order.release.walkthrough_recorded_at
+                    ? `Completed ${new Date(order.release.walkthrough_recorded_at).toLocaleString()}`
+                    : 'Waiting for a walkthrough video to be saved to the transaction evidence.'}
+                />
+                <ReleaseCondition
+                  complete={order.release.agreement_complete}
+                  icon={FileSignature}
+                  title="Purchase agreement signed by both parties"
+                  detail={order.release.agreement_completed_at
+                    ? `Completed ${new Date(order.release.agreement_completed_at).toLocaleString()}`
+                    : 'Waiting for both buyer and seller signatures through SignNow.'}
+                />
+              </div>
+              {deadline && !order.release.conditions_completed_at && (
+                <div className="mt-5 space-y-2 border-t border-border pt-4 text-xs text-muted-foreground">
+                  <p>Deadline: {deadline.toLocaleString()}.</p>
+                  <p>
+                    {msLeft != null && msLeft <= 0
+                      ? 'The deadline has passed. A Vendibook administrator will review this order and can cancel it and refund the buyer in full.'
+                      : 'If the checklist is still incomplete at the deadline, a Vendibook administrator can cancel the order and refund the buyer in full.'}
+                  </p>
+                  <p>
+                    Both the buyer and the seller get a daily reminder by email until the checklist is
+                    complete. If a Vendibook case is opened on this order, the countdown pauses and the
+                    remaining time resumes when the case closes without a refund.
+                  </p>
+                </div>
+              )}
+            </Card>
+          )}
+
+
+
+
           {order.listing && (
             <Card className="flex items-center gap-4 p-4">
               {order.listing.image_url && (
@@ -155,6 +286,54 @@ const OrderDetailPage = () => {
             </dl>
           </Card>
 
+          {!orderClosed && order.viewer_role === 'buyer' && order.transaction_type === 'equipment_sale' && order.fulfillment.type === 'equipment_pickup' && (
+            <Card className="flex flex-wrap items-center justify-between gap-3 p-4 sm:p-5">
+              <div className="flex items-start gap-3">
+                <SearchCheck className="mt-0.5 h-5 w-5 text-primary" aria-hidden />
+                <div>
+                  <p className="font-medium">Prepare for your meetup</p>
+                  <p className="text-sm text-muted-foreground">Review the equipment and document its condition before completing the handoff.</p>
+                </div>
+              </div>
+              <Button asChild size="sm" variant="outline">
+                <Link to={`/guides/meetup-inspection?${(order as any).links?.sale_transaction_id ? `transactionId=${(order as any).links.sale_transaction_id}&` : (order as any).links?.booking_request_id ? `bookingId=${(order as any).links.booking_request_id}&` : ''}returnTo=${encodeURIComponent(`/orders/${order.id}`)}`}>Open Meetup &amp; Inspection Guide</Link>
+              </Button>
+            </Card>
+          )}
+
+          {!orderClosed && ['equipment_pickup', 'rental_pickup'].includes(order.fulfillment.type) && (
+            <OrderMeetupCard listingId={order.listing?.id ?? null} viewerRole={order.viewer_role} />
+          )}
+
+          {!orderClosed && (
+            <DeliveryTrackingPanel
+              saleTransactionId={(order as any).links?.sale_transaction_id ?? null}
+              bookingId={(order as any).links?.booking_request_id ?? null}
+              fulfillmentType={order.fulfillment.type}
+            />
+          )}
+
+          {!orderClosed && order.viewer_role !== 'buyer' && ['rental_delivery','equipment_delivery','shipping'].includes(order.fulfillment.type) && (
+            <Card className="flex flex-wrap items-center justify-between gap-3 p-4 sm:p-5">
+              <div>
+                <p className="font-medium">Delivering this order yourself?</p>
+                <p className="text-sm text-muted-foreground">
+                  Open Delivery mode to share live location with the buyer while you're on the road.
+                </p>
+              </div>
+              <Button asChild size="sm" variant="outline">
+                <Link
+                  to={`/delivery/${(order as any).links?.sale_transaction_id ? 'sale' : 'booking'}/${
+                    (order as any).links?.sale_transaction_id ?? (order as any).links?.booking_request_id
+                  }`}
+                >
+                  <Truck className="mr-2 h-4 w-4" /> Open delivery mode
+                </Link>
+              </Button>
+            </Card>
+          )}
+
+
           <Card className="p-4 sm:p-5">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
               Timeline
@@ -182,6 +361,70 @@ const OrderDetailPage = () => {
         </div>
 
         <div className="space-y-6">
+          {order.settlement && (
+            <Card className="p-4 sm:p-5">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  Settlement
+                </h2>
+                <Badge variant="outline" className={toneClass[order.settlement.status_tone]}>
+                  {order.settlement.status_label}
+                </Badge>
+              </div>
+              <dl className="mt-3 space-y-2 text-sm">
+                <Line
+                  label="Buyer paid"
+                  value={money(order.settlement.gross_collected_cents, order.settlement.currency)}
+                />
+                <Line
+                  label={`Vendibook fee${order.settlement.fee_rate_pct ? ` (${order.settlement.fee_rate_pct}%)` : ''}`}
+                  value={`− ${money(order.settlement.platform_fee_cents, order.settlement.currency)}`}
+                />
+                {order.settlement.pro_discount_cents > 0 && (
+                  <Line
+                    label="Vendibook Pro savings"
+                    value={`+ ${money(order.settlement.pro_discount_cents, order.settlement.currency)}`}
+                  />
+                )}
+                {order.settlement.adjustments_cents !== 0 && (
+                  <Line
+                    label="Adjustments"
+                    value={money(order.settlement.adjustments_cents, order.settlement.currency)}
+                  />
+                )}
+                {order.settlement.refunded_cents > 0 && (
+                  <Line
+                    label="Refunded to buyer"
+                    value={`− ${money(order.settlement.refunded_cents, order.settlement.currency)}`}
+                  />
+                )}
+                <Separator className="my-2" />
+                <Line
+                  label="Your proceeds"
+                  value={money(order.settlement.net_to_seller_cents, order.settlement.currency)}
+                  strong
+                />
+                {order.settlement.settled_at && (
+                  <Line
+                    label={order.settlement.status_code === 'payout_completed' ? 'Settled on' : 'Payment received'}
+                    value={new Date(order.settlement.settled_at).toLocaleDateString()}
+                  />
+                )}
+              </dl>
+              <p className="mt-3 text-xs text-muted-foreground">
+                {order.settlement.status_description}
+              </p>
+              {order.settlement.hold_reason && (
+                <p className="mt-2 text-xs text-muted-foreground">{order.settlement.hold_reason}</p>
+              )}
+              {order.settlement.routed_to_connected_paypal && (
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Paid through your connected PayPal Business account.
+                </p>
+              )}
+            </Card>
+          )}
+
           <Card className="p-4 sm:p-5">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
               Payment
@@ -189,7 +432,12 @@ const OrderDetailPage = () => {
             <dl className="mt-3 space-y-2 text-sm">
               <Line label="Gross" value={money(a.gross_cents, a.currency)} />
               {a.tax_cents > 0 && <Line label="Taxes" value={money(a.tax_cents, a.currency)} />}
-              {a.fee_cents > 0 && <Line label="Service fee" value={money(a.fee_cents, a.currency)} />}
+              {a.fee_cents > 0 && !(order.viewer_role === 'buyer' && order.transaction_type === 'equipment_sale') && (
+                <Line label="Service fee" value={money(a.fee_cents, a.currency)} />
+              )}
+              {a.discount_cents > 0 && order.viewer_role === 'buyer' && (
+                <Line label="Credits and discounts" value={`− ${money(a.discount_cents, a.currency)}`} />
+              )}
               {a.refunded_cents > 0 && (
                 <Line label="Refunded" value={`− ${money(a.refunded_cents, a.currency)}`} />
               )}
@@ -206,7 +454,25 @@ const OrderDetailPage = () => {
               )}
               <Line label="Transaction ID" value={order.id} mono />
             </dl>
+            <PayPalPaymentFacts
+              saleTransactionId={(order as any).links?.sale_transaction_id ?? null}
+              bookingRequestId={(order as any).links?.booking_request_id ?? null}
+              className="mt-4 rounded-xl border border-border bg-muted/20 p-4 text-left"
+            />
+            {order.viewer_role === 'buyer' ? <CampusPartnerBenefit paymentRecordId={order.id} className="mt-4" /> : null}
           </Card>
+
+          <section id="report-issue" className="scroll-mt-8"><OrderCaseSection
+            orderId={order.id}
+            viewerRole={order.viewer_role}
+            canReport={order.viewer_role !== 'admin'}
+            showPayPal={order.payment.provider === 'paypal'}
+          /></section>
+
+          <OrderEvidenceSection
+            saleTransactionId={(order as any).links?.sale_transaction_id ?? null}
+            bookingId={(order as any).links?.booking_request_id ?? null}
+          />
 
           <Card className="p-4 sm:p-5">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
@@ -228,6 +494,8 @@ const OrderDetailPage = () => {
           </Card>
         </div>
       </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
@@ -240,6 +508,24 @@ const Line = ({ label, value, strong, mono }: {
     <dd className={`text-right ${strong ? 'font-semibold' : ''} ${mono ? 'font-mono text-xs break-all' : ''}`}>
       {value}
     </dd>
+  </div>
+);
+
+const ReleaseCondition = ({ complete, icon: Icon, title, detail }: {
+  complete: boolean;
+  icon: typeof Video;
+  title: string;
+  detail: string;
+}) => (
+  <div className="flex gap-3">
+    <span className="relative mt-0.5 text-primary">
+      {complete ? <CheckCircle2 className="h-5 w-5" /> : <Circle className="h-5 w-5" />}
+      <Icon className="sr-only" aria-hidden="true" />
+    </span>
+    <div>
+      <p className="text-sm font-medium text-foreground">{title}</p>
+      <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{detail}</p>
+    </div>
   </div>
 );
 

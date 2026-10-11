@@ -1,5 +1,6 @@
 // Vendi Vision: Snap-a-photo → AI extracts category, condition, suggested title/description, est. value.
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { getCaller, isAdminUser, unauthorizedResponse, forbiddenResponse } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,6 +9,7 @@ const corsHeaders = {
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (!(await getCaller(req))) return unauthorizedResponse(corsHeaders);
 
   try {
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");

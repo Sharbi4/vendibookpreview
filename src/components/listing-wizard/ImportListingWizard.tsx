@@ -32,6 +32,7 @@ import {
   trackImportFinishLaterClicked
 } from '@/lib/analytics';
 import { ListingCategory, ListingMode, CATEGORY_LABELS, MODE_LABELS } from '@/types/listing';
+import { createOrResumeListingDraft, rotateCreationSessionKey } from '@/lib/listings/creationSession';
 import { cn } from '@/lib/utils';
 
 type ImportMethod = 'url' | 'text' | 'photos';
@@ -457,14 +458,21 @@ export const ImportListingWizard: React.FC = () => {
         }
       }
 
-      // Create the draft listing
-      const { data: listing, error: insertError } = await supabase
+      // Create (or resume) the draft through the canonical, idempotent path.
+      // A retry after a failed upload no longer produces a second listing row.
+      const listingId = await createOrResumeListingDraft({
+        userId: user.id,
+        flow: 'import',
+        mode: formData.mode as 'rent' | 'sale',
+        category: formData.category as string,
+        location: formData.location?.trim() || null,
+      });
+
+      const { error: insertError } = await supabase
         .from('listings')
-        .insert({
-          host_id: user.id,
+        .update({
           mode: formData.mode,
           category: formData.category,
-          status: 'draft',
           title,
           description: formData.text?.trim() || '',
           highlights: Array.isArray(formData.highlights) ? formData.highlights : [],
@@ -473,17 +481,13 @@ export const ImportListingWizard: React.FC = () => {
           pickup_location_text: formData.location?.trim() || null,
           price_daily: priceDaily,
           price_sale: priceSale} as any)
-        .select()
-        .single();
+        .eq('id', listingId);
 
       if (insertError) {
-        console.error('Insert error:', insertError);
-        throw new Error(insertError.message || 'Failed to create listing');
+        console.error('Import update error:', insertError);
+        throw new Error(insertError.message || 'Failed to save imported listing');
       }
 
-      if (!listing || !listing.id) {
-        throw new Error('Failed to create listing - no listing ID returned');
-      }
 
       // Upload photos if any
       const uploadedImageUrls: string[] = [];
@@ -491,7 +495,7 @@ export const ImportListingWizard: React.FC = () => {
         for (const photo of formData.photos) {
           try {
             const fileExt = photo.name.split('.').pop() || 'jpg';
-            const fileName = `${listing.id}/${crypto.randomUUID()}.${fileExt}`;
+            const fileName = `${listingId}/${crypto.randomUUID()}.${fileExt}`;
             
             const { error: uploadError } = await supabase.storage
               .from('listings')
@@ -520,7 +524,7 @@ export const ImportListingWizard: React.FC = () => {
         for (const video of formData.videos) {
           try {
             const fileExt = video.name.split('.').pop() || 'mp4';
-            const fileName = `${listing.id}/${crypto.randomUUID()}.${fileExt}`;
+            const fileName = `${listingId}/${crypto.randomUUID()}.${fileExt}`;
             
             const { error: uploadError } = await supabase.storage
               .from('listings')
@@ -559,7 +563,7 @@ export const ImportListingWizard: React.FC = () => {
         const { error: updateError } = await supabase
           .from('listings')
           .update(updateData)
-          .eq('id', listing.id);
+          .eq('id', listingId);
         
         if (updateError) {
           console.warn('Error updating listing with media:', updateError);
@@ -574,7 +578,10 @@ export const ImportListingWizard: React.FC = () => {
         console.warn('Analytics tracking failed:', e);
       }
       
-      setCreatedListingId(listing.id);
+      // The draft now has its own identity (listing id). Retire the creation
+      // key so a later, genuinely new import creates a new row.
+      rotateCreationSessionKey(user.id, 'import');
+      setCreatedListingId(listingId);
       setStep('success');
     } catch (error) {
       console.error('Error creating draft:', error);

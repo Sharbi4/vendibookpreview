@@ -3,7 +3,7 @@ import { Body, Button, Container, Head, Heading, Html, Img, Preview, Section, Te
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
-import { BrandHeader } from './_blocks.tsx'
+import { BrandFooter, BrandHeader } from './_blocks.tsx'
 interface Props {
   name?: string
   listingTitle?: string
@@ -52,7 +52,7 @@ const E = ({ name, listingTitle, listingId, categoryLabel, modeLabel, priceLabel
           <Text style={s.smallHeader}>WHY YOU'RE GETTING THIS</Text>
           <Text style={s.listItem}>You asked Vendibook to alert you when matching listings became available in your area. New listings move fast — reach out to the host today.</Text>
         </Section>
-      </Container></Body>
+      <BrandFooter /></Container></Body>
     </Html>
   )
 }

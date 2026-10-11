@@ -1,0 +1,228 @@
+import { useEffect, useId, useRef, useState } from 'react';
+import { CreditCard, Loader2 } from 'lucide-react';
+import { supabase } from '@/integrations/supabase/client';
+import { loadPayPalSdk } from '@/lib/paypalClient';
+import { parseEdgeError } from '@/lib/edgeErrors';
+import type { PayPalCheckoutTarget } from './PayPalPaymentPanel';
+import CheckoutAddressCheck, { addressText } from './CheckoutAddressCheck';
+import { AddressAutocomplete } from '@/components/listing-detail/AddressAutocomplete';
+
+type BillingAddress = {
+  addressLine1: string; addressLine2: string; adminArea1: string;
+  adminArea2: string; postalCode: string; countryCode: string;
+};
+const regionNames = new Intl.DisplayNames(['en'], { type: 'region' });
+const countries = 'AD AE AF AG AI AL AM AO AQ AR AS AT AU AW AX AZ BA BB BD BE BF BG BH BI BJ BL BM BN BO BQ BR BS BT BV BW BY BZ CA CC CD CF CG CH CI CK CL CM CN CO CR CU CV CW CX CY CZ DE DJ DK DM DO DZ EC EE EG EH ER ES ET FI FJ FK FM FO FR GA GB GD GE GF GG GH GI GL GM GN GP GQ GR GS GT GU GW GY HK HM HN HR HT HU ID IE IL IM IN IO IQ IR IS IT JE JM JO JP KE KG KH KI KM KN KP KR KW KY KZ LA LB LC LI LK LR LS LT LU LV LY MA MC MD ME MF MG MH MK ML MM MN MO MP MQ MR MS MT MU MV MW MX MY MZ NA NC NE NF NG NI NL NO NP NR NU NZ OM PA PE PF PG PH PK PL PM PN PR PS PT PW PY QA RE RO RS RU RW SA SB SC SD SE SG SH SI SJ SK SL SM SN SO SR SS ST SV SX SY SZ TC TD TF TG TH TJ TK TL TM TN TO TR TT TV TW TZ UA UG UM US UY UZ VA VC VE VG VI VN VU WF WS YE YT ZA ZM ZW'
+  .split(' ').map(code => ({ code, name: regionNames.of(code) || code })).sort((a, b) => a.name.localeCompare(b.name));
+export function validCardBilling(address: BillingAddress): boolean {
+  return !!address.addressLine1.trim() && !!address.adminArea2.trim() &&
+    !!address.adminArea1.trim() && !!address.postalCode.trim() && countries.some(country => country.code === address.countryCode) &&
+    (address.countryCode !== 'US' || /^\d{5}(-\d{4})?$/.test(address.postalCode.trim()));
+}
+
+interface Props {
+  target: PayPalCheckoutTarget;
+  createOrder: (advanced?: boolean) => Promise<string>;
+  merchantId?: string | null;
+  onApprove: (orderId: string) => void;
+}
+
+/** PAN, expiry, CVV and cardholder name live only in PayPal-hosted iframes. */
+export default function PayPalCardFields({ target, createOrder, onApprove, merchantId }: Props) {
+  const id = `pp-card-${useId().replace(/:/g, '')}`;
+  const targetKey = JSON.stringify(target);
+  const callbacks = useRef({ createOrder, onApprove });
+  callbacks.current = { createOrder, onApprove };
+  const cardForm = useRef<any>(null);
+  const submitting = useRef(false);
+  const alive = useRef(false);
+  const [state, setState] = useState<'loading' | 'ready' | 'standard' | 'unavailable' | 'error'>('loading');
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
+  const [billing, setBilling] = useState<BillingAddress>({
+    addressLine1: '', addressLine2: '', adminArea1: '', adminArea2: '', postalCode: '', countryCode: 'US',
+  });
+  const [approvedAddress, setApprovedAddress] = useState('');
+  const postalAddress = { addressLines: [billing.addressLine1, billing.addressLine2], locality: billing.adminArea2, administrativeArea: billing.adminArea1, postalCode: billing.postalCode, regionCode: billing.countryCode };
+
+  useEffect(() => {
+    let cancelled = false;
+    alive.current = true;
+    const fields: any[] = [];
+    setState('loading');
+    setError(null);
+    const reportError = () => {
+      if (cancelled) return;
+      // An SDK exception is not proof of a decline. Declines come from PayPal's server response.
+      setError('Card details could not be approved. Check the highlighted fields and complete any bank verification, then try again.');
+      submitting.current = false;
+      setBusy(false);
+    };
+    const renderStandardCard = async (payee?: string | null) => {
+      const paypal = await loadPayPalSdk({ merchantId: payee ?? merchantId });
+      if (cancelled) return;
+      if (!paypal.Buttons || !paypal.FUNDING?.CARD) { setState('unavailable'); return; }
+      const button = paypal.Buttons({
+        fundingSource: paypal.FUNDING.CARD,
+        style: { layout: 'vertical', shape: 'pill', height: 48, color: 'black', tagline: false },
+        createOrder: () => callbacks.current.createOrder(false),
+        onApprove: (approval: { orderID?: string }) => {
+          if (!cancelled && approval.orderID) callbacks.current.onApprove(approval.orderID);
+        },
+        onCancel: () => { if (!cancelled) setError('Card checkout was cancelled. You can try again.'); },
+        onError: () => { if (!cancelled) setError('Card checkout could not be completed. Please try again.'); },
+      });
+      fields.push(button);
+      if (!button.isEligible()) { setState('unavailable'); return; }
+      setState('standard');
+      await button.render(`#${id}-standard`);
+      if (!cancelled) setState('standard');
+    };
+    void (async () => {
+      const { data, error: availabilityError } = await supabase.functions.invoke('paypal-checkout-intent', {
+        body: { ...JSON.parse(targetKey), card_fields: true },
+      });
+      if (cancelled) return;
+      if (availabilityError) {
+        const parsed = await parseEdgeError(availabilityError);
+        throw new Error(parsed.message || 'Card checkout could not load.');
+      }
+      // Older backends have no eligibility field. Keep the supported standard
+      // card path available while Advanced Card capability/deployment catches up.
+      if (data?.card_fields_eligible !== true) { await renderStandardCard(data?.merchant_id); return; }
+      const paypal = await loadPayPalSdk({ merchantId: data.merchant_id, cardFields: true });
+      if (cancelled) return;
+      if (!paypal.CardFields) throw new Error('Card checkout could not load.');
+      const form = paypal.CardFields({
+        style: { input: { 'font-size': '16px', 'font-family': 'sans-serif', color: '#27231f' }, '.invalid': { color: '#b91c1c' } },
+        createOrder: () => callbacks.current.createOrder(true),
+        onApprove: (approval: { orderID?: string }) => {
+          if (cancelled) return;
+          if (!approval.orderID) { reportError(); return; }
+          // Approval only opens final review. This component never captures a payment.
+          callbacks.current.onApprove(approval.orderID);
+        },
+        onError: reportError,
+        onCancel: () => {
+          if (cancelled) return;
+          submitting.current = false;
+          setBusy(false);
+          setError('Card verification was cancelled. You can try again or choose another payment method.');
+        },
+      });
+      cardForm.current = form;
+      if (!form.isEligible()) { await renderStandardCard(data.merchant_id); return; }
+      const definitions = [
+        ['name', form.NameField({ placeholder: 'Full name on card' })],
+        ['number', form.NumberField({ placeholder: 'Card number' })],
+        ['expiry', form.ExpiryField({ placeholder: 'MM / YY' })],
+        ['cvv', form.CVVField({ placeholder: 'Security code' })],
+      ] as const;
+      fields.push(...definitions.map(([, field]) => field));
+      await Promise.all(definitions.map(([key, field]) => field.render(`#${id}-${key}`)));
+      if (!cancelled) setState('ready');
+    })().catch((failure: unknown) => {
+      if (!cancelled) {
+        setState('error');
+        setError(failure instanceof Error ? failure.message : 'Card checkout could not load.');
+      }
+    });
+    return () => {
+      cancelled = true;
+      alive.current = false;
+      cardForm.current = null;
+      submitting.current = false;
+      fields.forEach(field => { try { void Promise.resolve(field.close?.()).catch(() => {}); } catch { /* already closed */ } });
+    };
+    // Callback identities, focus, billing input and parent renders must not reset the hosted fields.
+  }, [targetKey, id, attempt, merchantId]);
+
+  const submit = async () => {
+    if (submitting.current || state !== 'ready' || !cardForm.current) return;
+    setError(null);
+    if (!validCardBilling(billing)) {
+      setError('Complete your billing street address, city, state or region, postal code and country.');
+      return;
+    }
+    if (approvedAddress !== addressText(postalAddress)) {
+      setError('Check your billing address with Google before continuing.');
+      return;
+    }
+    submitting.current = true;
+    setBusy(true);
+    try {
+      const current = await cardForm.current.getState();
+      if (!current.isFormValid || current.fields?.cardNameField?.isEmpty !== false) {
+        setError('Check the cardholder name, card number, expiration date and security code.');
+        return;
+      }
+      await cardForm.current.submit({ billingAddress: billing });
+      // Resolution alone is not payment or approval; only onApprove advances the UI.
+    } catch {
+      if (alive.current) setError('Card details could not be approved. Check the highlighted fields and complete any bank verification, then try again.');
+    } finally {
+      submitting.current = false;
+      if (alive.current) setBusy(false);
+    }
+  };
+
+  const inputClass = 'mt-1.5 h-12 w-full rounded-xl border border-[#ded7ce] bg-white px-3 text-sm text-[#27231f] focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/15';
+  return (
+    <section aria-label="Debit or credit card" aria-busy={busy || state === 'loading'} className="relative rounded-2xl border border-[#e5dfd7] bg-[#fffdf9] p-4 sm:p-5 space-y-4">
+      <h3 className="flex items-center gap-2 text-sm font-semibold"><CreditCard className="h-4 w-4" />Debit or credit card</h3>
+      <div id={`${id}-standard`} aria-hidden={state !== 'standard'} className={state === 'standard' ? '' : 'absolute inset-x-4 invisible pointer-events-none'} />
+      {state === 'standard' ? <p className="text-xs text-muted-foreground">Enter your card details in PayPal’s secure checkout, then return here to review your payment.</p> : null}
+      {state === 'unavailable' ? <p role="status" className="text-sm text-muted-foreground">PayPal is not offering card checkout for this transaction. Please choose another available payment method.</p> : null}
+      {state === 'loading' ? <Loader2 aria-label="Loading card fields" className="mx-auto h-5 w-5 animate-spin" /> : null}
+      <div aria-hidden={state !== 'ready'} className={state === 'ready' ? 'space-y-3' : 'absolute inset-x-4 top-12 invisible pointer-events-none'}>
+        <div className="grid grid-cols-2 gap-3">
+          {([['name', 'Name on card'], ['number', 'Card number'], ['expiry', 'Expiration date'], ['cvv', 'Security code']] as const).map(([key, label]) => (
+            <div key={key} className={key === 'name' || key === 'number' ? 'col-span-2' : ''}>
+              <p id={`${id}-${key}-label`} className="text-xs font-medium">{label}</p>
+              <div id={`${id}-${key}`} aria-labelledby={`${id}-${key}-label`} className="mt-1.5 h-14 overflow-hidden rounded-xl border border-[#ded7ce] bg-white" />
+            </div>
+          ))}
+        </div>
+        <p className="pt-2 text-xs font-semibold">Billing address</p>
+        {billing.countryCode === 'US' && <div>
+          <label htmlFor={`${id}-billing-street`} className="block text-xs font-medium">Street address</label>
+          <AddressAutocomplete id={`${id}-billing-street`} value={billing.addressLine1} disabled={busy} showSavedAddresses={false}
+            onChange={value => setBilling(previous => ({ ...previous, addressLine1: value }))}
+            onAddressSelect={({ validation }) => {
+              const p = validation.parsedAddress;
+              setBilling(previous => ({ ...previous, addressLine1: p.street || previous.addressLine1, adminArea2: p.city || previous.adminArea2, adminArea1: p.state || previous.adminArea1, postalCode: p.zipCode || previous.postalCode }));
+            }} />
+        </div>}
+        {([
+          ['addressLine1', 'Street address', 'billing address-line1'], ['addressLine2', 'Apartment or suite (optional)', 'billing address-line2'],
+          ['adminArea2', 'City', 'billing address-level2'], ['adminArea1', 'State / region', 'billing address-level1'],
+          ['postalCode', 'ZIP / postal code', 'billing postal-code'],
+        ] as const).filter(([key]) => key !== 'addressLine1' || billing.countryCode !== 'US').map(([key, label, autoComplete]) => (
+          <label key={key} className="block text-xs font-medium">{label}
+            <input autoComplete={autoComplete} value={billing[key]} disabled={busy} maxLength={300}
+              onChange={event => setBilling(previous => ({ ...previous, [key]: event.target.value }))}
+              className={inputClass} />
+          </label>
+        ))}
+        <label className="block text-xs font-medium">Country
+          <select autoComplete="billing country" value={billing.countryCode} disabled={busy} className={inputClass}
+            onChange={event => setBilling(previous => ({ ...previous, countryCode: event.target.value }))}>
+            {countries.map(country => <option key={country.code} value={country.code}>{country.name}</option>)}
+          </select>
+        </label>
+        <CheckoutAddressCheck address={postalAddress} onApproved={setApprovedAddress} disabled={busy}
+          onUseSuggestion={({ address }) => {
+            setBilling({ addressLine1: address.addressLines[0] || '', addressLine2: address.addressLines.slice(1).join(', '), adminArea2: address.locality || '', adminArea1: address.administrativeArea || '', postalCode: address.postalCode || '', countryCode: address.regionCode || billing.countryCode });
+            return { ...address, regionCode: address.regionCode || billing.countryCode };
+          }} />
+        <button type="button" onClick={() => void submit()} disabled={busy} className="flex w-full items-center justify-center gap-2 rounded-xl bg-cta-primary px-4 py-3.5 text-sm font-bold text-white shadow-cta-primary disabled:opacity-60">
+          {busy ? <Loader2 aria-label="Checking card" className="h-4 w-4 animate-spin" /> : 'Continue to payment review'}
+        </button>
+        <p className="text-center text-xs text-muted-foreground">Review your total before submitting payment.</p>
+      </div>
+      {error ? <p role="alert" className="text-sm text-destructive">{error}</p> : null}
+      {state === 'error' ? <button type="button" className="text-sm underline" onClick={() => setAttempt(value => value + 1)}>Reload card fields</button> : null}
+    </section>
+  );
+}

@@ -18,9 +18,10 @@ import {
 } from '@/hooks/useUserProfile';
 import { useHostListings } from '@/hooks/useHostListings';
 import { useHostBookings } from '@/hooks/useHostBookings';
-import { useStripeConnect } from '@/hooks/useStripeConnect';
+import { useManualPayout, MANUAL_PAYOUT_SETTINGS_PATH } from '@/hooks/useManualPayout';
 import { useHostResponseTime } from '@/hooks/useHostResponseTime';
 import { useAuth } from '@/contexts/AuthContext';
+import { useSellerVerifiedBadge } from '@/hooks/useSellerVerifiedBadge';
 import { Listing } from '@/types/listing';
 
 const Profile = () => {
@@ -38,10 +39,17 @@ const Profile = () => {
   const { data: reviewsReceived, isLoading: reviewsReceivedLoading } = useUserReviewsReceived(profileUserId);
   const { data: reviewsGiven, isLoading: reviewsGivenLoading } = useUserReviewsGiven(profileUserId);
 
+  /**
+   * Identity Verified badge — authoritative server read. Covers both the paid
+   * Plaid check and sellers grandfathered in from the retired provider.
+   */
+  const { verified: sellerVerified } = useSellerVerifiedBadge(profileUserId);
+
   // Host-specific data (only for own profile)
   const { listings: hostListings, stats: hostStats } = useHostListings();
   const { stats: bookingStats } = useHostBookings();
-  const { isConnected: stripeConnected, isLoading: stripeLoading, connectStripe, isConnecting } = useStripeConnect();
+  const { hasPayoutInstructions: stripeConnected, isLoading: stripeLoading } = useManualPayout();
+  const goToPayoutSettings = () => { window.location.assign(MANUAL_PAYOUT_SETTINGS_PATH); };
   const { data: responseTimeData } = useHostResponseTime(profileUserId);
 
   const isLoading = profileLoading || statsLoading;
@@ -114,28 +122,28 @@ const Profile = () => {
           {/* Next Step Card - Only show for own profile */}
           {isOwnProfile && (
             <EnhancedProfileNextStepCard
-              isVerified={profile.identity_verified || false}
-              stripeConnected={stripeConnected}
+              isVerified={sellerVerified}
+              payoutReady={stripeConnected}
               isHost={isHost}
               draftCount={draftCount}
               pendingRequestCount={pendingRequestCount}
-              isLoadingStripe={stripeLoading}
-              onConnectStripe={connectStripe}
-              isConnectingStripe={isConnecting}
+              isLoadingPayout={stripeLoading}
+              onSetUpPayouts={goToPayoutSettings}
+              isSavingPayouts={false}
             />
           )}
 
           {/* Stats Row */}
           <EnhancedProfileStatsRow
             stats={stats}
-            isVerified={profile.identity_verified || false}
+            isVerified={sellerVerified}
             stripeConnected={stripeConnected}
             isHost={isHost}
           />
 
           {/* Trust Section - Collapsible */}
           <EnhancedProfileTrustSection
-            isVerified={profile.identity_verified || false}
+            isVerified={sellerVerified}
             stripeConnected={stripeConnected}
             isHost={isHost}
             isOwnProfile={isOwnProfile}
@@ -150,7 +158,7 @@ const Profile = () => {
             reviewsReceivedLoading={reviewsReceivedLoading}
             reviewsGivenLoading={reviewsGivenLoading}
             isOwnProfile={isOwnProfile}
-            hostVerified={profile.identity_verified || false}
+            hostVerified={sellerVerified}
             isHost={isHost}
             stats={stats}
           />

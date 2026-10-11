@@ -15,7 +15,7 @@ import PermitItemManager from './permits/PermitItemManager';
 import RenewalsStrip from './permits/RenewalsStrip';
 import PermitRoadmapCard from './permits/PermitRoadmapCard';
 import PermitsGate from './permits/PermitsGate';
-import { useToolAccess } from '@/hooks/useToolAccess';
+import { usePermitPathAccess } from '@/hooks/usePermitPathAccess';
 import { Flame } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 
@@ -38,8 +38,7 @@ function requiredCount(r: SavedRoadmap) {
 
 export default function PermitsTab() {
   const { user } = useAuth();
-  const access = useToolAccess();
-  const permitAccess = access.bySlug['permitpath'];
+  const permitAccess = usePermitPathAccess();
   const [searchParams, setSearchParams] = useSearchParams();
   const roadmapId = searchParams.get('roadmap');
 

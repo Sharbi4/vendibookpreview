@@ -1,7 +1,15 @@
+import ListingFinancingBadge from '@/components/listing/ListingFinancingBadge';
+import { illustrativeFinancingNote, illustrativeMonthlyPayment } from '@/lib/financing/calculator';
+import { deliveryRateLabel } from '@/lib/fulfillment/delivery';
+import { formatListingPriceLabel, type ListingPriceInput } from '@/lib/listings/rentalPricing';
+import { formatCurrency } from '@/lib/commissions';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Plug, Zap, Droplet, Refrigerator, Flame, Wind, Wifi, Car, Shield, Sun, Truck, Calendar, Clock, ArrowRight } from 'lucide-react';
+import { MapPin, Plug, Zap, Droplet, Refrigerator, Flame, Wind, Wifi, Car, Shield, Sun, Truck, Calendar, Clock, ArrowRight, Banknote, Coffee, IceCreamCone } from 'lucide-react';
+import { detectSpecialty, specialtyVehicleHref, SPECIALTY_VEHICLE_LABELS, type SpecialtyVehicle } from '@/lib/listings/specialty';
 import FeaturedBadge from '@/components/listing/FeaturedBadge';
+import { FinancingAvailableBadge } from '@/components/financing/FinancingAvailableBadge';
+import { useEquinoxFinancingEnabled } from '@/hooks/useListingFinancing';
 import ListingCardOverlay from '@/components/listing/ListingCardOverlay';
 import { Listing, CATEGORY_LABELS } from '@/types/listing';
 import { Badge } from '@/components/ui/badge';
@@ -9,11 +17,11 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import RatingBadge from '@/components/reviews/RatingBadge';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import VerificationBadge from '@/components/verification/VerificationBadge';
+import IdentityVerifiedBadge from '@/components/verification/IdentityVerifiedBadge';
+import { useSellerVerifiedBadge } from '@/hooks/useSellerVerifiedBadge';
 import { CategoryTooltip } from '@/components/categories/CategoryGuide';
+
 import { FavoriteButton } from '@/components/listing/FavoriteButton';
-import { AffirmBadge } from '@/components/ui/AffirmBadge';
-import { AfterpayBadge } from '@/components/ui/AfterpayBadge';
 import { trackListingCardClick } from '@/lib/analytics';
 import { trackLeadEvent } from '@/lib/leadTracking';
 // AvailabilityCalendarModal removed — calendar lives inside ListingCardOverlay now
@@ -21,6 +29,7 @@ import { normalizeScheduleKeys } from '@/lib/scheduleUtils';
 import { isListingFeatured } from '@/lib/featured';
 import { TrustESignChip } from '@/components/trust/TrustESignChip';
 import { SmartImage } from '@/components/ui/SmartImage';
+import { isSellerCoveredFreight } from '@/lib/freight/presentation';
 
 // Types for hourly schedule
 interface TimeRange {
@@ -123,7 +132,15 @@ interface ListingCardProps {
   canDeliverToUser?: boolean;
   distanceMiles?: number;
   compact?: boolean;
+  /**
+   * Presentation variant. `search` renders the warm/light marketplace surface
+   * used on /search only — homepage and other rails keep the dark default.
+   */
+  variant?: 'default' | 'search';
+  /** Search-only: horizontal marketplace row on desktop, stacked on mobile. */
+  horizontal?: boolean;
 }
+
 
 // Map of popular amenities to icons (subset for compact display)
 const popularAmenityIcons: Record<string, { icon: React.ElementType; label: string }> = {
@@ -146,29 +163,51 @@ const popularAmenityIcons: Record<string, { icon: React.ElementType; label: stri
   three_compartment_sink: { icon: Droplet, label: '3 Compartment Sink' },
 };
 
-const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickBook, canDeliverToUser, distanceMiles, compact = false }: ListingCardProps) => {
+const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickBook, canDeliverToUser, distanceMiles, compact = false, variant = 'default', horizontal = false }: ListingCardProps) => {
   const [showOverlay, setShowOverlay] = useState(false);
+
+  // Search-only warm/light marketplace surface. Presentation only — every
+  // badge, link, favorite and overlay behaviour below is shared.
+  const isSearch = variant === 'search';
+  const isRow = isSearch && horizontal;
+  const textStrong = isSearch ? 'text-[#1b1714]' : 'text-white';
+  const textMuted = isSearch ? 'text-[#1b1714]/60' : 'text-white/60';
+  const textFaint = isSearch ? 'text-[#1b1714]/50' : 'text-white/50';
+
+
+  // Authoritative fallback so a freshly verified seller's badge shows on every
+  // card even when the caller didn't pre-resolve `hostVerified`.
+  const { verified: sellerBadgeActive } = useSellerVerifiedBadge(
+    hostVerified ? null : ((listing as any).host_id ?? null),
+  );
+  const showVerifiedBadge = hostVerified || sellerBadgeActive;
   
   // Featured badge: dynamic, source of truth in src/lib/featured.ts
   const isFeatured = isListingFeatured(listing as any);
+  const financingEnabled = useEquinoxFinancingEnabled(listing as any);
+  const hasSellerCoveredFreight = isSellerCoveredFreight(listing);
+
+  // Specialty collection chip (coffee / ice cream) — deep-links to the same
+  // filtered /search state used by the hub headers and filter pill strip.
+  const specialtyKey = detectSpecialty({
+    title: listing.title,
+    subcategory: (listing as any).subcategory,
+    description: (listing as any).description,
+  });
+  const specialtyVehicle: SpecialtyVehicle | null =
+    listing.category === 'food_truck' ? 'truck' : listing.category === 'food_trailer' ? 'trailer' : null;
+  const specialtyChip = !compact && specialtyKey && specialtyVehicle
+    ? {
+        key: specialtyKey,
+        label: SPECIALTY_VEHICLE_LABELS[specialtyKey][specialtyVehicle],
+        href: specialtyVehicleHref(specialtyKey, specialtyVehicle),
+      }
+    : null;
 
 
-  // Safely format price with proper null handling
+  // Shared resolver: never shows "Price TBD" when any rate (incl. monthly) exists.
   const formatListingPrice = () => {
-    if (listing.mode === 'rent') {
-      if (listing.price_daily && listing.price_daily > 0) {
-        return `$${listing.price_daily.toLocaleString()}/day`;
-      }
-      if (listing.price_hourly && listing.price_hourly > 0) {
-        return `$${listing.price_hourly.toLocaleString()}/hr`;
-      }
-      return 'Price TBD';
-    }
-    // Sale mode
-    if (listing.price_sale && listing.price_sale > 0) {
-      return `$${listing.price_sale.toLocaleString()}`;
-    }
-    return 'Price TBD';
+    return formatListingPriceLabel(listing as ListingPriceInput);
   };
   
   const price = formatListingPrice();
@@ -215,18 +254,28 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
   return (
     <div
       data-listing-id={listing.id}
-      className="relative rounded-2xl border-2 border-white/[0.10] hover:border-white/[0.22] hover:-translate-y-1.5 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] flex flex-col overflow-hidden h-full group shadow-xl shadow-black/40 hover:shadow-2xl hover:shadow-black/60 bg-card/60 backdrop-blur-sm"
+      className={cn(
+        'relative flex flex-col overflow-hidden h-full group',
+        isSearch
+          ? 'rounded-3xl border border-[#1b1714]/[0.08] bg-white shadow-[0_1px_2px_rgba(24,20,16,0.04),0_12px_30px_-20px_rgba(24,20,16,0.30)] hover:border-[#1b1714]/[0.14] hover:shadow-[0_2px_6px_rgba(24,20,16,0.06),0_18px_38px_-22px_rgba(24,20,16,0.34)] hover:-translate-y-[2px] transition-all duration-300 ease-out'
+          : 'rounded-2xl border-2 border-white/[0.10] hover:border-white/[0.22] hover:-translate-y-1.5 transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] shadow-xl shadow-black/40 hover:shadow-2xl hover:shadow-black/60 bg-card/60 backdrop-blur-sm',
+      )}
     >
       <Link 
         to={`/listing/${listing.id}`} 
-        className={cn("cursor-pointer block flex-1 flex flex-col", className)}
+        className={cn(
+          'cursor-pointer block flex-1 flex flex-col',
+          isRow && 'sm:flex-row',
+          className,
+        )}
         onClick={() => {
           trackListingCardClick(listing.id, listing.category, 'listing_card');
           trackLeadEvent('listing_card_click', { listing_id: listing.id, category: listing.category });
         }}
       >
         {/* Image Container - Turo Look */}
-        <div className={cn("relative w-full", compact ? "" : "")}>
+        <div className={cn('relative w-full', isRow && 'sm:w-[238px] sm:shrink-0 sm:overflow-hidden')}>
+
           <SmartImage
             src={listing.cover_image_url || listing.image_urls[0]}
             alt={`${listing.title} - ${listing.category === 'food_truck' ? 'Food Truck' : listing.category === 'food_trailer' ? 'Food Trailer' : listing.category === 'ghost_kitchen' ? 'Shared Kitchen' : 'Vendor Space'} ${listing.mode === 'rent' ? 'for Rent' : 'for Sale'}`}
@@ -238,13 +287,17 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
         
         
         
-        {/* E-sign trust chip — every sale/rental agreement is signed online, free */}
-        <div className="absolute bottom-2 left-2 z-10">
+        {/* E-sign trust chip (+ financing badge outside search, where it moves
+            into the information surface to keep the image quiet). Card badges
+            are labels, not links: a tap anywhere on the card opens the listing,
+            which carries the financing panel. */}
+        <div className="absolute bottom-2 left-2 z-10 flex max-w-[calc(100%-1rem)] flex-col items-start gap-1.5">
+          {financingEnabled && !isSearch && <FinancingAvailableBadge compact asLink={false} />}
           <TrustESignChip variant="card" />
         </div>
 
         {/* Mode Badge */}
-        <div className="absolute top-2 left-2 flex items-center gap-1.5">
+        <div className="absolute top-2 left-2 right-12 flex flex-wrap items-center gap-1.5">
           <Badge 
             className={cn(
               "font-semibold text-white border-0 uppercase tracking-[0.08em] backdrop-blur-md shadow-lg",
@@ -270,6 +323,40 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
               </Tooltip>
             </TooltipProvider>
           )}
+
+          {hasSellerCoveredFreight && (
+            <Badge className="border-0 bg-emerald-500 text-[10px] font-semibold uppercase text-primary-foreground shadow-lg">
+              <Truck className="mr-1 h-3 w-3" />
+              Free shipping
+            </Badge>
+          )}
+
+          {/* Identity Verified badge — green shine metallic */}
+          {showVerifiedBadge && (
+            <TooltipProvider delayDuration={200}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span>
+                    <IdentityVerifiedBadge
+                      verified={showVerifiedBadge}
+                      size={compact ? 'sm' : 'md'}
+                      withDetails={false}
+                    />
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="bottom" className="max-w-[220px] text-xs">
+                  {`
+                    The seller has completed a paid identity check through Plaid.
+                    Identity verification does not verify ownership, condition, or transaction safety.
+                  `}
+                </TooltipContent>
+              </Tooltip>
+            </TooltipProvider>
+          )}
+
+
+
+
           
           {/* Instant Book Badge */}
           {!compact && listing.mode === 'rent' && listing.instant_book && (
@@ -315,7 +402,8 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
         {/* Amenities Icons Overlay */}
         <div className={cn("absolute left-3 right-3 flex items-center justify-between", compact ? "bottom-2" : "bottom-3")}>
           <div className="flex items-center gap-1">
-            {displayAmenities.length > 0 && (
+            {/* Search cards move amenity detail into the information surface */}
+            {!isSearch && displayAmenities.length > 0 && (
               <TooltipProvider delayDuration={200}>
                 {displayAmenities.map((amenityId) => {
                   const amenity = popularAmenityIcons[amenityId];
@@ -401,10 +489,10 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
         </div>
 
       {/* Content - Apple/OpenAI Cleanliness */}
-      <div className={cn("p-4 space-y-2 flex-1 flex flex-col", compact && "p-3 space-y-1")}>
+      <div className={cn("p-4 space-y-2 flex-1 flex flex-col", compact && "p-3 space-y-1", isRow && "sm:p-4 sm:space-y-1.5")}>
         {/* Location & Category */}
         <div className="flex items-center justify-between gap-2">
-          <span className={cn("text-white/60 font-medium flex items-center gap-1", compact ? "text-xs" : "text-sm")}>
+          <span className={cn(textMuted, "font-medium flex items-center gap-1", compact ? "text-xs" : "text-sm")}>
             <MapPin className={cn(compact ? "h-2.5 w-2.5" : "h-3 w-3")} />
             <span className="line-clamp-1">{location}</span>
             {distanceMiles !== undefined && (
@@ -415,7 +503,10 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
           </span>
           {!compact && (
             <CategoryTooltip category={listing.category} side="top">
-              <span className="bg-white/10 text-white/80 text-xs font-bold px-3 py-1 rounded-full cursor-help">
+              <span className={cn(
+                "text-xs font-bold px-3 py-1 rounded-full cursor-help",
+                isSearch ? "bg-[#1b1714]/[0.05] text-[#1b1714]/70" : "bg-white/10 text-white/80",
+              )}>
                 {CATEGORY_LABELS[listing.category]}
               </span>
             </CategoryTooltip>
@@ -424,11 +515,11 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
 
         {/* Delivery Radius Badge */}
         {!compact && (listing.fulfillment_type === 'delivery' || listing.fulfillment_type === 'both') && listing.delivery_radius_miles && (
-          <div className="flex items-center gap-1 text-xs text-white/50">
+          <div className={cn("flex items-center gap-1 text-xs", textFaint)}>
             <Truck className="h-3 w-3" />
             <span>Delivers within {listing.delivery_radius_miles} mi</span>
             {listing.delivery_fee && (
-              <span className="text-white/80 font-medium">· ${listing.delivery_fee} fee</span>
+              <span className={cn("font-medium", isSearch ? "text-[#1b1714]/80" : "text-white/80")}>· {deliveryRateLabel(listing.delivery_fee, (listing as any).delivery_fee_type)}</span>
             )}
           </div>
         )}
@@ -436,69 +527,164 @@ const ListingCard = ({ listing, className, hostVerified, showQuickBook, onQuickB
         {/* Title & Rating - Tracking Tight Typography */}
         <div className="flex items-center justify-between gap-2">
           <h3 className={cn(
-            "text-lg font-semibold tracking-tight text-white line-clamp-1 group-hover:text-primary transition-colors",
-            compact && "text-sm"
+            "text-lg font-semibold tracking-tight line-clamp-1 group-hover:text-primary transition-colors",
+            textStrong,
+            compact && "text-sm",
+            isRow && "sm:text-lg sm:line-clamp-2",
           )}>
             {listing.title}
           </h3>
           {!compact && <RatingBadge listingId={listing.id} />}
         </div>
 
+        {/* Specialty collection deep link (dark/default surface) */}
+        {!isSearch && specialtyChip && (
+          <Link
+            to={specialtyChip.href}
+            onClick={(e) => e.stopPropagation()}
+            className="relative z-10 inline-flex w-fit items-center gap-1 text-[11px] font-medium text-white/60 hover:text-primary transition-colors"
+          >
+            {specialtyChip.key === 'coffee' ? <Coffee className="h-3 w-3" /> : <IceCreamCone className="h-3 w-3" />}
+            {specialtyChip.label}
+            <ArrowRight className="h-3 w-3" />
+          </Link>
+        )}
+
+        {/* Search-only quiet detail row: financing + amenity summary live here
+            instead of competing with the primary badges over the image. */}
+        {isSearch && (financingEnabled || popularAmenities.length > 0 || remainingAmenitiesCount > 0 || specialtyChip) && (
+          <div className="flex flex-wrap items-center gap-1.5">
+            {specialtyChip && (
+              <Link
+                to={specialtyChip.href}
+                onClick={(e) => e.stopPropagation()}
+                className="relative z-10 inline-flex items-center gap-1 rounded-full bg-[#1b1714]/[0.05] px-2.5 py-1 text-[11px] font-medium text-[#1b1714]/70 hover:bg-[#1b1714]/[0.09] transition-colors"
+              >
+                {specialtyChip.key === 'coffee' ? <Coffee className="h-3 w-3" /> : <IceCreamCone className="h-3 w-3" />}
+                {specialtyChip.label}
+              </Link>
+            )}
+            {financingEnabled && (
+              <ListingFinancingBadge listingId={listing.id} asLink={false} />
+            )}
+            {displayAmenities.length > 0 && (
+              <TooltipProvider delayDuration={200}>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-[#1b1714]/[0.05] px-2.5 py-1 text-[11px] font-medium text-[#1b1714]/65">
+                      {displayAmenities.slice(0, 2).map((amenityId) => {
+                        const amenity = popularAmenityIcons[amenityId];
+                        if (!amenity) return null;
+                        const IconComponent = amenity.icon;
+                        return <IconComponent key={amenityId} className="h-3 w-3" />;
+                      })}
+                      {popularAmenities.length + Math.max(remainingAmenitiesCount, 0) > 2
+                        ? `+${(listing.amenities?.length || 0) - 2} more`
+                        : 'Features'}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent side="top" className="max-w-[220px] text-xs">
+                    {(listing.amenities || [])
+                      .map((a) => popularAmenityIcons[a]?.label)
+                      .filter(Boolean)
+                      .join(' · ') || 'Features & amenities'}
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            )}
+          </div>
+        )}
+
         {/* Price + Micro-action — the only conversion surface on the card */}
         <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2 mt-auto pt-1">
           <div className="flex items-baseline gap-2 flex-wrap min-w-0">
-            <span className={cn("text-white font-bold tracking-tight tabular-nums", compact ? "text-base" : "text-xl")}>
+            <span className={cn("font-bold tracking-tight tabular-nums", textStrong, compact ? "text-base" : "text-xl")}>
               {price}
             </span>
             {showHourlyRate && (
-              <span className={cn("text-white/50 font-medium", compact ? "text-xs" : "text-xs")}>
-                ${listing.price_hourly}/hr
+              <span className={cn("font-medium text-xs", textFaint)}>
+                {formatCurrency(listing.price_hourly)}/hr
+              </span>
+            )}
+            {financingEnabled && listing.mode === 'sale' && illustrativeMonthlyPayment(Number(listing.price_sale)) && (
+              <span className={cn("text-xs font-medium", textFaint)} title={illustrativeFinancingNote}>
+                or est. {Math.round(illustrativeMonthlyPayment(Number(listing.price_sale))!).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 })}/mo*
               </span>
             )}
             {!compact && listing.mode === 'rent' && listing.price_weekly && (
-              <span className="text-xs text-white/50 font-medium">
-                ${listing.price_weekly}/week
+              <span className={cn("text-xs font-medium", textFaint)}>
+                {formatCurrency(listing.price_weekly)}/week
               </span>
             )}
           </div>
-          <button
-            type="button"
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              trackLeadEvent(
-                listing.mode === 'sale'
-                  ? 'listing_start_purchase_click'
-                  : 'listing_view_availability_click',
-                {
-                  listing_id: listing.id,
-                  category: listing.category,
-                  price: listing.mode === 'sale' ? listing.price_sale : listing.price_daily,
-                  source: 'listing_card',
-                },
-              );
-              setShowOverlay(true);
-            }}
-            className="group/cta relative z-10 inline-flex items-center gap-1 text-[13px] font-medium text-[#f97316] hover:text-[#fb923c] whitespace-nowrap shrink-0 transition-colors"
-          >
-            <span>{listing.mode === 'sale' ? 'Start purchase' : 'View availability'}</span>
-            <ArrowRight className="h-3.5 w-3.5 transition-transform duration-150 ease-out group-hover/cta:translate-x-1 group-hover/cta:text-[#fb923c]" />
-          </button>
+          {isSearch ? (
+            <Button
+              type="button"
+              variant="cta"
+              size="sm"
+              className="relative z-10 h-9 px-4 text-[13px] rounded-2xl shrink-0"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                trackLeadEvent(
+                  listing.mode === 'sale'
+                    ? 'listing_start_purchase_click'
+                    : 'listing_view_availability_click',
+                  {
+                    listing_id: listing.id,
+                    category: listing.category,
+                    price: listing.mode === 'sale' ? listing.price_sale : listing.price_daily,
+                    source: 'listing_card',
+                  },
+                );
+                setShowOverlay(true);
+              }}
+            >
+              {listing.mode === 'sale' ? 'Start purchase' : 'View availability'}
+            </Button>
+          ) : (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                trackLeadEvent(
+                  listing.mode === 'sale'
+                    ? 'listing_start_purchase_click'
+                    : 'listing_view_availability_click',
+                  {
+                    listing_id: listing.id,
+                    category: listing.category,
+                    price: listing.mode === 'sale' ? listing.price_sale : listing.price_daily,
+                    source: 'listing_card',
+                  },
+                );
+                setShowOverlay(true);
+              }}
+              className="group/cta relative z-10 inline-flex items-center gap-1 text-[13px] font-medium text-[#f97316] hover:text-[#fb923c] whitespace-nowrap shrink-0 transition-colors"
+            >
+              <span>{listing.mode === 'sale' ? 'Start purchase' : 'View availability'}</span>
+              <ArrowRight className="h-3.5 w-3.5 transition-transform duration-150 ease-out group-hover/cta:translate-x-1 group-hover/cta:text-[#fb923c]" />
+            </button>
+          )}
         </div>
+
 
         
         {/* Hourly Schedule Summary - shows available days/hours for hourly rentals */}
         {scheduleSummary && (
           <div className={cn(
-            "flex items-center gap-1.5 text-white/50",
+            "flex items-center gap-1.5",
+            textFaint,
             compact ? "text-[10px]" : "text-xs"
           )}>
             <Clock className={cn("shrink-0", compact ? "h-3 w-3" : "h-3.5 w-3.5")} />
             <span>{scheduleSummary.daysText}</span>
             {scheduleSummary.hoursText && (
               <>
-                <span className="text-white/30">•</span>
+                <span className={isSearch ? "text-[#1b1714]/30" : "text-white/30"}>•</span>
                 <span>{scheduleSummary.hoursText}</span>
+
               </>
             )}
           </div>

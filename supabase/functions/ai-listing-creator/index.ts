@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { resolveHostTier, tierAtLeast, tierRequiredBody } from "../_shared/resolveHostTier.ts";
+import { getCaller, isAdminUser, unauthorizedResponse, forbiddenResponse } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -113,7 +114,7 @@ The JSON format is:
     "subcategory": "string or null",
     "total_slots": number or null,
     "slot_names": ["string"] or [],
-    "accept_card_payment": boolean or null,
+    "accept_paypal_checkout": boolean or null,
     "accept_cash_payment": boolean or null
   }
 }
@@ -160,7 +161,7 @@ Set "ready": true ONLY when you have gathered ALL required information and are p
     - **Trucks/Trailers for RENT:** Ask: "How will renters access this? Options: Pickup at your location, you deliver it, or both?"
     - **Trucks/Trailers for SALE:** Ask: "How will the buyer receive this? Pickup at your location, you deliver it, or both?"
 
-12. **Payment Method** (FOR SALE listings only) — Ask: "How would you like to accept payment? Options: Card only (Stripe), Pay in person (cash), or Both." Set accept_card_payment and accept_cash_payment accordingly. For RENT listings, skip this — card payment is the default.
+12. **Payment Method** (FOR SALE listings only) — Ask: "How would you like to accept payment? Options: PayPal checkout (online), Pay in person (cash), or Both." Set accept_paypal_checkout and accept_cash_payment accordingly. For RENT listings, skip this — PayPal checkout is the default.
 
 12. **Dimensions** (for trucks/trailers) — Ask length, width, height, and weight if applicable. If [PHOTO_ANALYSIS] estimated dimensions, suggest those and ask the user to confirm. Convert feet to inches for storage (e.g., 18ft = 216 inches).
 
@@ -241,7 +242,13 @@ serve(async (req) => {
       }
     }
 
-    const { messages, imageUrls } = await req.json();
+    if (!(await getCaller(req))) return unauthorizedResponse(corsHeaders);
+    const { messages: rawMessages, imageUrls } = await req.json();
+    // Callers may only supply user/assistant turns; system instructions are ours.
+    const messages = (Array.isArray(rawMessages) ? rawMessages : [])
+      .filter((m: any) => m && (m.role === "user" || m.role === "assistant") && typeof m.content === "string")
+      .slice(-40)
+      .map((m: any) => ({ role: m.role, content: m.content.slice(0, 8000) }));
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 

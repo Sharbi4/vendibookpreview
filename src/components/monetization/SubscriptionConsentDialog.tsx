@@ -80,7 +80,7 @@ export const SubscriptionConsentDialog: React.FC<Props> = ({
       footerSlot={
         <span className="inline-flex items-center gap-1.5 text-[11px] text-muted-foreground">
           <ShieldCheck className="h-3.5 w-3.5 text-emerald-500" />
-          Secure billing through PayPal — cancel anytime online.
+          Secure billing through Square — cancel anytime online.
         </span>
       }
       onAccept={async (consentId) => {

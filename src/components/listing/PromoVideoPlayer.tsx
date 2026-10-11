@@ -1,3 +1,4 @@
+import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useRef, useState } from "react";
 import { Loader2, Wand2 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
@@ -38,11 +39,13 @@ export function PromoVideoPlayer({ listingId, buttonClassName }: Props) {
     setLoading(true);
     try {
       const url = `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-listing-video`;
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token ?? import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
       const resp = await fetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`},
+          Authorization: `Bearer ${accessToken}`},
         body: JSON.stringify({ listing_id: listingId })});
       const j = await resp.json();
       if (!resp.ok) {

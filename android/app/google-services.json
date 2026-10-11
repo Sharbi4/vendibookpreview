@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "436256956098",
+    "project_id": "vendibook-e242d",
+    "storage_bucket": "vendibook-e242d.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:436256956098:android:171101799cbeb9ad93655b",
+        "android_client_info": {
+          "package_name": "com.vendibook.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDJnRK94zxZvTPJSI33s0wg981PKw9u7yU"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -1,5 +1,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient, type SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
+import { rankLeadMatches, type MatchableListing } from '../_shared/leadMatches.ts'
+import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,6 +14,11 @@ interface Listing {
   title: string;
   category: string;
   mode: string;
+  city: string | null;
+  state: string | null;
+  price_weekly: number | null;
+  price_monthly: number | null;
+  vendibook_freight_enabled: boolean | null;
   address: string | null;
   latitude: number | null;
   longitude: number | null;
@@ -73,8 +81,84 @@ async function geocodeZip(zip: string): Promise<{ lat: number; lng: number; city
   }
 }
 
+// Open "Tell Vendibook" buyer/renter requests from the last 60 days get the
+// same new-listing email when a just-published listing matches them (same
+// matching as the request confirmation). One email per request per run;
+// idempotency keys stop repeats for the same listing.
+const REQUEST_LOOKBACK_DAYS = 60
+const CLOSED_REQUEST_STATUSES = ['closed', 'matched', 'fulfilled', 'archived', 'spam', 'converted']
+const LEAD_CATEGORY: Record<string, string> = {
+  food_truck: 'food_truck',
+  food_trailer: 'food_trailer',
+  ghost_kitchen: 'commercial_kitchen',
+  commercial_kitchen: 'commercial_kitchen',
+  vendor_lot: 'vendor_space',
+  vendor_space: 'vendor_space',
+}
+
+async function notifyOpenAssetRequests(supabase: SupabaseClient, listings: Listing[]): Promise<number> {
+  const since = new Date(Date.now() - REQUEST_LOOKBACK_DAYS * 24 * 60 * 60 * 1000).toISOString()
+  const { data: requests, error } = await supabase
+    .from('asset_requests')
+    .select('id, email, name, intent, asset_type, city, state, budget_max, status')
+    .gte('created_at', since)
+    .in('intent', ['rent', 'buy'])
+    .not('email', 'is', null)
+  if (error) {
+    console.error('[availability-alerts] asset_requests lookup failed', error)
+    return 0
+  }
+
+  let sent = 0
+  for (const r of requests ?? []) {
+    if (CLOSED_REQUEST_STATUSES.includes(String(r.status ?? '').toLowerCase())) continue
+    const city = [r.city, r.state].filter(Boolean).join(', ')
+    const category = r.asset_type ? LEAD_CATEGORY[r.asset_type] ?? null : null
+    const budgetMax = Number(r.budget_max) || null
+    const candidates = listings.filter((l) =>
+      !(r.intent === 'buy' && budgetMax && l.price_sale && Number(l.price_sale) > budgetMax * 1.25))
+    const [match] = rankLeadMatches(
+      { intent: r.intent, category, city },
+      candidates as unknown as MatchableListing[],
+      1,
+    ) as unknown as Listing[]
+    if (!match) continue
+
+    const priceLabel = match.mode === 'rent'
+      ? (match.price_daily ? `$${Number(match.price_daily).toLocaleString()}/day` : '')
+      : (match.price_sale ? `$${Number(match.price_sale).toLocaleString()}` : '')
+    try {
+      const { error: emailError } = await invokeTransactionalEmail({
+        templateName: 'new-listing-alert',
+        recipientEmail: r.email,
+        idempotencyKey: `asset-request-${r.id}-${match.id}`,
+        templateData: {
+          name: (r.name ?? '').trim().split(/\s+/)[0] || undefined,
+          listingTitle: match.title,
+          listingId: match.id,
+          categoryLabel: CATEGORY_LABELS[match.category] || match.category,
+          modeLabel: match.mode === 'rent' ? 'For Rent' : 'For Sale',
+          priceLabel,
+          city: match.city ?? undefined,
+          state: match.state ?? undefined,
+          coverImageUrl: match.cover_image_url || undefined,
+        },
+      })
+      if (emailError) {
+        console.error('[availability-alerts] request email error', { request: r.id }, emailError)
+        continue
+      }
+      sent++
+    } catch (e) {
+      console.error('[availability-alerts] request email invoke failed', e)
+    }
+  }
+  return sent
+}
+
 const handler = async (req: Request): Promise<Response> => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (!(await isAdminOrBackendCaller(req))) return forbiddenResponse();
 
   try {
     const supabase = createClient(
@@ -91,8 +175,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     const { data: newListings, error: listingsError } = await supabase
       .from("listings")
-      .select("id, title, category, mode, address, latitude, longitude, price_daily, price_sale, cover_image_url, published_at")
-      .eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear")
+      .select("id, title, category, mode, city, state, price_weekly, price_monthly, vendibook_freight_enabled, address, latitude, longitude, price_daily, price_sale, cover_image_url, published_at")
+      .eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear").eq("unlisted", false)
       .gte("published_at", sinceIso);
 
     if (listingsError) throw listingsError;
@@ -109,7 +193,8 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (alertsError) throw alertsError;
     if (!alerts?.length) {
-      return new Response(JSON.stringify({ success: true, listings: newListings.length, emails: 0 }), {
+      const requestEmails = await notifyOpenAssetRequests(supabase, newListings as Listing[]);
+      return new Response(JSON.stringify({ success: true, listings: newListings.length, emails: 0, request_emails: requestEmails }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -185,8 +270,7 @@ const handler = async (req: Request): Promise<Response> => {
           : (listing.price_sale ? `$${listing.price_sale.toLocaleString()}` : "");
 
         try {
-          const { error: emailError } = await supabase.functions.invoke("send-transactional-email", {
-            body: {
+          const { error: emailError } = await invokeTransactionalEmail({
               templateName: "new-listing-alert",
               recipientEmail: alert.email,
               idempotencyKey: `availability-${alert.id}-${listing.id}`,
@@ -202,10 +286,9 @@ const handler = async (req: Request): Promise<Response> => {
                 distanceMiles: distance,
                 coverImageUrl: listing.cover_image_url || undefined,
               },
-            },
-          });
+            });
           if (emailError) {
-            console.error(`[availability-alerts] email error for ${alert.email}`, emailError);
+            console.error(`[availability-alerts] email error for alert ${alert.id}`, emailError);
             continue;
           }
           emailsSent++;
@@ -220,9 +303,11 @@ const handler = async (req: Request): Promise<Response> => {
       }
     }
 
-    console.log(`[availability-alerts] done. listings=${newListings.length} emails=${emailsSent}`);
+    const requestEmails = await notifyOpenAssetRequests(supabase, newListings as Listing[]);
+
+    console.log(`[availability-alerts] done. listings=${newListings.length} emails=${emailsSent} request_emails=${requestEmails}`);
     return new Response(
-      JSON.stringify({ success: true, listings: newListings.length, emails: emailsSent }),
+      JSON.stringify({ success: true, listings: newListings.length, emails: emailsSent, request_emails: requestEmails }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
     );
   } catch (error: any) {

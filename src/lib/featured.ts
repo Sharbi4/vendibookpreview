@@ -65,3 +65,73 @@ export function sortFeaturedFirstFair<T extends FeaturedFields & { id: string }>
   const rest = items.filter((i) => !isListingFeatured(i));
   return [...featured, ...rest];
 }
+
+/** Window during which a freshly-boosted listing is pinned to the front. */
+export const FRESH_BOOST_WINDOW_MS = 72 * 60 * 60 * 1000;
+
+export interface FeaturedWithBoostedAt extends FeaturedFields {
+  featured_at?: string | null;
+}
+
+/**
+ * Featured-first ordering that guarantees a *just-boosted* listing is visible
+ * immediately: boosts placed within the last 72h are pinned to the front
+ * (newest first), and the remaining featured cohort keeps the fair daily
+ * rotation. Non-featured items retain their original order at the end.
+ */
+export function sortFeaturedFreshFirstThenFair<
+  T extends FeaturedWithBoostedAt & { id: string },
+>(items: T[]): T[] {
+  const now = Date.now();
+  const featured = items.filter((i) => isListingFeatured(i));
+  const isFresh = (i: T) => {
+    if (!i.featured_at) return false;
+    const t = new Date(i.featured_at).getTime();
+    return !Number.isNaN(t) && now - t < FRESH_BOOST_WINDOW_MS;
+  };
+  const fresh = featured
+    .filter(isFresh)
+    .sort(
+      (a, b) =>
+        new Date(b.featured_at!).getTime() - new Date(a.featured_at!).getTime(),
+    );
+  const rotated = sortFeaturedFirstFair(featured.filter((i) => !isFresh(i)));
+  const rest = items.filter((i) => !isListingFeatured(i));
+  return [...fresh, ...rotated, ...rest];
+}
+
+/** Window during which a brand-new published listing is pinned to the front. */
+export const NEW_LISTING_WINDOW_MS = 48 * 60 * 60 * 1000;
+
+export interface PublishedAtField {
+  published_at?: string | null;
+}
+
+/**
+ * Homepage row ordering: brand-new listings first.
+ *
+ * Any listing published within the last 48h is pinned to the very front
+ * (newest first) so a seller who just published sees their listing at the
+ * beginning of the row. Everything after that keeps the existing
+ * featured-first + fair daily rotation ordering.
+ */
+export function sortNewFirstThenFeatured<
+  T extends FeaturedFields & PublishedAtField & { id: string },
+>(items: T[]): T[] {
+  const now = Date.now();
+  const publishedTime = (i: T) => {
+    if (!i.published_at) return NaN;
+    return new Date(i.published_at).getTime();
+  };
+  const isNew = (i: T) => {
+    const t = publishedTime(i);
+    return !Number.isNaN(t) && now - t < NEW_LISTING_WINDOW_MS;
+  };
+  const fresh = items
+    .filter(isNew)
+    .sort((a, b) => publishedTime(b) - publishedTime(a));
+  const rest = sortFeaturedFirstFair(items.filter((i) => !isNew(i)));
+  return [...fresh, ...rest];
+}
+
+

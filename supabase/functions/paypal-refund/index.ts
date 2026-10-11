@@ -2,11 +2,25 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
 import { centsFromPayPalAmount, PayPalError, refundPayPalCapture, safeLog } from "../_shared/paypal.ts";
-import { appendLedgerEntry, recalculatePayableAfterRefund } from "../_shared/paypalAccounting.ts";
+import {
+  appendLedgerEntry,
+  closeSaleAfterFullRefund,
+  recalculatePayableAfterRefund,
+  refundedCentsFromLedger,
+} from "../_shared/paypalAccounting.ts";
+import { routedMerchantId } from "../_shared/paypalMultiparty.ts";
 import { notifyOrderParties } from "../_shared/notify.ts";
 import { auditPayment, requestIp } from "../_shared/paymentAudit.ts";
 
-/** Administrator-only PayPal refund. Always calls PayPal — never a DB-only status flip. */
+/**
+ * PayPal refund, callable by a Vendibook administrator or by the seller on
+ * their own order. Always calls PayPal — never a DB-only status flip.
+ *
+ * Commission on refunds follows the published Payments Terms: the Vendibook
+ * commission is recalculated against the amount the buyer actually kept, so a
+ * full refund returns the full commission and a partial refund keeps
+ * commission only on the retained amount (see recalculatePayableAfterRefund).
+ */
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -24,7 +38,6 @@ serve(async (req) => {
     if (!user) return jsonError(401, "unauthenticated", "Your session expired.");
 
     const { data: isAdmin } = await admin.rpc("has_role", { _user_id: user.id, _role: "admin" });
-    if (!isAdmin) return jsonError(403, "forbidden", "Administrator access required.");
 
     const { payment_record_id, amount_cents, reason } = await req.json().catch(() => ({}));
     if (!payment_record_id) return jsonError(400, "missing_fields", "Missing payment record id.");
@@ -32,6 +45,13 @@ serve(async (req) => {
     const { data: record } = await admin.from("payment_records").select("*")
       .eq("id", payment_record_id).maybeSingle();
     if (!record) return jsonError(404, "not_found", "Payment record not found.");
+
+    // Sellers may refund their own orders; everyone else needs admin rights.
+    const isSeller = !!record.seller_id && record.seller_id === user.id;
+    if (!isAdmin && !isSeller) {
+      return jsonError(403, "forbidden", "You can only refund your own orders.");
+    }
+    const actorRole = isAdmin ? "admin" : "seller";
     if (!record.paypal_capture_id) {
       return jsonError(409, "not_captured", "This payment has no PayPal capture to refund.");
     }
@@ -48,41 +68,95 @@ serve(async (req) => {
     const isFull = requested >= remaining;
     const idempotencyKey = `refund:${record.reference}:${record.refunded_cents ?? 0}:${requested}`;
 
+    // Connected Path captures live in the seller's PayPal account, so the
+    // refund must be issued on their behalf, and Vendibook's platform fee is
+    // returned in proportion (Payments Terms: commission only on what the
+    // buyer kept). Without platform_fees PayPal leaves the whole fee with
+    // Vendibook and the seller funds the entire refund.
+    const merchantId = routedMerchantId(record);
+    const metadata = (record.metadata ?? {}) as Record<string, any>;
+    const feeCents = Number(metadata?.multiparty?.platform_fee_cents ?? record.platform_fee_cents ?? 0);
+    const feeAlreadyRefunded = Number(metadata?.refunded_platform_fee_cents ?? 0);
+    let feeRefundCents = 0;
+    if (merchantId && feeCents > 0) {
+      feeRefundCents = isFull
+        ? Math.max(0, feeCents - feeAlreadyRefunded)
+        : Math.min(Math.max(0, feeCents - feeAlreadyRefunded), Math.round((feeCents * requested) / record.gross_amount_cents));
+    }
+
     const refund = await refundPayPalCapture({
       captureId: record.paypal_capture_id,
       amountCents: isFull && (record.refunded_cents ?? 0) === 0 ? undefined : requested,
       currency: record.currency,
       reason,
       idempotencyKey,
+      actAsMerchantId: merchantId,
+      platformFeeRefundCents: feeRefundCents > 0 ? feeRefundCents : undefined,
     });
 
     const refundedNow = centsFromPayPalAmount(refund?.amount?.value) || requested;
-    const totalRefunded = (record.refunded_cents ?? 0) + refundedNow;
+    // PayPal may hold a refund as PENDING (e.g. an eCheck capture). It is
+    // recorded but not counted until PayPal's REFUNDED webhook confirms it.
+    const refundPending = String(refund?.status ?? "").toUpperCase() === "PENDING";
 
     await appendLedgerEntry(admin, {
       paymentRecordId: record.id,
-      entryType: "refund",
+      entryType: refundPending ? "refund_pending" : "refund",
       amountCents: refundedNow,
       currency: record.currency,
       direction: "debit",
-      description: reason ? `Admin refund — ${reason}` : "Admin refund",
+      description: reason
+        ? `${isAdmin ? "Admin" : "Seller"} refund — ${reason}`
+        : `${isAdmin ? "Admin" : "Seller"} refund`,
       externalReference: refund?.id,
-      dedupeKey: `refund:${refund?.id ?? idempotencyKey}`,
+      dedupeKey: `${refundPending ? "refund_pending" : "refund"}:${refund?.id ?? idempotencyKey}`,
       actorId: user.id,
+      metadata: { paypal_status: refund?.status ?? null, platform_fee_refund_cents: feeRefundCents },
     });
 
-    await admin.from("payment_records").update({
+    // The ledger is the source of truth: if PayPal's webhook already recorded
+    // this refund, it is not added a second time.
+    const totalRefunded = Math.min(record.gross_amount_cents, await refundedCentsFromLedger(admin, record.id));
+    const fullyRefunded = totalRefunded >= record.gross_amount_cents;
+
+    const { error: recordError } = await admin.from("payment_records").update({
       refunded_cents: totalRefunded,
-      payment_status: totalRefunded >= record.gross_amount_cents ? "refunded" : "partially_refunded",
+      payment_status: fullyRefunded ? "refunded" : totalRefunded > 0 ? "partially_refunded" : record.payment_status,
       refunded_at: new Date().toISOString(),
-      metadata: { ...(record.metadata ?? {}), last_refund_id: refund?.id, last_refund_reason: reason ?? null },
+      metadata: {
+        ...metadata,
+        last_refund_id: refund?.id,
+        last_refund_status: refund?.status ?? null,
+        last_refund_reason: reason ?? null,
+        refunded_platform_fee_cents: feeAlreadyRefunded + feeRefundCents,
+      },
     }).eq("id", record.id);
+    if (recordError) {
+      console.error("[paypal-refund] payment record not updated", recordError.message);
+      await admin.from("payment_records").update({
+        internal_status: "needs_review",
+        last_error: { reason: "refund_record_update_failed", refund_id: refund?.id ?? null, detail: recordError.message },
+      }).eq("id", record.id);
+    }
+
+    // A fully refunded sale must stop looking like an active purchase.
+    const saleClose = fullyRefunded
+      ? await closeSaleAfterFullRefund(admin, record, `Refunded in full${reason ? ` — ${reason}` : ""}`)
+      : { ok: true };
 
     const { data: payable } = await admin.from("seller_payables").select("*")
       .eq("payment_record_id", record.id).maybeSingle();
 
     if (payable) {
       if (payable.status === "payout_completed") {
+        // Connected Path: PayPal already settled this into the seller's own
+        // account, so the payout status stays completed — but the refund must
+        // still be visible on the payout record in the Payments UI.
+        await admin.from("seller_payables").update({
+          refunded_cents: totalRefunded,
+          hold_reason:
+            `Refund of ${(totalRefunded / 100).toFixed(2)} issued after this payout settled — under recovery review.`,
+        }).eq("id", payable.id);
         await admin.from("payout_actions").insert({
           payable_id: payable.id,
           action: "recovery_required",
@@ -114,7 +188,7 @@ serve(async (req) => {
 
     await auditPayment(admin, {
       actorId: user.id,
-      actorRole: "admin",
+      actorRole,
       actorIp: requestIp(req),
       provider: "paypal",
       action: isFull ? "refund.full" : "refund.partial",
@@ -135,7 +209,9 @@ serve(async (req) => {
       },
       seller: {
         title: "A refund was issued",
-        message: `Order ${record.reference} was refunded. Your payout has been recalculated.`,
+        message: merchantId
+          ? `Order ${record.reference} was refunded from your PayPal account${feeRefundCents > 0 ? ", and Vendibook returned its fee on the refunded amount" : ""}.`
+          : `Order ${record.reference} was refunded. Your payout has been recalculated.`,
       },
       dedupeKey: `refund-initiated:${refund?.id ?? idempotencyKey}`,
     });
@@ -148,10 +224,31 @@ serve(async (req) => {
       refund_status: refund?.status,
       refunded_cents: refundedNow,
       total_refunded_cents: totalRefunded,
+      refund_pending: refundPending,
+      sale_closed: saleClose.ok,
+      needs_review: !saleClose.ok || !!recordError,
     });
   } catch (err) {
     if (err instanceof PayPalError) {
-      return jsonError(502, "paypal_error", "PayPal could not process this refund right now.");
+      const issue = String((err as any).issue ?? "").toUpperCase();
+      // The most common real-world failure: the seller's PayPal balance can't
+      // cover the refund. This is recoverable — tell them exactly what to do
+      // instead of a dead end.
+      if (issue.includes("INSUFFICIENT") || issue.includes("SENDER_RESTRICTED")) {
+        return jsonError(
+          409,
+          "insufficient_paypal_balance",
+          "PayPal declined the refund because the account balance can't cover it right now. Add funds to your PayPal balance or link a backup funding source, then try the refund again.",
+        );
+      }
+      if (issue.includes("CANNOT_BE_REFUNDED") || issue.includes("REFUND_TIME_LIMIT")) {
+        return jsonError(
+          409,
+          "refund_not_allowed",
+          "PayPal can no longer refund this payment automatically. Contact support@vendibook.com and we'll help you settle it with the buyer.",
+        );
+      }
+      return jsonError(502, "paypal_error", "PayPal could not process this refund right now. Nothing was charged or changed — please try again in a moment.");
     }
     return unknownErrorResponse(err);
   }

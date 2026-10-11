@@ -34,7 +34,7 @@ export default function RoadmapSuccess({ location, totalCost }: Props) {
         </p>
         <div className="flex flex-col sm:flex-row gap-2 justify-center">
           <Button asChild className="bg-[#FF5124] hover:bg-[#FF5124]/90 text-white h-11 px-5 font-semibold">
-            <Link to="/host/listings/new">
+            <Link to="/list">
               Create your Vendibook listing <ArrowRight className="h-4 w-4 ml-2" />
             </Link>
           </Button>

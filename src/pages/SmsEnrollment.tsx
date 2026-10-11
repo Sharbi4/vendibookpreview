@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import SEO from '@/components/SEO';
@@ -65,6 +66,7 @@ const SmsEnrollment: React.FC = () => {
         canonical="https://vendibook.com/sms"
       />
       <main className="mx-auto max-w-lg px-4 py-14">
+        <Link to="/dashboard/account" className="inline-block underline mb-5">Back to Account</Link>
         <div className="rounded-2xl border border-border/70 bg-card/40 p-6 shadow-sm">
           <div className="flex items-center gap-3 mb-6">
             <img src={vendibookLogo} alt="Vendibook" className="h-8 w-auto" />

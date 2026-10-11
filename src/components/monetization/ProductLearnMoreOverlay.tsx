@@ -11,7 +11,7 @@
  * - Analytics: fires `learn_more_opened` on open and `learn_more_converted`
  *   when the buy CTA inside the overlay is clicked.
  * - Consent gate is preserved — the buy CTA calls the exact same
- *   `onBuy` handler the parent card uses, so subscription consent + Stripe
+ *   `onBuy` handler the parent card uses, so subscription consent + secure
  *   checkout flow are unchanged.
  */
 import * as React from 'react';

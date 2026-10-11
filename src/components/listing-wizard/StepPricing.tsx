@@ -2,6 +2,7 @@ import React, { useState, useMemo } from 'react';
 import { Calendar, DollarSign, Loader2, TrendingUp, TrendingDown, Target, Wallet, Info, Zap, CreditCard, Banknote, Check } from 'lucide-react';
 import { ListingFormData, FreightPayer } from '@/types/listing';
 import { Label } from '@/components/ui/label';
+import SellerBusinessAccountHelp from '@/components/payments/SellerBusinessAccountHelp';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
@@ -16,7 +17,6 @@ import {
   SALE_SELLER_FEE_PERCENT} from '@/lib/commissions';
 import { FreightSettingsCard } from '@/components/freight';
 import { InfoTooltip } from '@/components/ui/info-tooltip';
-import { StripeConnectBanner } from './StripeConnectBanner';
 
 interface StepPricingProps {
   formData: ListingFormData;
@@ -384,7 +384,7 @@ export const StepPricing: React.FC<StepPricingProps> = ({
             </div>
 
             {/* Payout Estimate - Compact */}
-            {salePayoutEstimate && formData.accept_card_payment && (
+            {salePayoutEstimate && formData.accept_paypal_checkout && (
               <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/30 border border-border/60 max-w-md">
                 <Wallet className="w-4 h-4 text-muted-foreground shrink-0" />
                 <div className="flex-1 text-sm">
@@ -429,37 +429,40 @@ export const StepPricing: React.FC<StepPricingProps> = ({
               </p>
             </div>
           ) : (
-            <div className="p-4 rounded-xl border border-border bg-card">
-              <Label className="font-medium mb-3 block">Payment Methods</Label>
-              <div className="space-y-3">
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <Checkbox 
-                    checked={formData.accept_card_payment} 
-                    onCheckedChange={(c) => updateField('accept_card_payment', !!c)} 
-                  />
-                  <div className="flex items-center gap-2">
-                    <CreditCard className="w-4 h-4 text-primary" />
-                    <span className="text-sm">Pay by Card (Online)</span>
-                  </div>
-                </label>
-                <label className="flex items-center gap-3 cursor-pointer">
-                  <Checkbox 
-                    checked={formData.accept_cash_payment} 
-                    onCheckedChange={(c) => updateField('accept_cash_payment', !!c)} 
-                  />
-                  <div className="flex items-center gap-2">
-                    <Banknote className="w-4 h-4 text-green-600" />
-                    <span className="text-sm">Pay in Person</span>
-                  </div>
-                </label>
+              <div className="p-4 rounded-xl border border-border bg-card">
+                <Label className="font-medium mb-3 block">Payment Methods</Label>
+                <div className="space-y-3">
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <Checkbox
+                      checked={formData.accept_paypal_checkout}
+                      onCheckedChange={(c) => updateField('accept_paypal_checkout', !!c)}
+                    />
+                    <div className="flex items-center gap-2">
+                      <CreditCard className="w-4 h-4 text-primary" />
+                      <span className="text-sm">PayPal checkout</span>
+                    </div>
+                  </label>
+                  {formData.accept_paypal_checkout && (
+                    <SellerBusinessAccountHelp className="border-l border-border pl-3" compact />
+                  )}
+                  <label className="flex items-center gap-3 cursor-pointer">
+                    <Checkbox
+                      checked={formData.accept_cash_payment}
+                      onCheckedChange={(c) => updateField('accept_cash_payment', !!c)}
+                    />
+                    <div className="flex items-center gap-2">
+                      <Banknote className="w-4 h-4 text-green-600" />
+                      <span className="text-sm">Pay in Person</span>
+                    </div>
+                  </label>
+                </div>
+                {!formData.accept_paypal_checkout && !formData.accept_cash_payment && (
+                  <p className="text-xs text-destructive mt-3 flex items-center gap-1">
+                    <Info className="w-3 h-3" />
+                    Select at least one payment method
+                  </p>
+                )}
               </div>
-              {!formData.accept_card_payment && !formData.accept_cash_payment && (
-                <p className="text-xs text-destructive mt-3 flex items-center gap-1">
-                  <Info className="w-3 h-3" />
-                  Select at least one payment method
-                </p>
-              )}
-            </div>
           )}
         </div>
 
@@ -513,10 +516,6 @@ export const StepPricing: React.FC<StepPricingProps> = ({
             </div>
           )}
 
-          {/* Stripe Banner for card payments */}
-          {formData.accept_card_payment && !isRental && (
-            <StripeConnectBanner variant="compact" />
-          )}
         </div>
       </section>
 

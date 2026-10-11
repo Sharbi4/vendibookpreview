@@ -10,10 +10,25 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "14.1"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
+      account_closures: {
+        Row: {
+          closed_at: string
+          user_id: string
+        }
+        Insert: {
+          closed_at?: string
+          user_id: string
+        }
+        Update: {
+          closed_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       admin_action_idempotency: {
         Row: {
           action: string
@@ -429,6 +444,8 @@ export type Database = {
           file_url: string
           id: string
           rejection_reason: string | null
+          requirement_id: string | null
+          review_notes: string | null
           reviewed_at: string | null
           reviewed_by: string | null
           status: Database["public"]["Enums"]["document_status"]
@@ -441,6 +458,8 @@ export type Database = {
           file_url: string
           id?: string
           rejection_reason?: string | null
+          requirement_id?: string | null
+          review_notes?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: Database["public"]["Enums"]["document_status"]
@@ -453,6 +472,8 @@ export type Database = {
           file_url?: string
           id?: string
           rejection_reason?: string | null
+          requirement_id?: string | null
+          review_notes?: string | null
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: Database["public"]["Enums"]["document_status"]
@@ -464,6 +485,13 @@ export type Database = {
             columns: ["booking_id"]
             isOneToOne: false
             referencedRelation: "booking_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "booking_documents_requirement_id_fkey"
+            columns: ["requirement_id"]
+            isOneToOne: false
+            referencedRelation: "listing_required_documents"
             referencedColumns: ["id"]
           },
         ]
@@ -519,6 +547,54 @@ export type Database = {
         }
         Relationships: []
       }
+      booking_identity_verifications: {
+        Row: {
+          attempt_count: number
+          created_at: string
+          id: string
+          identity_status: string | null
+          last_reason_code: string | null
+          plaid_verification_id: string | null
+          retry_allowance: number
+          reused_from: string | null
+          status: string
+          template_id: string | null
+          updated_at: string
+          user_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          attempt_count?: number
+          created_at?: string
+          id?: string
+          identity_status?: string | null
+          last_reason_code?: string | null
+          plaid_verification_id?: string | null
+          retry_allowance?: number
+          reused_from?: string | null
+          status?: string
+          template_id?: string | null
+          updated_at?: string
+          user_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          attempt_count?: number
+          created_at?: string
+          id?: string
+          identity_status?: string | null
+          last_reason_code?: string | null
+          plaid_verification_id?: string | null
+          retry_allowance?: number
+          reused_from?: string | null
+          status?: string
+          template_id?: string | null
+          updated_at?: string
+          user_id?: string
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       booking_messages: {
         Row: {
           attachment_name: string | null
@@ -567,9 +643,12 @@ export type Database = {
         Row: {
           access_instructions_snapshot: string | null
           address_snapshot: string | null
+          balance_due_at: string | null
+          balance_due_cents: number
           booking_end_timestamp: string | null
           business_info: Json | null
           checkout_session_id: string | null
+          client_request_key: string | null
           created_at: string
           delivery_address: string | null
           delivery_fee_snapshot: number | null
@@ -590,13 +669,17 @@ export type Database = {
           duration_hours: number | null
           end_date: string
           end_time: string | null
+          fee_locked_at: string | null
           first_response_at: string | null
           fulfillment_selected: string | null
           hold_expires_at: string | null
           hold_status: string | null
           host_confirmed_at: string | null
+          host_fee_rate_pct: number | null
           host_id: string
           host_nudge_sent_at: string | null
+          host_platform_fee: number | null
+          host_pro_discount: number
           host_response: string | null
           hourly_slots: Json | null
           id: string
@@ -606,15 +689,19 @@ export type Database = {
           message: string | null
           paid_at: string | null
           payment_intent_id: string | null
+          payment_lock_record_id: string | null
           payment_provider: Database["public"]["Enums"]["payment_provider"]
           payment_status: string | null
+          payment_strategy: string | null
           payout_hold_reason: string | null
           payout_hold_set_by: string | null
           payout_hold_until: string | null
           payout_processed: boolean | null
           payout_processed_at: string | null
           payout_transfer_id: string | null
+          pro_fee_applied: boolean
           referral_code: string | null
+          renter_snapshot: Json | null
           responded_at: string | null
           shopper_confirmed_at: string | null
           shopper_id: string
@@ -623,15 +710,22 @@ export type Database = {
           start_date: string
           start_time: string | null
           status: Database["public"]["Enums"]["booking_status"]
+          tax_amount: number
+          tax_jurisdiction: string | null
+          tax_rate_pct: number | null
+          tax_source: string | null
           total_price: number
           updated_at: string
         }
         Insert: {
           access_instructions_snapshot?: string | null
           address_snapshot?: string | null
+          balance_due_at?: string | null
+          balance_due_cents?: number
           booking_end_timestamp?: string | null
           business_info?: Json | null
           checkout_session_id?: string | null
+          client_request_key?: string | null
           created_at?: string
           delivery_address?: string | null
           delivery_fee_snapshot?: number | null
@@ -652,13 +746,17 @@ export type Database = {
           duration_hours?: number | null
           end_date: string
           end_time?: string | null
+          fee_locked_at?: string | null
           first_response_at?: string | null
           fulfillment_selected?: string | null
           hold_expires_at?: string | null
           hold_status?: string | null
           host_confirmed_at?: string | null
+          host_fee_rate_pct?: number | null
           host_id: string
           host_nudge_sent_at?: string | null
+          host_platform_fee?: number | null
+          host_pro_discount?: number
           host_response?: string | null
           hourly_slots?: Json | null
           id?: string
@@ -668,15 +766,19 @@ export type Database = {
           message?: string | null
           paid_at?: string | null
           payment_intent_id?: string | null
+          payment_lock_record_id?: string | null
           payment_provider?: Database["public"]["Enums"]["payment_provider"]
           payment_status?: string | null
+          payment_strategy?: string | null
           payout_hold_reason?: string | null
           payout_hold_set_by?: string | null
           payout_hold_until?: string | null
           payout_processed?: boolean | null
           payout_processed_at?: string | null
           payout_transfer_id?: string | null
+          pro_fee_applied?: boolean
           referral_code?: string | null
+          renter_snapshot?: Json | null
           responded_at?: string | null
           shopper_confirmed_at?: string | null
           shopper_id: string
@@ -685,15 +787,22 @@ export type Database = {
           start_date: string
           start_time?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
+          tax_amount?: number
+          tax_jurisdiction?: string | null
+          tax_rate_pct?: number | null
+          tax_source?: string | null
           total_price: number
           updated_at?: string
         }
         Update: {
           access_instructions_snapshot?: string | null
           address_snapshot?: string | null
+          balance_due_at?: string | null
+          balance_due_cents?: number
           booking_end_timestamp?: string | null
           business_info?: Json | null
           checkout_session_id?: string | null
+          client_request_key?: string | null
           created_at?: string
           delivery_address?: string | null
           delivery_fee_snapshot?: number | null
@@ -714,13 +823,17 @@ export type Database = {
           duration_hours?: number | null
           end_date?: string
           end_time?: string | null
+          fee_locked_at?: string | null
           first_response_at?: string | null
           fulfillment_selected?: string | null
           hold_expires_at?: string | null
           hold_status?: string | null
           host_confirmed_at?: string | null
+          host_fee_rate_pct?: number | null
           host_id?: string
           host_nudge_sent_at?: string | null
+          host_platform_fee?: number | null
+          host_pro_discount?: number
           host_response?: string | null
           hourly_slots?: Json | null
           id?: string
@@ -730,15 +843,19 @@ export type Database = {
           message?: string | null
           paid_at?: string | null
           payment_intent_id?: string | null
+          payment_lock_record_id?: string | null
           payment_provider?: Database["public"]["Enums"]["payment_provider"]
           payment_status?: string | null
+          payment_strategy?: string | null
           payout_hold_reason?: string | null
           payout_hold_set_by?: string | null
           payout_hold_until?: string | null
           payout_processed?: boolean | null
           payout_processed_at?: string | null
           payout_transfer_id?: string | null
+          pro_fee_applied?: boolean
           referral_code?: string | null
+          renter_snapshot?: Json | null
           responded_at?: string | null
           shopper_confirmed_at?: string | null
           shopper_id?: string
@@ -747,6 +864,10 @@ export type Database = {
           start_date?: string
           start_time?: string | null
           status?: Database["public"]["Enums"]["booking_status"]
+          tax_amount?: number
+          tax_jurisdiction?: string | null
+          tax_rate_pct?: number | null
+          tax_source?: string | null
           total_price?: number
           updated_at?: string
         }
@@ -1197,6 +1318,90 @@ export type Database = {
           },
         ]
       }
+      daily_webhook_config: {
+        Row: {
+          created_at: string
+          id: string
+          last_error: string | null
+          last_verified_at: string | null
+          provider: string
+          state: string
+          subscribed_events: string[]
+          updated_at: string
+          webhook_url: string | null
+          webhook_uuid: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          last_verified_at?: string | null
+          provider?: string
+          state?: string
+          subscribed_events?: string[]
+          updated_at?: string
+          webhook_url?: string | null
+          webhook_uuid?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_error?: string | null
+          last_verified_at?: string | null
+          provider?: string
+          state?: string
+          subscribed_events?: string[]
+          updated_at?: string
+          webhook_url?: string | null
+          webhook_uuid?: string | null
+        }
+        Relationships: []
+      }
+      daily_webhook_events: {
+        Row: {
+          created_at: string
+          dedupe_key: string
+          event_ts: string | null
+          event_type: string
+          id: string
+          payload: Json
+          process_error: string | null
+          processed_at: string | null
+          provider_event_id: string | null
+          room_name: string | null
+          session_id: string | null
+          walkthrough_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          dedupe_key: string
+          event_ts?: string | null
+          event_type: string
+          id?: string
+          payload?: Json
+          process_error?: string | null
+          processed_at?: string | null
+          provider_event_id?: string | null
+          room_name?: string | null
+          session_id?: string | null
+          walkthrough_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          dedupe_key?: string
+          event_ts?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json
+          process_error?: string | null
+          processed_at?: string | null
+          provider_event_id?: string | null
+          room_name?: string | null
+          session_id?: string | null
+          walkthrough_id?: string | null
+        }
+        Relationships: []
+      }
       discount_code_redemptions: {
         Row: {
           code_id: string
@@ -1294,46 +1499,337 @@ export type Database = {
         }
         Relationships: []
       }
-      documents: {
+      dispute_case_events: {
         Row: {
-          booking_id: string | null
+          actor_id: string | null
+          actor_role: string | null
+          case_id: string
           created_at: string
-          document_type: string
+          event_type: string
+          from_state: string | null
           id: string
           metadata: Json
+          reason: string | null
+          seller_payable_id: string | null
+          to_state: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_role?: string | null
+          case_id: string
+          created_at?: string
+          event_type: string
+          from_state?: string | null
+          id?: string
+          metadata?: Json
+          reason?: string | null
+          seller_payable_id?: string | null
+          to_state?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          actor_role?: string | null
+          case_id?: string
+          created_at?: string
+          event_type?: string
+          from_state?: string | null
+          id?: string
+          metadata?: Json
+          reason?: string | null
+          seller_payable_id?: string | null
+          to_state?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dispute_case_events_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "dispute_cases"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dispute_case_events_seller_payable_id_fkey"
+            columns: ["seller_payable_id"]
+            isOneToOne: false
+            referencedRelation: "seller_payables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dispute_case_messages: {
+        Row: {
+          attachments: Json
+          author_id: string | null
+          author_role: string
+          body: string
+          case_id: string
+          created_at: string
+          id: string
+          visible_to_parties: boolean
+        }
+        Insert: {
+          attachments?: Json
+          author_id?: string | null
+          author_role: string
+          body: string
+          case_id: string
+          created_at?: string
+          id?: string
+          visible_to_parties?: boolean
+        }
+        Update: {
+          attachments?: Json
+          author_id?: string | null
+          author_role?: string
+          body?: string
+          case_id?: string
+          created_at?: string
+          id?: string
+          visible_to_parties?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dispute_case_messages_case_id_fkey"
+            columns: ["case_id"]
+            isOneToOne: false
+            referencedRelation: "dispute_cases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      dispute_cases: {
+        Row: {
+          amount_held_cents: number
+          booking_request_id: string | null
+          buyer_id: string
+          case_number: string
+          created_at: string
+          currency: string
+          description: string
+          disbursement_frozen: boolean
+          evidence_links: Json
+          id: string
+          issue_type: string
+          last_activity_at: string
+          listing_id: string | null
+          listing_snapshot: Json | null
+          opened_by: string | null
+          opened_by_role: string
+          outcome: string | null
+          payment_record_id: string | null
+          paypal_dispute_id: string | null
+          paypal_dispute_outcome: string | null
+          paypal_dispute_reason: string | null
+          paypal_dispute_status: string | null
+          paypal_dispute_updated_at: string | null
+          resolution_reason: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          response_deadline_at: string | null
+          sale_transaction_id: string | null
+          seller_id: string
+          seller_payable_id: string | null
+          sla_due_at: string | null
+          source: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount_held_cents?: number
+          booking_request_id?: string | null
+          buyer_id: string
+          case_number: string
+          created_at?: string
+          currency?: string
+          description: string
+          disbursement_frozen?: boolean
+          evidence_links?: Json
+          id?: string
+          issue_type: string
+          last_activity_at?: string
+          listing_id?: string | null
+          listing_snapshot?: Json | null
+          opened_by?: string | null
+          opened_by_role: string
+          outcome?: string | null
+          payment_record_id?: string | null
+          paypal_dispute_id?: string | null
+          paypal_dispute_outcome?: string | null
+          paypal_dispute_reason?: string | null
+          paypal_dispute_status?: string | null
+          paypal_dispute_updated_at?: string | null
+          resolution_reason?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          response_deadline_at?: string | null
+          sale_transaction_id?: string | null
+          seller_id: string
+          seller_payable_id?: string | null
+          sla_due_at?: string | null
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount_held_cents?: number
+          booking_request_id?: string | null
+          buyer_id?: string
+          case_number?: string
+          created_at?: string
+          currency?: string
+          description?: string
+          disbursement_frozen?: boolean
+          evidence_links?: Json
+          id?: string
+          issue_type?: string
+          last_activity_at?: string
+          listing_id?: string | null
+          listing_snapshot?: Json | null
+          opened_by?: string | null
+          opened_by_role?: string
+          outcome?: string | null
+          payment_record_id?: string | null
+          paypal_dispute_id?: string | null
+          paypal_dispute_outcome?: string | null
+          paypal_dispute_reason?: string | null
+          paypal_dispute_status?: string | null
+          paypal_dispute_updated_at?: string | null
+          resolution_reason?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          response_deadline_at?: string | null
+          sale_transaction_id?: string | null
+          seller_id?: string
+          seller_payable_id?: string | null
+          sla_due_at?: string | null
+          source?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "dispute_cases_booking_request_id_fkey"
+            columns: ["booking_request_id"]
+            isOneToOne: false
+            referencedRelation: "booking_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dispute_cases_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dispute_cases_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dispute_cases_payment_record_id_fkey"
+            columns: ["payment_record_id"]
+            isOneToOne: false
+            referencedRelation: "payment_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dispute_cases_sale_transaction_id_fkey"
+            columns: ["sale_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "sale_transactions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "dispute_cases_seller_payable_id_fkey"
+            columns: ["seller_payable_id"]
+            isOneToOne: false
+            referencedRelation: "seller_payables"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      documents: {
+        Row: {
+          agreement_version: string | null
+          booking_id: string | null
+          completed_at: string | null
+          created_at: string
+          document_type: string
+          host_signed_at: string | null
+          id: string
+          listing_id: string | null
+          metadata: Json
+          partially_signed_at: string | null
+          renter_signed_at: string | null
+          requirements_snapshot: Json
+          sent_at: string | null
           signed_pdf_path: string | null
           signers: Json
           signnow_document_id: string | null
           signnow_template_id: string | null
+          snapshot: Json
           status: string
+          superseded_by_document_id: string | null
+          supersedes_document_id: string | null
+          template_version: string | null
+          terms_id: string | null
           transaction_id: string | null
           updated_at: string
         }
         Insert: {
+          agreement_version?: string | null
           booking_id?: string | null
+          completed_at?: string | null
           created_at?: string
           document_type: string
+          host_signed_at?: string | null
           id?: string
+          listing_id?: string | null
           metadata?: Json
+          partially_signed_at?: string | null
+          renter_signed_at?: string | null
+          requirements_snapshot?: Json
+          sent_at?: string | null
           signed_pdf_path?: string | null
           signers?: Json
           signnow_document_id?: string | null
           signnow_template_id?: string | null
+          snapshot?: Json
           status?: string
+          superseded_by_document_id?: string | null
+          supersedes_document_id?: string | null
+          template_version?: string | null
+          terms_id?: string | null
           transaction_id?: string | null
           updated_at?: string
         }
         Update: {
+          agreement_version?: string | null
           booking_id?: string | null
+          completed_at?: string | null
           created_at?: string
           document_type?: string
+          host_signed_at?: string | null
           id?: string
+          listing_id?: string | null
           metadata?: Json
+          partially_signed_at?: string | null
+          renter_signed_at?: string | null
+          requirements_snapshot?: Json
+          sent_at?: string | null
           signed_pdf_path?: string | null
           signers?: Json
           signnow_document_id?: string | null
           signnow_template_id?: string | null
+          snapshot?: Json
           status?: string
+          superseded_by_document_id?: string | null
+          supersedes_document_id?: string | null
+          template_version?: string | null
+          terms_id?: string | null
           transaction_id?: string | null
           updated_at?: string
         }
@@ -1343,6 +1839,41 @@ export type Database = {
             columns: ["booking_id"]
             isOneToOne: false
             referencedRelation: "booking_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_superseded_by_document_id_fkey"
+            columns: ["superseded_by_document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_supersedes_document_id_fkey"
+            columns: ["supersedes_document_id"]
+            isOneToOne: false
+            referencedRelation: "documents"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "documents_terms_id_fkey"
+            columns: ["terms_id"]
+            isOneToOne: false
+            referencedRelation: "transaction_terms"
             referencedColumns: ["id"]
           },
           {
@@ -1888,6 +2419,622 @@ export type Database = {
         }
         Relationships: []
       }
+      financing_leads: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          listing_id: string | null
+          name: string | null
+          provider: string
+          source: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          listing_id?: string | null
+          name?: string | null
+          provider?: string
+          source?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          listing_id?: string | null
+          name?: string | null
+          provider?: string
+          source?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "financing_leads_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "financing_leads_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      freight_requests: {
+        Row: {
+          admin_notes: string | null
+          contact_email: string
+          contact_name: string
+          contact_phone: string
+          created_at: string
+          deliver_by_date: string | null
+          delivery_location: string
+          equipment_type: string
+          height_ft: string | null
+          id: string
+          length_ft: string | null
+          notes: string | null
+          paypal_invoice_id: string | null
+          paypal_invoice_url: string | null
+          pickup_date: string | null
+          pickup_location: string
+          quote_amount_cents: number | null
+          quote_notes: string | null
+          quote_sent_at: string | null
+          quote_transit_days: string | null
+          quoted_at: string | null
+          quoted_by: string | null
+          runs_and_drives: string | null
+          source_page: string | null
+          status: string
+          updated_at: string
+          user_id: string | null
+          weight_lbs: string | null
+          width_ft: string | null
+          year: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          contact_email: string
+          contact_name: string
+          contact_phone: string
+          created_at?: string
+          deliver_by_date?: string | null
+          delivery_location: string
+          equipment_type: string
+          height_ft?: string | null
+          id?: string
+          length_ft?: string | null
+          notes?: string | null
+          paypal_invoice_id?: string | null
+          paypal_invoice_url?: string | null
+          pickup_date?: string | null
+          pickup_location: string
+          quote_amount_cents?: number | null
+          quote_notes?: string | null
+          quote_sent_at?: string | null
+          quote_transit_days?: string | null
+          quoted_at?: string | null
+          quoted_by?: string | null
+          runs_and_drives?: string | null
+          source_page?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+          weight_lbs?: string | null
+          width_ft?: string | null
+          year?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          contact_email?: string
+          contact_name?: string
+          contact_phone?: string
+          created_at?: string
+          deliver_by_date?: string | null
+          delivery_location?: string
+          equipment_type?: string
+          height_ft?: string | null
+          id?: string
+          length_ft?: string | null
+          notes?: string | null
+          paypal_invoice_id?: string | null
+          paypal_invoice_url?: string | null
+          pickup_date?: string | null
+          pickup_location?: string
+          quote_amount_cents?: number | null
+          quote_notes?: string | null
+          quote_sent_at?: string | null
+          quote_transit_days?: string | null
+          quoted_at?: string | null
+          quoted_by?: string | null
+          runs_and_drives?: string | null
+          source_page?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+          weight_lbs?: string | null
+          width_ft?: string | null
+          year?: string | null
+        }
+        Relationships: []
+      }
+      fulfillment_sessions: {
+        Row: {
+          arrived_at: string | null
+          assigned_driver_user_id: string | null
+          booking_id: string | null
+          buyer_id: string | null
+          cancelled_at: string | null
+          completed_at: string | null
+          created_at: string
+          created_by: string | null
+          delivered_at: string | null
+          destination_label: string | null
+          destination_latitude: number | null
+          destination_longitude: number | null
+          driver_email: string | null
+          driver_name: string | null
+          driver_phone: string | null
+          id: string
+          last_accuracy_m: number | null
+          last_latitude: number | null
+          last_location_at: string | null
+          last_longitude: number | null
+          listing_id: string | null
+          location_consent: boolean
+          location_consent_at: string | null
+          location_consent_by: string | null
+          location_consent_version: string | null
+          mode: string
+          notes: string | null
+          route_distance_meters: number | null
+          route_duration_seconds: number | null
+          route_polyline: string | null
+          route_provider: string | null
+          route_updated_at: string | null
+          sale_transaction_id: string | null
+          seller_id: string
+          started_at: string | null
+          status: string
+          tracking_active: boolean
+          tracking_ended_at: string | null
+          tracking_paused: boolean
+          tracking_started_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          arrived_at?: string | null
+          assigned_driver_user_id?: string | null
+          booking_id?: string | null
+          buyer_id?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          delivered_at?: string | null
+          destination_label?: string | null
+          destination_latitude?: number | null
+          destination_longitude?: number | null
+          driver_email?: string | null
+          driver_name?: string | null
+          driver_phone?: string | null
+          id?: string
+          last_accuracy_m?: number | null
+          last_latitude?: number | null
+          last_location_at?: string | null
+          last_longitude?: number | null
+          listing_id?: string | null
+          location_consent?: boolean
+          location_consent_at?: string | null
+          location_consent_by?: string | null
+          location_consent_version?: string | null
+          mode: string
+          notes?: string | null
+          route_distance_meters?: number | null
+          route_duration_seconds?: number | null
+          route_polyline?: string | null
+          route_provider?: string | null
+          route_updated_at?: string | null
+          sale_transaction_id?: string | null
+          seller_id: string
+          started_at?: string | null
+          status?: string
+          tracking_active?: boolean
+          tracking_ended_at?: string | null
+          tracking_paused?: boolean
+          tracking_started_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          arrived_at?: string | null
+          assigned_driver_user_id?: string | null
+          booking_id?: string | null
+          buyer_id?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          created_by?: string | null
+          delivered_at?: string | null
+          destination_label?: string | null
+          destination_latitude?: number | null
+          destination_longitude?: number | null
+          driver_email?: string | null
+          driver_name?: string | null
+          driver_phone?: string | null
+          id?: string
+          last_accuracy_m?: number | null
+          last_latitude?: number | null
+          last_location_at?: string | null
+          last_longitude?: number | null
+          listing_id?: string | null
+          location_consent?: boolean
+          location_consent_at?: string | null
+          location_consent_by?: string | null
+          location_consent_version?: string | null
+          mode?: string
+          notes?: string | null
+          route_distance_meters?: number | null
+          route_duration_seconds?: number | null
+          route_polyline?: string | null
+          route_provider?: string | null
+          route_updated_at?: string | null
+          sale_transaction_id?: string | null
+          seller_id?: string
+          started_at?: string | null
+          status?: string
+          tracking_active?: boolean
+          tracking_ended_at?: string | null
+          tracking_paused?: boolean
+          tracking_started_at?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fulfillment_sessions_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "booking_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fulfillment_sessions_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fulfillment_sessions_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "fulfillment_sessions_sale_transaction_id_fkey"
+            columns: ["sale_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "sale_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      gps_trip_events: {
+        Row: {
+          accuracy_m: number | null
+          created_at: string
+          fulfillment_session_id: string
+          id: string
+          latitude: number
+          longitude: number
+          recorded_at: string
+          source: string
+        }
+        Insert: {
+          accuracy_m?: number | null
+          created_at?: string
+          fulfillment_session_id: string
+          id?: string
+          latitude: number
+          longitude: number
+          recorded_at?: string
+          source?: string
+        }
+        Update: {
+          accuracy_m?: number | null
+          created_at?: string
+          fulfillment_session_id?: string
+          id?: string
+          latitude?: number
+          longitude?: number
+          recorded_at?: string
+          source?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "gps_trip_events_fulfillment_session_id_fkey"
+            columns: ["fulfillment_session_id"]
+            isOneToOne: false
+            referencedRelation: "fulfillment_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      handoff_exceptions: {
+        Row: {
+          created_at: string
+          description: string
+          handoff_session_id: string
+          id: string
+          reported_by: string | null
+          reported_by_role: string | null
+          severity: string
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          handoff_session_id: string
+          id?: string
+          reported_by?: string | null
+          reported_by_role?: string | null
+          severity?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          handoff_session_id?: string
+          id?: string
+          reported_by?: string | null
+          reported_by_role?: string | null
+          severity?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "handoff_exceptions_handoff_session_id_fkey"
+            columns: ["handoff_session_id"]
+            isOneToOne: false
+            referencedRelation: "handoff_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      handoff_media: {
+        Row: {
+          byte_size: number | null
+          created_at: string
+          duration_seconds: number | null
+          handoff_session_id: string
+          id: string
+          kind: string
+          media_type: string
+          storage_bucket: string
+          storage_path: string
+          uploaded_by: string | null
+          uploaded_by_role: string | null
+        }
+        Insert: {
+          byte_size?: number | null
+          created_at?: string
+          duration_seconds?: number | null
+          handoff_session_id: string
+          id?: string
+          kind?: string
+          media_type: string
+          storage_bucket?: string
+          storage_path: string
+          uploaded_by?: string | null
+          uploaded_by_role?: string | null
+        }
+        Update: {
+          byte_size?: number | null
+          created_at?: string
+          duration_seconds?: number | null
+          handoff_session_id?: string
+          id?: string
+          kind?: string
+          media_type?: string
+          storage_bucket?: string
+          storage_path?: string
+          uploaded_by?: string | null
+          uploaded_by_role?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "handoff_media_handoff_session_id_fkey"
+            columns: ["handoff_session_id"]
+            isOneToOne: false
+            referencedRelation: "handoff_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      handoff_sessions: {
+        Row: {
+          booking_id: string | null
+          buyer_decision: string | null
+          buyer_decision_at: string | null
+          buyer_decision_notes: string | null
+          buyer_id: string | null
+          completed_at: string | null
+          created_at: string
+          finalized: boolean
+          fulfillment_session_id: string | null
+          id: string
+          listing_id: string | null
+          location_captured_at: string | null
+          location_lat: number | null
+          location_lng: number | null
+          mode: string
+          pickup_code: string | null
+          pickup_code_verified_at: string | null
+          recording_consent_buyer_at: string | null
+          recording_consent_seller_at: string | null
+          sale_transaction_id: string | null
+          seller_id: string
+          started_at: string
+          status: string
+          updated_at: string
+          walkthrough_completed_at: string | null
+        }
+        Insert: {
+          booking_id?: string | null
+          buyer_decision?: string | null
+          buyer_decision_at?: string | null
+          buyer_decision_notes?: string | null
+          buyer_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          finalized?: boolean
+          fulfillment_session_id?: string | null
+          id?: string
+          listing_id?: string | null
+          location_captured_at?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          mode: string
+          pickup_code?: string | null
+          pickup_code_verified_at?: string | null
+          recording_consent_buyer_at?: string | null
+          recording_consent_seller_at?: string | null
+          sale_transaction_id?: string | null
+          seller_id: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+          walkthrough_completed_at?: string | null
+        }
+        Update: {
+          booking_id?: string | null
+          buyer_decision?: string | null
+          buyer_decision_at?: string | null
+          buyer_decision_notes?: string | null
+          buyer_id?: string | null
+          completed_at?: string | null
+          created_at?: string
+          finalized?: boolean
+          fulfillment_session_id?: string | null
+          id?: string
+          listing_id?: string | null
+          location_captured_at?: string | null
+          location_lat?: number | null
+          location_lng?: number | null
+          mode?: string
+          pickup_code?: string | null
+          pickup_code_verified_at?: string | null
+          recording_consent_buyer_at?: string | null
+          recording_consent_seller_at?: string | null
+          sale_transaction_id?: string | null
+          seller_id?: string
+          started_at?: string
+          status?: string
+          updated_at?: string
+          walkthrough_completed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "handoff_sessions_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "booking_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "handoff_sessions_fulfillment_session_id_fkey"
+            columns: ["fulfillment_session_id"]
+            isOneToOne: false
+            referencedRelation: "fulfillment_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "handoff_sessions_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "handoff_sessions_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "handoff_sessions_sale_transaction_id_fkey"
+            columns: ["sale_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "sale_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      handoff_signatures: {
+        Row: {
+          acknowledgment_type: string | null
+          created_at: string
+          document_id: string | null
+          envelope_id: string | null
+          handoff_session_id: string
+          id: string
+          last_error: string | null
+          provider: string
+          signed_at: string | null
+          signed_document_path: string | null
+          signer_email: string | null
+          signer_role: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          acknowledgment_type?: string | null
+          created_at?: string
+          document_id?: string | null
+          envelope_id?: string | null
+          handoff_session_id: string
+          id?: string
+          last_error?: string | null
+          provider?: string
+          signed_at?: string | null
+          signed_document_path?: string | null
+          signer_email?: string | null
+          signer_role?: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          acknowledgment_type?: string | null
+          created_at?: string
+          document_id?: string | null
+          envelope_id?: string | null
+          handoff_session_id?: string
+          id?: string
+          last_error?: string | null
+          provider?: string
+          signed_at?: string | null
+          signed_document_path?: string | null
+          signer_email?: string | null
+          signer_role?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "handoff_signatures_handoff_session_id_fkey"
+            columns: ["handoff_session_id"]
+            isOneToOne: false
+            referencedRelation: "handoff_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       host_payment_eligibility: {
         Row: {
           charges_enabled: boolean
@@ -1947,6 +3094,7 @@ export type Database = {
           payment_provider: Database["public"]["Enums"]["payment_provider"]
           paypal_subscription_id: string | null
           revoke_at_period_end: boolean
+          square_subscription_id: string | null
           status: string
           stripe_customer_id: string | null
           stripe_price_id: string | null
@@ -1972,6 +3120,7 @@ export type Database = {
           payment_provider?: Database["public"]["Enums"]["payment_provider"]
           paypal_subscription_id?: string | null
           revoke_at_period_end?: boolean
+          square_subscription_id?: string | null
           status?: string
           stripe_customer_id?: string | null
           stripe_price_id?: string | null
@@ -1997,6 +3146,7 @@ export type Database = {
           payment_provider?: Database["public"]["Enums"]["payment_provider"]
           paypal_subscription_id?: string | null
           revoke_at_period_end?: boolean
+          square_subscription_id?: string | null
           status?: string
           stripe_customer_id?: string | null
           stripe_price_id?: string | null
@@ -2012,6 +3162,74 @@ export type Database = {
             columns: ["consent_id"]
             isOneToOne: false
             referencedRelation: "user_consents"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      legal_acceptances: {
+        Row: {
+          accepted_at: string
+          content_hash: string | null
+          created_at: string
+          document_id: string | null
+          document_slug: string
+          document_version: string
+          granted_permissions: Json
+          id: string
+          ip_address: string | null
+          locale: string | null
+          related_entity_id: string | null
+          related_entity_type: string | null
+          route: string | null
+          security_metadata: Json
+          surface: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string
+          content_hash?: string | null
+          created_at?: string
+          document_id?: string | null
+          document_slug: string
+          document_version: string
+          granted_permissions?: Json
+          id?: string
+          ip_address?: string | null
+          locale?: string | null
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+          route?: string | null
+          security_metadata?: Json
+          surface?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string
+          content_hash?: string | null
+          created_at?: string
+          document_id?: string | null
+          document_slug?: string
+          document_version?: string
+          granted_permissions?: Json
+          id?: string
+          ip_address?: string | null
+          locale?: string | null
+          related_entity_id?: string | null
+          related_entity_type?: string | null
+          route?: string | null
+          security_metadata?: Json
+          surface?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "legal_acceptances_document_id_fkey"
+            columns: ["document_id"]
+            isOneToOne: false
+            referencedRelation: "legal_documents"
             referencedColumns: ["id"]
           },
         ]
@@ -2289,6 +3507,400 @@ export type Database = {
           },
         ]
       }
+      listing_completeness: {
+        Row: {
+          computed_at: string
+          listing_id: string
+          missing_sections: string[]
+          readiness_level: Database["public"]["Enums"]["listing_readiness_level"]
+          score: number
+          score_version: number
+          updated_at: string
+        }
+        Insert: {
+          computed_at?: string
+          listing_id: string
+          missing_sections?: string[]
+          readiness_level?: Database["public"]["Enums"]["listing_readiness_level"]
+          score?: number
+          score_version?: number
+          updated_at?: string
+        }
+        Update: {
+          computed_at?: string
+          listing_id?: string
+          missing_sections?: string[]
+          readiness_level?: Database["public"]["Enums"]["listing_readiness_level"]
+          score?: number
+          score_version?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_completeness_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_completeness_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_concierge_agreements: {
+        Row: {
+          accepted_at: string
+          agreement_kind: string
+          agreement_version: string
+          id: string
+          ip_address: string | null
+          order_id: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string
+          agreement_kind: string
+          agreement_version: string
+          id?: string
+          ip_address?: string | null
+          order_id?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string
+          agreement_kind?: string
+          agreement_version?: string
+          id?: string
+          ip_address?: string | null
+          order_id?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_concierge_agreements_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "listing_concierge_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_concierge_config: {
+        Row: {
+          copy: Json
+          created_at: string
+          currency: string
+          id: boolean
+          included_revisions: number
+          is_available: boolean
+          price_cents: number
+          specialist_contact_enabled: boolean
+          terms_version: string
+          turnaround_business_days: number
+          updated_at: string
+        }
+        Insert: {
+          copy?: Json
+          created_at?: string
+          currency?: string
+          id?: boolean
+          included_revisions?: number
+          is_available?: boolean
+          price_cents?: number
+          specialist_contact_enabled?: boolean
+          terms_version?: string
+          turnaround_business_days?: number
+          updated_at?: string
+        }
+        Update: {
+          copy?: Json
+          created_at?: string
+          currency?: string
+          id?: boolean
+          included_revisions?: number
+          is_available?: boolean
+          price_cents?: number
+          specialist_contact_enabled?: boolean
+          terms_version?: string
+          turnaround_business_days?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      listing_concierge_events: {
+        Row: {
+          actor_id: string | null
+          actor_role: string
+          code: string
+          created_at: string
+          from_status:
+            | Database["public"]["Enums"]["concierge_order_status"]
+            | null
+          id: string
+          metadata: Json
+          order_id: string
+          to_status:
+            | Database["public"]["Enums"]["concierge_order_status"]
+            | null
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_role?: string
+          code: string
+          created_at?: string
+          from_status?:
+            | Database["public"]["Enums"]["concierge_order_status"]
+            | null
+          id?: string
+          metadata?: Json
+          order_id: string
+          to_status?:
+            | Database["public"]["Enums"]["concierge_order_status"]
+            | null
+        }
+        Update: {
+          actor_id?: string | null
+          actor_role?: string
+          code?: string
+          created_at?: string
+          from_status?:
+            | Database["public"]["Enums"]["concierge_order_status"]
+            | null
+          id?: string
+          metadata?: Json
+          order_id?: string
+          to_status?:
+            | Database["public"]["Enums"]["concierge_order_status"]
+            | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_concierge_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "listing_concierge_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_concierge_messages: {
+        Row: {
+          answered_at: string | null
+          author_id: string | null
+          author_role: string
+          body: string
+          created_at: string
+          id: string
+          internal: boolean
+          kind: string
+          order_id: string
+        }
+        Insert: {
+          answered_at?: string | null
+          author_id?: string | null
+          author_role?: string
+          body: string
+          created_at?: string
+          id?: string
+          internal?: boolean
+          kind?: string
+          order_id: string
+        }
+        Update: {
+          answered_at?: string | null
+          author_id?: string | null
+          author_role?: string
+          body?: string
+          created_at?: string
+          id?: string
+          internal?: boolean
+          kind?: string
+          order_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_concierge_messages_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "listing_concierge_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_concierge_orders: {
+        Row: {
+          approved_at: string | null
+          assigned_reviewer_id: string | null
+          canceled_at: string | null
+          config_snapshot: Json
+          contact_availability: string | null
+          contact_method: string | null
+          created_at: string
+          currency: string
+          draft_delivered_at: string | null
+          id: string
+          idempotency_key: string
+          intake: Json
+          intake_submitted_at: string | null
+          intake_version: number
+          internal_notes: string | null
+          listing_id: string | null
+          paid_at: string | null
+          payment_record_id: string | null
+          payment_status: string
+          paypal_capture_id: string | null
+          paypal_order_id: string | null
+          price_cents: number
+          published_at: string | null
+          refund_status: string | null
+          refunded_at: string | null
+          refunded_cents: number
+          reviewer_completed_at: string | null
+          reviewer_completed_by: string | null
+          revision_count: number
+          revision_requested_at: string | null
+          revisions_included: number
+          specialist_contact_requested: boolean
+          status: Database["public"]["Enums"]["concierge_order_status"]
+          updated_at: string
+          uploads: Json
+          user_id: string
+        }
+        Insert: {
+          approved_at?: string | null
+          assigned_reviewer_id?: string | null
+          canceled_at?: string | null
+          config_snapshot?: Json
+          contact_availability?: string | null
+          contact_method?: string | null
+          created_at?: string
+          currency?: string
+          draft_delivered_at?: string | null
+          id?: string
+          idempotency_key: string
+          intake?: Json
+          intake_submitted_at?: string | null
+          intake_version?: number
+          internal_notes?: string | null
+          listing_id?: string | null
+          paid_at?: string | null
+          payment_record_id?: string | null
+          payment_status?: string
+          paypal_capture_id?: string | null
+          paypal_order_id?: string | null
+          price_cents: number
+          published_at?: string | null
+          refund_status?: string | null
+          refunded_at?: string | null
+          refunded_cents?: number
+          reviewer_completed_at?: string | null
+          reviewer_completed_by?: string | null
+          revision_count?: number
+          revision_requested_at?: string | null
+          revisions_included?: number
+          specialist_contact_requested?: boolean
+          status?: Database["public"]["Enums"]["concierge_order_status"]
+          updated_at?: string
+          uploads?: Json
+          user_id: string
+        }
+        Update: {
+          approved_at?: string | null
+          assigned_reviewer_id?: string | null
+          canceled_at?: string | null
+          config_snapshot?: Json
+          contact_availability?: string | null
+          contact_method?: string | null
+          created_at?: string
+          currency?: string
+          draft_delivered_at?: string | null
+          id?: string
+          idempotency_key?: string
+          intake?: Json
+          intake_submitted_at?: string | null
+          intake_version?: number
+          internal_notes?: string | null
+          listing_id?: string | null
+          paid_at?: string | null
+          payment_record_id?: string | null
+          payment_status?: string
+          paypal_capture_id?: string | null
+          paypal_order_id?: string | null
+          price_cents?: number
+          published_at?: string | null
+          refund_status?: string | null
+          refunded_at?: string | null
+          refunded_cents?: number
+          reviewer_completed_at?: string | null
+          reviewer_completed_by?: string | null
+          revision_count?: number
+          revision_requested_at?: string | null
+          revisions_included?: number
+          specialist_contact_requested?: boolean
+          status?: Database["public"]["Enums"]["concierge_order_status"]
+          updated_at?: string
+          uploads?: Json
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_concierge_orders_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_concierge_orders_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_concierge_orders_payment_record_id_fkey"
+            columns: ["payment_record_id"]
+            isOneToOne: false
+            referencedRelation: "payment_records"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_contact_redactions: {
+        Row: {
+          created_at: string
+          field: string
+          host_id: string | null
+          id: string
+          kinds: string[]
+          listing_id: string
+        }
+        Insert: {
+          created_at?: string
+          field: string
+          host_id?: string | null
+          id?: string
+          kinds: string[]
+          listing_id: string
+        }
+        Update: {
+          created_at?: string
+          field?: string
+          host_id?: string | null
+          id?: string
+          kinds?: string[]
+          listing_id?: string
+        }
+        Relationships: []
+      }
       listing_events: {
         Row: {
           created_at: string
@@ -2358,6 +3970,54 @@ export type Database = {
           },
         ]
       }
+      listing_financing_preferences: {
+        Row: {
+          created_at: string
+          disclosure_accepted_at: string | null
+          disclosure_version: string | null
+          equinox_opt_in: boolean
+          host_id: string
+          include_vin: boolean
+          listing_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          disclosure_accepted_at?: string | null
+          disclosure_version?: string | null
+          equinox_opt_in?: boolean
+          host_id: string
+          include_vin?: boolean
+          listing_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          disclosure_accepted_at?: string | null
+          disclosure_version?: string | null
+          equinox_opt_in?: boolean
+          host_id?: string
+          include_vin?: boolean
+          listing_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_financing_preferences_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_financing_preferences_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listing_leads: {
         Row: {
           created_at: string
@@ -2404,6 +4064,84 @@ export type Database = {
             foreignKeyName: "listing_leads_listing_id_fkey"
             columns: ["listing_id"]
             isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_ownership_details: {
+        Row: {
+          active_lien: boolean | null
+          authority_to_sell: boolean | null
+          created_at: string
+          documents_available: boolean | null
+          host_id: string
+          id: string
+          lien_holder_name: string | null
+          lien_release_available: boolean | null
+          listing_id: string
+          manufacturer_plate: string | null
+          ownership_notes: string | null
+          title_name_type: string | null
+          title_number: string | null
+          title_state: string | null
+          title_status: string
+          titled_owner: string | null
+          updated_at: string
+          vin_serial: string | null
+        }
+        Insert: {
+          active_lien?: boolean | null
+          authority_to_sell?: boolean | null
+          created_at?: string
+          documents_available?: boolean | null
+          host_id: string
+          id?: string
+          lien_holder_name?: string | null
+          lien_release_available?: boolean | null
+          listing_id: string
+          manufacturer_plate?: string | null
+          ownership_notes?: string | null
+          title_name_type?: string | null
+          title_number?: string | null
+          title_state?: string | null
+          title_status: string
+          titled_owner?: string | null
+          updated_at?: string
+          vin_serial?: string | null
+        }
+        Update: {
+          active_lien?: boolean | null
+          authority_to_sell?: boolean | null
+          created_at?: string
+          documents_available?: boolean | null
+          host_id?: string
+          id?: string
+          lien_holder_name?: string | null
+          lien_release_available?: boolean | null
+          listing_id?: string
+          manufacturer_plate?: string | null
+          ownership_notes?: string | null
+          title_name_type?: string | null
+          title_number?: string | null
+          title_state?: string | null
+          title_status?: string
+          titled_owner?: string | null
+          updated_at?: string
+          vin_serial?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_ownership_details_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_ownership_details_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
             referencedRelation: "public_listings"
             referencedColumns: ["id"]
           },
@@ -2487,6 +4225,48 @@ export type Database = {
           },
         ]
       }
+      listing_rental_terms: {
+        Row: {
+          confirmed: boolean
+          created_at: string
+          id: string
+          listing_id: string
+          terms: Json
+          updated_at: string
+        }
+        Insert: {
+          confirmed?: boolean
+          created_at?: string
+          id?: string
+          listing_id: string
+          terms?: Json
+          updated_at?: string
+        }
+        Update: {
+          confirmed?: boolean
+          created_at?: string
+          id?: string
+          listing_id?: string
+          terms?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_rental_terms_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_rental_terms_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listing_required_documents: {
         Row: {
           created_at: string
@@ -2495,8 +4275,11 @@ export type Database = {
           description: string | null
           document_type: Database["public"]["Enums"]["document_type"]
           id: string
+          instructions: string | null
           is_required: boolean
           listing_id: string
+          requirement_config: Json
+          title: string | null
           updated_at: string
         }
         Insert: {
@@ -2506,8 +4289,11 @@ export type Database = {
           description?: string | null
           document_type: Database["public"]["Enums"]["document_type"]
           id?: string
+          instructions?: string | null
           is_required?: boolean
           listing_id: string
+          requirement_config?: Json
+          title?: string | null
           updated_at?: string
         }
         Update: {
@@ -2517,8 +4303,11 @@ export type Database = {
           description?: string | null
           document_type?: Database["public"]["Enums"]["document_type"]
           id?: string
+          instructions?: string | null
           is_required?: boolean
           listing_id?: string
+          requirement_config?: Json
+          title?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -2623,6 +4412,304 @@ export type Database = {
           },
         ]
       }
+      listing_service_messages: {
+        Row: {
+          body: string
+          created_at: string
+          id: string
+          order_id: string
+          sender_role: string
+          sender_user_id: string | null
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          id?: string
+          order_id: string
+          sender_role?: string
+          sender_user_id?: string | null
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          id?: string
+          order_id?: string
+          sender_role?: string
+          sender_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_service_messages_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "listing_service_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_service_orders: {
+        Row: {
+          admin_user_id: string | null
+          approved_at: string | null
+          buyer_user_id: string
+          created_at: string
+          id: string
+          intake: Json
+          listing_id: string | null
+          product_slug: string
+          published_at: string | null
+          purchase_id: string | null
+          revision_count: number
+          status: Database["public"]["Enums"]["listing_service_order_status"]
+          turnaround_hours: number | null
+          updated_at: string
+        }
+        Insert: {
+          admin_user_id?: string | null
+          approved_at?: string | null
+          buyer_user_id: string
+          created_at?: string
+          id?: string
+          intake?: Json
+          listing_id?: string | null
+          product_slug: string
+          published_at?: string | null
+          purchase_id?: string | null
+          revision_count?: number
+          status?: Database["public"]["Enums"]["listing_service_order_status"]
+          turnaround_hours?: number | null
+          updated_at?: string
+        }
+        Update: {
+          admin_user_id?: string | null
+          approved_at?: string | null
+          buyer_user_id?: string
+          created_at?: string
+          id?: string
+          intake?: Json
+          listing_id?: string | null
+          product_slug?: string
+          published_at?: string | null
+          purchase_id?: string | null
+          revision_count?: number
+          status?: Database["public"]["Enums"]["listing_service_order_status"]
+          turnaround_hours?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_service_orders_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_service_orders_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_service_orders_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "monetization_pending_reconciliation"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_service_orders_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "monetization_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_spec_suggestions: {
+        Row: {
+          accepted_value: Json | null
+          confidence: number | null
+          created_at: string
+          field: string
+          id: string
+          listing_id: string
+          resolved_at: string | null
+          section: string
+          source: string
+          source_text: string | null
+          status: string
+          suggested_value: Json
+          updated_at: string
+        }
+        Insert: {
+          accepted_value?: Json | null
+          confidence?: number | null
+          created_at?: string
+          field: string
+          id?: string
+          listing_id: string
+          resolved_at?: string | null
+          section: string
+          source?: string
+          source_text?: string | null
+          status?: string
+          suggested_value?: Json
+          updated_at?: string
+        }
+        Update: {
+          accepted_value?: Json | null
+          confidence?: number | null
+          created_at?: string
+          field?: string
+          id?: string
+          listing_id?: string
+          resolved_at?: string | null
+          section?: string
+          source?: string
+          source_text?: string | null
+          status?: string
+          suggested_value?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_spec_suggestions_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_spec_suggestions_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_specs: {
+        Row: {
+          condition_details: Json
+          confirmed_sections: string[]
+          cooking: Json
+          created_at: string
+          dimensions: Json
+          electrical: Json
+          equipment_inventory: Json
+          hood: Json
+          id: string
+          inclusions: Json
+          inspections: Json
+          listing_id: string
+          mechanical: Json
+          ownership_public: Json
+          plumbing: Json
+          propane: Json
+          q_fresh_water_gal: number | null
+          q_grey_water_gal: number | null
+          q_has_generator: boolean | null
+          q_hood_type: string | null
+          q_operational_status: string | null
+          q_shore_power: string | null
+          refrigeration: Json
+          revision: number
+          safety: Json
+          site: Json
+          space: Json
+          trailer: Json
+          updated_at: string
+          utilities: Json
+          vehicle: Json
+          viewing: Json
+        }
+        Insert: {
+          condition_details?: Json
+          confirmed_sections?: string[]
+          cooking?: Json
+          created_at?: string
+          dimensions?: Json
+          electrical?: Json
+          equipment_inventory?: Json
+          hood?: Json
+          id?: string
+          inclusions?: Json
+          inspections?: Json
+          listing_id: string
+          mechanical?: Json
+          ownership_public?: Json
+          plumbing?: Json
+          propane?: Json
+          q_fresh_water_gal?: number | null
+          q_grey_water_gal?: number | null
+          q_has_generator?: boolean | null
+          q_hood_type?: string | null
+          q_operational_status?: string | null
+          q_shore_power?: string | null
+          refrigeration?: Json
+          revision?: number
+          safety?: Json
+          site?: Json
+          space?: Json
+          trailer?: Json
+          updated_at?: string
+          utilities?: Json
+          vehicle?: Json
+          viewing?: Json
+        }
+        Update: {
+          condition_details?: Json
+          confirmed_sections?: string[]
+          cooking?: Json
+          created_at?: string
+          dimensions?: Json
+          electrical?: Json
+          equipment_inventory?: Json
+          hood?: Json
+          id?: string
+          inclusions?: Json
+          inspections?: Json
+          listing_id?: string
+          mechanical?: Json
+          ownership_public?: Json
+          plumbing?: Json
+          propane?: Json
+          q_fresh_water_gal?: number | null
+          q_grey_water_gal?: number | null
+          q_has_generator?: boolean | null
+          q_hood_type?: string | null
+          q_operational_status?: string | null
+          q_shore_power?: string | null
+          refrigeration?: Json
+          revision?: number
+          safety?: Json
+          site?: Json
+          space?: Json
+          trailer?: Json
+          updated_at?: string
+          utilities?: Json
+          vehicle?: Json
+          viewing?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_specs_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listing_specs_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listing_views: {
         Row: {
           id: string
@@ -2672,6 +4759,8 @@ export type Database = {
         Row: {
           accept_card_payment: boolean | null
           accept_cash_payment: boolean | null
+          accept_paypal_checkout: boolean
+          accepts_offers: boolean
           access_instructions: string | null
           address: string | null
           amenities: string[] | null
@@ -2681,11 +4770,15 @@ export type Database = {
           buffer_time_mins: number | null
           category: Database["public"]["Enums"]["listing_category"]
           city: string | null
+          condition: string | null
+          coupler_type: string | null
           cover_image_url: string | null
           created_at: string
+          creation_session_key: string | null
           daily_enabled: boolean | null
           deleted_at: string | null
           delivery_fee: number | null
+          delivery_fee_type: string
           delivery_instructions: string | null
           delivery_radius_miles: number | null
           deposit_amount: number | null
@@ -2696,10 +4789,13 @@ export type Database = {
           featured_source: string | null
           freight_category: string | null
           freight_payer: string | null
+          fuel_type: string | null
           fulfillment_type: Database["public"]["Enums"]["fulfillment_type"]
           guest_draft_token: string | null
+          has_lien: string | null
           height_inches: number | null
           highlights: string[] | null
+          hitch_ball_size: string | null
           host_id: string | null
           hourly_enabled: boolean | null
           hourly_schedule: Json | null
@@ -2707,47 +4803,73 @@ export type Database = {
           hours_of_access: string | null
           id: string
           image_urls: string[] | null
+          included_items: string | null
           instant_book: boolean | null
+          kitchen_build_year: number | null
+          kitchen_build_year_unknown: boolean
+          known_problems: Json
           latitude: number | null
+          legacy_pickup_contact_text: string | null
           length_inches: number | null
           location_notes: string | null
           longitude: number | null
+          make: string | null
           max_hours: number | null
+          mileage: number | null
           min_hours: number | null
           min_notice_hours: number | null
+          min_offer_amount: number | null
           mode: Database["public"]["Enums"]["listing_mode"]
+          model: string | null
           moderation_status: string
+          no_known_problems: boolean
           operating_hours_end: string | null
           operating_hours_start: string | null
+          operational_status: string | null
           pending_featured_payment: Json | null
+          photos_exclusions_answered: boolean
+          photos_exclusions_note: string | null
           pickup_instructions: string | null
           pickup_location_text: string | null
           postal_code: string | null
           price_daily: number | null
           price_hourly: number | null
           price_monthly: number | null
+          price_negotiable: boolean
           price_sale: number | null
           price_weekly: number | null
           proof_notary_enabled: boolean | null
           published_at: string | null
           rental_buffer_days: number | null
           rental_min_days: number | null
+          renter_provides_tow_vehicle: boolean | null
+          return_instructions: string | null
           slot_names: string[] | null
+          source_listing_id: string | null
+          space_sqft: number | null
           state: string | null
           status: Database["public"]["Enums"]["listing_status"]
           subcategory: string | null
           title: string
+          title_status: string | null
           total_slots: number | null
+          tow_vehicle_requirement: string | null
+          trailer_plug_type: string | null
+          unlisted: boolean
           updated_at: string
+          vendi_session_key: string | null
           vendibook_freight_enabled: boolean | null
           video_urls: string[] | null
           view_count: number | null
           weight_lbs: number | null
           width_inches: number | null
+          year_built: number | null
         }
         Insert: {
           accept_card_payment?: boolean | null
           accept_cash_payment?: boolean | null
+          accept_paypal_checkout?: boolean
+          accepts_offers?: boolean
           access_instructions?: string | null
           address?: string | null
           amenities?: string[] | null
@@ -2757,11 +4879,15 @@ export type Database = {
           buffer_time_mins?: number | null
           category: Database["public"]["Enums"]["listing_category"]
           city?: string | null
+          condition?: string | null
+          coupler_type?: string | null
           cover_image_url?: string | null
           created_at?: string
+          creation_session_key?: string | null
           daily_enabled?: boolean | null
           deleted_at?: string | null
           delivery_fee?: number | null
+          delivery_fee_type?: string
           delivery_instructions?: string | null
           delivery_radius_miles?: number | null
           deposit_amount?: number | null
@@ -2772,10 +4898,13 @@ export type Database = {
           featured_source?: string | null
           freight_category?: string | null
           freight_payer?: string | null
+          fuel_type?: string | null
           fulfillment_type: Database["public"]["Enums"]["fulfillment_type"]
           guest_draft_token?: string | null
+          has_lien?: string | null
           height_inches?: number | null
           highlights?: string[] | null
+          hitch_ball_size?: string | null
           host_id?: string | null
           hourly_enabled?: boolean | null
           hourly_schedule?: Json | null
@@ -2783,47 +4912,73 @@ export type Database = {
           hours_of_access?: string | null
           id?: string
           image_urls?: string[] | null
+          included_items?: string | null
           instant_book?: boolean | null
+          kitchen_build_year?: number | null
+          kitchen_build_year_unknown?: boolean
+          known_problems?: Json
           latitude?: number | null
+          legacy_pickup_contact_text?: string | null
           length_inches?: number | null
           location_notes?: string | null
           longitude?: number | null
+          make?: string | null
           max_hours?: number | null
+          mileage?: number | null
           min_hours?: number | null
           min_notice_hours?: number | null
+          min_offer_amount?: number | null
           mode: Database["public"]["Enums"]["listing_mode"]
+          model?: string | null
           moderation_status?: string
+          no_known_problems?: boolean
           operating_hours_end?: string | null
           operating_hours_start?: string | null
+          operational_status?: string | null
           pending_featured_payment?: Json | null
+          photos_exclusions_answered?: boolean
+          photos_exclusions_note?: string | null
           pickup_instructions?: string | null
           pickup_location_text?: string | null
           postal_code?: string | null
           price_daily?: number | null
           price_hourly?: number | null
           price_monthly?: number | null
+          price_negotiable?: boolean
           price_sale?: number | null
           price_weekly?: number | null
           proof_notary_enabled?: boolean | null
           published_at?: string | null
           rental_buffer_days?: number | null
           rental_min_days?: number | null
+          renter_provides_tow_vehicle?: boolean | null
+          return_instructions?: string | null
           slot_names?: string[] | null
+          source_listing_id?: string | null
+          space_sqft?: number | null
           state?: string | null
           status?: Database["public"]["Enums"]["listing_status"]
           subcategory?: string | null
           title: string
+          title_status?: string | null
           total_slots?: number | null
+          tow_vehicle_requirement?: string | null
+          trailer_plug_type?: string | null
+          unlisted?: boolean
           updated_at?: string
+          vendi_session_key?: string | null
           vendibook_freight_enabled?: boolean | null
           video_urls?: string[] | null
           view_count?: number | null
           weight_lbs?: number | null
           width_inches?: number | null
+          year_built?: number | null
         }
         Update: {
           accept_card_payment?: boolean | null
           accept_cash_payment?: boolean | null
+          accept_paypal_checkout?: boolean
+          accepts_offers?: boolean
           access_instructions?: string | null
           address?: string | null
           amenities?: string[] | null
@@ -2833,11 +4988,15 @@ export type Database = {
           buffer_time_mins?: number | null
           category?: Database["public"]["Enums"]["listing_category"]
           city?: string | null
+          condition?: string | null
+          coupler_type?: string | null
           cover_image_url?: string | null
           created_at?: string
+          creation_session_key?: string | null
           daily_enabled?: boolean | null
           deleted_at?: string | null
           delivery_fee?: number | null
+          delivery_fee_type?: string
           delivery_instructions?: string | null
           delivery_radius_miles?: number | null
           deposit_amount?: number | null
@@ -2848,10 +5007,13 @@ export type Database = {
           featured_source?: string | null
           freight_category?: string | null
           freight_payer?: string | null
+          fuel_type?: string | null
           fulfillment_type?: Database["public"]["Enums"]["fulfillment_type"]
           guest_draft_token?: string | null
+          has_lien?: string | null
           height_inches?: number | null
           highlights?: string[] | null
+          hitch_ball_size?: string | null
           host_id?: string | null
           hourly_enabled?: boolean | null
           hourly_schedule?: Json | null
@@ -2859,45 +5021,84 @@ export type Database = {
           hours_of_access?: string | null
           id?: string
           image_urls?: string[] | null
+          included_items?: string | null
           instant_book?: boolean | null
+          kitchen_build_year?: number | null
+          kitchen_build_year_unknown?: boolean
+          known_problems?: Json
           latitude?: number | null
+          legacy_pickup_contact_text?: string | null
           length_inches?: number | null
           location_notes?: string | null
           longitude?: number | null
+          make?: string | null
           max_hours?: number | null
+          mileage?: number | null
           min_hours?: number | null
           min_notice_hours?: number | null
+          min_offer_amount?: number | null
           mode?: Database["public"]["Enums"]["listing_mode"]
+          model?: string | null
           moderation_status?: string
+          no_known_problems?: boolean
           operating_hours_end?: string | null
           operating_hours_start?: string | null
+          operational_status?: string | null
           pending_featured_payment?: Json | null
+          photos_exclusions_answered?: boolean
+          photos_exclusions_note?: string | null
           pickup_instructions?: string | null
           pickup_location_text?: string | null
           postal_code?: string | null
           price_daily?: number | null
           price_hourly?: number | null
           price_monthly?: number | null
+          price_negotiable?: boolean
           price_sale?: number | null
           price_weekly?: number | null
           proof_notary_enabled?: boolean | null
           published_at?: string | null
           rental_buffer_days?: number | null
           rental_min_days?: number | null
+          renter_provides_tow_vehicle?: boolean | null
+          return_instructions?: string | null
           slot_names?: string[] | null
+          source_listing_id?: string | null
+          space_sqft?: number | null
           state?: string | null
           status?: Database["public"]["Enums"]["listing_status"]
           subcategory?: string | null
           title?: string
+          title_status?: string | null
           total_slots?: number | null
+          tow_vehicle_requirement?: string | null
+          trailer_plug_type?: string | null
+          unlisted?: boolean
           updated_at?: string
+          vendi_session_key?: string | null
           vendibook_freight_enabled?: boolean | null
           video_urls?: string[] | null
           view_count?: number | null
           weight_lbs?: number | null
           width_inches?: number | null
+          year_built?: number | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "listings_source_listing_id_fkey"
+            columns: ["source_listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listings_source_listing_id_fkey"
+            columns: ["source_listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       message_reactions: {
         Row: {
@@ -2930,6 +5131,84 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      message_safety_events: {
+        Row: {
+          created_at: string
+          evidence: Json
+          id: string
+          reason: string
+          reporter_id: string | null
+          reviewed_at: string | null
+          reviewed_by: string | null
+          status: string
+          thread_id: string
+          thread_kind: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          evidence?: Json
+          id?: string
+          reason: string
+          reporter_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          thread_id: string
+          thread_kind: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          evidence?: Json
+          id?: string
+          reason?: string
+          reporter_id?: string | null
+          reviewed_at?: string | null
+          reviewed_by?: string | null
+          status?: string
+          thread_id?: string
+          thread_kind?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      message_sending_holds: {
+        Row: {
+          created_at: string
+          reason: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          reason: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          reason?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      message_user_blocks: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string
+        }
+        Relationships: []
       }
       monetization_product_plans: {
         Row: {
@@ -3012,6 +5291,7 @@ export type Database = {
           member_discount_pct: number
           metadata: Json
           name: string
+          paypal_product_env: string | null
           paypal_product_id: string | null
           price_cents: number
           promo_ends_at: string | null
@@ -3044,6 +5324,7 @@ export type Database = {
           member_discount_pct?: number
           metadata?: Json
           name: string
+          paypal_product_env?: string | null
           paypal_product_id?: string | null
           price_cents?: number
           promo_ends_at?: string | null
@@ -3076,6 +5357,7 @@ export type Database = {
           member_discount_pct?: number
           metadata?: Json
           name?: string
+          paypal_product_env?: string | null
           paypal_product_id?: string | null
           price_cents?: number
           promo_ends_at?: string | null
@@ -3115,10 +5397,15 @@ export type Database = {
           refund_amount_cents: number | null
           refund_status: string | null
           refunded_at: string | null
+          square_payment_id: string | null
           status: Database["public"]["Enums"]["monetization_purchase_status"]
           stripe_customer_id: string | null
           stripe_payment_intent_id: string | null
           stripe_session_id: string | null
+          tax_cents: number
+          tax_jurisdiction: string | null
+          tax_rate_pct: number | null
+          tax_source: string | null
           updated_at: string
           user_id: string | null
         }
@@ -3144,10 +5431,15 @@ export type Database = {
           refund_amount_cents?: number | null
           refund_status?: string | null
           refunded_at?: string | null
+          square_payment_id?: string | null
           status?: Database["public"]["Enums"]["monetization_purchase_status"]
           stripe_customer_id?: string | null
           stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
+          tax_cents?: number
+          tax_jurisdiction?: string | null
+          tax_rate_pct?: number | null
+          tax_source?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -3173,10 +5465,15 @@ export type Database = {
           refund_amount_cents?: number | null
           refund_status?: string | null
           refunded_at?: string | null
+          square_payment_id?: string | null
           status?: Database["public"]["Enums"]["monetization_purchase_status"]
           stripe_customer_id?: string | null
           stripe_payment_intent_id?: string | null
           stripe_session_id?: string | null
+          tax_cents?: number
+          tax_jurisdiction?: string | null
+          tax_rate_pct?: number | null
+          tax_source?: string | null
           updated_at?: string
           user_id?: string | null
         }
@@ -3262,6 +5559,72 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "monetization_purchases"
             referencedColumns: ["id"]
+          },
+        ]
+      }
+      native_push_devices: {
+        Row: {
+          token: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          token: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          token?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      native_push_jobs: {
+        Row: {
+          attempts: number
+          capability: string
+          id: string
+          next_attempt_at: string
+          notification_id: string
+          status: string
+          token: string
+          updated_at: string
+        }
+        Insert: {
+          attempts?: number
+          capability?: string
+          id?: string
+          next_attempt_at?: string
+          notification_id: string
+          status?: string
+          token: string
+          updated_at?: string
+        }
+        Update: {
+          attempts?: number
+          capability?: string
+          id?: string
+          next_attempt_at?: string
+          notification_id?: string
+          status?: string
+          token?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "native_push_jobs_notification_id_fkey"
+            columns: ["notification_id"]
+            isOneToOne: false
+            referencedRelation: "notifications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "native_push_jobs_token_fkey"
+            columns: ["token"]
+            isOneToOne: false
+            referencedRelation: "native_push_devices"
+            referencedColumns: ["token"]
           },
         ]
       }
@@ -3360,6 +5723,7 @@ export type Database = {
       }
       notifications: {
         Row: {
+          booking_event_key: string | null
           created_at: string
           id: string
           link: string | null
@@ -3370,6 +5734,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          booking_event_key?: string | null
           created_at?: string
           id?: string
           link?: string | null
@@ -3380,6 +5745,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          booking_event_key?: string | null
           created_at?: string
           id?: string
           link?: string | null
@@ -3912,9 +6278,19 @@ export type Database = {
       }
       payment_records: {
         Row: {
+          app_fee_cents: number | null
+          authorization_expires_at: string | null
+          authorization_honor_expires_at: string | null
+          authorization_status: string | null
+          authorization_voided_at: string | null
+          authorized_at: string | null
+          balance_due_at: string | null
+          balance_due_cents: number
+          billing_address: Json | null
           booking_request_id: string | null
           buyer_email: string | null
           buyer_id: string | null
+          captured_amount_cents: number
           captured_at: string | null
           created_at: string
           currency: string
@@ -3922,6 +6298,7 @@ export type Database = {
           discount_cents: number
           dispute_status: string
           fee_breakdown: Json
+          fee_rate_pct: number | null
           gross_amount_cents: number
           id: string
           idempotency_key: string | null
@@ -3931,12 +6308,20 @@ export type Database = {
           listing_id: string | null
           metadata: Json
           monetization_purchase_id: string | null
+          order_items: Json | null
+          payer_email: string | null
+          payment_intent: string
           payment_source: string | null
           payment_status: Database["public"]["Enums"]["paypal_payment_status"]
+          payment_strategy: string | null
+          paypal_authorization_id: string | null
           paypal_capture_id: string | null
           paypal_order_id: string | null
           paypal_payer_id: string | null
+          paypal_tracking: Json | null
           platform_fee_cents: number
+          pro_discount_cents: number
+          pro_fee_applied: boolean
           provider: Database["public"]["Enums"]["payment_provider"]
           reference: string
           refunded_at: string | null
@@ -3944,14 +6329,30 @@ export type Database = {
           sale_transaction_id: string | null
           seller_id: string | null
           seller_proceeds_cents: number
+          shipping_address: Json | null
+          square_location_id: string | null
+          square_merchant_id: string | null
+          square_order_id: string | null
+          square_payment_id: string | null
+          square_receipt_url: string | null
           tax_cents: number
           transaction_type: string
           updated_at: string
         }
         Insert: {
+          app_fee_cents?: number | null
+          authorization_expires_at?: string | null
+          authorization_honor_expires_at?: string | null
+          authorization_status?: string | null
+          authorization_voided_at?: string | null
+          authorized_at?: string | null
+          balance_due_at?: string | null
+          balance_due_cents?: number
+          billing_address?: Json | null
           booking_request_id?: string | null
           buyer_email?: string | null
           buyer_id?: string | null
+          captured_amount_cents?: number
           captured_at?: string | null
           created_at?: string
           currency?: string
@@ -3959,6 +6360,7 @@ export type Database = {
           discount_cents?: number
           dispute_status?: string
           fee_breakdown?: Json
+          fee_rate_pct?: number | null
           gross_amount_cents?: number
           id?: string
           idempotency_key?: string | null
@@ -3968,12 +6370,20 @@ export type Database = {
           listing_id?: string | null
           metadata?: Json
           monetization_purchase_id?: string | null
+          order_items?: Json | null
+          payer_email?: string | null
+          payment_intent?: string
           payment_source?: string | null
           payment_status?: Database["public"]["Enums"]["paypal_payment_status"]
+          payment_strategy?: string | null
+          paypal_authorization_id?: string | null
           paypal_capture_id?: string | null
           paypal_order_id?: string | null
           paypal_payer_id?: string | null
+          paypal_tracking?: Json | null
           platform_fee_cents?: number
+          pro_discount_cents?: number
+          pro_fee_applied?: boolean
           provider?: Database["public"]["Enums"]["payment_provider"]
           reference: string
           refunded_at?: string | null
@@ -3981,14 +6391,30 @@ export type Database = {
           sale_transaction_id?: string | null
           seller_id?: string | null
           seller_proceeds_cents?: number
+          shipping_address?: Json | null
+          square_location_id?: string | null
+          square_merchant_id?: string | null
+          square_order_id?: string | null
+          square_payment_id?: string | null
+          square_receipt_url?: string | null
           tax_cents?: number
           transaction_type: string
           updated_at?: string
         }
         Update: {
+          app_fee_cents?: number | null
+          authorization_expires_at?: string | null
+          authorization_honor_expires_at?: string | null
+          authorization_status?: string | null
+          authorization_voided_at?: string | null
+          authorized_at?: string | null
+          balance_due_at?: string | null
+          balance_due_cents?: number
+          billing_address?: Json | null
           booking_request_id?: string | null
           buyer_email?: string | null
           buyer_id?: string | null
+          captured_amount_cents?: number
           captured_at?: string | null
           created_at?: string
           currency?: string
@@ -3996,6 +6422,7 @@ export type Database = {
           discount_cents?: number
           dispute_status?: string
           fee_breakdown?: Json
+          fee_rate_pct?: number | null
           gross_amount_cents?: number
           id?: string
           idempotency_key?: string | null
@@ -4005,12 +6432,20 @@ export type Database = {
           listing_id?: string | null
           metadata?: Json
           monetization_purchase_id?: string | null
+          order_items?: Json | null
+          payer_email?: string | null
+          payment_intent?: string
           payment_source?: string | null
           payment_status?: Database["public"]["Enums"]["paypal_payment_status"]
+          payment_strategy?: string | null
+          paypal_authorization_id?: string | null
           paypal_capture_id?: string | null
           paypal_order_id?: string | null
           paypal_payer_id?: string | null
+          paypal_tracking?: Json | null
           platform_fee_cents?: number
+          pro_discount_cents?: number
+          pro_fee_applied?: boolean
           provider?: Database["public"]["Enums"]["payment_provider"]
           reference?: string
           refunded_at?: string | null
@@ -4018,6 +6453,12 @@ export type Database = {
           sale_transaction_id?: string | null
           seller_id?: string | null
           seller_proceeds_cents?: number
+          shipping_address?: Json | null
+          square_location_id?: string | null
+          square_merchant_id?: string | null
+          square_order_id?: string | null
+          square_payment_id?: string | null
+          square_receipt_url?: string | null
           tax_cents?: number
           transaction_type?: string
           updated_at?: string
@@ -4067,6 +6508,47 @@ export type Database = {
           },
         ]
       }
+      payout_ach_details: {
+        Row: {
+          created_at: string
+          encrypted_payload: string | null
+          encryption_version: string
+          id: string
+          intake_mode: string
+          preference_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          encrypted_payload?: string | null
+          encryption_version?: string
+          id?: string
+          intake_mode?: string
+          preference_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          encrypted_payload?: string | null
+          encryption_version?: string
+          id?: string
+          intake_mode?: string
+          preference_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payout_ach_details_preference_id_fkey"
+            columns: ["preference_id"]
+            isOneToOne: true
+            referencedRelation: "payout_preferences"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payout_actions: {
         Row: {
           action: string
@@ -4079,7 +6561,8 @@ export type Database = {
           id: string
           metadata: Json
           note: string | null
-          payable_id: string
+          payable_id: string | null
+          subject_user_id: string | null
           to_status: Database["public"]["Enums"]["seller_payout_status"] | null
         }
         Insert: {
@@ -4093,7 +6576,8 @@ export type Database = {
           id?: string
           metadata?: Json
           note?: string | null
-          payable_id: string
+          payable_id?: string | null
+          subject_user_id?: string | null
           to_status?: Database["public"]["Enums"]["seller_payout_status"] | null
         }
         Update: {
@@ -4107,7 +6591,8 @@ export type Database = {
           id?: string
           metadata?: Json
           note?: string | null
-          payable_id?: string
+          payable_id?: string | null
+          subject_user_id?: string | null
           to_status?: Database["public"]["Enums"]["seller_payout_status"] | null
         }
         Relationships: [
@@ -4119,6 +6604,156 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      payout_preferences: {
+        Row: {
+          ach_account_holder: string | null
+          ach_account_last4: string | null
+          ach_account_type: string | null
+          ach_bank_name: string | null
+          ach_routing_last4: string | null
+          address_city: string | null
+          address_country: string | null
+          address_line1: string | null
+          address_line2: string | null
+          address_postal_code: string | null
+          address_region: string | null
+          cash_app_cashtag: string | null
+          contact_email: string | null
+          contact_phone: string | null
+          created_at: string
+          display_label: string | null
+          id: string
+          masked_destination: string | null
+          method: Database["public"]["Enums"]["payout_method"]
+          needs_attention_reason: string | null
+          payee_first_name: string | null
+          payee_last_name: string | null
+          paypal_email: string | null
+          status: Database["public"]["Enums"]["payout_preference_status"]
+          updated_at: string
+          user_id: string
+          venmo_identifier_type: string | null
+          venmo_masked_identifier: string | null
+          verified_at: string | null
+        }
+        Insert: {
+          ach_account_holder?: string | null
+          ach_account_last4?: string | null
+          ach_account_type?: string | null
+          ach_bank_name?: string | null
+          ach_routing_last4?: string | null
+          address_city?: string | null
+          address_country?: string | null
+          address_line1?: string | null
+          address_line2?: string | null
+          address_postal_code?: string | null
+          address_region?: string | null
+          cash_app_cashtag?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          display_label?: string | null
+          id?: string
+          masked_destination?: string | null
+          method: Database["public"]["Enums"]["payout_method"]
+          needs_attention_reason?: string | null
+          payee_first_name?: string | null
+          payee_last_name?: string | null
+          paypal_email?: string | null
+          status?: Database["public"]["Enums"]["payout_preference_status"]
+          updated_at?: string
+          user_id: string
+          venmo_identifier_type?: string | null
+          venmo_masked_identifier?: string | null
+          verified_at?: string | null
+        }
+        Update: {
+          ach_account_holder?: string | null
+          ach_account_last4?: string | null
+          ach_account_type?: string | null
+          ach_bank_name?: string | null
+          ach_routing_last4?: string | null
+          address_city?: string | null
+          address_country?: string | null
+          address_line1?: string | null
+          address_line2?: string | null
+          address_postal_code?: string | null
+          address_region?: string | null
+          cash_app_cashtag?: string | null
+          contact_email?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          display_label?: string | null
+          id?: string
+          masked_destination?: string | null
+          method?: Database["public"]["Enums"]["payout_method"]
+          needs_attention_reason?: string | null
+          payee_first_name?: string | null
+          payee_last_name?: string | null
+          paypal_email?: string | null
+          status?: Database["public"]["Enums"]["payout_preference_status"]
+          updated_at?: string
+          user_id?: string
+          venmo_identifier_type?: string | null
+          venmo_masked_identifier?: string | null
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
+      paypal_api_logs: {
+        Row: {
+          call_name: string
+          created_at: string
+          endpoint: string
+          environment: string
+          id: string
+          latency_ms: number | null
+          method: string
+          order_id: string | null
+          paypal_debug_id: string | null
+          reference: string | null
+          request_body: Json | null
+          request_headers: Json
+          response_body: Json | null
+          response_status: number | null
+          seller_id: string | null
+        }
+        Insert: {
+          call_name: string
+          created_at?: string
+          endpoint: string
+          environment?: string
+          id?: string
+          latency_ms?: number | null
+          method: string
+          order_id?: string | null
+          paypal_debug_id?: string | null
+          reference?: string | null
+          request_body?: Json | null
+          request_headers?: Json
+          response_body?: Json | null
+          response_status?: number | null
+          seller_id?: string | null
+        }
+        Update: {
+          call_name?: string
+          created_at?: string
+          endpoint?: string
+          environment?: string
+          id?: string
+          latency_ms?: number | null
+          method?: string
+          order_id?: string | null
+          paypal_debug_id?: string | null
+          reference?: string | null
+          request_body?: Json | null
+          request_headers?: Json
+          response_body?: Json | null
+          response_status?: number | null
+          seller_id?: string | null
+        }
+        Relationships: []
       }
       paypal_plan_mappings: {
         Row: {
@@ -4461,6 +7096,33 @@ export type Database = {
           },
         ]
       }
+      permit_path_grandfathered: {
+        Row: {
+          created_at: string
+          granted_at: string
+          note: string | null
+          source: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          granted_at?: string
+          note?: string | null
+          source?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          granted_at?: string
+          note?: string | null
+          source?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       permit_progress: {
         Row: {
           business_type: string | null
@@ -4500,6 +7162,179 @@ export type Database = {
         }
         Relationships: []
       }
+      pricepilot_market_comparables: {
+        Row: {
+          asset_category: string
+          captured_at: string
+          city: string | null
+          claimed_sale_price: number | null
+          created_at: string
+          displayed_price: number | null
+          evidence_confidence: number | null
+          extraction_confidence: number | null
+          id: string
+          length_ft: number | null
+          make: string | null
+          model: string | null
+          normalized_features: Json
+          observed_status: string
+          previous_displayed_price: number | null
+          quality_flags: Json
+          raw_text: string | null
+          source: string
+          source_listing_id: string | null
+          source_title: string
+          source_url: string | null
+          state: string | null
+          transaction_price_verified: boolean
+          updated_at: string
+          usable_for_valuation: boolean
+          valuation_mode: string
+          verified_transaction_price: number | null
+          year: number | null
+        }
+        Insert: {
+          asset_category?: string
+          captured_at?: string
+          city?: string | null
+          claimed_sale_price?: number | null
+          created_at?: string
+          displayed_price?: number | null
+          evidence_confidence?: number | null
+          extraction_confidence?: number | null
+          id?: string
+          length_ft?: number | null
+          make?: string | null
+          model?: string | null
+          normalized_features?: Json
+          observed_status?: string
+          previous_displayed_price?: number | null
+          quality_flags?: Json
+          raw_text?: string | null
+          source: string
+          source_listing_id?: string | null
+          source_title: string
+          source_url?: string | null
+          state?: string | null
+          transaction_price_verified?: boolean
+          updated_at?: string
+          usable_for_valuation?: boolean
+          valuation_mode?: string
+          verified_transaction_price?: number | null
+          year?: number | null
+        }
+        Update: {
+          asset_category?: string
+          captured_at?: string
+          city?: string | null
+          claimed_sale_price?: number | null
+          created_at?: string
+          displayed_price?: number | null
+          evidence_confidence?: number | null
+          extraction_confidence?: number | null
+          id?: string
+          length_ft?: number | null
+          make?: string | null
+          model?: string | null
+          normalized_features?: Json
+          observed_status?: string
+          previous_displayed_price?: number | null
+          quality_flags?: Json
+          raw_text?: string | null
+          source?: string
+          source_listing_id?: string | null
+          source_title?: string
+          source_url?: string | null
+          state?: string | null
+          transaction_price_verified?: boolean
+          updated_at?: string
+          usable_for_valuation?: boolean
+          valuation_mode?: string
+          verified_transaction_price?: number | null
+          year?: number | null
+        }
+        Relationships: []
+      }
+      pro_boost_credits: {
+        Row: {
+          created_at: string
+          id: string
+          listing_id: string | null
+          metadata: Json
+          paypal_subscription_id: string | null
+          period_end: string
+          period_start: string
+          purchase_id: string | null
+          source: string
+          status: string
+          subscription_id: string | null
+          updated_at: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          listing_id?: string | null
+          metadata?: Json
+          paypal_subscription_id?: string | null
+          period_end: string
+          period_start: string
+          purchase_id?: string | null
+          source?: string
+          status?: string
+          subscription_id?: string | null
+          updated_at?: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          listing_id?: string | null
+          metadata?: Json
+          paypal_subscription_id?: string | null
+          period_end?: string
+          period_start?: string
+          purchase_id?: string | null
+          source?: string
+          status?: string
+          subscription_id?: string | null
+          updated_at?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pro_boost_credits_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pro_boost_credits_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pro_boost_credits_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "monetization_pending_reconciliation"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pro_boost_credits_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "monetization_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           account_suspended: boolean
@@ -4528,6 +7363,10 @@ export type Database = {
           membership_panel_dismissed_at: string | null
           name_parts_confirmed: boolean
           onboarded_at: string | null
+          payments_transition_ack_at: string | null
+          paypal_payout_email: string | null
+          paypal_payout_updated_at: string | null
+          paypal_payout_verified_at: string | null
           phone_number: string | null
           pinned_listing_id: string | null
           public_city: string | null
@@ -4582,6 +7421,10 @@ export type Database = {
           membership_panel_dismissed_at?: string | null
           name_parts_confirmed?: boolean
           onboarded_at?: string | null
+          payments_transition_ack_at?: string | null
+          paypal_payout_email?: string | null
+          paypal_payout_updated_at?: string | null
+          paypal_payout_verified_at?: string | null
           phone_number?: string | null
           pinned_listing_id?: string | null
           public_city?: string | null
@@ -4636,6 +7479,10 @@ export type Database = {
           membership_panel_dismissed_at?: string | null
           name_parts_confirmed?: boolean
           onboarded_at?: string | null
+          payments_transition_ack_at?: string | null
+          paypal_payout_email?: string | null
+          paypal_payout_updated_at?: string | null
+          paypal_payout_verified_at?: string | null
           phone_number?: string | null
           pinned_listing_id?: string | null
           public_city?: string | null
@@ -4682,30 +7529,116 @@ export type Database = {
       }
       promo_code_uses: {
         Row: {
+          booking_request_id: string | null
+          code: string | null
+          completed_at: string | null
+          credit_cents: number | null
           discount_applied: number
+          eligible_base_cents: number | null
+          gross_cents: number | null
           id: string
+          listing_id: string | null
+          partner_name: string | null
+          payment_record_id: string | null
+          platform_fee_cents: number | null
           promo_code_id: string
+          redemption_kind: string | null
+          refunded_at: string | null
+          refunded_cents: number
+          released_at: string | null
+          sale_transaction_id: string | null
+          status: string
           transaction_id: string | null
+          updated_at: string
           used_at: string
           user_id: string
         }
         Insert: {
+          booking_request_id?: string | null
+          code?: string | null
+          completed_at?: string | null
+          credit_cents?: number | null
           discount_applied: number
+          eligible_base_cents?: number | null
+          gross_cents?: number | null
           id?: string
+          listing_id?: string | null
+          partner_name?: string | null
+          payment_record_id?: string | null
+          platform_fee_cents?: number | null
           promo_code_id: string
+          redemption_kind?: string | null
+          refunded_at?: string | null
+          refunded_cents?: number
+          released_at?: string | null
+          sale_transaction_id?: string | null
+          status?: string
           transaction_id?: string | null
+          updated_at?: string
           used_at?: string
           user_id: string
         }
         Update: {
+          booking_request_id?: string | null
+          code?: string | null
+          completed_at?: string | null
+          credit_cents?: number | null
           discount_applied?: number
+          eligible_base_cents?: number | null
+          gross_cents?: number | null
           id?: string
+          listing_id?: string | null
+          partner_name?: string | null
+          payment_record_id?: string | null
+          platform_fee_cents?: number | null
           promo_code_id?: string
+          redemption_kind?: string | null
+          refunded_at?: string | null
+          refunded_cents?: number
+          released_at?: string | null
+          sale_transaction_id?: string | null
+          status?: string
           transaction_id?: string | null
+          updated_at?: string
           used_at?: string
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "promo_code_uses_booking_request_id_fkey"
+            columns: ["booking_request_id"]
+            isOneToOne: false
+            referencedRelation: "booking_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promo_code_uses_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promo_code_uses_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promo_code_uses_payment_record_id_fkey"
+            columns: ["payment_record_id"]
+            isOneToOne: false
+            referencedRelation: "payment_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "promo_code_uses_promo_code_id_fkey"
+            columns: ["promo_code_id"]
+            isOneToOne: false
+            referencedRelation: "campus_partner_summary"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "promo_code_uses_promo_code_id_fkey"
             columns: ["promo_code_id"]
@@ -4713,10 +7646,18 @@ export type Database = {
             referencedRelation: "promo_codes"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "promo_code_uses_sale_transaction_id_fkey"
+            columns: ["sale_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "sale_transactions"
+            referencedColumns: ["id"]
+          },
         ]
       }
       promo_codes: {
         Row: {
+          academic_year: string | null
           applies_to: string
           code: string
           created_at: string
@@ -4729,9 +7670,21 @@ export type Database = {
           is_active: boolean
           max_uses: number | null
           min_purchase_amount: number | null
+          normalized_code: string | null
+          partner_name: string | null
+          partner_state: string | null
+          program: string
+          purchase_credit_cents: number | null
+          purchase_min_cents: number | null
+          purchase_uses_per_user: number | null
+          rental_cap_cents: number | null
+          rental_percent: number | null
+          rental_uses_per_user: number | null
+          starts_at: string | null
           updated_at: string
         }
         Insert: {
+          academic_year?: string | null
           applies_to?: string
           code: string
           created_at?: string
@@ -4744,9 +7697,21 @@ export type Database = {
           is_active?: boolean
           max_uses?: number | null
           min_purchase_amount?: number | null
+          normalized_code?: string | null
+          partner_name?: string | null
+          partner_state?: string | null
+          program?: string
+          purchase_credit_cents?: number | null
+          purchase_min_cents?: number | null
+          purchase_uses_per_user?: number | null
+          rental_cap_cents?: number | null
+          rental_percent?: number | null
+          rental_uses_per_user?: number | null
+          starts_at?: string | null
           updated_at?: string
         }
         Update: {
+          academic_year?: string | null
           applies_to?: string
           code?: string
           created_at?: string
@@ -4759,6 +7724,17 @@ export type Database = {
           is_active?: boolean
           max_uses?: number | null
           min_purchase_amount?: number | null
+          normalized_code?: string | null
+          partner_name?: string | null
+          partner_state?: string | null
+          program?: string
+          purchase_credit_cents?: number | null
+          purchase_min_cents?: number | null
+          purchase_uses_per_user?: number | null
+          rental_cap_cents?: number | null
+          rental_percent?: number | null
+          rental_uses_per_user?: number | null
+          starts_at?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -5049,6 +8025,27 @@ export type Database = {
           p256dh?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      rate_limit_events: {
+        Row: {
+          created_at: string
+          id: string
+          key: string
+          scope: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          key: string
+          scope: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          key?: string
+          scope?: string
         }
         Relationships: []
       }
@@ -5494,6 +8491,27 @@ export type Database = {
         }
         Relationships: []
       }
+      removed_spam_conversations: {
+        Row: {
+          conversation_id: string
+          recipient_id: string
+          removed_at: string
+          sender_id: string
+        }
+        Insert: {
+          conversation_id: string
+          recipient_id: string
+          removed_at?: string
+          sender_id: string
+        }
+        Update: {
+          conversation_id?: string
+          recipient_id?: string
+          removed_at?: string
+          sender_id?: string
+        }
+        Relationships: []
+      }
       reviews: {
         Row: {
           booking_id: string
@@ -5615,6 +8633,50 @@ export type Database = {
           },
         ]
       }
+      sale_fulfillment_updates: {
+        Row: {
+          actor_id: string | null
+          actor_role: string | null
+          created_at: string
+          from_value: string | null
+          id: string
+          kind: string
+          note: string | null
+          sale_transaction_id: string
+          to_value: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_role?: string | null
+          created_at?: string
+          from_value?: string | null
+          id?: string
+          kind: string
+          note?: string | null
+          sale_transaction_id: string
+          to_value?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          actor_role?: string | null
+          created_at?: string
+          from_value?: string | null
+          id?: string
+          kind?: string
+          note?: string | null
+          sale_transaction_id?: string
+          to_value?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_fulfillment_updates_sale_transaction_id_fkey"
+            columns: ["sale_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "sale_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sale_transaction_status_history: {
         Row: {
           actor: string | null
@@ -5666,11 +8728,16 @@ export type Database = {
         Row: {
           amount: number
           bill_of_sale_completed_at: string | null
+          buyer_address1: string | null
+          buyer_address2: string | null
+          buyer_city: string | null
           buyer_confirmed_at: string | null
           buyer_email: string | null
           buyer_id: string
           buyer_name: string | null
           buyer_phone: string | null
+          buyer_state: string | null
+          buyer_zip: string | null
           carrier: string | null
           checkout_session_id: string | null
           created_at: string
@@ -5679,6 +8746,9 @@ export type Database = {
           delivery_fee: number | null
           delivery_instructions: string | null
           estimated_delivery_date: string | null
+          estimated_delivery_end: string | null
+          fee_locked_at: string | null
+          fee_rate_pct: number | null
           freight_checkout_session_id: string | null
           freight_cost: number | null
           freight_paid_at: string | null
@@ -5692,8 +8762,11 @@ export type Database = {
           message: string | null
           payment_intent_id: string | null
           payment_provider: Database["public"]["Enums"]["payment_provider"]
+          payment_strategy: string | null
           payout_completed_at: string | null
           platform_fee: number
+          pro_discount: number
+          pro_fee_applied: boolean
           promo_code_id: string | null
           promo_discount: number | null
           referral_code: string | null
@@ -5704,6 +8777,10 @@ export type Database = {
           shipping_notes: string | null
           shipping_status: string | null
           status: string
+          tax_amount: number
+          tax_jurisdiction: string | null
+          tax_rate_pct: number | null
+          tax_source: string | null
           terms_id: string | null
           tracking_number: string | null
           tracking_url: string | null
@@ -5713,11 +8790,16 @@ export type Database = {
         Insert: {
           amount: number
           bill_of_sale_completed_at?: string | null
+          buyer_address1?: string | null
+          buyer_address2?: string | null
+          buyer_city?: string | null
           buyer_confirmed_at?: string | null
           buyer_email?: string | null
           buyer_id: string
           buyer_name?: string | null
           buyer_phone?: string | null
+          buyer_state?: string | null
+          buyer_zip?: string | null
           carrier?: string | null
           checkout_session_id?: string | null
           created_at?: string
@@ -5726,6 +8808,9 @@ export type Database = {
           delivery_fee?: number | null
           delivery_instructions?: string | null
           estimated_delivery_date?: string | null
+          estimated_delivery_end?: string | null
+          fee_locked_at?: string | null
+          fee_rate_pct?: number | null
           freight_checkout_session_id?: string | null
           freight_cost?: number | null
           freight_paid_at?: string | null
@@ -5739,8 +8824,11 @@ export type Database = {
           message?: string | null
           payment_intent_id?: string | null
           payment_provider?: Database["public"]["Enums"]["payment_provider"]
+          payment_strategy?: string | null
           payout_completed_at?: string | null
           platform_fee: number
+          pro_discount?: number
+          pro_fee_applied?: boolean
           promo_code_id?: string | null
           promo_discount?: number | null
           referral_code?: string | null
@@ -5751,6 +8839,10 @@ export type Database = {
           shipping_notes?: string | null
           shipping_status?: string | null
           status?: string
+          tax_amount?: number
+          tax_jurisdiction?: string | null
+          tax_rate_pct?: number | null
+          tax_source?: string | null
           terms_id?: string | null
           tracking_number?: string | null
           tracking_url?: string | null
@@ -5760,11 +8852,16 @@ export type Database = {
         Update: {
           amount?: number
           bill_of_sale_completed_at?: string | null
+          buyer_address1?: string | null
+          buyer_address2?: string | null
+          buyer_city?: string | null
           buyer_confirmed_at?: string | null
           buyer_email?: string | null
           buyer_id?: string
           buyer_name?: string | null
           buyer_phone?: string | null
+          buyer_state?: string | null
+          buyer_zip?: string | null
           carrier?: string | null
           checkout_session_id?: string | null
           created_at?: string
@@ -5773,6 +8870,9 @@ export type Database = {
           delivery_fee?: number | null
           delivery_instructions?: string | null
           estimated_delivery_date?: string | null
+          estimated_delivery_end?: string | null
+          fee_locked_at?: string | null
+          fee_rate_pct?: number | null
           freight_checkout_session_id?: string | null
           freight_cost?: number | null
           freight_paid_at?: string | null
@@ -5786,8 +8886,11 @@ export type Database = {
           message?: string | null
           payment_intent_id?: string | null
           payment_provider?: Database["public"]["Enums"]["payment_provider"]
+          payment_strategy?: string | null
           payout_completed_at?: string | null
           platform_fee?: number
+          pro_discount?: number
+          pro_fee_applied?: boolean
           promo_code_id?: string | null
           promo_discount?: number | null
           referral_code?: string | null
@@ -5798,6 +8901,10 @@ export type Database = {
           shipping_notes?: string | null
           shipping_status?: string | null
           status?: string
+          tax_amount?: number
+          tax_jurisdiction?: string | null
+          tax_rate_pct?: number | null
+          tax_source?: string | null
           terms_id?: string | null
           tracking_number?: string | null
           tracking_url?: string | null
@@ -5817,6 +8924,13 @@ export type Database = {
             columns: ["listing_id"]
             isOneToOne: false
             referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_transactions_promo_code_id_fkey"
+            columns: ["promo_code_id"]
+            isOneToOne: false
+            referencedRelation: "campus_partner_summary"
             referencedColumns: ["id"]
           },
           {
@@ -5991,17 +9105,77 @@ export type Database = {
         }
         Relationships: []
       }
+      secure_driver_links: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          driver_email: string | null
+          driver_name: string | null
+          driver_phone: string | null
+          expires_at: string
+          first_used_at: string | null
+          fulfillment_session_id: string
+          id: string
+          last_used_at: string | null
+          revoked_at: string | null
+          token_hash: string
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          driver_email?: string | null
+          driver_name?: string | null
+          driver_phone?: string | null
+          expires_at: string
+          first_used_at?: string | null
+          fulfillment_session_id: string
+          id?: string
+          last_used_at?: string | null
+          revoked_at?: string | null
+          token_hash: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          driver_email?: string | null
+          driver_name?: string | null
+          driver_phone?: string | null
+          expires_at?: string
+          first_used_at?: string | null
+          fulfillment_session_id?: string
+          id?: string
+          last_used_at?: string | null
+          revoked_at?: string | null
+          token_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "secure_driver_links_fulfillment_session_id_fkey"
+            columns: ["fulfillment_session_id"]
+            isOneToOne: false
+            referencedRelation: "fulfillment_sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       seller_payables: {
         Row: {
           adjustments_cents: number
           admin_notes: string | null
+          agreement_completed_at: string | null
           buyer_id: string | null
+          conditions_completed_at: string | null
+          conditions_deadline_at: string | null
           created_at: string
           currency: string
+          deadline_remaining_seconds: number | null
+          dispute_case_id: string | null
+          dispute_frozen_at: string | null
           dispute_status: string
           dwolla_transfer_id: string | null
           external_payout_reference: string | null
           failure_reason: string | null
+          fee_rate_pct: number | null
           gross_collected_cents: number
           hold_reason: string | null
           id: string
@@ -6017,24 +9191,37 @@ export type Database = {
           payout_method: string
           payout_provider: Database["public"]["Enums"]["payment_provider"]
           platform_fee_cents: number
+          pro_discount_cents: number
+          pro_fee_applied: boolean
           refunded_cents: number
           release_due_at: string | null
+          release_state: string | null
           seller_id: string
+          signnow_document_id: string | null
           status: Database["public"]["Enums"]["seller_payout_status"]
           transaction_type: string
           updated_at: string
           verification_status: string
+          walkthrough_media_id: string | null
+          walkthrough_recorded_at: string | null
         }
         Insert: {
           adjustments_cents?: number
           admin_notes?: string | null
+          agreement_completed_at?: string | null
           buyer_id?: string | null
+          conditions_completed_at?: string | null
+          conditions_deadline_at?: string | null
           created_at?: string
           currency?: string
+          deadline_remaining_seconds?: number | null
+          dispute_case_id?: string | null
+          dispute_frozen_at?: string | null
           dispute_status?: string
           dwolla_transfer_id?: string | null
           external_payout_reference?: string | null
           failure_reason?: string | null
+          fee_rate_pct?: number | null
           gross_collected_cents?: number
           hold_reason?: string | null
           id?: string
@@ -6050,24 +9237,37 @@ export type Database = {
           payout_method?: string
           payout_provider?: Database["public"]["Enums"]["payment_provider"]
           platform_fee_cents?: number
+          pro_discount_cents?: number
+          pro_fee_applied?: boolean
           refunded_cents?: number
           release_due_at?: string | null
+          release_state?: string | null
           seller_id: string
+          signnow_document_id?: string | null
           status?: Database["public"]["Enums"]["seller_payout_status"]
           transaction_type: string
           updated_at?: string
           verification_status?: string
+          walkthrough_media_id?: string | null
+          walkthrough_recorded_at?: string | null
         }
         Update: {
           adjustments_cents?: number
           admin_notes?: string | null
+          agreement_completed_at?: string | null
           buyer_id?: string | null
+          conditions_completed_at?: string | null
+          conditions_deadline_at?: string | null
           created_at?: string
           currency?: string
+          deadline_remaining_seconds?: number | null
+          dispute_case_id?: string | null
+          dispute_frozen_at?: string | null
           dispute_status?: string
           dwolla_transfer_id?: string | null
           external_payout_reference?: string | null
           failure_reason?: string | null
+          fee_rate_pct?: number | null
           gross_collected_cents?: number
           hold_reason?: string | null
           id?: string
@@ -6083,15 +9283,28 @@ export type Database = {
           payout_method?: string
           payout_provider?: Database["public"]["Enums"]["payment_provider"]
           platform_fee_cents?: number
+          pro_discount_cents?: number
+          pro_fee_applied?: boolean
           refunded_cents?: number
           release_due_at?: string | null
+          release_state?: string | null
           seller_id?: string
+          signnow_document_id?: string | null
           status?: Database["public"]["Enums"]["seller_payout_status"]
           transaction_type?: string
           updated_at?: string
           verification_status?: string
+          walkthrough_media_id?: string | null
+          walkthrough_recorded_at?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "seller_payables_dispute_case_id_fkey"
+            columns: ["dispute_case_id"]
+            isOneToOne: false
+            referencedRelation: "dispute_cases"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "seller_payables_listing_id_fkey"
             columns: ["listing_id"]
@@ -6111,6 +9324,466 @@ export type Database = {
             columns: ["payment_record_id"]
             isOneToOne: true
             referencedRelation: "payment_records"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "seller_payables_walkthrough_media_id_fkey"
+            columns: ["walkthrough_media_id"]
+            isOneToOne: false
+            referencedRelation: "handoff_media"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seller_paypal_accounts: {
+        Row: {
+          acdc_vetting_status: string | null
+          action_reasons: string[]
+          archived_at: string | null
+          capabilities: Json | null
+          consent_granted: boolean
+          created_at: string
+          environment: string
+          id: string
+          last_status_check_at: string | null
+          last_webhook_event_id: string | null
+          merchant_id: string | null
+          oauth_scopes: string[]
+          onboarding_status: string
+          payments_receivable: boolean
+          paypal_email: string | null
+          primary_email_confirmed: boolean
+          products: Json | null
+          referral_url: string | null
+          status_payload: Json | null
+          status_source: string | null
+          tracking_id: string
+          updated_at: string
+          user_id: string
+          vaulting_status: string | null
+        }
+        Insert: {
+          acdc_vetting_status?: string | null
+          action_reasons?: string[]
+          archived_at?: string | null
+          capabilities?: Json | null
+          consent_granted?: boolean
+          created_at?: string
+          environment: string
+          id?: string
+          last_status_check_at?: string | null
+          last_webhook_event_id?: string | null
+          merchant_id?: string | null
+          oauth_scopes?: string[]
+          onboarding_status?: string
+          payments_receivable?: boolean
+          paypal_email?: string | null
+          primary_email_confirmed?: boolean
+          products?: Json | null
+          referral_url?: string | null
+          status_payload?: Json | null
+          status_source?: string | null
+          tracking_id: string
+          updated_at?: string
+          user_id: string
+          vaulting_status?: string | null
+        }
+        Update: {
+          acdc_vetting_status?: string | null
+          action_reasons?: string[]
+          archived_at?: string | null
+          capabilities?: Json | null
+          consent_granted?: boolean
+          created_at?: string
+          environment?: string
+          id?: string
+          last_status_check_at?: string | null
+          last_webhook_event_id?: string | null
+          merchant_id?: string | null
+          oauth_scopes?: string[]
+          onboarding_status?: string
+          payments_receivable?: boolean
+          paypal_email?: string | null
+          primary_email_confirmed?: boolean
+          products?: Json | null
+          referral_url?: string | null
+          status_payload?: Json | null
+          status_source?: string | null
+          tracking_id?: string
+          updated_at?: string
+          user_id?: string
+          vaulting_status?: string | null
+        }
+        Relationships: []
+      }
+      seller_verification_attempts: {
+        Row: {
+          completed_at: string | null
+          created_at: string
+          id: string
+          plaid_verification_id: string
+          previous_verification_id: string | null
+          reason_code: string | null
+          request_id: string | null
+          shareable_url_issued: boolean
+          status: string
+          template_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          plaid_verification_id: string
+          previous_verification_id?: string | null
+          reason_code?: string | null
+          request_id?: string | null
+          shareable_url_issued?: boolean
+          status?: string
+          template_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          plaid_verification_id?: string
+          previous_verification_id?: string | null
+          reason_code?: string | null
+          request_id?: string | null
+          shareable_url_issued?: boolean
+          status?: string
+          template_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      seller_verification_events: {
+        Row: {
+          created_at: string
+          event_key: string
+          event_type: string | null
+          id: string
+          outcome: string | null
+          processed_at: string
+          provider: string
+          user_id: string | null
+          verification_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_key: string
+          event_type?: string | null
+          id?: string
+          outcome?: string | null
+          processed_at?: string
+          provider: string
+          user_id?: string | null
+          verification_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_key?: string
+          event_type?: string | null
+          id?: string
+          outcome?: string | null
+          processed_at?: string
+          provider?: string
+          user_id?: string | null
+          verification_id?: string | null
+        }
+        Relationships: []
+      }
+      seller_verification_payments: {
+        Row: {
+          amount_cents: number
+          attempt_verification_id: string | null
+          authorized_at: string | null
+          captured_at: string | null
+          created_at: string
+          currency: string
+          error_code: string | null
+          expires_at: string | null
+          id: string
+          idempotency_key: string
+          paypal_authorization_id: string | null
+          paypal_capture_id: string | null
+          paypal_order_id: string | null
+          paypal_refund_id: string | null
+          provider: string
+          purpose: string
+          reference: string
+          refund_reason: string | null
+          refunded_at: string | null
+          refunded_by: string | null
+          state: string
+          updated_at: string
+          user_id: string
+          voided_at: string | null
+        }
+        Insert: {
+          amount_cents: number
+          attempt_verification_id?: string | null
+          authorized_at?: string | null
+          captured_at?: string | null
+          created_at?: string
+          currency?: string
+          error_code?: string | null
+          expires_at?: string | null
+          id?: string
+          idempotency_key: string
+          paypal_authorization_id?: string | null
+          paypal_capture_id?: string | null
+          paypal_order_id?: string | null
+          paypal_refund_id?: string | null
+          provider?: string
+          purpose?: string
+          reference: string
+          refund_reason?: string | null
+          refunded_at?: string | null
+          refunded_by?: string | null
+          state?: string
+          updated_at?: string
+          user_id: string
+          voided_at?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          attempt_verification_id?: string | null
+          authorized_at?: string | null
+          captured_at?: string | null
+          created_at?: string
+          currency?: string
+          error_code?: string | null
+          expires_at?: string | null
+          id?: string
+          idempotency_key?: string
+          paypal_authorization_id?: string | null
+          paypal_capture_id?: string | null
+          paypal_order_id?: string | null
+          paypal_refund_id?: string | null
+          provider?: string
+          purpose?: string
+          reference?: string
+          refund_reason?: string | null
+          refunded_at?: string | null
+          refunded_by?: string | null
+          state?: string
+          updated_at?: string
+          user_id?: string
+          voided_at?: string | null
+        }
+        Relationships: []
+      }
+      seller_verification_terms: {
+        Row: {
+          accepted_at: string
+          created_at: string
+          id: string
+          ip_address: string | null
+          terms_version: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          terms_version: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          terms_version?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      seller_verifications: {
+        Row: {
+          created_at: string
+          current_attempt_id: string | null
+          identity_status: string | null
+          identity_succeeded_at: string | null
+          last_reason_code: string | null
+          payment_state: string
+          retry_allowance: number
+          retry_count: number
+          revoked_at: string | null
+          revoked_by: string | null
+          revoked_reason: string | null
+          status: string
+          template_id: string | null
+          terms_version: string | null
+          updated_at: string
+          user_id: string
+          verified_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          current_attempt_id?: string | null
+          identity_status?: string | null
+          identity_succeeded_at?: string | null
+          last_reason_code?: string | null
+          payment_state?: string
+          retry_allowance?: number
+          retry_count?: number
+          revoked_at?: string | null
+          revoked_by?: string | null
+          revoked_reason?: string | null
+          status?: string
+          template_id?: string | null
+          terms_version?: string | null
+          updated_at?: string
+          user_id: string
+          verified_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          current_attempt_id?: string | null
+          identity_status?: string | null
+          identity_succeeded_at?: string | null
+          last_reason_code?: string | null
+          payment_state?: string
+          retry_allowance?: number
+          retry_count?: number
+          revoked_at?: string | null
+          revoked_by?: string | null
+          revoked_reason?: string | null
+          status?: string
+          template_id?: string | null
+          terms_version?: string | null
+          updated_at?: string
+          user_id?: string
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
+      seller_video_availability: {
+        Row: {
+          active: boolean
+          created_at: string
+          end_local_time: string
+          id: string
+          seller_id: string
+          start_local_time: string
+          updated_at: string
+          weekday: number
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          end_local_time: string
+          id?: string
+          seller_id: string
+          start_local_time: string
+          updated_at?: string
+          weekday: number
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          end_local_time?: string
+          id?: string
+          seller_id?: string
+          start_local_time?: string
+          updated_at?: string
+          weekday?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seller_video_availability_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seller_video_blackouts: {
+        Row: {
+          created_at: string
+          ends_at: string
+          id: string
+          reason: string | null
+          seller_id: string
+          starts_at: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          ends_at: string
+          id?: string
+          reason?: string | null
+          seller_id: string
+          starts_at: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          ends_at?: string
+          id?: string
+          reason?: string | null
+          seller_id?: string
+          starts_at?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seller_video_blackouts_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      seller_video_settings: {
+        Row: {
+          buffer_minutes: number
+          created_at: string
+          default_duration_minutes: number
+          enabled: boolean
+          minimum_notice_minutes: number
+          timezone: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          buffer_minutes?: number
+          created_at?: string
+          default_duration_minutes?: number
+          enabled?: boolean
+          minimum_notice_minutes?: number
+          timezone?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          buffer_minutes?: number
+          created_at?: string
+          default_duration_minutes?: number
+          enabled?: boolean
+          minimum_notice_minutes?: number
+          timezone?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seller_video_settings_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: true
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -6271,6 +9944,118 @@ export type Database = {
         }
         Relationships: []
       }
+      shipment_tracking_events: {
+        Row: {
+          booking_id: string | null
+          carrier: string | null
+          created_at: string
+          description: string | null
+          estimated_delivery_at: string | null
+          event_at: string
+          fulfillment_session_id: string | null
+          id: string
+          paypal_debug_id: string | null
+          paypal_sync_error: string | null
+          paypal_sync_status: string
+          paypal_synced_at: string | null
+          recorded_by: string | null
+          sale_transaction_id: string | null
+          source: string
+          status: string
+          tracking_number: string | null
+          tracking_url: string | null
+        }
+        Insert: {
+          booking_id?: string | null
+          carrier?: string | null
+          created_at?: string
+          description?: string | null
+          estimated_delivery_at?: string | null
+          event_at?: string
+          fulfillment_session_id?: string | null
+          id?: string
+          paypal_debug_id?: string | null
+          paypal_sync_error?: string | null
+          paypal_sync_status?: string
+          paypal_synced_at?: string | null
+          recorded_by?: string | null
+          sale_transaction_id?: string | null
+          source?: string
+          status?: string
+          tracking_number?: string | null
+          tracking_url?: string | null
+        }
+        Update: {
+          booking_id?: string | null
+          carrier?: string | null
+          created_at?: string
+          description?: string | null
+          estimated_delivery_at?: string | null
+          event_at?: string
+          fulfillment_session_id?: string | null
+          id?: string
+          paypal_debug_id?: string | null
+          paypal_sync_error?: string | null
+          paypal_sync_status?: string
+          paypal_synced_at?: string | null
+          recorded_by?: string | null
+          sale_transaction_id?: string | null
+          source?: string
+          status?: string
+          tracking_number?: string | null
+          tracking_url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shipment_tracking_events_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "booking_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shipment_tracking_events_fulfillment_session_id_fkey"
+            columns: ["fulfillment_session_id"]
+            isOneToOne: false
+            referencedRelation: "fulfillment_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shipment_tracking_events_sale_transaction_id_fkey"
+            columns: ["sale_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "sale_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      signnow_templates: {
+        Row: {
+          created_at: string
+          kind: string
+          roles: Json
+          signnow_template_id: string
+          status: string
+          version: string
+        }
+        Insert: {
+          created_at?: string
+          kind: string
+          roles?: Json
+          signnow_template_id: string
+          status?: string
+          version?: string
+        }
+        Update: {
+          created_at?: string
+          kind?: string
+          roles?: Json
+          signnow_template_id?: string
+          status?: string
+          version?: string
+        }
+        Relationships: []
+      }
       signnow_webhook_events: {
         Row: {
           created_at: string
@@ -6298,6 +10083,78 @@ export type Database = {
           id?: string
           payload?: Json
           processed_at?: string | null
+        }
+        Relationships: []
+      }
+      signup_phone_challenges: {
+        Row: {
+          attempts: number
+          code_hash: string
+          created_at: string
+          delivery_state: string
+          expires_at: string
+          id: string
+          phone_e164: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          attempts?: number
+          code_hash: string
+          created_at?: string
+          delivery_state?: string
+          expires_at?: string
+          id?: string
+          phone_e164: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          attempts?: number
+          code_hash?: string
+          created_at?: string
+          delivery_state?: string
+          expires_at?: string
+          id?: string
+          phone_e164?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      signup_phone_policy: {
+        Row: {
+          enforced_from: string | null
+          id: boolean
+          identity_enforced_from: string | null
+        }
+        Insert: {
+          enforced_from?: string | null
+          id?: boolean
+          identity_enforced_from?: string | null
+        }
+        Update: {
+          enforced_from?: string | null
+          id?: boolean
+          identity_enforced_from?: string | null
+        }
+        Relationships: []
+      }
+      signup_phone_verifications: {
+        Row: {
+          phone_e164: string
+          user_id: string
+          verified_at: string
+        }
+        Insert: {
+          phone_e164: string
+          user_id: string
+          verified_at?: string
+        }
+        Update: {
+          phone_e164?: string
+          user_id?: string
+          verified_at?: string
         }
         Relationships: []
       }
@@ -6660,6 +10517,445 @@ export type Database = {
           phone_number?: string
           user_id?: string
           verified_at?: string | null
+        }
+        Relationships: []
+      }
+      spotlight_submission_media: {
+        Row: {
+          content_type: string | null
+          created_at: string
+          file_name: string | null
+          id: string
+          kind: string
+          size_bytes: number | null
+          sort_order: number
+          storage_path: string
+          submission_id: string
+        }
+        Insert: {
+          content_type?: string | null
+          created_at?: string
+          file_name?: string | null
+          id?: string
+          kind?: string
+          size_bytes?: number | null
+          sort_order?: number
+          storage_path: string
+          submission_id: string
+        }
+        Update: {
+          content_type?: string | null
+          created_at?: string
+          file_name?: string | null
+          id?: string
+          kind?: string
+          size_bytes?: number | null
+          sort_order?: number
+          storage_path?: string
+          submission_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "spotlight_submission_media_submission_id_fkey"
+            columns: ["submission_id"]
+            isOneToOne: false
+            referencedRelation: "spotlight_submissions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      spotlight_submissions: {
+        Row: {
+          admin_notes: string | null
+          business_name: string
+          business_type: string
+          city: string
+          consent_version: string
+          contact_name: string
+          created_at: string
+          differentiator: string | null
+          email: string
+          facebook: string | null
+          id: string
+          instagram: string | null
+          linkedin: string | null
+          listing_id: string | null
+          listing_url: string | null
+          marketing_opt_in: boolean
+          offerings: string
+          other_social: string | null
+          owns_content_consent: boolean
+          owns_content_consent_at: string | null
+          phone: string | null
+          product_feedback_experience: string | null
+          product_feedback_wishlist: string | null
+          proud_of: string | null
+          publication_consent: boolean
+          publication_consent_at: string | null
+          source: string | null
+          state: string
+          status: string
+          story: string
+          tiktok: string | null
+          updated_at: string
+          user_id: string | null
+          website: string | null
+          whats_new: string | null
+          years_operating: string | null
+          youtube: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          business_name: string
+          business_type: string
+          city: string
+          consent_version?: string
+          contact_name: string
+          created_at?: string
+          differentiator?: string | null
+          email: string
+          facebook?: string | null
+          id?: string
+          instagram?: string | null
+          linkedin?: string | null
+          listing_id?: string | null
+          listing_url?: string | null
+          marketing_opt_in?: boolean
+          offerings: string
+          other_social?: string | null
+          owns_content_consent?: boolean
+          owns_content_consent_at?: string | null
+          phone?: string | null
+          product_feedback_experience?: string | null
+          product_feedback_wishlist?: string | null
+          proud_of?: string | null
+          publication_consent?: boolean
+          publication_consent_at?: string | null
+          source?: string | null
+          state: string
+          status?: string
+          story: string
+          tiktok?: string | null
+          updated_at?: string
+          user_id?: string | null
+          website?: string | null
+          whats_new?: string | null
+          years_operating?: string | null
+          youtube?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          business_name?: string
+          business_type?: string
+          city?: string
+          consent_version?: string
+          contact_name?: string
+          created_at?: string
+          differentiator?: string | null
+          email?: string
+          facebook?: string | null
+          id?: string
+          instagram?: string | null
+          linkedin?: string | null
+          listing_id?: string | null
+          listing_url?: string | null
+          marketing_opt_in?: boolean
+          offerings?: string
+          other_social?: string | null
+          owns_content_consent?: boolean
+          owns_content_consent_at?: string | null
+          phone?: string | null
+          product_feedback_experience?: string | null
+          product_feedback_wishlist?: string | null
+          proud_of?: string | null
+          publication_consent?: boolean
+          publication_consent_at?: string | null
+          source?: string | null
+          state?: string
+          status?: string
+          story?: string
+          tiktok?: string | null
+          updated_at?: string
+          user_id?: string | null
+          website?: string | null
+          whats_new?: string | null
+          years_operating?: string | null
+          youtube?: string | null
+        }
+        Relationships: []
+      }
+      square_billing_attempts: {
+        Row: {
+          amount_cents: number
+          billing_interval: string | null
+          card_id: string | null
+          consent_id: string | null
+          created_at: string
+          currency: string
+          customer_id: string | null
+          environment: string
+          id: string
+          kind: string
+          listing_id: string | null
+          paid_through: string | null
+          payment_id: string | null
+          product_id: string
+          purchase_id: string | null
+          status: string
+          subscription_id: string | null
+          tax_cents: number
+          tier: string | null
+          updated_at: string
+          user_id: string
+          variation_id: string | null
+        }
+        Insert: {
+          amount_cents: number
+          billing_interval?: string | null
+          card_id?: string | null
+          consent_id?: string | null
+          created_at?: string
+          currency: string
+          customer_id?: string | null
+          environment: string
+          id?: string
+          kind: string
+          listing_id?: string | null
+          paid_through?: string | null
+          payment_id?: string | null
+          product_id: string
+          purchase_id?: string | null
+          status?: string
+          subscription_id?: string | null
+          tax_cents?: number
+          tier?: string | null
+          updated_at?: string
+          user_id: string
+          variation_id?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          billing_interval?: string | null
+          card_id?: string | null
+          consent_id?: string | null
+          created_at?: string
+          currency?: string
+          customer_id?: string | null
+          environment?: string
+          id?: string
+          kind?: string
+          listing_id?: string | null
+          paid_through?: string | null
+          payment_id?: string | null
+          product_id?: string
+          purchase_id?: string | null
+          status?: string
+          subscription_id?: string | null
+          tax_cents?: number
+          tier?: string | null
+          updated_at?: string
+          user_id?: string
+          variation_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "square_billing_attempts_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "square_billing_attempts_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "square_billing_attempts_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "monetization_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "square_billing_attempts_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "monetization_pending_reconciliation"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "square_billing_attempts_purchase_id_fkey"
+            columns: ["purchase_id"]
+            isOneToOne: false
+            referencedRelation: "monetization_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      square_billing_plans: {
+        Row: {
+          billing_interval: string
+          currency: string
+          environment: string
+          price_cents: number
+          product_id: string
+          variation_id: string
+        }
+        Insert: {
+          billing_interval: string
+          currency?: string
+          environment: string
+          price_cents: number
+          product_id: string
+          variation_id: string
+        }
+        Update: {
+          billing_interval?: string
+          currency?: string
+          environment?: string
+          price_cents?: number
+          product_id?: string
+          variation_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "square_billing_plans_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "monetization_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      square_oauth_states: {
+        Row: {
+          created_at: string
+          environment: string
+          expires_at: string
+          return_path: string | null
+          state: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          environment: string
+          expires_at?: string
+          return_path?: string | null
+          state: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          environment?: string
+          expires_at?: string
+          return_path?: string | null
+          state?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      square_seller_accounts: {
+        Row: {
+          access_token_encrypted: string
+          business_name: string | null
+          connected_at: string
+          created_at: string
+          currency: string
+          environment: string
+          id: string
+          last_error: string | null
+          location_id: string | null
+          location_name: string | null
+          merchant_id: string
+          refresh_token_encrypted: string | null
+          refreshed_at: string | null
+          revoked_at: string | null
+          scopes: string[]
+          status: string
+          token_expires_at: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          access_token_encrypted: string
+          business_name?: string | null
+          connected_at?: string
+          created_at?: string
+          currency?: string
+          environment: string
+          id?: string
+          last_error?: string | null
+          location_id?: string | null
+          location_name?: string | null
+          merchant_id: string
+          refresh_token_encrypted?: string | null
+          refreshed_at?: string | null
+          revoked_at?: string | null
+          scopes?: string[]
+          status?: string
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          access_token_encrypted?: string
+          business_name?: string | null
+          connected_at?: string
+          created_at?: string
+          currency?: string
+          environment?: string
+          id?: string
+          last_error?: string | null
+          location_id?: string | null
+          location_name?: string | null
+          merchant_id?: string
+          refresh_token_encrypted?: string | null
+          refreshed_at?: string | null
+          revoked_at?: string | null
+          scopes?: string[]
+          status?: string
+          token_expires_at?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      square_webhook_events: {
+        Row: {
+          error: string | null
+          event_id: string
+          event_type: string
+          merchant_id: string | null
+          object_id: string | null
+          outcome: string | null
+          processed_at: string | null
+          received_at: string
+        }
+        Insert: {
+          error?: string | null
+          event_id: string
+          event_type: string
+          merchant_id?: string | null
+          object_id?: string | null
+          outcome?: string | null
+          processed_at?: string | null
+          received_at?: string
+        }
+        Update: {
+          error?: string | null
+          event_id?: string
+          event_type?: string
+          merchant_id?: string | null
+          object_id?: string | null
+          outcome?: string | null
+          processed_at?: string | null
+          received_at?: string
         }
         Relationships: []
       }
@@ -7065,6 +11361,7 @@ export type Database = {
           id: string
           metadata: Json | null
           reason: string
+          scope: string
         }
         Insert: {
           created_at?: string
@@ -7072,6 +11369,7 @@ export type Database = {
           id?: string
           metadata?: Json | null
           reason: string
+          scope?: string
         }
         Update: {
           created_at?: string
@@ -7079,8 +11377,92 @@ export type Database = {
           id?: string
           metadata?: Json | null
           reason?: string
+          scope?: string
         }
         Relationships: []
+      }
+      transaction_evidence_events: {
+        Row: {
+          actor_id: string | null
+          actor_label: string | null
+          actor_role: string | null
+          booking_id: string | null
+          created_at: string
+          detail: string | null
+          event_type: string
+          fulfillment_session_id: string | null
+          handoff_session_id: string | null
+          id: string
+          metadata: Json
+          occurred_at: string
+          sale_transaction_id: string | null
+          status: string | null
+          title: string
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_label?: string | null
+          actor_role?: string | null
+          booking_id?: string | null
+          created_at?: string
+          detail?: string | null
+          event_type: string
+          fulfillment_session_id?: string | null
+          handoff_session_id?: string | null
+          id?: string
+          metadata?: Json
+          occurred_at?: string
+          sale_transaction_id?: string | null
+          status?: string | null
+          title: string
+        }
+        Update: {
+          actor_id?: string | null
+          actor_label?: string | null
+          actor_role?: string | null
+          booking_id?: string | null
+          created_at?: string
+          detail?: string | null
+          event_type?: string
+          fulfillment_session_id?: string | null
+          handoff_session_id?: string | null
+          id?: string
+          metadata?: Json
+          occurred_at?: string
+          sale_transaction_id?: string | null
+          status?: string | null
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transaction_evidence_events_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "booking_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transaction_evidence_events_fulfillment_session_id_fkey"
+            columns: ["fulfillment_session_id"]
+            isOneToOne: false
+            referencedRelation: "fulfillment_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transaction_evidence_events_handoff_session_id_fkey"
+            columns: ["handoff_session_id"]
+            isOneToOne: false
+            referencedRelation: "handoff_sessions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transaction_evidence_events_sale_transaction_id_fkey"
+            columns: ["sale_transaction_id"]
+            isOneToOne: false
+            referencedRelation: "sale_transactions"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       transaction_terms: {
         Row: {
@@ -7336,6 +11718,449 @@ export type Database = {
         }
         Relationships: []
       }
+      vendi_listing_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          listing_id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id: string
+          listing_id: string
+          role: string
+          user_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          listing_id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vendi_listing_messages_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vendi_listing_messages_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_walkthrough_consents: {
+        Row: {
+          accepted_at: string
+          camera_permission_granted: boolean
+          consent_type: string
+          consent_version: string
+          created_at: string
+          id: string
+          location_permission_granted: boolean
+          location_permission_required: boolean
+          meeting_type: string | null
+          microphone_permission_granted: boolean
+          recording_consent_granted: boolean
+          recording_consent_version: string | null
+          route: string | null
+          source: string
+          user_agent: string | null
+          user_id: string
+          walkthrough_id: string | null
+        }
+        Insert: {
+          accepted_at?: string
+          camera_permission_granted?: boolean
+          consent_type: string
+          consent_version: string
+          created_at?: string
+          id?: string
+          location_permission_granted?: boolean
+          location_permission_required?: boolean
+          meeting_type?: string | null
+          microphone_permission_granted?: boolean
+          recording_consent_granted?: boolean
+          recording_consent_version?: string | null
+          route?: string | null
+          source?: string
+          user_agent?: string | null
+          user_id: string
+          walkthrough_id?: string | null
+        }
+        Update: {
+          accepted_at?: string
+          camera_permission_granted?: boolean
+          consent_type?: string
+          consent_version?: string
+          created_at?: string
+          id?: string
+          location_permission_granted?: boolean
+          location_permission_required?: boolean
+          meeting_type?: string | null
+          microphone_permission_granted?: boolean
+          recording_consent_granted?: boolean
+          recording_consent_version?: string | null
+          route?: string | null
+          source?: string
+          user_agent?: string | null
+          user_id?: string
+          walkthrough_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_walkthrough_consents_walkthrough_id_fkey"
+            columns: ["walkthrough_id"]
+            isOneToOne: false
+            referencedRelation: "video_walkthroughs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_walkthrough_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json
+          walkthrough_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json
+          walkthrough_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json
+          walkthrough_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_walkthrough_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_walkthrough_events_walkthrough_id_fkey"
+            columns: ["walkthrough_id"]
+            isOneToOne: false
+            referencedRelation: "video_walkthroughs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_walkthrough_participants: {
+        Row: {
+          created_at: string
+          first_joined_at: string
+          id: string
+          is_present: boolean
+          last_joined_at: string
+          last_left_at: string | null
+          last_participant_id: string | null
+          meeting_session_id: string | null
+          role: string
+          room_name: string | null
+          total_join_count: number
+          updated_at: string
+          user_id: string
+          walkthrough_id: string
+        }
+        Insert: {
+          created_at?: string
+          first_joined_at?: string
+          id?: string
+          is_present?: boolean
+          last_joined_at?: string
+          last_left_at?: string | null
+          last_participant_id?: string | null
+          meeting_session_id?: string | null
+          role: string
+          room_name?: string | null
+          total_join_count?: number
+          updated_at?: string
+          user_id: string
+          walkthrough_id: string
+        }
+        Update: {
+          created_at?: string
+          first_joined_at?: string
+          id?: string
+          is_present?: boolean
+          last_joined_at?: string
+          last_left_at?: string | null
+          last_participant_id?: string | null
+          meeting_session_id?: string | null
+          role?: string
+          room_name?: string | null
+          total_join_count?: number
+          updated_at?: string
+          user_id?: string
+          walkthrough_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_walkthrough_participants_walkthrough_id_fkey"
+            columns: ["walkthrough_id"]
+            isOneToOne: false
+            referencedRelation: "video_walkthroughs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_walkthrough_provider_rooms: {
+        Row: {
+          created_at: string
+          disabled_at: string | null
+          expires_at: string
+          join_hook_configured: boolean
+          meeting_type: string
+          nbf_at: string | null
+          provider: string
+          room_name: string
+          room_profile_version: string | null
+          room_url: string | null
+          scheduled_ends_at: string | null
+          scheduled_starts_at: string | null
+          updated_at: string
+          walkthrough_id: string
+        }
+        Insert: {
+          created_at?: string
+          disabled_at?: string | null
+          expires_at: string
+          join_hook_configured?: boolean
+          meeting_type?: string
+          nbf_at?: string | null
+          provider?: string
+          room_name: string
+          room_profile_version?: string | null
+          room_url?: string | null
+          scheduled_ends_at?: string | null
+          scheduled_starts_at?: string | null
+          updated_at?: string
+          walkthrough_id: string
+        }
+        Update: {
+          created_at?: string
+          disabled_at?: string | null
+          expires_at?: string
+          join_hook_configured?: boolean
+          meeting_type?: string
+          nbf_at?: string | null
+          provider?: string
+          room_name?: string
+          room_profile_version?: string | null
+          room_url?: string | null
+          scheduled_ends_at?: string | null
+          scheduled_starts_at?: string | null
+          updated_at?: string
+          walkthrough_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_walkthrough_provider_rooms_walkthrough_id_fkey"
+            columns: ["walkthrough_id"]
+            isOneToOne: true
+            referencedRelation: "video_walkthroughs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_walkthrough_recordings: {
+        Row: {
+          created_at: string
+          duration_seconds: number | null
+          error_code: string | null
+          error_message: string | null
+          id: string
+          instance_id: string | null
+          max_duration_seconds: number | null
+          meeting_type: string
+          provider: string
+          provider_metadata: Json
+          provider_recording_id: string | null
+          ready_at: string | null
+          room_name: string
+          started_at: string | null
+          status: string
+          stopped_at: string | null
+          updated_at: string
+          walkthrough_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_seconds?: number | null
+          error_code?: string | null
+          error_message?: string | null
+          id?: string
+          instance_id?: string | null
+          max_duration_seconds?: number | null
+          meeting_type?: string
+          provider?: string
+          provider_metadata?: Json
+          provider_recording_id?: string | null
+          ready_at?: string | null
+          room_name: string
+          started_at?: string | null
+          status?: string
+          stopped_at?: string | null
+          updated_at?: string
+          walkthrough_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_seconds?: number | null
+          error_code?: string | null
+          error_message?: string | null
+          id?: string
+          instance_id?: string | null
+          max_duration_seconds?: number | null
+          meeting_type?: string
+          provider?: string
+          provider_metadata?: Json
+          provider_recording_id?: string | null
+          ready_at?: string | null
+          room_name?: string
+          started_at?: string | null
+          status?: string
+          stopped_at?: string | null
+          updated_at?: string
+          walkthrough_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_walkthrough_recordings_walkthrough_id_fkey"
+            columns: ["walkthrough_id"]
+            isOneToOne: false
+            referencedRelation: "video_walkthroughs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      video_walkthroughs: {
+        Row: {
+          buyer_id: string
+          buyer_note: string | null
+          cancelled_at: string | null
+          completed_at: string | null
+          conversation_id: string | null
+          created_at: string
+          ends_at: string
+          id: string
+          listing_id: string
+          meeting_ended_at: string | null
+          meeting_started_at: string | null
+          meeting_type: string
+          provider: string
+          requested_topics: string[]
+          seller_id: string
+          starts_at: string
+          status: string
+          timezone_snapshot: string
+          updated_at: string
+        }
+        Insert: {
+          buyer_id: string
+          buyer_note?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          ends_at: string
+          id?: string
+          listing_id: string
+          meeting_ended_at?: string | null
+          meeting_started_at?: string | null
+          meeting_type?: string
+          provider?: string
+          requested_topics?: string[]
+          seller_id: string
+          starts_at: string
+          status?: string
+          timezone_snapshot: string
+          updated_at?: string
+        }
+        Update: {
+          buyer_id?: string
+          buyer_note?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          conversation_id?: string | null
+          created_at?: string
+          ends_at?: string
+          id?: string
+          listing_id?: string
+          meeting_ended_at?: string | null
+          meeting_started_at?: string | null
+          meeting_type?: string
+          provider?: string
+          requested_topics?: string[]
+          seller_id?: string
+          starts_at?: string
+          status?: string
+          timezone_snapshot?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "video_walkthroughs_buyer_id_fkey"
+            columns: ["buyer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_walkthroughs_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_walkthroughs_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_walkthroughs_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "video_walkthroughs_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       voice_agent_leads: {
         Row: {
           budget: string | null
@@ -7381,6 +12206,72 @@ export type Database = {
           session_id?: string | null
           summary?: string
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      weekly_digests: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          article_excerpt: string
+          article_image_url: string
+          article_title: string
+          article_url: string
+          broadcast_id: string | null
+          created_at: string
+          featured_listing_ids: string[]
+          id: string
+          preview_text: string
+          recipient_count: number | null
+          sent_at: string | null
+          sent_by: string | null
+          status: string
+          subject: string
+          updated_at: string
+          week_key: string
+          whats_new: Json
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          article_excerpt?: string
+          article_image_url?: string
+          article_title?: string
+          article_url?: string
+          broadcast_id?: string | null
+          created_at?: string
+          featured_listing_ids?: string[]
+          id?: string
+          preview_text?: string
+          recipient_count?: number | null
+          sent_at?: string | null
+          sent_by?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string
+          week_key: string
+          whats_new?: Json
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          article_excerpt?: string
+          article_image_url?: string
+          article_title?: string
+          article_url?: string
+          broadcast_id?: string | null
+          created_at?: string
+          featured_listing_ids?: string[]
+          id?: string
+          preview_text?: string
+          recipient_count?: number | null
+          sent_at?: string | null
+          sent_by?: string | null
+          status?: string
+          subject?: string
+          updated_at?: string
+          week_key?: string
+          whats_new?: Json
         }
         Relationships: []
       }
@@ -7481,6 +12372,35 @@ export type Database = {
         }
         Relationships: []
       }
+      campus_partner_summary: {
+        Row: {
+          academic_year: string | null
+          code: string | null
+          expires_at: string | null
+          id: string | null
+          is_active: boolean | null
+          net_platform_revenue_cents: number | null
+          partner_name: string | null
+          platform_fee_cents: number | null
+          purchase_credit_cents: number | null
+          purchase_gmv_cents: number | null
+          purchase_min_cents: number | null
+          purchase_redemptions: number | null
+          purchase_uses_per_user: number | null
+          redemptions: number | null
+          refunded_cents: number | null
+          refunded_transactions: number | null
+          rental_cap_cents: number | null
+          rental_gmv_cents: number | null
+          rental_percent: number | null
+          rental_redemptions: number | null
+          rental_uses_per_user: number | null
+          starts_at: string | null
+          total_credit_cents: number | null
+          unique_users: number | null
+        }
+        Relationships: []
+      }
       monetization_pending_reconciliation: {
         Row: {
           age: string | null
@@ -7550,6 +12470,62 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "monetization_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      payment_attempts_safe: {
+        Row: {
+          attempt_number: number | null
+          buyer_id: string | null
+          completed_at: string | null
+          created_at: string | null
+          failure_category: string | null
+          failure_code: string | null
+          failure_message_safe: string | null
+          id: string | null
+          payment_record_id: string | null
+          provider: Database["public"]["Enums"]["payment_provider"] | null
+          provider_order_id: string | null
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          attempt_number?: number | null
+          buyer_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          failure_category?: string | null
+          failure_code?: string | null
+          failure_message_safe?: string | null
+          id?: string | null
+          payment_record_id?: string | null
+          provider?: Database["public"]["Enums"]["payment_provider"] | null
+          provider_order_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          attempt_number?: number | null
+          buyer_id?: string | null
+          completed_at?: string | null
+          created_at?: string | null
+          failure_category?: string | null
+          failure_code?: string | null
+          failure_message_safe?: string | null
+          id?: string | null
+          payment_record_id?: string | null
+          provider?: Database["public"]["Enums"]["payment_provider"] | null
+          provider_order_id?: string | null
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_attempts_payment_record_id_fkey"
+            columns: ["payment_record_id"]
+            isOneToOne: false
+            referencedRelation: "payment_records"
             referencedColumns: ["id"]
           },
         ]
@@ -7817,6 +12793,7 @@ export type Database = {
       }
     }
     Functions: {
+      account_access_active: { Args: never; Returns: boolean }
       acknowledge_transaction_terms: {
         Args: { _ip: unknown; _terms_id: string; _ua: string }
         Returns: undefined
@@ -7826,6 +12803,8 @@ export type Database = {
         Returns: {
           accept_card_payment: boolean | null
           accept_cash_payment: boolean | null
+          accept_paypal_checkout: boolean
+          accepts_offers: boolean
           access_instructions: string | null
           address: string | null
           amenities: string[] | null
@@ -7835,11 +12814,15 @@ export type Database = {
           buffer_time_mins: number | null
           category: Database["public"]["Enums"]["listing_category"]
           city: string | null
+          condition: string | null
+          coupler_type: string | null
           cover_image_url: string | null
           created_at: string
+          creation_session_key: string | null
           daily_enabled: boolean | null
           deleted_at: string | null
           delivery_fee: number | null
+          delivery_fee_type: string
           delivery_instructions: string | null
           delivery_radius_miles: number | null
           deposit_amount: number | null
@@ -7850,10 +12833,13 @@ export type Database = {
           featured_source: string | null
           freight_category: string | null
           freight_payer: string | null
+          fuel_type: string | null
           fulfillment_type: Database["public"]["Enums"]["fulfillment_type"]
           guest_draft_token: string | null
+          has_lien: string | null
           height_inches: number | null
           highlights: string[] | null
+          hitch_ball_size: string | null
           host_id: string | null
           hourly_enabled: boolean | null
           hourly_schedule: Json | null
@@ -7861,43 +12847,67 @@ export type Database = {
           hours_of_access: string | null
           id: string
           image_urls: string[] | null
+          included_items: string | null
           instant_book: boolean | null
+          kitchen_build_year: number | null
+          kitchen_build_year_unknown: boolean
+          known_problems: Json
           latitude: number | null
+          legacy_pickup_contact_text: string | null
           length_inches: number | null
           location_notes: string | null
           longitude: number | null
+          make: string | null
           max_hours: number | null
+          mileage: number | null
           min_hours: number | null
           min_notice_hours: number | null
+          min_offer_amount: number | null
           mode: Database["public"]["Enums"]["listing_mode"]
+          model: string | null
           moderation_status: string
+          no_known_problems: boolean
           operating_hours_end: string | null
           operating_hours_start: string | null
+          operational_status: string | null
           pending_featured_payment: Json | null
+          photos_exclusions_answered: boolean
+          photos_exclusions_note: string | null
           pickup_instructions: string | null
           pickup_location_text: string | null
           postal_code: string | null
           price_daily: number | null
           price_hourly: number | null
           price_monthly: number | null
+          price_negotiable: boolean
           price_sale: number | null
           price_weekly: number | null
           proof_notary_enabled: boolean | null
           published_at: string | null
           rental_buffer_days: number | null
           rental_min_days: number | null
+          renter_provides_tow_vehicle: boolean | null
+          return_instructions: string | null
           slot_names: string[] | null
+          source_listing_id: string | null
+          space_sqft: number | null
           state: string | null
           status: Database["public"]["Enums"]["listing_status"]
           subcategory: string | null
           title: string
+          title_status: string | null
           total_slots: number | null
+          tow_vehicle_requirement: string | null
+          trailer_plug_type: string | null
+          unlisted: boolean
           updated_at: string
+          vendi_session_key: string | null
           vendibook_freight_enabled: boolean | null
           video_urls: string[] | null
           view_count: number | null
           weight_lbs: number | null
           width_inches: number | null
+          year_built: number | null
         }
         SetofOptions: {
           from: "*"
@@ -7936,6 +12946,65 @@ export type Database = {
         Args: { p_end_date: string; p_hourly_slots: Json }
         Returns: string
       }
+      campus_partner_report: {
+        Args: { p_from?: string; p_to?: string }
+        Returns: {
+          academic_year: string
+          code: string
+          credits_cents: number
+          expires_at: string
+          id: string
+          is_active: boolean
+          net_platform_revenue_cents: number
+          partner_name: string
+          partner_state: string
+          platform_fee_cents: number
+          purchase_credit_cents: number
+          purchase_gmv_cents: number
+          purchase_min_cents: number
+          purchase_redemptions: number
+          purchase_uses_per_user: number
+          refunded_cents: number
+          refunded_transactions: number
+          rental_cap_cents: number
+          rental_gmv_cents: number
+          rental_percent: number
+          rental_redemptions: number
+          rental_uses_per_user: number
+          starts_at: string
+          unique_users: number
+        }[]
+      }
+      cancel_video_walkthrough: {
+        Args: { _walkthrough_id: string }
+        Returns: {
+          buyer_id: string
+          buyer_note: string | null
+          cancelled_at: string | null
+          completed_at: string | null
+          conversation_id: string | null
+          created_at: string
+          ends_at: string
+          id: string
+          listing_id: string
+          meeting_ended_at: string | null
+          meeting_started_at: string | null
+          meeting_type: string
+          provider: string
+          requested_topics: string[]
+          seller_id: string
+          starts_at: string
+          status: string
+          timezone_snapshot: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "video_walkthroughs"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       check_booking_availability: {
         Args: {
           p_end_date: string
@@ -7948,9 +13017,51 @@ export type Database = {
         }
         Returns: Json
       }
+      claim_rental_capture: { Args: { p_record: string }; Returns: undefined }
+      claim_seller_verification_retry: {
+        Args: { _user_id: string }
+        Returns: boolean
+      }
+      close_my_account: { Args: { confirmation: string }; Returns: Json }
       count_purchase_referrals_this_month: {
         Args: { p_referrer_id: string }
         Returns: number
+      }
+      create_video_walkthrough: {
+        Args: {
+          _buyer_note?: string
+          _conversation_id?: string
+          _listing_id: string
+          _requested_topics?: string[]
+          _starts_at: string
+        }
+        Returns: {
+          buyer_id: string
+          buyer_note: string | null
+          cancelled_at: string | null
+          completed_at: string | null
+          conversation_id: string | null
+          created_at: string
+          ends_at: string
+          id: string
+          listing_id: string
+          meeting_ended_at: string | null
+          meeting_started_at: string | null
+          meeting_type: string
+          provider: string
+          requested_topics: string[]
+          seller_id: string
+          starts_at: string
+          status: string
+          timezone_snapshot: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "video_walkthroughs"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       current_legal_document: {
         Args: { _document_type: string }
@@ -7977,18 +13088,23 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      delete_email: {
-        Args: { message_id: number; queue_name: string }
-        Returns: boolean
-      }
-      email_queue_dispatch: { Args: never; Returns: undefined }
-      enqueue_email: {
-        Args: { payload: Json; queue_name: string }
-        Returns: number
-      }
+      dispatch_native_push_jobs: { Args: never; Returns: undefined }
       format_public_name: {
         Args: { _fallback?: string; _first: string; _last: string }
         Returns: string
+      }
+      freeze_payable_for_case: {
+        Args: { _case_id: string; _payable_id: string }
+        Returns: undefined
+      }
+      fulfill_square_addon: {
+        Args: {
+          p_amount: number
+          p_attempt: string
+          p_currency: string
+          p_payment: string
+        }
+        Returns: undefined
       }
       get_all_asset_requests: {
         Args: never
@@ -8048,6 +13164,19 @@ export type Database = {
           rating: number
         }[]
       }
+      get_hero_listings: {
+        Args: { p_limit?: number }
+        Returns: {
+          category: string
+          city: string
+          cover_image_url: string
+          id: string
+          mode: string
+          priority: number
+          state: string
+          title: string
+        }[]
+      }
       get_host_avg_response_time: {
         Args: { host_user_id: string }
         Returns: string
@@ -8057,6 +13186,19 @@ export type Database = {
         Returns: {
           id: string
           identity_verified: boolean
+        }[]
+      }
+      get_listing_busy_slots: {
+        Args: { _listing_id: string }
+        Returns: {
+          end_date: string
+          end_time: string
+          hourly_slots: Json
+          is_hourly_booking: boolean
+          slot_number: number
+          start_date: string
+          start_time: string
+          status: string
         }[]
       }
       get_listing_favorite_count: {
@@ -8078,6 +13220,19 @@ export type Database = {
           updated_at: string
         }[]
       }
+      get_my_seller_verification: { Args: never; Returns: Json }
+      get_my_square_connection: {
+        Args: never
+        Returns: {
+          business_name: string
+          connected_at: string
+          environment: string
+          location_name: string
+          merchant_id: string
+          status: string
+        }[]
+      }
+      get_public_feature_flag: { Args: { flag_key: string }; Returns: boolean }
       get_referral_leaderboard: {
         Args: { p_limit?: number }
         Returns: {
@@ -8087,6 +13242,10 @@ export type Database = {
           rank: number
           referrer_id: string
         }[]
+      }
+      get_removed_conversation_notice: {
+        Args: { _conversation_id: string }
+        Returns: string
       }
       get_safe_host_profile: {
         Args: { host_user_id: string }
@@ -8114,6 +13273,15 @@ export type Database = {
         Args: { _user_id: string }
         Returns: Database["public"]["Enums"]["app_role"][]
       }
+      get_video_walkthrough_slots: {
+        Args: { _from: string; _listing_id: string; _to: string }
+        Returns: {
+          ends_at: string
+          seller_timezone: string
+          starts_at: string
+        }[]
+      }
+      has_permit_path_plus: { Args: { _user_id: string }; Returns: boolean }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -8122,11 +13290,21 @@ export type Database = {
         Returns: boolean
       }
       host_active_listing_limit: { Args: { _user_id: string }; Returns: number }
+      host_square_ready: { Args: { _host_id: string }; Returns: boolean }
       increment_referral_counter: {
         Args: { p_owner_id: string }
         Returns: undefined
       }
+      internal_cron_secret: { Args: never; Returns: string }
+      invoke_edge_function: {
+        Args: { _body?: Json; _fn: string }
+        Returns: number
+      }
       is_admin: { Args: { user_id: string }; Returns: boolean }
+      is_dispute_case_participant: {
+        Args: { _case_id: string; _user_id: string }
+        Returns: boolean
+      }
       is_document_participant: {
         Args: {
           _doc: Database["public"]["Tables"]["documents"]["Row"]
@@ -8135,9 +13313,18 @@ export type Database = {
         Returns: boolean
       }
       is_fast_responder: { Args: { host_user_id: string }; Returns: boolean }
+      is_handoff_participant: {
+        Args: { _booking: string; _sale: string }
+        Returns: boolean
+      }
       is_host_account_active: { Args: { _host_id: string }; Returns: boolean }
       is_listing_publicly_visible: {
         Args: { _listing_id: string }
+        Returns: boolean
+      }
+      is_privileged_financial_writer: { Args: never; Returns: boolean }
+      is_seller_identity_verified: {
+        Args: { _user_id: string }
         Returns: boolean
       }
       list_payable_referrers: {
@@ -8148,7 +13335,19 @@ export type Database = {
           total_owed: number
         }[]
       }
+      listing_committed_sale: {
+        Args: { _exclude_sale?: string; _listing_id: string }
+        Returns: string
+      }
       listing_purchase_state: { Args: { _listing_id: string }; Returns: Json }
+      listing_sale_committed: {
+        Args: { _listing_id: string }
+        Returns: boolean
+      }
+      listing_video_walkthrough_enabled: {
+        Args: { _listing_id: string }
+        Returns: boolean
+      }
       log_referral_status_change:
         | {
             Args: {
@@ -8226,12 +13425,28 @@ export type Database = {
           isSetofReturn: false
         }
       }
-      move_to_dlq: {
+      message_account_active: { Args: { actor?: string }; Returns: boolean }
+      message_contact_info_problem: { Args: { body: string }; Returns: string }
+      message_content_problem: {
+        Args: { body: string; is_new: boolean }
+        Returns: string
+      }
+      message_normalize: { Args: { value: string }; Returns: string }
+      message_recipient: {
+        Args: { actor: string; kind: string; thread: string }
+        Returns: string
+      }
+      message_reserved_name: { Args: { value: string }; Returns: boolean }
+      message_safety_context: {
+        Args: { kind: string; thread: string }
+        Returns: Json
+      }
+      partner_code_active_uses: {
         Args: {
-          dlq_name: string
-          message_id: number
-          payload: Json
-          source_queue: string
+          p_code_id: string
+          p_exclude_record?: string
+          p_kind: string
+          p_user: string
         }
         Returns: number
       }
@@ -8240,14 +13455,7 @@ export type Database = {
         Returns: string
       }
       purge_expired_permit_soft_deletes: { Args: never; Returns: undefined }
-      read_email_batch: {
-        Args: { batch_size: number; queue_name: string; vt: number }
-        Returns: {
-          message: Json
-          msg_id: number
-          read_ct: number
-        }[]
-      }
+      purge_paypal_api_logs: { Args: never; Returns: number }
       record_user_consent: {
         Args: {
           _acceptance_text: string
@@ -8289,6 +13497,18 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      refresh_sale_release_requirements: {
+        Args: { _payment_record_id: string }
+        Returns: undefined
+      }
+      release_seller_verification_retry: {
+        Args: { _user_id: string }
+        Returns: undefined
+      }
+      remove_confirmed_spam_conversation: {
+        Args: { _conversation_id: string; _sender_id: string }
+        Returns: undefined
       }
       rename_permit_document: {
         Args: { p_document_id: string; p_file_name: string }
@@ -8334,6 +13554,62 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      rental_checkout_fingerprint: { Args: { b: Json }; Returns: string }
+      rental_period_subtotal: {
+        Args: { daily: number; days: number; monthly: number; weekly: number }
+        Returns: number
+      }
+      report_message_thread: {
+        Args: { kind: string; reason: string; thread: string }
+        Returns: undefined
+      }
+      reschedule_video_walkthrough: {
+        Args: { _starts_at: string; _walkthrough_id: string }
+        Returns: {
+          buyer_id: string
+          buyer_note: string | null
+          cancelled_at: string | null
+          completed_at: string | null
+          conversation_id: string | null
+          created_at: string
+          ends_at: string
+          id: string
+          listing_id: string
+          meeting_ended_at: string | null
+          meeting_started_at: string | null
+          meeting_type: string
+          provider: string
+          requested_topics: string[]
+          seller_id: string
+          starts_at: string
+          status: string
+          timezone_snapshot: string
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "video_walkthroughs"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      reserve_partner_redemption: {
+        Args: {
+          p_base_cents: number
+          p_code_id: string
+          p_credit_cents: number
+          p_gross_cents: number
+          p_kind: string
+          p_payment_record: string
+          p_platform_fee_cents: number
+          p_user: string
+        }
+        Returns: string
+      }
+      reserve_signup_phone_code: {
+        Args: { actor: string; hashed_code: string; phone: string }
+        Returns: string
+      }
       restore_permit_document: {
         Args: { p_document_id: string }
         Returns: {
@@ -8378,10 +13654,34 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      review_message_safety: {
+        Args: { action: string; event_id: string }
+        Returns: undefined
+      }
       revoke_user_consent: {
         Args: { _consent_id: string; _reason: string }
         Returns: undefined
       }
+      seller_identity_badges: {
+        Args: { _user_ids: string[] }
+        Returns: {
+          user_id: string
+          verified_at: string
+        }[]
+      }
+      seller_payment_readiness: { Args: { _seller_id: string }; Returns: Json }
+      seller_paypal_ready: { Args: { _user_id: string }; Returns: boolean }
+      send_marketplace_message: {
+        Args: { attachment?: Json; body: string; kind: string; thread: string }
+        Returns: Json
+      }
+      set_message_block: {
+        Args: { blocked: boolean; kind: string; thread: string }
+        Returns: undefined
+      }
+      signup_identity_required: { Args: { actor?: string }; Returns: boolean }
+      signup_phone_required: { Args: { actor?: string }; Returns: boolean }
+      signup_phone_status: { Args: never; Returns: Json }
       soft_delete_permit_document: {
         Args: { p_document_id: string }
         Returns: {
@@ -8426,6 +13726,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      strip_contact_details: {
+        Args: { t: string }
+        Returns: Record<string, unknown>
+      }
       submit_feedback_by_token: {
         Args: {
           _business_type: string
@@ -8436,6 +13740,25 @@ export type Database = {
           _token: string
         }
         Returns: string
+      }
+      submit_general_feedback: {
+        Args: {
+          _can_contact?: boolean
+          _can_share?: boolean
+          _category?: string
+          _email?: string
+          _message: string
+          _name?: string
+          _page?: string
+          _rating: number
+        }
+        Returns: string
+      }
+      sweep_non_public_listing_artifacts: { Args: never; Returns: Json }
+      test_native_push: { Args: never; Returns: undefined }
+      unfreeze_payable_for_case: {
+        Args: { _payable_id: string }
+        Returns: undefined
       }
       update_asset_request_status: {
         Args: {
@@ -8491,11 +13814,16 @@ export type Database = {
         Returns: {
           amount: number
           bill_of_sale_completed_at: string | null
+          buyer_address1: string | null
+          buyer_address2: string | null
+          buyer_city: string | null
           buyer_confirmed_at: string | null
           buyer_email: string | null
           buyer_id: string
           buyer_name: string | null
           buyer_phone: string | null
+          buyer_state: string | null
+          buyer_zip: string | null
           carrier: string | null
           checkout_session_id: string | null
           created_at: string
@@ -8504,6 +13832,9 @@ export type Database = {
           delivery_fee: number | null
           delivery_instructions: string | null
           estimated_delivery_date: string | null
+          estimated_delivery_end: string | null
+          fee_locked_at: string | null
+          fee_rate_pct: number | null
           freight_checkout_session_id: string | null
           freight_cost: number | null
           freight_paid_at: string | null
@@ -8517,8 +13848,11 @@ export type Database = {
           message: string | null
           payment_intent_id: string | null
           payment_provider: Database["public"]["Enums"]["payment_provider"]
+          payment_strategy: string | null
           payout_completed_at: string | null
           platform_fee: number
+          pro_discount: number
+          pro_fee_applied: boolean
           promo_code_id: string | null
           promo_discount: number | null
           referral_code: string | null
@@ -8529,6 +13863,10 @@ export type Database = {
           shipping_notes: string | null
           shipping_status: string | null
           status: string
+          tax_amount: number
+          tax_jurisdiction: string | null
+          tax_rate_pct: number | null
+          tax_source: string | null
           terms_id: string | null
           tracking_number: string | null
           tracking_url: string | null
@@ -8546,6 +13884,14 @@ export type Database = {
         Args: { _min_tier: string; _user_id: string }
         Returns: boolean
       }
+      vendi_save_required_documents: {
+        Args: {
+          p_documents: Database["public"]["Enums"]["document_type"][]
+          p_listing_id: string
+        }
+        Returns: undefined
+      }
+      verify_signup_phone_code: { Args: { code: string }; Returns: Json }
     }
     Enums: {
       app_role: "host" | "shopper" | "admin"
@@ -8555,11 +13901,28 @@ export type Database = {
         | "declined"
         | "cancelled"
         | "completed"
+      concierge_order_status:
+        | "payment_required"
+        | "intake_not_started"
+        | "intake_in_progress"
+        | "information_needed"
+        | "listing_being_created"
+        | "ready_for_seller_review"
+        | "revision_requested"
+        | "approved_for_publication"
+        | "published"
+        | "canceled"
+        | "refunded"
       document_deadline_type:
         | "before_booking_request"
         | "before_approval"
         | "after_approval_deadline"
-      document_status: "pending" | "approved" | "rejected"
+      document_status:
+        | "pending"
+        | "approved"
+        | "rejected"
+        | "under_review"
+        | "waived"
       document_type:
         | "drivers_license"
         | "business_license"
@@ -8571,6 +13934,7 @@ export type Database = {
         | "certificate_of_insurance"
         | "work_history_proof"
         | "prior_experience_proof"
+        | "custom_requirement"
       fulfillment_type: "pickup" | "delivery" | "both" | "on_site"
       listing_category:
         | "food_truck"
@@ -8587,6 +13951,19 @@ export type Database = {
         | "motivated_seller"
         | "email_campaign"
         | "social_feature"
+      listing_readiness_level: "published" | "buyer_ready" | "highly_detailed"
+      listing_service_order_status:
+        | "awaiting_payment"
+        | "paid"
+        | "intake"
+        | "in_progress"
+        | "questions"
+        | "revision"
+        | "seller_review"
+        | "approved"
+        | "published"
+        | "cancelled"
+        | "refunded"
       listing_status: "draft" | "published" | "paused" | "archived"
       marketing_event_type:
         | "delivered"
@@ -8628,7 +14005,18 @@ export type Database = {
         | "refunded"
         | "failed"
         | "cancelled"
-      payment_provider: "stripe" | "paypal" | "manual" | "dwolla_future"
+      payment_provider:
+        | "stripe"
+        | "paypal"
+        | "manual"
+        | "dwolla_future"
+        | "square"
+      payout_method: "paypal" | "venmo" | "cash_app" | "ach"
+      payout_preference_status:
+        | "not_set"
+        | "pending_review"
+        | "verified"
+        | "needs_attention"
       paypal_payment_status:
         | "created"
         | "approved"
@@ -8640,6 +14028,11 @@ export type Database = {
         | "partially_refunded"
         | "refunded"
         | "reversed"
+        | "authorized"
+        | "partially_captured"
+        | "authorization_voided"
+        | "authorization_expired"
+        | "deposit_paid_balance_due"
       protected_sale_handoff_mode: "pickup" | "delivery"
       protected_sale_status:
         | "initiated"
@@ -8682,12 +14075,12 @@ export type Tables<
   DefaultSchemaTableNameOrOptions extends
     | keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof (DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"] &
         DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Views"])
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -8711,11 +14104,11 @@ export type TablesInsert<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -8736,11 +14129,11 @@ export type TablesUpdate<
   DefaultSchemaTableNameOrOptions extends
     | keyof DefaultSchema["Tables"]
     | { schema: keyof DatabaseWithoutInternals },
-  TableName extends DefaultSchemaTableNameOrOptions extends {
+  TableName extends (DefaultSchemaTableNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaTableNameOrOptions["schema"]]["Tables"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaTableNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -8761,11 +14154,11 @@ export type Enums<
   DefaultSchemaEnumNameOrOptions extends
     | keyof DefaultSchema["Enums"]
     | { schema: keyof DatabaseWithoutInternals },
-  EnumName extends DefaultSchemaEnumNameOrOptions extends {
+  EnumName extends (DefaultSchemaEnumNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[DefaultSchemaEnumNameOrOptions["schema"]]["Enums"]
-    : never = never,
+    : never) = never,
 > = DefaultSchemaEnumNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -8778,11 +14171,11 @@ export type CompositeTypes<
   PublicCompositeTypeNameOrOptions extends
     | keyof DefaultSchema["CompositeTypes"]
     | { schema: keyof DatabaseWithoutInternals },
-  CompositeTypeName extends PublicCompositeTypeNameOrOptions extends {
+  CompositeTypeName extends (PublicCompositeTypeNameOrOptions extends {
     schema: keyof DatabaseWithoutInternals
   }
     ? keyof DatabaseWithoutInternals[PublicCompositeTypeNameOrOptions["schema"]]["CompositeTypes"]
-    : never = never,
+    : never) = never,
 > = PublicCompositeTypeNameOrOptions extends {
   schema: keyof DatabaseWithoutInternals
 }
@@ -8802,12 +14195,31 @@ export const Constants = {
         "cancelled",
         "completed",
       ],
+      concierge_order_status: [
+        "payment_required",
+        "intake_not_started",
+        "intake_in_progress",
+        "information_needed",
+        "listing_being_created",
+        "ready_for_seller_review",
+        "revision_requested",
+        "approved_for_publication",
+        "published",
+        "canceled",
+        "refunded",
+      ],
       document_deadline_type: [
         "before_booking_request",
         "before_approval",
         "after_approval_deadline",
       ],
-      document_status: ["pending", "approved", "rejected"],
+      document_status: [
+        "pending",
+        "approved",
+        "rejected",
+        "under_review",
+        "waived",
+      ],
       document_type: [
         "drivers_license",
         "business_license",
@@ -8819,6 +14231,7 @@ export const Constants = {
         "certificate_of_insurance",
         "work_history_proof",
         "prior_experience_proof",
+        "custom_requirement",
       ],
       fulfillment_type: ["pickup", "delivery", "both", "on_site"],
       listing_category: [
@@ -8837,6 +14250,20 @@ export const Constants = {
         "motivated_seller",
         "email_campaign",
         "social_feature",
+      ],
+      listing_readiness_level: ["published", "buyer_ready", "highly_detailed"],
+      listing_service_order_status: [
+        "awaiting_payment",
+        "paid",
+        "intake",
+        "in_progress",
+        "questions",
+        "revision",
+        "seller_review",
+        "approved",
+        "published",
+        "cancelled",
+        "refunded",
       ],
       listing_status: ["draft", "published", "paused", "archived"],
       marketing_event_type: [
@@ -8884,7 +14311,20 @@ export const Constants = {
         "failed",
         "cancelled",
       ],
-      payment_provider: ["stripe", "paypal", "manual", "dwolla_future"],
+      payment_provider: [
+        "stripe",
+        "paypal",
+        "manual",
+        "dwolla_future",
+        "square",
+      ],
+      payout_method: ["paypal", "venmo", "cash_app", "ach"],
+      payout_preference_status: [
+        "not_set",
+        "pending_review",
+        "verified",
+        "needs_attention",
+      ],
       paypal_payment_status: [
         "created",
         "approved",
@@ -8896,6 +14336,11 @@ export const Constants = {
         "partially_refunded",
         "refunded",
         "reversed",
+        "authorized",
+        "partially_captured",
+        "authorization_voided",
+        "authorization_expired",
+        "deposit_paid_balance_due",
       ],
       protected_sale_handoff_mode: ["pickup", "delivery"],
       protected_sale_status: [

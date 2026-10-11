@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { ArrowRight, CreditCard, FileText, UserCheck, Calendar, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useStripeConnect } from '@/hooks/useStripeConnect';
+import { useManualPayout } from '@/hooks/useManualPayout';
 import { useAuth } from '@/contexts/AuthContext';
 import { useHostListings } from '@/hooks/useHostListings';
 import { useHostBookings } from '@/hooks/useHostBookings';
@@ -20,13 +20,13 @@ interface NextStepConfig {
 }
 
 interface NextStepCardProps {
-  onConnectStripe: () => void;
-  isConnectingStripe: boolean;
+  onSetUpPayouts: () => void;
+  isSavingPayouts: boolean;
 }
 
-export const NextStepCard = ({ onConnectStripe, isConnectingStripe }: NextStepCardProps) => {
+export const NextStepCard = ({ onSetUpPayouts, isSavingPayouts }: NextStepCardProps) => {
   const { user, profile } = useAuth();
-  const { isConnected, isLoading: stripeLoading } = useStripeConnect();
+  const { hasPayoutInstructions: isConnected, isLoading: payoutLoading } = useManualPayout();
   const { stats, isLoading: listingsLoading } = useHostListings();
   const { stats: bookingStats, isLoading: bookingsLoading } = useHostBookings();
 
@@ -37,13 +37,13 @@ export const NextStepCard = ({ onConnectStripe, isConnectingStripe }: NextStepCa
   // Define all possible next steps in priority order
   const possibleSteps: NextStepConfig[] = [
     {
-      id: 'stripe',
-      title: 'Connect Stripe to get paid',
+      id: 'payouts',
+      title: 'Set up payouts to get paid',
       description: 'Set up payouts so you can accept bookings and sales.',
       icon: CreditCard,
       action: {
-        label: 'Connect Stripe',
-        onClick: onConnectStripe,
+        label: 'Set up payouts',
+        onClick: onSetUpPayouts,
       },
       priority: 1,
     },
@@ -70,17 +70,6 @@ export const NextStepCard = ({ onConnectStripe, isConnectingStripe }: NextStepCa
       priority: 3,
     },
     {
-      id: 'verify',
-      title: 'Verify your identity',
-      description: 'Earn your verified badge and build trust.',
-      icon: UserCheck,
-      action: {
-        label: 'Verify Identity',
-        to: '/verify-identity',
-      },
-      priority: 4,
-    },
-    {
       id: 'listing',
       title: 'Create your first listing',
       description: 'Add a truck, trailer, kitchen, or lot.',
@@ -96,14 +85,12 @@ export const NextStepCard = ({ onConnectStripe, isConnectingStripe }: NextStepCa
   // Filter to only applicable steps
   const applicableSteps = possibleSteps.filter(step => {
     switch (step.id) {
-      case 'stripe':
+      case 'payouts':
         return !isConnected;
       case 'bookings':
         return hasPendingRequests;
       case 'drafts':
         return hasDrafts && isConnected;
-      case 'verify':
-        return !isIdentityVerified && isConnected;
       case 'listing':
         return stats.total === 0 && isConnected;
       default:
@@ -115,7 +102,7 @@ export const NextStepCard = ({ onConnectStripe, isConnectingStripe }: NextStepCa
   const nextStep = applicableSteps.sort((a, b) => a.priority - b.priority)[0];
 
   // Loading state
-  if (stripeLoading || listingsLoading || bookingsLoading) {
+  if (payoutLoading || listingsLoading || bookingsLoading) {
     return (
       <div className="flex items-center justify-center py-4 rounded-xl border border-border bg-card">
         <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
@@ -159,10 +146,10 @@ export const NextStepCard = ({ onConnectStripe, isConnectingStripe }: NextStepCa
               size="sm" 
               className="bg-foreground text-background hover:bg-foreground/90 gap-1.5"
               onClick={nextStep.action.onClick}
-              disabled={isConnectingStripe}
+              disabled={isSavingPayouts}
             >
-              {isConnectingStripe ? 'Connecting...' : nextStep.action.label}
-              {!isConnectingStripe && <ArrowRight className="h-3.5 w-3.5" />}
+              {isSavingPayouts ? 'Connecting...' : nextStep.action.label}
+              {!isSavingPayouts && <ArrowRight className="h-3.5 w-3.5" />}
             </Button>
           )}
         </div>

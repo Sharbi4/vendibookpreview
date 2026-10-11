@@ -1,7 +1,9 @@
-// Platform commission rates
-export const RENTAL_HOST_FEE_PERCENT = 12.9; // 12.9% from host
-export const RENTAL_RENTER_FEE_PERCENT = 12.9; // 12.9% platform fee from renter
-export const SALE_SELLER_FEE_PERCENT = 12.9; // 12.9% from seller on sales
+import { FEE_CONFIG } from '../../supabase/functions/_shared/feeConfig';
+
+// Platform commission rates (single source: supabase/functions/_shared/feeConfig.ts)
+export const RENTAL_HOST_FEE_PERCENT = FEE_CONFIG.rentalHostFeePct;
+export const RENTAL_RENTER_FEE_PERCENT = FEE_CONFIG.rentalRenterFeePct;
+export const SALE_SELLER_FEE_PERCENT = FEE_CONFIG.saleSellerFeePct;
 
 /**
  * Calculate rental fees (dual-sided commission)
@@ -76,5 +78,7 @@ export function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(amount);
 }

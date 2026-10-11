@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { MiniPlansComparison } from '@/components/monetization/MiniPlansComparison';
-import { StripeTrustBadge } from '@/components/trust/StripeTrustBadge';
+import { PaymentTrustBadge } from '@/components/trust/PaymentTrustBadge';
 import { cn } from '@/lib/utils';
 import heroBg from '@/assets/hero-hosttools-bg.jpg';
 
@@ -238,7 +238,8 @@ const Welcome: React.FC = () => {
                 size="lg"
                 onClick={handlePrimary}
                 disabled={saving}
-                className="sm:min-w-[200px] gap-2 shadow-cta-primary bg-cta-primary text-white"
+                variant="cta"
+                className="sm:min-w-[200px] gap-2"
               >
                 {saving ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
@@ -252,10 +253,10 @@ const Welcome: React.FC = () => {
             </div>
           </div>
           <div className="mt-3 flex items-center justify-center">
-            {/* Truthful context: billing is Stripe-powered. Do not imply Stripe covers
-                every part of Vendibook. Badge asset already reads "Powered by Stripe" —
+            {/* Truthful context: billing is PayPal-powered. Do not imply PayPal covers
+                every part of Vendibook. Badge asset already reads "Powered by PayPal" —
                 no repeat copy alongside it. */}
-            <StripeTrustBadge context="subscription" surface="dark" size="sm" withCopy={false} />
+            <PaymentTrustBadge context="subscription" surface="dark" size="sm" withCopy={false} />
           </div>
         </div>
       </section>

@@ -3,7 +3,7 @@ import { Body, Button, Container, Head, Heading, Html, Hr, Link, Preview, Sectio
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
-import { BrandHeader } from './_blocks.tsx'
+import { BrandFooter, BrandHeader } from './_blocks.tsx'
 interface Props {
   recipientName?: string
   contextLabel?: string
@@ -23,9 +23,9 @@ const npsCellBase = {
   textAlign: 'center' as const,
   fontSize: '13px',
   fontWeight: 600,
-  color: '#fafafa',
-  backgroundColor: '#141414',
-  border: '1px solid #232323',
+  color: '#1c1917',
+  backgroundColor: '#f7f4ef',
+  border: '1px solid #e7e2dc',
   borderRadius: '8px',
   textDecoration: 'none',
   margin: '0 3px 6px 0',
@@ -94,7 +94,7 @@ const E = ({ recipientName, contextLabel, contextType, feedbackToken, aiIntro }:
             — The Vendibook founders. Replies aren't monitored — please use the buttons above.
           </Text>
         </Section>
-      </Container></Body></Html>
+      <BrandFooter /></Container></Body></Html>
   )
 }
 

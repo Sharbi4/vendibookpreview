@@ -6,6 +6,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import type { InstantBooking } from '@/hooks/useAdminInstantBookings';
+import { openBookingDocument } from '@/lib/documents/openBookingDocument';
+import { toast } from 'sonner';
 
 interface InstantBookMonitorCardProps {
   booking: InstantBooking;
@@ -147,7 +149,7 @@ const InstantBookMonitorCard = ({ booking }: InstantBookMonitorCardProps) => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => window.open(doc.file_url, '_blank')}
+                        onClick={() => { openBookingDocument(doc.file_url).catch((e) => toast.error(e instanceof Error ? e.message : 'Could not open the document.')); }}
                       >
                         <ExternalLink className="h-4 w-4 mr-1" />
                         View

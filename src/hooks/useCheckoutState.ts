@@ -1,60 +1,30 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
-/**
- * Persist a checkout wizard's furthest-reached step and captured form
- * state to sessionStorage keyed per listing so a buyer can leave and
- * return without losing typed information.
- */
+/** Keep checkout drafts isolated by the caller's account and listing key. */
 export function useCheckoutState<T extends object>(sessionKey: string, initial: T) {
   const storageKey = `vb.checkout:${sessionKey}`;
-  const [state, setState] = useState<T>(() => {
-    if (typeof window === 'undefined') return initial;
+  const read = () => {
     try {
-      const raw = window.sessionStorage.getItem(storageKey);
-      if (!raw) return initial;
-      const parsed = JSON.parse(raw) as { state?: T };
-      return { ...initial, ...(parsed.state ?? {}) };
+      const raw = typeof window === 'undefined' ? null : window.sessionStorage.getItem(storageKey);
+      const saved = raw ? JSON.parse(raw) : null;
+      return { key: storageKey, state: { ...initial, ...(saved?.state ?? {}) } as T, furthestStep: saved?.furthestStep ?? 1 };
     } catch {
-      return initial;
+      return { key: storageKey, state: initial, furthestStep: 1 };
     }
-  });
-
-  const [furthestStep, setFurthestStep] = useState<number>(() => {
-    if (typeof window === 'undefined') return 1;
-    try {
-      const raw = window.sessionStorage.getItem(storageKey);
-      if (!raw) return 1;
-      const parsed = JSON.parse(raw) as { furthestStep?: number };
-      return parsed.furthestStep ?? 1;
-    } catch {
-      return 1;
-    }
-  });
-
-  const first = useRef(true);
-  useEffect(() => {
-    if (first.current) {
-      first.current = false;
-      return;
-    }
-    try {
-      window.sessionStorage.setItem(
-        storageKey,
-        JSON.stringify({ state, furthestStep }),
-      );
-    } catch {
-      /* quota — ignore */
-    }
-  }, [state, furthestStep, storageKey]);
-
-  const clear = () => {
-    try { window.sessionStorage.removeItem(storageKey); } catch { /* noop */ }
   };
-
-  const bumpFurthestStep = (n: number) =>
-    setFurthestStep((cur) => (n > cur ? n : cur));
-
-  return { state, setState, furthestStep, bumpFurthestStep, clear };
+  const [draft, setDraft] = useState(read);
+  // Reset during render so children never receive another account's draft.
+  if (draft.key !== storageKey) setDraft(read());
+  useEffect(() => {
+    if (draft.key !== storageKey) return;
+    try { window.sessionStorage.setItem(storageKey, JSON.stringify(draft)); } catch { /* Storage may be unavailable. */ }
+  }, [draft, storageKey]);
+  const setState = (next: T | ((previous: T) => T)) => setDraft(previous => ({
+    ...previous,
+    state: typeof next === 'function' ? (next as (previous: T) => T)(previous.state) : next,
+  }));
+  const bumpFurthestStep = (step: number) => setDraft(previous => ({ ...previous, furthestStep: Math.max(previous.furthestStep, step) }));
+  const clear = () => { try { window.sessionStorage.removeItem(storageKey); } catch { /* noop */ } };
+  return { state: draft.state, setState, furthestStep: draft.furthestStep, bumpFurthestStep, clear };
 }
-
 export default useCheckoutState;

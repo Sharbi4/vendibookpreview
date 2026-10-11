@@ -6,6 +6,7 @@ interface SEOProps {
   canonical?: string;
   type?: 'website' | 'article' | 'product';
   image?: string;
+  imageAlt?: string;
   ogTitle?: string;
   ogDescription?: string;
   twitterTitle?: string;
@@ -29,7 +30,8 @@ interface SEOProps {
 }
 
 const BASE_URL = 'https://vendibook.com';
-const DEFAULT_IMAGE = `${BASE_URL}/images/vendibook-og-image.jpg`;
+const DEFAULT_IMAGE = `${BASE_URL}/images/social/vendibook-og-default.jpg`;
+const DEFAULT_IMAGE_ALT = 'Vendibook — the marketplace for the mobile food economy';
 const SITE_NAME = 'Vendibook';
 
 /**
@@ -42,6 +44,7 @@ const SEO = ({
   canonical,
   type = 'website',
   image = DEFAULT_IMAGE,
+  imageAlt,
   ogTitle,
   ogDescription,
   twitterTitle,
@@ -51,12 +54,15 @@ const SEO = ({
   noindex = false,
 }: SEOProps) => {
   const fullTitle = title.includes('Vendibook') ? title : `${title} | Vendibook`;
-  const canonicalUrl = canonical ? `${BASE_URL}${canonical}` : BASE_URL;
+  // Pages supply both site-relative paths and fully qualified canonical URLs.
+  // Concatenation turned legal/seller URLs into vendibook.comhttps://vendibook.com/…
+  const canonicalUrl = canonical ? new URL(canonical, `${BASE_URL}/`).href : BASE_URL;
   const imageUrl = image.startsWith('http') ? image : `${BASE_URL}${image}`;
   const ogTitleFinal = ogTitle || fullTitle;
   const ogDescriptionFinal = ogDescription || description;
   const twitterTitleFinal = twitterTitle || ogTitleFinal;
   const twitterDescriptionFinal = twitterDescription || ogDescriptionFinal;
+  const imageAltFinal = imageAlt || (image === DEFAULT_IMAGE ? DEFAULT_IMAGE_ALT : ogTitleFinal);
 
   useEffect(() => {
     // Update document title
@@ -98,6 +104,8 @@ const SEO = ({
     setMeta('og:title', ogTitleFinal, true);
     setMeta('og:description', ogDescriptionFinal, true);
     setMeta('og:image', imageUrl, true);
+    setMeta('og:image:secure_url', imageUrl, true);
+    setMeta('og:image:alt', imageAltFinal, true);
     setMeta('og:site_name', SITE_NAME, true);
     setMeta('og:locale', 'en_US', true);
 
@@ -107,6 +115,8 @@ const SEO = ({
     setMeta('twitter:title', twitterTitleFinal);
     setMeta('twitter:description', twitterDescriptionFinal);
     setMeta('twitter:image', imageUrl);
+    setMeta('twitter:image:alt', imageAltFinal);
+    setMeta('twitter:site', '@vendibook');
 
     // Article-specific meta (for blog posts, help articles, etc.)
     if (type === 'article' && article) {
@@ -150,11 +160,10 @@ const SEO = ({
       }
     }
 
-    // Cleanup on unmount - reset to defaults
-    return () => {
-      document.title = 'Vendibook | Food Truck & Mobile Vendor Marketplace';
-    };
-  }, [fullTitle, description, canonicalUrl, type, imageUrl, ogTitleFinal, ogDescriptionFinal, twitterTitleFinal, twitterDescriptionFinal, article, product, noindex]);
+    // No unmount reset. Resetting the title to the sitewide default on route
+    // change made GA record the generic default title for real pages; the next
+    // route's <SEO> (or the page-tracking fallback) owns the title instead.
+  }, [fullTitle, description, canonicalUrl, type, imageUrl, imageAltFinal, ogTitleFinal, ogDescriptionFinal, twitterTitleFinal, twitterDescriptionFinal, article, product, noindex]);
 
   return null;
 };
@@ -168,7 +177,7 @@ export const generateOrganizationSchema = () => ({
   name: 'Vendibook',
   url: 'https://vendibook.com',
   logo: 'https://vendibook.com/images/vendibook-logo.png',
-  description: 'Rent or buy food trucks, food trailers, shared kitchens, and Vendor Spaces.',
+  description: 'Shop food trucks, food trailers, carts and mobile food equipment nationwide. Buy, sell or rent with financing options, verified sellers and delivery.',
   contactPoint: {
     '@type': 'ContactPoint',
     telephone: '+1-725-755-9598',

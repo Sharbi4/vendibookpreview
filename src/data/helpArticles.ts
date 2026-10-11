@@ -2231,7 +2231,7 @@ If you disagree with findings:
 
 **What You'll Need**
 - Valid government-issued ID
-- Bank account for payouts (via Stripe)
+- Payout details (PayPal email or bank account)
 - Photos of your asset(s)
 - Any relevant permits or licenses (optional but recommended)`
       },
@@ -2243,18 +2243,17 @@ If you disagree with findings:
 - [ ] Complete your profile (name, phone, photo)
 - [ ] Add your business name (optional)
 
-**Pro tip:** A complete profile with a professional photo increases booking rates by 40%.`
+**Pro tip:** A complete profile with a clear photo helps buyers and renters trust your listing.`
       },
       {
-        id: 'step-2-stripe',
-        title: 'Step 2: Set Up Stripe Connect',
+        id: 'step-2-payouts',
+        title: 'Step 2: Save Your Payout Details',
         content: `- [ ] Click "Set Up Payouts" in your dashboard
-- [ ] Connect or create a Stripe account
-- [ ] Verify your identity (government ID required)
-- [ ] Add your bank account for payouts
-- [ ] Complete any additional Stripe requirements
+- [ ] Choose how you want to be paid (PayPal, Venmo, Cash App, or bank transfer)
+- [ ] Enter your payout destination
+- [ ] Save
 
-**Important:** You must complete Stripe setup before your listing can go live. Payouts are processed automatically after each completed booking.`
+**Note:** Payout details are not required to publish. Vendibook reviews and releases seller payouts manually once a transaction is eligible, so add them before your first payout.`
       },
       {
         id: 'step-3-listing',
@@ -2311,7 +2310,7 @@ You'll receive email and in-app notifications for new requests.
 Great reviews build trust and increase future bookings.`
       }
     ],
-    relatedArticles: ['stripe-connect-setup', 'host-listing-checklist', 'payout-timing-fees']
+    relatedArticles: ['payout-setup', 'host-listing-checklist', 'payout-timing-fees']
   },
   {
     slug: 'host-listing-checklist',
@@ -2402,80 +2401,62 @@ Examples:
     relatedArticles: ['host-onboarding', 'pricing-guidance']
   },
   {
-    slug: 'stripe-connect-setup',
-    title: 'Stripe Connect Setup Guide',
-    description: 'How to set up Stripe Connect to receive payouts from your Vendibook listings.',
+    slug: 'payout-setup',
+    title: 'Payout Setup Guide',
+    description: 'How to save your payout details so Vendibook can send you proceeds from your listings.',
     category: 'Payments & Payouts',
     categorySlug: 'payments-payouts',
     sections: [
       {
         id: 'overview',
-        title: 'Why Stripe Connect?',
-        content: `Vendibook uses Stripe Connect to process payments securely. This ensures:
-- Fast, reliable payouts directly to your bank
-- Protection for both hosts and renters
-- Compliance with financial regulations
-- Support for multiple currencies
+        title: 'How Payouts Work',
+        content: `Buyers and renters pay through PayPal. Vendibook records what you are owed, reviews the transaction, and releases your payout manually to the destination you save.
 
-**You must complete Stripe setup before publishing your first listing.**`
+- Payout destinations: PayPal, Venmo, Cash App, or bank transfer
+- Protection for both hosts and renters
+- A clear record of every payable in your dashboard
+
+**You do not need payout details to publish a listing — only to receive money.**`
       },
       {
         id: 'requirements',
         title: 'What You Will Need',
         content: `**For Individuals**
-- Valid government-issued ID (drivers license or passport)
-- Social Security Number (last 4 digits)
-- Bank account routing and account numbers
-- Home address
+- A PayPal, Venmo, or Cash App account, or a bank account
+- The name on the payout destination should match your Vendibook account
 
 **For Businesses**
-- EIN (Employer Identification Number)
-- Business address
-- Beneficial owner information
-- Business bank account details`
+- Business name and address
+- A business PayPal account or business bank account
+- Tax information may be requested for larger payouts`
       },
       {
         id: 'setup-steps',
         title: 'Step-by-Step Setup',
         content: `**1. Start the Process**
 - Log in to your Vendibook dashboard
-- Click "Set Up Payouts" or go to Account → Stripe Connect
-- Click "Connect with Stripe"
+- Click "Set Up Payouts" on any listing, or go to Account → Payments & payouts
 
-**2. Choose Account Type**
-- Individual or Business
-- Select your country
+**2. Choose a Payout Method**
+- PayPal, Venmo, Cash App, or bank transfer
 
-**3. Verify Your Identity**
-- Enter personal information
-- Upload ID document (takes 2-5 minutes to verify)
-- May require a selfie for verification
+**3. Enter Your Destination**
+- PayPal/Venmo/Cash App: the email, phone, or handle on the account
+- Bank transfer: account holder name, routing number, account number
 
-**4. Add Bank Account**
-- Enter routing number
-- Enter account number
-- Verify with micro-deposits (if required)
-
-**5. Complete Setup**
-- Review all information
-- Accept Stripe terms of service
-- Submit for verification`
+**4. Save**
+- Review the details for typos
+- Save — you can update them any time before a payout is released`
       },
       {
         id: 'verification',
         title: 'Verification Timeline',
-        content: `**Instant Verification (most common)**
-Most hosts are verified within minutes.
+        content: `**Payout details are reviewed before your first release**
+- Most accounts clear without any extra steps
+- Some accounts are asked for additional documentation
+- Check your email for any request from our team
 
-**Extended Review (rare)**
-Some accounts require additional review:
-- Allow 1-2 business days
-- You may be asked for additional documents
-- Check email for updates
-
-**While waiting:**
-- You can create listings
-- Listings will not go live until verification completes`
+**This does not block your listing.** You can create and publish listings without payout details or identity verification — payout details are only needed to receive money.`
       },
       {
         id: 'troubleshooting',
@@ -2491,7 +2472,7 @@ Some accounts require additional review:
 - Account must be in your name or business name
 
 **Need Help?**
-Contact our support team via Zendesk chat. We can help troubleshoot verification issues.`
+Contact support from the [Help Center](/help) or email support@vendibook.com and we'll help troubleshoot.`
       }
     ],
     relatedArticles: ['payout-timing-fees', 'host-onboarding']
@@ -2506,37 +2487,42 @@ Contact our support team via Zendesk chat. We can help troubleshoot verification
       {
         id: 'payout-schedule',
         title: 'When You Get Paid',
-        content: `**For Rentals**
-- Payment is captured when the booking starts
-- Payout initiated within 24 hours of rental start
-- Funds arrive in 2-5 business days (depends on your bank)
+        content: `Vendibook reviews and issues payouts after a transaction completes. Payouts are **not automatic or instant**.
+
+**For Rentals**
+- The renter pays through PayPal when the booking is confirmed
+- Vendibook releases the host payout after the booking has started and completed as agreed
 
 **For Sales**
-- Payment captured when buyer confirms purchase
-- Payout initiated after buyer confirms receipt
-- Or automatically after 7 days if no disputes
+- Funds are held after checkout rather than sent straight to the seller
+- The payout is issued after delivery or handoff is confirmed — or after the 7-day auto-complete window if the buyer never confirms
+
+**Financed purchases (exception)**
+On a successfully completed financed purchase, seller payment is released within 24 hours after successful delivery and confirmation.
 
 **Payout Methods**
-Payouts are sent directly to the bank account connected via Stripe.`
+Payouts are sent to the payout destination saved in your account (PayPal, Venmo, Cash App, or bank transfer).`
       },
       {
         id: 'fee-breakdown',
         title: 'Fee Breakdown',
-        content: `**Vendibook Service Fee**
-- 10% of the booking/sale total
-- Covers platform, support, and payment processing
-- Deducted automatically from your payout
+        content: `**Seller / Host Commission**
+- 12.9% of the completed sale or booking subtotal
+- 10.9% for active Vendibook Pro members, with savings capped at $500 per completed transaction
+- Deducted from your payout
 
-**What is Included in the Fee**
-- Stripe payment processing
-- Customer support for you and your renters
-- Dispute resolution services
-- Platform maintenance and features
+**Renter Service Fee**
+- Rentals also add a 12.9% renter service fee on top of the booking subtotal (the Pro discount applies to the host side only)
 
-**Example**
-- Rental price: $500
-- Vendibook fee (10%): $50
-- Your payout: $450`
+**Pay in Person**
+- Equipment sales settled in person: $0 Vendibook commission
+- Rentals settled in person still owe the standard host commission
+
+**Example (free plan rental)**
+- Rental subtotal: $1,000
+- Host commission (12.9%): $129
+- Your payout: $871
+- Renter is charged: $1,129`
       },
       {
         id: 'payout-tracking',
@@ -2546,10 +2532,9 @@ Payouts are sent directly to the bank account connected via Stripe.`
 - View pending, processing, and completed payouts
 - Download reports for accounting
 
-**In Stripe**
-- Access your Stripe Express dashboard
-- View detailed transaction history
-- Download 1099 tax forms (US hosts)`
+**In PayPal**
+- Payments you receive from Vendibook appear in your PayPal activity
+- Keep your payout email current so releases are not delayed`
       },
       {
         id: 'delays',
@@ -2561,12 +2546,12 @@ Payouts are sent directly to the bank account connected via Stripe.`
 - Disputes or holds on your account
 
 **If Your Payout is Late**
-1. Check Stripe dashboard for status
+1. Check Dashboard → Earnings for the payout status
 2. Verify bank account details are correct
 3. Contact support if over 7 business days`
       }
     ],
-    relatedArticles: ['stripe-connect-setup', 'cancellations-refunds']
+    relatedArticles: ['payout-setup', 'cancellations-refunds']
   },
   {
     slug: 'deposits-protection',
@@ -2772,8 +2757,8 @@ You are only charged if:
 **Self-Arrange**
 Handle your own pickup or hire your own transport.
 
-**Vendibook Freight (Coming Soon)**
-Request quotes from vetted freight carriers directly through the platform.
+**Vendibook Freight**
+Coordinated transport for food trucks, trailers, and mobile food equipment across the 48 contiguous states. See the Vendibook Freight page for how it works and how pricing is prepared.
 
 **Seller Delivery**
 Some sellers offer delivery within a certain radius.`
@@ -2959,11 +2944,11 @@ Once buyer confirms receipt, funds are released to your account (minus platform 
         content: `Vendibook is built specifically for mobile food assets. Unlike generic marketplaces, we connect you with serious buyers who are actively looking for food trucks, trailers, and commercial kitchen equipment.
 
 **What you get:**
-- Verified buyers who reduce tire-kickers
-- Secure checkout with payment protection-style protection
-- Dashboard to manage inquiries and confirmations
-- Optional freight coordination
-- 24/7 support
+- Buyers who are actively shopping for mobile food assets
+- Secure PayPal checkout where funds are held until the sale is confirmed
+- Dashboard to manage inquiries, offers, and confirmations
+- Optional delivery and freight coordination where available
+- Support Mon–Fri, 9am–5pm Arizona time
 
 Ready to get started? [List your food truck for sale →](/sell-my-food-truck)`
       },
@@ -3025,9 +3010,9 @@ Review your listing and go live. Your truck will appear in search results immedi
 Buyers don't pay a platform fee (though shipping/freight may apply if selected).
 
 **Payouts:**
-- Processed via Stripe Connect
-- Funds released after transaction confirmation
-- Deposited to your linked bank account
+- Buyer pays through PayPal
+- Funds released after transaction confirmation and Vendibook review
+- Sent to the payout destination saved in your account
 
 [Learn more about selling →](/sell-my-food-truck)`
       }
@@ -3107,7 +3092,7 @@ Most buyers expect to negotiate. Price 5-10% higher than your minimum acceptable
 - Transparency builds trust
 
 **Forgetting Fees**
-- Factor in Vendibook 10% service fee
+- Factor in the Vendibook seller commission (12.9%, or 10.9% with active Vendibook Pro)
 - Consider any shipping costs you will cover`
       }
     ],
@@ -3176,7 +3161,7 @@ Once buyer confirms through Vendibook, funds are released.`
 - Auto-release if no issues reported after 7 days
 
 **Your Payout**
-- Sale price minus 10% Vendibook fee
+- Sale price minus the Vendibook seller commission (12.9%, or 10.9% with active Vendibook Pro; $0 if the sale is settled in person)
 - Funds sent to your connected bank account
 - Typically arrives in 2-5 business days
 
@@ -3260,7 +3245,7 @@ We may make exceptions for:
 - Death of immediate family member
 
 **How to Request**
-1. Contact support via Zendesk
+1. Contact support from the Help Center or at support@vendibook.com
 2. Provide documentation
 3. We will review on a case-by-case basis
 
@@ -3514,211 +3499,59 @@ If the asset significantly differs from the listing or is unsafe:
 
   // PAYMENT OPTIONS
   {
-    slug: 'affirm-financing',
-    title: 'Affirm: Monthly Payment Plans',
-    description: 'Learn how to use Affirm to split purchases into affordable monthly payments on Vendibook.',
+    slug: 'buyer-financing',
+    title: 'Buyer Financing for Equipment Purchases',
+    description: 'How buyer financing works on eligible for-sale Vendibook listings, who decides, and when the seller is paid.',
     category: 'Payments & Payouts',
     categorySlug: 'payments-payouts',
-    featured: true,
     sections: [
       {
-        id: 'what-is-affirm',
-        title: 'What is Affirm?',
-        content: `Affirm is a buy-now-pay-later service that lets you split purchases into monthly payments. Unlike credit cards, Affirm shows you the exact amount you'll pay upfront—no hidden fees or compounding interest.
+        id: 'what-it-is',
+        title: 'What Buyer Financing Is',
+        content: `Buyer financing is an option on eligible published **for-sale** equipment listings. Instead of paying the full amount at once, the buyer applies with the third-party financing partner Vendibook surfaces — currently Equinox Funding — and pays the partner back under the agreement they sign.
 
-**Key Benefits**
-- Split purchases from $35 to $30,000 into monthly payments
-- Know your total cost before you commit
-- No late fees or prepayment penalties
-- Quick approval with soft credit check (won't affect your score)
+**Important**
+- Financing is a buyer option, not a seller-paid subscription or seller opt-in.
+- The seller does not manage the application and does not make the lending decision.
+- Vendibook is **not a lender**. We do not approve applicants, set rates or terms, or guarantee funding or funding speed.
 
-**Available On**
-Affirm is available for sale listings priced between $35 and $30,000.`
+Current provider details, eligibility, and the application link live on the [financing page](/financing).`
       },
       {
-        id: 'how-it-works',
-        title: 'How Affirm Works',
-        content: `**At Checkout**
-1. Select "Affirm" as your payment method
-2. Enter basic information (name, email, phone, date of birth)
-3. Affirm performs a soft credit check (no impact on credit score)
-4. See your personalized payment options (3, 6, 12, or more months)
-5. Choose your plan and confirm
+        id: 'how-to-apply',
+        title: 'How a Buyer Applies',
+        content: `**1. Find an eligible listing**
+Eligible for-sale listings show a financing option on the listing page.
 
-**After Purchase**
-- First payment due at checkout or within 30 days (varies by plan)
-- Automatic monthly payments from your linked bank or card
-- Manage payments in the Affirm app or website
-- Pay off early anytime with no penalties`
+**2. Download the Pro Forma Invoice (optional)**
+Listings can generate a Pro Forma Invoice with the price and VIN/serial to submit with an application.
+
+**3. Continue to the financing partner**
+You leave Vendibook and submit your application directly to the partner. Their terms and privacy policy apply.
+
+**4. Work with the partner**
+A financing specialist may contact you for more information. Approval, rates, and terms come from the partner.`
       },
       {
-        id: 'rates-terms',
-        title: 'Rates and Terms',
-        content: `**APR Range**
-- 0% to 36% APR depending on creditworthiness
-- Rates shown before you commit
-- No hidden fees
+        id: 'seller-side',
+        title: 'What Sellers Should Know',
+        content: `**You do not have to enable anything.** Financing is offered to buyers at the marketplace level on eligible for-sale listings.
 
-**Example Payment**
-For a $15,000 food truck:
-- 12 months at 15% APR: ~$1,357/month
-- 24 months at 15% APR: ~$726/month
-- 36 months at 15% APR: ~$520/month
+**Vendibook fees still apply.** If a financed sale completes through Vendibook, the standard platform commission applies to the sale and is deducted from proceeds. It is a platform fee, not a financing fee.
 
-*Actual rates vary based on your credit profile.*
-
-**What Affirm Checks**
-- Credit history (soft pull)
-- Debt-to-income ratio
-- Payment history with Affirm`
+**Payout on a financed purchase.** On a successfully completed financed Vendibook purchase, seller payment is released **within 24 hours after successful delivery and confirmation**. Other online transactions follow the standard review-and-release schedule.`
       },
       {
-        id: 'eligibility',
-        title: 'Eligibility Requirements',
-        content: `**To Use Affirm You Must**
-- Be at least 18 years old
-- Be a US resident
-- Have a valid US phone number
-- Have a Social Security Number
-- Pass Affirm's credit check
+        id: 'not-supported',
+        title: 'What We Do Not Offer',
+        content: `- No buy-now-pay-later checkout (no Affirm, Klarna, or Afterpay).
+- No guaranteed approval, funding amount, rate, or funding timeline.
+- No Vendibook-issued loans or credit.
 
-**What Affirm Does NOT Support**
-- Recurring subscriptions or rentals
-- Purchases under $35 or over $30,000
-- Non-US transactions
-
-**If You're Declined**
-- Try again in 30 days
-- Build credit history
-- Consider a smaller purchase first`
-      },
-      {
-        id: 'managing-payments',
-        title: 'Managing Your Affirm Loan',
-        content: `**Payment Methods**
-- Debit card
-- Bank transfer (ACH)
-- Check (mail-in)
-
-**Making Payments**
-- Log in at affirm.com or the Affirm app
-- Payments due on the same day each month
-- Set up autopay to avoid missing payments
-
-**Early Payoff**
-- Pay off your balance anytime
-- No prepayment penalties
-- Interest stops accruing when paid in full
-
-**Need Help?**
-Contact Affirm directly at affirm.com/help for payment issues.`
+If financing is not a fit, you can still pay through Vendibook checkout with PayPal (balance, bank, or card), or use Pay in Person when the seller offers it.`
       }
     ],
-    relatedArticles: ['afterpay-guide', 'buying-end-to-end']
-  },
-  {
-    slug: 'afterpay-guide',
-    title: 'Afterpay: Pay in 4 Installments',
-    description: 'Split your purchase into 4 interest-free payments with Afterpay on Vendibook.',
-    category: 'Payments & Payouts',
-    categorySlug: 'payments-payouts',
-    featured: true,
-    sections: [
-      {
-        id: 'what-is-afterpay',
-        title: 'What is Afterpay?',
-        content: `Afterpay lets you split purchases into 4 equal payments, due every 2 weeks. It's interest-free when you pay on time.
-
-**Key Benefits**
-- 4 equal payments over 6 weeks
-- 0% interest (no APR)
-- No credit impact for approval
-- Get your purchase immediately
-
-**Available On**
-Afterpay is available for purchases up to $4,000. The first payment is due at checkout.`
-      },
-      {
-        id: 'how-it-works',
-        title: 'How Afterpay Works',
-        content: `**Payment Schedule Example**
-For a $2,000 purchase:
-- Today: $500 (25%)
-- 2 weeks: $500 (25%)
-- 4 weeks: $500 (25%)
-- 6 weeks: $500 (25%)
-
-**At Checkout**
-1. Select "Afterpay" as payment method
-2. Log in or create Afterpay account
-3. Confirm your payment schedule
-4. Complete purchase
-
-**Payments Are Automatic**
-Afterpay charges your linked card automatically every 2 weeks.`
-      },
-      {
-        id: 'fees-limits',
-        title: 'Fees and Spending Limits',
-        content: `**Interest**
-- 0% interest when payments are on time
-
-**Late Fees**
-- $10 fee if payment fails
-- Additional $7 fee if not paid within 7 days
-- Maximum late fee: 25% of purchase or $68 (whichever is less)
-
-**Spending Limits**
-- First-time users: typically $150-$500
-- Limits increase with on-time payments
-- Maximum: $4,000 per transaction
-
-**How to Increase Your Limit**
-- Pay on time consistently
-- Link a debit card (vs credit)
-- Use Afterpay regularly`
-      },
-      {
-        id: 'eligibility',
-        title: 'Eligibility',
-        content: `**Requirements**
-- 18+ years old
-- Valid debit or credit card
-- US phone number and address
-- Valid email address
-
-**Approval Factors**
-- Payment history with Afterpay
-- Amount of outstanding Afterpay orders
-- Order amount and type
-
-**No Credit Check**
-Afterpay does not perform a hard credit check. Your credit score is not affected.`
-      },
-      {
-        id: 'managing-payments',
-        title: 'Managing Afterpay Payments',
-        content: `**View Your Schedule**
-- Download the Afterpay app
-- Log in at afterpay.com
-- See all upcoming payments
-
-**Change Payment Method**
-- Update your card in the Afterpay app
-- Changes apply to future installments
-
-**Pay Early**
-- Make extra payments anytime in the app
-- Reduces future installment amounts
-- No benefit or penalty for early payment
-
-**Missed Payment?**
-- Your account may be paused
-- Late fees apply
-- Pay ASAP to restore your account`
-      }
-    ],
-    relatedArticles: ['affirm-financing', 'buying-end-to-end']
+    relatedArticles: ['buying-end-to-end', 'making-offers', 'pay-in-person-guide']
   },
   {
     slug: 'making-offers',
@@ -3822,7 +3655,7 @@ You have 48 hours to respond. After that, the counter-offer expires and you'll n
 The best negotiations are win-win. Sellers want to sell, and buyers want to buy. Finding middle ground helps everyone.`
       }
     ],
-    relatedArticles: ['buying-end-to-end', 'affirm-financing']
+    relatedArticles: ['buying-end-to-end', 'buyer-financing']
   },
   {
     slug: 'pay-in-person-guide',
@@ -3913,26 +3746,96 @@ For high-value transactions ($5,000+), we strongly recommend using Vendibook's s
         content: `**Buyer Fees**
 - No platform fee for buyers on cash transactions
 
-**Seller Fees**
-- Standard Vendibook commission still applies
-- No payment processing fee (since no card is processed)
-- Commission is invoiced to seller separately
+**Seller Fees — equipment sales**
+- $0 Vendibook commission on an equipment sale settled in person
+- Nothing is invoiced to you afterward
 
-**Why Sellers Still Pay Commission**
-Vendibook provides the marketplace, listing exposure, messaging system, and transaction infrastructure. The commission covers these services regardless of payment method.
+**Seller Fees — rentals**
+- Rentals settled in person still owe the standard host commission, because the booking, calendar, and rental agreement run on Vendibook
 
-**Payment of Commission**
-Sellers receive an invoice for their commission, payable via credit card or bank transfer.`
+**Why the difference**
+We do not take a cut of money we never process. Rentals are different because the booking infrastructure and agreement are provided by Vendibook either way.`
       }
     ],
     relatedArticles: ['buying-end-to-end', 'deposits-protection']
   }
 ];
 
+// Legacy / shorthand slugs that used to be linked from older pages and emails.
+// Keeping them resolvable prevents "Article not found" dead ends.
+export const HELP_SLUG_ALIASES: Record<string, string> = {
+  contact: 'host-onboarding',
+  rentals: 'rentals-end-to-end',
+  renting: 'rentals-end-to-end',
+  buying: 'buying-end-to-end',
+  selling: 'selling-end-to-end',
+  permits: 'mobile-vending-permits',
+  'permits-and-licensing': 'mobile-vending-permits',
+  'permits-licensing': 'mobile-vending-permits',
+  payouts: 'payout-setup',
+  'payout-fees': 'payout-timing-fees',
+  fees: 'payout-timing-fees',
+  shipping: 'shipping-freight',
+  freight: 'shipping-freight',
+  offers: 'making-offers',
+  'pay-in-person': 'pay-in-person-guide',
+  financing: 'buyer-financing',
+  'affirm-financing': 'buyer-financing',
+  'afterpay-guide': 'buyer-financing',
+  affirm: 'buyer-financing',
+  afterpay: 'buyer-financing',
+  refunds: 'cancellations-refunds',
+  disputes: 'dispute-evidence',
+  pricing: 'pricing-guidance',
+};
+
+const normalizeSlug = (slug: string) =>
+  slug.trim().toLowerCase().replace(/^\/+|\/+$/g, '').replace(/[_\s]+/g, '-');
+
+/**
+ * Resolve a slug to a real article, tolerating legacy aliases, trailing
+ * slashes, casing, and near-miss/truncated slugs. Returns undefined only when
+ * nothing plausible matches.
+ */
+export const resolveArticleSlug = (rawSlug: string): HelpArticle | undefined => {
+  const slug = normalizeSlug(rawSlug || '');
+  if (!slug) return undefined;
+
+  const exact = helpArticles.find((a) => a.slug === slug);
+  if (exact) return exact;
+
+  const aliased = HELP_SLUG_ALIASES[slug];
+  if (aliased) {
+    const hit = helpArticles.find((a) => a.slug === aliased);
+    if (hit) return hit;
+  }
+
+  // Truncated or extended slug (e.g. /help/rentals-end → rentals-end-to-end)
+  const prefix = helpArticles.find(
+    (a) => a.slug.startsWith(slug) || slug.startsWith(a.slug),
+  );
+  if (prefix) return prefix;
+
+  // Token overlap fallback — needs a strong majority of words to match.
+  const words = slug.split('-').filter((w) => w.length > 2);
+  if (words.length) {
+    let best: { article: HelpArticle; score: number } | null = null;
+    for (const article of helpArticles) {
+      const target = article.slug.split('-');
+      const score = words.filter((w) => target.includes(w)).length / words.length;
+      if (score >= 0.6 && (!best || score > best.score)) best = { article, score };
+    }
+    if (best) return best.article;
+  }
+
+  return undefined;
+};
+
 // Helper to get article by slug
 export const getArticleBySlug = (slug: string): HelpArticle | undefined => {
-  return helpArticles.find(article => article.slug === slug);
+  return resolveArticleSlug(slug);
 };
+
 
 // Helper to get related articles
 export const getRelatedArticles = (article: HelpArticle): HelpArticle[] => {

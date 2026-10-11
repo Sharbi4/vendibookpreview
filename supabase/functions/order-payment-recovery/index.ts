@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
 import { capturePayPalOrder, getPayPalOrder, PayPalError, safeLog } from "../_shared/paypal.ts";
+import { routedMerchantId } from "../_shared/paypalMultiparty.ts";
 import { extractCaptureFacts, finalizeCapture } from "../_shared/paypalFinalize.ts";
 import { auditPayment, requestIp } from "../_shared/paymentAudit.ts";
 import { classifyCaptureFailure, presentPaymentStatus } from "../_shared/orders/orderStatus.ts";
@@ -45,6 +46,8 @@ serve(async (req) => {
       .eq("id", order_id)
       .maybeSingle();
     if (!record) return jsonError(404, "not_found", "We couldn't find that order.");
+    // Orders routed to the seller must be read and captured as that seller.
+    const asSeller = { actAsMerchantId: routedMerchantId(record) };
     if (record.buyer_id !== user.id) {
       return jsonError(403, "forbidden", "This order belongs to another account.");
     }
@@ -77,7 +80,7 @@ serve(async (req) => {
     // ---- reconcile first: read PayPal's truth before doing anything.
     let providerOrder: any;
     try {
-      providerOrder = await getPayPalOrder(record.paypal_order_id);
+      providerOrder = await getPayPalOrder(record.paypal_order_id, asSeller);
     } catch (err) {
       const cls = classifyCaptureFailure({
         issue: err instanceof PayPalError ? err.issue : null,
@@ -148,11 +151,11 @@ serve(async (req) => {
 
     let captured: any;
     try {
-      captured = await capturePayPalOrder(record.paypal_order_id, `capture:${record.reference}`);
+      captured = await capturePayPalOrder(record.paypal_order_id, `capture:${record.reference}`, asSeller);
     } catch (err) {
       const isPayPal = err instanceof PayPalError;
       if (isPayPal && (err as PayPalError).issue === "ORDER_ALREADY_CAPTURED") {
-        captured = await getPayPalOrder(record.paypal_order_id);
+        captured = await getPayPalOrder(record.paypal_order_id, asSeller);
       } else {
         const cls = classifyCaptureFailure({
           issue: isPayPal ? (err as PayPalError).issue : null,

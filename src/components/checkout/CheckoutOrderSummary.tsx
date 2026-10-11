@@ -1,11 +1,12 @@
 import FinancingLine from './FinancingLine';
-import PaymentProtectionBlock from './PaymentProtectionBlock';
 import TrustRow from './TrustRow';
 
 export interface OrderSummaryLine {
   label: string;
   amount: number;
   muted?: boolean;
+  /** Overrides the rendered value (e.g. "Calculating…") instead of $amount. */
+  valueLabel?: string;
 }
 
 interface CheckoutOrderSummaryProps {
@@ -61,7 +62,7 @@ const CheckoutOrderSummary = ({
           className={`flex justify-between text-xs ${line.muted ? 'text-muted-foreground' : 'text-foreground/90'}`}
         >
           <span>{line.label}</span>
-          <span>{money(line.amount)}</span>
+          <span>{line.valueLabel ?? money(line.amount)}</span>
         </div>
       ))}
       <div className="h-px bg-border/60 my-2" />
@@ -72,7 +73,6 @@ const CheckoutOrderSummary = ({
       <FinancingLine totalUsd={total} />
     </div>
 
-    <PaymentProtectionBlock variant={variant} />
     <TrustRow />
   </div>
 );

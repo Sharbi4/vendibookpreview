@@ -9,10 +9,9 @@ import {
 } from "../_shared/jsonError.ts";
 import { getPaymentProvider, type ProviderName } from "../_shared/payments/index.ts";
 import { auditPayment, requestIp } from "../_shared/paymentAudit.ts";
-import { paypalConfigStatus, safeLog } from "../_shared/paypal.ts";
+import { paypalEnvironment, safeLog } from "../_shared/paypal.ts";
 import { classifyProduct } from "../_shared/productEntitlement.ts";
-
-const FUNCTION_VERSION = "paypal-subscription-create-2026-08-01.3";
+import { ensureProviderPlan, intervalForProduct } from "../_shared/ensureProviderPlan.ts";
 
 /**
  * Starts a recurring membership. The plan (and therefore the price) is always
@@ -23,19 +22,6 @@ const FUNCTION_VERSION = "paypal-subscription-create-2026-08-01.3";
  */
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
-
-  // Safe deployment/configuration probe. This exposes no credential values.
-  if (req.method === "GET") {
-    const config = paypalConfigStatus();
-    return jsonResponse(200, {
-      ok: true,
-      function: "paypal-subscription-create",
-      version: FUNCTION_VERSION,
-      provider: "paypal",
-      environment: config.environment,
-      configured: config.client_id_configured && config.client_secret_configured,
-    });
-  }
 
   try {
     const admin = createClient(
@@ -62,32 +48,16 @@ serve(async (req) => {
     }
 
     const provider = getPaymentProvider(providerName);
-    if (providerName === "paypal") {
-      const config = paypalConfigStatus();
-      const configured = config.client_id_configured && config.client_secret_configured;
-      if (!configured) {
-        safeLog("subscription_paypal_credentials_missing", {
-          functionVersion: FUNCTION_VERSION,
-          environment: config.environment,
-          clientIdConfigured: config.client_id_configured,
-          clientSecretConfigured: config.client_secret_configured,
-        });
-        return jsonError(
-          503,
-          "paypal_credentials_missing",
-          "Subscription billing is temporarily unavailable. Vendibook support has been notified.",
-        );
-      }
-    } else if (!provider.isConfigured()) {
-      safeLog("subscription_provider_unavailable", {
-        functionVersion: FUNCTION_VERSION,
+    if (!provider.isConfigured()) {
+      // Distinct internal diagnostic — the customer message stays generic.
+      safeLog("live_credentials_missing", {
         provider: providerName,
+        environment: paypalEnvironment(),
+        client_id_configured: !!Deno.env.get("PAYPAL_CLIENT_ID"),
+        client_secret_configured: !!Deno.env.get("PAYPAL_CLIENT_SECRET"),
+        webhook_id_configured: !!Deno.env.get("PAYPAL_WEBHOOK_ID"),
       });
-      return jsonError(
-        503,
-        "provider_unavailable",
-        "Subscription billing is temporarily unavailable. Please try again shortly.",
-      );
+      return jsonError(503, "provider_unavailable", "Payments are temporarily unavailable. Please try again shortly.");
     }
 
     // ---- product + plan (server-side pricing) --------------------------
@@ -98,24 +68,48 @@ serve(async (req) => {
       return jsonError(400, "not_recurring", "That product isn't a subscription.");
     }
 
-    const { data: plan } = await admin.from("monetization_product_plans")
-      .select("*")
-      .eq("product_id", product.id)
-      .eq("billing_interval", interval)
-      .eq("provider", providerName)
-      .eq("environment", provider.environment)
-      .eq("is_active", true)
-      .maybeSingle();
+    // Plans are seeded by the admin catalog sync, but a missing plan must not
+    // dead-end a paying member: create it on demand from the catalog price
+    // (deterministic idempotency key → no duplicate provider plans).
+    // Annual products carry their cadence in the catalog row itself — trust
+    // that over whatever the browser asked for so we never bill an annual
+    // price on a monthly cycle.
+    const resolvedInterval = intervalForProduct(product, interval);
+
+    const { plan, error: planError } = await ensureProviderPlan({
+      admin,
+      provider,
+      providerName,
+      product,
+      interval: resolvedInterval,
+    });
     if (!plan?.paypal_plan_id) {
-      safeLog("subscription_plan_unavailable", {
-        functionVersion: FUNCTION_VERSION,
-        productSlug,
-        interval,
-        provider: providerName,
-        environment: provider.environment,
+      // Distinct internal reason codes so admin diagnostics can tell a
+      // sandbox/live catalog mismatch apart from a missing product or plan.
+      const env = paypalEnvironment();
+      const productEnv = product.paypal_product_env ?? null;
+      const reason = !product.paypal_product_id
+        ? "live_product_missing"
+        : productEnv && productEnv !== env
+        ? "catalog_environment_mismatch"
+        : /auth|credential|401/i.test(planError ?? "")
+        ? "oauth_authentication_failed"
+        : "live_plan_missing";
+      safeLog("plan_provision_failed", {
+        reason,
+        slug: productSlug,
+        interval: resolvedInterval,
+        environment: env,
+        stored_product_env: productEnv,
+        message: planError,
       });
-      return jsonError(409, "plan_unavailable", "That billing option isn't set up yet. Please pick another.");
+      return jsonError(
+        409,
+        "plan_unavailable",
+        "That billing option isn't set up yet. Please pick another or contact support.",
+      );
     }
+
 
     // ---- consent (required for recurring billing) ----------------------
     if (!consentId) {
@@ -144,21 +138,24 @@ serve(async (req) => {
       });
     }
 
-    const tier = classifyProduct(product).grantsTier ?? "starter";
+    // Tool subscriptions (e.g. PermitPath Plus) grant no host tier — store the
+    // product slug so tier resolvers map them to `free` instead of promoting.
+    const classified = classifyProduct(product);
+    const tier = classified.grantsTier ??
+      (typeof (product.metadata as Record<string, unknown> | null)?.grants_tier === "string"
+        ? String((product.metadata as Record<string, unknown>).grants_tier)
+        : product.slug);
     const origin = req.headers.get("origin") ?? "https://vendibook.com";
     const returnUrl = `${origin}${body.return_path ?? "/account/subscription?subscribed=1"}`;
     const cancelUrl = `${origin}${body.cancel_path ?? "/pricing?cancelled=1"}`;
 
     const { data: profile } = await admin.from("profiles")
-      .select("first_name, last_name").eq("id", user.id).maybeSingle();
-    const subscriberName = [profile?.first_name, profile?.last_name]
-      .filter((value: unknown) => typeof value === "string" && value.trim())
-      .join(" ") || null;
+      .select("full_name").eq("id", user.id).maybeSingle();
 
     const subscription = await provider.createSubscription({
       planId: plan.paypal_plan_id,
       subscriberEmail: user.email,
-      subscriberName,
+      subscriberName: profile?.full_name ?? null,
       returnUrl,
       cancelUrl,
       customId: user.id,
@@ -166,13 +163,18 @@ serve(async (req) => {
     });
 
     if (!subscription.approveUrl) {
+      safeLog("approval_url_missing", {
+        environment: paypalEnvironment(),
+        subscription_id: subscription.providerSubscriptionId,
+        status: subscription.status,
+      });
       return jsonError(502, "approval_link_missing", "We couldn't start that subscription. Please try again.");
     }
 
     const { data: row, error: insertError } = await admin.from("paypal_subscriptions").insert({
       user_id: user.id,
       tier,
-      billing_interval: interval,
+      billing_interval: resolvedInterval,
       paypal_product_id: product.paypal_product_id,
       paypal_plan_id: plan.paypal_plan_id,
       paypal_subscription_id: subscription.providerSubscriptionId,
@@ -181,12 +183,7 @@ serve(async (req) => {
       currency: plan.currency,
       next_billing_time: subscription.nextBillingTime,
       consent_id: consentId,
-      metadata: {
-        product_slug: product.slug,
-        product_id: product.id,
-        plan_id: plan.id,
-        function_version: FUNCTION_VERSION,
-      },
+      metadata: { product_slug: product.slug, product_id: product.id, plan_id: plan.id },
     }).select().maybeSingle();
     if (insertError) {
       safeLog("subscription_row_insert_failed", { message: insertError.message });
@@ -203,11 +200,10 @@ serve(async (req) => {
       reference: subscription.providerSubscriptionId,
       newValue: {
         tier,
-        interval,
+        interval: resolvedInterval,
         plan_id: plan.id,
         amount_cents: plan.price_cents,
         status: subscription.status,
-        function_version: FUNCTION_VERSION,
       },
     });
 
@@ -218,14 +214,9 @@ serve(async (req) => {
       tier,
       amount_cents: plan.price_cents,
       currency: plan.currency,
-      billing_interval: interval,
-      function_version: FUNCTION_VERSION,
+      billing_interval: resolvedInterval,
     });
   } catch (err) {
-    safeLog("subscription_create_unhandled", {
-      functionVersion: FUNCTION_VERSION,
-      message: err instanceof Error ? err.message : "unknown_error",
-    });
     return unknownErrorResponse(err);
   }
 });

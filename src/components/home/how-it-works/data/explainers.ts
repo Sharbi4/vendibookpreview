@@ -55,14 +55,14 @@ const build = (
 
 // Scripts are the authoritative source for both TTS and captions.
 // Each sentence maps 1:1 to one scene, in order. Scenes render real UI
-// (search results, listing detail, checkout w/ Affirm, agreement signing,
+// (search results, listing detail, checkout, agreement signing,
 // host dashboard, PermitPath) — the mascot only appears in the closing frame.
 
 const BUYING_SENTENCES = [
   'Buying a food truck is a big deal — Vendibook makes it safe.',
-  'Browse verified listings with real photos and specs.',
+  'Browse detailed listings with real photos and specs.',
   'Message sellers and make offers directly.',
-  'Pay by card, or split it into monthly payments with Affirm.',
+  'Pay by card or PayPal at checkout, or apply for equipment financing through our lending partner.',
   'Your money stays protected until you confirm delivery.',
   'And every permit and license you need? Our free PermitPath tool maps it out.',
   'Find your truck on Vendibook.',
@@ -90,7 +90,7 @@ const HOSTING_SENTENCES = [
   'Own a commercial kitchen or vendor space? Turn it into income.',
   'List free, set your own calendar and rates.',
   'Review and approve booking requests in one tap.',
-  'Agreements sign online, and payouts land straight in your bank.',
+  'Agreements sign online, and payouts are sent to your PayPal, ACH, or Venmo account on file.',
   'Track earnings and bookings from your host dashboard.',
   'Start hosting on Vendibook.',
 ];
@@ -101,16 +101,16 @@ export const explainers: Explainer[] = [
     title: 'Buying on Vendibook',
     tileHeadline: 'How Buying Works',
     description:
-      'Browse verified listings, message sellers, and pay protected — all from one dashboard.',
+      'Browse listings, message sellers, and pay through secure checkout — all from one dashboard.',
     durationSeconds: 28,
     accessory: 'none',
     heroImage: buyingHero,
     narrationScript: BUYING_SENTENCES.join(' '),
     // Sentence -> scene:
     // 1) Marketplace intro (0)
-    // 2) Verified listings & search (1)
+    // 2) Detailed listings & search (1)
     // 3) Listing detail + messaging (3)
-    // 4) Checkout with card & Affirm (4)
+    // 4) Checkout with card / PayPal / financing (4)
     // 5) Protected payment status (5)
     // 6) PermitPath / requirements (2)
     // 7) Close (7)
@@ -120,9 +120,9 @@ export const explainers: Explainer[] = [
       BUYING_SENTENCES,
       [
         'Intro',
-        'Verified listings',
+        'Detailed listings',
         'Message & offer',
-        'Card or Affirm',
+        'Card, PayPal or financing',
         'Protected payment',
         'PermitPath',
         'Close',
@@ -165,7 +165,7 @@ export const explainers: Explainer[] = [
       ],
     ),
     ctaLabel: 'Explore Rentals',
-    ctaRoute: '/browse?mode=rent',
+    ctaRoute: '/search?mode=rent',
     secondaryCtaLabel: 'How Rentals Work',
     secondaryCtaRoute: '/how-it-works',
     transcript: RENTING_SENTENCES.join(' '),
@@ -211,7 +211,7 @@ export const explainers: Explainer[] = [
     title: 'Hosting on Vendibook',
     tileHeadline: 'How Hosting Works',
     description:
-      'Open your calendar, approve real requests, and get paid straight to your bank.',
+      'Open your calendar, approve real requests, and get paid after the booking starts.',
     durationSeconds: 26,
     accessory: 'none',
     heroImage: hostingHero,

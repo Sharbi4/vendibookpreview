@@ -14,9 +14,9 @@ interface Props {
 }
 
 const tierCopy: Record<Props['requiredTier'], { label: string; blurb: string }> = {
-  starter: { label: 'Starter', blurb: 'Unlocks 4 tools including PricePilot and Listing Studio.' },
-  pro: { label: 'Pro', blurb: 'Everything in Starter, plus Marketing Studio, Concept Lab, and Market Radar.' },
-  premium: { label: 'Premium', blurb: 'The full stack — BuildKit, blueprints, sourcing, and priority support.' },
+  starter: { label: 'Starter', blurb: 'Unlocks premium tools including PricePilot.' },
+  pro: { label: 'Pro', blurb: 'Everything in Starter, plus PermitPath Plus and the full tools bundle.' },
+  premium: { label: 'Premium', blurb: 'The full stack — every tool, portfolio analytics, and priority support.' },
 };
 
 /**

@@ -1,4 +1,6 @@
 import { useState, useMemo } from 'react';
+import { useCatalogPrice } from '@/hooks/useCatalogPrices';
+import { ACTIVE_PRODUCT_SLUGS } from '@/lib/monetization/catalogPricing';
 import { Megaphone, Share2, TrendingUp, CheckCircle2, Loader2, Copy, Star, Facebook, Search as GoogleIcon, Instagram, Mail, Zap } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -74,6 +76,7 @@ function calcSeoScore(listing: any): SeoScore {
 }
 
 export const PromotionHub = () => {
+  const boostPrice = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.featuredBoost);
   const { listings } = useHostListings();
   const published = listings.filter((l) => l.status === 'published');
   const [selectedId, setSelectedId] = useState<string>('');
@@ -95,7 +98,7 @@ export const PromotionHub = () => {
     } catch (e: any) {
       const parsed = await parseEdgeError(e);
       if (isPremiumError(parsed)) {
-        premiumUpsell.show(featureFromParsed(parsed) ?? 'marketing-studio', 'promotion_hub');
+        premiumUpsell.show(featureFromParsed(parsed) ?? 'pricepilot', 'promotion_hub');
       } else {
         toast({
           title: 'Could not generate copy',
@@ -160,36 +163,31 @@ export const PromotionHub = () => {
 
         {/* BOOST */}
         <TabsContent value="boost" className="mt-4 space-y-3">
-          <Card className="border border-border overflow-hidden">
-            <div className="bg-gradient-to-br from-amber-500/10 via-orange-500/10 to-pink-500/10 p-5 border-b border-border">
-              <div className="flex items-center gap-2 mb-1">
-                <Star className="h-4 w-4 text-amber-600 fill-amber-500" />
-                <span className="text-xs font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-300">
-                  Featured Boost
-                </span>
+          {/* Featured Boost is sold in the Upgrades area above — this stays a pointer only. */}
+          <Card className="border border-border">
+            <CardContent className="p-4 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Star className="h-4 w-4 text-amber-600" />
+                {selected?.featured_enabled
+                  ? 'Featured Boost is active on this listing — extending adds 30 days.'
+                  : `Featured Boost (${boostPrice.label}) pins this listing to the top of search for 30 days.`}
               </div>
-              <h3 className="text-lg font-bold text-foreground">Top of search for 30 days</h3>
-              <p className="text-sm text-muted-foreground mt-1">
-                $30 one-time. Pin to top of category, glow in cards, weekly performance email.
-              </p>
-              <p className="text-xs text-muted-foreground/80 mt-1.5">
-                Extending stacks — you never lose remaining days. Rotates fairly with other Featured
-                listings each day so every booster reaches the top slot.
-              </p>
               <Button
-                variant="dark-shine"
-                className="mt-3 rounded-xl"
+                variant="outline"
+                size="sm"
+                className="rounded-xl"
                 onClick={() => {
                   toast({
                     title: 'Open the Listings tab',
-                    description: 'Click "Boost" on the listing card to activate or extend.'});
+                    description: 'Click "Boost" on the listing card to activate or extend.' });
                 }}
               >
                 <Zap className="h-4 w-4 mr-1.5" />
-                {selected?.featured_enabled ? 'Active — extend (adds 30 days)' : 'Activate $30 boost'}
+                {selected?.featured_enabled ? 'Extend boost' : 'Boost this listing'}
               </Button>
-            </div>
+            </CardContent>
           </Card>
+
 
           <Card className="border border-border">
             <CardHeader className="pb-3">

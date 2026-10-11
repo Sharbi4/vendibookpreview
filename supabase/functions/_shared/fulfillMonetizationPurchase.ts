@@ -8,6 +8,8 @@
  * Safe to call repeatedly — every write is either idempotent or guarded.
  */
 
+import { alertAdminsOfPayment, formatUsd } from "./adminPaymentAlert.ts";
+
 const FEATURED_PROMOS = new Set(["featured_7", "featured_30", "top_of_search"]);
 
 export async function fulfillMonetizationPurchase(
@@ -131,6 +133,26 @@ export async function fulfillMonetizationPurchase(
         () => {},
       );
   }
+
+  // ---- admin revenue alert (featured boosts, add-ons, upgrades) ---------
+  await alertAdminsOfPayment(
+    supabase,
+    FEATURED_PROMOS.has(product?.promo_type) ? "featured_purchase" : "addon_purchase",
+    {
+      product_name: product?.name ?? "Upgrade",
+      product_slug: product?.slug ?? undefined,
+      promo_type: product?.promo_type ?? undefined,
+      duration_days: product?.duration_days ?? undefined,
+      amount: formatUsd(purchase.amount_cents ?? purchase.amount_paid_cents),
+      provider: purchase.payment_provider ?? undefined,
+      listing_id: purchase.listing_id ?? undefined,
+      user_id: purchase.user_id ?? undefined,
+      purchase_id: purchase.id,
+      listing_url: purchase.listing_id
+        ? `https://vendibook.com/listing/${purchase.listing_id}`
+        : undefined,
+    },
+  );
 
   return { fulfilled: true };
 }

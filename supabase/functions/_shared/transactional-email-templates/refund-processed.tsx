@@ -3,7 +3,7 @@ import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } 
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
-import { BrandHeader } from './_blocks.tsx'
+import { BrandFooter, BrandHeader } from './_blocks.tsx'
 interface Props {
   recipientName?: string
   listingTitle?: string
@@ -40,7 +40,7 @@ const E = ({ recipientName, listingTitle, refundAmount, reason, recipientType = 
           </Section>
           {bookingId ? <Text style={s.footnote}>Reference: {String(bookingId).slice(0, 8)}</Text> : null}
         </Section>
-      </Container></Body></Html>
+      <BrandFooter /></Container></Body></Html>
   )
 }
 

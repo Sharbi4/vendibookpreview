@@ -58,7 +58,7 @@ export const generateLocalBusinessSchema = (city: string, state: string) => ({
   '@context': 'https://schema.org',
   '@type': 'LocalBusiness',
   name: `Vendibook - ${city}`,
-  description: `Rent or buy food trucks, food trailers, shared kitchens, and Vendor Spaces in ${city}, ${state}.`,
+  description: `Shop food trucks, food trailers, carts and mobile food equipment nationwide. Buy, sell or rent with financing options, verified sellers and delivery. Find listings in ${city}, ${state}.`,
   url: `https://vendibook.com/${city.toLowerCase().replace(' ', '-')}/browse`,
   areaServed: {
     '@type': 'City',
@@ -78,14 +78,14 @@ export const generateLocalBusinessSchema = (city: string, state: string) => ({
 export const generateServiceSchema = () => ({
   '@context': 'https://schema.org',
   '@type': 'Service',
-  name: 'Food Truck & Mobile Vendor Marketplace',
+  name: 'Vendibook',
   provider: {
     '@type': 'Organization',
     name: 'Vendibook',
     url: 'https://vendibook.com',
   },
   serviceType: 'Marketplace',
-  description: 'Rent or buy food trucks, food trailers, shared kitchens, and Vendor Spaces across the United States.',
+  description: 'Shop food trucks, food trailers, carts and mobile food equipment nationwide. Buy, sell or rent with financing options, verified sellers and delivery.',
   areaServed: {
     '@type': 'Country',
     name: 'United States',
@@ -133,7 +133,7 @@ export const generateBlogPostSchema = (post: {
   headline: post.title,
   description: post.description,
   url: `https://vendibook.com/blog/${post.slug}`,
-  image: post.image || 'https://vendibook.com/images/vendibook-og-image.jpg',
+  image: post.image || 'https://vendibook.com/images/social/vendibook-og-default.jpg',
   author: {
     '@type': 'Person',
     name: post.author,
@@ -227,7 +227,7 @@ export const generateCityCategoryFAQSchema = (
     ? [
         {
           q: `How much does it cost to rent a ${lowerSingular} in ${city}, ${state}?`,
-          a: `${city} ${lowerSingular} rentals on Vendibook typically range from $200–$500 per day, with weekly and monthly discounts available. Pricing varies by size, equipment, and host. Browse live ${city} listings for current rates.`,
+          a: `Cost depends on the vehicle or trailer type, location within ${city}, rental term, equipment, and condition. Each Vendibook listing shows the owner's current daily, weekly, and (where offered) monthly rates, so you can compare real ${city} options side by side.`,
         },
         {
           q: `Do I need a license to operate a ${lowerSingular} in ${city}?`,
@@ -247,7 +247,7 @@ export const generateCityCategoryFAQSchema = (
         },
         {
           q: `Is renting cheaper than buying a ${lowerSingular} in ${city}?`,
-          a: `For most new operators in ${city}, renting is dramatically cheaper than buying. A new ${lowerSingular} costs $50K–$150K+ to purchase, while Vendibook rentals start under $300/day — letting you test concepts and locations before committing.`,
+          a: `Renting reduces upfront investment and fits operators testing a concept, covering a seasonal rush, or needing temporary equipment. Buying builds equity in the asset and suits long-term, full-time operation. Compare current ${city} rental listings with ${city} purchase listings on Vendibook to see real numbers for both paths.`,
         },
       ]
     : [
@@ -261,7 +261,7 @@ export const generateCityCategoryFAQSchema = (
         },
         {
           q: `What financing options are available for buying a ${lowerSingular}?`,
-          a: `Many ${city} buyers finance through SBA loans, equipment financing, or seller financing. Vendibook also supports Affirm and Klarna for qualifying purchases up to $30,000. Contact the seller directly to discuss financing.`,
+          a: `Many ${city} buyers finance through SBA loans, equipment financing, or seller financing. Vendibook also offers equipment financing through a third-party lending partner for qualifying buyers, subject to approval. Contact the seller directly to discuss financing.`,
         },
         {
           q: `Can I inspect a ${lowerSingular} before buying in ${city}?`,
@@ -603,7 +603,7 @@ export const generateListingBreadcrumbSchema = (listing: {
   };
 };
 
-// ItemList schema for search results - helps Google index multiple products
+// Collection references only. Product offers belong on individual listing pages.
 export const generateItemListSchema = (
   listings: ProductListItem[],
   searchParams?: {
@@ -611,6 +611,7 @@ export const generateItemListSchema = (
     category?: string;
     query?: string;
     location?: string;
+    canonicalPath?: string;
   }
 ) => {
   const categoryLabels: Record<string, string> = {
@@ -637,40 +638,31 @@ export const generateItemListSchema = (
   if (searchParams?.mode && searchParams.mode !== 'all') urlParams.set('mode', searchParams.mode);
   if (searchParams?.category && searchParams.category !== 'all') urlParams.set('category', searchParams.category);
   if (searchParams?.query) urlParams.set('q', searchParams.query);
-  const listUrl = `https://vendibook.com/search${urlParams.toString() ? '?' + urlParams.toString() : ''}`;
+  const listUrl = searchParams?.canonicalPath ? new URL(searchParams.canonicalPath, 'https://vendibook.com').href : 'https://vendibook.com/search' + (urlParams.size ? '?' + urlParams.toString() : '');
+
+  // Loading, failed, and empty searches have no visible list to mark up.
+  // Emit page identity instead of an empty carousel candidate.
+  if (listings.length === 0) {
+    return {
+      '@context': 'https://schema.org',
+      '@type': 'CollectionPage',
+      name: listName,
+      url: listUrl,
+    };
+  }
 
   return {
     '@context': 'https://schema.org',
     '@type': 'ItemList',
     name: listName,
     url: listUrl,
-    numberOfItems: listings.length,
-    itemListElement: listings.slice(0, 50).map((listing, index) => {
-      const price = listing.mode === 'rent'
-        ? (listing.price_daily || listing.price_weekly || 0)
-        : (listing.price_sale || 0);
-
-      return {
-        '@type': 'ListItem',
-        position: index + 1,
-        item: {
-          '@type': 'Product',
-          name: listing.title,
-          url: `https://vendibook.com/listing/${listing.id}`,
-          image: listing.cover_image_url || 'https://vendibook.com/placeholder.svg',
-          description: listing.description?.slice(0, 200) || `${categoryLabels[listing.category] || 'Asset'} ${listing.mode === 'rent' ? 'for rent' : 'for sale'}`,
-          offers: {
-            '@type': 'Offer',
-            url: `https://vendibook.com/listing/${listing.id}`,
-            priceCurrency: 'USD',
-            price: price.toString(),
-            availability: listing.status === 'published'
-              ? 'https://schema.org/InStock'
-              : 'https://schema.org/OutOfStock',
-          },
-        },
-      };
-    }),
+    numberOfItems: Math.min(listings.length, 50),
+    itemListElement: listings.slice(0, 50).map((listing, index) => ({
+      '@type': 'ListItem',
+      position: index + 1,
+      name: listing.title,
+      url: 'https://vendibook.com/listing/' + listing.id,
+    })),
   };
 };
 
@@ -682,16 +674,15 @@ export const generateCityCategoryBreadcrumbSchema = (
   cityStateSlug: string,
   cityName: string,
   stateCode: string
-) => ({
-  '@context': 'https://schema.org',
-  '@type': 'BreadcrumbList',
-  itemListElement: [
-    {
-      '@type': 'ListItem',
-      position: 1,
-      name: 'Home',
-      item: 'https://vendibook.com',
-    },
+) => {
+  const stateHubs: Record<string, { slug: string; name: string }> = {
+    TX: { slug: 'texas', name: 'Texas Rentals' },
+    FL: { slug: 'florida', name: 'Florida Rentals' },
+    CA: { slug: 'california', name: 'California Rentals' },
+  };
+
+  const items: { '@type': string; position: number; name: string; item: string }[] = [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://vendibook.com' },
     {
       '@type': 'ListItem',
       position: 2,
@@ -704,14 +695,34 @@ export const generateCityCategoryBreadcrumbSchema = (
       name: categoryLabel,
       item: `https://vendibook.com/search?mode=${mode === 'buy' ? 'sale' : 'rent'}&category=${categorySlug}`,
     },
-    {
+  ];
+
+  // Rental pages sit under the national/state rental hubs (hub-and-spoke SEO).
+  if (mode === 'rent') {
+    const stateHub = stateHubs[stateCode];
+    items.push({
       '@type': 'ListItem',
       position: 4,
-      name: `${cityName}, ${stateCode}`,
-      item: `https://vendibook.com/${mode}/${categorySlug}/${cityStateSlug}`,
-    },
-  ],
-});
+      name: stateHub ? stateHub.name : 'Rentals Nationwide',
+      item: stateHub
+        ? `https://vendibook.com/food-trucks-for-rent/${stateHub.slug}`
+        : 'https://vendibook.com/food-trucks-for-rent',
+    });
+  }
+
+  items.push({
+    '@type': 'ListItem',
+    position: items.length + 1,
+    name: `${cityName}, ${stateCode}`,
+    item: `https://vendibook.com/${mode}/${categorySlug}/${cityStateSlug}`,
+  });
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: items,
+  };
+};
 
 // Search results breadcrumb schema
 export const generateSearchBreadcrumbSchema = (searchParams?: {

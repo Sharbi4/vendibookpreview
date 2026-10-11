@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { format } from 'date-fns';
+import { parseDateOnly } from '@/lib/sale/handoff';
 import { 
   Package, Truck, Save, X, Edit2, 
   ExternalLink, Calendar, MapPin
@@ -200,7 +201,7 @@ const TrackingManagementCard = ({
                 <p className="text-muted-foreground">Est. Delivery</p>
                 <p className="font-medium">
                   {transaction.estimated_delivery_date 
-                    ? format(new Date(transaction.estimated_delivery_date), 'MMM d, yyyy') 
+                    ? format(parseDateOnly(transaction.estimated_delivery_date) ?? new Date(transaction.estimated_delivery_date), 'MMM d, yyyy') 
                     : '-'}
                 </p>
               </div>

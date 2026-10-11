@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { ArrowRight, DollarSign, FileCheck, Wrench, FileText, Lightbulb, Search, Megaphone, Rocket, Scale } from 'lucide-react';
+import { ArrowRight, DollarSign, FileCheck, Rocket, Scale } from 'lucide-react';
 
 interface Tool {
   id: string;
@@ -12,28 +12,21 @@ interface Tool {
   gradient: string;
 }
 
+// PARKED 2026-08-25: BuildKit, Listing Studio, Concept Lab, Market Radar, and
+// Marketing Studio removed from cross-links while disabled. Restore entries
+// here (and in toolFlows) when the tools relaunch.
 const allTools: Tool[] = [
   { id: 'pricepilot', name: 'PricePilot', tagline: 'Set competitive pricing', path: '/tools/pricepilot', icon: <DollarSign className="h-5 w-5" />, gradient: 'from-yellow-500 to-amber-500' },
   { id: 'permitpath', name: 'PermitPath', tagline: 'Find permits & licenses', path: '/tools/permitpath', icon: <FileCheck className="h-5 w-5" />, gradient: 'from-amber-500 to-orange-500' },
-  { id: 'buildkit', name: 'BuildKit', tagline: 'Get equipment guides', path: '/tools/buildkit', icon: <Wrench className="h-5 w-5" />, gradient: 'from-[#FF5124] to-[#FFBA08]' },
-  { id: 'listing-studio', name: 'Listing Studio', tagline: 'Write compelling listings', path: '/tools/listing-studio', icon: <FileText className="h-5 w-5" />, gradient: 'from-[#FF5124] to-[#FF9F1C]' },
-  { id: 'concept-lab', name: 'Concept Lab', tagline: 'Generate business ideas', path: '/tools/concept-lab', icon: <Lightbulb className="h-5 w-5" />, gradient: 'from-[#FF5124] to-[#FFBA08]' },
-  { id: 'market-radar', name: 'Market Radar', tagline: 'Research your market', path: '/tools/market-radar', icon: <Search className="h-5 w-5" />, gradient: 'from-[#FF9F1C] to-[#FFBA08]' },
-  { id: 'marketing-studio', name: 'Marketing Studio', tagline: 'Create marketing materials', path: '/tools/marketing-studio', icon: <Megaphone className="h-5 w-5" />, gradient: 'from-pink-500 to-purple-600' },
   { id: 'startup-guide', name: 'Startup Guide', tagline: 'Complete launch checklist', path: '/tools/startup-guide', icon: <Rocket className="h-5 w-5" />, gradient: 'from-emerald-500 to-teal-500' },
   { id: 'regulations-hub', name: 'Regulations Hub', tagline: 'Permits & compliance by state', path: '/tools/regulations-hub', icon: <Scale className="h-5 w-5" />, gradient: 'from-blue-500 to-purple-600' }
 ];
 
 const toolFlows: Record<string, string[]> = {
-  'concept-lab': ['buildkit', 'permitpath', 'startup-guide'],
-  'buildkit': ['permitpath', 'pricepilot', 'startup-guide'],
-  'permitpath': ['buildkit', 'regulations-hub', 'startup-guide'],
-  'pricepilot': ['listing-studio', 'market-radar', 'marketing-studio'],
-  'listing-studio': ['pricepilot', 'market-radar', 'marketing-studio'],
-  'market-radar': ['concept-lab', 'pricepilot', 'startup-guide'],
-  'marketing-studio': ['listing-studio', 'concept-lab', 'market-radar'],
+  'permitpath': ['pricepilot', 'regulations-hub', 'startup-guide'],
+  'pricepilot': ['permitpath', 'regulations-hub', 'startup-guide'],
   'startup-guide': ['permitpath', 'regulations-hub', 'pricepilot'],
-  'regulations-hub': ['permitpath', 'startup-guide', 'buildkit']
+  'regulations-hub': ['permitpath', 'startup-guide', 'pricepilot']
 };
 
 interface ToolCrossLinksProps {

@@ -2,17 +2,12 @@ import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import {
   ArrowRight,
-  BadgeCheck,
-  Camera,
+  Banknote,
+  Calculator,
   CheckCircle2,
-  ChevronRight,
   CreditCard,
-  FileCheck,
-  MapPin,
-  MessageCircle,
-  Package,
+  ImagePlus,
   ShieldCheck,
-  Sparkles,
   Truck,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -26,550 +21,584 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
 import JsonLd from '@/components/JsonLd';
+import { TellVendibookButton } from '@/components/lead/TellVendibookButton';
+import { useCatalogPrice } from '@/hooks/useCatalogPrices';
+import { ACTIVE_PRODUCT_SLUGS } from '@/lib/monetization/catalogPricing';
+import { useRealSaleListingPhotos } from '@/hooks/useRealSaleListingPhotos';
 
-import trailerWeddingFlowers from '@/assets/trailer-wedding-flowers.jpg';
-import trailerCreamParty from '@/assets/trailer-cream-party.jpg';
-import trailerPinkVintage from '@/assets/trailer-pink-vintage.jpg';
+import heroSelling from '@/assets/how-selling-hero.jpg';
+import heroTruck from '@/assets/hero-food-truck.jpg';
+import trailerGrill from '@/assets/trailer-orange-grill.jpg';
+import trailerCafecito from '@/assets/trailer-cafecito.jpg';
+import TransactionConfidenceSection from '@/components/seo/TransactionConfidenceSection';
+
+const LIST_HREF = '/list/start?mode=sale';
 
 const faqs = [
   {
-    question: 'How do I sell my food truck on Vendibook?',
+    question: 'Where can I sell my food truck?',
     answer:
-      'Start a free for-sale listing and choose the listing experience that works best for you. You can chat with Vendi to build the listing with you or use the standard listing editor. Add your photos, price, location, equipment details, and publish when you are ready.',
+      'Vendibook is a marketplace built specifically for mobile food equipment. Create a free listing with photos, specs, and your asking price, and it becomes discoverable to buyers searching for food trucks, food trailers, and concession trailers nationwide. You communicate with interested buyers directly through Vendibook messaging and offers.',
   },
   {
-    question: 'Does it cost anything to list my food truck?',
+    question: 'How do I sell a food truck online?',
     answer:
-      'Creating a listing is free. If you arrange payment directly with the buyer in person, there is no Vendibook platform transaction fee. If you choose Vendibook online checkout, the standard seller fee is 12.9%; eligible Vendibook Pro sellers receive the reduced 10.9% rate.',
+      'Create a free Vendibook account and open the listing builder. Use the step-by-step wizard. Add exterior and interior photos, equipment specs, dimensions, and an honest asking price, save a draft at any point, then publish when you are ready. Buyers message you and submit offers, and you accept, decline, or counter from your dashboard.',
   },
   {
-    question: 'Can buyers finance a food truck or food trailer?',
+    question: 'Can I sell a food trailer or concession trailer on Vendibook?',
     answer:
-      'Buyer financing options are available through Vendibook financing partners for eligible equipment and applicants. Financing approval and terms are determined by the financing provider.',
+      'Yes. Vendibook supports food trailers, concession trailers, mobile kitchens, and specialty trailers alongside food trucks, with equipment-specific fields for towing, dimensions, power, and water setup. List your trailer the same way you would a truck — publishing is free.',
   },
   {
-    question: 'How do I know what to ask for my food truck?',
+    question: 'Is it really free to list?',
     answer:
-      'PricePilot can help you compare your truck or trailer against relevant market evidence and build a practical pricing range. Third-party marketplace sold-status records are treated as observed market evidence, not verified closing prices.',
+      'Yes. Publishing a standard for-sale listing is free, subject to current account and listing limits. You do not need identity verification, a membership, or any paid add-on to publish.',
   },
   {
-    question: 'Can I sell a food trailer instead?',
+    question: 'What happens if I sell and get paid in person?',
     answer:
-      'Yes. Vendibook supports food trucks and food trailers, including specialty builds such as coffee, concession, pizza, BBQ, beverage, and mobile kitchen units.',
+      'Equipment sales settled in person carry no Vendibook platform transaction fee. You and the buyer arrange payment and the handoff directly, and you can still use Vendibook messaging, offers, and your dashboard to keep everything in one place.',
   },
   {
-    question: 'Can the buyer pick it up or have it delivered?',
+    question: 'What is the fee if the buyer pays online?',
     answer:
-      'Sellers can describe pickup and delivery options in the listing. Vendibook also supports freight and delivery workflows for eligible equipment, so sellers are not limited to buyers in the immediate area.',
+      'Vendibook online checkout is optional. A completed equipment sale through online checkout carries a standard 12.9% seller fee, or 10.9% for active Vendibook Pro sellers, with Pro savings capped at $500 per completed transaction. Payment-processing costs charged by the payment provider are separate where applicable.',
+  },
+  {
+    question: 'How does secure PayPal checkout work for a sale?',
+    answer:
+      'If you turn on optional Vendibook online checkout, the buyer pays through PayPal’s secure hosted checkout rather than handing you cash or a wire. Card details are handled by PayPal, not by Vendibook, and eligible buyers may see PayPal Pay Later options at checkout. Payouts on completed online sales are reviewed and issued by Vendibook. You can read the full breakdown on the Vendibook payments page.',
+  },
+  {
+    question: 'When do I get paid after an online sale?',
+    answer:
+      'Payouts on completed online sales are reviewed by the Vendibook team after the handoff is confirmed. They are typically released within 24 hours of delivery confirmation, and we always strive for 24–48 hours. Funds are sent via PayPal, ACH, or Venmo depending on the payout account you have on file.',
+  },
+  {
+    question: 'Can Vendibook Freight deliver the truck to my buyer?',
+    answer:
+      'Where coordination is available, buyers can review Vendibook Freight delivery options from the listing before they commit, so you do not have to drive it across the country yourself. Availability and cost depend on the listing, the route, and the equipment, and many sales are still simple local pickup.',
+  },
+  {
+    question: 'Can a buyer finance my food truck or trailer?',
+    answer:
+      'Eligible buyers can apply with third-party financing partners from a for-sale listing. Approval depends on the applicant and the equipment, and provider approval applies. Vendibook is not a lender: it does not approve applicants, set rates or terms, or guarantee funding, and you do not manage the buyer’s application.',
   },
   {
     question: 'Can I save my listing and finish it later?',
     answer:
-      'Yes. The listing flow supports drafts so you can save your progress, return later, add more photos or details, review the listing, and publish only when you are ready.',
+      'Yes. Listings save as drafts while you build them, as you complete the step-by-step wizard. Nothing goes public until you review it and confirm the publish step yourself.',
+  },
+  {
+    question: 'Do I have to arrange shipping?',
+    answer:
+      'No. Many sales are local pickup. You can offer delivery yourself, and where freight coordination is available buyers can check delivery options from the listing before they commit. Availability depends on the listing, the route, and the equipment.',
+  },
+  {
+    question: 'Do I need identity verification?',
+    answer:
+      'No. Identity verification is optional, powered by Plaid, and adds an Identity Verified badge to your profile when completed. It is not required to publish, sell, get paid, or use pay in person. It applies to the account that completes it — it is not a blanket guarantee about every other user.',
+  },
+  {
+    question: 'Can Vendibook make the listing for me?',
+    answer:
+      'The self-service paths are free and most sellers use them. Concierge Listing is an optional one-time paid service where our team builds and polishes the listing from your photos and information.',
+  },
+];
+
+const faqSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'FAQPage',
+  mainEntity: faqs.map((faq) => ({
+    '@type': 'Question',
+    name: faq.question,
+    acceptedAnswer: { '@type': 'Answer', text: faq.answer },
+  })),
+};
+
+const breadcrumbSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: [
+    { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://vendibook.com' },
+    { '@type': 'ListItem', position: 2, name: 'Sell My Food Truck', item: 'https://vendibook.com/sell-my-food-truck' },
+  ],
+};
+
+const howToSchema = {
+  '@context': 'https://schema.org',
+  '@type': 'HowTo',
+  name: 'How to sell your food truck or trailer on Vendibook',
+  description:
+    'Build a free for-sale listing, review and publish it, then manage inquiries and complete the handoff.',
+  step: [
+    {
+      '@type': 'HowToStep',
+      position: 1,
+      name: 'Build your listing',
+      text: 'Use the step-by-step wizard. Add photos, specs, and your asking price.',
+      url: 'https://vendibook.com/list/start',
+    },
+    {
+      '@type': 'HowToStep',
+      position: 2,
+      name: 'Review, save, publish',
+      text: 'Save a draft while you gather details, review the live preview, then publish when you are ready. Publishing a standard listing is free.',
+      url: 'https://vendibook.com/list/start',
+    },
+    {
+      '@type': 'HowToStep',
+      position: 3,
+      name: 'Manage inquiries and the handoff',
+      text: 'Answer buyer questions and offers, choose pay in person or optional Vendibook online checkout, then coordinate pickup, delivery, or freight.',
+      url: 'https://vendibook.com/how-it-works?role=sell',
+    },
+  ],
+};
+
+const assetPoints = [
+  {
+    title: 'It is equipment, not a used couch',
+    body: 'Buyers want build year, kitchen equipment, power and water setup, towing details, and honest photos. Vendibook has fields for all of it, so you are not writing a paragraph and hoping.',
+  },
+  {
+    title: 'The audience is already shopping',
+    body: 'Your listing sits inside a marketplace people browse specifically for food trucks, trailers, and mobile kitchens — not a general classifieds feed where it competes with furniture.',
+  },
+  {
+    title: 'The sale has moving parts',
+    body: 'Questions, offers, documents, payment method, and getting the unit to the buyer. Vendibook keeps those in one place instead of scattered texts.',
+  },
+];
+
+const wholeSale = [
+  {
+    icon: Banknote,
+    title: 'Buyer financing options',
+    body: 'Eligible buyers can apply with third-party financing partners straight from your listing. Approval depends on the applicant and the equipment, and provider approval applies. Vendibook is not a lender and does not set rates, terms, or guarantee funding.',
+    href: '/financing',
+    cta: 'How buyer financing works',
+    image: trailerGrill,
+    alt: 'Food trailer with an orange grill setup parked at an outdoor event',
+  },
+  {
+    icon: CreditCard,
+    title: 'Two ways to get paid — including secure PayPal checkout',
+    body: 'Settle in person with no Vendibook platform transaction fee, or turn on optional Vendibook online checkout powered by PayPal, where the buyer pays through PayPal’s secure hosted checkout and eligible buyers may see PayPal Pay Later. You choose per sale.',
+    href: '/payments',
+    cta: 'How PayPal checkout works',
+    image: heroTruck,
+    alt: 'Food truck serving customers on a warm evening street',
+  },
+  {
+    icon: Truck,
+    title: 'Pickup, delivery, or Vendibook Freight',
+    body: 'Most sales are local pickup. You can deliver it yourself, or point the buyer to Vendibook Freight where coordination is available, so they can review delivery options from the listing before they commit. Availability depends on the listing, route, and equipment.',
+    href: '/ship-your-food-truck',
+    cta: 'Explore Vendibook Freight',
+    image: trailerCafecito,
+    alt: 'Compact coffee trailer ready for transport',
+  },
+
+  {
+    icon: ShieldCheck,
+    title: 'Trust and optional verification',
+    body: 'Messaging, offers, and documents stay inside Vendibook, so you do not hand out your phone number to browse-only contacts. Identity verification powered by Plaid is optional and adds a badge to the account that completes it.',
+    href: '/identity-verification',
+    cta: 'About verification',
+    image: heroSelling,
+    alt: 'Seller handing over the keys to a food truck buyer',
   },
 ];
 
 const steps = [
   {
-    number: '01',
-    title: 'Build the listing your way',
-    description:
-      'Chat with Vendi or use the standard editor. Add your photos, location, price, condition, equipment, pickup or delivery details, and anything buyers should know.',
+    n: '01',
+    title: 'Build your listing',
+    body: 'Use the step-by-step wizard. Photos, specs, dimensions, and your asking price.',
   },
   {
-    number: '02',
-    title: 'Review it before it goes live',
-    description:
-      'Preview the listing, make changes, save a draft if you need more time, and publish only after the details look right.',
+    n: '02',
+    title: 'Review, save, publish',
+    body: 'Save a draft any time. Check the live preview, then publish when it reads the way you want. Publishing a standard listing is free.',
   },
   {
-    number: '03',
-    title: 'Manage buyers and the handoff',
-    description:
-      'Handle inquiries from your dashboard and choose the payment, pickup, delivery, or freight path that fits the sale.',
-  },
-];
-
-const sellerFeatures = [
-  {
-    icon: CreditCard,
-    eyebrow: 'More ways to close',
-    title: 'Give qualified buyers a financing path.',
-    description:
-      'Financing availability can help serious buyers explore a purchase without requiring every transaction to be cash-only. Approval and terms come from the financing provider.',
-  },
-  {
-    icon: Package,
-    eyebrow: 'Broader buyer reach',
-    title: 'Your buyer does not have to live down the street.',
-    description:
-      'Set pickup and delivery expectations clearly, and use available freight workflows when the equipment and transaction qualify.',
-  },
-  {
-    icon: ShieldCheck,
-    eyebrow: 'Clear transaction choices',
-    title: 'Choose the payment path that works for you.',
-    description:
-      'Keep a sale simple with pay in person, or use Vendibook online checkout when you want the transaction handled through the marketplace workflow.',
-  },
-  {
-    icon: BadgeCheck,
-    eyebrow: 'Trust where it matters',
-    title: 'Build a listing buyers can understand quickly.',
-    description:
-      'Strong photos, clear equipment details, accurate condition, location, and optional identity verification all help buyers evaluate the asset with less back-and-forth.',
+    n: '03',
+    title: 'Manage inquiries and the handoff',
+    body: 'Answer questions, weigh offers, pick pay in person or online checkout, then coordinate pickup, delivery, or freight and confirm the sale.',
   },
 ];
 
 const SellMyFoodTruck = () => {
-  const reduceMotion = useReducedMotion();
+  const reduced = useReducedMotion();
+  const pro = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.vendibookPro);
+  const concierge = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.conciergeListing);
+  const { data: realPhotos = [] } = useRealSaleListingPhotos(8);
 
-  const faqSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'FAQPage',
-    mainEntity: faqs.map((faq) => ({
-      '@type': 'Question',
-      name: faq.question,
-      acceptedAnswer: {
-        '@type': 'Answer',
-        text: faq.answer,
-      },
-    })),
-  };
+  // Real marketplace photography first; bundled imagery only as a fallback.
+  const fallbackCollage = [
+    { src: heroTruck, alt: 'Food truck parked and serving customers at dusk' },
+    { src: trailerCafecito, alt: 'Coffee trailer with a serving window open' },
+    { src: trailerGrill, alt: 'Concession trailer set up for service at an outdoor event' },
+    { src: heroSelling, alt: 'Seller handing over keys to a food truck buyer' },
+  ];
+  const collage = fallbackCollage.map((fallback, i) => {
+    const real = realPhotos[i];
+    return real
+      ? {
+          src: real.imageUrl,
+          alt: `${real.title}${real.city ? ` in ${real.city}${real.state ? `, ${real.state}` : ''}` : ''} listed for sale on Vendibook`,
+        }
+      : fallback;
+  });
+  const featured = realPhotos[0];
 
-  const breadcrumbSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'BreadcrumbList',
-    itemListElement: [
-      {
-        '@type': 'ListItem',
-        position: 1,
-        name: 'Home',
-        item: 'https://vendibook.com',
-      },
-      {
-        '@type': 'ListItem',
-        position: 2,
-        name: 'Sell My Food Truck',
-        item: 'https://vendibook.com/sell-my-food-truck',
-      },
-    ],
-  };
 
-  const howToSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'HowTo',
-    name: 'How to Sell Your Food Truck on Vendibook',
-    description:
-      'Create, review, and publish a food truck or food trailer listing on Vendibook, then manage buyer inquiries and the handoff from your dashboard.',
-    step: steps.map((step, index) => ({
-      '@type': 'HowToStep',
-      position: index + 1,
-      name: step.title,
-      text: step.description,
-      url: index === 0 ? 'https://vendibook.com/list?mode=sale' : 'https://vendibook.com/sell-my-food-truck',
-    })),
-  };
 
-  const serviceSchema = {
-    '@context': 'https://schema.org',
-    '@type': 'Service',
-    name: 'Food Truck Sales Marketplace',
-    description:
-      'List a food truck or food trailer for sale on Vendibook with marketplace discovery, buyer financing options, flexible payment paths, and pickup or freight workflows.',
-    provider: {
-      '@type': 'Organization',
-      name: 'Vendibook',
-      url: 'https://vendibook.com',
-    },
-    serviceType: 'Marketplace',
-    areaServed: {
-      '@type': 'Country',
-      name: 'United States',
-    },
-  };
-
-  const fadeUp = reduceMotion
-    ? {}
-    : {
-        initial: { opacity: 0, y: 18 },
-        whileInView: { opacity: 1, y: 0 },
-        viewport: { once: true, amount: 0.2 },
-        transition: { duration: 0.55 },
-      };
+  const fade = (delay = 0) =>
+    reduced
+      ? { initial: { opacity: 1 }, whileInView: { opacity: 1 } }
+      : {
+          initial: { opacity: 0, y: 18 },
+          whileInView: { opacity: 1, y: 0 },
+          viewport: { once: true, margin: '-80px' },
+          transition: { duration: 0.55, delay, ease: [0.22, 1, 0.36, 1] as const },
+        };
 
   return (
     <>
       <SEO
-        title="Sell Your Food Truck — Without Getting Buried on Facebook Marketplace"
-        description="List your food truck or trailer on Vendibook and reach buyers who are actively searching — not scrolling. Verified inquiries, secure checkout, financing-friendly buyers, and nationwide freight."
+        title="Sell My Food Truck Fast — List Free, Get Paid via PayPal | Vendibook"
+        description="Sell your food truck or trailer on Vendibook. List free, reach buyers already shopping for mobile food equipment, offer financing to eligible buyers, and get paid in person or through secure PayPal checkout."
         canonical="/sell-my-food-truck"
         type="website"
-        ogTitle="Sell Your Food Truck — Without Getting Buried on Facebook Marketplace"
-        ogDescription="Reach buyers actively searching for food trucks. Verified inquiries, secure checkout, financing-friendly traffic, nationwide freight."
-        twitterTitle="Sell Your Food Truck — Without Getting Buried on Facebook Marketplace"
-        twitterDescription="Buyers come to Vendibook ready to buy. List in minutes, get serious inquiries."
+        ogTitle="Sell your food truck where buyers are already looking"
+        ogDescription="List free, reach buyers shopping specifically for mobile food equipment, and choose the transaction path that works for you."
+        twitterTitle="Sell your food truck where buyers are already looking"
+        twitterDescription="List free and choose pay in person or optional online checkout."
+        image="https://vendibook.com/images/social/vendibook-og-sell.jpg"
+        imageAlt="Sell your food truck or trailer on Vendibook"
       />
 
-      <JsonLd schema={[faqSchema, breadcrumbSchema, howToSchema, serviceSchema]} />
+      <JsonLd schema={[faqSchema, breadcrumbSchema, howToSchema]} />
 
-      <div className="min-h-screen flex flex-col bg-[#fbfaf8] text-[#24211e]">
+      <div className="min-h-screen flex flex-col bg-background">
         <Header />
 
-        <main className="flex-1 overflow-hidden">
-          <section className="relative pt-10 pb-16 md:pt-16 md:pb-24">
-            <div className="container max-w-7xl mx-auto px-4">
-              <div className="grid lg:grid-cols-[1.02fr_0.98fr] gap-10 lg:gap-16 items-center">
+        <main className="flex-1 sale-light">
+          {/* ── HERO ─────────────────────────────────────────────── */}
+          <section className="pt-12 pb-16 md:pt-20 md:pb-24">
+            <div className="container max-w-6xl">
+              <div className="grid lg:grid-cols-[1.05fr_1fr] gap-12 lg:gap-16 items-center">
                 <motion.div
-                  initial={reduceMotion ? undefined : { opacity: 0, y: 16 }}
+                  initial={reduced ? { opacity: 1 } : { opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.55 }}
-                  className="max-w-2xl"
+                  transition={{ duration: 0.6, ease: [0.22, 1, 0.36, 1] }}
                 >
-                  <div className="inline-flex items-center gap-2 rounded-full border border-[#ded7cf] bg-white/80 px-3.5 py-2 text-xs font-medium tracking-wide text-[#5f5851] shadow-sm mb-6">
-                    <Truck className="h-3.5 w-3.5" />
-                    Sell on Vendibook · Free to list
-                  </div>
-
-                  <h1 className="text-[2.65rem] sm:text-5xl lg:text-[4rem] leading-[1.02] tracking-[-0.045em] font-semibold text-[#24211e] mb-6">
+                  <span className="inline-flex items-center gap-2 rounded-full chip-accent px-3 py-1 text-xs font-medium">
+                    For sellers
+                  </span>
+                  <h1 className="mt-5 text-[2.1rem] leading-[1.08] md:text-[3.4rem] md:leading-[1.05] font-semibold tracking-[-0.02em] text-foreground">
                     Sell your food truck where buyers are already looking for one.
                   </h1>
-
-                  <p className="text-lg md:text-xl leading-relaxed text-[#6f675f] max-w-xl mb-8">
-                    Give your truck or trailer a polished marketplace listing with room for the photos, equipment, pricing, financing options, and delivery details serious buyers actually need.
+                  <p className="mt-6 text-base md:text-lg text-muted-foreground leading-relaxed max-w-xl">
+                    Vendibook is a marketplace for food trucks, trailers, and mobile kitchens — so your
+                    listing has real equipment fields, a guided builder, and buyers who came here for
+                    exactly this. Not a classifieds post competing with used furniture.
                   </p>
 
-                  <div className="flex flex-col sm:flex-row gap-3 mb-5">
-                    <Button size="lg" variant="glass-cta" className="rounded-full px-7 text-base" asChild>
-                      <Link to="/list?mode=sale">
+                  <div className="mt-8 flex flex-col sm:flex-row gap-3">
+                    <Button size="lg" variant="cta" asChild>
+                      <Link to={LIST_HREF}>
                         List my food truck free
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Link>
                     </Button>
-                    <Button
-                      size="lg"
-                      variant="outline"
-                      className="rounded-full border-[#d8d1ca] bg-white/70 hover:bg-white px-7 text-base"
-                      asChild
-                    >
-                      <Link to="/how-it-works-seller">See how selling works</Link>
+                    <Button size="lg" variant="ghost" className="rounded-2xl text-foreground" asChild>
+                      <a href="#how-selling-works">See how selling works</a>
                     </Button>
                   </div>
 
-                  <p className="text-sm text-[#7b736b] mb-8">
-                    Free to list · Pay in person with no Vendibook platform transaction fee · Online checkout optional
+                  <p className="mt-5 text-sm text-muted-foreground">
+                    Free to list · Pay in person with no Vendibook platform transaction fee · Online
+                    checkout optional
                   </p>
 
-                  <div className="grid sm:grid-cols-3 gap-4 max-w-xl border-t border-[#e5dfd8] pt-6">
-                    <div>
-                      <div className="text-sm font-medium text-[#302c28]">Buyer financing</div>
-                      <div className="text-xs text-[#847c74] mt-1">Available for eligible applicants and equipment.</div>
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium text-[#302c28]">Pickup or freight</div>
-                      <div className="text-xs text-[#847c74] mt-1">Set the handoff path that fits your sale.</div>
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium text-[#302c28]">Save your draft</div>
-                      <div className="text-xs text-[#847c74] mt-1">Come back and finish when you are ready.</div>
-                    </div>
+                  <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3 text-sm text-muted-foreground">
+                    {[
+                      { icon: Banknote, label: 'Financing options for eligible buyers', href: '/financing' },
+                      { icon: ShieldCheck, label: 'Secure PayPal checkout, optional', href: '/payments' },
+                      { icon: Truck, label: 'Pickup, delivery, or Vendibook Freight', href: '/ship-your-food-truck' },
+                      { icon: ImagePlus, label: 'Guided listing with saved drafts', href: null },
+                    ].map((cue) => (
+                      <span key={cue.label} className="inline-flex items-center gap-2">
+                        <cue.icon className="h-4 w-4 text-primary" aria-hidden="true" />
+                        {cue.href ? (
+                          <Link to={cue.href} className="hover:text-foreground underline-offset-4 hover:underline">
+                            {cue.label}
+                          </Link>
+                        ) : (
+                          cue.label
+                        )}
+                      </span>
+                    ))}
+                  </div>
+
+                  <div className="mt-6">
+                    <TellVendibookButton
+                      variant="ghost"
+                      size="sm"
+                      defaultIntent="sell"
+                      defaultCategory="food_truck"
+                      sourcePage="sell_my_food_truck"
+                    >
+                      Just exploring? Tell Vendibook about your truck →
+                    </TellVendibookButton>
                   </div>
                 </motion.div>
 
+                {/* Asymmetric collage */}
                 <motion.div
-                  initial={reduceMotion ? undefined : { opacity: 0, scale: 0.975 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.65, delay: 0.05 }}
+                  initial={reduced ? { opacity: 1 } : { opacity: 0, y: 24 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.7, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
                   className="relative"
                 >
-                  <div className="grid grid-cols-[1.1fr_0.9fr] gap-3 sm:gap-4">
-                    <div className="relative overflow-hidden rounded-[32px] bg-[#eee8e1] aspect-[4/5] shadow-[0_24px_70px_rgba(49,42,35,0.12)]">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-4 pt-8">
                       <img
-                        src={trailerWeddingFlowers}
-                        alt="Food trailer presented for sale"
-                        className="h-full w-full object-cover"
+                        src={collage[0].src}
+                        alt={collage[0].alt}
+                        loading="eager"
+                        className="w-full aspect-[3/4] object-cover rounded-[28px] shadow-[0_24px_60px_-32px_rgba(24,20,16,0.45)]"
+                      />
+                      <img
+                        src={collage[1].src}
+                        alt={collage[1].alt}
+                        loading="lazy"
+                        className="w-full aspect-square object-cover rounded-[24px] shadow-[0_18px_44px_-28px_rgba(24,20,16,0.4)]"
                       />
                     </div>
-                    <div className="grid gap-3 sm:gap-4">
-                      <div className="overflow-hidden rounded-[28px] bg-[#eee8e1] aspect-square">
-                        <img
-                          src={trailerCreamParty}
-                          alt="Specialty food trailer"
-                          className="h-full w-full object-cover"
-                        />
-                      </div>
-                      <div className="overflow-hidden rounded-[28px] bg-[#eee8e1] aspect-square">
-                        <img
-                          src={trailerPinkVintage}
-                          alt="Vintage style food trailer"
-                          className="h-full w-full object-cover"
-                        />
-                      </div>
+                    <div className="space-y-4">
+                      <img
+                        src={collage[2].src}
+                        alt={collage[2].alt}
+                        loading="lazy"
+                        className="w-full aspect-square object-cover rounded-[24px] shadow-[0_18px_44px_-28px_rgba(24,20,16,0.4)]"
+                      />
+                      <img
+                        src={collage[3].src}
+                        alt={collage[3].alt}
+                        loading="lazy"
+                        className="w-full aspect-[3/4] object-cover rounded-[28px] shadow-[0_24px_60px_-32px_rgba(24,20,16,0.45)]"
+                      />
                     </div>
                   </div>
 
-                  <div className="absolute -bottom-5 left-4 sm:left-8 max-w-[275px] rounded-[22px] border border-white/70 bg-white/[0.88] p-4 shadow-[0_18px_50px_rgba(42,36,31,0.14)] backdrop-blur-xl">
-                    <div className="flex items-start gap-3">
-                      <div className="mt-0.5 flex h-9 w-9 items-center justify-center rounded-full bg-[#f4eee7]">
-                        <CheckCircle2 className="h-4 w-4 text-[#5d544b]" />
-                      </div>
-                      <div>
-                        <p className="text-sm font-medium text-[#2d2925]">A listing built for a serious asset</p>
-                        <p className="text-xs leading-relaxed text-[#776f67] mt-1">
-                          Photos, equipment, price, financing, pickup and delivery details in one place.
-                        </p>
-                      </div>
-                    </div>
-                  </div>
                 </motion.div>
               </div>
             </div>
           </section>
 
-          <section className="py-16 md:py-24 bg-white border-y border-[#eee8e1]">
-            <div className="container max-w-6xl mx-auto px-4">
-              <motion.div {...fadeUp} className="max-w-3xl mb-12 md:mb-16">
-                <p className="text-sm font-medium text-[#8a7665] mb-3">A marketplace built around mobile food businesses</p>
-                <h2 className="text-3xl md:text-[2.8rem] leading-tight tracking-[-0.035em] font-semibold text-[#292521] mb-4">
-                  Your food truck deserves more than a one-line classified post.
+          {/* ── ASSET NARRATIVE ──────────────────────────────────── */}
+          <section className="py-16 md:py-[100px] border-t border-border">
+            <div className="container max-w-5xl">
+              <motion.div {...fade()} className="max-w-2xl">
+                <h2 className="text-2xl md:text-[2.1rem] leading-tight font-semibold tracking-[-0.015em] text-foreground">
+                  A food truck is a business asset. It deserves more than a classified post.
                 </h2>
-                <p className="text-lg leading-relaxed text-[#746c64]">
-                  Vendibook gives sellers space to explain what the asset actually is, what comes with it, how a buyer can pay, and how the truck or trailer can get to its next owner.
-                </p>
               </motion.div>
-
-              <div className="grid md:grid-cols-3 gap-8 md:gap-12 border-t border-[#e9e3dc] pt-9">
-                <div>
-                  <Camera className="h-5 w-5 text-[#7c6b5b] mb-4" />
-                  <h3 className="text-lg font-medium mb-2">Show the whole asset</h3>
-                  <p className="text-sm leading-relaxed text-[#7d756d]">
-                    Give buyers exterior, interior, equipment and detail photos instead of forcing the sale into a generic classifieds format.
-                  </p>
-                </div>
-                <div>
-                  <MessageCircle className="h-5 w-5 text-[#7c6b5b] mb-4" />
-                  <h3 className="text-lg font-medium mb-2">Answer the questions up front</h3>
-                  <p className="text-sm leading-relaxed text-[#7d756d]">
-                    Put condition, location, included equipment, pricing and handoff details where a buyer can understand them before reaching out.
-                  </p>
-                </div>
-                <div>
-                  <MapPin className="h-5 w-5 text-[#7c6b5b] mb-4" />
-                  <h3 className="text-lg font-medium mb-2">Reach beyond your neighborhood</h3>
-                  <p className="text-sm leading-relaxed text-[#7d756d]">
-                    Marketplace discovery, buyer financing options and freight workflows can make the asset relevant to buyers outside your immediate area.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section className="py-16 md:py-24 bg-[#f6f2ed]">
-            <div className="container max-w-6xl mx-auto px-4">
-              <motion.div
-                {...fadeUp}
-                className="rounded-[34px] border border-white/80 bg-white/[0.72] shadow-[0_26px_80px_rgba(55,45,37,0.08)] backdrop-blur-xl overflow-hidden"
-              >
-                <div className="grid lg:grid-cols-[0.9fr_1.1fr]">
-                  <div className="p-7 sm:p-10 lg:p-12 flex flex-col justify-center">
-                    <div className="inline-flex w-fit items-center gap-2 rounded-full bg-[#f1ebe4] px-3 py-1.5 text-xs font-medium text-[#66594e] mb-5">
-                      <Sparkles className="h-3.5 w-3.5" />
-                      List with Vendi
-                    </div>
-                    <h2 className="text-3xl md:text-4xl tracking-[-0.035em] font-semibold leading-tight mb-4">
-                      Don't feel like filling out a long form? Just tell Vendi about it.
-                    </h2>
-                    <p className="text-base md:text-lg leading-relaxed text-[#746c64] mb-6">
-                      Vendi guides you through the important questions in a friendly chat, turns your answers into listing details, lets you upload photos and video, and shows a live preview while you go.
+              <div className="mt-12 grid md:grid-cols-3 gap-x-10 gap-y-10">
+                {assetPoints.map((point, i) => (
+                  <motion.div key={point.title} {...fade(i * 0.06)}>
+                    <div className="h-px w-10 bg-primary/60" aria-hidden="true" />
+                    <h3 className="mt-5 text-lg font-medium text-foreground">{point.title}</h3>
+                    <p className="mt-3 text-sm md:text-[0.95rem] text-muted-foreground leading-relaxed">
+                      {point.body}
                     </p>
-                    <div className="space-y-3 mb-7 text-sm text-[#625b54]">
-                      <div className="flex gap-2.5"><CheckCircle2 className="h-4 w-4 mt-0.5 text-[#7e6e60]" />Asks only the questions that fit your truck or trailer</div>
-                      <div className="flex gap-2.5"><CheckCircle2 className="h-4 w-4 mt-0.5 text-[#7e6e60]" />Shows your listing preview as it comes together</div>
-                      <div className="flex gap-2.5"><CheckCircle2 className="h-4 w-4 mt-0.5 text-[#7e6e60]" />Save a draft and finish later</div>
-                      <div className="flex gap-2.5"><CheckCircle2 className="h-4 w-4 mt-0.5 text-[#7e6e60]" />Nothing publishes until you review and confirm it</div>
-                    </div>
-                    <Button variant="glass-cta" size="lg" className="rounded-full w-fit px-6" asChild>
-                      <Link to="/list?mode=sale">
-                        Start my listing
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Link>
-                    </Button>
-                  </div>
-
-                  <div className="p-4 sm:p-6 lg:p-8 bg-white/[0.35]">
-                    <div className="h-full min-h-[470px] rounded-[28px] border border-white/90 bg-white/[0.72] p-4 sm:p-5 shadow-inner backdrop-blur-xl flex flex-col">
-                      <div className="flex items-center justify-between border-b border-[#ece6df] pb-4">
-                        <div className="flex items-center gap-3">
-                          <div className="h-9 w-9 rounded-full bg-[#efe7df] flex items-center justify-center">
-                            <Sparkles className="h-4 w-4 text-[#766454]" />
-                          </div>
-                          <div>
-                            <div className="text-sm font-medium">Vendi</div>
-                            <div className="text-xs text-[#8a827a]">Building your listing with you</div>
-                          </div>
-                        </div>
-                        <div className="text-[11px] text-[#8a827a]">Draft saved</div>
-                      </div>
-
-                      <div className="grid sm:grid-cols-[1fr_0.95fr] gap-4 flex-1 pt-5">
-                        <div className="flex flex-col gap-3">
-                          <div className="max-w-[88%] rounded-[18px] rounded-tl-md bg-[#f1ece6] px-4 py-3 text-sm leading-relaxed text-[#514a44]">
-                            Tell me a little about what you're selling. You can say it naturally — I'll organize the details for you.
-                          </div>
-                          <div className="self-end max-w-[90%] rounded-[18px] rounded-tr-md bg-[#2c2926] px-4 py-3 text-sm leading-relaxed text-white">
-                            It's a 2019 food trailer in Mesa. Excellent condition. I'm asking $45,000.
-                          </div>
-                          <div className="max-w-[90%] rounded-[18px] rounded-tl-md bg-[#f1ece6] px-4 py-3 text-sm leading-relaxed text-[#514a44]">
-                            Perfect. I've got the year, location, condition and asking price. Add a few photos when you're ready, then we'll cover what's included.
-                          </div>
-                          <div className="mt-auto rounded-full border border-[#e3ddd6] bg-white px-4 py-3 text-xs text-[#989089]">
-                            Type a message or add photos…
-                          </div>
-                        </div>
-
-                        <div className="rounded-[22px] border border-[#e7e1da] bg-[#fcfbf9] p-3 shadow-sm self-start">
-                          <div className="aspect-[4/3] rounded-[17px] overflow-hidden bg-[#eee7df] mb-3">
-                            <img src={trailerCreamParty} alt="Example listing preview" className="h-full w-full object-cover" />
-                          </div>
-                          <p className="text-xs text-[#8b8178] mb-1">Live listing preview</p>
-                          <p className="font-medium text-sm leading-snug mb-2">2019 Food Trailer</p>
-                          <div className="flex items-center justify-between gap-2 text-xs text-[#716960]">
-                            <span>Mesa, AZ</span>
-                            <span className="font-medium text-[#342f2a]">$45,000</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
+                  </motion.div>
+                ))}
+              </div>
             </div>
           </section>
 
-          <section className="py-16 md:py-24 bg-white">
-            <div className="container max-w-6xl mx-auto px-4">
-              <motion.div {...fadeUp} className="max-w-3xl mb-12">
-                <p className="text-sm font-medium text-[#8a7665] mb-3">More than a listing page</p>
-                <h2 className="text-3xl md:text-[2.7rem] leading-tight tracking-[-0.035em] font-semibold mb-4">
-                  Built around the whole sale, not just the post.
+          {/* ── BUILT AROUND THE WHOLE SALE ──────────────────────── */}
+          <section className="py-16 md:py-[100px] border-t border-border">
+            <div className="container max-w-5xl">
+              <motion.div {...fade()} className="max-w-2xl">
+                <h2 className="text-2xl md:text-[2.1rem] leading-tight font-semibold tracking-[-0.015em] text-foreground">
+                  Built around the whole sale — not just the listing.
                 </h2>
-                <p className="text-lg text-[#766e66] leading-relaxed">
-                  A food truck is a business asset. The marketplace should give both sides enough structure to make a serious transaction easier to evaluate and complete.
-                </p>
               </motion.div>
 
-              <div className="border-y border-[#eae4dd] divide-y divide-[#eae4dd]">
-                {sellerFeatures.map((feature, index) => (
+              <div className="mt-14 space-y-14 md:space-y-20">
+                {wholeSale.map((row, i) => (
                   <motion.div
-                    key={feature.title}
-                    {...(reduceMotion
-                      ? {}
-                      : {
-                          initial: { opacity: 0, y: 14 },
-                          whileInView: { opacity: 1, y: 0 },
-                          viewport: { once: true, amount: 0.3 },
-                          transition: { duration: 0.45, delay: index * 0.04 },
-                        })}
-                    className="grid md:grid-cols-[70px_0.65fr_1.1fr] gap-4 md:gap-8 py-8 md:py-10 items-start"
+                    key={row.title}
+                    {...fade()}
+                    className={`grid md:grid-cols-2 gap-8 md:gap-14 items-center ${
+                      i % 2 === 1 ? 'md:[&>*:first-child]:order-2' : ''
+                    }`}
                   >
-                    <div className="h-11 w-11 rounded-full bg-[#f3eee8] flex items-center justify-center">
-                      <feature.icon className="h-5 w-5 text-[#756556]" />
-                    </div>
                     <div>
-                      <p className="text-xs font-medium text-[#9a8573] mb-2">{feature.eyebrow}</p>
-                      <h3 className="text-xl md:text-2xl tracking-[-0.02em] font-medium leading-tight">{feature.title}</h3>
+                      <row.icon className="h-5 w-5 text-primary" aria-hidden="true" />
+                      <h3 className="mt-4 text-xl md:text-2xl font-semibold tracking-[-0.01em] text-foreground">
+                        {row.title}
+                      </h3>
+                      <p className="mt-4 text-sm md:text-[0.95rem] text-muted-foreground leading-relaxed">
+                        {row.body}
+                      </p>
+                      <Link
+                        to={row.href}
+                        className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+                      >
+                        {row.cta}
+                        <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                      </Link>
                     </div>
-                    <p className="text-sm md:text-base leading-relaxed text-[#776f67] max-w-xl">{feature.description}</p>
+                    <img
+                      src={realPhotos[i + 4]?.imageUrl ?? realPhotos[i]?.imageUrl ?? row.image}
+                      alt={realPhotos[i + 4] || realPhotos[i]
+                        ? `${(realPhotos[i + 4] ?? realPhotos[i]).title} listed for sale on Vendibook`
+                        : row.alt}
+                      loading="lazy"
+                      className="w-full aspect-[4/3] object-cover rounded-[26px] shadow-[0_22px_56px_-34px_rgba(24,20,16,0.45)]"
+                    />
+
                   </motion.div>
                 ))}
               </div>
             </div>
           </section>
 
-          <section className="py-14 md:py-20 bg-[#f7f3ee] border-y border-[#ece5de]">
-            <div className="container max-w-6xl mx-auto px-4">
-              <div className="grid md:grid-cols-3 gap-8 md:gap-12">
-                <div>
-                  <p className="text-3xl font-semibold tracking-[-0.035em] mb-2">Free to list</p>
-                  <p className="text-sm text-[#7c746c] leading-relaxed">Create and publish your seller listing without an upfront listing charge.</p>
-                </div>
-                <div>
-                  <p className="text-3xl font-semibold tracking-[-0.035em] mb-2">0% platform fee</p>
-                  <p className="text-sm text-[#7c746c] leading-relaxed">When you choose pay in person and handle payment directly with the buyer.</p>
-                </div>
-                <div>
-                  <p className="text-3xl font-semibold tracking-[-0.035em] mb-2">12.9% / 10.9% Pro</p>
-                  <p className="text-sm text-[#7c746c] leading-relaxed">Standard online seller fee, with the reduced rate for eligible Vendibook Pro sellers.</p>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section className="py-16 md:py-24 bg-[#fbfaf8]">
-            <div className="container max-w-6xl mx-auto px-4">
-              <motion.div {...fadeUp} className="text-center max-w-3xl mx-auto mb-14">
-                <p className="text-sm font-medium text-[#8a7665] mb-3">Simple from the start</p>
-                <h2 className="text-3xl md:text-[2.7rem] tracking-[-0.035em] font-semibold mb-4">From “I should sell it” to a live listing.</h2>
-                <p className="text-lg text-[#756d65]">The flow stays lightweight, but buyers still get the information that matters.</p>
+          {/* ── FEES ─────────────────────────────────────────────── */}
+          <section className="py-16 md:py-[100px] border-t border-border">
+            <div className="container max-w-5xl">
+              <motion.div {...fade()} className="max-w-2xl">
+                <h2 className="text-2xl md:text-[2.1rem] leading-tight font-semibold tracking-[-0.015em] text-foreground">
+                  What it costs, plainly.
+                </h2>
               </motion.div>
 
-              <div className="grid md:grid-cols-3 gap-8 md:gap-10 max-w-5xl mx-auto">
-                {steps.map((step, index) => (
+              <div className="mt-12 grid md:grid-cols-3 gap-y-10 md:gap-y-0 md:divide-x md:divide-border">
+                {[
+                  {
+                    value: 'Free',
+                    label: 'To list',
+                    body: 'Publishing a standard for-sale listing costs nothing, subject to current account and listing limits.',
+                  },
+                  {
+                    value: '0%',
+                    label: 'Vendibook platform transaction fee, in person',
+                    body: 'When payment is handled directly between you and the buyer, Vendibook takes no platform transaction fee on the sale.',
+                  },
+                  {
+                    value: '12.9%',
+                    label: 'Online seller fee · 10.9% for Vendibook Pro',
+                    body: `Applies only if the buyer pays through optional Vendibook online checkout. Pro (${pro.labelWithCadence}) saves 2 points, capped at $500 per completed transaction.`,
+                  },
+                ].map((col, i) => (
                   <motion.div
-                    key={step.number}
-                    {...(reduceMotion
-                      ? {}
-                      : {
-                          initial: { opacity: 0, y: 15 },
-                          whileInView: { opacity: 1, y: 0 },
-                          viewport: { once: true },
-                          transition: { duration: 0.45, delay: index * 0.08 },
-                        })}
-                    className="relative"
+                    key={col.label}
+                    {...fade(i * 0.06)}
+                    className="md:px-8 first:md:pl-0 last:md:pr-0"
                   >
-                    <div className="text-xs font-medium text-[#a08c79] mb-4">{step.number}</div>
-                    <h3 className="text-xl font-medium tracking-[-0.02em] mb-3">{step.title}</h3>
-                    <p className="text-sm leading-relaxed text-[#7a726a]">{step.description}</p>
+                    <div className="text-[2.25rem] leading-none font-semibold tracking-[-0.02em] text-foreground">
+                      {col.value}
+                    </div>
+                    <div className="mt-3 text-sm font-medium text-foreground">{col.label}</div>
+                    <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{col.body}</p>
                   </motion.div>
                 ))}
+              </div>
+
+              <p className="mt-10 text-xs text-muted-foreground leading-relaxed max-w-3xl">
+                Payment-processing costs charged by the payment provider are separate where applicable.
+                Payouts on completed online sales are reviewed and issued by Vendibook.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <Button variant="outline" className="rounded-2xl" asChild>
+                  <Link to="/pricing">See pricing and Pro details</Link>
+                </Button>
+                <Button variant="ghost" className="rounded-2xl text-foreground" asChild>
+                  <Link to="/payments">How secure PayPal checkout works</Link>
+                </Button>
+                <Button variant="ghost" className="rounded-2xl text-foreground" asChild>
+                  <Link to="/list/concierge">Optional Concierge Listing · {concierge.label}</Link>
+                </Button>
               </div>
             </div>
           </section>
 
-          <section className="py-16 md:py-20 bg-white border-y border-[#eee8e1]">
-            <div className="container max-w-5xl mx-auto px-4">
-              <motion.div {...fadeUp} className="rounded-[30px] bg-[#f6f1eb] p-7 sm:p-10 md:p-12 grid md:grid-cols-[1fr_auto] gap-8 items-center">
-                <div>
-                  <p className="text-sm font-medium text-[#8a7665] mb-3">Not sure what it's worth?</p>
-                  <h2 className="text-2xl md:text-3xl tracking-[-0.03em] font-semibold mb-3">Price with market evidence before you publish.</h2>
-                  <p className="text-sm md:text-base leading-relaxed text-[#746c64] max-w-2xl">
-                    PricePilot compares the equipment profile with relevant market evidence to help you choose a practical listing position. Marketplace sold-status records are treated as observations, not guaranteed or verified closing prices.
+          {/* ── HOW IT WORKS ─────────────────────────────────────── */}
+          <section id="how-selling-works" className="py-16 md:py-[100px] border-t border-border scroll-mt-24">
+            <div className="container max-w-5xl">
+              <motion.div {...fade()} className="max-w-2xl">
+                <h2 className="text-2xl md:text-[2.1rem] leading-tight font-semibold tracking-[-0.015em] text-foreground">
+                  How selling works.
+                </h2>
+              </motion.div>
+              <div className="mt-12 grid md:grid-cols-3 gap-x-10 gap-y-10">
+                {steps.map((step, i) => (
+                  <motion.div key={step.n} {...fade(i * 0.06)}>
+                    <div className="text-sm font-semibold tracking-[0.16em] text-primary">{step.n}</div>
+                    <h3 className="mt-4 text-lg font-medium text-foreground">{step.title}</h3>
+                    <p className="mt-3 text-sm text-muted-foreground leading-relaxed">{step.body}</p>
+                  </motion.div>
+                ))}
+              </div>
+              <div className="mt-10">
+                <Link
+                  to="/how-it-works?role=sell"
+                  className="text-sm font-medium text-primary hover:underline"
+                >
+                  See the full seller journey →
+                </Link>
+              </div>
+            </div>
+          </section>
+
+          {/* ── PRICEPILOT ───────────────────────────────────────── */}
+          <section className="py-16 md:py-[100px] border-t border-border">
+            <div className="container max-w-4xl">
+              <motion.div {...fade()} className="md:flex md:items-start md:gap-12">
+                <Calculator className="h-6 w-6 text-primary shrink-0" aria-hidden="true" />
+                <div className="mt-5 md:mt-0">
+                  <h2 className="text-2xl md:text-[1.9rem] leading-tight font-semibold tracking-[-0.015em] text-foreground">
+                    Not sure what to ask for it?
+                  </h2>
+                  <p className="mt-4 text-muted-foreground leading-relaxed">
+                    PricePilot gives you market-evidence pricing guidance: enter your equipment details and
+                    it returns a suggested asking-range built from comparable listing data. Comparables are
+                    asking prices and market signals, not confirmed closing prices — treat it as guidance,
+                    not an appraisal or a guarantee of sale price.
                   </p>
-                </div>
-                <Button variant="outline" className="rounded-full border-[#d6cec5] bg-white hover:bg-white/80 shrink-0" asChild>
-                  <Link to="/tools/pricepilot">
-                    Explore PricePilot
-                    <ChevronRight className="ml-1 h-4 w-4" />
+                  <Link
+                    to="/tools/pricepilot"
+                    className="mt-5 inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline"
+                  >
+                    Open PricePilot
+                    <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
                   </Link>
-                </Button>
+                </div>
               </motion.div>
             </div>
           </section>
 
-          <section className="py-16 md:py-24 bg-[#fbfaf8]">
-            <div className="container max-w-3xl mx-auto px-4">
-              <motion.div {...fadeUp} className="text-center mb-10">
-                <p className="text-sm font-medium text-[#8a7665] mb-3">Seller questions</p>
-                <h2 className="text-3xl md:text-4xl tracking-[-0.035em] font-semibold">A few things sellers usually want to know.</h2>
-              </motion.div>
-
-              <Accordion type="single" collapsible className="w-full border-t border-[#e3ddd6]">
+          {/* ── FAQ ──────────────────────────────────────────────── */}
+          <section className="py-16 md:py-[100px] border-t border-border">
+            <div className="container max-w-3xl">
+              <h2 className="text-2xl md:text-[2.1rem] leading-tight font-semibold tracking-[-0.015em] text-foreground">
+                Seller questions
+              </h2>
+              <Accordion type="single" collapsible className="mt-8 w-full">
                 {faqs.map((faq, index) => (
-                  <AccordionItem key={faq.question} value={`faq-${index}`} className="border-[#e3ddd6]">
-                    <AccordionTrigger className="text-left text-base md:text-lg font-medium hover:no-underline py-5">
+                  <AccordionItem key={faq.question} value={`item-${index}`} className="border-border">
+                    <AccordionTrigger className="text-left text-foreground hover:no-underline py-5">
                       {faq.question}
                     </AccordionTrigger>
-                    <AccordionContent className="text-[#746c64] leading-relaxed pb-5">
+                    <AccordionContent className="text-muted-foreground leading-relaxed pb-5">
                       {faq.answer}
                     </AccordionContent>
                   </AccordionItem>
@@ -578,48 +607,61 @@ const SellMyFoodTruck = () => {
             </div>
           </section>
 
-          <section className="py-14 md:py-20 bg-white">
-            <div className="container max-w-6xl mx-auto px-4">
+          {/* ── INTERNAL LINKS ───────────────────────────────────── */}
+          <section className="py-14 md:py-20 border-t border-border">
+            <div className="container max-w-4xl">
+              <h2 className="text-lg font-medium text-foreground">Part of the Vendibook marketplace</h2>
+              <ul className="mt-6 grid sm:grid-cols-2 gap-x-10 gap-y-3 text-sm">
+                <li><Link to="/food-trucks-for-sale" className="font-medium text-primary hover:underline">Food trucks for sale →</Link></li>
+                <li><Link to="/food-trailers-for-sale" className="font-medium text-primary hover:underline">Food trailers for sale →</Link></li>
+                <li><Link to="/sell-food-trailer" className="font-medium text-primary hover:underline">Sell your food trailer →</Link></li>
+                <li><Link to="/sell-concession-trailer" className="font-medium text-primary hover:underline">Sell your concession trailer →</Link></li>
+                <li><Link to="/financing" className="font-medium text-primary hover:underline">How buyer financing works →</Link></li>
+                <li><Link to="/how-it-works?role=sell" className="font-medium text-primary hover:underline">The full seller journey →</Link></li>
+                <li><Link to="/tools/pricepilot" className="font-medium text-primary hover:underline">Estimate your asking price with PricePilot →</Link></li>
+                <li><Link to="/payments" className="font-medium text-primary hover:underline">Secure PayPal checkout on Vendibook →</Link></li>
+                <li><Link to="/ship-your-food-truck" className="font-medium text-primary hover:underline">Vendibook Freight delivery →</Link></li>
+                <li><Link to="/pricing" className="font-medium text-primary hover:underline">Pricing and Vendibook Pro →</Link></li>
+              </ul>
+            </div>
+          </section>
+
+          {/* ── FINAL CTA ────────────────────────────────────────── */}
+          <section className="border-t border-border">
+            <div className="container max-w-6xl py-16 md:py-24">
               <motion.div
-                {...fadeUp}
-                className="relative overflow-hidden rounded-[34px] border border-[#eee6de] bg-[#f5eee7] px-6 py-12 sm:px-10 md:px-14 md:py-16"
+                {...fade()}
+                className="rounded-[34px] bg-[#f4efe7] px-7 py-14 md:px-16 md:py-20 text-center"
               >
-                <div className="absolute right-[-80px] top-[-80px] h-64 w-64 rounded-full bg-white/50 blur-3xl" aria-hidden="true" />
-                <div className="relative max-w-3xl">
-                  <FileCheck className="h-6 w-6 text-[#7b6756] mb-5" />
-                  <h2 className="text-3xl md:text-[2.8rem] leading-tight tracking-[-0.04em] font-semibold mb-4">
-                    Ready to give your food truck a better place to sell?
-                  </h2>
-                  <p className="text-base md:text-lg text-[#756c63] leading-relaxed max-w-2xl mb-7">
-                    Start free, build the listing at your own pace, and publish when the photos, price and details feel right.
-                  </p>
-                  <div className="flex flex-col sm:flex-row gap-3">
-                    <Button size="lg" variant="glass-cta" className="rounded-full px-7" asChild>
-                      <Link to="/list?mode=sale">
-                        List my food truck free
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Link>
-                    </Button>
-                    <Button size="lg" variant="outline" className="rounded-full border-[#d5cdc4] bg-white/70 hover:bg-white" asChild>
-                      <Link to="/food-trucks-for-sale">Browse food trucks for sale</Link>
-                    </Button>
-                  </div>
+                <h2 className="text-2xl md:text-[2.3rem] leading-tight font-semibold tracking-[-0.02em] text-foreground max-w-2xl mx-auto">
+                  Ready to sell your food truck?
+                </h2>
+                <p className="mt-4 text-muted-foreground max-w-xl mx-auto leading-relaxed">
+                  Listing is free, drafts save as you go, and you decide how you get paid.
+                </p>
+                <div className="mt-8 flex flex-col sm:flex-row gap-3 justify-center">
+                  <Button size="lg" variant="cta" asChild>
+                    <Link to={LIST_HREF}>
+                      List my food truck free
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </Link>
+                  </Button>
+                  <Button size="lg" variant="ghost" className="rounded-2xl text-foreground" asChild>
+                    <Link to="/food-trucks-for-sale">Browse food trucks for sale</Link>
+                  </Button>
+                  <Button size="lg" variant="ghost" className="rounded-2xl text-foreground" asChild>
+                    <Link to="/payments">See how payments work</Link>
+                  </Button>
                 </div>
               </motion.div>
             </div>
           </section>
+
+          <div className="mx-auto w-full max-w-6xl px-4 py-12 md:py-16"><TransactionConfidenceSection audience="seller" source="sell_my_food_truck" /></div>
         </main>
 
         <Footer />
 
-        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-[#e5ded7] bg-[#fbfaf8]/[0.94] p-3 backdrop-blur-xl md:hidden">
-          <Button variant="glass-cta" size="lg" className="w-full rounded-full" asChild>
-            <Link to="/list?mode=sale">
-              List my food truck free
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
-        </div>
       </div>
     </>
   );

@@ -129,18 +129,35 @@ export async function createDocumentFromTemplate(
 export async function prefillFields(
   documentId: string,
   fields: Record<string, string | number | null | undefined>,
+  requiredFields: readonly string[] = [],
 ): Promise<void> {
-  const entries = Object.entries(fields)
+  let entries = Object.entries(fields)
     .filter(([, v]) => v !== undefined && v !== null)
     .map(([field_name, prefilled_text]) => ({
       field_name,
       prefilled_text: String(prefilled_text),
     }));
-  if (!entries.length) return;
-  await apiFetch(`/v2/documents/${documentId}/prefill-texts`, {
-    method: 'PUT',
-    json: { fields: entries },
-  });
+  // A field missing from the template rejects the whole request; drop the
+  // unknown field (logged) and retry so one stale key never blocks a document.
+  for (let attempt = 0; attempt < 10; attempt++) {
+    if (!entries.length) return;
+    try {
+      await apiFetch(`/v2/documents/${documentId}/prefill-texts`, {
+        method: 'PUT',
+        json: { fields: entries },
+      });
+      return;
+    } catch (err) {
+      const missing = /Field (\S+) not found among text fields/.exec(String((err as Error)?.message))?.[1];
+      if (!missing || !entries.some((e) => e.field_name === missing)) throw err;
+      if (requiredFields.includes(missing)) {
+        throw new Error(`SignNow template is missing required field "${missing}"; agreement not sent`);
+      }
+      console.warn(`[signnow] template has no text field "${missing}"; skipping it`);
+      entries = entries.filter((e) => e.field_name !== missing);
+    }
+  }
+  throw new Error('SignNow prefill failed: too many unknown fields');
 }
 
 /**
@@ -159,7 +176,7 @@ export async function registerDocumentWebhook(
   const results: { id: string; event: string }[] = [];
   for (const event of events) {
     try {
-      const json = await apiFetch('/v2/event-subscriptions', {
+      const res = await apiFetch('/v2/event-subscriptions', {
         method: 'POST',
         json: {
           event,
@@ -172,7 +189,8 @@ export async function registerDocumentWebhook(
           },
         },
       });
-      results.push({ id: json?.data?.id ?? json?.id ?? 'unknown', event });
+      const json = await res.json().catch(() => ({}));
+      results.push({ id: String(json?.data?.id ?? json?.id ?? 'unknown'), event });
     } catch (e: any) {
       if (e.message?.includes('subscription already exists') || e.message?.includes('duplicate')) {
         results.push({ id: 'existing', event });
@@ -194,16 +212,24 @@ export interface EmbeddedInviteSigner {
   last_name?: string;
 }
 
+export interface CreatedInvite {
+  id: string;
+  email: string;
+  role_name?: string;
+  order?: number;
+}
+
 /**
- * Create an embedded invite for a document. Returns the invite id needed
- * later to generate short-lived signing links.
+ * Create embedded invites for a document. Returns ALL created invites so the
+ * caller can map each Vendibook signer to its own SignNow invite id
+ * deterministically (never assume the first invite belongs to everyone).
  * https://docs.signnow.com/docs/signnow/reference/operations/embedded-invites
  */
 export async function createEmbeddedInvite(
   documentId: string,
   signers: EmbeddedInviteSigner[],
   nameFormula?: string,
-): Promise<string> {
+): Promise<CreatedInvite[]> {
   const res = await apiFetch(`/v2/documents/${documentId}/embedded-invites`, {
     method: 'POST',
     json: {
@@ -220,8 +246,45 @@ export async function createEmbeddedInvite(
   });
   const json = await res.json();
   // Response returns { data: [{ id, email, role_name, order, ... }] }
-  return String(json?.data?.[0]?.id ?? json?.id ?? '');
+  const rows: any[] = Array.isArray(json?.data) ? json.data : (json?.id ? [json] : []);
+  let created: CreatedInvite[] = rows
+    .filter((r) => r?.id)
+    .map((r) => ({
+      id: String(r.id),
+      email: String(r.email ?? ''),
+      role_name: r.role_name ? String(r.role_name) : undefined,
+      order: r.order != null ? Number(r.order) : undefined,
+    }));
+
+  // Some SignNow responses omit per-invite emails. Fall back to reading the
+  // document's field_invites, which always carries email + role_name.
+  if (created.length < signers.length || created.some((c) => !c.email)) {
+    try {
+      const remote = await getDocument(documentId);
+      const fi: any[] = remote?.field_invites ?? [];
+      if (fi.length) {
+        created = fi
+          .filter((i) => i?.id)
+          .map((i) => ({
+            id: String(i.id),
+            email: String(i.email ?? ''),
+            role_name: i.role ? String(i.role) : undefined,
+            order: i.order != null ? Number(i.order) : undefined,
+          }));
+      }
+    } catch (_e) {
+      // Non-fatal: create-embedded-session resolves invite ids lazily too.
+    }
+  }
+  return created;
 }
+
+/** Map created invites back onto signer records by email (case-insensitive). */
+export function inviteIdForEmail(invites: CreatedInvite[], email: string): string | undefined {
+  const hit = invites.find((i) => i.email?.toLowerCase() === email.toLowerCase());
+  return hit?.id;
+}
+
 
 /**
  * Generate a short-lived signing link for one embedded signer.

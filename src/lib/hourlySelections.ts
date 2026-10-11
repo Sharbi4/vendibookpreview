@@ -1,3 +1,4 @@
+import { parseRentalDate } from './rentalCheckoutValidation';
 export type HourlySelectionsByDate = Record<string, string[]>;
 
 const uniqSorted = (values: string[]) => Array.from(new Set(values)).sort();
@@ -14,6 +15,9 @@ export const parseHourlySelections = (params: {
   startDate: string | null;
   hourlyData: string | null;
   timeSlots: string | null;
+  endDate?: string | null;
+  startTime?: string | null;
+  endTime?: string | null;
 }): HourlySelectionsByDate => {
   const { startDate, hourlyData, timeSlots } = params;
 
@@ -28,12 +32,12 @@ export const parseHourlySelections = (params: {
       const dateKey = part.slice(0, colonIdx).trim();
       const slotsRaw = part.slice(colonIdx + 1);
 
-      if (!dateKey) continue;
+      if (!parseRentalDate(dateKey) || (startDate && dateKey < startDate) || (params.endDate && dateKey > params.endDate)) continue;
 
       const slots = slotsRaw
         .split(',')
         .map((s) => s.trim())
-        .filter(Boolean);
+        .filter((slot) => /^([01]\d|2[0-3]):00$/.test(slot));
 
       if (slots.length > 0) out[dateKey] = uniqSorted(slots);
     }
@@ -41,11 +45,19 @@ export const parseHourlySelections = (params: {
     return out;
   }
 
-  if (startDate && timeSlots) {
+  if (!timeSlots && startDate && parseRentalDate(startDate) && params.startTime && params.endTime && (!params.endDate || params.endDate === startDate)) {
+    const validTime = /^([01]\d|2[0-3]):00$/;
+    if (!validTime.test(params.startTime) || !validTime.test(params.endTime)) return {};
+    const start = Number(params.startTime.slice(0, 2)), end = Number(params.endTime.slice(0, 2));
+    if (end <= start) return {};
+    return { [startDate]: Array.from({ length: end - start }, (_, index) => `${String(start + index).padStart(2, '0')}:00`) };
+  }
+
+  if (startDate && parseRentalDate(startDate) && timeSlots) {
     const slots = timeSlots
       .split(',')
       .map((s) => s.trim())
-      .filter(Boolean);
+      .filter((slot) => /^([01]\d|2[0-3]):00$/.test(slot));
 
     return slots.length > 0 ? { [startDate]: uniqSorted(slots) } : {};
   }

@@ -7,6 +7,9 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { cn } from '@/lib/utils';
 import { AIOptimizeButton } from '../AIOptimizeButton';
+import { ContactDetailsNotice } from '../ContactDetailsNotice';
+import { VoiceMicButton } from '@/components/voice/VoiceMicButton';
+import { useVoiceDictation } from '@/hooks/useVoiceDictation';
 
 interface StepHeadlineDescriptionProps {
   title: string;
@@ -27,6 +30,12 @@ export const StepHeadlineDescription: React.FC<StepHeadlineDescriptionProps> = (
   const { toast } = useToast();
   const [originalDescription, setOriginalDescription] = useState<string | null>(null);
   const [showOptimized, setShowOptimized] = useState(false);
+  const voice = useVoiceDictation({
+    onFinal: (text) => {
+      onDescriptionChange(description ? `${description.trimEnd()} ${text}` : text);
+      if (showOptimized) setShowOptimized(false);
+    },
+  });
 
   const applyOptimized = (optimized: string) => {
     setOriginalDescription(description);
@@ -102,17 +111,29 @@ export const StepHeadlineDescription: React.FC<StepHeadlineDescriptionProps> = (
           )}
         </div>
         
+        <div className="relative">
         <Textarea
           id="description"
-          value={description}
+          value={voice.partial ? `${description ? description.trimEnd() + ' ' : ''}${voice.partial}` : description}
+          readOnly={voice.isRecording}
           onChange={(e) => {
             onDescriptionChange(e.target.value);
             if (showOptimized) setShowOptimized(false);
           }}
           placeholder="Describe your listing in detail. What makes it special? What equipment is included?"
           rows={6}
-          className="resize-none text-sm bg-background"
+          className="resize-none text-base md:text-sm bg-background pr-12"
         />
+        <VoiceMicButton
+          isRecording={voice.isRecording}
+          isBusy={voice.isConnecting}
+          onClick={voice.toggle}
+          label="Speak your description"
+          className="absolute bottom-1 right-1"
+        />
+        </div>
+        {voice.isRecording && <p className="text-xs font-medium text-success">Listening…</p>}
+        <ContactDetailsNotice text={description} />
         
         <div className="flex items-center justify-between">
           <p className="text-xs text-muted-foreground">

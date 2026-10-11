@@ -31,14 +31,14 @@ export const useHostBookings = () => {
 
     setIsLoading(true);
     try {
-      // Get booking requests where user is host.
-      // Include both 'paid' (captured) and 'authorized' (auth-hold awaiting host action) so
-      // hosts can actually see and respond to instant-book requests that haven't been captured yet.
+      // Get booking requests where user is host. Request-to-book bookings are
+      // unpaid until the host approves, so they must be listed. Only hide an
+      // Instant Book checkout the renter started but never paid for.
       const { data: bookingData, error: bookingError } = await supabase
         .from('booking_requests')
         .select('*')
         .eq('host_id', user.id)
-        .in('payment_status', ['paid', 'authorized'])
+        .or('is_instant_book.eq.false,payment_status.in.(paid,authorized,refunded),status.neq.pending')
         .order('created_at', { ascending: false });
 
       if (bookingError) throw bookingError;

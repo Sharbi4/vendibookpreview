@@ -1,6 +1,9 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { refundPayment } from "../_shared/paymentOps.ts";
+import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
+import { queueCompletedRentalPayouts } from "../_shared/rentalPayoutEligibility.ts";
+import { confirmedRefundId } from "../_shared/confirmedRefund.ts";
 
 declare const EdgeRuntime: { waitUntil: (promise: Promise<unknown>) => void };
 
@@ -18,20 +21,16 @@ serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+  if (!(await isAdminOrBackendCaller(req))) return forbiddenResponse();
 
   try {
     logStep("Function started - checking for ended bookings and pending releases");
-
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
 
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
       { auth: { persistSession: false } }
     );
-
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
     // Get current date and 24 hours ago
     const now = new Date();
@@ -43,7 +42,7 @@ serve(async (req) => {
 
     const results = {
       markedCompleted: 0,
-      payoutsProcessed: 0,
+      payoutsQueued: 0,
       depositsRefunded: 0,
       errors: [] as string[],
     };
@@ -139,130 +138,36 @@ serve(async (req) => {
     }
 
     // ========================================
-    // STEP 2: Process RENTAL payouts 24 hours after booking_end_timestamp (if no dispute or manual hold)
-    // NOTE: For SALES, payouts are handled by confirm-sale (both parties confirm) or 
-    // auto-release-sale-payouts (25 days after payment if not both confirmed)
+    // STEP 2: Queue completed rentals for manual payout review after 24 hours.
+    // Eligibility is not a transfer and must never appear as "payout sent".
     // ========================================
-    logStep("Step 2: Processing RENTAL payouts for bookings ended 24+ hours ago");
-
     const { data: payoutEligibleBookings, error: payoutFetchError } = await supabaseClient
       .from('booking_requests')
-      .select(`
-        id,
-        listing_id,
-        shopper_id,
-        host_id,
-        end_date,
-        booking_end_timestamp,
-        total_price,
-        payment_intent_id,
-        payout_processed,
-        payout_hold_until,
-        payout_hold_reason
-      `)
+      .select('id, host_id, status, payment_status, dispute_status, payout_hold_until, payout_hold_reason')
       .eq('status', 'completed')
       .eq('payment_status', 'paid')
-      .is('payout_processed', null) // Only bookings that haven't had payout processed
-      .lt('booking_end_timestamp', twentyFourHoursAgo.toISOString()); // 24+ hours since actual end
+      .lt('booking_end_timestamp', twentyFourHoursAgo.toISOString());
 
     if (payoutFetchError) {
-      logStep("Error fetching payout eligible bookings", { error: payoutFetchError.message });
-    } else if (payoutEligibleBookings && payoutEligibleBookings.length > 0) {
-      for (const booking of payoutEligibleBookings) {
+      results.errors.push(`Unable to check rental payout eligibility: ${payoutFetchError.message}`);
+    } else {
+      for (const booking of payoutEligibleBookings ?? []) {
         try {
-          // Check if manual hold is set and not yet expired
-          if (booking.payout_hold_until && new Date(booking.payout_hold_until) > now) {
-            logStep("Booking has manual hold - skipping payout", { 
-              bookingId: booking.id, 
-              holdUntil: booking.payout_hold_until,
-              reason: booking.payout_hold_reason 
-            });
-            continue;
-          }
-
-          // Check if there's an active dispute on the booking itself
-          const { data: bookingWithDispute } = await supabaseClient
-            .from('booking_requests')
-            .select('dispute_status')
-            .eq('id', booking.id)
-            .single();
-
-          if (bookingWithDispute?.dispute_status && bookingWithDispute.dispute_status !== 'closed') {
-            logStep("Booking has active dispute - skipping payout", { bookingId: booking.id, disputeStatus: bookingWithDispute.dispute_status });
-            continue;
-          }
-
-          // Get host's Stripe account
-          const { data: hostProfile } = await supabaseClient
-            .from('profiles')
-            .select('stripe_account_id, full_name')
-            .eq('id', booking.host_id)
-            .single();
-
-          if (!hostProfile?.stripe_account_id) {
-            logStep("Host has no Stripe account - skipping payout", { bookingId: booking.id });
-            continue;
-          }
-
-          // Calculate payout (10% platform fee)
-          const platformFeePercent = 0.10;
-          const payoutAmount = Math.round(Number(booking.total_price) * (1 - platformFeePercent) * 100);
-
-          logStep("Processing payout", { 
-            bookingId: booking.id, 
-            amount: payoutAmount / 100,
-            stripeAccount: hostProfile.stripe_account_id 
+          const queued = await queueCompletedRentalPayouts(supabaseClient, booking);
+          if (!queued.count) continue;
+          results.payoutsQueued += queued.count;
+          // No payout_processed flag or sent email: an administrator must record
+          // the confirmed external transfer before the payout is completed.
+          const { error: notificationError } = await supabaseClient.from('notifications').insert({
+            user_id: booking.host_id,
+            type: 'payout_pending',
+            title: 'Rental payout ready for review',
+            message: `Your rental proceeds of $${(queued.amountCents / 100).toFixed(2)} are ready for payout review. Payment has not been sent yet.`,
+            data: { booking_id: booking.id, amount: queued.amountCents / 100 },
           });
-
-          // Create transfer
-          const transfer = await stripe.transfers.create({
-            amount: payoutAmount,
-            currency: 'usd',
-            destination: hostProfile.stripe_account_id,
-            metadata: {
-              booking_id: booking.id,
-              listing_id: booking.listing_id,
-              type: 'booking_payout',
-            },
-          });
-
-          // Mark payout as processed
-          await supabaseClient
-            .from('booking_requests')
-            .update({ 
-              payout_processed: true,
-              payout_processed_at: now.toISOString(),
-              payout_transfer_id: transfer.id,
-            })
-            .eq('id', booking.id);
-
-          results.payoutsProcessed++;
-          logStep("Payout processed", { bookingId: booking.id, transferId: transfer.id });
-
-          // Notify host
-          EdgeRuntime.waitUntil(
-            (async () => {
-              await supabaseClient.from('notifications').insert({
-                user_id: booking.host_id,
-                type: 'payout_completed',
-                title: 'Payout Received! 💰',
-                message: `Your payout of $${(payoutAmount / 100).toFixed(2)} has been sent to your bank account.`,
-                data: { booking_id: booking.id, transfer_id: transfer.id, amount: payoutAmount / 100 },
-              });
-            })()
-          );
-
-          // Send payout notification email
-          EdgeRuntime.waitUntil(
-            supabaseClient.functions.invoke('send-payout-notification', {
-              body: { booking_id: booking.id, amount: payoutAmount / 100 },
-            }).catch(err => logStep("Payout email failed", { error: err }))
-          );
-
+          if (notificationError) logStep('Payout review notification failed', { bookingId: booking.id });
         } catch (err) {
-          const msg = err instanceof Error ? err.message : String(err);
-          results.errors.push(`Payout failed for booking ${booking.id}: ${msg}`);
-          logStep("Payout error", { bookingId: booking.id, error: msg });
+          results.errors.push(`Payout review failed for booking ${booking.id}: ${err instanceof Error ? err.message : String(err)}`);
         }
       }
     }
@@ -284,6 +189,7 @@ serve(async (req) => {
         deposit_amount,
         deposit_status,
         deposit_charge_id,
+        payment_provider,
         payout_hold_until,
         payout_hold_reason
       `)
@@ -308,13 +214,17 @@ serve(async (req) => {
           }
 
           // Check if there's an active dispute on the booking itself
-          const { data: bookingWithDispute } = await supabaseClient
+          const { data: bookingWithDispute, error: disputeError } = await supabaseClient
             .from('booking_requests')
             .select('dispute_status')
             .eq('id', booking.id)
             .single();
 
-          if (bookingWithDispute?.dispute_status && bookingWithDispute.dispute_status !== 'closed') {
+          if (disputeError || !bookingWithDispute) {
+            results.errors.push(`Cannot verify deposit dispute status for ${booking.id}`);
+            continue;
+          }
+          if (bookingWithDispute.dispute_status && !['none', 'closed', 'resolved'].includes(bookingWithDispute.dispute_status)) {
             logStep("Booking has active dispute - skipping deposit refund", { bookingId: booking.id, disputeStatus: bookingWithDispute.dispute_status });
             continue;
           }
@@ -326,33 +236,48 @@ serve(async (req) => {
             depositAmount: refundAmount 
           });
 
-          // Process Stripe refund if we have a charge ID
-          let refundId = null;
+          // Refund the deposit through PayPal. Legacy references from the
+          // retired processor resolve to a manual outcome for admin settlement.
+          let refundId: string | null = null;
+          if (booking.payment_provider !== 'paypal') {
+            results.errors.push(`Deposit ${booking.id} requires review through its original payment provider.`);
+            continue;
+          }
+          if (!booking.deposit_charge_id) {
+            results.errors.push(`Deposit ${booking.id} has no payment reference; manual review is required.`);
+            continue;
+          }
           if (booking.deposit_charge_id) {
             try {
-              const refund = await stripe.refunds.create({
-                charge: booking.deposit_charge_id,
-                amount: Math.round(refundAmount * 100),
-                reason: 'requested_by_customer',
+              const outcome = await refundPayment({
+                paymentReference: booking.deposit_charge_id,
+                amountCents: Math.round(refundAmount * 100),
+                reason: 'Automatic deposit release after rental completion',
+                idempotencyKey: `deposit-auto-refund:${booking.id}`,
               });
-              refundId = refund.id;
-              logStep("Stripe deposit refund processed", { refundId, amount: refundAmount });
-            } catch (stripeError: any) {
-              logStep("Stripe deposit refund failed", { error: stripeError.message });
-              results.errors.push(`Deposit refund failed for ${booking.id}: ${stripeError.message}`);
+              refundId = confirmedRefundId(outcome, Math.round(refundAmount * 100));
+              logStep("Deposit refund completed", { refundId, amount: refundAmount });
+            } catch (refundError) {
+              const message = refundError instanceof Error ? refundError.message : String(refundError);
+              logStep("Deposit refund failed", { error: message });
+              results.errors.push(`Deposit refund failed for ${booking.id}: ${message}`);
               continue;
             }
           }
 
           // Update booking
-          await supabaseClient
+          const { data: refundedBooking, error: recordError } = await supabaseClient
             .from('booking_requests')
             .update({ 
               deposit_status: 'refunded',
               deposit_refunded_at: now.toISOString(),
               deposit_refund_notes: 'Auto-refunded 24 hours after rental completion - no issues reported',
             })
-            .eq('id', booking.id);
+            .eq('id', booking.id)
+            .eq('deposit_status', 'charged')
+            .select('id');
+          if (recordError) throw new Error(`Refund ${refundId} completed but could not be recorded: ${recordError.message}`);
+          if (!refundedBooking?.length) continue;
 
           results.depositsRefunded++;
           logStep("Deposit refunded", { bookingId: booking.id, refundId });
@@ -418,7 +343,7 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true,
-        message: `Completed: ${results.markedCompleted} marked, ${results.payoutsProcessed} payouts, ${results.depositsRefunded} deposits refunded`,
+        message: `Completed: ${results.markedCompleted} marked, ${results.payoutsQueued} payouts queued, ${results.depositsRefunded} deposits refunded`,
         ...results
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }

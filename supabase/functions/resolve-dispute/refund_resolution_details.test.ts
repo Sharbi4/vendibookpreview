@@ -51,12 +51,12 @@ function makeFakeSupabase(byTermsId: Record<string, unknown> | null) {
   return { from };
 }
 
-// ---------- Fixture: a paid stripe_card sale + its terms row -------------
+// ---------- Fixture: a paid paypal_card sale + its terms row -------------
 
 const TERMS_ROW = {
   id: "terms-refund-e2e",
   terms_version: "v3",
-  payment_method: "stripe_card",
+  payment_method: "paypal_card",
   transaction_mode: "sale",
   total_cents: 45999,
   snapshot: {
@@ -183,7 +183,7 @@ Deno.test("refund_buyer: buyer generic-notice details expose terms-derived field
 
   const pm = detail(details, "Payment method");
   assert(pm, "Payment method detail missing");
-  assertEquals(pm!.value, "stripe card"); // underscores stripped
+  assertEquals(pm!.value, "paypal card"); // underscores stripped
 
   const ver = detail(details, "Terms version");
   assert(ver, "Terms version detail missing");
@@ -205,7 +205,7 @@ Deno.test("refund_buyer: seller generic-notice details expose the same terms fie
 
   const details = seller.templateData.details;
   assertEquals(detail(details, "Total agreed")!.value, "$459.99");
-  assertEquals(detail(details, "Payment method")!.value, "stripe card");
+  assertEquals(detail(details, "Payment method")!.value, "paypal card");
   assertEquals(detail(details, "Terms version")!.value, "v3");
 });
 
@@ -220,7 +220,7 @@ Deno.test("release_to_seller: both audiences see identical terms-derived details
   for (const p of [buyer, seller]) {
     const details = p.templateData.details;
     assertEquals(detail(details, "Total agreed")!.value, "$459.99");
-    assertEquals(detail(details, "Payment method")!.value, "stripe card");
+    assertEquals(detail(details, "Payment method")!.value, "paypal card");
     assertEquals(detail(details, "Terms version")!.value, "v3");
     // Alert body must reflect the release-to-seller flow.
     assertEquals(

@@ -1,6 +1,6 @@
 import { Shield, Lock, Users, Rocket, Heart, ArrowRight, CheckCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const values = [
   {
@@ -86,19 +86,12 @@ const PaymentsSection = () => {
 
             <div className="relative mt-8 pt-6 border-t border-border/50">
               <div className="flex items-center gap-4">
-                <img 
-                  src="/stripe-badge.png" 
-                  alt="Powered by Stripe" 
-                  width={120}
-                  height={32}
-                  className="h-8 w-auto opacity-70"
-                  onError={(e) => {
-                    e.currentTarget.style.display = 'none';
-                  }}
-                />
-                <span className="text-sm text-muted-foreground">
-                  Payments processed securely by Stripe
-                </span>
+                <Link
+                  to="/payments"
+                  className="text-sm text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground"
+                >
+                  Payments processed securely by PayPal — see how payments work
+                </Link>
               </div>
             </div>
           </div>

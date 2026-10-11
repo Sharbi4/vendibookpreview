@@ -297,7 +297,9 @@ export function computeNextAction(ctx: NextActionContext): NextAction {
     return action('complete_identity_verification', 'Complete identity verification', 'Verify your identity so the host can release this rental to you.', '/verify-identity', 3);
   }
   if (ctx.agreementRequired && !ctx.agreementSigned) {
-    return action('sign_rental_agreement', 'Sign your rental agreement', 'Your payment went through. Sign the rental agreement to lock in your dates.', orderUrl, 3);
+    return ctx.transactionType === 'equipment_sale'
+      ? action('sign_rental_agreement', 'Sign your purchase agreement', 'Your payment went through. Sign the purchase agreement so the seller can complete the handoff.', orderUrl, 3)
+      : action('sign_rental_agreement', 'Sign your rental agreement', 'Your payment went through. Sign the rental agreement to lock in your dates.', orderUrl, 3);
   }
   if ((ctx.documentsOutstanding ?? 0) > 0) {
     return action('upload_required_document', 'Upload your required documents', `You still have ${ctx.documentsOutstanding} document(s) to upload before this can move forward.`, orderUrl, 4);
@@ -452,7 +454,7 @@ export function deriveOrderStatus(
   if (['completed', 'delivered', 'picked_up', 'fulfilled'].includes(f)) {
     return { code: 'completed', label: 'Completed' };
   }
-  if (['scheduled', 'in_transit', 'shipped', 'processing'].includes(f)) {
+  if (['scheduled', 'in_transit', 'shipped', 'out_for_delivery', 'ready_for_pickup', 'processing'].includes(f)) {
     return { code: 'in_progress', label: 'In progress' };
   }
   return { code: 'confirmed', label: 'Confirmed' };

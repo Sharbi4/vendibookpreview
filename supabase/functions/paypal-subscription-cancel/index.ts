@@ -2,6 +2,10 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
 import { cancelPayPalSubscription, PayPalError, safeLog } from "../_shared/paypal.ts";
+import { resolveSubscriptionPeriod } from "../_shared/subscriptionPeriod.ts";
+import { sendSubscriptionLifecycleEmail } from "../_shared/subscriptionLifecycleEmail.ts";
+import { notifyUser } from "../_shared/notify.ts";
+
 
 /**
  * Cancels the member's PayPal subscription at PayPal FIRST, then records it
@@ -23,14 +27,22 @@ serve(async (req) => {
     const user = userData?.user;
     if (!user) return jsonError(401, "unauthenticated", "Your session expired.");
 
-    const { reason } = await req.json().catch(() => ({}));
+    const { reason, paypal_subscription_id } = await req.json().catch(() => ({}));
 
-    const { data: sub } = await admin.from("paypal_subscriptions").select("*")
+    // Multiple recurring products can be live at once — when the client pins a
+    // subscription id, cancel exactly that one (ownership-scoped).
+    let query = admin.from("paypal_subscriptions").select("*")
       .eq("user_id", user.id)
       .in("status", ["active", "approval_pending", "pending", "suspended", "past_due"])
-      .maybeSingle();
+      .order("created_at", { ascending: false });
+    if (paypal_subscription_id) {
+      query = query.eq("paypal_subscription_id", paypal_subscription_id);
+    }
+    const { data: rows } = await query.limit(1);
+    const sub = rows?.[0] ?? null;
 
     if (!sub) return jsonError(404, "no_subscription", "You don't have an active membership to cancel.");
+
 
     try {
       await cancelPayPalSubscription(
@@ -42,25 +54,82 @@ serve(async (req) => {
       if (!(err instanceof PayPalError && err.status === 422)) throw err;
     }
 
+    // Idempotent: re-running on an already-cancelled row produces the same state.
     await admin.from("paypal_subscriptions").update({
       status: "cancelled",
-      cancelled_at: new Date().toISOString(),
+      cancelled_at: sub.cancelled_at ?? new Date().toISOString(),
     }).eq("id", sub.id);
 
-    await admin.from("host_subscriptions").update({
-      status: "canceled",
-      cancel_at_period_end: true,
-      cancel_at: sub.next_billing_time ?? new Date().toISOString(),
-      updated_at: new Date().toISOString(),
-    }).eq("user_id", user.id);
+    // Scope the entitlement row to this exact subscription when possible so a
+    // second recurring product's row is never rewritten.
+    const hostSubQuery = admin.from("host_subscriptions")
+      .select("id, current_period_start, current_period_end")
+      .eq("user_id", user.id);
+    const { data: hostRows } = await (
+      sub.paypal_subscription_id
+        ? hostSubQuery.eq("paypal_subscription_id", sub.paypal_subscription_id)
+        : hostSubQuery
+    ).limit(1);
+    const hostSub = hostRows?.[0] ?? null;
 
-    safeLog("subscription_cancelled", { userId: user.id });
+    // Cancel anytime → no future renewal, benefits stay live through the end of
+    // the period the member already paid for.
+    const period = resolveSubscriptionPeriod({
+      providerStatus: "cancelled",
+      nextBillingTime: sub.next_billing_time,
+      lastPaymentAt: sub.last_payment_at,
+      startTime: sub.start_time,
+      existingPeriodEnd: hostSub?.current_period_end ?? null,
+      existingPeriodStart: hostSub?.current_period_start ?? null,
+    });
+
+    const patch = {
+      status: period.status,
+      cancel_at_period_end: true,
+      cancel_at: period.cancel_at ?? new Date().toISOString(),
+      current_period_start: period.current_period_start,
+      current_period_end: period.current_period_end,
+      updated_at: new Date().toISOString(),
+    };
+    if (hostSub) {
+      await admin.from("host_subscriptions").update(patch).eq("id", hostSub.id);
+    } else {
+      await admin.from("host_subscriptions").update(patch).eq("user_id", user.id);
+    }
+
+    const accessThrough = period.entitled ? period.current_period_end : null;
+
+    // Same idempotency key convention the webhook uses, so a later PayPal
+    // CANCELLED event cannot send a second confirmation.
+    await sendSubscriptionLifecycleEmail(admin, sub, "cancelled", { accessThrough });
+
+    await notifyUser(admin, {
+      userId: user.id,
+      type: "subscription_cancelled",
+      title: "Membership cancelled",
+      message: accessThrough
+        ? `Your membership is cancelled — no future renewal. Your benefits remain active through ${
+          new Date(accessThrough).toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+            timeZone: "UTC",
+          })
+        }.`
+        : "Your membership is cancelled. You can resubscribe at any time.",
+      link: "/account/subscription",
+      dedupeKey: `${sub.paypal_subscription_id}:cancelled`,
+    });
+
+    safeLog("subscription_cancelled", { userId: user.id, entitled_until: period.current_period_end });
+
 
     return jsonResponse(200, {
       success: true,
       status: "cancelled",
-      access_until: sub.next_billing_time,
-      message: sub.next_billing_time
+      access_until: period.current_period_end,
+      still_entitled: period.entitled,
+      message: period.entitled
         ? "Your membership is cancelled. Access continues until the end of the paid period."
         : "Your membership is cancelled.",
     });

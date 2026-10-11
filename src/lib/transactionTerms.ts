@@ -16,6 +16,7 @@ import {
   calculateRentalFees,
   calculateSaleFees,
   formatCurrency,
+  RENTAL_RENTER_FEE_PERCENT,
 } from './commissions';
 
 export const TERMS_VERSION = 'v1';
@@ -39,13 +40,15 @@ export interface TermsListing {
   price_weekly?: number | null;
   price_monthly?: number | null;
   security_deposit?: number | null;
-  accept_card_payment?: boolean | null;
+  accept_paypal_checkout?: boolean | null;
+  accept_card_payment?: boolean | null; // Legacy Stripe flag retained for audit
   required_documents?: unknown; // jsonb list from listing_required_documents
 }
 
 export interface TermsSelection {
   mode: 'rent' | 'sale';
-  paymentMethod: 'stripe_card' | 'pay_in_person' | 'offer' | 'other';
+  /** card_checkout = rental card payment through Square. */
+  paymentMethod: 'card_checkout' | 'paypal_checkout' | 'pay_in_person' | 'offer' | 'other';
   basePriceDollars: number;      // rental subtotal or sale price (before fees, before deposit)
   depositDollars?: number;       // security deposit (rental)
   deliveryFeeDollars?: number;   // buyer-visible delivery / freight
@@ -126,7 +129,7 @@ const defaultCancellationCopy = (mode: 'rent' | 'sale', isCash: boolean): string
     if (isCash) {
       return 'Pay-in-Person sales are between buyer and seller. Vendibook does not hold funds or process refunds for cash transactions — inspect the item in person before you pay.';
     }
-    return 'Sales are payment protection-protected. Funds are held by Vendibook and released to the seller 25 days after you confirm the item is as described. Open a dispute from your order page if something is wrong.';
+    return 'Sales are payment protection-protected. Funds are held by Vendibook and typically released to the seller within 24 hours of delivery confirmation (24 to 48 hours at the outside). Open a dispute from your order page if something is wrong.';
   }
   return 'Free cancellation is not automatic. Contact the host to request a refund. Deposits are refunded within 24 hours after the rental ends if there is no damage or late return. Platform service fees are non-refundable once a booking is confirmed.';
 };
@@ -164,7 +167,7 @@ export function buildTerms(input: {
       lines.push({ label: 'Delivery', amountCents: deliveryCents, kind: 'delivery' });
     }
     lines.push({
-      label: 'Service fee (12.9%)',
+      label: `Service fee (${RENTAL_RENTER_FEE_PERCENT}%)`,
       amountCents: renterFeeCents,
       kind: 'fee',
       hint: 'Vendibook marketplace fee. Non-refundable once the booking is confirmed.',
@@ -234,11 +237,17 @@ export function buildTerms(input: {
       ? `You are booking "${listing.title}" for the dates shown above.`
       : `You are buying "${listing.title}" from the seller.`,
   );
-  if (selection.paymentMethod === 'stripe_card') {
+  if (selection.paymentMethod === 'card_checkout') {
     acknowledgements.push(
       selection.mode === 'rent'
-        ? 'Your card is authorized now; funds are held by Vendibook until 24 hours after the rental ends.'
-        : 'Your card is charged now; funds are held in payment protection and released to the seller 25 days after you confirm the item.',
+        ? 'Request bookings require host approval before payment; after approval you pay by card on Vendibook. Instant Book is confirmed only after your card payment is verified.'
+        : 'Your card is charged when you confirm payment on Vendibook.',
+    );
+  } else if (selection.paymentMethod === 'paypal_checkout') {
+    acknowledgements.push(
+      selection.mode === 'rent'
+        ? 'Request bookings require host approval before payment. Approve at PayPal, then review the final total on Vendibook and select Submit payment. Instant Book is confirmed only after verified payment.'
+        : 'Your PayPal payment is charged now; funds are held in payment protection and typically released to the seller within 24 hours of delivery confirmation (24 to 48 hours at the outside).',
     );
   } else if (selection.paymentMethod === 'pay_in_person') {
     acknowledgements.push(
@@ -342,7 +351,8 @@ export interface HighlightsListing {
   city?: string | null;
   state?: string | null;
   instant_book?: boolean | null;
-  accept_card_payment?: boolean | null;
+  accept_paypal_checkout?: boolean | null;
+  accept_card_payment?: boolean | null; // Legacy Stripe flag retained for audit
   accept_cash_payment?: boolean | null;
   deposit_amount?: number | null;
   security_deposit?: number | null;
@@ -407,10 +417,12 @@ export function buildListingHighlights(listing: HighlightsListing): ListingHighl
 
   // 2. Payment posture (spec §7, §10)
   if (isSale) {
-    if (listing.accept_cash_payment && !listing.accept_card_payment) {
+    if (listing.accept_cash_payment && !listing.accept_paypal_checkout) {
       bullets.push('Pay in Person — Vendibook records the transaction but does not hold funds');
-    } else if (listing.accept_cash_payment && listing.accept_card_payment) {
-      bullets.push('Pay online or in person');
+    } else if (listing.accept_cash_payment && listing.accept_paypal_checkout) {
+      bullets.push('Pay online via PayPal or in person');
+    } else if (listing.accept_paypal_checkout) {
+      bullets.push('Payment is completed securely via PayPal at checkout');
     } else {
       bullets.push('Payment is completed securely at checkout');
     }

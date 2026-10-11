@@ -1,4 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { freightQuote } from "../_shared/freightRates.ts";
+import { coerceCoords, geocodeAddress, haversineMiles } from "../_shared/geo.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -44,96 +46,7 @@ interface FreightEstimateResponse {
   error?: string;
 }
 
-// Freight rate calculations - Premium flat rate
-const FREIGHT_RATES = {
-  ratePerMile: 4.50,
-  minimumCharge: 150,
-  handlingFee: 75,
-  fuelSurchargePercent: 0.08, // 8% fuel surcharge
-  defaultTaxRate: 0.0825, // 8.25% default tax rate (can be adjusted per state)
-};
-
-async function geocodeAddress(address: string, apiKey: string): Promise<{ lat: number; lng: number } | null> {
-  try {
-    const encodedAddress = encodeURIComponent(address);
-    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodedAddress}&key=${apiKey}&components=country:US`;
-    
-    const response = await fetch(url);
-    if (!response.ok) {
-      logStep("Geocoding failed", { status: response.status, address });
-      return null;
-    }
-    
-    const data = await response.json();
-    if (data.status === "OK" && data.results && data.results.length > 0) {
-      const location = data.results[0].geometry.location;
-      return { lat: location.lat, lng: location.lng };
-    }
-    
-    return null;
-  } catch (error) {
-    logStep("Geocoding error", { error: String(error), address });
-    return null;
-  }
-}
-
-function calculateDistance(lat1: number, lng1: number, lat2: number, lng2: number): number {
-  const R = 3959; // Earth's radius in miles
-  const dLat = (lat2 - lat1) * Math.PI / 180;
-  const dLng = (lng2 - lng1) * Math.PI / 180;
-  const a =
-    Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-    Math.sin(dLng / 2) * Math.sin(dLng / 2);
-  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-  return R * c;
-}
-
-function calculateFreightCost(
-  distanceMiles: number,
-  taxRate: number = FREIGHT_RATES.defaultTaxRate
-): { 
-  base_cost: number; 
-  fuel_surcharge: number;
-  handling_fee: number; 
-  subtotal: number;
-  tax_rate: number;
-  tax_amount: number;
-  total_cost: number;
-  rate_per_mile: number;
-} {
-  // Base cost: $4.50/mile with minimum charge
-  const baseCost = Math.max(
-    FREIGHT_RATES.minimumCharge,
-    distanceMiles * FREIGHT_RATES.ratePerMile
-  );
-
-  // Fuel surcharge: 8% of base cost
-  const fuelSurcharge = baseCost * FREIGHT_RATES.fuelSurchargePercent;
-  
-  // Handling fee: flat $75
-  const handlingFee = FREIGHT_RATES.handlingFee;
-  
-  // Subtotal before tax
-  const subtotal = baseCost + fuelSurcharge + handlingFee;
-  
-  // Tax calculation
-  const taxAmount = subtotal * taxRate;
-  
-  // Total cost
-  const totalCost = subtotal + taxAmount;
-
-  return {
-    base_cost: Math.round(baseCost * 100) / 100,
-    fuel_surcharge: Math.round(fuelSurcharge * 100) / 100,
-    handling_fee: handlingFee,
-    subtotal: Math.round(subtotal * 100) / 100,
-    tax_rate: taxRate,
-    tax_amount: Math.round(taxAmount * 100) / 100,
-    total_cost: Math.round(totalCost * 100) / 100,
-    rate_per_mile: FREIGHT_RATES.ratePerMile,
-  };
-}
+// Freight rates live in _shared/freightRates.ts (also used for the listing-page range).
 
 function estimateTransitDays(distanceMiles: number): { min: number; max: number } {
   // Standard 7-10 business days for all US shipments
@@ -154,17 +67,10 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
-    const GOOGLE_MAPS_API_KEY = Deno.env.get("GOOGLE_MAPS_API_KEY");
-    
-    if (!GOOGLE_MAPS_API_KEY) {
-      logStep("Google Maps API key not configured");
-      return new Response(
-        JSON.stringify({ success: false, error: "Geocoding service not configured" }),
-        { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }
-      );
-    }
-
-    const body: FreightEstimateRequest = await req.json();
+    const body: FreightEstimateRequest & {
+      origin_coords?: { lat: number; lng: number };
+      destination_coords?: { lat: number; lng: number };
+    } = await req.json();
     logStep("Request body", body);
 
     // Support both camelCase and snake_case parameter names
@@ -174,18 +80,21 @@ const handler = async (req: Request): Promise<Response> => {
     const widthInches = body.widthInches || body.width_inches;
     const heightInches = body.heightInches || body.height_inches;
     const weightLbs = body.weightLbs || body.weight_lbs;
+    const providedOrigin = coerceCoords(body.origin_coords);
+    const providedDest = coerceCoords(body.destination_coords);
 
-    if (!originAddress || !destinationAddress) {
+    if ((!originAddress && !providedOrigin) || (!destinationAddress && !providedDest)) {
       return new Response(
         JSON.stringify({ success: false, error: "Origin and destination addresses are required" }),
         { status: 400, headers: { "Content-Type": "application/json", ...corsHeaders } }
       );
     }
 
-    // Geocode both addresses
-    logStep("Geocoding origin address", { originAddress });
-    const originCoords = await geocodeAddress(originAddress, GOOGLE_MAPS_API_KEY);
-    
+    // Geocode both endpoints (coordinates win when the caller already has them)
+    logStep("Resolving origin", { originAddress, providedOrigin });
+    const originCoords =
+      providedOrigin ?? (await geocodeAddress(originAddress as string));
+
     if (!originCoords) {
       return new Response(
         JSON.stringify({ success: false, error: "Could not geocode origin address" }),
@@ -194,9 +103,10 @@ const handler = async (req: Request): Promise<Response> => {
     }
     logStep("Origin coordinates", originCoords);
 
-    logStep("Geocoding destination address", { destinationAddress });
-    const destCoords = await geocodeAddress(destinationAddress, GOOGLE_MAPS_API_KEY);
-    
+    logStep("Resolving destination", { destinationAddress, providedDest });
+    const destCoords =
+      providedDest ?? (await geocodeAddress(destinationAddress as string));
+
     if (!destCoords) {
       return new Response(
         JSON.stringify({ success: false, error: "Could not geocode destination address" }),
@@ -205,17 +115,13 @@ const handler = async (req: Request): Promise<Response> => {
     }
     logStep("Destination coordinates", destCoords);
 
+
     // Calculate distance
-    const distanceMiles = calculateDistance(
-      originCoords.lat,
-      originCoords.lng,
-      destCoords.lat,
-      destCoords.lng
-    );
+    const distanceMiles = haversineMiles(originCoords, destCoords);
     logStep("Calculated distance", { distanceMiles });
 
     // Calculate freight cost
-    const costs = calculateFreightCost(distanceMiles);
+    const costs = freightQuote(distanceMiles);
     logStep("Calculated costs", costs);
 
     // Estimate transit time

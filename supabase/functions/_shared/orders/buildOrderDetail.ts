@@ -52,6 +52,9 @@ export interface OrderDetail {
     total_paid_cents: number;
   };
 
+  /** Buyer/admin only: Vendibook-funded Campus Partner credit on this payment. */
+  campus_partner: { code: string | null; partner_name: string | null; credit_cents: number } | null;
+
   fulfillment: {
     type: FulfillmentType;
     label: string;
@@ -61,6 +64,20 @@ export interface OrderDetail {
 
   next_action: NextAction;
   seller_next_action: NextAction | null;
+
+  /** Identifiers used to load the Verified Handoff evidence chain. */
+  links?: { sale_transaction_id: string | null; booking_request_id: string | null };
+
+  release: {
+    state: string;
+    deadline_at: string | null;
+    walkthrough_complete: boolean;
+    walkthrough_recorded_at: string | null;
+    agreement_complete: boolean;
+    agreement_completed_at: string | null;
+    conditions_completed_at: string | null;
+    payout_recorded_at: string | null;
+  } | null;
 
   timeline: Array<{
     id: string;
@@ -72,7 +89,37 @@ export interface OrderDetail {
 
   attempts?: Array<Record<string, unknown>>;
   receipt?: Record<string, unknown> | null;
+  /**
+   * Seller/admin only. Server-computed settlement breakdown from the persisted
+   * seller payable — the browser never derives fees, proceeds or payout state.
+   */
+  settlement: {
+    currency: string;
+    routed_to_connected_paypal: boolean;
+    gross_collected_cents: number;
+    platform_fee_cents: number;
+    adjustments_cents: number;
+    refunded_cents: number;
+    net_to_seller_cents: number;
+    fee_rate_pct: number | null;
+    pro_discount_cents: number;
+    status_code: string;
+    status_label: string;
+    status_tone: 'positive' | 'pending' | 'warning' | 'critical' | 'neutral';
+    status_description: string;
+    settled_at: string | null;
+    hold_reason: string | null;
+  } | null;
+
   support: { email: string; phone: string; dispute_url: string };
+}
+
+/** fee_breakdown.campus_partner snapshot (kept local: this module is also type-checked by the web app). */
+function campusPartnerFromBreakdown(feeBreakdown: unknown): OrderDetail['campus_partner'] {
+  const snap = (feeBreakdown as any)?.campus_partner;
+  const credit = Math.round(Number(snap?.credit_cents ?? 0));
+  if (!(credit > 0)) return null;
+  return { code: snap?.code ?? null, partner_name: snap?.partner_name ?? null, credit_cents: credit };
 }
 
 const PAYMENT_SOURCE_LABEL: Record<string, string> = {
@@ -90,11 +137,13 @@ export async function buildOrderDetail(
 ): Promise<OrderDetail> {
   const transactionType = normalizeTransactionType(record.transaction_type);
 
-  const [listing, counterpartyName, domain, timeline] = await Promise.all([
+  const [listing, counterpartyName, domain, timeline, settlement, release] = await Promise.all([
     loadListing(supabase, record.listing_id),
     loadCounterpartyName(supabase, viewerRole === 'seller' ? record.buyer_id : record.seller_id),
     loadDomainRecord(supabase, record, transactionType),
     loadTimeline(supabase, record.id, viewerRole),
+    loadSettlement(supabase, record, viewerRole),
+    loadRelease(supabase, record),
   ]);
 
   const fulfillmentType = inferFulfillmentType(transactionType, domain.fulfillmentRaw);
@@ -147,20 +196,31 @@ export async function buildOrderDetail(
       currency: record.currency ?? 'USD',
       gross_cents: record.gross_amount_cents ?? 0,
       tax_cents: record.tax_cents ?? 0,
-      fee_cents: record.platform_fee_cents ?? 0,
+      // On sales the stored platform fee is the SELLER's fee; buyers pay no
+      // Vendibook fee, so it is never shown to them as a charge.
+      fee_cents: viewerRole === 'buyer' && transactionType === 'equipment_sale'
+        ? 0
+        : (record.platform_fee_cents ?? 0),
       discount_cents: record.discount_cents ?? 0,
       refunded_cents: record.refunded_cents ?? 0,
       total_paid_cents: Math.max(0, (record.gross_amount_cents ?? 0) - (record.refunded_cents ?? 0)),
     },
+    campus_partner: campusPartnerFromBreakdown(record.fee_breakdown),
     fulfillment: {
       type: fulfillmentType,
-      label: FULFILLMENT_LABEL[fulfillmentType],
+      label: domain.fulfillmentLabel ?? FULFILLMENT_LABEL[fulfillmentType],
       status: domain.fulfillmentStatus ?? null,
       details: viewerRole === 'seller' ? domain.sellerDetails : domain.details,
     },
     next_action: nextAction,
     seller_next_action: domain.sellerNextAction ?? null,
     timeline,
+    settlement,
+    release,
+    links: {
+      sale_transaction_id: record.sale_transaction_id ?? null,
+      booking_request_id: record.booking_request_id ?? null,
+    },
     support: {
       email: 'support@vendibook.com',
       phone: '(725) 755-9598',
@@ -175,11 +235,32 @@ export async function buildOrderDetail(
       fee_cents: 0,
       discount_cents: 0,
     };
+    detail.campus_partner = null;
     detail.payment.paypal_capture_id = null;
     detail.payment.payment_method_label = null;
   }
 
   return detail;
+}
+
+async function loadRelease(supabase: any, record: Record<string, any>): Promise<OrderDetail['release']> {
+  if (!record.sale_transaction_id) return null;
+  const { data } = await supabase
+    .from('seller_payables')
+    .select('release_state, conditions_deadline_at, walkthrough_media_id, walkthrough_recorded_at, signnow_document_id, agreement_completed_at, conditions_completed_at, payout_completed_at')
+    .eq('payment_record_id', record.id)
+    .maybeSingle();
+  if (!data) return null;
+  return {
+    state: data.release_state ?? 'awaiting_walkthrough',
+    deadline_at: data.conditions_deadline_at ?? null,
+    walkthrough_complete: Boolean(data.walkthrough_media_id && data.walkthrough_recorded_at),
+    walkthrough_recorded_at: data.walkthrough_recorded_at ?? null,
+    agreement_complete: Boolean(data.signnow_document_id && data.agreement_completed_at),
+    agreement_completed_at: data.agreement_completed_at ?? null,
+    conditions_completed_at: data.conditions_completed_at ?? null,
+    payout_recorded_at: data.payout_completed_at ?? null,
+  };
 }
 
 function isPayable(code: string) {
@@ -223,8 +304,127 @@ async function loadTimeline(supabase: any, paymentRecordId: string, viewerRole: 
   return data ?? [];
 }
 
+type SettlementTone = 'positive' | 'pending' | 'warning' | 'critical' | 'neutral';
+
+const PAYABLE_PRESENTATION: Record<string, { label: string; tone: SettlementTone; description: string }> = {
+  awaiting_payment_confirmation: {
+    label: 'Awaiting payment confirmation',
+    tone: 'pending',
+    description: 'We are confirming the buyer payment with PayPal before settlement figures are final.',
+  },
+  pending_release: {
+    label: 'Checklist in progress',
+    tone: 'pending',
+    description: 'Payment received. Complete the walkthrough video and both agreement signatures before payout review.',
+  },
+  eligible_for_review: {
+    label: 'Eligible for review',
+    tone: 'pending',
+    description: 'The walkthrough video and both signatures are complete. Your payout is ready for administrator review.',
+  },
+  payout_on_hold: {
+    label: 'On hold',
+    tone: 'warning',
+    description: 'Settlement is paused while an issue on this order is resolved.',
+  },
+  payout_approved: {
+    label: 'Approved',
+    tone: 'pending',
+    description: 'Your payout has been approved and is being prepared.',
+  },
+  payout_processing: {
+    label: 'Processing',
+    tone: 'pending',
+    description: 'Your payout is on its way to your payout account.',
+  },
+  payout_completed: {
+    label: 'Paid',
+    tone: 'positive',
+    description: 'Your proceeds for this order have been paid out in full.',
+  },
+  payout_failed: {
+    label: 'Payout failed',
+    tone: 'critical',
+    description: 'The payout attempt failed. Vendibook support is reviewing it.',
+  },
+  partially_refunded: {
+    label: 'Partially refunded',
+    tone: 'warning',
+    description: 'Part of this order was refunded to the buyer, so your proceeds were reduced.',
+  },
+  fully_refunded: {
+    label: 'Refunded',
+    tone: 'warning',
+    description: 'This order was fully refunded to the buyer, so no proceeds are due.',
+  },
+  disputed: {
+    label: 'Disputed',
+    tone: 'critical',
+    description: 'A dispute is open on this order. Settlement is paused until it is resolved.',
+  },
+  reversed: {
+    label: 'Reversed',
+    tone: 'critical',
+    description: 'The payment for this order was reversed.',
+  },
+  cancelled: {
+    label: 'Cancelled',
+    tone: 'neutral',
+    description: 'This order was cancelled, so no settlement is due.',
+  },
+};
+
+async function loadSettlement(
+  supabase: any,
+  record: Record<string, any>,
+  viewerRole: ViewerRole,
+): Promise<OrderDetail['settlement']> {
+  // Buyers never see the seller's proceeds breakdown.
+  if (viewerRole === 'buyer') return null;
+
+  const { data } = await supabase
+    .from('seller_payables')
+    .select(
+      'currency, gross_collected_cents, platform_fee_cents, adjustments_cents, refunded_cents, net_payout_cents, status, payout_completed_at, paid_at, hold_reason, fee_rate_pct, pro_discount_cents',
+    )
+    .eq('payment_record_id', record.id)
+    .maybeSingle();
+  if (!data) return null;
+
+  const routed = !!(record.metadata as any)?.multiparty?.merchant_id;
+  const presentation = PAYABLE_PRESENTATION[data.status] ?? {
+    label: String(data.status ?? 'Pending'),
+    tone: 'neutral' as SettlementTone,
+    description: 'Settlement status for this order.',
+  };
+
+  const description = routed && data.status === 'payout_completed'
+    ? 'PayPal settled this payment directly into your connected PayPal Business account, with the Vendibook fee already deducted.'
+    : presentation.description;
+
+  return {
+    currency: data.currency ?? record.currency ?? 'USD',
+    routed_to_connected_paypal: routed,
+    gross_collected_cents: data.gross_collected_cents ?? 0,
+    platform_fee_cents: data.platform_fee_cents ?? 0,
+    adjustments_cents: data.adjustments_cents ?? 0,
+    refunded_cents: data.refunded_cents ?? 0,
+    net_to_seller_cents: data.net_payout_cents ?? 0,
+    fee_rate_pct: data.fee_rate_pct ?? null,
+    pro_discount_cents: data.pro_discount_cents ?? 0,
+    status_code: String(data.status ?? ''),
+    status_label: presentation.label,
+    status_tone: presentation.tone,
+    status_description: description,
+    settled_at: data.payout_completed_at ?? data.paid_at ?? null,
+    hold_reason: data.hold_reason ?? null,
+  };
+}
+
 interface DomainSummary {
   fulfillmentRaw: string | null;
+  /** Overrides FULFILLMENT_LABEL (e.g. "Vendibook Freight · Free shipping"). */
+  fulfillmentLabel?: string | null;
   fulfillmentStatus: string | null;
   details: Record<string, unknown>;
   sellerDetails: Record<string, unknown>;
@@ -308,29 +508,65 @@ async function loadDomainRecord(
       .maybeSingle();
     if (!t) return empty;
 
-    const raw = t.delivery_address ? 'delivery' : (t.shipping_status ? 'shipping' : 'pickup');
+    // The buyer's chosen method is the source of truth, not the address or
+    // shipping columns (a pickup sale can still carry a contact address).
+    const ft = String(t.fulfillment_type ?? '').toLowerCase();
+    const isFreight = ft.includes('freight');
+    const raw = isFreight || ft.includes('deliver') || ft === 'shipping'
+      ? 'delivery'
+      : ft.includes('pickup') || ft === 'on_site'
+        ? 'pickup'
+        : (t.delivery_address ? 'delivery' : 'pickup');
+    let fulfillmentLabel: string | null = null;
+    if (isFreight) {
+      const { data: l } = await supabase
+        .from('listings')
+        .select('freight_payer')
+        .eq('id', t.listing_id)
+        .maybeSingle();
+      // Seller-covered freight: buyers see "Free shipping", never the rate or cost.
+      fulfillmentLabel = l?.freight_payer === 'seller' ? 'Vendibook Freight · Free shipping' : 'Vendibook Freight';
+    }
+
+    // Sales need the purchase agreement signed once one has been issued.
+    const { data: agreementDocs } = await supabase
+      .from('documents')
+      .select('status')
+      .eq('transaction_id', t.id)
+      .in('document_type', ['purchase_sale_agreement', 'bill_of_sale', 'purchase_agreement'])
+      .is('superseded_by_document_id', null)
+      .neq('status', 'voided');
+    const agreementRequired = (agreementDocs ?? []).length > 0;
+    const agreementSigned = !!t.bill_of_sale_completed_at ||
+      (agreementDocs ?? []).some((d: { status?: string }) => d.status === 'completed');
+
     return {
       fulfillmentRaw: raw,
+      fulfillmentLabel,
       fulfillmentStatus: t.shipping_status ?? t.status ?? null,
       details: {
-        method: raw,
+        method: isFreight ? 'vendibook_freight' : raw,
+        // Buyer's own contact address captured at checkout. Not a destination.
+        buyer_contact_address: formatBuyerAddress(t),
         delivery_address: t.delivery_address ?? null,
         delivery_instructions: t.delivery_instructions ?? null,
         delivery_fee_cents: t.delivery_fee != null ? Math.round(Number(t.delivery_fee) * 100) : null,
         tracking_number: t.tracking_number ?? null,
         tracking_url: t.tracking_url ?? null,
         estimated_delivery_date: t.estimated_delivery_date ?? null,
+        estimated_delivery_end: t.estimated_delivery_end ?? null,
         delivered_at: t.delivered_at ?? null,
         transfer_documentation_status: t.bill_of_sale_completed_at ? 'complete' : 'pending',
         seller_coordination_status: t.status ?? null,
       },
       sellerDetails: {
-        method: raw,
+        method: isFreight ? 'vendibook_freight' : raw,
         status: t.status ?? null,
         shipping_status: t.shipping_status ?? null,
         tracking_number: t.tracking_number ?? null,
       },
-      agreementRequired: false,
+      agreementRequired,
+      agreementSigned,
       documentsOutstanding: 0,
       pickupScheduled: raw !== 'pickup' || !!t.delivered_at || t.status === 'completed',
       deliveryConfirmed: !!t.delivered_at || t.status === 'completed',
@@ -373,4 +609,12 @@ async function loadDomainRecord(
   }
 
   return empty;
+}
+
+/** Buyer's own contact address, joined for display. Never a delivery destination. */
+function formatBuyerAddress(t: Record<string, any>): string | null {
+  const line = [t.buyer_address1, t.buyer_address2].filter(Boolean).join(', ');
+  const region = [t.buyer_city, t.buyer_state].filter(Boolean).join(', ');
+  const parts = [line, region, t.buyer_zip].filter(Boolean);
+  return parts.length ? parts.join(' · ') : null;
 }

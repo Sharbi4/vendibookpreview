@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
+import { filterPubliclyVisible } from '@/lib/listings/publicVisibility';
 import { supabase } from '@/integrations/supabase/client';
 import { Listing } from '@/types/listing';
 
@@ -32,18 +33,18 @@ export function useTrendingListings(limit = 5) {
         const { data, error } = await supabase
           .from('listings')
           .select('*')
-          .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear')
+          .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear').eq('unlisted', false)
           .order('view_count', { ascending: false })
           .limit(limit);
         if (error) throw error;
-        return (data || []) as Listing[];
+        return filterPubliclyVisible((data || []) as Listing[]);
       }
 
       const { data, error } = await supabase
         .from('listings')
         .select('*')
         .in('id', topListingIds)
-        .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear');
+        .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear').eq('unlisted', false);
 
       if (error) throw error;
 
@@ -52,7 +53,7 @@ export function useTrendingListings(limit = 5) {
         return (listingCounts.get(b.id) || 0) - (listingCounts.get(a.id) || 0);
       });
 
-      return sorted as Listing[];
+      return filterPubliclyVisible(sorted as Listing[]);
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });

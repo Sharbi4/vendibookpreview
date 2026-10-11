@@ -2,6 +2,8 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { VENDIBOOK_BASE_URL } from "../_shared/marketing-templates/constants.ts";
+import { verifyUnsubToken } from "../_shared/unsubscribeToken.ts";
+import { escapeHtml } from "../_shared/callerGuard.ts";
 
 async function unsubscribe(email: string) {
   const supabase = createClient(
@@ -19,7 +21,8 @@ async function unsubscribe(email: string) {
       .upsert({ email: lower, unsubscribed_at: now }, { onConflict: "email" }),
     supabase
       .from("suppressed_emails")
-      .upsert({ email: lower, reason: "unsubscribe" }, { onConflict: "email" }),
+      // scope 'marketing' — must NOT block receipts/booking mail.
+      .upsert({ email: lower, reason: "unsubscribe", scope: "marketing" }, { onConflict: "email" }),
     supabase
       .from("newsletter_subscribers")
       .upsert(
@@ -37,20 +40,25 @@ const PAGE = (email: string) => `<!DOCTYPE html><html><head><meta charset="utf-8
 .card{max-width:480px;}h1{font-size:24px;margin:0 0 12px;}p{color:#a1a1aa;line-height:1.6;}a{color:#FF5124;}</style>
 </head><body><div class="card">
 <h1>You've been unsubscribed</h1>
-<p>${email} will no longer receive The Vendibook Report.</p>
+<p>${escapeHtml(email)} will no longer receive The Vendibook Report.</p>
 <p><a href="${VENDIBOOK_BASE_URL}">Return to Vendibook →</a></p>
 </div></body></html>`;
 
 serve(async (req) => {
   const url = new URL(req.url);
   let email = url.searchParams.get("e") ?? "";
+  let token = url.searchParams.get("t");
   if (req.method === "POST") {
     try {
       const body = await req.json();
       if (body.email) email = body.email;
-    } catch { /* ignore */ }
+      if (body.token) token = body.token;
+    } catch { /* one-click List-Unsubscribe POST has no JSON body */ }
   }
   if (!email) return new Response("Missing email", { status: 400 });
+  if (!verifyUnsubToken(email, token)) {
+    return new Response("This unsubscribe link is invalid or incomplete. Use the link from your most recent email, or contact support@vendibook.com.", { status: 403 });
+  }
   await unsubscribe(email);
   return new Response(PAGE(email), { status: 200, headers: { "Content-Type": "text/html" } });
 });

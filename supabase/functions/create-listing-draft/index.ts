@@ -16,7 +16,22 @@ const BodySchema = z.object({
   zipCode: z.string().trim().max(20).optional().nullable(),
   latitude: z.number().finite().optional().nullable(),
   longitude: z.number().finite().optional().nullable(),
+  /**
+   * Durable per-session idempotency key for the "List with Vendi" builder.
+   * One key == one listing row for this owner, forever. Repeated effects,
+   * remounts, StrictMode double-invocations, second tabs, reloads mid-create
+   * and auth redirects all resolve to the same id instead of a new draft.
+   */
+  sessionKey: z.string().trim().min(8).max(80).optional().nullable(),
+  /**
+   * Same idempotency contract for every NON-Vendi creation flow (manual
+   * quick-start wizard, import/paste wizard, AI creator). Kept in its own
+   * column so the Vendi resume chooser never offers a manual draft.
+   */
+  creationSessionKey: z.string().trim().min(8).max(80).optional().nullable(),
 });
+
+
 
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), {
@@ -50,11 +65,44 @@ serve(async (req) => {
       auth: { persistSession: false },
     });
 
-    const { mode, category, location, city, state, zipCode, latitude, longitude } = parsed.data;
+    const {
+      mode, category, location, city, state, zipCode, latitude, longitude,
+      sessionKey, creationSessionKey,
+    } = parsed.data;
     const normalizedLocation = location || [city, state].filter(Boolean).join(", ") || null;
     const fulfillmentType = category === "ghost_kitchen" || category === "vendor_lot" || category === "vendor_space"
       ? "on_site"
       : "pickup";
+
+    // IDEMPOTENCY: a session key that already produced a DRAFT row always
+    // returns that same row. This is the server-authoritative guard that
+    // replaced the browser-local draftId as the source of truth for listing
+    // identity. A key whose listing already went live (or was archived/
+    // deleted) is RETIRED: it must never be resumed or autosaved onto, so an
+    // old tab is told to start a fresh session instead.
+    // Both flows share the contract; only the column differs.
+    const idempotency: Array<{ column: string; value: string }> = [];
+    if (sessionKey) idempotency.push({ column: "vendi_session_key", value: sessionKey });
+    if (creationSessionKey) {
+      idempotency.push({ column: "creation_session_key", value: creationSessionKey });
+    }
+
+    for (const { column, value } of idempotency) {
+      const { data: existing } = await admin
+        .from("listings")
+        .select("id, status, deleted_at")
+        .eq("host_id", user.id)
+        .eq(column, value)
+        .maybeSingle();
+      if (existing?.id) {
+        const resumable = existing.status === "draft" && !existing.deleted_at;
+        if (resumable) return json({ id: existing.id, resumed: true });
+        return json({ error: "session_retired", retired: true }, 409);
+      }
+    }
+
+
+
 
     // Guarantee a profiles row exists BEFORE any downstream code (identity
     // gate, quota, listing insert) reads it. If the auth trigger is missing
@@ -71,12 +119,17 @@ serve(async (req) => {
         },
         { onConflict: "id", ignoreDuplicates: false },
       );
-    if (profileError) return json({ error: `profile_upsert_failed: ${profileError.message}` }, 400);
+    if (profileError) {
+      console.error("[create-listing-draft] profile upsert failed", profileError.message);
+      return json({ error: `We couldn't prepare your account: ${profileError.message}` }, 400);
+    }
 
+    // Granting the host role is best-effort: a duplicate or transient failure
+    // must never block someone from starting a listing.
     const { error: roleError } = await admin
       .from("user_roles")
       .upsert({ user_id: user.id, role: "host" }, { onConflict: "user_id,role" });
-    if (roleError) return json({ error: roleError.message }, 400);
+    if (roleError) console.error("[create-listing-draft] role upsert failed", roleError.message);
 
     const { data: listing, error: listingError } = await admin
       .from("listings")
@@ -96,15 +149,63 @@ serve(async (req) => {
         postal_code: zipCode || null,
         latitude: latitude ?? null,
         longitude: longitude ?? null,
-        accept_card_payment: mode === "sale" ? true : null,
-        accept_cash_payment: mode === "sale" ? false : null,
+        vendi_session_key: sessionKey ?? null,
+        creation_session_key: creationSessionKey ?? null,
+        // accept_paypal_checkout is NOT NULL in the database — never write null.
+        accept_paypal_checkout: mode === "sale",
+        accept_cash_payment: false,
       })
       .select("id")
       .single();
 
-    if (listingError) return json({ error: listingError.message }, 400);
+    if (listingError) {
+      // Two tabs raced the same session key: the partial unique index rejected
+      // the loser. Return the winner's row instead of surfacing an error.
+      if (idempotency.length && listingError.code === "23505") {
+        for (const { column, value } of idempotency) {
+          const { data: winner } = await admin
+            .from("listings")
+            .select("id")
+            .eq("host_id", user.id)
+            .eq(column, value)
+            .maybeSingle();
+          if (winner?.id) return json({ id: winner.id, resumed: true });
+        }
+      }
+      console.error("[create-listing-draft] insert failed", listingError);
+      return json(
+        { error: `We couldn't start your draft: ${listingError.message}`, code: listingError.code ?? null },
+        400,
+      );
+    }
 
-    return json({ id: listing.id });
+    // Telemetry only — never merges or deletes anything. Surfaces same-owner
+    // draft bursts (the Earl Wigger pattern) so admins can spot regressions.
+    {
+      const since = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+      const { count } = await admin
+        .from("listings")
+        .select("id", { count: "exact", head: true })
+        .eq("host_id", user.id)
+        .eq("status", "draft")
+        .gte("created_at", since);
+      if ((count ?? 0) > 1) {
+        const flow = sessionKey ? "vendi" : creationSessionKey ? "manual" : "unkeyed";
+        console.warn(`[create-listing-draft] draft_burst host=${user.id} flow=${flow} drafts_30m=${count}`);
+        await admin.from("analytics_events").insert({
+          event_name: "listing_draft_burst",
+          event_category: "Supply",
+          user_id: user.id,
+          listing_id: listing.id,
+          metadata: { drafts_last_30m: count, flow, keyed: Boolean(sessionKey || creationSessionKey) },
+        } as never);
+
+      }
+
+    }
+
+    return json({ id: listing.id, resumed: false });
+
   } catch (error) {
     const message = error instanceof Error ? error.message : "unknown_error";
     return json({ error: message }, 500);

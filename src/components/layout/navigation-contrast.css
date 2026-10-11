@@ -1,0 +1,15 @@
+
+/* The shared header is always dark, independent of the page theme. */
+.marketplace-header {
+  --background: 0 0% 4%; --foreground: 40 30% 97%;
+  --muted: 0 0% 15%; --muted-foreground: 36 12% 80%;
+  --border: 0 0% 30%; --input: 0 0% 30%;
+  --popover: 0 0% 10%; --popover-foreground: 40 30% 97%;
+  --accent: 0 0% 20%; --accent-foreground: 40 30% 97%;
+  color: #fff9ef;
+}
+.marketplace-dropdown { color: #fff9ef; max-height: calc(100dvh - 100px); overflow-y: auto; }
+.marketplace-header a:focus-visible, .marketplace-header button:focus-visible,
+.marketplace-dropdown a:focus-visible, .marketplace-dropdown button:focus-visible {
+  outline: 2px solid #ff995e; outline-offset: 3px;
+}

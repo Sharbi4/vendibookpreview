@@ -1,10 +1,10 @@
 import { MessageCircle, X } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, lazy, Suspense } from 'react';
 import { motion } from 'framer-motion';
 import { useLocation } from 'react-router-dom';
-import TicketFormDialog from './home/TicketFormDialog';
+const TicketFormDialog = lazy(() => import('./home/TicketFormDialog'));
 
-const HIDDEN_ROUTES = ['/help', '/faq'];
+const HIDDEN_ROUTES = ['/help', '/faq', '/list-with-vendi', '/list/vendi', '/onboarding', '/welcome', '/onboarding-v2', '/dashboard', '/dashboard-v2', '/account'];
 
 const FloatingConciergeButton = () => {
   const [isHovered, setIsHovered] = useState(false);
@@ -57,6 +57,11 @@ const FloatingConciergeButton = () => {
     }, 400);
   };
 
+  // Listing and checkout pages have a sticky Buy/Book bar along the bottom on
+  // phones and tablets; the floating button sat on top of its main button
+  // (site test 2026-10-06). Hide it there below lg; desktop keeps it.
+  const hasStickyCta = /^\/(listing|checkout|meta-checkout|book)(\/|$)/.test(location.pathname);
+
   if (isHiddenRoute) return null;
 
   return (
@@ -65,7 +70,7 @@ const FloatingConciergeButton = () => {
         initial={{ opacity: 0, y: 20, scale: 0.9 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ duration: 0.3, ease: 'easeOut' }}
-        className="fixed bottom-6 right-6 z-50"
+        className={`fixed bottom-6 right-6 z-50${hasStickyCta ? ' hidden lg:block' : ''}`}
       >
         {isMinimized ? (
           <motion.button
@@ -135,7 +140,7 @@ const FloatingConciergeButton = () => {
         )}
       </motion.div>
 
-      <TicketFormDialog open={isTicketOpen} onOpenChange={setIsTicketOpen} />
+      {isTicketOpen && <Suspense fallback={<span role="status" className="sr-only">Opening support…</span>}><TicketFormDialog open={isTicketOpen} onOpenChange={setIsTicketOpen} /></Suspense>}
     </>
   );
 };

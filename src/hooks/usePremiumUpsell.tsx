@@ -6,18 +6,13 @@ import { ToolUnlockDialog } from '@/components/monetization/ToolUnlockDialog';
  * resolves to a specific tool so the upsell overlay can show the real
  * sample preview + the full ladder (cheapest first).
  */
+// PARKED 2026-08-25: listing-studio, marketing-studio, concept-lab,
+// market-radar, and buildkit are disabled site-wide. Feature keys that used
+// to resolve to them now fall through to the PricePilot default below.
+// Restore the mappings when the tools relaunch.
 const FEATURE_TO_TOOL_SLUG: Record<string, string> = {
   pricepilot: 'pricepilot',
-  'ai-description': 'listing-studio',
-  'ai-listing-creator': 'listing-studio',
-  'listing-studio': 'listing-studio',
-  'marketing-studio': 'marketing-studio',
-  'concept-lab': 'concept-lab',
-  'market-radar': 'market-radar',
   'negotiation-coach': 'pricepilot',
-  'advanced-insights': 'market-radar',
-  'listing-insights': 'market-radar',
-  buildkit: 'buildkit',
   permitpath: 'permitpath',
 };
 

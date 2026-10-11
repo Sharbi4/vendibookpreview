@@ -21,7 +21,7 @@ const VerificationProgress = () => {
 
   const isHost = hasRole('host');
 
-  // Only show identity verification - Stripe is handled in NextStepCard
+  // Only show identity verification - payout setup is handled in NextStepCard
   const steps: VerificationStep[] = [
     {
       id: 'identity',

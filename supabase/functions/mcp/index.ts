@@ -26,7 +26,7 @@ var search_listings_default = defineTool({
     const supabase = createClient(SUPABASE_URL, SUPABASE_KEY, {
       auth: { persistSession: false, autoRefreshToken: false }
     });
-    let q = supabase.from("listings").select("id,title,city,state,price,transaction_type,category,published_at").eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear").order("published_at", { ascending: false }).limit(limit ?? 10);
+    let q = supabase.from("listings").select("id,title,city,state,price,transaction_type,category,published_at").eq("status", "published").not("published_at", "is", null).is("deleted_at", null).eq("moderation_status", "clear").eq("unlisted", false).order("published_at", { ascending: false }).limit(limit ?? 10);
     if (query) q = q.ilike("title", `%${query}%`);
     if (city) q = q.ilike("city", `%${city}%`);
     if (transaction_type && transaction_type !== "any") {
@@ -156,18 +156,579 @@ var list_my_bookings_default = defineTool4({
   }
 });
 
+// src/lib/mcp/tools/check-listing-blockers.ts
+import { defineTool as defineTool5 } from "npm:@lovable.dev/mcp-js@0.24.0";
+import { z as z5 } from "npm:zod@^3.25.76";
+
+// src/lib/mcp/supabase.ts
+import { createClient as createClient5 } from "npm:@supabase/supabase-js@^2.90.1";
+function runtimeEnv(name) {
+  const runtime = globalThis;
+  return runtime.Deno?.env?.get?.(name) ?? runtime.process?.env?.[name];
+}
+function configuredEnv(names) {
+  for (const name of names) {
+    const value = runtimeEnv(name)?.trim();
+    if (value) return value;
+  }
+  return void 0;
+}
+function supabaseProjectUrl() {
+  const url = configuredEnv(["SUPABASE_URL", "VITE_SUPABASE_URL"]);
+  if (!url) throw new Error("SUPABASE_URL (or VITE_SUPABASE_URL) is required");
+  return url;
+}
+function supabasePublishableKey() {
+  const direct = configuredEnv([
+    "SUPABASE_PUBLISHABLE_KEY",
+    "VITE_SUPABASE_PUBLISHABLE_KEY"
+  ]);
+  if (direct) return direct;
+  const keyset = runtimeEnv("SUPABASE_PUBLISHABLE_KEYS");
+  if (keyset) {
+    try {
+      const parsed = JSON.parse(keyset);
+      if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
+        const keys = parsed;
+        const key = [keys.default, ...Object.values(keys)].find((v) => typeof v === "string" && v.trim().startsWith("sb_publishable_"))?.trim();
+        if (key) return key;
+      }
+    } catch {
+    }
+  }
+  const legacy = configuredEnv(["SUPABASE_ANON_KEY", "VITE_SUPABASE_ANON_KEY"]);
+  if (legacy) return legacy;
+  throw new Error("SUPABASE_PUBLISHABLE_KEY, SUPABASE_PUBLISHABLE_KEYS, or SUPABASE_ANON_KEY is required");
+}
+function supabaseForUser3(ctx) {
+  const token = ctx.getToken();
+  if (!token) throw new Error("supabaseForUser requires a verified OAuth token");
+  return createClient5(supabaseProjectUrl(), supabasePublishableKey(), {
+    global: { headers: { Authorization: `Bearer ${token}` } },
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+}
+
+// src/lib/listings/stages.ts
+var MOBILE_VEHICLE_CATEGORIES = ["food_truck"];
+var TOWABLE_CATEGORIES = ["food_trailer"];
+function getCategoryBasics(category) {
+  if (MOBILE_VEHICLE_CATEGORIES.includes(category)) {
+    return {
+      modelYear: true,
+      kitchenBuildYear: true,
+      dimensions: true,
+      titled: true,
+      readiness: "drivable"
+    };
+  }
+  if (TOWABLE_CATEGORIES.includes(category)) {
+    return {
+      modelYear: true,
+      kitchenBuildYear: true,
+      dimensions: true,
+      titled: true,
+      readiness: "towable"
+    };
+  }
+  return {
+    modelYear: false,
+    kitchenBuildYear: category === "ghost_kitchen",
+    dimensions: false,
+    titled: false,
+    readiness: "operational"
+  };
+}
+function isTitledAsset(category, mode) {
+  return mode === "sale" && getCategoryBasics(category).titled;
+}
+var DIMENSION_REQUIRED_CATEGORIES = ["food_truck", "food_trailer"];
+var requiresSaleDimensions = (mode, category) => mode === "sale" && DIMENSION_REQUIRED_CATEGORIES.includes(category);
+function getStageRequirements(input) {
+  const basics = getCategoryBasics(input.category);
+  const missing = [];
+  if (!input.condition) {
+    missing.push({
+      fieldId: "listing-condition",
+      label: "Select the overall condition",
+      stage: "what",
+      step: "basics"
+    });
+  }
+  if (!input.operationalStatus) {
+    missing.push({
+      fieldId: "listing-operational-status",
+      label: basics.readiness === "drivable" ? "Tell buyers whether it starts, runs and drives" : basics.readiness === "towable" ? "Tell buyers whether it is currently towable" : "Tell buyers whether the space is operational",
+      stage: "what",
+      step: "basics"
+    });
+  }
+  if (isTitledAsset(input.category, input.mode)) {
+    if (!input.titleStatus) {
+      missing.push({
+        fieldId: "listing-title-status",
+        label: "Select the title status",
+        stage: "details",
+        step: "includes"
+      });
+    }
+    if (!input.hasLien) {
+      missing.push({
+        fieldId: "listing-lien",
+        label: "Disclose whether there is a lien on the asset",
+        stage: "details",
+        step: "includes"
+      });
+    }
+  }
+  if (!input.noKnownProblems && input.knownProblems.length === 0) {
+    missing.push({
+      fieldId: "listing-known-problems",
+      label: "Select any known problems, or confirm there are none",
+      stage: "details",
+      step: "includes"
+    });
+  }
+  const unexplained = input.noKnownProblems ? [] : input.knownProblems.filter((p) => (p.note ?? "").trim().length < 3);
+  if (unexplained.length > 0) {
+    missing.push({
+      fieldId: `known-problem-${unexplained[0].category}`,
+      label: "Add a short explanation for each problem you selected",
+      stage: "details",
+      step: "includes"
+    });
+  }
+  if (!input.includedItems || input.includedItems.trim().length < 3) {
+    missing.push({
+      fieldId: "listing-included-items",
+      label: "Describe what is included in the advertised price",
+      stage: "details",
+      step: "includes"
+    });
+  }
+  if (requiresSaleDimensions(input.mode, input.category)) {
+    if (!input.lengthInches || input.lengthInches <= 0) {
+      missing.push({
+        fieldId: "length_ft",
+        label: "Enter the overall length in feet",
+        stage: "details",
+        step: "includes"
+      });
+    }
+    if (!input.heightInches || input.heightInches <= 0) {
+      missing.push({
+        fieldId: "height_ft",
+        label: "Enter the overall height in feet",
+        stage: "details",
+        step: "includes"
+      });
+    }
+  }
+  if (!input.photosExclusionsAnswered) {
+    missing.push({
+      fieldId: "listing-photo-exclusions",
+      label: "Answer whether anything shown in the photos is not included",
+      stage: "details",
+      step: "includes"
+    });
+  }
+  return missing;
+}
+
+// src/lib/mcp/tools/check-listing-blockers.ts
+var check_listing_blockers_default = defineTool5({
+  name: "check_listing_blockers",
+  title: "Check listing publish blockers",
+  description: "Return the remaining blockers that prevent a Vendibook listing from being published. The caller must own the listing.",
+  inputSchema: {
+    listing_id: z5.string().uuid().describe("The listing UUID to inspect.")
+  },
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  handler: async ({ listing_id }, ctx) => {
+    if (!ctx.isAuthenticated()) {
+      return { content: [{ type: "text", text: "Not authenticated." }], isError: true };
+    }
+    const supabase = supabaseForUser3(ctx);
+    const uid = ctx.getUserId();
+    const { data: row, error } = await supabase.from("listings").select(
+      "id, host_id, status, title, description, category, mode, city, state, price_sale, price_monthly, price_weekly, price_daily, price_hourly, image_urls, condition, operational_status, title_status, has_lien, no_known_problems, known_problems, included_items, length_inches, height_inches, photos_exclusions_answered, published_at, deleted_at, moderation_status"
+    ).eq("id", listing_id).maybeSingle();
+    if (error) {
+      return { content: [{ type: "text", text: `Lookup failed: ${error.message}` }], isError: true };
+    }
+    if (!row) {
+      return { content: [{ type: "text", text: "Listing not found." }], isError: true };
+    }
+    const listing = row;
+    if (listing.host_id !== uid) {
+      return { content: [{ type: "text", text: "You do not own this listing." }], isError: true };
+    }
+    if (listing.deleted_at) {
+      return { content: [{ type: "text", text: "This listing has been deleted." }], isError: true };
+    }
+    const blockers = [];
+    if (!listing.title) blockers.push("Add a headline/title.");
+    if (!listing.description) blockers.push("Add a description.");
+    if (!listing.category) blockers.push("Select a category (food truck, trailer, etc.).");
+    if (!listing.mode) blockers.push("Select whether this is for sale or rent.");
+    if (!listing.city || !listing.state) blockers.push("Set the city and state location.");
+    const images = Array.isArray(listing.image_urls) ? listing.image_urls : [];
+    if (!images.length) blockers.push("Upload at least one photo.");
+    const mode = listing.mode;
+    if (mode === "sale") {
+      if (Number(listing.price_sale) <= 0) blockers.push("Set the sale price.");
+    } else if (mode === "rent") {
+      const hasRate = Number(listing.price_monthly) > 0 || Number(listing.price_weekly) > 0 || Number(listing.price_daily) > 0 || Number(listing.price_hourly) > 0;
+      if (!hasRate) blockers.push("Set at least one rental rate (monthly, weekly, daily, or hourly).");
+    } else {
+      blockers.push("Set whether the listing is for sale or rent so pricing can be checked.");
+    }
+    if (mode && listing.category) {
+      try {
+        const stageReqs = getStageRequirements({
+          mode,
+          category: listing.category,
+          condition: listing.condition ?? null,
+          operationalStatus: listing.operational_status ?? null,
+          titleStatus: listing.title_status ?? null,
+          hasLien: listing.has_lien ?? null,
+          noKnownProblems: Boolean(listing.no_known_problems),
+          knownProblems: Array.isArray(listing.known_problems) ? listing.known_problems : [],
+          includedItems: listing.included_items ?? null,
+          photosExclusionsAnswered: Boolean(listing.photos_exclusions_answered),
+          lengthInches: listing.length_inches ?? null,
+          heightInches: listing.height_inches ?? null
+        });
+        for (const req of stageReqs) {
+          blockers.push(req.label);
+        }
+      } catch {
+      }
+    }
+    const isPublished = listing.status === "published" && listing.published_at;
+    const moderation = listing.moderation_status;
+    if (moderation && moderation !== "clear") {
+      blockers.push("This listing is under review by our team and cannot be published right now.");
+    }
+    return {
+      content: [
+        {
+          type: "text",
+          text: blockers.length === 0 ? isPublished ? "This listing is already published and live." : "No blockers \u2014 the listing is ready to publish." : `Blockers (${blockers.length}): ${blockers.join("; ")}`
+        }
+      ],
+      structuredContent: {
+        listing_id,
+        ready: blockers.length === 0 && !isPublished,
+        already_published: Boolean(isPublished),
+        blockers
+      }
+    };
+  }
+});
+
+// src/lib/mcp/tools/publish-listing.ts
+import { defineTool as defineTool6 } from "npm:@lovable.dev/mcp-js@0.24.0";
+import { z as z6 } from "npm:zod@^3.25.76";
+var BLOCKED_STATUSES = /* @__PURE__ */ new Set([
+  "removed",
+  "deleted",
+  "rejected",
+  "suspended",
+  "sold",
+  "rented"
+]);
+var publish_listing_default = defineTool6({
+  name: "publish_listing",
+  title: "Publish a Vendibook listing",
+  description: "Publish a Vendibook listing owned by the signed-in user. Requires all blockers to be cleared and a legal acknowledgment. The caller must have already recorded the typed YES consent in the app; this tool verifies it was recorded before publishing.",
+  inputSchema: {
+    listing_id: z6.string().uuid().describe("The listing UUID to publish."),
+    consent_acknowledged: z6.boolean().describe("Must be true. The tool verifies the seller's typed YES consent is recorded server-side.").default(false)
+  },
+  annotations: { readOnlyHint: false, idempotentHint: true, openWorldHint: false },
+  handler: async ({ listing_id, consent_acknowledged }, ctx) => {
+    if (!ctx.isAuthenticated()) {
+      return { content: [{ type: "text", text: "Not authenticated." }], isError: true };
+    }
+    if (!consent_acknowledged) {
+      return {
+        content: [{ type: "text", text: "You must acknowledge the seller disclosure and type YES on screen before publishing." }],
+        isError: true
+      };
+    }
+    const supabase = supabaseForUser3(ctx);
+    const uid = ctx.getUserId();
+    const { data: current, error: readError } = await supabase.from("listings").select(
+      "id, host_id, status, published_at, deleted_at, moderation_status, title, description, category, mode, city, state, price_sale, price_monthly, price_weekly, price_daily, price_hourly, image_urls, condition, operational_status, title_status, has_lien, no_known_problems, known_problems, included_items, length_inches, height_inches, photos_exclusions_answered, seller_disclosure_acknowledged"
+    ).eq("id", listing_id).maybeSingle();
+    if (readError) {
+      return { content: [{ type: "text", text: `Read failed: ${readError.message}` }], isError: true };
+    }
+    if (!current) {
+      return { content: [{ type: "text", text: "Listing not found." }], isError: true };
+    }
+    const listing = current;
+    if (listing.host_id !== uid) {
+      return { content: [{ type: "text", text: "You do not own this listing." }], isError: true };
+    }
+    const moderation = listing.moderation_status;
+    if (listing.deleted_at || BLOCKED_STATUSES.has(String(listing.status)) || moderation && moderation !== "clear") {
+      return {
+        content: [{ type: "text", text: "This listing cannot be published right now. It may be under review, sold, rented, or removed." }],
+        isError: true
+      };
+    }
+    if (listing.status === "published" && listing.published_at) {
+      return {
+        content: [{ type: "text", text: "This listing is already published." }],
+        structuredContent: { listing_id, public_url: `/listing/${listing_id}`, already_published: true }
+      };
+    }
+    if (!listing.seller_disclosure_acknowledged) {
+      return {
+        content: [
+          {
+            type: "text",
+            text: "The seller disclosure has not been acknowledged. The seller must read the disclosure and type YES on screen before publishing."
+          }
+        ],
+        isError: true
+      };
+    }
+    const blockers = [];
+    if (!listing.title) blockers.push("Add a headline/title.");
+    if (!listing.description) blockers.push("Add a description.");
+    if (!listing.category) blockers.push("Select a category.");
+    if (!listing.mode) blockers.push("Select sale or rent.");
+    if (!listing.city || !listing.state) blockers.push("Set city and state.");
+    const images = Array.isArray(listing.image_urls) ? listing.image_urls : [];
+    if (!images.length) blockers.push("Upload at least one photo.");
+    const mode = listing.mode;
+    if (mode === "sale") {
+      if (Number(listing.price_sale) <= 0) blockers.push("Set the sale price.");
+    } else if (mode === "rent") {
+      const hasRate = Number(listing.price_monthly) > 0 || Number(listing.price_weekly) > 0 || Number(listing.price_daily) > 0 || Number(listing.price_hourly) > 0;
+      if (!hasRate) blockers.push("Set at least one rental rate.");
+    } else {
+      blockers.push("Set sale or rent.");
+    }
+    if (mode && listing.category) {
+      try {
+        const stageReqs = getStageRequirements({
+          mode,
+          category: listing.category,
+          condition: listing.condition ?? null,
+          operationalStatus: listing.operational_status ?? null,
+          titleStatus: listing.title_status ?? null,
+          hasLien: listing.has_lien ?? null,
+          noKnownProblems: Boolean(listing.no_known_problems),
+          knownProblems: Array.isArray(listing.known_problems) ? listing.known_problems : [],
+          includedItems: listing.included_items ?? null,
+          photosExclusionsAnswered: Boolean(listing.photos_exclusions_answered),
+          lengthInches: listing.length_inches ?? null,
+          heightInches: listing.height_inches ?? null
+        });
+        for (const req of stageReqs) blockers.push(req.label);
+      } catch {
+      }
+    }
+    if (blockers.length) {
+      return {
+        content: [{ type: "text", text: `Cannot publish yet. ${blockers.join("; ")}` }],
+        structuredContent: { listing_id, blockers },
+        isError: true
+      };
+    }
+    const nowIso = (/* @__PURE__ */ new Date()).toISOString();
+    const { data: claimed, error: claimError } = await supabase.from("listings").update({ status: "published", published_at: nowIso }).eq("id", listing_id).is("published_at", null).select("published_at");
+    if (claimError) {
+      return { content: [{ type: "text", text: `Publish failed: ${claimError.message}` }], isError: true };
+    }
+    if (!claimed || claimed.length === 0) {
+      const { data: rows, error: updateError } = await supabase.from("listings").update({ status: "published" }).eq("id", listing_id).select("published_at");
+      if (updateError) {
+        return { content: [{ type: "text", text: `Publish failed: ${updateError.message}` }], isError: true };
+      }
+      if (!rows || rows.length === 0) {
+        return {
+          content: [{ type: "text", text: "Publishing did not complete. Your draft is safe \u2014 please try again." }],
+          isError: true
+        };
+      }
+    }
+    const { data: verified, error: verifyError } = await supabase.from("listings").select("status, published_at").eq("id", listing_id).maybeSingle();
+    if (verifyError || !verified || verified.status !== "published" || !verified.published_at) {
+      return {
+        content: [{ type: "text", text: "Publishing did not complete. Your listing is still a draft \u2014 please try again." }],
+        isError: true
+      };
+    }
+    return {
+      content: [
+        {
+          type: "text",
+          text: `Published! Your listing is live at /listing/${listing_id}.`
+        }
+      ],
+      structuredContent: {
+        listing_id,
+        public_url: `/listing/${listing_id}`,
+        published_at: verified.published_at
+      }
+    };
+  }
+});
+
+// src/lib/mcp/tools/list-upsell-products.ts
+import { defineTool as defineTool7 } from "npm:@lovable.dev/mcp-js@0.24.0";
+import { z as z7 } from "npm:zod@^3.25.76";
+var list_upsell_products_default = defineTool7({
+  name: "list_upsell_products",
+  title: "List Vendibook upgrade products",
+  description: "Return the Vendibook upsell products available to the signed-in user, such as Vendibook Pro membership, Featured Boost, Listing Concierge, and buyer financing/freight options. Prices come from the live catalog.",
+  inputSchema: {
+    listing_id: z7.string().uuid().optional().describe("Optional listing UUID to scope upgrades to.")
+  },
+  annotations: { readOnlyHint: true, idempotentHint: true, openWorldHint: false },
+  handler: async ({ listing_id }, ctx) => {
+    if (!ctx.isAuthenticated()) {
+      return { content: [{ type: "text", text: "Not authenticated." }], isError: true };
+    }
+    const supabase = supabaseForUser3(ctx);
+    const { data, error } = await supabase.from("monetization_products").select("id, slug, name, description, billing_type, price_cents, promo_price_cents, promo_starts_at, promo_ends_at, duration_days, is_active").eq("is_active", true).in("slug", [
+      "vendibook_pro",
+      "boost-featured-30",
+      "pro_listing_30",
+      "listing_concierge"
+    ]).order("display_order");
+    if (error) {
+      return { content: [{ type: "text", text: `Catalog lookup failed: ${error.message}` }], isError: true };
+    }
+    const HIGHLIGHTS = {
+      vendibook_pro: [
+        "Seller/host commission drops from 12.9% to 10.9% (max $500 savings per transaction)",
+        "PricePilot appraisals included",
+        "One Featured Boost credit each billing period (does not roll over)"
+      ],
+      "boost-featured-30": [
+        "Pins one listing to the top of search in its city for 30 days",
+        "Applies to a specific listing \u2014 requires the seller's own listing_id",
+        "One-time PayPal payment on the Vendibook checkout page"
+      ]
+    };
+    const products = (data ?? []).map((p) => {
+      const now = Date.now();
+      const inPromo = p.promo_price_cents != null && (!p.promo_starts_at || new Date(p.promo_starts_at).getTime() <= now) && (!p.promo_ends_at || new Date(p.promo_ends_at).getTime() > now);
+      const cents = inPromo ? p.promo_price_cents : p.price_cents;
+      const price = cents ? `$${(cents / 100).toFixed(cents % 100 === 0 ? 0 : 2)}` : "$0";
+      const cadence = p.billing_type === "recurring" ? "/mo" : p.duration_days ? ` \xB7 ${p.duration_days} days` : "";
+      return {
+        slug: p.slug,
+        name: p.name,
+        description: p.description,
+        highlights: HIGHLIGHTS[p.slug] ?? [],
+        requires_listing_id: p.slug === "boost-featured-30" || p.slug === "pro_listing_30",
+        price_display: `${price}${cadence}`,
+        listing_id: listing_id ?? null
+      };
+    });
+    return {
+      content: [{ type: "text", text: JSON.stringify(products, null, 2) }],
+      structuredContent: { products, listing_id: listing_id ?? null }
+    };
+  }
+});
+
+// src/lib/mcp/tools/create-upgrade-checkout.ts
+import { defineTool as defineTool8 } from "npm:@lovable.dev/mcp-js@0.24.0";
+import { z as z8 } from "npm:zod@^3.25.76";
+var VALID_UPGRADE_SLUGS = /* @__PURE__ */ new Set([
+  "vendibook_pro",
+  "boost-featured-30",
+  "pro_listing_30",
+  "listing_concierge"
+]);
+var create_upgrade_checkout_default = defineTool8({
+  name: "create_upgrade_checkout",
+  title: "Create an upgrade checkout link",
+  description: "Return a Vendibook checkout URL for an upgrade product (Vendibook Pro, Featured Boost, Listing Concierge). The user completes payment on the secure PayPal checkout page. Does not charge the payment method directly.",
+  inputSchema: {
+    product_slug: z8.enum(["vendibook_pro", "boost-featured-30", "pro_listing_30", "listing_concierge"]).describe("The upgrade product to purchase."),
+    listing_id: z8.string().uuid().optional().describe("Optional listing UUID to attach the upgrade to (required for featured boost)."),
+    discount_code: z8.string().optional().describe("Optional promo/discount code.")
+  },
+  annotations: { readOnlyHint: false, idempotentHint: false, openWorldHint: false },
+  handler: async ({ product_slug, listing_id, discount_code }, ctx) => {
+    if (!ctx.isAuthenticated()) {
+      return { content: [{ type: "text", text: "Not authenticated." }], isError: true };
+    }
+    const supabase = supabaseForUser3(ctx);
+    if (!VALID_UPGRADE_SLUGS.has(product_slug)) {
+      return { content: [{ type: "text", text: "Unknown upgrade product." }], isError: true };
+    }
+    const LISTING_SCOPED = /* @__PURE__ */ new Set(["boost-featured-30", "pro_listing_30"]);
+    if (LISTING_SCOPED.has(product_slug)) {
+      if (!listing_id) {
+        return {
+          content: [{ type: "text", text: "That upgrade applies to a specific listing \u2014 provide the listing_id first." }],
+          isError: true
+        };
+      }
+      const { data: owned, error: ownErr } = await supabase.from("listings").select("id").eq("id", listing_id).eq("host_id", ctx.getUserId() ?? "").maybeSingle();
+      if (ownErr) {
+        return { content: [{ type: "text", text: `Listing lookup failed: ${ownErr.message}` }], isError: true };
+      }
+      if (!owned) {
+        return { content: [{ type: "text", text: "That listing was not found on this account." }], isError: true };
+      }
+    }
+    const { data: product, error } = await supabase.from("monetization_products").select("billing_type, is_active").eq("slug", product_slug).maybeSingle();
+    if (error) {
+      return { content: [{ type: "text", text: `Catalog lookup failed: ${error.message}` }], isError: true };
+    }
+    if (!product?.is_active) {
+      return { content: [{ type: "text", text: "That upgrade is not currently available." }], isError: true };
+    }
+    if (product.billing_type === "recurring") {
+      const url2 = `/plans?plan=${encodeURIComponent(product_slug)}`;
+      return { content: [{ type: "text", text: `Review membership terms and continue: ${url2}` }], structuredContent: { checkout_url: url2 } };
+    }
+    const params = new URLSearchParams();
+    if (listing_id) params.set("listing_id", listing_id);
+    params.set("success", listing_id ? `/listing/${listing_id}` : "/account");
+    params.set("cancel", listing_id ? `/listing/${listing_id}` : "/pricing");
+    if (discount_code) params.set("discount", discount_code);
+    const qs = params.toString();
+    const url = `/checkout/product/${product_slug}${qs ? `?${qs}` : ""}`;
+    return {
+      content: [{ type: "text", text: `Complete payment on the secure checkout page: ${url}` }],
+      structuredContent: { product_slug, listing_id: listing_id ?? null, checkout_url: url }
+    };
+  }
+});
+
 // src/lib/mcp/index.ts
 var projectRef = "nbrehbwfsmedbelzntqs";
 var mcp_default = defineMcp({
   name: "vendibook-mcp",
   title: "Vendibook",
   version: "0.1.0",
-  instructions: "Tools for Vendibook \u2014 the marketplace for food trucks, trailers, shared kitchens, and vendor lots. Use `search_listings` and `get_listing` for public marketplace data. Use `list_my_listings` and `list_my_bookings` to act as the signed-in user. All per-user tools respect Vendibook's ownership and privacy rules.",
+  instructions: "Tools for Vendibook \u2014 the marketplace for food trucks, trailers, shared kitchens, and vendor lots. Public tools: `search_listings`, `get_listing`. Authenticated tools: `list_my_listings`, `list_my_bookings`, `check_listing_blockers`, `publish_listing`, `list_upsell_products`, `create_upgrade_checkout`. Use `check_listing_blockers` before publishing. Use `list_upsell_products` and `create_upgrade_checkout` for Vendibook Pro, Featured Boost, and Listing Concierge upgrades.",
   auth: auth.oauth.issuer({
     issuer: `https://${projectRef}.supabase.co/auth/v1`,
     acceptedAudiences: "authenticated"
   }),
-  tools: [search_listings_default, get_listing_default, list_my_listings_default, list_my_bookings_default]
+  tools: [
+    search_listings_default,
+    get_listing_default,
+    list_my_listings_default,
+    list_my_bookings_default,
+    check_listing_blockers_default,
+    publish_listing_default,
+    list_upsell_products_default,
+    create_upgrade_checkout_default
+  ]
 });
 
 // lovable-mcp-supabase-entry.ts

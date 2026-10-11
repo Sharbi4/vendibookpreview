@@ -1,470 +1,460 @@
 import { Link } from 'react-router-dom';
-import { 
-  ShieldCheck, 
-  Lock, 
-  CreditCard, 
-  Building, 
-  Clock, 
-  CheckCircle2, 
-  ArrowRight, 
-  Truck, 
-  Users, 
-  AlertTriangle,
-  HandshakeIcon,
-  Search,
-  PlusCircle,
+import { motion, useReducedMotion } from 'framer-motion';
+import {
+  ArrowRight,
+  CalendarClock,
+  Check,
+  CreditCard,
+  ExternalLink,
+  FileSignature,
+  Landmark,
+  MessageSquare,
+  Truck,
+  Video,
+  Wallet,
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
-import affirmLogo from '@/assets/affirm-logo.png';
-import afterpayLogo from '@/assets/afterpay-logo.jpg';
-import stripeLogo from '@/assets/stripe-wordmark-blurple.png';
+import JsonLd from '@/components/JsonLd';
+import { Button } from '@/components/ui/button';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
+import { PayPalMonogram, PayPalWordmark } from '@/components/brand/ProviderLogos';
+import paypalAppImage from '@/assets/paypal-app-2025.webp.asset.json';
+
+const ease = [0.22, 1, 0.36, 1] as const;
+
+const fadeUp = {
+  initial: { opacity: 0, y: 14 },
+  whileInView: { opacity: 1, y: 0 },
+  viewport: { once: true, margin: '-60px' },
+  transition: { duration: 0.42, ease },
+};
+
+const PAYPAL_LINKS = {
+  payLater: 'https://www.paypal.com/us/digital-wallet/ways-to-pay/buy-now-pay-later',
+  payMonthly: 'https://www.paypal.com/us/cshelp/article/what-is-pay-monthly-help839',
+  payIn4: 'https://www.paypal.com/us/cshelp/article/what-is-pay-in-4-help463',
+  protection: 'https://www.paypal.com/us/legalhub/paypal/buyer-protection',
+};
+
+const ExtLink = ({ href, children }: { href: string; children: React.ReactNode }) => (
+  <a
+    href={href}
+    target="_blank"
+    rel="noopener noreferrer"
+    className="inline-flex items-center gap-1 font-semibold text-primary underline-offset-4 hover:underline"
+  >
+    {children}
+    <ExternalLink className="h-3.5 w-3.5" aria-hidden="true" />
+  </a>
+);
+
+const PayPalVisual = () => (
+  <div className="overflow-hidden border border-border bg-card shadow-lg">
+    <img
+      src={paypalAppImage.url}
+      alt="PayPal app shown on a mobile phone"
+      loading="eager"
+      className="aspect-[4/3] w-full object-cover"
+    />
+    <div className="flex items-center justify-between gap-4 border-t border-border px-5 py-4">
+      <div className="flex items-center gap-2">
+        <PayPalMonogram className="h-5" />
+        <span className="text-sm font-semibold text-foreground">Checkout powered by PayPal</span>
+      </div>
+        <span className="text-xs text-muted-foreground">Secure online payment</span>
+    </div>
+  </div>
+);
+
+const BUYING_SEQUENCE = [
+  {
+    icon: Video,
+    title: 'See it live',
+    body: 'Review the listing and schedule a live video walkthrough when you want a closer look before moving forward.',
+  },
+  {
+    icon: FileSignature,
+    title: 'Confirm the deal',
+    body: 'Keep the agreed price, transaction details, messages, and purchase agreement connected to the order.',
+  },
+  {
+    icon: Wallet,
+    title: 'Pay through PayPal',
+    body: 'When online checkout is available, complete payment through PayPal using the options PayPal makes available for your transaction.',
+  },
+  {
+    icon: Truck,
+    title: 'Track the handoff',
+    body: 'Keep pickup, delivery updates, confirmations, and order details together through completion.',
+  },
+];
+
+const BUYER_OPTIONS = [
+  {
+    icon: Wallet,
+    title: 'PayPal balance or linked bank',
+    body: 'Use eligible funding sources connected to your PayPal account.',
+  },
+  {
+    icon: CreditCard,
+    title: 'Debit or credit card',
+    body: 'Pay with an eligible card through PayPal checkout.',
+  },
+  {
+    icon: Wallet,
+    title: 'Venmo, when available',
+    body: 'Venmo may appear on eligible devices and transactions.',
+  },
+  {
+    icon: CalendarClock,
+    title: 'Pay Later, when eligible',
+    body: 'PayPal may offer installment options for qualifying buyers and purchases.',
+  },
+];
+
+const FAQS = [
+  {
+    q: 'When is PayPal checkout available?',
+    a: 'Online checkout appears on eligible listings when the seller’s PayPal payment setup is ready and the transaction supports online payment.',
+  },
+  {
+    q: 'What if I want to see the truck or trailer first?',
+    a: 'Message the seller or schedule a live video walkthrough when available. You can ask to see specific equipment, systems, condition details, or documentation before deciding what to do next.',
+  },
+  {
+    q: 'Can I cancel after I pay?',
+    a: 'Cancellation and refund eligibility depend on the transaction status and the applicable Payments Terms. If something changes after payment, contact Vendibook support as soon as possible.',
+  },
+  {
+    q: 'What does it mean when a seller can accept PayPal?',
+    a: 'It means the seller completed the PayPal connection and payment-readiness steps required for Vendibook checkout. It does not mean Vendibook inspected the equipment, verified title, or guarantees the seller’s claims.',
+  },
+  {
+    q: 'What is PayPal Pay Later?',
+    a: 'Eligible buyers may see Pay in 4 or Pay Monthly inside PayPal checkout. PayPal determines availability, approval, rates, and terms.',
+  },
+  {
+    q: 'Does PayPal Purchase Protection cover a food truck or trailer?',
+    a: 'PayPal Purchase Protection applies only to eligible transactions, and PayPal’s current U.S. terms exclude vehicles. Review PayPal’s current terms before purchasing a food truck or trailer.',
+  },
+  {
+    q: 'Who decides whether I qualify for Pay Later?',
+    a: 'PayPal determines eligibility and the options shown at checkout. Vendibook is not the lender and does not decide approval, rates, or terms.',
+  },
+];
 
 const Payments = () => {
+  const reduce = useReducedMotion();
+
   return (
-    <div className="min-h-screen flex flex-col bg-background">
+    <div className="sale-light flex min-h-screen flex-col overflow-x-hidden bg-background">
       <SEO
-        title="Secure Payments & Buyer Protection | Vendibook"
-        description="Secure Stripe-powered payments, protected holds, and flexible checkout options for food truck rentals and purchases. Buy Now Pay Later with Affirm and Afterpay."
+        title="Pay with PayPal on Vendibook | Food Truck & Trailer Checkout"
+        description="See how Vendibook brings listing details, seller communication, video walkthroughs, agreements, PayPal checkout, and delivery records into one transaction flow."
         canonical="/payments"
+        ogTitle="How Payments Work on Vendibook"
+        ogDescription="A clearer way to move from listing to payment and handoff."
+        twitterTitle="How Payments Work on Vendibook"
+        twitterDescription="A clearer way to move from listing to payment and handoff."
+      />
+      <JsonLd
+        schema={{
+          '@context': 'https://schema.org',
+          '@type': 'FAQPage',
+          mainEntity: FAQS.map((faq) => ({
+            '@type': 'Question',
+            name: faq.q,
+            acceptedAnswer: { '@type': 'Answer', text: faq.a },
+          })),
+        }}
       />
       <Header />
 
       <main className="flex-1">
-        {/* Hero Section */}
-        <section className="py-12 md:py-20 bg-gradient-to-b from-primary/5 to-background">
-          <div className="container">
-            <div className="max-w-3xl mx-auto text-center">
-              <Badge variant="secondary" className="mb-4">
-                <ShieldCheck className="h-3 w-3 mr-1" />
-                Secure Transactions
-              </Badge>
-              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4">
-                Secure Payments, Protected Transactions, Flexible Checkout
+        <section className="border-b border-border pb-16 pt-12 md:pb-24 md:pt-20">
+          <div className="container mx-auto grid max-w-6xl items-center gap-12 px-4 lg:grid-cols-[1.08fr,0.92fr] lg:gap-16">
+            <motion.div
+              initial={reduce ? undefined : { opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, ease }}
+            >
+              <div className="mb-6 flex items-center gap-2 text-sm font-semibold text-muted-foreground">
+                <PayPalMonogram className="h-5" />
+                 PayPal checkout on Vendibook
+              </div>
+              <h1 className="max-w-3xl text-4xl font-bold leading-tight text-foreground sm:text-5xl md:text-6xl">
+                 Keep the deal moving without taking it off-platform.
               </h1>
-              <p className="text-lg text-muted-foreground mb-8 max-w-2xl mx-auto">
-                Vendibook is built to keep transactions safe, trackable, and fair—with Stripe-powered payments, protected holds, and flexible checkout options for both rentals and purchases.
+              <p className="mt-6 max-w-2xl text-lg leading-relaxed text-muted-foreground">
+                 See the equipment, talk with the seller, review the agreement, pay through PayPal,
+                 and keep pickup or delivery details together on Vendibook.
               </p>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center">
-                <Button size="lg" variant="dark-shine" asChild>
-                  <Link to="/search">
-                    <Search className="h-4 w-4 mr-2" />
-                    Start Your Search
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <Button variant="cta" size="lg" className="rounded-full" asChild>
+                   <Link to="/search">
+                     Browse listings <ArrowRight className="ml-1.5 h-4 w-4" />
                   </Link>
                 </Button>
-                <Button size="lg" variant="dark-shine" asChild>
-                  <Link to="/list">
-                    <PlusCircle className="h-4 w-4 mr-2" />
-                    Create a Free Listing
-                  </Link>
+                <Button variant="cta-outline" size="lg" className="rounded-full" asChild>
+                  <Link to="/how-purchasing-works">How buying works</Link>
                 </Button>
               </div>
-              <p className="text-sm text-muted-foreground mt-4">
-                List in minutes — no monthly fees.
-              </p>
-            </div>
+            </motion.div>
+            <motion.div
+              initial={reduce ? undefined : { opacity: 0, y: 18 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.55, delay: 0.08, ease }}
+            >
+              <PayPalVisual />
+            </motion.div>
           </div>
         </section>
 
-        {/* Section 1: Buying & Selling */}
-        <section className="py-12 md:py-16">
-          <div className="container">
-            <div className="max-w-4xl mx-auto">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold">
-                  1
-                </div>
-                <div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-                    Buying & Selling Assets
-                  </h2>
-                  <p className="text-muted-foreground">
-                    Food Trucks • Trailers • Equipment
-                  </p>
-                </div>
-              </div>
-
-              <p className="text-muted-foreground mb-8 text-lg">
-                Buying a food truck is a major investment. Vendibook reduces risk with a protected payment hold and a clear in-app confirmation flow—so you're not handing money to a stranger.
-              </p>
-
-              {/* Payment Methods */}
-              <div className="mb-10">
-                <h3 className="text-lg font-semibold text-foreground mb-4">
-                  How you can pay (Purchases)
-                </h3>
-                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {/* BNPL */}
-                  <Card className="border-2 border-primary/20 bg-primary/5">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="flex gap-2">
-                          <img src={affirmLogo} alt="Affirm" className="h-5 w-auto dark:invert" />
-                          <span className="text-muted-foreground">/</span>
-                          <img src={afterpayLogo} alt="Afterpay" className="h-5 w-auto dark:invert" />
-                        </div>
-                      </div>
-                      <h4 className="font-medium text-foreground mb-1">Buy Now, Pay Later</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Split the purchase into manageable payments (available on eligible checkouts).
-                      </p>
-                    </CardContent>
-                  </Card>
-
-                  {/* ACH */}
-                  <Card>
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <Building className="h-5 w-5 text-primary" />
-                      </div>
-                      <h4 className="font-medium text-foreground mb-1">ACH / Bank Transfer</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Best for high-value purchases (secure + low fees).
-                      </p>
-                    </CardContent>
-                  </Card>
-
-                  {/* Cards */}
-                  <Card>
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-2 mb-3">
-                        <CreditCard className="h-5 w-5 text-primary" />
-                      </div>
-                      <h4 className="font-medium text-foreground mb-1">Credit & Debit Cards</h4>
-                      <p className="text-sm text-muted-foreground">
-                        Visa, Mastercard, American Express, Discover.
-                      </p>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-
-              {/* Protection Hold */}
-              <div className="mb-8">
-                <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                  <Lock className="h-5 w-5 text-primary" />
-                  The Vendibook Protection Hold (Sales)
-                </h3>
-                <p className="text-muted-foreground mb-6">
-                  A simple 3-step process that protects both sides:
-                </p>
-                <div className="grid md:grid-cols-3 gap-4">
-                  <Card className="border-l-4 border-l-primary">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
-                          1
-                        </div>
-                        <h4 className="font-medium text-foreground">Funds are secured</h4>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        When you click Buy, payment is placed into a secure holding state—not sent directly to the seller.
-                      </p>
-                    </CardContent>
-                  </Card>
-                  <Card className="border-l-4 border-l-primary">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
-                          2
-                        </div>
-                        <h4 className="font-medium text-foreground">Verify & inspect</h4>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        Meet, inspect the asset, and exchange keys/documents with confidence.
-                      </p>
-                    </CardContent>
-                  </Card>
-                  <Card className="border-l-4 border-l-primary">
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <div className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
-                          3
-                        </div>
-                        <h4 className="font-medium text-foreground">Mutual confirmation</h4>
-                      </div>
-                      <p className="text-sm text-muted-foreground">
-                        Funds are released only after both parties confirm the sale is complete in the app.
-                      </p>
-                    </CardContent>
-                  </Card>
-                </div>
-              </div>
-
-              {/* VendiBook Freight + BNPL */}
-              <div className="mb-8">
-                <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                  <Truck className="h-5 w-5 text-primary" />
-                  VendiBook Freight — Financing Available
-                </h3>
-                <Card className="border-2 border-primary/20 bg-primary/5">
-                  <CardContent className="p-6">
-                    <div className="flex flex-col md:flex-row items-center gap-6">
-                      <div className="flex-1">
-                        <p className="text-muted-foreground mb-3">
-                          Shipping a food truck across the country? VendiBook Freight coordinates nationwide delivery — and you can finance the total (including freight) with Affirm or Afterpay at checkout.
-                        </p>
-                        <ul className="space-y-2 text-sm">
-                          <li className="flex items-start gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
-                            <span>Freight costs included in your BNPL payment plan</span>
-                          </li>
-                          <li className="flex items-start gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
-                            <span>Split the full purchase + shipping into manageable payments</span>
-                          </li>
-                          <li className="flex items-start gap-2">
-                            <CheckCircle2 className="h-4 w-4 text-emerald-500 mt-0.5 shrink-0" />
-                            <span>Available on eligible checkouts across 48 contiguous states</span>
-                          </li>
-                        </ul>
-                      </div>
-                      <div className="flex flex-col items-center gap-3 p-4 bg-background rounded-xl border border-border">
-                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Finance with</p>
-                        <div className="flex items-center gap-4">
-                          <img src={affirmLogo} alt="Affirm" className="h-6 md:h-7 object-contain dark:invert" />
-                          <img src={afterpayLogo} alt="Afterpay" className="h-5 md:h-6 object-contain dark:invert" />
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* CTA for Sales */}
-              <div className="flex flex-col sm:flex-row gap-3 items-center justify-center p-6 bg-muted/30 rounded-xl">
-                <p className="text-sm text-muted-foreground">Selling? Reach serious buyers nationwide.</p>
-                <Button variant="dark-shine" asChild>
-                  <Link to="/sell-my-food-truck">
-                    Create a For-Sale Listing
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Link>
-                </Button>
-                <Button variant="dark-shine" asChild>
-                  <Link to="/search?mode=sale">
-                    Browse Assets For Sale
-                  </Link>
-                </Button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Section 2: Rentals & Bookings */}
-        <section className="py-12 md:py-16 bg-muted/30">
-          <div className="container">
-            <div className="max-w-4xl mx-auto">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold">
-                  2
-                </div>
-                <div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-                    Rentals & Bookings
-                  </h2>
-                  <p className="text-muted-foreground">
-                    Kitchens • Vendor Spaces • Short-Term Trucks
-                  </p>
-                </div>
-              </div>
-
-              <p className="text-muted-foreground mb-8 text-lg">
-                Cash flow matters. Vendibook gives renters flexible checkout and gives hosts access to more qualified renters.
-              </p>
-
-              {/* BNPL for Rentals */}
-              <Card className="mb-8 border-2 border-primary/20 bg-primary/5">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="flex gap-3 items-center">
-                      <img src={affirmLogo} alt="Affirm" className="h-6 w-auto dark:invert" />
-                      <span className="text-muted-foreground">/</span>
-                      <img src={afterpayLogo} alt="Afterpay" className="h-6 w-auto dark:invert" />
-                    </div>
-                    <Badge>Buy Now, Pay Later</Badge>
-                  </div>
-                  <p className="text-muted-foreground mb-4">
-                    If eligible, choose Affirm or Afterpay at checkout and split your total over time.
-                  </p>
-                  <div className="grid sm:grid-cols-2 gap-4">
-                    <div className="flex items-start gap-3">
-                      <Users className="h-5 w-5 text-primary mt-0.5" />
-                      <div>
-                        <p className="font-medium text-foreground text-sm">For Renters</p>
-                        <p className="text-sm text-muted-foreground">
-                          Spread out costs so you can start earning sooner
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-start gap-3">
-                      <Truck className="h-5 w-5 text-primary mt-0.5" />
-                      <div>
-                        <p className="font-medium text-foreground text-sm">For Hosts</p>
-                        <p className="text-sm text-muted-foreground">
-                          Reach more renters, while payouts follow the Vendibook schedule
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* 24-Hour Safety Window */}
-              <div className="mb-8">
-                <h3 className="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
-                  <Clock className="h-5 w-5 text-primary" />
-                  The 24-Hour Safety Window (Rentals)
-                </h3>
-                <Card className="bg-background">
-                  <CardContent className="p-6">
-                    <div className="flex items-center gap-4 flex-wrap">
-                      <div className="flex items-center gap-2">
-                        <CheckCircle2 className="h-5 w-5 text-emerald-500" />
-                        <span className="text-sm">Payment collected at booking</span>
-                      </div>
-                      <ArrowRight className="h-4 w-4 text-muted-foreground hidden sm:block" />
-                      <div className="flex items-center gap-2">
-                        <Lock className="h-5 w-5 text-blue-500" />
-                        <span className="text-sm">held securely</span>
-                      </div>
-                      <ArrowRight className="h-4 w-4 text-muted-foreground hidden sm:block" />
-                      <div className="flex items-center gap-2">
-                        <Clock className="h-5 w-5 text-primary" />
-                        <span className="text-sm">host payout starts 24 hours after the booking ends</span>
-                      </div>
-                    </div>
-                    <p className="text-xs text-muted-foreground mt-3">
-                      (when no issues are reported)
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-
-              {/* CTA for Rentals */}
-              <div className="flex flex-col sm:flex-row gap-3 items-center justify-center">
-                <Button variant="dark-shine" asChild>
-                  <Link to="/search?mode=rent">
-                    <Search className="h-4 w-4 mr-2" />
-                    Find a Rental
-                  </Link>
-                </Button>
-                <Button variant="dark-shine" asChild>
-                  <Link to="/list">
-                    Create a Rental Listing
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Link>
-                </Button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Section 3: Resolution Guarantee */}
-        <section className="py-12 md:py-16">
-          <div className="container">
-            <div className="max-w-4xl mx-auto">
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-bold">
-                  3
-                </div>
-                <div>
-                  <h2 className="text-2xl md:text-3xl font-bold text-foreground">
-                    Resolution Guarantee
-                  </h2>
-                </div>
-              </div>
-
-              <p className="text-lg text-muted-foreground mb-8">
-                If something goes wrong, we step in fast.
-              </p>
-
-              <div className="grid md:grid-cols-3 gap-4 mb-8">
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <AlertTriangle className="h-5 w-5 text-amber-500" />
-                      <h4 className="font-medium text-foreground">Immediate pause</h4>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Reported issues can pause payouts during review
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Search className="h-5 w-5 text-blue-500" />
-                      <h4 className="font-medium text-foreground">Evidence-based review</h4>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Photos, messages, and booking details
-                    </p>
-                  </CardContent>
-                </Card>
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Clock className="h-5 w-5 text-emerald-500" />
-                      <h4 className="font-medium text-foreground">Target timeline</h4>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      We aim to resolve claims within 5 business days, depending on evidence completeness
-                    </p>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <div className="text-center">
-                <Button variant="dark-shine" asChild>
-                  <Link to="/help/buyer-protection">
-                    <HandshakeIcon className="h-4 w-4 mr-2" />
-                    Learn How Protection Works
-                  </Link>
-                </Button>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* Final CTA */}
-        <section className="py-12 md:py-16 bg-gradient-to-b from-muted/50 to-background">
-          <div className="container">
-            <div className="max-w-2xl mx-auto text-center">
-              <h2 className="text-2xl md:text-3xl font-bold text-foreground mb-4">
-                Ready to buy, book, or list—confidently?
+        <section className="bg-muted/40 py-16 md:py-24">
+          <div className="container mx-auto max-w-6xl px-4">
+            <motion.div {...fadeUp} className="max-w-3xl">
+               <p className="text-sm font-semibold uppercase text-primary">How it works</p>
+              <h2 className="mt-3 text-3xl font-bold text-foreground sm:text-4xl">
+                 From first look to final handoff.
               </h2>
-              <div className="flex flex-col sm:flex-row gap-3 justify-center mb-6">
-                <Button size="lg" variant="dark-shine" asChild>
-                  <Link to="/search">
-                    <Search className="h-4 w-4 mr-2" />
-                    Start Your Search
-                  </Link>
-                </Button>
-                <Button size="lg" variant="dark-shine" asChild>
-                  <Link to="/list">
-                    <PlusCircle className="h-4 w-4 mr-2" />
-                    Create a Free Listing
-                  </Link>
-                </Button>
-              </div>
-              <p className="text-sm text-muted-foreground mb-8">
-                List For Sale • List For Rent
+              <p className="mt-4 text-base leading-relaxed text-muted-foreground">
+                 Everything stays connected to the same transaction, so you can see what happened and what comes next.
               </p>
+            </motion.div>
+            <div className="mt-12 border-y border-border">
+              {BUYING_SEQUENCE.map((step, index) => (
+                <motion.div
+                  key={step.title}
+                  {...fadeUp}
+                  transition={{ ...fadeUp.transition, delay: reduce ? 0 : index * 0.05 }}
+                  className="grid gap-4 border-b border-border py-8 last:border-b-0 md:grid-cols-[72px,1fr,1.25fr] md:items-start md:gap-8"
+                >
+                  <span className="text-3xl font-semibold text-primary">0{index + 1}</span>
+                  <div className="flex items-center gap-3">
+                    <step.icon className="h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
+                    <h3 className="text-xl font-semibold text-foreground">{step.title}</h3>
+                  </div>
+                  <p className="text-sm leading-relaxed text-muted-foreground">{step.body}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
 
-              {/* Stripe Badge */}
-              <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-                <span>Powered by</span>
-                <img src={stripeLogo} alt="Stripe" className="h-6 w-auto" />
+        <section className="border-y border-border bg-card py-16 md:py-24">
+          <div className="container mx-auto max-w-6xl px-4">
+            <motion.div {...fadeUp} className="max-w-2xl">
+               <h2 className="text-3xl font-bold text-foreground sm:text-4xl">Use the payment options PayPal shows you.</h2>
+              <p className="mt-4 text-base leading-relaxed text-muted-foreground">
+                 Available methods vary by buyer, device, merchant, and transaction.
+              </p>
+            </motion.div>
+            <div className="mt-10 grid gap-x-10 gap-y-8 sm:grid-cols-2">
+              {BUYER_OPTIONS.map((option) => (
+                <motion.div key={option.title} {...fadeUp} className="flex gap-4 border-t border-border pt-6">
+                  <option.icon className="mt-0.5 h-5 w-5 shrink-0 text-primary" aria-hidden="true" />
+                  <div>
+                    <h3 className="font-semibold text-foreground">{option.title}</h3>
+                    <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{option.body}</p>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="py-16 md:py-24">
+          <div className="container mx-auto max-w-6xl px-4">
+            <motion.div {...fadeUp} className="max-w-3xl">
+              <h2 className="text-3xl font-bold text-foreground sm:text-4xl">
+                 Need more flexibility? PayPal may offer Pay Later.<span className="text-primary">*</span>
+              </h2>
+              <p className="mt-4 text-base leading-relaxed text-muted-foreground">
+                 Eligible buyers may see Pay in 4 or Pay Monthly directly in PayPal checkout.
+              </p>
+            </motion.div>
+            <div className="mt-10 grid gap-8 border-y border-border py-10 lg:grid-cols-2 lg:gap-16">
+              <motion.div {...fadeUp}>
+                <p className="text-sm font-semibold uppercase text-muted-foreground">Smaller eligible purchases</p>
+                <h3 className="mt-3 text-2xl font-bold text-foreground">Pay in 4</h3>
+                <ul className="mt-5 space-y-3 text-sm leading-relaxed text-muted-foreground">
+                   <li className="flex gap-3"><Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />Four payments on eligible purchases.</li>
+                   <li className="flex gap-3"><Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />PayPal determines eligibility and shows the applicable terms at checkout.</li>
+                </ul>
+                 <p className="mt-6"><ExtLink href={PAYPAL_LINKS.payIn4}>View Pay in 4 details</ExtLink></p>
+              </motion.div>
+              <motion.div {...fadeUp} transition={{ ...fadeUp.transition, delay: reduce ? 0 : 0.06 }}>
+                <p className="text-sm font-semibold uppercase text-primary">Larger qualifying purchases</p>
+                <h3 className="mt-3 text-2xl font-bold text-foreground">Pay Monthly</h3>
+                <ul className="mt-5 space-y-3 text-sm leading-relaxed text-muted-foreground">
+                   <li className="flex gap-3"><Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />Monthly payment options may be available on qualifying purchases.</li>
+                   <li className="flex gap-3"><Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" />Available term, rate, and approval are determined by PayPal.</li>
+                </ul>
+                 <p className="mt-6"><ExtLink href={PAYPAL_LINKS.payMonthly}>View Pay Monthly details</ExtLink></p>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        <section className="bg-muted/40 py-16 md:py-24">
+          <div className="container mx-auto max-w-6xl px-4">
+            <motion.div {...fadeUp} className="max-w-3xl">
+               <h2 className="text-3xl font-bold text-foreground sm:text-4xl">PayPal handles checkout. Vendibook keeps the deal organized.</h2>
+               <p className="mt-4 text-muted-foreground">Each service has a clear role in the transaction.</p>
+            </motion.div>
+            <div className="mt-10 grid gap-px overflow-hidden border border-border bg-border md:grid-cols-2">
+              <motion.div {...fadeUp} className="bg-card p-7 sm:p-9">
+                <PayPalWordmark surface="light" className="text-lg" />
+                <ul className="mt-6 space-y-4 text-sm leading-relaxed text-muted-foreground">
+                   <li>Processes the online payment.</li>
+                   <li>Shows the eligible funding options available at checkout.</li>
+                   <li>Handles Pay Later eligibility, terms, and repayment.</li>
+                   <li>Processes card details within PayPal checkout.</li>
+                </ul>
+              </motion.div>
+              <motion.div {...fadeUp} className="bg-card p-7 sm:p-9">
+                <div className="flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5 text-primary" aria-hidden="true" />
+                  <span className="text-lg font-bold text-foreground">Vendibook</span>
+                </div>
+                <ul className="mt-6 space-y-4 text-sm leading-relaxed text-muted-foreground">
+                   <li>Keeps the listing, messages, and video walkthrough connected.</li>
+                   <li>Provides the agreement and transaction workflow.</li>
+                   <li>Organizes pickup, delivery updates, and confirmations.</li>
+                   <li>Keeps the order and transaction record accessible in your account.</li>
+                </ul>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        <section className="py-16 md:py-24">
+          <div className="container mx-auto grid max-w-6xl gap-10 px-4 lg:grid-cols-[0.8fr,1.2fr] lg:gap-16">
+            <motion.div {...fadeUp}>
+              <div className="flex items-center gap-2 text-sm font-semibold uppercase text-primary">
+                <Landmark className="h-4 w-4" aria-hidden="true" /> For sellers
               </div>
+              <h2 className="mt-4 text-3xl font-bold text-foreground sm:text-4xl">
+                 Want buyers to pay online? Connect PayPal.
+              </h2>
+              <p className="mt-5 text-base leading-relaxed text-muted-foreground">
+                 Create your listing first, then connect PayPal when you're ready to enable online checkout on eligible listings.
+              </p>
+              <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+                Sole proprietors can use a PayPal Business account; Vendibook does not require you to form an LLC just to list.
+              </p>
+              <Button variant="cta" size="lg" className="mt-8 rounded-full" asChild>
+                <Link to="/sell-my-food-truck">
+                  Start selling <ArrowRight className="ml-1.5 h-4 w-4" />
+                </Link>
+              </Button>
+            </motion.div>
+            <motion.div {...fadeUp} className="border-y border-border py-2">
+              {[
+                 ['Create and publish your listing', 'Add the equipment details buyers need and take your listing live.'],
+                 ['Connect PayPal', 'Complete the connection from your Vendibook account.'],
+                 ['Complete account checks', 'Finish the steps PayPal requires for your account.'],
+                 ['Offer online checkout', 'Eligible listings can show checkout when your payment setup is ready.'],
+              ].map(([title, body]) => (
+                <div key={title} className="grid gap-2 border-b border-border py-6 last:border-b-0 sm:grid-cols-[150px,1fr] sm:gap-6">
+                  <h3 className="font-semibold text-foreground">{title}</h3>
+                  <p className="text-sm leading-relaxed text-muted-foreground">{body}</p>
+                </div>
+              ))}
+            </motion.div>
+          </div>
+        </section>
+
+        <section className="border-y border-border bg-card py-16 md:py-24">
+          <div className="container mx-auto max-w-6xl px-4">
+            <motion.div {...fadeUp} className="grid gap-8 md:grid-cols-[0.45fr,1fr] md:gap-16">
+              <div>
+                <Truck className="h-6 w-6 text-primary" aria-hidden="true" />
+                 <h2 className="mt-4 text-3xl font-bold text-foreground">Buying from farther away?</h2>
+              </div>
+              <div>
+                <p className="text-base leading-relaxed text-muted-foreground">
+                   Eligible orders can include pickup, seller delivery, or freight options. Keep delivery details and order updates connected to the transaction.
+                </p>
+                <p className="mt-4 text-sm leading-relaxed text-muted-foreground">
+                   If a separate freight charge is paid through PayPal, any Pay Later eligibility is determined separately by PayPal.
+                </p>
+                <Button variant="cta-outline" className="mt-7 rounded-full" asChild>
+                  <Link to="/vendibook-freight">Explore Vendibook Freight</Link>
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        </section>
+
+        <section className="py-16 md:py-24">
+          <div className="container mx-auto max-w-3xl px-4">
+            <motion.h2 {...fadeUp} className="text-3xl font-bold text-foreground sm:text-4xl">
+               Payment questions, answered.
+            </motion.h2>
+            <motion.div {...fadeUp} className="mt-8">
+              <Accordion type="single" collapsible>
+                {FAQS.map((faq, index) => (
+                  <AccordionItem key={faq.q} value={`faq-${index}`} className="border-border">
+                    <AccordionTrigger className="py-5 text-left text-base font-semibold text-foreground hover:no-underline">
+                      {faq.q}
+                    </AccordionTrigger>
+                    <AccordionContent className="pb-5 text-sm leading-relaxed text-muted-foreground">
+                      {faq.a}
+                    </AccordionContent>
+                  </AccordionItem>
+                ))}
+              </Accordion>
+            </motion.div>
+          </div>
+        </section>
+
+        <section className="bg-foreground py-16 text-background md:py-20">
+          <div className="container mx-auto max-w-4xl px-4 text-center">
+            <PayPalWordmark surface="dark" className="mx-auto text-lg" />
+            <h2 className="mx-auto mt-6 max-w-2xl text-3xl font-bold sm:text-4xl">
+               Find the equipment. Keep the transaction in one place.
+            </h2>
+            <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
+              <Button variant="cta" size="lg" className="rounded-full" asChild>
+                 <Link to="/search">Browse marketplace <ArrowRight className="ml-1.5 h-4 w-4" /></Link>
+              </Button>
+              <Button variant="outline" size="lg" className="rounded-full border-background/30 bg-transparent text-background hover:bg-background/10 hover:text-background" asChild>
+                 <Link to="/sell-my-food-truck">Sell on Vendibook</Link>
+              </Button>
+            </div>
+          </div>
+        </section>
+
+        <section className="py-12">
+          <div className="container mx-auto max-w-4xl px-4">
+            <p className="text-xs leading-relaxed text-muted-foreground">
+               *PayPal Pay Later offers are subject to consumer credit approval, buyer and purchase eligibility,
+               merchant and state availability, and PayPal/WebBank terms. Pay Monthly is an interest-bearing
+               consumer installment loan issued by WebBank. Vendibook LC is not the lender and does not determine
+               approval, rates, available terms, or APR. Twelve months is a possible Pay Monthly term, not a separate
+               Pay in 12 product. Separate PayPal transactions, including separately charged Vendibook Freight, may
+               require separate Pay Later applications. PayPal Purchase Protection applies only to eligible
+               transactions. PayPal&rsquo;s current U.S. terms exclude vehicles. Review PayPal&rsquo;s current terms before
+               purchasing a food truck or trailer.
+            </p>
+            <div className="mt-5 flex flex-wrap gap-x-5 gap-y-3 text-xs">
+              <Link to="/legal/payments-terms" className="font-semibold text-primary hover:underline">Payments Terms</Link>
+              <Link to="/legal/financing-disclosure" className="font-semibold text-primary hover:underline">Financing Disclosure</Link>
+              <Link to="/legal/video-walkthrough-terms" className="font-semibold text-primary hover:underline">Video Walkthrough Terms</Link>
+              <ExtLink href={PAYPAL_LINKS.payLater}>PayPal Pay Later overview</ExtLink>
+              <ExtLink href={PAYPAL_LINKS.protection}>PayPal Purchase Protection terms</ExtLink>
             </div>
           </div>
         </section>
       </main>
-
       <Footer />
     </div>
   );

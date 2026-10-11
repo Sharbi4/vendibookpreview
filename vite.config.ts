@@ -29,10 +29,10 @@ export default defineConfig(({ mode }) => ({
       },
 
       manifest: {
-        name: "Vendibook - Food Truck & Mobile Vendor Marketplace",
+        name: "Vendibook - Buy, Sell & Rent Food Trucks & Trailers",
         short_name: "Vendibook",
         description:
-          "Rent or buy food trucks, trailers, shared kitchens, and vendor lots. Verified listings, secure payments, and 24/7 support.",
+          "Shop food trucks, food trailers, carts and mobile food equipment nationwide. Buy, sell or rent with financing options, verified sellers and delivery.",
         theme_color: "#FF5124",
         background_color: "#ffffff",
         display: "standalone",

@@ -12,7 +12,7 @@ export interface SaleTransaction {
   seller_payout: number;
   payment_intent_id: string | null;
   checkout_session_id: string | null;
-  status: 'pending' | 'pending_cash' | 'paid' | 'buyer_confirmed' | 'seller_confirmed' | 'completed' | 'disputed' | 'refunded' | 'cancelled';
+  status: 'pending' | 'payment_failed' | 'pending_cash' | 'paid' | 'buyer_confirmed' | 'seller_confirmed' | 'completed' | 'disputed' | 'refunded' | 'cancelled';
   buyer_confirmed_at: string | null;
   seller_confirmed_at: string | null;
   payout_completed_at: string | null;
@@ -33,6 +33,7 @@ export interface SaleTransaction {
   tracking_url: string | null;
   shipped_at: string | null;
   estimated_delivery_date: string | null;
+  estimated_delivery_end?: string | null;
   delivered_at: string | null;
   shipping_notes: string | null;
   // Link to the immutable transaction_terms snapshot the buyer/seller
@@ -46,6 +47,7 @@ export interface SaleTransaction {
     category: string;
     pickup_location_text: string | null;
     pickup_instructions: string | null;
+    freight_payer?: string | null;
   };
   buyer?: {
     id: string;
@@ -75,7 +77,7 @@ export const useBuyerSaleTransactions = (userId: string | undefined) => {
         .from('sale_transactions' as any)
         .select(`
           *,
-          listing:listings(id, title, cover_image_url, category, pickup_location_text, pickup_instructions)
+          listing:listings(id, title, cover_image_url, category, pickup_location_text, pickup_instructions, freight_payer)
         `)
         .eq('buyer_id', userId)
         .order('created_at', { ascending: false })) as any;
@@ -192,7 +194,7 @@ export const useSellerSaleTransactions = (userId: string | undefined) => {
         .from('sale_transactions' as any)
         .select(`
           *,
-          listing:listings(id, title, cover_image_url, category, pickup_location_text, pickup_instructions)
+          listing:listings(id, title, cover_image_url, category, pickup_location_text, pickup_instructions, freight_payer)
         `)
         .eq('seller_id', userId)
         .order('created_at', { ascending: false })) as any;
@@ -296,28 +298,5 @@ export const useSellerSaleTransactions = (userId: string | undefined) => {
   };
 };
 
-// Hook to create transaction from checkout session
-export const useCreateSaleTransaction = () => {
-  const { toast } = useToast();
-
-  return useMutation({
-    mutationFn: async (sessionId: string) => {
-      const { data, error } = await supabase.functions.invoke('create-sale-transaction', {
-        body: { session_id: sessionId },
-      });
-      
-      if (error) throw error;
-      if (data.error) throw new Error(data.error);
-      return data;
-    },
-    onSuccess: () => {
-      toast({
-        title: 'Purchase Recorded',
-        description: 'Your purchase is now in payment protection. Please confirm receipt of the item to release payment to the seller.',
-      });
-    },
-    onError: (error: Error) => {
-      console.error('Failed to create sale transaction:', error);
-    },
-  });
-};
+// Protected-sale transactions are written server-side by the PayPal order
+// finalizer, so there is no client-side creation hook.

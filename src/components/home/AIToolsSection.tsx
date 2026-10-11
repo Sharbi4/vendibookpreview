@@ -99,10 +99,10 @@ const AIToolsSection = () => {
           })}
         </div>
 
-        {/* Coming Soon Teaser */}
+        {/* More tools teaser */}
         <div className="mt-16 text-center">
           <p className="text-sm text-muted-foreground">
-            More tools coming soon: <span className="font-medium text-foreground">AI Pricing</span> • <span className="font-medium text-foreground">Market Radar</span> • <span className="font-medium text-foreground">Listing Studio</span>
+            Also in the toolkit: <span className="font-medium text-foreground">PricePilot appraisals</span> • <span className="font-medium text-foreground">PermitPath permit roadmaps</span>
           </p>
         </div>
 

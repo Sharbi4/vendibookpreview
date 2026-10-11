@@ -15,7 +15,7 @@ interface DataSnapshot {
   totalViews: number;
   avgRating: number;
   pendingBookings: number;
-  stripeBalance: number;
+  pendingPayoutBalance: number;
 }
 
 interface UseAIInsightsReturn {
@@ -74,7 +74,7 @@ export const useAIInsights = (): UseAIInsightsReturn => {
               title: 'Unlock Spark Insights with Growth',
               description:
                 'Personalized recommendations, competitor benchmarks, and health scores are included with the Growth plan.',
-              action: '/pricing?learn=host_growth',
+              action: '/pricing?learn=vendibook_pro',
               priority: 1,
             }
           : {

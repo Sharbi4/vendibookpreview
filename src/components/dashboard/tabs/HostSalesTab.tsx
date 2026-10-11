@@ -11,6 +11,7 @@ type FilterId = 'all' | 'action' | 'completed' | 'cancelled';
 
 const STATUS_MAP: Record<string, { label: string; tone: 'success' | 'warning' | 'muted' | 'info'; body: string; next?: string }> = {
   pending: { label: 'Pending', tone: 'warning', body: 'Buyer started checkout but hasn\'t paid yet.', next: "We'll notify you the moment payment clears." },
+  payment_failed: { label: 'Payment failed', tone: 'warning', body: 'The buyer’s latest payment attempt was declined or failed. This purchase is unpaid.', next: 'The buyer can retry payment. Do not arrange handoff until payment is confirmed.' },
   pending_cash: { label: 'Cash pending', tone: 'warning', body: 'Buyer chose Pay in Person — this is your signal to arrange the handoff.', next: 'Mark the order paid on your end once you receive the cash.' },
   paid: { label: 'Paid — action needed', tone: 'info', body: 'The buyer paid and funds are in payment protection.', next: 'Coordinate delivery and mark the order shipped/handed off. Payout runs after buyer confirmation.' },
   buyer_confirmed: { label: 'Buyer confirmed', tone: 'info', body: 'Buyer confirmed receipt.', next: 'Your payout is queued on Vendibook\'s standard schedule.' },
@@ -19,12 +20,17 @@ const STATUS_MAP: Record<string, { label: string; tone: 'success' | 'warning' | 
   disputed: { label: 'Disputed', tone: 'warning', body: 'The buyer opened a dispute.', next: 'Respond from the order page — our team mediates.' },
   refunded: { label: 'Refunded', tone: 'muted', body: 'Funds were returned to the buyer.' },
   cancelled: { label: 'Cancelled', tone: 'muted', body: 'This order was cancelled.' },
+  confirmed: { label: 'Paid — action needed', tone: 'info', body: 'The buyer\'s payment was received.', next: 'Coordinate pickup or delivery with the buyer from the order page.' },
+  payment_authorized: { label: 'Payment processing', tone: 'warning', body: 'The buyer\'s payment is authorized and being finalized.', next: 'Do not arrange handoff until payment is confirmed.' },
+  paid_out: { label: 'Paid out', tone: 'success', body: 'Sale complete and your payout was sent.' },
+  payout_failed: { label: 'Payout issue', tone: 'warning', body: 'Sale complete, but the payout did not go through.', next: 'Vendibook support is resolving it and will contact you.' },
+  partially_refunded: { label: 'Partially refunded', tone: 'muted', body: 'Part of the payment was returned to the buyer.' },
 };
 
 const FILTERS: { id: FilterId; label: string; match: (s: string) => boolean }[] = [
   { id: 'all', label: 'All', match: () => true },
-  { id: 'action', label: 'Action needed', match: (s) => ['paid', 'pending_cash', 'disputed', 'seller_confirmed'].includes(s) },
-  { id: 'completed', label: 'Completed', match: (s) => s === 'completed' || s === 'buyer_confirmed' },
+  { id: 'action', label: 'Action needed', match: (s) => ['paid', 'confirmed', 'pending_cash', 'disputed', 'seller_confirmed', 'payout_failed'].includes(s) },
+  { id: 'completed', label: 'Completed', match: (s) => ['completed', 'buyer_confirmed', 'paid_out', 'payout_failed'].includes(s) },
   { id: 'cancelled', label: 'Cancelled', match: (s) => ['cancelled', 'refunded'].includes(s) },
 ];
 

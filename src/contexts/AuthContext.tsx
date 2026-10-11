@@ -1,3 +1,6 @@
+import { disableNativePush } from '@/lib/native/push';
+import { publicReturnUrl } from '@/lib/native/links';
+import { rememberAuthMethod } from '@/lib/auth/oauthIntent';
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
@@ -23,7 +26,7 @@ interface AuthContextType {
   roles: AppRole[];
   isLoading: boolean;
   isVerified: boolean;
-  signUp: (email: string, password: string, fullName: string, role: AppRole, firstName?: string, lastName?: string, phoneNumber?: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, fullName: string, role: AppRole, firstName?: string, lastName?: string, phoneNumber?: string, returnTo?: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
   resetPassword: (email: string) => Promise<{ error: Error | null }>;
@@ -174,9 +177,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             }
 
 
+            // Remember which method actually worked so the sign-in screen can
+            // badge it as "Last used" and disambiguate credential errors.
+            if (event === 'SIGNED_IN') {
+              try {
+                const provider = (session.user.app_metadata as any)?.provider;
+                if (provider === 'google') {
+                  rememberAuthMethod('google', session.user.email || undefined);
+                } else if (provider === 'email') {
+                  rememberAuthMethod('email', session.user.email || undefined);
+                }
+              } catch {
+                /* non-critical */
+              }
+            }
+
             // Stitch the anonymous analytics session to the now-known user so
             // pre-auth events can be back-attributed in admin queries.
             if (event === 'SIGNED_IN') {
+
               try {
                 const sid = typeof window !== 'undefined'
                   ? window.sessionStorage?.getItem('analytics_session_id')
@@ -271,9 +290,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signUp = async (email: string, password: string, fullName: string, role: AppRole, firstName?: string, lastName?: string, phoneNumber?: string) => {
+  const signUp = async (email: string, password: string, fullName: string, role: AppRole, firstName?: string, lastName?: string, phoneNumber?: string, returnTo?: string) => {
     try {
-      const redirectUrl = `${window.location.origin}/`;
+      // Preserve the flow the visitor came from (listing, checkout, /list/start)
+      // so the email confirmation link lands them back there.
+      const dest = returnTo && returnTo.startsWith('/') && !returnTo.startsWith('//') ? returnTo : '/dashboard';
+      const redirectUrl = publicReturnUrl(dest);
 
       const { data, error } = await supabase.auth.signUp({
         email,
@@ -294,19 +316,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return { error };
       }
 
-      // Role is now assigned by the handle_new_user trigger (SECURITY DEFINER)
-      // using the `role` field in user_metadata above. We still attempt a
-      // best-effort client insert as belt-and-suspenders for legacy sessions,
-      // but ON CONFLICT prevents duplicates and RLS failures are non-fatal.
+      // Role is assigned server-side by the handle_new_user trigger
+      // (SECURITY DEFINER) using the `role` field in user_metadata above.
+      // No client-side user_roles insert — it would be blocked by RLS.
       if (data.user) {
-        const { error: roleError } = await supabase
-          .from('user_roles')
-          .insert({ user_id: data.user.id, role });
 
-        if (roleError && !/(duplicate|already exists|conflict)/i.test(roleError.message)) {
-          // Trigger is the source of truth — log but don't fail signup.
-          console.warn('[signUp] client user_roles insert skipped:', roleError.message);
-        }
 
         // Send welcome email to the new user
         try {
@@ -349,6 +363,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 
   const signOut = async () => {
+    await disableNativePush().catch(() => false);
     await supabase.auth.signOut();
     setUser(null);
     setSession(null);
@@ -358,7 +373,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   const resetPassword = async (email: string) => {
     try {
-      const redirectUrl = `${window.location.origin}/reset-password`;
+      const redirectUrl = publicReturnUrl('/reset-password');
       
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
         redirectTo: redirectUrl,

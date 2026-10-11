@@ -1,7 +1,9 @@
 // Routes offer notification emails through Lovable Emails queue.
 // Looks up offer + buyer/seller, picks the right template + recipient, and
-// invokes send-transactional-email so all sends are queued, retried, and logged.
+// sends through the shared transactional email helper so all sends are queued, retried, and logged.
 import { createClient } from 'npm:@supabase/supabase-js@2';
+import { getCaller, isAdminUser, isBackendCaller, forbiddenResponse, unauthorizedResponse } from "../_shared/callerGuard.ts";
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -27,6 +29,13 @@ Deno.serve(async (req) => {
       .eq('id', offer_id)
       .single();
     if (offerErr || !offer) throw new Error(`Offer not found: ${offerErr?.message}`);
+    if (!(await isBackendCaller(req))) {
+      const caller = await getCaller(req);
+      if (!caller) return unauthorizedResponse(corsHeaders);
+      if (caller.id !== offer.buyer_id && caller.id !== offer.seller_id && !(await isAdminUser(caller.id))) {
+        return forbiddenResponse(corsHeaders);
+      }
+    }
 
     const [{ data: seller }, { data: buyer }] = await Promise.all([
       supabase.from('profiles').select('id, email, full_name, first_name').eq('id', offer.seller_id).maybeSingle(),
@@ -101,14 +110,12 @@ Deno.serve(async (req) => {
       });
     }
 
-    const { error } = await supabase.functions.invoke('send-transactional-email', {
-      body: {
+    const { error } = await invokeTransactionalEmail({
         templateName,
         recipientEmail: recipient.email,
         idempotencyKey: `offer-${offer.id}-${event_type}`,
         templateData,
-      },
-    });
+      });
     if (error) throw error;
 
     return new Response(JSON.stringify({ success: true }), {

@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { useSellerVerification } from '@/hooks/useSellerVerification';
 
 interface NextStepConfig {
   id: string;
@@ -28,42 +29,48 @@ interface NextStepConfig {
 
 interface EnhancedProfileNextStepCardProps {
   isVerified: boolean;
-  stripeConnected: boolean;
+  payoutReady: boolean;
   isHost: boolean;
   draftCount: number;
   pendingRequestCount: number;
-  isLoadingStripe?: boolean;
-  onConnectStripe?: () => void;
-  isConnectingStripe?: boolean;
+  isLoadingPayout?: boolean;
+  onSetUpPayouts?: () => void;
+  isSavingPayouts?: boolean;
 }
 
 const EnhancedProfileNextStepCard = ({
   isVerified,
-  stripeConnected,
+  payoutReady,
   isHost,
   draftCount,
   pendingRequestCount,
-  isLoadingStripe,
-  onConnectStripe,
-  isConnectingStripe}: EnhancedProfileNextStepCardProps) => {
+  isLoadingPayout,
+  onSetUpPayouts,
+  isSavingPayouts}: EnhancedProfileNextStepCardProps) => {
+  const sellerVerification = useSellerVerification();
+  // Verified sellers never see the offer again, even if the profile flag lags.
+  const verified =
+    isVerified ||
+    sellerVerification.state?.badge_active === true ||
+    sellerVerification.offer.enabled === false;
   const allSteps: NextStepConfig[] = [
     {
       id: 'verify',
       icon: Shield,
-      title: 'Verify your identity',
-      description: 'Build trust with renters and hosts by verifying your identity.',
-      actionLabel: 'Verify Now',
+      title: 'Get verified*',
+      description: 'A paid Plaid identity add-on that adds a verified badge to your profile. Never required to buy, sell, or publish.',
+      actionLabel: 'Learn more',
       actionHref: '/identity-verification',
-      priority: 1,
+      priority: 6,
       gradient: 'from-amber-500 to-orange-500',
       iconBg: 'bg-amber-100 dark:bg-amber-900/50'},
     {
-      id: 'stripe',
+      id: 'payouts',
       icon: CreditCard,
-      title: 'Connect Stripe to get paid',
+      title: 'Set up payouts to get paid',
       description: 'Set up payouts so you can receive payments for your listings.',
-      actionLabel: 'Connect Stripe',
-      actionOnClick: onConnectStripe,
+      actionLabel: 'Set up payouts',
+      actionOnClick: onSetUpPayouts,
       priority: 2,
       gradient: 'from-emerald-500 to-teal-500',
       iconBg: 'bg-emerald-100 dark:bg-emerald-900/50'},
@@ -99,11 +106,11 @@ const EnhancedProfileNextStepCard = ({
       iconBg: 'bg-pink-100 dark:bg-pink-900/50'}];
 
   const getApplicableStep = (): NextStepConfig | null => {
-    if (!isVerified) return allSteps.find(s => s.id === 'verify')!;
-    if (isHost && !stripeConnected && !isLoadingStripe) return allSteps.find(s => s.id === 'stripe')!;
+    if (isHost && !payoutReady && !isLoadingPayout) return allSteps.find(s => s.id === 'payouts')!;
     if (draftCount > 0) return allSteps.find(s => s.id === 'drafts')!;
     if (pendingRequestCount > 0) return allSteps.find(s => s.id === 'requests')!;
     if (!isHost) return allSteps.find(s => s.id === 'create')!;
+    if (!verified) return allSteps.find(s => s.id === 'verify')!;
     return null;
   };
 
@@ -203,9 +210,9 @@ const EnhancedProfileNextStepCard = ({
                     `bg-gradient-to-r ${step.gradient} hover:opacity-90`
                   )}
                   onClick={step.actionOnClick}
-                  disabled={isConnectingStripe}
+                  disabled={isSavingPayouts}
                 >
-                  {isConnectingStripe ? (
+                  {isSavingPayouts ? (
                     <>
                       <Loader2 className="h-4 w-4 animate-spin" />
                       Connecting...

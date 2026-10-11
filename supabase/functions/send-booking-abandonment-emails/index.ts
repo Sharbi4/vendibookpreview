@@ -1,6 +1,8 @@
 // Cron-triggered: scans booking_drafts for abandoned sessions and sends recovery emails
 // at 2 hours and 24 hours after the last update.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
+import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,6 +11,7 @@ const corsHeaders = {
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  if (!(await isAdminOrBackendCaller(req))) return forbiddenResponse();
 
   const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
   const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -51,8 +54,7 @@ Deno.serve(async (req) => {
 
     const resumeUrl = `https://vendibook.com/listing/${listing.id}?resume=${draft.recovery_token}`;
 
-    const { error } = await supabase.functions.invoke("send-transactional-email", {
-      body: {
+    const { error } = await invokeTransactionalEmail({
         templateName: "booking-abandoned",
         recipientEmail: draft.email,
         idempotencyKey: `abandon-${variant}-${draft.id}`,
@@ -64,8 +66,7 @@ Deno.serve(async (req) => {
           resumeUrl,
           variant,
         },
-      },
-    });
+      });
 
     if (error) {
       errors.push(`${variant}/${draft.id}: ${error.message}`);

@@ -53,6 +53,7 @@ const PATCH_ALLOWLIST = new Set([
   "city",
   "state",
   "zip_code",
+  "postal_code",
   "show_precise_location",
   "delivery_fee",
   "delivery_radius_miles",
@@ -83,13 +84,22 @@ const PATCH_ALLOWLIST = new Set([
   "freight_category",
   "required_documents",
   "accept_cash_payment",
-  "accept_card_payment",
+  "accept_paypal_checkout",
   "proof_notary_enabled",
   "total_slots",
   "slot_names",
   "hourly_schedule",
   "hourly_special_pricing",
   "rental_min_days",
+  // Booking-mode toggles + constraints saved by the wizard's availability step.
+  "hourly_enabled",
+  "daily_enabled",
+  "min_hours",
+  "max_hours",
+  "buffer_time_mins",
+  "min_notice_hours",
+  // Location-step delivery pricing mode (flat / per-mile / free).
+  "delivery_fee_type",
 ]);
 
 function json(body: unknown, status = 200) {

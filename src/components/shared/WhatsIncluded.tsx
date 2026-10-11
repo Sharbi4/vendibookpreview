@@ -24,7 +24,7 @@ const WhatsIncluded = ({
       title: "Secure Payment Protection Payment",
       description: mode === 'checkout' 
         ? "Funds held until both parties confirm"
-        : "Protected by Stripe encryption",
+        : "Protected by encrypted PayPal checkout",
     },
     {
       icon: ShieldCheck,

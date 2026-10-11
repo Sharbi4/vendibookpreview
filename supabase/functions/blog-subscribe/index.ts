@@ -3,6 +3,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { Resend } from "https://esm.sh/resend@2.0.0";
+import { escapeHtml } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -15,12 +16,12 @@ const REPLY_TO = "support@vendibook.com";
 const ADMIN_ALERT_TO = ["support@vendibook.com"];
 const HOME_URL = "https://vendibook.com";
 const BLOG_URL = "https://vendibook.com/blog";
-const LOGO_IMG = "https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png";
+const LOGO_IMG = "https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-email-logo.png?v=2026-08";
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 function buildConfirmationHtml(name: string | null) {
-  const greeting = name ? `Welcome, ${name.split(" ")[0]}!` : "Welcome to Vendibook!";
+  const greeting = name ? `Welcome, ${escapeHtml(name.split(" ")[0])}!` : "Welcome to Vendibook!";
   const unsubUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/marketing-unsubscribe`;
   return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light only"><title>${greeting}</title></head>
 <body style="margin:0;padding:0;background:#f5f5f4;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#1a1a1a;">
@@ -74,9 +75,9 @@ function buildAdminAlertHtml(email: string, name: string | null, source: string)
   return `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#1a1a1a;max-width:520px;">
 <h2 style="margin:0 0 12px 0;font-size:20px;">New Vendibook subscriber</h2>
 <table cellpadding="6" style="border-collapse:collapse;font-size:14px;">
-<tr><td style="color:#737373;">Email</td><td><strong>${email}</strong></td></tr>
-<tr><td style="color:#737373;">Name</td><td>${name || "—"}</td></tr>
-<tr><td style="color:#737373;">Source</td><td>${source}</td></tr>
+<tr><td style="color:#737373;">Email</td><td><strong>${escapeHtml(email)}</strong></td></tr>
+<tr><td style="color:#737373;">Name</td><td>${escapeHtml(name || "—")}</td></tr>
+<tr><td style="color:#737373;">Source</td><td>${escapeHtml(source)}</td></tr>
 <tr><td style="color:#737373;">When</td><td>${new Date().toISOString()}</td></tr>
 </table></div>`;
 }
@@ -147,7 +148,7 @@ serve(async (req) => {
       await resend.emails.send({
         from: FROM,
         to: ADMIN_ALERT_TO,
-        subject: `New subscriber: ${email}`,
+        subject: `New subscriber: ${String(email).replace(/[\r\n<>]/g, "").slice(0, 254)}`,
         html: buildAdminAlertHtml(email, name, source),
         reply_to: email,
         tags: [{ name: "type", value: "subscribe_admin_alert" }],

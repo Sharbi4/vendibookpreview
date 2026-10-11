@@ -8,6 +8,8 @@ import { useToast } from '@/hooks/use-toast';
 import { trackEventToDb } from '@/hooks/useAnalyticsEvents';
 import { CATEGORY_LABELS } from '@/types/listing';
 import type { Tables } from '@/integrations/supabase/types';
+import { useSharePreflight } from '@/hooks/useSharePreflight';
+import SharePreviewCard from '@/components/share/SharePreviewCard';
 
 type Listing = Tables<'listings'>;
 
@@ -72,6 +74,17 @@ const ShareKitModal = ({ open, onOpenChange, listing }: ShareKitModalProps) => {
       ? `🚚 Now Booking${cityState ? ` in ${cityState}` : ''}\n\n${listing.title}\n💰 ${priceText}\n\nSecure booking through Vendibook.\nBook instantly here:\n${shareUrl}`
       : `🚚 ${categoryLabel} for Sale${cityState ? ` in ${cityState}` : ''}\n\n${listing.title}\n💰 ${priceText}\n\nView full details on Vendibook:\n${shareUrl}`;
 
+  /* ── Preflight: verify image, title and link before copy/post ── */
+  const preflight = useSharePreflight({
+    listingId: listing.id,
+    title: listing.title,
+    imageUrl: listing.cover_image_url,
+    shareUrl,
+    enabled: open,
+  });
+  const blocked = preflight.blocked;
+  const blockedMsg = 'Resolve the share preview issues first';
+
   /* ── QR Code ── */
   useEffect(() => {
     if (!open) return;
@@ -87,6 +100,7 @@ const ShareKitModal = ({ open, onOpenChange, listing }: ShareKitModalProps) => {
   }, []);
 
   const handleCopyLink = async () => {
+    if (blocked) { toast({ title: blockedMsg, variant: 'destructive' }); return; }
     await copyToClipboard(shareUrl);
     setCopiedLink(true);
     setTimeout(() => setCopiedLink(false), 2000);
@@ -95,6 +109,7 @@ const ShareKitModal = ({ open, onOpenChange, listing }: ShareKitModalProps) => {
   };
 
   const handleCopyCaption = async (withLink = false) => {
+    if (blocked) { toast({ title: blockedMsg, variant: 'destructive' }); return; }
     const text = withLink ? caption : caption.split('\n').filter(l => !l.startsWith('http')).join('\n');
     await copyToClipboard(withLink ? caption : text);
     setCopiedCaption(true);
@@ -104,6 +119,7 @@ const ShareKitModal = ({ open, onOpenChange, listing }: ShareKitModalProps) => {
   };
 
   const handleCopyEverything = async () => {
+    if (blocked) { toast({ title: blockedMsg, variant: 'destructive' }); return; }
     await copyToClipboard(caption);
     toast({ title: 'Caption + link copied!' });
     trackEventToDb('share_everything_copied', 'share_kit', undefined, listing.id);
@@ -112,6 +128,7 @@ const ShareKitModal = ({ open, onOpenChange, listing }: ShareKitModalProps) => {
 
   /* ── Social share ── */
   const handleSocialClick = (platform: string) => {
+    if (blocked) { toast({ title: blockedMsg, variant: 'destructive' }); return; }
     trackEventToDb('share_social_click', 'share_kit', { platform }, listing.id);
     const encoded = encodeURIComponent(shareUrl);
     const text = encodeURIComponent(`Check out ${listing.title} on Vendibook`);
@@ -213,6 +230,20 @@ const ShareKitModal = ({ open, onOpenChange, listing }: ShareKitModalProps) => {
                 <p className="text-sm text-white/50">Get more bookings and visibility by sharing.</p>
               </div>
 
+              {/* Preflight preview + verification */}
+              <SharePreviewCard
+                tone="dark"
+                title={listing.title}
+                imageUrl={listing.cover_image_url}
+                shareUrl={shareUrl}
+                subtitle={[cityState, priceText].filter(Boolean).join(' · ')}
+                checks={preflight.checks}
+                running={preflight.running}
+                verified={preflight.verified}
+                blocked={blocked}
+                onRecheck={preflight.recheck}
+              />
+
               {/* Section 1 — Share Link */}
               <div className="space-y-2">
                 <p className="text-xs font-medium text-white/60 uppercase tracking-wider">Share Link</p>
@@ -228,7 +259,8 @@ const ShareKitModal = ({ open, onOpenChange, listing }: ShareKitModalProps) => {
                 <div className="flex gap-2">
                   <button
                     onClick={handleCopyLink}
-                    className={glassButtonOutline}
+                    disabled={blocked}
+                    className={`${glassButtonOutline} disabled:opacity-40 disabled:cursor-not-allowed`}
                     style={{
                       background: 'linear-gradient(135deg, #FF5124, #E64A19, #FFB800)',
                       boxShadow: '0 4px 20px -4px rgba(255,81,36,0.4)'}}
@@ -371,7 +403,8 @@ const ShareKitModal = ({ open, onOpenChange, listing }: ShareKitModalProps) => {
                 </div>
                 <button
                   onClick={handleCopyEverything}
-                  className="w-full h-10 rounded-lg font-medium text-sm transition-all text-white"
+                  disabled={blocked}
+                  className="w-full h-10 disabled:opacity-40 disabled:cursor-not-allowed rounded-lg font-medium text-sm transition-all text-white"
                   style={{
                     background: 'linear-gradient(135deg, #FF5124, #E64A19, #FFB800)',
                     boxShadow: '0 4px 20px -4px rgba(255,81,36,0.4)'}}

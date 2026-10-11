@@ -171,7 +171,7 @@ const BestPlaceToSellAFoodTruck = () => (
         <li>• You want photos and video to do the heavy lifting.</li>
         <li>• You want optional secure transaction support when closing.</li>
         <li>• You want to rent the truck or trailer while waiting to sell.</li>
-        <li>• You want verified buyer and seller signals through Stripe Identity.</li>
+        <li>• You want verified buyer and seller signals through Vendibook identity verification.</li>
       </ul>
     </section>
 
@@ -211,6 +211,9 @@ const BestPlaceToSellAFoodTruck = () => (
       <div className="flex flex-wrap gap-3 justify-center">
         <Button asChild size="lg" variant="dark-shine">
           <Link to="/list">List Your Food Truck Free</Link>
+        </Button>
+        <Button asChild size="lg" variant="outline">
+          <Link to="/sell-my-food-truck">Sell my food truck</Link>
         </Button>
         <Button asChild size="lg" variant="outline">
           <Link to="/why-list-on-vendibook">Why list on Vendibook</Link>

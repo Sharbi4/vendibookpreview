@@ -3,6 +3,7 @@
  * Writes to public.analytics_events and to window.gtag (if loaded) so the
  * same event powers admin funnels and GA4.
  */
+import { toGa4EventParams } from '@/lib/ga4Params';
 import { trackEventToDb } from '@/hooks/useAnalyticsEvents';
 
 export type LeadEventName =
@@ -22,6 +23,7 @@ export type LeadEventName =
   | 'booking_request_submitted'
   | 'host_listing_started'
   | 'host_listing_published'
+  | 'rental_host_landing_cta'
   // Homepage funnel
   | 'homepage_primary_cta_click'
   | 'homepage_browse_click'
@@ -33,6 +35,7 @@ export type LeadEventName =
   | 'homepage_listing_row_view_more_click'
   | 'homepage_featured_view_all_click'
   | 'homepage_featured_card_click'
+  | 'homepage_premium_discovery_click'
   | 'hero_panel_viewed'
   | 'hero_panel_swiped'
   | 'hero_search_clicked'
@@ -140,7 +143,13 @@ export type LeadEventName =
   | 'video_progress_50'
   | 'video_progress_75'
   | 'video_complete'
-  | 'video_replay';
+  | 'video_replay'
+  // Equipment financing (Equinox)
+  | 'financing_page_view'
+  | 'financing_apply_click'
+  | 'lead_captured'
+  | 'seller_financing_enabled'
+  | 'seller_financing_disabled';
 
 
 
@@ -170,6 +179,7 @@ const EVENT_CATEGORY: Record<LeadEventName, string> = {
   booking_request_submitted: 'booking',
   host_listing_started: 'supply',
   host_listing_published: 'supply',
+  rental_host_landing_cta: 'supply',
   homepage_primary_cta_click: 'homepage',
   homepage_browse_click: 'homepage',
   homepage_host_list_click: 'homepage',
@@ -180,6 +190,7 @@ const EVENT_CATEGORY: Record<LeadEventName, string> = {
   homepage_listing_row_view_more_click: 'homepage',
   homepage_featured_view_all_click: 'homepage',
   homepage_featured_card_click: 'homepage',
+  homepage_premium_discovery_click: 'homepage',
   hero_panel_viewed: 'homepage',
   hero_panel_swiped: 'homepage',
   hero_search_clicked: 'homepage',
@@ -281,6 +292,12 @@ const EVENT_CATEGORY: Record<LeadEventName, string> = {
   video_progress_75: 'homepage',
   video_complete: 'homepage',
   video_replay: 'homepage',
+  // Equipment financing (Equinox)
+  financing_page_view: 'financing',
+  financing_apply_click: 'financing',
+  lead_captured: 'financing',
+  seller_financing_enabled: 'financing',
+  seller_financing_disabled: 'financing',
 };
 
 
@@ -295,7 +312,7 @@ export const trackLeadEvent = (name: LeadEventName, payload: LeadEventPayload = 
 
   if (typeof window !== 'undefined' && (window as any).gtag) {
     try {
-      (window as any).gtag('event', name, payload);
+      (window as any).gtag('event', name, toGa4EventParams(payload as Record<string, unknown>));
     } catch {
       // ignore
     }

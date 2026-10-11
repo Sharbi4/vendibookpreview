@@ -6,6 +6,8 @@
 //
 // Trigger by POSTing to this function. Admin-only via service role.
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { isAdminOrInternalCaller, internalOnlyResponse } from '../_shared/internalAuth.ts'
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -14,6 +16,12 @@ const corsHeaders = {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders })
+
+  // Mass host email job — internal scheduler or signed-in admin only.
+  if (!(await isAdminOrInternalCaller(req))) {
+    return internalOnlyResponse(corsHeaders)
+  }
+
   try {
     const supabase = createClient(
       Deno.env.get('SUPABASE_URL')!,
@@ -50,8 +58,7 @@ Deno.serve(async (req) => {
       const listingType: 'rental' | 'sale' | 'both' =
         l.mode === 'sale' ? 'sale' : l.mode === 'both' ? 'both' : 'rental'
       if (dryRun) return { listingId: l.id, email, status: 'dry_run' }
-      const { error: sendErr } = await supabase.functions.invoke('send-transactional-email', {
-        body: {
+      const { error: sendErr } = await invokeTransactionalEmail({
           templateName: 'listing-published',
           recipientEmail: email,
           idempotencyKey: `listing-published-backfill-v1-${l.id}`,
@@ -64,8 +71,7 @@ Deno.serve(async (req) => {
             coverImageUrl: l.cover_image_url,
             listingType,
           },
-        },
-      })
+        })
       if (sendErr) return { listingId: l.id, email, status: 'error', error: String((sendErr as any)?.message || sendErr) }
       return { listingId: l.id, email, status: 'queued' }
     }

@@ -1,3 +1,4 @@
+import { filterPubliclyVisible } from '@/lib/listings/publicVisibility';
 import { useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -9,6 +10,7 @@ import Footer from '@/components/layout/Footer';
 import ListingCard from '@/components/listing/ListingCard';
 import { Button } from '@/components/ui/button';
 import { Loader2, Heart, Search, ArrowLeft } from 'lucide-react';
+import { authPath } from '@/lib/auth/returnTo';
 
 const Favorites = () => {
   const { user, isLoading: authLoading } = useAuth();
@@ -18,7 +20,7 @@ const Favorites = () => {
   // Redirect to auth if not logged in
   useEffect(() => {
     if (!authLoading && !user) {
-      navigate('/auth');
+      navigate(authPath('/favorites'));
     }
   }, [user, authLoading, navigate]);
 
@@ -37,7 +39,7 @@ const Favorites = () => {
         .in('id', favorites)
         .eq('status', 'published').not('published_at', 'is', null).is('deleted_at', null).eq('moderation_status', 'clear');
       if (error) throw error;
-      return data ?? [];
+      return filterPubliclyVisible(data ?? []);
     },
     enabled: !!user && favorites.length > 0,
   });

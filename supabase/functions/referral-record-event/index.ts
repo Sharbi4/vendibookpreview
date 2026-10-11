@@ -7,6 +7,7 @@
 //
 // Always idempotent: pass `idempotency_key` (e.g. stripe-event-${event.id}) so retries don't double-log.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,6 +26,7 @@ const ignoreDup = (err: { code?: string } | null) => (err && err.code !== "23505
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
+  if (!(await isAdminOrBackendCaller(req))) return forbiddenResponse();
   try {
     const body = await req.json();
     const {

@@ -30,6 +30,7 @@ const OrderPaymentLink = ({ saleTransactionId, bookingRequestId, className }: Or
         .from('payment_records')
         .select('id, reference')
         .eq(column, value)
+        .not('payment_status', 'in', '("created","cancelled")')
         .order('created_at', { ascending: false })
         .limit(1)
         .maybeSingle();

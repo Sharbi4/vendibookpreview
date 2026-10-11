@@ -63,7 +63,7 @@ const VerificationBadge = ({
             </div>
           </TooltipTrigger>
           <TooltipContent>
-            <p>Identity verified via Stripe Identity</p>
+            <p>Identity verified by Vendibook</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -83,7 +83,7 @@ const VerificationBadge = ({
             </div>
           </TooltipTrigger>
           <TooltipContent>
-            <p>Identity verified via Stripe Identity</p>
+            <p>Identity verified by Vendibook</p>
           </TooltipContent>
         </Tooltip>
       </TooltipProvider>
@@ -151,7 +151,7 @@ const VerificationBadge = ({
           <TooltipContent>
             <p>
               {isVerified
-                ? 'Identity verified via Stripe Identity'
+                ? 'Identity verified by Vendibook'
                 : 'Identity not yet verified'}
             </p>
           </TooltipContent>
@@ -186,7 +186,7 @@ const VerificationBadge = ({
         <TooltipContent>
           <p>
             {isVerified
-              ? 'Identity verified via Stripe Identity'
+              ? 'Identity verified by Vendibook'
               : 'Identity not yet verified'}
           </p>
         </TooltipContent>

@@ -52,7 +52,7 @@ const InsightsReportingTab = () => {
             </p>
           </div>
           <Button asChild>
-            <Link to="/host/reporting">Open reporting <ArrowRight className="h-4 w-4 ml-1" /></Link>
+            <Link to="/dashboard/reporting">Open reporting <ArrowRight className="h-4 w-4 ml-1" /></Link>
           </Button>
         </div>
       )}

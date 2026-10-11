@@ -1,5 +1,5 @@
 import { useState, useMemo, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { format, differenceInDays, addDays, isBefore, startOfDay, parseISO, isSameDay } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -30,8 +30,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { trackCTAClick } from '@/lib/analytics';
 import { trackLeadEvent } from '@/lib/leadTracking';
 import { cn } from '@/lib/utils';
-import { AffirmBadge, isAffirmEligible } from '@/components/ui/AffirmBadge';
-import { AfterpayBadge, isAfterpayEligible } from '@/components/ui/AfterpayBadge';
 import { LeadCaptureModal } from './LeadCaptureModal';
 import { MakeOfferModal, AuthGateOfferModal } from '@/components/offers';
 import type { FulfillmentType } from '@/types/listing';
@@ -271,10 +269,7 @@ export const BookingWidget = ({
 
   const handleBuyNow = () => {
     trackCTAClick('buy_now', 'booking_widget');
-    if (!user) {
-      navigate(`/auth?redirect=/checkout/${listingId}`);
-      return;
-    }
+    // Checkout shows the order before asking guests to sign in.
     navigate(`/checkout/${listingId}`);
   };
 
@@ -342,14 +337,14 @@ export const BookingWidget = ({
                     initial={{ scale: 1 }}
                     whileHover={{ scale: 1.02 }}
                   >
-                    ${priceHourly?.toLocaleString() || '—'}
+                    {priceHourly ? formatCurrency(priceHourly) : '—'}
                   </motion.span>
                   <span className="text-muted-foreground text-lg">/hour</span>
                 </div>
                 {priceDaily && (
                   <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
                     <Sun className="h-3.5 w-3.5 text-primary" />
-                    Full day from ${priceDaily.toLocaleString()}
+                    Full day from {formatCurrency(priceDaily)}
                   </p>
                 )}
               </>
@@ -361,7 +356,7 @@ export const BookingWidget = ({
                     initial={{ scale: 1 }}
                     whileHover={{ scale: 1.02 }}
                   >
-                    ${priceDaily?.toLocaleString() || '—'}
+                    {priceDaily ? formatCurrency(priceDaily) : '—'}
                   </motion.span>
                   <span className="text-muted-foreground text-lg">/day</span>
                 </div>
@@ -371,19 +366,19 @@ export const BookingWidget = ({
                   {priceHourly && hourlyEnabled && (
                     <p className="text-sm text-muted-foreground flex items-center gap-1.5">
                       <Clock className="h-3.5 w-3.5 text-primary" />
-                      ${priceHourly.toLocaleString()}/hr for hourly bookings
+                      {formatCurrency(priceHourly)}/hr for hourly bookings
                     </p>
                   )}
                   {priceWeekly && (
                     <p className="text-sm text-muted-foreground flex items-center gap-1.5">
                       
-                      ${priceWeekly.toLocaleString()}/week for 7+ days
+                      {formatCurrency(priceWeekly)}/week for 7+ days
                     </p>
                   )}
                   {priceMonthly && (
                     <p className="text-sm text-muted-foreground flex items-center gap-1.5">
                       <CalendarRange className="h-3.5 w-3.5 text-primary" />
-                      ${priceMonthly.toLocaleString()}/month for 30+ days
+                      {formatCurrency(priceMonthly)}/month for 30+ days
                     </p>
                   )}
                 </div>
@@ -490,12 +485,12 @@ export const BookingWidget = ({
                       className="p-4 bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl border border-primary/20 space-y-2"
                     >
                       <div className="flex items-center justify-between text-sm text-muted-foreground">
-                        <span>${priceDaily?.toLocaleString()} × {priceBreakdown.days} day{priceBreakdown.days > 1 ? 's' : ''}</span>
-                        <span>${priceBreakdown.basePrice.toLocaleString()}</span>
+                        <span>{priceDaily ? formatCurrency(priceDaily) : '—'} × {priceBreakdown.days} day{priceBreakdown.days > 1 ? 's' : ''}</span>
+                        <span>{formatCurrency(priceBreakdown.basePrice)}</span>
                       </div>
                       <div className="flex items-center justify-between text-sm text-muted-foreground">
                         <span>Service fee</span>
-                        <span>${priceBreakdown.renterFee.toLocaleString()}</span>
+                        <span>{formatCurrency(priceBreakdown.renterFee)}</span>
                       </div>
                       <Separator className="bg-primary/20" />
                       <div className="flex items-center justify-between pt-1">
@@ -505,7 +500,7 @@ export const BookingWidget = ({
                           initial={{ scale: 1 }}
                           whileHover={{ scale: 1.05 }}
                         >
-                          ${priceBreakdown.customerTotal.toLocaleString()}
+                          {formatCurrency(priceBreakdown.customerTotal)}
                         </motion.span>
                       </div>
                     </motion.div>
@@ -628,12 +623,12 @@ export const BookingWidget = ({
                       className="p-4 bg-gradient-to-br from-primary/5 to-primary/10 rounded-xl border border-primary/20 space-y-2"
                     >
                       <div className="flex items-center justify-between text-sm text-muted-foreground">
-                        <span>${priceHourly?.toLocaleString()} × {hourlyPriceBreakdown.hours} hour{hourlyPriceBreakdown.hours > 1 ? 's' : ''}</span>
-                        <span>${hourlyPriceBreakdown.basePrice.toLocaleString()}</span>
+                        <span>{priceHourly ? formatCurrency(priceHourly) : '—'} × {hourlyPriceBreakdown.hours} hour{hourlyPriceBreakdown.hours > 1 ? 's' : ''}</span>
+                        <span>{formatCurrency(hourlyPriceBreakdown.basePrice)}</span>
                       </div>
                       <div className="flex items-center justify-between text-sm text-muted-foreground">
                         <span>Service fee</span>
-                        <span>${hourlyPriceBreakdown.renterFee.toLocaleString()}</span>
+                        <span>{formatCurrency(hourlyPriceBreakdown.renterFee)}</span>
                       </div>
                       <Separator className="bg-primary/20" />
                       <div className="flex items-center justify-between pt-1">
@@ -643,7 +638,7 @@ export const BookingWidget = ({
                           initial={{ scale: 1 }}
                           whileHover={{ scale: 1.05 }}
                         >
-                          ${hourlyPriceBreakdown.customerTotal.toLocaleString()}
+                          {formatCurrency(hourlyPriceBreakdown.customerTotal)}
                         </motion.span>
                       </div>
                     </motion.div>
@@ -764,11 +759,8 @@ export const BookingWidget = ({
               className="text-3xl font-bold text-foreground"
               whileHover={{ scale: 1.02 }}
             >
-              ${priceSale?.toLocaleString()}
+              {priceSale ? formatCurrency(priceSale) : '—'}
             </motion.span>
-            {priceSale && isAfterpayEligible(priceSale) && (
-              <AfterpayBadge price={priceSale} className="text-xs" showEstimate={false} />
-            )}
           </div>
           
           {vendibookFreightEnabled && (
@@ -835,7 +827,8 @@ export const BookingWidget = ({
               <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
                 <Button
                   onClick={handleBuyNow}
-                  className="w-full h-14 text-base font-bold rounded-2xl bg-cta-primary hover:opacity-95 shadow-cta-primary text-white border-0"
+                  variant="cta"
+                  className="w-full h-14 text-base"
                   size="lg"
                   disabled={!priceSale}
                   data-testid="booking-widget-buy-now"
@@ -905,13 +898,17 @@ export const BookingWidget = ({
           </div>
 
           {/* Financing options */}
-          {priceSale && (isAffirmEligible(priceSale) || isAfterpayEligible(priceSale)) && (
-            <div className="flex flex-col gap-2 pt-2">
-              {isAffirmEligible(priceSale) && (
-                <AffirmBadge price={priceSale} className="w-full justify-center py-2.5 bg-muted/30 rounded-lg" showEstimate={false} />
-              )}
+          {priceSale ? (
+            <div className="pt-2">
+              <Link
+                to="/financing"
+                className="flex w-full items-center justify-center gap-2 rounded-2xl border border-white/10 bg-white/[0.04] px-4 py-2.5 text-xs font-semibold text-foreground transition-colors hover:bg-white/[0.08]"
+              >
+                Explore equipment financing
+                <span className="text-[10px] font-normal text-muted-foreground">Third-party lender · subject to approval</span>
+              </Link>
             </div>
-          )}
+          ) : null}
         </div>
       </motion.div>
 

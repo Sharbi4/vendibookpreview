@@ -4,14 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { useSavedSearches } from '@/hooks/useSavedSearches';
 import { trackEvent } from '@/lib/analytics';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { useNavigate } from 'react-router-dom';
+import SignupIntentDialog from '@/components/auth/SignupIntentDialog';
 
 interface SaveSearchButtonProps {
   category?: string;
@@ -39,7 +32,6 @@ export const SaveSearchButton = ({
   amenities,
 }: SaveSearchButtonProps) => {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const { savedSearches, saveSearch, isSaving } = useSavedSearches();
   const [showLoginPrompt, setShowLoginPrompt] = useState(false);
 
@@ -113,35 +105,11 @@ export const SaveSearchButton = ({
         <span className="hidden sm:inline">Get alerts</span>
       </Button>
 
-      <Dialog open={showLoginPrompt} onOpenChange={setShowLoginPrompt}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Sign in to save this search</DialogTitle>
-            <DialogDescription>
-              Create an account to get notified when new matching listings are posted.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="flex gap-3 mt-4">
-            <Button
-              variant="outline"
-              className="flex-1"
-              onClick={() => setShowLoginPrompt(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="dark-shine"
-              className="flex-1"
-              onClick={() => {
-                setShowLoginPrompt(false);
-                navigate('/auth?redirect=' + encodeURIComponent(window.location.pathname + window.location.search));
-              }}
-            >
-              Sign in
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+      <SignupIntentDialog
+        open={showLoginPrompt}
+        onOpenChange={setShowLoginPrompt}
+        intent="save_search"
+      />
     </>
   );
 };

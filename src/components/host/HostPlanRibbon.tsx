@@ -49,7 +49,7 @@ export function HostPlanRibbon({ className = '' }: Props) {
       <div className="flex items-center gap-2">
         {isFree ? (
           <Button asChild size="sm" variant="dark-shine" className="rounded-xl">
-            <Link to="/host/plans">
+            <Link to="/pricing">
               <Zap className="h-3.5 w-3.5 mr-1.5" />
               Unlock Host Pro
               <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
@@ -57,7 +57,7 @@ export function HostPlanRibbon({ className = '' }: Props) {
           </Button>
         ) : (
           <Button asChild size="sm" variant="outline" className="rounded-xl">
-            <Link to="/account">Manage subscription</Link>
+            <Link to="/dashboard/account">Manage subscription</Link>
           </Button>
         )}
       </div>

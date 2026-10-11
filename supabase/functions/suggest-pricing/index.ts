@@ -80,7 +80,8 @@ serve(async (req) => {
       vendor_lot: "Vendor Lot/Space",
     };
 
-    const categoryLabel = categoryLabels[category] || category;
+    // Only known categories reach the prompt; free text never does.
+    const categoryLabel = categoryLabels[category] || 'mobile food business';
     const isRental = mode === "rent";
 
     // Build dynamic context from all available listing data

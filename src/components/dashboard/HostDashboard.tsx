@@ -7,24 +7,25 @@ import {
   MessageSquare,
 } from 'lucide-react';
 import ActionRequiredStack, { type ActionItem } from './shared/ActionRequiredStack';
-import StripeNotificationBubble from './StripeNotificationBubble';
 import { BoostListingPrompt } from './BoostListingPrompt';
-import { StripeConnectModal } from '@/components/listing-wizard/StripeConnectModal';
 import OverviewGreeting from './overview/OverviewGreeting';
+import VerifiedSellerCTA from '@/components/verification/VerifiedSellerCTA';
 import { KpiCard } from './overview/KpiCard';
 import RecentActivityStrip, { ActivityItem } from './overview/RecentActivityStrip';
-import PremiumSpotlight from './overview/PremiumSpotlight';
+import MembershipCard from './MembershipCard';
 import { useHostListings } from '@/hooks/useHostListings';
 import { useHostBookings } from '@/hooks/useHostBookings';
-import { useStripeConnect } from '@/hooks/useStripeConnect';
+import { useManualPayout } from '@/hooks/useManualPayout';
 import { useRevenueAnalytics } from '@/hooks/useRevenueAnalytics';
 import { useHostOffers } from '@/hooks/useHostOffers';
 import { useUnreadMessageCount } from '@/hooks/useUnreadMessageCount';
 import { useAuth } from '@/contexts/AuthContext';
 import { useHostEntitlements } from '@/hooks/useHostEntitlements';
 import { Link } from 'react-router-dom';
-import { Crown } from 'lucide-react';
+import { ArrowRight, Wrench } from 'lucide-react';
 import { getCounterpartyName } from '@/lib/displayName';
+import PaymentsTransitionModal from '@/components/payments/PaymentsTransitionModal';
+import PaymentsTransitionReminder from '@/components/payments/PaymentsTransitionReminder';
 
 /**
  * NEW OVERVIEW — one viewport-ish surface:
@@ -38,26 +39,19 @@ import { getCounterpartyName } from '@/lib/displayName';
 const HostDashboard = () => {
   const { user, profile, isVerified } = useAuth();
   const { tier } = useHostEntitlements();
-  const isFreeTier = tier === 'free';
+  const isPro = tier === 'pro' || tier === 'premium';
+
   const { listings, stats } = useHostListings();
   const { bookings, stats: bookingStats } = useHostBookings();
-  const {
-    isConnected,
-    isLoading: stripeLoading,
-    connectStripe,
-    isConnecting,
-    openStripeDashboard,
-    isOpeningDashboard,
-  } = useStripeConnect();
+  const { hasPayoutInstructions, isLoading: payoutLoading } = useManualPayout();
   const { analytics: revenueAnalytics } = useRevenueAnalytics();
   const { pendingOffers } = useHostOffers();
   const { count: unreadMessageCount } = useUnreadMessageCount();
-  const [showStripeModal, setShowStripeModal] = useState(false);
 
   const firstName = profile?.full_name?.split(' ')[0];
   const monthlyRevenue = revenueAnalytics?.revenueThisMonth || 0;
   const nextPayoutHint = monthlyRevenue > 0
-    ? 'Rentals settle in 24h · sales in 25d'
+    ? 'Payout status updates as orders complete'
     : 'Nothing pending';
 
   const actionItems: ActionItem[] = useMemo(() => {
@@ -66,20 +60,16 @@ const HostDashboard = () => {
       id: 'pending-bookings', icon: Clock,
       title: `${bookingStats.pending} booking request${bookingStats.pending > 1 ? 's' : ''}`,
       description: 'Review and reply so guests can plan.',
-      href: '/host/bookings', cta: 'Review', tone: 'warning',
+      href: '/dashboard/activity?filter=requests', cta: 'Review', tone: 'warning',
     });
-    if (!stripeLoading && !isConnected) items.push({
-      id: 'stripe', icon: Banknote,
-      title: 'Finish Stripe onboarding',
-      description: 'Required to accept card payments and receive payouts.',
-      href: '/dashboard?view=host&tab=payouts', cta: 'Set up', tone: 'warning',
+    if (!payoutLoading && !hasPayoutInstructions) items.push({
+      id: 'payout-details', icon: Banknote,
+      title: 'Add your payout details',
+      description: 'Optional — tell us where to send earnings when you make a sale. Publishing and bookings work without it.',
+      href: '/dashboard?view=host&tab=payouts', cta: 'Add', tone: 'default',
     });
-    if (!isVerified) items.push({
-      id: 'verify', icon: ShieldAlert,
-      title: 'Verify your identity',
-      description: 'Required before publishing. Drafts stay safe.',
-      href: '/verify-identity', cta: 'Verify', tone: 'warning',
-    });
+    // Identity verification is optional on Vendibook — never surfaced as a
+    // publishing requirement.
     if (pendingOffers.length > 0) items.push({
       id: 'offers', icon: DollarSign,
       title: `${pendingOffers.length} open offer${pendingOffers.length > 1 ? 's' : ''}`,
@@ -91,7 +81,7 @@ const HostDashboard = () => {
       href: '/messages', cta: 'Open',
     });
     return items;
-  }, [bookingStats.pending, stripeLoading, isConnected, isVerified, pendingOffers.length, unreadMessageCount]);
+  }, [bookingStats.pending, payoutLoading, hasPayoutInstructions, isVerified, pendingOffers.length, unreadMessageCount]);
 
   const activity: ActivityItem[] = useMemo(() => {
     return bookings.slice(0, 3).map((b) => {
@@ -104,7 +94,7 @@ const HostDashboard = () => {
         : { label: b.status, tone: 'muted' };
       return {
         id: b.id,
-        href: `/host/bookings?id=${b.id}`,
+        href: `/dashboard/bookings/${b.id}`,
         title: b.listing?.title || 'Booking',
         imageUrl: b.listing?.cover_image_url,
         meta: `${getCounterpartyName(b.shopper, 'Guest')} · ${new Date(b.created_at).toLocaleDateString()}`,
@@ -115,18 +105,12 @@ const HostDashboard = () => {
 
   return (
     <div className="max-w-[1320px] mx-auto section-stack">
-      {!stripeLoading && (
-        <StripeNotificationBubble
-          isConnected={isConnected}
-          isLoading={stripeLoading}
-          onConnect={connectStripe}
-          onManage={openStripeDashboard}
-          isConnecting={isConnecting}
-          isOpeningDashboard={isOpeningDashboard}
-        />
-      )}
-
+      <PaymentsTransitionModal />
       <OverviewGreeting firstName={firstName} persona="Hosting" isVerified={isVerified} />
+
+      <PaymentsTransitionReminder />
+
+      <VerifiedSellerCTA variant="card" />
 
       {/* KPI row — ember reserved for Earnings */}
       <section aria-labelledby="dash-glance">
@@ -147,43 +131,46 @@ const HostDashboard = () => {
             label="Active listings"
             value={stats.published}
             hint={stats.drafts > 0 ? `${stats.drafts} draft${stats.drafts > 1 ? 's' : ''}` : 'All live'}
-            href="/host/listings"
+            href="/dashboard/listings"
           />
           <KpiCard
             label="Pending requests"
             value={bookingStats.pending}
             hint={bookingStats.pending > 0 ? 'Awaiting reply' : 'All clear'}
-            href="/host/bookings"
+            href="/dashboard/activity?filter=requests"
           />
-          {isFreeTier && pendingOffers.length === 0 ? (
-            <Link
-              to="/pricing"
-              aria-label="Unlock Pro"
-              className="block relative rounded-[18px] gold-card p-5 sm:p-6 h-full hover:-translate-y-0.5 transition-transform"
-            >
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#1A1400]">
-                  Unlock Pro
-                </span>
-                <Crown className="h-4 w-4 text-[#1A1400]" strokeWidth={2.4} />
-              </div>
-              <div className="mt-3 sm:mt-4 text-[24px] sm:text-[26px] font-extrabold tracking-tight text-[#1A1400] leading-tight">
-                Featured &amp; lower fees
-              </div>
-              <div className="mt-2 text-[12px] font-semibold text-[#2b2100]">
-                See plans →
-              </div>
-            </Link>
-          ) : (
-            <KpiCard
-              label="Open offers"
-              value={pendingOffers.length}
-              hint={pendingOffers.length > 0 ? 'Awaiting reply' : 'Nothing pending'}
-              href="/dashboard?view=host&tab=sales"
-            />
-          )}
+          <KpiCard
+            label="Open offers"
+            value={pendingOffers.length}
+            hint={pendingOffers.length > 0 ? 'Awaiting reply' : 'Nothing pending'}
+            href="/dashboard?view=host&tab=sales"
+          />
+
         </div>
+
+        <Link
+          to="/dashboard?view=host&tab=promote"
+          className="mt-4 flex items-center justify-between gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 transition-colors hover:border-foreground/25"
+        >
+          <span className="flex min-w-0 items-center gap-3">
+            <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-muted">
+              <Wrench className="h-4 w-4 text-foreground" />
+            </span>
+            <span className="min-w-0">
+              <span className="block text-sm font-medium text-foreground">
+                Upgrades &amp; premium tools
+              </span>
+              <span className="block text-xs text-muted-foreground">
+                {isPro
+                  ? 'Your Pro tools, boost credit, and optional add-ons.'
+                  : 'See what’s included with Vendibook Pro and optional per-listing upgrades.'}
+              </span>
+            </span>
+          </span>
+          <ArrowRight className="h-4 w-4 shrink-0 text-muted-foreground" />
+        </Link>
       </section>
+
 
       {actionItems.length > 0 && (
         <>
@@ -191,7 +178,7 @@ const HostDashboard = () => {
           <section aria-labelledby="dash-attention">
             <header className="section-header">
               <h2 id="dash-attention" className="section-title">Needs your attention</h2>
-              <p className="section-subtitle">Clear these to keep bookings and payouts moving.</p>
+              <p className="section-subtitle">Optional steps that help you stay on top of your listings.</p>
             </header>
             <ActionRequiredStack items={actionItems} />
           </section>
@@ -207,19 +194,12 @@ const HostDashboard = () => {
         </header>
         <RecentActivityStrip
           items={activity}
-          viewAllHref="/host/bookings"
+          viewAllHref="/dashboard/activity?filter=requests"
           emptyText="No bookings yet. Publish or share a listing to attract renters."
           emptyHref="/host/listings"
           emptyCta="Manage listings"
         />
       </section>
-
-      <StripeConnectModal
-        open={showStripeModal}
-        onOpenChange={setShowStripeModal}
-        onConnect={connectStripe}
-        isConnecting={isConnecting}
-      />
 
       {listings.length > 0 && (
         <>
@@ -230,7 +210,7 @@ const HostDashboard = () => {
 
       <hr className="section-divider" />
 
-      <PremiumSpotlight />
+      <MembershipCard />
     </div>
   );
 };

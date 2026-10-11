@@ -42,10 +42,12 @@ interface PurchaseStepInfoProps {
   // Navigation
   onBack: () => void;
   onContinue: () => void;
-  /** When true (pickup), the address section is hidden — we don't collect it. */
+  /** @deprecated Buyer contact address is always collected. */
   hideAddress?: boolean;
   /** Override for the primary CTA label. */
   continueLabel?: string;
+  /** Host page owns the stepper footer (light sale checkout). */
+  embedded?: boolean;
 }
 
 const PurchaseStepInfo = ({
@@ -61,6 +63,7 @@ const PurchaseStepInfo = ({
   onContinue,
   hideAddress = false,
   continueLabel,
+  embedded = false,
 }: PurchaseStepInfoProps) => {
   const handleFieldTouch = (field: string) => {
     setTouchedFields(new Set([...touchedFields, field]));
@@ -72,13 +75,15 @@ const PurchaseStepInfo = ({
     <div className="space-y-6">
       {/* Step Header */}
       <div>
-        <h2 className="font-display text-2xl font-bold text-foreground">
-          Where should we send everything?
-        </h2>
-        <p className="text-sm text-muted-foreground mt-1 flex items-center gap-1.5">
+        {!embedded && (
+          <h2 className="font-display text-2xl font-bold text-foreground">
+            Where should we send everything?
+          </h2>
+        )}
+        <p className={`text-sm text-muted-foreground flex items-center gap-1.5${embedded ? '' : ' mt-1'}`}>
           Receipts, documents, and coordination — nothing extra.
           <InfoPopover title="Why we need this">
-            <p>Sellers and Vendibook support use this to coordinate {hideAddress ? 'pickup' : 'delivery'} and resolve issues.</p>
+            <p>Sellers and Vendibook support use this to coordinate the handoff, prepare documents, and resolve issues.</p>
             <p className="mt-2">Your information is kept private and only shared with parties involved in this transaction.</p>
           </InfoPopover>
         </p>
@@ -173,17 +178,15 @@ const PurchaseStepInfo = ({
           />
         </div>
 
-        {/* Address Section — only when delivery/freight needs it */}
-        {hideAddress ? (
-          <div className="rounded-xl border border-border/70 bg-muted/30 p-4 text-sm text-muted-foreground">
-            Since you're picking up, we don't need a delivery address.
-          </div>
-        ) : (
+        {/* Contact address — always collected, separate from any delivery address */}
         <div className="space-y-4">
           <div className="flex items-center gap-2">
             <MapPin className="h-5 w-5 text-primary" />
-            <h3 className="font-semibold text-foreground">Your Address</h3>
+            <h3 className="font-semibold text-foreground">Your Contact Address</h3>
           </div>
+          <p className="text-sm text-muted-foreground -mt-2">
+            Used for your receipt and documents. This is not a delivery address.
+          </p>
 
           <ValidatedInput
             id="address1"
@@ -264,7 +267,7 @@ const PurchaseStepInfo = ({
             </div>
           </div>
         </div>
-        )}
+
 
         {/* Delivery Instructions */}
         {showDeliveryInstructions && (
@@ -294,23 +297,27 @@ const PurchaseStepInfo = ({
         )}
       </div>
 
-      {/* Next Step Hint */}
-      <NextStepHint text="Review your order and pay next." />
+      {!embedded && (
+        <>
+          {/* Next Step Hint */}
+          <NextStepHint text="Review your order and pay next." />
 
-      {/* Navigation Buttons */}
-      <div className="flex gap-3">
-        <Button
-          variant="outline"
-          onClick={onBack}
-          className="flex-1"
-          size="lg"
-        >
-          Back
-        </Button>
-        <Button onClick={onContinue} className="flex-1" size="lg">
-          {continueLabel ?? 'Review your order'}
-        </Button>
-      </div>
+          {/* Navigation Buttons */}
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              onClick={onBack}
+              className="flex-1"
+              size="lg"
+            >
+              Back
+            </Button>
+            <Button onClick={onContinue} className="flex-1" size="lg">
+              {continueLabel ?? 'Review your order'}
+            </Button>
+          </div>
+        </>
+      )}
     </div>
   );
 };

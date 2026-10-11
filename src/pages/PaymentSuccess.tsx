@@ -1,5 +1,7 @@
+import { parseRentalDate } from '@/lib/rentalDates';
 import { useEffect, useState, useRef } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import PayPalPaymentFacts from '@/components/checkout/PayPalPaymentFacts';
+import { useSearchParams, Link, Navigate } from 'react-router-dom';
 import { CheckCircle2, Calendar, ArrowRight, Loader2, Home, ShieldCheck, Clock, PartyPopper, Mail, ChevronDown, ChevronUp, Receipt, Download, FileText, Printer, Wallet, BanknoteIcon, MapPin, AlertCircle, RefreshCw } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { Button } from '@/components/ui/button';
@@ -19,6 +21,7 @@ import { calculateRentalFees } from '@/lib/commissions';
 import { generateReceiptPdf } from '@/lib/generateReceiptPdf';
 import { trackGA4Purchase } from '@/lib/ga4Conversions';
 import { trackCheckoutConversion } from '@/lib/gtagConversions';
+import CampusPartnerBenefit from '@/components/checkout/CampusPartnerBenefit';
 
 interface HourlySlotData {
   date: string;
@@ -79,9 +82,12 @@ interface CheckoutSessionInfo {
 const PaymentSuccess = () => {
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get('session_id');
-  const isEscrow = searchParams.get('escrow') === 'true';
+  const isPaymentProtected = searchParams.get('protected') === 'true';
   const isHold = searchParams.get('hold') === 'true';
   const isMonetization = searchParams.get('monetization') === 'true';
+  // Rentals now have a dedicated confirmation surface; keep old links working.
+  const legacyBookingId = searchParams.get('booking_id');
+  const paymentReference = searchParams.get('ref');
   const { user } = useAuth();
   
   const [booking, setBooking] = useState<BookingDetails | null>(null);
@@ -134,6 +140,7 @@ const PaymentSuccess = () => {
 
   useEffect(() => {
     const processPayment = async () => {
+      if (paymentReference || (legacyBookingId && !sessionId)) return;
       if (isMonetization) {
         // Provisioning happens in monetization-webhook. Confirm the purchase
         // actually flipped to 'completed' before we congratulate — otherwise
@@ -176,17 +183,10 @@ const PaymentSuccess = () => {
 
 
       try {
-        if (isEscrow) {
-          // First, try to create the transaction via edge function
-          // This handles the case where webhook hasn't fired or user returns before it processes
-          // The edge function is idempotent - if transaction exists, it returns success
-          try {
-            await supabase.functions.invoke('create-sale-transaction', {
-              body: { session_id: sessionId }});
-          } catch (createError) {
-            // Log but don't fail - transaction might already exist from webhook
-            console.log('Create transaction attempt:', createError);
-          }
+        if (isPaymentProtected) {
+          // The PayPal order finalizer writes the protected-sale transaction, so
+          // we simply poll until it lands instead of creating it from the client.
+
 
           // Now poll for the transaction (should exist after create call or from webhook)
           let attempts = 0;
@@ -303,21 +303,6 @@ const PaymentSuccess = () => {
           }
         }
 
-        // Fetch checkout session details for tax breakdown
-        if (sessionId) {
-          try {
-            const { data: sessionData, error: sessionError } = await supabase.functions.invoke('get-checkout-session', {
-              body: { session_id: sessionId }
-            });
-            
-            if (!sessionError && sessionData) {
-              setSessionInfo(sessionData as CheckoutSessionInfo);
-            }
-          } catch (taxErr) {
-            console.error('Error fetching tax info:', taxErr);
-            // Non-critical error, continue without tax breakdown
-          }
-        }
       } catch (err) {
         console.error('Error processing payment:', err);
         setError(err instanceof Error ? err.message : 'An error occurred');
@@ -332,7 +317,12 @@ const PaymentSuccess = () => {
     };
 
     processPayment();
-  }, [sessionId, isEscrow, isMonetization, user]);
+  }, [sessionId, isPaymentProtected, isMonetization, user, paymentReference, legacyBookingId]);
+
+  if (paymentReference) return <Navigate to={`/receipt/${encodeURIComponent(paymentReference)}`} replace />;
+  if (legacyBookingId && !sessionId) {
+    return <Navigate to={`/dashboard/bookings/${legacyBookingId}`} replace />;
+  }
 
   return (
     <div className="min-h-screen flex flex-col relative overflow-hidden bg-gradient-to-br from-emerald-200/30 via-teal-100/25 to-cyan-200/20">
@@ -359,7 +349,7 @@ const PaymentSuccess = () => {
                     </div>
                   </div>
                   <p className="text-muted-foreground font-medium">
-                    {isEscrow ? 'Setting up your payment protection purchase...' : 'Confirming your payment...'}
+                    {isPaymentProtected ? 'Setting up your payment protection purchase...' : 'Confirming your payment...'}
                   </p>
                 </div>
               ) : error ? (
@@ -389,7 +379,7 @@ const PaymentSuccess = () => {
                         Payment didn't go through
                       </h1>
                       <p className="mt-2 text-muted-foreground">
-                        Stripe couldn't complete this purchase. You have not been charged for a successful subscription. Try again or reach out to support.
+                        We couldn't complete this purchase. You have not been charged for a successful subscription. Try again or reach out to support.
                       </p>
                       <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
                         <Button asChild size="lg">
@@ -450,7 +440,7 @@ const PaymentSuccess = () => {
                         Finalizing your purchase…
                       </h1>
                       <p className="mt-2 text-muted-foreground">
-                        Stripe has your payment. We're waiting on the confirmation event to provision your upgrades — this usually lands in a few seconds.
+                        PayPal has your payment. We're waiting on the confirmation event to provision your upgrades — this usually lands in a few seconds.
                       </p>
                       <div className="mt-8 flex flex-wrap items-center justify-center gap-3">
                         <Button size="lg" onClick={() => window.location.reload()}>
@@ -467,7 +457,7 @@ const PaymentSuccess = () => {
                   )}
                 </div>
 
-              ) : isEscrow ? (
+              ) : isPaymentProtected ? (
                 // Payment Protection Sale Success
                 <div className={`transition-all duration-700 ${showContent ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-4'}`}>
                   <div className="relative w-24 h-24 mx-auto mb-6">
@@ -479,14 +469,17 @@ const PaymentSuccess = () => {
                     
                   </div>
                   
+                  <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-1">
+                    Payment confirmed
+                  </p>
                   <h1 className="text-2xl font-bold text-foreground mb-2 flex items-center justify-center gap-2">
                     <PartyPopper className="h-6 w-6 text-primary" />
-                    Purchase in Payment Protection!
+                    Your order is in motion.
                     <PartyPopper className="h-6 w-6 text-primary transform scale-x-[-1]" />
                   </h1>
-                  
+
                   <p className="text-muted-foreground mb-6">
-                    Your payment is securely held until both you and the seller confirm the transaction.
+                    PayPal confirmed your payment. Your order, agreement, and fulfillment details stay together on Vendibook.
                   </p>
 
                   {saleTransaction && (
@@ -514,6 +507,13 @@ const PaymentSuccess = () => {
                       </div>
                     </div>
                   )}
+
+                  {/* Payment facts PayPal requires on the confirmation page */}
+                  <PayPalPaymentFacts
+                    saleTransactionId={saleTransaction?.id ?? null}
+                    className="rounded-xl border border-border bg-muted/30 p-4 text-left mb-6"
+                  />
+                  <CampusPartnerBenefit saleTransactionId={saleTransaction?.id ?? null} className="mb-6 text-left" />
 
                   {/* Tax Breakdown */}
                   {sessionInfo && sessionInfo.tax_total > 0 && (
@@ -571,10 +571,10 @@ const PaymentSuccess = () => {
                     <h4 className="font-semibold text-foreground mb-3 text-sm">What happens next?</h4>
                     <div className="space-y-3">
                       {[
-                        { done: true, title: 'Payment Secured', desc: 'Your funds are safely held in payment protection' },
+                        { done: true, title: 'Payment confirmed', desc: 'PayPal confirmed your payment' },
                         { done: false, step: 2, title: 'Receive Your Item', desc: 'Coordinate with the seller' },
                         { done: false, step: 3, title: 'Confirm Receipt', desc: 'Verify in your dashboard' },
-                        { done: false, step: 4, title: 'Payment Released', desc: 'Funds go to the seller' }].map((item, i) => (
+                        { done: false, step: 4, title: 'Order complete', desc: 'The order record is finalized' }].map((item, i) => (
                         <div key={i} className="flex items-start gap-3">
                           <div className={`w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 ${item.done ? 'bg-emerald-100' : 'bg-muted'}`}>
                             {item.done ? (
@@ -624,7 +624,7 @@ const PaymentSuccess = () => {
                             platformFee: saleTransaction.platform_fee,
                             deliveryFee: saleTransaction.delivery_fee,
                             isRental: false,
-                            isEscrow: true,
+                            isPaymentProtected: true,
                             fulfillmentType: saleTransaction.fulfillment_type,
                             address: saleTransaction.delivery_address,
                             paymentDate: new Date().toISOString(),
@@ -648,11 +648,12 @@ const PaymentSuccess = () => {
 
                   <div className="space-y-3">
                     <Button asChild className="w-full bg-primary hover:bg-primary/90" size="lg">
-                      <Link to="/transactions?tab=purchases">
-                        View My Purchases
+                      <Link to={saleTransaction ? `/transaction/${saleTransaction.id}` : '/transactions?tab=purchases'}>
+                        View order &amp; next steps
                         <ArrowRight className="ml-2 h-4 w-4" />
                       </Link>
                     </Button>
+
                     
                     <Button variant="outline" asChild className="w-full">
                       <Link to="/dashboard">
@@ -683,7 +684,7 @@ const PaymentSuccess = () => {
                           isRental={false}
                           address={saleTransaction.delivery_address}
                           fulfillmentType={saleTransaction.fulfillment_type}
-                          isEscrow={true}
+                          isPaymentProtected={true}
                           paymentMethod="Card ending in ****"
                           paymentDate={new Date().toISOString()}
                           recipientName={userProfile?.full_name || 'Valued Customer'}
@@ -694,8 +695,24 @@ const PaymentSuccess = () => {
                   </Collapsible>
 
                   <div className="mt-6">
-                    <PostPaymentTimeline />
+                    <PostPaymentTimeline
+                      mode="sale"
+                      fulfillment={
+                        (saleTransaction?.fulfillment_type as
+                          | 'pickup'
+                          | 'delivery'
+                          | 'vendibook_freight'
+                          | undefined) ?? 'pickup'
+                      }
+                    />
                   </div>
+                  {saleTransaction?.fulfillment_type === 'pickup' ? (
+                    <div className="mt-4 rounded-lg border border-border p-4 text-left">
+                      <p className="text-sm font-semibold text-foreground">Prepare for your meetup</p>
+                      <p className="mt-1 text-xs text-muted-foreground">Review the inspection guide before pickup.</p>
+                      <Link to={`/guides/meetup-inspection?${saleTransaction?.id ? `transactionId=${saleTransaction.id}&returnTo=${encodeURIComponent(`/transaction/${saleTransaction.id}`)}` : 'mode=sale&fulfillment=pickup'}`} className="mt-2 inline-flex text-sm font-medium underline underline-offset-4">Open Meetup &amp; Inspection Guide →</Link>
+                    </div>
+                  ) : null}
 
                   <div className="mt-6">
                     <UnlockedConfirmation />
@@ -715,6 +732,7 @@ const PaymentSuccess = () => {
                       <p className="font-mono font-bold text-lg text-foreground">VB-{booking.id.slice(0, 8).toUpperCase()}</p>
                     </div>
                   )}
+                  <CampusPartnerBenefit bookingRequestId={booking?.id ?? null} className="mb-4 text-left" />
 
                   <div className="relative w-24 h-24 mx-auto mb-6">
                     <div className={`absolute inset-0 ${booking?.is_instant_book ? 'bg-emerald-200' : isHold ? 'bg-amber-200' : 'bg-emerald-200'} rounded-full animate-pulse`} />
@@ -895,10 +913,10 @@ const PaymentSuccess = () => {
                             <div className="flex items-center gap-1.5 text-sm text-muted-foreground mt-1">
                               <Calendar className="h-4 w-4 text-primary" />
                               <span>
-                                {new Date(booking.start_date).toLocaleDateString('en-US', { 
+                                {parseRentalDate(booking.start_date).toLocaleDateString('en-US', {
                                   month: 'short', 
                                   day: 'numeric' 
-                                })} - {new Date(booking.end_date).toLocaleDateString('en-US', { 
+                                })} - {parseRentalDate(booking.end_date).toLocaleDateString('en-US', {
                                   month: 'short', 
                                   day: 'numeric',
                                   year: 'numeric'
@@ -931,6 +949,12 @@ const PaymentSuccess = () => {
                       </div>
                     </div>
                   )}
+
+                  {/* Payment facts PayPal requires on the confirmation page */}
+                  <PayPalPaymentFacts
+                    bookingRequestId={booking?.id ?? null}
+                    className="rounded-xl border border-border bg-muted/30 p-4 text-left mb-6"
+                  />
 
                   {/* Tax Breakdown for Rentals */}
                   {sessionInfo && sessionInfo.tax_total > 0 && (
@@ -995,7 +1019,7 @@ const PaymentSuccess = () => {
                             Host Payout Timeline
                           </h4>
                           <p className="text-xs text-muted-foreground mt-1">
-                            Your host will receive their payout within <span className="font-medium text-blue-600 dark:text-blue-400">2-3 business days</span> after the booking begins. Payouts are processed automatically via Stripe.
+                            Your host will receive their payout within <span className="font-medium text-blue-600 dark:text-blue-400">2-3 business days</span> after the booking begins. Vendibook reviews and releases host payouts.
                           </p>
                           <div className="mt-2 flex items-center gap-4 text-xs">
                             <div className="flex items-center gap-1.5">
@@ -1103,7 +1127,7 @@ const PaymentSuccess = () => {
                               endDate={booking.end_date}
                               address={booking.address_snapshot}
                               fulfillmentType={booking.fulfillment_selected}
-                              isEscrow={false}
+                              isPaymentProtected={false}
                               paymentMethod="Card ending in ****"
                               paymentDate={new Date().toISOString()}
                               recipientName={userProfile?.full_name || 'Valued Customer'}

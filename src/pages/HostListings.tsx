@@ -1,17 +1,18 @@
-import { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useState, useEffect, useRef } from 'react';
+import { Link, useNavigate, useLocation, useSearchParams } from 'react-router-dom';
 import { Plus, Truck, Loader2, Grid3X3, List, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { DashboardLayout } from '@/components/layout/DashboardLayout';
 import HostListingCard from '@/components/dashboard/HostListingCard';
 import DraftsSection from '@/components/dashboard/DraftsSection';
 import { OperationsTable } from '@/components/dashboard/OperationsTable';
-import { StripeConnectModal } from '@/components/listing-wizard/StripeConnectModal';
 import { useHostListings } from '@/hooks/useHostListings';
-import { useStripeConnect } from '@/hooks/useStripeConnect';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePageTracking } from '@/hooks/usePageTracking';
 import { HostPlanRibbon } from '@/components/host/HostPlanRibbon';
+import { PromoteListingModal } from '@/components/dashboard/PromoteListingModal';
+import { isListingFeatured } from '@/lib/featured';
+import { toast } from 'sonner';
 import { ListingQuotaBanner } from '@/components/host/ListingQuotaBanner';
 import { useHostEntitlements } from '@/hooks/useHostEntitlements';
 import { useListingQuota } from '@/hooks/useListingQuota';
@@ -22,17 +23,64 @@ const HostListings = () => {
   const { user, isLoading: authLoading, hasRole } = useAuth();
   const navigate = useNavigate();
   const { listings, isLoading, stats, pauseListing, publishListing, deleteListing, updateListingPrice } = useHostListings();
-  const { isConnected, connectStripe, isConnecting } = useStripeConnect();
   const { canBulkListings } = useHostEntitlements();
   const quota = useListingQuota();
-  const [showStripeModal, setShowStripeModal] = useState(false);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
+  const location = useLocation();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [boostTarget, setBoostTarget] = useState<{ id: string; title: string } | null>(null);
+  const boostHandled = useRef(false);
 
   usePageTracking();
 
   useEffect(() => {
-    if (!authLoading && !user) navigate('/auth?redirect=' + encodeURIComponent('/host/listings'));
-  }, [authLoading, user, navigate]);
+    if (!authLoading && !user) {
+      // Preserve the full deep link (incl. ?boost=… and UTMs) through auth.
+      navigate('/auth?redirect=' + encodeURIComponent(location.pathname + location.search));
+    }
+  }, [authLoading, user, navigate, location.pathname, location.search]);
+
+  // Email deep link: /host/listings?boost=<listing_id> auto-opens the existing
+  // Featured Boost flow for that listing (owner-scoped, eligibility checked).
+  useEffect(() => {
+    const boostId = searchParams.get('boost');
+    if (!boostId || boostHandled.current || isLoading || !user) return;
+    boostHandled.current = true;
+
+    const listing = listings.find((l) => l.id === boostId);
+    const consume = () => {
+      const next = new URLSearchParams(searchParams);
+      next.delete('boost');
+      setSearchParams(next, { replace: true });
+    };
+
+    if (!listing) {
+      toast.error("We couldn't find that listing in your account.");
+      consume();
+      return;
+    }
+    if (isListingFeatured(listing as never)) {
+      toast.success(`"${listing.title}" is already Featured — no action needed.`);
+      consume();
+      return;
+    }
+    if (listing.status !== 'published') {
+      toast.info('That listing needs to be live before it can be Featured.');
+      consume();
+      return;
+    }
+
+    if (typeof window !== 'undefined' && (window as { gtag?: (...a: unknown[]) => void }).gtag) {
+      (window as unknown as { gtag: (...a: unknown[]) => void }).gtag('event', 'boost_modal_opened_from_email', {
+        event_category: 'featured_boost',
+        event_label: boostId,
+        campaign: searchParams.get('utm_campaign') ?? undefined,
+      });
+    }
+
+    setBoostTarget({ id: listing.id, title: listing.title });
+    consume();
+  }, [searchParams, setSearchParams, listings, isLoading, user]);
 
   if (!authLoading && !user) return null;
 
@@ -43,22 +91,11 @@ const HostListings = () => {
   const draftListings = listings.filter(l => l.status === 'draft');
   const publishedListings = listings.filter(l => l.status !== 'draft');
 
-  const handleConnectStripe = async () => {
-    await connectStripe();
-  };
+
 
   const handlePublish = async (id: string) => {
-    // Stripe is only required for rentals or sales that accept card payments.
-    // Cash-only (Pay in Person) sale listings can publish without Stripe.
-    const listing = listings.find((l) => l.id === id);
-    const needsStripe =
-      listing?.mode === 'rent' ||
-      (listing?.mode === 'sale' && (listing as any)?.accept_card_payment !== false);
-
-    if (needsStripe && !isConnected) {
-      setShowStripeModal(true);
-      return;
-    }
+    // Payouts are handled manually by Vendibook, so publishing is never gated
+    // on a seller payment account.
     publishListing(id);
   };
 
@@ -114,7 +151,7 @@ const HostListings = () => {
                     </Button>
                   ) : (
                     <RouterLink
-                      to="/host/plans"
+                      to="/pricing"
                       className="h-8 px-2 rounded-md inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground hover:bg-background transition-colors"
                       title="Bulk operations table — Host Pro"
                     >
@@ -127,7 +164,7 @@ const HostListings = () => {
               
               {quota.isAtLimit ? (
                 <Button asChild variant="dark-shine" className="rounded-xl" title="Upgrade to add more listings">
-                  <Link to="/host/plans">
+                  <Link to="/pricing">
                     <Lock className="h-4 w-4 mr-2" />
                     Upgrade to add more
                   </Link>
@@ -183,7 +220,7 @@ const HostListings = () => {
         ) : (
           <div className="rounded-xl border border-border bg-card overflow-hidden">
             <div className="p-4 border-b border-border">
-              <h3 className="text-sm font-semibold text-foreground">Published Listings ({publishedListings.length})</h3>
+              <h3 className="text-sm font-semibold text-foreground">Your listings ({publishedListings.length})</h3>
             </div>
             <div className="p-4 space-y-3">
               {publishedListings.map((listing) => (
@@ -201,13 +238,15 @@ const HostListings = () => {
         )}
       </div>
 
-      {/* Stripe Connect Modal */}
-      <StripeConnectModal
-        open={showStripeModal}
-        onOpenChange={setShowStripeModal}
-        onConnect={handleConnectStripe}
-        isConnecting={isConnecting}
-      />
+      {boostTarget && (
+        <PromoteListingModal
+          open={!!boostTarget}
+          onOpenChange={(open) => { if (!open) setBoostTarget(null); }}
+          listingId={boostTarget.id}
+          listingTitle={boostTarget.title}
+        />
+      )}
+
     </DashboardLayout>
   );
 };

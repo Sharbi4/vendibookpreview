@@ -1,0 +1,71 @@
+import { cleanup, fireEvent, render, screen, waitFor, act } from '@testing-library/react';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+const mocks = vi.hoisted(() => ({ invoke: vi.fn() }));
+vi.mock('@/integrations/supabase/client', () => ({ supabase: { functions: { invoke: mocks.invoke } } }));
+import CheckoutAddressCheck, { addressText } from '@/components/checkout/CheckoutAddressCheck';
+import { checkoutAddressResult } from '../../supabase/functions/_shared/checkoutAddress';
+const address = { addressLines: ['123 Main St', 'Suite 4'], locality: 'Phoenix', administrativeArea: 'AZ', postalCode: '85001', regionCode: 'US' };
+const result = { decision: 'accept', address, formattedAddress: addressText(address), coordinates: [-112, 33] };
+beforeEach(() => mocks.invoke.mockReset().mockResolvedValue({ data: result, error: null }));
+afterEach(cleanup);
+it('checks all address fields and discards approval after any edit', async () => {
+  const approved = vi.fn(); const suggestion = vi.fn();
+  const view = render(<CheckoutAddressCheck address={address} onApproved={approved} onUseSuggestion={suggestion} />);
+  fireEvent.click(screen.getByRole('button', { name: 'Check address' }));
+  await screen.findByText('Address checked with Google.');
+  expect(mocks.invoke).toHaveBeenCalledWith('validate-checkout-address', { body: { address } });
+  expect(approved).toHaveBeenCalledWith(addressText(address), address, [-112, 33]);
+  view.rerender(<CheckoutAddressCheck address={{ ...address, postalCode: '85002' }} onApproved={approved} onUseSuggestion={suggestion} />);
+  expect(screen.queryByText('Address checked with Google.')).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Check address' })).toBeEnabled();
+});
+it('does not overwrite address or apartment until a correction is accepted', async () => {
+  mocks.invoke.mockResolvedValue({ data: { ...result, decision: 'confirm' } });
+  const approved = vi.fn(); const suggestion = vi.fn().mockReturnValue(address);
+  render(<CheckoutAddressCheck address={address} onApproved={approved} onUseSuggestion={suggestion} />);
+  fireEvent.click(screen.getByRole('button', { name: 'Check address' }));
+  await screen.findByText('Google suggests:');
+  expect(suggestion).not.toHaveBeenCalled(); expect(approved).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'Use suggested address' }));
+  expect(suggestion).toHaveBeenCalledWith(expect.objectContaining({ address }));
+  expect(approved).toHaveBeenCalledWith(addressText(address), address, [-112, 33]);
+});
+it('blocks incomplete provider results and does not offer the outage override', async () => {
+  mocks.invoke.mockResolvedValue({ data: { ...result, decision: 'fix' } });
+  const approved = vi.fn();
+  render(<CheckoutAddressCheck address={address} onApproved={approved} onUseSuggestion={vi.fn()} />);
+  fireEvent.click(screen.getByRole('button', { name: 'Check address' }));
+  expect(await screen.findByRole('alert')).toHaveTextContent('could not confirm a complete address');
+  expect(screen.queryByText('I confirm my entered address')).not.toBeInTheDocument();
+  expect(approved).not.toHaveBeenCalled();
+});
+it('requires explicit manual confirmation during an outage and never claims verification', async () => {
+  mocks.invoke.mockResolvedValue({ error: new Error('offline') });
+  const approved = vi.fn();
+  render(<CheckoutAddressCheck address={address} onApproved={approved} onUseSuggestion={vi.fn()} />);
+  fireEvent.click(screen.getByRole('button', { name: 'Check address' }));
+  await screen.findByRole('alert'); expect(approved).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('button', { name: 'I confirm my entered address' }));
+  expect(screen.getByRole('status')).toHaveTextContent('verification was unavailable');
+  expect(approved).toHaveBeenCalledOnce();
+});
+it('ignores a response for an address edited while the request was in flight', async () => {
+  let resolve!: (value: any) => void;
+  mocks.invoke.mockReturnValue(new Promise(r => { resolve = r; }));
+  const approved = vi.fn(); const suggestion = vi.fn();
+  const view = render(<CheckoutAddressCheck address={address} onApproved={approved} onUseSuggestion={suggestion} />);
+  fireEvent.click(screen.getByRole('button', { name: 'Check address' }));
+  view.rerender(<CheckoutAddressCheck address={{ ...address, locality: 'Tucson' }} onApproved={approved} onUseSuggestion={suggestion} />);
+  await act(async () => resolve({ data: result }));
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Check address' })).toBeEnabled());
+  expect(approved).not.toHaveBeenCalled();
+});
+it('uses Google verdicts instead of inferring validity from a formatted address', () => {
+  const payload = { result: { verdict: { addressComplete: true, validationGranularity: 'PREMISE' }, address: { postalAddress: address } } };
+  expect(checkoutAddressResult(payload).decision).toBe('accept');
+  expect(checkoutAddressResult({ result: { ...payload.result, verdict: { ...payload.result.verdict, hasReplacedComponents: true } } }).decision).toBe('confirm');
+  expect(checkoutAddressResult({ result: { ...payload.result, verdict: { ...payload.result.verdict, validationGranularity: 'ROUTE' } } }).decision).toBe('fix');
+  expect(checkoutAddressResult({ result: { ...payload.result, address: { ...payload.result.address, missingComponentTypes: ['subpremise'] } } }).decision).toBe('fix');
+  expect(checkoutAddressResult({ result: { ...payload.result, address: { ...payload.result.address, addressComponents: [{ confirmationLevel: 'UNCONFIRMED_AND_SUSPICIOUS' }] } } }).decision).toBe('fix');
+  expect(() => checkoutAddressResult({})).toThrow('Missing address verdict');
+});

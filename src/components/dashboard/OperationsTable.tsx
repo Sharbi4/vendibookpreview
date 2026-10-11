@@ -147,10 +147,29 @@ export const OperationsTable = ({
                           Resume Listing
                         </DropdownMenuItem>
                       )}
-                      {(listing.status === 'draft' || listing.status === 'archived') && (
+                      {/* Drafts are never published from here — publishing runs
+                          the wizard's content validation. Send the seller back
+                          into the journey instead of flipping status directly. */}
+                      {listing.status === 'draft' && (
+                        <DropdownMenuItem asChild>
+                          <Link to={`/create-listing/${listing.id}`} className="flex items-center gap-2">
+                            <Play className="h-4 w-4" />
+                            Continue setup
+                          </Link>
+                        </DropdownMenuItem>
+                      )}
+                      {listing.status === 'archived' && listing.published_at && (
                         <DropdownMenuItem onClick={() => onPublish(listing.id)} className="flex items-center gap-2">
                           <Play className="h-4 w-4" />
-                          {listing.status === 'archived' ? 'Republish' : 'Publish'}
+                          Republish
+                        </DropdownMenuItem>
+                      )}
+                      {listing.status === 'archived' && !listing.published_at && (
+                        <DropdownMenuItem asChild>
+                          <Link to={`/create-listing/${listing.id}`} className="flex items-center gap-2">
+                            <Play className="h-4 w-4" />
+                            Continue setup
+                          </Link>
                         </DropdownMenuItem>
                       )}
                       {onDuplicate && (

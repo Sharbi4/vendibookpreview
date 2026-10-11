@@ -2,6 +2,8 @@
 // the premium `generic-notice` template through the Lovable Emails queue.
 // No direct Resend usage.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { isInternalCaller, internalOnlyResponse } from "../_shared/internalAuth.ts";
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -50,6 +52,10 @@ const toneForType = (type: string): "neutral" | "success" | "warning" | "danger"
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  if (!isInternalCaller(req)) {
+    return internalOnlyResponse(corsHeaders);
   }
 
   try {
@@ -122,8 +128,7 @@ Deno.serve(async (req) => {
           const baseUrl = Deno.env.get("SITE_URL") || "https://vendibook.com";
           const actionLink = link ? (link.startsWith("http") ? link : `${baseUrl}${link}`) : baseUrl;
 
-          const { error: emailError } = await supabase.functions.invoke("send-transactional-email", {
-            body: {
+          const { error: emailError } = await invokeTransactionalEmail({
               templateName: "generic-notice",
               recipientEmail: profile.email,
               idempotencyKey: notification?.id
@@ -140,8 +145,7 @@ Deno.serve(async (req) => {
                 ctaUrl: link ? actionLink : undefined,
                 footnote: "Manage your notification preferences from your account settings.",
               },
-            },
-          });
+            });
           if (emailError) throw emailError;
           emailQueued = true;
           console.log("Email enqueued via Lovable Emails:", profile.email);

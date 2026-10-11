@@ -1,0 +1,1 @@
+revoke execute on function public.has_permit_path_plus(uuid) from public, anon;

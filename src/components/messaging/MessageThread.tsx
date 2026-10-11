@@ -1,3 +1,4 @@
+import MessagingSafety from './MessagingSafety';
 import React, { useState, useEffect, useRef } from 'react';
 import { format } from 'date-fns';
 import { Send, Loader2, Paperclip, X, FileText, Image as ImageIcon, Download } from 'lucide-react';
@@ -95,7 +96,7 @@ export const MessageThread: React.FC<MessageThreadProps> = ({
     const trimmedMessage = newMessage.trim();
     
     // Validate message length
-    if (!trimmedMessage && !selectedFile) return;
+    if (isSending || (!trimmedMessage && !selectedFile)) return;
     
     if (trimmedMessage.length > 5000) {
       toast({
@@ -106,9 +107,8 @@ export const MessageThread: React.FC<MessageThreadProps> = ({
       return;
     }
     
-    await sendMessage(trimmedMessage, selectedFile || undefined);
-    setNewMessage('');
-    clearSelectedFile();
+    const sent = await sendMessage(trimmedMessage, selectedFile || undefined);
+    if (sent) { setNewMessage(''); clearSelectedFile(); }
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -163,7 +163,8 @@ export const MessageThread: React.FC<MessageThreadProps> = ({
   }
 
   return (
-    <div className="flex flex-col h-[400px]">
+    <div className="message-thread flex flex-col h-[520px]">
+      <MessagingSafety kind="booking" thread={bookingId} />
       <ScrollArea className="flex-1 p-4" ref={scrollRef}>
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full text-muted-foreground">
@@ -183,10 +184,10 @@ export const MessageThread: React.FC<MessageThreadProps> = ({
                 >
                 <div
                     className={cn(
-                      'rounded-lg px-4 py-2',
+                      'message-bubble rounded-lg px-4 py-2',
                       isOwn
-                        ? 'bg-primary text-primary-foreground'
-                        : 'bg-muted text-foreground'
+                        ? 'is-own'
+                        : ''
                     )}
                   >
                     <p className="text-sm whitespace-pre-wrap">{message.message}</p>
@@ -255,7 +256,7 @@ export const MessageThread: React.FC<MessageThreadProps> = ({
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyDown={handleKeyDown}
             placeholder={`Message ${otherPartyName}...`}
-            className="min-h-[60px] resize-none"
+            className="message-composer min-h-[60px] resize-none"
             disabled={isSending}
           />
           <Button

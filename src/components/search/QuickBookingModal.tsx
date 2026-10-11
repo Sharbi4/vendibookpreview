@@ -1,3 +1,4 @@
+import { hostedCheckoutUrl } from '@/lib/payments/hostedCheckout';
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Calendar, Loader2, MapPin, Truck, Building, Info, CreditCard, CheckCircle2, Zap } from 'lucide-react';
@@ -31,6 +32,7 @@ import { SlotSelector } from '@/components/booking';
 import { FinalReviewSheet } from '@/components/transaction/FinalReviewSheet';
 import { useTermsGate } from '@/hooks/useTermsGate';
 import { buildTerms } from '@/lib/transactionTerms';
+import { authPath } from '@/lib/auth/returnTo';
 
 interface QuickBookingModalProps {
   listing: Listing | null;
@@ -183,11 +185,11 @@ const QuickBookingModal = ({
         price_daily: listing.price_daily ?? null,
         price_weekly: listing.price_weekly ?? null,
         security_deposit: (listing as { deposit_amount?: number | null }).deposit_amount ?? null,
-        accept_card_payment: listing.accept_card_payment ?? true,
+        accept_paypal_checkout: listing.accept_paypal_checkout ?? true,
       },
       selection: {
         mode: 'rent',
-        paymentMethod: 'stripe_card',
+        paymentMethod: 'paypal_checkout',
         basePriceDollars: fees.subtotal - currentDeliveryFee,
         deliveryFeeDollars: currentDeliveryFee,
         startDate: format(startDate, 'yyyy-MM-dd'),
@@ -204,7 +206,7 @@ const QuickBookingModal = ({
 
   const handleSubmit = async () => {
     if (!user) {
-      navigate('/auth');
+      navigate(authPath());
       return;
     }
     const validationError = validateForm();
@@ -279,20 +281,13 @@ const QuickBookingModal = ({
 
       // For Instant Book listings, redirect to checkout immediately
       if (isInstantBook) {
-        const { data: checkoutData, error: checkoutError } = await supabase.functions.invoke('create-checkout', {
-          body: {
-            booking_id: bookingResult.id,
-            listing_id: listing.id,
-            mode: 'rent',
-            amount: fees.subtotal,
-            delivery_fee: currentDeliveryFee,
-            terms_id: termsGate.termsId,
-          },
-        });
-
-        if (checkoutError) throw checkoutError;
-
-        if (!checkoutData?.url) throw new Error('Failed to create checkout session');
+        const checkoutData = {
+          url: hostedCheckoutUrl('booking', bookingResult.id, {
+            success: '/payment-success',
+            cancel: '/dashboard',
+            label: 'Rental booking',
+          }),
+        };
 
         if (checkoutWindow) {
           checkoutWindow.location.href = checkoutData.url;

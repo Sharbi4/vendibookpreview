@@ -1,140 +1,158 @@
 import { useState } from 'react';
-import { Landmark, CreditCard, Loader2, ExternalLink, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Landmark, CheckCircle2, AlertCircle, Clock, Wallet, Receipt } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { supabase } from '@/integrations/supabase/client';
-import { useAuth } from '@/contexts/AuthContext';
-import { useStripeConnect } from '@/hooks/useStripeConnect';
+import { usePayoutPreference } from '@/hooks/usePayoutPreference';
+import {
+  PAYOUT_METHOD_LABEL,
+  PAYOUT_PREFERENCE_DISCLOSURE,
+  PAYOUT_STATUS_LABEL,
+  type PayoutPreferenceInput,
+} from '@/lib/payouts/methods';
+import PayoutMethodForm from './PayoutMethodForm';
+
 import { SectionCard } from './RowLink';
 
 /**
- * Payments & payouts — single source of truth for money settings.
- * - Hosts: Stripe Express dashboard (bank details, tax forms, payout history).
- * - Buyers: Stripe Billing Portal (saved cards, receipts).
+ * Payments & payouts.
+ *
+ * Vendibook-collected seller earnings are reviewed and paid
+ * MANUALLY by Vendibook — this screen collects a payout preference for those
+ * manual payouts. It is not a connected merchant account and it never gates
+ * publishing or checkout.
  */
 export default function PaymentsPayoutsSection() {
-  const { session } = useAuth();
-  const {
-    hasAccountStarted,
-    isOnboardingComplete,
-    isLoading,
-    isConnecting,
-    isOpeningDashboard,
-    payoutsEnabled,
-    bankLast4,
-    bankName,
-    connectStripe,
-    openStripeDashboard,
-  } = useStripeConnect();
+  const { preference, isLoading, isSaving, savePreference } = usePayoutPreference();
+  const [editing, setEditing] = useState(false);
 
-  const [openingPortal, setOpeningPortal] = useState(false);
-
-  const openBillingPortal = async () => {
-    if (!session?.access_token) return;
-    const win = window.open('about:blank', '_blank');
-    setOpeningPortal(true);
+  const handleSubmit = async (input: PayoutPreferenceInput) => {
     try {
-      const { data, error } = await supabase.functions.invoke('customer-portal', {
-        headers: { Authorization: `Bearer ${session.access_token}` },
-      });
-      if (error) throw error;
-      if (data?.url && win) win.location.href = data.url;
-      else if (data?.url) window.location.href = data.url;
-      else win?.close();
+      const result = await savePreference(input);
+      setEditing(false);
+      toast.success(
+        result?.pending_verification
+          ? 'Saved. Vendibook will complete secure verification before your first payout.'
+          : 'Payout preference saved.',
+      );
     } catch (e) {
-      win?.close();
-      const msg = e instanceof Error ? e.message : 'Could not open billing portal';
-      // 404 no_stripe_customer is expected for users who never paid — show a friendly hint.
-      if (/no.?stripe.?customer/i.test(msg)) {
-        toast.info('No saved payment methods yet — they\'ll appear here after your first purchase.');
-      } else {
-        toast.error(msg);
-      }
-    } finally {
-      setOpeningPortal(false);
+      toast.error(e instanceof Error ? e.message : 'Could not save your payout preference.');
     }
   };
+
+  const status = preference?.status ?? 'not_set';
+  const statusBadge = {
+    not_set: { cls: 'bg-muted text-muted-foreground border-border', Icon: AlertCircle },
+    pending_review: { cls: 'bg-amber-500/15 text-amber-600 border-amber-500/30', Icon: Clock },
+    verified: { cls: 'bg-emerald-500/15 text-emerald-600 border-emerald-500/30', Icon: CheckCircle2 },
+    needs_attention: { cls: 'bg-amber-500/15 text-amber-600 border-amber-500/30', Icon: AlertCircle },
+  }[status];
+  const StatusIcon = statusBadge.Icon;
 
   return (
     <SectionCard
       id="section-payments"
       title="Payments & payouts"
-      description="Update where money comes in and goes out."
+      description="How buyers pay you, and where Vendibook sends your reviewed earnings."
     >
-      {/* Payout method (host / seller) */}
-      <div className="p-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+      {/* Payout preference */}
+      <div className="p-5 flex flex-col gap-4">
         <div className="flex items-start gap-4 min-w-0">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-muted/50">
             <Landmark className="h-4 w-4" />
           </div>
-          <div className="min-w-0">
+          <div className="min-w-0 flex-1">
             <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm font-semibold text-foreground">Payout method</span>
-              {isLoading ? (
-                <Badge variant="outline" className="text-[10px] h-4 px-1.5">Checking</Badge>
-              ) : isOnboardingComplete && payoutsEnabled ? (
-                <Badge className="bg-emerald-500/15 text-emerald-600 border-emerald-500/30 text-[10px] h-4 px-1.5">
-                  <CheckCircle2 className="h-2.5 w-2.5 mr-0.5" />Active
+              <span className="text-sm font-semibold text-foreground">Payout preference</span>
+              {!isLoading && (
+                <Badge className={`${statusBadge.cls} text-[10px] h-4 px-1.5`}>
+                  <StatusIcon className="h-2.5 w-2.5 mr-0.5" />
+                  {PAYOUT_STATUS_LABEL[status]}
                 </Badge>
-              ) : hasAccountStarted ? (
-                <Badge className="bg-amber-500/15 text-amber-600 border-amber-500/30 text-[10px] h-4 px-1.5">
-                  <AlertCircle className="h-2.5 w-2.5 mr-0.5" />Incomplete
-                </Badge>
-              ) : (
-                <Badge variant="outline" className="text-[10px] h-4 px-1.5">Not set up</Badge>
               )}
             </div>
+
             <p className="text-xs text-muted-foreground mt-0.5">
-              {isOnboardingComplete && bankLast4
-                ? <>Bank {bankName ? <>· <span className="text-foreground/80">{bankName}</span> </> : null}·&nbsp;
-                    <span className="tabular text-foreground/80">•••• {bankLast4}</span></>
-                : isOnboardingComplete
-                  ? 'Bank connected via Stripe. Payouts are enabled.'
-                  : hasAccountStarted
-                    ? 'Your Stripe account exists but onboarding isn\'t finished.'
-                    : 'Connect a Stripe account to receive payouts from rentals and sales.'}
+              Funds collected by Vendibook are reviewed and paid manually according to the
+              transaction timeline. {PAYOUT_PREFERENCE_DISCLOSURE}
             </p>
+
+            {!isLoading && preference && !editing && (
+              <p className="text-sm text-foreground/85 mt-2">
+                {PAYOUT_METHOD_LABEL[preference.method]} ·{' '}
+                <span className="text-muted-foreground">{preference.masked_destination}</span>
+                {preference.method === 'ach' && preference.ach_bank_name && (
+                  <span className="text-muted-foreground"> · {preference.ach_bank_name} {preference.ach_account_type}</span>
+                )}
+              </p>
+            )}
+
+            {!isLoading && !preference && !editing && (
+              <p className="text-sm text-foreground/85 mt-2">
+                No payout method on file yet. You can list, take bookings and get paid by buyers
+                before you add one.
+              </p>
+            )}
+
+            {editing ? (
+              <div className="mt-4">
+                <PayoutMethodForm
+                  initialMethod={preference?.method ?? 'paypal'}
+                  isSaving={isSaving}
+                  onCancel={() => setEditing(false)}
+                  onSubmit={handleSubmit}
+                />
+              </div>
+            ) : (
+              <Button variant="outline" size="sm" className="mt-3" disabled={isLoading} onClick={() => setEditing(true)}>
+                {preference ? 'Change payout method' : 'Add payout method'}
+              </Button>
+            )}
+
+            {!editing && (
+              <p className="text-[11px] text-muted-foreground mt-3">
+                Supported methods: PayPal, Venmo, Cash App and direct bank transfer (ACH).
+              </p>
+            )}
           </div>
-        </div>
-        <div className="shrink-0">
-          {isOnboardingComplete ? (
-            <Button variant="outline" size="sm" onClick={openStripeDashboard} disabled={isOpeningDashboard}>
-              {isOpeningDashboard ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ExternalLink className="h-4 w-4 mr-2" />}
-              Update bank details
-            </Button>
-          ) : hasAccountStarted ? (
-            <Button size="sm" onClick={() => connectStripe('/account')} disabled={isConnecting}>
-              {isConnecting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-              Finish payout setup
-            </Button>
-          ) : (
-            <Button size="sm" onClick={() => connectStripe('/account')} disabled={isConnecting}>
-              {isConnecting ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-              Connect Stripe
-            </Button>
-          )}
         </div>
       </div>
 
-      {/* Payment methods (buyer) */}
-      <div className="p-5 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-start gap-4 min-w-0">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-muted/50">
-            <CreditCard className="h-4 w-4" />
-          </div>
-          <div className="min-w-0">
-            <span className="text-sm font-semibold text-foreground">Payment methods</span>
-            <p className="text-xs text-muted-foreground mt-0.5">
-              Manage saved cards and download receipts in Stripe's secure billing portal.
-            </p>
-          </div>
+      <div className="p-5"><Link className="text-primary underline underline-offset-4" to="/dashboard/payments/setup">Manage PayPal sales and Square rental connections</Link></div>
+
+      {/* How buyers pay */}
+      <div className="p-5 flex items-start gap-4">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-muted/50">
+          <Wallet className="h-4 w-4" />
         </div>
-        <div className="shrink-0">
-          <Button variant="outline" size="sm" onClick={openBillingPortal} disabled={openingPortal}>
-            {openingPortal ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <ExternalLink className="h-4 w-4 mr-2" />}
-            Manage cards
-          </Button>
+        <div className="min-w-0">
+          <span className="text-sm font-semibold text-foreground">Buyer payments</span>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            Equipment sale payments use PayPal. Rental card checkout uses Square. PayPal decides which eligible
+            wallet, card or payment options to show each buyer at checkout, and no card details are
+            stored on Vendibook.
+          </p>
+        </div>
+      </div>
+
+      {/* Records */}
+      <div className="p-5 flex items-start gap-4">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md border border-border bg-muted/50">
+          <Receipt className="h-4 w-4" />
+        </div>
+        <div className="min-w-0 space-y-1">
+          <span className="text-sm font-semibold text-foreground">Receipts & records</span>
+          <p className="text-xs text-muted-foreground">
+            View marketplace payment status and receipts in Transactions. Plans, boosts, and services
+            have a separate purchase history.
+          </p>
+          <div className="flex flex-wrap gap-3 pt-1 text-xs">
+            <Link to="/dashboard/transactions" className="text-primary underline underline-offset-4">Marketplace transactions &amp; receipts</Link>
+            <Link to="/account/purchases" className="text-primary underline underline-offset-4">Plans, boosts &amp; services</Link>
+            <Link to="/account/subscription" className="text-primary underline underline-offset-4">Manage membership</Link>
+            <Link to="/dashboard/payments" className="text-primary underline underline-offset-4">Earnings &amp; payouts</Link>
+          </div>
         </div>
       </div>
     </SectionCard>

@@ -1,5 +1,5 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import Stripe from "https://esm.sh/stripe@18.5.0";
+import { captureHeldPayment } from "../_shared/paymentOps.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 
 const corsHeaders = {
@@ -20,8 +20,6 @@ serve(async (req) => {
   try {
     logStep("Function started");
 
-    const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
 
     const supabaseClient = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
@@ -82,38 +80,22 @@ serve(async (req) => {
       throw new Error("Payment hold was already released");
     }
 
-    const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-
-    // Get the payment intent to check its status
-    const paymentIntent = await stripe.paymentIntents.retrieve(booking.payment_intent_id);
-    logStep("PaymentIntent retrieved", { 
-      status: paymentIntent.status,
-      amount: paymentIntent.amount,
+    // Vendibook captures money through PayPal only.
+    const amountCents = Math.round(Number(booking.total_price ?? 0) * 100);
+    const capture = await captureHeldPayment({
+      authorizationId: booking.payment_intent_id,
+      provider: booking.payment_provider,
+      amountCents,
+      invoiceId: `booking-${booking_id}`,
+      idempotencyKey: `booking-capture-${booking_id}`,
     });
 
-    if (paymentIntent.status !== 'requires_capture') {
-      if (paymentIntent.status === 'succeeded') {
-        // Already captured
-        await supabaseClient
-          .from('booking_requests')
-          .update({ hold_status: 'captured', payment_status: 'paid', paid_at: new Date().toISOString() })
-          .eq('id', booking_id);
-        
-        return new Response(
-          JSON.stringify({ success: true, message: "Payment was already captured" }),
-          { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
-        );
-      }
-      throw new Error(`Cannot capture payment. Current status: ${paymentIntent.status}`);
+    if (!capture.success) {
+      logStep("Capture not completed", { error: capture.error, manual: capture.manual });
+      throw new Error(capture.error ?? "Payment capture failed");
     }
 
-    // Capture the payment
-    const capturedIntent = await stripe.paymentIntents.capture(booking.payment_intent_id);
-    logStep("Payment captured", { 
-      id: capturedIntent.id, 
-      status: capturedIntent.status,
-      amount_captured: capturedIntent.amount_received,
-    });
+    logStep("Payment captured", { id: capture.id, status: capture.status });
 
     // Update booking status
     const { error: updateError } = await supabaseClient
@@ -156,8 +138,8 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({ 
         success: true, 
-        payment_intent_id: capturedIntent.id,
-        amount_captured: capturedIntent.amount_received / 100,
+        payment_intent_id: capture.id,
+        amount_captured: (capture.amountCents ?? amountCents) / 100,
       }),
       {
         headers: { ...corsHeaders, "Content-Type": "application/json" },

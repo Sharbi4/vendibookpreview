@@ -138,7 +138,7 @@ const EnhancedProfileHeader = ({
               {isOwnProfile && (
                 <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
                   <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5 rounded-full" asChild>
-                    <Link to="/account">
+                    <Link to="/dashboard/account">
                       <Edit className="h-3.5 w-3.5" />
                       Edit Profile
                     </Link>
@@ -176,13 +176,13 @@ const EnhancedProfileHeader = ({
                     </TooltipTrigger>
                     <TooltipContent>
                       {profile.identity_verified 
-                        ? 'Identity verified via Stripe Identity'
+                        ? 'Identity verified by Vendibook'
                         : 'Identity not yet verified'}
                     </TooltipContent>
                   </Tooltip>
                 </motion.div>
 
-                {/* Stripe Connected Badge */}
+                {/* Payout status badge */}
                 {isHost && (
                   <motion.div variants={badgeVariants}>
                     <Tooltip>
@@ -204,8 +204,8 @@ const EnhancedProfileHeader = ({
                       </TooltipTrigger>
                       <TooltipContent>
                         {stripeConnected 
-                          ? 'Connected to Stripe for secure payouts'
-                          : 'Stripe not connected - cannot receive payments'}
+                          ? 'Payout details saved — Vendibook can release your proceeds'
+                          : 'Add payout details to receive proceeds'}
                       </TooltipContent>
                     </Tooltip>
                   </motion.div>

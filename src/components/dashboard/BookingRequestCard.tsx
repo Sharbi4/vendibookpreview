@@ -1,3 +1,4 @@
+import { parseRentalDate } from '@/lib/rentalDates';
 import { useState } from 'react';
 import { format, isPast, parseISO } from 'date-fns';
 import { Check, X, Calendar, User, MessageSquare, Loader2, MessageCircle, FileText, DollarSign, FileCheck, FileClock, FileWarning, Zap, Shield, AlertTriangle, Undo2, Building2, Users, ChevronDown, ChevronUp } from 'lucide-react';
@@ -30,6 +31,9 @@ import BookingConfirmationSection from './BookingConfirmationSection';
 import NextActionBanner from '@/components/shared/NextActionBanner';
 import { AddToCalendarButton } from '@/components/booking/AddToCalendarButton';
 import { getCounterpartyName, getDisplayInitials } from '@/lib/displayName';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
+
 
 // Type for business info stored in JSONB
 interface BusinessInfoData {
@@ -79,6 +83,8 @@ interface BookingRequestCardProps {
   onDecline: (id: string, response?: string) => void;
   onCancel?: (id: string, reason?: string, refundAmount?: number) => Promise<unknown>;
   onDepositAction?: (bookingId: string, action: 'refund' | 'partial' | 'forfeit', deductionAmount?: number, notes?: string) => Promise<unknown>;
+  onRefunded?: () => void;
+
 }
 
 const StatusPill = ({ status }: { status: string }) => {
@@ -106,10 +112,15 @@ const StatusPill = ({ status }: { status: string }) => {
 };
 
 
-const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel, onDepositAction }: BookingRequestCardProps) => {
+const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel, onDepositAction, onRefunded }: BookingRequestCardProps) => {
+  const { toast } = useToast();
   const [showResponseDialog, setShowResponseDialog] = useState(false);
   const [showMessageDialog, setShowMessageDialog] = useState(false);
   const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [showRefundDialog, setShowRefundDialog] = useState(false);
+  const [refundReason, setRefundReason] = useState('');
+  const [isRefunding, setIsRefunding] = useState(false);
+
   const [showDepositDialog, setShowDepositDialog] = useState(false);
   const [showBusinessInfo, setShowBusinessInfo] = useState(false);
   const [responseAction, setResponseAction] = useState<'approve' | 'decline'>('approve');
@@ -160,8 +171,11 @@ const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel, onDeposit
   const isApproved = booking.status === 'approved';
   const isCompleted = booking.status === 'completed';
   const isPaid = booking.payment_status === 'paid';
+  const isRefunded = booking.payment_status === 'refunded';
   const canCancel = isApproved && isPaid && onCancel;
+  const canRefundPayPal = isPaid && !isRefunded;
   const canMessage = booking.status !== 'cancelled' && booking.status !== 'declined';
+
   const isInstantBook = booking.is_instant_book === true;
   const bookingCancelled = booking.status === 'cancelled';
   const bookingConfirmed = isApproved && (!hasDocumentRequirements || compliance.allApproved);
@@ -170,7 +184,7 @@ const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel, onDeposit
   const hasDeposit = (booking.deposit_amount ?? 0) > 0;
   const depositStatus = booking.deposit_status || 'pending';
   const depositAmount = booking.deposit_amount || 0;
-  const rentalEnded = isPast(parseISO(booking.end_date));
+  const rentalEnded = isPast(parseRentalDate(booking.end_date));
   const canManageDeposit = hasDeposit && 
     (isCompleted || (isApproved && rentalEnded)) && 
     depositStatus === 'charged' && 
@@ -211,6 +225,54 @@ const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel, onDeposit
     } finally {
       setIsCancelling(false);
     }
+  };
+
+  const handlePayPalRefund = async () => {
+    setIsRefunding(true);
+    try {
+      const amount = usePartialRefund && partialRefundAmount
+        ? parseFloat(partialRefundAmount)
+        : undefined;
+
+      const { data, error } = await supabase.functions.invoke('process-refund', {
+        body: {
+          booking_id: booking.id,
+          initiated_by: 'host',
+          reason: 'requested_by_customer',
+          cancellation_reason: refundReason || 'Refunded by host',
+          ...(amount !== undefined ? { refund_amount: amount } : {}),
+        },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+
+      toast({
+        title: 'Refund sent to PayPal',
+        description: amount
+          ? `$${amount.toFixed(2)} refunded. The booking is now marked as refunded.`
+          : `$${booking.total_price} refunded. The booking is now marked as refunded.`,
+      });
+      setShowRefundDialog(false);
+      setRefundReason('');
+      setUsePartialRefund(false);
+      setPartialRefundAmount('');
+      onRefunded?.();
+    } catch (err) {
+      toast({
+        title: 'Refund failed',
+        description: err instanceof Error ? err.message : 'Could not process the PayPal refund.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsRefunding(false);
+    }
+  };
+
+  const openRefundDialog = () => {
+    setRefundReason('');
+    setUsePartialRefund(false);
+    setPartialRefundAmount('');
+    setShowRefundDialog(true);
   };
 
   const openCancelDialog = () => {
@@ -266,7 +328,7 @@ const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel, onDeposit
                 <div className="flex items-center gap-2 text-sm text-muted-foreground mt-1">
                   <Calendar className="h-4 w-4" />
                   <span>
-                    {format(new Date(booking.start_date), 'MMM d')} - {format(new Date(booking.end_date), 'MMM d, yyyy')}
+                    {format(parseRentalDate(booking.start_date), 'MMM d')} - {format(parseRentalDate(booking.end_date), 'MMM d, yyyy')}
                   </span>
                 </div>
                 </div>
@@ -539,6 +601,27 @@ const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel, onDeposit
                   Cancel & Refund
                 </Button>
               )}
+              {/* PayPal refund — cancels the payment and marks the booking refunded */}
+              {canRefundPayPal && (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="text-destructive border-destructive/30 hover:bg-destructive/10"
+                  onClick={openRefundDialog}
+                  disabled={isRefunding}
+                >
+                  {isRefunding
+                    ? <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                    : <Undo2 className="h-4 w-4 mr-1" />}
+                  Refund via PayPal
+                </Button>
+              )}
+              {isRefunded && (
+                <span className="text-xs font-medium text-emerald-600 inline-flex items-center gap-1">
+                  <Undo2 className="h-3.5 w-3.5" /> Refunded
+                </span>
+              )}
+
               {canMessage && (
                 <Button
                   size="sm"
@@ -689,7 +772,75 @@ const BookingRequestCard = ({ booking, onApprove, onDecline, onCancel, onDeposit
         </DialogContent>
       </Dialog>
 
+      {/* PayPal Refund Dialog */}
+      <Dialog open={showRefundDialog} onOpenChange={setShowRefundDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Refund via PayPal</DialogTitle>
+            <DialogDescription>
+              This cancels the payment through PayPal and marks the booking as refunded.
+              Paid amount: ${booking.total_price}.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="paypalRefundReason">Reason (optional)</Label>
+              <Textarea
+                id="paypalRefundReason"
+                placeholder="Why is this payment being refunded?"
+                value={refundReason}
+                onChange={(e) => setRefundReason(e.target.value)}
+                rows={2}
+                className="mt-1.5"
+              />
+            </div>
+
+            <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+              <div className="space-y-0.5">
+                <Label htmlFor="paypalPartial" className="text-sm font-medium">Partial refund</Label>
+                <p className="text-xs text-muted-foreground">Refund a custom amount instead of the full total</p>
+              </div>
+              <Switch id="paypalPartial" checked={usePartialRefund} onCheckedChange={setUsePartialRefund} />
+            </div>
+
+            {usePartialRefund && (
+              <div className="relative">
+                <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="number"
+                  min="0.01"
+                  max={booking.total_price}
+                  step="0.01"
+                  placeholder={`Max: ${booking.total_price}`}
+                  value={partialRefundAmount}
+                  onChange={(e) => setPartialRefundAmount(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowRefundDialog(false)} disabled={isRefunding}>
+              Keep payment
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={handlePayPalRefund}
+              disabled={isRefunding || (usePartialRefund && (!partialRefundAmount || parseFloat(partialRefundAmount) <= 0 || parseFloat(partialRefundAmount) > booking.total_price))}
+            >
+              {isRefunding && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
+              {usePartialRefund && partialRefundAmount
+                ? `Refund $${parseFloat(partialRefundAmount).toFixed(2)}`
+                : `Refund $${booking.total_price}`}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Message Dialog */}
+
       <MessageDialog
         open={showMessageDialog}
         onOpenChange={setShowMessageDialog}

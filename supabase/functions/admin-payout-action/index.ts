@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
+import { MONEY_ACTIONS, payoutBlockers } from "../_shared/payoutReleasePolicy.ts";
 
 /**
  * Administrator actions on the manual seller-payout queue.
@@ -50,11 +51,27 @@ serve(async (req) => {
       return jsonError(400, "missing_fields", "Missing action or payable id.");
     }
 
-    const { data: payable } = await admin.from("seller_payables")
+    let { data: payable } = await admin.from("seller_payables")
       .select("*, payment:payment_records(*)")
       .eq("id", payableId)
       .maybeSingle();
     if (!payable) return jsonError(404, "not_found", "Payout record not found.");
+
+    const initialPayment = (payable as any).payment;
+    if (initialPayment?.sale_transaction_id) {
+      const { error: releaseError } = await admin.rpc("refresh_sale_release_requirements", { _payment_record_id: initialPayment.id });
+      if (releaseError && MONEY_ACTIONS.includes(action)) {
+        return jsonError(409, "payout_blocked", "Sale completion evidence could not be verified. Please retry.");
+      }
+      const refreshed = await admin.from("seller_payables")
+        .select("*, payment:payment_records(*)")
+        .eq("id", payableId)
+        .maybeSingle();
+      if ((!refreshed.data || refreshed.error) && MONEY_ACTIONS.includes(action)) {
+        return jsonError(409, "payout_blocked", "The updated payout requirements could not be loaded. Please retry.");
+      }
+      payable = refreshed.data ?? payable;
+    }
 
     const payment = (payable as any).payment;
     const from = payable.status;
@@ -62,7 +79,42 @@ serve(async (req) => {
     let note: string | null = body?.note ?? null;
     let externalReference: string | null = body?.external_reference ?? null;
 
-    const blockers = payoutBlockers(payable, payment);
+    let saleStatus: string | null = null;
+    if (payment?.sale_transaction_id) {
+      const { data: sale } = await admin.from("sale_transactions")
+        .select("status").eq("id", payment.sale_transaction_id).maybeSingle();
+      saleStatus = sale?.status ?? null;
+    }
+    let booking = null;
+    if (payment?.booking_request_id) {
+      const result = await admin.from("booking_requests")
+        .select("status, payment_status, dispute_status, payout_hold_until, payout_hold_reason")
+        .eq("id", payment.booking_request_id).maybeSingle();
+      booking = result.error ? null : result.data;
+    }
+    const blockers = payoutBlockers(payable, payment, saleStatus, booking);
+
+    // ---- Vendibook case freeze. FAIL CLOSED: if we cannot determine whether a
+    // case is open, we refuse to move money. The database enforces the same rule
+    // through block_payout_while_disputed().
+    if (MONEY_ACTIONS.includes(action)) {
+      if (payable.dispute_frozen_at) {
+        blockers.unshift("A Vendibook case is open on this order. Resolve the case before releasing payment.");
+      } else if (payment?.id) {
+        const { data: openCase, error: caseErr } = await admin.from("dispute_cases")
+          .select("id, case_number")
+          .eq("payment_record_id", payment.id)
+          .not("status", "in", "(resolved,closed)")
+          .maybeSingle();
+        if (caseErr) {
+          blockers.unshift("Case status could not be verified for this order, so payment is blocked.");
+        } else if (openCase) {
+          blockers.unshift(`Vendibook case ${openCase.case_number} is open on this order. Resolve it before releasing payment.`);
+        }
+      } else {
+        blockers.unshift("This payout has no linked payment record, so case status cannot be verified.");
+      }
+    }
 
     switch (action) {
       case "add_note":
@@ -104,6 +156,7 @@ serve(async (req) => {
         break;
 
       case "start_payout":
+        if (blockers.length) return jsonError(409, "payout_blocked", blockers[0]);
         if (payable.status !== "payout_approved") {
           return jsonError(409, "invalid_state", "Approve the payout before starting it.");
         }
@@ -114,6 +167,7 @@ serve(async (req) => {
         break;
 
       case "record_manual_payout": {
+        if (blockers.length) return jsonError(409, "payout_blocked", blockers[0]);
         if (!externalReference) {
           return jsonError(
             400,
@@ -139,6 +193,7 @@ serve(async (req) => {
       }
 
       case "mark_completed": {
+        if (blockers.length) return jsonError(409, "payout_blocked", blockers[0]);
         const reference = externalReference ?? payable.external_payout_reference;
         if (!reference && !payable.dwolla_transfer_id) {
           return jsonError(
@@ -168,6 +223,7 @@ serve(async (req) => {
         break;
 
       case "retry":
+        if (blockers.length) return jsonError(409, "payout_blocked", blockers[0]);
         if (payable.status !== "payout_failed") {
           return jsonError(409, "invalid_state", "Only a failed payout can be retried.");
         }
@@ -201,26 +257,3 @@ serve(async (req) => {
   }
 });
 
-/** Reasons a payout must not be approved right now. */
-function payoutBlockers(payable: any, payment: any): string[] {
-  const reasons: string[] = [];
-  if (!payment || payment.payment_status !== "completed") {
-    reasons.push("The buyer payment is not confirmed as completed.");
-  }
-  if (payment && payment.dispute_status && !["none", "resolved"].includes(payment.dispute_status)) {
-    reasons.push("An active dispute is open on this payment.");
-  }
-  if (["fully_refunded", "reversed", "cancelled", "disputed"].includes(payable.status)) {
-    reasons.push("This payment was refunded, reversed, disputed or cancelled.");
-  }
-  if (payable.status === "payout_completed") {
-    reasons.push("This seller has already been paid for this transaction.");
-  }
-  if ((payable.net_payout_cents ?? 0) <= 0) {
-    reasons.push("The payout amount is zero after refunds and fees.");
-  }
-  if (payable.hold_reason && payable.status === "payout_on_hold") {
-    reasons.push(`A hold is in place: ${payable.hold_reason}`);
-  }
-  return reasons;
-}

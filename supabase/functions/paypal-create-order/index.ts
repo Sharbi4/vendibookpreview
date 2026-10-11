@@ -1,19 +1,69 @@
+import {
+  applyPartnerCredit,
+  normalizePartnerCode,
+  PARTNER_MESSAGES,
+  type PartnerKind,
+  type PartnerResolution,
+  partnerSnapshot,
+  rentalEligibleBaseCents,
+  reservePartnerRedemption,
+  resolvePartnerCredit,
+} from "../_shared/campusPartner.ts";
+import { cardEligibility } from "../_shared/paypalCardEligibility.ts";
+import { sameCheckoutSource } from "../_shared/paypalCardPolicy.ts";
+import { assertRentalCheckoutReady } from "../_shared/rentalCheckoutReady.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
-import { PayPalError, safeLog } from "../_shared/paypal.ts";
+import { hasCurrentLegalAcceptance } from "../_shared/legalVersions.ts";
+import {
+  PAYPAL_CHECKOUT_INTENT,
+  PAYPAL_CHECKOUT_USER_ACTION,
+  PayPalError,
+  paypalEnvironment,
+  safeLog,
+} from "../_shared/paypal.ts";
 import { getPaymentProvider, PaymentProviderError } from "../_shared/payments/index.ts";
 import { auditPayment, requestIp } from "../_shared/paymentAudit.ts";
 import { assertListingPurchasable } from "../_shared/listingGuard.ts";
+import { resolveProStatus } from "../_shared/proEligibility.ts";
 import {
+  applyTaxToQuote,
   quoteBookingRequest,
   quoteMonetizationProduct,
   quoteSaleTransaction,
   quoteServiceCharge,
   type QuoteResult,
 } from "../_shared/paypalAccounting.ts";
+import {
+  determinePaymentStrategy,
+  type PaymentStrategyContext,
+  type PaymentStrategyDecision,
+} from "../_shared/payments/paymentStrategy.ts";
+import {
+  parseStateZipFromAddress,
+  quoteSalesTax,
+  type TaxDestination,
+  type TaxKind,
+} from "../_shared/tax.ts";
+import { sellerMultipartyReady } from "../_shared/paypalMultiparty.ts";
+import {
+  buildOrderDetail,
+  buildSoftDescriptor,
+  parseShippingAddress,
+} from "../_shared/paypalOrderDetail.ts";
+import { OrderArithmeticError } from "../_shared/paypal.ts";
 
 const NOTARY_FEE_CENTS = 4500;
+const SITE_URL = "https://vendibook.com";
+
+/** Serializable tax snapshot included in every create-order response. */
+const taxPayload = (quote: QuoteResult) => ({
+  tax_cents: quote.taxCents,
+  rate_pct: quote.taxRatePct ?? null,
+  state: quote.taxState ?? null,
+  source: quote.taxSource ?? null,
+});
 
 /**
  * Creates a PayPal Orders v2 order for a Vendibook transaction.
@@ -41,22 +91,77 @@ serve(async (req) => {
       return jsonError(401, "unauthenticated", "Your session expired. Please sign in again.");
     }
 
+    // Legal gate, enforced here rather than in the UI: no PayPal order is
+    // created for a buyer who has not accepted the current Terms of Service
+    // and Payments Terms. A version bump invalidates an older acceptance.
+    for (const slug of ["terms-of-service", "payments-terms"] as const) {
+      const accepted = await hasCurrentLegalAcceptance(admin, user.id, slug);
+      if (!accepted) {
+        return jsonError(
+          403,
+          "legal_acceptance_required",
+          "Please tick the box agreeing to the Vendibook Terms of Service, Payments Terms, and Privacy Policy before paying.",
+        );
+      }
+    }
+
     const body = await req.json().catch(() => ({}));
+    const cardFields = body.card_fields === true;
     const kind = String(body?.kind ?? "");
     const targetId = body?.id ? String(body.id) : null;
 
     let quote: QuoteResult;
+    // deno-lint-ignore no-explicit-any
+    let saleRow: any = null;
+    // deno-lint-ignore no-explicit-any
+    let bookingRow: any = null;
+    // Listing title, used as the PayPal item name (sales and rentals).
+    let itemTitle: string | null = null;
     let saleTransactionId: string | null = null;
     let bookingRequestId: string | null = null;
+    let rentalFingerprint: string | null = null;
     let monetizationPurchaseId: string | null = null;
     /** Set for Vendibook service charges so the capture can fulfil them. */
     let fulfillment: Record<string, string> | null = null;
+    /** Where the purchase is taxed — resolved per checkout kind below. */
+    let taxDestination: TaxDestination = {};
+    let taxKind: TaxKind = "service";
+    /** Deposits toward a future sale are taxed on the sale itself, not here. */
+    let skipTax = false;
+    /**
+     * Buyer shipping address. Set only for orders that actually ship
+     * (delivery / Vendibook Freight). Everything else sends NO_SHIPPING.
+     */
+    let shippingAddress: ReturnType<typeof parseShippingAddress> = null;
+    /** Buyer contact PayPal uses to prefill login and the Contact Module. */
+    let buyerPhone: string | null = null;
+    /**
+     * Rental/sale context for the deterministic payment policy. Left null for
+     * Vendibook-owned products and service charges, which always capture now.
+     */
+    let strategyContext: Omit<PaymentStrategyContext, "grossCents"> | null = null;
+
+    /** Buyer profile location — used for Vendibook-owned products/services. */
+    const buyerTaxLocation = async (): Promise<TaxDestination> => {
+      const { data: profile } = await admin
+        .from("profiles")
+        .select("state, zip_code, city")
+        .eq("id", user.id)
+        .maybeSingle();
+      return {
+        state: profile?.state ?? null,
+        zip: profile?.zip_code ?? null,
+        city: profile?.city ?? null,
+      };
+    };
 
     if (kind === "sale") {
       if (!targetId) return jsonError(400, "missing_fields", "Missing transaction id.");
       const { data: tx } = await admin
         .from("sale_transactions")
-        .select("*, listing:listings(title)")
+        .select(
+          "*, listing:listings(title, city, state, address, freight_payer, vendibook_freight_enabled)",
+        )
         .eq("id", targetId)
         .maybeSingle();
       if (!tx) return jsonError(404, "not_found", "We couldn't find that transaction.");
@@ -66,13 +171,73 @@ serve(async (req) => {
       if (tx.seller_id === user.id) {
         return jsonError(403, "self_transaction", "You can't purchase your own listing.");
       }
-      quote = quoteSaleTransaction(tx, (tx as any).listing?.title ?? "Listing");
+      // Only an open purchase can be paid online. A cancelled, cash or
+      // already-settled sale must never receive a new PayPal order.
+      if (!["pending", "payment_failed"].includes(String(tx.status))) {
+        return jsonError(409, "purchase_not_payable", "This purchase can't be paid online. Open the order to see its status.");
+      }
+      // Another buyer already secured this listing: never open a second order.
+      const { data: otherSale } = await admin.rpc("listing_committed_sale", {
+        _listing_id: tx.listing_id,
+        _exclude_sale: tx.id,
+      });
+      if (otherSale) {
+        return jsonError(409, "listing_sold", "This item has already been purchased by another buyer.");
+      }
+      // This buyer already paid for this sale through another PayPal order.
+      const { data: paidAttempt } = await admin.from("payment_records")
+        .select("id").eq("sale_transaction_id", tx.id).eq("payment_status", "completed").limit(1).maybeSingle();
+      if (paidAttempt) {
+        return jsonError(409, "already_paid", "This purchase is already paid. Open the order to see its status.");
+      }
+      const freightPayer = (tx as any).listing?.freight_payer === "seller" ? "seller" : "buyer";
+      itemTitle = (tx as any).listing?.title ?? null;
+      quote = quoteSaleTransaction(tx, (tx as any).listing?.title ?? "Listing", { freightPayer });
+      saleRow = tx;
       saleTransactionId = tx.id;
+      // Buyer-paid freight now rides along with the purchase. Reuse the freight
+      // fulfillment key so the standalone freight invoice can never be charged
+      // a second time for the same sale.
+      if (
+        tx.fulfillment_type === "vendibook_freight" &&
+        freightPayer === "buyer" &&
+        Number(tx.freight_cost ?? 0) > 0 &&
+        tx.freight_payment_status !== "paid"
+      ) {
+        fulfillment = { kind: "freight", sale_transaction_id: tx.id, key: `freight:${tx.id}` };
+      }
+      strategyContext = {
+        mode: "sale",
+        // Once the seller has confirmed there is nothing left to gate on, so
+        // we charge outright. Otherwise PayPal holds the funds until they do.
+        requiresSellerAcceptance: !tx.seller_confirmed_at,
+      };
+      taxKind = "sale";
+      // Destination sourcing: delivery/freight tax where the goods land;
+      // pickup/on-site tax where the listing sits.
+      const listingLoc = (tx as any).listing ?? {};
+      const listingLocParsed = parseStateZipFromAddress(listingLoc.address);
+      const delivers = tx.fulfillment_type === "delivery" ||
+        tx.fulfillment_type === "vendibook_freight";
+      const parsed = delivers ? parseStateZipFromAddress(tx.delivery_address) : { state: null, zip: null };
+      taxDestination = {
+        state: parsed.state ?? listingLoc.state ?? null,
+        zip: parsed.zip ?? listingLocParsed.zip ?? null,
+        city: listingLoc.city ?? null,
+      };
+      // Physical goods that move: PayPal and Venmo need the destination.
+      if (delivers) {
+        shippingAddress = parseShippingAddress(tx.delivery_address, {
+          city: listingLoc.city,
+          state: listingLoc.state,
+        });
+      }
+      buyerPhone = tx.buyer_phone ?? null;
     } else if (kind === "booking") {
       if (!targetId) return jsonError(400, "missing_fields", "Missing booking id.");
       const { data: booking } = await admin
         .from("booking_requests")
-        .select("*, listing:listings(title)")
+        .select("*, listing:listings(title, city, state, address)")
         .eq("id", targetId)
         .maybeSingle();
       if (!booking) return jsonError(404, "not_found", "We couldn't find that booking.");
@@ -82,8 +247,60 @@ serve(async (req) => {
       if (booking.host_id === user.id) {
         return jsonError(403, "self_transaction", "You can't book your own listing.");
       }
-      quote = quoteBookingRequest(booking, (booking as any).listing?.title ?? "Listing");
+      try { await assertRentalCheckoutReady(admin, booking, authHeader); }
+      catch (error) { return jsonError(409, "rental_requirements", (error as Error).message); }
+      if (booking.payment_lock_record_id || booking.payment_status === "paid") {
+        return jsonError(409, "payment_in_progress", "This booking already has a payment being verified. Open its payment status before paying again.");
+      }
+      if (booking.is_instant_book && booking.status !== "approved") {
+        const { data: verified } = await admin.rpc("is_seller_identity_verified", { _user_id: booking.host_id });
+        if (verified !== true) return jsonError(409, "payment_not_ready", "The host needs to approve this request before payment.");
+      }
+      const { data: fingerprint, error: fingerprintError } = await admin.rpc("rental_checkout_fingerprint", { b: booking });
+      if (fingerprintError || !fingerprint) return jsonError(409, "quote_unavailable", "We could not verify this booking. Please try again.");
+      rentalFingerprint = fingerprint;
+      // COMMITMENT POINT for rentals: resolve Vendibook Pro once, lock the
+      // host-side fee onto the booking, and never reprice it afterwards.
+      const hostPro = booking.host_platform_fee !== null && booking.host_platform_fee !== undefined
+        ? { isPro: !!booking.pro_fee_applied }
+        : { isPro: (await resolveProStatus(admin, booking.host_id)).isPro };
+      itemTitle = (booking as any).listing?.title ?? null;
+      quote = quoteBookingRequest(booking, (booking as any).listing?.title ?? "Listing", hostPro);
+      bookingRow = booking;
       bookingRequestId = booking.id;
+      strategyContext = {
+        mode: "rent",
+        instantBook: !!booking.is_instant_book,
+        bookingStartAt: booking.start_date
+          ? new Date(`${booking.start_date}T${booking.start_time ?? "00:00:00"}`).toISOString()
+          : null,
+        hostApproved: booking.status === "approved",
+        hostDeclined: booking.status === "declined" || booking.status === "cancelled",
+        securityDepositCents: Math.round(Number(booking.deposit_amount ?? 0) * 100),
+      };
+      taxKind = "rental";
+      // Rentals are taxed where the rental happens — the listing's location.
+      const bookingListingLoc = parseStateZipFromAddress((booking as any).listing?.address);
+      taxDestination = {
+        state: (booking as any).listing?.state ?? null,
+        zip: bookingListingLoc.zip ?? null,
+        city: (booking as any).listing?.city ?? null,
+      };
+      if (booking.host_platform_fee === null || booking.host_platform_fee === undefined) {
+        await admin
+          .from("booking_requests")
+          .update({
+            // Host commission only. platformFeeCents also carries the renter
+            // fee, and quoteBookingRequest reads this column back as the host fee.
+            host_platform_fee: (quote.hostFeeCents ?? quote.platformFeeCents) / 100,
+            host_fee_rate_pct: quote.feeRatePct ?? null,
+            host_pro_discount: (quote.proDiscountCents ?? 0) / 100,
+            pro_fee_applied: !!quote.proFeeApplied,
+            fee_locked_at: new Date().toISOString(),
+          })
+          .eq("id", booking.id)
+          .is("host_platform_fee", null);
+      }
     } else if (kind === "product") {
       const slug = body?.slug ? String(body.slug) : null;
       if (!slug) return jsonError(400, "missing_fields", "Missing product slug.");
@@ -108,6 +325,9 @@ serve(async (req) => {
       const discount = promoActive ? (product.price_cents - product.promo_price_cents) : 0;
       quote = quoteMonetizationProduct(product, amountCents, discount);
       quote.buyerId = user.id;
+      taxKind = "product";
+      // Vendibook-owned products are taxed at the buyer's location.
+      taxDestination = await buyerTaxLocation();
 
       const { data: purchase } = await admin
         .from("monetization_purchases")
@@ -129,12 +349,16 @@ serve(async (req) => {
       if (!targetId) return jsonError(400, "missing_fields", "Missing transaction id.");
       const { data: tx } = await admin
         .from("sale_transactions")
-        .select("*, listing:listings(title)")
+        .select("*, listing:listings(title, city, state, address, freight_payer)")
         .eq("id", targetId)
         .maybeSingle();
       if (!tx) return jsonError(404, "not_found", "We couldn't find that transaction.");
       if (tx.buyer_id !== user.id) {
         return jsonError(403, "forbidden", "Only the buyer can pay for freight.");
+      }
+      // Seller-covered freight is never charged to the buyer.
+      if ((tx as any).listing?.freight_payer === "seller") {
+        return jsonError(409, "freight_seller_paid", "Shipping on this order is free — the seller covers freight.");
       }
       if (!tx.seller_confirmed_at) {
         return jsonError(409, "not_ready", "The seller needs to confirm this sale before freight can be paid.");
@@ -147,6 +371,17 @@ serve(async (req) => {
       }
       const freightCents = Math.round(Number(tx.freight_cost ?? 0) * 100);
       if (freightCents <= 0) return jsonError(400, "invalid_amount", "There's no freight amount due.");
+      taxKind = "service";
+      {
+        const listingLoc = (tx as any).listing ?? {};
+        const listingLocParsed = parseStateZipFromAddress(listingLoc.address);
+        const parsed = parseStateZipFromAddress(tx.delivery_address);
+        taxDestination = {
+          state: parsed.state ?? listingLoc.state ?? null,
+          zip: parsed.zip ?? listingLocParsed.zip ?? null,
+          city: listingLoc.city ?? null,
+        };
+      }
       quote = quoteServiceCharge({
         prefix: "VB-FRT",
         transactionType: "freight",
@@ -158,20 +393,37 @@ serve(async (req) => {
         sellerId: tx.seller_id ?? null,
       });
       fulfillment = { kind: "freight", sale_transaction_id: tx.id, key: `freight:${tx.id}` };
+      shippingAddress = parseShippingAddress(tx.delivery_address, {
+        city: (tx as any).listing?.city,
+        state: (tx as any).listing?.state,
+      });
+      buyerPhone = tx.buyer_phone ?? null;
     } else if (kind === "notary") {
       if (!targetId) return jsonError(400, "missing_fields", "Missing listing id.");
       const { data: listing } = await admin
         .from("listings")
-        .select("id, title, host_id, proof_notary_enabled")
+        .select("id, title, host_id, proof_notary_enabled, city, state, address")
         .eq("id", targetId)
         .maybeSingle();
       if (!listing) return jsonError(404, "not_found", "We couldn't find that listing.");
       if (listing.host_id !== user.id) {
         return jsonError(403, "forbidden", "You don't own this listing.");
       }
-      if (!listing.proof_notary_enabled) {
-        return jsonError(409, "not_applicable", "Proof Notary isn't enabled on this listing.");
+      // NOTE: we deliberately do NOT require `proof_notary_enabled` here — that
+      // column is the *paid entitlement*, granted only by a verified capture.
+      // The owner buys the add-on while it is still off; a second purchase of an
+      // already-active add-on is the only thing worth refusing.
+      if (listing.proof_notary_enabled) {
+        return jsonError(409, "already_active", "Proof Notary is already active on this listing.");
       }
+      taxKind = "service";
+      // The notary service is performed at the listing.
+      const notaryLoc = parseStateZipFromAddress(listing.address);
+      taxDestination = {
+        state: listing.state ?? null,
+        zip: notaryLoc.zip ?? null,
+        city: listing.city ?? null,
+      };
       quote = quoteServiceCharge({
         prefix: "VB-NOT",
         transactionType: "addon",
@@ -182,7 +434,45 @@ serve(async (req) => {
         buyerId: user.id,
       });
       fulfillment = { kind: "notary", listing_id: listing.id, key: `notary:${listing.id}` };
+    } else if (kind === "concierge") {
+      if (!targetId) return jsonError(400, "missing_fields", "Missing concierge order id.");
+      const { data: order } = await admin
+        .from("listing_concierge_orders")
+        .select("*")
+        .eq("id", targetId)
+        .maybeSingle();
+      if (!order) return jsonError(404, "not_found", "We couldn't find that concierge order.");
+      if (order.user_id !== user.id) {
+        return jsonError(403, "forbidden", "This concierge order belongs to another account.");
+      }
+      if (order.payment_status === "paid") {
+        return jsonError(409, "already_paid", "This concierge order is already paid.");
+      }
+      if (order.status !== "payment_required") {
+        return jsonError(409, "not_ready", "This concierge order isn't awaiting payment.");
+      }
+      if (!order.price_cents || order.price_cents <= 0) {
+        return jsonError(400, "invalid_amount", "This concierge order has no amount due.");
+      }
+      taxKind = "service";
+      // Concierge is a Vendibook service billed to the seller — their location.
+      taxDestination = await buyerTaxLocation();
+      quote = quoteServiceCharge({
+        prefix: "VB-CON",
+        transactionType: "addon",
+        amountCents: order.price_cents,
+        description: "VendiBook Listing Concierge — listing preparation service",
+        lineLabel: "VendiBook Listing Concierge",
+        listingId: null,
+        buyerId: user.id,
+      });
+      fulfillment = {
+        kind: "concierge",
+        concierge_order_id: order.id,
+        key: `concierge:${order.id}`,
+      };
     } else if (kind === "protected_sale_deposit") {
+
       if (!targetId) return jsonError(400, "missing_fields", "Missing protected sale id.");
       const { data: ps } = await admin
         .from("protected_sales")
@@ -197,6 +487,9 @@ serve(async (req) => {
       if (!ps.deposit_cents || ps.deposit_cents <= 0) {
         return jsonError(400, "invalid_amount", "There's no deposit amount due.");
       }
+      // A deposit is a partial payment toward the protected sale — the sale
+      // itself carries the tax, so collecting tax here would double-charge.
+      skipTax = true;
       quote = quoteServiceCharge({
         prefix: "VB-DEP",
         transactionType: "booking_deposit",
@@ -224,8 +517,94 @@ serve(async (req) => {
       if (blocked) return blocked;
     }
 
+    // ── Sales tax (marketplace facilitator model) ─────────────────────────
+    // Computed authoritatively here via _shared/tax.ts (state sales-tax
+    // table). Tax rides on top of the merchandise /
+    // rental / service amount — it is NEVER part of the seller payout or the
+    // commission base, and is booked to `tax_collected` at capture.
+    if (!skipTax) {
+      const tax = await quoteSalesTax({
+        amountCents: quote.taxableBaseCents,
+        destination: taxDestination,
+        kind: taxKind,
+      });
+      applyTaxToQuote(quote, tax);
+
+      // Persist the tax snapshot on the business record so receipts, order
+      // detail pages, and accounting all read the same numbers.
+      const taxSnapshot = {
+        tax_rate_pct: tax.ratePct,
+        tax_source: tax.source,
+        tax_jurisdiction: tax.state,
+      };
+      if (saleTransactionId) {
+        await admin.from("sale_transactions")
+          .update({ ...taxSnapshot, tax_amount: tax.taxCents / 100 })
+          .eq("id", saleTransactionId);
+      }
+      if (bookingRequestId) {
+        await admin.from("booking_requests")
+          .update({ ...taxSnapshot, tax_amount: tax.taxCents / 100 })
+          .eq("id", bookingRequestId);
+      }
+      if (monetizationPurchaseId) {
+        await admin.from("monetization_purchases")
+          .update({ ...taxSnapshot, tax_cents: tax.taxCents })
+          .eq("id", monetizationPurchaseId);
+      }
+    }
+
+    // ── Campus Partner credit (validated here, right before order creation) ──
+    const partnerCode = normalizePartnerCode(body?.partner_code);
+    let partner: PartnerResolution | null = null;
+    const partnerKind: PartnerKind = kind === "sale" ? "purchase" : "rental";
+    if (partnerCode && (saleRow || bookingRow)) {
+      const isCash = !!saleRow && (/cash|in_person/i.test(String(saleRow.payment_method ?? "")) ||
+        saleRow.is_cash_sale === true || String(saleRow.status) === "pending_cash");
+      partner = await resolvePartnerCredit(admin, {
+        code: partnerCode,
+        userId: user.id,
+        kind: partnerKind,
+        eligibleBaseCents: saleRow ? Math.round(Number(saleRow.amount ?? 0) * 100) : rentalEligibleBaseCents(quote, bookingRow),
+        isCash,
+      });
+      if (!partner.ok) {
+        return jsonError(409, "partner_code_invalid", partner.message ?? PARTNER_MESSAGES.invalid, { reason: partner.reason });
+      }
+      try {
+        applyPartnerCredit(quote, partner.creditCents);
+      } catch {
+        return jsonError(409, "partner_code_invalid", PARTNER_MESSAGES.not_eligible, { reason: "not_eligible" });
+      }
+    }
+    const reservePartner = async (recordId: string) =>
+      partner?.ok
+        ? await reservePartnerRedemption(admin, {
+          codeId: partner.row!.id, userId: user.id, kind: partnerKind, paymentRecordId: recordId,
+          creditCents: partner.creditCents, eligibleBaseCents: partner.eligibleBaseCents,
+          grossCents: quote.grossCents, platformFeeCents: quote.platformFeeCents,
+        })
+        : null;
+
     if (quote.grossCents <= 0) {
       return jsonError(400, "invalid_amount", "This transaction has no amount due.");
+    }
+
+    // ── Payment policy ───────────────────────────────────────────────────
+    // Eligibility remains server-side. Marketplace checkout itself always
+    // creates a CAPTURE order and waits for the buyer's final Submit action.
+    const decision: PaymentStrategyDecision = strategyContext
+      ? determinePaymentStrategy({ ...strategyContext, grossCents: quote.grossCents })
+      : determinePaymentStrategy({ mode: "sale", grossCents: quote.grossCents, requiresSellerAcceptance: false });
+
+    if (decision.blocked) {
+      return jsonError(409, "payment_not_ready", decision.buyerMessage);
+    }
+
+    // Card eligibility is checked again at order creation, not trusted from the browser.
+    const cardAccess = cardFields ? await cardEligibility(admin, kind === "sale" || kind === "booking" ? quote.sellerId : null) : null;
+    if (cardAccess && !cardAccess.eligible) {
+      return jsonError(409, "card_unavailable", "Card checkout is not available for this seller. Please choose another payment method.");
     }
 
     // Reuse an in-flight order for the same target so a double click or a
@@ -248,20 +627,28 @@ serve(async (req) => {
 
       const { data: inflight } = await admin
         .from("payment_records")
-        .select("id, reference, paypal_order_id, gross_amount_cents")
+        .select("id, reference, paypal_order_id, gross_amount_cents, payment_intent, fee_breakdown")
         .eq("fee_breakdown->fulfillment->>key", fulfillment.key)
         .in("payment_status", ["created", "approved"])
         .gt("created_at", new Date(Date.now() - 20 * 60_000).toISOString())
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
-      if (inflight?.paypal_order_id && inflight.gross_amount_cents === quote.grossCents) {
+      if (
+        inflight?.paypal_order_id &&
+        inflight.gross_amount_cents === quote.grossCents &&
+        inflight.payment_intent === PAYPAL_CHECKOUT_INTENT &&
+        sameCheckoutSource(inflight.fee_breakdown, cardFields)
+      ) {
         return jsonResponse(200, {
           order_id: inflight.paypal_order_id,
           reference: inflight.reference,
           amount_cents: inflight.gross_amount_cents,
           currency: quote.currency,
           breakdown: quote.breakdown,
+          tax: taxPayload(quote),
+          payment_intent: PAYPAL_CHECKOUT_INTENT,
+          payment_strategy: "capture_after_buyer_review",
           reused: true,
         });
       }
@@ -270,7 +657,7 @@ serve(async (req) => {
     if (inflightFilter) {
       const { data: existing } = await admin
         .from("payment_records")
-        .select("id, reference, paypal_order_id, payment_status, gross_amount_cents")
+        .select("id, reference, paypal_order_id, payment_status, gross_amount_cents, payment_intent, fee_breakdown")
         .eq(inflightFilter.column, inflightFilter.value)
         .in("payment_status", ["created", "approved"])
         .gt("created_at", new Date(Date.now() - 20 * 60_000).toISOString())
@@ -278,7 +665,17 @@ serve(async (req) => {
         .limit(1)
         .maybeSingle();
 
-      if (existing?.paypal_order_id && existing.gross_amount_cents === quote.grossCents) {
+      if (
+        existing?.paypal_order_id &&
+        existing.gross_amount_cents === quote.grossCents &&
+        existing.payment_intent === PAYPAL_CHECKOUT_INTENT &&
+        sameCheckoutSource(existing.fee_breakdown, cardFields) &&
+        (!bookingRequestId || existing.fee_breakdown?.rental_fingerprint === rentalFingerprint)
+      ) {
+        const reuseBlocked = await reservePartner(existing.id);
+        if (reuseBlocked) {
+          return jsonError(409, "partner_code_invalid", PARTNER_MESSAGES[reuseBlocked], { reason: reuseBlocked });
+        }
         safeLog("reusing_inflight_order", { reference: existing.reference });
         return jsonResponse(200, {
           order_id: existing.paypal_order_id,
@@ -286,6 +683,9 @@ serve(async (req) => {
           amount_cents: existing.gross_amount_cents,
           currency: quote.currency,
           breakdown: quote.breakdown,
+          tax: taxPayload(quote),
+          payment_intent: PAYPAL_CHECKOUT_INTENT,
+          payment_strategy: "capture_after_buyer_review",
           reused: true,
         });
       }
@@ -318,17 +718,29 @@ serve(async (req) => {
         currency: quote.currency,
         gross_amount_cents: quote.grossCents,
         platform_fee_cents: quote.platformFeeCents,
+        fee_rate_pct: quote.feeRatePct ?? null,
+        pro_discount_cents: quote.proDiscountCents ?? 0,
+        pro_fee_applied: !!quote.proFeeApplied,
         tax_cents: quote.taxCents,
         deposit_cents: quote.depositCents,
         discount_cents: quote.discountCents,
         seller_proceeds_cents: quote.sellerProceedsCents,
         payment_status: "created",
         internal_status: "awaiting_buyer_approval",
+        payment_strategy: "capture_after_buyer_review",
+        payment_intent: PAYPAL_CHECKOUT_INTENT,
+        // balance_due_cents is NOT NULL DEFAULT 0 — an explicit NULL violates
+        // the constraint and kills order creation for every checkout.
+        balance_due_cents: decision.balanceDueCents ?? 0,
+        balance_due_at: decision.balanceDueAt,
         idempotency_key: quote.reference,
         fee_breakdown: {
+          checkout_source: cardFields ? "card_fields" : "buttons",
+          ...(bookingRequestId ? { rental_fingerprint: rentalFingerprint } : {}),
           lines: quote.breakdown,
           release_at: quote.releaseAt,
           ...(fulfillment ? { fulfillment } : {}),
+          ...(partner?.ok ? { campus_partner: partnerSnapshot(partner, partnerKind) } : {}),
         },
       })
       .select()
@@ -339,21 +751,116 @@ serve(async (req) => {
       return jsonError(500, "record_failed", "We couldn't start this payment. Please try again.");
     }
 
+    const partnerBlocked = await reservePartner(record.id);
+    if (partnerBlocked) {
+      await admin.from("payment_records").update({ payment_status: "cancelled", internal_status: "partner_code_rejected" })
+        .eq("id", record.id).eq("payment_status", "created");
+      return jsonError(409, "partner_code_invalid", PARTNER_MESSAGES[partnerBlocked], { reason: partnerBlocked });
+    }
+
+    // ---- Connected Path routing decision (Step 3)
+    // Only seller-owned money moves: sales and rentals. Vendibook's own
+    // products and service charges (boosts, freight, notary, verification)
+    // always settle first-party. `sellerMultipartyReady` is itself gated by
+    // the PAYPAL_MULTIPARTY_ENABLED env flag and the runtime kill switch, so
+    // with the flag off this resolves to first-party exactly as today.
+    const sellerOwnedKind = kind === "sale" || kind === "booking";
+    const sellerRouting = sellerOwnedKind && (quote.sellerProceedsCents ?? 0) > 0
+      ? cardAccess?.routing ?? await sellerMultipartyReady(admin, quote.sellerId ?? null)
+      : { enabled: false, merchantId: null as string | null };
+
+    // Vendibook keeps everything that is not the seller's net proceeds:
+    // commission, buyer-side fee and collected sales tax held for remittance.
+    const platformFeeCents = sellerRouting.enabled
+      ? Math.max(0, quote.grossCents - (quote.sellerProceedsCents ?? 0))
+      : 0;
+    const routing = sellerRouting.enabled && sellerRouting.merchantId
+      ? { merchantId: sellerRouting.merchantId, platformFeeCents }
+      : null;
+
+    if (routing) {
+      safeLog("multiparty_routed", {
+        reference: quote.reference,
+        onBehalfOf: routing.merchantId,
+        platform_fee_cents: routing.platformFeeCents,
+        gross_cents: quote.grossCents,
+      });
+    }
+
+    // ── Item-level detail (PayPal certification requirement) ─────────────
+    // Every order carries real lines with stable SKUs, and the breakdown is
+    // validated here so a mismatch surfaces as our error, not a PayPal 422.
+    // Equipment bought on Vendibook is a physical good even when the buyer
+    // picks it up; only shipped orders carry an address.
+    const detail = buildOrderDetail(quote, {
+      physical: !!shippingAddress || kind === "sale",
+      itemName: itemTitle,
+    });
+
+    // Soft descriptor: the seller's business name so the buyer recognises the
+    // charge on their statement. Falls back to VENDIBOOK.
+    let sellerDisplayName: string | null = null;
+    if (quote.sellerId) {
+      const { data: sellerProfile } = await admin
+        .from("profiles")
+        .select("business_name, display_name, full_name")
+        .eq("id", quote.sellerId)
+        .maybeSingle();
+      sellerDisplayName = sellerProfile?.business_name ?? sellerProfile?.display_name ??
+        sellerProfile?.full_name ?? null;
+    }
+
     // Routed through the provider abstraction — no direct SDK calls here.
     const provider = getPaymentProvider();
     const order = await provider.createOrder({
+      cardFields,
       amount: { amountCents: quote.grossCents, currency: quote.currency },
       reference: quote.reference,
       description: quote.description,
       idempotencyKey: quote.reference,
-      softDescriptor: "VENDIBOOK",
+      softDescriptor: buildSoftDescriptor(sellerDisplayName),
+      intent: PAYPAL_CHECKOUT_INTENT,
+      // Itemized amounts must reconcile exactly with the order total.
+      breakdown: {
+        itemTotalCents: detail.itemTotalCents,
+        taxCents: detail.taxCents,
+        shippingCents: detail.shippingCents,
+        discountCents: detail.discountCents,
+      },
+      items: detail.items,
+      shipping: shippingAddress,
+      buyerEmail: user.email ?? null,
+      buyerPhone,
+      returnUrl: `${SITE_URL}/payment/return?ref=${encodeURIComponent(quote.reference)}${bookingRequestId ? `&returnTo=${encodeURIComponent(`/dashboard/bookings/${bookingRequestId}?step=payment`)}` : ""}`,
+      cancelUrl: `${SITE_URL}/payment/cancelled?ref=${encodeURIComponent(quote.reference)}${bookingRequestId ? `&returnTo=${encodeURIComponent(`/dashboard/bookings/${bookingRequestId}?step=payment`)}` : ""}`,
+      sellerId: quote.sellerId ?? null,
+      payeeMerchantId: routing?.merchantId ?? null,
+      platformFeeCents: routing?.platformFeeCents ?? 0,
     });
 
     await admin
       .from("payment_records")
       .update({
         paypal_order_id: order.providerOrderId,
-        metadata: { paypal_status: order.status },
+        // SKUs must be persisted: the Tracking API only accepts SKUs that were
+        // present on the original order.
+        order_items: detail.items,
+        shipping_address: shippingAddress,
+        metadata: {
+          paypal_status: order.status,
+          // Read back at capture time so the payout ledger knows the seller was
+          // paid directly, and at refund time for the auth assertion.
+          ...(routing
+            ? {
+              multiparty: {
+                routed: true,
+                merchant_id: routing.merchantId,
+                platform_fee_cents: routing.platformFeeCents,
+                disbursement_mode: "INSTANT",
+              },
+            }
+            : {}),
+        },
       })
       .eq("id", record.id);
 
@@ -373,7 +880,13 @@ serve(async (req) => {
       },
     });
 
-    safeLog("order_created", { reference: quote.reference, orderId: order.providerOrderId });
+    safeLog("order_created", {
+      reference: quote.reference,
+      orderId: order.providerOrderId,
+      intent: PAYPAL_CHECKOUT_INTENT,
+      user_action: PAYPAL_CHECKOUT_USER_ACTION,
+      environment: paypalEnvironment(),
+    });
 
 
     return jsonResponse(200, {
@@ -382,8 +895,24 @@ serve(async (req) => {
       amount_cents: quote.grossCents,
       currency: quote.currency,
       breakdown: quote.breakdown,
+      tax: taxPayload(quote),
+      payment_intent: PAYPAL_CHECKOUT_INTENT,
+      payment_strategy: "capture_after_buyer_review",
+      buyer_message: "Nothing is charged until you return to Vendibook, review the payment, and select Submit payment.",
+      balance_due_cents: decision.balanceDueCents,
+      balance_due_at: decision.balanceDueAt,
     });
   } catch (err) {
+    if (err instanceof OrderArithmeticError) {
+      // Our own arithmetic is wrong — never hand PayPal an order that cannot
+      // reconcile. Loud in the logs, recoverable for the buyer.
+      safeLog("order_breakdown_mismatch", { message: err.message });
+      return jsonError(
+        500,
+        "order_breakdown_mismatch",
+        "We couldn't total this order correctly. Nothing has been charged — please try again or contact support.",
+      );
+    }
     if (err instanceof PaymentProviderError || err instanceof PayPalError) {
       const status = (err as { status?: number }).status ?? 502;
       return jsonError(
@@ -397,3 +926,4 @@ serve(async (req) => {
     return unknownErrorResponse(err);
   }
 });
+

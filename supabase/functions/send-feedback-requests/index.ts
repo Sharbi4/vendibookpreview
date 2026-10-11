@@ -2,6 +2,8 @@
 // feedback request email per (context_type, context_id). Idempotency is
 // guaranteed by the unique constraint on feedback_email_sent.
 import { createClient } from 'npm:@supabase/supabase-js@2'
+import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
+import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -16,6 +18,7 @@ function genToken(): string {
 
 Deno.serve(async (req) => {
   if (req.method === 'OPTIONS') return new Response(null, { headers: corsHeaders })
+  if (!(await isAdminOrBackendCaller(req))) return forbiddenResponse();
 
   const supabaseUrl = Deno.env.get('SUPABASE_URL')!
   const serviceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
@@ -30,14 +33,25 @@ Deno.serve(async (req) => {
   try {
     const { data: bookings } = await supabase
       .from('booking_requests')
-      .select('id, shopper_id, listing_id, booking_end_timestamp, end_date, listings(title), profiles!booking_requests_shopper_id_fkey(email, full_name, first_name)')
+      .select('id, shopper_id, listing_id, booking_end_timestamp, end_date, listings(title)')
       .eq('status', 'approved')
       .lt('booking_end_timestamp', minAge)
       .gt('booking_end_timestamp', cutoff)
       .limit(200)
 
+    // shopper_id references auth.users, not profiles — fetch profiles separately.
+    const shopperIds = Array.from(new Set((bookings || []).map((b: any) => b.shopper_id).filter(Boolean)))
+    const profilesById = new Map<string, any>()
+    if (shopperIds.length > 0) {
+      const { data: profileRows } = await supabase
+        .from('profiles')
+        .select('id, email, full_name, first_name')
+        .in('id', shopperIds)
+      ;(profileRows || []).forEach((p: any) => profilesById.set(p.id, p))
+    }
+
     for (const b of bookings || []) {
-      const profile: any = (b as any).profiles
+      const profile: any = profilesById.get((b as any).shopper_id)
       const listing: any = (b as any).listings
       const email = profile?.email
       if (!email) continue
@@ -63,8 +77,7 @@ Deno.serve(async (req) => {
       const recipientName = profile?.first_name || profile?.full_name?.split(' ')[0]
       const contextLabel = listing?.title ? `your booking at ${listing.title}` : 'your recent booking'
 
-      const { error } = await supabase.functions.invoke('send-transactional-email', {
-        body: {
+      const { error } = await invokeTransactionalEmail({
           templateName: 'feedback-request',
           recipientEmail: email,
           idempotencyKey: `feedback-booking-${b.id}`,
@@ -72,8 +85,7 @@ Deno.serve(async (req) => {
             recipientName, contextLabel, contextType: 'booking',
             feedbackToken: token, aiSubject: true,
           },
-        },
-      })
+        })
       if (error) errors.push({ booking: b.id, error: error.message })
       else sentLog.push({ type: 'booking', id: b.id, email })
     }
@@ -117,8 +129,7 @@ Deno.serve(async (req) => {
       const recipientName = profile?.first_name || profile?.full_name?.split(' ')[0]
       const contextLabel = listing?.title ? `your purchase of ${listing.title}` : 'your recent purchase'
 
-      const { error } = await supabase.functions.invoke('send-transactional-email', {
-        body: {
+      const { error } = await invokeTransactionalEmail({
           templateName: 'feedback-request',
           recipientEmail: email,
           idempotencyKey: `feedback-sale-${s.id}`,
@@ -126,8 +137,7 @@ Deno.serve(async (req) => {
             recipientName, contextLabel, contextType: 'sale',
             feedbackToken: token, aiSubject: true,
           },
-        },
-      })
+        })
       if (error) errors.push({ sale: s.id, error: error.message })
       else sentLog.push({ type: 'sale', id: s.id, email })
     }

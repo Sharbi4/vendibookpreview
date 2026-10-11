@@ -56,9 +56,9 @@ export function buildTimeline(ps: ProtectedSale, role: Role): TimelineStage[] {
         )
       : null,
     detail: idComplete
-      ? 'Both parties verified through Stripe Identity.'
+      ? 'Both parties verified through Vendibook identity verification.'
       : `Buyer ${ps.buyer_identity_verified_at ? '✓' : '…'} · Seller ${ps.seller_identity_verified_at ? '✓' : '…'}`,
-    nextAction: idComplete ? null : (meVerified ? 'Waiting on the other party to verify.' : 'Verify your ID with Stripe Identity.'),
+    nextAction: idComplete ? null : (meVerified ? 'Waiting on the other party to verify.' : 'Verify your ID with Vendibook identity verification.'),
     waitingOn: idComplete ? null : (meVerified ? 'them' : 'you'),
   });
 
@@ -152,7 +152,7 @@ export function buildTimeline(ps: ProtectedSale, role: Role): TimelineStage[] {
     timestamp: fmt(ps.funds_released_at),
     detail: released
       ? role === 'seller'
-        ? 'Payout follows the standard 25-day sale window.'
+        ? 'Payout is typically released within 24 hours of delivery confirmation.'
         : 'Your protection window closes. Thanks for using Protected Sale.'
       : 'Auto-releases once both parties confirm handoff.',
     nextAction: released ? null : confirmed ? 'Processing release…' : null,

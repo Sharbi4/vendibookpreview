@@ -1,10 +1,12 @@
 import { excludeTestListings } from '@/lib/excludeTestListings';
 import { useMemo, useState, useEffect } from 'react';
+import { filterPubliclyVisible } from '@/lib/listings/publicVisibility';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import ListingCard from '@/components/listing/ListingCard';
 import ListingPreviewDrawer from '@/components/listing/ListingPreviewDrawer';
 import { supabase } from '@/integrations/supabase/client';
+import { useSellerVerifiedMap } from '@/hooks/useSellerIdentityBadgeMap';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MapPin, Navigation, Map, List, Columns, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -62,7 +64,11 @@ const FeaturedListings = () => {
       });
 
       if (error) throw error;
-      return data;
+      if (!data) return null;
+      return {
+        ...data,
+        listings: filterPubliclyVisible((data.listings ?? []) as any[]),
+      };
     },
     enabled: !!userLocation,
   });
@@ -79,7 +85,7 @@ const FeaturedListings = () => {
       ).order('published_at', { ascending: false });
 
       if (error) throw error;
-      return data;
+      return filterPubliclyVisible(data ?? []);
     },
     enabled: true, // Always fetch immediately
   });
@@ -87,7 +93,7 @@ const FeaturedListings = () => {
   // Use nearby listings if available, otherwise fall back to all listings
   const listings = useMemo(() => {
     if (nearbyData?.listings && nearbyData.listings.length > 0) {
-      return nearbyData.listings;
+      return filterPubliclyVisible(nearbyData.listings as any[]);
     }
     return allListings;
   }, [nearbyData, allListings]);
@@ -98,32 +104,12 @@ const FeaturedListings = () => {
     return [...new Set(ids)] as string[];
   }, [listings]);
 
-  // Use host verification from nearby API or fetch separately
-  const { data: hostProfiles = [] } = useQuery({
-    queryKey: ['featured-host-profiles', hostIds],
-    queryFn: async () => {
-      if (hostIds.length === 0) return [];
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('id, identity_verified')
-        .in('id', hostIds);
-      if (error) throw error;
-      return data;
-    },
-    enabled: hostIds.length > 0 && !nearbyData?.hostVerificationMap,
-  });
+  /**
+   * Authoritative paid Identity Verified badges — one batched request for the
+   * whole row, never the legacy profiles.identity_verified column.
+   */
+  const hostVerificationMap = useSellerVerifiedMap(hostIds);
 
-  // Create verification map
-  const hostVerificationMap = useMemo(() => {
-    if (nearbyData?.hostVerificationMap) {
-      return nearbyData.hostVerificationMap;
-    }
-    const map: Record<string, boolean> = {};
-    hostProfiles.forEach(profile => {
-      map[profile.id] = profile.identity_verified ?? false;
-    });
-    return map;
-  }, [nearbyData?.hostVerificationMap, hostProfiles]);
 
   const sortedListings = useMemo(() => {
     let result = [...listings];

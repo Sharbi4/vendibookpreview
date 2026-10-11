@@ -2,9 +2,16 @@
 
 > The marketplace for mobile food vendors — buy or rent food trucks, food trailers, shared/commercial kitchens, and vendor spaces across the United States.
 
-Vendibook connects food entrepreneurs with verified hosts. Every listing supports secure payments, identity verification, document workflows, and 24/7 support. Rentals and sales are protected by our checkout, dispute resolution, and host payout system.
+Vendibook connects buyers and renters with equipment owners and hosts. Listing details and asking prices are supplied by sellers. Identity verification and payment options are shown where available; buyers should confirm equipment condition, ownership, and local requirements before committing. Financing applications are handled by a third-party provider; Vendibook is not a lender and does not guarantee approval.
 
 ## Pages
+
+- [Food Truck & Food Trailer Financing](https://vendibook.com/financing): Payment estimates, purchase-budget inventory links, and third-party financing applications.
+- [Food Truck Prices](https://vendibook.com/food-truck-prices): Seller asking-price data and equipment cost planning; asking prices are not completed sale prices.
+- [Food Trucks for Sale](https://vendibook.com/food-trucks-for-sale): Compare equipment, seller details, prices, and locations.
+- [Food Trailers for Sale](https://vendibook.com/food-trailers-for-sale): Concession and mobile kitchen trailers.
+- [Used Food Trucks](https://vendibook.com/used-food-trucks-for-sale): Listings with a seller-declared used condition.
+- [How to Buy a Food Truck](https://vendibook.com/how-to-buy-a-food-truck): A buyer checklist for selecting and inspecting equipment.
 
 - [Home](/): Search and browse food trucks, trailers, kitchens, and vendor spaces.
 - [What Is Vendibook?](/what-is-vendibook): Plain-language explanation of the Vendibook marketplace and who it serves.

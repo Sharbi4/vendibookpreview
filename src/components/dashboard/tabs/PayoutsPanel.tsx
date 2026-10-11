@@ -1,32 +1,63 @@
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Loader2, CheckCircle2, AlertTriangle, ExternalLink, Wallet } from 'lucide-react';
-import { useStripeConnect } from '@/hooks/useStripeConnect';
+import { Loader2, Wallet, Clock, ShieldCheck } from 'lucide-react';
+import { usePayoutPreference } from '@/hooks/usePayoutPreference';
+import { PAYOUT_METHOD_LABEL, PAYOUT_STATUS_LABEL } from '@/lib/payouts/methods';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
-import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import EmptyState from '../shared/EmptyState';
+
+/** Where sellers manage their manual payout preference. */
+const PAYOUT_SETTINGS_PATH = '/dashboard/account/payouts';
+
+/** Truthful labels for the internal payable states admins work through. */
+const PAYABLE_STATUS_LABEL: Record<string, string> = {
+  awaiting_payment_confirmation: 'Awaiting confirmation',
+  pending_release: 'Pending release',
+  eligible_for_review: 'Eligible for review',
+  payout_on_hold: 'Held',
+  payout_approved: 'Approved',
+  payout_processing: 'Processing',
+  payout_completed: 'Paid',
+  payout_failed: 'Failed — support notified',
+  partially_refunded: 'Partially refunded',
+  fully_refunded: 'Refunded',
+  disputed: 'Disputed',
+  reversed: 'Reversed',
+  cancelled: 'Cancelled',
+};
+
+/** States where no release date should be presented as a promise. */
+const NO_TIMING_PROMISE = new Set([
+  'payout_on_hold',
+  'disputed',
+  'reversed',
+  'payout_failed',
+  'partially_refunded',
+  'fully_refunded',
+  'cancelled',
+]);
+
+const money = (cents: number | null | undefined) =>
+  `$${(((cents ?? 0) as number) / 100).toLocaleString(undefined, { minimumFractionDigits: 2 })}`;
 
 const PayoutsPanel = () => {
   const { user } = useAuth();
-  const {
-    isOnboardingComplete, isLoading, isConnecting, connectStripe,
-    openStripeDashboard, isOpeningDashboard,
-  } = useStripeConnect();
+  const { preference, isLoading } = usePayoutPreference();
 
-  const { data: payouts = [], isLoading: payoutsLoading } = useQuery({
-    queryKey: ['host-payout-history', user?.id],
-    enabled: !!user && isOnboardingComplete,
+  const { data: payables = [], isLoading: payablesLoading } = useQuery({
+    queryKey: ['seller-payables', user?.id],
+    enabled: !!user,
     queryFn: async () => {
-      // Best-effort — some deployments don't expose payouts to the client.
-      const { data } = await supabase
-        .from('sale_transactions')
-        .select('id, amount, platform_fee, created_at, status')
+      const { data } = await (supabase as any)
+        .from('seller_payables')
+        .select(
+          'id, status, transaction_type, gross_collected_cents, platform_fee_cents, adjustments_cents, refunded_cents, net_payout_cents, release_due_at, payout_eligible_at, payout_completed_at, payout_provider, hold_reason, created_at',
+        )
         .eq('seller_id', user!.id)
-        .in('status', ['completed', 'buyer_confirmed'])
         .order('created_at', { ascending: false })
-        .limit(10);
+        .limit(25);
       return data ?? [];
     },
   });
@@ -34,122 +65,121 @@ const PayoutsPanel = () => {
   return (
     <div className="max-w-[840px] mx-auto space-y-6">
       <header>
-        <h1 className="text-2xl font-semibold text-foreground">Payouts</h1>
-        <p className="text-sm text-muted-foreground mt-1">Where your earnings land, and your Stripe Connect status.</p>
+        <h1 className="text-2xl font-semibold text-foreground">Earnings &amp; payouts</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Buyer payments are processed securely through PayPal. Vendibook records your proceeds and
+          our team reviews and sends every payout manually according to the transaction timeline.
+        </p>
       </header>
 
-      <button
-        type="button"
-        onClick={() => (isOnboardingComplete ? openStripeDashboard() : connectStripe())}
-        disabled={isLoading || isConnecting || isOpeningDashboard}
-        className="w-full text-left rounded-md border border-border bg-card p-6 hover:bg-muted/30 transition disabled:opacity-70 disabled:cursor-wait"
-      >
+      <div className="rounded-md border border-border bg-card p-6">
         {isLoading ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="h-4 w-4 animate-spin" /> Checking your Stripe account…
-          </div>
-        ) : isOnboardingComplete ? (
-          <div className="flex items-start gap-4">
-            <div className="h-10 w-10 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center shrink-0">
-              <CheckCircle2 className="h-5 w-5" />
-            </div>
-            <div className="flex-1">
-              <p className="text-sm font-medium text-foreground">Stripe Connect is active</p>
-              <p className="text-xs text-muted-foreground mt-1">
-                Rentals settle in 24h · sales in 25d after buyer confirmation.
-              </p>
-              <span className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-foreground">
-                {isOpeningDashboard ? 'Opening…' : 'Manage in Stripe'} <ExternalLink className="h-3 w-3" />
-              </span>
-            </div>
+            <Loader2 className="h-4 w-4 animate-spin" /> Loading your payout preference…
           </div>
         ) : (
           <div className="flex items-start gap-4">
-            <div className="h-10 w-10 rounded-full bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0">
-              <AlertTriangle className="h-5 w-5" />
+            <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center shrink-0">
+              <Wallet className="h-5 w-5 text-muted-foreground" />
             </div>
             <div className="flex-1">
-              <p className="text-sm font-medium text-foreground">Finish Stripe onboarding to accept card payments</p>
-              <p className="text-xs text-muted-foreground mt-1">You can still list and take cash / Pay in Person bookings without it.</p>
-              <span className="mt-3 inline-flex items-center gap-1 text-xs font-medium text-primary">
-                {isConnecting ? 'Opening Stripe…' : 'Set up payouts'} <ExternalLink className="h-3 w-3" />
-              </span>
+              <p className="text-sm font-medium text-foreground">
+                {preference
+                  ? `${PAYOUT_METHOD_LABEL[preference.method]} · ${preference.masked_destination ?? ''}`
+                  : 'Add your payout preference'}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                {preference
+                  ? `Status: ${PAYOUT_STATUS_LABEL[preference.status]}. This is a payout preference for Vendibook operations — not a connected merchant account. Admins review and send each payout manually.`
+                  : 'Choose PayPal, Venmo, Cash App or bank transfer (ACH). You can list, take bookings and get paid by buyers before adding this — it never affects publishing.'}
+              </p>
+              <Button asChild variant="outline" size="sm" className="mt-3">
+                <Link to={PAYOUT_SETTINGS_PATH}>
+                  {preference ? 'Update payout preference' : 'Add payout preference'}
+                </Link>
+              </Button>
             </div>
           </div>
         )}
-      </button>
+      </div>
 
-      <section className="rounded-md border border-border bg-card overflow-hidden">
-        <header className="px-5 pt-4 pb-2">
-          <h2 className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">Recent payouts</h2>
+      <div className="rounded-md border border-border bg-card">
+        <header className="px-6 py-4 border-b border-border flex items-center gap-2">
+          <ShieldCheck className="h-4 w-4 text-muted-foreground" />
+          <h2 className="text-sm font-medium text-foreground">Your earnings</h2>
         </header>
-        {payoutsLoading ? (
-          <div className="flex items-center justify-center py-10">
-            <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+        {payablesLoading ? (
+          <div className="p-6 flex items-center gap-2 text-sm text-muted-foreground">
+            <Loader2 className="h-4 w-4 animate-spin" /> Loading earnings…
           </div>
-        ) : payouts.length === 0 ? (
-          <EmptyState
-            icon={Wallet}
-            title="No payouts yet"
-            description="Once a sale completes, the payout breakdown lands here — gross, fees, and net."
-          />
+        ) : payables.length === 0 ? (
+          <div className="p-6">
+            <EmptyState
+              icon={Clock}
+              title="No earnings yet"
+              description="Once a buyer pays, your proceeds appear here while our team reviews the payout."
+            />
+          </div>
         ) : (
           <ul className="divide-y divide-border">
-            {payouts.map((p: any) => {
-              const gross = (p.amount ?? 0) / 100;
-              const fees = (p.platform_fee ?? 0) / 100;
-              const net = gross - fees;
-              const arrival = new Date(new Date(p.created_at).getTime() + 25 * 24 * 60 * 60 * 1000);
+            {payables.map((p: any) => {
+              const releaseAt = p.payout_eligible_at ?? p.release_due_at;
+              // Connected PayPal sellers are paid by PayPal at the moment of
+              // capture, so there is no review queue and no release date.
+              const autoPaid = p.payout_provider === 'paypal' && p.status === 'payout_completed';
+              const showTiming = !autoPaid && releaseAt && !NO_TIMING_PROMISE.has(p.status);
               return (
-                <li key={p.id}>
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <button
-                        type="button"
-                        className="w-full flex items-center justify-between px-5 py-3 hover:bg-muted/40 transition text-left"
-                      >
-                        <div>
-                          <p className="text-sm font-medium text-foreground">
-                            Order {p.id.slice(0, 8).toUpperCase()}
-                          </p>
-                          <p className="text-[11px] text-muted-foreground mt-0.5">
-                            {new Date(p.created_at).toLocaleDateString()}
-                          </p>
-                        </div>
-                        <span className="text-sm font-semibold text-foreground">${net.toLocaleString()}</span>
-                      </button>
-                    </PopoverTrigger>
-                    <PopoverContent align="end" className="w-64">
-                      <p className="text-sm font-semibold text-foreground">Payout breakdown</p>
-                      <ul className="mt-3 text-sm space-y-1.5">
-                        <li className="flex justify-between">
-                          <span className="text-muted-foreground">Gross</span>
-                          <span className="text-foreground">${gross.toLocaleString()}</span>
-                        </li>
-                        <li className="flex justify-between">
-                          <span className="text-muted-foreground">Vendibook fee</span>
-                          <span className="text-foreground">−${fees.toLocaleString()}</span>
-                        </li>
-                        <li className="flex justify-between pt-1.5 border-t border-border">
-                          <span className="text-foreground font-medium">Net to you</span>
-                          <span className="text-foreground font-semibold">${net.toLocaleString()}</span>
-                        </li>
-                      </ul>
-                      <p className="mt-3 text-[11px] text-muted-foreground">
-                        Estimated arrival {arrival.toLocaleDateString()} · Stripe schedule may vary.
+                <li key={p.id} className="px-6 py-4 space-y-2">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">
+                        {money(p.net_payout_cents)} <span className="text-xs font-normal text-muted-foreground">net payout</span>
                       </p>
-                    </PopoverContent>
-                  </Popover>
+                      <p className="text-xs text-muted-foreground">
+                        {(p.transaction_type ?? 'transaction').replace(/_/g, ' ')} ·{' '}
+                        {new Date(p.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                    <span className="text-xs font-medium text-foreground/80 shrink-0">
+                      {autoPaid ? 'Paid to your PayPal' : PAYABLE_STATUS_LABEL[p.status] ?? p.status}
+                    </span>
+                  </div>
+
+                  <dl className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-1 text-[11px]">
+                    <div>
+                      <dt className="text-muted-foreground">Gross collected</dt>
+                      <dd className="text-foreground/85">{money(p.gross_collected_cents)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">Vendibook fee</dt>
+                      <dd className="text-foreground/85">−{money(p.platform_fee_cents)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">Adjustments</dt>
+                      <dd className="text-foreground/85">{money(p.adjustments_cents)}</dd>
+                    </div>
+                    <div>
+                      <dt className="text-muted-foreground">Refunded</dt>
+                      <dd className="text-foreground/85">−{money(p.refunded_cents)}</dd>
+                    </div>
+                  </dl>
+
+                  <p className="text-[11px] text-muted-foreground">
+                    {autoPaid
+                      ? (p.refunded_cents ?? 0) > 0
+                        ? `Paid straight into your connected PayPal Business account${p.payout_completed_at ? ` on ${new Date(p.payout_completed_at).toLocaleDateString()}` : ''}. A refund of ${money(p.refunded_cents)} was later issued from that same PayPal account${p.hold_reason ? ` — ${p.hold_reason}` : '.'}`
+                        : `Paid straight into your connected PayPal Business account${p.payout_completed_at ? ` on ${new Date(p.payout_completed_at).toLocaleDateString()}` : ''}, with the Vendibook fee already deducted. Nothing further is owed to you for this order.`
+                      : showTiming
+                      ? `Eligible for review on ${new Date(releaseAt).toLocaleDateString()}. A Vendibook admin approves and sends the payout after review.`
+                      : p.hold_reason
+                        ? `On hold: ${p.hold_reason}. Payout timing changes while this is resolved.`
+                        : 'Timing may change if a hold, refund, dispute, verification issue or operational review applies.'}
+                  </p>
                 </li>
               );
             })}
           </ul>
         )}
-      </section>
-
-      <div className="rounded-md border border-border bg-card p-5 text-sm text-muted-foreground">
-        Need to update bank info?{' '}
-        <Link to="/account" className="text-foreground underline underline-offset-2">Open account settings</Link>.
       </div>
     </div>
   );

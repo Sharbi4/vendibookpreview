@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { RENTAL_RENTER_FEE_PERCENT } from '@/lib/commissions';
 import { format, parseISO } from 'date-fns';
 import { Download, FileText, Printer, Loader2, RefreshCcw, ArrowDownCircle } from 'lucide-react';
 import { jsPDF } from 'jspdf';
@@ -16,7 +17,7 @@ import { supabase } from '@/integrations/supabase/client';
 import vendibookLogo from '@/assets/vendibook-logo.png';
 
 // Platform fee percentage
-const PLATFORM_FEE_PERCENT = 12.9;
+const PLATFORM_FEE_PERCENT = RENTAL_RENTER_FEE_PERCENT;
 
 interface RefundInfo {
   refund_amount: number;
@@ -305,7 +306,7 @@ export function BookingReceiptModal({
         priceItems.push(['Delivery Fee', `$${deliveryFee.toFixed(2)}`]);
       }
       
-      priceItems.push(['Platform Service Fee (12.9%)', `$${platformFee.toFixed(2)}`]);
+      priceItems.push([`Platform Service Fee (${PLATFORM_FEE_PERCENT}%)`, `$${platformFee.toFixed(2)}`]);
       
       if (depositAmount > 0) {
         priceItems.push(['Security Deposit (Refundable)', `$${depositAmount.toFixed(2)}`]);
@@ -703,7 +704,7 @@ export function BookingReceiptModal({
                 )}
                 
                 <div className="flex justify-between">
-                  <span className="text-muted-foreground">Platform Service Fee (12.9%)</span>
+                  <span className="text-muted-foreground">Platform Service Fee ({PLATFORM_FEE_PERCENT}%)</span>
                   <span>${platformFee.toFixed(2)}</span>
                 </div>
                 

@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import { useSellerVerification } from '@/hooks/useSellerVerification';
 
 interface NextStepConfig {
   id: string;
@@ -25,43 +26,49 @@ interface NextStepConfig {
 
 interface ProfileNextStepCardProps {
   isVerified: boolean;
-  stripeConnected: boolean;
+  payoutReady: boolean;
   isHost: boolean;
   draftCount: number;
   pendingRequestCount: number;
-  isLoadingStripe?: boolean;
-  onConnectStripe?: () => void;
-  isConnectingStripe?: boolean;
+  isLoadingPayout?: boolean;
+  onSetUpPayouts?: () => void;
+  isSavingPayouts?: boolean;
 }
 
 const ProfileNextStepCard = ({
   isVerified,
-  stripeConnected,
+  payoutReady,
   isHost,
   draftCount,
   pendingRequestCount,
-  isLoadingStripe,
-  onConnectStripe,
-  isConnectingStripe,
+  isLoadingPayout,
+  onSetUpPayouts,
+  isSavingPayouts,
 }: ProfileNextStepCardProps) => {
+  const sellerVerification = useSellerVerification();
+  // Verified sellers never see the offer again, even if the profile flag lags.
+  const verified =
+    isVerified ||
+    sellerVerification.state?.badge_active === true ||
+    sellerVerification.offer.enabled === false;
   // Define all possible next steps with priority
   const allSteps: NextStepConfig[] = [
     {
       id: 'verify',
       icon: Shield,
-      title: 'Verify your identity',
-      description: 'Build trust with renters and hosts by verifying your identity.',
-      actionLabel: 'Verify Now',
-      actionHref: '/verify-identity',
-      priority: 1,
+      title: 'Get verified*',
+      description: 'A paid Plaid identity add-on that adds a verified badge. Never required to buy, sell, or publish.',
+      actionLabel: 'Learn more',
+      actionHref: '/identity-verification',
+      priority: 6,
     },
     {
-      id: 'stripe',
+      id: 'payouts',
       icon: CreditCard,
-      title: 'Connect Stripe to get paid',
+      title: 'Set up payouts to get paid',
       description: 'Set up payouts so you can receive payments for your listings.',
-      actionLabel: 'Connect Stripe',
-      actionOnClick: onConnectStripe,
+      actionLabel: 'Set up payouts',
+      actionOnClick: onSetUpPayouts,
       priority: 2,
     },
     {
@@ -95,29 +102,29 @@ const ProfileNextStepCard = ({
 
   // Determine which step to show based on conditions
   const getApplicableStep = (): NextStepConfig | null => {
-    // Priority 1: Not verified
-    if (!isVerified) {
-      return allSteps.find(s => s.id === 'verify')!;
+    // Priority 1: Host without payout details saved
+    if (isHost && !payoutReady && !isLoadingPayout) {
+      return allSteps.find(s => s.id === 'payouts')!;
     }
 
-    // Priority 2: Host without Stripe connected
-    if (isHost && !stripeConnected && !isLoadingStripe) {
-      return allSteps.find(s => s.id === 'stripe')!;
-    }
-
-    // Priority 3: Has drafts
+    // Priority 2: Has drafts
     if (draftCount > 0) {
       return allSteps.find(s => s.id === 'drafts')!;
     }
 
-    // Priority 4: Has pending requests
+    // Priority 3: Has pending requests
     if (pendingRequestCount > 0) {
       return allSteps.find(s => s.id === 'requests')!;
     }
 
-    // Priority 5: Create first listing (only if not a host yet)
+    // Priority 4: Create first listing (only if not a host yet)
     if (!isHost) {
       return allSteps.find(s => s.id === 'create')!;
+    }
+
+    // Last: optional paid verification add-on (never a gate)
+    if (!verified) {
+      return allSteps.find(s => s.id === 'verify')!;
     }
 
     return null;
@@ -155,9 +162,9 @@ const ProfileNextStepCard = ({
               size="sm" 
               className="flex-shrink-0" 
               onClick={step.actionOnClick}
-              disabled={isConnectingStripe}
+              disabled={isSavingPayouts}
             >
-              {isConnectingStripe ? (
+              {isSavingPayouts ? (
                 <>
                   <Loader2 className="h-4 w-4 mr-1 animate-spin" />
                   Connecting...

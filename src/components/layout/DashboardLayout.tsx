@@ -14,7 +14,6 @@ import {
   User,
   Search,
   Shield,
-  Megaphone,
   ChefHat,
   Gift,
   FileCheck,
@@ -25,6 +24,7 @@ import {
   Wrench,
   CreditCard,
   Banknote,
+  Receipt,
 } from 'lucide-react';
 import { useUnreadMessageCount } from '@/hooks/useUnreadMessageCount';
 import { useReferralEarnings } from '@/hooks/useReferralEarnings';
@@ -40,10 +40,9 @@ import { ConciergeInbox } from '@/components/concierge/ConciergeInbox';
 import vendibookFavicon from '@/assets/vendibook-favicon.png';
 import AppDropdownMenu from './AppDropdownMenu';
 import IdentityChip from '@/components/dashboard/shared/IdentityChip';
+import EmailVerifiedBadge from '@/components/dashboard/shared/EmailVerifiedBadge';
 import DashboardMobileTabs from '@/components/dashboard/overview/DashboardMobileTabs';
 import GoProButton from '@/components/dashboard/GoProButton';
-import SidebarUpgradeCard from '@/components/dashboard/SidebarUpgradeCard';
-import VerifyReminderModal from '@/components/dashboard/VerifyReminderModal';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 
@@ -100,10 +99,12 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
             { title: 'Overview', icon: LayoutGrid, href: '/dashboard?view=host', tab: null },
             { title: 'Listings', icon: Truck, href: '/host/listings', tab: null },
             { title: 'Sales & Transactions', icon: DollarSign, href: '/dashboard?view=host&tab=sales', tab: 'sales' },
-            { title: 'Booking Manager', icon: CalendarDays, href: '/host/bookings', tab: null },
+            { title: 'Booking Manager', icon: CalendarDays, href: '/dashboard/activity?filter=requests', tab: null },
+            { title: 'Payments & Disputes', icon: Receipt, href: '/dashboard?view=host&tab=transactions', tab: 'transactions' },
             { title: 'Insights & Reporting', icon: BarChart3, href: '/dashboard?view=host&tab=insights', tab: 'insights' },
-            { title: 'Promote & Upgrades', icon: Megaphone, href: '/dashboard?view=host&tab=promote', tab: 'promote' },
+            { title: 'Upgrades & Premium Tools', icon: Wrench, href: '/dashboard?view=host&tab=promote', tab: 'promote' },
             { title: 'Membership', icon: CreditCard, href: '/dashboard?view=host&tab=membership', tab: 'membership' },
+
             { title: 'Permits', icon: FileCheck, href: '/dashboard?view=host&tab=permits', tab: 'permits' },
             ...(hasGhostKitchen ? [{ title: 'Kitchen', icon: ChefHat, href: '/dashboard?view=host&tab=kitchen', tab: 'kitchen' }] : []),
             { title: 'Messages', icon: MessageSquare, href: '/messages', tab: null, badge: messagesBadge },
@@ -130,11 +131,12 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
             { title: 'Overview', icon: LayoutGrid, href: '/dashboard?view=shopper', tab: null },
             { title: 'Orders & Transactions', icon: ShoppingBag, href: '/dashboard?view=shopper&tab=orders', tab: 'orders' },
             { title: 'Bookings & Rentals', icon: CalendarDays, href: '/dashboard?view=shopper&tab=bookings', tab: 'bookings' },
+            { title: 'Payments & Disputes', icon: Receipt, href: '/dashboard?view=shopper&tab=transactions', tab: 'transactions' },
             { title: 'Favorites', icon: Heart, href: '/dashboard?view=shopper&tab=favorites', tab: 'favorites' },
             { title: 'Messages', icon: MessageSquare, href: '/messages', tab: null, badge: messagesBadge },
             { title: 'Notifications', icon: Bell, href: '/dashboard?view=shopper&tab=notifications', tab: 'notifications' },
             { title: 'Refer & Earn', icon: Gift, href: '/dashboard?view=shopper&tab=referral', tab: 'referral', badge: referralBadge },
-            { title: 'Premium Tools', icon: Wrench, href: '/dashboard?view=shopper&tab=tools', tab: 'tools' },
+            { title: 'Upgrades & Premium Tools', icon: Wrench, href: '/dashboard?view=shopper&tab=tools', tab: 'tools' },
             { title: 'Permits', icon: FileCheck, href: '/dashboard?view=shopper&tab=permits', tab: 'permits' },
           ],
         },
@@ -165,12 +167,12 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
   };
 
   const ModeSwitch = ({ small = false }: { small?: boolean }) => (
-    <div className={cn('flex border border-border rounded-lg overflow-hidden', small ? '' : '')}>
+    <div className={cn('flex w-full border border-border rounded-lg overflow-hidden')}>
       <button
         onClick={() => onModeChange('shopper')}
         className={cn(
           'flex-1 font-medium transition-all',
-          small ? 'text-xs px-4 py-1.5' : 'text-sm py-2.5',
+          small ? 'text-xs px-4 py-1.5 whitespace-nowrap' : 'text-sm py-2.5 whitespace-nowrap',
           mode === 'shopper' ? 'bg-foreground text-background' : 'text-muted-foreground hover:bg-muted',
         )}
       >
@@ -180,7 +182,7 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
         onClick={() => onModeChange('host')}
         className={cn(
           'flex-1 font-medium transition-all',
-          small ? 'text-xs px-4 py-1.5' : 'text-sm py-2.5',
+          small ? 'text-xs px-4 py-1.5 whitespace-nowrap' : 'text-sm py-2.5 whitespace-nowrap',
           mode === 'host' ? 'bg-foreground text-background' : 'text-muted-foreground hover:bg-muted',
         )}
       >
@@ -212,9 +214,10 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
             <p className="text-base font-medium text-foreground truncate">
               {profile?.full_name || 'User'}
             </p>
-            <div className="flex items-center gap-2 mt-1">
+            <div className="flex flex-wrap items-center gap-2 mt-1">
               <span className="text-xs text-muted-foreground">{mode === 'host' ? 'Hosting' : 'Buying'}</span>
               <IdentityChip verified={isVerified} prominent={!isVerified} />
+              <EmailVerifiedBadge />
             </div>
           </div>
         </div>
@@ -230,7 +233,6 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
       <ScrollArea className="flex-1">
         {sections.map((section, sIdx) => (
           <div key={section.id}>
-            {section.id === 'account' && <SidebarUpgradeCard />}
             <div className={cn('py-3', sIdx > 0 && 'border-t border-border')}>
             {section.label && (
               <p className="px-6 pb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground/70">
@@ -288,7 +290,6 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
 
   return (
     <div className="dashboard-shell vendibook-dashboard-luxury min-h-screen flex flex-col bg-background">
-      <VerifyReminderModal />
       {/* Mobile Header — only real mobile, tablets get the icon rail */}
       <header className="md:hidden sticky top-0 z-50 dash-utility-header">
 
@@ -296,8 +297,14 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
           <div className="flex items-center gap-2">
             <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
               <SheetTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9" aria-label="Open menu">
-                  <Menu className="h-5 w-5" />
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="h-9 gap-1.5 rounded-full border-white/15 bg-white/[0.04] px-3 text-xs font-semibold"
+                  aria-label="Open dashboard menu"
+                >
+                  <Menu className="h-4 w-4" />
+                  Menu
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="w-72 p-0">
@@ -308,15 +315,20 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
               <img src={vendibookFavicon} alt="Vendibook" className="h-7 w-7" />
             </Link>
           </div>
-          {isHost && <ModeSwitch small />}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 shrink-0">
             <GoProButton compact />
             {user && <ConciergeInbox userId={user.id} />}
             <NotificationCenter />
             <AppDropdownMenu variant="light" />
           </div>
         </div>
+        {isHost && (
+          <div className="px-4 pb-2">
+            <ModeSwitch small />
+          </div>
+        )}
       </header>
+
 
       <div className="flex flex-1 min-h-0">
         {/* Full sidebar — lg+, sticky to viewport height */}
@@ -333,10 +345,11 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
             </Link>
             <button
               onClick={() => setIsMobileOpen(true)}
-              className="h-10 w-10 rounded-lg flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-white/[0.04]"
-              aria-label="Expand sidebar"
+              className="w-12 rounded-lg flex flex-col items-center justify-center gap-0.5 py-1.5 text-muted-foreground hover:text-foreground hover:bg-white/[0.04]"
+              aria-label="Expand dashboard menu"
             >
               <Menu className="h-4 w-4" />
+              <span className="text-[9px] font-semibold uppercase tracking-wide">Menu</span>
             </button>
             <Sheet open={isMobileOpen} onOpenChange={setIsMobileOpen}>
               <SheetContent side="left" className="w-72 p-0">
@@ -403,14 +416,14 @@ export const DashboardLayout = ({ children, mode, onModeChange, isHost }: Dashbo
             ? [
                 { to: '/dashboard?view=host', match: (p: string, s: string) => p === '/dashboard' && s.includes('view=host') && !s.includes('tab='), icon: LayoutGrid, label: 'Overview' },
                 { to: '/host/listings', match: (p: string) => p === '/host/listings', icon: Truck, label: 'Listings' },
-                { to: '/host/bookings', match: (p: string) => p === '/host/bookings', icon: CalendarDays, label: 'Manager' },
+                { to: '/dashboard/activity?filter=requests', match: (p: string) => p === '/dashboard/activity', icon: CalendarDays, label: 'Manager' },
                 { to: '/messages', match: (p: string) => p === '/messages', icon: MessageSquare, label: 'Inbox', badge: messagesBadge },
                 { to: '/account', match: (p: string) => p === '/account', icon: User, label: 'Profile' },
               ]
             : [
                 { to: '/search', match: (p: string) => p === '/search', icon: Search, label: 'Explore' },
                 { to: '/dashboard?view=shopper&tab=orders', match: (p: string, s: string) => p === '/dashboard' && s.includes('tab=orders'), icon: ShoppingBag, label: 'Orders' },
-                { to: '/dashboard?view=shopper', match: (p: string, s: string) => p === '/dashboard' && !s.includes('tab='), icon: CalendarDays, label: 'Bookings' },
+                { to: '/dashboard?view=shopper&tab=bookings', match: (p: string, s: string) => p === '/dashboard' && s.includes('tab=bookings'), icon: CalendarDays, label: 'Bookings' },
                 { to: '/messages', match: (p: string) => p === '/messages', icon: MessageSquare, label: 'Inbox', badge: messagesBadge },
                 { to: '/account', match: (p: string) => p === '/account', icon: User, label: 'Profile' },
               ]

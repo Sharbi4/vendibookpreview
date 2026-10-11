@@ -196,7 +196,7 @@ export const useAdminTransactions = (userId: string | undefined) => {
     total: allTransactions.length,
     disputed: disputedTransactions.length,
     pending: allTransactions.filter(t => t.status === 'pending').length,
-    inEscrow: allTransactions.filter(t => ['paid', 'buyer_confirmed', 'seller_confirmed'].includes(t.status)).length,
+    inPaymentProtection: allTransactions.filter(t => ['paid', 'buyer_confirmed', 'seller_confirmed'].includes(t.status)).length,
     completed: allTransactions.filter(t => t.status === 'completed').length,
     refunded: allTransactions.filter(t => t.status === 'refunded').length,
   };

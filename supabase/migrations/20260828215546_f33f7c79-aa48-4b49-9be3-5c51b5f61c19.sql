@@ -1,0 +1,2 @@
+ALTER TABLE public.transaction_terms DROP CONSTRAINT IF EXISTS transaction_terms_payment_method_check;
+ALTER TABLE public.transaction_terms ADD CONSTRAINT transaction_terms_payment_method_check CHECK (payment_method = ANY (ARRAY['paypal_checkout'::text, 'paypal'::text, 'stripe_card'::text, 'pay_in_person'::text, 'offer'::text, 'other'::text]));

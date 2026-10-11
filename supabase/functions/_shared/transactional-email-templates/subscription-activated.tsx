@@ -2,7 +2,7 @@ import * as React from 'npm:react@18.3.1'
 import { Body, Button, Container, Head, Heading, Hr, Html, Link, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL, SUPPORT_PHONE } from './_styles.ts'
-import { BrandHeader } from './_blocks.tsx'
+import { BrandFooter, BrandHeader } from './_blocks.tsx'
 
 interface BenefitLink { label: string; href: string }
 
@@ -102,7 +102,7 @@ const Email = ({
           <Text style={s.smallHeader}>WHAT'S INCLUDED</Text>
           {benefits.map((b, i) => (
             <Text key={i} style={s.listItem}>
-              • <Link href={b.href.startsWith('http') ? b.href : `${SITE_URL}${b.href}`} style={{ color: '#fafafa', textDecoration: 'underline' }}>{b.label}</Link>
+              • <Link href={b.href.startsWith('http') ? b.href : `${SITE_URL}${b.href}`} style={{ color: '#d93f16', textDecoration: 'underline' }}>{b.label}</Link>
             </Text>
           ))}
 
@@ -113,7 +113,7 @@ const Email = ({
           </Text>
         </Section>
         <Text style={s.footnote}>Questions? Reply to this email or call {SUPPORT_PHONE}.</Text>
-      </Container>
+      <BrandFooter /></Container>
     </Body>
   </Html>
 )
@@ -132,7 +132,7 @@ export const template = {
     chargedOn: 'August 24, 2026',
     nextBillingDate: 'September 24, 2026',
     last4: '4242',
-    invoiceUrl: 'https://invoice.stripe.com/i/example',
+    invoiceUrl: 'https://vendibook.com/account/subscription',
     isRenewal: false,
     benefits: [
       { label: 'Feature your first listing', href: '/dashboard/promote' },

@@ -1,10 +1,22 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { alertAdminsOfPaymentOnce, formatUsd } from "../_shared/adminPaymentAlert.ts";
 import { corsHeaders, jsonResponse } from "../_shared/jsonError.ts";
 import { centsFromPayPalAmount, safeLog, verifyPayPalWebhook } from "../_shared/paypal.ts";
+import { applyAuthorization, markAuthorizationExpired } from "../_shared/paypalAuthorization.ts";
 import { extractCaptureFacts, finalizeCapture } from "../_shared/paypalFinalize.ts";
-import { appendLedgerEntry, recalculatePayableAfterRefund } from "../_shared/paypalAccounting.ts";
+import {
+  appendLedgerEntry,
+  closeSaleAfterFullRefund,
+  recalculatePayableAfterRefund,
+  refundedCentsFromLedger,
+} from "../_shared/paypalAccounting.ts";
 import { notifyOrderParties, notifyUser } from "../_shared/notify.ts";
+import { ingestPayPalDispute } from "../_shared/paypalDisputeIntake.ts";
+import { resolveSubscriptionPeriod } from "../_shared/subscriptionPeriod.ts";
+import { grantMonthlyBoostCredit } from "../_shared/proBoostCredit.ts";
+import { resolvePaidPeriodKind } from "../_shared/proMembershipEmail.ts";
+import { sendSubscriptionLifecycleEmail } from "../_shared/subscriptionLifecycleEmail.ts";
 
 /**
  * Verified, idempotent PayPal webhook receiver for both one-time payments
@@ -33,32 +45,47 @@ serve(async (req) => {
     return jsonResponse(400, { error: "Missing event id or type." });
   }
 
-  // Idempotency gate: first insert wins, duplicates short-circuit.
+  // ------------------------------------------------------------------ verify
+  // Signature verification happens BEFORE the event id is reserved. Otherwise a
+  // forged payload could "poison" a legitimate retry by claiming its id first.
+  const verified = await verifyPayPalWebhook(req.headers, rawBody);
+  if (!verified) {
+    safeLog("webhook_rejected_unverified", { eventId, eventType });
+    return jsonResponse(401, { error: "Signature verification failed." });
+  }
+
+  // --------------------------------------------------------------- idempotency
+  // Reserve the event. A duplicate short-circuits ONLY when the earlier copy was
+  // already processed successfully; an unprocessed or failed row stays claimable
+  // so PayPal's retry (or reconciliation) can finish the job.
   const { error: insertErr } = await admin.from("paypal_webhook_events").insert({
     event_id: eventId,
     event_type: eventType,
     resource_type: event?.resource_type ?? null,
     resource_id: event?.resource?.id ?? null,
     raw_event: event,
+    verification_status: "verified",
   });
   if (insertErr) {
     if (insertErr.code === "23505") {
-      safeLog("webhook_duplicate_ignored", { eventId, eventType });
-      return jsonResponse(200, { received: true, duplicate: true });
+      const { data: existing } = await admin.from("paypal_webhook_events")
+        .select("processed").eq("event_id", eventId).maybeSingle();
+      if (existing?.processed) {
+        safeLog("webhook_duplicate_ignored", { eventId, eventType });
+        return jsonResponse(200, { received: true, duplicate: true });
+      }
+      // Verified retry of an event that never completed — mark verified and
+      // fall through so processing is attempted again (handlers are idempotent).
+      await admin.from("paypal_webhook_events")
+        .update({ verification_status: "verified", raw_event: event })
+        .eq("event_id", eventId);
+      safeLog("webhook_retry_claimed", { eventId, eventType });
+    } else {
+      safeLog("webhook_store_failed", { eventId, message: insertErr.message });
+      return jsonResponse(500, { error: "Could not store event." });
     }
-    safeLog("webhook_store_failed", { eventId, message: insertErr.message });
-    return jsonResponse(500, { error: "Could not store event." });
   }
 
-  const verified = await verifyPayPalWebhook(req.headers, rawBody);
-  await admin.from("paypal_webhook_events")
-    .update({ verification_status: verified ? "verified" : "failed" })
-    .eq("event_id", eventId);
-
-  if (!verified) {
-    safeLog("webhook_rejected_unverified", { eventId, eventType });
-    return jsonResponse(401, { error: "Signature verification failed." });
-  }
 
   try {
     await handleEvent(admin, event);
@@ -72,8 +99,9 @@ serve(async (req) => {
       .update({ processing_error: message })
       .eq("event_id", eventId);
     await alertAdmins(admin, `PayPal webhook ${eventType} failed`, message);
-    // 200 so PayPal doesn't hot-loop; the row is flagged for reconciliation.
-    return jsonResponse(200, { received: true, processing_error: true });
+    // Retryable: the row stays unprocessed and re-claimable, so PayPal's retry
+    // (and our reconciliation sweep) can complete the fulfillment.
+    return jsonResponse(500, { received: false, processing_error: true });
   }
 
   return jsonResponse(200, { received: true });
@@ -91,20 +119,110 @@ async function handleEvent(admin: any, event: any) {
         .eq("payment_status", "created");
       return;
 
+    // The payer's approval was reversed before money moved (e.g. they backed
+    // out at PayPal). Never fulfil on this: mark the attempt cancelled unless
+    // it already reached an authorized/completed state.
+    case "CHECKOUT.PAYMENT-APPROVAL.REVERSED": {
+      const orderId = resource.id ?? resource.order_id;
+      const reference = resource.custom_id || resource.invoice_id;
+      let record: any = null;
+      if (orderId) {
+        const { data } = await admin.from("payment_records")
+          .select("*")
+          .eq("paypal_order_id", orderId)
+          .maybeSingle();
+        record = data ?? null;
+      }
+      if (!record && reference) {
+        record = await findRecord(admin, reference, undefined, resource.supplementary_data);
+      }
+      if (!record) return;
+      if (record.payment_status === "completed" || record.authorization_status === "created") return;
+      await admin.from("payment_records").update({
+        payment_status: "cancelled",
+        internal_status: "approval_reversed:provider",
+        last_error: { issue: "CHECKOUT.PAYMENT-APPROVAL.REVERSED" },
+      }).eq("id", record.id)
+        .neq("payment_status", "completed");
+      await holdPayables(admin, record.id, "PayPal approval was reversed before payment.", "cancelled");
+      return;
+    }
+
+
+    // ── Authorization (temporary hold) lifecycle ───────────────────────
+    // Idempotent: applyAuthorization / markAuthorizationExpired no-op when
+    // the state has already been recorded by the authorize endpoint.
+    case "PAYMENT.AUTHORIZATION.CREATED": {
+      const reference = resource.custom_id || resource.invoice_id;
+      const record = await findRecord(admin, reference, undefined, resource.supplementary_data);
+      if (!record) return;
+      await applyAuthorization(admin, record, {
+        authorizationId: resource.id,
+        status: String(resource.status ?? "CREATED").toLowerCase(),
+        amountCents: centsFromPayPalAmount(resource.amount?.value),
+        currency: resource.amount?.currency_code ?? "USD",
+        expiresAt: resource.expiration_time ?? null,
+      }, "webhook");
+      return;
+    }
+
+    case "PAYMENT.AUTHORIZATION.VOIDED": {
+      const reference = resource.custom_id || resource.invoice_id;
+      const record = await findRecord(admin, reference, undefined, resource.supplementary_data);
+      if (!record || record.payment_status === "completed") return;
+      await admin.from("payment_records").update({
+        authorization_status: "voided",
+        authorization_voided_at: new Date().toISOString(),
+        payment_status: "cancelled",
+        internal_status: "authorization_voided:provider",
+      }).eq("id", record.id).neq("payment_status", "completed");
+      return;
+    }
+
+    case "PAYMENT.AUTHORIZATION.EXPIRED": {
+      const reference = resource.custom_id || resource.invoice_id;
+      const record = await findRecord(admin, reference, undefined, resource.supplementary_data);
+      if (!record || record.payment_status === "completed") return;
+      await markAuthorizationExpired(admin, record);
+      return;
+    }
+
+    // PayPal marks the whole order complete once every capture settled. Our
+    // per-capture handlers already finalised the money; this only records the
+    // order-level signal so reconciliation can see it.
+    case "CHECKOUT.ORDER.COMPLETED": {
+      const orderId = resource.id;
+      if (!orderId) return;
+      await admin.from("payment_records")
+        .update({ internal_status: "order_completed" })
+        .eq("paypal_order_id", orderId)
+        .eq("payment_status", "completed");
+      safeLog("webhook_order_completed", { order_id: orderId });
+      return;
+    }
+
     case "PAYMENT.CAPTURE.COMPLETED":
     case "PAYMENT.CAPTURE.PENDING":
+    case "PAYMENT.CAPTURE.DECLINED":
     case "PAYMENT.CAPTURE.DENIED": {
       const reference = resource.custom_id || resource.invoice_id;
       const record = await findRecord(admin, reference, resource.id, resource.supplementary_data);
       if (!record) return;
 
-      if (type === "PAYMENT.CAPTURE.DENIED") {
-        await admin.from("payment_records").update({
-          payment_status: "declined",
-          internal_status: "declined",
-          paypal_capture_id: resource.id,
-        }).eq("id", record.id);
-        await holdPayables(admin, record.id, "Payment was denied by PayPal.", "cancelled");
+      if (type === "PAYMENT.CAPTURE.DENIED" || type === "PAYMENT.CAPTURE.DECLINED") {
+        // Share terminal-state/race guards with capture processing. A late
+        // denial must not overwrite a previously verified completed payment.
+        const updated = await finalizeCapture(admin, record, {
+          captureId: resource.id,
+          status: "DECLINED",
+          amountCents: centsFromPayPalAmount(resource.amount?.value),
+          currency: resource.amount?.currency_code ?? "USD",
+          payerId: null,
+          paymentSource: null,
+        }, "webhook");
+        if (updated.payment_status === "declined") {
+          await holdPayables(admin, record.id, "PayPal did not approve this payment.", "cancelled");
+        }
         return;
       }
 
@@ -131,10 +249,9 @@ async function handleEvent(admin: any, event: any) {
       if (!record) return;
 
       const refundCents = centsFromPayPalAmount(resource.amount?.value);
-      const total = Math.min(record.gross_amount_cents, (record.refunded_cents ?? 0) + refundCents);
       const reversed = type.endsWith("REVERSED");
 
-      await appendLedgerEntry(admin, {
+      const inserted = await appendLedgerEntry(admin, {
         paymentRecordId: record.id,
         entryType: reversed ? "reversal" : "refund",
         amountCents: refundCents,
@@ -144,7 +261,10 @@ async function handleEvent(admin: any, event: any) {
         externalReference: resource.id,
         dedupeKey: `${reversed ? "reversal" : "refund"}:${resource.id}`,
       });
+      // Already recorded by paypal-refund (same refund id): nothing to add.
+      if (!inserted) return;
 
+      const total = Math.min(record.gross_amount_cents, await refundedCentsFromLedger(admin, record.id));
       await admin.from("payment_records").update({
         refunded_cents: total,
         payment_status: reversed
@@ -156,6 +276,9 @@ async function handleEvent(admin: any, event: any) {
       }).eq("id", record.id);
 
       await applyRefundToPayable(admin, record.id, total, reversed);
+      if (total >= record.gross_amount_cents) {
+        await closeSaleAfterFullRefund(admin, record, reversed ? "Payment reversed by PayPal" : "Refunded in full");
+      }
       await notifyOrderParties(admin, record, {
         type: "refund_completed",
         buyer: {
@@ -171,25 +294,16 @@ async function handleEvent(admin: any, event: any) {
       return;
     }
 
+    // ── Buyer claims and chargebacks PayPal tells us about ─────────────
+    // These land in the same Vendibook case queue an admin already watches and
+    // freeze the seller's money exactly like a case a party opened.
     case "CUSTOMER.DISPUTE.CREATED":
-    case "CUSTOMER.DISPUTE.UPDATED": {
-      const captureId = resource?.disputed_transactions?.[0]?.seller_transaction_id;
-      if (!captureId) return;
-      const { data: record } = await admin.from("payment_records")
-        .select("id, reference").eq("paypal_capture_id", captureId).maybeSingle();
-      if (!record) return;
-      await admin.from("payment_records")
-        .update({ dispute_status: resource.status ?? "open" }).eq("id", record.id);
-      await holdPayables(admin, record.id, "An active PayPal dispute is open.", "disputed");
-      await alertAdmins(admin, "PayPal dispute opened", `Payment ${record.reference} is disputed.`);
-      return;
-    }
-
+    case "CUSTOMER.DISPUTE.UPDATED":
     case "CUSTOMER.DISPUTE.RESOLVED": {
-      const captureId = resource?.disputed_transactions?.[0]?.seller_transaction_id;
-      if (!captureId) return;
-      await admin.from("payment_records")
-        .update({ dispute_status: "resolved" }).eq("paypal_capture_id", captureId);
+      const result = await ingestPayPalDispute(admin, type, resource);
+      if (!result.handled) {
+        safeLog("paypal_dispute_unhandled", { type, reason: result.reason });
+      }
       return;
     }
 
@@ -225,10 +339,145 @@ async function handleEvent(admin: any, event: any) {
       await mirrorHostSubscription(admin, resource.billing_agreement_id, "active");
       return;
     }
+
+    // ---------------- seller onboarding (Connected Path) ----------------
+    case "MERCHANT.ONBOARDING.COMPLETED":
+      await handleMerchantOnboarding(admin, resource, event.id);
+      return;
+    case "MERCHANT.PARTNER-CONSENT.REVOKED":
+      await handleMerchantConsentRevoked(admin, resource, event.id);
+      return;
+    case "CUSTOMER.MERCHANT-INTEGRATION.CAPABILITY-UPDATED":
+    case "CUSTOMER.MERCHANT-INTEGRATION.PRODUCT-SUBSCRIPTION-UPDATED":
+      await handleMerchantIntegrationUpdated(admin, resource, event.id);
+      return;
+
     default:
-      safeLog("webhook_unhandled", { type });
+      // Enough detail to reconcile later without logging any payer PII.
+      safeLog("webhook_unhandled", {
+        type,
+        event_id: event.id,
+        resource_type: event.resource_type ?? null,
+        resource_id: resource?.id ?? null,
+        reference: resource?.custom_id ?? resource?.invoice_id ?? null,
+        status: resource?.status ?? null,
+        create_time: event.create_time ?? null,
+      });
   }
 }
+
+/**
+ * MERCHANT.ONBOARDING.COMPLETED — the seller finished signup and granted the
+ * permissions we asked for. PayPal sends merchant_id + tracking_id; we match on
+ * tracking_id (our own id) and fall back to merchant_id. Readiness is still
+ * confirmed by a status refresh, so this only records what PayPal told us.
+ */
+async function handleMerchantOnboarding(admin: any, resource: any, eventId: string) {
+  const trackingId = resource?.tracking_id ?? null;
+  const merchantId = resource?.merchant_id ?? null;
+  if (!trackingId && !merchantId) return;
+
+  let query = admin.from("seller_paypal_accounts").select("id").is("archived_at", null).limit(1);
+  query = trackingId ? query.eq("tracking_id", trackingId) : query.eq("merchant_id", merchantId);
+  const { data } = await query.maybeSingle();
+  if (!data) {
+    safeLog("merchant_onboarding_no_match", { has_tracking: !!trackingId });
+    return;
+  }
+
+  const now = new Date().toISOString();
+  await admin.from("seller_paypal_accounts").update({
+    merchant_id: merchantId,
+    consent_granted: true,
+    onboarding_status: "action_required", // promoted to ready by refresh_status
+    referral_url: null,
+    last_webhook_event_id: eventId,
+    updated_at: now,
+  }).eq("id", data.id);
+  safeLog("merchant_onboarding_completed", { row: data.id });
+}
+
+/**
+ * MERCHANT.PARTNER-CONSENT.REVOKED — the seller removed our permissions in
+ * PayPal. Archive the association (history is never deleted) so checkout can
+ * never route to a merchant who revoked consent.
+ */
+async function handleMerchantConsentRevoked(admin: any, resource: any, eventId: string) {
+  const trackingId = resource?.tracking_id ?? null;
+  const merchantId = resource?.merchant_id ?? null;
+  if (!trackingId && !merchantId) return;
+
+  let query = admin.from("seller_paypal_accounts")
+    .select("id, user_id").is("archived_at", null).limit(1);
+  query = trackingId ? query.eq("tracking_id", trackingId) : query.eq("merchant_id", merchantId);
+  const { data } = await query.maybeSingle();
+  if (!data) return;
+
+  const now = new Date().toISOString();
+  await admin.from("seller_paypal_accounts").update({
+    consent_granted: false,
+    payments_receivable: false,
+    onboarding_status: "revoked",
+    action_reasons: ["consent_revoked"],
+    referral_url: null,
+    archived_at: now,
+    last_webhook_event_id: eventId,
+    updated_at: now,
+  }).eq("id", data.id);
+
+  // Tell the seller their checkout is off so they can relink — silence here
+  // would look like listings quietly failing to sell.
+  await notifyUser(admin, {
+    userId: data.user_id,
+    type: "paypal_consent_revoked",
+    title: "PayPal disconnected",
+    message:
+      "PayPal permissions for your Vendibook account were removed, so new orders can't be accepted. Reconnect PayPal to start selling again.",
+    link: "/dashboard/payments/setup",
+    dedupeKey: `${eventId}`,
+  });
+  safeLog("merchant_consent_revoked", { row: data.id });
+}
+
+/**
+ * CUSTOMER.MERCHANT-INTEGRATION.PRODUCT-SUBSCRIPTION-UPDATED / CAPABILITY-UPDATED
+ * — PayPal changed what this seller is approved for. We record the change and
+ * let the next status refresh confirm readiness; we never grant a capability
+ * from a webhook alone.
+ */
+async function handleMerchantIntegrationUpdated(admin: any, resource: any, eventId: string) {
+  const trackingId = resource?.tracking_id ?? null;
+  const merchantId = resource?.merchant_id ?? null;
+  if (!trackingId && !merchantId) return;
+
+  let query = admin.from("seller_paypal_accounts")
+    .select("id, user_id").is("archived_at", null).limit(1);
+  query = trackingId ? query.eq("tracking_id", trackingId) : query.eq("merchant_id", merchantId);
+  const { data } = await query.maybeSingle();
+  if (!data) {
+    safeLog("merchant_integration_update_no_match", { has_tracking: !!trackingId });
+    return;
+  }
+
+  const products = Array.isArray(resource?.products) ? resource.products : [];
+  const acdc = products.find(
+    (p: any) => String(p?.name ?? "").toUpperCase() === "PPCP_CUSTOM",
+  );
+  const capabilities = (Array.isArray(resource?.capabilities) ? resource.capabilities : [])
+    .map((c: any) => (typeof c === "string" ? c : c?.name))
+    .filter((c: any): c is string => typeof c === "string");
+
+  const patch: Record<string, unknown> = {
+    last_webhook_event_id: eventId,
+    updated_at: new Date().toISOString(),
+  };
+  if (acdc) patch.acdc_vetting_status = String(acdc?.vetting_status ?? "PENDING").toUpperCase();
+  if (capabilities.length) patch.capabilities = capabilities;
+
+  await admin.from("seller_paypal_accounts").update(patch).eq("id", data.id);
+  safeLog("merchant_integration_updated", { row: data.id, capabilities: capabilities.length });
+}
+
 
 async function findRecord(admin: any, reference?: string, captureId?: string, supp?: any) {
   if (reference) {
@@ -295,6 +544,33 @@ async function applyRefundToPayable(
   }).eq("id", payable.id);
 }
 
+async function alertSubscriptionPayment(
+  // deno-lint-ignore no-explicit-any
+  admin: any,
+  sub: any,
+  kind: "subscription_started" | "subscription_renewed",
+) {
+  if (!sub?.user_id || !sub?.paypal_subscription_id) return;
+  const period = kind === "subscription_renewed"
+    ? (sub.last_payment_at ?? new Date().toISOString())
+    : "initial";
+  await alertAdminsOfPaymentOnce(
+    admin,
+    `${sub.paypal_subscription_id}:${kind}:${period}`,
+    sub.user_id,
+    kind,
+    {
+      tier: sub.tier ?? undefined,
+      billing_interval: sub.billing_interval ?? undefined,
+      amount: formatUsd(sub.recurring_amount_cents),
+      provider: "paypal",
+      paypal_subscription_id: sub.paypal_subscription_id,
+      user_id: sub.user_id,
+      next_billing_time: sub.next_billing_time ?? undefined,
+    },
+  );
+}
+
 async function syncSubscription(
   admin: any,
   resource: any,
@@ -324,26 +600,33 @@ async function mirrorHostSubscription(admin: any, paypalSubId: string, status: s
   if (!sub) return;
 
   const entitlementActive = status === "active";
-  const mapped = entitlementActive
-    ? "active"
-    : status === "payment_failed"
-    ? "past_due"
-    : status === "suspended"
-    ? "paused"
-    : status === "cancelled" || status === "expired"
-    ? "canceled"
-    : "incomplete";
 
-  const { data: existing } = await admin.from("host_subscriptions").select("id")
+  const { data: existing } = await admin.from("host_subscriptions")
+    .select("id, current_period_start, current_period_end")
     .eq("user_id", sub.user_id).maybeSingle();
+
+  // Grandfathering: a cancelled/expired membership keeps its benefits until the
+  // paid-through date already on file. Pure + idempotent, so webhook retries
+  // and the reconciler converge on the same row.
+  const period = resolveSubscriptionPeriod({
+    providerStatus: status,
+    nextBillingTime: sub.next_billing_time,
+    lastPaymentAt: sub.last_payment_at,
+    startTime: sub.start_time,
+    existingPeriodEnd: existing?.current_period_end ?? null,
+    existingPeriodStart: existing?.current_period_start ?? null,
+  });
 
   const payload = {
     user_id: sub.user_id,
     tier: sub.tier,
-    status: mapped,
+    status: period.status,
     payment_provider: "paypal",
     paypal_subscription_id: paypalSubId,
-    current_period_end: sub.next_billing_time,
+    cancel_at_period_end: period.cancel_at_period_end,
+    cancel_at: period.cancel_at,
+    current_period_start: period.current_period_start,
+    current_period_end: period.current_period_end,
     updated_at: new Date().toISOString(),
   };
 
@@ -353,11 +636,66 @@ async function mirrorHostSubscription(admin: any, paypalSubId: string, status: s
     await admin.from("host_subscriptions").insert(payload);
   }
 
-  await notifySubscriptionState(admin, sub, status);
+  if (entitlementActive) {
+    // One non-rolling Featured Boost credit per paid Vendibook Pro period.
+    try {
+      await grantMonthlyBoostCredit(admin, {
+        userId: sub.user_id,
+        tier: sub.tier,
+        periodStart: period.current_period_start,
+        periodEnd: period.current_period_end,
+        subscriptionId: existing?.id ?? null,
+        paypalSubscriptionId: paypalSubId,
+      });
+    } catch (err) {
+      console.error("[paypal-webhook] boost credit grant failed", err);
+    }
+
+    // First paid period vs renewal, resolved durably (see resolvePaidPeriodKind).
+    const paidKind = await resolvePaidPeriodKind(
+      admin,
+      paypalSubId,
+      sub.user_id,
+      period.current_period_end,
+    );
+    if (paidKind !== "duplicate") {
+      await alertSubscriptionPayment(
+        admin,
+        sub,
+        paidKind === "renewed" ? "subscription_renewed" : "subscription_started",
+      );
+      await sendSubscriptionLifecycleEmail(admin, sub, paidKind, {
+        accessThrough: period.current_period_end,
+        stamp: paidKind === "renewed" ? (period.current_period_end ?? sub.last_payment_at ?? "") : "",
+      });
+    }
+  }
+
+  if (status === "payment_failed") {
+    await sendSubscriptionLifecycleEmail(admin, sub, "payment_failed", {
+      accessThrough: period.current_period_end,
+    });
+  }
+  if (status === "cancelled" || status === "expired") {
+    await sendSubscriptionLifecycleEmail(admin, sub, "cancelled", {
+      accessThrough: period.entitled ? period.current_period_end : null,
+    });
+  }
+
+
+  await notifySubscriptionState(admin, sub, status, period.entitled ? period.current_period_end : null);
 }
 
 /** In-app notification for every subscription lifecycle transition. */
-async function notifySubscriptionState(admin: any, sub: any, status: string) {
+async function notifySubscriptionState(
+  admin: any,
+  sub: any,
+  status: string,
+  accessThrough: string | null = null,
+) {
+  const accessThroughLabel = accessThrough
+    ? new Date(accessThrough).toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric", timeZone: "UTC" })
+    : null;
   const link = "/account/subscription";
   const key = `${sub.paypal_subscription_id}:${status}`;
   const plan = sub.tier ? `${sub.tier} plan` : "your plan";
@@ -384,7 +722,9 @@ async function notifySubscriptionState(admin: any, sub: any, status: string) {
     cancelled: {
       type: "subscription_cancelled",
       title: "Membership cancelled",
-      message: `Your ${plan} has been cancelled. You can resubscribe at any time.`,
+      message: accessThroughLabel
+        ? `Your ${plan} is cancelled — no future renewal. Your benefits remain active through ${accessThroughLabel}.`
+        : `Your ${plan} has been cancelled. You can resubscribe at any time.`,
     },
     expired: {
       type: "subscription_cancelled",
@@ -408,7 +748,7 @@ async function notifySubscriptionState(admin: any, sub: any, status: string) {
 async function alertAdmins(admin: any, title: string, message: string) {
   try {
     await admin.functions.invoke("send-admin-notification", {
-      body: { subject: `[Payments] ${title}`, message },
+      body: { type: "payments_alert", data: { title, message } },
     });
   } catch {
     safeLog("admin_alert_failed", { title });

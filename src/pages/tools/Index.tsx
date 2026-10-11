@@ -6,7 +6,7 @@ import { usePageTracking } from '@/hooks/usePageTracking';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { ArrowRight, CheckCircle2, Crown, Flame } from 'lucide-react';
-import { TOOLS } from '@/lib/tools/catalog';
+import { ACTIVE_TOOLS } from '@/lib/tools/catalog';
 import { useToolAccess } from '@/hooks/useToolAccess';
 import ToolTile from '@/components/tools/ToolTile';
 
@@ -26,8 +26,8 @@ const ToolsIndex = () => {
   return (
     <>
       <SEO
-        title="Vendibook Premium Tools | Pricing, Permits, Marketing & Market Research"
-        description="The operator toolkit for food-truck and trailer owners: PermitPath, PricePilot, Listing Studio, Marketing Studio, Concept Lab, Market Radar, and BuildKit."
+        title="Vendibook Premium Tools | Pricing, Permits & Launch Guides"
+        description="The operator toolkit for food-truck and trailer owners: PermitPath, PricePilot, the Startup Guide, and the Regulations Hub."
         canonical="/tools"
       />
       <script
@@ -59,7 +59,7 @@ const ToolsIndex = () => {
                 </h1>
                 <p className="mt-4 text-lg text-muted-foreground">
                   Price competitively, get permitted, and market smarter — all from one dashboard.
-                  PermitPath and the Startup Guide are free forever. Growth unlocks the rest.
+                  PermitPath Basic and the Startup Guide are free forever. Growth unlocks the rest.
                 </p>
                 <div className="mt-6 flex flex-wrap gap-3">
                   <Button size="lg" variant="glass-cta" asChild>
@@ -86,7 +86,7 @@ const ToolsIndex = () => {
           {/* Grid */}
           <section className="container py-12 md:py-16">
             <div className="grid gap-5 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {TOOLS.map((t) => (
+              {ACTIVE_TOOLS.map((t) => (
                 <ToolTile key={t.slug} tool={t} access={access.bySlug[t.slug]} />
               ))}
             </div>

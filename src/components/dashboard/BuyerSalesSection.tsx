@@ -9,7 +9,7 @@ const BuyerSalesSection = () => {
   const { user } = useAuth();
   const { transactions, isLoading, confirmSale, isConfirming, raiseDispute, isDisputing, stats } = useBuyerSaleTransactions(user?.id);
 
-  const escrowTransactions = transactions.filter(t => 
+  const protectedTransactions = transactions.filter(t => 
     ['paid', 'seller_confirmed'].includes(t.status) && !t.buyer_confirmed_at
   );
   const confirmedTransactions = transactions.filter(t => 
@@ -84,7 +84,7 @@ const BuyerSalesSection = () => {
             <div className="flex items-center justify-center py-12">
               <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
-          ) : escrowTransactions.length === 0 ? (
+          ) : protectedTransactions.length === 0 ? (
             <div className="bg-muted/50 rounded-xl p-12 text-center">
               <ShieldCheck className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
               <h4 className="font-semibold text-foreground mb-2">No pending confirmations</h4>
@@ -94,7 +94,7 @@ const BuyerSalesSection = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {escrowTransactions.map((transaction) => (
+              {protectedTransactions.map((transaction) => (
                 <SaleTransactionCard
                   key={transaction.id}
                   transaction={transaction}

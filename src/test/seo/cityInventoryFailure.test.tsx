@@ -1,0 +1,23 @@
+import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { MemoryRouter, Routes, Route } from 'react-router-dom';
+import { afterEach, expect, it, vi } from 'vitest';
+const query = vi.hoisted(() => ({ data: [], isLoading: false, isError: true, refetch: vi.fn() }));
+vi.mock('@tanstack/react-query', () => ({ useQuery: () => query }));
+vi.mock('@/integrations/supabase/client', () => ({ supabase: {} }));
+vi.mock('@/lib/analytics', () => ({ trackEvent: vi.fn() }));
+vi.mock('@/components/layout/Header', () => ({ default: () => null }));
+vi.mock('@/components/layout/Footer', () => ({ default: () => null }));
+vi.mock('@/components/ExitIntentCapture', () => ({ default: () => null }));
+vi.mock('@/components/seo/TransactionConfidenceSection', () => ({ default: () => null }));
+vi.mock('@/hooks/useNationwideInventory', () => ({ useNationwideInventory: () => ({ listings: [], isLoading: false }) }));
+vi.mock('@/components/seo/ExpandSearchModule', () => ({ default: () => <p>No inventory</p>, LowInventoryInlineLine: () => null, LOW_INVENTORY_THRESHOLD: 6, NEAR_EMPTY_THRESHOLD: 2 }));
+import CategoryCityPage from '@/pages/CategoryCityPage';
+afterEach(cleanup);
+it('keeps a ranking city URL indexable and offers retry when inventory is unavailable', () => {
+  render(<MemoryRouter initialEntries={['/rent/food-trailers/houston-tx']}><Routes><Route path="/rent/:categorySlug/:cityStateSlug" element={<CategoryCityPage mode="rent" />} /></Routes></MemoryRouter>);
+  expect(screen.getByRole('alert')).toHaveTextContent('Listings are temporarily unavailable');
+  expect(document.querySelector('meta[name="robots"]')?.getAttribute('content')).not.toContain('noindex');
+  expect(screen.queryByText('No inventory')).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Retry listings' }));
+  expect(query.refetch).toHaveBeenCalledOnce();
+});
