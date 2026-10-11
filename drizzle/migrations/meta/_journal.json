@@ -64,6 +64,13 @@
       "when": 1791672484281,
       "tag": "0008_sync_verified_phone_to_profile",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1791680680279,
+      "tag": "0009_build_studio_phase2_regions_catalog",
+      "breakpoints": true
     }
   ]
 }

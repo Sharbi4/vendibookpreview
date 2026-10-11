@@ -895,6 +895,459 @@ export type Database = {
           },
         ]
       }
+      bs_builds: {
+        Row: {
+          config: Json
+          created_at: string
+          id: string
+          manufacturer_id: string
+          model_id: string
+          name: string | null
+          price_snapshot: Json
+          quote_required: boolean
+          region_id: string
+          status: string
+          subtotal_cents: number | null
+          updated_at: string
+          user_id: string
+          zip: string
+        }
+        Insert: {
+          config: Json
+          created_at?: string
+          id?: string
+          manufacturer_id: string
+          model_id: string
+          name?: string | null
+          price_snapshot: Json
+          quote_required?: boolean
+          region_id: string
+          status?: string
+          subtotal_cents?: number | null
+          updated_at?: string
+          user_id: string
+          zip: string
+        }
+        Update: {
+          config?: Json
+          created_at?: string
+          id?: string
+          manufacturer_id?: string
+          model_id?: string
+          name?: string | null
+          price_snapshot?: Json
+          quote_required?: boolean
+          region_id?: string
+          status?: string
+          subtotal_cents?: number | null
+          updated_at?: string
+          user_id?: string
+          zip?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bs_builds_manufacturer_id_fkey"
+            columns: ["manufacturer_id"]
+            isOneToOne: false
+            referencedRelation: "bs_manufacturers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bs_builds_model_id_fkey"
+            columns: ["model_id"]
+            isOneToOne: false
+            referencedRelation: "bs_models"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bs_builds_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "bs_regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bs_catalog_history: {
+        Row: {
+          changed_at: string
+          changed_by: string | null
+          id: number
+          manufacturer_id: string
+          record_id: string
+          snapshot: Json
+          table_name: string
+          version: number
+        }
+        Insert: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: number
+          manufacturer_id: string
+          record_id: string
+          snapshot: Json
+          table_name: string
+          version: number
+        }
+        Update: {
+          changed_at?: string
+          changed_by?: string | null
+          id?: number
+          manufacturer_id?: string
+          record_id?: string
+          snapshot?: Json
+          table_name?: string
+          version?: number
+        }
+        Relationships: []
+      }
+      bs_coverage_requests: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          user_id: string | null
+          zip: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          user_id?: string | null
+          zip: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          user_id?: string | null
+          zip?: string
+        }
+        Relationships: []
+      }
+      bs_equipment: {
+        Row: {
+          allowed_walls: string[]
+          category: string
+          compatible_model_ids: string[]
+          created_at: string
+          depth_in: number
+          description: string | null
+          glb_path: string | null
+          height_in: number
+          id: string
+          install_notes: string | null
+          manufacturer_id: string
+          name: string
+          needs: string[]
+          photos: string[]
+          power: string | null
+          price_cents: number | null
+          sku: string
+          status: string
+          supplier: string | null
+          updated_at: string
+          version: number
+          weight_lb: number | null
+          width_in: number
+        }
+        Insert: {
+          allowed_walls?: string[]
+          category?: string
+          compatible_model_ids?: string[]
+          created_at?: string
+          depth_in: number
+          description?: string | null
+          glb_path?: string | null
+          height_in: number
+          id?: string
+          install_notes?: string | null
+          manufacturer_id: string
+          name: string
+          needs?: string[]
+          photos?: string[]
+          power?: string | null
+          price_cents?: number | null
+          sku: string
+          status?: string
+          supplier?: string | null
+          updated_at?: string
+          version?: number
+          weight_lb?: number | null
+          width_in: number
+        }
+        Update: {
+          allowed_walls?: string[]
+          category?: string
+          compatible_model_ids?: string[]
+          created_at?: string
+          depth_in?: number
+          description?: string | null
+          glb_path?: string | null
+          height_in?: number
+          id?: string
+          install_notes?: string | null
+          manufacturer_id?: string
+          name?: string
+          needs?: string[]
+          photos?: string[]
+          power?: string | null
+          price_cents?: number | null
+          sku?: string
+          status?: string
+          supplier?: string | null
+          updated_at?: string
+          version?: number
+          weight_lb?: number | null
+          width_in?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bs_equipment_manufacturer_id_fkey"
+            columns: ["manufacturer_id"]
+            isOneToOne: false
+            referencedRelation: "bs_manufacturers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bs_manufacturer_members: {
+        Row: {
+          created_at: string
+          manufacturer_id: string
+          role: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          manufacturer_id: string
+          role?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          manufacturer_id?: string
+          role?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bs_manufacturer_members_manufacturer_id_fkey"
+            columns: ["manufacturer_id"]
+            isOneToOne: false
+            referencedRelation: "bs_manufacturers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bs_manufacturers: {
+        Row: {
+          contact_email: string | null
+          created_at: string
+          id: string
+          integration_mode: string
+          is_demo: boolean
+          name: string
+          status: string
+        }
+        Insert: {
+          contact_email?: string | null
+          created_at?: string
+          id?: string
+          integration_mode?: string
+          is_demo?: boolean
+          name: string
+          status?: string
+        }
+        Update: {
+          contact_email?: string | null
+          created_at?: string
+          id?: string
+          integration_mode?: string
+          is_demo?: boolean
+          name?: string
+          status?: string
+        }
+        Relationships: []
+      }
+      bs_models: {
+        Row: {
+          base_price_cents: number | null
+          created_at: string
+          door_from_in: number | null
+          door_to_in: number | null
+          ext_height_in: number | null
+          ext_length_in: number | null
+          ext_width_in: number | null
+          glb_path: string | null
+          gvwr_lb: number | null
+          id: string
+          int_height_in: number
+          int_length_in: number
+          int_width_in: number
+          lead_time_weeks: number | null
+          manufacturer_id: string
+          name: string
+          photos: string[]
+          sku: string
+          standard_features: string[]
+          status: string
+          updated_at: string
+          vehicle_type: string
+          version: number
+          window_from_in: number | null
+          window_to_in: number | null
+        }
+        Insert: {
+          base_price_cents?: number | null
+          created_at?: string
+          door_from_in?: number | null
+          door_to_in?: number | null
+          ext_height_in?: number | null
+          ext_length_in?: number | null
+          ext_width_in?: number | null
+          glb_path?: string | null
+          gvwr_lb?: number | null
+          id?: string
+          int_height_in: number
+          int_length_in: number
+          int_width_in: number
+          lead_time_weeks?: number | null
+          manufacturer_id: string
+          name: string
+          photos?: string[]
+          sku: string
+          standard_features?: string[]
+          status?: string
+          updated_at?: string
+          vehicle_type?: string
+          version?: number
+          window_from_in?: number | null
+          window_to_in?: number | null
+        }
+        Update: {
+          base_price_cents?: number | null
+          created_at?: string
+          door_from_in?: number | null
+          door_to_in?: number | null
+          ext_height_in?: number | null
+          ext_length_in?: number | null
+          ext_width_in?: number | null
+          glb_path?: string | null
+          gvwr_lb?: number | null
+          id?: string
+          int_height_in?: number
+          int_length_in?: number
+          int_width_in?: number
+          lead_time_weeks?: number | null
+          manufacturer_id?: string
+          name?: string
+          photos?: string[]
+          sku?: string
+          standard_features?: string[]
+          status?: string
+          updated_at?: string
+          vehicle_type?: string
+          version?: number
+          window_from_in?: number | null
+          window_to_in?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bs_models_manufacturer_id_fkey"
+            columns: ["manufacturer_id"]
+            isOneToOne: false
+            referencedRelation: "bs_manufacturers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bs_region_assignments: {
+        Row: {
+          assigned_by: string | null
+          ended_at: string | null
+          id: string
+          manufacturer_id: string
+          region_id: string
+          started_at: string
+        }
+        Insert: {
+          assigned_by?: string | null
+          ended_at?: string | null
+          id?: string
+          manufacturer_id: string
+          region_id: string
+          started_at?: string
+        }
+        Update: {
+          assigned_by?: string | null
+          ended_at?: string | null
+          id?: string
+          manufacturer_id?: string
+          region_id?: string
+          started_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bs_region_assignments_manufacturer_id_fkey"
+            columns: ["manufacturer_id"]
+            isOneToOne: false
+            referencedRelation: "bs_manufacturers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bs_region_assignments_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "bs_regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bs_region_zip3: {
+        Row: {
+          region_id: string
+          zip3: string
+        }
+        Insert: {
+          region_id: string
+          zip3: string
+        }
+        Update: {
+          region_id?: string
+          zip3?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bs_region_zip3_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "bs_regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bs_regions: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          status?: string
+        }
+        Relationships: []
+      }
       buyer_service_requests: {
         Row: {
           admin_notes: string | null
@@ -12941,6 +13394,36 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      bs_add_member_by_email: {
+        Args: { p_email: string; p_manufacturer_id: string; p_role?: string }
+        Returns: undefined
+      }
+      bs_assign_region: {
+        Args: { p_manufacturer_id: string; p_region_id: string }
+        Returns: undefined
+      }
+      bs_is_member: {
+        Args: { _manufacturer_id: string; _min_role?: string }
+        Returns: boolean
+      }
+      bs_price_build: {
+        Args: { p_equipment_ids: string[]; p_model_id: string; p_zip: string }
+        Returns: Json
+      }
+      bs_resolve_zip: { Args: { p_zip: string }; Returns: Json }
+      bs_save_build: {
+        Args: {
+          p_config: Json
+          p_model_id: string
+          p_name?: string
+          p_zip: string
+        }
+        Returns: string
+      }
+      bs_zip_manufacturer: {
+        Args: { p_zip: string }
+        Returns: Record<string, unknown>
       }
       calculate_booking_end_timestamp: {
         Args: { p_end_date: string; p_hourly_slots: Json }
