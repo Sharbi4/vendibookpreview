@@ -94,7 +94,7 @@ function Equipment({ p, config, selected, onSelect }: { p: Placement; config: Bu
 function CameraRig({ view }: { view: ViewMode }) {
   const { camera, controls } = useThree() as unknown as { camera: THREE.Camera; controls: { target: THREE.Vector3; update: () => void } | null };
   useEffect(() => {
-    if (view === 'interior') camera.position.set(0.2, 6.5, 2.6); else camera.position.set(6.2, 3.4, 7.2);
+    if (view === 'interior') camera.position.set(0.2, 9, 4.2); else camera.position.set(6.2, 3.4, 7.2);
     controls?.target.set(0, 1.2, 0); controls?.update();
   }, [view, camera, controls]);
   return null;
