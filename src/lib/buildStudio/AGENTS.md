@@ -1,1 +1,2 @@
 - Build Studio (/build-studio) keeps catalog, pricing and layout rules in src/lib/buildStudio/catalog.ts (procedural geometry, optional GLB per item). Why: one source of truth for the 3D scene and price until manufacturer data exists.
+- Partner catalog, regions and prices live in bs_* tables; the configurator loads them only via bs_resolve_zip and shows bs_price_build (integer cents) as the authoritative price, never client math. Why: customers must not pick another manufacturer or alter prices from the browser; the demo catalog is used only when no partner covers the ZIP.
