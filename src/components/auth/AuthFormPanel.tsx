@@ -659,7 +659,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="lastName" className="text-sm font-medium text-foreground">
-                      Last name
+                      Legal last name
                     </Label>
                     <Input
                       id="lastName"
