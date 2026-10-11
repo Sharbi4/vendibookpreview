@@ -2,7 +2,7 @@ import { Canvas, useThree } from '@react-three/fiber';
 import { ContactShadows, Environment, Lightformer, OrbitControls, OrthographicCamera, PerspectiveCamera } from '@react-three/drei';
 import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
-import { TRAILER, specOf, type BuildConfig, type Placement, placementIssues, EXTERIOR_COLORS } from '@/lib/buildStudio/catalog';
+import { TRAILER, specOf, type BuildConfig, type Placement, placementIssues, exteriorHex } from '@/lib/buildStudio/catalog';
 
 export type ViewMode = 'exterior' | 'interior' | 'plan';
 interface Props {
@@ -104,7 +104,7 @@ function CameraRig({ view }: { view: ViewMode }) {
 
 export default function TrailerScene({ config, view, roof, selected, onSelect }: Props) {
   L = TRAILER.length; W = TRAILER.width; H = TRAILER.height;
-  const color = (EXTERIOR_COLORS.find((c) => c.id === config.color) ?? EXTERIOR_COLORS[0]).hex;
+  const color = exteriorHex(config);
   return <Canvas shadows dpr={[1, 2]} onPointerMissed={() => onSelect(null)} aria-label="3D trailer preview">
     <color attach="background" args={['#eeebe5']} />
     {view === 'plan'

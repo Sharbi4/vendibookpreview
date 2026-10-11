@@ -68,8 +68,11 @@ export interface PartnerModel {
 export interface PartnerEquipment {
   id: string; name: string; category: string; description: string | null; width_in: number; depth_in: number; height_in: number;
   power: string | null; needs: string[]; install_notes: string | null; compatible_model_ids: string[]; allowed_walls: string[];
-  price_cents: number | null; glb_path: string | null; version: number;
+  price_cents: number | null; glb_path: string | null; version: number; color_hex?: string | null;
 }
+export interface Finish { id: string; name: string; hex: string; price: number | null }
+/** Partner exterior finishes (priced paint/wrap options); empty in demo mode. */
+export let FINISHES: Finish[] = [];
 const IN = 0.0254;
 const TONES: Record<string, string> = { Refrigeration: '#c8ced3', Sanitation: '#b7bfc6', Cooking: '#9aa3ab' };
 
@@ -84,8 +87,10 @@ export function setPartnerCatalog(model: PartnerModel, equipment: PartnerEquipme
     door: { wall: 'back' as Wall, ...zone(model.door_from_in, model.door_to_in, DEMO_TRAILER.door) },
     window: zone(model.window_from_in, model.window_to_in, DEMO_TRAILER.window),
   });
-  EQUIPMENT = equipment
-    .filter((e) => !e.compatible_model_ids?.length || e.compatible_model_ids.includes(model.id))
+  const compatible = equipment.filter((e) => !e.compatible_model_ids?.length || e.compatible_model_ids.includes(model.id));
+  FINISHES = compatible.filter((e) => e.category === 'Exterior finish')
+    .map((e) => ({ id: e.id, name: e.name, hex: e.color_hex || '#f2f1ee', price: e.price_cents == null ? null : e.price_cents / 100 }));
+  EQUIPMENT = compatible.filter((e) => e.category !== 'Exterior finish')
     .map((e) => ({
       id: e.id, name: e.name, category: e.category as EquipmentSpec['category'],
       w: e.width_in * IN, d: e.depth_in * IN, h: e.height_in * IN,
@@ -100,6 +105,7 @@ export function setPartnerCatalog(model: PartnerModel, equipment: PartnerEquipme
 export function resetToDemoCatalog() {
   Object.assign(TRAILER, structuredClone(DEMO_TRAILER));
   EQUIPMENT = DEMO_EQUIPMENT;
+  FINISHES = [];
   DEMO_DATA = true;
 }
 
@@ -112,7 +118,10 @@ export const EXTERIOR_COLORS = [
 ];
 
 export interface Placement { uid: string; id: string; wall: Wall; x: number }
-export interface BuildConfig { color: string; items: Placement[] }
+export interface BuildConfig { color: string; items: Placement[]; /** partner exterior finish id */ finish?: string }
+
+export const exteriorHex = (c: BuildConfig) =>
+  FINISHES.find((f) => f.id === c.finish)?.hex ?? (EXTERIOR_COLORS.find((x) => x.id === c.color) ?? EXTERIOR_COLORS[0]).hex;
 
 export const specOf = (id: string) => EQUIPMENT.find((e) => e.id === id) ?? {
   id, name: 'Unavailable item', category: 'Prep' as const, w: 0.3, d: 0.3, h: 0.3, price: null, power: '', needs: [], notes: 'No longer offered.', color: '#999',
