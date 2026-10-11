@@ -3,7 +3,7 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState, type ReactNode } 
 import {
   ArrowLeft, ArrowRight, Beef, Cake, Check, ChevronLeft, ChevronRight, Coffee, Croissant, Egg, Expand, Flame, FolderOpen, Grid3x3, HelpCircle,
   IceCreamCone, Info, Layers, Loader2, MapPin, Maximize, Minus, Pizza, Plus, Refrigerator, Ruler, RotateCcw, Sandwich, Save, Tag, Trash2,
-  Truck, Utensils, Wrench, X, Zap, Droplets, Palette,
+  Truck, Utensils, Wrench, X, Zap, Droplets, Palette, Sparkles, ShieldCheck, Pencil, Copy,
 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -11,6 +11,10 @@ import SEO from '@/components/SEO';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import StudioPreview, { FloorPlan } from '@/components/buildStudio/StudioPreview';
+import { DRAFT_KEY, SAVES_KEY, readDrafts, type StudioDraft } from '@/lib/buildStudio/drafts';
+import '@/components/buildStudio/studio.css';
 import { DELIVERY_LABELS } from '@/lib/buildStudio/partnerCatalog';
 import {
   DEMO_DATA, EQUIPMENT, FINISHES, EXTERIOR_COLORS, TRAILER, findFreeSpot, placementIssues, priceBuild, setPartnerCatalog, specOf,
@@ -19,8 +23,8 @@ import {
 import { BUSINESS_CATEGORIES, PANEL_GROUPS, greatFor, recommend } from '@/lib/buildStudio/business';
 import type { ViewMode } from '@/components/buildStudio/TrailerScene';
 
-const TrailerScene = lazy(() => import('@/components/buildStudio/TrailerScene'));
-const SAVE_KEY = 'vb.buildStudio.saves.v1';
+const TrailerScene = StudioPreview;
+const SAVE_KEY = SAVES_KEY;
 const cents = (c: number) => (c / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 const money = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
 const inch = (m: number) => Math.round(m * 39.37);
@@ -28,27 +32,22 @@ type ServerPrice = { status: string; lines?: { id?: string; label: string; amoun
   subtotal_cents?: number; quote_required?: boolean; delivery_options?: { method: string; fee_cents: number | null; notes: string | null }[]; problems?: { id: string; name?: string; issue: string }[]; lead_time_weeks?: number | null };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const rpc = (fn: string, args: Record<string, unknown>) => (supabase as any).rpc(fn, args);
-type Saved = { name: string; savedAt: string; config: BuildConfig };
-const readSaves = (): Saved[] => { try { return JSON.parse(localStorage.getItem(SAVE_KEY) || '[]'); } catch { return []; } };
-type Step = 'landing' | 'zip' | 'business' | 'studio';
+type Saved = StudioDraft;
+type Step = 'landing' | 'zip' | 'business' | 'studio' | 'review';
 
 const CAT_ICONS: Record<string, typeof Beef> = { burgers: Sandwich, tacos: Utensils, pizza: Pizza, bbq: Flame, coffee: Coffee, dessert: IceCreamCone, breakfast: Egg, bakery: Croissant, other: Cake };
 const GROUP_ICONS: Record<string, typeof Beef> = { trailer: Truck, cooking: Flame, refrigeration: Refrigerator, plumbing: Droplets, prep: Layers, power: Zap, other: Wrench, finishes: Palette };
 const groupOf = (category: string) => PANEL_GROUPS.find((g) => g.categories.includes(category))?.id ?? 'other';
 
-function StudioNav({ onHome, user }: { onHome: () => void; user: boolean }) {
-  return <header className="sticky top-0 z-30 border-b border-border bg-background/90 backdrop-blur">
-    <div className="mx-auto flex h-14 max-w-[1600px] items-center gap-3 px-4">
-      <Link to="/" aria-label="Back to Vendibook" className="flex items-center gap-2"><img src="/brand/vendibook-logo-email.png" alt="Vendibook" className="h-6 w-auto" /></Link>
-      <span className="h-5 w-px bg-border" aria-hidden />
-      <button type="button" onClick={onHome} className="text-sm font-medium text-foreground">Build Studio</button>
-      <nav className="ml-auto flex items-center gap-1 text-sm">
-        <Link to="/build-studio/my-builds" className="rounded-lg px-3 py-2 text-muted-foreground hover:text-foreground">My builds</Link>
-        <a href="#how" onClick={onHome} className="hidden rounded-lg px-3 py-2 text-muted-foreground hover:text-foreground sm:inline-flex"><HelpCircle className="mr-1 h-4 w-4" />Help</a>
-        {user ? <Link to="/dashboard" className="rounded-lg px-3 py-2 text-muted-foreground hover:text-foreground">Account</Link>
-          : <Link to="/auth?redirect=/build-studio" className="rounded-lg border border-border px-3 py-1.5 text-foreground hover:bg-muted">Sign in</Link>}
-      </nav>
-    </div>
+function StudioNav({ onHome, onBuilds, onHelp, user }: { onHome: () => void; onBuilds: () => void; onHelp: () => void; user: boolean }) {
+  return <header className="bs-nav">
+    <div className="bs-brand"><Link to="/" aria-label="Back to Vendibook"><img src="/brand/vendibook-logo-email.png" alt="Vendibook" /></Link>
+      <span><button type="button" onClick={onHome}>Build Studio</button></span></div>
+    <nav aria-label="Build Studio">
+      <button onClick={onBuilds}><FolderOpen size={15} />My builds</button>
+      <button className="bs-help" onClick={onHelp}><HelpCircle size={15} />Help</button>
+      <Link className="bs-nav-save" to={user ? '/dashboard' : '/auth?redirect=/build-studio'}>{user ? 'My account' : 'Sign in'}<ArrowRight size={14} /></Link>
+    </nav>
   </header>;
 }
 
@@ -88,8 +87,35 @@ export default function BuildStudio() {
   const [leftOpen, setLeftOpen] = useState(true);
   const [rightOpen, setRightOpen] = useState(true);
   const [showBreakdown, setShowBreakdown] = useState(false);
+  const [heroColor, setHeroColor] = useState('white');
+  const [mobileOptions, setMobileOptions] = useState(false);
+  const [assistant, setAssistant] = useState(false);
+  const [guideTopic, setGuideTopic] = useState<'menu' | 'power' | 'review'>('menu');
+  const [showBuilds, setShowBuilds] = useState(false);
+  const [showHelp, setShowHelp] = useState(false);
+  const [recovered, setRecovered] = useState<Saved | null>(null);
+  const [saveStatus, setSaveStatus] = useState('');
+  const [storageError, setStorageError] = useState('');
+  const [priceAttempt, setPriceAttempt] = useState(0);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
+  const [saveBusy, setSaveBusy] = useState(false);
+  const [saveAttempt, setSaveAttempt] = useState(0);
   const stageRef = useRef<HTMLDivElement>(null);
-  useEffect(() => setSaves(readSaves()), []);
+  useEffect(() => {
+    try { setSaves(readDrafts(localStorage)); setRecovered(readDrafts(localStorage, DRAFT_KEY)[0] ?? null); }
+    catch { setStorageError('Saved drafts could not be read. Existing device data has been preserved.'); }
+  }, []);
+  useEffect(() => {
+    if (partner || (step !== 'studio' && step !== 'review') || storageError) return;
+    setSaveStatus('Saving on this device…');
+    const timeout = setTimeout(() => {
+      const draft = { name: saveName.trim() || 'My kitchen concept', savedAt: new Date().toISOString(), config, categories: cats, menu: menuItems };
+      try { localStorage.setItem(DRAFT_KEY, JSON.stringify([draft])); setRecovered(draft); setSaveStatus('All changes saved on this device'); }
+      catch { setSaveStatus('Device save failed. Your design is still here.'); }
+    }, 600);
+    return () => clearTimeout(timeout);
+  }, [config, cats, menuItems, saveName, partner, step, storageError, saveAttempt]);
   useEffect(() => () => resetToDemoCatalog(), []);
   useEffect(() => { window.scrollTo({ top: 0 }); }, [step]);
 
@@ -120,7 +146,7 @@ export default function BuildStudio() {
   const equipmentIds = [...config.items.map((i) => i.id), ...(config.finish ? [config.finish] : [])].join(',');
   useEffect(() => {
     if (!partner || !modelId) return;
-    let live = true; setPricing(true);
+    let live = true; setPricing(true); setServerPrice(null);
     const t = setTimeout(async () => {
       const { data, error } = await rpc('bs_price_build', { p_zip: zip, p_model_id: modelId, p_equipment_ids: equipmentIds ? equipmentIds.split(',') : [], p_delivery_method: delivery || null });
       if (!live) return;
@@ -128,8 +154,8 @@ export default function BuildStudio() {
       setServerPrice(error ? { status: 'error' } : data);
     }, 350);
     return () => { live = false; clearTimeout(t); };
-  }, [partner, modelId, equipmentIds, zip, delivery]);
-  useEffect(() => setSavedId(null), [equipmentIds, delivery, config.items]);
+  }, [partner, modelId, equipmentIds, zip, delivery, priceAttempt]);
+  useEffect(() => { setSavedId(null); setSubmitted(false); }, [config, delivery, modelId, zip]);
 
   const price = useMemo(() => priceBuild(config), [config]);
   const sel = config.items.find((i) => i.uid === selected);
@@ -162,22 +188,40 @@ export default function BuildStudio() {
   const update = (patch: Partial<{ x: number; wall: Wall }>) =>
     setConfig((c) => ({ ...c, items: c.items.map((i) => (i.uid === selected ? { ...i, ...patch } : i)) }));
   const remove = (uid = selected) => { setConfig((c) => ({ ...c, items: c.items.filter((i) => i.uid !== uid) })); setSelected(null); };
-  const persist = (next: Saved[]) => { localStorage.setItem(SAVE_KEY, JSON.stringify(next)); setSaves(next); };
+  const persist = (next: Saved[]) => {
+    try { localStorage.setItem(SAVE_KEY, JSON.stringify(next)); setSaves(next); return true; }
+    catch { setNotice('Device storage is unavailable. Your design is still here — please retry.'); return false; }
+  };
+  const resume = (draft: Saved) => {
+    resetToDemoCatalog(); setPartner(null); setModelId(''); setConfig(structuredClone(draft.config)); setCats(draft.categories ?? []); setMenuItems(draft.menu ?? []);
+    setSaveName(draft.name); setSelected(null); setShowBuilds(false); setStep('studio'); setView('interior');
+  };
   const save = async () => {
+    if (saveBusy) return;
     if (partner) {
       if (!user) { setNotice('Sign in to save this build to your account.'); return; }
+      setSaveBusy(true);
+      try {
       const { data, error } = await rpc('bs_save_build', { p_zip: zip, p_model_id: modelId, p_config: config, p_name: saveName.trim() || null, p_delivery_method: delivery || null });
       setNotice(error ? "We couldn't save your build. Your design is still here — please try again." : "Saved to your account with today's prices.");
       if (!error) { setSaveName(''); setSavedId(data as string); }
+      } catch { setNotice('Save failed. Your design is still here — please retry.'); }
+      finally { setSaveBusy(false); }
       return;
     }
     const name = saveName.trim() || `Build ${saves.length + 1}`;
-    persist([{ name, savedAt: new Date().toISOString(), config }, ...saves.filter((s) => s.name !== name)].slice(0, 10));
-    setSaveName(''); setNotice(`Saved “${name}” on this device.`);
+    if (storageError) { setNotice(storageError); return; }
+    if (persist([{ name, savedAt: new Date().toISOString(), config, categories: cats, menu: menuItems }, ...saves.filter((s) => s.name !== name)].slice(0, 10))) {
+      setNotice(`Saved “${name}” on this device.`);
+    }
   };
   const submitForReview = async () => {
+    if (submitting || submitted || !partner || pricing || serverPrice?.status !== 'ok' || allIssues.length || serverPrice?.problems?.length) return;
     if (!user) { setNotice('Sign in to send your build for engineering review.'); return; }
-    let id = savedId;
+    setSubmitting(true);
+    try {
+    // Submit a fresh immutable snapshot; a prior save may have completed after an edit.
+    let id: string | null = null;
     if (!id) {
       const { data, error } = await rpc('bs_save_build', { p_zip: zip, p_model_id: modelId, p_config: config, p_name: saveName.trim() || null, p_delivery_method: delivery || null });
       if (error) { setNotice("We couldn't save your build. Please try again."); return; }
@@ -185,7 +229,9 @@ export default function BuildStudio() {
     }
     const { error } = await rpc('bs_submit_build', { p_build_id: id, p_note: null });
     setNotice(error ? "We couldn't send your build. Please try again." : 'Sent for engineering review. Track it in My builds.');
-    if (!error) setSavedId(null);
+    if (!error) { setSavedId(id); setSubmitted(true); }
+    } catch { setNotice("We couldn't send your build. Your design is still here — please retry."); }
+    finally { setSubmitting(false); }
   };
   const addMenu = () => {
     const items = menuText.split(/,|\n/).map((s) => s.trim()).filter((s) => s && s.length <= 40);
@@ -221,44 +267,63 @@ export default function BuildStudio() {
     }
     return [...groups.entries()];
   }, [partner, serverPrice, price, config.items, modelId]);
-  const total = partner ? (serverPrice?.subtotal_cents ?? 0) / 100 : price.total;
+  const total = partner ? (serverPrice?.status === 'ok' && serverPrice.subtotal_cents != null ? serverPrice.subtotal_cents / 100 : null) : price.total;
+  const priceLabel = total == null ? (pricing ? 'Updating…' : 'Price unavailable') : money(total);
   const incomplete = partner ? !!serverPrice?.quote_required : price.quoteRequired;
-  const buildTitle = `${Math.round(TRAILER.length / 0.3048 + 1)}′ ${TRAILER.name.replace(/^\d+\s*ft\s*/i, '')}`;
-  const concept = cats.length ? `Custom ${BUSINESS_CATEGORIES.find((c) => c.id === cats[0])!.name.split(' and ')[0].toLowerCase()} kitchen` : 'Custom kitchen';
+  const buildTitle = TRAILER.name;
+  const concept = cats.length ? `Custom ${BUSINESS_CATEGORIES.find((c) => c.id === cats[0])?.name.split(' and ')[0].toLowerCase() ?? 'food'} kitchen` : 'Your kitchen. Your way.';
 
   const seo = <SEO title="Build Studio — design your food truck or trailer in 3D" description="Design a food truck or trailer around your menu: customize equipment in 3D, see preliminary pricing, and request an engineering-reviewed quote." canonical="/build-studio" noindex={step === 'studio'} />;
-  const shell = (children: ReactNode) => <div className="sale-light min-h-screen">{seo}<StudioNav onHome={() => setStep('landing')} user={!!user} />{children}</div>;
+  const shell = (children: ReactNode) => <div className="sale-light build-studio min-h-screen">{seo}
+    <StudioNav onHome={() => setStep('landing')} onBuilds={() => setShowBuilds(true)} onHelp={() => setShowHelp(true)} user={!!user} />{children}
+    <Dialog open={showHelp} onOpenChange={setShowHelp}><DialogContent className="sale-light build-studio">
+      <DialogTitle>From your idea to your kitchen</DialogTitle><DialogDescription>Build with confidence, one decision at a time.</DialogDescription>
+      <ol className="space-y-4 text-sm leading-relaxed"><li><strong>1. Start with your location and menu.</strong> We check regional availability and suggest equipment from the available catalog.</li><li><strong>2. Make it yours.</strong> Select equipment and finishes. Rotate the trailer, look inside, or inspect the floor plan. All prices are preliminary.</li><li><strong>3. Review before you commit.</strong> A manufacturing partner must confirm engineering, delivery, the final quote and legal terms before purchase.</li></ol>
+      <p className="text-xs text-muted-foreground">Demo designs save on this device. Regional builds require sign-in to save to your account. No payment is collected in this preview.</p>
+      <Link to="/contact" className="text-sm text-primary underline">Contact Vendibook</Link>
+    </DialogContent></Dialog>
+    <Dialog open={showBuilds} onOpenChange={setShowBuilds}><DialogContent className="sale-light build-studio max-w-4xl max-h-[85dvh] overflow-y-auto">
+      <DialogTitle>My builds</DialogTitle><DialogDescription>Your kitchen ideas, ready when you are. These demo drafts are stored on this device.</DialogDescription>
+      <Link to="/build-studio/my-builds" className="text-sm text-primary underline">View account builds, engineering reviews and quotes →</Link>
+      {storageError && <p role="alert" className="text-sm text-destructive">{storageError}</p>}
+      {!saves.length && !recovered && <p className="py-8 text-muted-foreground">Your next business starts with an idea. Start designing to create your first draft.</p>}
+      {recovered && <Button variant="outline" onClick={() => resume(recovered)}>Resume last autosaved design</Button>}
+      <div className="bs-local-grid">{saves.map(s => <article className="bs-draft-card" key={s.name}>
+        {!partner && <FloorPlan config={s.config} selected={null} onSelect={() => resume(s)} />}
+        <div className="bs-draft-body"><span className="bs-preview-badge">Demo draft</span><h2 className="mt-3">{s.name}</h2><p>{new Date(s.savedAt).toLocaleDateString()} · {s.config.items.length} equipment items</p>
+          {!partner && <p>{money(priceBuild(s.config).total)} · demonstration price</p>}
+          <div className="bs-draft-actions"><Button size="sm" onClick={() => resume(s)}>Continue designing</Button>
+            <Button size="sm" variant="outline" aria-label={`Duplicate ${s.name}`} onClick={() => { const name = `${s.name.slice(0, 48)} copy ${Date.now().toString().slice(-5)}`; persist([{ ...s, name, savedAt: new Date().toISOString() }, ...saves].slice(0, 10)); }}><Copy size={14} /></Button>
+            <Button size="sm" variant="ghost" aria-label={`Delete ${s.name}`} onClick={() => { if (window.confirm(`Delete the device draft “${s.name}”?`)) persist(saves.filter(x => x.name !== s.name)); }}><Trash2 size={14} /></Button></div>
+        </div></article>)}</div>
+    </DialogContent></Dialog>
+  </div>;
 
   /* ---------------- Landing ---------------- */
   if (step === 'landing') return shell(<main>
-    <section className="mx-auto grid max-w-[1400px] items-center gap-10 px-4 py-12 lg:grid-cols-[1fr_1.15fr] lg:py-20">
-      <div className="motion-safe:animate-fade-in">
-        <p className="text-sm font-medium text-primary">Vendibook Build Studio</p>
-        <h1 className="mt-3 text-4xl font-semibold tracking-tight text-foreground sm:text-6xl">Your business.<br />Your build.</h1>
-        <p className="mt-5 max-w-lg text-lg text-muted-foreground">Design a food truck or trailer around your menu, your vision, and your budget.</p>
-        <p className="mt-2 max-w-lg text-sm text-muted-foreground">Explore layouts, customize equipment, and see preliminary pricing as you build.</p>
-        <div className="mt-8 flex flex-wrap gap-3">
-          <Button size="lg" className="h-12 rounded-xl px-6" onClick={() => setStep('zip')}>Start designing<ArrowRight className="ml-2 h-4 w-4" /></Button>
-          <Button size="lg" variant="outline" className="h-12 rounded-xl px-6" asChild><a href="#how">How Build Studio works</a></Button>
-        </div>
+    <section className="bs-hero">
+      <div className="bs-hero-copy">
+        <p className="bs-eyebrow">A little imagination. A whole new business.</p>
+        <h1>Your business.<br /><em>Your build.</em></h1>
+        <p className="bs-hero-description">The kitchen you've been dreaming about.<br />Designed around your menu, your vision,<br className="hidden sm:block" /> and your next chapter.</p>
+        <div className="bs-hero-actions"><Button onClick={() => setStep('zip')}>Start designing<ArrowRight className="ml-3 h-4 w-4" /></Button>
+          <Button variant="outline" onClick={() => setShowHelp(true)}>How it works</Button></div>
+        <p className="bs-hero-note"><ShieldCheck size={14} />Explore freely. Engineering review before you commit.</p>
+        {recovered && <button className="mt-5 text-xs text-primary underline" onClick={() => resume(recovered)}>Welcome back — continue your design →</button>}
       </div>
-      <div className="relative aspect-[4/3] overflow-hidden rounded-3xl border border-border bg-muted">
-        <Suspense fallback={<div className="absolute inset-0 grid place-items-center"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>}>
-          <div className="absolute inset-0"><TrailerScene config={{ color: 'orange', items: [] }} view="exterior" roof selected={null} onSelect={() => {}} /></div>
-        </Suspense>
-        <p className="absolute bottom-3 left-3 rounded-md bg-card/90 px-2 py-1 text-[11px] text-muted-foreground">Concept visualization — drag to rotate</p>
-      </div>
+      <div className="bs-hero-stage"><TrailerScene config={{ color: heroColor, items: [] }} view="exterior" roof selected={null} onSelect={() => {}} /></div>
+      <div className="bs-hero-controls"><span>Make it yours</span>{EXTERIOR_COLORS.map(c => <button key={c.id} aria-label={`Preview ${c.name}`} aria-pressed={heroColor === c.id} style={{ background: c.hex }} onClick={() => setHeroColor(c.id)} />)}</div>
+      <p className="bs-hero-caption">Drag to explore · Concept visualization, subject to engineering approval</p>
     </section>
-    <section id="how" className="border-t border-border bg-card">
-      <div className="mx-auto max-w-[1400px] px-4 py-14">
-        <h2 className="text-2xl font-semibold text-foreground">How Build Studio works</h2>
-        <ol className="mt-8 grid gap-4 md:grid-cols-3">
+    <div className="bs-trust-strip"><span><Layers size={16} />Your menu. Your layout.</span><span><RotateCcw size={16} />Explore every angle in 3D</span><span><ShieldCheck size={16} />Reviewed before it's built</span></div>
+    <section id="how" className="bs-how">
+      <div>
+        <div className="bs-how-heading"><h2>Big dreams. A clear next step.</h2><p>From “what if” to your first service.</p></div>
+        <ol>
           {[['Tell us about your business', 'Share your location and what you want to serve. We suggest a kitchen setup that fits.'],
             ['Customize your mobile kitchen in 3D', 'Add equipment, choose finishes and watch the preliminary price update as you go.'],
             ['Receive an engineering-reviewed quote', 'A regional manufacturing partner checks your design and sends a final quote. Nothing is charged until you approve.']]
-            .map(([t, d], i) => <li key={t} className="rounded-2xl border border-border bg-background p-6">
-              <span className="grid h-8 w-8 place-items-center rounded-full bg-primary/10 text-sm font-semibold text-primary">{i + 1}</span>
-              <h3 className="mt-4 font-medium text-foreground">{t}</h3><p className="mt-2 text-sm text-muted-foreground">{d}</p></li>)}
+            .map(([t, d], i) => <li key={t}><span>0{i + 1}</span><h3>{t}</h3><p>{d}</p></li>)}
         </ol>
         <p className="mt-6 max-w-2xl text-sm text-muted-foreground">Designs and prices in Build Studio are preliminary. A manufacturing partner validates the final specifications before anything is built.</p>
       </div>
@@ -283,6 +348,7 @@ export default function BuildStudio() {
       <p id="bs-zip-msg" role="status" className={`mt-3 text-sm ${zipError ? 'text-destructive' : 'text-muted-foreground'}`}>
         {zipError || (zipState === 'covered' ? <span className="inline-flex items-center gap-1.5 text-foreground"><Check className="h-4 w-4 text-primary" />Great! Build Studio is available in your area.</span> : 'Five digits, e.g. 85004.')}
       </p>
+      {import.meta.env.DEV && <div className="mt-8 rounded-xl border border-border bg-card p-4"><p className="text-xs text-muted-foreground">Local design preview · sample catalog only. This does not establish regional availability.</p><Button type="button" variant="outline" className="mt-3" onClick={startDemo}>Explore with demo pricing</Button></div>}
     </form> : <Pane className="mt-8 p-6">
       <p className="font-medium text-foreground">Build Studio isn't available in {zip} yet.</p>
       <p className="mt-2 text-sm text-muted-foreground">We don't have a manufacturing partner serving your area today. Leave your email and we'll let you know when one is.</p>
@@ -343,6 +409,29 @@ export default function BuildStudio() {
         <Button disabled={!recs.some((r) => r.available.length)} onClick={addRecommended}>Start with these suggestions<ArrowRight className="ml-1 h-4 w-4" /></Button>
       </div>
     </div>
+  </main>);
+
+  if (step === 'review') return shell(<main className="bs-review">
+    <Button variant="ghost" disabled={submitting} onClick={() => { if (submitted) { setSubmitted(false); setSavedId(null); setNotice('Creating a new revision. Your submitted build remains unchanged.'); } setStep('studio'); }}><ArrowLeft size={16} className="mr-2" />{submitted ? 'Create a revised design' : 'Back to designing'}</Button>
+    <p className="bs-eyebrow mt-7">{submitted ? 'Your next chapter' : 'One step closer'}</p>
+    <h1>{submitted ? 'Your vision is in review.' : 'Your vision is taking shape.'}</h1>
+    <p className="text-muted-foreground max-w-2xl">{submitted ? 'Your submitted revision is locked. Follow engineering updates and your final quote in My builds.' : 'Take a moment to review your kitchen. A manufacturing partner will need to validate the configuration, pricing and delivery before you commit.'}</p>
+    <div className="bs-review-grid"><div><div className="bs-review-preview"><TrailerScene config={config} view="exterior" roof selected={null} onSelect={() => {}} /></div>
+      <Pane className="mt-5 p-6"><h2 className="font-semibold">{buildTitle}</h2><p className="text-sm text-muted-foreground mt-2">{concept}</p><p className="text-sm text-muted-foreground mt-2">{inch(TRAILER.length)}″ L × {inch(TRAILER.width)}″ W × {inch(TRAILER.height)}″ H · {FINISHES.find(f => f.id === config.finish)?.name ?? EXTERIOR_COLORS.find(c => c.id === config.color)?.name}</p><FloorPlan config={config} selected={null} onSelect={() => {}} /></Pane></div>
+      <Pane className="p-6 self-start"><span className="bs-preview-badge">{DEMO_DATA ? 'Demonstration pricing' : 'Preliminary estimate'}</span><h2 className="text-xl font-semibold mt-4">Your build, at a glance</h2>
+        <ul className="my-5 space-y-3 text-sm">{(partner ? (serverPrice?.lines ?? []).map(l => ({ label: l.label, amount: l.amount_cents == null ? null : l.amount_cents / 100 })) : price.lines).map((l, i) => <li className="flex justify-between gap-4" key={i}><span className="text-muted-foreground">{l.label}</span><span>{l.amount == null ? 'Quote required' : money(l.amount)}</span></li>)}</ul>
+        <div className="border-t border-border pt-4"><p className="text-xs text-muted-foreground">{incomplete ? 'Known subtotal · additional items need a quote' : 'Preliminary build price'}</p><p className="text-3xl font-semibold mt-1" aria-live="polite">{priceLabel}</p></div>
+        <p className="mt-4 text-sm text-muted-foreground">Delivery: {delivery ? DELIVERY_LABELS[delivery] ?? delivery : 'To be confirmed'}{zip ? ` · ZIP ${zip}` : ''}</p>
+        <p className="mt-2 text-xs text-muted-foreground">{serverPrice?.lead_time_weeks ? `Estimated manufacturing time: ${serverPrice.lead_time_weeks} weeks, subject to confirmation.` : 'Manufacturing schedule to be confirmed.'}</p>
+        {allIssues.length > 0 && <ul role="alert" className="mt-4 text-xs text-destructive space-y-1">{allIssues.map((issue, i) => <li key={i}>{issue}</li>)}</ul>}
+        <p className="mt-5 text-xs text-muted-foreground">The manufacturer is the legal seller of the unit. Vendibook facilitates the purchase. Checkout will require an approved quote, manufacturing agreement and supported marketplace payment terms. No payment is collected here.</p>
+        {submitted ? <Button asChild className="mt-6 w-full"><Link to="/build-studio/my-builds">Track engineering review<ArrowRight size={16} className="ml-2" /></Link></Button> : <>
+          <Button className="mt-6 w-full" onClick={submitForReview} disabled={!partner || submitting || pricing || allIssues.length > 0 || serverPrice?.status !== 'ok' || !!serverPrice?.problems?.length}>{submitting ? 'Sending for review…' : 'Submit for engineering review'}</Button>
+          {!partner && <p className="mt-3 text-xs text-muted-foreground">Demo designs cannot be submitted. A regional manufacturing partner and approved catalog are required.</p>}
+          <Button variant="outline" className="mt-3 w-full" onClick={save} disabled={saveBusy}><Save size={15} className="mr-2" />{saveBusy ? 'Saving…' : 'Save my build'}</Button>
+        </>}
+        {notice && <p role="status" className="mt-3 text-sm">{notice}</p>}
+      </Pane></div>
   </main>);
 
   /* ---------------- Studio ---------------- */
@@ -442,20 +531,20 @@ export default function BuildStudio() {
       {showBreakdown && <ul className="mt-2 space-y-1 text-xs">{breakdown.map(([k, g]) => <li key={k} className="flex justify-between"><span className="text-muted-foreground">{k}</span><span className="text-foreground">{g.quote ? (g.amount ? `${money(g.amount)} + quote` : 'Quote') : money(g.amount)}</span></li>)}
         {partner && !delivery && <li className="flex justify-between"><span className="text-muted-foreground">Delivery estimate</span><span className="text-foreground">Choose above</span></li>}</ul>}
       <p className="mt-3 text-xs text-muted-foreground">{incomplete ? 'Known preliminary subtotal' : 'Preliminary build price'}</p>
-      <p className="text-2xl font-semibold tabular-nums text-foreground transition-opacity" style={{ opacity: pricing ? 0.5 : 1 }} aria-live="polite">{money(total)}</p>
+      <p className="text-2xl font-semibold tabular-nums text-foreground transition-opacity" style={{ opacity: pricing ? 0.5 : 1 }} aria-live="polite">{priceLabel}</p>
       {incomplete && <p className="mt-1 text-xs text-foreground">Some items need a manufacturer quote, so this total is incomplete.</p>}
-      {serverPrice?.status === 'error' && <p className="mt-1 text-xs text-destructive">Couldn't refresh the price. Your design is safe — change anything to retry.</p>}
+      {serverPrice?.status === 'error' && <p className="mt-1 text-xs text-destructive">Couldn't refresh the price. <button className="underline" onClick={() => setPriceAttempt(a => a + 1)}>Retry pricing</button></p>}
       {(serverPrice?.problems ?? []).length > 0 && <p className="mt-1 text-xs text-destructive">{serverPrice!.problems!.map((p) => `${p.name ?? specOf(p.id).name}: ${p.issue === 'incompatible' ? 'not compatible with this model' : 'no longer available'}`).join(' · ')}</p>}
       {serverPrice?.lead_time_weeks ? <p className="mt-1 text-xs text-muted-foreground">Estimated build time about {serverPrice.lead_time_weeks} weeks.</p> : null}
       <p className="mt-2 text-[11px] text-muted-foreground">{DEMO_DATA ? 'Demonstration pricing, not a quote.' : 'Not a final price. Taxes excluded.'} The final quote comes after engineering review; nothing is charged now.</p>
     </div>
     {allIssues.length > 0 && <p className="text-xs text-destructive" role="alert">Fix {allIssues.length} layout issue{allIssues.length > 1 ? 's' : ''} before sending for review.</p>}
     <div className="space-y-2">
-      <Button className="h-11 w-full rounded-xl" onClick={submitForReview} disabled={!partner || allIssues.length > 0 || serverPrice?.status !== 'ok'}>Continue build — request review</Button>
+      <Button className="h-11 w-full rounded-xl" onClick={() => setStep('review')}>Review my build<ArrowRight className="ml-2 h-4 w-4" /></Button>
       {!partner && <p className="text-[11px] text-muted-foreground">Engineering review needs a manufacturing partner in your area.</p>}
       <div className="flex gap-2">
-        <Input placeholder="Name this build" value={saveName} onChange={(e) => setSaveName(e.target.value)} className="h-10 text-base sm:text-sm" maxLength={80} />
-        <Button variant="outline" className="h-10" onClick={save}><Save className="mr-1 h-4 w-4" />Save</Button>
+        <Input aria-label="Build name" placeholder="Name this build" value={saveName} onChange={(e) => setSaveName(e.target.value)} className="h-10 text-base sm:text-sm" maxLength={80} />
+        <Button variant="outline" className="h-10" onClick={save} disabled={saveBusy}><Save className="mr-1 h-4 w-4" />{saveBusy ? 'Saving' : 'Save'}</Button>
       </div>
       <p className="text-[11px] text-muted-foreground">{partner ? 'Saves to your account with exact prices.' : 'Demo builds save on this device.'} {user && <Link to="/build-studio/my-builds" className="text-primary underline">My builds</Link>}</p>
       {saves.length > 0 && !partner && <ul className="space-y-1">{saves.map((s) => <li key={s.name} className="flex items-center justify-between text-xs">
@@ -470,18 +559,22 @@ export default function BuildStudio() {
     <button type="button" aria-label={label} title={label} aria-pressed={pressed} disabled={disabled} onClick={on}
       className={`grid h-9 w-9 place-items-center rounded-lg transition-colors disabled:opacity-40 ${pressed ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-muted'}`}>{icon}</button>;
 
-  return shell(<main className="mx-auto max-w-[1600px] pb-24 lg:pb-0">
-    <div className="flex items-center gap-2 border-b border-border px-4 py-2 text-xs text-muted-foreground">
-      <button type="button" onClick={() => setStep('business')} className="inline-flex items-center hover:text-foreground"><ChevronLeft className="h-4 w-4" />Menu</button>
-      <span>·</span><span>ZIP {zip || '—'}</span><span>·</span><span>{DEMO_DATA ? 'Demo catalog' : 'Regional partner catalog'}</span>
+  return shell(<main className="bs-workspace">
+    <div className="bs-workbar">
+      <div><h1>{saveName || 'My kitchen concept'}</h1><p>{DEMO_DATA ? 'Demo catalog · explore your possibilities' : `Regional catalog · ZIP ${zip}`}</p></div>
+      <div className="bs-workbar-actions"><span role="status">{partner ? 'Save to your account when ready' : saveStatus || storageError}</span>{saveStatus.includes('failed') && <button onClick={() => setSaveAttempt(a => a + 1)}>Retry save</button>}
+        <button type="button" onClick={() => setStep('business')} className="inline-flex items-center gap-2 hover:text-foreground"><Pencil size={13} />Edit menu</button></div>
     </div>
-    <div className="lg:grid lg:h-[calc(100vh-56px-33px)] lg:gap-0" style={{ gridTemplateColumns: `${leftOpen ? '300px' : '0px'} minmax(0,1fr) ${rightOpen ? '320px' : '0px'}` }}>
-      <aside className={`order-2 border-border bg-card lg:order-none lg:min-h-0 lg:overflow-hidden lg:border-r ${leftOpen ? '' : 'lg:hidden'}`}>{leftPanel}</aside>
+    <div className="bs-workgrid" style={{ gridTemplateColumns: `${leftOpen ? '280px' : '0px'} minmax(0,1fr) ${rightOpen ? '300px' : '0px'}` }}>
+      <aside aria-label="Build options" className={`bs-options ${leftOpen ? '' : 'is-hidden'}`}>{leftPanel}</aside>
 
-      <section ref={stageRef} className="relative h-[52vh] min-h-[360px] bg-muted lg:h-auto">
+      <section ref={stageRef} className="bs-stage" aria-label="Interactive design studio">
         <Suspense fallback={<div className="absolute inset-0 grid place-items-center text-sm text-muted-foreground"><Loader2 className="mb-2 h-6 w-6 animate-spin text-primary" />Loading your trailer…</div>}>
           <div className="absolute inset-0"><TrailerScene config={config} view={view} roof={roof} selected={selected} onSelect={setSelected} labels={labels} dims={dims} grid={grid} cmd={cmd} /></div>
         </Suspense>
+        <div className="bs-stage-title"><h2>{buildTitle}</h2><p>{concept}</p></div>
+        <button className="bs-assistant-button" onClick={() => setAssistant(true)}><Sparkles size={16} className="text-primary" />A little guidance for your big idea<ArrowRight size={13} /></button>
+        <div className="bs-mobile-config"><Button onClick={() => setMobileOptions(true)}><Layers size={16} className="mr-2" />Customize</Button></div>
         <div className="absolute left-1/2 top-3 -translate-x-1/2" role="radiogroup" aria-label="View">
           <div className="flex rounded-xl border border-border bg-card/95 p-1 shadow-sm">
             {(['exterior', 'interior', 'plan'] as ViewMode[]).map((v) => <button key={v} type="button" role="radio" aria-checked={view === v} onClick={() => setView(v)}
@@ -509,15 +602,23 @@ export default function BuildStudio() {
         <p className="absolute bottom-3 left-1/2 w-max max-w-[92%] -translate-x-1/2 rounded-md bg-card/90 px-2 py-1 text-center text-[11px] text-muted-foreground">Concept visualization. Final specifications subject to manufacturer engineering approval.</p>
       </section>
 
-      <aside className={`order-3 border-border bg-card lg:order-none lg:min-h-0 lg:overflow-y-auto lg:border-l ${rightOpen ? '' : 'lg:hidden'}`}>{rightPanel}</aside>
+      <aside id="bs-summary" aria-label="Your build summary" className={`bs-summary ${rightOpen ? '' : 'is-hidden'}`}>{rightPanel}</aside>
     </div>
 
     <div className="fixed inset-x-0 bottom-0 z-30 flex items-center gap-3 border-t border-border bg-card/95 px-4 py-3 backdrop-blur lg:hidden">
-      <div className="min-w-0 flex-1"><p className="text-[11px] text-muted-foreground">{incomplete ? 'Known subtotal' : 'Preliminary price'}</p><p className="text-lg font-semibold tabular-nums text-foreground">{money(total)}</p></div>
-      <Button variant="outline" onClick={save}><Save className="h-4 w-4" /></Button>
-      <Button onClick={() => document.getElementById('bs-summary')?.scrollIntoView({ behavior: 'smooth' })}>Review build</Button>
+      <div className="min-w-0 flex-1"><p className="text-[11px] text-muted-foreground">{incomplete ? 'Known subtotal' : 'Preliminary price'}</p><p className="text-lg font-semibold tabular-nums text-foreground">{priceLabel}</p></div>
+      <Button variant="outline" onClick={save} aria-label="Save my build" disabled={saveBusy}><Save className="h-4 w-4" /></Button>
+      <Button onClick={() => setStep('review')}>Review build</Button>
     </div>
-    <span id="bs-summary" className="block lg:hidden" />
+    <Sheet open={mobileOptions} onOpenChange={setMobileOptions}><SheetContent side="bottom" className="sale-light build-studio bs-options-sheet"><SheetHeader><SheetTitle>Make it yours</SheetTitle></SheetHeader>{leftPanel}</SheetContent></Sheet>
+    <Sheet open={assistant} onOpenChange={setAssistant}><SheetContent className="sale-light build-studio w-full sm:max-w-md overflow-y-auto">
+      <SheetHeader><SheetTitle><Sparkles className="inline mr-2 text-primary h-5 w-5" />A little help with your build</SheetTitle></SheetHeader>
+      <p className="mt-4 text-sm text-muted-foreground">Explore guidance based on your menu and the current catalog. This guide uses curated rules; it is not an engineering approval or a live AI service.</p>
+      <div className="flex flex-wrap gap-2 my-5">{(['menu', 'power', 'review'] as const).map(t => <Button key={t} variant={guideTopic === t ? 'default' : 'outline'} size="sm" onClick={() => setGuideTopic(t)}>{t === 'menu' ? 'My menu' : t === 'power' ? 'Power options' : 'What happens next?'}</Button>)}</div>
+      {guideTopic === 'menu' && <><h3 className="font-semibold">A kitchen built around what you serve</h3><p className="text-xs text-muted-foreground mt-2">{menuItems.length ? menuItems.join(' · ') : 'Choose your business category or add menu items to get tailored suggestions.'}</p><ul className="mt-5 space-y-4">{recs.map(r => <li key={r.kind} className="border-b border-border pb-4"><h4 className="text-sm font-medium">{r.label}</h4><p className="text-xs text-muted-foreground mt-1">{r.does}</p><p className="text-xs mt-2">{r.available.length ? `${r.available.length} option${r.available.length === 1 ? '' : 's'} in ${DEMO_DATA ? 'the demo' : 'your regional'} catalog` : 'Not in the current catalog — manufacturer confirmation needed'}</p>{r.available.map(e => <Button key={e.id} size="sm" variant="outline" className="mt-2 mr-2" disabled={!!unavailableReason(e)} onClick={() => { add(e.id); }}>{e.name}<Plus size={12} className="ml-2" /></Button>)}</li>)}</ul></>}
+      {guideTopic === 'power' && <div className="text-sm space-y-4"><h3 className="font-semibold">How will your kitchen be powered?</h3><p>Shore power uses a suitable connection at your location. Generators provide on-site power and require plans for fuel, exhaust and noise.</p><p>Battery and solar-assisted systems depend on the electrical load, usable capacity, available roof area and operating conditions. The manufacturer must confirm compatibility and runtime.</p><p className="text-muted-foreground">{groupItems('power').length ? 'Explore the power options offered in your regional catalog.' : 'No power packages are currently listed in this catalog. Pricing and specifications need manufacturer confirmation.'}</p>{groupItems('power').length > 0 && <Button onClick={() => { setPanel('power'); setAssistant(false); setMobileOptions(true); }}>Explore power options</Button>}</div>}
+      {guideTopic === 'review' && <div className="space-y-4 text-sm"><p>Review your complete design, then submit it when a manufacturing partner is available in your region.</p><p>The partner checks the layout, equipment, ventilation, electrical and plumbing needs. They may request changes before issuing a final quote.</p><p>A final quote must identify the legal manufacturer, delivery terms, payment schedule and agreement. Financing availability and payment capabilities must be confirmed before checkout.</p><Button onClick={() => { setAssistant(false); setStep('review'); }}>Review my design</Button></div>}
+    </SheetContent></Sheet>
 
     <Sheet open={!!learn} onOpenChange={(o) => !o && setLearn(null)}>
       <SheetContent className="sale-light w-full overflow-y-auto sm:max-w-md">

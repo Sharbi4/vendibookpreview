@@ -766,6 +766,7 @@ const useGlobalErrorHandler = () => {
 const FloatingConciergeButton = lazy(() => import("@/components/FloatingConciergeButton"));
 
 const AppContent = () => {
+  const isBuildStudio = useLocation().pathname.startsWith('/build-studio');
   useGlobalErrorHandler();
   useOfflineQueueSync();
   useListingsLiveSync();
@@ -781,16 +782,16 @@ const AppContent = () => {
       <Sonner />
       <CookieConsent />
 
-      <GoogleOneTap />
+      {!isBuildStudio && <GoogleOneTap />}
       <TawkIdentity />
       
       
       <AnimatedRoutes />
-      <MobileBottomNav />
+      {!isBuildStudio && <MobileBottomNav />}
       <Suspense fallback={null}>
       </Suspense>
       <Suspense fallback={null}>
-        <FloatingConciergeButton />
+        {!isBuildStudio && <FloatingConciergeButton />}
       </Suspense>
     </>
   );

@@ -1,6 +1,6 @@
 import { Canvas, useThree } from '@react-three/fiber';
 import { ContactShadows, Environment, Grid, Html, Lightformer, OrbitControls, OrthographicCamera, PerspectiveCamera } from '@react-three/drei';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, type ReactNode } from 'react';
 import * as THREE from 'three';
 import { TRAILER, specOf, type BuildConfig, type Placement, placementIssues, exteriorHex } from '@/lib/buildStudio/catalog';
 
@@ -14,6 +14,7 @@ interface Props {
   labels?: boolean;
   dims?: boolean;
   grid?: boolean;
+  fallback?: ReactNode;
   /** Camera command; `n` increments so repeated clicks re-trigger. */
   cmd?: { kind: 'in' | 'out' | 'reset'; n: number };
 }
@@ -25,7 +26,7 @@ const T = 0.05;
 const FLOOR_Y = 0.55; // floor height above ground
 
 function useDiamondPlate() {
-  return useMemo(() => {
+  const texture = useMemo(() => {
     const c = document.createElement('canvas'); c.width = c.height = 64;
     const g = c.getContext('2d')!;
     g.fillStyle = '#8f969c'; g.fillRect(0, 0, 64, 64);
@@ -34,6 +35,8 @@ function useDiamondPlate() {
     const t = new THREE.CanvasTexture(c); t.wrapS = t.wrapT = THREE.RepeatWrapping; t.repeat.set(12, 6);
     t.colorSpace = THREE.SRGBColorSpace; return t;
   }, []);
+  useEffect(() => () => texture.dispose(), [texture]);
+  return texture;
 }
 
 function Wall({ size, position, color, opacity = 1 }: { size: [number, number, number]; position: [number, number, number]; color: string; opacity?: number }) {
@@ -47,7 +50,7 @@ function Shell({ color, roof, view }: { color: string; roof: boolean; view: View
   const plate = useDiamondPlate();
   const winW = TRAILER.window.to - TRAILER.window.from, winX = (TRAILER.window.to + TRAILER.window.from) / 2;
   const doorW = TRAILER.door.to - TRAILER.door.from, doorX = (TRAILER.door.to + TRAILER.door.from) / 2;
-  const fade = view === 'interior' ? 0.18 : 1;
+  const fade = view === 'interior' ? 0.10 : view === 'plan' ? 0.06 : 1;
   const zS = W / 2 + T / 2, zB = -W / 2 - T / 2; // service (+Z) and back (-Z)
   const winBottom = 1.05, winTop = 2.0;
   return <group position={[0, FLOOR_Y, 0]}>
@@ -68,6 +71,18 @@ function Shell({ color, roof, view }: { color: string; roof: boolean; view: View
     <Wall size={[T, H, W + 2 * T]} position={[-L / 2 - T / 2, H / 2, 0]} color={color} opacity={fade} />
     <Wall size={[T, H, W + 2 * T]} position={[L / 2 + T / 2, H / 2, 0]} color={color} opacity={fade} />
     {roof && view === 'exterior' && <Wall size={[L + 2 * T, T, W + 2 * T]} position={[0, H + T / 2, 0]} color="#e9e9e6" />}
+    {/* Trim, service counter and running lights are conceptual exterior details. */}
+    {view === 'exterior' && <>
+      {[-1, 1].map(side => <group key={side}>
+        <Wall size={[L + .1, .10, .07]} position={[0, .06, side * (W / 2 + .055)]} color="#adb3b6" />
+        <Wall size={[L + .1, .05, .07]} position={[0, H - .04, side * (W / 2 + .055)]} color="#c7cbca" />
+        {[-1, 1].map(end => <group key={end}>
+          <Wall size={[.06, H, .07]} position={[end * L / 2, H / 2, side * (W / 2 + .055)]} color="#bfc4c4" />
+          <mesh position={[end * (L / 2 - .10), H - .18, side * (W / 2 + .10)]}><boxGeometry args={[.10, .04, .02]} /><meshStandardMaterial color={end === 1 ? '#9f3427' : '#d5a151'} /></mesh>
+        </group>)}
+      </group>)}
+      <Wall size={[winW + .10, .045, .42]} position={[winX, winBottom, zS + .18]} color="#bfc5c7" />
+    </>}
   </group>;
 }
 
@@ -80,6 +95,10 @@ function Chassis() {
       <mesh castShadow><cylinderGeometry args={[0.33, 0.33, 0.2, 28]} /><meshStandardMaterial color="#151515" roughness={0.9} /></mesh>
       <mesh><cylinderGeometry args={[0.18, 0.18, 0.21, 20]} /><meshStandardMaterial color="#c9cdd0" metalness={0.8} roughness={0.25} /></mesh>
     </group>))}
+    {[-1, 1].map(s => <group key={s}>
+      <mesh position={[0, .73, s * (W / 2 + .08)]} castShadow><boxGeometry args={[1.55, .12, .36]} /><meshStandardMaterial color="#a8afb4" metalness={.8} roughness={.25} /></mesh>
+      {[-.72, .72].map(x => <mesh key={x} position={[x, .56, s * (W / 2 + .08)]} rotation={[0, 0, x < 0 ? -.3 : .3]}><boxGeometry args={[.12, .35, .36]} /><meshStandardMaterial color="#a8afb4" metalness={.8} roughness={.25} /></mesh>)}
+    </group>)}
   </group>;
 }
 
@@ -103,7 +122,7 @@ function Equipment({ p, config, selected, onSelect, label }: { p: Placement; con
 function CameraRig({ view, cmd }: { view: ViewMode; cmd?: Props['cmd'] }) {
   const { camera, controls } = useThree() as unknown as { camera: THREE.PerspectiveCamera | THREE.OrthographicCamera; controls: { target: THREE.Vector3; update: () => void } | null };
   const home = () => {
-    if (view === 'plan') { (camera as THREE.OrthographicCamera).zoom = 95; camera.updateProjectionMatrix(); return; }
+    if (view === 'plan') { (camera as THREE.OrthographicCamera).zoom = Math.min(95, window.innerWidth / (L + 2)); camera.updateProjectionMatrix(); return; }
     if (view === 'interior') camera.position.set(0.2, 9, 4.2); else camera.position.set(6.2, 3.4, 7.2);
     controls?.target.set(0, 1.2, 0); controls?.update();
   };
@@ -129,11 +148,11 @@ function Dimensions() {
   </group>;
 }
 
-export default function TrailerScene({ config, view, roof, selected, onSelect, labels = false, dims = false, grid = false, cmd }: Props) {
+export default function TrailerScene({ config, view, roof, selected, onSelect, labels = false, dims = false, grid = false, cmd, fallback }: Props) {
   L = TRAILER.length; W = TRAILER.width; H = TRAILER.height;
   const color = exteriorHex(config);
-  return <Canvas shadows dpr={[1, 2]} onPointerMissed={() => onSelect(null)} aria-label="3D trailer preview">
-    <color attach="background" args={['#f1eee9']} />
+  return <Canvas shadows frameloop="demand" dpr={[1, 1.5]} fallback={fallback} onPointerMissed={() => onSelect(null)} aria-label="3D trailer preview">
+    <color attach="background" args={['#faf9f6']} />
     {view === 'plan'
       ? <OrthographicCamera makeDefault position={[0, 20, 0]} zoom={95} up={[0, 0, -1]} onUpdate={(c) => c.lookAt(0, 0, 0)} />
       : <PerspectiveCamera makeDefault fov={45} position={[6.2, 3.4, 7.2]} />}
@@ -149,8 +168,8 @@ export default function TrailerScene({ config, view, roof, selected, onSelect, l
     {config.items.map((p) => <Equipment key={p.uid} p={p} config={config} selected={selected === p.uid} onSelect={onSelect} label={labels || view === 'plan'} />)}
     {dims && <Dimensions />}
     {grid && <Grid position={[0, FLOOR_Y + 0.005, 0]} args={[L, W]} cellSize={0.3048} sectionSize={1.2192} cellColor="#b9b2a6" sectionColor="#f26a1b" fadeDistance={30} />}
-    <mesh rotation-x={-Math.PI / 2} receiveShadow><planeGeometry args={[40, 40]} /><meshStandardMaterial color="#dcd7ce" roughness={1} /></mesh>
+    <mesh rotation-x={-Math.PI / 2} receiveShadow><planeGeometry args={[200, 200]} /><meshStandardMaterial color="#faf9f6" roughness={1} /></mesh>
     <ContactShadows position={[0, 0.01, 0]} opacity={0.4} scale={14} blur={2.2} far={3} />
-    <OrbitControls makeDefault enabled={view !== 'plan'} target={[0, 1.2, 0]} minDistance={3} maxDistance={14} maxPolarAngle={Math.PI / 2.05} enablePan={false} />
+    <OrbitControls makeDefault enableDamping={!window.matchMedia('(prefers-reduced-motion: reduce)').matches} enabled={view !== 'plan'} target={[0, 1.2, 0]} minDistance={3} maxDistance={14} maxPolarAngle={Math.PI / 2.05} enablePan={false} />
   </Canvas>;
 }
