@@ -97,7 +97,7 @@ export function setPartnerCatalog(model: PartnerModel, equipment: PartnerEquipme
   DEMO_DATA = false;
 }
 
-export function useDemoCatalog() {
+export function resetToDemoCatalog() {
   Object.assign(TRAILER, structuredClone(DEMO_TRAILER));
   EQUIPMENT = DEMO_EQUIPMENT;
   DEMO_DATA = true;

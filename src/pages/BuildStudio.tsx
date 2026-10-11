@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
   ALWAYS_REQUIRED, DEMO_DATA, EQUIPMENT, EXTERIOR_COLORS, MENU_SUGGESTIONS, TRAILER, findFreeSpot, placementIssues,
-  priceBuild, setPartnerCatalog, specOf, useDemoCatalog, type BuildConfig, type PartnerEquipment, type PartnerModel, type Wall,
+  priceBuild, setPartnerCatalog, specOf, resetToDemoCatalog, type BuildConfig, type PartnerEquipment, type PartnerModel, type Wall,
 } from '@/lib/buildStudio/catalog';
 import type { ViewMode } from '@/components/buildStudio/TrailerScene';
 
@@ -45,7 +45,7 @@ export default function BuildStudio() {
   const [saves, setSaves] = useState<Saved[]>([]);
   const [saveName, setSaveName] = useState('');
   useEffect(() => setSaves(readSaves()), []);
-  useEffect(() => () => useDemoCatalog(), []);
+  useEffect(() => () => resetToDemoCatalog(), []);
 
   const startZip = async () => {
     setStage('checking'); setZipError('');
@@ -62,7 +62,7 @@ export default function BuildStudio() {
   const pickModel = (m: PartnerModel, eq: PartnerEquipment[]) => {
     setPartnerCatalog(m, eq); setModelId(m.id); setConfig({ color: 'white', items: [] }); setSelected(null); setServerPrice(null);
   };
-  const startDemo = () => { useDemoCatalog(); setPartner(null); setModelId(''); setStarted(true); setStage('build'); };
+  const startDemo = () => { resetToDemoCatalog(); setPartner(null); setModelId(''); setStarted(true); setStage('build'); };
   const requestCoverage = async () => {
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(reqEmail.trim())) { setZipError('Enter a valid email.'); return; }
     const { error } = await supabase.from('bs_coverage_requests').insert({ zip, email: reqEmail.trim().slice(0, 255), user_id: user?.id ?? null });
@@ -259,7 +259,7 @@ export default function BuildStudio() {
             <Input placeholder="Build name" value={saveName} onChange={(e) => setSaveName(e.target.value)} className="text-base" />
             <Button onClick={save}><Save className="mr-1 h-4 w-4" />Save</Button>
           </div>
-          {saves.length > 0 && <ul className="mt-2 space-y-1">
+          {saves.length > 0 && !partner && <ul className="mt-2 space-y-1">
             {saves.map((s) => <li key={s.name} className="flex items-center justify-between text-xs">
               <span className="truncate">{s.name} · {new Date(s.savedAt).toLocaleDateString()}</span>
               <span className="flex gap-1">
