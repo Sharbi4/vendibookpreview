@@ -150,6 +150,8 @@ const AdminRevenue = lazy(() => import("./pages/AdminRevenue"));
 const AdminCampusPartners = lazy(() => import("./pages/AdminCampusPartners"));
 const AdminBuildStudio = lazy(() => import("./pages/AdminBuildStudio"));
 const PartnerBuildStudio = lazy(() => import("./pages/PartnerBuildStudio"));
+const PartnerLogin = lazy(() => import("./pages/PartnerLogin"));
+const BuildStudioMyBuilds = lazy(() => import("./pages/BuildStudioMyBuilds"));
 const AdminMonetizationOps = lazy(() => import("./pages/AdminMonetizationOps"));
 const AdminBilling = lazy(() => import("./pages/AdminBilling"));
 const ServicesHub = lazy(() => import("./pages/ServicesHub"));
@@ -498,6 +500,8 @@ const AnimatedRoutes = () => {
           <Route path="/admin/campus-partners" element={<PageTransition><AdminCampusPartners /></PageTransition>} />
           <Route path="/admin/build-studio" element={<PageTransition><AdminBuildStudio /></PageTransition>} />
           <Route path="/partner/build-studio" element={<PageTransition><PartnerBuildStudio /></PageTransition>} />
+          <Route path="/partner/login" element={<PageTransition><PartnerLogin /></PageTransition>} />
+          <Route path="/build-studio/my-builds" element={<PageTransition><BuildStudioMyBuilds /></PageTransition>} />
           <Route path="/admin/monetization-ops" element={<PageTransition><AdminMonetizationOps /></PageTransition>} />
           <Route path="/admin/billing" element={<PageTransition><AdminBilling /></PageTransition>} />
           <Route path="/services" element={<PageTransition><ServicesHub /></PageTransition>} />
