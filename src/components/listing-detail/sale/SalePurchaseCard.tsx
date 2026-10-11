@@ -21,7 +21,6 @@ import { toast } from 'sonner';
 import { buyerFreightRangeLabel } from '@/lib/freight/presentation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { MakeOfferModal } from '@/components/offers/MakeOfferModal';
@@ -108,7 +107,6 @@ export const SalePurchaseCard = ({
   const [showOffer, setShowOffer] = useState(false);
   const [showAuthGate, setShowAuthGate] = useState(false);
   const [pending, setPending] = useState<'buy' | 'offer' | null>(null);
-  const [showContact, setShowContact] = useState(false);
 
 
   // Delivery / address check — answered on this page, never a checkout jump.
@@ -364,7 +362,7 @@ export const SalePurchaseCard = ({
                 Sold — this item has already been purchased.
               </p>
               <Button
-                onClick={() => setShowContact(true)}
+                onClick={() => document.getElementById(`listing-message-${listing.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
                 variant="outline"
                 className="h-12 w-full rounded-2xl font-semibold"
               >
@@ -397,7 +395,7 @@ export const SalePurchaseCard = ({
                 Make Offer
               </Button>
               <Button
-                onClick={() => setShowContact(true)}
+                onClick={() => document.getElementById(`listing-message-${listing.id}`)?.scrollIntoView({ behavior: 'smooth', block: 'center' })}
                 variant="outline"
                 className="h-12 rounded-2xl font-semibold"
               >
@@ -458,18 +456,12 @@ export const SalePurchaseCard = ({
         </div>
       </SaleCard>
 
-      <Dialog open={showContact} onOpenChange={setShowContact}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Message {sellerName}</DialogTitle>
-          </DialogHeader>
-          <MessageHostForm
-            listingId={listing.id}
-            hostId={listing.host_id}
-            listingTitle={listing.title}
-          />
-        </DialogContent>
-      </Dialog>
+      {!isOwner && <SaleCard padding="lg" className="space-y-4">
+        <section id={`listing-message-${listing.id}`} className="scroll-mt-24" aria-label="Message the seller">
+          <h2 className="mb-3 text-lg font-semibold">Message {sellerName}</h2>
+          <MessageHostForm key={listing.id} listingId={listing.id} hostId={listing.host_id} listingTitle={listing.title} />
+        </section>
+      </SaleCard>}
 
       <DeliveryCheckSheet
         open={showDeliveryResult}

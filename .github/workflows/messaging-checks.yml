@@ -1,0 +1,31 @@
+name: Messaging checks
+on:
+  push:
+    branches: [main, fix/paypal-webhook-config]
+    paths:
+      - 'src/components/messaging/**'
+      - 'src/components/listing-detail/**'
+      - 'src/lib/messageSafety*'
+      - '.github/workflows/messaging-checks.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'src/components/messaging/**'
+      - 'src/components/listing-detail/**'
+      - 'src/lib/messageSafety*'
+jobs:
+  messaging:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - name: Message form and guarded send regressions
+        run: bunx vitest run src/components/messaging/__tests__/MessageHostForm.test.tsx src/components/messaging/__tests__/MessageHostButton.test.tsx src/lib/messageSafety.test.ts --reporter=verbose
+      - name: Production bundle
+        run: bun run build

@@ -6,6 +6,8 @@ import MessageHostForm from '../MessageHostForm';
 const mocks = vi.hoisted(() => ({
   user: null as null | { id: string },
   insert: vi.fn(),
+  getOrCreateConversation: vi.fn(),
+  sendMessage: vi.fn(),
   invoke: vi.fn(),
   toast: vi.fn(),
   navigate: vi.fn(),
@@ -13,10 +15,10 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock('@/contexts/AuthContext', () => ({ useAuth: () => ({ user: mocks.user }) }));
-vi.mock('@/hooks/useConversations', () => ({ useConversations: () => ({ getOrCreateConversation: vi.fn() }) }));
+vi.mock('@/hooks/useConversations', () => ({ useConversations: () => ({ getOrCreateConversation: mocks.getOrCreateConversation }) }));
 vi.mock('@/hooks/use-toast', () => ({ useToast: () => ({ toast: mocks.toast }) }));
 vi.mock('@/lib/analytics', () => ({ trackHostContacted: mocks.trackHostContacted, trackFormSubmit: vi.fn() }));
-vi.mock('@/lib/messageSafety', () => ({ sendMarketplaceMessage: vi.fn(), messageSendError: () => 'error' }));
+vi.mock('@/lib/messageSafety', () => ({ sendMarketplaceMessage: mocks.sendMessage, messageSendError: () => 'error' }));
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
     from: () => ({ insert: mocks.insert }),
@@ -98,5 +100,38 @@ describe('MessageHostForm guest inquiry', () => {
     renderForm();
     expect(screen.queryByPlaceholderText(/your email/i)).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /send message/i })).toBeEnabled();
+  });
+});
+
+describe('listing message draft and delivery', () => {
+  it('prefills an editable walkthrough request without sending anything', () => {
+    mocks.user = { id: 'buyer-1' };
+    renderForm();
+    expect(screen.getByRole('textbox', { name: 'Your message' })).toHaveValue(
+      'Hi! I’m interested in "Coffee Trailer". Could you share a video walkthrough here on Vendibook?'
+    );
+    expect(mocks.sendMessage).not.toHaveBeenCalled();
+    expect(mocks.insert).not.toHaveBeenCalled();
+  });
+  it('saves the edited draft through the guarded RPC before navigating', async () => {
+    mocks.user = { id: 'buyer-1' };
+    mocks.getOrCreateConversation.mockResolvedValue('thread-1');
+    mocks.sendMessage.mockResolvedValue({ id: 'message-1' });
+    renderForm();
+    fireEvent.change(screen.getByRole('textbox', { name: 'Your message' }), { target: { value: 'Is the griddle included?' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Send Message' }));
+    await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith('/messages/thread-1'));
+    expect(mocks.sendMessage).toHaveBeenCalledWith('conversation', 'thread-1', 'Is the griddle included?');
+  });
+  it('keeps the draft and does not navigate when the server rejects it', async () => {
+    mocks.user = { id: 'buyer-1' };
+    mocks.getOrCreateConversation.mockResolvedValue('thread-1');
+    mocks.sendMessage.mockRejectedValue(new Error('Contact information is not allowed.'));
+    renderForm();
+    fireEvent.change(screen.getByRole('textbox', { name: 'Your message' }), { target: { value: 'Email buyer@example.com' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Send Message' }));
+    await waitFor(() => expect(mocks.toast).toHaveBeenCalledWith(expect.objectContaining({ variant: 'destructive' })));
+    expect(screen.getByRole('textbox', { name: 'Your message' })).toHaveValue('Email buyer@example.com');
+    expect(mocks.navigate).not.toHaveBeenCalled();
   });
 });

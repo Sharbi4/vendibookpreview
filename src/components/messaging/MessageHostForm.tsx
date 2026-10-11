@@ -1,6 +1,6 @@
 import { sendMarketplaceMessage, messageSendError } from '@/lib/messageSafety';
 import './messaging.css';
-import { useState } from 'react';
+import { useId, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Send, Loader2, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -28,14 +28,16 @@ const MessageHostForm = ({
   className = '',
 }: MessageHostFormProps) => {
   const defaultMessage = listingTitle
-    ? `Hi! I'd like to learn more about "${listingTitle}" and set up a time to see it.`
-    : "Hi! I'd like to set up a time to see this.";
+    ? `Hi! I’m interested in "${listingTitle}". Could you share a video walkthrough here on Vendibook?`
+    : "Hi! I’m interested in this listing. Could you share a video walkthrough here on Vendibook?";
 
   const { user } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const { getOrCreateConversation } = useConversations();
   const [message, setMessage] = useState(defaultMessage);
+  const messageId = useId();
+  const sending = useRef(false);
   const [isLoading, setIsLoading] = useState(false);
   // Guest (logged-out) inquiry: buyers can ask before creating an account.
   const [guest, setGuest] = useState({ name: '', email: '', phone: '' });
@@ -92,7 +94,7 @@ const MessageHostForm = ({
       trackFormSubmit('guest_inquiry', false, { listing_id: listingId, error: String(error) });
       toast({
         title: 'Something went wrong',
-        description: 'Please try again, or sign in to message the seller.',
+        description: messageSendError(error),
         variant: 'destructive',
       });
     } finally {
@@ -101,53 +103,52 @@ const MessageHostForm = ({
   };
 
   const handleSend = async () => {
-    if (!message.trim()) return;
-
-    // Logged-out buyers send a guest inquiry instead of hitting a login wall.
-    if (!user) {
-      await handleGuestSend();
-      return;
-    }
-
-    // Don't allow messaging yourself
-    if (user.id === hostId) {
-      toast({
-        title: 'Cannot message yourself',
-        description: "This is your own listing.",
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setIsLoading(true);
+    if (!message.trim() || sending.current) return;
+    sending.current = true;
     try {
-      const conversationId = await getOrCreateConversation(listingId, hostId);
-      if (conversationId) {
-        // Send the message directly
-        await sendMarketplaceMessage('conversation', conversationId, message.trim());
 
-        // Update conversation last_message_at
-        await supabase
-          .from('conversations')
-          .update({ last_message_at: new Date().toISOString() })
-          .eq('id', conversationId);
-
-        trackHostContacted(listingId);
-        toast({
-          title: 'Message sent!',
-          description: 'The host has been notified.',
-        });
-        navigate(`/messages/${conversationId}`);
+      // Logged-out buyers send a guest inquiry instead of hitting a login wall.
+      if (!user) {
+        await handleGuestSend();
+        return;
       }
-    } catch (error) {
-      console.error('Error sending message:', error);
-      toast({
-        title: 'Error',
-        description: messageSendError(error),
-        variant: 'destructive',
-      });
+
+      // Don't allow messaging yourself
+      if (user.id === hostId) {
+        toast({
+          title: 'Cannot message yourself',
+          description: "This is your own listing.",
+          variant: 'destructive',
+        });
+        return;
+      }
+
+      setIsLoading(true);
+      try {
+        const conversationId = await getOrCreateConversation(listingId, hostId);
+        if (conversationId) {
+          // Send the message directly
+          await sendMarketplaceMessage('conversation', conversationId, message.trim());
+
+          trackHostContacted(listingId);
+          toast({
+            title: 'Message sent!',
+            description: 'Your message is saved in the conversation.',
+          });
+          navigate(`/messages/${conversationId}`);
+        }
+      } catch (error) {
+        console.error('Error sending message:', error);
+        toast({
+          title: 'Error',
+          description: messageSendError(error),
+          variant: 'destructive',
+        });
+      } finally {
+        setIsLoading(false);
+      }
     } finally {
-      setIsLoading(false);
+      sending.current = false;
     }
   };
 
@@ -168,7 +169,11 @@ const MessageHostForm = ({
 
   return (
     <div className={`space-y-3 ${className}`}>
+      <label htmlFor={messageId} className="block text-sm font-medium">Your message</label>
+      <p className="text-xs text-muted-foreground">Start with a video walkthrough request, or edit it to ask your own question.</p>
       <Textarea
+        id={messageId}
+        maxLength={5000}
         value={message}
         onChange={(e) => setMessage(e.target.value)}
         placeholder="Write a message to the host..."
@@ -219,6 +224,7 @@ const MessageHostForm = ({
           </div>
         </div>
       )}
+      <p className="text-xs text-muted-foreground">Keep phone numbers and email addresses out of your message. Chat here on Vendibook.</p>
       <Button
         onClick={handleSend}
         disabled={isLoading || !message.trim() || (!user && !guest.email.trim())}

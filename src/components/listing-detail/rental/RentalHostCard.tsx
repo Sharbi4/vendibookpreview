@@ -38,7 +38,7 @@ export const RentalHostCard = ({
   ratingData,
   isOwner = false,
 }: RentalHostCardProps) => {
-  const [showMessage, setShowMessage] = useState(false);
+  const [showMessage, setShowMessage] = useState(true);
   const { data: responseTimeData } = useHostResponseTime(hostId);
 
   const name = hostName || 'Host';
@@ -110,7 +110,7 @@ export const RentalHostCard = ({
 
       {!isOwner && showMessage && (
         <div className="pt-1">
-          <MessageHostForm listingId={listingId} hostId={hostId} listingTitle={listingTitle} />
+          <MessageHostForm key={listingId} listingId={listingId} hostId={hostId} listingTitle={listingTitle} />
         </div>
       )}
     </SaleCard>
