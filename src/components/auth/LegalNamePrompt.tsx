@@ -47,7 +47,7 @@ export default function LegalNamePrompt({ children }: { children: ReactNode }) {
     const { error: e } = await supabase.from("profiles")
       .update({ first_name: f, last_name: l, full_name: `${f} ${l}` }).eq("id", user.id);
     setSaving(false);
-    if (e) return setError("Couldn't save your name. Please try again.");
+    if (e) return setError(e.message?.startsWith("Please use your own name") ? e.message : "Couldn't save your name. Please try again.");
     setOpen(false);
   };
 
