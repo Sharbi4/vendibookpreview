@@ -1,0 +1,1 @@
+- Build Studio (/build-studio) keeps catalog, pricing and layout rules in src/lib/buildStudio/catalog.ts (procedural geometry, optional GLB per item). Why: one source of truth for the 3D scene and price until manufacturer data exists.

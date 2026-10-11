@@ -59,7 +59,7 @@ function Shell({ color, roof, view }: { color: string; roof: boolean; view: View
     {/* end walls */}
     <Wall size={[T, H, W + 2 * T]} position={[-L / 2 - T / 2, H / 2, 0]} color={color} opacity={fade} />
     <Wall size={[T, H, W + 2 * T]} position={[L / 2 + T / 2, H / 2, 0]} color={color} opacity={fade} />
-    {roof && view === 'exterior' && <Wall size={[L + 2 * T, T, W + 2 * T]} position={[0, H + T / 2, 0]} color="#e9e9e6" opacity={view === 'interior' ? 0.15 : 1} />}
+    {roof && view === 'exterior' && <Wall size={[L + 2 * T, T, W + 2 * T]} position={[0, H + T / 2, 0]} color="#e9e9e6" />}
   </group>;
 }
 
