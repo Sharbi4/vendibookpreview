@@ -78,6 +78,13 @@
       "when": 1791681446810,
       "tag": "0010_build_studio_engineering_review",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791681464622,
+      "tag": "0011_build_studio_assets_read",
+      "breakpoints": true
     }
   ]
 }
