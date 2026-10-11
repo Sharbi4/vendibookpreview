@@ -42,11 +42,17 @@ const SIGNUP_TOS_ACCEPTANCE_TEXT =
 const SIGNUP_MARKETING_TEXT =
   'Send me occasional Vendibook updates and marketing emails. I can unsubscribe anytime.';
 
-const authSchema = z.object({
+import { legalNamePartError } from '@/lib/legalName';
+
+const authBaseSchema = z.object({
   email: z.string().trim().email('Please enter a valid email').max(255, 'Email is too long'),
   password: z.string().min(8, 'Password must be at least 8 characters').max(72, 'Password is too long'),
-  firstName: z.string().trim().min(1, 'First name is required').max(50, 'First name is too long').optional(),
-  lastName: z.string().trim().min(1, 'Last name is required').max(50, 'Last name is too long').optional(),
+  firstName: z.string().trim().superRefine((v, ctx) => { const e = legalNamePartError(v, 'First'); if (e) ctx.addIssue({ code: 'custom', message: e }); }).optional(),
+  lastName: z.string().trim().superRefine((v, ctx) => { const e = legalNamePartError(v, 'Last'); if (e) ctx.addIssue({ code: 'custom', message: e }); }).optional(),
+});
+const authSchema = authBaseSchema.superRefine((v, ctx) => {
+  if (v.firstName && v.lastName && v.firstName.toLowerCase() === v.lastName.toLowerCase())
+    ctx.addIssue({ code: 'custom', path: ['lastName'], message: 'First and last name can’t be the same' });
 });
 
 const getPasswordStrength = (password: string): { score: number; label: string; color: string } => {
@@ -118,9 +124,9 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
       if (mode === 'signup') {
         authSchema.parse({ email, password, firstName, lastName });
       } else if (mode === 'forgot' || mode === 'verify') {
-        authSchema.pick({ email: true }).parse({ email });
+        authBaseSchema.pick({ email: true }).parse({ email });
       } else {
-        authSchema.omit({ firstName: true, lastName: true }).parse({ email, password });
+        authBaseSchema.omit({ firstName: true, lastName: true }).parse({ email, password });
       }
       setErrors({});
       return true;
@@ -145,7 +151,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
     }
     
     try {
-      authSchema.pick({ email: true }).parse({ email });
+      authBaseSchema.pick({ email: true }).parse({ email });
     } catch {
       setErrors({ email: 'Please enter a valid email address' });
       return;
@@ -637,7 +643,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <Label htmlFor="firstName" className="text-sm font-medium text-foreground">
-                      First name
+                      Legal first name
                     </Label>
                     <Input
                       id="firstName"
@@ -653,7 +659,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
                   </div>
                   <div className="space-y-2">
                     <Label htmlFor="lastName" className="text-sm font-medium text-foreground">
-                      Last name
+                      Legal last name
                     </Label>
                     <Input
                       id="lastName"
