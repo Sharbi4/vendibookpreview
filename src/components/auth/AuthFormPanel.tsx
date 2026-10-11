@@ -44,12 +44,13 @@ const SIGNUP_MARKETING_TEXT =
 
 import { legalNamePartError } from '@/lib/legalName';
 
-const authSchema = z.object({
+const authBaseSchema = z.object({
   email: z.string().trim().email('Please enter a valid email').max(255, 'Email is too long'),
   password: z.string().min(8, 'Password must be at least 8 characters').max(72, 'Password is too long'),
   firstName: z.string().trim().superRefine((v, ctx) => { const e = legalNamePartError(v, 'First'); if (e) ctx.addIssue({ code: 'custom', message: e }); }).optional(),
   lastName: z.string().trim().superRefine((v, ctx) => { const e = legalNamePartError(v, 'Last'); if (e) ctx.addIssue({ code: 'custom', message: e }); }).optional(),
-}).superRefine((v, ctx) => {
+});
+const authSchema = authBaseSchema.superRefine((v, ctx) => {
   if (v.firstName && v.lastName && v.firstName.toLowerCase() === v.lastName.toLowerCase())
     ctx.addIssue({ code: 'custom', path: ['lastName'], message: 'First and last name can’t be the same' });
 });
@@ -125,7 +126,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
       } else if (mode === 'forgot' || mode === 'verify') {
         authSchema.pick({ email: true }).parse({ email });
       } else {
-        authSchema.omit({ firstName: true, lastName: true }).parse({ email, password });
+        authBaseSchema.omit({ firstName: true, lastName: true }).parse({ email, password });
       }
       setErrors({});
       return true;
@@ -642,7 +643,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
                     <Label htmlFor="firstName" className="text-sm font-medium text-foreground">
-                      First name
+                      Legal first name
                     </Label>
                     <Input
                       id="firstName"
