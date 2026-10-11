@@ -1,5 +1,5 @@
 import { Canvas, useThree } from '@react-three/fiber';
-import { ContactShadows, Environment, Lightformer, OrbitControls, OrthographicCamera, PerspectiveCamera } from '@react-three/drei';
+import { ContactShadows, Environment, Grid, Html, Lightformer, OrbitControls, OrthographicCamera, PerspectiveCamera } from '@react-three/drei';
 import { useEffect, useMemo } from 'react';
 import * as THREE from 'three';
 import { TRAILER, specOf, type BuildConfig, type Placement, placementIssues, exteriorHex } from '@/lib/buildStudio/catalog';
@@ -11,7 +11,13 @@ interface Props {
   roof: boolean;
   selected: string | null;
   onSelect: (uid: string | null) => void;
+  labels?: boolean;
+  dims?: boolean;
+  grid?: boolean;
+  /** Camera command; `n` increments so repeated clicks re-trigger. */
+  cmd?: { kind: 'in' | 'out' | 'reset'; n: number };
 }
+const tag = 'pointer-events-none whitespace-nowrap rounded-md bg-card/90 px-1.5 py-0.5 text-[10px] font-medium text-foreground shadow-sm';
 
 // Refreshed from the active catalog on every render of TrailerScene.
 let L = TRAILER.length, W = TRAILER.width, H = TRAILER.height;
@@ -77,7 +83,7 @@ function Chassis() {
   </group>;
 }
 
-function Equipment({ p, config, selected, onSelect }: { p: Placement; config: BuildConfig; selected: boolean; onSelect: (uid: string) => void }) {
+function Equipment({ p, config, selected, onSelect, label }: { p: Placement; config: BuildConfig; selected: boolean; onSelect: (uid: string) => void; label: boolean }) {
   const s = specOf(p.id);
   const bad = placementIssues(config, p.uid).length > 0;
   const z = p.wall === 'service' ? W / 2 - s.d / 2 : -W / 2 + s.d / 2;
@@ -87,30 +93,51 @@ function Equipment({ p, config, selected, onSelect }: { p: Placement; config: Bu
       <boxGeometry args={[s.w, s.h, s.d]} />
       <meshStandardMaterial color={tone} metalness={0.75} roughness={0.28} emissive={selected || bad ? tone : '#000'} emissiveIntensity={selected || bad ? 0.25 : 0} />
     </mesh>
+    {(label || selected) && <Html position={[0, s.h + 0.18, 0]} center zIndexRange={[10, 0]}><span className={tag}>{s.name}</span></Html>}
     {s.category === 'Cooking' && <mesh position={[0, s.h + 0.01, 0]}><boxGeometry args={[s.w * 0.92, 0.02, s.d * 0.85]} /><meshStandardMaterial color="#222" metalness={0.4} roughness={0.6} /></mesh>}
     {s.category === 'Sanitation' && <mesh position={[0, s.h - 0.05, 0]}><boxGeometry args={[s.w * 0.85, 0.1, s.d * 0.7]} /><meshStandardMaterial color="#5d666e" metalness={0.8} roughness={0.2} /></mesh>}
     {s.category === 'Refrigeration' && <mesh position={[0, s.h / 2, p.wall === 'service' ? -s.d / 2 - 0.005 : s.d / 2 + 0.005]}><boxGeometry args={[s.w * 0.85, s.h * 0.85, 0.01]} /><meshStandardMaterial color="#e6eaed" metalness={0.5} roughness={0.2} /></mesh>}
   </group>;
 }
 
-function CameraRig({ view }: { view: ViewMode }) {
-  const { camera, controls } = useThree() as unknown as { camera: THREE.Camera; controls: { target: THREE.Vector3; update: () => void } | null };
-  useEffect(() => {
+function CameraRig({ view, cmd }: { view: ViewMode; cmd?: Props['cmd'] }) {
+  const { camera, controls } = useThree() as unknown as { camera: THREE.PerspectiveCamera | THREE.OrthographicCamera; controls: { target: THREE.Vector3; update: () => void } | null };
+  const home = () => {
+    if (view === 'plan') { (camera as THREE.OrthographicCamera).zoom = 95; camera.updateProjectionMatrix(); return; }
     if (view === 'interior') camera.position.set(0.2, 9, 4.2); else camera.position.set(6.2, 3.4, 7.2);
     controls?.target.set(0, 1.2, 0); controls?.update();
-  }, [view, camera, controls]);
+  };
+  useEffect(home, [view, camera, controls]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => {
+    if (!cmd?.n) return;
+    if (cmd.kind === 'reset') return home();
+    const f = cmd.kind === 'in' ? 0.8 : 1.25;
+    if (view === 'plan') { const o = camera as THREE.OrthographicCamera; o.zoom = Math.min(260, Math.max(40, o.zoom / f)); o.updateProjectionMatrix(); return; }
+    const t = controls?.target ?? new THREE.Vector3(0, 1.2, 0);
+    const d = camera.position.clone().sub(t); const len = Math.min(14, Math.max(3, d.length() * f));
+    camera.position.copy(t.clone().add(d.setLength(len))); controls?.update();
+  }, [cmd?.n]); // eslint-disable-line react-hooks/exhaustive-deps
   return null;
 }
 
-export default function TrailerScene({ config, view, roof, selected, onSelect }: Props) {
+function Dimensions() {
+  const ft = (m: number) => { const i = Math.round(m / 0.0254); return `${Math.floor(i / 12)}′ ${i % 12}″`; };
+  return <group position={[0, FLOOR_Y, 0]}>
+    <Html position={[0, 0.05, W / 2 + 0.55]} center zIndexRange={[10, 0]}><span className={tag}>Length {ft(L)}</span></Html>
+    <Html position={[L / 2 + 0.55, 0.05, 0]} center zIndexRange={[10, 0]}><span className={tag}>Width {ft(W)}</span></Html>
+    <Html position={[-L / 2 - 0.2, H / 2, W / 2 + 0.2]} center zIndexRange={[10, 0]}><span className={tag}>Height {ft(H)}</span></Html>
+  </group>;
+}
+
+export default function TrailerScene({ config, view, roof, selected, onSelect, labels = false, dims = false, grid = false, cmd }: Props) {
   L = TRAILER.length; W = TRAILER.width; H = TRAILER.height;
   const color = exteriorHex(config);
   return <Canvas shadows dpr={[1, 2]} onPointerMissed={() => onSelect(null)} aria-label="3D trailer preview">
-    <color attach="background" args={['#eeebe5']} />
+    <color attach="background" args={['#f1eee9']} />
     {view === 'plan'
       ? <OrthographicCamera makeDefault position={[0, 20, 0]} zoom={95} up={[0, 0, -1]} onUpdate={(c) => c.lookAt(0, 0, 0)} />
       : <PerspectiveCamera makeDefault fov={45} position={[6.2, 3.4, 7.2]} />}
-    {view !== 'plan' && <CameraRig view={view} />}
+    <CameraRig key={view} view={view} cmd={cmd} />
     <ambientLight intensity={0.45} />
     <directionalLight position={[6, 10, 6]} intensity={1.4} castShadow shadow-mapSize={[1024, 1024]} />
     <Environment resolution={64}>
@@ -119,7 +146,9 @@ export default function TrailerScene({ config, view, roof, selected, onSelect }:
     </Environment>
     <Chassis />
     <Shell color={color} roof={roof} view={view} />
-    {config.items.map((p) => <Equipment key={p.uid} p={p} config={config} selected={selected === p.uid} onSelect={onSelect} />)}
+    {config.items.map((p) => <Equipment key={p.uid} p={p} config={config} selected={selected === p.uid} onSelect={onSelect} label={labels || view === 'plan'} />)}
+    {dims && <Dimensions />}
+    {grid && <Grid position={[0, FLOOR_Y + 0.005, 0]} args={[L, W]} cellSize={0.3048} sectionSize={1.2192} cellColor="#b9b2a6" sectionColor="#f26a1b" fadeDistance={30} />}
     <mesh rotation-x={-Math.PI / 2} receiveShadow><planeGeometry args={[40, 40]} /><meshStandardMaterial color="#dcd7ce" roughness={1} /></mesh>
     <ContactShadows position={[0, 0.01, 0]} opacity={0.4} scale={14} blur={2.2} far={3} />
     <OrbitControls makeDefault enabled={view !== 'plan'} target={[0, 1.2, 0]} minDistance={3} maxDistance={14} maxPolarAngle={Math.PI / 2.05} enablePan={false} />
