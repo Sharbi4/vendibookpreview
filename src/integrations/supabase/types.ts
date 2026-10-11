@@ -895,10 +895,52 @@ export type Database = {
           },
         ]
       }
+      bs_build_events: {
+        Row: {
+          actor_id: string | null
+          actor_role: string
+          body: string | null
+          build_id: string
+          created_at: string
+          data: Json
+          id: string
+          kind: string
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_role: string
+          body?: string | null
+          build_id: string
+          created_at?: string
+          data?: Json
+          id?: string
+          kind: string
+        }
+        Update: {
+          actor_id?: string | null
+          actor_role?: string
+          body?: string | null
+          build_id?: string
+          created_at?: string
+          data?: Json
+          id?: string
+          kind?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bs_build_events_build_id_fkey"
+            columns: ["build_id"]
+            isOneToOne: false
+            referencedRelation: "bs_builds"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bs_builds: {
         Row: {
           config: Json
           created_at: string
+          delivery_method: string | null
           id: string
           manufacturer_id: string
           model_id: string
@@ -907,6 +949,7 @@ export type Database = {
           quote_required: boolean
           region_id: string
           status: string
+          submitted_at: string | null
           subtotal_cents: number | null
           updated_at: string
           user_id: string
@@ -915,6 +958,7 @@ export type Database = {
         Insert: {
           config: Json
           created_at?: string
+          delivery_method?: string | null
           id?: string
           manufacturer_id: string
           model_id: string
@@ -923,6 +967,7 @@ export type Database = {
           quote_required?: boolean
           region_id: string
           status?: string
+          submitted_at?: string | null
           subtotal_cents?: number | null
           updated_at?: string
           user_id: string
@@ -931,6 +976,7 @@ export type Database = {
         Update: {
           config?: Json
           created_at?: string
+          delivery_method?: string | null
           id?: string
           manufacturer_id?: string
           model_id?: string
@@ -939,6 +985,7 @@ export type Database = {
           quote_required?: boolean
           region_id?: string
           status?: string
+          submitted_at?: string | null
           subtotal_cents?: number | null
           updated_at?: string
           user_id?: string
@@ -1025,10 +1072,59 @@ export type Database = {
         }
         Relationships: []
       }
+      bs_delivery_rates: {
+        Row: {
+          active: boolean
+          fee_cents: number | null
+          id: string
+          manufacturer_id: string
+          method: string
+          notes: string | null
+          region_id: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          fee_cents?: number | null
+          id?: string
+          manufacturer_id: string
+          method: string
+          notes?: string | null
+          region_id: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          fee_cents?: number | null
+          id?: string
+          manufacturer_id?: string
+          method?: string
+          notes?: string | null
+          region_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bs_delivery_rates_manufacturer_id_fkey"
+            columns: ["manufacturer_id"]
+            isOneToOne: false
+            referencedRelation: "bs_manufacturers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bs_delivery_rates_region_id_fkey"
+            columns: ["region_id"]
+            isOneToOne: false
+            referencedRelation: "bs_regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bs_equipment: {
         Row: {
           allowed_walls: string[]
           category: string
+          color_hex: string | null
           compatible_model_ids: string[]
           created_at: string
           depth_in: number
@@ -1054,6 +1150,7 @@ export type Database = {
         Insert: {
           allowed_walls?: string[]
           category?: string
+          color_hex?: string | null
           compatible_model_ids?: string[]
           created_at?: string
           depth_in: number
@@ -1079,6 +1176,7 @@ export type Database = {
         Update: {
           allowed_walls?: string[]
           category?: string
+          color_hex?: string | null
           compatible_model_ids?: string[]
           created_at?: string
           depth_in?: number
@@ -1258,6 +1356,68 @@ export type Database = {
             columns: ["manufacturer_id"]
             isOneToOne: false
             referencedRelation: "bs_manufacturers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bs_quotes: {
+        Row: {
+          build_id: string
+          change_reason: string | null
+          created_at: string
+          created_by: string | null
+          delivery_terms: string | null
+          expires_at: string
+          id: string
+          lead_time_weeks: number | null
+          lines: Json
+          manufacturer_name: string
+          preliminary_subtotal_cents: number | null
+          responded_at: string | null
+          status: string
+          total_cents: number
+          version: number
+        }
+        Insert: {
+          build_id: string
+          change_reason?: string | null
+          created_at?: string
+          created_by?: string | null
+          delivery_terms?: string | null
+          expires_at: string
+          id?: string
+          lead_time_weeks?: number | null
+          lines: Json
+          manufacturer_name: string
+          preliminary_subtotal_cents?: number | null
+          responded_at?: string | null
+          status?: string
+          total_cents: number
+          version: number
+        }
+        Update: {
+          build_id?: string
+          change_reason?: string | null
+          created_at?: string
+          created_by?: string | null
+          delivery_terms?: string | null
+          expires_at?: string
+          id?: string
+          lead_time_weeks?: number | null
+          lines?: Json
+          manufacturer_name?: string
+          preliminary_subtotal_cents?: number | null
+          responded_at?: string | null
+          status?: string
+          total_cents?: number
+          version?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bs_quotes_build_id_fkey"
+            columns: ["build_id"]
+            isOneToOne: false
+            referencedRelation: "bs_builds"
             referencedColumns: ["id"]
           },
         ]
@@ -13403,23 +13563,62 @@ export type Database = {
         Args: { p_manufacturer_id: string; p_region_id: string }
         Returns: undefined
       }
+      bs_build_message: {
+        Args: { p_body: string; p_build_id: string }
+        Returns: undefined
+      }
+      bs_can_see_build: { Args: { _build_id: string }; Returns: boolean }
       bs_is_member: {
         Args: { _manufacturer_id: string; _min_role?: string }
         Returns: boolean
       }
+      bs_issue_quote: {
+        Args: {
+          p_build_id: string
+          p_delivery_terms: string
+          p_lead_time_weeks: number
+          p_lines: Json
+          p_reason?: string
+          p_valid_days?: number
+        }
+        Returns: string
+      }
+      bs_partner_review: {
+        Args: {
+          p_body?: string
+          p_build_id: string
+          p_data?: Json
+          p_kind: string
+        }
+        Returns: undefined
+      }
       bs_price_build: {
-        Args: { p_equipment_ids: string[]; p_model_id: string; p_zip: string }
+        Args: {
+          p_delivery_method?: string
+          p_equipment_ids: string[]
+          p_model_id: string
+          p_zip: string
+        }
         Returns: Json
       }
       bs_resolve_zip: { Args: { p_zip: string }; Returns: Json }
+      bs_respond_quote: {
+        Args: { p_accept: boolean; p_note?: string; p_quote_id: string }
+        Returns: undefined
+      }
       bs_save_build: {
         Args: {
           p_config: Json
+          p_delivery_method?: string
           p_model_id: string
           p_name?: string
           p_zip: string
         }
         Returns: string
+      }
+      bs_submit_build: {
+        Args: { p_build_id: string; p_note?: string }
+        Returns: undefined
       }
       bs_zip_manufacturer: {
         Args: { p_zip: string }

@@ -1,0 +1,2 @@
+CREATE POLICY "bs members view assigned regions" ON public.bs_regions FOR SELECT TO authenticated
+  USING (EXISTS (SELECT 1 FROM public.bs_region_assignments a WHERE a.region_id = bs_regions.id AND a.ended_at IS NULL AND public.bs_is_member(a.manufacturer_id)));

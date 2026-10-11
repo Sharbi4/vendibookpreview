@@ -71,6 +71,27 @@
       "when": 1791680680279,
       "tag": "0009_build_studio_phase2_regions_catalog",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1791681446810,
+      "tag": "0010_build_studio_engineering_review",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1791681464622,
+      "tag": "0011_build_studio_assets_read",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1791681597513,
+      "tag": "0012_bs_members_view_assigned_regions",
+      "breakpoints": true
     }
   ]
 }

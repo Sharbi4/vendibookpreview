@@ -1,0 +1,2 @@
+-- Catalog photos/3D files are shown to shoppers through short-lived signed links (workspace blocks public buckets).
+CREATE POLICY "bs assets read" ON storage.objects FOR SELECT TO anon, authenticated USING (bucket_id = 'build-studio-assets');

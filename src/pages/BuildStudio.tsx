@@ -1,3 +1,5 @@
+import { Link } from 'react-router-dom';
+import { DELIVERY_LABELS } from '@/lib/buildStudio/partnerCatalog';
 import { lazy, Suspense, useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
@@ -8,7 +10,7 @@ import SEO from '@/components/SEO';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
-  ALWAYS_REQUIRED, DEMO_DATA, EQUIPMENT, EXTERIOR_COLORS, MENU_SUGGESTIONS, TRAILER, findFreeSpot, placementIssues,
+  ALWAYS_REQUIRED, DEMO_DATA, EQUIPMENT, FINISHES, EXTERIOR_COLORS, MENU_SUGGESTIONS, TRAILER, findFreeSpot, placementIssues,
   priceBuild, setPartnerCatalog, specOf, resetToDemoCatalog, type BuildConfig, type PartnerEquipment, type PartnerModel, type Wall,
 } from '@/lib/buildStudio/catalog';
 import type { ViewMode } from '@/components/buildStudio/TrailerScene';
@@ -17,7 +19,7 @@ const TrailerScene = lazy(() => import('@/components/buildStudio/TrailerScene'))
 const SAVE_KEY = 'vb.buildStudio.saves.v1';
 const cents = (c: number) => (c / 100).toLocaleString('en-US', { style: 'currency', currency: 'USD' });
 type ServerPrice = { status: string; lines?: { id?: string; label: string; amount_cents: number | null; quote_required: boolean }[];
-  subtotal_cents?: number; quote_required?: boolean; problems?: { id: string; name?: string; issue: string }[]; lead_time_weeks?: number | null };
+  subtotal_cents?: number; quote_required?: boolean; delivery_options?: { method: string; fee_cents: number | null; notes: string | null }[]; problems?: { id: string; name?: string; issue: string }[]; lead_time_weeks?: number | null };
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const rpc = (fn: string, args: Record<string, unknown>) => (supabase as any).rpc(fn, args);
 const money = (n: number) => n.toLocaleString('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 });
@@ -36,6 +38,8 @@ export default function BuildStudio() {
   const [reqEmail, setReqEmail] = useState('');
   const [reqSent, setReqSent] = useState(false);
   const [zipError, setZipError] = useState('');
+  const [delivery, setDelivery] = useState('');
+  const [savedId, setSavedId] = useState<string | null>(null);
   const [config, setConfig] = useState<BuildConfig>({ color: 'white', items: [] });
   const [view, setView] = useState<ViewMode>('exterior');
   const [roof, setRoof] = useState(true);
@@ -60,7 +64,7 @@ export default function BuildStudio() {
     setStage('not_covered');
   };
   const pickModel = (m: PartnerModel, eq: PartnerEquipment[]) => {
-    setPartnerCatalog(m, eq); setModelId(m.id); setConfig({ color: 'white', items: [] }); setSelected(null); setServerPrice(null);
+    setPartnerCatalog(m, eq); setModelId(m.id); setConfig({ color: 'white', items: [], finish: FINISHES[0]?.id }); setDelivery(''); setSavedId(null); setSelected(null); setServerPrice(null);
   };
   const startDemo = () => { resetToDemoCatalog(); setPartner(null); setModelId(''); setStarted(true); setStage('build'); };
   const requestCoverage = async () => {
@@ -70,18 +74,19 @@ export default function BuildStudio() {
   };
 
   // Server is the authority for partner pricing; recompute after each change.
-  const equipmentIds = config.items.map((i) => i.id).join(',');
+  const equipmentIds = [...config.items.map((i) => i.id), ...(config.finish ? [config.finish] : [])].join(',');
   useEffect(() => {
     if (!partner || !modelId) return;
     let live = true; setPricing(true);
     const t = setTimeout(async () => {
-      const { data, error } = await rpc('bs_price_build', { p_zip: zip, p_model_id: modelId, p_equipment_ids: equipmentIds ? equipmentIds.split(',') : [] });
+      const { data, error } = await rpc('bs_price_build', { p_zip: zip, p_model_id: modelId, p_equipment_ids: equipmentIds ? equipmentIds.split(',') : [], p_delivery_method: delivery || null });
       if (!live) return;
       setPricing(false);
       setServerPrice(error ? { status: 'error' } : data);
     }, 350);
     return () => { live = false; clearTimeout(t); };
-  }, [partner, modelId, equipmentIds, zip]);
+  }, [partner, modelId, equipmentIds, zip, delivery]);
+  useEffect(() => setSavedId(null), [equipmentIds, delivery, config.items]);
 
   const price = useMemo(() => priceBuild(config), [config]);
   const sel = config.items.find((i) => i.uid === selected);
@@ -106,14 +111,27 @@ export default function BuildStudio() {
   const save = async () => {
     if (partner) {
       if (!user) { setNotice('Sign in to save this build to your account.'); return; }
-      const { error } = await rpc('bs_save_build', { p_zip: zip, p_model_id: modelId, p_config: config, p_name: saveName.trim() || null });
+      const { data, error } = await rpc('bs_save_build', { p_zip: zip, p_model_id: modelId, p_config: config, p_name: saveName.trim() || null, p_delivery_method: delivery || null });
       setNotice(error ? `Couldn't save: ${error.message}` : 'Saved to your account with today\'s prices and catalog version.');
-      if (!error) setSaveName('');
+      if (!error) { setSaveName(''); setSavedId(data as string); }
       return;
     }
     const name = saveName.trim() || `Build ${saves.length + 1}`;
     persist([{ name, savedAt: new Date().toISOString(), config }, ...saves.filter((s) => s.name !== name)].slice(0, 10));
     setSaveName(''); setNotice(`Saved “${name}” on this device.`);
+  };
+
+  const submitForReview = async () => {
+    if (!user) { setNotice('Sign in to send your build for engineering review.'); return; }
+    let id = savedId;
+    if (!id) {
+      const { data, error } = await rpc('bs_save_build', { p_zip: zip, p_model_id: modelId, p_config: config, p_name: saveName.trim() || null, p_delivery_method: delivery || null });
+      if (error) { setNotice(`Couldn't save: ${error.message}`); return; }
+      id = data as string;
+    }
+    const { error } = await rpc('bs_submit_build', { p_build_id: id, p_note: null });
+    setNotice(error ? `Couldn't send: ${error.message}` : 'Sent to the build partner for engineering review. Track it in My builds.');
+    if (!error) setSavedId(null);
   };
 
   if (!started) {
@@ -177,12 +195,19 @@ export default function BuildStudio() {
           <p className="mt-1 text-[11px] text-muted-foreground">Switching models clears placed equipment.</p>
         </div>}
         <div>
-          <h2 className="text-sm font-semibold text-foreground">Exterior color{partner ? ' (preview)' : ''}</h2>
-          <div className="mt-2 flex flex-wrap gap-2">
+          <h2 className="text-sm font-semibold text-foreground">Exterior {partner && FINISHES.length ? 'finish' : `color${partner ? ' (preview)' : ''}`}</h2>
+          {partner && FINISHES.length > 0 ? <div className="mt-2 space-y-1">
+            {FINISHES.map((f) => <button key={f.id} type="button" aria-pressed={config.finish === f.id} onClick={() => setConfig((x) => ({ ...x, finish: f.id }))}
+              className={`flex w-full items-center gap-3 rounded-lg border p-2 text-left text-sm ${config.finish === f.id ? 'border-primary' : 'border-border'}`}>
+              <span className="h-6 w-6 shrink-0 rounded-full border border-border" style={{ background: f.hex }} />
+              <span className="flex-1 text-foreground">{f.name}</span>
+              <span className="text-xs text-muted-foreground">{f.price == null ? 'Quote' : f.price === 0 ? 'Included' : `+${money(f.price)}`}</span>
+            </button>)}
+          </div> : <div className="mt-2 flex flex-wrap gap-2">
             {EXTERIOR_COLORS.map((c) => <button key={c.id} type="button" title={`${c.name}${c.price && !partner ? ` +${money(c.price)}` : ''}`} aria-label={c.name} aria-pressed={config.color === c.id}
               onClick={() => setConfig((x) => ({ ...x, color: c.id }))}
               className={`h-9 w-9 rounded-full border-2 ${config.color === c.id ? 'border-primary' : 'border-border'}`} style={{ background: c.hex }} />)}
-          </div>
+          </div>}
         </div>
 
         {!partner && <div>
@@ -235,8 +260,13 @@ export default function BuildStudio() {
             {serverPrice?.status === 'error' && <p className="mt-2 text-xs text-destructive">Couldn't refresh the price. Your design is safe — change anything to try again.</p>}
             <ul className="mt-2 space-y-1 text-xs">
               {(serverPrice?.lines ?? []).map((l, i) => <li key={i} className="flex justify-between gap-2"><span className="text-muted-foreground">{l.label}</span><span>{l.amount_cents == null ? 'Quote required' : cents(l.amount_cents)}</span></li>)}
-              <li className="flex justify-between gap-2"><span className="text-muted-foreground">Delivery</span><span>Quoted by build partner</span></li>
+              {!delivery && <li className="flex justify-between gap-2"><span className="text-muted-foreground">Delivery</span><span>Choose below</span></li>}
             </ul>
+            {(serverPrice?.delivery_options ?? []).length > 0 ? <label className="mt-3 block text-xs text-muted-foreground">Delivery
+              <select className="mt-1 h-10 w-full rounded-md border border-input bg-background px-2 text-sm text-foreground" value={delivery} onChange={(e) => setDelivery(e.target.value)}>
+                <option value="">Choose delivery…</option>
+                {serverPrice!.delivery_options!.map((o) => <option key={o.method} value={o.method}>{DELIVERY_LABELS[o.method] ?? o.method} · {o.fee_cents == null ? 'quoted' : o.fee_cents === 0 ? 'free' : cents(o.fee_cents)}{o.notes ? ` · ${o.notes}` : ''}</option>)}
+              </select></label> : <p className="mt-2 text-xs text-muted-foreground">Delivery is quoted by the build partner.</p>}
             {(serverPrice?.problems ?? []).length > 0 && <p className="mt-2 text-xs text-destructive">{serverPrice!.problems!.map((p) => `${p.name ?? specOf(p.id).name}: ${p.issue === 'incompatible' ? 'not compatible with this model' : 'no longer available'}`).join(' · ')}</p>}
             <p className="mt-3 flex justify-between border-t border-border pt-2 text-base font-semibold"><span>{serverPrice?.quote_required ? 'Known subtotal' : 'Preliminary subtotal'}</span>
               <span>{pricing && !serverPrice ? <Loader2 className="h-4 w-4 animate-spin" /> : cents(serverPrice?.subtotal_cents ?? 0)}</span></p>
@@ -268,6 +298,11 @@ export default function BuildStudio() {
               </span>
             </li>)}
           </ul>}
+          {partner && <div className="mt-3 space-y-2">
+            <Button className="w-full" onClick={submitForReview} disabled={allIssues.length > 0 || serverPrice?.status !== 'ok'}>Send for engineering review</Button>
+            <p className="text-[11px] text-muted-foreground">The build partner checks your layout and sends a final quote. Nothing is charged, and you approve any changes.</p>
+            {user && <Link to="/build-studio/my-builds" className="text-xs text-primary underline">My builds and quotes</Link>}
+          </div>}
           <p className="mt-1 text-[11px] text-muted-foreground">{partner ? 'Partner builds save to your Vendibook account with the exact prices and catalog version used.' : 'Demo builds are saved on this device.'}</p>
         </div>
       </aside>

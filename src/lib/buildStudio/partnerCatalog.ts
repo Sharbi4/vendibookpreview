@@ -56,3 +56,4 @@ export function parseEquipmentCsv(text: string): { rows: EquipmentImportRow[]; e
   });
   return { rows: errors.length ? [] : rows, errors };
 }
+export const DELIVERY_LABELS: Record<string, string> = { factory_pickup: 'Pick up at factory', delivered: 'Delivered', towed: 'Towed to you', flatbed: 'Flatbed delivery', other: 'Other' };
