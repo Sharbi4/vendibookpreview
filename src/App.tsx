@@ -172,6 +172,7 @@ const HelpCenter = lazy(() => import("./pages/HelpCenter"));
 const HelpArticle = lazy(() => import("./pages/HelpArticle"));
 const CaliforniaPrivacy = lazy(() => import("./pages/CaliforniaPrivacy"));
 const ToolsIndex = lazy(() => import("./pages/tools/Index"));
+const BuildStudio = lazy(() => import("./pages/BuildStudio"));
 const PricePilot = lazy(() => import("./pages/tools/PricePilot"));
 const PermitPath = lazy(() => import("./pages/tools/PermitPath"));
 // PARKED 2026-08-25: BuildKit, Listing Studio, Concept Lab, Market Radar, and
@@ -526,6 +527,7 @@ const AnimatedRoutes = () => {
           <Route path="/california-privacy" element={<PageTransition><CaliforniaPrivacy /></PageTransition>} />
           
           {/* Tools - /tools is the canonical hub */}
+          <Route path="/build-studio" element={<BuildStudio />} />
           <Route path="/tools" element={<PageTransition><ToolsIndex /></PageTransition>} />
           {/* PricePilot is a public product page — the access wall lives at the appraisal entry point inside the page, not on the route. */}
           <Route path="/tools/pricepilot" element={<PageTransition><PricePilot /></PageTransition>} />
