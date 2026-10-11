@@ -13,7 +13,9 @@ interface Props {
   onSelect: (uid: string | null) => void;
 }
 
-const L = TRAILER.length, W = TRAILER.width, H = TRAILER.height, T = 0.05;
+// Refreshed from the active catalog on every render of TrailerScene.
+let L = TRAILER.length, W = TRAILER.width, H = TRAILER.height;
+const T = 0.05;
 const FLOOR_Y = 0.55; // floor height above ground
 
 function useDiamondPlate() {
@@ -101,6 +103,7 @@ function CameraRig({ view }: { view: ViewMode }) {
 }
 
 export default function TrailerScene({ config, view, roof, selected, onSelect }: Props) {
+  L = TRAILER.length; W = TRAILER.width; H = TRAILER.height;
   const color = (EXTERIOR_COLORS.find((c) => c.id === config.color) ?? EXTERIOR_COLORS[0]).hex;
   return <Canvas shadows dpr={[1, 2]} onPointerMissed={() => onSelect(null)} aria-label="3D trailer preview">
     <color attach="background" args={['#eeebe5']} />
