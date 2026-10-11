@@ -42,11 +42,16 @@ const SIGNUP_TOS_ACCEPTANCE_TEXT =
 const SIGNUP_MARKETING_TEXT =
   'Send me occasional Vendibook updates and marketing emails. I can unsubscribe anytime.';
 
+import { legalNamePartError } from '@/lib/legalName';
+
 const authSchema = z.object({
   email: z.string().trim().email('Please enter a valid email').max(255, 'Email is too long'),
   password: z.string().min(8, 'Password must be at least 8 characters').max(72, 'Password is too long'),
-  firstName: z.string().trim().min(1, 'First name is required').max(50, 'First name is too long').optional(),
-  lastName: z.string().trim().min(1, 'Last name is required').max(50, 'Last name is too long').optional(),
+  firstName: z.string().trim().superRefine((v, ctx) => { const e = legalNamePartError(v, 'First'); if (e) ctx.addIssue({ code: 'custom', message: e }); }).optional(),
+  lastName: z.string().trim().superRefine((v, ctx) => { const e = legalNamePartError(v, 'Last'); if (e) ctx.addIssue({ code: 'custom', message: e }); }).optional(),
+}).superRefine((v, ctx) => {
+  if (v.firstName && v.lastName && v.firstName.toLowerCase() === v.lastName.toLowerCase())
+    ctx.addIssue({ code: 'custom', path: ['lastName'], message: 'First and last name can’t be the same' });
 });
 
 const getPasswordStrength = (password: string): { score: number; label: string; color: string } => {
