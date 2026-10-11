@@ -92,12 +92,11 @@ function Equipment({ p, config, selected, onSelect }: { p: Placement; config: Bu
 }
 
 function CameraRig({ view }: { view: ViewMode }) {
-  const { camera } = useThree();
+  const { camera, controls } = useThree() as unknown as { camera: THREE.Camera; controls: { target: THREE.Vector3; update: () => void } | null };
   useEffect(() => {
-    if (view === 'exterior') camera.position.set(5.5, 3.2, 6.5);
-    if (view === 'interior') camera.position.set(0.6, 4.2, 3.6);
-    camera.lookAt(0, 1.2, 0);
-  }, [view, camera]);
+    if (view === 'interior') camera.position.set(0.4, 6, 3.4); else camera.position.set(6.2, 3.4, 7.2);
+    controls?.target.set(0, 1.2, 0); controls?.update();
+  }, [view, camera, controls]);
   return null;
 }
 
@@ -107,7 +106,8 @@ export default function TrailerScene({ config, view, roof, selected, onSelect }:
     <color attach="background" args={['#eeebe5']} />
     {view === 'plan'
       ? <OrthographicCamera makeDefault position={[0, 20, 0]} zoom={95} up={[0, 0, -1]} onUpdate={(c) => c.lookAt(0, 0, 0)} />
-      : <PerspectiveCamera key={view} makeDefault fov={45} position={view === 'interior' ? [0.4, 6, 3.4] : [6.2, 3.4, 7.2]} />}
+      : <PerspectiveCamera makeDefault fov={45} position={[6.2, 3.4, 7.2]} />}
+    {view !== 'plan' && <CameraRig view={view} />}
     <ambientLight intensity={0.45} />
     <directionalLight position={[6, 10, 6]} intensity={1.4} castShadow shadow-mapSize={[1024, 1024]} />
     <Environment resolution={64}>
@@ -119,6 +119,6 @@ export default function TrailerScene({ config, view, roof, selected, onSelect }:
     {config.items.map((p) => <Equipment key={p.uid} p={p} config={config} selected={selected === p.uid} onSelect={onSelect} />)}
     <mesh rotation-x={-Math.PI / 2} receiveShadow><planeGeometry args={[40, 40]} /><meshStandardMaterial color="#dcd7ce" roughness={1} /></mesh>
     <ContactShadows position={[0, 0.01, 0]} opacity={0.4} scale={14} blur={2.2} far={3} />
-    <OrbitControls key={view} enabled={view !== 'plan'} target={[0, 1.2, 0]} minDistance={3} maxDistance={14} maxPolarAngle={Math.PI / 2.05} enablePan={false} />
+    <OrbitControls makeDefault enabled={view !== 'plan'} target={[0, 1.2, 0]} minDistance={3} maxDistance={14} maxPolarAngle={Math.PI / 2.05} enablePan={false} />
   </Canvas>;
 }
