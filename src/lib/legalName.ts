@@ -5,7 +5,7 @@
  */
 const PART = /^[\p{L}][\p{L}\p{M}'’.\- ]*[\p{L}.]$/u;
 const PLACEHOLDERS = new Set(['test', 'tester', 'user', 'admin', 'asdf', 'qwerty', 'name', 'first', 'last',
-  'none', 'na', 'n/a', 'unknown', 'anonymous', 'fake', 'xxx', 'abc', 'vendibook', 'owner', 'seller', 'buyer', 'host']);
+  'none', 'n/a', 'unknown', 'anonymous', 'fake', 'xxx', 'abc', 'vendibook', 'owner', 'seller', 'buyer', 'host']);
 
 export function legalNamePartError(value: string, label: 'First' | 'Last'): string | null {
   const v = value.trim();
