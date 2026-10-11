@@ -29,6 +29,7 @@ import { AnimatePresence } from "framer-motion";
 import { Loader2 } from "lucide-react";
 import GoogleOneTap from "@/components/auth/GoogleOneTap";
 import PhoneVerificationPrompt from "@/components/comms/PhoneVerificationPrompt";
+import LegalNamePrompt from "@/components/auth/LegalNamePrompt";
 import TawkIdentity from "@/components/support/TawkIdentity";
 
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
@@ -793,7 +794,7 @@ const App = () => (
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <AuthProvider>
-            <PhoneVerificationPrompt><AppContent /></PhoneVerificationPrompt>
+            <PhoneVerificationPrompt><LegalNamePrompt><AppContent /></LegalNamePrompt></PhoneVerificationPrompt>
           </AuthProvider>
         </TooltipProvider>
       </QueryClientProvider>
