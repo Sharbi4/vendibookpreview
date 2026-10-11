@@ -50,7 +50,7 @@ function Shell({ color, roof, view }: { color: string; roof: boolean; view: View
     <Wall size={[winX - winW / 2 + L / 2, winTop - winBottom, T]} position={[(-L / 2 + winX - winW / 2) / 2, (winTop + winBottom) / 2, zS]} color={color} opacity={fade} />
     <Wall size={[L / 2 - winX - winW / 2, winTop - winBottom, T]} position={[(L / 2 + winX + winW / 2) / 2, (winTop + winBottom) / 2, zS]} color={color} opacity={fade} />
     {/* awning */}
-    <mesh position={[winX, winTop + 0.05, zS + 0.35]} rotation={[0.35, 0, 0]} castShadow><boxGeometry args={[winW + 0.3, 0.03, 0.75]} /><meshStandardMaterial color="#e8e6e1" /></mesh>
+    {view === 'exterior' && <mesh position={[winX, winTop + 0.05, zS + 0.35]} rotation={[0.35, 0, 0]} castShadow><boxGeometry args={[winW + 0.3, 0.03, 0.75]} /><meshStandardMaterial color="#e8e6e1" /></mesh>}
     {/* back wall with door */}
     <Wall size={[doorX - doorW / 2 + L / 2, H, T]} position={[(-L / 2 + doorX - doorW / 2) / 2, H / 2, zB]} color={color} opacity={fade} />
     <Wall size={[L / 2 - doorX - doorW / 2, H, T]} position={[(L / 2 + doorX + doorW / 2) / 2, H / 2, zB]} color={color} opacity={fade} />
@@ -59,7 +59,7 @@ function Shell({ color, roof, view }: { color: string; roof: boolean; view: View
     {/* end walls */}
     <Wall size={[T, H, W + 2 * T]} position={[-L / 2 - T / 2, H / 2, 0]} color={color} opacity={fade} />
     <Wall size={[T, H, W + 2 * T]} position={[L / 2 + T / 2, H / 2, 0]} color={color} opacity={fade} />
-    {roof && view !== 'plan' && <Wall size={[L + 2 * T, T, W + 2 * T]} position={[0, H + T / 2, 0]} color="#e9e9e6" opacity={view === 'interior' ? 0.15 : 1} />}
+    {roof && view === 'exterior' && <Wall size={[L + 2 * T, T, W + 2 * T]} position={[0, H + T / 2, 0]} color="#e9e9e6" opacity={view === 'interior' ? 0.15 : 1} />}
   </group>;
 }
 
@@ -94,7 +94,7 @@ function Equipment({ p, config, selected, onSelect }: { p: Placement; config: Bu
 function CameraRig({ view }: { view: ViewMode }) {
   const { camera, controls } = useThree() as unknown as { camera: THREE.Camera; controls: { target: THREE.Vector3; update: () => void } | null };
   useEffect(() => {
-    if (view === 'interior') camera.position.set(0.4, 6, 3.4); else camera.position.set(6.2, 3.4, 7.2);
+    if (view === 'interior') camera.position.set(0.2, 6.5, 2.6); else camera.position.set(6.2, 3.4, 7.2);
     controls?.target.set(0, 1.2, 0); controls?.update();
   }, [view, camera, controls]);
   return null;

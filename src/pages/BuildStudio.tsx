@@ -88,7 +88,7 @@ export default function BuildStudio() {
         <div className="absolute left-3 top-3 flex flex-wrap gap-2">
           {(['exterior', 'interior', 'plan'] as ViewMode[]).map((v) => <Button key={v} size="sm" variant={view === v ? 'default' : 'secondary'} onClick={() => setView(v)}>
             {v === 'plan' ? 'Floor plan' : v[0].toUpperCase() + v.slice(1)}</Button>)}
-          <Button size="sm" variant="secondary" onClick={() => setRoof((r) => !r)} disabled={view === 'plan'}>{roof ? 'Remove roof' : 'Add roof'}</Button>
+          <Button size="sm" variant="secondary" onClick={() => setRoof((r) => !r)} disabled={view !== 'exterior'}>{roof ? 'Remove roof' : 'Add roof'}</Button>
         </div>
         <p className="absolute bottom-3 left-3 rounded bg-background/80 px-2 py-1 text-xs text-muted-foreground">Drag to rotate · scroll or pinch to zoom · tap equipment to select. Preview only, not engineering CAD.</p>
       </section>
