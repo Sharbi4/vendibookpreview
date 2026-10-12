@@ -353,8 +353,7 @@ const DynamicCityPage = ({ mode, category }: DynamicCityPageProps) => {
                 Ready to move in {city.name}?
               </h2>
               <p className="mt-3 text-muted-foreground max-w-xl mx-auto">
-                Search live inventory or publish your own listing free — the 12.9% platform fee applies only
-                when a transaction is paid through Vendibook.
+                Search live inventory or publish your own listing free — new online equipment sales carry an 8.7% seller fee for Standard and Pro. Rental fees are separate.
               </p>
               <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center">
                 <Button size="lg" variant="cta" asChild>

@@ -5,11 +5,11 @@
  *   /faq, /help, /how-it-works, /how-it-works-seller, /how-it-works-host.
  *
  * Numbers must match src/lib/commissions.ts and src/lib/fees/proFee.ts:
- *   Sales  — 12.9% seller commission, $0 buyer fee.
+ *   Sales  — 8.7% seller commission, $0 buyer fee.
  *   Rentals— 12.9% host commission + 12.9% renter service fee.
  *   Pay in Person (cash) SALES — 100% free, no commission, no fee.
  *   Rentals paid in person still owe host commission.
- *   Vendibook Pro — 10.9% on the eligible seller/host side, savings capped
+ *   Vendibook Pro — 10.9% on the eligible rental host side, savings capped
  *   at $500 per completed transaction.
  *
  * Payout language rule: do NOT describe general online payouts as instant,
@@ -41,7 +41,7 @@ export const PRICING_FAQ: PricingFaqEntry[] = [
     id: 'seller-commission',
     question: 'What does it cost to sell if the sale runs through Vendibook?',
     answer:
-      "A 12.9% platform commission comes out of a completed sale — nothing up front, nothing if it doesn't sell. That covers PayPal checkout, the e-signed bill of sale, dispute mediation, and your payout. Buyers pay $0 in platform fees. Active Vendibook Pro members pay 10.9% instead of 12.9% on the seller side, with the savings capped at $500 per completed transaction.",
+      "An 8.7% platform commission applies to new eligible online equipment sales for both Standard and Pro sellers. The commission base is the agreed equipment price, excluding sales tax and separately priced transport. Payment-provider charges are recorded separately. Buyers pay no Vendibook platform fee; eligible pay-in-person equipment sales remain free. Previously agreed transactions keep their fee snapshot.",
     audiences: ['seller', 'all'],
     cta: { label: 'See the full fee breakdown', href: '/pricing' },
   },

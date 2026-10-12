@@ -63,7 +63,7 @@ const faqs = [
   {
     question: 'What is the fee if the buyer pays online?',
     answer:
-      'Vendibook online checkout is optional. A completed equipment sale through online checkout carries a standard 12.9% seller fee, or 10.9% for active Vendibook Pro sellers, with Pro savings capped at $500 per completed transaction. Payment-processing costs charged by the payment provider are separate where applicable.',
+      'Vendibook online checkout is optional. A completed equipment sale through online checkout carries a standard 8.7% seller fee for both Standard and Pro sellers. Payment-processing costs charged by the payment provider are separate where applicable.',
   },
   {
     question: 'How does secure PayPal checkout work for a sale?',
@@ -494,9 +494,9 @@ const SellMyFoodTruck = () => {
                     body: 'When payment is handled directly between you and the buyer, Vendibook takes no platform transaction fee on the sale.',
                   },
                   {
-                    value: '12.9%',
-                    label: 'Online seller fee · 10.9% for Vendibook Pro',
-                    body: `Applies only if the buyer pays through optional Vendibook online checkout. Pro (${pro.labelWithCadence}) saves 2 points, capped at $500 per completed transaction.`,
+                    value: '8.7%',
+                    label: 'Online equipment-sale fee · Standard & Pro',
+                    body: `Applies only if the buyer pays through optional Vendibook online checkout. The rate is the same for Standard and Pro sellers; tax and separately priced transport are excluded from the commission base.`,
                   },
                 ].map((col, i) => (
                   <motion.div

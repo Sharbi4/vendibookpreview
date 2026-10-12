@@ -440,8 +440,8 @@ const PaymentOptions = () => (
             Buyers check out securely with PayPal. Eligible food trucks and trailers can also offer buyer
             financing through <EquinoxFundingLogo className="inline h-4 w-auto align-middle" />.
           </p>
-          <p className="text-xs text-primary/80 font-medium mb-1">Buyer pays for payment processing — you get paid upfront</p>
-          <p className="text-xs text-muted-foreground">12.9% success fee on completed transactions</p>
+          <p className="text-xs text-primary/80 font-medium mb-1">Payment-provider charges and seller disbursement details are shown separately</p>
+          <p className="text-xs text-muted-foreground">8.7% seller commission on new eligible online equipment sales, for Standard and Pro</p>
         </motion.div>
 
         <motion.div

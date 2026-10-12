@@ -19,7 +19,7 @@ const PricingCalculator = () => {
         "name": "What are Vendibook's fees for selling a food truck?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "Vendibook charges a 12.9% seller commission on sales processed through our secure platform. There are no hidden fees. Buyers pay the listing price with no additional platform fee."
+          "text": "Vendibook charges a 8.7% seller commission on new online equipment sales for Standard and Pro sellers processed through our secure platform. There are no hidden fees. Buyers pay the listing price with no additional platform fee."
         }
       },
       {
@@ -35,7 +35,7 @@ const PricingCalculator = () => {
         "name": "What are the rental fees on Vendibook?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "For rentals, hosts pay a 3% commission and renters pay a 12% service fee. These fees cover secure payments, messaging, and platform support."
+          "text": "For rentals, hosts pay a 12.9% commission and renters pay a 12.9% service fee. These fees cover secure payments, messaging, and platform support."
         }
       }
     ]
@@ -52,7 +52,7 @@ const PricingCalculator = () => {
 
   const transparencyPoints = [
     { icon: Eye, title: "No hidden fees", description: "What you see is what you pay. Period." },
-    { icon: Percent, title: "Simple commission", description: "12.9% on sales, 3% host / 12% renter on rentals." },
+    { icon: Percent, title: "Simple commission", description: "8.7% on new equipment sales; 12.9% host / 12.9% renter on rentals." },
     { icon: CreditCard, title: "Pay in Person option", description: "Handle payment directly — completely free." },
     { icon: ShieldCheck, title: "Buyer protection included", description: "Secure checkout protects both parties." }];
 
@@ -60,7 +60,7 @@ const PricingCalculator = () => {
     <>
       <SEO
         title="Vendibook Fees Calculator — See Exact Costs"
-        description="Calculate your exact payout or buyer cost before you list. 12.9% buyer fee, $0 host fees, no surprises. Try the calculator free."
+        description="Calculate your exact payout or buyer cost before you list. 8.7% seller fee for new equipment sales and no Vendibook buyer fee. Rental fees are shown separately. Try the calculator free."
         canonical="https://vendibook.com/pricing-calculator"
       />
       <JsonLd schema={[faqSchema, breadcrumbSchema]} />

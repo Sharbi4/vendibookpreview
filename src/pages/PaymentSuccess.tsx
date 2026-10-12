@@ -603,7 +603,7 @@ const PaymentSuccess = () => {
                           Seller Payout Timeline
                         </h4>
                         <p className="text-xs text-muted-foreground mt-1">
-                          Funds will be released to the seller within <span className="font-medium text-blue-600 dark:text-blue-400">2-3 business days</span> after you confirm receipt. The seller will receive their payout minus the 12.9% platform fee.
+                          Your order records show the agreed seller fee and current payout status. Delivery confirmation and provider requirements determine when funds are eligible for release.
                         </p>
                       </div>
                     </div>
@@ -1028,7 +1028,7 @@ const PaymentSuccess = () => {
                             </div>
                             <div className="flex items-center gap-1.5">
                               <div className="w-2 h-2 rounded-full bg-blue-500"></div>
-                              <span className="text-muted-foreground">Platform fee: <span className="font-medium text-foreground">12.9%</span></span>
+                              <span className="text-muted-foreground">Platform fee: <span className="font-medium text-foreground">As agreed on this order</span></span>
                             </div>
                           </div>
                         </div>

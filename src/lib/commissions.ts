@@ -39,7 +39,7 @@ export function calculateRentalFees(basePrice: number, deliveryFee: number = 0) 
 
 /**
  * Calculate sale fees (seller-side only)
- * Seller pays 12.9%, Buyer pays nothing extra
+ * New equipment seller rate comes from FEE_CONFIG; buyer platform fee is zero
  * Optional freight cost for seller-paid shipping
  * Pay-in-Person (cash) sales are 100% free — no commission collected.
  */

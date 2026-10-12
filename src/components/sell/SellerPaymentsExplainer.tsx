@@ -25,7 +25,7 @@ import {
  *  - Publishing is free and never gated on verification, payout setup,
  *    PayPal setup, financing, membership, or any paid add-on.
  *  - PayPal is the active online checkout provider.
- *  - Vendibook records seller proceeds minus the 12.9% seller platform fee and
+ *  - Vendibook records seller proceeds minus the 8.7% seller platform fee and
  *    issues payouts through its reviewed payout workflow. Never describe payouts
  *    as instant, automated, split-settled, or held by a third party.
  *  - Pay-in-person sales carry no Vendibook seller platform fee.
@@ -142,7 +142,7 @@ const SellerPaymentsExplainer = ({
             </h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
               For a completed Vendibook-processed sale, Vendibook records your proceeds minus the
-              12.9% seller platform fee. The payout is issued through Vendibook&rsquo;s current
+              8.7% seller platform fee. The payout is issued through Vendibook&rsquo;s current
               reviewed payout workflow to the PayPal, Venmo, Cash App, or ACH destination you saved
               in your dashboard.
             </p>

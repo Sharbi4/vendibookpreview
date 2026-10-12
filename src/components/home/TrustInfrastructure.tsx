@@ -166,7 +166,7 @@ const TrustInfrastructure = () => {
                 </h3>
 
                 <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-                  Create an account, list an asset, or book a rental in minutes. Free to list — the 12.9% platform fee applies only when a transaction is paid through Vendibook.
+                  Create an account, list an asset, or book a rental in minutes. Free to list — new online equipment sales carry an 8.7% seller fee for Standard and Pro. Rental fees are separate.
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-2.5 shrink-0">

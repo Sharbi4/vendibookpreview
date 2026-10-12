@@ -25,7 +25,8 @@ const ROWS: Array<{ label: string; free: string; growth: string }> = [
   { label: 'Featured placement', free: 'Standard',        growth: 'Monthly Featured Boost credit' },
   { label: 'AI listing tools',   free: 'Basic templates', growth: 'Full tools bundle' },
   { label: 'PermitPath',         free: 'Free checklist',  growth: 'Plus tracker' },
-  { label: 'Fees',               free: '12.9%',           growth: '10.9% your side' },
+  { label: 'Online equipment sales', free: '8.7%', growth: '8.7%' },
+  { label: 'Rental host fees', free: '12.9%', growth: '10.9% (saving capped)' },
   { label: 'Support',            free: 'Standard',        growth: 'Priority' },
 ];
 

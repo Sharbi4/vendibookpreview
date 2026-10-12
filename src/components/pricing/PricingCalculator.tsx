@@ -16,7 +16,7 @@ import {
 
 // Competitor data for comparison
 const competitors = [
-  { name: 'Vendibook', sellerFee: 12.9, note: 'Full buyer & seller protection' },
+  { name: 'Vendibook', sellerFee: SALE_SELLER_FEE_PERCENT, note: 'Full buyer & seller protection' },
   { name: 'eBay', sellerFee: 13.25, note: 'Additional payment fees apply' },
   { name: 'Facebook Marketplace', sellerFee: 5, note: 'Limited buyer protection' },
   { name: 'Traditional Broker', sellerFee: 20, note: 'Slow process, high overhead' },

@@ -3,7 +3,7 @@
  *
  * Rules enforced here:
  *  - Every fee, tier price, and window matches the live config.
- *    Commission: 12.9% (src/lib/commissions.ts); Vendibook Pro seller/host
+ *    Commission: 12.9% (src/lib/commissions.ts); Vendibook Pro rental host
  *      side 10.9%, savings capped at $500 per completed transaction
  *      (src/lib/fees/proFee.ts).
  *    Plans: Free / Vendibook Pro $79/mo (monetization_products.vendibook_pro).
@@ -73,7 +73,7 @@ const PRICING_CATEGORY: FaqCategory = {
   id: "pricing-fees",
   title: "Pricing, fees & financing",
   blurb:
-    "Free to list. 12.9% only when a transaction runs through Vendibook — and $0 when a sale is paid in person.",
+    "Free to list. New online equipment sales carry an 8.7% seller commission for Standard and Pro sellers. Eligible pay-in-person equipment sales remain free. Rental fees are separate.",
   // Namespaced: several pricing FAQ ids (e.g. "payout-timing") also exist as
   // full entries in the selling category. Prefixing keeps entry ids unique.
   entries: PRICING_FAQ.map((e) => ({
@@ -302,7 +302,7 @@ export const faqCategories: FaqCategory[] = [
         id: "list-for-free",
         question: "Is it free to list on Vendibook?",
         answer:
-          "Yes. Creating an account and publishing a standard listing are free, subject to the active-listing limit on your plan. Identity verification is not required to publish. You only pay when a sale or booking completes on-platform (12.9% seller/host commission, 10.9% with active Vendibook Pro) or when you buy an optional upgrade like Featured Boost.",
+          "Yes. Creating an account and publishing a standard listing are free, subject to the active-listing limit on your plan. Identity verification is not required to publish. You only pay when a sale or booking completes on-platform (8.7% on new online equipment sales; rentals retain their host and renter rates) or when you buy an optional upgrade like Featured Boost.",
         actions: [A.createListing],
       },
       {
@@ -330,7 +330,7 @@ export const faqCategories: FaqCategory[] = [
         id: "seller-fees",
         question: "What are the seller fees?",
         answer:
-          "12.9% platform commission on sales paid through Vendibook checkout. Buyers pay $0 in platform fees. Pay-in-Person equipment sales are 100% free (no commission, no fee) since we're not processing payment. Rentals: 12.9% host commission + 12.9% renter service fee. Active Vendibook Pro members pay 10.9% on the seller/host side, with savings capped at $500 per completed transaction.",
+          "8.7% platform commission on new eligible online equipment sales for Standard and Pro sellers. Buyers pay $0 in platform fees. Pay-in-Person equipment sales are 100% free (no commission, no fee) since we're not processing payment. Rentals: 12.9% host commission + 12.9% renter service fee. Active Vendibook Pro members pay 10.9% on the rental host side, with savings capped at $500 per completed transaction.",
         actions: [A.pricing],
       },
       {
@@ -414,14 +414,14 @@ export const faqCategories: FaqCategory[] = [
         id: "tiers-overview",
         question: "What plans are available?",
         answer:
-          "Two: Free (2 active listings, core buying, selling and renting) and Vendibook Pro at {{price:vendibook_pro}} (unlimited listings, the Premium Tools bundle including PricePilot and PermitPath Plus, advanced seller analytics, one Featured Boost credit each paid billing period, and a reduced 10.9% seller/host fee capped at $500 saved per completed transaction). PermitPath Plus is also available on its own for {{price:permit_path_plus_monthly}}. See the full comparison on the pricing page.",
+          "Two: Free (2 active listings, core buying, selling and renting) and Vendibook Pro at {{price:vendibook_pro}} (unlimited listings, the Premium Tools bundle including PricePilot and PermitPath Plus, advanced seller analytics, one Featured Boost credit each paid billing period, and a reduced 10.9% rental host fee capped at $500 saved per completed transaction). PermitPath Plus is also available on its own for {{price:permit_path_plus_monthly}}. See the full comparison on the pricing page.",
         actions: [A.pricing],
       },
       {
         id: "pro-benefits",
         question: "What exactly do I get with Vendibook Pro?",
         answer:
-          "Vendibook Pro is {{price:vendibook_pro}}, billed monthly in advance, cancel anytime. It includes: a reduced 10.9% seller/host transaction fee instead of 12.9% (savings capped at $500 per completed transaction); one Featured Boost credit each paid billing period (unused credits do not roll over, and an activated boost finishes its 30-day run even if Pro later ends); unlimited active listings; the Premium Tools bundle and advanced seller analytics; and PermitPath Plus included. Cancelling stops the next renewal and your benefits stay active through the period you already paid for — there is no prorated refund simply for cancelling early.",
+          "Vendibook Pro is {{price:vendibook_pro}}, billed monthly in advance, cancel anytime. It includes: a reduced 10.9% rental host transaction fee instead of 12.9% (savings capped at $500 per completed transaction); one Featured Boost credit each paid billing period (unused credits do not roll over, and an activated boost finishes its 30-day run even if Pro later ends); unlimited active listings; the Premium Tools bundle and advanced seller analytics; and PermitPath Plus included. Cancelling stops the next renewal and your benefits stay active through the period you already paid for — there is no prorated refund simply for cancelling early.",
         keywords: ["pro", "membership", "benefits", "10.9", "boost credit"],
         actions: [A.pricing, A.subscription],
       },
@@ -535,7 +535,7 @@ export const faqCategories: FaqCategory[] = [
         id: "addon-differences",
         question: "What's the difference between Featured Boost, Pro Listing, and Vendibook Pro?",
         answer:
-          "Featured Boost buys visibility for one listing for 30 days. Pro Listing is a premium upgrade applied to one listing for 30 days. Vendibook Pro is an account-level monthly membership: unlimited listings, the reduced 10.9% seller/host fee, premium tools, PermitPath Plus, and a Featured Boost credit each paid billing period.",
+          "Featured Boost buys visibility for one listing for 30 days. Pro Listing is a premium upgrade applied to one listing for 30 days. Vendibook Pro is an account-level monthly membership: unlimited listings, the reduced 10.9% rental host fee, premium tools, PermitPath Plus, and a Featured Boost credit each paid billing period.",
         actions: [A.pricing],
       },
       {
@@ -597,7 +597,7 @@ export const faqCategories: FaqCategory[] = [
         id: "fee-transparency",
         question: "What are Vendibook's fees, exactly?",
         answer:
-          "Sales through Vendibook checkout: 12.9% commission from the seller, $0 from the buyer. Rentals: 12.9% commission from the host + 12.9% service fee on the renter. Pay-in-Person equipment sales: 100% free (no commission, no fee). Active Vendibook Pro members pay 10.9% on the seller/host side, capped at $500 saved per completed transaction. Subscriptions and one-time upgrades are separate — see the pricing page.",
+          "New online equipment sales: 8.7% commission from Standard and Pro sellers, $0 from the buyer. Rentals: 12.9% commission from the host + 12.9% service fee on the renter. Pay-in-Person equipment sales: 100% free (no commission, no fee). Active Vendibook Pro members pay 10.9% on the rental host side, capped at $500 saved per completed transaction. Subscriptions and one-time upgrades are separate — see the pricing page.",
         actions: [A.pricing],
       },
       {

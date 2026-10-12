@@ -209,15 +209,15 @@ const COST_ROWS: { label: string; value: string; note: string }[] = [
   },
   {
     label: 'A PayPal online checkout sale',
-    value: '12.9% seller fee',
-    note: 'Deducted from the completed sale. Vendibook Pro members pay 10.9% instead, up to $500 saved per transaction.',
+    value: '8.7% seller fee',
+    note: 'Applies to the equipment price for new online sales on Standard and Pro. Tax, separately priced transport and provider charges are separate.',
   },
 ];
 
 const FAQS: { q: string; a: string }[] = [
   {
     q: 'How much does it cost to sell?',
-    a: 'Publishing is free. A sale completed in person carries no Vendibook commission. A sale completed through PayPal online checkout carries a 12.9% seller fee, deducted from the completed sale — 10.9% for active Vendibook Pro members, up to $500 saved per transaction.',
+    a: 'Publishing is free. A sale completed in person carries no Vendibook commission. A sale completed through PayPal online checkout carries an 8.7% seller fee on new equipment sales, for both Standard and Pro sellers.',
   },
   {
     q: 'Do I need to verify my identity or set up payouts before publishing?',

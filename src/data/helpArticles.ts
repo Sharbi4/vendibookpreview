@@ -2507,8 +2507,8 @@ Payouts are sent to the payout destination saved in your account (PayPal, Venmo,
         id: 'fee-breakdown',
         title: 'Fee Breakdown',
         content: `**Seller / Host Commission**
-- 12.9% of the completed sale or booking subtotal
-- 10.9% for active Vendibook Pro members, with savings capped at $500 per completed transaction
+- New online equipment sales: 8.7% of the equipment price for Standard and Pro sellers, excluding tax and separately priced transport
+- Rentals: 12.9% host commission; 10.9% for active Pro hosts, with savings capped at $500 per completed rental
 - Deducted from your payout
 
 **Renter Service Fee**
@@ -3005,7 +3005,7 @@ Review your listing and go live. Your truck will appear in search results immedi
       {
         id: 'fees',
         title: 'Fees and Payouts',
-        content: `**Seller Commission:** 12.9% of the sale price
+        content: `**Seller Commission:** 8.7% of the equipment price for new online sales, for Standard and Pro sellers
 
 Buyers don't pay a platform fee (though shipping/freight may apply if selected).
 
@@ -3092,7 +3092,7 @@ Most buyers expect to negotiate. Price 5-10% higher than your minimum acceptable
 - Transparency builds trust
 
 **Forgetting Fees**
-- Factor in the Vendibook seller commission (12.9%, or 10.9% with active Vendibook Pro)
+- Factor in the Vendibook seller commission (8.7% for new online equipment sales on Standard and Pro)
 - Consider any shipping costs you will cover`
       }
     ],
@@ -3161,7 +3161,7 @@ Once buyer confirms through Vendibook, funds are released.`
 - Auto-release if no issues reported after 7 days
 
 **Your Payout**
-- Sale price minus the Vendibook seller commission (12.9%, or 10.9% with active Vendibook Pro; $0 if the sale is settled in person)
+- Sale price minus the Vendibook seller commission (8.7% for new online equipment sales on Standard and Pro; $0 if the sale is settled in person)
 - Funds sent to your connected bank account
 - Typically arrives in 2-5 business days
 

@@ -124,7 +124,7 @@ const STARTER_FEATURES = [
 ];
 
 const PRO_FEATURES = [
-  '10.9% seller/host fee instead of 12.9% — up to $500 saved per completed transaction',
+  '10.9% rental host fee instead of 12.9% — up to $500 saved per completed transaction',
   '1 Featured Boost credit every billing period',
   'PricePilot appraisals included — comparable-backed valuations for your equipment',
   'PermitPath Plus included — save and track permit roadmaps',
@@ -357,7 +357,7 @@ const Pricing = () => {
     <div className="sale-light min-h-screen flex flex-col">
       <SEO
         title="Vendibook Pricing — Free & Vendibook Pro Membership"
-        description="Start free on Vendibook or go Pro for a lower 10.9% seller fee, a monthly Featured Boost credit and premium tools. Cancel anytime."
+        description="Start free on Vendibook or go Pro for a 10.9% rental host fee, a monthly Featured Boost credit and premium tools. Cancel anytime."
         canonical="/pricing"
         image="https://vendibook.com/images/social/vendibook-og-pricing.jpg"
         imageAlt="Vendibook plans and pricing"
@@ -429,8 +429,8 @@ const Pricing = () => {
                   $0<span className="ml-1.5 text-base font-normal text-muted-foreground">/month</span>
                 </p>
                 <p className="mt-2 text-sm text-muted-foreground">
-                  <span className="font-semibold text-foreground">12.9%</span> seller/host
-                  fee on completed transactions. No listing fees, no contract.
+                  <span className="font-semibold text-foreground">12.9%</span> rental host
+                  fee. New online equipment sales are 8.7% for Standard and Pro. No listing fees.
                 </p>
 
                 <ul className="mt-8 space-y-3.5">
@@ -453,11 +453,11 @@ const Pricing = () => {
                     summary="Everything you need to list, get paid and close a deal on Vendibook. No listing fees and no contract."
                     included={[
                       'Unlimited listings for sale or for rent',
-                      '12.9% seller/host fee on completed transactions',
+                      '8.7% on new online equipment sales; 12.9% rental host fee',
                       ...STARTER_FEATURES.slice(1),
                     ]}
                     bestFor="Anyone listing their first truck, trailer, cart or space."
-                    billing="No charge. You only pay a 12.9% seller/host fee when a transaction completes."
+                    billing="No listing fee. New online equipment sales: 8.7%. Rental host fee: 12.9%."
                     finePrint={[
                       'Pay-in-person sales are free — no commission and no buyer fee.',
                       'Rentals paid in person still owe the host commission.',
@@ -494,8 +494,8 @@ const Pricing = () => {
                   <span className="ml-1.5 text-base font-normal text-white/60">/month</span>
                 </p>
                 <p className="relative mt-2 text-sm text-white/70">
-                  <span className="font-semibold text-white">10.9%</span> seller/host fee
-                  — our lowest rate. Cancel anytime.
+                  <span className="font-semibold text-white">10.9%</span> rental host fee
+                  on eligible rentals. Equipment sales: 8.7% on both plans. Cancel anytime.
                 </p>
 
                 {isPro && (
@@ -524,13 +524,13 @@ const Pricing = () => {
                     className="text-white/65 hover:text-white"
                     title="Vendibook Pro"
                     priceLabel={`${loadingSubs ? '—' : formatUsd(proPrice)}/month`}
-                    summary="A lower seller/host fee, a Featured Boost credit every billing period and the premium tool set — on one monthly membership."
+                    summary="A lower rental host fee, a Featured Boost credit every billing period and the premium tool set — on one monthly membership."
                     included={PRO_FEATURES}
                     bestFor="Sellers and hosts closing regularly, where the fee difference outweighs the membership."
                     billing="Recurring monthly through PayPal · cancel anytime."
                     statusLabel={isPro ? 'Your plan' : null}
                     finePrint={[
-                      'The 10.9% rate applies to the seller/host side of a completed transaction, up to $500 saved per transaction.',
+                      'The 10.9% rate applies to the rental host side of a completed transaction, up to $500 saved per transaction.',
                       'The Featured Boost credit is 1 per billing period and does not roll over.',
                       'Cancel anytime — access continues through the end of the current paid period.',
                     ]}
@@ -580,7 +580,8 @@ const Pricing = () => {
               </div>
               <dl className="grid divide-y divide-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
                 {[
-                  { who: 'Sellers and hosts', rate: '12.9%', note: '10.9% with Vendibook Pro, deducted from your payout.' },
+                  { who: 'Equipment sellers', rate: '8.7%', note: 'New online sales, for Standard and Pro. Equipment price only; excludes tax and separately priced transport.' },
+                  { who: 'Rental hosts', rate: '12.9%', note: '10.9% with Pro, savings capped at $500 per completed rental.' },
                   { who: 'Renters', rate: '12.9%', note: 'Service fee shown at checkout before you pay.' },
                   { who: 'Buyers', rate: '$0', note: 'No Vendibook fee on purchases.' },
                 ].map((row) => (

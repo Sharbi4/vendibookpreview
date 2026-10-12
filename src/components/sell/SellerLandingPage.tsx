@@ -66,7 +66,7 @@ const FAQ_DATA = (asset: string): { q: string; a: string }[] => [
   },
   {
     q: 'How do I get paid?',
-    a: 'You choose how your listing accepts payment: PayPal Checkout online, payment in person, or both. For a completed Vendibook-processed sale, Vendibook records your proceeds minus the 12.9% seller platform fee and issues the payout through Vendibook\u2019s current reviewed payout workflow to the PayPal, Venmo, Cash App, or ACH destination you saved. Pay-in-person sales are arranged directly with the buyer and carry no Vendibook seller platform fee.',
+    a: 'You choose how your listing accepts payment: PayPal Checkout online, payment in person, or both. For a completed Vendibook-processed sale, Vendibook records your proceeds minus the 8.7% seller platform fee and issues the payout through Vendibook\u2019s current reviewed payout workflow to the PayPal, Venmo, Cash App, or ACH destination you saved. Pay-in-person sales are arranged directly with the buyer and carry no Vendibook seller platform fee.',
   },
   {
     q: `Can I upload a video of my ${asset}?`,
@@ -82,7 +82,7 @@ const FAQ_DATA = (asset: string): { q: string; a: string }[] => [
   },
   {
     q: 'Can buyers finance the purchase?',
-    a: 'Eligible buyers can apply with third-party financing partners directly from a for-sale listing \u2014 you do not manage the application. A completed Vendibook online-checkout sale carries the standard 12.9% seller fee. Vendibook is not a lender: it does not approve applicants, set rates or terms, or guarantee funding.',
+    a: 'Eligible buyers can apply with third-party financing partners directly from a for-sale listing \u2014 you do not manage the application. A completed Vendibook online-checkout sale carries the standard 8.7% seller fee. Vendibook is not a lender: it does not approve applicants, set rates or terms, or guarantee funding.',
   },
   {
     q: 'What should I include in my listing?',
