@@ -2,7 +2,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 vi.mock("../../../supabase/functions/_shared/paypalApiLog.ts", () => ({ logPayPalApiCall: vi.fn() }));
 import { createPayPalOrder } from "../../../supabase/functions/_shared/paypal.ts";
 
-const env: Record<string,string> = {};
+const env = vi.hoisted(() => {
+  const values: Record<string,string> = {};
+  vi.stubGlobal("Deno", { env: { get: (key: string) => values[key] } });
+  return values;
+});
 let requests: { url: string; init: RequestInit }[];
 beforeEach(() => {
   for (const key of Object.keys(env)) delete env[key];
