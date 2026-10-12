@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useRef } from 'react';
 import { playNotificationSound } from '@/lib/notificationSound';
+import { offerErrorMessage } from '@/lib/offers/offerTerms';
 
 export interface HostOffer {
   id: string;
@@ -100,26 +101,13 @@ export const useHostOffers = () => {
       counterAmount?: number;
       counterMessage?: string;
     }) => {
-      const updateData: Record<string, unknown> = {
-        status,
-        seller_response: response || null,
-        responded_at: new Date().toISOString(),
-      };
-
-      // Add counter-offer fields if countering
-      if (status === 'countered' && counterAmount) {
-        updateData.counter_amount = counterAmount;
-        updateData.counter_message = counterMessage || null;
-        updateData.counter_expires_at = new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString();
-      }
-
-      const { error } = await supabase
-        .from('offers')
-        .update(updateData)
-        .eq('id', offerId)
-        .eq('seller_id', user?.id);
-
+      const action = status === 'accepted' ? 'accept' : status === 'declined' ? 'decline' : 'counter';
+      const { data: result, error } = await supabase.rpc('respond_to_offer' as never, {
+        p_offer_id: offerId, p_action: action, p_counter_amount: status === 'countered' ? counterAmount ?? null : null,
+        p_message: (status === 'countered' ? counterMessage : response) || null,
+      } as never);
       if (error) throw error;
+      if (result === 'expired') throw new Error('This offer has expired.');
 
       // Send email notification to buyer
       const eventType = status === 'countered' ? 'counter_offer' : 
@@ -135,7 +123,7 @@ export const useHostOffers = () => {
     onSuccess: (_, { status }) => {
       queryClient.invalidateQueries({ queryKey: ['host-offers'] });
       const messages = {
-        accepted: { title: 'Offer accepted!', desc: 'The buyer will be notified to complete the purchase.' },
+        accepted: { title: 'Offer accepted', desc: 'Price agreed. The buyer has not paid yet — an itemized invoice comes next.' },
         declined: { title: 'Offer declined', desc: 'The buyer has been notified.' },
         countered: { title: 'Counter-offer sent!', desc: 'The buyer has 48 hours to respond.' },
       };
@@ -148,7 +136,7 @@ export const useHostOffers = () => {
       console.error('Error responding to offer:', error);
       toast({
         title: 'Failed to respond',
-        description: 'Please try again.',
+        description: error instanceof Error && /expired/.test(error.message) ? error.message : offerErrorMessage(error),
         variant: 'destructive',
       });
     },

@@ -2,7 +2,7 @@
 // Looks up offer + buyer/seller, picks the right template + recipient, and
 // sends through the shared transactional email helper so all sends are queued, retried, and logged.
 import { createClient } from 'npm:@supabase/supabase-js@2';
-import { getCaller, isAdminUser, isBackendCaller, forbiddenResponse, unauthorizedResponse } from "../_shared/callerGuard.ts";
+import { getCaller, isBackendCaller, forbiddenResponse, unauthorizedResponse } from "../_shared/callerGuard.ts";
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 
 const corsHeaders = {
@@ -29,12 +29,30 @@ Deno.serve(async (req) => {
       .eq('id', offer_id)
       .single();
     if (offerErr || !offer) throw new Error(`Offer not found: ${offerErr?.message}`);
+    // The event must match the offer's recorded state, and only the party who
+    // caused that transition may trigger its email. Prevents forged/spam sends.
+    const counterPath = offer.counter_amount != null;
+    const expected: Record<EventType, { ok: boolean; actor: string }> = {
+      new_offer: { ok: offer.status === 'pending', actor: offer.buyer_id },
+      counter_offer: { ok: offer.status === 'countered', actor: offer.seller_id },
+      offer_accepted: { ok: offer.status === 'accepted' && !counterPath, actor: offer.seller_id },
+      offer_declined: { ok: offer.status === 'declined' && !counterPath, actor: offer.seller_id },
+      counter_accepted: { ok: offer.status === 'accepted' && counterPath, actor: offer.buyer_id },
+      counter_declined: { ok: offer.status === 'declined' && counterPath, actor: offer.buyer_id },
+    };
+    const rule = expected[event_type];
+    if (!rule) return new Response(JSON.stringify({ error: 'unknown event_type' }), { status: 400, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     if (!(await isBackendCaller(req))) {
       const caller = await getCaller(req);
       if (!caller) return unauthorizedResponse(corsHeaders);
-      if (caller.id !== offer.buyer_id && caller.id !== offer.seller_id && !(await isAdminUser(caller.id))) {
-        return forbiddenResponse(corsHeaders);
-      }
+      if (caller.id !== rule.actor) return forbiddenResponse(corsHeaders);
+    }
+    if (!rule.ok) {
+      return new Response(JSON.stringify({ error: 'event does not match offer state' }), { status: 409, headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
+    }
+    const { error: dupErr } = await supabase.from('offer_notification_sends').insert({ offer_id: offer.id, event_type });
+    if (dupErr) {
+      return new Response(JSON.stringify({ skipped: true, reason: 'already sent' }), { headers: { ...corsHeaders, 'Content-Type': 'application/json' } });
     }
 
     const [{ data: seller }, { data: buyer }] = await Promise.all([
@@ -47,7 +65,7 @@ Deno.serve(async (req) => {
     let recipient: any = null;
     let templateName = '';
     let templateData: Record<string, any> = {};
-    const amount = Number(offer.counter_amount || offer.offer_amount) || 0;
+    const amount = Number(offer.agreed_amount ?? offer.counter_amount ?? offer.offer_amount) || 0;
     const expiresAt = offer.expires_at
       ? new Date(offer.expires_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
       : undefined;
