@@ -145,18 +145,18 @@ serve(async (req) => {
     // refresh can never create two transactions. The fulfillment selection can
     // legitimately have changed since that row was created, so re-sync it —
     // otherwise the buyer would pay against a stale delivery amount.
-    const { data: existing } = await admin
+    const { data: existing, error: existingError } = await admin
       .from("sale_transactions")
       .select("id, status, amount")
       .eq("listing_id", listingId)
       .eq("buyer_id", user.id)
       .eq("invoice_required", requestOnly)
       .in("status", ["pending", "payment_failed"])
-      .or(`status.eq.payment_failed,created_at.gt.${new Date(Date.now() - 60 * 60_000).toISOString()}`)
       .order("created_at", { ascending: false })
       .limit(1)
       .maybeSingle();
 
+    if (existingError) return jsonError(503,'request_unavailable','Unable to verify your existing purchase request.');
     if (existing) {
       if (requestOnly) {
         const { data: submitted, error: submittedError } = await admin.from('sale_purchase_requests').select('id').eq('sale_id',existing.id).maybeSingle();
@@ -222,6 +222,15 @@ serve(async (req) => {
       .select("id")
       .single();
 
+    if (insertErr?.code === '23505') {
+      // Another request may have inserted the same intent while this one priced
+      // fulfillment. Reuse its canonical server values; never overwrite them.
+      const { data: concurrent, error: concurrentError } = await admin.from("sale_transactions")
+        .select("id,amount").eq("listing_id",listingId).eq("buyer_id",user.id)
+        .eq("invoice_required",true).in("status",["pending","payment_failed"]).maybeSingle();
+      if (!concurrentError && concurrent) return respondWithIntent(concurrent.id,Number(concurrent.amount),true);
+      return jsonError(409,'request_changed','This request has closed or changed. Reload and review a new purchase agreement.');
+    }
     if (insertErr || !created) {
       return jsonError(500, "intent_failed", "We couldn't start this purchase. Please try again.");
     }

@@ -20,6 +20,8 @@ await db.exec(await readFile('supabase/migrations/20261012170000_invoice_live_va
 await db.exec("alter table listings add column accept_cash_payment boolean, add column accept_paypal_checkout boolean");
 await db.exec(await readFile('supabase/migrations/20261012180000_retire_new_cash_sales.sql','utf8'));
 await db.exec(await readFile('supabase/migrations/20261012200000_commerce_email_delivery.sql','utf8'));
+await db.exec("alter table sale_transactions add column invoice_required boolean not null default false");
+await db.exec(await readFile('supabase/migrations/20261012210000_invoice_request_retry_safety.sql','utf8'));
 const id = n => `00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const buyer=id(1), seller=id(2), other=id(3), admin=id(4), listing=id(5), sale=id(6), sale2=id(7);
 const query=(sql,params=[])=>db.query(sql,params);
@@ -27,6 +29,7 @@ for(const u of [buyer,seller,other,admin])await query('insert into auth.users va
 await query('insert into profiles values($1,$2,$2)',[seller,'Legal Seller LLC']);
 await query("insert into listings(id,host_id,status,mode,freight_payer,title) values($1,$2,'published','sale','seller','Truck')",[listing,seller]);
 for(const [s,b] of [[sale,buyer],[sale2,other]]) await query("insert into sale_transactions(id,listing_id,buyer_id,seller_id,status,terms_id,amount,delivery_fee,freight_cost,fulfillment_type,buyer_name,buyer_email,fee_rate_pct) values($1,$2,$3,$4,'pending',$5,5000,200,900,'vendibook_freight','Buyer','buyer@example.com',8.7)",[s,listing,b,seller,id(8)]);
+await query("update sale_transactions set invoice_required=true");
 let count=0;
 const test=async(name,fn)=>{await fn(); count++; console.log('PASS '+name);};
 const submit=(s,b,ack=true)=>query('select commerce_submit_request($1,$2,$3,$4) as id',[s,b,'purchase-request-2026-10-11',ack]);
@@ -63,6 +66,12 @@ await query('select commerce_claim_invoice($1,$2)',[sale,buyer]);
 await test('in-flight payment cannot release reservation',async()=>{await assert.rejects(query('select commerce_cancel_invoice($1,$2)',[invoice,buyer]),/reconciliation/);await query("update sale_invoices set due_at=now()-interval '1 day'");await query('select commerce_expire_unpaid()');assert.equal((await query('select status from sale_invoices')).rows[0].status,'payment_processing');});
 await test('unrelated users cannot read invoice data',async()=>{await query("select set_config('test.uid',$1,false)",[other]);await db.exec('set role authenticated');assert.equal((await query('select * from sale_invoices')).rows.length,0);await assert.rejects(query('select commerce_claim_invoice($1,$2)',[sale,buyer]),/permission denied/);await db.exec('reset role');});
 await test('public badge reveals only listing status',async()=>{await db.exec('set role anon');const r=(await query('select * from equipment_reservation_status($1)',[[listing]])).rows;assert.deepEqual(r,[{listing_id:listing,status:'payment_pending'}]);await db.exec('reset role');});
+await test('pending invoice intent is unique and cancelled requests release it',async()=>{
+ await assert.rejects(query("insert into sale_transactions(id,listing_id,buyer_id,status,invoice_required) values($1,$2,$3,'pending',true)",[id(92),listing,other]),/unique constraint/);
+ await action(request2,other,'cancel');
+ assert.equal((await query('select status from sale_transactions where id=$1',[sale2])).rows[0].status,'cancelled');
+ await query("insert into sale_transactions(id,listing_id,buyer_id,status,invoice_required) values($1,$2,$3,'pending',true)",[id(92),listing,other]);
+});
 await test('commerce email leases prevent duplicate work and retain failed sends',async()=>{
  const token=id(80),retry=id(81);
  const claimed=(await query('select * from claim_commerce_emails($1)',[token])).rows;
