@@ -184,6 +184,19 @@ CATALOG.host_starter_annual = { ...CATALOG.host_starter, slug: 'host_starter_ann
 CATALOG.host_growth_annual = { ...CATALOG.host_growth, slug: 'host_growth_annual' };
 CATALOG.host_operator_annual = { ...CATALOG.host_operator, slug: 'host_operator_annual' };
 
+CATALOG.vendibook_pro = {
+  slug: 'vendibook_pro',
+  promise: 'Your listing deserves more than visibility. Pro helps connect your equipment with potential buyers.',
+  bestFor: 'Eligible equipment sellers seeking reviewed buyer discovery and measurable marketing activity. Activation and capacity apply; no guaranteed leads or sales.',
+  outcomes: [
+    { icon: Search, title: 'BuyerMatch AI', body: 'Relevant buyer discovery based on equipment, geography, budget, and documented buying intent.' },
+    { icon: Megaphone, title: 'Priority Buyer Outreach', body: 'Operator-reviewed research and authorized outreach. Pending activation does not mean research has started.' },
+    { icon: BarChart3, title: 'Activity reports', body: 'See real discovered matches, documented contact attempts, actual responses, and qualified conversations separately.' },
+    { icon: TrendingUp, title: 'Your existing Pro benefits', body: 'Included Featured Boost credits, priority visibility, PricePilot, and PermitPath Plus remain available. Separately purchased services stay separate.' },
+  ],
+  screenshots: [],
+};
+
 export function getLearnMoreEntry(slug: string): LearnMoreEntry | null {
   const resolved = resolveLearnMoreSlug(slug);
   return CATALOG[resolved] ?? CATALOG[slug] ?? null;

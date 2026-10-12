@@ -10,7 +10,7 @@ Status: reviewed manual research/import implementation. Automatic Muse API integ
 - No documented Muse API was found. Existing Muse instructions are a manual public buyer-intent research workflow in docs/growth/buyer-desk/muse-prompts-2026-10-05.md. This release implements secure JSON import, not an invented API. CSV must be converted to the documented JSON format before import.
 
 ## Deployment order
-1. Deploy migrations 20261012230000_buyermatch_foundation.sql and 20261012231000_buyermatch_report_email.sql through Lovable, after the existing invoice migrations. Do not enable fulfillment yet.
+1. Deploy migrations 20261012230000_buyermatch_foundation.sql , 20261012231000_buyermatch_report_email.sql and 20261012232000_buyermatch_catalog_copy.sql through Lovable, after the existing invoice migrations. Do not enable fulfillment yet.
 2. Deploy the UI and the updated expire-stale-offers function with its buyerMatchEmail helper. Existing authenticated maintenance drains report emails and pauses ineligible campaigns. Confirm the existing scheduler is still invoking it; failures are reported as retry failures.
 3. Open /dashboard/buyermatch as an administrator. Record the approved Muse/manual research procedure in Operational controls. Configure the maximum open campaigns (default three; paused campaigns count). Submissions can be switched off independently.
 4. Verify the actual research, consent/permission review, authorized outreach, opt-out handling, import and review process with controlled test data before enabling fulfillment. Enabling the control does not start any outreach.
@@ -108,3 +108,5 @@ These checks do not constitute a live PayPal purchase, live Muse research run, o
 - supabase/migrations/20261012230000_buyermatch_foundation.sql
 - supabase/migrations/20261012231000_buyermatch_report_email.sql
 - docs/buyermatch/operations.md
+
+- supabase/migrations/20261012232000_buyermatch_catalog_copy.sql
