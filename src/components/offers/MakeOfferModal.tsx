@@ -7,7 +7,10 @@ import { Label } from '@/components/ui/label';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
-import { DollarSign, Send, Tag, Loader2 } from 'lucide-react';
+import { DollarSign, Send, Tag, Loader2, ArrowLeft } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Link } from 'react-router-dom';
+import { OFFER_TERMS_TEXT, OFFER_TERMS_VERSION, OFFER_EXPIRY_HOURS, offerErrorMessage } from '@/lib/offers/offerTerms';
 
 interface MakeOfferModalProps {
   open: boolean;
@@ -33,6 +36,8 @@ export const MakeOfferModal = ({
   const [offerAmount, setOfferAmount] = useState('');
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [step, setStep] = useState<'amount' | 'review'>('amount');
+  const [acknowledged, setAcknowledged] = useState(false);
 
   // Check if user is the owner of this listing
   const isOwner = user?.id === sellerId;
@@ -65,29 +70,15 @@ export const MakeOfferModal = ({
     setIsSubmitting(true);
 
     try {
-      // Create the offer
-      const { data: offer, error: offerError } = await supabase
-        .from('offers')
-        .insert({
-          listing_id: listingId,
-          buyer_id: user.id,
-          seller_id: sellerId,
-          offer_amount: amount,
-          message: message.trim() || null,
-        })
-        .select()
-        .single();
-
+      if (step === 'amount') { setStep('review'); setAcknowledged(false); setIsSubmitting(false); return; }
+      if (!acknowledged) { setIsSubmitting(false); return; }
+      // Server verifies the acknowledgment text/version and records it with the offer.
+      const { data: offerId, error: offerError } = await supabase.rpc('submit_offer' as never, {
+        p_listing_id: listingId, p_amount: Math.round(amount * 100) / 100, p_message: message.trim() || null,
+        p_terms_version: OFFER_TERMS_VERSION, p_terms_text: OFFER_TERMS_TEXT, p_acknowledged: true,
+      } as never);
       if (offerError) throw offerError;
-
-      // Create in-app notification for seller
-      await supabase.from('notifications').insert({
-        user_id: sellerId,
-        type: 'offer',
-        title: 'New Offer Received! 💰',
-        message: `You received a $${amount.toLocaleString()} offer for "${listingTitle}"`,
-        link: '/dashboard',
-      });
+      const offer = { id: offerId as unknown as string };
 
       // Send email notification to seller
       await supabase.functions.invoke('send-offer-notification', {
@@ -107,19 +98,21 @@ export const MakeOfferModal = ({
       });
 
       toast({
-        title: 'Offer sent!',
-        description: 'The seller will be notified of your offer.',
+        title: 'Offer sent',
+        description: 'Nothing has been charged. The seller can accept, decline or counter.',
       });
 
       setOfferAmount('');
       setMessage('');
+      setStep('amount');
+      setAcknowledged(false);
       onOpenChange(false);
       onOfferSent?.();
     } catch (error) {
       console.error('Error submitting offer:', error);
       toast({
         title: 'Failed to send offer',
-        description: 'Please try again later.',
+        description: offerErrorMessage(error),
         variant: 'destructive',
       });
     } finally {
@@ -134,7 +127,7 @@ export const MakeOfferModal = ({
   ];
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={(o) => { if (!o) { setStep('amount'); setAcknowledged(false); } onOpenChange(o); }}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
@@ -147,6 +140,26 @@ export const MakeOfferModal = ({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {step === 'review' ? <>
+            <div className="rounded-xl border border-border bg-muted/40 p-4">
+              <p className="text-sm text-muted-foreground">Your offer for "{listingTitle}"</p>
+              <p className="mt-1 text-2xl font-semibold text-foreground">${Number(offerAmount).toLocaleString()}</p>
+              {message.trim() && <p className="mt-2 text-sm text-muted-foreground line-clamp-3">"{message.trim()}"</p>}
+            </div>
+            <div className="flex items-start gap-3 rounded-xl border border-border p-4">
+              <Checkbox id="offer-ack" checked={acknowledged} onCheckedChange={(v) => setAcknowledged(v === true)} aria-describedby="offer-ack-text" className="mt-0.5" />
+              <Label htmlFor="offer-ack" id="offer-ack-text" className="text-sm font-normal leading-relaxed text-foreground">{OFFER_TERMS_TEXT}</Label>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              See the <Link to="/terms" target="_blank" className="text-primary underline">Terms of Service</Link>, <Link to="/legal/payments-terms" target="_blank" className="text-primary underline">Payments Terms</Link> and <Link to="/privacy" target="_blank" className="text-primary underline">Privacy Policy</Link>. If the seller doesn't respond within {OFFER_EXPIRY_HOURS} hours, the offer expires.
+            </p>
+            <div className="flex gap-3 pt-1">
+              <Button type="button" variant="outline" className="flex-1" onClick={() => setStep('amount')}><ArrowLeft className="h-4 w-4 mr-2" />Edit offer</Button>
+              <Button type="submit" className="flex-1" disabled={isSubmitting || !acknowledged}>
+                {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}Send offer
+              </Button>
+            </div>
+          </> : <>
           <div className="p-3 bg-muted/50 rounded-lg border border-border">
             <div className="flex justify-between items-center">
               <span className="text-sm text-muted-foreground">Asking Price</span>
@@ -212,20 +225,21 @@ export const MakeOfferModal = ({
             <Button
               type="submit"
               className="flex-1"
-              disabled={isSubmitting || !offerAmount}
+              disabled={!offerAmount}
             >
               {isSubmitting ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
               ) : (
                 <Send className="h-4 w-4 mr-2" />
               )}
-              Send Offer
+              Review offer
             </Button>
           </div>
 
           <p className="text-xs text-muted-foreground text-center">
-            Offer expires in 48 hours if not responded to
+            Offer expires in 48 hours if not responded to. You won't be charged.
           </p>
+          </>}
         </form>
       </DialogContent>
     </Dialog>

@@ -54,13 +54,7 @@ export const useBuyerOffers = () => {
 
   const cancelOffer = useMutation({
     mutationFn: async (offerId: string) => {
-      const { error } = await supabase
-        .from('offers')
-        .update({ status: 'cancelled' })
-        .eq('id', offerId)
-        .eq('buyer_id', user?.id)
-        .eq('status', 'pending');
-
+      const { error } = await supabase.rpc('respond_to_offer' as never, { p_offer_id: offerId, p_action: 'cancel' } as never);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -88,20 +82,10 @@ export const useBuyerOffers = () => {
       offerId: string; 
       action: 'accept' | 'decline';
     }) => {
-      const newStatus = action === 'accept' ? 'accepted' : 'declined';
-      
-      const { error } = await supabase
-        .from('offers')
-        .update({ 
-          status: newStatus,
-          // If accepting counter, update offer_amount to counter_amount
-          ...(action === 'accept' ? {} : {}),
-        })
-        .eq('id', offerId)
-        .eq('buyer_id', user?.id)
-        .eq('status', 'countered');
-
+      // Server locks the row, checks expiry and snapshots the agreed price.
+      const { data: result, error } = await supabase.rpc('respond_to_offer' as never, { p_offer_id: offerId, p_action: action } as never);
       if (error) throw error;
+      if (result === 'expired') throw new Error('This counteroffer has expired.');
 
       // Notify seller
       await supabase.functions.invoke('send-offer-notification', {
@@ -116,7 +100,7 @@ export const useBuyerOffers = () => {
       toast({
         title: action === 'accept' ? 'Counter-offer accepted!' : 'Counter-offer declined',
         description: action === 'accept' 
-          ? 'Proceed to complete your purchase.'
+          ? 'Price agreed. Nothing has been charged — an itemized invoice comes next.'
           : 'The seller has been notified.',
       });
     },
