@@ -127,5 +127,18 @@ await test('open campaign limit and unavailable listing checks are enforced',asy
  await db.exec("reset role; update listings set unlisted=true");
  await who(seller);await assert.rejects(()=>act('resume',{campaign_id:campaign.id}));
 });
+await test('brief exports recheck availability and admin authorization',async()=>{
+ await who(seller);await assert.rejects(()=>act('brief',{campaign_id:campaign.id}));
+ await who(admin);await assert.rejects(()=>act('brief',{campaign_id:campaign.id}));
+ await db.exec("reset role; update listings set unlisted=false");
+ await who(seller);await act('resume',{campaign_id:campaign.id});
+ await who(admin);await act('activate',{campaign_id:campaign.id,research_started:true});
+ await db.exec("reset role; update listings set price_sale=12345 where id='"+listing+"'");
+ await who(admin);const brief=await act('brief',{campaign_id:campaign.id});
+ assert.equal(brief.listing.price_sale,12345);
+ await act('settings',{submissions_enabled:true,fulfillment_enabled:false,max_campaigns:1,workflow_reference:'Manual SOP'});
+ assert.equal((await db.query('select status from buyermatch_campaigns')).rows[0].status,'paused');
+ await assert.rejects(()=>act('brief',{campaign_id:campaign.id}));
+});
 console.log(tests+' BuyerMatch security and workflow tests passed');
 await db.close();

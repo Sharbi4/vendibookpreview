@@ -118,6 +118,9 @@ BEGIN
   IF NOT admin THEN RAISE EXCEPTION 'Administrator required'; END IF;
   UPDATE public.buyermatch_settings SET submissions_enabled=(_payload->>'submissions_enabled')::boolean,fulfillment_enabled=(_payload->>'fulfillment_enabled')::boolean,
    max_campaigns=(_payload->>'max_campaigns')::integer,workflow_reference=trim(_payload->>'workflow_reference') WHERE id=true;
+  IF NOT (_payload->>'fulfillment_enabled')::boolean THEN
+   UPDATE public.buyermatch_campaigns SET status='paused',updated_at=now() WHERE status='researching';
+  END IF;
   INSERT INTO public.buyermatch_audit(actor_id,action) VALUES(actor,'settings_updated');
   RETURN jsonb_build_object('ok',true);
  END IF;
@@ -140,10 +143,10 @@ BEGIN
      'cover_image_url',listing.cover_image_url,'image_urls',listing.image_urls,'description',listing.description,'highlights',listing.highlights,'included_items',listing.included_items,'condition',listing.condition))
    RETURNING * INTO campaign;
   INSERT INTO public.notifications(user_id,type,title,message,link) VALUES(actor,'system','BuyerMatch campaign submitted','Your campaign is pending activation. Research and outreach have not started.','/dashboard/buyermatch');
- ELSIF _action IN ('pause','preferences','resume','activate','complete','import','approve_import','reject_import') THEN
+ ELSIF _action IN ('pause','preferences','resume','activate','complete','import','approve_import','reject_import','brief') THEN
   SELECT * INTO campaign FROM public.buyermatch_campaigns WHERE id=(_payload->>'campaign_id')::uuid FOR UPDATE;
   IF NOT FOUND OR (campaign.seller_id<>actor AND NOT admin) THEN RAISE EXCEPTION 'Campaign not found'; END IF;
-  IF _action IN ('activate','complete','import','approve_import','reject_import') AND NOT admin THEN RAISE EXCEPTION 'Administrator required'; END IF;
+  IF _action IN ('activate','complete','import','approve_import','reject_import','brief') AND NOT admin THEN RAISE EXCEPTION 'Administrator required'; END IF;
   IF _action='pause' THEN
    IF campaign.status='completed' THEN RAISE EXCEPTION 'Campaign completed'; END IF;
    UPDATE public.buyermatch_campaigns SET status='paused',updated_at=now() WHERE id=campaign.id;
@@ -165,7 +168,13 @@ BEGIN
     IF (_payload->>'research_started')::boolean IS DISTINCT FROM true THEN RAISE EXCEPTION 'Confirm the approved research workflow has actually started'; END IF;
     IF NOT config.fulfillment_enabled THEN RAISE EXCEPTION 'Configure the approved fulfillment workflow before activation'; END IF;
     IF campaign.status NOT IN ('pending_activation','researching') THEN RAISE EXCEPTION 'Seller must resume participation first'; END IF;
-    UPDATE public.buyermatch_campaigns SET status='researching',activated_at=coalesce(activated_at,now()),updated_at=now() WHERE id=campaign.id;
+    UPDATE public.buyermatch_campaigns SET listing_snapshot=jsonb_build_object('title',listing.title,'category',listing.category,'make',listing.make,'model',listing.model,'price_sale',listing.price_sale,'city',listing.city,'state',listing.state,'cover_image_url',listing.cover_image_url,'image_urls',listing.image_urls,'description',listing.description,'highlights',listing.highlights,'included_items',listing.included_items,'condition',listing.condition),status='researching',activated_at=coalesce(activated_at,now()),updated_at=now() WHERE id=campaign.id;
+   ELSIF _action='brief' THEN
+    IF campaign.status<>'researching' OR NOT config.fulfillment_enabled THEN RAISE EXCEPTION 'Campaign is not active'; END IF;
+    INSERT INTO public.buyermatch_audit(campaign_id,actor_id,action) VALUES(campaign.id,actor,'brief_exported');
+    RETURN jsonb_build_object('campaign_id',campaign.id,'listing_id',listing.id,'seller_id',campaign.seller_id,
+      'listing',jsonb_build_object('title',listing.title,'category',listing.category,'make',listing.make,'model',listing.model,'price_sale',listing.price_sale,'city',listing.city,'state',listing.state,'cover_image_url',listing.cover_image_url,'image_urls',listing.image_urls,'description',listing.description,'highlights',listing.highlights,'included_items',listing.included_items,'condition',listing.condition),'geography',campaign.geography,'buyer_criteria',campaign.buyer_criteria,
+      'exported_at',now(),'instructions','Research public buying intent. Respect source permissions and opt-outs. No outreach without documented authorization. Return evidence-backed JSON records for admin review.');
    ELSIF _action='import' THEN
     IF campaign.status<>'researching' OR NOT config.fulfillment_enabled THEN RAISE EXCEPTION 'Campaign is not active'; END IF;
     IF jsonb_typeof(_payload->'records') IS DISTINCT FROM 'array' OR jsonb_array_length(_payload->'records') NOT BETWEEN 1 AND 500 THEN RAISE EXCEPTION 'Import 1 to 500 JSON records'; END IF;
