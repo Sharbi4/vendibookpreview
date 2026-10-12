@@ -4,6 +4,7 @@ import { AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 import WorkspaceShell from '@/components/workspace/WorkspaceShell';
 import { supabase } from '@/integrations/supabase/client';
 import { parseEdgeError } from '@/lib/edgeErrors';
+import { useAuth } from '@/contexts/AuthContext';
 
 /** Square sends the host back here after they approve the connection. */
 export default function SquareConnectCallback() {
@@ -12,9 +13,17 @@ export default function SquareConnectCallback() {
   const [state, setState] = useState<'working' | 'done' | 'error'>('working');
   const [message, setMessage] = useState('');
   const ran = useRef(false);
+  const { user, isLoading } = useAuth();
 
   useEffect(() => {
-    if (ran.current) return;
+    // Square may return to a different site address than the one the host started on
+    // (e.g. vendibook.com vs the preview), where they may not be signed in yet.
+    // Wait for the session, and if missing, sign in first and resume here.
+    if (ran.current || isLoading) return;
+    if (!user && params.get('code')) {
+      navigate(`/auth?redirect=${encodeURIComponent(`/dashboard/payments/square/callback?${params.toString()}`)}`, { replace: true });
+      return;
+    }
     ran.current = true;
     const code = params.get('code');
     const oauthState = params.get('state');
@@ -36,7 +45,7 @@ export default function SquareConnectCallback() {
         setTimeout(() => navigate(data?.return_path || '/dashboard/payments/setup', { replace: true }), 1500);
       })
       .catch((e) => { setState('error'); setMessage((e as Error).message); });
-  }, [navigate, params]);
+  }, [navigate, params, user, isLoading]);
 
   return (
     <WorkspaceShell>
