@@ -180,7 +180,7 @@ const PUBLISH_INCOMPLETE_MESSAGES: Record<string, string> = {
   address: 'Add the street address.',
   price_sale: 'Add your asking price.',
   price_rent: 'Add a rental rate.',
-  payment_option: 'Turn on at least one way to get paid: online checkout or pay in person.',
+  payment_option: 'Save the listing’s invoice payment settings and try again.',
   title_status: 'Select the title status.',
 };
 

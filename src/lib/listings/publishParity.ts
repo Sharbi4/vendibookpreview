@@ -92,16 +92,7 @@ export function getPublishContentBlockers(input: PublishContentInput): PublishBl
     if (!positive(input.priceSale)) {
       blockers.push({ id: 'price', message: 'Add your asking price.' });
     }
-    // Undefined means "not answered yet" and both methods default to on, so
-    // this only blocks when the seller explicitly turned both off.
-    const paypal = input.acceptPayPalCheckout ?? true;
-    const cash = input.acceptCashPayment ?? true;
-    if (!paypal && !cash) {
-      blockers.push({
-        id: 'payment_method',
-        message: 'Accept at least one payment method — online checkout or pay in person.',
-      });
-    }
+    // Sale listings are normalized to invoice payment when saved.
   } else if (input.mode === 'rent') {
     if (!positive(input.priceDaily)) {
       const hasOther = positive(input.priceWeekly) || positive(input.priceMonthly) || positive(input.priceHourly);

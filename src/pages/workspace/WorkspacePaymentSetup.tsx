@@ -90,14 +90,14 @@ export default function WorkspacePaymentSetup() {
   useEffect(() => {
     if (!user || !isReady || listingsLoading || autoActivated.current) return;
     const targets = listings.filter(
-      (l) => l.accept_paypal_checkout !== true && l.accept_cash_payment !== true,
+      (l) => l.accept_paypal_checkout !== true ,
     );
     if (targets.length === 0) return;
     autoActivated.current = true;
     (async () => {
       const { error } = await supabase
         .from('listings')
-        .update({ accept_paypal_checkout: true })
+        .update({ accept_paypal_checkout: true, accept_cash_payment: false })
         .in(
           'id',
           targets.map((l) => l.id),
@@ -122,7 +122,7 @@ export default function WorkspacePaymentSetup() {
     try {
       const { error } = await supabase
         .from('listings')
-        .update({ accept_paypal_checkout: true })
+        .update({ accept_paypal_checkout: true, accept_cash_payment: false })
         .in(
           'id',
           needsOnlineCheckout.map((l) => l.id),
@@ -145,7 +145,7 @@ export default function WorkspacePaymentSetup() {
     try {
       const { error } = await supabase
         .from('listings')
-        .update({ accept_paypal_checkout: true })
+        .update({ accept_paypal_checkout: true, accept_cash_payment: false })
         .eq('id', listing.id);
       if (error) throw new Error(error.message);
       toast.success(`Online payments turned on for “${listing.title}”.`);
@@ -415,9 +415,7 @@ export default function WorkspacePaymentSetup() {
                   <p className="truncate text-sm font-semibold">{listing.title}</p>
                   <p className="text-xs text-muted-foreground">
                     {listing.status === 'published' ? 'Live' : listing.status || 'Draft'} ·{' '}
-                    {listing.accept_cash_payment
-                      ? 'Currently pay in person only'
-                      : 'No payment method selected'}
+                    Invoice payment setup required
                   </p>
                 </div>
                 <div className="flex items-center gap-2">

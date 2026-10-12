@@ -771,8 +771,8 @@ export const PublishWizard: React.FC = () => {
     apply(cached.globalDeadline, setGlobalDeadline);
     if (typeof cached.dailyEnabled === 'boolean') setDailyEnabled(cached.dailyEnabled);
     if (typeof cached.isStaticLocation === 'boolean') setIsStaticLocation(cached.isStaticLocation);
-    if (typeof cached.acceptPayPalCheckout === 'boolean') setAcceptPayPalCheckout(cached.acceptPayPalCheckout);
-    if (typeof cached.acceptCashPayment === 'boolean') setAcceptCashPayment(cached.acceptCashPayment);
+    if (typeof cached.acceptPayPalCheckout === 'boolean') setAcceptPayPalCheckout(true);
+    if (typeof cached.acceptCashPayment === 'boolean') setAcceptCashPayment(false);
     if (typeof cached.totalSlots === 'number' && cached.totalSlots > 0) setTotalSlots(cached.totalSlots);
     if (typeof cached.minHours === 'number') setMinHours(cached.minHours);
     if (typeof cached.maxHours === 'number') setMaxHours(cached.maxHours);
@@ -1025,8 +1025,8 @@ export const PublishWizard: React.FC = () => {
       setExistingVideos(((data as any).video_urls as string[] | null) || []);
       setVendibookFreightEnabled(data.vendibook_freight_enabled || false);
       setFreightPayer((data.freight_payer as FreightPayer) || 'buyer');
-      setAcceptPayPalCheckout(data.accept_paypal_checkout ?? true);
-      setAcceptCashPayment(data.accept_cash_payment ?? false);
+      setAcceptPayPalCheckout(true);
+      setAcceptCashPayment(false);
       setFeaturedEnabled((data as any).featured_enabled ?? false);
       // Set details step fields
       setHighlights(data.highlights || []);
@@ -1552,7 +1552,7 @@ export const PublishWizard: React.FC = () => {
     
     const isSellerPaidFreight = vendibookFreightEnabled && freightPayer === 'seller';
     const freightCost = vendibookFreightEnabled ? estimatedFreightCost : 0;
-    const isCashOnlySale = listing?.mode === 'sale' && acceptCashPayment && !acceptPayPalCheckout;
+    const isCashOnlySale = false;
     
     return calculateSaleFees(salePriceNum, freightCost, isSellerPaidFreight, isCashOnlySale);
   }, [priceSale, vendibookFreightEnabled, freightPayer, listing?.mode, acceptCashPayment, acceptPayPalCheckout]);
@@ -2785,7 +2785,7 @@ export const PublishWizard: React.FC = () => {
     const errors: string[] = [];
     if (totalPhotoCount < 3) errors.push(`Add at least 3 photos (currently ${totalPhotoCount})`);
     if (!hasPriceAmount) errors.push(listing?.mode === 'sale' ? 'Set a sale price greater than $0' : 'Set a daily rate greater than $0');
-    if (listing?.mode === 'sale' && !hasSalePaymentMethod) errors.push('Select at least one payment method: PayPal Checkout or Pay in Person');
+    if (listing?.mode === 'sale' && !hasSalePaymentMethod) errors.push('Invoice payment settings need to be saved. Please try again.');
     if (!hasValidTitle) errors.push(`Title must be at least ${MIN_TITLE_LENGTH} characters`);
     if (!hasValidDescription) errors.push(`Description must be at least ${MIN_DESCRIPTION_LENGTH} characters (currently ${description.trim().length})`);
     if (!checklistState.hasLocation) errors.push('Complete the location and logistics section');
@@ -3640,9 +3640,7 @@ export const PublishWizard: React.FC = () => {
                               <div className="flex items-start gap-1.5 mt-3 text-xs text-muted-foreground">
                                 <Info className="w-3 h-3 mt-0.5 shrink-0" />
                                 <span>
-                                  {acceptCashPayment && !acceptPayPalCheckout
-                                    ? 'Pay in Person sales have no platform commission.'
-                                    : `Platform fee is ${SALE_SELLER_FEE_PERCENT}% of the sale price for online PayPal payments`}
+                                  {`Platform fee is ${SALE_SELLER_FEE_PERCENT}% of the equipment price for invoice payments`}
                                 </span>
                               </div>
                             </div>
@@ -3650,97 +3648,11 @@ export const PublishWizard: React.FC = () => {
                         </div>
                       )}
 
-                      {/* Payment Method Options */}
-                      <div className="pt-6 border-t">
-                        <div className="flex items-center gap-2 mb-4">
-                          <PayPalMonogram className="h-5 w-5" />
-                          <h3 className="text-lg font-semibold">How buyers can pay</h3>
-                          <InfoTooltip
-                            side="top"
-                            align="start"
-                            content={
-                              <span className="block space-y-2">
-                                <span className="block">
-                                  <span className="font-medium">PayPal / Online Checkout:</span> Buyers
-                                  pay securely through Vendibook. The applicable Vendibook seller fee is
-                                  handled as part of the online transaction, and payout follows
-                                  Vendibook's completion/payout process.
-                                </span>
-                                <span className="block">
-                                  <span className="font-medium">Pay in Person:</span> You arrange payment
-                                  directly with the buyer at pickup or delivery; Vendibook does not charge
-                                  the online-sale commission on that pay-in-person transaction.
-                                </span>
-                              </span>
-                            }
-                          />
-                        </div>
-                        <p className="text-sm text-muted-foreground mb-4">
-                          Select how buyers can pay for your item. You can enable both options.
-                        </p>
-
-                        <div className="space-y-4">
-                          <div className="flex items-start space-x-3 p-4 rounded-2xl border border-border bg-card hover:border-primary/30 transition-colors">
-                            <Checkbox
-                              id="accept_paypal_checkout"
-                              checked={acceptPayPalCheckout}
-                              onCheckedChange={(checked) => setAcceptPayPalCheckout(!!checked)}
-                              className="mt-0.5"
-                            />
-                            <div className="flex-1">
-                              <Label
-                                htmlFor="accept_paypal_checkout"
-                                className="flex items-center gap-2 text-base font-medium cursor-pointer"
-                              >
-                                <PayPalMonogram className="h-4 w-4" />
-                                Pay online with PayPal
-                              </Label>
-                              <p className="text-sm text-muted-foreground mt-1">
-                                Buyers check out securely with PayPal. Your sale proceeds are recorded to
-                                your account and paid out to your payout details after the sale is confirmed.
-                              </p>
-                              {acceptPayPalCheckout && (
-                                <div className="mt-2 space-y-2 rounded-lg bg-primary/5 p-3">
-                                  <p className="text-xs text-muted-foreground">
-                                    <Info className="mr-1 inline h-3 w-3" />
-                                    Connect PayPal in Payment setup before buyers can check out online.
-                                  </p>
-                                  <SellerBusinessAccountHelp compact />
-                                </div>
-                              )}
-                            </div>
-                          </div>
-
-                          <div className="flex items-start space-x-3 p-4 rounded-2xl border border-border bg-card hover:border-primary/30 transition-colors">
-                            <Checkbox
-                              id="accept_cash_payment"
-                              checked={acceptCashPayment}
-                              onCheckedChange={(checked) => setAcceptCashPayment(!!checked)}
-                              className="mt-0.5"
-                            />
-                            <div className="flex-1">
-                              <Label
-                                htmlFor="accept_cash_payment"
-                                className="flex items-center gap-2 text-base font-medium cursor-pointer"
-                              >
-                                <Banknote className="w-4 h-4 text-foreground" />
-                                Pay in Person
-                              </Label>
-                              <p className="text-sm text-muted-foreground mt-1">
-                                Accept cash or other payments at pickup/delivery. You'll arrange payment directly with the buyer.
-                              </p>
-                            </div>
-                          </div>
-
-                          {!acceptPayPalCheckout && !acceptCashPayment && (
-                            <div className="p-3 bg-muted/50 border border-border rounded-xl">
-                              <p className="text-sm text-muted-foreground flex items-center gap-2">
-                                <Info className="w-4 h-4" />
-                                Please select at least one payment method.
-                              </p>
-                            </div>
-                          )}
-                        </div>
+                      <div className="pt-6 border-t space-y-3">
+                        <h3 className="text-lg font-semibold">Invoice payment</h3>
+                        <p className="text-sm text-muted-foreground">Buyers send a purchase request for your review. Approve the agreed details to issue an itemized invoice. The buyer then pays online through PayPal.</p>
+                        <p className="text-sm text-muted-foreground">Review requests within 24–48 hours when possible. Invoice links appear in the buyer’s dashboard and email.</p>
+                        <SellerBusinessAccountHelp compact />
                       </div>
 
                       {/* Buyer financing — included on every published for-sale listing */}

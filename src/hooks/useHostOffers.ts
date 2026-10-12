@@ -41,7 +41,7 @@ export const useHostOffers = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: offers = [], isLoading, refetch } = useQuery({
+  const { data: offers = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['host-offers', user?.id],
     queryFn: async () => {
       if (!user) return [];
@@ -210,6 +210,7 @@ export const useHostOffers = () => {
     counteredOffers,
     respondedOffers,
     isLoading,
+    isError,
     refetch,
     respondToOffer: respondToOffer.mutate,
     isResponding: respondToOffer.isPending,

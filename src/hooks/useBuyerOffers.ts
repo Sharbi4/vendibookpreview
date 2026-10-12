@@ -35,7 +35,7 @@ export const useBuyerOffers = () => {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  const { data: offers = [], isLoading, refetch } = useQuery({
+  const { data: offers = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['buyer-offers', user?.id],
     queryFn: async () => {
       if (!user) return [];
@@ -208,6 +208,7 @@ export const useBuyerOffers = () => {
     expiredOffers,
     stats,
     isLoading,
+    isError,
     refetch,
     cancelOffer: cancelOffer.mutate,
     isCancelling: cancelOffer.isPending,

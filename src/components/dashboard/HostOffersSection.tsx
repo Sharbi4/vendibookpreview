@@ -385,7 +385,7 @@ interface HostOffersSectionProps {
 }
 
 export const HostOffersSection = ({ focusOfferId, focusAction, showEmpty = false }: HostOffersSectionProps = {}) => {
-  const { pendingOffers, counteredOffers, respondedOffers, isLoading, respondToOffer, isResponding } = useHostOffers();
+  const { pendingOffers, counteredOffers, respondedOffers, isLoading, isError, refetch, respondToOffer, isResponding } = useHostOffers();
 
   const handleAccept = (offerId: string) => {
     respondToOffer({ offerId, status: 'accepted' });
@@ -398,6 +398,10 @@ export const HostOffersSection = ({ focusOfferId, focusAction, showEmpty = false
   const handleCounter = (offerId: string, amount: number, message?: string) => {
     respondToOffer({ offerId, status: 'countered', counterAmount: amount, counterMessage: message });
   };
+
+  if (isError) {
+    return <div role="alert" className="rounded-xl border border-destructive/30 p-4 text-sm">Offers could not be loaded. <Button variant="outline" size="sm" onClick={() => void refetch()}>Try again</Button></div>;
+  }
 
   if (isLoading) {
     return (

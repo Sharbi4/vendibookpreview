@@ -253,12 +253,18 @@ export const BuyerOffersSection = () => {
   const { 
     offers, 
     stats, 
-    isLoading, 
+    isLoading,
+    isError,
+    refetch,
     cancelOffer, 
     isCancelling,
     respondToCounter,
     isRespondingToCounter,
   } = useBuyerOffers();
+
+  if (isError) {
+    return <div role="alert" className="rounded-xl border border-destructive/30 p-4 text-sm">Offers could not be loaded. <Button variant="outline" size="sm" onClick={() => void refetch()}>Try again</Button></div>;
+  }
 
   if (isLoading) {
     return (

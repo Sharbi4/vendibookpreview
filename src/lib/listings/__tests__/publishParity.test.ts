@@ -40,10 +40,10 @@ describe('publish parity — content blockers', () => {
     );
   });
 
-  it('blocks a sale with both payment methods off', () => {
+  it('does not offer a payment-method choice for invoice-only sales', () => {
     const sale = { ...completeRental, mode: 'sale' as const, priceDaily: null, priceSale: 60000 };
     expect(ids(sale)).toEqual([]);
-    expect(ids({ ...sale, acceptPayPalCheckout: false, acceptCashPayment: false })).toContain('payment_method');
+    expect(ids({ ...sale, acceptPayPalCheckout: false, acceptCashPayment: false })).not.toContain('payment_method');
   });
 
   it('skips the street address only for delivery-only sales', () => {
