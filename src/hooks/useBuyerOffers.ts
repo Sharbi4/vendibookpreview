@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useRef } from 'react';
 import { playNotificationSound } from '@/lib/notificationSound';
+import { effectiveOfferStatus } from '@/lib/offers/offerState';
 import { offerErrorMessage } from '@/lib/offers/offerTerms';
 
 export interface BuyerOffer {
@@ -11,6 +12,7 @@ export interface BuyerOffer {
   listing_id: string;
   seller_id: string;
   offer_amount: number;
+  agreed_amount: number | null;
   message: string | null;
   status: string;
   created_at: string;
@@ -48,15 +50,17 @@ export const useBuyerOffers = () => {
         .order('created_at', { ascending: false });
 
       if (error) throw error;
-      return data as BuyerOffer[];
+      return (data as BuyerOffer[]).map(offer => ({ ...offer, status: effectiveOfferStatus(offer) }));
     },
     enabled: !!user,
+    refetchInterval: 15_000,
   });
 
   const cancelOffer = useMutation({
     mutationFn: async (offerId: string) => {
-      const { error } = await supabase.rpc('respond_to_offer' as never, { p_offer_id: offerId, p_action: 'cancel' } as never);
+      const { data: result, error } = await supabase.rpc('respond_to_offer' as never, { p_offer_id: offerId, p_action: 'cancel' } as never);
       if (error) throw error;
+      if (result === 'expired') throw new Error('This offer has expired.');
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['buyer-offers'] });
@@ -66,6 +70,7 @@ export const useBuyerOffers = () => {
       });
     },
     onError: (error) => {
+      queryClient.invalidateQueries({ queryKey: ['buyer-offers'] });
       console.error('Error cancelling offer:', error);
       toast({
         title: 'Failed to cancel',
@@ -89,12 +94,12 @@ export const useBuyerOffers = () => {
       if (result === 'expired') throw new Error('This counteroffer has expired.');
 
       // Notify seller
-      await supabase.functions.invoke('send-offer-notification', {
+      void supabase.functions.invoke('send-offer-notification', {
         body: {
           offer_id: offerId,
           event_type: action === 'accept' ? 'counter_accepted' : 'counter_declined',
         },
-      });
+      }).catch(error => console.warn('Offer email will retry', error));
     },
     onSuccess: (_, { action }) => {
       queryClient.invalidateQueries({ queryKey: ['buyer-offers'] });
@@ -106,6 +111,7 @@ export const useBuyerOffers = () => {
       });
     },
     onError: (error) => {
+      queryClient.invalidateQueries({ queryKey: ['buyer-offers'] });
       console.error('Error responding to counter:', error);
       toast({
         title: 'Failed to respond',

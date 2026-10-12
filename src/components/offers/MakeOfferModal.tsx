@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,13 +39,16 @@ export const MakeOfferModal = ({
   const [step, setStep] = useState<'amount' | 'review'>('amount');
   const [acknowledged, setAcknowledged] = useState(false);
 
+  const submitting = useRef(false);
+  useEffect(() => { if (!open) { setStep('amount'); setAcknowledged(false); } }, [open]);
+
   // Check if user is the owner of this listing
   const isOwner = user?.id === sellerId;
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!user) return;
+    if (!user || submitting.current) return;
     
     // Prevent owners from making offers on their own listings
     if (isOwner) {
@@ -58,7 +61,7 @@ export const MakeOfferModal = ({
     }
     
     const amount = parseFloat(offerAmount);
-    if (isNaN(amount) || amount <= 0) {
+    if (!Number.isFinite(amount) || amount <= 0 || amount > 10000000 || Math.abs(amount * 100 - Math.round(amount * 100)) > 1e-7) {
       toast({
         title: 'Invalid amount',
         description: 'Please enter a valid offer amount.',
@@ -67,6 +70,7 @@ export const MakeOfferModal = ({
       return;
     }
 
+    submitting.current = true;
     setIsSubmitting(true);
 
     try {
@@ -81,21 +85,12 @@ export const MakeOfferModal = ({
       const offer = { id: offerId as unknown as string };
 
       // Send email notification to seller
-      await supabase.functions.invoke('send-offer-notification', {
+      void supabase.functions.invoke('send-offer-notification', {
         body: {
           offer_id: offer.id,
           event_type: 'new_offer',
         },
-      });
-
-      // AI Orchestrator: route the right channel to the seller
-      const { triggerOrchestrator } = await import('@/lib/orchestrator');
-      triggerOrchestrator({
-        user_id: sellerId,
-        event_type: 'offer_received',
-        entity_id: offer.id,
-        payload: { listing_title: listingTitle, amount, message: message.trim() || null },
-      });
+      }).catch(error => console.warn('Offer email will retry', error));
 
       toast({
         title: 'Offer sent',
@@ -116,6 +111,7 @@ export const MakeOfferModal = ({
         variant: 'destructive',
       });
     } finally {
+      submitting.current = false;
       setIsSubmitting(false);
     }
   };
@@ -180,8 +176,9 @@ export const MakeOfferModal = ({
                 value={offerAmount}
                 onChange={(e) => setOfferAmount(e.target.value)}
                 className="pl-9"
-                min="1"
-                step="1"
+                min="0.01"
+                max="10000000"
+                step="0.01"
                 required
               />
             </div>
@@ -209,6 +206,7 @@ export const MakeOfferModal = ({
               placeholder="Add a message to the seller..."
               value={message}
               onChange={(e) => setMessage(e.target.value)}
+              maxLength={1000}
               rows={3}
             />
           </div>

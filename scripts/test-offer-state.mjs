@@ -1,0 +1,10 @@
+import assert from 'node:assert/strict';
+import { effectiveOfferStatus } from '../src/lib/offers/offerState.ts';
+const offer={status:'countered',created_at:'2026-10-01T00:00:00Z',expires_at:'2026-10-03T00:00:00Z',responded_at:'2026-10-02T00:00:00Z',counter_expires_at:'2026-10-04T00:00:00Z'};
+assert.equal(effectiveOfferStatus(offer,Date.parse('2026-10-03T12:00:00Z')),'countered');
+assert.equal(effectiveOfferStatus(offer,Date.parse('2026-10-04T00:00:00Z')),'expired');
+assert.equal(effectiveOfferStatus({...offer,counter_expires_at:null},Date.parse('2026-10-04T00:00:00Z')),'expired');
+assert.equal(effectiveOfferStatus({...offer,status:'accepted'},Date.parse('2026-11-01')),'accepted');
+assert.equal(effectiveOfferStatus({...offer,status:'pending'},Date.parse('2026-10-03')),'expired');
+assert.equal(effectiveOfferStatus({...offer,status:'pending',expires_at:null},Date.parse('2026-10-03')),'expired');
+console.log('6 offer deadline checks passed');

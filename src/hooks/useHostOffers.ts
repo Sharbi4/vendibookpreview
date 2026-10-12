@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useRef } from 'react';
 import { playNotificationSound } from '@/lib/notificationSound';
+import { effectiveOfferStatus } from '@/lib/offers/offerState';
 import { offerErrorMessage } from '@/lib/offers/offerTerms';
 
 export interface HostOffer {
@@ -11,6 +12,7 @@ export interface HostOffer {
   listing_id: string;
   buyer_id: string;
   offer_amount: number;
+  agreed_amount: number | null;
   message: string | null;
   status: string;
   created_at: string;
@@ -82,9 +84,10 @@ export const useHostOffers = () => {
         })
       );
 
-      return offersWithBuyers as HostOffer[];
+      return (offersWithBuyers as HostOffer[]).map(offer => ({ ...offer, status: effectiveOfferStatus(offer) }));
     },
     enabled: !!user,
+    refetchInterval: 15_000,
   });
 
   const respondToOffer = useMutation({
@@ -113,12 +116,12 @@ export const useHostOffers = () => {
       const eventType = status === 'countered' ? 'counter_offer' : 
                         status === 'accepted' ? 'offer_accepted' : 'offer_declined';
       
-      await supabase.functions.invoke('send-offer-notification', {
+      void supabase.functions.invoke('send-offer-notification', {
         body: {
           offer_id: offerId,
           event_type: eventType,
         },
-      });
+      }).catch(error => console.warn('Offer email will retry', error));
     },
     onSuccess: (_, { status }) => {
       queryClient.invalidateQueries({ queryKey: ['host-offers'] });
@@ -133,6 +136,7 @@ export const useHostOffers = () => {
       });
     },
     onError: (error) => {
+      queryClient.invalidateQueries({ queryKey: ['host-offers'] });
       console.error('Error responding to offer:', error);
       toast({
         title: 'Failed to respond',

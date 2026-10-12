@@ -1,17 +1,23 @@
-name: Square add-on reconciliation checks
+name: Payment and offer regression checks
 
 on:
   push:
     branches: [fix/paypal-webhook-config]
     paths:
       - 'supabase/functions/**'
-      - 'src/pages/AdminRevenue.tsx'
+      - 'src/**'
+      - 'drizzle/migrations/**'
+      - 'supabase/migrations/**'
+      - 'scripts/**'
       - 'scripts/test-square-addon-reconciliation.mjs'
       - '.github/workflows/square-addon-reconciliation.yml'
   pull_request:
     paths:
       - 'supabase/functions/**'
-      - 'src/pages/AdminRevenue.tsx'
+      - 'src/**'
+      - 'drizzle/migrations/**'
+      - 'supabase/migrations/**'
+      - 'scripts/**'
       - 'scripts/test-square-addon-reconciliation.mjs'
   workflow_dispatch:
 
@@ -33,5 +39,13 @@ jobs:
         with:
           bun-version: latest
       - run: bun install --frozen-lockfile
+      - name: Offer deadline behavior
+        run: node --experimental-strip-types scripts/test-offer-state.mjs
+      - name: Equipment fee and consent regressions
+        run: bunx vitest run src/test/payments/equipmentSaleFee.test.ts src/lib/fees/feeConfig.test.ts src/test/purchaseRequestPolicy.test.tsx
+      - name: Isolated invoice database
+        run: |
+          npm install --prefix "$RUNNER_TEMP/invoice-test" @electric-sql/pglite@0.3.14
+          PGLITE_MODULE="$RUNNER_TEMP/invoice-test/node_modules/@electric-sql/pglite/dist/index.js" node scripts/test-invoice-commerce.mjs
       - name: Build UI without data-generation side effects
         run: bunx vite build

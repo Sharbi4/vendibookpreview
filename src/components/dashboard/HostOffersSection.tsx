@@ -55,7 +55,7 @@ const OfferCard = ({ offer, onAccept, onDecline, onCounter, isResponding, focusA
 
   const handleCounter = () => {
     const amount = parseFloat(counterAmount);
-    if (isNaN(amount) || amount <= 0) return;
+    if (!Number.isFinite(amount) || amount <= 0 || amount > 10000000 || Math.abs(amount * 100 - Math.round(amount * 100)) > 1e-7) return;
     onCounter(offer.id, amount, counterMessage);
     setShowCounterModal(false);
     setCounterAmount('');
@@ -92,6 +92,9 @@ const OfferCard = ({ offer, onAccept, onDecline, onCounter, isResponding, focusA
     switch (offer.status) {
       case 'accepted':
         return <Badge className="bg-emerald-500 text-white">Accepted</Badge>;
+      case 'expired':
+      case 'cancelled':
+        return <Badge variant="outline">{offer.status === 'expired' ? 'Expired' : 'Cancelled'}</Badge>;
       case 'declined':
         return <Badge variant="outline" className="text-destructive border-destructive">Declined</Badge>;
       case 'countered':
@@ -280,6 +283,7 @@ const OfferCard = ({ offer, onAccept, onDecline, onCounter, isResponding, focusA
             placeholder="E.g., 'I'm looking for offers closer to asking price' or leave blank..."
             value={declineReason}
             onChange={(e) => setDeclineReason(e.target.value)}
+            maxLength={1000}
             rows={3}
           />
           <DialogFooter>
@@ -331,8 +335,9 @@ const OfferCard = ({ offer, onAccept, onDecline, onCounter, isResponding, focusA
                   value={counterAmount}
                   onChange={(e) => setCounterAmount(e.target.value)}
                   className="pl-9"
-                  min="1"
-                  step="1"
+                  min="0.01"
+                  max="10000000"
+                  step="0.01"
                 />
               </div>
             </div>
@@ -344,7 +349,8 @@ const OfferCard = ({ offer, onAccept, onDecline, onCounter, isResponding, focusA
                 placeholder="E.g., 'I can meet you halfway at this price...'"
                 value={counterMessage}
                 onChange={(e) => setCounterMessage(e.target.value)}
-                rows={2}
+                maxLength={1000}
+            rows={2}
               />
             </div>
           </div>
