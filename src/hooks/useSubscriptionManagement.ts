@@ -82,11 +82,13 @@ export function useSubscriptionManagement(product: SubscriptionProduct = 'pro') 
     queryKey: ['subscription-management', user?.id, product],
     enabled: !!user?.id,
     queryFn: async (): Promise<SubscriptionRow | null> => {
-      const { data } = await supabase
+      if (!user) return null;
+      const { data, error } = await supabase
         .from('host_subscriptions')
         .select('*')
-        .eq('user_id', user!.id)
+        .eq('user_id', user.id)
         .order('updated_at', { ascending: false });
+      if (error) throw error;
       const rows = (data as SubscriptionRow[] | null) ?? [];
       const scoped = rows.filter((row) => matchesProduct(row, product));
       // Prefer a live row over a lapsed one of the same product.
@@ -217,6 +219,7 @@ export function useSubscriptionManagement(product: SubscriptionProduct = 'pro') 
     /** PayPal cancellations are immediate-at-provider, so there's no resume. */
     canReactivate: false,
     isLoading: query.isLoading,
+    error: query.error,
     isFetching: query.isFetching,
     refetch: query.refetch,
     busy,

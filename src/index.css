@@ -4,6 +4,31 @@
 @tailwind components;
 @tailwind utilities;
 
+/* BuyerMatch is a deliberately light, scoped seller-intelligence workspace. */
+.buyermatch-theme {
+  --background: 30 12% 97%;
+  --foreground: 240 5% 12%;
+  --card: 0 0% 100%;
+  --card-foreground: 240 5% 12%;
+  --popover: 0 0% 100%;
+  --popover-foreground: 240 5% 12%;
+  --muted: 30 8% 94%;
+  --muted-foreground: 240 3% 43%;
+  --accent: 14 100% 96%;
+  --accent-foreground: 14 75% 35%;
+  --secondary: 30 8% 94%;
+  --secondary-foreground: 240 5% 12%;
+  --border: 240 4% 87%;
+  --input: 240 4% 82%;
+  --primary: var(--vendibook-orange);
+  --shadow-sm: 0 2px 6px hsl(240 5% 12% / .04);
+  color: hsl(var(--foreground));
+  background: hsl(var(--background));
+  letter-spacing: 0;
+}
+.buyermatch-theme input, .buyermatch-theme select, .buyermatch-theme textarea { font-size: 16px; }
+.buyermatch-theme :focus-visible { outline-color: hsl(var(--primary)); }
+
 @font-face {
   font-family: 'SofiaProSoftLight';
   src: url('/__l5e/assets-v1/5c9bc164-9241-46f4-98fa-bc6ea22ce45e/SofiaProSoftLight.otf') format('opentype');
