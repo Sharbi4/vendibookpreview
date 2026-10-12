@@ -88,7 +88,7 @@ GRANT ALL ON public.buyermatch_settings,public.buyermatch_campaigns,public.buyer
 
 
 CREATE FUNCTION public.buyermatch_pause_ineligible() RETURNS integer
-LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $
+LANGUAGE plpgsql SECURITY DEFINER SET search_path=public AS $$
 DECLARE affected integer;
 BEGIN
  UPDATE public.buyermatch_campaigns c SET status='paused',updated_at=now()
@@ -99,7 +99,7 @@ BEGIN
   OR EXISTS(SELECT 1 FROM public.sale_invoices i WHERE i.listing_id=c.listing_id AND i.status IN ('issued','payment_processing','paid','disputed','partially_refunded','completed')));
  GET DIAGNOSTICS affected=ROW_COUNT;
  RETURN affected;
-END $;
+END $$;
 REVOKE ALL ON FUNCTION public.buyermatch_pause_ineligible() FROM public,anon,authenticated;
 GRANT EXECUTE ON FUNCTION public.buyermatch_pause_ineligible() TO service_role;
 
