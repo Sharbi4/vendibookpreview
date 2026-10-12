@@ -1,3 +1,5 @@
+import { useSaleActionState } from '@/hooks/useSaleActionState';
+import SaleAvailabilityNote from '@/components/commerce/SaleAvailabilityNote';
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { Calendar, ShoppingCart, Zap, Tag, Edit, AlertTriangle, X } from 'lucide-react';
@@ -69,6 +71,7 @@ export const StickyMobileCTA = ({
   minNoticeHours,
 }: StickyMobileCTAProps) => {
   const { user } = useAuth();
+  const saleActions = useSaleActionState(isRental ? undefined : listingId);
   const navigate = useNavigate();
   const [isVisible, setIsVisible] = useState(true);
   const [showBookingModal, setShowBookingModal] = useState(false);
@@ -193,13 +196,14 @@ export const StickyMobileCTA = ({
             </Button>
           ) : (
 
-            /* Sale CTAs - Request to Buy (prominent) & Make Offer */
+            /* Sale purchase actions */
             <div className="flex items-center gap-2 sm:gap-3">
+              <SaleAvailabilityNote listingId={listingId} />
               <Button
                 variant="outline"
                 size="default"
                 onClick={handleMakeOffer}
-                disabled={!isAvailable}
+                disabled={!saleActions.canOffer || (!isAvailable)}
                 className="gap-1.5 h-10 sm:h-12 px-3 sm:px-4"
               >
                 <Tag className="h-4 w-4" />
@@ -210,7 +214,7 @@ export const StickyMobileCTA = ({
                 variant="dark-shine"
                 size="lg"
                 onClick={handleBuyNow}
-                disabled={!isAvailable}
+                disabled={!saleActions.canRequest || (!isAvailable)}
                 data-testid="sticky-mobile-buy-now"
                 className="gap-2 h-12 sm:h-14 px-6 sm:px-8 text-base sm:text-lg font-bold shadow-xl no-tap-highlight"
               >

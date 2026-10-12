@@ -26,6 +26,6 @@ export function offerStatusLabel(status: string, expiresAt?: string | null): { l
 /** Maps RPC errors to plain messages without exposing internals. */
 export function offerErrorMessage(e: unknown): string {
   const m = (e as { message?: string })?.message ?? '';
-  const known = ['Sign in', 'acknowledgment', 'valid', 'own listing', 'open offer', 'no longer be changed', 'already accepted', 'not accepting', 'phone', 'verif'];
+  const known = ['Sign in', 'acknowledgment', 'valid', 'own listing', 'open offer', 'no longer be changed', 'already accepted', 'not accepting', 'minimum', 'reserved', 'expired', 'already been agreed', 'no longer available', 'phone', 'verif'];
   return known.some((k) => m.includes(k)) ? m : 'Something went wrong. Please try again.';
 }

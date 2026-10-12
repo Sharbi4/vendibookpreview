@@ -1,3 +1,5 @@
+import { useSaleActionState } from '@/hooks/useSaleActionState';
+import SaleAvailabilityNote from '@/components/commerce/SaleAvailabilityNote';
 import { saleDisclosures } from '@/lib/listings/disclosures';
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -93,6 +95,7 @@ export const SaleListingMobile = ({
   onShare,
 }: SaleListingMobileProps) => {
   const { user } = useAuth();
+  const saleActions = useSaleActionState(listing.id);
   const navigate = useNavigate();
   const [conciergeOpen, setConciergeOpen] = useState(false);
   const [showOfferModal, setShowOfferModal] = useState(false);
@@ -314,11 +317,12 @@ export const SaleListingMobile = ({
         {/* PRIMARY ACTIONS */}
         {!isOwner && (
           <SaleCard padding="md" className="space-y-3">
+            <SaleAvailabilityNote listingId={listing.id} />
             <div className="grid grid-cols-2 gap-3">
               <Button
                 size="lg"
                 onClick={handleBuyNow}
-                disabled={!isAvailable}
+                disabled={!saleActions.canRequest || (!isAvailable)}
                 data-testid="sale-mobile-buy-now"
                 variant="cta"
                 className="h-14 gap-2 text-base"
@@ -330,7 +334,7 @@ export const SaleListingMobile = ({
                 size="lg"
                 variant="outline"
                 onClick={handleMakeOffer}
-                disabled={!isAvailable || !listing.price_sale}
+                disabled={!saleActions.canOffer || (!isAvailable || !listing.price_sale)}
                 className="h-14 gap-2 rounded-2xl border-0 bg-cta-glass hover:bg-white/10 text-base font-bold text-white"
               >
                 <Tag className="h-4 w-4" />

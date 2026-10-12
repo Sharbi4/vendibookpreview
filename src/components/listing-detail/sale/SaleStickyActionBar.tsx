@@ -1,3 +1,5 @@
+import { useSaleActionState } from '@/hooks/useSaleActionState';
+import SaleAvailabilityNote from '@/components/commerce/SaleAvailabilityNote';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { MessageSquare, ShoppingCart, Tag } from 'lucide-react';
@@ -26,6 +28,7 @@ export const SaleStickyActionBar = ({
   isOwner,
 }: SaleStickyActionBarProps) => {
   const { user } = useAuth();
+  const saleActions = useSaleActionState(listingId);
   const navigate = useNavigate();
   const [showOfferModal, setShowOfferModal] = useState(false);
   const [showAuthGate, setShowAuthGate] = useState(false);
@@ -70,6 +73,7 @@ export const SaleStickyActionBar = ({
           boxShadow: '0 -18px 50px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)',
         }}
       >
+        <SaleAvailabilityNote listingId={listingId} />
         <div className="px-3 py-3 grid grid-cols-[auto_1fr_1fr] gap-2.5 items-center">
           <Button
             variant="outline"
@@ -85,7 +89,7 @@ export const SaleStickyActionBar = ({
             variant="outline"
             size="lg"
             onClick={handleOffer}
-            disabled={!isAvailable || !priceSale}
+            disabled={!saleActions.canOffer || (!isAvailable || !priceSale)}
             className="h-14 text-base font-bold gap-2 rounded-2xl border-0 bg-cta-glass hover:bg-white/10 text-white"
           >
             <Tag className="h-4 w-4" />
@@ -94,7 +98,7 @@ export const SaleStickyActionBar = ({
           <Button
             size="lg"
             onClick={handleBuy}
-            disabled={!isAvailable}
+            disabled={!saleActions.canRequest || (!isAvailable)}
             data-testid="sale-sticky-buy-now"
             variant="cta"
             className="h-14 text-base gap-2"

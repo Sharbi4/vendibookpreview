@@ -1,3 +1,5 @@
+import { useSaleActionState } from '@/hooks/useSaleActionState';
+import SaleAvailabilityNote from '@/components/commerce/SaleAvailabilityNote';
 import { useState, useMemo, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { format, differenceInDays, addDays, isBefore, startOfDay, parseISO, isSameDay } from 'date-fns';
@@ -80,6 +82,7 @@ export const BookingWidget = ({
   freightPayer = 'buyer'}: BookingWidgetProps) => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const saleActions = useSaleActionState(isRental ? undefined : listingId);
   const { isDateUnavailable, isLoading: datesLoading } = useBlockedDates({ listingId });
   
   // Get hourly availability info
@@ -821,6 +824,7 @@ export const BookingWidget = ({
 
           </div>
 
+          <SaleAvailabilityNote listingId={listingId} />
           {/* Action Buttons */}
           <div className="space-y-3">
             <div className="flex gap-2">
@@ -830,7 +834,7 @@ export const BookingWidget = ({
                   variant="cta"
                   className="w-full h-14 text-base"
                   size="lg"
-                  disabled={!priceSale}
+                  disabled={!saleActions.canRequest || (!priceSale)}
                   data-testid="booking-widget-buy-now"
                 >
                   Request to Buy
@@ -843,7 +847,7 @@ export const BookingWidget = ({
                   onClick={handleMakeOffer}
                   className="h-14 px-4 rounded-2xl border-0 bg-cta-glass hover:bg-white/10 text-white font-semibold"
                   size="lg"
-                  disabled={!priceSale}
+                  disabled={!saleActions.canOffer || (!priceSale)}
                 >
                   <Tag className="w-5 h-5" />
                 </Button>
@@ -856,7 +860,7 @@ export const BookingWidget = ({
                 onClick={handleMakeOffer}
                 variant="ghost"
                 className="w-full text-sm text-muted-foreground hover:text-primary h-11" 
-                disabled={!priceSale}
+                disabled={!saleActions.canOffer || (!priceSale)}
               >
                 <Tag className="w-4 h-4 mr-2" />
                 Make an Offer

@@ -1,3 +1,5 @@
+import { useSaleActionState } from '@/hooks/useSaleActionState';
+import SaleAvailabilityNote from '@/components/commerce/SaleAvailabilityNote';
 import { financingCalculatorUrl, illustrativeFinancingNote, illustrativeMonthlyPayment } from '@/lib/financing/calculator';
 import { useCategoryPriceCheck } from '@/hooks/useCategoryPriceCheck';
 import { useCallback, useState } from 'react';
@@ -101,6 +103,7 @@ export const SalePurchaseCard = ({
 }: SalePurchaseCardProps) => {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const saleActions = useSaleActionState(listing?.id);
   const financingEnabled = useEquinoxFinancingEnabled(listing);
   const { startFinancingApply, financingLeadDialog } = useFinancingHandoff();
 
@@ -372,9 +375,10 @@ export const SalePurchaseCard = ({
             </div>
           ) : (
           <div className="space-y-2.5">
+            <SaleAvailabilityNote listingId={listing?.id} />
             <Button
               onClick={handleBuy}
-              disabled={!isAvailable || !priceSale}
+              disabled={!saleActions.canRequest || (!isAvailable || !priceSale)}
               size="lg"
               data-testid={`sale-purchase-card-buy-now-${instanceId}`}
               variant="cta"
@@ -387,7 +391,7 @@ export const SalePurchaseCard = ({
             <div className="grid grid-cols-2 gap-2">
               <Button
                 onClick={handleOffer}
-                disabled={!isAvailable || !priceSale}
+                disabled={!saleActions.canOffer || (!isAvailable || !priceSale)}
                 variant="outline"
                 className="h-12 rounded-2xl font-semibold"
               >

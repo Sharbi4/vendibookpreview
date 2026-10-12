@@ -49,3 +49,29 @@ jobs:
           PGLITE_MODULE="$RUNNER_TEMP/invoice-test/node_modules/@electric-sql/pglite/dist/index.js" node scripts/test-invoice-commerce.mjs
       - name: Build UI without data-generation side effects
         run: bunx vite build
+
+  offer-concurrency:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: offer_tests
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Offer authorization, expiry, notification and concurrency tests
+        run: |
+          npm install --prefix "$RUNNER_TEMP/offer-test" pg@8.16.3
+          PG_MODULE="$RUNNER_TEMP/offer-test/node_modules/pg/lib/index.js" node scripts/test-offer-concurrency.mjs

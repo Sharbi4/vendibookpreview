@@ -1,3 +1,4 @@
+import { useSaleActionState } from '@/hooks/useSaleActionState';
 import { useState, useRef, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -33,6 +34,7 @@ export const MakeOfferModal = ({
 }: MakeOfferModalProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
+  const eligibility = useSaleActionState(open ? listingId : undefined);
   const [offerAmount, setOfferAmount] = useState('');
   const [message, setMessage] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -48,7 +50,7 @@ export const MakeOfferModal = ({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!user || submitting.current) return;
+    if (!user || submitting.current || !eligibility.canOffer) return;
     
     // Prevent owners from making offers on their own listings
     if (isOwner) {
@@ -61,10 +63,10 @@ export const MakeOfferModal = ({
     }
     
     const amount = parseFloat(offerAmount);
-    if (!Number.isFinite(amount) || amount <= 0 || amount > 10000000 || Math.abs(amount * 100 - Math.round(amount * 100)) > 1e-7) {
+    if (!Number.isFinite(amount) || amount <= 0 || amount < eligibility.minimumOffer || amount > 10000000 || Math.abs(amount * 100 - Math.round(amount * 100)) > 1e-7) {
       toast({
         title: 'Invalid amount',
-        description: 'Please enter a valid offer amount.',
+        description: eligibility.minimumOffer > 0 ? `Enter an offer of at least ${eligibility.minimumOffer.toLocaleString()}.` : 'Please enter a valid offer amount.',
         variant: 'destructive',
       });
       return;
@@ -120,7 +122,7 @@ export const MakeOfferModal = ({
     Math.round(askingPrice * 0.9),
     Math.round(askingPrice * 0.85),
     Math.round(askingPrice * 0.8),
-  ];
+  ].filter(amount => amount >= eligibility.minimumOffer);
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) { setStep('amount'); setAcknowledged(false); } onOpenChange(o); }}>
@@ -136,6 +138,8 @@ export const MakeOfferModal = ({
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {eligibility.isError ? <p role="alert">Unable to check offer availability. <button type="button" className="underline" onClick={()=>void eligibility.refetch()}>Try again</button></p> : eligibility.isLoading ? <p role="status">Checking availability…</p> : !eligibility.canOffer ? <p role="status">This listing is not accepting offers right now.</p> : null}
+          {eligibility.minimumOffer > 0 && <p className="text-sm text-muted-foreground">Minimum offer: ${eligibility.minimumOffer.toLocaleString()}</p>}
           {step === 'review' ? <>
             <div className="rounded-xl border border-border bg-muted/40 p-4">
               <p className="text-sm text-muted-foreground">Your offer for "{listingTitle}"</p>
@@ -151,7 +155,7 @@ export const MakeOfferModal = ({
             </p>
             <div className="flex gap-3 pt-1">
               <Button type="button" variant="outline" className="flex-1" onClick={() => setStep('amount')}><ArrowLeft className="h-4 w-4 mr-2" />Edit offer</Button>
-              <Button type="submit" className="flex-1" disabled={isSubmitting || !acknowledged}>
+              <Button type="submit" className="flex-1" disabled={isSubmitting || !acknowledged || !eligibility.canOffer}>
                 {isSubmitting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Send className="h-4 w-4 mr-2" />}Send offer
               </Button>
             </div>
@@ -176,7 +180,7 @@ export const MakeOfferModal = ({
                 value={offerAmount}
                 onChange={(e) => setOfferAmount(e.target.value)}
                 className="pl-9"
-                min="0.01"
+                min={Math.max(0.01,eligibility.minimumOffer)}
                 max="10000000"
                 step="0.01"
                 required
@@ -223,7 +227,7 @@ export const MakeOfferModal = ({
             <Button
               type="submit"
               className="flex-1"
-              disabled={!offerAmount}
+              disabled={!offerAmount || isSubmitting || !eligibility.canOffer}
             >
               {isSubmitting ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
