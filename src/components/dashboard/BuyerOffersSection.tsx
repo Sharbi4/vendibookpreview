@@ -23,7 +23,7 @@ const getStatusConfig = (status: string, expiresAt: string | null) => {
     case 'pending':
       return {
         icon: Clock,
-        label: 'Pending',
+        label: 'Request pending',
         color: 'text-amber-600',
         bgColor: 'bg-amber-50',
         badgeVariant: 'outline' as const,
@@ -31,7 +31,7 @@ const getStatusConfig = (status: string, expiresAt: string | null) => {
     case 'countered':
       return {
         icon: ArrowRightLeft,
-        label: 'Counter-Offer',
+        label: 'Counteroffer pending',
         color: 'text-blue-600',
         bgColor: 'bg-blue-50',
         badgeVariant: 'outline' as const,
@@ -39,7 +39,7 @@ const getStatusConfig = (status: string, expiresAt: string | null) => {
     case 'accepted':
       return {
         icon: CheckCircle2,
-        label: 'Accepted',
+        label: 'Price agreed — invoice pending',
         color: 'text-emerald-600',
         bgColor: 'bg-emerald-50',
         badgeVariant: 'default' as const,
@@ -47,7 +47,7 @@ const getStatusConfig = (status: string, expiresAt: string | null) => {
     case 'purchased':
       return {
         icon: CheckCircle2,
-        label: 'Purchased',
+        label: 'Sale pending',
         color: 'text-primary',
         bgColor: 'bg-primary/10',
         badgeVariant: 'default' as const,
