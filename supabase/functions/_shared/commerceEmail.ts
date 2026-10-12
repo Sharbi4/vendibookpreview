@@ -9,6 +9,33 @@ export async function dispatchCommerceEmails(admin: any, actorId: string | null 
   for (const event of events ?? []) {
     let failure: string | null = null;
     try {
+      // One persisted buyer event owns the support alert. Keep it independent
+      // of customer email preferences and use a stable key across queue retries.
+      if (event.event_type === "purchase_requested" && /^request:[0-9a-f-]{36}:buyer$/i.test(event.event_key)) {
+        const requestId = event.event_key.split(":")[1];
+        const { error: alertError } = await invokeTransactionalEmail({
+          templateName: "generic-notice",
+          recipientEmail: "support@vendibook.com",
+          idempotencyKey: "manual-invoice-request:" + requestId,
+          templateData: {
+            subject: "Action required: purchase request — manual invoice",
+            kicker: "Vendibook purchase order",
+            heading: "Prepare the customer's invoice",
+            paragraphs: [
+              "A purchase request has been submitted. Payment is pending; this request is not a paid receipt.",
+              "Purchase request: " + requestId,
+              "Sale / order: " + event.sale_id,
+              "Buyer account: " + event.recipient_id,
+              "Review the purchase details, seller approval, agreed terms, and applicable tax before manually sending the invoice. Do not mark the order paid until payment has been verified.",
+            ],
+            ctaLabel: "Open admin",
+            ctaUrl: "https://vendibook.com/admin",
+            footnote: "Use the purchase request and order references above to reconcile the invoice and payment.",
+          },
+          metadata: { commerce_event_id: event.id, sale_id: event.sale_id, purchase_request_id: requestId, event_type: "manual_invoice_requested" },
+        });
+        if (alertError) throw alertError;
+      }
       const { data: prefs, error: prefsError } = await admin.from("notification_preferences")
         .select("sale_email").eq("user_id", event.recipient_id).maybeSingle();
       if (prefsError) throw prefsError;
