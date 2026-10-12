@@ -16,6 +16,7 @@ create table public.sale_transactions(id uuid primary key,listing_id uuid,buyer_
 create table public.notifications(id uuid default gen_random_uuid(),user_id uuid,type text,title text,message text,link text);
 `);
 await db.exec(await readFile('supabase/migrations/20261012014545_invoice_commerce_foundation.sql','utf8'));
+await db.exec(await readFile('supabase/migrations/20261012170000_invoice_live_validation.sql','utf8'));
 const id = n => `00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const buyer=id(1), seller=id(2), other=id(3), admin=id(4), listing=id(5), sale=id(6), sale2=id(7);
 const query=(sql,params=[])=>db.query(sql,params);
@@ -44,8 +45,11 @@ const invoice=(await action(request,seller,'approve')).rows[0].result.invoice_id
 await test('repeat approval creates no duplicate invoice',async()=>{assert.equal((await action(request,seller,'approve')).rows[0].result.invoice_id,invoice);assert.equal((await query('select count(*)::int n from sale_invoices')).rows[0].n,1);});
 await test('another buyer cannot reserve the same equipment',()=>assert.rejects(action(request2,seller,'approve'),/reserved/));
 await test('seller-covered freight is zero on buyer invoice',async()=>{const i=(await query('select * from sale_invoices where id=$1',[invoice])).rows[0];assert.equal(Number(i.freight_cents),0);assert.equal(Number(i.total_cents),520000);assert.equal(i.fee_snapshot.fee_cents,43500);});
-await test('payment gate requires sandbox evidence',()=>assert.rejects(query('update commerce_rollout set payments_enabled=true'),/check constraint/));
-await query("update commerce_rollout set payments_enabled=true,sandbox_validation_reference='TEST ONLY'");
+await test('live payment gate requires live evidence',()=>assert.rejects(query('update commerce_rollout set payments_enabled=true'),/check constraint/));
+await test('sandbox evidence cannot activate live payments',()=>assert.rejects(query("update commerce_rollout set payments_enabled=true,sandbox_validation_reference='TEST ONLY'"),/check constraint/));
+await test('blank live evidence cannot activate payments',()=>assert.rejects(query("update commerce_rollout set payments_enabled=true,live_validation_reference='   '"),/check constraint/));
+await query("update commerce_rollout set payments_enabled=true,live_validation_reference='TEST ONLY: non-charging readiness'");
+await test('live evidence cannot activate sandbox payments',()=>assert.rejects(query("update commerce_rollout set payment_environment='sandbox',sandbox_validation_reference=null"),/check constraint/));
 await test('invoice payment ownership enforced',()=>assert.rejects(query('select commerce_claim_invoice($1,$2)',[sale,other]),/Not authorized/));
 await query('select commerce_claim_invoice($1,$2)',[sale,buyer]);
 await test('in-flight payment cannot release reservation',async()=>{await assert.rejects(query('select commerce_cancel_invoice($1,$2)',[invoice,buyer]),/reconciliation/);await query("update sale_invoices set due_at=now()-interval '1 day'");await query('select commerce_expire_unpaid()');assert.equal((await query('select status from sale_invoices')).rows[0].status,'payment_processing');});

@@ -1,3 +1,4 @@
+import { sellerReferralFeatures } from "./paypalInvoiceReadiness.ts";
 import { cardPaymentSource } from "./paypalCardPolicy.ts";
 /**
  * Vendibook PayPal service layer.
@@ -1070,12 +1071,10 @@ export async function createPartnerReferral(opts: {
               integration_method: "PAYPAL",
               integration_type: "THIRD_PARTY",
               third_party_details: {
-                features: [
-                  "PAYMENT",
-                  "REFUND",
-                  "ACCESS_MERCHANT_INFORMATION",
-                  "BILLING_AGREEMENT",
-                ],
+                features: sellerReferralFeatures(
+                  env === "live" &&
+                  (Deno.env.get("PAYPAL_INVOICE_DISBURSEMENT_ENABLED") ?? "").toLowerCase() === "true",
+                ),
               },
             },
           },

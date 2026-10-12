@@ -42,7 +42,7 @@ jobs:
       - name: Offer deadline behavior
         run: node --experimental-strip-types scripts/test-offer-state.mjs
       - name: Equipment fee and consent regressions
-        run: bunx vitest run src/test/payments/equipmentSaleFee.test.ts src/lib/fees/feeConfig.test.ts src/test/purchaseRequestPolicy.test.tsx
+        run: bunx vitest run src/test/payments/equipmentSaleFee.test.ts src/lib/fees/feeConfig.test.ts src/test/purchaseRequestPolicy.test.tsx src/test/payments/paypalSellerStatus.test.ts src/test/payments/paypalInvoiceReadiness.test.ts
       - name: Isolated invoice database
         run: |
           npm install --prefix "$RUNNER_TEMP/invoice-test" @electric-sql/pglite@0.3.14

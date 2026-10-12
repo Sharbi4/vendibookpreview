@@ -1,9 +1,14 @@
+import { invoiceSellerReadiness } from "../_shared/paypalInvoiceReadiness.ts";
+import { multipartyEnabled } from "../_shared/paypalMultiparty.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
 import {
   PAYPAL_CHECKOUT_INTENT,
   getPayPalAccessToken,
+  getMerchantIntegrationStatus,
+  paypalPublicClientId,
+  paypalOnboardingEnvironment,
   paypalConfigStatus,
   paypalEnvironment,
 } from "../_shared/paypal.ts";
@@ -28,6 +33,47 @@ serve(async (req) => {
     if (!isAdmin) return jsonError(403, "forbidden", "Administrator access required.");
 
     const config = paypalConfigStatus();
+
+    // Non-charging admin diagnostic. Never creates an order or changes a seller.
+    const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
+    if (body?.action === "invoice_readiness") {
+      const sellerId = body.seller_id;
+      if (typeof sellerId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(sellerId)) {
+        return jsonError(400, "seller_required", "Select the seller to check.");
+      }
+      const reasons: string[] = [];
+      if (config.environment !== "live") reasons.push("live_environment_required");
+      if (paypalOnboardingEnvironment() !== "live") reasons.push("live_onboarding_required");
+      if (!config.client_id_configured || !config.client_secret_configured) reasons.push("live_credentials_missing");
+      if (!config.webhook_id_configured) reasons.push("webhook_configuration_missing");
+      if (!(await multipartyEnabled(admin))) reasons.push("multiparty_disabled");
+      if ((Deno.env.get("PAYPAL_INVOICE_DISBURSEMENT_ENABLED") ?? "").toLowerCase() !== "true") reasons.push("invoice_disbursement_disabled");
+      const { data: account, error: accountError } = await admin.from("seller_paypal_accounts")
+        .select("merchant_id,environment").eq("user_id", sellerId).is("archived_at", null).maybeSingle();
+      if (accountError) return jsonError(503, "seller_lookup_unavailable", "Seller readiness could not be checked.");
+      if (!account?.merchant_id || account.environment !== "live") reasons.push("live_seller_connection_required");
+      let merchantVerified = false;
+      if (config.environment === "live" && account?.environment === "live" && account.merchant_id) {
+        try {
+          const raw = await getMerchantIntegrationStatus(account.merchant_id, { environment: "live" });
+          const result = invoiceSellerReadiness(raw, account.merchant_id, paypalPublicClientId(), "live");
+          reasons.push(...result.reasons);
+          merchantVerified = result.ready;
+        } catch {
+          // Recorded webhook consent and old snapshots cannot prove live capabilities.
+          reasons.push("live_merchant_status_unavailable");
+        }
+      }
+      return jsonResponse(200, {
+        environment: config.environment,
+        seller_ready: merchantVerified && reasons.length === 0,
+        reasons: [...new Set(reasons)],
+        checked_at: new Date().toISOString(),
+        payment_activation_verified: false,
+        detail: "Seller readiness only. Invoice capture, tax, fulfillment and release verification remain separate.",
+      });
+    }
+
 
     let apiConnectivity: "ok" | "unauthenticated" | "not_configured" = "not_configured";
     if (config.client_id_configured && config.client_secret_configured) {
