@@ -430,38 +430,9 @@ export const StepPricing: React.FC<StepPricingProps> = ({
             </div>
           ) : (
               <div className="p-4 rounded-xl border border-border bg-card">
-                <Label className="font-medium mb-3 block">Payment Methods</Label>
-                <div className="space-y-3">
-                  <label className="flex items-center gap-3 cursor-pointer">
-                    <Checkbox
-                      checked={formData.accept_paypal_checkout}
-                      onCheckedChange={(c) => updateField('accept_paypal_checkout', !!c)}
-                    />
-                    <div className="flex items-center gap-2">
-                      <CreditCard className="w-4 h-4 text-primary" />
-                      <span className="text-sm">PayPal checkout</span>
-                    </div>
-                  </label>
-                  {formData.accept_paypal_checkout && (
-                    <SellerBusinessAccountHelp className="border-l border-border pl-3" compact />
-                  )}
-                  <label className="flex items-center gap-3 cursor-pointer">
-                    <Checkbox
-                      checked={formData.accept_cash_payment}
-                      onCheckedChange={(c) => updateField('accept_cash_payment', !!c)}
-                    />
-                    <div className="flex items-center gap-2">
-                      <Banknote className="w-4 h-4 text-green-600" />
-                      <span className="text-sm">Pay in Person</span>
-                    </div>
-                  </label>
-                </div>
-                {!formData.accept_paypal_checkout && !formData.accept_cash_payment && (
-                  <p className="text-xs text-destructive mt-3 flex items-center gap-1">
-                    <Info className="w-3 h-3" />
-                    Select at least one payment method
-                  </p>
-                )}
+                <Label className="font-medium mb-3 block">Invoice payment</Label>
+                <p className="text-sm text-muted-foreground">Buyers submit a purchase request for your approval. After approval, they review and pay an itemized invoice online through PayPal.</p>
+                <SellerBusinessAccountHelp className="mt-3 border-l border-border pl-3" compact />
               </div>
           )}
         </div>

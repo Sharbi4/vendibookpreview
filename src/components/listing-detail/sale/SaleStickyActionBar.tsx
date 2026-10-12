@@ -100,7 +100,7 @@ export const SaleStickyActionBar = ({
             className="h-14 text-base gap-2"
           >
             <ShoppingCart className="h-5 w-5" />
-            Buy Now
+            Request to Buy
           </Button>
         </div>
       </div>

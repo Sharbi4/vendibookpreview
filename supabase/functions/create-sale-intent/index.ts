@@ -42,6 +42,7 @@ serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const requestOnly = body?.request_only === true;
+    if (!requestOnly) return jsonError(409,'invoice_request_required','Submit a purchase request for seller approval before invoice payment.');
     if (requestOnly) {
       const { data: rollout, error: rolloutError } = await admin.from('commerce_rollout').select('requests_enabled').eq('id',true).single();
       if (rolloutError || !rollout?.requests_enabled) return jsonError(409,'rollout_pending','Invoice purchase requests are awaiting activation.');

@@ -50,8 +50,8 @@ const initialFormData: ListingFormData = {
   height_inches: '',
   freight_category: null,
   required_documents: [],
-  // Payment method preferences (for sales) - PayPal checkout + in-person cash
-  accept_cash_payment: true,
+  // New equipment sales use an approved invoice and online payment.
+  accept_cash_payment: false,
   accept_card_payment: true, // Legacy; retained for audit
   accept_paypal_checkout: true,
   // Proof Notary add-on (for sales)
@@ -163,7 +163,7 @@ export const useListingForm = () => {
       case 3:
         // Price required, and for sales, at least one payment method
         if (formData.mode === 'sale') {
-          const hasPaymentMethod = formData.accept_cash_payment || formData.accept_paypal_checkout;
+          const hasPaymentMethod = true; // Invoice payment is the only sale method.
           return formData.price_sale.trim().length > 0 && parseFloat(formData.price_sale) > 0 && hasPaymentMethod;
         }
         return formData.price_daily.trim().length > 0 && parseFloat(formData.price_daily) > 0;

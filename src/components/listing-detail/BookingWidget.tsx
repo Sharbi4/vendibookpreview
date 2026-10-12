@@ -833,7 +833,7 @@ export const BookingWidget = ({
                   disabled={!priceSale}
                   data-testid="booking-widget-buy-now"
                 >
-                  Buy Now
+                  Request to Buy
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               </motion.div>

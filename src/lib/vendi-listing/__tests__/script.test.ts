@@ -217,11 +217,11 @@ describe('progressive interview and optional depth', () => {
     expect(parseExtraRates('no idea')).toEqual({});
   });
 
-  it('maps sale payment preferences to the current PayPal / in-person fields', () => {
+  it('normalizes stale cash selections to invoice-only payment', () => {
     const base: VendiDraft = { title: null, description: null, category: 'food_truck', mode: 'sale' };
     const inPerson = answer(base, 'payment_prefs', 'in_person');
     expect(buildListingPayload(inPerson, [])).toMatchObject({
-      accept_paypal_checkout: false, accept_cash_payment: true,
+      accept_paypal_checkout: true, accept_cash_payment: false,
     });
     const paypal = answer(base, 'payment_prefs', 'paypal');
     expect(buildListingPayload(paypal, [])).toMatchObject({

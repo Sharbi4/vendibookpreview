@@ -20,11 +20,11 @@ export const ListingPaymentMethods = ({ listing, className }: ListingPaymentMeth
   // PayPal checkout unless the seller explicitly disables it.
   const isSale = listing?.mode === 'sale';
   const paypalEnabled = isSale
-    ? listing?.accept_paypal_checkout === true
+    ? true
     : listing?.accept_paypal_checkout !== false;
-  const cashPayments = listing?.accept_cash_payment === true;
+  const cashPayments = false;
 
-  if (!paypalEnabled && !cashPayments && !financing) return null;
+  if (!isSale || (!paypalEnabled && !financing)) return null;
 
   return (
     <div
@@ -42,8 +42,8 @@ export const ListingPaymentMethods = ({ listing, className }: ListingPaymentMeth
             <PayPalWordmark className="h-3.5" />
           </div>
           <p className="text-[11px] text-muted-foreground/80 leading-relaxed mt-2">
-            Checkout is processed by PayPal. Card and PayPal balance are accepted — a PayPal account
-            is not required to pay by card.
+            The seller reviews your purchase request, usually within 24–48 hours. After approval,
+            review your itemized invoice and pay online through PayPal.
           </p>
         </>
       )}

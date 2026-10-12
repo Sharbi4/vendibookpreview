@@ -193,7 +193,7 @@ export const StickyMobileCTA = ({
             </Button>
           ) : (
 
-            /* Sale CTAs - Buy Now (prominent) & Make Offer */
+            /* Sale CTAs - Request to Buy (prominent) & Make Offer */
             <div className="flex items-center gap-2 sm:gap-3">
               <Button
                 variant="outline"
@@ -215,7 +215,7 @@ export const StickyMobileCTA = ({
                 className="gap-2 h-12 sm:h-14 px-6 sm:px-8 text-base sm:text-lg font-bold shadow-xl no-tap-highlight"
               >
                 <ShoppingCart className="h-5 w-5 sm:h-6 sm:w-6" />
-                Buy Now
+                Request to Buy
               </Button>
             </div>
           )}

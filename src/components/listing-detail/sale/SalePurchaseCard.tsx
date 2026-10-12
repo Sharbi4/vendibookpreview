@@ -380,7 +380,7 @@ export const SalePurchaseCard = ({
               variant="cta"
               className="w-full h-14 text-base"
             >
-              Buy Now
+              Request to Buy
               <ArrowRight className="w-5 h-5 ml-2" />
             </Button>
             <WalkthroughCta listingId={listing.id} />

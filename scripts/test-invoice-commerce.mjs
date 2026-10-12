@@ -17,16 +17,23 @@ create table public.notifications(id uuid default gen_random_uuid(),user_id uuid
 `);
 await db.exec(await readFile('supabase/migrations/20261012014545_invoice_commerce_foundation.sql','utf8'));
 await db.exec(await readFile('supabase/migrations/20261012170000_invoice_live_validation.sql','utf8'));
+await db.exec("alter table listings add column accept_cash_payment boolean, add column accept_paypal_checkout boolean");
+await db.exec(await readFile('supabase/migrations/20261012180000_retire_new_cash_sales.sql','utf8'));
 const id = n => `00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const buyer=id(1), seller=id(2), other=id(3), admin=id(4), listing=id(5), sale=id(6), sale2=id(7);
 const query=(sql,params=[])=>db.query(sql,params);
 for(const u of [buyer,seller,other,admin])await query('insert into auth.users values($1)',[u]);
 await query('insert into profiles values($1,$2,$2)',[seller,'Legal Seller LLC']);
-await query("insert into listings values($1,$2,'published','sale','seller','Truck')",[listing,seller]);
+await query("insert into listings(id,host_id,status,mode,freight_payer,title) values($1,$2,'published','sale','seller','Truck')",[listing,seller]);
 for(const [s,b] of [[sale,buyer],[sale2,other]]) await query("insert into sale_transactions(id,listing_id,buyer_id,seller_id,status,terms_id,amount,delivery_fee,freight_cost,fulfillment_type,buyer_name,buyer_email,fee_rate_pct) values($1,$2,$3,$4,'pending',$5,5000,200,900,'vendibook_freight','Buyer','buyer@example.com',8.7)",[s,listing,b,seller,id(8)]);
 let count=0;
 const test=async(name,fn)=>{await fn(); count++; console.log('PASS '+name);};
 const submit=(s,b,ack=true)=>query('select commerce_submit_request($1,$2,$3,$4) as id',[s,b,'purchase-request-2026-10-11',ack]);
+await test('new cash transactions are rejected',()=>assert.rejects(query("insert into sale_transactions(id,status) values($1,'pending_cash')",[id(90)]),/Cash sales are retired/));
+await test('manipulated listing flags normalize to invoice payment',async()=>{
+  await query("update listings set accept_cash_payment=true,accept_paypal_checkout=false where id=$1",[listing]);
+  assert.deepEqual((await query("select accept_cash_payment,accept_paypal_checkout from listings where id=$1",[listing])).rows[0],{accept_cash_payment:false,accept_paypal_checkout:true});
+});
 await test('disabled rollout rejects requests',()=>assert.rejects(submit(sale,buyer),/not activated/));
 await test('null legal review cannot activate rollout',()=>assert.rejects(query('update commerce_rollout set requests_enabled=true,enabled_at=now()'),/check constraint/));
 await query("update commerce_rollout set requests_enabled=true,enabled_at=now(),legal_review_reference='TEST ONLY'");

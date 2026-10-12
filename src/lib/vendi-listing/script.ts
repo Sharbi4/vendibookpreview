@@ -136,9 +136,7 @@ export const FULFILLMENT_OPTIONS: QuestionOption[] = [
 ];
 
 export const PAYMENT_OPTIONS: QuestionOption[] = [
-  { value: 'both', label: 'PayPal or in person', description: 'Widest reach — recommended' },
-  { value: 'paypal', label: 'PayPal checkout only', description: 'Buyer pays online' },
-  { value: 'in_person', label: 'In person only', description: 'Cash sales are free on Vendibook' },
+  { value: 'invoice', label: 'Invoice payment', description: 'Buyer pays online after seller approval' },
 ];
 
 export const RENTAL_DOC_OPTIONS: DocumentType[] = [
@@ -1103,22 +1101,11 @@ export const QUESTIONS: Question[] = [
     kind: 'choice',
     tier: 'extra',
     optional: true,
-    when: (d) => d.mode === 'sale',
-    prompt: () => 'How would you like to get paid?',
-    tip: () => 'Pay-in-person sales are completely free — no commission, no buyer fee.',
+    when: () => false, // Invoice payment is automatic; no payment-method choice.
+    prompt: () => 'Equipment purchases use invoice payment.',
+    tip: () => 'Review the purchase request before an invoice is issued.',
     options: () => PAYMENT_OPTIONS,
-    apply: (_d, raw) => {
-      if (isSkip(raw)) return { patch: {} };
-      const v = cleanText(raw).toLowerCase();
-      if (v.includes('paypal') && !v.includes('person')) {
-        return { patch: { accept_paypal_checkout: true, accept_cash_payment: false } };
-      }
-      if (v.includes('person') || v.includes('cash')) {
-        return { patch: { accept_paypal_checkout: false, accept_cash_payment: true } };
-      }
-      if (v.includes('both')) return { patch: { accept_paypal_checkout: true, accept_cash_payment: true } };
-      return { error: 'Pick one of the payment options, or skip to keep both open.' };
-    },
+    apply: () => ({ patch: { accept_paypal_checkout: true, accept_cash_payment: false } }),
   },
   {
     id: 'dimensions',
@@ -1274,8 +1261,8 @@ export function getPublishBlockerDetails(draft: VendiDraft, imageCount: number):
     priceWeekly: draft.price_weekly ?? null,
     priceMonthly: draft.price_monthly ?? null,
     priceHourly: draft.price_hourly ?? null,
-    acceptPayPalCheckout: draft.accept_paypal_checkout ?? null,
-    acceptCashPayment: draft.accept_cash_payment ?? null,
+    acceptPayPalCheckout: draft.mode === 'sale' ? true : draft.accept_paypal_checkout ?? null,
+    acceptCashPayment: false,
     streetAddress: draft.street_address ?? null,
     city: draft.city ?? null,
     state: draft.state ?? null,
@@ -1377,8 +1364,8 @@ export function buildListingPayload(
     image_urls: imageUrls.length ? imageUrls : null,
     cover_image_url: imageUrls[0] ?? null,
     video_urls: videoUrls.length ? videoUrls : null,
-    accept_paypal_checkout: isSale ? draft.accept_paypal_checkout ?? true : false,
-    accept_cash_payment: isSale ? draft.accept_cash_payment ?? true : false,
+    accept_paypal_checkout: isSale,
+    accept_cash_payment: false,
     // Seller disclosures — same columns the manual wizard writes.
     condition: draft.condition ?? null,
     operational_status: draft.operational_status ?? null,

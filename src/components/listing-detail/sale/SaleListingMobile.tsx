@@ -324,7 +324,7 @@ export const SaleListingMobile = ({
                 className="h-14 gap-2 text-base"
               >
                 <ShoppingCart className="h-5 w-5" />
-                Buy Now
+                Request to Buy
               </Button>
               <Button
                 size="lg"

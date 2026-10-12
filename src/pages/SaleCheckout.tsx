@@ -81,7 +81,7 @@ const SALE_STEPS: Array<{ id: string; label: string; heading: string; descriptio
     id: 'agreement',
     label: 'Agreement',
     heading: 'Agreements',
-    description: 'Review and accept the terms for this transaction before continuing to payment.',
+    description: 'Review the terms before sending your purchase request for seller approval.',
   },
   {
     id: 'payment',
@@ -95,7 +95,7 @@ const SALE_STEPS: Array<{ id: string; label: string; heading: string; descriptio
  * Inline for-sale checkout wizard. Money, eligibility, and server payment
  * rules remain authoritative while each step preserves the buyer's inputs.
  */
-const SaleCheckout = ({ requestOnly = false }: { requestOnly?: boolean }) => {
+const SaleCheckout = ({ requestOnly = true }: { requestOnly?: boolean }) => {
   const [requestConfirmOpen, setRequestConfirmOpen] = useState(false);
   const requestAcknowledgement = useRef<{ version: string; accepted: true } | null>(null);
   const { listingId } = useParams();
@@ -343,8 +343,8 @@ const SaleCheckout = ({ requestOnly = false }: { requestOnly?: boolean }) => {
   const fulfillmentType = listing?.fulfillment_type || 'pickup';
   const vendibookFreightEnabled = listing?.vendibook_freight_enabled || false;
   const freightPayer = (listing?.freight_payer as 'buyer' | 'seller') || 'buyer';
-  const acceptPayPalCheckout = listing?.accept_paypal_checkout ?? true;
-  const acceptCashPayment = listing?.accept_cash_payment ?? false;
+  const acceptPayPalCheckout = true;
+  const acceptCashPayment = false;
   const isFreightSellerPaid = vendibookFreightEnabled && freightPayer === 'seller';
   const freightCost = estimate?.total_cost ?? 0;
   const hasValidEstimate = estimate !== null && estimate.total_cost > 0 && !estimateError;
@@ -680,7 +680,11 @@ const SaleCheckout = ({ requestOnly = false }: { requestOnly?: boolean }) => {
           privacy: privacyConsent.data?.content_hash ?? null,
         },
       });
-      await supabase.functions.invoke('acknowledge-terms', { body: { terms_id: prepared.termsId } });
+      const { data: acknowledged, error: acknowledgmentError } = await supabase.functions.invoke('acknowledge-terms', { body: { terms_id: prepared.termsId } });
+      if (acknowledgmentError || acknowledged?.error) {
+        const parsed = await parseEdgeError(acknowledgmentError, acknowledged);
+        throw new Error(parsed.message);
+      }
       return true;
     } catch (error) {
       toast({
@@ -1018,7 +1022,9 @@ const SaleCheckout = ({ requestOnly = false }: { requestOnly?: boolean }) => {
   const railExtras = requestOnly ? (
     <div className="rounded-2xl border bg-orange-50/50 p-5 space-y-3 text-sm">
       <strong>Request first. Pay after approval.</strong>
-      <p>The seller reviews your equipment and fulfillment details. Your itemized invoice will show the final tax and total before you authorize payment.</p>
+      <p>Send your purchase request to the seller for approval. Seller review usually takes 24–48 hours.</p>
+      <p>After approval, your invoice link will be available in your dashboard and sent by email. Review the itemized invoice and authorize payment of the total shown there.</p>
+      <p>Submitting a request does not reserve the equipment. Applicable tax and final delivery charges are confirmed on the invoice.</p>
       <p>No payment is collected with this request.</p>
     </div>
   ) : (
@@ -1317,7 +1323,7 @@ const SaleCheckout = ({ requestOnly = false }: { requestOnly?: boolean }) => {
           {step === 5 && requestOnly ? (
             <div className="space-y-4 rounded-3xl border bg-orange-50/40 p-6">
               <h2 className="text-xl font-semibold">Ready for seller review</h2>
-              <p className="text-sm text-muted-foreground">Your request includes the equipment, fulfillment preferences and accepted terms. The seller must approve before an invoice is issued.</p>
+              <p className="text-sm text-muted-foreground">Send your purchase request to the seller for approval. Reviews usually take 24–48 hours. After approval, you will receive an invoice link in your dashboard and by email to review and pay the total shown on the invoice. Nothing is charged now.</p>
               {intentError && <p role="alert" className="text-sm text-destructive">{intentError.detail}</p>}
               <Button size="lg" disabled={!agreementsRecorded || isPurchasing} onClick={() => setRequestConfirmOpen(true)}>Review &amp; request to buy</Button>
               <PurchaseRequestConfirmation open={requestConfirmOpen} onOpenChange={setRequestConfirmOpen} busy={isPurchasing} listingTitle={listing.title} onSubmit={ack => { requestAcknowledgement.current = ack; void runPurchase(); }} />

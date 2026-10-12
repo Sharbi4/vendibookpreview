@@ -161,7 +161,7 @@ Set "ready": true ONLY when you have gathered ALL required information and are p
     - **Trucks/Trailers for RENT:** Ask: "How will renters access this? Options: Pickup at your location, you deliver it, or both?"
     - **Trucks/Trailers for SALE:** Ask: "How will the buyer receive this? Pickup at your location, you deliver it, or both?"
 
-12. **Payment Method** (FOR SALE listings only) — Ask: "How would you like to accept payment? Options: PayPal checkout (online), Pay in person (cash), or Both." Set accept_paypal_checkout and accept_cash_payment accordingly. For RENT listings, skip this — PayPal checkout is the default.
+12. **Payment Method** — Do not ask the seller to choose a payment method. All equipment sales use seller-approved invoices paid online through PayPal. Set accept_paypal_checkout=true and accept_cash_payment=false for sale listings. Never offer cash or pay in person. Rental payments use the existing Square flow.
 
 12. **Dimensions** (for trucks/trailers) — Ask length, width, height, and weight if applicable. If [PHOTO_ANALYSIS] estimated dimensions, suggest those and ask the user to confirm. Convert feet to inches for storage (e.g., 18ft = 216 inches).
 
