@@ -68,17 +68,25 @@ serve(async (req) => {
   });
   if (insertErr) {
     if (insertErr.code === "23505") {
-      const { data: existing } = await admin.from("paypal_webhook_events")
+      const { data: existing, error: lookupErr } = await admin.from("paypal_webhook_events")
         .select("processed").eq("event_id", eventId).maybeSingle();
+      if (lookupErr || !existing) {
+        safeLog("webhook_retry_lookup_failed", { eventId, message: lookupErr?.message ?? "Event not found." });
+        return jsonResponse(500, { error: "Could not check stored event." });
+      }
       if (existing?.processed) {
         safeLog("webhook_duplicate_ignored", { eventId, eventType });
         return jsonResponse(200, { received: true, duplicate: true });
       }
       // Verified retry of an event that never completed — mark verified and
       // fall through so processing is attempted again (handlers are idempotent).
-      await admin.from("paypal_webhook_events")
+      const { error: retryErr } = await admin.from("paypal_webhook_events")
         .update({ verification_status: "verified", raw_event: event })
         .eq("event_id", eventId);
+      if (retryErr) {
+        safeLog("webhook_retry_store_failed", { eventId, message: retryErr.message });
+        return jsonResponse(500, { error: "Could not update stored event." });
+      }
       safeLog("webhook_retry_claimed", { eventId, eventType });
     } else {
       safeLog("webhook_store_failed", { eventId, message: insertErr.message });
@@ -89,9 +97,16 @@ serve(async (req) => {
 
   try {
     await handleEvent(admin, event);
-    await admin.from("paypal_webhook_events")
-      .update({ processed: true, processed_at: new Date().toISOString() })
-      .eq("event_id", eventId);
+    const { data: processedEvent, error: processedErr } = await admin.from("paypal_webhook_events")
+      .update({ processed: true, processed_at: new Date().toISOString(), processing_error: null })
+      .eq("event_id", eventId)
+      .select("event_id")
+      .maybeSingle();
+    // Do not acknowledge delivery until the processing result is durable.
+    // Returning 500 keeps a failed write (or missing event row) retryable.
+    if (processedErr || !processedEvent) {
+      throw new Error(processedErr?.message ?? "Could not record processed webhook.");
+    }
   } catch (err) {
     const message = (err as Error).message;
     safeLog("webhook_processing_failed", { eventId, eventType, message });
