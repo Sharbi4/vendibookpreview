@@ -92,6 +92,13 @@
       "when": 1791681597513,
       "tag": "0012_bs_members_view_assigned_regions",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1791769050313,
+      "tag": "0013_offer_purchase_process_hardening",
+      "breakpoints": true
     }
   ]
 }

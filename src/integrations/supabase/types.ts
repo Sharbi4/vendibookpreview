@@ -6370,8 +6370,77 @@ export type Database = {
         }
         Relationships: []
       }
+      offer_notification_sends: {
+        Row: {
+          created_at: string
+          event_type: string
+          offer_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          offer_id: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          offer_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offer_notification_sends_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: false
+            referencedRelation: "offers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      offer_terms_acceptances: {
+        Row: {
+          accepted_at: string
+          amount: number
+          buyer_id: string
+          id: string
+          listing_id: string
+          offer_id: string
+          terms_text: string
+          terms_version: string
+        }
+        Insert: {
+          accepted_at?: string
+          amount: number
+          buyer_id: string
+          id?: string
+          listing_id: string
+          offer_id: string
+          terms_text: string
+          terms_version: string
+        }
+        Update: {
+          accepted_at?: string
+          amount?: number
+          buyer_id?: string
+          id?: string
+          listing_id?: string
+          offer_id?: string
+          terms_text?: string
+          terms_version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offer_terms_acceptances_offer_id_fkey"
+            columns: ["offer_id"]
+            isOneToOne: true
+            referencedRelation: "offers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       offers: {
         Row: {
+          agreed_amount: number | null
+          agreed_at: string | null
           buyer_id: string
           counter_amount: number | null
           counter_expires_at: string | null
@@ -6386,9 +6455,12 @@ export type Database = {
           seller_id: string
           seller_response: string | null
           status: string
+          terms_version: string | null
           updated_at: string
         }
         Insert: {
+          agreed_amount?: number | null
+          agreed_at?: string | null
           buyer_id: string
           counter_amount?: number | null
           counter_expires_at?: string | null
@@ -6403,9 +6475,12 @@ export type Database = {
           seller_id: string
           seller_response?: string | null
           status?: string
+          terms_version?: string | null
           updated_at?: string
         }
         Update: {
+          agreed_amount?: number | null
+          agreed_at?: string | null
           buyer_id?: string
           counter_amount?: number | null
           counter_expires_at?: string | null
@@ -6420,6 +6495,7 @@ export type Database = {
           seller_id?: string
           seller_response?: string | null
           status?: string
+          terms_version?: string | null
           updated_at?: string
         }
         Relationships: [
@@ -14123,6 +14199,13 @@ export type Database = {
         Args: { kind: string; thread: string }
         Returns: Json
       }
+      offer_terms_current: {
+        Args: never
+        Returns: {
+          body: string
+          version: string
+        }[]
+      }
       partner_code_active_uses: {
         Args: {
           p_code_id: string
@@ -14292,6 +14375,15 @@ export type Database = {
         Args: { actor: string; hashed_code: string; phone: string }
         Returns: string
       }
+      respond_to_offer: {
+        Args: {
+          p_action: string
+          p_counter_amount?: number
+          p_message?: string
+          p_offer_id: string
+        }
+        Returns: string
+      }
       restore_permit_document: {
         Args: { p_document_id: string }
         Returns: {
@@ -14433,6 +14525,17 @@ export type Database = {
           _name?: string
           _page?: string
           _rating: number
+        }
+        Returns: string
+      }
+      submit_offer: {
+        Args: {
+          p_acknowledged: boolean
+          p_amount: number
+          p_listing_id: string
+          p_message: string
+          p_terms_text: string
+          p_terms_version: string
         }
         Returns: string
       }
