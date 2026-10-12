@@ -111,6 +111,7 @@ export default function MembershipSummaryCard() {
 
         <div className="flex flex-wrap gap-2">
           <Button asChild size="sm" variant="outline"><Link to="/dashboard/buyermatch">BuyerMatch AI</Link></Button>
+          <Button asChild size="sm" variant="outline"><Link to="/dashboard/buyermatch/membership">BuyerMatch membership</Link></Button>
           {isLoading ? (
             <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
           ) : hasSubscription ? (
