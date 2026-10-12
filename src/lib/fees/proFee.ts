@@ -15,7 +15,7 @@
 
 import { FEE_CONFIG } from '../../../supabase/functions/_shared/feeConfig';
 
-export const STANDARD_FEE_PCT = FEE_CONFIG.saleSellerFeePct;
+export const STANDARD_FEE_PCT = FEE_CONFIG.rentalHostFeePct;
 export const PRO_FEE_PCT = FEE_CONFIG.proSellerFeePct;
 /** Max saving versus standard, per completed transaction. */
 export const PRO_MAX_SAVINGS_CENTS = FEE_CONFIG.proMaxSavingsCents;

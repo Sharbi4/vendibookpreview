@@ -2,8 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
 import { assertListingPurchasable } from "../_shared/listingGuard.ts";
-import { resolveProStatus } from "../_shared/proEligibility.ts";
-import { computeProSellerFee } from "../_shared/proFee.ts";
+import { equipmentSaleFee } from "../_shared/equipmentSaleFee.ts";
 import { hasCurrentLegalAcceptance } from "../_shared/legalVersions.ts";
 import { priceFulfillment } from "../_shared/salePricing.ts";
 
@@ -171,11 +170,7 @@ serve(async (req) => {
     // COMMITMENT POINT: snapshot the seller fee that both sides agreed to.
     // Vendibook Pro eligibility is resolved here once; a later cancellation,
     // downgrade or upgrade never reprices this transaction.
-    const proStatus = await resolveProStatus(admin, listing.host_id);
-    const feeQuote = computeProSellerFee({
-      baseCents: Math.round(amount * 100),
-      isPro: proStatus.isPro,
-    });
+    const feeQuote = equipmentSaleFee(Math.round(amount * 100));
     const platformFee = feeQuote.feeCents / 100;
 
     const { data: created, error: insertErr } = await admin
@@ -187,9 +182,9 @@ serve(async (req) => {
         amount,
         platform_fee: platformFee,
         seller_payout: Math.round((amount - platformFee) * 100) / 100,
-        fee_rate_pct: feeQuote.effectiveRatePct,
-        pro_discount: feeQuote.discountCents / 100,
-        pro_fee_applied: feeQuote.proApplied,
+        fee_rate_pct: feeQuote.feeRatePct,
+        pro_discount: 0,
+        pro_fee_applied: false,
         fee_locked_at: new Date().toISOString(),
         status: "pending",
         payment_provider: "paypal",

@@ -15,8 +15,12 @@ export const FEE_CONFIG = {
   /** Host-side commission deducted from the rental subtotal. */
   rentalHostFeePct: 12.9,
   /** Seller-side commission on equipment sales. */
-  saleSellerFeePct: 12.9,
-  /** Vendibook Pro seller/host rate. */
+  saleSellerFeePct: 8.7,
+  /** Historical unsnapshotted sales; never reprice an existing order. */
+  legacySaleSellerFeePct: 12.9,
+  /** Build Studio is a separate commercial policy. */
+  buildStudioManufacturerFeePct: 6.5,
+  /** Preserved rental host benefit; never use for new equipment sales. */
   proSellerFeePct: 10.9,
   /** Max Pro saving versus standard, per completed transaction. */
   proMaxSavingsCents: 50_000,
