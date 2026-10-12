@@ -16,6 +16,7 @@ create table sale_invoices(listing_id uuid,status text);
 create table notifications(user_id uuid,type text,title text,message text,link text);
 `);
 await db.exec(await readFile('supabase/migrations/20261012230000_buyermatch_foundation.sql','utf8'));
+await db.exec(await readFile('supabase/migrations/20261012231000_buyermatch_report_email.sql','utf8'));
 const id=n=>'00000000-0000-4000-8000-'+String(n).padStart(12,'0');
 const seller=id(1),other=id(2),admin=id(4),listing=id(5);
 for(const u of [seller,other,admin])await db.query('insert into auth.users values($1)',[u]);
@@ -47,7 +48,7 @@ await test('activation is blocked before a real workflow is configured',async()=
  await assert.rejects(()=>act('activate',{campaign_id:campaign.id}));
  await act('activate',{campaign_id:campaign.id,research_started:true});
 });
-const record={campaign_id:campaign.id,listing_id:listing,prospect_id:'prospect-1',buyer_intent_summary:'Public request for a truck',source_type:'public buying request',match_confidence:0.8,outreach_status:'discovered',discovered_at:'2026-01-01T00:00:00Z',updated_at:'2026-01-02T00:00:00Z',private_contact:'private@example.test'};
+const record={campaign_id:campaign.id,listing_id:listing,prospect_id:'prospect-1',buyer_intent_summary:'Public request for a truck',source_type:'public buying request',source_reference:'test fixture source',research_permission:'authorized research fixture',match_confidence:0.8,outreach_status:'discovered',discovered_at:'2026-01-01T00:00:00Z',updated_at:'2026-01-02T00:00:00Z',private_contact:'private@example.test'};
 const stage=(key,records)=>act('import',{campaign_id:campaign.id,batch_key:key,records});
 const approve=(batch)=>act('approve_import',{campaign_id:campaign.id,import_id:batch.id,summary:'Reviewed public buying intent. No outreach has occurred.',review_confirmed:true});
 let batch;
@@ -104,6 +105,27 @@ await test('expiration stops new activity and preserves historical reports',asyn
 await test('canceled paid-through memberships retain eligibility, expired passes do not',async()=>{
  await db.exec("reset role; update host_subscriptions set status='canceled',current_period_end=now()+interval '1 day'");
  await who(seller);assert.equal((await act('config')).entitled,true);
+});
+await test('digest batching creates one email per campaign per day with exclusive leases',async()=>{
+ await db.exec("reset role; update buyermatch_email_queue set next_attempt_at=now()-interval '1 second'");
+ const queued=(await db.query('select * from buyermatch_email_queue')).rows;
+ assert.equal(queued.length,1);
+ const token=id(90);
+ const claimed=(await db.query('select * from claim_buyermatch_emails($1)',[token])).rows;
+ assert.equal(claimed.length,1);
+ assert.equal((await db.query('select * from claim_buyermatch_emails($1)',[id(91)])).rows.length,0);
+ await db.query('select finish_buyermatch_email($1,$2,null)',[claimed[0].id,id(91)]);
+ assert.equal((await db.query('select delivered_at from buyermatch_email_queue')).rows[0].delivered_at,null);
+ await db.query('select finish_buyermatch_email($1,$2,null)',[claimed[0].id,token]);
+ assert.ok((await db.query('select delivered_at from buyermatch_email_queue')).rows[0].delivered_at);
+});
+await test('open campaign limit and unavailable listing checks are enforced',async()=>{
+ await who(admin);await act('settings',{submissions_enabled:true,fulfillment_enabled:true,max_campaigns:1,workflow_reference:'Manual SOP'});
+ await db.exec('reset role');
+ await db.query("insert into listings(id,host_id,mode,status,title) values($1,$2,'sale','published','Second truck')",[id(6),seller]);
+ await who(seller);await assert.rejects(()=>act('submit',{listing_id:id(6)}));
+ await db.exec("reset role; update listings set unlisted=true");
+ await who(seller);await assert.rejects(()=>act('resume',{campaign_id:campaign.id}));
 });
 console.log(tests+' BuyerMatch security and workflow tests passed');
 await db.close();

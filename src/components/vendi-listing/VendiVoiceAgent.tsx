@@ -26,7 +26,7 @@ const UPSELLS: Record<
 > = {
   pro: {
     title: 'Vendibook Pro',
-    body: 'Seller commission drops to 10.9%, PricePilot appraisals are included, and every billing period comes with a Featured Boost credit.',
+    body: 'BuyerMatch AI adds reviewed buyer discovery for eligible listings, subject to activation and capacity. PricePilot and a Featured Boost credit each paid billing period remain included.',
     cta: 'See Pro plans',
     href: '/pricing',
   },

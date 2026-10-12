@@ -41,7 +41,7 @@ export default defineTool({
      */
     const HIGHLIGHTS: Record<string, string[]> = {
       vendibook_pro: [
-        "Seller/host commission drops from 12.9% to 10.9% (max $500 savings per transaction)",
+        "BuyerMatch AI: reviewed buyer discovery and priority outreach for eligible listings, subject to activation and capacity",
         "PricePilot appraisals included",
         "One Featured Boost credit each billing period (does not roll over)",
       ],

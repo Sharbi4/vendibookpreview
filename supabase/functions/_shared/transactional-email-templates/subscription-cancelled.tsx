@@ -54,8 +54,7 @@ const Email = ({ firstName, planName = 'Vendibook Pro', accessEndsAt, immediate,
     <Divider />
 
     <Text style={t.small}>
-      The free tier keeps your listings live. You'd move from the 10.9% Pro seller/host fee back
-      to the standard 12.9% rate, and Featured Boost credits stop accruing.
+      The free tier keeps your listings live. When paid Pro access ends, new BuyerMatch activity stops and Featured Boost credits stop accruing. Historical campaign reports and existing conversations remain available.
     </Text>
 
     <SupportRow note="Anything we could have done better? Reply and tell us." />

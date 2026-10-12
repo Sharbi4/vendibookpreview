@@ -83,7 +83,7 @@ const CATALOG: Record<string, LearnMoreEntry> = {
       { icon: Camera, title: 'Enhanced listing tools', body: 'Add more photos, richer descriptions, and highlight badges so your listing looks credible next to national competitors.' },
       { icon: Calendar, title: 'Booking calendar & inquiries', body: 'Manage requests, dates, and pricing in one place instead of texting back and forth.' },
       { icon: ShieldCheck, title: 'Payment protection built in', body: 'Every booking is held until fulfillment, so you never chase a payment.' },
-      { icon: DollarSign, title: 'Lower marketplace commission', body: 'Starter members keep more of every sale versus free-tier hosts.' },
+      { icon: DollarSign, title: 'Clear equipment-sale pricing', body: 'New eligible equipment sales use the same 8.7% commission for Standard and Pro sellers.' },
     ],
     screenshots: [
       { src: startupGuideShot, alt: 'Startup Guide checklist', caption: 'Startup Guide — every milestone to opening day.' },
@@ -95,10 +95,10 @@ const CATALOG: Record<string, LearnMoreEntry> = {
     promise: 'Sell faster and book more — the toolkit active hosts use to run a busy pipeline.',
     bestFor: 'Best for hosts with 2+ active listings or a growing customer base.',
     outcomes: [
-      { icon: TrendingUp, title: 'Featured placement included', body: 'Your listings show above standard results, typically 3–5× more views than untreated listings.' },
+      { icon: TrendingUp, title: 'Featured placement included', body: 'Your listings show above standard results, with visibility measured in your actual listing analytics.' },
       { icon: LineChart, title: 'PricePilot dynamic pricing', body: 'See what similar trucks and kitchens book for and adjust rates without guessing.' },
       { icon: Megaphone, title: 'AI listing rewrite credits', body: 'Rewrite tired copy in one click — headline, description, and highlights tuned for conversion.' },
-      { icon: Zap, title: 'Faster payouts, lower fees', body: 'Reduced marketplace commission on every paid booking or sale.' },
+      { icon: Zap, title: 'BuyerMatch AI', body: 'Reviewed buyer discovery and priority outreach for eligible sale listings. Campaign activation and capacity apply; sales are not guaranteed.' },
       { icon: Users, title: 'Multiple active listings', body: 'Run several units, spaces, or trucks from one dashboard.' },
     ],
     screenshots: [

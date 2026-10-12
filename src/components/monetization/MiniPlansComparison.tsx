@@ -21,6 +21,7 @@ export interface MiniPlansComparisonProps {
 }
 
 const ROWS: Array<{ label: string; free: string; growth: string }> = [
+  { label: 'BuyerMatch AI', free: 'Not included', growth: 'Eligible campaigns · activation required' },
   { label: 'Active listings',    free: 'Up to 2',         growth: 'Unlimited' },
   { label: 'Featured placement', free: 'Standard',        growth: 'Monthly Featured Boost credit' },
   { label: 'AI listing tools',   free: 'Basic templates', growth: 'Full tools bundle' },

@@ -58,7 +58,7 @@ export default function MembershipSummaryCard() {
         <div>
           <h2 className="text-base font-semibold text-foreground font-display">Membership & billing</h2>
           <p className="text-xs text-muted-foreground mt-0.5">
-            Manage your plan, cancel, or resume — right here.
+            Manage your plan, cancel, or resume — right here. BuyerMatch campaigns and reports are available in your dashboard.
           </p>
         </div>
         <Button asChild variant="ghost" size="sm" className="text-xs">
@@ -110,6 +110,7 @@ export default function MembershipSummaryCard() {
         )}
 
         <div className="flex flex-wrap gap-2">
+          <Button asChild size="sm" variant="outline"><Link to="/dashboard/buyermatch">BuyerMatch AI</Link></Button>
           {isLoading ? (
             <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
           ) : hasSubscription ? (

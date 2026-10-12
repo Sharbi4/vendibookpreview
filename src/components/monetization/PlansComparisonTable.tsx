@@ -11,6 +11,7 @@ interface Row {
 }
 
 const ROWS: Row[] = [
+  { label: 'BuyerMatch AI · eligible campaigns, activation required', free: false, starter: false, pro: true, premium: true },
   { label: 'Active listings', free: 'Up to 2 active', starter: 'Up to 5 active', pro: 'Unlimited', premium: 'Unlimited' },
   { label: 'Free e-signatures on every agreement', free: true, starter: true, pro: true, premium: true },
   { label: 'Payment protection at checkout', free: true, starter: true, pro: true, premium: true },

@@ -3,10 +3,12 @@ import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const FAQ = [
+  { q: 'Does BuyerMatch guarantee a buyer?', a: 'No. BuyerMatch supports relevant buyer discovery and authorized outreach for eligible sale listings. Submit a campaign from your Pro dashboard. It stays pending until an operator starts the approved workflow. Campaign limits apply; reports show actual reviewed activity, not guaranteed leads or sales.' },
+  { q: 'What happens when Pro ends?', a: 'New BuyerMatch activity stops when Pro access ends. Historical reports and existing customer conversations remain available. Previously activated boosts complete their purchased duration.' },
   { q: 'Can I cancel anytime?', a: 'Yes. Cancel online from Account → Subscription in one click. Your plan stays active through the end of the current paid period — no early-termination fees, no phone calls.' },
   { q: 'What happens to my listings if I downgrade?', a: 'Your listings stay live. If a downgrade would exceed your new plan\'s active-listing count, the newest ones are auto-paused and you can choose which to keep active. Nothing is deleted.' },
   { q: 'Is basic listing still free?', a: 'Yes. Free hosts and sellers keep every core tool: unlimited photos on your first listing, booking calendar basics, messaging, and payment protection at checkout.' },
-  { q: 'How do the fees work?', a: 'We charge a 12.9% host commission and a 12.9% renter fee on rentals, and an 8.7% seller commission on new online equipment sales for Standard and Pro sellers. Cash equipment sales are 100% free. Active Vendibook Pro members pay a reduced 10.9% rental host commission, with savings capped at $500 per completed transaction.' },
+  { q: 'How do the fees work?', a: 'We charge a 12.9% host commission and a 12.9% renter fee on rentals, and an 8.7% seller commission on new online equipment sales for Standard and Pro sellers. Equipment purchases follow the request and invoice process; cash checkout is no longer offered. Active Vendibook Pro members pay a reduced 10.9% rental host commission, with savings capped at $500 per completed transaction.' },
   { q: 'Do you offer refunds?', a: 'Subscription charges are non-refundable, but you can cancel anytime and access continues through the paid period. One-time boosts follow the refund policy shown at purchase.' },
 ];
 

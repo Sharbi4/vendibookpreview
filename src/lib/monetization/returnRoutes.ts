@@ -52,6 +52,14 @@ const buildDashboard = (
 });
 
 export const RETURN_ROUTES: Record<string, ReturnRoute> = {
+  vendibook_pro: buildDashboard(
+    'Welcome to Vendibook Pro',
+    'Your dashboard confirms membership activation after the payment provider verifies it.',
+    [{title:'Choose an eligible sale listing'},{title:'Add optional buyer preferences'},{title:'Submit your BuyerMatch campaign for operator activation'}],
+    'Set up BuyerMatch AI',
+    '/dashboard/buyermatch',
+    {successPath:'/dashboard/buyermatch?purchase=success',cancelPath:'/pricing?purchase=cancelled'},
+  ),
   // ---- Listing upgrades ------------------------------------------------
   'featured-listing-30': buildDashboard(
     'Your listing is featured for 30 days',

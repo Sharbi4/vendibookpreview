@@ -3,7 +3,7 @@
  *
  * Vendibook Pro and PermitPath Plus are separate products with separate PayPal
  * subscriptions, so their lifecycle emails must never cross: a PermitPath-only
- * member must never see the 10.9% Pro fee or the Featured Boost credit, and a
+ * member must never see Pro BuyerMatch benefits or the Featured Boost credit, and a
  * Pro member must never get a "$7.99 PermitPath" receipt.
  *
  * Both families share the SAME idempotency key convention

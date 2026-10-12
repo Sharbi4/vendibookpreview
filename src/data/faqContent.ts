@@ -414,15 +414,15 @@ export const faqCategories: FaqCategory[] = [
         id: "tiers-overview",
         question: "What plans are available?",
         answer:
-          "Two: Free (2 active listings, core buying, selling and renting) and Vendibook Pro at {{price:vendibook_pro}} (unlimited listings, the Premium Tools bundle including PricePilot and PermitPath Plus, advanced seller analytics, one Featured Boost credit each paid billing period, and a reduced 10.9% rental host fee capped at $500 saved per completed transaction). PermitPath Plus is also available on its own for {{price:permit_path_plus_monthly}}. See the full comparison on the pricing page.",
+          "Two: Free (2 active listings, core buying, selling and renting) and Vendibook Pro at {{price:vendibook_pro}} (unlimited listings, the Premium Tools bundle including PricePilot and PermitPath Plus, BuyerMatch AI with reviewed outreach reports (activation and campaign limits apply), advanced seller analytics, one Featured Boost credit each paid billing period, and a reduced 10.9% rental host fee capped at $500 saved per completed transaction). PermitPath Plus is also available on its own for {{price:permit_path_plus_monthly}}. See the full comparison on the pricing page.",
         actions: [A.pricing],
       },
       {
         id: "pro-benefits",
         question: "What exactly do I get with Vendibook Pro?",
         answer:
-          "Vendibook Pro is {{price:vendibook_pro}}, billed monthly in advance, cancel anytime. It includes: a reduced 10.9% rental host transaction fee instead of 12.9% (savings capped at $500 per completed transaction); one Featured Boost credit each paid billing period (unused credits do not roll over, and an activated boost finishes its 30-day run even if Pro later ends); unlimited active listings; the Premium Tools bundle and advanced seller analytics; and PermitPath Plus included. Cancelling stops the next renewal and your benefits stay active through the period you already paid for — there is no prorated refund simply for cancelling early.",
-        keywords: ["pro", "membership", "benefits", "10.9", "boost credit"],
+          "Vendibook Pro is {{price:vendibook_pro}}, billed monthly in advance, cancel anytime. It includes: BuyerMatch AI buyer discovery and reviewed activity reports for eligible sale listings (activation and capacity apply, no guaranteed leads or sales); existing rental fee benefits; one Featured Boost credit each paid billing period (unused credits do not roll over, and an activated boost finishes its 30-day run even if Pro later ends); unlimited active listings; the Premium Tools bundle and advanced seller analytics; and PermitPath Plus included. Cancelling stops the next renewal and your benefits stay active through the period you already paid for — there is no prorated refund simply for cancelling early.",
+        keywords: ["pro", "membership", "benefits", "BuyerMatch", "boost credit"],
         actions: [A.pricing, A.subscription],
       },
       {
@@ -535,7 +535,7 @@ export const faqCategories: FaqCategory[] = [
         id: "addon-differences",
         question: "What's the difference between Featured Boost, Pro Listing, and Vendibook Pro?",
         answer:
-          "Featured Boost buys visibility for one listing for 30 days. Pro Listing is a premium upgrade applied to one listing for 30 days. Vendibook Pro is an account-level monthly membership: unlimited listings, the reduced 10.9% rental host fee, premium tools, PermitPath Plus, and a Featured Boost credit each paid billing period.",
+          "Featured Boost buys visibility for one listing for 30 days. Pro Listing is a premium upgrade applied to one listing for 30 days. Vendibook Pro is an account-level monthly membership: unlimited listings, BuyerMatch AI for eligible sale listings (activation required), existing rental fee benefits, premium tools, PermitPath Plus, and a Featured Boost credit each paid billing period.",
         actions: [A.pricing],
       },
       {

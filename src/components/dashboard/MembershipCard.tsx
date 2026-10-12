@@ -79,7 +79,7 @@ const MembershipCard = () => {
               You&apos;re on Free
             </h2>
             <p className="mt-1.5 max-w-md text-[14px] leading-relaxed text-muted-foreground">
-              Vendibook Pro lowers your seller/host fee to 10.9%, includes a monthly Featured Boost
+              Vendibook Pro adds BuyerMatch AI with reviewed buyer discovery, a monthly Featured Boost
               credit, and unlocks the premium tools — {proPrice.labelWithCadence}. Cancel anytime.
             </p>
           </div>
@@ -190,13 +190,13 @@ const MembershipCard = () => {
         <div className="rounded-2xl border border-[rgba(24,20,16,0.09)] bg-card px-4 py-4">
           <p className="inline-flex items-center gap-2 text-[12px] font-semibold uppercase tracking-[0.14em] text-muted-foreground">
             <Percent className="h-3.5 w-3.5 text-primary" />
-            Your fee benefit
+            Your next buyer
           </p>
           <p className="mt-2 text-[15px] font-semibold text-foreground">
-            10.9% seller/host fee
+            BuyerMatch AI
           </p>
           <p className="mt-1 text-[13px] text-muted-foreground">
-            Instead of 12.9% — up to $500 saved per transaction.
+            Priority research and authorized outreach. Select a listing to request activation.
           </p>
         </div>
 
@@ -247,7 +247,7 @@ const MembershipCard = () => {
 
       <div className="mt-6 flex flex-wrap items-center gap-2.5">
         <Button asChild variant="cta">
-          <Link to="/account/subscription">Manage membership</Link>
+          <Link to="/dashboard/buyermatch">Open BuyerMatch AI</Link>
         </Button>
         <Button asChild variant="cta-outline">
           <Link to="/dashboard?view=host&tab=permits">Open PermitPath Plus</Link>
@@ -295,7 +295,7 @@ const MembershipCard = () => {
           <AlertDialogHeader>
             <AlertDialogTitle>Cancel Vendibook Pro?</AlertDialogTitle>
             <AlertDialogDescription>
-              Future renewals stop right away. You keep the 10.9% fee benefit, your Featured Boost
+              Future renewals stop right away. You keep BuyerMatch access, your Featured Boost
               credit, and premium tools through <strong>{fmtDate(endsOn)}</strong>. After that your
               account returns to Free — nothing is deleted and you can rejoin anytime.
             </AlertDialogDescription>

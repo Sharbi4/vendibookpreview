@@ -1,3 +1,4 @@
+import { dispatchBuyerMatchEmails } from "../_shared/buyerMatchEmail.ts";
 import { dispatchCommerceEmails } from "../_shared/commerceEmail.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { isAdminOrBackendCaller, forbiddenResponse } from '../_shared/callerGuard.ts';
@@ -19,6 +20,16 @@ Deno.serve(async req => {
     if (invoiceExpiryError) throw invoiceExpiryError;
     const commerceEmails = await dispatchCommerceEmails(db);
     let failures = commerceEmails.failures;
+    // BuyerMatch failures must not prevent offer notifications from draining.
+    try {
+      const { error: pauseError } = await db.rpc('buyermatch_pause_ineligible');
+      if (pauseError) throw pauseError;
+      const buyerMatchEmails = await dispatchBuyerMatchEmails(db);
+      failures += buyerMatchEmails.failures;
+    } catch (error) {
+      console.warn('[buyermatch-maintenance] Retry required', error);
+      failures++;
+    }
     for (const event of pending ?? []) {
       // Sender claims a lease and uses a stable provider idempotency key.
       const { error: sendError } = await db.functions.invoke('send-offer-notification', { body: event });

@@ -69,11 +69,13 @@ export const TIER_CATALOG: Record<TierRole, TierFeatureGroups> = {
   pro: {
     role: 'pro',
     name: 'Vendibook Pro',
-    tagline: 'Sell and book faster.',
+    tagline: 'Actively find your next buyer.',
     audience: 'For active hosts running the show.',
     ctaLabel: 'Go Pro',
     sellers: [
-      '1 active Featured Boost included',
+      'BuyerMatch AI — reviewed buyer discovery and priority outreach',
+      'Activity reports for eligible sale listings, subject to activation and capacity',
+      '1 Featured Boost credit per paid billing period',
       'Premium tools bundle — PricePilot appraisals and PermitPath Plus',
     ],
     hosts: [
@@ -83,7 +85,7 @@ export const TIER_CATALOG: Record<TierRole, TierFeatureGroups> = {
     ],
     shared: [
       'PermitPath Plus included — no per-tool paywalls',
-      'Lower Vendibook fee — 10.9% instead of 12.9% on your side',
+      '8.7% on new equipment sales for Standard and Pro sellers',
       'Everything in Free',
     ],
   },

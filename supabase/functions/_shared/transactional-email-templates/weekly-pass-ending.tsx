@@ -33,7 +33,7 @@ const Email = ({
               {firstName ? `${firstName}, your Pro Pass ends in ${daysLeft} days.` : `Your Pro Pass ends in ${daysLeft} days.`}
             </Heading>
             <Text style={s.lede}>
-              Keep featured placement, lower fees, and advanced analytics without a break — upgrade to monthly Pro for {monthlyPrice} before your pass ends{endsAt ? ` on ${endsAt}` : ''}.
+              Keep featured placement, eligible BuyerMatch access, and advanced analytics without a break — upgrade to monthly Pro for {monthlyPrice} before your pass ends{endsAt ? ` on ${endsAt}` : ''}.
             </Text>
             <Section style={s.ctaWrap}>
               <Button href={primary} style={s.button}>

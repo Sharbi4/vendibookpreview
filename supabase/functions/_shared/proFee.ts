@@ -1,16 +1,7 @@
 /**
- * Vendibook Pro seller/host fee benefit — pure money math.
- *
- * Standard seller/host commission is 12.9%. An active Vendibook Pro member
- * pays 10.9% on the seller/host side only, and the saving is capped at $500
- * per completed transaction (i.e. the discount is 2 points of the base, up to
- * $500). Buyer/renter fees are never touched, and pay-in-person sales stay
- * free with no extra discount.
- *
- * PayPal processing costs are NOT part of this calculation.
- *
- * MIRROR: src/lib/fees/proFee.ts — keep both in lockstep (parity unit test in
- * src/lib/fees/proFee.test.ts).
+ * Rental host fee benefit and historical transaction compatibility.
+ * New equipment sales use equipmentSaleFee.ts (8.7% Standard and Pro).
+ * The rental-only 10.9% benefit and $500 cap remain unchanged.
  */
 
 import { FEE_CONFIG } from './feeConfig.ts';

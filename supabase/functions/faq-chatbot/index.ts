@@ -36,7 +36,7 @@ const knowledgeBase = `
 - Card and PayPal payments are processed through PayPal (secure, PCI compliant)
 - Vendibook records the transaction and releases the seller payout after delivery is confirmed — typically within 24 hours, and always within 24–48 hours
 - Payouts are sent by PayPal, ACH, or Venmo depending on the seller's payout account
-- Seller commission is 12.9% (10.9% for Vendibook Pro members). Buyers pay no fee on sales
+- New eligible equipment sales have an 8.7% seller commission for Standard and Pro. Buyers pay no platform fee. Pro adds BuyerMatch AI, subject to campaign activation and capacity; no guaranteed buyers
 - Pay-in-person cash sales are completely free — no commission, no buyer fee
 - Rentals: 12.9% host commission plus a 12.9% renter fee
 - Disputes can be raised within 48 hours of issues

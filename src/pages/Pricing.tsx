@@ -43,6 +43,7 @@ import {
   buildPlanAuthReturnTo,
 } from '@/lib/monetization/returnRoutes';
 import { trackLeadEvent } from '@/lib/leadTracking';
+import BuyerMatchBenefits from '@/components/monetization/BuyerMatchBenefits';
 import PlansFAQ from '@/components/monetization/PlansFAQ';
 import PlanDetailsDialog from '@/components/monetization/PlanDetailsDialog';
 
@@ -120,11 +121,12 @@ const STARTER_FEATURES = [
   'Payment protection and PayPal-secured checkout',
   'Free e-signatures on every agreement',
   'PermitPath Basic — unlimited permit roadmaps',
-  'Pay-in-person sales are always free',
+  'Purchase requests and itemized invoices for equipment sales',
 ];
 
 const PRO_FEATURES = [
-  '10.9% rental host fee instead of 12.9% — up to $500 saved per completed transaction',
+  'BuyerMatch AI — priority buyer discovery for eligible sale listings',
+  'Reviewed outreach activity reports; campaign activation and capacity apply',
   '1 Featured Boost credit every billing period',
   'PricePilot appraisals included — comparable-backed valuations for your equipment',
   'PermitPath Plus included — save and track permit roadmaps',
@@ -357,7 +359,7 @@ const Pricing = () => {
     <div className="sale-light min-h-screen flex flex-col">
       <SEO
         title="Vendibook Pricing — Free & Vendibook Pro Membership"
-        description="Start free on Vendibook or go Pro for a 10.9% rental host fee, a monthly Featured Boost credit and premium tools. Cancel anytime."
+        description="Vendibook Pro adds BuyerMatch AI, priority buyer discovery, reviewed outreach reports, a monthly Featured Boost credit and premium tools."
         canonical="/pricing"
         image="https://vendibook.com/images/social/vendibook-og-pricing.jpg"
         imageAlt="Vendibook plans and pricing"
@@ -389,11 +391,11 @@ const Pricing = () => {
                 Pricing
               </div>
               <h1 className="text-4xl sm:text-5xl md:text-[3.4rem] font-bold tracking-tight text-foreground mb-5 leading-[1.06]">
-                Free to list. Pay only when you close.
+                Your listing deserves more than visibility.
               </h1>
               <p className="text-lg text-muted-foreground max-w-xl mx-auto leading-relaxed">
                 No listing fees and no contract. Upgrade to Pro when you&rsquo;re
-                ready for a lower fee, more visibility, and the full tool set.
+                ready for buyer discovery, reviewed outreach activity, and the full tool set.
               </p>
               <div className="mt-8 inline-flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-muted-foreground">
                 <span className="inline-flex items-center gap-1.5"><Check className="h-4 w-4 text-primary" /> Unlimited listings</span>
@@ -407,6 +409,7 @@ const Pricing = () => {
         {/* ---------------------------------------------------------- */}
         {/* PLANS — Starter vs Vendibook Pro                            */}
         {/* ---------------------------------------------------------- */}
+        <div className="container mx-auto max-w-5xl px-4 pb-12"><BuyerMatchBenefits /></div>
         <section aria-labelledby="membership" className="pb-16 md:pb-24">
           <h2 id="membership" className="sr-only">Membership plans</h2>
           <div className="container max-w-5xl mx-auto px-4">
@@ -459,7 +462,7 @@ const Pricing = () => {
                     bestFor="Anyone listing their first truck, trailer, cart or space."
                     billing="No listing fee. New online equipment sales: 8.7%. Rental host fee: 12.9%."
                     finePrint={[
-                      'Pay-in-person sales are free — no commission and no buyer fee.',
+                      'Equipment purchases use the request and invoice process. No cash checkout.',
                       'Rentals paid in person still owe the host commission.',
                       'Renters pay a separate 12.9% service fee at checkout, shown before they pay. Buyers pay no Vendibook fee on purchases.',
                     ]}
@@ -494,8 +497,8 @@ const Pricing = () => {
                   <span className="ml-1.5 text-base font-normal text-white/60">/month</span>
                 </p>
                 <p className="relative mt-2 text-sm text-white/70">
-                  <span className="font-semibold text-white">10.9%</span> rental host fee
-                  on eligible rentals. Equipment sales: 8.7% on both plans. Cancel anytime.
+                  <span className="font-semibold text-white">BuyerMatch AI</span> helps connect your equipment with potential buyers.
+                  Equipment sales: 8.7% on both plans. Cancel anytime.
                 </p>
 
                 {isPro && (
@@ -524,13 +527,14 @@ const Pricing = () => {
                     className="text-white/65 hover:text-white"
                     title="Vendibook Pro"
                     priceLabel={`${loadingSubs ? '—' : formatUsd(proPrice)}/month`}
-                    summary="A lower rental host fee, a Featured Boost credit every billing period and the premium tool set — on one monthly membership."
+                    summary="Priority buyer discovery, reviewed activity reports, a Featured Boost credit every billing period, and premium tools."
                     included={PRO_FEATURES}
-                    bestFor="Sellers and hosts closing regularly, where the fee difference outweighs the membership."
+                    bestFor="Sellers looking for relevant buying opportunities and measurable marketing activity."
                     billing="Recurring monthly through PayPal · cancel anytime."
                     statusLabel={isPro ? 'Your plan' : null}
                     finePrint={[
-                      'The 10.9% rate applies to the rental host side of a completed transaction, up to $500 saved per transaction.',
+                      'BuyerMatch campaigns require activation and are subject to operational limits; no guaranteed leads or sales.',
+                      'Existing rental fee benefits remain unchanged; see the rental fee schedule below.',
                       'The Featured Boost credit is 1 per billing period and does not roll over.',
                       'Cancel anytime — access continues through the end of the current paid period.',
                     ]}

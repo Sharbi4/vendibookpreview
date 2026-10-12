@@ -56,7 +56,7 @@ const Email = ({
   <VendibookEmailLayout preview={`${planName} is active — here's what's unlocked`} logoWidth={132}>
     <StatusChip label="Pro active" tone="brand" />
     <H1>{firstName ? `${planName} is unlocked, ${firstName}.` : `${planName} is unlocked.`}</H1>
-    <Lede>Every benefit below is switched on right now — nothing else to set up.</Lede>
+    <Lede>Your membership is active. Choose an eligible sale listing to submit your first BuyerMatch campaign; research begins after operator activation.</Lede>
 
     <DetailTable
       rows={[
@@ -66,14 +66,14 @@ const Email = ({
       ]}
     />
 
-    <CtaButton href={`${SITE_URL}/dashboard`}>Open your dashboard</CtaButton>
+    <CtaButton href={`${SITE_URL}/dashboard/buyermatch`}>Set up BuyerMatch AI</CtaButton>
 
     <Divider />
 
     <H2>Your Pro toolkit</H2>
     <Benefit
-      title="10.9% seller & host fee"
-      detail="Down from 12.9% on eligible transactions — up to $500 saved per completed transaction."
+      title="BuyerMatch AI & Priority Buyer Outreach"
+      detail="AI-assisted buyer discovery and reviewed outreach reports. Campaign activation and capacity apply; buyers and sales are not guaranteed."
     />
     <Benefit
       title="One Featured Boost every paid billing period"

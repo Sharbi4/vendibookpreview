@@ -49,7 +49,7 @@ const PILLARS: Array<{
     icon: Crown,
     eyebrow: 'For people who list often',
     title: 'Host Plans',
-    body: 'Featured placement, deeper analytics, lower selling fees, and priority support. Starter, Pro, and Premium. Cancel anytime.',
+    body: 'BuyerMatch AI, reviewed outreach reports, featured placement, premium tools, and priority support. Campaign activation and capacity apply. Cancel anytime.',
     href: '/pricing',
     cta: 'See host plans',
   },

@@ -175,6 +175,8 @@ BEGIN
       OR length(trim(coalesce(item->>'prospect_id',''))) NOT BETWEEN 1 AND 200
       OR length(trim(coalesce(item->>'buyer_intent_summary',''))) NOT BETWEEN 1 AND 2000
       OR length(trim(coalesce(item->>'source_type','')))=0
+      OR length(trim(coalesce(item->>'source_reference','')))=0
+      OR length(trim(coalesce(item->>'research_permission','')))=0
       OR coalesce((item->>'match_confidence')::numeric,-1) NOT BETWEEN 0 AND 1
       OR item->>'outreach_status' IS NULL OR item->>'outreach_status' NOT IN ('discovered','contacted','replied','interested','qualified','introduced','inquiry','opted_out')
       OR (item->>'discovered_at')::timestamptz IS NULL OR (item->>'discovered_at')::timestamptz>now()
@@ -229,7 +231,7 @@ BEGIN
         OR ((p.record->>'updated_at')::timestamptz=(item->>'updated_at')::timestamptz AND p.record IS DISTINCT FROM item)))
       THEN RAISE EXCEPTION 'Cannot overwrite opt-out or newer research'; END IF;
       INSERT INTO public.buyermatch_prospects(campaign_id,prospect_id,record,source_import_id) VALUES(campaign.id,item->>'prospect_id',item,batch.id)
-       ON CONFLICT(campaign_id,prospect_id) DO UPDATE SET record=excluded.record,source_import_id=excluded.source_import_id;
+       ON CONFLICT(campaign_id,prospect_id) DO UPDATE SET record=buyermatch_prospects.record || excluded.record,source_import_id=excluded.source_import_id;
      END LOOP;
      SELECT jsonb_build_object('discovered',count(*),
       'contacted',count(*) FILTER(WHERE p.record->>'attempt_at' IS NOT NULL),

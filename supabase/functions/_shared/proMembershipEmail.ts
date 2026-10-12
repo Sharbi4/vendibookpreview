@@ -5,7 +5,7 @@
  * idempotency key convention — a cancellation confirmed in-app and a later
  * BILLING.SUBSCRIPTION.CANCELLED webhook can never send two emails.
  *
- * Pro-only by design: the copy talks about the 10.9% seller fee and the monthly
+ * Pro-only by design: the copy talks about BuyerMatch AI and the monthly
  * Featured Boost credit, which do not apply to PermitPath Plus or any other
  * recurring product. Non-Pro tiers are skipped here rather than mis-branded.
  */

@@ -48,11 +48,11 @@ const PremiumDiscoveryBlock = () => {
               </div>
 
               <h2 className="text-2xl sm:text-3xl font-semibold text-foreground tracking-tight leading-[1.15] mb-2">
-                More visibility. Better tools. Lower fees.
+                More visibility. BuyerMatch AI. Better tools.
               </h2>
 
               <p className="text-sm sm:text-base text-muted-foreground leading-relaxed max-w-2xl">
-                Explore Vendibook Pro, Featured Boosts, Pro Listings, Concierge Listing, and PermitPath Plus.
+                Explore Pro buyer discovery and reviewed outreach reports for eligible listings. Activation and campaign limits apply. Featured Boosts and other upgrades remain available separately.
               </p>
             </div>
 

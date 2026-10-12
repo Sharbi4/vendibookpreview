@@ -51,7 +51,7 @@ const Email = ({
     <Divider />
 
     <Text style={t.small}>
-      Until that date you keep the 10.9% seller/host fee (versus the 12.9% standard rate) and
+      Until that date you keep eligible BuyerMatch access, premium tools, and
       your Featured Boost credit for the paid billing period. After that your account simply
       returns to Free — your listings, messages and history stay exactly where they are, and you
       can rejoin anytime.

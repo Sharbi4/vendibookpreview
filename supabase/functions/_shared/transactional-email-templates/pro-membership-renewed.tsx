@@ -55,8 +55,7 @@ const Email = ({
     <Divider />
 
     <Text style={t.small}>
-      Your Pro benefits continue for this billing period: the 10.9% seller/host fee instead of
-      the 12.9% standard rate (up to $500 saved per eligible completed transaction) and one
+      Your Pro benefits continue for this billing period: eligible BuyerMatch campaigns with reviewed activity reports, premium tools, and one
       Featured Boost credit per paid billing period, which doesn't roll over. Cancel anytime —
       cancelling stops future renewals only, and benefits stay active through the period you've
       paid for.
