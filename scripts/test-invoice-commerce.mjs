@@ -31,10 +31,10 @@ for(const u of [buyer,seller,other,admin])await query('insert into auth.users va
 await query('insert into profiles values($1,$2,$2)',[seller,'Legal Seller LLC']);
 await query("insert into listings(id,host_id,status,mode,freight_payer,title) values($1,$2,'published','sale','seller','Truck')",[listing,seller]);
 for(const [s,b] of [[sale,buyer],[sale2,other]]) await query("insert into sale_transactions(id,listing_id,buyer_id,seller_id,status,terms_id,amount,delivery_fee,freight_cost,fulfillment_type,buyer_name,buyer_email,fee_rate_pct) values($1,$2,$3,$4,'pending',$5,5000,200,900,'vendibook_freight','Buyer','buyer@example.com',8.7)",[s,listing,b,seller,s===sale?id(8):id(9)]);
-await query("update sale_transactions set invoice_required=true");
 const offer=id(91);
 await query("insert into offers values($1,$2,$3,$4,'accepted',5000)",[offer,buyer,seller,listing]);
 await query("update sale_transactions set source_offer_id=$1 where id=$2",[offer,sale]);
+await query("update sale_transactions set invoice_required=true");
 let count=0;
 const test=async(name,fn)=>{await fn(); count++; console.log('PASS '+name);};
 const submit=(s,b,ack=true)=>query('select commerce_submit_request($1,$2,$3,$4) as id',[s,b,'purchase-request-2026-10-11',ack]);

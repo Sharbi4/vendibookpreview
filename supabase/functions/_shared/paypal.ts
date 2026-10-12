@@ -14,8 +14,8 @@ import { cardPaymentSource } from "./paypalCardPolicy.ts";
  *   PAYPAL_ENVIRONMENT   'sandbox' | 'live'  (defaults to 'sandbox')
  */
 
-// NOTE: the Connected Path rollout flag lives in ./paypalMultiparty.ts. It is
-// intentionally NOT imported here — this layer creates first-party orders only.
+// Routing and merchant readiness are resolved by callers; this transport never
+// falls back to a first-party payee for a delayed-disbursement request.
 
 
 import { logPayPalApiCall } from "./paypalApiLog.ts";
@@ -456,6 +456,8 @@ export interface CreateOrderInput {
   payeeMerchantId?: string | null;
   /** Vendibook's fee in cents, disbursed to the partner account. */
   platformFeeCents?: number;
+  /** Server-only; invoice callers must verify merchant capabilities first. */
+  disbursementMode?: "INSTANT" | "DELAYED";
 }
 
 /** Vendibook's own merchant id — receives the platform fee on routed orders. */
@@ -547,17 +549,25 @@ function buildShipping(address?: OrderShippingAddress | null) {
   };
 }
 
-/*
- * Connected Path (multiparty) order routing is intentionally NOT implemented
- * here. Every order created by Vendibook today is first-party: Vendibook is
- * the payee and sellers are paid by the existing manual payout process.
- * `purchase_units[].payee` and `payment_instruction.platform_fees` will be
- * added deliberately in Step 3, behind the server-side paypalMultiparty flag
- * and per-seller readiness. Do not reintroduce them earlier.
- */
 
 
 export async function createPayPalOrder(input: CreateOrderInput) {
+  // No provider call is made for an incomplete delayed-disbursement route.
+  // The rollout flag is necessary but not sufficient: invoice entry points
+  // must additionally verify the current merchant capabilities and rollout.
+  if (input.disbursementMode === "DELAYED") {
+    if (Deno.env.get("PAYPAL_INVOICE_DISBURSEMENT_ENABLED") !== "true") {
+      throw new PayPalError("Invoice disbursement is not enabled.", 503, "INVOICE_DISBURSEMENT_DISABLED");
+    }
+    if (!input.payeeMerchantId?.trim() || !paypalPartnerMerchantId()?.trim()) {
+      throw new PayPalError("Delayed disbursement requires seller and partner merchants.", 503, "INVOICE_ROUTING_REQUIRED");
+    }
+    if (!Number.isSafeInteger(input.amountCents) || input.amountCents <= 0 ||
+        !Number.isSafeInteger(input.platformFeeCents) || input.platformFeeCents! < 0 ||
+        input.platformFeeCents! >= input.amountCents) {
+      throw new OrderArithmeticError("Invalid delayed-disbursement amounts.");
+    }
+  }
   const currency = (input.currency ?? "USD").toUpperCase();
   const b = input.breakdown;
   const taxCents = b?.taxCents ?? 0;
@@ -620,7 +630,7 @@ export async function createPayPalOrder(input: CreateOrderInput) {
   const partnerMerchantId = paypalPartnerMerchantId();
   const paymentInstruction = payeeMerchantId
     ? {
-      disbursement_mode: "INSTANT",
+      disbursement_mode: input.disbursementMode ?? "INSTANT",
       ...(platformFeeCents > 0
         ? {
           platform_fees: [{

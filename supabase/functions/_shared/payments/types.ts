@@ -99,6 +99,8 @@ export interface CreateOrderRequest {
   payeeMerchantId?: string | null;
   /** Vendibook's cut, in cents, on a routed order. */
   platformFeeCents?: number;
+  /** Server-resolved invoice routing; omitted preserves existing settlement. */
+  disbursementMode?: "INSTANT" | "DELAYED";
   /** Line items sent to the provider. Required by PayPal certification. */
   items?: {
     name: string;

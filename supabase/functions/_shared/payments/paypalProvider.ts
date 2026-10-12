@@ -155,6 +155,7 @@ export class PayPalProvider implements PaymentProvider, AuthorizationCapableProv
         // Connected Path routing — resolved server-side by the caller.
         payeeMerchantId: req.payeeMerchantId ?? null,
         platformFeeCents: req.platformFeeCents ?? 0,
+        disbursementMode: req.disbursementMode,
         items: req.items,
         shipping: req.shipping ?? null,
         buyerEmail: req.buyerEmail ?? null,
