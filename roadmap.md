@@ -1,5 +1,8 @@
 # Roadmap
 
+- [open] BuyerMatch seller intelligence: repair reads, locked/live dashboards, membership center, approved activation and attributable events.
+- [open] Restrict Build Studio asset reads while preserving approved catalog visibility and partner access.
+
 - [open] Premium homepage refresh using the attached tester feedback; preserve partner logos and existing search/voice behavior. Awaiting design selection.
 
 - [done] Checkout agreement gate: keep the payment-side Payments Terms version aligned with the version saved by the checked agreement box.
