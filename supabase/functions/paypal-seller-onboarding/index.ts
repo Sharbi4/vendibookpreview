@@ -1,3 +1,4 @@
+import { referralFailure } from "../_shared/paypalOnboardingError.ts";
 import { deriveStatus } from "../_shared/paypalSellerStatus.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { hasCurrentLegalAcceptance } from "../_shared/legalVersions.ts";
@@ -66,6 +67,7 @@ function returnUrlFor(req: Request): string {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
 
+  let action = "";
   try {
     const admin = createClient(
       Deno.env.get("SUPABASE_URL")!,
@@ -97,7 +99,7 @@ Deno.serve(async (req) => {
     }
 
     const body = await req.json().catch(() => ({}));
-    const action = String(body?.action ?? "");
+    action = String(body?.action ?? "");
 
     if (!sellerOnboardingEnabled()) {
       return jsonError(403, "onboarding_disabled", "PayPal connection isn't available yet.");
@@ -346,7 +348,13 @@ Deno.serve(async (req) => {
         issue: err.issue,
         debugId: err.debugId,
       });
-      if (['AUTHORIZATION_ERROR', 'USER_BUSINESS_ERROR'].includes(err.issue ?? '')) {
+      const referralError = referralFailure(err, action);
+      if (referralError) {
+        return jsonError(referralError.status, referralError.code, referralError.message, {
+          environment: paypalOnboardingEnvironment(), issue: err.issue, debug_id: err.debugId,
+        });
+      }
+      if (action === "refresh_status" && ['AUTHORIZATION_ERROR', 'USER_BUSINESS_ERROR'].includes(err.issue ?? '')) {
         // Expected while PayPal withholds the merchant-status API from this app.
         // Not a failure: the recorded connection stands, so answer 200 with a
         // soft "status unavailable" flag the UI shows as an info notice.
