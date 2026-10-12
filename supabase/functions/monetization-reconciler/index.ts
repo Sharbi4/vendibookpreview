@@ -4,7 +4,7 @@
 // either paid but never fulfilled, or pending long enough that a webhook was
 // likely lost — and re-plays them against PayPal as the source of truth.
 //
-// Vendibook processes payments through PayPal only. Legacy rows from the
+// Square add-ons are reconciled through their own verified payment path. Legacy rows from the
 // retired processor are read-only accounting history and are never re-played.
 //
 // Auth: admin JWT required (verify_jwt = false in config, checked in-function).
@@ -12,6 +12,7 @@
 
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { reconcileSquareAddonByPaymentId } from '../_shared/squareAddonReconciliation.ts';
 import { getPayPalOrder, getPayPalSubscription } from "../_shared/paypal.ts";
 import { fulfillMonetizationPurchase } from "../_shared/fulfillMonetizationPurchase.ts";
 import { resolveSubscriptionPeriod } from "../_shared/subscriptionPeriod.ts";
@@ -87,6 +88,24 @@ serve(async (req) => {
     }
   } catch { /* ignore */ }
 
+  // Explicit Square repairs also cover paid purchases absent from the stuck view.
+  // The existing admin/backend caller guard above applies to this path.
+  if (onlyId) {
+    const { data: purchase, error } = await admin.from('monetization_purchases')
+      .select('id,payment_provider,square_payment_id').eq('id',onlyId).maybeSingle();
+    if (error) return json({ error: error.message }, 500);
+    if (purchase?.payment_provider === 'square') {
+      try {
+        if (!purchase.square_payment_id) throw new Error('Square payment mapping missing; manual review required');
+        const result = await reconcileSquareAddonByPaymentId(admin,purchase.square_payment_id,'admin_repair');
+        return json({ scanned: 1, results: [{ purchase_id: onlyId,
+          action: result.outcome === 'addon_completed' ? 'promoted_to_paid' : 'no_change', detail: result.outcome }] });
+      } catch (error) {
+        return json({ error: error instanceof Error ? error.message : 'Square repair failed' }, 500);
+      }
+    }
+  }
+
   // Pull candidates
   let query = admin
     .from("monetization_pending_reconciliation")
@@ -102,6 +121,15 @@ serve(async (req) => {
 
   for (const row of candidates ?? []) {
     try {
+      const { data: purchase, error: purchaseError } = await admin.from('monetization_purchases')
+        .select('payment_provider,square_payment_id').eq('id',row.id).single();
+      if (purchaseError) throw purchaseError;
+      if (purchase.payment_provider === 'square') {
+        if (!purchase.square_payment_id) throw new Error('Square payment mapping missing; manual review required');
+        const result = await reconcileSquareAddonByPaymentId(admin,purchase.square_payment_id,'admin_sweep');
+        results.push({ purchase_id: row.id, action: result.outcome === 'addon_completed' ? 'promoted_to_paid' : 'no_change', detail: result.outcome });
+        continue;
+      }
       // Resolve the PayPal order backing this purchase.
       const { data: record } = await admin
         .from("payment_records")

@@ -1,6 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
 import { corsHeaders, jsonResponse, jsonError } from '../_shared/jsonError.ts';
 import { squareConfig, squareRequest, catalogPrice } from '../_shared/square.ts';
+import { reconcileSquareAddonPayment, reconcileSquareAddonByPaymentId } from '../_shared/squareAddonReconciliation.ts';
 import { validateSquarePlan } from '../_shared/squarePlan.ts';
 import { syncSquareSubscription } from '../_shared/squareSubscription.ts';
 import { quoteSalesTax } from '../_shared/tax.ts';
@@ -79,6 +80,7 @@ Deno.serve(async req => {
     const a = check(await admin.from('square_billing_attempts').select('*').eq('id',body.attempt_id).eq('user_id',user.id).eq('environment',config.environment).single());
     if (action === 'status') {
       if(a.subscription_id) await syncSquareSubscription(admin,a);
+      if(a.kind === 'addon' && a.payment_id) await reconcileSquareAddonByPaymentId(admin,a.payment_id,'checkout_status');
       const latest=check(await admin.from('square_billing_attempts').select('status,subscription_id,payment_id').eq('id',a.id).single());
       return jsonResponse(200,latest);
     }
@@ -89,7 +91,10 @@ Deno.serve(async req => {
       return jsonResponse(200,{status:result.subscription?.status,canceled_date:result.subscription?.canceled_date});
     }
     if (action !== 'pay') return jsonError(400,'action','Unsupported action');
-    if (a.status === 'completed' || a.subscription_id) return jsonResponse(200,{status:a.status,subscription_id:a.subscription_id});
+    if (a.status === 'completed' || a.subscription_id) {
+      if (a.kind === 'addon' && a.payment_id) await reconcileSquareAddonByPaymentId(admin,a.payment_id,'checkout_retry');
+      return jsonResponse(200,{status:a.status,subscription_id:a.subscription_id});
+    }
     if (typeof body.source_id !== 'string' || !body.source_id) return jsonError(400,'source','Enter your payment details.');
     check(await admin.from('square_billing_attempts').update({status:'processing'}).eq('id',a.id));
     if (a.kind === 'subscription') {
@@ -113,7 +118,7 @@ Deno.serve(async req => {
     const result = await squareRequest('/v2/payments',{idempotency_key:a.id,source_id:body.source_id,location_id:config.locationId,amount_money:{amount:a.amount_cents+a.tax_cents,currency:a.currency},reference_id:a.id,autocomplete:true,buyer_email_address:user.email});
     const payment = result.payment;
     check(await admin.from('square_billing_attempts').update({payment_id:payment.id}).eq('id',a.id));
-    if (payment.status === 'COMPLETED') check(await admin.rpc('fulfill_square_addon',{p_attempt:a.id,p_payment:payment.id,p_amount:Number(payment.amount_money.amount),p_currency:payment.amount_money.currency}));
+    if (payment.status === 'COMPLETED') await reconcileSquareAddonPayment(admin,payment,'checkout',config);
     return jsonResponse(200,{status:payment.status === 'COMPLETED'?'completed':'processing'});
   } catch (error) {
     return jsonError(400,'square_billing',error instanceof Error?error.message:'Could not complete Square checkout.');

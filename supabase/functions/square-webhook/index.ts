@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
 import { squareConfig, squareRequest, verifySquareSignature } from '../_shared/square.ts';
+import { reconcileSquareAddonPayment } from '../_shared/squareAddonReconciliation.ts';
 import { syncSquareSubscription } from '../_shared/squareSubscription.ts';
 Deno.serve(async req => {
   if(req.method !== 'POST') return new Response('POST required',{status:405});
@@ -19,15 +20,7 @@ Deno.serve(async req => {
       if(eventLocation && eventLocation !== config.locationId) return new Response('Ignored');
       const {payment}=await squareRequest('/v2/payments/'+encodeURIComponent(id));
       if(payment.location_id !== config.locationId) return new Response('Ignored');
-      const reference=payment.reference_id;
-      if(reference && /^[0-9a-f-]{36}$/i.test(reference)) {
-        const {data:a,error}=await admin.from('square_billing_attempts').select('*').eq('id',reference).eq('environment',config.environment).maybeSingle();
-        if(error) throw error;
-        if(a && payment.status==='COMPLETED') {
-          const result=await admin.rpc('fulfill_square_addon',{p_attempt:a.id,p_payment:payment.id,p_amount:Number(payment.amount_money.amount),p_currency:payment.amount_money.currency});
-          if(result.error) throw result.error;
-        }
-      }
+      await reconcileSquareAddonPayment(admin,payment,'billing_webhook',config);
     }
     if(event.type?.startsWith('subscription.') || event.type?.startsWith('invoice.')) {
       const object=event.data?.object?.subscription || event.data?.object?.invoice;

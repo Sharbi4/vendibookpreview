@@ -10,6 +10,7 @@
  * Events that don't belong to a Vendibook rental are acknowledged and ignored.
  */
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { reconcileSquareAddonByPaymentId } from '../_shared/squareAddonReconciliation.ts';
 import { verifySquareSignature } from "../_shared/square.ts";
 import { recordSquareContext, squareApi } from "../_shared/squareMarketplace.ts";
 import { safeLog } from "../_shared/paypal.ts";
@@ -25,10 +26,23 @@ async function squareAccess(admin: any, record: any) {
   return ctx ? { token: await ctx.token(), base: ctx.base } : null;
 }
 
-async function handlePayment(admin: any, paymentId: string) {
-  const { data: record } = await admin.from("payment_records").select("*")
+async function handlePayment(admin: any, paymentId: string, hint: any) {
+  const { data: record, error: lookupError } = await admin.from("payment_records").select("*")
     .eq("square_payment_id", paymentId).maybeSingle();
-  if (!record) return "ignored_unknown_payment";
+  if (lookupError) throw lookupError;
+  if (record?.monetization_purchase_id) {
+    return (await reconcileSquareAddonByPaymentId(admin, paymentId, 'rental_webhook_billing_route')).outcome;
+  }
+  if (!record) {
+    const { data: attempt, error } = await admin.from("square_billing_attempts").select("id")
+      .eq("payment_id", paymentId).eq("kind", "addon").maybeSingle();
+    if (error) throw error;
+    // A signature-verified hint only selects the provider lookup; it never proves payment.
+    if (attempt || (hint?.location_id === Deno.env.get("SQUARE_LOCATION_ID") && hint?.reference_id)) {
+      return (await reconcileSquareAddonByPaymentId(admin, paymentId, 'rental_webhook_billing_route')).outcome;
+    }
+    return "ignored_unknown_payment";
+  }
   const access = await squareAccess(admin, record);
   if (!access) return "square_account_unavailable";
   const { payment } = await squareApi(`/v2/payments/${encodeURIComponent(paymentId)}`, access);
@@ -48,9 +62,16 @@ async function handlePayment(admin: any, paymentId: string) {
 
 async function handleRefund(admin: any, refundId: string, paymentId: string | undefined) {
   if (!paymentId) return "ignored_no_payment";
-  const { data: record } = await admin.from("payment_records").select("*")
+  const { data: record, error: lookupError } = await admin.from("payment_records").select("*")
     .eq("square_payment_id", paymentId).maybeSingle();
-  if (!record) return "ignored_unknown_payment";
+  if (lookupError) throw lookupError;
+  if (record?.monetization_purchase_id) return "billing_refund_requires_review";
+  if (!record) {
+    const { data: attempt, error } = await admin.from("square_billing_attempts").select("id")
+      .eq("payment_id", paymentId).eq("kind", "addon").maybeSingle();
+    if (error) throw error;
+    return attempt ? "billing_refund_requires_review" : "ignored_unknown_payment";
+  }
   const access = await squareAccess(admin, record);
   if (!access) return "square_account_unavailable";
   const { refund } = await squareApi(`/v2/refunds/${encodeURIComponent(refundId)}`, access);
@@ -78,19 +99,21 @@ Deno.serve(async (req) => {
   if (!eventId || !type) return new Response("Invalid event", { status: 400 });
 
   // Idempotency: a processed event is acknowledged without re-running.
-  const { data: seen } = await admin.from("square_webhook_events").select("processed_at").eq("event_id", eventId).maybeSingle();
-  if (seen?.processed_at) return ok("duplicate");
+  const { data: seen, error: seenError } = await admin.from("square_webhook_events").select("processed_at,outcome").eq("event_id", eventId).maybeSingle();
+  if (seenError) return new Response("Retry", { status: 500 });
+  if (seen?.processed_at && seen.outcome !== "ignored_unknown_payment") return ok("duplicate");
   if (!seen) {
-    await admin.from("square_webhook_events").insert({
+    const { error } = await admin.from("square_webhook_events").insert({
       event_id: eventId, event_type: type, merchant_id: event.merchant_id ?? null, object_id: event.data?.id ?? null,
     });
+    if (error && error.code !== "23505") return new Response("Retry", { status: 500 });
   }
 
   try {
     let outcome = "ignored_type";
     const object = event.data?.object ?? {};
     if (type.startsWith("payment.") && object.payment?.id) {
-      outcome = await handlePayment(admin, String(object.payment.id));
+      outcome = await handlePayment(admin, String(object.payment.id), object.payment);
     } else if (type.startsWith("refund.") && object.refund?.id) {
       outcome = await handleRefund(admin, String(object.refund.id), object.refund.payment_id);
     } else if (type === "oauth.authorization.revoked" && event.merchant_id) {
@@ -99,8 +122,9 @@ Deno.serve(async (req) => {
       }).eq("merchant_id", event.merchant_id);
       outcome = "seller_revoked";
     }
-    await admin.from("square_webhook_events").update({ processed_at: new Date().toISOString(), outcome, error: null })
+    const { error: savedError } = await admin.from("square_webhook_events").update({ processed_at: new Date().toISOString(), outcome, error: null })
       .eq("event_id", eventId);
+    if (savedError) throw savedError;
     return ok(outcome);
   } catch (err) {
     const message = (err as Error).message?.slice(0, 300) ?? "error";

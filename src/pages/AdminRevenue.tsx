@@ -23,6 +23,15 @@ interface PurchaseRow {
   refund_status: string | null;
   created_at: string;
   paid_at: string | null;
+  payment_provider: string;
+  square_payment_id: string | null;
+  tax_cents: number;
+  access_ends_at: string | null;
+  metadata: Record<string, unknown> | null;
+  listing: { title: string } | null;
+  payments: Array<{ reference: string; buyer_email: string | null; square_order_id: string | null;
+    square_payment_id: string | null; payment_status: string; gross_amount_cents: number;
+    metadata: Record<string, unknown> | null }>;
 }
 
 interface PromoRow {
@@ -64,6 +73,8 @@ export default function AdminRevenue() {
       setIsCheckingAdmin(false);
     })();
   }, [user]);
+  const [purchaseSearch, setPurchaseSearch] = useState('');
+  const [repairing, setRepairing] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<MonetizationProduct[]>([]);
   const [purchases, setPurchases] = useState<PurchaseRow[]>([]);
@@ -76,11 +87,12 @@ export default function AdminRevenue() {
     try {
       const [p, pu, pr, dc, sb] = await Promise.all([
         anyClient.from('monetization_products').select('*').order('display_order'),
-        anyClient.from('monetization_purchases').select('*').order('created_at', { ascending: false }).limit(200),
+        anyClient.from('monetization_purchases').select('*,listing:listings(title),payments:payment_records!payment_records_monetization_purchase_id_fkey(reference,buyer_email,square_order_id,square_payment_id,payment_status,gross_amount_cents,metadata)').order('created_at', { ascending: false }).limit(200),
         anyClient.from('listing_promotions').select('*').order('starts_at', { ascending: false }).limit(200),
         anyClient.from('discount_codes').select('*').order('created_at', { ascending: false }),
         anyClient.from('host_subscriptions').select('*').order('created_at', { ascending: false }).limit(1000),
       ]);
+      for (const result of [p, pu, pr, dc, sb]) if (result.error) throw result.error;
       setProducts(p.data ?? []);
       setPurchases(pu.data ?? []);
       setPromos(pr.data ?? []);
@@ -99,12 +111,13 @@ export default function AdminRevenue() {
   }, [isAdmin]);
 
   const summary = useMemo(() => {
-    const paid = purchases.filter((p) => p.status === 'paid' || p.status === 'fulfilled');
+    const live = purchases.filter((p) => p.metadata?.square_environment !== 'sandbox' && !p.payments?.some((r) => r.metadata?.environment === 'sandbox'));
+    const paid = live.filter((p) => p.status === 'paid' || p.status === 'fulfilled');
     const gross = paid.reduce((s, p) => s + p.amount_cents, 0);
-    const refunded = purchases
+    const refunded = live
       .filter((p) => p.status === 'refunded')
       .reduce((s, p) => s + p.amount_cents, 0);
-    const failed = purchases.filter((p) => p.status === 'failed').length;
+    const failed = live.filter((p) => p.status === 'failed').length;
     const byCategory: Record<string, number> = {};
     for (const purchase of paid) {
       const prod = products.find((x) => x.id === purchase.product_id);
@@ -113,6 +126,26 @@ export default function AdminRevenue() {
     }
     return { gross, refunded, failed, byCategory, paidCount: paid.length };
   }, [purchases, products]);
+
+  const visiblePurchases = purchases.filter((row) => {
+    const product = products.find((p) => p.id === row.product_id);
+    return [row.id,row.user_id,row.listing_id,row.listing?.title,product?.name,row.square_payment_id,
+      ...((row.payments ?? []).flatMap((p) => [p.buyer_email,p.reference,p.square_order_id]))]
+      .some((value) => value?.toLowerCase().includes(purchaseSearch.trim().toLowerCase()));
+  });
+
+  const repairSquarePurchase = async (id: string) => {
+    setRepairing(id);
+    try {
+      const { data, error } = await supabase.functions.invoke('monetization-reconciler', { body: { purchase_id: id } });
+      if (error || data?.error) throw error || new Error(data.error);
+      const repaired = data?.results?.some((r: { action: string }) => r.action === 'promoted_to_paid');
+      if (repaired) toast.success('Square payment and purchase reconciled');
+      else toast.info('No change — review the payment status before further action');
+      await load();
+    } catch (error) { toast.error(error instanceof Error ? error.message : 'Reconciliation failed'); }
+    finally { setRepairing(null); }
+  };
 
   const toggleProduct = async (id: string, next: boolean) => {
     const { error } = await anyClient
@@ -151,7 +184,7 @@ export default function AdminRevenue() {
       </header>
 
       <div className="grid gap-4 md:grid-cols-4">
-        <SummaryCard label="Gross revenue" value={formatUsd(summary.gross)} icon={DollarSign} />
+        <SummaryCard label="Revenue before tax (recent 200)" value={formatUsd(summary.gross)} icon={DollarSign} />
         <SummaryCard label="Paid purchases" value={String(summary.paidCount)} icon={TrendingUp} />
         <SummaryCard label="Refunded" value={formatUsd(summary.refunded)} icon={RefreshCw} />
         <SummaryCard
@@ -235,7 +268,10 @@ export default function AdminRevenue() {
         </TabsContent>
 
         <TabsContent value="purchases" className="mt-4">
-          <div className="overflow-hidden rounded-xl border border-border">
+          <input aria-label="Search purchases" className="mb-3 w-full rounded-md border border-border bg-background p-2 text-sm"
+            placeholder="Search customer email, listing, purchase, Square payment or order ID"
+            value={purchaseSearch} onChange={(event) => setPurchaseSearch(event.target.value)} />
+          <div className="overflow-x-auto rounded-xl border border-border">
             <table className="w-full text-sm">
               <thead className="bg-muted/50 text-xs uppercase tracking-wider text-muted-foreground">
                 <tr>
@@ -247,21 +283,44 @@ export default function AdminRevenue() {
                 </tr>
               </thead>
               <tbody>
-                {purchases.length === 0 && (
+                {visiblePurchases.length === 0 && (
                   <tr>
                     <td colSpan={5} className="px-3 py-6 text-center text-muted-foreground">
                       No purchases yet.
                     </td>
                   </tr>
                 )}
-                {purchases.map((row) => {
+                {visiblePurchases.map((row) => {
                   const prod = products.find((p) => p.id === row.product_id);
                   return (
                     <tr key={row.id} className="border-t border-border">
                       <td className="px-3 py-2 text-muted-foreground">
                         {new Date(row.created_at).toLocaleString()}
                       </td>
-                      <td className="px-3 py-2">{prod?.name ?? row.product_id}</td>
+                      <td className="px-3 py-2">
+                        {prod?.name ?? row.product_id}
+                        <details className="mt-1 text-xs text-muted-foreground">
+                          <summary className="cursor-pointer">Transaction details · {row.payment_provider}</summary>
+                          <dl className="mt-2 space-y-1 break-all">
+                            <dt>Purchase</dt><dd>{row.id}</dd>
+                            <dt>Customer</dt><dd>{row.payments?.[0]?.buyer_email ?? row.user_id ?? '—'}</dd>
+                            <dt>User ID</dt><dd>{row.user_id ?? '—'}</dd>
+                            <dt>Listing</dt><dd>{row.listing?.title ?? '—'} · {row.listing_id ?? '—'}</dd>
+                            <dt>Subtotal / tax / total</dt><dd>{formatUsd(row.amount_cents)} / {formatUsd(row.tax_cents ?? 0)} / {formatUsd(row.amount_cents + (row.tax_cents ?? 0))}</dd>
+                            <dt>Square payment</dt><dd>{row.square_payment_id ?? '—'}</dd>
+                            <dt>Square order</dt><dd>{row.payments?.[0]?.square_order_id ?? '—'}</dd>
+                            <dt>Payment record / status</dt><dd>{row.payments?.[0]?.reference ?? 'Missing payment record'} · {row.payments?.[0]?.payment_status ?? 'unreconciled'}</dd>
+                            <dt>Paid / expires</dt><dd>{row.paid_at ?? '—'} / {row.access_ends_at ?? '—'}</dd>
+                            <dt>Environment</dt><dd>{String(row.metadata?.square_environment ?? row.payments?.[0]?.metadata?.environment ?? 'Not recorded')}</dd>
+                          </dl>
+                          {row.payment_provider === 'square' && row.square_payment_id && (
+                            <Button size="sm" variant="outline" className="mt-2" disabled={repairing !== null}
+                              onClick={() => repairSquarePurchase(row.id)}>
+                              {repairing === row.id ? 'Reconciling…' : 'Reconcile with Square'}
+                            </Button>
+                          )}
+                        </details>
+                      </td>
                       <td className="px-3 py-2 text-right font-semibold">
                         {formatUsd(row.amount_cents)}
                       </td>
