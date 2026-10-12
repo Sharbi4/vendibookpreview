@@ -1588,6 +1588,297 @@ export type Database = {
           },
         ]
       }
+      buyermatch_campaigns: {
+        Row: {
+          activated_at: string | null
+          buyer_criteria: string
+          created_at: string
+          geography: string
+          id: string
+          listing_id: string
+          listing_snapshot: Json
+          notifications_enabled: boolean
+          seller_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          activated_at?: string | null
+          buyer_criteria?: string
+          created_at?: string
+          geography?: string
+          id?: string
+          listing_id: string
+          listing_snapshot: Json
+          notifications_enabled?: boolean
+          seller_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          activated_at?: string | null
+          buyer_criteria?: string
+          created_at?: string
+          geography?: string
+          id?: string
+          listing_id?: string
+          listing_snapshot?: Json
+          notifications_enabled?: boolean
+          seller_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buyermatch_campaigns_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buyermatch_campaigns_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buyermatch_campaigns_seller_id_fkey"
+            columns: ["seller_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      buyermatch_events: {
+        Row: {
+          campaign_id: string
+          event_key: string
+          event_type: string
+          evidence_reference: string
+          feedback: string | null
+          id: string
+          listing_id: string
+          next_step: string
+          occurred_at: string
+          outcome: string
+          recorded_by: string
+          source: string
+          verification_status: string
+        }
+        Insert: {
+          campaign_id: string
+          event_key: string
+          event_type: string
+          evidence_reference: string
+          feedback?: string | null
+          id?: string
+          listing_id: string
+          next_step?: string
+          occurred_at: string
+          outcome?: string
+          recorded_by: string
+          source: string
+          verification_status: string
+        }
+        Update: {
+          campaign_id?: string
+          event_key?: string
+          event_type?: string
+          evidence_reference?: string
+          feedback?: string | null
+          id?: string
+          listing_id?: string
+          next_step?: string
+          occurred_at?: string
+          outcome?: string
+          recorded_by?: string
+          source?: string
+          verification_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buyermatch_events_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "buyermatch_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buyermatch_events_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buyermatch_events_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buyermatch_events_recorded_by_fkey"
+            columns: ["recorded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      buyermatch_links: {
+        Row: {
+          approval_event_id: string
+          campaign_id: string
+          created_at: string
+          id: string
+          listing_id: string
+          source: string
+          token: string
+        }
+        Insert: {
+          approval_event_id: string
+          campaign_id: string
+          created_at?: string
+          id?: string
+          listing_id: string
+          source: string
+          token?: string
+        }
+        Update: {
+          approval_event_id?: string
+          campaign_id?: string
+          created_at?: string
+          id?: string
+          listing_id?: string
+          source?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buyermatch_links_approval_event_id_fkey"
+            columns: ["approval_event_id"]
+            isOneToOne: true
+            referencedRelation: "buyermatch_events"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buyermatch_links_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "buyermatch_campaigns"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buyermatch_links_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "buyermatch_links_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      buyermatch_reports: {
+        Row: {
+          campaign_id: string
+          id: string
+          metrics: Json
+          published_at: string
+          summary: string
+        }
+        Insert: {
+          campaign_id: string
+          id?: string
+          metrics?: Json
+          published_at?: string
+          summary: string
+        }
+        Update: {
+          campaign_id?: string
+          id?: string
+          metrics?: Json
+          published_at?: string
+          summary?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buyermatch_reports_campaign_id_fkey"
+            columns: ["campaign_id"]
+            isOneToOne: false
+            referencedRelation: "buyermatch_campaigns"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      buyermatch_settings: {
+        Row: {
+          fulfillment_enabled: boolean
+          id: boolean
+          max_campaigns: number
+          submissions_enabled: boolean
+          workflow_reference: string | null
+        }
+        Insert: {
+          fulfillment_enabled?: boolean
+          id?: boolean
+          max_campaigns?: number
+          submissions_enabled?: boolean
+          workflow_reference?: string | null
+        }
+        Update: {
+          fulfillment_enabled?: boolean
+          id?: boolean
+          max_campaigns?: number
+          submissions_enabled?: boolean
+          workflow_reference?: string | null
+        }
+        Relationships: []
+      }
+      buyermatch_visits: {
+        Row: {
+          id: string
+          link_id: string
+          referrer_host: string | null
+          visit_day: string
+          visited_at: string
+          visitor_session: string
+        }
+        Insert: {
+          id?: string
+          link_id: string
+          referrer_host?: string | null
+          visit_day?: string
+          visited_at?: string
+          visitor_session: string
+        }
+        Update: {
+          id?: string
+          link_id?: string
+          referrer_host?: string | null
+          visit_day?: string
+          visited_at?: string
+          visitor_session?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "buyermatch_visits_link_id_fkey"
+            columns: ["link_id"]
+            isOneToOne: false
+            referencedRelation: "buyermatch_links"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       concierge_events: {
         Row: {
           created_at: string
@@ -13699,6 +13990,21 @@ export type Database = {
       bs_zip_manufacturer: {
         Args: { p_zip: string }
         Returns: Record<string, unknown>
+      }
+      buyermatch_action: {
+        Args: { _action: string; _payload?: Json }
+        Returns: Json
+      }
+      buyermatch_entitled: { Args: { _user: string }; Returns: boolean }
+      buyermatch_track_visit: {
+        Args: {
+          _consent: boolean
+          _listing_id: string
+          _referrer_host?: string
+          _session: string
+          _token: string
+        }
+        Returns: boolean
       }
       calculate_booking_end_timestamp: {
         Args: { p_end_date: string; p_hourly_slots: Json }
