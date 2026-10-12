@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useRef } from 'react';
 import { playNotificationSound } from '@/lib/notificationSound';
+import { offerErrorMessage } from '@/lib/offers/offerTerms';
 
 export interface HostOffer {
   id: string;
@@ -135,7 +136,7 @@ export const useHostOffers = () => {
       console.error('Error responding to offer:', error);
       toast({
         title: 'Failed to respond',
-        description: 'Please try again.',
+        description: error instanceof Error && /expired/.test(error.message) ? error.message : offerErrorMessage(error),
         variant: 'destructive',
       });
     },

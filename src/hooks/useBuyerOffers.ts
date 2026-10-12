@@ -4,6 +4,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
 import { useEffect, useRef } from 'react';
 import { playNotificationSound } from '@/lib/notificationSound';
+import { offerErrorMessage } from '@/lib/offers/offerTerms';
 
 export interface BuyerOffer {
   id: string;
@@ -68,7 +69,7 @@ export const useBuyerOffers = () => {
       console.error('Error cancelling offer:', error);
       toast({
         title: 'Failed to cancel',
-        description: 'Please try again.',
+        description: error instanceof Error && /expired/.test(error.message) ? error.message : offerErrorMessage(error),
         variant: 'destructive',
       });
     },
@@ -108,7 +109,7 @@ export const useBuyerOffers = () => {
       console.error('Error responding to counter:', error);
       toast({
         title: 'Failed to respond',
-        description: 'Please try again.',
+        description: error instanceof Error && /expired/.test(error.message) ? error.message : offerErrorMessage(error),
         variant: 'destructive',
       });
     },
@@ -156,8 +157,8 @@ export const useBuyerOffers = () => {
             if (newStatus === 'accepted') {
               playNotificationSound();
               toast({
-                title: 'Offer Accepted! 🎉',
-                description: 'Your offer has been accepted. Complete your purchase now!',
+                title: 'Offer accepted',
+                description: 'Price agreed. Nothing has been charged — an itemized invoice comes next.',
               });
             } else if (newStatus === 'countered') {
               playNotificationSound();
