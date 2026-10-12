@@ -15,6 +15,18 @@ const SENDER_DOMAIN = "notify.vendibook.com"
 // Can be the root domain when display_from_root is enabled — this is cosmetic only.
 const FROM_DOMAIN = "vendibook.com"
 
+// Staff inboxes that bounce mail; every alert sent to them is also delivered,
+// as its own separate email (the original recipient list is never shown), to
+// the owner's inbox. Copies of the same alert collapse into one via a
+// content-based idempotency key.
+const STAFF_INBOXES = new Set(['support@vendibook.com', 'shawnnaharbin@vendibook.com'])
+const OWNER_INBOX = 'atlasmom421@gmail.com'
+
+async function contentKey(templateName: string, html: string) {
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(templateName + '|' + html))
+  return 'owner-copy-' + Array.from(new Uint8Array(digest).slice(0, 16), (b) => b.toString(16).padStart(2, '0')).join('')
+}
+
 export type SendTemplateEmailResult =
   | { sent: true }
   | { sent: false; reason: 'recipient_suppressed' }
@@ -66,28 +78,39 @@ export async function sendTemplateEmail(
       ? template.subject(templateData)
       : template.subject
 
-  try {
-    await sendLovableEmail(
-      {
-        to: recipient,
-        from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
-        sender_domain: SENDER_DOMAIN,
-        subject,
-        html,
-        text,
-        purpose: 'transactional',
-        label: templateName,
-        idempotency_key: options.idempotencyKey || crypto.randomUUID(),
-        reply_to: options.replyTo,
-      },
-      { apiKey, sendUrl: Deno.env.get('LOVABLE_SEND_URL') }
-    )
-  } catch (error) {
-    if (error instanceof EmailAPIError && error.code === 'recipient_suppressed') {
-      return { sent: false, reason: 'recipient_suppressed' }
+  const send = async (to: string, key: string) => {
+    try {
+      await sendLovableEmail(
+        {
+          to,
+          from: `${SITE_NAME} <noreply@${FROM_DOMAIN}>`,
+          sender_domain: SENDER_DOMAIN,
+          subject,
+          html,
+          text,
+          purpose: 'transactional',
+          label: templateName,
+          idempotency_key: key,
+          reply_to: options.replyTo,
+        },
+        { apiKey, sendUrl: Deno.env.get('LOVABLE_SEND_URL') }
+      )
+      return true
+    } catch (error) {
+      if (error instanceof EmailAPIError && error.code === 'recipient_suppressed') return false
+      throw error
     }
-    throw error
   }
 
-  return { sent: true }
+  const lower = recipient.trim().toLowerCase()
+  if (lower === OWNER_INBOX) {
+    const ok = await send(recipient, await contentKey(templateName, html))
+    return ok ? { sent: true } : { sent: false, reason: 'recipient_suppressed' }
+  }
+  const ok = await send(recipient, options.idempotencyKey || crypto.randomUUID())
+  if (STAFF_INBOXES.has(lower)) {
+    try { await send(OWNER_INBOX, await contentKey(templateName, html)) }
+    catch (e) { console.warn('[send-email] owner copy failed', (e as Error)?.message) }
+  }
+  return ok ? { sent: true } : { sent: false, reason: 'recipient_suppressed' }
 }
