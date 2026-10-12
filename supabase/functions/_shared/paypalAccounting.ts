@@ -114,7 +114,7 @@ export function quoteSaleTransaction(
   const grossCents = merchandiseCents + buyerFreightCents;
   const platformFeeCents = tx.platform_fee !== null && tx.platform_fee !== undefined
     ? cents(tx.platform_fee)
-    : Math.round(salePriceCents * (SALE_SELLER_FEE_PERCENT / 100));
+    : Math.round(salePriceCents * ((tx.fee_rate_pct ?? FEE_CONFIG.legacySaleSellerFeePct) / 100));
   const sellerProceedsCents = tx.seller_payout !== null && tx.seller_payout !== undefined
     ? cents(tx.seller_payout)
     : Math.max(0, salePriceCents - platformFeeCents - sellerFreightCents);

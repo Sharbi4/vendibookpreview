@@ -10,7 +10,7 @@ describe('central fee config', () => {
     expect(RENTAL_RENTER_FEE_PERCENT).toBe(FEE_CONFIG.rentalRenterFeePct);
     expect(RENTAL_HOST_FEE_PERCENT).toBe(FEE_CONFIG.rentalHostFeePct);
     expect(SALE_SELLER_FEE_PERCENT).toBe(FEE_CONFIG.saleSellerFeePct);
-    expect(STANDARD_FEE_PCT).toBe(FEE_CONFIG.saleSellerFeePct);
+    expect(STANDARD_FEE_PCT).toBe(FEE_CONFIG.rentalHostFeePct);
     expect(PRO_FEE_PCT).toBe(FEE_CONFIG.proSellerFeePct);
     expect(PRO_MAX_SAVINGS_CENTS).toBe(FEE_CONFIG.proMaxSavingsCents);
   });
