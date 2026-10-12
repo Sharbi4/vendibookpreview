@@ -1,3 +1,5 @@
+import WorkspaceInvoices from './pages/workspace/WorkspaceInvoices';
+import InvoiceDetail from './pages/InvoiceDetail';
 import { NativePushLifecycle } from '@/hooks/useNativePushNotifications';
 import { useNativeNavigation } from '@/hooks/useNativeNavigation';
 import React, { Suspense, lazy, useEffect } from "react";
@@ -351,6 +353,9 @@ const AnimatedRoutes = () => {
           <Route path="/dashboard/notifications" element={<PageTransition><WorkspaceNotifications /></PageTransition>} />
           <Route path="/dashboard/notifications/settings" element={<PageTransition><NotificationPreferences /></PageTransition>} />
           <Route path="/dashboard/saved" element={<PageTransition><WorkspaceSaved /></PageTransition>} />
+          <Route path="/dashboard/invoices" element={<PageTransition><WorkspaceInvoices /></PageTransition>} />
+          <Route path="/invoices/:invoiceId" element={<PageTransition><InvoiceDetail /></PageTransition>} />
+          <Route path="/purchase-request/:listingId" element={<PageTransition><SaleCheckout requestOnly /></PageTransition>} />
           <Route path="/dashboard/offers" element={<PageTransition><WorkspaceOffers /></PageTransition>} />
           <Route path="/dashboard/payments" element={<PageTransition><WorkspacePayments /></PageTransition>} />
           <Route path="/dashboard/payments/setup" element={<PageTransition><WorkspacePaymentSetup /></PageTransition>} />

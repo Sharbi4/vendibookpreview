@@ -171,6 +171,9 @@ serve(async (req) => {
       if (tx.seller_id === user.id) {
         return jsonError(403, "self_transaction", "You can't purchase your own listing.");
       }
+      if (tx.invoice_required) {
+        return jsonError(409, "invoice_validation_pending", "Invoice payments are awaiting validated marketplace payment integration. Open your invoice for its current status.");
+      }
       // Only an open purchase can be paid online. A cancelled, cash or
       // already-settled sale must never receive a new PayPal order.
       if (!["pending", "payment_failed"].includes(String(tx.status))) {

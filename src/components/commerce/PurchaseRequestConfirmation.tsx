@@ -1,4 +1,4 @@
-import {useState} from 'react';
+import {useState,useEffect} from 'react';
 import {Link} from 'react-router-dom';
 import {Dialog,DialogContent,DialogDescription,DialogHeader,DialogTitle} from '@/components/ui/dialog';
 import {Checkbox} from '@/components/ui/checkbox';
@@ -7,6 +7,7 @@ import {PURCHASE_ACK_TEXT,PURCHASE_ACK_VERSION,PURCHASE_DISCLOSURES} from '../..
 
 export default function PurchaseRequestConfirmation({open,onOpenChange,onSubmit,busy,listingTitle}:{open:boolean;onOpenChange:(open:boolean)=>void;onSubmit:(ack:{version:string;accepted:true})=>void;busy:boolean;listingTitle:string}) {
   const [accepted,setAccepted]=useState(false);
+  useEffect(()=>{setAccepted(false);},[open]);
   return <Dialog open={open} onOpenChange={v=>{if(busy)return;setAccepted(false);onOpenChange(v);}}>
     <DialogContent className="max-h-[90dvh] overflow-y-auto rounded-3xl sm:max-w-xl">
       <DialogHeader><DialogTitle className="text-2xl">Confirm Your Purchase Request</DialogTitle><DialogDescription>You are requesting to begin the purchase process for {listingTitle} through Vendibook.</DialogDescription></DialogHeader>

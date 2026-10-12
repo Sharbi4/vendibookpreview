@@ -2,6 +2,7 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
 import { assertListingPurchasable } from "../_shared/listingGuard.ts";
+import { purchaseAcknowledged } from "../_shared/purchaseRequestPolicy.ts";
 import { equipmentSaleFee } from "../_shared/equipmentSaleFee.ts";
 import { hasCurrentLegalAcceptance } from "../_shared/legalVersions.ts";
 import { priceFulfillment } from "../_shared/salePricing.ts";
@@ -40,6 +41,21 @@ serve(async (req) => {
     }
 
     const body = await req.json().catch(() => ({}));
+    const requestOnly = body?.request_only === true;
+    if (requestOnly) {
+      const { data: rollout, error: rolloutError } = await admin.from('commerce_rollout').select('requests_enabled').eq('id',true).single();
+      if (rolloutError || !rollout?.requests_enabled) return jsonError(409,'rollout_pending','Invoice purchase requests are awaiting activation.');
+      if (!purchaseAcknowledged(body.acknowledgement)) return jsonError(400,'acknowledgment_required','Review the purchase process acknowledgment.');
+      if (!body.terms_id) return jsonError(400,'terms_required','Review and accept the purchase agreement.');
+    }
+    const respondWithIntent = async (transactionId: string, amount: number, reused = false) => {
+      if (!requestOnly) return jsonResponse(200,{transaction_id:transactionId,amount,reused});
+      const { data: requestId, error: submitError } = await admin.rpc('commerce_submit_request',{
+        _sale:transactionId,_actor:user.id,_ack_version:body.acknowledgement.version,_acknowledged:true,
+      });
+      if (submitError) return jsonError(409,'request_not_submitted',submitError.message);
+      return jsonResponse(200,{transaction_id:transactionId,request_id:requestId,amount,reused});
+    };
     const listingId = body?.listing_id ? String(body.listing_id) : null;
     if (!listingId) return jsonError(400, "missing_fields", "Missing listing id.");
 
@@ -61,9 +77,9 @@ serve(async (req) => {
 
     // AGREED PRICE: an accepted offer (or accepted counter) is the price both
     // sides agreed to. Resolved server-side — the browser never sets price.
-    const { data: acceptedOffer } = await admin
+    const { data: acceptedOffer, error: offerError } = await admin
       .from("offers")
-      .select("offer_amount, counter_amount, updated_at")
+      .select("id, agreed_amount, offer_amount, counter_amount, updated_at")
       .eq("listing_id", listingId)
       .eq("buyer_id", user.id)
       .eq("status", "accepted")
@@ -71,8 +87,10 @@ serve(async (req) => {
       .limit(1)
       .maybeSingle();
 
+    if (offerError) return jsonError(503,'offer_unavailable','Unable to verify the agreed price.');
+    if (body.offer_id && acceptedOffer?.id !== body.offer_id) return jsonError(409,'offer_changed','This offer is not the current accepted agreement.');
     const agreedAmount = acceptedOffer
-      ? Number(acceptedOffer.counter_amount ?? acceptedOffer.offer_amount)
+      ? Number(acceptedOffer.agreed_amount ?? acceptedOffer.counter_amount ?? acceptedOffer.offer_amount)
       : Number(listing.price_sale);
     const amount = Number.isFinite(agreedAmount) && agreedAmount > 0
       ? agreedAmount
@@ -129,6 +147,7 @@ serve(async (req) => {
       .select("id, status, amount")
       .eq("listing_id", listingId)
       .eq("buyer_id", user.id)
+      .eq("invoice_required", requestOnly)
       .in("status", ["pending", "payment_failed"])
       .or(`status.eq.payment_failed,created_at.gt.${new Date(Date.now() - 60 * 60_000).toISOString()}`)
       .order("created_at", { ascending: false })
@@ -136,6 +155,11 @@ serve(async (req) => {
       .maybeSingle();
 
     if (existing) {
+      if (requestOnly) {
+        const { data: submitted, error: submittedError } = await admin.from('sale_purchase_requests').select('id').eq('sale_id',existing.id).maybeSingle();
+        if (submittedError) return jsonError(503,'request_unavailable','Unable to verify the purchase request.');
+        if (submitted) return respondWithIntent(existing.id,Number(existing.amount),true);
+      }
       const { data: updated, error: updateError } = await admin
         .from("sale_transactions")
         .update(mutableFields)
@@ -143,7 +167,7 @@ serve(async (req) => {
         .in("status", ["pending", "payment_failed"])
         .select("id").maybeSingle();
       if (updateError || !updated) return jsonError(409, "purchase_changed", "This purchase changed. Refresh its status before trying again.");
-      return jsonResponse(200, { transaction_id: existing.id, reused: true, amount: Number(existing.amount) });
+      return respondWithIntent(existing.id,Number(existing.amount),true);
     }
 
     // Buyer-scoped on purpose: this only blocks the SAME buyer from paying
@@ -168,8 +192,8 @@ serve(async (req) => {
     }
 
     // COMMITMENT POINT: snapshot the seller fee that both sides agreed to.
-    // Vendibook Pro eligibility is resolved here once; a later cancellation,
-    // downgrade or upgrade never reprices this transaction.
+    // The equipment fee policy is frozen here; later configuration or
+    // membership changes never reprice this transaction.
     const feeQuote = equipmentSaleFee(Math.round(amount * 100));
     const platformFee = feeQuote.feeCents / 100;
 
@@ -188,6 +212,8 @@ serve(async (req) => {
         fee_locked_at: new Date().toISOString(),
         status: "pending",
         payment_provider: "paypal",
+        invoice_required: requestOnly,
+        source_offer_id: requestOnly ? acceptedOffer?.id ?? null : null,
         ...mutableFields,
       })
       .select("id")
@@ -197,12 +223,7 @@ serve(async (req) => {
       return jsonError(500, "intent_failed", "We couldn't start this purchase. Please try again.");
     }
 
-    return jsonResponse(200, {
-      transaction_id: created.id,
-      amount,
-      delivery_fee: pricing.deliveryFee,
-      freight_cost: pricing.freightCost,
-    });
+    return respondWithIntent(created.id,amount);
 
 
   } catch (err) {

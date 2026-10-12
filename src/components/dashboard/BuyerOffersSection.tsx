@@ -52,6 +52,8 @@ const getStatusConfig = (status: string, expiresAt: string | null) => {
         bgColor: 'bg-primary/10',
         badgeVariant: 'default' as const,
       };
+    case 'expired':
+      return { icon: AlertCircle, label: 'Expired', color: 'text-muted-foreground', bgColor: 'bg-muted', badgeVariant: 'outline' as const };
     case 'declined':
       return {
         icon: XCircle,
@@ -102,12 +104,7 @@ const OfferCard = ({
   const isCountered = offer.status === 'countered';
   const isExpired = offer.expires_at && new Date(offer.expires_at) < new Date() && isPending;
 
-  // For accepted offers with counter, the agreed price is the counter amount
-  const agreedPrice = offer.status === 'accepted' && offer.counter_amount 
-    ? offer.counter_amount 
-    : offer.status === 'accepted' 
-      ? offer.offer_amount 
-      : null;
+  const agreedPrice = offer.status === 'accepted' ? offer.agreed_amount : null;
 
   return (
     <Card className="border border-border shadow-sm">
@@ -222,8 +219,8 @@ const OfferCard = ({
               <div className="flex items-center gap-2">
                 {offer.status === 'accepted' && agreedPrice && (
                   <Button size="sm" asChild>
-                    <Link to={`/checkout/${offer.listing_id}?offer_price=${agreedPrice}`}>
-                      Buy for ${agreedPrice.toLocaleString()}
+                    <Link to={`/purchase-request/${offer.listing_id}?offer=${offer.id}`}>
+                      Prepare invoice · ${agreedPrice.toLocaleString()}
                       <ExternalLink className="h-3 w-3 ml-1" />
                     </Link>
                   </Button>

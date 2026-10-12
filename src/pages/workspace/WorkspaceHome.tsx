@@ -1,3 +1,4 @@
+import { useCommerceRecords, invoiceMoney } from '@/hooks/useCommerceRecords';
 import ListingManageMenu from '@/components/workspace/ListingManageMenu';
 import DashboardNextSteps from '@/components/workspace/DashboardNextSteps';
 import FeaturedPromotionBanner from '@/components/workspace/FeaturedPromotionBanner';
@@ -79,6 +80,7 @@ export default function WorkspaceHome() {
   const { walkthroughs, isLoading: walkthroughsLoading } = useVideoWalkthroughs();
   const { data: handoffTasks } = useHandoffTasks();
   const { pendingOffers } = useHostOffers();
+  const { data: commerce } = useCommerceRecords();
 
   const name = profile?.full_name?.trim() || 'there';
   const firstName = name.split(' ')[0];
@@ -96,6 +98,11 @@ export default function WorkspaceHome() {
 
   const tasks = useMemo(() => {
     const items: Task[] = [];
+    const unpaid = (commerce?.invoices ?? []).filter((i:any) => i.buyer_id === user?.id && i.status === 'issued' && new Date(i.due_at).getTime() > Date.now()).sort((a:any,b:any) => Date.parse(a.due_at)-Date.parse(b.due_at));
+    if (unpaid[0]) items.push({ id:'urgent-invoice',label:'Review your purchase invoice',hint:`${unpaid[0].invoice_number} · ${invoiceMoney(unpaid[0].total_cents)} · due ${new Date(unpaid[0].due_at).toLocaleDateString()}`,to:`/invoices/${unpaid[0].id}`,icon:Receipt,tone:'warn' });
+    const sellerRequests=(commerce?.requests??[]).filter((r:any)=>r.seller_id===user?.id && ['requested','under_review','revision_pending'].includes(r.status) && new Date(r.expires_at).getTime()>Date.now());
+    if(sellerRequests.length)items.push({id:'purchase-requests',label:`${sellerRequests.length} purchase request(s) to review`,hint:'Review the equipment and agreed terms.',to:'/dashboard/invoices?view=selling',icon:FileText,tone:'warn'});
+
     (handoffTasks ?? []).forEach((t) =>
       items.push({ id: t.id, label: t.label, hint: t.hint, to: t.to, icon: ShieldCheck, tone: t.tone }),
     );
@@ -160,7 +167,7 @@ export default function WorkspaceHome() {
         icon: FileText,
       });
     return items.sort((a,b) => Number(b.tone === 'warn') - Number(a.tone === 'warn'));
-  }, [
+  }, [commerce, user?.id, 
     handoffTasks,
     pendingOffers.length,
     pendingSellerBookings.length,

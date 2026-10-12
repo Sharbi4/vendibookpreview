@@ -1,3 +1,4 @@
+import PurchaseRequestConfirmation from '@/components/commerce/PurchaseRequestConfirmation';
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { trackBuyerSeoDownstream } from '@/lib/buyerSeoTracking';
 import { useParams, useNavigate, useSearchParams, useLocation, Link } from 'react-router-dom';
@@ -94,7 +95,9 @@ const SALE_STEPS: Array<{ id: string; label: string; heading: string; descriptio
  * Inline for-sale checkout wizard. Money, eligibility, and server payment
  * rules remain authoritative while each step preserves the buyer's inputs.
  */
-const SaleCheckout = () => {
+const SaleCheckout = ({ requestOnly = false }: { requestOnly?: boolean }) => {
+  const [requestConfirmOpen, setRequestConfirmOpen] = useState(false);
+  const requestAcknowledgement = useRef<{ version: string; accepted: true } | null>(null);
   const { listingId } = useParams();
   const navigate = useNavigate();
   const routerLocation = useLocation();
@@ -249,25 +252,18 @@ const SaleCheckout = () => {
 
   // Depend on stable identity/selection values: a token refresh must not
   // replace the mounted PayPal form with the offer-loading screen.
-  const offerPriceParam = searchParams.get('offer_price');
+  const offerPriceParam = searchParams.get('offer');
   // Check for accepted offer to get negotiated price
   useEffect(() => {
     const fetchAcceptedOffer = async () => {
       if (!user || !listingId) return;
 
-      if (offerPriceParam) {
-        const price = parseFloat(offerPriceParam);
-        if (!isNaN(price) && price > 0) {
-          setAcceptedOfferPrice(price);
-          return;
-        }
-      }
 
       setIsLoadingOffer(true);
       try {
         const { data: offer, error } = await supabase
           .from('offers')
-          .select('offer_amount, counter_amount, status')
+          .select('agreed_amount, offer_amount, counter_amount, status')
           .eq('buyer_id', user.id)
           .eq('listing_id', listingId)
           .eq('status', 'accepted')
@@ -278,7 +274,7 @@ const SaleCheckout = () => {
         if (error) {
           console.error('Error fetching accepted offer:', error);
         } else if (offer) {
-          const agreedPrice = offer.counter_amount || offer.offer_amount;
+          const agreedPrice = (offer as unknown as { agreed_amount?: number }).agreed_amount ?? offer.counter_amount ?? offer.offer_amount;
           setAcceptedOfferPrice(agreedPrice);
         }
       } catch (err) {
@@ -306,7 +302,7 @@ const SaleCheckout = () => {
 
       if (listing.accept_paypal_checkout) {
         setPaymentMethod('card');
-      } else if (listing.accept_cash_payment) {
+      } else if (listing.accept_cash_payment && !requestOnly) {
         setPaymentMethod('cash');
       }
     }
@@ -395,7 +391,7 @@ const SaleCheckout = () => {
   // Pre-warm PayPal config/readiness/SDK while the buyer works through the
   // earlier steps so the payment buttons render without a loading wait.
   // Sales authorize first until the seller confirms, hence the AUTHORIZE guess.
-  useWarmPayPalCheckout(listing?.host_id ?? null);
+  useWarmPayPalCheckout(requestOnly ? null : listing?.host_id ?? null);
   const paypalPurchaseBlocked = sellerReadiness.gatingActive && !sellerReadiness.ready;
   const [fulfillmentReady, setFulfillmentReady] = useState(false);
 
@@ -470,7 +466,7 @@ const SaleCheckout = () => {
   const [taxEstimate, setTaxEstimate] = useState<{ tax_cents: number; rate_pct: number; label: string } | null>(null);
   const [taxState, setTaxState] = useState<'idle' | 'loading' | 'ready' | 'error'>('idle');
   useEffect(() => {
-    if (!listing?.id || !priceSale) { setTaxEstimate(null); setTaxState('idle'); return; }
+    if (requestOnly || !listing?.id || !priceSale) { setTaxEstimate(null); setTaxState('idle'); return; }
     const isDelivery = fulfillmentSelected === 'delivery' || fulfillmentSelected === 'vendibook_freight';
     if (isDelivery && !deliveryAddress.trim()) { setTaxEstimate(null); setTaxState('idle'); return; }
     const controller = new AbortController();
@@ -504,7 +500,7 @@ const SaleCheckout = () => {
         });
     }, 350);
     return () => { clearTimeout(t); controller.abort(); };
-  }, [listing?.id, priceSale, fulfillmentSelected, currentDeliveryFee, deliveryAddress]);
+  }, [requestOnly, listing?.id, priceSale, fulfillmentSelected, currentDeliveryFee, deliveryAddress]);
 
   const taxAmount = (taxEstimate?.tax_cents ?? 0) / 100;
   // Item + seller delivery + buyer-paid freight + estimated sales tax. Mirrors
@@ -636,7 +632,7 @@ const SaleCheckout = () => {
     if (submitLockRef.current || isPurchasing || termsGate.preparing) return null;
     if (!validateFulfillment()) return null;
     if (!validateDetails()) return null;
-    if (paypalPurchaseBlocked && paymentMethod !== 'cash') {
+    if (!requestOnly && paypalPurchaseBlocked && paymentMethod !== 'cash') {
       toast({
         title: 'Seller setup incomplete',
         description: "This seller hasn't finished payment setup yet. Message them or choose pay-in-person if available.",
@@ -645,7 +641,7 @@ const SaleCheckout = () => {
       return null;
     }
     if (!user) {
-      navigate(authPath(`/checkout/${listingId}`, 'signin'));
+      navigate(authPath(`${requestOnly ? '/purchase-request' : '/checkout'}/${listingId}`, 'signin'));
       return null;
     }
     if (isOwner) {
@@ -700,11 +696,12 @@ const SaleCheckout = () => {
 
   const runPurchase = async () => {
     if (submitLockRef.current || isPurchasing) return;
+    if (requestOnly && !requestAcknowledgement.current) { setRequestConfirmOpen(true); return; }
     if (!listingId || !listing?.host_id) return;
     submitLockRef.current = true;
     const termsId = termsGate.termsId;
 
-    if (paymentMethod === 'cash') {
+    if (!requestOnly && paymentMethod === 'cash') {
       setIsPurchasing(true);
       try {
         const isVendibookFreight = fulfillmentSelected === 'vendibook_freight';
@@ -791,6 +788,9 @@ const SaleCheckout = () => {
       const { data, error } = await supabase.functions.invoke('create-sale-intent', {
         body: {
           listing_id: listingId,
+          request_only: requestOnly,
+          acknowledgement: requestOnly ? requestAcknowledgement.current : undefined,
+          offer_id: requestOnly ? searchParams.get('offer') ?? undefined : undefined,
           delivery_fee: fulfillmentSelected === 'delivery' ? currentDeliveryFee : 0,
           fulfillment_type: isVendibookFreight ? 'vendibook_freight' : fulfillmentSelected,
           delivery_address: (fulfillmentSelected === 'delivery' || isVendibookFreight) ? deliveryAddress.trim() : null,
@@ -842,6 +842,17 @@ const SaleCheckout = () => {
         });
         setIsPurchasing(false);
         submitLockRef.current = false;
+        return;
+      }
+
+      if (requestOnly) {
+        if (!data.request_id) throw new Error('Purchase request was not recorded.');
+        setRequestConfirmOpen(false);
+        requestAcknowledgement.current = null;
+        termsGate.reset();
+        toast({ title: 'Purchase request submitted', description: 'The seller will review your request. Nothing has been charged.' });
+        trackBuyerSeoDownstream('checkout_started', listingId, { payment_path: 'invoice_request' });
+        navigate(`/dashboard/invoices?request=${data.request_id}`);
         return;
       }
 
@@ -904,13 +915,13 @@ const SaleCheckout = () => {
   runPurchaseRef.current = runPurchase;
 
   useEffect(() => {
-    if (!agreementsRecorded || paymentMethod !== 'card') return;
+    if (requestOnly || !agreementsRecorded || paymentMethod !== 'card') return;
     if (paypalCheckout || autoIntentRef.current) return;
     autoIntentRef.current = true;
     void runPurchaseRef.current?.().finally(() => {
       autoIntentRef.current = false;
     });
-  }, [agreementsRecorded, paymentMethod, paypalCheckout]);
+  }, [requestOnly, agreementsRecorded, paymentMethod, paypalCheckout]);
 
 
 
@@ -993,7 +1004,7 @@ const SaleCheckout = () => {
   ];
 
   const moneyBreakdown = (
-    <MoneyBreakdown lines={moneyLines} total={formatCurrency(totalPrice)} totalNote="Order total" />
+    <MoneyBreakdown lines={moneyLines} total={formatCurrency(totalPrice)} totalNote={requestOnly ? "Quoted subtotal · tax determined on invoice" : "Order total"} />
   );
 
   const summaryMeta = [
@@ -1004,7 +1015,13 @@ const SaleCheckout = () => {
   const humanizeCategory = (value?: string | null) =>
     value ? value.replace(/_/g, ' ').replace(/\b\w/g, (letter) => letter.toUpperCase()) : null;
 
-  const railExtras = (
+  const railExtras = requestOnly ? (
+    <div className="rounded-2xl border bg-orange-50/50 p-5 space-y-3 text-sm">
+      <strong>Request first. Pay after approval.</strong>
+      <p>The seller reviews your equipment and fulfillment details. Your itemized invoice will show the final tax and total before you authorize payment.</p>
+      <p>No payment is collected with this request.</p>
+    </div>
+  ) : (
     <div className="v2-rail-extras">
       <div className="v2-rail-paypal">
         <span className="v2-rail-paypal-mark">
@@ -1067,10 +1084,10 @@ const SaleCheckout = () => {
     if (!validateFulfillment()) return;
     if (!validateDetails()) return;
     if (!user) {
-      navigate(authPath(`/checkout/${listingId}`, 'signin'));
+      navigate(authPath(`${requestOnly ? '/purchase-request' : '/checkout'}/${listingId}`, 'signin'));
       return;
     }
-    if (paypalPurchaseBlocked && paymentMethod !== 'cash') {
+    if (!requestOnly && paypalPurchaseBlocked && paymentMethod !== 'cash') {
       toast({ title: 'Seller setup incomplete', description: "This seller hasn't finished payment setup yet.", variant: 'destructive' });
       return;
     }
@@ -1097,7 +1114,7 @@ const SaleCheckout = () => {
     termsGate.reset();
   };
 
-  const stepDefs = SALE_STEPS;
+  const stepDefs = requestOnly ? SALE_STEPS.map(s => s.id === 'payment' ? { ...s, label: 'Request', heading: 'Submit your purchase request', description: 'Confirm the details for seller approval. No payment is collected.' } : s) : SALE_STEPS;
   const activeStep = stepDefs[step - 1];
 
 
@@ -1105,7 +1122,7 @@ const SaleCheckout = () => {
     // Guests can review the full order; continuing past it needs an account,
     // and sign-in brings them straight back to this checkout.
     if (!user && next > 1) {
-      navigate(authPath(`/checkout/${listingId}`, 'signin'));
+      navigate(authPath(`${requestOnly ? '/purchase-request' : '/checkout'}/${listingId}`, 'signin'));
       return;
     }
     setStep(next);
@@ -1164,7 +1181,7 @@ const SaleCheckout = () => {
         return {
           onBack: () => goToStep(3),
           onNext: () => void continueFromAgreements(),
-          nextLabel: 'Continue to payment',
+          nextLabel: requestOnly ? 'Review purchase request' : 'Continue to payment',
           nextDisabled:
             !agreedToTerms || !privacyAccepted || !agreement.data || !privacyConsent.data || !fulfillmentReady,
           nextBusy: termsGate.preparing || recordingConsent,
@@ -1176,11 +1193,11 @@ const SaleCheckout = () => {
 
   return (
     <>
-      <SEO title={`Checkout - ${listing.title}`} description={`Complete your purchase of ${listing.title}`} />
+      <SEO title={`${requestOnly ? "Request to Buy" : "Checkout"} - ${listing.title}`} description={`Review your purchase of ${listing.title}`} />
 
       <TransactionCheckoutShell
         mode="wizard"
-        title="Checkout"
+        title={requestOnly ? "Request to Buy" : "Checkout"}
         subtitle={listing.title}
         exitHref={`/listing/${listingId}`}
         summary={summaryContent}
@@ -1199,7 +1216,7 @@ const SaleCheckout = () => {
                 An account is required to pay securely. Sign in now so we can keep your details when you return.
               </p>
               <button
-                onClick={() => navigate(authPath(`/checkout/${listingId}`, 'signin'))}
+                onClick={() => navigate(authPath(`${requestOnly ? '/purchase-request' : '/checkout'}/${listingId}`, 'signin'))}
                 className="v2-btn mt-3"
               >
                 Sign in / Create account
@@ -1297,7 +1314,15 @@ const SaleCheckout = () => {
             />
           ) : null}
 
-          {step === 5 ? (
+          {step === 5 && requestOnly ? (
+            <div className="space-y-4 rounded-3xl border bg-orange-50/40 p-6">
+              <h2 className="text-xl font-semibold">Ready for seller review</h2>
+              <p className="text-sm text-muted-foreground">Your request includes the equipment, fulfillment preferences and accepted terms. The seller must approve before an invoice is issued.</p>
+              {intentError && <p role="alert" className="text-sm text-destructive">{intentError.detail}</p>}
+              <Button size="lg" disabled={!agreementsRecorded || isPurchasing} onClick={() => setRequestConfirmOpen(true)}>Review &amp; request to buy</Button>
+              <PurchaseRequestConfirmation open={requestConfirmOpen} onOpenChange={setRequestConfirmOpen} busy={isPurchasing} listingTitle={listing.title} onSubmit={ack => { requestAcknowledgement.current = ack; void runPurchase(); }} />
+            </div>
+          ) : step === 5 ? (
             <div className="space-y-5">
               {hasMultiplePaymentOptionsFor(acceptPayPalCheckout && !paypalPurchaseBlocked, acceptCashPayment) ? (
                 <PurchaseStepPayment

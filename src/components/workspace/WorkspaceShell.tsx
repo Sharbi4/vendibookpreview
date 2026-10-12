@@ -38,6 +38,7 @@ const desktopNav = [
   ['Listings', '/dashboard/listings', List],
   ['Transactions', '/dashboard/transactions', ShoppingBag],
   ['Offers', '/dashboard/offers', DollarSign],
+  ['Invoices & Payments', '/dashboard/invoices', FileCheck2],
   ['Messages', '/dashboard/messages', Inbox],
   ['Notifications', '/dashboard/notifications', Bell],
   ['Saved', '/dashboard/saved', Heart],
