@@ -67,8 +67,8 @@ const PayoutsPanel = () => {
       <header>
         <h1 className="text-2xl font-semibold text-foreground">Earnings &amp; payouts</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Buyer payments are processed securely through PayPal. Vendibook records your proceeds and
-          our team reviews and sends every payout manually according to the transaction timeline.
+          Review recorded earnings and payout statuses for your existing transactions. Payment and
+          payout timing depends on the provider and the transaction status.
         </p>
       </header>
 

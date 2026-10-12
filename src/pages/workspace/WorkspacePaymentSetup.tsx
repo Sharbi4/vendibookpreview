@@ -1,3 +1,4 @@
+import SalesPaymentSetupPaused from '@/components/payments/SalesPaymentSetupPaused';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, CheckCircle2, AlertTriangle, Circle, Loader2 } from 'lucide-react';
@@ -34,7 +35,31 @@ const marker = (state: StepState) =>
  * Nothing is marked complete on guesswork, and no money logic, routing, or
  * payout behaviour changes on this page — payouts stay manually reviewed.
  */
+// Keep the existing setup implementation available for a deliberate reactivation.
+// Do not mount it during this pause: its effects can automatically enable listings.
 export default function WorkspacePaymentSetup() {
+  return (
+    <WorkspaceShell>
+      <div className="v2-page-stack">
+        <header className="v2-page-heading">
+          <Link to="/dashboard/payments" className="v2-btn-quiet inline-flex w-fit">
+            <ArrowLeft className="h-4 w-4" /> Back to Payments
+          </Link>
+          <p className="v2-eyebrow">Payment setup</p>
+          <h1>Payment setup</h1>
+          <p>Manage your rental payment connection and review existing transactions.</p>
+        </header>
+        <SalesPaymentSetupPaused />
+        <Link to="/dashboard/payments" className="v2-btn-quiet w-fit">
+          View transactions and payouts <ArrowRight className="h-4 w-4" />
+        </Link>
+        <SellerSquareConnect />
+      </div>
+    </WorkspaceShell>
+  );
+}
+
+function PayPalPaymentSetup() {
   const { user } = useAuth();
   const { connection, status, isReady, isLoading, isRefreshing, refreshFromPayPal, lastCheckedAt, lastRefreshError } =
     useMyPayPalConnection();
