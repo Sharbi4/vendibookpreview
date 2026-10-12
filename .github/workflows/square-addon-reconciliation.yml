@@ -1,0 +1,37 @@
+name: Square add-on reconciliation checks
+
+on:
+  push:
+    branches: [fix/paypal-webhook-config]
+    paths:
+      - 'supabase/functions/**'
+      - 'src/pages/AdminRevenue.tsx'
+      - 'scripts/test-square-addon-reconciliation.mjs'
+      - '.github/workflows/square-addon-reconciliation.yml'
+  pull_request:
+    paths:
+      - 'supabase/functions/**'
+      - 'src/pages/AdminRevenue.tsx'
+      - 'scripts/test-square-addon-reconciliation.mjs'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  reconciliation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Reconciliation behavioral tests
+        run: node scripts/test-square-addon-reconciliation.mjs
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+      - run: bun install --frozen-lockfile
+      - name: Build UI without data-generation side effects
+        run: bunx vite build
