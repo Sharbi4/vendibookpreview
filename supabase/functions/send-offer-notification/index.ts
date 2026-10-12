@@ -112,6 +112,8 @@ Deno.serve(async (req) => {
         finalAmount: amount,
         accepted: event_type === 'offer_accepted' || event_type === 'counter_accepted',
         offerId: offer.id,
+        listingId: offer.listing_id,
+        recipientIsBuyer: sendToBuyer,
       };
     }
 

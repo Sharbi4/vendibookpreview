@@ -1,3 +1,4 @@
+import { dispatchCommerceEmails } from "../_shared/commerceEmail.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { isAdminOrBackendCaller, forbiddenResponse } from '../_shared/callerGuard.ts';
 const corsHeaders = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
@@ -14,7 +15,10 @@ Deno.serve(async req => {
       .select('offer_id,event_type').is('delivered_at',null)
       .lte('next_attempt_at',new Date().toISOString()).order('next_attempt_at').limit(30);
     if (pendingError) throw pendingError;
-    let failures = 0;
+    const { error: invoiceExpiryError } = await db.rpc('commerce_expire_unpaid');
+    if (invoiceExpiryError) throw invoiceExpiryError;
+    const commerceEmails = await dispatchCommerceEmails(db);
+    let failures = commerceEmails.failures;
     for (const event of pending ?? []) {
       // Sender claims a lease and uses a stable provider idempotency key.
       const { error: sendError } = await db.functions.invoke('send-offer-notification', { body: event });

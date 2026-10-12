@@ -1,3 +1,4 @@
+import { queueCommerceEmails } from "../_shared/commerceEmail.ts";
 import { serve } from 'https://deno.land/std@0.190.0/http/server.ts';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from '../_shared/jsonError.ts';
@@ -21,16 +22,19 @@ serve(async (req) => {
       if(!purchaseAcknowledged(body.acknowledgement))return jsonError(400,'acknowledgment_required','Review and acknowledge the purchase process.');
       const {data,error}=await admin.rpc('commerce_submit_request',{_sale:body.sale_id,_actor:user.id,_ack_version:PURCHASE_ACK_VERSION,_acknowledged:true});
       if(error)return jsonError(409,'request_not_submitted',error.message);
+      void queueCommerceEmails(admin,user.id);
       return jsonResponse(200,{request_id:data});
     }
     if(body.action==='request_action') {
       const {data,error}=await admin.rpc('commerce_request_action',{_request:body.request_id,_actor:user.id,_action:body.request_action,_revision:body.revision,_proposed:body.proposed_terms??null});
       if(error)return jsonError(409,'request_not_updated',error.message);
+      void queueCommerceEmails(admin,user.id);
       return jsonResponse(200,data);
     }
     if(body.action==='cancel_invoice') {
       const {error}=await admin.rpc('commerce_cancel_invoice',{_invoice:body.invoice_id,_actor:user.id});
       if(error)return jsonError(409,'invoice_not_cancelled',error.message);
+      void queueCommerceEmails(admin,user.id);
       return jsonResponse(200,{ok:true});
     }
     if(body.action==='review_tax') {

@@ -18,7 +18,7 @@ const E = ({ buyerName, sellerName, listingTitle, counterAmount, originalOffer, 
         {counterAmount ? <Section style={s.accentRow}><Text style={s.accentLabel}>COUNTER</Text><Text style={s.accentValue}>${counterAmount.toLocaleString()}</Text></Section> : null}
         {message ? <><Text style={s.smallHeader}>MESSAGE</Text><Text style={s.text}>“{message}”</Text></> : null}
         {expiresAt ? <Text style={s.small}>Expires {expiresAt}.</Text> : null}
-        <Section style={s.ctaWrap}><Button href={`${SITE_URL}/dashboard?offer=${offerId || ''}`} style={s.button}>Respond</Button></Section>
+        <Section style={s.ctaWrap}><Button href={`${SITE_URL}/dashboard/offers?offer=${encodeURIComponent(offerId || '')}`} style={s.button}>Respond</Button></Section>
       </Section>
     <BrandFooter /></Container></Body></Html>
 )

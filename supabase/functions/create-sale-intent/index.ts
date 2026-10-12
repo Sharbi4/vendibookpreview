@@ -1,3 +1,4 @@
+import { queueCommerceEmails } from "../_shared/commerceEmail.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { corsHeaders, jsonError, jsonResponse, unknownErrorResponse } from "../_shared/jsonError.ts";
@@ -55,6 +56,7 @@ serve(async (req) => {
         _sale:transactionId,_actor:user.id,_ack_version:body.acknowledgement.version,_acknowledged:true,
       });
       if (submitError) return jsonError(409,'request_not_submitted',submitError.message);
+      void queueCommerceEmails(admin,user.id);
       return jsonResponse(200,{transaction_id:transactionId,request_id:requestId,amount,reused});
     };
     const listingId = body?.listing_id ? String(body.listing_id) : null;
