@@ -157,3 +157,22 @@ They sit alongside the existing `checkout_step_view` and `checkout_abandoned` ev
 ## Extension-ready
 
 A rental extension can be built as a new `booking_requests` row linked to the original, or as a second Square payment against the same host account. Either way it goes through `square-rental-payment` `pay`, which already takes any approved booking id. No extension feature ships yet.
+
+## Troubleshooting host connections (2026-10-13)
+
+Symptom: the host sees Square's "authorize Vendibook" screen, approves, and the connection never shows as Connected.
+Production data on 2026-10-13: one attempt (2026-10-11) consumed its one-time state and saved no account, so the
+failure happened after approval (token exchange, location lookup or saving).
+
+- `square_oauth_states.failure_stage` / `failure_code` / `failed_at` now record which step failed (codes only).
+  Read them with: `select created_at, failure_stage, failure_code from square_oauth_states order by created_at desc limit 5;`
+- The callback page shows a short reference (stage · Square error code) the host can send to support.
+- `status` and `start` refuse to begin a connection when the setup can't succeed: missing id/secret/redirect/key,
+  a key that isn't 32 bytes, a half-set `RENTAL_SQUARE_*` pair, or a sandbox app id with the production environment
+  (or the reverse). Function logs show the issue names as `square_oauth_not_configured`.
+- `RENTAL_SQUARE_APPLICATION_ID` and `RENTAL_SQUARE_APPLICATION_SECRET` are used only as a pair. Otherwise both come
+  from `SQUARE_APPLICATION_ID` / `SQUARE_APPLICATION_SECRET`.
+- The redirect URL registered in the Square app must equal `SQUARE_OAUTH_REDIRECT_URL` exactly. Only one redirect
+  is used, so test connections from the domain in that URL.
+- If a host is connected but `RENTAL_SQUARE_ENABLED` isn't `true`, the panel says rental checkout isn't using
+  connected accounts yet.

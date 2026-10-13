@@ -46,7 +46,7 @@ const EquinoxFinancingCallout = ({
                     On eligible for-sale trucks, trailers, and carts you can switch on the optional
                     Equinox Funding add-on. Buyers see a financing option on your listing, can apply
                     directly, and can download a pro forma purchase sheet — which widens your buyer
-                    pool beyond cash-in-hand shoppers. A 12.9% platform fee applies to an
+                    pool beyond cash-in-hand shoppers. An 8.7% platform fee applies to an
                     Equinox-financed Vendibook sale.{' '}
                     <Link to="/financing" className="font-medium text-foreground underline underline-offset-4 hover:text-primary">
                       Learn about financing

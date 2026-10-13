@@ -62,7 +62,7 @@ const paypalRail = (audience: RailsAudience): RailDef => ({
     'Both sides get a receipt by email and can follow the order in the dashboard.',
     audience === 'buyer'
       ? 'You coordinate pickup, delivery, or booking details with the other party.'
-      : 'Vendibook records your proceeds, minus the 12.9% platform fee, and an administrator issues your payout to the destination you saved.',
+      : 'Vendibook records your proceeds, minus the 8.7% platform fee, and an administrator issues your payout to the destination you saved.',
   ],
   detailNote:
     'PayPal Checkout only appears on listings where the seller or host has enabled it. Payout destinations are saved privately in your dashboard.',
@@ -112,7 +112,7 @@ const equinoxRail = (audience: RailsAudience): RailDef => ({
     'If funded, Equinox settles the purchase and Vendibook records the sale.',
   ],
   detailNote:
-    'Financing is offered by Equinox Funding LLC, not Vendibook, and is subject to credit approval. A 12.9% platform fee applies to financed sales. PayPal does not process an Equinox-funded purchase.',
+    'Financing is offered by Equinox Funding LLC, not Vendibook, and is subject to credit approval. An 8.7% platform fee applies to financed sales. PayPal does not process an Equinox-funded purchase.',
   link: { label: 'See financing details', href: '/financing' },
   flowLink:
     audience === 'buyer'
@@ -211,7 +211,7 @@ export const PaymentRailsSection = ({ audience }: { audience: RailsAudience }) =
         </div>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          Platform fee is 12.9%. Pay-in-person sales are free — no commission, no buyer fee.
+          The sale platform fee is 8.7%, paid by the seller. Pay-in-person sales are free — no commission, no buyer fee.
         </p>
       </div>
 

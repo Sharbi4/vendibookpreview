@@ -31,6 +31,7 @@ export default function SellerSquareConnect() {
   const [available, setAvailable] = useState(false);
   const [environment, setEnvironment] = useState<string>('sandbox');
   const [connection, setConnection] = useState<Connection | null>(null);
+  const [rentalsEnabled, setRentalsEnabled] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,6 +42,7 @@ export default function SellerSquareConnect() {
         setAvailable(Boolean(d?.available));
         setEnvironment(d?.environment ?? 'sandbox');
         setConnection(d?.connection ?? null);
+        setRentalsEnabled(d?.rentals_enabled !== false);
       })
       .catch((e) => setError((e as Error).message))
       .finally(() => setLoading(false));
@@ -97,6 +99,12 @@ export default function SellerSquareConnect() {
             <CheckCircle2 className="h-4 w-4 text-emerald-600" />
             Paying out to {connection?.business_name || 'your Square account'}
             {connection?.location_name ? ` · ${connection.location_name}` : ''}
+          </p>
+        ) : null}
+        {active && !rentalsEnabled ? (
+          <p className="text-xs text-foreground">
+            Your Square account is connected. Rental checkout isn&apos;t using connected Square accounts yet, so
+            payments for now are collected through Vendibook and paid out to you after review.
           </p>
         ) : null}
         {environment === 'sandbox' && available ? (

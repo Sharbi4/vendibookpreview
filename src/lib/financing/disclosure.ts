@@ -3,10 +3,10 @@
  * opt-in. Bump the version whenever the text below changes so a stored
  * acceptance always points at the exact wording the seller agreed to.
  */
-export const EQUINOX_DISCLOSURE_VERSION = 'equinox-financing-v1';
+export const EQUINOX_DISCLOSURE_VERSION = 'equinox-financing-v2';
 
 export const EQUINOX_DISCLOSURE_TEXT =
-  'If this listing results in a sale financed through Equinox Funding, Vendibook\u2019s 12.9% sale platform fee applies and is deducted from the financed sale proceeds before the net seller payout. This is a Vendibook platform fee\u2014not a financing fee. Cash/pay-in-person sales completed without Vendibook checkout or Equinox financing do not carry this fee. Financing is subject to Equinox Funding and/or its funding providers\u2019 approval and terms. Vendibook is not a lender.';
+  'If this listing results in a sale financed through Equinox Funding, Vendibook\u2019s 8.7% sale platform fee applies and is deducted from the financed sale proceeds before the net seller payout. This is a Vendibook platform fee\u2014not a financing fee. Cash/pay-in-person sales completed without Vendibook checkout or Equinox financing do not carry this fee. Financing is subject to Equinox Funding and/or its funding providers\u2019 approval and terms. Vendibook is not a lender.';
 
 export const EQUINOX_APPLY_URL = 'https://equinox-funding.com/efapplication/';
 

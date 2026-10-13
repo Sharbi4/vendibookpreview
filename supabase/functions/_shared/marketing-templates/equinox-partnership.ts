@@ -52,7 +52,7 @@ const BODY: Record<EquinoxVariant, { heading: string; paras: string[]; bullets: 
     bullets: [
       "Buyers see a financing option and can apply with Equinox Funding",
       "Your VIN / serial number stays private on the listing — it only appears on the financing purchase summary",
-      "Vendibook's 12.9% sale platform fee still applies to financed sales completed through Vendibook",
+      "Vendibook's 8.7% sale platform fee still applies to financed sales completed through Vendibook",
     ],
     primary: { label: "Turn on financing for a listing", href: utm("/financing/enable", "seller_enable") },
     secondary: { label: "Learn how financing works", href: utm("/financing", "seller_learn") },

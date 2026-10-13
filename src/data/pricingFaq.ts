@@ -110,7 +110,7 @@ export const PRICING_FAQ: PricingFaqEntry[] = [
     id: 'subscriptions-optional',
     question: 'Do I need a paid plan to sell or host?',
     answer:
-      'No. The free plan covers listing, messaging, checkout, and payouts. Vendibook Pro and one-time upgrades such as Featured Boost add reach, tooling, and a reduced seller/host fee — they change how fast you sell, not whether you can.',
+      'No. The free plan covers listing, messaging, checkout, and payouts. Vendibook Pro and one-time upgrades such as Featured Boost add reach, tooling, and BuyerMatch AI buyer outreach — they change how fast you sell, not whether you can.',
     audiences: ['seller', 'host', 'all'],
     cta: { label: 'Compare plans', href: '/pricing' },
   },

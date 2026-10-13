@@ -189,7 +189,7 @@ const SellerPaymentsExplainer = ({
             <p className="text-sm text-muted-foreground leading-relaxed">
               Equinox Funding is an optional per-listing add-on for eligible for-sale trucks,
               trailers, and carts. When enabled, buyers can apply and download the financing
-              purchase sheet. A 12.9% platform fee applies to an Equinox-financed Vendibook sale.
+              purchase sheet. An 8.7% platform fee applies to an Equinox-financed Vendibook sale.
             </p>
             <p className="text-xs text-muted-foreground leading-relaxed">
               Vendibook is not a lender. Approval and terms are determined by Equinox and/or its

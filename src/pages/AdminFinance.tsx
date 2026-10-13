@@ -334,7 +334,7 @@ const AdminFinance = () => {
           <CardContent className="py-4">
             <div className="flex items-center gap-4 flex-wrap">
               <Badge variant="outline" className="text-sm">
-                Sale Commission: 12.9% seller fee
+                Sale Commission: 8.7% seller fee (new sales)
               </Badge>
               <Badge variant="outline" className="text-sm">
                 Rental Commission: 12.9% host + 12.9% renter

@@ -39,18 +39,59 @@ export class SquareApiError extends Error {
   }
 }
 
+/**
+ * The OAuth client id and secret must come from the same Square app. Use the
+ * RENTAL_* pair only when both are set; otherwise the shared pair. A half-set
+ * RENTAL_* pair is reported as a configuration issue instead of silently
+ * mixing an id from one app with a secret from another (Square then shows its
+ * consent screen but rejects the token exchange).
+ */
+function credentialPair() {
+  const rentalId = Deno.env.get('RENTAL_SQUARE_APPLICATION_ID') || '';
+  const rentalSecret = Deno.env.get('RENTAL_SQUARE_APPLICATION_SECRET') || '';
+  if (rentalId && rentalSecret) return { applicationId: rentalId, applicationSecret: rentalSecret, mixed: false };
+  return {
+    applicationId: rentalId || Deno.env.get('SQUARE_APPLICATION_ID') || '',
+    applicationSecret: rentalSecret || Deno.env.get('SQUARE_APPLICATION_SECRET') || '',
+    mixed: Boolean(rentalId) !== Boolean(rentalSecret),
+  };
+}
+
 export function marketplaceEnv() {
   const environment = (Deno.env.get('RENTAL_SQUARE_ENVIRONMENT') || Deno.env.get('SQUARE_ENVIRONMENT') || 'sandbox') as SquareEnvironment;
   if (environment !== 'sandbox' && environment !== 'production') throw new Error('Invalid Square environment');
+  const pair = credentialPair();
   return {
     environment,
-    applicationId: Deno.env.get('RENTAL_SQUARE_APPLICATION_ID') || Deno.env.get('SQUARE_APPLICATION_ID') || '',
-    applicationSecret: Deno.env.get('RENTAL_SQUARE_APPLICATION_SECRET') || Deno.env.get('SQUARE_APPLICATION_SECRET') || '',
+    applicationId: pair.applicationId,
+    applicationSecret: pair.applicationSecret,
+    mixedCredentials: pair.mixed,
     redirectUrl: Deno.env.get('SQUARE_OAUTH_REDIRECT_URL') || '',
     encryptionKey: Deno.env.get('SQUARE_TOKEN_ENCRYPTION_KEY') || '',
     rentalsEnabled: Deno.env.get('RENTAL_SQUARE_ENABLED') === 'true',
     base: environment === 'production' ? 'https://connect.squareup.com' : 'https://connect.squareupsandbox.com',
   };
+}
+
+function encryptionKeyValid(raw: string) {
+  try { return Uint8Array.from(atob(raw), (c) => c.charCodeAt(0)).length === 32; } catch { return false; }
+}
+
+/**
+ * Configuration problems that would let a host reach Square's consent screen
+ * but fail afterwards. Names only, never secret values.
+ */
+export function oauthConfigIssues(): string[] {
+  const env = marketplaceEnv();
+  const issues: string[] = [];
+  if (!env.applicationId) issues.push('missing_application_id');
+  if (!env.applicationSecret) issues.push('missing_application_secret');
+  if (env.mixedCredentials) issues.push('rental_credentials_incomplete');
+  if (!env.redirectUrl) issues.push('missing_redirect_url');
+  if (!env.encryptionKey) issues.push('missing_encryption_key');
+  else if (!encryptionKeyValid(env.encryptionKey)) issues.push('invalid_encryption_key');
+  if (env.applicationId && /^sandbox-/.test(env.applicationId) !== (env.environment === 'sandbox')) issues.push('environment_app_mismatch');
+  return issues;
 }
 
 /** True when every secret the rental marketplace flow needs is present. */

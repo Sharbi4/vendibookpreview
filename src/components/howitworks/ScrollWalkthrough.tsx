@@ -388,7 +388,7 @@ const MockVisual = ({ variant, tone }: { variant: WalkthroughStep['mock']; tone:
             </div>
             <div className="flex items-center justify-between text-sm">
               <span className="text-muted-foreground">Seller fee</span>
-              <span className="text-foreground">12.9%</span>
+              <span className="text-foreground">8.7%</span>
             </div>
             <div className="flex items-center justify-between text-sm border-t border-border pt-2.5">
               <span className="text-muted-foreground">Payout</span>

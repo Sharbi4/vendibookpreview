@@ -8,7 +8,7 @@
 
 import { jsonError } from './jsonError.ts';
 
-export const EQUINOX_DISCLOSURE_VERSION = 'equinox-financing-v1';
+export const EQUINOX_DISCLOSURE_VERSION = 'equinox-financing-v2';
 export const EQUINOX_FLAG_KEY = 'equinox_financing_enabled';
 export const EQUINOX_APPLY_URL = 'https://equinox-funding.com/efapplication/';
 

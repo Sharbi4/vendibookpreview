@@ -17,6 +17,7 @@ import {
   encryptToken,
   exchangeCode,
   marketplaceEnv,
+  oauthConfigIssues,
   primaryLocation,
   revokeSellerToken,
   squareApi,
@@ -28,8 +29,7 @@ import { safeLog } from "../_shared/paypal.ts";
 const SAFE_RETURN = /^\/[A-Za-z0-9/_\-?=&.]*$/;
 
 function oauthReady() {
-  const env = marketplaceEnv();
-  return Boolean(env.applicationId && env.applicationSecret && env.redirectUrl && env.encryptionKey);
+  return oauthConfigIssues().length === 0;
 }
 
 Deno.serve(async (req) => {
@@ -52,11 +52,20 @@ Deno.serve(async (req) => {
       const { data } = await admin.from("square_seller_accounts")
         .select("environment, status, merchant_id, location_name, business_name, connected_at")
         .eq("user_id", user.id).eq("environment", env.environment).maybeSingle();
-      return jsonResponse(200, { available: oauthReady(), environment: env.environment, connection: data ?? null });
+      return jsonResponse(200, {
+        available: oauthReady(),
+        environment: env.environment,
+        // Lets the panel explain a connected account that rentals won't use yet.
+        rentals_enabled: env.rentalsEnabled,
+        connection: data ?? null,
+      });
     }
 
-    if (!oauthReady()) {
-      return jsonError(503, "square_not_configured", "Square connections aren't available yet. Please check back soon.");
+    const configIssues = oauthConfigIssues();
+    if (configIssues.length) {
+      safeLog("square_oauth_not_configured", { issues: configIssues.join(",") });
+      return jsonError(503, "square_not_configured", "Square connections aren't available yet. Please check back soon.",
+        { issues: configIssues });
     }
 
     if (action === "start") {
@@ -82,45 +91,69 @@ Deno.serve(async (req) => {
         return jsonError(400, "state_invalid", "This Square link expired. Start again from your payout settings.");
       }
 
-      const tokens = await exchangeCode(code);
-      const location = await primaryLocation(tokens.access_token);
-      if (!location) {
-        return jsonError(409, "no_location",
-          "Your Square account has no active location that can take card payments. Activate one in Square, then connect again.");
-      }
-      let businessName: string | null = location.business_name ?? null;
+      // Record which step failed (codes only) so support can see it in
+      // square_oauth_states without function logs.
+      let stage = "token_exchange";
+      const fail = async (failureCode: string) => {
+        safeLog("square_seller_connect_failed", { userId: user.id, stage, code: failureCode });
+        await admin.from("square_oauth_states")
+          .update({ failure_stage: stage, failure_code: failureCode.slice(0, 120), failed_at: new Date().toISOString() })
+          .eq("state", state);
+      };
       try {
-        const { merchant } = await squareApi("/v2/merchants/me", { token: tokens.access_token });
-        businessName = merchant?.business_name ?? businessName;
-      } catch { /* optional */ }
+        const tokens = await exchangeCode(code);
+        stage = "location_lookup";
+        const location = await primaryLocation(tokens.access_token);
+        if (!location) {
+          await fail("no_location");
+          return jsonError(409, "no_location",
+            "Your Square account has no active location that can take card payments. Activate one in Square, then connect again.",
+            { stage });
+        }
+        stage = "save_connection";
+        let businessName: string | null = location.business_name ?? null;
+        try {
+          const { merchant } = await squareApi("/v2/merchants/me", { token: tokens.access_token });
+          businessName = merchant?.business_name ?? businessName;
+        } catch { /* optional */ }
 
-      const now = new Date().toISOString();
-      const { error } = await admin.from("square_seller_accounts").upsert({
-        user_id: user.id,
-        environment: env.environment,
-        merchant_id: tokens.merchant_id,
-        location_id: location.id,
-        location_name: location.name ?? null,
-        business_name: businessName,
-        currency: location.currency ?? "USD",
-        access_token_encrypted: await encryptToken(tokens.access_token),
-        refresh_token_encrypted: tokens.refresh_token ? await encryptToken(tokens.refresh_token) : null,
-        token_expires_at: tokens.expires_at ?? null,
-        scopes: SQUARE_SELLER_SCOPES,
-        status: "active",
-        connected_at: now,
-        revoked_at: null,
-        last_error: null,
-        updated_at: now,
-      }, { onConflict: "user_id,environment" });
-      if (error) throw error;
-      safeLog("square_seller_connected", { userId: user.id, environment: env.environment });
-      return jsonResponse(200, {
-        connected: true,
-        business_name: businessName,
-        location_name: location.name ?? null,
-        return_path: claimed.return_path ?? null,
-      });
+        const now = new Date().toISOString();
+        const { error } = await admin.from("square_seller_accounts").upsert({
+          user_id: user.id,
+          environment: env.environment,
+          merchant_id: tokens.merchant_id,
+          location_id: location.id,
+          location_name: location.name ?? null,
+          business_name: businessName,
+          currency: location.currency ?? "USD",
+          access_token_encrypted: await encryptToken(tokens.access_token),
+          refresh_token_encrypted: tokens.refresh_token ? await encryptToken(tokens.refresh_token) : null,
+          token_expires_at: tokens.expires_at ?? null,
+          scopes: SQUARE_SELLER_SCOPES,
+          status: "active",
+          connected_at: now,
+          revoked_at: null,
+          last_error: null,
+          updated_at: now,
+        }, { onConflict: "user_id,environment" });
+        if (error) throw error;
+        safeLog("square_seller_connected", { userId: user.id, environment: env.environment });
+        return jsonResponse(200, {
+          connected: true,
+          business_name: businessName,
+          location_name: location.name ?? null,
+          return_path: claimed.return_path ?? null,
+        });
+      } catch (err) {
+        const failureCode = err instanceof SquareApiError ? err.code
+          : (err as { code?: string })?.code || (err instanceof Error ? err.message : "error");
+        await fail(failureCode);
+        if (err instanceof SquareApiError) {
+          return jsonError(502, "square_error", "Square couldn't complete the connection. Please try again.",
+            { square_code: err.code, stage });
+        }
+        return jsonError(500, "connect_failed", "We couldn't save your Square connection. Please try again.", { stage });
+      }
     }
 
     if (action === "disconnect") {

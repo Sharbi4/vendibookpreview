@@ -38,7 +38,11 @@ export default function SquareConnectCallback() {
       .then(async ({ data, error }) => {
         if (error) {
           const parsed = await parseEdgeError(error);
-          throw new Error(parsed?.message || 'Square could not complete the connection.');
+          const raw = (parsed?.raw ?? {}) as { stage?: string; square_code?: string };
+          // A short reference lets support match the failure recorded server-side.
+          const reference = [raw.stage, raw.square_code ?? parsed?.code].filter(Boolean).join(' · ');
+          const text = parsed?.message || 'Square could not complete the connection.';
+          throw new Error(reference ? `${text} (Reference: ${reference})` : text);
         }
         setState('done');
         setMessage(data?.business_name ? `Connected ${data.business_name}.` : 'Your Square account is connected.');
