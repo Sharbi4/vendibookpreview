@@ -17,3 +17,16 @@ see the right status. Database: `supabase/migrations/20261013180000_manual_invoi
 Admins can cancel an unpaid sale from `/admin/invoices`; a paid invoice must be refunded instead.
 
 Testing: `PGLITE_MODULE=... node scripts/test-manual-invoice-flow.mjs` (21 checks).
+
+## Deployment record (2026-10-13)
+
+Applied to the live database (Lovable project f4d8586e) with owner approval, in one transaction, after a
+rolled-back dry run of the identical SQL (md5-checked): `supabase/migrations/` 20261010010000, 20261012014545,
+20261012120000, 20261012160000, 20261012170000, 20261012180000, 20261012190000 (supersedes the unregistered
+`drizzle/migrations/0015_offer_transaction_security.sql` and `0016_offer_notification_outbox.sql`; do not apply those),
+20261012200000, 20261012210000, 20261012220000, 20261013170000, 20261013180000. All twelve are recorded in
+`supabase_migrations.schema_migrations`. The BuyerMatch migrations 20261012230000–232000 were NOT applied
+(they conflict with the live drizzle 0015/0017 BuyerMatch design).
+
+`commerce_rollout.requests_enabled` is on (owner approval; no separate counsel review on file).
+`payments_enabled` stays off: invoices are paid outside the API and recorded by an admin.
