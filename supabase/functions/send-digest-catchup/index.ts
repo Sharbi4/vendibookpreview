@@ -10,6 +10,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { buildMarketingAudience } from "../_shared/marketingAudience.ts";
 import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
 import { unsubToken } from "../_shared/unsubscribeToken.ts";
+import { injectBrandHead } from "../_shared/email-brand/bulletproof.ts";
+import { FONT_STACK } from "../_shared/email-brand/tokens.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -82,6 +84,8 @@ Deno.serve(async (req) => {
     if (body?.confirm !== campaignId) {
       return json({ error: "Send requires confirm to equal campaignId." }, 400);
     }
+    // Brand chrome (Poppins + Outlook font fix); idempotent for composed HTML.
+    html = injectBrandHead(html);
 
 
     let sent = 0;
@@ -91,7 +95,7 @@ Deno.serve(async (req) => {
       const personalized = html.includes("</body>")
         ? html.replace(
             "</body>",
-            `<table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;padding:0 16px 32px;"><tr><td align="center"><p style="font-size:12px;color:#94a3b8;margin:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">You're receiving this because you have a Vendibook account or joined our list. <a href="${unsubUrl}" style="color:#64748b;">Unsubscribe</a></p></td></tr></table></body>`,
+            `<table width="100%" cellpadding="0" cellspacing="0" style="background:#f8fafc;padding:0 16px 32px;"><tr><td align="center"><p style="font-size:12px;color:#94a3b8;margin:0;font-family:${FONT_STACK};">You're receiving this because you have a Vendibook account or joined our list. <a href="${unsubUrl}" style="color:#64748b;">Unsubscribe</a></p></td></tr></table></body>`,
           )
         : `${html}<p style="font-size:12px;color:#94a3b8;text-align:center;">You're receiving this because you have a Vendibook account or joined our list. <a href="${unsubUrl}">Unsubscribe</a></p>`;
 

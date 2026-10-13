@@ -1,5 +1,6 @@
 import * as React from 'npm:react@18.3.1'
-import { Body, Container, Head, Heading, Html, Hr, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { Body, Container, Heading, Html, Hr, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { BrandHead } from '../email-brand/components.tsx'
 import type { TemplateEntry } from './registry.ts'
 import { s } from './_styles.ts'
 import { BrandFooter, BrandHeader } from './_blocks.tsx'
@@ -19,7 +20,7 @@ interface Props {
 const sevColor = (sev?: string) => sev === 'high' ? '#ef4444' : sev === 'medium' ? '#f59e0b' : '#10b981'
 
 const E = ({ weekLabel, totalSubmissions = 0, avgNps, promoters = 0, detractors = 0, themes = [], highlightQuotes = [], rawSummary }: Props) => (
-  <Html lang="en" dir="ltr"><Head /><Preview>Weekly feedback digest — {totalSubmissions} responses, avg NPS {avgNps ?? '—'}</Preview>
+  <Html lang="en" dir="ltr"><BrandHead /><Preview>Weekly feedback digest — {totalSubmissions} responses, avg NPS {avgNps ?? '—'}</Preview>
     <Body style={s.main}><Container style={s.container}>
       <BrandHeader hero="insight" />
       <Section style={s.card}>

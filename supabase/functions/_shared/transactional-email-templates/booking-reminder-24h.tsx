@@ -1,5 +1,6 @@
 import * as React from 'npm:react@18.3.1'
-import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { Body, Container, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { BrandHead, EmailButton } from '../email-brand/components.tsx'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
@@ -7,7 +8,7 @@ import { BrandFooter, BrandHeader } from './_blocks.tsx'
 interface Props { shopperName?: string; listingTitle?: string; startDate?: string; address?: string; bookingId?: string; accessInstructions?: string; coverImageUrl?: string }
 
 const E = ({ shopperName, listingTitle, startDate, address, bookingId, accessInstructions, coverImageUrl }: Props) => (
-  <Html lang="en" dir="ltr"><Head /><Preview>Reminder: your booking starts tomorrow</Preview>
+  <Html lang="en" dir="ltr"><BrandHead /><Preview>Reminder: your booking starts tomorrow</Preview>
     <Body style={s.main}><Container style={s.container}>
       <BrandHeader hero="booking" listingImageUrl={coverImageUrl} listingTitle={listingTitle} />
       <Section style={s.card}>
@@ -16,7 +17,7 @@ const E = ({ shopperName, listingTitle, startDate, address, bookingId, accessIns
         <Text style={s.lede}>{listingTitle ? `“${listingTitle}”` : 'Your booking'} kicks off {startDate}. Here's everything you need.</Text>
         {address ? <Section style={s.accentRow}><Text style={s.accentLabel}>LOCATION</Text><Text style={s.accentValuePlain}>{address}</Text></Section> : null}
         {accessInstructions ? <Section style={s.accentRow}><Text style={s.accentLabel}>ACCESS</Text><Text style={s.accentValuePlain}>{accessInstructions}</Text></Section> : null}
-        <Section style={s.ctaWrap}><Button href={`${SITE_URL}/dashboard?booking=${bookingId || ''}`} style={s.button}>Open booking</Button></Section>
+        <Section style={s.ctaWrap}><EmailButton href={`${SITE_URL}/dashboard?booking=${bookingId || ''}`} style={s.button}>Open booking</EmailButton></Section>
       </Section>
     <BrandFooter /></Container></Body></Html>
 )

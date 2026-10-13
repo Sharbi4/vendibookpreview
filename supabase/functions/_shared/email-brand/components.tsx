@@ -2,16 +2,15 @@
 // ─────────────────────────────────────────────────────────────
 // VENDIBOOK MASTER EMAIL DESIGN SYSTEM — shared blocks
 //
-// Every block is email-client-safe: inline styles only, table-friendly
-// React Email primitives, no webfonts, no JS, no background imagery.
+// Every block is email-client-safe: inline styles plus one shared <head>
+// block (Poppins + Outlook Arial fallback, see ./bulletproof.ts),
+// table-friendly React Email primitives, no JS, no background imagery.
 // ─────────────────────────────────────────────────────────────
 
 import * as React from 'npm:react@18.3.1'
 import {
   Body,
-  Button,
   Container,
-  Head,
   Heading,
   Hr,
   Html,
@@ -39,6 +38,66 @@ import {
   currentYear,
   t,
 } from './tokens.ts'
+import { brandHeadHtml, ctaButtonHtml, type CtaVariant } from './bulletproof.ts'
+
+// ---- <head> ----------------------------------------------------------
+/**
+ * Shared <head> for every React Email template: charset/viewport/colour-scheme
+ * metas, Poppins from Google Fonts (<link> + @import), a sans-serif font
+ * reset on body/table/td/p/a/h1-h3 and the Outlook (mso) Arial override.
+ * Rendered as raw HTML because React cannot emit conditional comments.
+ */
+export const BrandHead = () => (
+  <head
+    dangerouslySetInnerHTML={{
+      __html:
+        '<meta content="text/html; charset=UTF-8" http-equiv="Content-Type">' + brandHeadHtml(),
+    }}
+  />
+)
+
+// ---- Bulletproof CTA ---------------------------------------------------
+const textOf = (node: React.ReactNode): string => {
+  if (node === null || node === undefined || typeof node === 'boolean') return ''
+  if (typeof node === 'string' || typeof node === 'number') return String(node)
+  if (Array.isArray(node)) return node.map(textOf).join('')
+  if (React.isValidElement(node)) {
+    return textOf((node.props as { children?: React.ReactNode }).children)
+  }
+  return ''
+}
+
+const isLightFill = (bg: unknown) =>
+  typeof bg === 'string' && /^(#fff(fff)?|white|#faf7f2|#f7f4ef)$/i.test(bg.trim())
+
+/**
+ * Drop-in replacement for React Email's <Button>: same `href` / `style` /
+ * children API, but renders the bulletproof orange glow pill (table + Outlook
+ * VML). A white/ivory `style.backgroundColor` selects the secondary (outline)
+ * pill; anything else is the primary CTA. Other `style` values are ignored so
+ * every CTA matches the site button.
+ */
+export const EmailButton = ({
+  href,
+  children,
+  style,
+  variant,
+  align,
+}: {
+  href: string
+  children: React.ReactNode
+  style?: React.CSSProperties
+  variant?: CtaVariant
+  align?: 'left' | 'center'
+}) => {
+  const v: CtaVariant = variant ?? (isLightFill(style?.backgroundColor) ? 'secondary' : 'primary')
+  return (
+    <div
+      style={{ margin: 0, padding: 0 }}
+      dangerouslySetInnerHTML={{ __html: ctaButtonHtml({ href, label: textOf(children).trim(), variant: v, align }) }}
+    />
+  )
+}
 
 // ---- Brand header ----------------------------------------------------
 export const EmailHeader = ({
@@ -175,13 +234,13 @@ export const Divider = () => <Hr style={t.hr} />
 // ---- Buttons ---------------------------------------------------------
 export const CtaButton = ({ href, children }: { href: string; children: React.ReactNode }) => (
   <Section style={{ margin: '4px 0 20px' }}>
-    <Button href={href} style={t.button}>{children}</Button>
+    <EmailButton href={href} variant="primary">{children}</EmailButton>
   </Section>
 )
 
 export const SecondaryButton = ({ href, children }: { href: string; children: React.ReactNode }) => (
   <Section style={{ margin: '0 0 20px' }}>
-    <Button href={href} style={t.buttonSecondary}>{children}</Button>
+    <EmailButton href={href} variant="secondary">{children}</EmailButton>
   </Section>
 )
 
@@ -373,26 +432,12 @@ export const MarketingFooter = ({ unsubscribeUrl }: { unsubscribeUrl?: string })
 
 // ---- Outer shell -----------------------------------------------------
 /**
- * Dark-mode resilience: Vendibook email is a light-only design. We declare
- * `color-scheme: light` (honoured by Apple Mail / iOS 13+, Outlook.com and
- * increasingly Gmail) and re-assert background + text colours for clients
- * that partially invert (Gmail Android / Samsung Mail use [data-ogsc]).
- * No separate dark design system, no unsupported CSS.
+ * Dark-mode resilience: Vendibook email is a light-only design. BrandHead
+ * declares `color-scheme: light` (honoured by Apple Mail / iOS 13+,
+ * Outlook.com and increasingly Gmail) and re-asserts background + text
+ * colours for clients that partially invert (Gmail Android / Samsung Mail use
+ * [data-ogsc]) — see EMAIL_HEAD_CSS in ./bulletproof.ts.
  */
-const HEAD_CSS = `
-  :root { color-scheme: light only; supported-color-schemes: light only; }
-  body, table, td, div, p, a, h1, h2 { -webkit-text-size-adjust: 100%; }
-  u + .vb-body .vb-surface { background-color: #ffffff !important; }
-  [data-ogsc] .vb-body { background-color: #faf7f2 !important; }
-  [data-ogsc] .vb-surface { background-color: #ffffff !important; }
-  [data-ogsc] .vb-panel { background-color: #f7f4ef !important; }
-  [data-ogsc] .vb-ink { color: #1c1917 !important; }
-  [data-ogsc] .vb-ink-2 { color: #57534e !important; }
-  @media (max-width: 600px) {
-    .vb-surface { padding: 24px 18px !important; }
-  }
-`
-
 export const VendibookEmailLayout = ({
   preview,
   children,
@@ -410,11 +455,7 @@ export const VendibookEmailLayout = ({
   logoWidth?: number
 }) => (
   <Html lang="en" dir="ltr">
-    <Head>
-      <meta name="color-scheme" content="light only" />
-      <meta name="supported-color-schemes" content="light only" />
-      <style dangerouslySetInnerHTML={{ __html: HEAD_CSS }} />
-    </Head>
+    <BrandHead />
     <Preview>{preview}</Preview>
     <Body style={t.body} className="vb-body">
       <Container style={t.container}>
@@ -432,3 +473,4 @@ export const VendibookEmailLayout = ({
 )
 
 export * from './tokens.ts'
+export { brandHeadHtml, ctaButtonHtml, injectBrandHead } from './bulletproof.ts'

@@ -1,5 +1,6 @@
 import * as React from 'npm:react@18.3.1'
-import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { Body, Container, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { BrandHead, EmailButton } from '../email-brand/components.tsx'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 import { BrandFooter, BrandHeader } from './_blocks.tsx'
@@ -23,7 +24,7 @@ const E = ({ firstName, variant = 'boost', listingTitle, listingId, coverImageUr
 
   return (
     <Html lang="en" dir="ltr">
-      <Head />
+      <BrandHead />
       <Preview>{isBoost ? 'Checkout is fixed — your Featured Boost is ready' : 'Checkout is fixed — publish your listing'}</Preview>
       <Body style={s.main}>
         <Container style={s.container}>
@@ -46,7 +47,7 @@ const E = ({ firstName, variant = 'boost', listingTitle, listingId, coverImageUr
                   add a 30-day Featured Boost in under a minute.
                 </Text>
                 <Section style={s.ctaWrap}>
-                  <Button href={ctaUrl} style={s.button}>Boost my listing</Button>
+                  <EmailButton href={ctaUrl} style={s.button}>Boost my listing</EmailButton>
                 </Section>
               </>
             ) : (
@@ -56,7 +57,7 @@ const E = ({ firstName, variant = 'boost', listingTitle, listingId, coverImageUr
                   is live, buyers and renters can find it, and boosts become available if you want extra reach.
                 </Text>
                 <Section style={s.ctaWrap}>
-                  <Button href={ctaUrl} style={s.button}>Publish my listing</Button>
+                  <EmailButton href={ctaUrl} style={s.button}>Publish my listing</EmailButton>
                 </Section>
               </>
             )}

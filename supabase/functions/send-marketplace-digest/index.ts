@@ -154,7 +154,7 @@ export function buildDigestHtml(
     ${whatsNewBlock}
     ${listingsBlock}
     <tr><td style="padding:28px 28px 36px;text-align:center;">
-      ${mkButton("Browse food trucks & trailers", utm(`${SITE_URL}/browse`))}
+      ${mkButton("Browse food trucks & trailers", utm(`${SITE_URL}/browse`), { align: "center" })}
     </td></tr>`;
 
   return marketingShell({

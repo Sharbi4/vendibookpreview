@@ -1,5 +1,6 @@
 import * as React from 'npm:react@18.3.1'
-import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text, Hr } from 'npm:@react-email/components@0.0.22'
+import { Body, Container, Heading, Html, Preview, Section, Text, Hr } from 'npm:@react-email/components@0.0.22'
+import { BrandHead, EmailButton } from '../email-brand/components.tsx'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
@@ -16,7 +17,7 @@ interface Props {
 }
 
 const E = ({ sellerName, dateLabel, openOffers, salesYesterday, revenueYesterday, aiInsight, tip }: Props) => (
-  <Html lang="en" dir="ltr"><Head /><Preview>Open offers and market pulse</Preview>
+  <Html lang="en" dir="ltr"><BrandHead /><Preview>Open offers and market pulse</Preview>
     <Body style={s.main}><Container style={s.container}>
       <BrandHeader hero="insight" />
       <Section style={s.card}>
@@ -45,7 +46,7 @@ const E = ({ sellerName, dateLabel, openOffers, salesYesterday, revenueYesterday
           <Text style={s.text}>{tip}</Text>
         </>) : null}
 
-        <Section style={s.ctaWrap}><Button href={`${SITE_URL}/dashboard`} style={s.button}>Open dashboard</Button></Section>
+        <Section style={s.ctaWrap}><EmailButton href={`${SITE_URL}/dashboard`} style={s.button}>Open dashboard</EmailButton></Section>
       </Section>
     <BrandFooter /></Container></Body></Html>
 )

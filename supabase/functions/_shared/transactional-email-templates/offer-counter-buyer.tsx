@@ -1,5 +1,6 @@
 import * as React from 'npm:react@18.3.1'
-import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { Body, Container, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { BrandHead, EmailButton } from '../email-brand/components.tsx'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
@@ -7,7 +8,7 @@ import { BrandFooter, BrandHeader } from './_blocks.tsx'
 interface Props { buyerName?: string; sellerName?: string; listingTitle?: string; counterAmount?: number; originalOffer?: number; message?: string; offerId?: string; expiresAt?: string; coverImageUrl?: string }
 
 const E = ({ buyerName, sellerName, listingTitle, counterAmount, originalOffer, message, offerId, expiresAt, coverImageUrl }: Props) => (
-  <Html lang="en" dir="ltr"><Head /><Preview>Counter-offer received</Preview>
+  <Html lang="en" dir="ltr"><BrandHead /><Preview>Counter-offer received</Preview>
     <Body style={s.main}><Container style={s.container}>
       <BrandHeader hero="message" listingImageUrl={coverImageUrl} listingTitle={listingTitle} />
       <Section style={s.card}>
@@ -18,7 +19,7 @@ const E = ({ buyerName, sellerName, listingTitle, counterAmount, originalOffer, 
         {counterAmount ? <Section style={s.accentRow}><Text style={s.accentLabel}>COUNTER</Text><Text style={s.accentValue}>${counterAmount.toLocaleString()}</Text></Section> : null}
         {message ? <><Text style={s.smallHeader}>MESSAGE</Text><Text style={s.text}>“{message}”</Text></> : null}
         {expiresAt ? <Text style={s.small}>Expires {expiresAt}.</Text> : null}
-        <Section style={s.ctaWrap}><Button href={`${SITE_URL}/dashboard/offers?offer=${encodeURIComponent(offerId || '')}`} style={s.button}>Respond</Button></Section>
+        <Section style={s.ctaWrap}><EmailButton href={`${SITE_URL}/dashboard/offers?offer=${encodeURIComponent(offerId || '')}`} style={s.button}>Respond</EmailButton></Section>
       </Section>
     <BrandFooter /></Container></Body></Html>
 )

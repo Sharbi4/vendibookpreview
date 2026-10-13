@@ -130,7 +130,7 @@ export function buildSellerConciergeHtml(d: SellerConciergeData): string {
   <p style="${p}margin-top:22px;"><strong>${esc(it.currentTitle)}</strong></p>
   ${it.suggestedTitle ? `<p style="${p}">Suggested title: <strong>${esc(it.suggestedTitle)}</strong></p>` : ""}
   ${it.asks.length ? `<ul style="${p}padding-left:20px;">${it.asks.map((a) => `<li style="margin:0 0 8px;">${esc(a)}</li>`).join("")}</ul>` : ""}
-  <p style="margin:0 0 18px;">${mkButton("Edit this listing", editUrlFor(it.listingId, d.variant))}</p>`).join("") +
+  <div style="margin:0 0 18px;">${mkButton("Edit this listing", editUrlFor(it.listingId, d.variant))}</div>`).join("") +
       (d.featuredTrialOffer ? `<p style="${p}">${esc(FEATURED_TRIAL_NOTE)}</p>` : "")
     : "";
   const shareBlock = d.variant === "share"
@@ -154,7 +154,7 @@ export function buildSellerConciergeHtml(d: SellerConciergeData): string {
   ${polishBlock}
   ${shareBlock}
   ${profileBlock}
-  ${cta ? `<p style="margin:20px 0 24px;">${cta}</p>` : ""}
+  ${cta ? `<div style="margin:20px 0 24px;">${cta}</div>` : ""}
   <p style="${p}">Reply to this email if you have any questions. A real person reads every reply.</p>
   <p style="${small}">${esc(REFERRAL_NOTE)} <a href="${esc(referralUrl(d.variant))}" style="color:${MK.textMuted};">See the referral terms</a>.</p>
   <p style="${small}">${esc(SAFETY_NOTE)}</p>

@@ -4,6 +4,7 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { FROM_EMAIL, FROM_NAME, REPLY_TO_EMAIL } from "../_shared/marketing-templates/constants.ts";
+import { injectBrandHead } from "../_shared/email-brand/bulletproof.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -51,7 +52,7 @@ async function alertAdmin(supabase: any, subject: string, html: string) {
         from: `${FROM_NAME} <${FROM_EMAIL}>`,
         to: [ADMIN_EMAIL],
         subject: `[Vendibook Report] ${subject}`,
-        html,
+        html: injectBrandHead(html),
         reply_to: REPLY_TO_EMAIL,
         tags: [{ name: "type", value: "ops_alert" }],
       }),

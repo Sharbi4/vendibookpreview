@@ -1,4 +1,4 @@
-import { CTA_SHADOW, FONT } from "./brand.ts";
+import { FONT, brandHeadHtml, ctaButtonHtml } from "./brand.ts";
 
 // Vendibook Business Spotlight invitation — premium light/editorial marketing
 // email. Table-based, mobile-first, ivory canvas with a white content surface.
@@ -76,9 +76,7 @@ export function buildSpotlightInviteHtml(
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="color-scheme" content="light only">
+${brandHeadHtml()}
 <title>${esc(SPOTLIGHT_SUBJECT_A)}</title>
 </head>
 <body style="margin:0;padding:0;background:#f6f3ef;font-family:${FONT};color:#1d1a17;">
@@ -112,7 +110,7 @@ export function buildSpotlightInviteHtml(
         </table>
       </td></tr>
       <tr><td align="center" style="padding:32px 40px 12px 40px;">
-         <a href="${CTA_HREF}" style="display:inline-block;background:#ff5124;color:#ffffff;border:1px solid #ff5124;box-shadow:${CTA_SHADOW};font-family:${FONT};text-decoration:none;font-weight:700;font-size:16px;padding:18px 40px;border-radius:12px;">Share my business</a>
+         ${ctaButtonHtml({ href: CTA_HREF, label: "Share my business", align: "center" })}
       </td></tr>
       <tr><td align="center" style="padding:0 40px 28px 40px;font-size:14px;line-height:1.6;">
         <a href="${BROWSE_HREF}" style="color:#6b635a;text-decoration:underline;">Not ready to submit? Browse Vendibook</a>

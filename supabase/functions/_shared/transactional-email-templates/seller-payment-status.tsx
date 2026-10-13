@@ -1,5 +1,6 @@
 import * as React from 'npm:react@18.3.1'
-import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { Body, Container, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { BrandHead, EmailButton } from '../email-brand/components.tsx'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 import { BrandFooter, BrandHeader } from './_blocks.tsx'
@@ -40,7 +41,7 @@ const COPY: Record<Outcome, { label: string; heading: string; lede: string; deta
 const E = ({ sellerName, listingTitle, orderNumber, orderId, amount, outcome, buyerName }: Props) => {
   const copy = COPY[(outcome as Outcome) in COPY ? (outcome as Outcome) : 'pending']
   return (
-    <Html lang="en" dir="ltr"><Head /><Preview>{copy.heading}</Preview>
+    <Html lang="en" dir="ltr"><BrandHead /><Preview>{copy.heading}</Preview>
       <Body style={s.main}><Container style={s.container}>
         <BrandHeader />
         <Section style={s.card}>
@@ -54,9 +55,9 @@ const E = ({ sellerName, listingTitle, orderNumber, orderId, amount, outcome, bu
           {orderNumber ? <Section style={s.accentRow}><Text style={s.accentLabel}>ORDER</Text><Text style={s.accentValuePlain}>{orderNumber}</Text></Section> : null}
           <Text style={s.text}>{copy.detail}</Text>
           <Section style={s.ctaWrap}>
-            <Button href={orderId ? `${SITE_URL}/orders/${orderId}` : `${SITE_URL}/dashboard/activity`} style={s.button}>
+            <EmailButton href={orderId ? `${SITE_URL}/orders/${orderId}` : `${SITE_URL}/dashboard/activity`} style={s.button}>
               View the order
-            </Button>
+            </EmailButton>
           </Section>
         </Section>
       <BrandFooter /></Container></Body></Html>

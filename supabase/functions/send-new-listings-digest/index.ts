@@ -122,7 +122,7 @@ export function buildDigestHtml(opts: {
     <div style="font-family:${FONT};font-size:11px;color:${MK.orangeOnWhite};text-transform:uppercase;font-weight:700;letter-spacing:1.6px;margin-bottom:10px;">New on Vendibook</div>
     <h1 style="font-family:${FONT};font-size:27px;line-height:1.25;font-weight:700;color:${MK.text};margin:0 0 10px;">Fresh trucks, trailers &amp; rentals worth a look</h1>
     <p style="font-family:${FONT};font-size:15px;line-height:1.65;color:${MK.textSecondary};margin:0 auto 18px;max-width:430px;">A quick roundup of what just went live on the marketplace — units for sale, kitchens and trailers to rent, and financing options for qualified buyers.</p>
-    ${mkButton("Browse the marketplace", utm("/search", "hero"))}
+    ${mkButton("Browse the marketplace", utm("/search", "hero"), { align: "center" })}
   </td></tr>
   <tr><td style="padding:22px 28px 0;"><div style="height:1px;background:${MK.border};"></div></td></tr>`;
 
@@ -156,7 +156,7 @@ export function buildDigestHtml(opts: {
         <img src="${EQUINOX_LOGO}" alt="Equinox Funding" width="170" style="display:inline-block;width:170px;max-width:170px;height:auto;border:0;margin:0 0 14px;" />
         <div style="font-family:${FONT};font-size:19px;font-weight:700;color:${MK.text};line-height:1.35;margin-bottom:8px;">Finance your truck or trailer with Equinox Funding</div>
         <p style="font-family:${FONT};font-size:14px;line-height:1.65;color:${MK.textSecondary};margin:0 auto 16px;max-width:420px;">Equipment financing is available to eligible buyers through our partner Equinox Funding. Quick online application, and many decisions come back within 24–48 hours.</p>
-        ${mkButton("Explore financing options", utm("/financing", "financing"))}
+        ${mkButton("Explore financing options", utm("/financing", "financing"), { align: "center" })}
         <p style="font-family:${FONT};font-size:11px;line-height:1.6;color:${MK.textMuted};margin:14px auto 0;max-width:440px;">Financing is provided by Equinox Funding, not Vendibook. Applications are subject to underwriting and approval; terms, rates, and availability vary. Approval is not guaranteed.</p>
       </td></tr>
     </table>
@@ -199,7 +199,7 @@ export function buildDigestHtml(opts: {
   <tr><td style="padding:32px 28px 34px;text-align:center;">
     <div style="font-family:${FONT};font-size:18px;font-weight:700;color:${MK.text};margin-bottom:10px;">New listings go live every week.</div>
     <p style="font-family:${FONT};font-size:14px;color:${MK.textSecondary};line-height:1.6;margin:0 0 16px;">Search by city, category, or budget and save the ones you like.</p>
-    ${mkButton("Start searching", utm("/search", "footer_cta"))}
+    ${mkButton("Start searching", utm("/search", "footer_cta"), { align: "center" })}
   </td></tr>`;
 
   return marketingShell({

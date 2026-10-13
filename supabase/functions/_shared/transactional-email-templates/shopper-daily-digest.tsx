@@ -1,5 +1,6 @@
 import * as React from 'npm:react@18.3.1'
-import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text, Hr, Img } from 'npm:@react-email/components@0.0.22'
+import { Body, Container, Heading, Html, Preview, Section, Text, Hr, Img } from 'npm:@react-email/components@0.0.22'
+import { BrandHead, EmailButton } from '../email-brand/components.tsx'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
@@ -14,7 +15,7 @@ interface Props {
 }
 
 const E = ({ shopperName, area, listings, aiInsight, tip }: Props) => (
-  <Html lang="en" dir="ltr"><Head /><Preview>New listings near you on Vendibook</Preview>
+  <Html lang="en" dir="ltr"><BrandHead /><Preview>New listings near you on Vendibook</Preview>
     <Body style={s.main}><Container style={s.container}>
       <BrandHeader hero="insight" />
       <Section style={s.card}>
@@ -28,7 +29,7 @@ const E = ({ shopperName, area, listings, aiInsight, tip }: Props) => (
             <Text style={s.accentLabel}>{[l.city, l.state].filter(Boolean).join(', ').toUpperCase() || 'NEW LISTING'}</Text>
             <Text style={{ ...s.accentValuePlain, marginBottom: 4 }}>{l.title}</Text>
             {l.priceLabel ? <Text style={{ ...s.small, margin: 0 }}>{l.priceLabel}</Text> : null}
-            <Section style={{ marginTop: 10 }}><Button href={`${SITE_URL}/listing/${l.id}`} style={s.buttonGhost}>View</Button></Section>
+            <Section style={{ marginTop: 10 }}><EmailButton href={`${SITE_URL}/listing/${l.id}`} style={s.buttonGhost}>View</EmailButton></Section>
           </Section>
         ))}
 
@@ -38,7 +39,7 @@ const E = ({ shopperName, area, listings, aiInsight, tip }: Props) => (
           <Text style={s.text}>{tip}</Text>
         </>) : null}
 
-        <Section style={s.ctaWrap}><Button href={`${SITE_URL}/search`} style={s.button}>Browse marketplace</Button></Section>
+        <Section style={s.ctaWrap}><EmailButton href={`${SITE_URL}/search`} style={s.button}>Browse marketplace</EmailButton></Section>
       </Section>
     <BrandFooter /></Container></Body></Html>
 )

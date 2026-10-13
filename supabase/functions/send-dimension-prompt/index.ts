@@ -10,6 +10,8 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { unsubToken } from "../_shared/unsubscribeToken.ts";
+import { brandHeadHtml, ctaButtonHtml } from "../_shared/email-brand/bulletproof.ts";
+import { FONT_STACK } from "../_shared/email-brand/tokens.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -46,14 +48,14 @@ function buildHtml(t: Target, unsubUrl: string, ctaUrl: string) {
   const line = multi
     ? `You have <strong>${t.titles.length} listings</strong> missing required Length and/or Height. Adding them takes about a minute each and updates your listings automatically.`
     : `Your listing <strong>${esc(t.titles[0] ?? "")}</strong> is missing required Length and/or Height. Adding it takes about a minute and will update your listing automatically.`;
-  return `<!doctype html><html><body style="margin:0;background:#08080a;font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif;">
+  return `<!doctype html><html><head>${brandHeadHtml()}</head><body style="margin:0;background:#08080a;font-family:${FONT_STACK};">
   <div style="max-width:560px;margin:0 auto;padding:32px 24px;color:#f5f5f4;">
     <img src="https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/vendibook-hero-logo.png?v=2026-08" alt="Vendibook" width="150" style="display:block;margin-bottom:28px;" />
     <h1 style="font-size:22px;line-height:1.3;margin:0 0 16px;color:#ffffff;">Add your listing dimensions to help buyers</h1>
     <p style="font-size:15px;line-height:1.6;color:#d6d3d1;margin:0 0 14px;">Hi ${esc(t.firstName || "there")},</p>
     <p style="font-size:15px;line-height:1.6;color:#d6d3d1;margin:0 0 14px;">We’ve added clearer trailer/truck dimensions to Vendibook listings so buyers can quickly evaluate fit, transport and delivery.</p>
     <p style="font-size:15px;line-height:1.6;color:#d6d3d1;margin:0 0 24px;">${line}</p>
-    <a href="${ctaUrl}" style="display:inline-block;background:#f97316;color:#0b0b0c;font-weight:600;font-size:15px;text-decoration:none;padding:13px 26px;border-radius:14px;">Add dimensions</a>
+    ${ctaButtonHtml({ href: ctaUrl, label: "Add dimensions" })}
     <p style="font-size:15px;line-height:1.6;color:#d6d3d1;margin:28px 0 0;">Thanks,<br/>Vendibook</p>
     <p style="font-size:12px;color:#78716c;margin:28px 0 0;">Vendibook · 1 S Church St, Tucson, AZ · <a href="${unsubUrl}" style="color:#a8a29e;">Unsubscribe</a></p>
   </div></body></html>`;

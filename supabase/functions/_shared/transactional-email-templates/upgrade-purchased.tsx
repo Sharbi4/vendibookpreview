@@ -1,5 +1,6 @@
 import * as React from 'npm:react@18.3.1'
-import { Body, Button, Container, Head, Heading, Hr, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { Body, Container, Heading, Hr, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { BrandHead, EmailButton } from '../email-brand/components.tsx'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL, SUPPORT_PHONE } from './_styles.ts'
 import { BrandFooter, BrandHeader } from './_blocks.tsx'
@@ -16,7 +17,7 @@ const Email = ({ firstName, productName = 'Your upgrade', amount, listingId, pur
   const primary = listingId ? `${SITE_URL}/listing/${listingId}` : `${SITE_URL}${purchasesUrl}`
   return (
     <Html lang="en" dir="ltr">
-      <Head />
+      <BrandHead />
       <Preview>{productName} is now active</Preview>
       <Body style={s.main}>
         <Container style={s.container}>
@@ -38,9 +39,9 @@ const Email = ({ firstName, productName = 'Your upgrade', amount, listingId, pur
               </Section>
             )}
             <Section style={s.ctaWrap}>
-              <Button href={primary} style={s.button}>
+              <EmailButton href={primary} style={s.button}>
                 {listingId ? 'View boosted listing' : 'See what you unlocked'}
-              </Button>
+              </EmailButton>
             </Section>
             <Hr style={s.hr} />
             <Text style={s.footnote}>

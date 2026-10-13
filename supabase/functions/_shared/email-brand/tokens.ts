@@ -6,10 +6,13 @@
 // content surface, charcoal type, Vendibook orange accent.
 //
 // Constraints baked in on purpose:
-//   • no webfonts — modern system stack only
-//   • no Tailwind, no CSS classes — inline styles only
+//   • Poppins (Google Fonts) with a sans-serif fallback stack — never a
+//     serif/Times face; Outlook desktop is forced to Arial (see ./bulletproof.ts)
+//   • no Tailwind — inline styles plus one shared <head> block
 //   • 600px max content width
-//   • no gradients, no animation, no dark-mode hacks
+//   • one primary CTA look everywhere: the site's orange glow pill
+//     (bulletproof table + Outlook VML in ./bulletproof.ts)
+//   • no animation, no dark-mode hacks
 // ─────────────────────────────────────────────────────────────
 
 // ---- Brand constants -------------------------------------------------
@@ -83,13 +86,28 @@ export const color = {
 } as const
 
 // ---- Type ------------------------------------------------------------
+/** Owner request 2026-10-13: modern Poppins (Google Fonts) everywhere. Clients
+ * that block web fonts (Gmail, Outlook) get Helvetica/Arial — never a serif. */
 export const FONT_STACK =
-  "Aptos, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, Helvetica, sans-serif"
+  "Poppins, 'Helvetica Neue', Helvetica, Arial, sans-serif"
+/** Google Fonts stylesheet loaded by every email <head>. */
+export const GOOGLE_FONTS_HREF =
+  'https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap'
 
-/** Email-safe equivalent of the homepage/dashboard orange CTA glow.
- * Clients that do not support box-shadow gracefully retain the solid fill. */
+/**
+ * Primary CTA = the site's orange glow button (`.bg-cta-primary` +
+ * `.shadow-cta-primary` in src/index.css, used by `<Button variant="cta">`):
+ *   background: linear-gradient(135deg, #FF4B1F 0%, #FF5A1F 45%, #FF7A22 100%)
+ *   box-shadow: 0 18px 40px rgba(255, 75, 31, .32)
+ * Email keeps the solid brand orange as the fill (Gmail/Outlook drop
+ * gradients), layers the site gradient on top for clients that render it,
+ * and adds a soft orange halo so the "glow" also reads at email scale.
+ * Clients without box-shadow support keep the solid fill.
+ */
+export const CTA_BG = '#FF5124'
+export const CTA_GRADIENT = 'linear-gradient(135deg, #FF4B1F 0%, #FF5A1F 45%, #FF7A22 100%)'
 export const CTA_SHADOW =
-  '0 8px 20px rgba(255, 81, 36, 0.30), 0 2px 6px rgba(255, 81, 36, 0.22)'
+  '0 0 24px rgba(255, 81, 36, 0.45), 0 18px 40px rgba(255, 75, 31, 0.32)'
 
 export const size = {
   h1: '28px',
@@ -104,7 +122,7 @@ export const size = {
 
 // ---- Layout ----------------------------------------------------------
 export const MAX_WIDTH = 600
-export const radius = { card: '12px', button: '12px', pill: '999px' } as const
+export const radius = { card: '12px', button: '999px', pill: '999px' } as const
 export const space = {
   xs: '6px',
   sm: '10px',
@@ -202,14 +220,15 @@ export const t = {
   linkMuted: { color: color.textSecondary, textDecoration: 'underline' } as const,
   button: {
     backgroundColor: color.primary,
+    backgroundImage: CTA_GRADIENT,
     color: color.primaryText,
     border: `1px solid ${color.primary}`,
     boxShadow: CTA_SHADOW,
-    padding: '14px 26px',
+    padding: '14px 28px',
     borderRadius: radius.button,
-    fontWeight: 700,
-    fontSize: size.bodySm,
-    lineHeight: 1.2,
+    fontWeight: 600,
+    fontSize: size.body,
+    lineHeight: '20px',
     textDecoration: 'none',
     display: 'inline-block',
     fontFamily: FONT_STACK,
@@ -217,12 +236,12 @@ export const t = {
   buttonSecondary: {
     backgroundColor: color.surface,
     color: color.text,
-    padding: '13px 24px',
+    padding: '13px 27px',
     borderRadius: radius.button,
     border: `1px solid ${color.borderStrong}`,
     fontWeight: 600,
-    fontSize: size.bodySm,
-    lineHeight: 1.2,
+    fontSize: size.body,
+    lineHeight: '20px',
     textDecoration: 'none',
     display: 'inline-block',
     fontFamily: FONT_STACK,

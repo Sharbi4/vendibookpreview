@@ -2,6 +2,7 @@ import * as React from 'npm:react@18.3.1'
 import { renderAsync } from 'npm:@react-email/components@0.0.22'
 import { EmailAPIError, sendLovableEmail } from 'npm:@lovable.dev/email-js@0.1.0'
 import { TEMPLATES } from './registry.ts'
+import { injectBrandHead } from '../email-brand/bulletproof.ts'
 
 // Server-only: reads LOVABLE_API_KEY. Import from edge functions only — never
 // expose sending to the browser.
@@ -71,7 +72,9 @@ export async function sendTemplateEmail(
 
   const templateData = options.templateData ?? {}
   const element = React.createElement(template.component, templateData)
-  const html = await renderAsync(element)
+  // Brand chrome safety net (Poppins + Outlook font fix); a no-op for
+  // templates that already render <BrandHead />.
+  const html = injectBrandHead(await renderAsync(element))
   const text = await renderAsync(element, { plainText: true })
   const subject =
     typeof template.subject === 'function'

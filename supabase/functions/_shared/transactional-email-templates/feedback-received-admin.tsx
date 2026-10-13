@@ -1,5 +1,6 @@
 import * as React from 'npm:react@18.3.1'
-import { Body, Container, Head, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { Body, Container, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { BrandHead } from '../email-brand/components.tsx'
 import type { TemplateEntry } from './registry.ts'
 import { s } from './_styles.ts'
 import { BrandFooter, BrandHeader } from './_blocks.tsx'
@@ -17,7 +18,7 @@ interface Props {
 }
 
 const E = ({ fromEmail, fromName, rating, nps, message, contextType, contextLabel, businessType, canShare }: Props) => (
-  <Html lang="en" dir="ltr"><Head /><Preview>New feedback submitted on Vendibook</Preview>
+  <Html lang="en" dir="ltr"><BrandHead /><Preview>New feedback submitted on Vendibook</Preview>
     <Body style={s.main}><Container style={s.container}>
       <BrandHeader hero="message" />
       <Section style={s.card}>

@@ -1,5 +1,6 @@
 import * as React from 'npm:react@18.3.1'
-import { Body, Button, Container, Head, Heading, Hr, Html, Link, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { Body, Container, Heading, Hr, Html, Link, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { BrandHead, EmailButton } from '../email-brand/components.tsx'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL, SUPPORT_PHONE } from './_styles.ts'
 import { BrandFooter, BrandHeader } from './_blocks.tsx'
@@ -15,7 +16,7 @@ interface Props {
 
 const Email = ({ firstName, amount = '$29.00', chargedOn, expiresOn, invoiceUrl, last4 }: Props) => (
   <Html lang="en" dir="ltr">
-    <Head />
+    <BrandHead />
     <Preview>Pro Weekly Pass active — full access for 7 days</Preview>
     <Body style={s.main}>
       <Container style={s.container}>
@@ -61,7 +62,7 @@ const Email = ({ firstName, amount = '$29.00', chargedOn, expiresOn, invoiceUrl,
           </Section>
 
           <Section style={s.ctaWrap}>
-            <Button href={`${SITE_URL}/dashboard`} style={s.button}>Open your dashboard</Button>
+            <EmailButton href={`${SITE_URL}/dashboard`} style={s.button}>Open your dashboard</EmailButton>
           </Section>
 
           <Hr style={s.hr} />

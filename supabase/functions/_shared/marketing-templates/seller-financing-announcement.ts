@@ -1,4 +1,4 @@
-import { CTA_SHADOW, FONT } from "./brand.ts";
+import { FONT, brandHeadHtml, ctaButtonHtml } from "./brand.ts";
 
 // Seller product update: buyer financing (Equinox Funding) is now available on
 // every published for-sale Vendibook listing. Light "sale-light" email design —
@@ -67,9 +67,7 @@ export function buildFinancingAnnouncementHtml(unsubUrl: string): string {
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="color-scheme" content="light only">
+${brandHeadHtml()}
 <title>${esc(FINANCING_SUBJECT)}</title>
 </head>
 <body style="margin:0;padding:0;background:#f6f4f1;font-family:${FONT};color:#1c1c1e;">
@@ -112,10 +110,10 @@ export function buildFinancingAnnouncementHtml(unsubUrl: string): string {
         <p style="margin:0;font-size:13px;line-height:1.7;color:#5b5b63;background:#fff7ed;border:1px solid #fde3c7;border-radius:14px;padding:14px 16px;">${esc(PAYOUT_NOTE)}</p>
       </td></tr>
       <tr><td align="center" style="padding:24px 28px 8px 28px;">
-         <a href="${PRIMARY.href}" style="display:inline-block;background:#ff5124;color:#ffffff;border:1px solid #ff5124;box-shadow:${CTA_SHADOW};font-family:${FONT};text-decoration:none;font-weight:700;font-size:15px;padding:14px 30px;border-radius:12px;">${esc(PRIMARY.label)}</a>
+         ${ctaButtonHtml({ href: PRIMARY.href, label: PRIMARY.label, align: "center" })}
       </td></tr>
       <tr><td align="center" style="padding:0 28px 24px 28px;">
-        <a href="${SECONDARY.href}" style="display:inline-block;background:#ffffff;color:#1c1c1e;text-decoration:none;font-weight:600;font-size:14px;padding:11px 26px;border-radius:999px;border:1px solid #ddd8d2;">${esc(SECONDARY.label)}</a>
+        ${ctaButtonHtml({ href: SECONDARY.href, label: SECONDARY.label, variant: "secondary", align: "center" })}
       </td></tr>
       <tr><td style="padding:0 28px 22px 28px;font-size:11px;line-height:1.7;color:#8a8a92;">
         ${esc(DISCLOSURE)}

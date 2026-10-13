@@ -1,4 +1,4 @@
-import { CTA_SHADOW, FONT } from "./brand.ts";
+import { FONT, brandHeadHtml, ctaButtonHtml } from "./brand.ts";
 
 // Vendibook x Equinox Funding partnership announcement — responsive, table-based,
 // dark-luxury marketing email. One template, two audience variants.
@@ -67,9 +67,7 @@ export function buildEquinoxHtml(variant: EquinoxVariant, unsubUrl: string): str
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="color-scheme" content="light only">
+${brandHeadHtml()}
 <title>${esc(SUBJECTS[variant])}</title>
 </head>
 <body style="margin:0;padding:0;background:#0a0a0b;font-family:${FONT};color:#f5f5f4;">
@@ -98,10 +96,10 @@ export function buildEquinoxHtml(variant: EquinoxVariant, unsubUrl: string): str
         </table>
       </td></tr>
       <tr><td align="center" style="padding:24px 28px 8px 28px;">
-         <a href="${b.primary.href}" style="display:inline-block;background:#ff5124;color:#ffffff;border:1px solid #ff5124;box-shadow:${CTA_SHADOW};font-family:${FONT};text-decoration:none;font-weight:700;font-size:15px;padding:14px 30px;border-radius:12px;">${esc(b.primary.label)}</a>
+         ${ctaButtonHtml({ href: b.primary.href, label: b.primary.label, align: "center" })}
       </td></tr>
       <tr><td align="center" style="padding:0 28px 26px 28px;">
-        <a href="${b.secondary.href}" style="display:inline-block;background:transparent;color:#ffffff;text-decoration:none;font-weight:600;font-size:14px;padding:11px 26px;border-radius:999px;border:1px solid #3a3a44;">${esc(b.secondary.label)}</a>
+        <a href="${b.secondary.href}" style="display:inline-block;background:transparent;color:#ffffff;font-family:${FONT};text-decoration:none;font-weight:600;font-size:14px;padding:11px 26px;border-radius:999px;border:1px solid #3a3a44;">${esc(b.secondary.label)}</a>
       </td></tr>
       <tr><td style="padding:0 28px 24px 28px;font-size:11px;line-height:1.7;color:#8a8a92;">
         Financing is provided by Equinox Funding and its funding providers, not by Vendibook. Vendibook is not a lender and does not make credit decisions. Approval, rates, and terms are subject to lender review. Vendibook may receive compensation from Equinox Funding for referrals.

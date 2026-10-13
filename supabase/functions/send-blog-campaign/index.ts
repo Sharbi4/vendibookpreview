@@ -78,15 +78,15 @@ export function buildHtml(c: Campaign, unsubUrl: string) {
   </td></tr>
   <tr><td style="padding:0 32px;">${paras}</td></tr>
   <tr><td align="center" style="padding:8px 32px 32px;">
-    ${mkButton(c.ctaLabel, `${c.articleUrl}${utm}`)}
+    ${mkButton(c.ctaLabel, `${c.articleUrl}${utm}`, { align: "center" })}
   </td></tr>
   <tr><td style="padding:0 32px;"><hr style="border:0;border-top:1px solid ${MK.border};margin:0;"></td></tr>
   <tr><td style="padding:28px 32px 8px;">
     <p style="margin:0 0 12px;font-family:${FONT};font-size:16px;font-weight:700;color:${MK.text};">Stay up to date with Vendibook news</p>
     <p style="margin:0 0 20px;font-family:${FONT};font-size:16px;line-height:1.65;color:${MK.textSecondary};">Get the latest stories, listings, and insights from the mobile food economy delivered to your inbox.</p>
   </td></tr>
-  <tr><td align="center" style="padding:0 32px 12px;">${mkButton("Subscribe to Vendibook", `${SUBSCRIBE_URL}${utm}_subscribe`)}</td></tr>
-  <tr><td align="center" style="padding:0 32px 32px;">${mkButton("Explore Vendibook", `${SITE_URL}${utm}`, { ghost: true })}</td></tr>`;
+  <tr><td align="center" style="padding:0 32px 12px;">${mkButton("Subscribe to Vendibook", `${SUBSCRIBE_URL}${utm}_subscribe`, { align: "center" })}</td></tr>
+  <tr><td align="center" style="padding:0 32px 32px;">${mkButton("Explore Vendibook", `${SITE_URL}${utm}`, { ghost: true, align: "center" })}</td></tr>`;
 
   return marketingShell({
     title: c.subject,

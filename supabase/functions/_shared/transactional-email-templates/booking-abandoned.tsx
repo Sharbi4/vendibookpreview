@@ -1,5 +1,6 @@
 import * as React from 'npm:react@18.3.1'
-import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { Body, Container, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { BrandHead, EmailButton } from '../email-brand/components.tsx'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
@@ -22,7 +23,7 @@ const E = ({ shopperName, listingTitle, startDate, endDate, resumeUrl, variant =
     : `You started a booking for ${listingTitle ? `"${listingTitle}"` : 'a listing'}${startDate ? ` on ${startDate}` : ''}${endDate ? ` – ${endDate}` : ''} but didn't finish. Your selection is saved — finish in 60 seconds.`
   return (
     <Html lang="en" dir="ltr">
-      <Head />
+      <BrandHead />
       <Preview>{isFollowup ? 'Your booking is still saved' : 'Finish your booking in 60 seconds'}</Preview>
       <Body style={s.main}>
         <Container style={s.container}>
@@ -32,9 +33,9 @@ const E = ({ shopperName, listingTitle, startDate, endDate, resumeUrl, variant =
             <Heading style={s.h1}>{headline}</Heading>
             <Text style={s.lede}>{lede}</Text>
             <Section style={s.ctaWrap}>
-              <Button href={resumeUrl || `${SITE_URL}/dashboard`} style={s.button}>
+              <EmailButton href={resumeUrl || `${SITE_URL}/dashboard`} style={s.button}>
                 Resume booking
-              </Button>
+              </EmailButton>
             </Section>
             <Text style={s.footnote}>
               No payment is taken until you confirm. Need help? Reply to this email.

@@ -1,7 +1,15 @@
 import * as React from 'npm:react@18.3.1'
 import {
-  Body, Button, Container, Head, Heading, Hr, Html, Preview, Section, Text,
+  Body,
+  Container,
+  Heading,
+  Hr,
+  Html,
+  Preview,
+  Section,
+  Text,
 } from 'npm:@react-email/components@0.0.22'
+import { BrandHead, EmailButton } from '../email-brand/components.tsx'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_NAME, SITE_URL, SUPPORT_PHONE } from './_styles.ts'
 
@@ -41,7 +49,7 @@ const FeaturedPaymentReceiptEmail = ({ firstName,
   orderUrl,
   durationLabel }: FeaturedReceiptProps) => (
   <Html lang="en" dir="ltr">
-    <Head />
+    <BrandHead />
     <Preview>Your boost is live — {listingTitle || 'your listing'} is now featured</Preview>
     <Body style={s.main}>
       <Container style={s.container}>
@@ -137,9 +145,9 @@ const FeaturedPaymentReceiptEmail = ({ firstName,
 
           {(orderUrl || listingId) && (
             <Section style={s.ctaWrap}>
-              <Button href={orderUrl || `${SITE_URL}/listing/${listingId}`} style={s.button}>
+              <EmailButton href={orderUrl || `${SITE_URL}/listing/${listingId}`} style={s.button}>
                 {orderUrl ? 'View your order & receipt' : 'View your live listing'}
-              </Button>
+              </EmailButton>
             </Section>
           )}
 

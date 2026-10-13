@@ -1,5 +1,6 @@
 import * as React from 'npm:react@18.3.1'
-import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { Body, Container, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { BrandHead, EmailButton } from '../email-brand/components.tsx'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 import { BrandFooter, BrandHeader, ToolsBlock } from './_blocks.tsx'
@@ -27,7 +28,7 @@ const nextStep = (fulfillment?: string) => {
 }
 
 const E = ({ sellerName, listingTitle, salePrice, buyerName, orderNumber, transactionId, fulfillmentType, coverImageUrl }: Props) => (
-  <Html lang="en" dir="ltr"><Head /><Preview>Payment received — time to arrange the handoff</Preview>
+  <Html lang="en" dir="ltr"><BrandHead /><Preview>Payment received — time to arrange the handoff</Preview>
     <Body style={s.main}><Container style={s.container}>
       <BrandHeader hero="celebrate" listingImageUrl={coverImageUrl} listingTitle={listingTitle} />
       <Section style={s.card}>
@@ -43,9 +44,9 @@ const E = ({ sellerName, listingTitle, salePrice, buyerName, orderNumber, transa
           Vendibook reviews and issues the seller payout after the required handoff or delivery confirmation steps are complete.
         </Text>
         <Section style={s.ctaWrap}>
-          <Button href={transactionId ? `${SITE_URL}/transaction/${transactionId}` : `${SITE_URL}/dashboard`} style={s.button}>
+          <EmailButton href={transactionId ? `${SITE_URL}/transaction/${transactionId}` : `${SITE_URL}/dashboard`} style={s.button}>
             Open the order
-          </Button>
+          </EmailButton>
         </Section>
         <ToolsBlock role="seller" />
       </Section>

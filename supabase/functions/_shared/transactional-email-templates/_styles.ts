@@ -2,11 +2,13 @@
 //
 // These now mirror the MASTER email design system in
 // `_shared/email-brand/tokens.ts`: warm ivory canvas, white content card,
-// charcoal type, Vendibook orange CTA with white text, soft gray hairlines,
-// email-safe system font stack, ~600px max width.
+// charcoal type, Vendibook orange glow-pill CTA with white text, soft gray
+// hairlines, Poppins with a sans-serif fallback stack, ~600px max width.
+// Buttons render through <EmailButton> (bulletproof table + Outlook VML);
+// `button` / `buttonGhost` below only pick the variant and mirror its look.
 //
 // Key names are preserved so the ~50 templates that import `s` keep working.
-import { color, CTA_SHADOW, FONT_STACK, LOGO_LIGHT_URL, SITE_URL as BRAND_SITE_URL } from '../email-brand/tokens.ts'
+import { color, FONT_STACK, LOGO_LIGHT_URL, SITE_URL as BRAND_SITE_URL, t } from '../email-brand/tokens.ts'
 
 export const SITE_NAME = 'Vendibook'
 export const SITE_URL = BRAND_SITE_URL
@@ -32,8 +34,8 @@ export const s = {
   accentValue: { fontSize: '16px', color: color.primaryDark, fontWeight: 700, margin: 0 } as const,
   accentValuePlain: { fontSize: '16px', color: color.text, fontWeight: 600, margin: 0 } as const,
   ctaWrap: { margin: '12px 0 8px' } as const,
-  button: { backgroundColor: color.primary, color: color.primaryText, border: `1px solid ${color.primary}`, boxShadow: CTA_SHADOW, padding: '14px 26px', borderRadius: '12px', fontWeight: 700, fontSize: '15px', lineHeight: 1.2, textDecoration: 'none', display: 'inline-block', fontFamily: FONT_STACK } as const,
-  buttonGhost: { backgroundColor: color.surface, color: color.text, padding: '13px 24px', borderRadius: '12px', fontWeight: 600, fontSize: '14px', lineHeight: 1.2, textDecoration: 'none', display: 'inline-block', border: `1px solid ${color.borderStrong}`, fontFamily: FONT_STACK } as const,
+  button: t.button,
+  buttonGhost: t.buttonSecondary,
   hr: { borderColor: color.border, borderStyle: 'solid', borderWidth: '1px 0 0', margin: '24px 0' } as const,
   smallHeader: { fontSize: '11px', letterSpacing: '0.16em', color: color.textMuted, fontWeight: 700, margin: '0 0 12px', textTransform: 'uppercase' as const } as const,
   listItem: { fontSize: '15px', color: color.textSecondary, margin: '0 0 8px', lineHeight: 1.6 } as const,

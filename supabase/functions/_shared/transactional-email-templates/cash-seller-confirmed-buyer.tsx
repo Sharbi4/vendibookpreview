@@ -1,5 +1,6 @@
 import * as React from 'npm:react@18.3.1'
-import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { Body, Container, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { BrandHead, EmailButton } from '../email-brand/components.tsx'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL, SUPPORT_PHONE } from './_styles.ts'
 import { BrandFooter, BrandHeader } from './_blocks.tsx'
@@ -14,7 +15,7 @@ interface Props {
 }
 
 const E = ({ buyerName, listingTitle, salePrice, sellerName, orderNumber, transactionId }: Props) => (
-  <Html lang="en" dir="ltr"><Head /><Preview>Seller confirmed — your turn to confirm receipt</Preview>
+  <Html lang="en" dir="ltr"><BrandHead /><Preview>Seller confirmed — your turn to confirm receipt</Preview>
     <Body style={s.main}><Container style={s.container}>
       <BrandHeader hero="celebrate" listingTitle={listingTitle} />
       <Section style={s.card}>
@@ -38,7 +39,7 @@ const E = ({ buyerName, listingTitle, salePrice, sellerName, orderNumber, transa
         </Text>
 
         <Section style={s.ctaWrap}>
-          <Button href={`${SITE_URL}${transactionId ? `/order-tracking/${transactionId}` : '/dashboard?tab=purchases'}`} style={s.button}>Confirm receipt</Button>
+          <EmailButton href={`${SITE_URL}${transactionId ? `/order-tracking/${transactionId}` : '/dashboard?tab=purchases'}`} style={s.button}>Confirm receipt</EmailButton>
         </Section>
 
         <Text style={s.footnote}>Something wrong with the handoff? Do not confirm yet. Call {SUPPORT_PHONE} and we'll help mediate.</Text>

@@ -1,5 +1,6 @@
 import * as React from 'npm:react@18.3.1'
-import { Body, Button, Container, Head, Heading, Hr, Html, Link, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { Body, Container, Heading, Hr, Html, Link, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { BrandHead, EmailButton } from '../email-brand/components.tsx'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL, SUPPORT_PHONE } from './_styles.ts'
 import { BrandFooter, BrandHeader } from './_blocks.tsx'
@@ -20,7 +21,7 @@ const DEFAULT_ACTIONS: Action[] = [
 
 const Email = ({ firstName, planName = 'Vendibook Growth', actions = DEFAULT_ACTIONS }: Props) => (
   <Html lang="en" dir="ltr">
-    <Head />
+    <BrandHead />
     <Preview>Get the most out of {planName} — 3 quick wins</Preview>
     <Body style={s.main}>
       <Container style={s.container}>
@@ -43,7 +44,7 @@ const Email = ({ firstName, planName = 'Vendibook Growth', actions = DEFAULT_ACT
           ))}
 
           <Section style={s.ctaWrap}>
-            <Button href={`${SITE_URL}/dashboard`} style={s.button}>Open dashboard</Button>
+            <EmailButton href={`${SITE_URL}/dashboard`} style={s.button}>Open dashboard</EmailButton>
           </Section>
 
           <Hr style={s.hr} />

@@ -1,5 +1,6 @@
 import * as React from 'npm:react@18.3.1'
-import { Body, Button, Container, Head, Heading, Html, Link, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { Body, Container, Heading, Html, Link, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { BrandHead, EmailButton } from '../email-brand/components.tsx'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
@@ -12,7 +13,7 @@ const secondaryLink = { color: '#1f2937', fontWeight: 600, textDecoration: 'unde
 interface Props { sellerName?: string; buyerName?: string; listingTitle?: string; offerAmount?: number; askingPrice?: number; message?: string; offerId?: string; expiresAt?: string; coverImageUrl?: string }
 
 const E = ({ sellerName, buyerName, listingTitle, offerAmount, askingPrice, message, offerId, expiresAt, coverImageUrl }: Props) => (
-  <Html lang="en" dir="ltr"><Head /><Preview>New offer received</Preview>
+  <Html lang="en" dir="ltr"><BrandHead /><Preview>New offer received</Preview>
     <Body style={s.main}><Container style={s.container}>
       <BrandHeader hero="message" listingImageUrl={coverImageUrl} listingTitle={listingTitle} />
       <Section style={s.card}>
@@ -24,7 +25,7 @@ const E = ({ sellerName, buyerName, listingTitle, offerAmount, askingPrice, mess
         {message ? <><Text style={s.smallHeader}>MESSAGE</Text><Text style={s.text}>“{message}”</Text></> : null}
         {expiresAt ? <Text style={s.small}>Expires {expiresAt}.</Text> : null}
         <Section style={s.ctaWrap}>
-          <Button href={offerLink(offerId, 'accept')} style={s.button}>{offerAmount ? `Accept $${offerAmount.toLocaleString()}` : 'Accept'}</Button>
+          <EmailButton href={offerLink(offerId, 'accept')} style={s.button}>{offerAmount ? `Accept $${offerAmount.toLocaleString()}` : 'Accept'}</EmailButton>
         </Section>
         <Text style={s.small}>
           <Link href={offerLink(offerId, 'counter')} style={secondaryLink}>Counter</Link>

@@ -100,7 +100,7 @@ export function buildRentCampaignHtml(d: RentCampaignData): string {
   <p style="${p}">${leadHtml}</p>
   ${bullets.length ? `<ul style="${p}padding-left:20px;">${bullets.map((b) => `<li style="margin:0 0 8px;">${esc(b)}</li>`).join("")}</ul>` : ""}
   ${after.map((t) => `<p style="${p}">${esc(t)}</p>`).join("\n  ")}
-  <p style="margin:20px 0 24px;">${cta}</p>
+  <div style="margin:20px 0 24px;">${cta}</div>
   <p style="${p}">Reply to this email if you have any questions. A real person reads every reply.</p>
   <p style="${small}">${esc(RENTAL_SAFETY_NOTE)}</p>
   <p style="${p}">${SIGN_OFF.map(esc).join("<br/>")}</p>

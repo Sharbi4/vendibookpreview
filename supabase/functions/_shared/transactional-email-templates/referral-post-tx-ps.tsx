@@ -1,5 +1,6 @@
 import * as React from 'npm:react@18.3.1'
-import { Body, Container, Head, Html, Link, Preview, Section, Text, Heading } from 'npm:@react-email/components@0.0.22'
+import { Body, Container, Html, Link, Preview, Section, Text, Heading } from 'npm:@react-email/components@0.0.22'
+import { BrandHead } from '../email-brand/components.tsx'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL, SUPPORT_PHONE } from './_styles.ts'
 
@@ -16,7 +17,7 @@ const HEADLINES: Record<string, string> = {
 }
 
 const E = ({ name, transactionType = 'purchase' }: Props) => (
-  <Html lang="en" dir="ltr"><Head /><Preview>One quick thing worth knowing.</Preview>
+  <Html lang="en" dir="ltr"><BrandHead /><Preview>One quick thing worth knowing.</Preview>
     <Body style={s.main}><Container style={s.container}>
       <BrandHeader hero="celebrate" />
       <Section style={s.card}>

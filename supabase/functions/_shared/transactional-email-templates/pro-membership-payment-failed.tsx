@@ -1,9 +1,9 @@
 import * as React from 'npm:react@18.3.1'
-import { Body, Button, Container, Head, Heading, Hr, Html, Link, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { Body, Container, Heading, Hr, Html, Link, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { BrandHead, EmailButton, EmailHeader, SupportRow, TransactionalFooter } from '../email-brand/components.tsx'
 import type { TemplateEntry } from './registry.ts'
 import { SITE_URL, SUPPORT_PHONE } from './_styles.ts'
 import { l } from './_stylesLight.ts'
-import { EmailHeader, SupportRow, TransactionalFooter } from '../email-brand/components.tsx'
 
 interface Props {
   firstName?: string
@@ -22,7 +22,7 @@ const Email = ({
   manageUrl = `${SITE_URL}/account/subscription`,
 }: Props) => (
   <Html lang="en" dir="ltr">
-    <Head />
+    <BrandHead />
     <Preview>{`We couldn't process your ${planName} payment`}</Preview>
     <Body style={l.main}>
       <Container style={l.container}>
@@ -58,7 +58,7 @@ const Email = ({
           </Section>
 
           <Section style={l.ctaWrap}>
-            <Button href={manageUrl} style={l.button}>Update payment method</Button>
+            <EmailButton href={manageUrl} style={l.button}>Update payment method</EmailButton>
           </Section>
 
           <Hr style={l.hr} />

@@ -13,7 +13,7 @@ import {
   VENDIBOOK_BASE_URL,
   UNSUBSCRIBE_URL_BASE,
 } from "../_shared/marketing-templates/constants.ts";
-import { MK, FONT, radius, SUPPORT_EMAIL, SUPPORT_HOURS } from "../_shared/marketing-templates/brand.ts";
+import { MK, FONT, radius, brandHeadHtml, ctaButtonHtml, SUPPORT_EMAIL, SUPPORT_HOURS } from "../_shared/marketing-templates/brand.ts";
 import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
 import { unsubToken } from "../_shared/unsubscribeToken.ts";
 
@@ -43,10 +43,7 @@ function renderReferralEmail(opts: {
 }): string {
   const { recipientEmail, dashboardUrl, termsUrl, unsubscribeUrl } = opts;
   return `<!doctype html>
-<html lang="en"><head><meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<meta name="color-scheme" content="light only" />
-<meta name="supported-color-schemes" content="light only" />
+<html lang="en"><head>${brandHeadHtml()}
 <title>You could earn $500 just for sharing Vendibook</title></head>
 <body style="margin:0;padding:0;background:${COLORS.bgWarm};font-family:${FONT};color:${COLORS.textDark};">
   <div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">
@@ -64,9 +61,7 @@ function renderReferralEmail(opts: {
           <p style="margin:0;font-size:17px;line-height:1.55;color:${COLORS.textMuted};">Refer a buyer, seller, or renter &mdash; get paid when they transact. No cap on how much you can earn.</p>
         </td></tr>
         <tr><td style="padding:32px 40px 8px 40px;" align="left">
-          <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td style="background:${MK.orange};border-radius:${radius.button};">
-            <a href="${dashboardUrl}" style="display:inline-block;padding:16px 28px;font-size:15px;font-weight:700;letter-spacing:0.3px;color:#ffffff;text-decoration:none;">Get My Referral Link &rarr;</a>
-          </td></tr></table>
+          ${ctaButtonHtml({ href: dashboardUrl, label: "Get My Referral Link →" })}
         </td></tr>
         <tr><td style="padding:40px 40px 8px 40px;" align="left">
           <p style="margin:0 0 18px 0;font-size:11px;letter-spacing:2px;text-transform:uppercase;color:${COLORS.textMuted};font-weight:700;">What You Can Earn</p>
@@ -91,9 +86,7 @@ function renderReferralEmail(opts: {
           <p style="margin:0;font-size:16px;line-height:1.65;color:${COLORS.textDark};">Send them your link. When they transact, we pay you. It's that simple.</p>
         </td></tr>
         <tr><td style="padding:36px 40px 48px 40px;" align="left">
-          <table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr><td style="background:${MK.orange};border-radius:${radius.button};">
-            <a href="${dashboardUrl}" style="display:inline-block;padding:16px 28px;font-size:15px;font-weight:700;letter-spacing:0.3px;color:#ffffff;text-decoration:none;">Get My Referral Link &rarr;</a>
-          </td></tr></table>
+          ${ctaButtonHtml({ href: dashboardUrl, label: "Get My Referral Link →" })}
           <p style="margin:18px 0 0 0;font-size:13px;color:${COLORS.textMuted};"><a href="${termsUrl}" style="color:${COLORS.textMuted};text-decoration:underline;">Full program terms</a></p>
         </td></tr>
         <tr><td style="background:${COLORS.bgWarm};padding:28px 40px;border-top:1px solid ${COLORS.divider};" align="left">

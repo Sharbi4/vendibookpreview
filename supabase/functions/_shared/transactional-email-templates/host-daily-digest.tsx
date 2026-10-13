@@ -1,5 +1,6 @@
 import * as React from 'npm:react@18.3.1'
-import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text, Hr } from 'npm:@react-email/components@0.0.22'
+import { Body, Container, Heading, Html, Preview, Section, Text, Hr } from 'npm:@react-email/components@0.0.22'
+import { BrandHead, EmailButton } from '../email-brand/components.tsx'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
@@ -18,7 +19,7 @@ interface Props {
 }
 
 const E = ({ hostName, dateLabel, views, inquiries, bookings, earnings, topListingTitle, topListingId, aiInsight, tip }: Props) => (
-  <Html lang="en" dir="ltr"><Head /><Preview>Your Vendibook day in numbers</Preview>
+  <Html lang="en" dir="ltr"><BrandHead /><Preview>Your Vendibook day in numbers</Preview>
     <Body style={s.main}><Container style={s.container}>
       <BrandHeader hero="insight" />
       <Section style={s.card}>
@@ -35,7 +36,7 @@ const E = ({ hostName, dateLabel, views, inquiries, bookings, earnings, topListi
           <Hr style={s.hr} />
           <Text style={s.smallHeader}>YESTERDAY'S TOP LISTING</Text>
           <Text style={s.text}>"{topListingTitle}" got the most attention.</Text>
-          {topListingId ? <Section style={s.ctaWrap}><Button href={`${SITE_URL}/listing/${topListingId}`} style={s.buttonGhost}>View listing</Button></Section> : null}
+          {topListingId ? <Section style={s.ctaWrap}><EmailButton href={`${SITE_URL}/listing/${topListingId}`} style={s.buttonGhost}>View listing</EmailButton></Section> : null}
         </>) : null}
 
         {tip ? (<>
@@ -44,7 +45,7 @@ const E = ({ hostName, dateLabel, views, inquiries, bookings, earnings, topListi
           <Text style={s.text}>{tip}</Text>
         </>) : null}
 
-        <Section style={s.ctaWrap}><Button href={`${SITE_URL}/dashboard`} style={s.button}>Open dashboard</Button></Section>
+        <Section style={s.ctaWrap}><EmailButton href={`${SITE_URL}/dashboard`} style={s.button}>Open dashboard</EmailButton></Section>
       </Section>
     <BrandFooter /></Container></Body></Html>
 )

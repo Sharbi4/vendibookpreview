@@ -1,5 +1,7 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 import { escapeHtml } from "../_shared/callerGuard.ts";
+import { ctaButtonHtml, injectBrandHead } from '../_shared/email-brand/bulletproof.ts';
+import { FONT_STACK } from '../_shared/email-brand/tokens.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -804,8 +806,8 @@ async function sendBookingLink(supabase: any, args: any) {
           vendor_space: 'Vendor Space',
         };
 
-        const emailHtml = `
-          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: #ffffff;">
+        const emailHtml = injectBrandHead(`
+          <div style="font-family: ${FONT_STACK}; max-width: 600px; margin: 0 auto; background: #ffffff;">
             <div style="background: linear-gradient(135deg, #FF5124, #FF7A52); padding: 32px 24px; text-align: center; border-radius: 12px 12px 0 0;">
               <img src="https://nbrehbwfsmedbelzntqs.supabase.co/storage/v1/object/public/email-assets/logo.png?v=2026-08" alt="Vendibook" style="height: 48px; margin-bottom: 16px;" />
               <h1 style="color: white; margin: 0; font-size: 24px; font-weight: 700;">Your Booking Link is Ready! 🎉</h1>
@@ -827,9 +829,7 @@ async function sendBookingLink(supabase: any, args: any) {
                 </div>
               </div>
               
-              <a href="${escapeHtml(bookingUrl)}" style="display: block; background: #FF5124; color: white; text-align: center; padding: 16px 32px; border-radius: 8px; text-decoration: none; font-size: 16px; font-weight: 600; margin-bottom: 24px;">
-                View Listing & Book Now →
-              </a>
+              ${ctaButtonHtml({ href: bookingUrl, label: "View Listing & Book Now →", align: "center", margin: "0 auto 24px" })}
               
               <div style="background: #f9fafb; border-radius: 8px; padding: 16px; margin-bottom: 24px;">
                 <p style="margin: 0; font-size: 14px; color: #555;">
@@ -842,7 +842,7 @@ async function sendBookingLink(supabase: any, args: any) {
               </p>
             </div>
           </div>
-        `;
+        `);
 
         const emailResponse = await fetch('https://api.resend.com/emails', {
           method: 'POST',

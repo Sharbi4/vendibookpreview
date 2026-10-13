@@ -1,7 +1,15 @@
 import * as React from 'npm:react@18.3.1'
 import {
-  Body, Button, Container, Head, Heading, Hr, Html, Preview, Section, Text,
+  Body,
+  Container,
+  Heading,
+  Hr,
+  Html,
+  Preview,
+  Section,
+  Text,
 } from 'npm:@react-email/components@0.0.22'
+import { BrandHead, EmailButton } from '../email-brand/components.tsx'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL, SUPPORT_PHONE } from './_styles.ts'
 
@@ -17,7 +25,7 @@ const FeaturedBoostExpiredEmail = ({ firstName,
   listingId,
   expiredAt, coverImageUrl }: FeaturedExpiredProps) => (
   <Html lang="en" dir="ltr">
-    <Head />
+    <BrandHead />
     <Preview>Your boost for {listingTitle || 'your listing'} has ended</Preview>
     <Body style={s.main}>
       <Container style={s.container}>
@@ -47,9 +55,9 @@ const FeaturedBoostExpiredEmail = ({ firstName,
 
           {listingId && (
             <Section style={s.ctaWrap}>
-              <Button href={`${SITE_URL}/listing/${listingId}`} style={s.button}>
+              <EmailButton href={`${SITE_URL}/listing/${listingId}`} style={s.button}>
                 Re-boost this listing
-              </Button>
+              </EmailButton>
             </Section>
           )}
         </Section>

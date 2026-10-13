@@ -1,5 +1,6 @@
 import * as React from 'npm:react@18.3.1'
-import { Body, Button, Container, Head, Heading, Html, Hr, Link, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { Body, Container, Heading, Html, Hr, Link, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { BrandHead, EmailButton } from '../email-brand/components.tsx'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
@@ -37,7 +38,7 @@ const E = ({ recipientName, contextLabel, contextType, feedbackToken, aiIntro }:
   const isBroadcast = contextType === 'broadcast'
 
   return (
-    <Html lang="en" dir="ltr"><Head /><Preview>One tap, 0–10. How likely are you to recommend Vendibook?</Preview>
+    <Html lang="en" dir="ltr"><BrandHead /><Preview>One tap, 0–10. How likely are you to recommend Vendibook?</Preview>
       <Body style={s.main}><Container style={s.container}>
         <BrandHeader hero="message" />
         <Section style={s.card}>
@@ -85,7 +86,7 @@ const E = ({ recipientName, contextLabel, contextType, feedbackToken, aiIntro }:
           </Text>
 
           <Section style={s.ctaWrap}>
-            <Button href={url} style={s.button}>Add a comment (optional)</Button>
+            <EmailButton href={url} style={s.button}>Add a comment (optional)</EmailButton>
           </Section>
           <Text style={s.small}>Tap a number above to send instantly — the button is only if you want to say more.</Text>
 

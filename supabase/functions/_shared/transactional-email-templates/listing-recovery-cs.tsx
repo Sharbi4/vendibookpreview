@@ -1,5 +1,6 @@
 import * as React from 'npm:react@18.3.1'
-import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { Body, Container, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { BrandHead, EmailButton } from '../email-brand/components.tsx'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 import { BrandFooter, BrandHeader } from './_blocks.tsx'
@@ -17,7 +18,7 @@ const E = ({ firstName, listingTitle, listingId, coverImageUrl }: Props) => {
   const listingRef = listingTitle ? `“${listingTitle}”` : 'your listing'
   return (
     <Html lang="en" dir="ltr">
-      <Head />
+      <BrandHead />
       <Preview>Your Vendibook listing is ready to go</Preview>
       <Body style={s.main}>
         <Container style={s.container}>
@@ -34,7 +35,7 @@ const E = ({ firstName, listingTitle, listingId, coverImageUrl }: Props) => {
               You can pick up right where you left off — your draft is saved.
             </Text>
             <Section style={s.ctaWrap}>
-              <Button href={resumeUrl} style={s.button}>Finish & publish</Button>
+              <EmailButton href={resumeUrl} style={s.button}>Finish & publish</EmailButton>
             </Section>
             <Text style={s.small}>
               If you run into anything, just reply to this email — our Customer Success team is happy to help.

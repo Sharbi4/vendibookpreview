@@ -180,7 +180,7 @@ export function buildFeatureYourListingHtml(opts: {
 
   const cta = `
   <tr><td align="center" style="padding:6px 28px 4px;">
-    ${mkButton("Feature My Listing", ctaUrl)}
+    ${mkButton("Feature My Listing", ctaUrl, { align: "center" })}
     <p style="font-family:${FONT};font-size:13px;color:${MK.textMuted};margin:12px 0 0;">
       <a href="${esc(utmUrl("/dashboard/listings", "view_my_listings"))}" style="color:${MK.textMuted};text-decoration:underline;">View My Listings</a>
     </p>

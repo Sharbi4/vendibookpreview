@@ -1,5 +1,6 @@
 import * as React from 'npm:react@18.3.1'
-import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { Body, Container, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { BrandHead, EmailButton } from '../email-brand/components.tsx'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 import { BlogHighlights, BrandFooter, BrandHeader, ToolsBlock } from './_blocks.tsx'
@@ -7,7 +8,7 @@ import { BlogHighlights, BrandFooter, BrandHeader, ToolsBlock } from './_blocks.
 interface Props { sellerName?: string; listingTitle?: string; salePrice?: number; buyerName?: string; orderNumber?: string; coverImageUrl?: string }
 
 const E = ({ sellerName, listingTitle, salePrice, buyerName, orderNumber, coverImageUrl }: Props) => (
-  <Html lang="en" dir="ltr"><Head /><Preview>Sale completed 🎉</Preview>
+  <Html lang="en" dir="ltr"><BrandHead /><Preview>Sale completed 🎉</Preview>
     <Body style={s.main}><Container style={s.container}>
       <BrandHeader hero="celebrate" listingImageUrl={coverImageUrl} listingTitle={listingTitle} />
       <Section style={s.card}>
@@ -17,7 +18,7 @@ const E = ({ sellerName, listingTitle, salePrice, buyerName, orderNumber, coverI
         {salePrice ? <Section style={s.accentRow}><Text style={s.accentLabel}>SALE PRICE</Text><Text style={s.accentValue}>${salePrice.toLocaleString()}</Text></Section> : null}
         {orderNumber ? <Section style={s.accentRow}><Text style={s.accentLabel}>ORDER</Text><Text style={s.accentValuePlain}>{orderNumber}</Text></Section> : null}
         <Text style={s.text}>Your payout is released once delivery is confirmed — typically within 24 hours, and always within 24–48 hours. It's sent by PayPal, ACH, or Venmo depending on the payout account on file.</Text>
-        <Section style={s.ctaWrap}><Button href={`${SITE_URL}/dashboard`} style={s.button}>View transaction</Button></Section>
+        <Section style={s.ctaWrap}><EmailButton href={`${SITE_URL}/dashboard`} style={s.button}>View transaction</EmailButton></Section>
         <ToolsBlock role="seller" />
         <BlogHighlights role="seller" />
       </Section>

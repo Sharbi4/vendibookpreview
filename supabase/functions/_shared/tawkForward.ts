@@ -9,6 +9,9 @@
 // downstream success. Retries are safe: Tawk deduplicates by subject +
 // reference code and we always include the Vendibook ticket reference.
 
+import { brandHeadHtml } from "./email-brand/bulletproof.ts";
+import { FONT_STACK } from "./email-brand/tokens.ts";
+
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") ?? "";
 const TAWK_FORWARD_EMAIL = Deno.env.get("TAWK_FORWARD_EMAIL") ?? "";
 // Primary internal support recipient. Server-only: never returned to the
@@ -82,16 +85,16 @@ function renderHtml(input: ForwardInput): string {
     .map(([k, v]) => `<tr><td style="padding:4px 12px 4px 0;color:#666"><strong>${escapeHtml(k)}</strong></td><td style="padding:4px 0">${escapeHtml(String(v))}</td></tr>`)
     .join("");
   const callSummary = input.callSummary
-    ? `<h3 style="margin:24px 0 8px">Call summary</h3><pre style="white-space:pre-wrap;background:#f6f6f8;padding:12px;border-radius:8px;font:13px/1.5 -apple-system,Segoe UI,Roboto,sans-serif">${escapeHtml(input.callSummary)}</pre>`
+    ? `<h3 style="margin:24px 0 8px">Call summary</h3><pre style="white-space:pre-wrap;background:#f6f6f8;padding:12px;border-radius:8px;font:13px/1.5 ${FONT_STACK}">${escapeHtml(input.callSummary)}</pre>`
     : "";
   const ctx = input.context && Object.keys(input.context).length
     ? `<h3 style="margin:24px 0 8px">Structured context</h3><pre style="white-space:pre-wrap;background:#f6f6f8;padding:12px;border-radius:8px;font:12px/1.4 ui-monospace,Menlo,monospace">${escapeHtml(JSON.stringify(input.context, null, 2))}</pre>`
     : "";
-  return `<!doctype html><html><body style="font:14px/1.55 -apple-system,Segoe UI,Roboto,sans-serif;color:#111">
+  return `<!doctype html><html><head>${brandHeadHtml()}</head><body style="font:14px/1.55 ${FONT_STACK};color:#111">
     <h2 style="margin:0 0 12px">[${escapeHtml(input.priority.toUpperCase())}] ${escapeHtml(input.subject)}</h2>
     <table style="border-collapse:collapse">${rowsHtml}</table>
     <h3 style="margin:24px 0 8px">Report</h3>
-    <pre style="white-space:pre-wrap;background:#f6f6f8;padding:12px;border-radius:8px;font:13px/1.5 -apple-system,Segoe UI,Roboto,sans-serif">${escapeHtml(input.bodyText)}</pre>
+    <pre style="white-space:pre-wrap;background:#f6f6f8;padding:12px;border-radius:8px;font:13px/1.5 ${FONT_STACK}">${escapeHtml(input.bodyText)}</pre>
     ${callSummary}${ctx}
     <p style="color:#888;margin-top:24px;font-size:12px">Vendibook ticket ${escapeHtml(input.referenceCode)} — do not reply to this address; agents should reply from Tawk.</p>
   </body></html>`;

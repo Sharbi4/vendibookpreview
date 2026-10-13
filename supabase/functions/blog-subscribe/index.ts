@@ -4,6 +4,8 @@ import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.39.3";
 import { Resend } from "https://esm.sh/resend@2.0.0";
 import { escapeHtml } from "../_shared/callerGuard.ts";
+import { brandHeadHtml, ctaButtonHtml, injectBrandHead } from "../_shared/email-brand/bulletproof.ts";
+import { FONT_STACK } from "../_shared/email-brand/tokens.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -23,8 +25,8 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 function buildConfirmationHtml(name: string | null) {
   const greeting = name ? `Welcome, ${escapeHtml(name.split(" ")[0])}!` : "Welcome to Vendibook!";
   const unsubUrl = `${Deno.env.get("SUPABASE_URL")}/functions/v1/marketing-unsubscribe`;
-  return `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light only"><title>${greeting}</title></head>
-<body style="margin:0;padding:0;background:#f5f5f4;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#1a1a1a;">
+  return `<!DOCTYPE html><html lang="en"><head>${brandHeadHtml()}<title>${greeting}</title></head>
+<body style="margin:0;padding:0;background:#f5f5f4;font-family:${FONT_STACK};color:#1a1a1a;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#f5f5f4;padding:24px 12px;"><tr><td align="center">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 1px 2px rgba(0,0,0,0.04);">
 <tr><td align="center" style="padding:32px 32px 16px 32px;"><img src="${LOGO_IMG}" alt="Vendibook" height="128" style="height:128px;width:auto;display:inline-block;border:0;"></td></tr>
@@ -61,7 +63,7 @@ function buildConfirmationHtml(name: string | null) {
 </td></tr></table>
 </td></tr>
 <tr><td align="center" style="padding:20px 32px 32px 32px;">
-<a href="${HOME_URL}" style="display:inline-block;background:#ff5124;color:#ffffff;text-decoration:none;font-weight:700;font-size:15px;padding:13px 30px;border-radius:999px;">Visit Vendibook</a>
+${ctaButtonHtml({ href: HOME_URL, label: "Visit Vendibook", align: "center" })}
 </td></tr>
 <tr><td style="background:#fafaf9;padding:24px 32px;border-top:1px solid #e7e5e4;font-size:12px;line-height:1.6;color:#737373;text-align:center;">
 <p style="margin:0 0 6px 0;color:#0a0a0a;font-weight:700;letter-spacing:0.04em;">VENDIBOOK</p>
@@ -72,14 +74,14 @@ function buildConfirmationHtml(name: string | null) {
 }
 
 function buildAdminAlertHtml(email: string, name: string | null, source: string) {
-  return `<div style="font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;color:#1a1a1a;max-width:520px;">
+  return injectBrandHead(`<div style="font-family:${FONT_STACK};color:#1a1a1a;max-width:520px;">
 <h2 style="margin:0 0 12px 0;font-size:20px;">New Vendibook subscriber</h2>
 <table cellpadding="6" style="border-collapse:collapse;font-size:14px;">
 <tr><td style="color:#737373;">Email</td><td><strong>${escapeHtml(email)}</strong></td></tr>
 <tr><td style="color:#737373;">Name</td><td>${escapeHtml(name || "—")}</td></tr>
 <tr><td style="color:#737373;">Source</td><td>${escapeHtml(source)}</td></tr>
 <tr><td style="color:#737373;">When</td><td>${new Date().toISOString()}</td></tr>
-</table></div>`;
+</table></div>`);
 }
 
 serve(async (req) => {

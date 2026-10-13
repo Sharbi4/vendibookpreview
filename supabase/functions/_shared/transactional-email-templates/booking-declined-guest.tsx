@@ -1,5 +1,6 @@
 import * as React from 'npm:react@18.3.1'
-import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { Body, Container, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { BrandHead, EmailButton } from '../email-brand/components.tsx'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
@@ -7,7 +8,7 @@ import { BrandFooter, BrandHeader } from './_blocks.tsx'
 interface Props { shopperName?: string; listingTitle?: string; reason?: string; coverImageUrl?: string }
 
 const E = ({ shopperName, listingTitle, reason, coverImageUrl }: Props) => (
-  <Html lang="en" dir="ltr"><Head /><Preview>Update on your booking request</Preview>
+  <Html lang="en" dir="ltr"><BrandHead /><Preview>Update on your booking request</Preview>
     <Body style={s.main}><Container style={s.container}>
       <BrandHeader hero="booking" listingImageUrl={coverImageUrl} listingTitle={listingTitle} />
       <Section style={s.card}>
@@ -15,7 +16,7 @@ const E = ({ shopperName, listingTitle, reason, coverImageUrl }: Props) => (
         <Heading style={s.h1}>{shopperName ? `${shopperName}, ` : ''}your request wasn't accepted.</Heading>
         <Text style={s.lede}>The host couldn't accommodate {listingTitle ? `“${listingTitle}”` : 'your booking'} this time. Don't worry — there are dozens of similar listings nearby.</Text>
         {reason ? <Section style={s.accentRow}><Text style={s.accentLabel}>HOST NOTE</Text><Text style={s.accentValuePlain}>{reason}</Text></Section> : null}
-        <Section style={s.ctaWrap}><Button href={`${SITE_URL}/search`} style={s.button}>Browse alternatives</Button></Section>
+        <Section style={s.ctaWrap}><EmailButton href={`${SITE_URL}/search`} style={s.button}>Browse alternatives</EmailButton></Section>
       </Section>
     <BrandFooter /></Container></Body></Html>
 )

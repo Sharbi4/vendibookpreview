@@ -38,7 +38,7 @@ export function buildListingFixNudgeHtml(d: ListingFixNudgeData): string {
   <p style="${p}">Your listing <strong>${esc(d.listingTitle)}</strong> has been getting buyer visits on Vendibook, but no messages yet.</p>
   <p style="${p}">${d.fixes.length === 1 ? "One change" : "A couple of changes"} usually turn${d.fixes.length === 1 ? "s" : ""} those visits into conversations:</p>
   <ul style="${p}padding-left:20px;">${items}</ul>
-  <p style="margin:20px 0 24px;">${mkButton("Update my listing", editListingUrl(d.listingId))}</p>
+  <div style="margin:20px 0 24px;">${mkButton("Update my listing", editListingUrl(d.listingId))}</div>
   <p style="font-family:${FONT};font-size:13px;line-height:1.6;color:${MK.textMuted};margin:0 0 8px;">${esc(SAFETY_NOTE)}</p>
   <p style="${p}">Vendibook Concierge</p>
 </td></tr>`;

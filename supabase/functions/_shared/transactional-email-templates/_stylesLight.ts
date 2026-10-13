@@ -1,4 +1,4 @@
-import { CTA_SHADOW, FONT_STACK } from '../email-brand/tokens.ts'
+import { FONT_STACK, t } from '../email-brand/tokens.ts'
 
 // Light Vendibook email tokens — clean white card, charcoal type, soft
 // dividers, restrained orange CTA. Used by the membership lifecycle emails so
@@ -24,7 +24,7 @@ export const l = {
   value: { fontSize: '16px', color: '#1c1917', fontWeight: 600, margin: 0 } as const,
   valueAccent: { fontSize: '16px', color: ORANGE, fontWeight: 700, margin: 0 } as const,
   ctaWrap: { margin: '6px 0 4px' } as const,
-  button: { backgroundColor: ORANGE, color: '#ffffff', border: `1px solid ${ORANGE}`, boxShadow: CTA_SHADOW, padding: '13px 26px', borderRadius: '12px', fontWeight: 700, fontSize: '15px', textDecoration: 'none', display: 'inline-block', fontFamily: FONT_STACK } as const,
+  button: t.button,
   hr: { borderColor: '#ece7e1', margin: '24px 0 18px' } as const,
   sectionLabel: { fontSize: '11px', letterSpacing: '0.18em', color: '#8a827a', fontWeight: 700, margin: '0 0 12px', textTransform: 'uppercase' as const },
   listItem: { fontSize: '14.5px', color: '#44403c', margin: '0 0 8px', lineHeight: 1.55 } as const,

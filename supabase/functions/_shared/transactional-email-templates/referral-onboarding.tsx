@@ -1,5 +1,6 @@
 import * as React from 'npm:react@18.3.1'
-import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text, Hr } from 'npm:@react-email/components@0.0.22'
+import { Body, Container, Heading, Html, Preview, Section, Text, Hr } from 'npm:@react-email/components@0.0.22'
+import { BrandHead, EmailButton } from '../email-brand/components.tsx'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL, SITE_NAME, SUPPORT_PHONE } from './_styles.ts'
 
@@ -15,7 +16,7 @@ const PROGRAMS = [
 ]
 
 const E = ({ name }: Props) => (
-  <Html lang="en" dir="ltr"><Head /><Preview>No listings needed.</Preview>
+  <Html lang="en" dir="ltr"><BrandHead /><Preview>No listings needed.</Preview>
     <Body style={s.main}><Container style={s.container}>
       <BrandHeader hero="celebrate" />
       <Section style={s.card}>
@@ -34,7 +35,7 @@ const E = ({ name }: Props) => (
         ))}
 
         <Section style={s.ctaWrap}>
-          <Button href={`${SITE_URL}/referral/dashboard?source=email_onboarding`} style={s.button}>Get my referral link</Button>
+          <EmailButton href={`${SITE_URL}/referral/dashboard?source=email_onboarding`} style={s.button}>Get my referral link</EmailButton>
         </Section>
 
         <Hr style={s.hr} />

@@ -19,6 +19,9 @@ import {
   SUPPORT_EMAIL,
   SUPPORT_HOURS,
 } from "../email-brand/tokens.ts";
+import { brandHeadHtml, ctaButtonHtml, injectBrandHead } from "../email-brand/bulletproof.ts";
+
+export { brandHeadHtml, ctaButtonHtml, injectBrandHead };
 
 export {
   color,
@@ -78,13 +81,16 @@ export function esc(s: unknown): string {
   );
 }
 
-/** Orange CTA with the static, email-safe version of the site button glow. */
-export function mkButton(label: string, href: string, opts: { ghost?: boolean } = {}): string {
-  const bg = opts.ghost ? MK.surface : MK.orange;
-  const fg = opts.ghost ? MK.text : MK.onOrange;
-  const border = opts.ghost ? `1px solid ${MK.border}` : `1px solid ${MK.orange}`;
-  const shadow = opts.ghost ? "none" : CTA_SHADOW;
-  return `<a href="${esc(href)}" style="display:inline-block;background:${bg};color:${fg};border:${border};border-radius:${radius.button};box-shadow:${shadow};padding:14px 28px;font-family:${FONT};font-size:15px;font-weight:700;line-height:1.2;text-decoration:none;">${esc(label)}</a>`;
+/**
+ * Orange glow pill CTA (the site's primary button), bulletproof: table cell
+ * + Outlook VML. `ghost` renders the white outline secondary pill.
+ */
+export function mkButton(
+  label: string,
+  href: string,
+  opts: { ghost?: boolean; align?: "left" | "center" } = {},
+): string {
+  return ctaButtonHtml({ href, label, variant: opts.ghost ? "secondary" : "primary", align: opts.align });
 }
 
 /**
@@ -128,7 +134,7 @@ export function marketingShell(opts: {
   footerNote?: string;
 }): string {
   return `<!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="light only"><title>${esc(opts.title)}</title></head>
+<html lang="en"><head>${brandHeadHtml()}<title>${esc(opts.title)}</title></head>
 <body style="margin:0;padding:0;background:${MK.canvas};font-family:${FONT};color:${MK.text};-webkit-text-size-adjust:100%;">
 ${opts.preheader ? `<div style="display:none;max-height:0;overflow:hidden;opacity:0;color:transparent;">${esc(opts.preheader)}</div>` : ""}
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:${MK.canvas};padding:24px 12px;"><tr><td align="center">

@@ -1,5 +1,6 @@
 import * as React from 'npm:react@18.3.1'
-import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { Body, Container, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { BrandHead, EmailButton } from '../email-brand/components.tsx'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
@@ -18,7 +19,7 @@ const E = ({ recipientName, listingTitle, refundAmount, reason, recipientType = 
   const amount = typeof refundAmount === 'number' ? `$${refundAmount.toFixed(2)}` : ''
   const initiator = initiatedBy === 'shopper' ? 'the guest' : initiatedBy === 'admin' ? 'our team' : 'you'
   return (
-    <Html lang="en" dir="ltr"><Head /><Preview>{isShopper ? 'Your refund has been processed' : 'Booking cancelled and refunded'}</Preview>
+    <Html lang="en" dir="ltr"><BrandHead /><Preview>{isShopper ? 'Your refund has been processed' : 'Booking cancelled and refunded'}</Preview>
       <Body style={s.main}><Container style={s.container}>
         <BrandHeader hero="payment" listingImageUrl={coverImageUrl} listingTitle={listingTitle} />
         <Section style={s.card}>
@@ -36,7 +37,7 @@ const E = ({ recipientName, listingTitle, refundAmount, reason, recipientType = 
             </Section>
           ) : null}
           <Section style={s.ctaWrap}>
-            <Button href={`${SITE_URL}/dashboard`} style={s.button}>View dashboard</Button>
+            <EmailButton href={`${SITE_URL}/dashboard`} style={s.button}>View dashboard</EmailButton>
           </Section>
           {bookingId ? <Text style={s.footnote}>Reference: {String(bookingId).slice(0, 8)}</Text> : null}
         </Section>

@@ -1,5 +1,6 @@
 import * as React from 'npm:react@18.3.1'
-import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { Body, Container, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { BrandHead, EmailButton } from '../email-brand/components.tsx'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL, SUPPORT_PHONE } from './_styles.ts'
 import { BrandFooter, BrandHeader, TermsBlock, type TermsSnapshot } from './_blocks.tsx'
@@ -16,7 +17,7 @@ interface Props {
 }
 
 const E = ({ buyerName, listingTitle, salePrice, sellerName, orderNumber, transactionId, termsSnapshot, termsVersion }: Props) => (
-  <Html lang="en" dir="ltr"><Head /><Preview>Your Pay-in-Person request was sent</Preview>
+  <Html lang="en" dir="ltr"><BrandHead /><Preview>Your Pay-in-Person request was sent</Preview>
     <Body style={s.main}><Container style={s.container}>
       <BrandHeader hero="celebrate" listingTitle={listingTitle} />
       <Section style={s.card}>
@@ -43,7 +44,7 @@ const E = ({ buyerName, listingTitle, salePrice, sellerName, orderNumber, transa
         <Text style={s.listItem}>4. You come back here and tap <strong>Confirm Receipt</strong> to close the sale.</Text>
 
         <Section style={s.ctaWrap}>
-          <Button href={`${SITE_URL}${transactionId ? `/order-tracking/${transactionId}` : '/dashboard?tab=purchases'}`} style={s.button}>Track order</Button>
+          <EmailButton href={`${SITE_URL}${transactionId ? `/order-tracking/${transactionId}` : '/dashboard?tab=purchases'}`} style={s.button}>Track order</EmailButton>
         </Section>
 
         <Text style={s.footnote}>Meet in a public place, inspect the item before paying, and never wire money in advance. Questions? Call {SUPPORT_PHONE}.</Text>

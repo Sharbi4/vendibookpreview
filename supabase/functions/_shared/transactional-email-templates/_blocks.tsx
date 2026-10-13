@@ -8,7 +8,8 @@
 // code has to know which articles or tools to feature.
 
 import * as React from 'npm:react@18.3.1'
-import { Button, Hr, Img, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { Hr, Img, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { EmailButton } from '../email-brand/components.tsx'
 import { s, SITE_URL, LOGO_URL, SUPPORT_PHONE } from './_styles.ts'
 
 // Editorial spot illustrations — flat hand-drawn, dark charcoal + orange.
@@ -254,7 +255,7 @@ export const ToolsBlock = ({ role, tools }: { role?: Role; tools?: Tool[] }) => 
         </Text>
       ))}
       <Section style={{ margin: '14px 0 0' }}>
-        <Button href={`${SITE_URL}/dashboard`} style={s.buttonGhost}>Open your dashboard</Button>
+        <EmailButton href={`${SITE_URL}/dashboard`} style={s.buttonGhost}>Open your dashboard</EmailButton>
       </Section>
     </>
   )

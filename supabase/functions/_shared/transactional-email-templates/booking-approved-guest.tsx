@@ -1,5 +1,6 @@
 import * as React from 'npm:react@18.3.1'
-import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text, Hr } from 'npm:@react-email/components@0.0.22'
+import { Body, Container, Heading, Html, Preview, Section, Text, Hr } from 'npm:@react-email/components@0.0.22'
+import { BrandHead, EmailButton } from '../email-brand/components.tsx'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
@@ -7,7 +8,7 @@ import { BrandFooter, BrandHeader } from './_blocks.tsx'
 interface Props { shopperName?: string; listingTitle?: string; startDate?: string; endDate?: string; totalPrice?: number; bookingId?: string; address?: string; coverImageUrl?: string }
 
 const E = ({ shopperName, listingTitle, startDate, endDate, totalPrice, bookingId, address, coverImageUrl }: Props) => (
-  <Html lang="en" dir="ltr"><Head /><Preview>Your booking is approved 🎉</Preview>
+  <Html lang="en" dir="ltr"><BrandHead /><Preview>Your booking is approved 🎉</Preview>
     <Body style={s.main}><Container style={s.container}>
       <BrandHeader hero="booking" listingImageUrl={coverImageUrl} listingTitle={listingTitle} />
       <Section style={s.card}>
@@ -17,7 +18,7 @@ const E = ({ shopperName, listingTitle, startDate, endDate, totalPrice, bookingI
         <Section style={s.accentRow}><Text style={s.accentLabel}>WHEN</Text><Text style={s.accentValuePlain}>{startDate}{endDate && startDate !== endDate ? ` → ${endDate}` : ''}</Text></Section>
         {address ? <Section style={s.accentRow}><Text style={s.accentLabel}>WHERE</Text><Text style={s.accentValuePlain}>{address}</Text></Section> : null}
         {totalPrice ? <Section style={s.accentRow}><Text style={s.accentLabel}>TOTAL</Text><Text style={s.accentValue}>${totalPrice.toLocaleString()}</Text></Section> : null}
-        <Section style={s.ctaWrap}><Button href={`${SITE_URL}/dashboard?booking=${bookingId || ''}`} style={s.button}>View booking</Button></Section>
+        <Section style={s.ctaWrap}><EmailButton href={`${SITE_URL}/dashboard?booking=${bookingId || ''}`} style={s.button}>View booking</EmailButton></Section>
         <Hr style={s.hr} />
         <Text style={s.smallHeader}>BEFORE YOU GO</Text>
         <Text style={s.listItem}>• Upload any required documents.</Text>

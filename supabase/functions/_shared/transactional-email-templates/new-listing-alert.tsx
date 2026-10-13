@@ -1,5 +1,6 @@
 import * as React from 'npm:react@18.3.1'
-import { Body, Button, Container, Head, Heading, Html, Img, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { Body, Container, Heading, Html, Img, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { BrandHead, EmailButton } from '../email-brand/components.tsx'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 
@@ -21,7 +22,7 @@ const E = ({ name, listingTitle, listingId, categoryLabel, modeLabel, priceLabel
   const where = [city, state].filter(Boolean).join(', ')
   const distance = typeof distanceMiles === 'number' ? `${Math.round(distanceMiles)} mi away` : null
   return (
-    <Html lang="en" dir="ltr"><Head /><Preview>{listingTitle ? `${listingTitle} just listed near you` : 'A new listing just went live near you'}</Preview>
+    <Html lang="en" dir="ltr"><BrandHead /><Preview>{listingTitle ? `${listingTitle} just listed near you` : 'A new listing just went live near you'}</Preview>
       <Body style={s.main}><Container style={s.container}>
         <BrandHeader hero="celebrate" listingImageUrl={coverImageUrl} listingTitle={listingTitle} />
         <Section style={s.card}>
@@ -46,7 +47,7 @@ const E = ({ name, listingTitle, listingId, categoryLabel, modeLabel, priceLabel
           ) : null}
 
           <Section style={s.ctaWrap}>
-            <Button href={`${SITE_URL}/listing/${listingId || ''}`} style={s.button}>View listing</Button>
+            <EmailButton href={`${SITE_URL}/listing/${listingId || ''}`} style={s.button}>View listing</EmailButton>
           </Section>
 
           <Text style={s.smallHeader}>WHY YOU'RE GETTING THIS</Text>

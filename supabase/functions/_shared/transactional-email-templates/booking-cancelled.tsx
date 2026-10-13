@@ -1,5 +1,6 @@
 import * as React from 'npm:react@18.3.1'
-import { Body, Container, Head, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { Body, Container, Heading, Html, Preview, Section, Text } from 'npm:@react-email/components@0.0.22'
+import { BrandHead } from '../email-brand/components.tsx'
 import type { TemplateEntry } from './registry.ts'
 import { s } from './_styles.ts'
 
@@ -7,7 +8,7 @@ import { BrandFooter, BrandHeader } from './_blocks.tsx'
 interface Props { recipientName?: string; listingTitle?: string; cancelledBy?: 'host' | 'guest' | string; reason?: string; coverImageUrl?: string }
 
 const E = ({ recipientName, listingTitle, cancelledBy, reason, coverImageUrl }: Props) => (
-  <Html lang="en" dir="ltr"><Head /><Preview>Booking cancelled</Preview>
+  <Html lang="en" dir="ltr"><BrandHead /><Preview>Booking cancelled</Preview>
     <Body style={s.main}><Container style={s.container}>
       <BrandHeader hero="booking" listingImageUrl={coverImageUrl} listingTitle={listingTitle} />
       <Section style={s.card}>

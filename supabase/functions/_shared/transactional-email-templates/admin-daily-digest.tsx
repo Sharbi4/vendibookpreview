@@ -1,5 +1,6 @@
 import * as React from 'npm:react@18.3.1'
-import { Body, Button, Container, Head, Heading, Html, Preview, Section, Text, Hr } from 'npm:@react-email/components@0.0.22'
+import { Body, Container, Heading, Html, Preview, Section, Text, Hr } from 'npm:@react-email/components@0.0.22'
+import { BrandHead, EmailButton } from '../email-brand/components.tsx'
 import type { TemplateEntry } from './registry.ts'
 import { s, SITE_URL } from './_styles.ts'
 import { BrandFooter, BrandHeader } from './_blocks.tsx'
@@ -23,7 +24,7 @@ const Row = ({ label, value, accent }: { label: string; value: string | number; 
 )
 
 const E = ({ dateLabel, newSignups, newListings, newBookings, grossRevenue, openDisputes, pendingPayouts, aiInsight }: Props) => (
-  <Html lang="en" dir="ltr"><Head /><Preview>Vendibook ops digest</Preview>
+  <Html lang="en" dir="ltr"><BrandHead /><Preview>Vendibook ops digest</Preview>
     <Body style={s.main}><Container style={s.container}>
       <BrandHeader hero="insight" />
       <Section style={s.card}>
@@ -41,7 +42,7 @@ const E = ({ dateLabel, newSignups, newListings, newBookings, grossRevenue, open
         <Row label="OPEN DISPUTES" value={(openDisputes ?? 0).toLocaleString()} />
         <Row label="PENDING PAYOUTS" value={(pendingPayouts ?? 0).toLocaleString()} />
 
-        <Section style={s.ctaWrap}><Button href={`${SITE_URL}/admin`} style={s.button}>Open admin</Button></Section>
+        <Section style={s.ctaWrap}><EmailButton href={`${SITE_URL}/admin`} style={s.button}>Open admin</EmailButton></Section>
       </Section>
     <BrandFooter /></Container></Body></Html>
 )
