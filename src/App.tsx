@@ -787,6 +787,7 @@ const AppContent = () => {
     <>
       <NativePushLifecycle />
       <ScrollToTop />
+      <BuyerMatchAttribution />
       <OfflineBanner />
       <Toaster />
       <Sonner />

@@ -10,6 +10,12 @@ vi.mock('@/components/workspace/WorkspaceShell',()=>({default:({children}:any)=>
 function show(){return render(<QueryClientProvider client={new QueryClient({defaultOptions:{queries:{retry:false},mutations:{retry:false}}})}><MemoryRouter><WorkspaceBuyerMatch/></MemoryRouter></QueryClientProvider>);}
 beforeEach(()=>{cleanup();mocks.action.mockReset();mocks.error=null;mocks.data={config:{entitled:true,is_admin:false,submissions_enabled:true,fulfillment_enabled:false,max_campaigns:3},campaigns:[],reports:[],listings:[{id:'listing',title:'Food truck'}],imports:[]};});
 describe('BuyerMatch seller experience',()=>{
+ it('labels the locked preview and routes unlocking to dedicated membership management',()=>{
+  mocks.data.config.entitled=false;show();
+  expect(screen.getByText('Illustrative sample data only — not actual Vendibook or Muse activity.')).toBeInTheDocument();
+  expect(screen.getByRole('link',{name:/Unlock now/})).toHaveAttribute('href','/dashboard/buyermatch/membership');
+  expect(screen.getByRole('link',{name:'Manage membership'})).toHaveAttribute('href','/dashboard/buyermatch/membership');
+ });
  it('shows pending service honestly and submits only the selected listing and preferences',async()=>{
   mocks.action.mockResolvedValue({id:'campaign'});show();
   expect(screen.getByText('Pending service activation.')).toBeInTheDocument();
