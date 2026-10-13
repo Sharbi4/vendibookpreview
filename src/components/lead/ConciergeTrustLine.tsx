@@ -6,7 +6,7 @@ interface ConciergeTrustLineProps {
 }
 
 /**
- * Standardized concierge trust message used above every Tell-Vendibook CTA.
+ * Standardized "Need help?" trust message used above every Tell-Vendibook CTA.
  * Keep copy consistent across surfaces.
  */
 export const ConciergeTrustLine = ({ variant = 'dark', className = '' }: ConciergeTrustLineProps) => {

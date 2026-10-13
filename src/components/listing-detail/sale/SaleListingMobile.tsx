@@ -97,7 +97,7 @@ export const SaleListingMobile = ({
   const { user } = useAuth();
   const saleActions = useSaleActionState(listing.id);
   const navigate = useNavigate();
-  const [conciergeOpen, setConciergeOpen] = useState(false);
+  const [availabilityOpen, setAvailabilityOpen] = useState(false);
   const [showOfferModal, setShowOfferModal] = useState(false);
   const [showAuthGate, setShowAuthGate] = useState(false);
   const [pendingAction, setPendingAction] = useState<'buy' | 'offer' | null>(null);
@@ -344,7 +344,7 @@ export const SaleListingMobile = ({
             </div>
             <Button
               size="lg"
-              onClick={() => setConciergeOpen(true)}
+              onClick={() => setAvailabilityOpen(true)}
               className="w-full h-14 gap-2 rounded-2xl bg-cta-cream text-[#1a1a1a] hover:brightness-95 font-bold shadow-[0_8px_24px_rgba(0,0,0,0.25)] border-0"
             >
               <CalendarCheck className="h-5 w-5" />
@@ -354,23 +354,23 @@ export const SaleListingMobile = ({
 
         )}
 
-        {/* CONCIERGE CARD */}
+        {/* VENDIBOOK SUPPORT CARD */}
         {!isOwner && (
           <SaleCard variant="warm" padding="lg">
             <div className="text-[11px] font-semibold uppercase tracking-[0.14em] text-muted-foreground mb-2">
-              Vendibook Concierge
+              Vendibook support
             </div>
             <h2 className="text-lg font-semibold leading-snug text-foreground">
               Want help with this listing?
             </h2>
             <p className="text-sm text-muted-foreground mt-1.5 leading-relaxed">
-              Our concierge can confirm availability, answer questions, and coordinate next steps.
+              Our team can confirm availability, answer questions, and coordinate next steps.
             </p>
 
             <div className="mt-4 flex flex-col sm:flex-row gap-2.5">
               <Button
                 size="lg"
-                onClick={() => setConciergeOpen(true)}
+                onClick={() => setAvailabilityOpen(true)}
                 className="flex-1 h-11 gap-2 rounded-lg"
               >
                 <CalendarCheck className="h-4 w-4" />
@@ -712,8 +712,8 @@ export const SaleListingMobile = ({
 
       {/* Modals */}
       <TellVendibookModal
-        open={conciergeOpen}
-        onOpenChange={setConciergeOpen}
+        open={availabilityOpen}
+        onOpenChange={setAvailabilityOpen}
         defaultIntent="buy"
         defaultCategory={toLeadCategory(listing.category)}
         defaultCity={listing.city || undefined}

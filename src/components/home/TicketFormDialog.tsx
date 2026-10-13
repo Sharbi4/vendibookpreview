@@ -160,7 +160,7 @@ const TicketFormDialog = ({ open, onOpenChange }: TicketFormDialogProps) => {
                       style={{ background: 'rgba(245, 158, 11, 0.15)' }}
                     >
                       
-                      Free Concierge
+                      Free matching help
                     </div>
                     <h2 className="text-xl sm:text-2xl font-bold text-white">Match Me</h2>
                     <p className="text-white/50 text-xs sm:text-sm mt-0.5">Tell us what you need — we'll find it for you.</p>

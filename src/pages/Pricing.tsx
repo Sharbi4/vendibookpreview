@@ -80,17 +80,6 @@ const ADDON_DETAILS: Record<
       'Vendibook Pro members receive 1 boost credit per billing period.',
     ],
   },
-  [ACTIVE_PRODUCT_SLUGS.conciergeListing]: {
-    summary: 'Our team writes and structures a complete listing for you from the details you provide.',
-    included: [
-      'Written title, description and specification sheet',
-      'Structured listing set up for search',
-      'Photo and detail guidance before publishing',
-    ],
-    bestFor: 'Sellers who would rather hand the listing off than write it.',
-    billing: 'One-time charge per listing.',
-    finePrint: ['One-time service · non-recurring.', 'You review and approve before publishing.'],
-  },
   [ACTIVE_PRODUCT_SLUGS.permitPathPlus]: {
     summary: 'The saving and tracking layer on top of PermitPath. Roadmap generation stays free.',
     included: [
@@ -112,7 +101,6 @@ const ADDON_DETAILS: Record<
 /** Short benefit copy per active add-on. Falls back to the DB description. */
 const ONE_LINERS: Record<string, string> = {
   [ACTIVE_PRODUCT_SLUGS.featuredBoost]: 'Top of search and a highlighted card for 30 days.',
-  [ACTIVE_PRODUCT_SLUGS.conciergeListing]: 'Our team writes and structures your listing for you.',
   [ACTIVE_PRODUCT_SLUGS.permitPathPlus]: 'Save roadmaps, track permits, store documents, export PDFs.',
 };
 

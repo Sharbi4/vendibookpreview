@@ -18,7 +18,7 @@ export interface FieldHelpProps {
 
 /**
  * Accessible information tip used across the listing gateway, wizard, manage
- * listing, readiness system and concierge intake.
+ * listing and readiness system.
  *
  * Behaviour:
  * - Desktop: opens on hover and on keyboard focus, toggles on click.

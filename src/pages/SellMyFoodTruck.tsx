@@ -100,11 +100,6 @@ const faqs = [
     answer:
       'No. Identity verification is optional, powered by Plaid, and adds an Identity Verified badge to your profile when completed. It is not required to publish, sell, get paid, or use pay in person. It applies to the account that completes it — it is not a blanket guarantee about every other user.',
   },
-  {
-    question: 'Can Vendibook make the listing for me?',
-    answer:
-      'The self-service paths are free and most sellers use them. Concierge Listing is an optional one-time paid service where our team builds and polishes the listing from your photos and information.',
-  },
 ];
 
 const faqSchema = {
@@ -233,7 +228,6 @@ const steps = [
 const SellMyFoodTruck = () => {
   const reduced = useReducedMotion();
   const pro = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.vendibookPro);
-  const concierge = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.conciergeListing);
   const { data: realPhotos = [] } = useRealSaleListingPhotos(8);
 
   // Real marketplace photography first; bundled imagery only as a fallback.
@@ -523,9 +517,6 @@ const SellMyFoodTruck = () => {
                 </Button>
                 <Button variant="ghost" className="rounded-2xl text-foreground" asChild>
                   <Link to="/payments">How secure PayPal checkout works</Link>
-                </Button>
-                <Button variant="ghost" className="rounded-2xl text-foreground" asChild>
-                  <Link to="/list/concierge">Optional Concierge Listing · {concierge.label}</Link>
                 </Button>
               </div>
             </div>

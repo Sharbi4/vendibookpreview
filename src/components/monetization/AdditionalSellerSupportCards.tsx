@@ -9,7 +9,7 @@ import {
 interface Props {
   /** Undefined during wizard until save; when omitted, checkout still works and attaches later on webhook. */
   listingId?: string;
-  /** Slugs to include; defaults to the two seller support products. */
+  /** Slugs to include; defaults to Seller Pro (the White Glove service is retired). */
   slugs?: string[];
   heading?: string;
   subheading?: string;
@@ -17,10 +17,10 @@ interface Props {
   openInNewTab?: boolean;
 }
 
-const DEFAULT_SLUGS = ['seller-pro', 'white-glove-seller'];
+const DEFAULT_SLUGS = ['seller-pro'];
 
 /**
- * Compact strip of optional seller support products (Seller Pro, White Glove).
+ * Compact strip of optional seller support products (Seller Pro).
  * Rendered alongside the Featured toggle on the wizard review step and inside
  * the dashboard Upgrades dialog. Featured is intentionally NOT included here —
  * that flow uses the toggle-during-publish UX in FeaturedListingCard.
@@ -29,7 +29,7 @@ export function AdditionalSellerSupportCards({
   listingId,
   slugs = DEFAULT_SLUGS,
   heading = 'Want extra support?',
-  subheading = 'Optional Seller Pro coaching or White-Glove concierge. Add whenever you are ready — your listing stays free.',
+  subheading = 'Optional Seller Pro coaching. Add whenever you are ready — your listing stays free.',
   openInNewTab = false,
 }: Props) {
   const [products, setProducts] = useState<MonetizationProduct[]>([]);

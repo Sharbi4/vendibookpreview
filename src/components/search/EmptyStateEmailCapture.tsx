@@ -121,7 +121,7 @@ export const EmptyStateEmailCapture = ({ locationText, category, mode, onClearFi
       <p className="text-muted-foreground text-center max-w-sm mb-6 text-sm relative">
         {hasActiveFilters
           ? 'Try removing some filters or resetting them to see more results.'
-          : 'Tell Vendibook what you need — our concierge will text or email you within 1 business hour with verified options.'}
+          : 'Tell Vendibook what you need — our team will text or email you within 1 business hour with verified options.'}
       </p>
 
       {/* Prominent reset when filters are active */}
@@ -147,7 +147,7 @@ export const EmptyStateEmailCapture = ({ locationText, category, mode, onClearFi
         </div>
       )}
 
-      {/* Primary action: Concierge lead */}
+      {/* Primary action: Tell Vendibook lead */}
       <div className="relative w-full max-w-md mb-4">
         <TellVendibookButton
           variant={hasActiveFilters ? 'glass-cta' : 'dark-shine'}

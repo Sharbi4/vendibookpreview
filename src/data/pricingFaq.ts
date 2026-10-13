@@ -33,7 +33,7 @@ export const PRICING_FAQ: PricingFaqEntry[] = [
     id: 'cost-to-list',
     question: 'Does it cost anything to list on Vendibook?',
     answer:
-      'No. Creating your account, building a standard listing, and publishing it are free, subject to the active-listing limit on your plan. There is no listing fee and no card required to go live. Identity verification is optional and is not required to publish. Concierge listing creation is an optional paid service — self-service listing stays free.',
+      'No. Creating your account, building a standard listing, and publishing it are free, subject to the active-listing limit on your plan. There is no listing fee and no card required to go live. Identity verification is optional and is not required to publish.',
     audiences: ['seller', 'host', 'all'],
     cta: { label: 'Create a free listing', href: '/list' },
   },

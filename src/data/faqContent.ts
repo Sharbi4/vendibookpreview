@@ -518,13 +518,6 @@ export const faqCategories: FaqCategory[] = [
         actions: [A.pricing],
       },
       {
-        id: "concierge-listing",
-        question: "What is Concierge Listing?",
-        answer:
-          "Concierge Listing ({{price:listing_concierge}}, one time) is an optional service where the Vendibook team builds and polishes the listing for you from the details and photos you provide. Self-service listing stays free — Concierge just hands the work to us. We do not publish a guaranteed turnaround time.",
-        actions: [{ label: "See Concierge", href: "/list/concierge" }],
-      },
-      {
         id: "listing-rewrite",
         question: "What is the Listing Rewrite service?",
         answer:

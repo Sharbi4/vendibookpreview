@@ -77,7 +77,7 @@ const FloatingConciergeButton = () => {
             onClick={() => setIsMinimized(false)}
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.92 }}
-            aria-label="Open concierge chat"
+            aria-label="Chat with support"
             className="relative flex items-center justify-center w-12 h-12 rounded-full cursor-pointer border-none outline-none"
             style={{
               background: 'linear-gradient(145deg, rgba(255,255,255,0.55) 0%, rgba(140,190,255,0.4) 50%, rgba(210,170,255,0.32) 100%)',
@@ -95,7 +95,7 @@ const FloatingConciergeButton = () => {
           <div className="relative">
             <button
               onClick={(e) => { e.stopPropagation(); handleMinimize(); }}
-              aria-label="Minimize concierge"
+              aria-label="Minimize support chat"
               className="absolute -top-2 -right-2 z-10 flex items-center justify-center w-6 h-6 rounded-full bg-background/90 border border-border shadow-md hover:bg-muted transition-colors"
             >
               <X className="w-3.5 h-3.5 text-foreground" />

@@ -14,7 +14,6 @@ describe('canonical listing route map', () => {
   const routed = [
     '/list',
     '/list/start',
-    '/list/concierge',
     '/list/finish/:listingId',
     '/create-listing/:listingId',
     '/edit-listing/:listingId',

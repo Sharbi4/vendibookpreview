@@ -53,7 +53,7 @@ const CATEGORIES: Category[] = [
   {
     icon: FileText,
     title: 'Find permits',
-    copy: 'Permit Path checklist, plus concierge help for your city.',
+    copy: 'Permit Path checklist and permit roadmap for your city.',
     to: '/tools/permitpath',
     cta: 'Open Permit Path',
   },

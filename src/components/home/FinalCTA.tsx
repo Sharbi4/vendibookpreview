@@ -10,7 +10,7 @@ const FinalCTA = () => {
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
 
-  const handleConcierge = () => {
+  const handleTellVendibook = () => {
     trackLeadEvent('homepage_final_cta_click', {
       route: '/',
       cta: 'concierge',
@@ -54,7 +54,7 @@ const FinalCTA = () => {
             <Button
               size="lg"
               variant="cta"
-              onClick={handleConcierge}
+              onClick={handleTellVendibook}
               className="rounded-2xl px-8 gap-2"
             >
               Tell Vendibook what you need

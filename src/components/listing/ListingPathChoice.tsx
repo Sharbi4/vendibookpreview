@@ -93,7 +93,7 @@ interface ListingPathChoiceProps {
 
 /**
  * The first screen of the listing flow: assisted "List with Vendi" (recommended)
- * or the existing manual wizard. Never buried behind Concierge.
+ * or the existing manual wizard.
  */
 const ListingPathChoice: React.FC<ListingPathChoiceProps> = ({ onChooseManual, search = '' }) => {
   const navigate = useNavigate();

@@ -4,7 +4,6 @@ import {
   Search, MapPin, SlidersHorizontal, Truck, ChevronRight, Map as MapIcon, X, Plus, UserPlus, Info, ArrowRight, Utensils,
   Building2, ShoppingBag, Zap, Loader2, Navigation} from 'lucide-react';
 import AppDropdownMenu from '@/components/layout/AppDropdownMenu';
-import SmartConciergeModal from '@/components/home/SmartConciergeModal';
 import { FilterPanel, FilterValues } from '@/components/search/FilterPanel';
 import { EmptyStateEmailCapture } from '@/components/search/EmptyStateEmailCapture';
 import InlineNewsletterCard from '@/components/search/InlineNewsletterCard';
@@ -723,8 +722,7 @@ const Homepage2 = () => {
           100% { transform: translateX(100%); }
         }
       `}</style>
-      
-      <SmartConciergeModal />
+
     </div>
   );
 };

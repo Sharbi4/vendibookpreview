@@ -37,12 +37,6 @@ const UPSELLS: Record<
     href: '/pricing',
     hostedSlug: 'boost-featured-30',
   },
-  concierge: {
-    title: 'Listing concierge',
-    body: 'Our team writes, photographs, and polishes your listing for you.',
-    cta: 'See concierge',
-    href: '/pricing',
-  },
   financing: {
     title: 'Buyer financing',
     body: 'Let qualified buyers apply for equipment financing on your listing.',

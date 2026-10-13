@@ -182,7 +182,7 @@ const browseTopics: { title: string; icon: typeof BookOpen; articles: TopicLink[
     icon: Package,
     articles: [
       { label: 'Vendibook Pro benefits', to: '/faq?cat=memberships-billing#pro-benefits' },
-      { label: 'Featured Boost, Pro Listing & Concierge', to: '/faq?cat=tools-addons#addon-differences' },
+      { label: 'Featured Boost, Pro Listing & Vendibook Pro', to: '/faq?cat=tools-addons#addon-differences' },
       { label: 'Compare plans & prices', to: '/pricing' },
     ],
   },

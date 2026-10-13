@@ -120,7 +120,7 @@ const VoiceAssistantButton = () => {
         )}
       </AnimatePresence>
 
-      {/* Concierge pill — combined button + label */}
+      {/* Voice help pill — combined button + label */}
       <div className="relative flex items-center">
         {/* Floating label (idle only) */}
         {isIdle && (
@@ -132,7 +132,7 @@ const VoiceAssistantButton = () => {
           >
             <div className="pointer-events-auto flex items-center gap-1.5 pl-3 pr-1.5 py-1 rounded-full bg-background/90 backdrop-blur-md border-2 border-border/70 shadow-lg whitespace-nowrap">
               <span className="text-[11px] font-semibold uppercase tracking-[0.12em] text-foreground/80">
-                Concierge
+                Voice help
               </span>
               <span className="text-[11px] text-muted-foreground">·</span>
               <span className="text-[11px] text-muted-foreground">Talk to Vendi</span>

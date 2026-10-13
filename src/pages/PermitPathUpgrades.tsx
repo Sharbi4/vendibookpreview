@@ -17,7 +17,7 @@ const PermitPathUpgrades = () => {
         <SectionHeader
           eyebrow="Permit Path"
           title="Optional upgrades for your Permit Path"
-          description="Basic Permit Path stays free. These add saved progress, document storage, and concierge-level help preparing your applications."
+          description="Basic Permit Path stays free. These add saved progress, permit tracking, and document storage."
         />
 
         {loading ? (

@@ -158,7 +158,7 @@ const MessageHostForm = ({
         <CheckCircle2 className="h-8 w-8 mx-auto text-emerald-500" />
         <p className="font-semibold">Question sent</p>
         <p className="text-sm text-muted-foreground">
-          We got it. A Vendibook concierge will review it, connect you with the seller, and follow up at <strong>{guest.email.trim()}</strong> within 1 business hour.
+          We got it. The Vendibook team will review it, connect you with the seller, and follow up at <strong>{guest.email.trim()}</strong> within 1 business hour.
         </p>
         <Button variant="link" className="h-auto p-0 text-sm" onClick={goToAuth}>
           Create a free account to chat with the seller directly

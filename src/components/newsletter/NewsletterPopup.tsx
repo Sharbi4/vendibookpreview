@@ -16,7 +16,7 @@ const NewsletterPopup = () => {
 
   useEffect(() => {
     // Do not interrupt first-time visitors on the homepage —
-    // the homepage uses the concierge lead form as its primary soft-conversion.
+    // the homepage uses the Tell Vendibook lead form as its primary soft-conversion.
     if (location.pathname === '/') return;
 
     const hasSeenPopup = localStorage.getItem('newsletter_popup_dismissed');

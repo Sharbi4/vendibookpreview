@@ -304,7 +304,7 @@ const HeroValueProp = () => {
               </button>
             </motion.div>
 
-            {/* Concierge soft-conversion CTA */}
+            {/* Tell Vendibook soft-conversion CTA */}
             <motion.div
               className="w-full max-w-xl mx-auto mb-7 sm:mb-9 space-y-2.5"
               initial={{ opacity: 0, y: 8 }}

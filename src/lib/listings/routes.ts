@@ -2,7 +2,7 @@
  * Canonical listing route map.
  *
  * The self-service flow is:
- *   /list            opening choice page (self-serve vs concierge)
+ *   /list            opening choice page (List with Vendi vs manual wizard)
  *   /list/start      QuickStart wizard entry — creates the draft
  *   /create-listing/:listingId   PublishWizard (draft continuation)
  *   /list/finish/:listingId      one-screen finish & publish for older drafts
@@ -22,8 +22,6 @@ export const LISTING_ROUTES = {
   hub: '/list',
   /** QuickStart wizard entry. */
   quickStart: '/list/start',
-  /** Concierge introduction / intake placeholder. */
-  conciergeIntro: '/list/concierge',
   /** One-screen finish & publish for drafts missing only disclosures. */
   finish: (listingId: string) => `/list/finish/${listingId}`,
   /** Draft continuation (PublishWizard). */
@@ -50,6 +48,9 @@ export const LEGACY_LISTING_REDIRECTS: Record<string, string> = {
   '/create-listing': LISTING_ROUTES.gateway,
   '/new-listing': LISTING_ROUTES.gateway,
   '/listing-wizard': LISTING_ROUTES.gateway,
+  // Listing Concierge retired (owner request 2026-10-13).
+  '/list/concierge': LISTING_ROUTES.gateway,
+  '/list/concierge/:orderId': LISTING_ROUTES.gateway,
 };
 
 /** Builds an /auth redirect that returns the user to `target` after sign-in. */

@@ -17,7 +17,6 @@ export const ACTIVE_PRODUCT_SLUGS = {
   permitPathPlus: 'permit_path_plus_monthly',
   proListing: 'pro_listing_30',
   featuredBoost: 'boost-featured-30',
-  conciergeListing: 'listing_concierge',
   listingRewrite: 'listing_rewrite',
   pricePilot: 'tool_pricepilot',
 } as const;
@@ -75,6 +74,8 @@ export const RETIRED_PRODUCT_SLUGS = new Set<string>([
   'boost-motivated-seller',
   'boost-email-campaign',
   'boost-social-feature',
+  // Listing Concierge retired from every seller surface (owner request 2026-10-13).
+  'listing_concierge',
 ]);
 
 export const isRetiredProduct = (slug: string) => RETIRED_PRODUCT_SLUGS.has(slug);

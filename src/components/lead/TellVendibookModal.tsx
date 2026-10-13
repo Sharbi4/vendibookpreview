@@ -271,7 +271,7 @@ export const TellVendibookModal = ({
           <DialogHeader className="space-y-2 text-left">
             <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/20 text-primary text-[10px] font-semibold uppercase tracking-[0.14em] w-fit">
               
-              Vendibook Concierge · Step {submitted ? '✓' : step} of 2
+              Vendibook · Step {submitted ? '✓' : step} of 2
             </div>
             <DialogTitle className="text-xl sm:text-2xl font-semibold text-foreground">
               {submitted
@@ -282,7 +282,7 @@ export const TellVendibookModal = ({
             </DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground">
               {submitted
-                ? 'A concierge will reach out within 1 business hour.'
+                ? 'The Vendibook team will reach out within 1 business hour.'
                 : step === 1
                   ? "Two quick fields. We'll do the rest."
                   : 'These help us match faster — skip any field you want.'}

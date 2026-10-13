@@ -101,8 +101,6 @@ const ListingPaymentsFinancing = lazy(() => import("./pages/ListingPaymentsFinan
 const ListingStart = lazy(() => import("./pages/ListingStart"));
 const ListStart = lazy(() => import("./pages/ListStart"));
 const ListingFinish = lazy(() => import("./pages/ListingFinish"));
-const ConciergeIntro = lazy(() => import("./pages/ConciergeIntro"));
-const ConciergeOrderPage = lazy(() => import("./pages/ConciergeOrder"));
 
 
 const ListPage = lazy(() => import("./pages/List"));
@@ -573,9 +571,10 @@ const AnimatedRoutes = () => {
           {/* Supply flow: /list is quick start, then /create-listing/:id for publish wizard */}
           <Route path="/list" element={<PageTransition><ListingStart /></PageTransition>} />
           <Route path="/list/start" element={<PageTransition><ListStart /></PageTransition>} />
-          <Route path="/list/concierge" element={<PageTransition><ConciergeIntro /></PageTransition>} />
+          {/* Listing Concierge retired (owner request 2026-10-13): old links go to the free self-serve flow. */}
+          <Route path="/list/concierge" element={<Navigate to="/list" replace />} />
           <Route path="/list/finish/:listingId" element={<PageTransition><ListingFinish /></PageTransition>} />
-          <Route path="/list/concierge/:orderId" element={<PageTransition><ConciergeOrderPage /></PageTransition>} />
+          <Route path="/list/concierge/:orderId" element={<Navigate to="/list" replace />} />
 
 
           <Route path="/list/ai" element={<PageTransition><AIListingCreator /></PageTransition>} />

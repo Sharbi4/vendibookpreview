@@ -19,7 +19,6 @@ import {
   ArrowRight,
   Check,
   ClipboardCheck,
-  ConciergeBell,
   Crown,
   Flame,
   Lock,
@@ -272,18 +271,12 @@ interface AddOn {
 }
 
 const OneTimeUpgrades = () => {
-  const { bySlug, activePromotions = [] } = useEntitlements();
+  const { activePromotions = [] } = useEntitlements();
   const { tier } = useHostEntitlements();
   const { data: boostCredit } = useProBoostCredit();
   const isPro = tier === 'pro' || tier === 'premium';
 
   const boost = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.featuredBoost);
-  const concierge = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.conciergeListing);
-
-  const owns = (slug: string) => {
-    const e = bySlug[slug];
-    return !!e && ['paid', 'fulfilled', 'active'].includes(e.status);
-  };
 
   const boostState = (() => {
     if (activePromotions.length > 0) {
@@ -304,16 +297,6 @@ const OneTimeUpgrades = () => {
       state: boostState,
       ctaLabel: 'Boost a listing',
       href: '/host/listings',
-    },
-    {
-      key: 'concierge',
-      icon: ConciergeBell,
-      name: 'Concierge Listing',
-      benefit: 'Our team writes, structures and polishes your listing for you.',
-      price: concierge.detailLabel,
-      state: owns(ACTIVE_PRODUCT_SLUGS.conciergeListing) ? 'Purchased' : null,
-      ctaLabel: 'Start concierge',
-      href: '/list/concierge',
     },
   ];
 

@@ -37,7 +37,7 @@ export function GetHelpWithOrder({
   const [openReport, setOpenReport] = useState(false);
   const [openReportBuyer, setOpenReportBuyer] = useState(false);
 
-  const openConcierge = () => {
+  const openSupportChat = () => {
     const prefill = orderLabel
       ? `I need help with order ${orderLabel} (id ${transactionId.slice(0, 8)}). `
       : `I need help with order ${transactionId.slice(0, 8)}. `;
@@ -74,7 +74,7 @@ export function GetHelpWithOrder({
         {
           key: 'contact', icon: MessageCircle, label: 'Contact us',
           hint: 'Chat with Vendi — prefilled with this order.',
-          onClick: openConcierge,
+          onClick: openSupportChat,
           show: true,
         },
       ]
@@ -94,7 +94,7 @@ export function GetHelpWithOrder({
         {
           key: 'contact', icon: MessageCircle, label: 'Contact us',
           hint: 'Chat with Vendi — prefilled with this order.',
-          onClick: openConcierge,
+          onClick: openSupportChat,
           show: true,
         },
       ];
