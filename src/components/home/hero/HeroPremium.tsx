@@ -1,25 +1,21 @@
 import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
-import { useQuery } from '@tanstack/react-query';
 import { ArrowRight, Check, Search as SearchIcon, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import HeroListingRotator from './HeroListingRotator';
 import GoogleSignInButton from '@/components/auth/GoogleSignInButton';
 import { trackLeadEvent } from '@/lib/leadTracking';
-import { supabase } from '@/integrations/supabase/client';
-import { excludeTestListings } from '@/lib/excludeTestListings';
 
 /**
- * Buyer-first marketplace hero — warm ivory editorial styling: live
- * inventory chip, buy-focused headline, Browse + Check financing CTAs and a
+ * Buyer-first marketplace hero — warm ivory editorial styling: buy-focused
+ * headline, Browse + Check financing CTAs and a
  * one-line Vendibook Guarantee trust strip.
  *
  * Copy guardrails (do not regress): never describe Vendibook as holding,
  * escrowing or safekeeping buyer funds. The Guarantee is payment protection —
  * the seller payout is released only after the buyer confirms the handoff,
  * both parties sign the purchase agreement and the walkthrough video is saved
- * (public.commerce_check_release_ready / commerce_record_release). Live counts
- * are real counts of discoverable for-sale listings; nothing is shown on error.
+ * (public.commerce_check_release_ready / commerce_record_release).
  */
 interface HeroPremiumProps {
   /** Show the compact Google sign-in beside the CTAs. */
@@ -37,63 +33,6 @@ const TRUST_STRIP = [
   'Signed purchase agreement',
   'Walkthrough video before payout',
 ];
-
-const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
-
-const countSaleListings = async (since?: string): Promise<number> => {
-  let query = supabase
-    .from('listings')
-    .select('id', { count: 'exact', head: true })
-    .eq('status', 'published')
-    .not('published_at', 'is', null)
-    .is('deleted_at', null)
-    .eq('moderation_status', 'clear')
-    .eq('mode', 'sale');
-  if (since) query = query.gte('published_at', since);
-  // excludeTestListings also drops admin-unlisted listings.
-  const { count, error } = await excludeTestListings(query);
-  if (error) throw error;
-  return count ?? 0;
-};
-
-const formatCount = (n: number) => new Intl.NumberFormat('en-US').format(n);
-
-function LiveInventoryChip() {
-  const { data } = useQuery({
-    queryKey: ['home-v2-sale-activity'],
-    staleTime: 5 * 60 * 1000,
-    retry: 1,
-    queryFn: async () => {
-      const since = new Date(Date.now() - WEEK_MS).toISOString();
-      const [forSale, newThisWeek] = await Promise.all([countSaleListings(), countSaleListings(since)]);
-      return { forSale, newThisWeek };
-    },
-  });
-  const live = !!data && data.forSale > 0;
-
-  return (
-    <p className="mb-5 inline-flex max-w-full items-center gap-2 rounded-full border border-border bg-card px-3.5 py-1.5 text-[12.5px] font-semibold text-foreground shadow-sm">
-      <span
-        className={`h-1.5 w-1.5 flex-none rounded-full ${live ? 'bg-emerald-600 ring-[3px] ring-emerald-600/20' : 'bg-primary'}`}
-        aria-hidden="true"
-      />
-      {live ? (
-        <span>
-          <strong className="font-bold">{formatCount(data.forSale)}</strong>{' '}
-          {data.forSale === 1 ? 'listing' : 'listings'} for sale now
-          {data.newThisWeek > 0 ? (
-            <>
-              <span className="mx-1.5 text-muted-foreground" aria-hidden="true">·</span>
-              <strong className="font-bold">{formatCount(data.newThisWeek)}</strong> new this week
-            </>
-          ) : null}
-        </span>
-      ) : (
-        <span className="uppercase tracking-[0.16em] text-[11px]">The mobile food marketplace</span>
-      )}
-    </p>
-  );
-}
 
 const HeroPremium = ({ showGoogleSignIn = true, showRotator = true, guaranteeHref = '/how-purchasing-works' }: HeroPremiumProps = {}) => {
   const reduced = useReducedMotion();
@@ -141,10 +80,6 @@ const HeroPremium = ({ showGoogleSignIn = true, showRotator = true, guaranteeHre
 
       <div className="container relative z-10 mx-auto max-w-3xl px-4 pb-10 pt-9 sm:px-5 sm:pb-14 sm:pt-14 md:pb-16">
         <div className="text-center">
-          <motion.div {...rise(0)}>
-            <LiveInventoryChip />
-          </motion.div>
-
           <motion.h1
             id="home-hero-heading"
             {...rise(0.05)}
