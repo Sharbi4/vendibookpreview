@@ -13,7 +13,8 @@ export default function BuyerMatchPreview() {
     <div className="absolute inset-x-4 top-24 z-10 mx-auto max-w-md rounded-lg border border-border bg-card p-6 text-center shadow-sm sm:top-28">
       <LockKeyhole className="mx-auto h-6 w-6 text-primary"/><h2 className="mt-4 text-2xl font-semibold">Unlock BuyerMatch AI</h2>
       <p className="mt-3 text-sm leading-6 text-muted-foreground">See how Vendibook helps discover potential buyers, tracks approved outreach, and measures interest in your equipment.</p>
-      <Button asChild className="mt-5 w-full"><Link to="/dashboard/buyermatch/membership">Unlock now<ArrowUpRight className="ml-2 h-4 w-4"/></Link></Button>
+      <Button asChild className="mt-5 w-full shadow-[0_0_24px_hsl(var(--primary)/0.45)]"><Link to="/dashboard/buyermatch/membership">Unlock BuyerMatch AI — $79/month<ArrowUpRight className="ml-2 h-4 w-4"/></Link></Button>
+      <p className="mt-2 text-xs text-muted-foreground">Included with Vendibook Pro.</p>
       <Button asChild variant="ghost" className="mt-2 w-full"><Link to="/dashboard/buyermatch/membership#benefits">Explore membership benefits</Link></Button>
       <p className="mt-3 text-xs text-muted-foreground">Interactive preview only — no payment required here.</p>
     </div>
