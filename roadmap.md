@@ -1,7 +1,8 @@
 # Roadmap
 
-- [open] BuyerMatch seller intelligence: repair reads, locked/live dashboards, membership center, approved activation and attributable events.
-- [open] Restrict Build Studio asset reads while preserving approved catalog visibility and partner access.
+- [done] BuyerMatch seller intelligence: repaired missing services, locked/live dashboards, membership center, approved activation and attributable events.
+- [open] BuyerMatch automated Muse transport and paid-member activation/Astra verification — requires approved Muse workflow and current member-owned campaign; frontend unpublished.
+- [done] Make all Build Studio uploads private to manufacturer teams/admins as requested; no further Build Studio redesign work.
 
 - [open] Premium homepage refresh using the attached tester feedback; preserve partner logos and existing search/voice behavior. Awaiting design selection.
 

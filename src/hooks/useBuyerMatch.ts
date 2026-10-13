@@ -1,4 +1,5 @@
-import { useQuery } from '@tanstack/react-query';
+import { useEffect } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 const db = supabase as any;
@@ -9,18 +10,28 @@ export async function buyerMatchAction(action: string, payload: Record<string, u
 }
 export function useBuyerMatch() {
   const { user } = useAuth();
+  const client = useQueryClient();
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase.channel(`buyermatch-${user.id}`)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'buyermatch_campaigns', filter: `seller_id=eq.${user.id}` }, () => client.invalidateQueries({ queryKey: ['buyermatch', user.id] }))
+      .subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, [user?.id, client]);
   return useQuery({
     queryKey: ['buyermatch', user?.id], enabled: !!user, refetchInterval: 60000,
     queryFn: async () => {
+      if (!user) throw new Error('Sign in required');
       const config = await buyerMatchAction('config');
-      const [campaigns, reports, listings, imports] = await Promise.all([
+      const [campaigns, reports, listings, events, links] = await Promise.all([
         db.from('buyermatch_campaigns').select('*').order('created_at', { ascending: false }),
         db.from('buyermatch_reports').select('*').order('published_at', { ascending: false }),
-        db.from('listings').select('id,title,cover_image_url').eq('host_id', user!.id).eq('mode','sale').eq('status','published').is('deleted_at',null).or('unlisted.eq.false,unlisted.is.null'),
-        config.is_admin ? db.from('buyermatch_imports').select('*').eq('status','pending_review').order('submitted_at') : Promise.resolve({ data: [], error: null }),
+        db.from('listings').select('id,title,cover_image_url,price_sale,city,state,description,image_urls,included_items').eq('host_id', user.id).eq('mode','sale').eq('status','published').is('deleted_at',null).or('unlisted.eq.false,unlisted.is.null'),
+        db.from('buyermatch_events').select('id,event_key,campaign_id,listing_id,event_type,occurred_at,source,verification_status,outcome,next_step,feedback').order('occurred_at', { ascending: false }),
+        db.from('buyermatch_links').select('*').order('created_at', { ascending: false }),
       ]);
-      for (const result of [campaigns, reports, listings, imports]) if (result.error) throw new Error(result.error.message);
-      return { config, campaigns: campaigns.data ?? [], reports: reports.data ?? [], listings: listings.data ?? [], imports: imports.data ?? [] };
+      for (const result of [campaigns, reports, listings, events, links]) if (result.error) throw new Error(result.error.message);
+      return { config, campaigns: campaigns.data ?? [], reports: reports.data ?? [], listings: listings.data ?? [], events: events.data ?? [], links: links.data ?? [] };
     },
   });
 }

@@ -1,4 +1,6 @@
 import WorkspaceBuyerMatch from './pages/workspace/WorkspaceBuyerMatch';
+import WorkspaceBuyerMatchMembership from './pages/workspace/WorkspaceBuyerMatchMembership';
+import BuyerMatchAttribution from './components/analytics/BuyerMatchAttribution';
 import WorkspaceInvoices from './pages/workspace/WorkspaceInvoices';
 import InvoiceDetail from './pages/InvoiceDetail';
 import { NativePushLifecycle } from '@/hooks/useNativePushNotifications';
@@ -355,6 +357,7 @@ const AnimatedRoutes = () => {
           <Route path="/dashboard/notifications/settings" element={<PageTransition><NotificationPreferences /></PageTransition>} />
           <Route path="/dashboard/saved" element={<PageTransition><WorkspaceSaved /></PageTransition>} />
           <Route path="/dashboard/buyermatch" element={<PageTransition><WorkspaceBuyerMatch /></PageTransition>} />
+          <Route path="/dashboard/buyermatch/membership" element={<PageTransition><WorkspaceBuyerMatchMembership /></PageTransition>} />
           <Route path="/dashboard/invoices" element={<PageTransition><WorkspaceInvoices /></PageTransition>} />
           <Route path="/invoices/:invoiceId" element={<PageTransition><InvoiceDetail /></PageTransition>} />
           <Route path="/purchase-request/:listingId" element={<PageTransition><SaleCheckout requestOnly /></PageTransition>} />
@@ -784,6 +787,7 @@ const AppContent = () => {
     <>
       <NativePushLifecycle />
       <ScrollToTop />
+      <BuyerMatchAttribution />
       <OfflineBanner />
       <Toaster />
       <Sonner />

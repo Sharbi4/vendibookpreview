@@ -68,6 +68,7 @@ const CookieConsent = () => {
   const savePreferences = (prefs: CookiePreferences) => {
     localStorage.setItem('cookie-consent', JSON.stringify(prefs));
     localStorage.setItem('cookie-consent-date', new Date().toISOString());
+    window.dispatchEvent(new Event('cookieConsentUpdated'));
     setPreferences(prefs);
     setShowBanner(false);
     releasePopupSlot(POPUP_ID);
