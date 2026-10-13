@@ -19,7 +19,6 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import vendibookFavicon from '@/assets/vendibook-favicon.png';
 import vendibookWordmark from '@/assets/vendibook-wordmark-light.png';
 import NotificationCenter from '@/components/notifications/NotificationCenter';
-import { ConciergeInbox } from '@/components/concierge/ConciergeInbox';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import MobileMenu from './MobileMenu';
@@ -427,10 +426,10 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
 
         {/* Centered Search - Desktop */}
         {!hideSearch && (
-          <div className="hidden md:flex flex-1 justify-center max-w-2xl mx-6">
+          <div className="hidden md:flex flex-1 justify-center max-w-xl mx-4 xl:mx-8">
             <button
               onClick={() => navigate('/search')}
-              className="group flex h-[52px] w-full items-center gap-3.5 rounded-full px-6 text-[15px] font-medium text-white/70 transition-all duration-300 hover:-translate-y-px"
+              className="group flex h-[48px] w-full min-w-0 items-center gap-3 rounded-full px-5 text-[15px] font-medium text-white/70 transition-all duration-300 hover:-translate-y-px"
               style={{
                 background: 'rgba(255,255,255,0.045)',
                 border: '1px solid rgba(255,255,255,0.10)',
@@ -439,26 +438,30 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
               }}
             >
               <Search className="h-[18px] w-[18px] text-primary transition-transform duration-200 group-hover:scale-105" />
-              <span className="text-white/80 transition-colors group-hover:text-white/85">Search food trucks, trailers, or a city</span>
-              <span className="ml-auto rounded-full border border-white/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/75 transition-colors group-hover:text-white/60">Search</span>
+              <span className="min-w-0 truncate whitespace-nowrap text-white/80 transition-colors group-hover:text-white/85">Search trucks, trailers or a city</span>
+              <span className="ml-auto hidden shrink-0 rounded-full border border-white/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/75 transition-colors group-hover:text-white/60 2xl:inline">Search</span>
             </button>
           </div>
         )}
 
-        {/* Desktop Navigation */}
-        <nav className="hidden lg:flex items-center gap-3 shrink-0">
-          {!user && (
-            <Link 
-              to="/become-a-host" 
-              className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors"
+        {/* Desktop navigation: text links, then a divider, then account actions */}
+        <nav className="hidden lg:flex items-center gap-1 xl:gap-2 shrink-0" aria-label="Main">
+          {[
+            { to: '/how-it-works', label: 'How it works' },
+            { to: '/financing', label: 'Financing', wide: true },
+            ...(!user ? [{ to: '/become-a-host', label: 'List your equipment' }] : []),
+          ].map((item) => (
+            <Link
+              key={item.to}
+              to={item.to}
+              className={`${item.wide ? 'hidden xl:inline-flex' : 'inline-flex'} items-center rounded-full px-3 py-2 text-sm font-medium text-white/75 transition-colors hover:bg-white/[0.06] hover:text-white`}
             >
-              List your equipment
+              {item.label}
             </Link>
-          )}
+          ))}
         </nav>
 
-        {/* Desktop Actions */}
-        <div className="hidden lg:flex items-center gap-2 ml-4 shrink-0">
+        <div className="hidden lg:flex items-center gap-2.5 ml-3 pl-4 border-l border-white/10 shrink-0">
           {user && (
             <Button 
               variant="dark-shine"
@@ -470,7 +473,6 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
           )}
           {user ? (
             <>
-              <ConciergeInbox userId={user.id} />
               <NotificationCenter />
               <AppDropdownMenu variant="dark" />
             </>
@@ -486,14 +488,12 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
               <AppDropdownMenu variant="dark" />
             </>
           )}
-          <FacebookLink size={32} className="ml-1" />
-          {/* Language Switcher - Far Right */}
+          <FacebookLink size={32} />
           <LanguageSwitcher />
         </div>
 
         {/* Mobile & Tablet Actions - hide when search is open */}
         <div className={`flex lg:hidden items-center gap-1 shrink-0 ${isMobileSearchOpen ? 'hidden' : 'flex'}`}> 
-          {user && <ConciergeInbox userId={user.id} />}
           {user && <NotificationCenter />}
           <FacebookLink size={30} className="mr-1" />
           <AppDropdownMenu variant="dark" />
