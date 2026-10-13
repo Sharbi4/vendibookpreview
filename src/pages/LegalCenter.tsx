@@ -28,8 +28,11 @@ const GROUP_ICON: Record<LegalDocumentGroup, React.ComponentType<{ className?: s
 const FURTHER_POLICIES = [
   { href: '/california-privacy', title: 'California Privacy Notice', summary: 'Rights under CCPA/CPRA and related state laws.' },
   { href: '/legal/marketplace-rules', title: 'Marketplace Rules', summary: 'What you can and can’t list, post, or do on Vendibook.' },
-  { href: '/legal/seller-terms', title: 'Seller & Host Terms', summary: 'Listing accuracy, payouts, cancellations, and conduct.' },
-  { href: '/legal/renter-terms', title: 'Buyer & Renter Terms', summary: 'Inspection, pickup, damage, and marketplace transaction risks.' },
+  { href: '/terms?tab=seller', title: 'Seller Terms', summary: 'Listing standards, the 14-day decision window, fees, payouts and handoff.' },
+  { href: '/terms?tab=buyer', title: 'Buyer Terms', summary: 'Requests and offers, invoices, sales tax, pickup and title.' },
+  { href: '/terms?tab=rental', title: 'Rental Terms', summary: 'Square card payments, deposits, cancellations, damage and returns.' },
+  { href: '/terms?tab=guarantee', title: 'Vendibook Guarantee', summary: 'Payment protection: when the seller is paid and how to report a problem.' },
+  { href: '/terms?tab=abandonment', title: 'Abandonment Policy', summary: 'Pickup windows, storage fees and abandoned equipment.' },
   { href: '/legal/pay-in-person-terms', title: 'Pay-in-Person Acknowledgment', summary: 'What Vendibook does — and doesn’t — cover when you pay in cash.' },
   { href: '/legal/subscription-terms', title: 'Subscription & Paid Add-On Terms', summary: 'Recurring billing, renewal, cancellation, and refunds.' },
   { href: '/legal/refund-cancellation-policy', title: 'Refund & Cancellation Policy', summary: 'When platform fees and payments are refundable.' },

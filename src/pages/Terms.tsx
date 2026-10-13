@@ -1,304 +1,110 @@
+import { Link, useSearchParams } from 'react-router-dom';
+import { Printer } from 'lucide-react';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
-import { Link } from 'react-router-dom';
+import { Button } from '@/components/ui/button';
 import { LEGAL_DOCUMENTS } from '@/lib/legal/versions';
+import {
+  MARKETPLACE_TERMS_EFFECTIVE,
+  MARKETPLACE_TERMS_TABS,
+  MARKETPLACE_TERMS_VERSION,
+  type TermsBlock,
+  type TermsTab,
+} from '@/lib/legal/marketplaceTerms';
 
-const Terms = () => {
+function Block({ block }: { block: TermsBlock }) {
+  if (typeof block === 'string') return <p>{block}</p>;
+  if ('list' in block) return <ul className="list-disc space-y-1.5 pl-5">{block.list.map((item) => <li key={item}>{item}</li>)}</ul>;
+  return <p className="text-[13px] font-medium uppercase leading-6 tracking-[0.01em]">{block.caps}</p>;
+}
+
+function TabBody({ tab }: { tab: TermsTab }) {
   return (
-    <div className="min-h-screen flex flex-col">
+    <article className="space-y-8">
+      <header className="space-y-3">
+        <h2 className="text-2xl font-semibold tracking-tight">{tab.title}</h2>
+        {tab.intro.map((p) => <p key={p} className="leading-7 text-muted-foreground">{p}</p>)}
+      </header>
+      {tab.keyPoints && (
+        <section className="rounded-2xl border border-orange-200 bg-orange-50/60 p-5" aria-label="Key points">
+          <h3 className="text-sm font-semibold uppercase tracking-wider text-orange-800">{tab.sections.length ? 'Key points' : 'Summary'}</h3>
+          <ul className="mt-3 list-disc space-y-2 pl-5 text-sm leading-6">{tab.keyPoints.map((p) => <li key={p}>{p}</li>)}</ul>
+          {tab.sections.length > 0 && <p className="mt-3 text-xs text-muted-foreground">These key points summarize the full terms below, which control.</p>}
+        </section>
+      )}
+      {tab.sections.map((section) => (
+        <section key={section.id} id={section.id} className="scroll-mt-28 space-y-3 text-[15px] leading-7">
+          <h3 className="text-lg font-semibold">{section.title}</h3>
+          {section.blocks.map((block, i) => <Block key={i} block={block} />)}
+        </section>
+      ))}
+      {tab.id === 'site-usage' && (
+        <section className="space-y-3 text-[15px] leading-7">
+          <h3 className="text-lg font-semibold">Other documents that form part of these terms</h3>
+          <ul className="list-disc space-y-1.5 pl-5">
+            {LEGAL_DOCUMENTS.filter((d) => d.slug !== 'terms-of-service').map((d) => (
+              <li key={d.slug}><Link className="underline" to={d.route}>{d.title}</Link>: {d.summary} (v{d.version})</li>
+            ))}
+            <li><Link className="underline" to="/legal/sms">SMS Terms</Link>: Vendibook text messages are optional. Message frequency varies, message and data rates may apply, reply STOP to opt out or HELP for help.</li>
+          </ul>
+        </section>
+      )}
+      {tab.id === 'privacy' && (
+        <p className="flex flex-wrap gap-3">
+          <Button asChild><Link to="/privacy">Read the full Privacy Policy</Link></Button>
+          <Button asChild variant="outline"><Link to="/california-privacy">California Privacy Notice</Link></Button>
+        </p>
+      )}
+    </article>
+  );
+}
+
+/** Tabbed Vendibook terms (owner request 2026-10-13). ?tab=<id> selects a tab. */
+const Terms = () => {
+  const [params, setParams] = useSearchParams();
+  const active = MARKETPLACE_TERMS_TABS.find((t) => t.id === params.get('tab')) ?? MARKETPLACE_TERMS_TABS[0];
+  return (
+    <div className="flex min-h-screen flex-col bg-background">
       <SEO
-        title="Terms of Service"
-        description="Read the Vendibook Terms of Service governing rentals, sales, payments, and host obligations on our food truck marketplace."
-        canonical="/terms"
+        title={`${active.title} | Vendibook`}
+        description="Vendibook's site usage, buyer, seller, rental, payment protection, abandonment and privacy terms in one place."
+        canonical={active.id === 'site-usage' ? '/terms' : `/terms?tab=${active.id}`}
       />
       <Header />
-      
-      <main className="flex-1 py-12">
-        <div className="container max-w-4xl">
-          <h1 className="text-4xl font-bold mb-8">Terms of Service</h1>
-          <p className="text-muted-foreground mb-8">Last updated: {new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })}</p>
-
-          <div className="prose prose-gray max-w-none space-y-8">
-            <section>
-              <h2 className="text-2xl font-semibold mb-4">1. Acceptance of Terms</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                Vendibook is operated by Vendibook LC ("Vendibook LC", "we", "us"). By accessing or using Vendibook ("the Platform"), you agree to be bound by these Terms of Service ("Terms"). 
-                If you do not agree to these Terms, you may not access or use the Platform. These Terms apply to all users, 
-                including hosts who list assets and shoppers who book them.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold mb-4">2. Description of Service</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                Vendibook is an online marketplace that connects hosts who have mobile food business assets (food trucks, 
-                food trailers, shared kitchens, Vendor Spaces) with shoppers seeking to rent or purchase such assets. 
-                Vendibook facilitates these transactions but is not a party to any rental or sale agreement between hosts and shoppers.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold mb-4">3. User Accounts</h2>
-              <div className="space-y-4 text-muted-foreground leading-relaxed">
-                <p>
-                  <strong className="text-foreground">3.1 Registration:</strong> You must create an account to use certain features of the Platform. 
-                  You agree to provide accurate, current, and complete information during registration.
-                </p>
-                <p>
-                  <strong className="text-foreground">3.2 Account Security:</strong> You are responsible for maintaining the confidentiality of your 
-                  account credentials and for all activities that occur under your account.
-                </p>
-                <p>
-                  <strong className="text-foreground">3.3 Age Requirement:</strong> You must be at least 18 years old to create an account and use the Platform.
-                </p>
-                <p>
-                  <strong className="text-foreground">3.4 Account Termination:</strong> We reserve the right to suspend or terminate your account at any time 
-                  for violations of these Terms or for any other reason at our sole discretion.
-                </p>
-              </div>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold mb-4">4. Host Responsibilities</h2>
-              <div className="space-y-4 text-muted-foreground leading-relaxed">
-                <p>
-                  <strong className="text-foreground">4.1 Listing Accuracy:</strong> Hosts must provide accurate and complete information about their assets, 
-                  including descriptions, photos, availability, pricing, and any applicable terms or restrictions.
-                </p>
-                <p>
-                  <strong className="text-foreground">4.2 Legal Compliance:</strong> Hosts are responsible for ensuring their listings comply with all applicable 
-                  laws, regulations, permits, and licenses required for food service operations.
-                </p>
-                <p>
-                  <strong className="text-foreground">4.3 Asset Condition:</strong> Hosts must ensure their assets are safe, clean, and in good working condition 
-                  as described in their listings.
-                </p>
-                <p>
-                  <strong className="text-foreground">4.4 Communication:</strong> Hosts must respond to booking requests and inquiries in a timely manner.
-                </p>
-              </div>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold mb-4">5. Shopper Responsibilities</h2>
-              <div className="space-y-4 text-muted-foreground leading-relaxed">
-                <p>
-                  <strong className="text-foreground">5.1 Proper Use:</strong> Shoppers must use rented assets responsibly and in accordance with the 
-                  host's instructions and any applicable laws.
-                </p>
-                <p>
-                  <strong className="text-foreground">5.2 Return Condition:</strong> Shoppers must return rented assets in the same condition as received, 
-                  normal wear and tear excepted.
-                </p>
-                <p>
-                  <strong className="text-foreground">5.3 Damage Responsibility:</strong> Shoppers are responsible for any damage to assets that occurs 
-                  during the rental period beyond normal wear and tear.
-                </p>
-                <p>
-                  <strong className="text-foreground">5.4 Compliance:</strong> Shoppers must comply with all applicable food safety regulations, permits, 
-                  and licenses required for their intended use.
-                </p>
-              </div>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold mb-4">6. Payments and Fees</h2>
-              <div className="space-y-4 text-muted-foreground leading-relaxed">
-                <p>
-                  <strong className="text-foreground">6.1 Service Fees:</strong> Vendibook charges service fees for facilitating transactions. 
-                  These fees will be clearly disclosed before any booking is confirmed.
-                </p>
-                <p>
-                  <strong className="text-foreground">6.2 Payment Processing:</strong> All payments are processed through our third-party payment processor. 
-                  By using the Platform, you agree to their terms of service.
-                </p>
-                <p>
-                  <strong className="text-foreground">6.3 Cancellations and Refunds:</strong> Cancellation and refund policies are set by individual hosts 
-                  and will be displayed on each listing. Vendibook's service fees may be non-refundable.
-                </p>
-                <p>
-                  <strong className="text-foreground">6.4 Taxes:</strong> Users are responsible for determining and paying any applicable taxes related 
-                  to their transactions on the Platform.
-                </p>
-              </div>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold mb-4">7. Prohibited Activities</h2>
-              <p className="text-muted-foreground leading-relaxed mb-4">You agree not to:</p>
-              <ul className="list-disc pl-6 space-y-2 text-muted-foreground">
-                <li>Violate any applicable laws or regulations</li>
-                <li>Post false, misleading, or fraudulent content</li>
-                <li>Infringe on the intellectual property rights of others</li>
-                <li>Harass, abuse, or harm other users</li>
-                <li>Circumvent the Platform's payment system</li>
-                <li>Use the Platform for any illegal purpose</li>
-                <li>Attempt to gain unauthorized access to the Platform or other users' accounts</li>
-                <li>Interfere with the proper functioning of the Platform</li>
-                <li>Collect or store personal data about other users without their consent</li>
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold mb-4">8. Intellectual Property</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                The Platform and its original content, features, and functionality are owned by Vendibook and are protected 
-                by international copyright, trademark, and other intellectual property laws. Users retain ownership of content 
-                they submit but grant Vendibook a license to use, display, and distribute such content on the Platform.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold mb-4">9. Disclaimer of Warranties</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                THE PLATFORM IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY KIND, EXPRESS OR IMPLIED. 
-                VENDIBOOK LC DOES NOT GUARANTEE THE ACCURACY, COMPLETENESS, OR RELIABILITY OF ANY CONTENT ON THE PLATFORM. 
-                WE DO NOT WARRANT THAT THE PLATFORM WILL BE UNINTERRUPTED, SECURE, OR ERROR-FREE.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold mb-4">10. Limitation of Liability</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                TO THE MAXIMUM EXTENT PERMITTED BY LAW, VENDIBOOK LC SHALL NOT BE LIABLE FOR ANY INDIRECT, INCIDENTAL, SPECIAL, 
-                CONSEQUENTIAL, OR PUNITIVE DAMAGES ARISING FROM YOUR USE OF THE PLATFORM OR ANY TRANSACTIONS FACILITATED THROUGH IT. 
-                VENDIBOOK LC IS NOT RESPONSIBLE FOR THE ACTIONS, CONTENT, OR CONDITION OF ASSETS PROVIDED BY HOSTS.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold mb-4">11. Indemnification</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                You agree to indemnify and hold harmless Vendibook LC, its officers, directors, employees, and agents from any claims, 
-                damages, losses, or expenses arising from your use of the Platform, your violation of these Terms, or your violation 
-                of any rights of a third party.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold mb-4">12. Dispute Resolution</h2>
-              <div className="space-y-4 text-muted-foreground leading-relaxed">
-                <p>
-                  <strong className="text-foreground">12.1 Between Users:</strong> Disputes between hosts and shoppers should first be resolved 
-                  directly between the parties. Vendibook may offer mediation services but is not obligated to do so.
-                </p>
-                <p>
-                  <strong className="text-foreground">12.2 With Vendibook:</strong> Any disputes with Vendibook shall be resolved through binding 
-                  arbitration in accordance with applicable arbitration rules, except where prohibited by law.
-                </p>
-              </div>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold mb-4">13. Changes to Terms</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                We reserve the right to modify these Terms at any time. We will notify users of material changes by posting the 
-                updated Terms on the Platform. Your continued use of the Platform after such changes constitutes acceptance of 
-                the modified Terms.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold mb-4">14. Governing Law</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                These Terms shall be governed by and construed in accordance with the laws of the jurisdiction in which 
-                Vendibook operates, without regard to its conflict of law provisions.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold mb-4">14A. No agency; no endorsement; listings are as is</h2>
-              <div className="space-y-4 text-muted-foreground leading-relaxed">
-                <p>
-                  Vendibook LC is a marketplace. We are not the agent, broker, dealer, partner, or representative of any
-                  buyer, renter, seller, or host, and we are not a party to any transaction between them. Showing a listing,
-                  a badge, or a search ranking is not an endorsement, a recommendation, or a certification.
-                </p>
-                <p>
-                  Listings, including used trucks, trailers, and equipment, are offered by their sellers as is, with all
-                  faults, unless the seller gives you a written warranty. Vendibook LC does not inspect, test, certify, or
-                  warrant any unit, its title, its lien status, its permitting, or its compliance with any code.
-                </p>
-              </div>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold mb-4">14B. Eligibility</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                You must be at least 18 years old and able to enter into a binding contract to use Vendibook. The Platform is
-                intended for business use. If you use it for a company, you confirm you are authorised to bind that company.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold mb-4">14C. Your content</h2>
-              <div className="space-y-4 text-muted-foreground leading-relaxed">
-                <p>
-                  You keep ownership of the photos, video, text, and other content you upload. You grant Vendibook LC a
-                  worldwide, non-exclusive, royalty-free licence to host, store, reproduce, resize, and display that content
-                  to operate and promote the marketplace, and to use it as transaction evidence in a dispute. The licence ends
-                  for new uses when you delete the content, except where we must keep it as a transaction record.
-                </p>
-                <p>
-                  You confirm you have the right to upload what you upload. If you believe content on Vendibook infringes your
-                  rights, email legal@vendibook.com with the listing link and details, and we will review and remove it where
-                  appropriate.
-                </p>
-              </div>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold mb-4">14D. Suspension and termination</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                We may suspend or close an account, remove a listing, or cancel a transaction where we reasonably believe there
-                has been fraud, misrepresentation, payment abuse, a safety risk, or a breach of these Terms or any document
-                below. You may close your account at any time. Closing an account does not release you from obligations to a
-                party who has already paid you or whom you have already paid.
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold mb-4">14E. Documents that form part of these Terms</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                The following documents are part of these Terms. Each is versioned, and where a document is accepted at a
-                specific step, a new version must be accepted again before you can continue past that step.
-              </p>
-              <ul className="mt-3 list-disc pl-5 space-y-1 text-muted-foreground">
-                {LEGAL_DOCUMENTS.filter((d) => d.slug !== 'terms-of-service').map((d) => (
-                  <li key={d.slug}>
-                    <Link to={d.route} className="underline">{d.title}</Link> — {d.summary} (v{d.version})
-                  </li>
-                ))}
-              </ul>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold mb-4">15. Contact Us</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                If you have any questions about these Terms of Service, please contact us at:
-              </p>
-              <p className="text-muted-foreground mt-2">
-                Email: legal@vendibook.com
-              </p>
-            </section>
-
-            <section>
-              <h2 className="text-2xl font-semibold mb-4">Mobile Messaging</h2>
-              <p className="text-muted-foreground leading-relaxed">
-                Vendibook offers an optional transactional SMS program. Enrollment is
-                voluntary and consent is <strong>not</strong> a condition of purchase or
-                account creation. Message frequency varies and message and data rates may
-                apply. You can reply <strong>STOP</strong> to any Vendibook SMS to opt out
-                or <strong>HELP</strong> for assistance. The full program terms are
-                governed by the{' '}
-                <a className="underline" href="/legal/sms">Vendibook SMS Terms and Consent Policy</a>.
-              </p>
-            </section>
+      <main className="container max-w-5xl flex-1 py-10">
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground">Vendibook terms and conditions</p>
+            <h1 className="mt-1 text-3xl font-semibold tracking-tight">Terms &amp; Policies</h1>
+          </div>
+          <div className="flex items-center gap-3 text-sm text-muted-foreground print:hidden">
+            <span>Revised {MARKETPLACE_TERMS_EFFECTIVE} · v{MARKETPLACE_TERMS_VERSION}</span>
+            <Button variant="outline" size="sm" onClick={() => window.print()}><Printer className="mr-2 h-4 w-4" />Print</Button>
           </div>
         </div>
+        <div role="tablist" aria-label="Terms" className="mt-6 flex gap-1 overflow-x-auto border-b print:hidden">
+          {MARKETPLACE_TERMS_TABS.map((tab) => {
+            const selected = tab.id === active.id;
+            return (
+              <button
+                key={tab.id}
+                role="tab"
+                type="button"
+                aria-selected={selected}
+                aria-controls={`terms-panel-${tab.id}`}
+                onClick={() => { setParams(tab.id === 'site-usage' ? {} : { tab: tab.id }, { replace: true }); window.scrollTo({ top: 0 }); }}
+                className={`shrink-0 rounded-t-xl border border-b-0 px-4 py-2.5 text-sm font-semibold transition ${selected ? 'border-border bg-background text-foreground' : 'border-transparent text-muted-foreground hover:text-foreground'}`}
+              >
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+        <div id={`terms-panel-${active.id}`} role="tabpanel" className="pt-8">
+          <TabBody tab={active} />
+        </div>
       </main>
-
       <Footer />
     </div>
   );

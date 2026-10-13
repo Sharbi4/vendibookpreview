@@ -23,9 +23,9 @@
 export const LEGAL_EFFECTIVE_DATE = 'September 18, 2026';
 
 /** Individual document versions. Referenced everywhere; never inlined. */
-export const TERMS_OF_SERVICE_VERSION = '2026-09-18';
+export const TERMS_OF_SERVICE_VERSION = '2026-10-13';
 export const PRIVACY_POLICY_VERSION = '2026-09-18';
-export const PAYMENTS_TERMS_VERSION = '2026-09-18c';
+export const PAYMENTS_TERMS_VERSION = '2026-10-13';
 export const SELLER_PAYMENT_TERMS_VERSION = '2026-09-18c';
 export const ESIGN_VERSION = '2026-09-18';
 export const HANDOFF_TERMS_VERSION = '2026-09-18';
@@ -69,11 +69,11 @@ export type LegalDocument = {
 export const LEGAL_DOCUMENTS: LegalDocument[] = [
   {
     slug: 'terms-of-service',
-    title: 'Terms of Service',
+    title: 'Terms & Policies',
     route: '/terms',
     version: TERMS_OF_SERVICE_VERSION,
-    effectiveDate: LEGAL_EFFECTIVE_DATE,
-    summary: 'The agreement between you and Vendibook for using the marketplace.',
+    effectiveDate: 'October 13, 2026',
+    summary: 'Site usage, buyer, seller and rental terms, the Vendibook Guarantee and the abandonment policy, in tabs.',
     group: 'platform',
   },
   {
@@ -90,7 +90,7 @@ export const LEGAL_DOCUMENTS: LegalDocument[] = [
     title: 'Payments, Fees, Refunds & Payouts Terms',
     route: '/legal/payments-terms',
     version: PAYMENTS_TERMS_VERSION,
-    effectiveDate: LEGAL_EFFECTIVE_DATE,
+    effectiveDate: 'October 13, 2026',
     summary: 'How checkout, platform fees, payment protection, refunds, and payouts work.',
     group: 'transactions',
   },

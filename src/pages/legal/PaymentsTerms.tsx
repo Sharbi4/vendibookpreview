@@ -14,6 +14,10 @@ import LegalDocumentLayout, { Section } from '@/components/legal/LegalDocumentLa
  *    PayPal. Vendibook LC never guarantees, insures, or backstops a sale.
  *  - No surcharge language: the commission is identical regardless of the
  *    payment method the buyer selects.
+ *  - Owner decision 2026-10-13: equipment purchases paid by Vendibook invoice
+ *    follow the Buyer/Seller Terms and the Vendibook Guarantee at /terms
+ *    (payout released after handoff). Sections 3-7 describe direct PayPal
+ *    checkout only. Pending legal review of the invoice payment structure.
  */
 const PaymentsTerms: React.FC = () => (
   <LegalDocumentLayout
@@ -27,6 +31,17 @@ const PaymentsTerms: React.FC = () => (
       <p>
         These terms apply whenever you pay, receive payment, or are charged a fee on Vendibook. They
         are part of the <Link to="/terms" className="underline">Terms of Service</Link>.
+      </p>
+      <p>
+        Equipment purchases made through a Vendibook purchase request and paid through a Vendibook
+        invoice work differently from the direct PayPal checkout described in sections 3 to 7. For
+        those purchases, the <Link to="/terms?tab=buyer" className="underline">Buyer Terms</Link>,{' '}
+        <Link to="/terms?tab=seller" className="underline">Seller Terms</Link> and{' '}
+        <Link to="/terms?tab=guarantee" className="underline">Vendibook Guarantee</Link> apply and
+        control if anything here conflicts: the seller&apos;s payout is released only after the buyer
+        confirms the handoff, both parties sign the purchase agreement and the walkthrough video is
+        saved. Rental bookings are paid by card through Square as described in the{' '}
+        <Link to="/terms?tab=rental" className="underline">Rental Terms</Link>.
       </p>
     </Section>
 
