@@ -1,5 +1,52 @@
 import { invokeTransactionalEmail } from "./invokeTransactionalEmail.ts";
 
+const UUID = "[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}";
+/** CTAs stay on authenticated Vendibook purchase and admin surfaces. */
+const TRANSACTION_LINK = new RegExp(
+  `^/(?:invoices/${UUID}|dashboard/invoices(?:\\?(?:view=selling&)?request=${UUID})?|admin/invoices\\?(?:request|invoice)=${UUID})$`, "i");
+
+type CommerceEvent = { id: string; event_key: string; event_type: string; sale_id: string; recipient_id: string; link: string; title: string; message: string };
+
+export function supportAlert(event: CommerceEvent) {
+  const ref = event.event_key.split(":")[1] ?? "";
+  if (event.event_type === "invoice_requested" && /^invoice-requested:/.test(event.event_key)) {
+    return {
+      key: "manual-invoice-request:" + ref,
+      subject: "Action required: send the buyer's invoice",
+      heading: "A seller approved a purchase",
+      paragraphs: [
+        "Prepare the invoice (equipment price, delivery, tax and the 8.7% seller fee) and send it to the buyer.",
+        "Then record it in Vendibook admin so the buyer sees Pay Invoice in their dashboard.",
+        "Purchase request: " + ref,
+      ],
+      footnote: "No payment has been collected. Do not record the payment until it is verified.",
+      metadataType: "manual_invoice_requested",
+    };
+  }
+  if (event.event_type === "payout_ready" && /^release-ready:/.test(event.event_key)) {
+    return {
+      key: "manual-payout-release:" + ref,
+      subject: "Action required: release the seller payment",
+      heading: "This sale is ready for payout",
+      paragraphs: [
+        "The buyer confirmed the handoff, both parties signed the purchase agreement and the walkthrough video is saved.",
+        "Release the seller's payment manually, then record the payout reference in Vendibook admin.",
+        "Invoice: " + ref,
+      ],
+      footnote: "Releasing funds is irreversible. Check for open disputes before paying out.",
+      metadataType: "manual_payout_release_ready",
+    };
+  }
+  return null;
+}
+
+function ctaLabel(event: CommerceEvent) {
+  if (event.link.startsWith("/admin/")) return "Open admin invoices";
+  if (event.event_type === "invoice_issued") return event.title === "Pay Invoice" ? "Pay Invoice" : "View invoice";
+  if (event.link.startsWith("/invoices/")) return "View invoice";
+  return "View purchase request";
+}
+
 // Only persisted, server-created commerce events can become outbound messages.
 export async function dispatchCommerceEmails(admin: any, actorId: string | null = null) {
   const token = crypto.randomUUID();
@@ -9,30 +56,25 @@ export async function dispatchCommerceEmails(admin: any, actorId: string | null 
   for (const event of events ?? []) {
     let failure: string | null = null;
     try {
-      // One persisted buyer event owns the support alert. Keep it independent
-      // of customer email preferences and use a stable key across queue retries.
-      if (event.event_type === "purchase_requested" && /^request:[0-9a-f-]{36}:buyer$/i.test(event.event_key)) {
-        const requestId = event.event_key.split(":")[1];
+      // Owner process (2026-10-13): invoices are sent and payouts released by
+      // hand. Each admin alert also goes to support@ once, keyed by the request
+      // or invoice so retries and multiple admins never duplicate it.
+      const support = supportAlert(event);
+      if (support) {
         const { error: alertError } = await invokeTransactionalEmail({
           templateName: "generic-notice",
           recipientEmail: "support@vendibook.com",
-          idempotencyKey: "manual-invoice-request:" + requestId,
+          idempotencyKey: support.key,
           templateData: {
-            subject: "Action required: purchase request — manual invoice",
-            kicker: "Vendibook purchase order",
-            heading: "Prepare the customer's invoice",
-            paragraphs: [
-              "A purchase request has been submitted. Payment is pending; this request is not a paid receipt.",
-              "Purchase request: " + requestId,
-              "Sale / order: " + event.sale_id,
-              "Buyer account: " + event.recipient_id,
-              "Review the purchase details, seller approval, agreed terms, and applicable tax before manually sending the invoice. Do not mark the order paid until payment has been verified.",
-            ],
-            ctaLabel: "Open admin",
-            ctaUrl: "https://vendibook.com/admin",
-            footnote: "Use the purchase request and order references above to reconcile the invoice and payment.",
+            subject: support.subject,
+            kicker: "Vendibook admin action",
+            heading: support.heading,
+            paragraphs: [...support.paragraphs, "Sale / order: " + event.sale_id],
+            ctaLabel: "Open admin invoices",
+            ctaUrl: "https://vendibook.com" + (TRANSACTION_LINK.test(event.link) ? event.link : "/admin/invoices"),
+            footnote: support.footnote,
           },
-          metadata: { commerce_event_id: event.id, sale_id: event.sale_id, purchase_request_id: requestId, event_type: "manual_invoice_requested" },
+          metadata: { commerce_event_id: event.id, sale_id: event.sale_id, event_type: support.metadataType },
         });
         if (alertError) throw alertError;
       }
@@ -43,7 +85,7 @@ export async function dispatchCommerceEmails(admin: any, actorId: string | null 
         const { data: recipient, error: recipientError } = await admin.auth.admin.getUserById(event.recipient_id);
         if (recipientError || !recipient?.user?.email) throw new Error("Recipient unavailable");
         // The CTA must remain on the authenticated Vendibook purchase surfaces.
-        if (!/^\/(?:invoices\/[0-9a-f-]{36}|dashboard\/invoices(?:\?request=[0-9a-f-]{36})?)$/i.test(event.link)) {
+        if (!TRANSACTION_LINK.test(event.link)) {
           throw new Error("Invalid transaction link");
         }
         const { error: sendError } = await invokeTransactionalEmail({
@@ -55,7 +97,7 @@ export async function dispatchCommerceEmails(admin: any, actorId: string | null 
             kicker: "Equipment purchase",
             heading: event.title,
             paragraphs: [event.message],
-            ctaLabel: event.event_type === "invoice_issued" ? "Review invoice" : "View purchase request",
+            ctaLabel: ctaLabel(event),
             ctaUrl: "https://vendibook.com" + event.link,
             footnote: "Open your dashboard for the current transaction status. Only an explicitly authorized invoice payment collects funds.",
           },

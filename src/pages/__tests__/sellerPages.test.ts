@@ -46,7 +46,7 @@ describe('seller marketing pages', () => {
 
   it('the consolidated explainer states the fee, payout, and add-on facts', () => {
     const text = read('src/components/sell/SellerPaymentsExplainer.tsx');
-    expect(text).toContain('12.9% seller platform fee');
+    expect(text).toContain('8.7% seller platform fee');
     expect(text).toContain('no Vendibook seller platform fee');
     expect(text).toContain('$19.99');
     expect(text).toContain('Vendibook is not a lender');

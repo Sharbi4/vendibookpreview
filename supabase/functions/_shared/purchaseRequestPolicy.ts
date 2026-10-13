@@ -18,7 +18,7 @@ export const COMMERCE_STATUSES = {
   requested: ['Request Pending', 'Waiting for seller approval'],
   under_review: ['Under Review', 'The seller is reviewing your request'],
   revision_pending: ['Review Revised Terms', 'Buyer acceptance is required'],
-  approved: ['Payment Pending', 'Open the issued invoice'],
+  approved: ['Payment Pending', 'Seller approved; Vendibook is preparing your invoice'],
   issued: ['Payment Pending', 'Review and pay your invoice'],
   payment_processing: ['Payment Processing', 'Awaiting a confirmed payment result'],
   paid: ['Sale Pending', 'Payment captured; awaiting handoff'],

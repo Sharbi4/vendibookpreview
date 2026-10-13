@@ -135,6 +135,7 @@ const AdminMetrics = lazy(() => import("./pages/AdminMetrics"));
 const AdminListings = lazy(() => import("./pages/AdminListings"));
 const AdminRisk = lazy(() => import("./pages/AdminRisk"));
 const AdminFinance = lazy(() => import("./pages/AdminFinance"));
+const AdminInvoices = lazy(() => import("./pages/AdminInvoices"));
 const AdminPayouts = lazy(() => import("./pages/AdminPayouts"));
 const AdminFreightRequests = lazy(() => import("./pages/AdminFreightRequests"));
 const AdminUsers = lazy(() => import("./pages/AdminUsers"));
@@ -486,6 +487,7 @@ const AnimatedRoutes = () => {
           <Route path="/admin/listings" element={<PageTransition><AdminListings /></PageTransition>} />
           <Route path="/admin/risk" element={<PageTransition><AdminRisk /></PageTransition>} />
           <Route path="/admin/finance" element={<PageTransition><AdminFinance /></PageTransition>} />
+          <Route path="/admin/invoices" element={<PageTransition><AdminInvoices /></PageTransition>} />
           <Route path="/orders/:orderId" element={<PageTransition><OrderDetail /></PageTransition>} />
           <Route path="/orders/:orderId/payment" element={<PageTransition><OrderDetail /></PageTransition>} />
           <Route path="/handoff/:kind/:id" element={<PageTransition><HandoffPage /></PageTransition>} />

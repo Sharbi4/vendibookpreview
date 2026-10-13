@@ -42,6 +42,33 @@ serve(async (req) => {
       if(error)return jsonError(409,'tax_not_reviewed',error.message);
       return jsonResponse(200,{ok:true});
     }
+    // Manual invoicing (owner process 2026-10-13): admins send the invoice and
+    // release the seller payment by hand, then record each step here. The RPCs
+    // re-check the admin role, amounts and order of steps.
+    if(body.action==='admin_record_invoice') {
+      const {data,error}=await admin.rpc('commerce_record_invoice_sent',{_request:body.request_id,_actor:user.id,_equipment:body.equipment_cents,_delivery:body.delivery_cents??0,_freight:body.freight_cents??0,_tax:body.tax_cents??0,_fee:body.fee_cents,_due_days:body.due_days??7,_invoice_url:body.invoice_url??null,_invoice_reference:body.invoice_reference??null,_note:body.note??null,_tax_jurisdiction:body.tax_jurisdiction??null});
+      if(error)return jsonError(409,'invoice_not_recorded',error.message);
+      void queueCommerceEmails(admin,user.id);
+      return jsonResponse(200,{invoice_id:data});
+    }
+    if(body.action==='admin_record_payment') {
+      const {error}=await admin.rpc('commerce_record_payment',{_invoice:body.invoice_id,_actor:user.id,_reference:body.reference,_received_at:body.received_at??null});
+      if(error)return jsonError(409,'payment_not_recorded',error.message);
+      void queueCommerceEmails(admin,user.id);
+      return jsonResponse(200,{ok:true});
+    }
+    if(body.action==='admin_record_release') {
+      const {error}=await admin.rpc('commerce_record_release',{_invoice:body.invoice_id,_actor:user.id,_reference:body.reference});
+      if(error)return jsonError(409,'release_not_recorded',error.message);
+      void queueCommerceEmails(admin,user.id);
+      return jsonResponse(200,{ok:true});
+    }
+    if(body.action==='admin_cancel') {
+      const {error}=await admin.rpc('commerce_admin_cancel',{_request:body.request_id,_actor:user.id,_reason:body.reason});
+      if(error)return jsonError(409,'request_not_cancelled',error.message);
+      void queueCommerceEmails(admin,user.id);
+      return jsonResponse(200,{ok:true});
+    }
     return jsonError(400,'unknown_action','Choose a supported invoice action.');
   } catch(error){return unknownErrorResponse(error);}
 });

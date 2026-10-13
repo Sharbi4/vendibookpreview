@@ -56,8 +56,8 @@ describe('buildTerms', () => {
     });
     expect(t.pricing.totalCents).toBe(500000);
     expect(t.pricing.renterFeeCents).toBe(0);
-    // 12.9% commission on seller side (info only for buyer)
-    expect(t.pricing.commissionCents).toBe(64500);
+    // 8.7% commission on seller side (info only for buyer)
+    expect(t.pricing.commissionCents).toBe(43500);
   });
 
   it('pay-in-person sale is 100% free — zero commission, zero fee', () => {

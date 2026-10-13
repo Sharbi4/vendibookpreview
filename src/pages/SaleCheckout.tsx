@@ -1022,7 +1022,7 @@ const SaleCheckout = ({ requestOnly = true }: { requestOnly?: boolean }) => {
   const railExtras = requestOnly ? (
     <div className="rounded-2xl border bg-orange-50/50 p-5 space-y-3 text-sm">
       <strong>Request first. Pay after approval.</strong>
-      <p>Send your purchase request to the seller for approval. Seller review usually takes 24–48 hours.</p>
+      <p>Send your purchase request to the seller for approval. Sellers have up to 14 days to approve or decline.</p>
       <p>After approval, your invoice link will be available in your dashboard and sent by email. Review the itemized invoice and authorize payment of the total shown there.</p>
       <p>Submitting a request does not reserve the equipment. Applicable tax and final delivery charges are confirmed on the invoice.</p>
       <p>No payment is collected with this request.</p>
@@ -1323,7 +1323,7 @@ const SaleCheckout = ({ requestOnly = true }: { requestOnly?: boolean }) => {
           {step === 5 && requestOnly ? (
             <div className="space-y-4 rounded-3xl border bg-orange-50/40 p-6">
               <h2 className="text-xl font-semibold">Ready for seller review</h2>
-              <p className="text-sm text-muted-foreground">Send your purchase request to the seller for approval. Reviews usually take 24–48 hours. After approval, you will receive an invoice link in your dashboard and by email to review and pay the total shown on the invoice. Nothing is charged now.</p>
+              <p className="text-sm text-muted-foreground">Send your purchase request to the seller for approval. Sellers have up to 14 days to approve or decline; if they don't respond, the request is canceled automatically. After approval, you will receive an invoice link in your dashboard and by email to review and pay the total shown on the invoice. Nothing is charged now.</p>
               {intentError && <p role="alert" className="text-sm text-destructive">{intentError.detail}</p>}
               <Button size="lg" disabled={!agreementsRecorded || isPurchasing} onClick={() => setRequestConfirmOpen(true)}>Review &amp; request to buy</Button>
               <PurchaseRequestConfirmation open={requestConfirmOpen} onOpenChange={setRequestConfirmOpen} busy={isPurchasing} listingTitle={listing.title} onSubmit={ack => { requestAcknowledgement.current = ack; void runPurchase(); }} />
