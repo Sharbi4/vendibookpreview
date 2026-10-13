@@ -1,0 +1,62 @@
+/* Buyer-first homepage: inventory chips, Vendibook Guarantee, seller strip,
+   closing CTA. Uses the .v2-home tokens (--v2h-*); orange stays on actions. */
+
+/* ── Just listed + shop-by-type chips ── */
+.hb-inventory { display: grid; gap: 14px; }
+.hb-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.hb-chips a {
+  border: 1px solid hsl(var(--v2h-line)); border-radius: 999px; background: hsl(var(--v2h-surface));
+  padding: 6px 12px; color: hsl(var(--v2h-ink)); font-size: 13px; font-weight: 600;
+  transition: border-color .15s ease, background-color .15s ease;
+}
+.hb-chips a:hover { border-color: hsl(var(--v2h-ink) / .45); background: hsl(40 28% 96%); }
+
+/* ── Vendibook Guarantee ── */
+.hb-guarantee {
+  scroll-margin-top: 88px; display: grid; gap: 20px;
+  border: 1px solid hsl(var(--v2h-line)); border-radius: 18px; background: hsl(var(--v2h-surface));
+  padding: 24px 18px; box-shadow: 0 1px 2px hsl(28 12% 20% / .05), 0 24px 52px -40px hsl(28 12% 20% / .5);
+}
+.hb-guarantee-eyebrow { display: inline-flex; align-items: center; gap: 6px; }
+.hb-guarantee-eyebrow svg { width: 15px; height: 15px; color: hsl(var(--v2h-ink)); }
+.hb-guarantee h2 {
+  margin-top: 8px; max-width: 22ch; color: hsl(var(--v2h-ink));
+  font-size: clamp(1.45rem, 2.6vw, 2.15rem); font-weight: 700; line-height: 1.12;
+}
+.hb-guarantee-lede { margin-top: 10px; max-width: 58ch; color: hsl(var(--v2h-stone)); font-size: 15px; line-height: 1.55; }
+.hb-guarantee-more { margin-top: 14px; }
+.hb-steps { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
+.hb-steps li {
+  display: grid; grid-template-columns: 32px 1fr; gap: 12px; align-items: start;
+  border: 1px solid hsl(var(--v2h-line)); border-radius: 12px; background: hsl(var(--v2h-paper));
+  padding: 12px 14px;
+}
+.hb-step-num {
+  display: inline-flex; width: 28px; height: 28px; align-items: center; justify-content: center;
+  border-radius: 999px; background: hsl(240 6% 10%); color: hsl(40 30% 97%); font-size: 13px; font-weight: 700;
+}
+.hb-steps h3 { color: hsl(var(--v2h-ink)); font-size: 15px; font-weight: 680; }
+.hb-steps p { margin-top: 2px; color: hsl(var(--v2h-stone)); font-size: 13.5px; line-height: 1.45; }
+.hb-guarantee-fine { color: hsl(var(--v2h-stone)); font-size: 12px; line-height: 1.5; }
+.hb-guarantee-fine a { color: hsl(var(--v2h-ink)); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+@media (min-width: 900px) {
+  .hb-guarantee { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 24px 40px; padding: 32px; }
+  .hb-guarantee-fine { grid-column: 1 / -1; }
+}
+
+/* ── Compact seller strip ── */
+.hb-seller {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 14px;
+  border: 1px solid hsl(var(--v2h-line)); border-radius: 14px; background: hsl(var(--v2h-surface));
+  padding: 18px 20px;
+}
+.hb-seller h2 { color: hsl(var(--v2h-ink)); font-size: 17px; font-weight: 700; line-height: 1.3; }
+.hb-seller p { margin-top: 4px; color: hsl(var(--v2h-stone)); font-size: 14px; line-height: 1.5; }
+.hb-seller p a { color: hsl(var(--v2h-ink)); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+@media (min-width: 640px) {
+  .hb-seller { flex-direction: row; align-items: center; justify-content: space-between; gap: 24px; }
+  .hb-seller .v2-home-btn { flex: none; }
+}
+
+/* ── Closing CTA ── */
+.v2-home-final.hb-final > div:last-child { flex-wrap: wrap; gap: 10px; }
