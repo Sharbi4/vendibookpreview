@@ -18,6 +18,5 @@ export default function BuyerMatchPreview() {
       <Button asChild variant="ghost" className="mt-2 w-full"><Link to="/dashboard/buyermatch/membership#benefits">Explore membership benefits</Link></Button>
       <p className="mt-3 text-xs text-muted-foreground">Interactive preview only — no payment required here.</p>
     </div>
-    <p className="border-t border-border px-6 py-4 text-xs text-muted-foreground">Illustrative sample data only — not actual Vendibook or Muse activity.</p>
   </section>;
 }

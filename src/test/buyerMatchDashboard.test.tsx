@@ -12,7 +12,8 @@ beforeEach(()=>{cleanup();mocks.action.mockReset();mocks.error=null;mocks.data={
 describe('BuyerMatch seller experience',()=>{
  it('labels the locked preview and routes unlocking to dedicated membership management',()=>{
   mocks.data.config.entitled=false;show();
-  expect(screen.getByText('Illustrative sample data only — not actual Vendibook or Muse activity.')).toBeInTheDocument();
+   expect(screen.getByText('Example preview')).toBeInTheDocument();
+   expect(screen.queryByText('Illustrative sample data only — not actual Vendibook or Muse activity.')).not.toBeInTheDocument();
   expect(screen.getByRole('link',{name:/Unlock BuyerMatch AI — \$79\/month/})).toHaveAttribute('href','/dashboard/buyermatch/membership');
   expect(screen.getByRole('link',{name:'Manage membership'})).toHaveAttribute('href','/dashboard/buyermatch/membership');
  });
