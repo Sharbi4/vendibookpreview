@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import BuyerMatchPreview from '@/components/monetization/BuyerMatchPreview';
+import BuyerMatchRecommendations from '@/components/monetization/BuyerMatchRecommendations';
 import { buyerMatchAction, useBuyerMatch } from '@/hooks/useBuyerMatch';
 import { campaignMetrics, listingRecommendations, CAMPAIGN_STATUS, EVENT_LABELS, type CampaignEvent } from '@/lib/monetization/buyerMatchIntelligence';
 
@@ -67,6 +68,7 @@ function CampaignDashboard({ campaign: c, events, links, reports, entitled, busy
     <section className="border-t border-border pt-5"><h3 className="font-semibold">Buyer feedback</h3>{!events.some((e: CampaignEvent) => e.feedback) ? <p className="mt-2 text-sm text-muted-foreground">No recorded buyer feedback yet.</p> : ['interested','needs_financing','price_concern','not_interested'].map(f => <p key={f} className="mt-2 flex justify-between text-sm"><span>{f.replace(/_/g,' ')}</span><span>{events.filter((e: CampaignEvent) => e.feedback === f && e.verification_status === 'verified').length}</span></p>)}</section>
     {!!reports.length && <section className="border-t border-border pt-5"><h3 className="font-semibold">Historical approved reports</h3>{reports.map((r: any) => <div key={r.id} className="mt-3"><p className="text-xs text-muted-foreground">{date(r.published_at)}</p><p className="mt-1 text-sm">{r.summary}</p></div>)}</section>}
     <div className="flex flex-wrap gap-2 border-t border-border pt-5"><Button asChild variant="outline"><Link to="/dashboard/messages">View buyer conversations</Link></Button>{!['completed','rejected'].includes(c.status) && <Button disabled={busy || (c.status === 'paused' && !entitled)} variant="outline" onClick={() => act(c.status === 'paused' ? 'resume' : 'pause', { campaign_id: c.id })}>{c.status === 'paused' ? 'Resubmit for review' : 'Pause campaign'}</Button>}</div>
+    {entitled && <BuyerMatchRecommendations campaignId={c.id}/>}
   </article>;
 }
 function Operations({ config, campaign: c, events, busy, act }: any) {
