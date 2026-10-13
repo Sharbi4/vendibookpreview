@@ -27,7 +27,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { AddressAutocomplete } from '@/components/listing-detail/AddressAutocomplete';
-import CheckoutAddressCheck, { addressText } from '@/components/checkout/CheckoutAddressCheck';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -242,9 +241,6 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   const activeStep = RENTAL_STEPS[step - 1];
   const [fulfillmentSelected, setFulfillmentSelected] = useState<FulfillmentSelection>(restoredDraft?.fulfillment ?? 'pickup');
   const [deliveryAddress, setDeliveryAddress] = useState(restoredDraft?.deliveryAddress ?? '');
-  const [approvedDeliveryAddress, setApprovedDeliveryAddress] = useState('');
-  const deliveryPostalAddress = { addressLines: [deliveryAddress], regionCode: 'US' };
-  const deliveryAddressChecked = !!approvedDeliveryAddress && approvedDeliveryAddress === addressText(deliveryPostalAddress);
   const [message, setMessage] = useState(restoredDraft?.message ?? '');
   const [userInfo, setUserInfo] = useState<BookingUserInfo | null>(null);
   const [editingContact, setEditingContact] = useState(false);
@@ -486,7 +482,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   );
   const isStepDocsComplete = !requirementsLoading && !requirementsError && (preBookingBlockers.length === 0 || (docsStepDone && allDocsStaged));
   const isFulfillmentComplete = Boolean(userInfo?.agreedToTerms) &&
-    (fulfillmentSelected !== 'delivery' || (Boolean(deliveryAddress.trim()) && deliveryAddressChecked));
+    (fulfillmentSelected !== 'delivery' || Boolean(deliveryAddress.trim()));
   const isStepFulfillmentComplete = isFulfillmentComplete;
   // The server records the attestation; this only tracks that the step was passed.
   const isStepDisclosureComplete = disclosureDone && !!disclosureRecord?.attestedAt && !!disclosureRecord?.documentVersion;
@@ -515,7 +511,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   const canSubmit = rentalSubmitAllowed({
     contact: isStepContactComplete && !hostIdentityLoading, business: !!isStepBusinessInfoComplete,
     documents: isStepDocsComplete, disclosure: isStepDisclosureComplete,
-    fulfillment: fulfillmentSelected, deliveryAddress: deliveryAddressChecked ? deliveryAddress : '', slotRequired: hasMultipleSlots,
+    fulfillment: fulfillmentSelected, deliveryAddress, slotRequired: hasMultipleSlots,
     slot: selectedSlot, legal: legalAccepted, dates: isValidRentalDateRange(startDate, endDate) && (!hourlyInputRequested || isHourlyBooking),
     selfBooking: !!user && user.id === listing?.host_id,
   });
@@ -1263,7 +1259,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
           onNext={step === 2 ? (detailsSection === 'agreement' ? continueToPayment : undefined) : step < 3 ? () => goToStep(step + 1) : undefined}
           nextLabel={step === 2 ? 'Continue to payment' : 'Continue'}
           nextDisabled={
-            (step === 1 && fulfillmentSelected === 'delivery' && (!deliveryAddress.trim() || !deliveryAddressChecked)) ||
+            (step === 1 && fulfillmentSelected === 'delivery' && !deliveryAddress.trim()) ||
             (step === 2 && !(isStepContactComplete && !editingContact && isStepBusinessInfoComplete && isStepDocsComplete && isStepDisclosureComplete
               && rentalAgreementAccepted && privacyAccepted))
           }
@@ -1402,11 +1398,6 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
                     onChange={setDeliveryAddress}
                     className="h-12"
                   />
-                  <CheckoutAddressCheck address={deliveryPostalAddress} onApproved={setApprovedDeliveryAddress}
-                    onUseSuggestion={result => {
-                      setDeliveryAddress(result.formattedAddress);
-                      return { addressLines: [result.formattedAddress], regionCode: 'US' };
-                    }} />
                 </div>
               )}
 

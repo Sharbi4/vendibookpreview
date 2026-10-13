@@ -29,7 +29,6 @@ import {
 } from '@/lib/sms/consent';
 import { normalizeNanpToE164 } from '@/lib/sms/phone';
 import type { BookingUserInfo } from './types';
-import CheckoutAddressCheck, { addressText } from '@/components/checkout/CheckoutAddressCheck';
 import { AddressAutocomplete } from '@/components/listing-detail/AddressAutocomplete';
 
 export interface ContactWizardValue extends BookingUserInfo {
@@ -105,9 +104,6 @@ export function ContactInfoWizard({
   const [loadingProfile, setLoadingProfile] = useState(Boolean(user));
   const [savingStep, setSavingStep] = useState<StepKey | null>(null);
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
-  const [approvedAddress, setApprovedAddress] = useState('');
-  const postalAddress = { addressLines: [value.address1, value.address2 || ''], locality: value.city, administrativeArea: value.state, postalCode: value.zipCode, regionCode: 'US' };
-  const addressChecked = !!approvedAddress && approvedAddress === addressText(postalAddress);
   const [doneSteps, setDoneSteps] = useState<StepKey[]>([]);
   const hydrated = useRef(false);
   const partialCallback = useRef(onPartialChange);
@@ -264,7 +260,6 @@ export function ContactInfoWizard({
 
   const handleSaveAndContinue = async () => {
     if (!validateAll()) return;
-    if (!addressChecked) { setErrors(previous => ({ ...previous, address1: 'Check your address with Google before continuing.' })); return; }
     setSavingStep('agree');
     try {
       const next = { ...value };
@@ -405,12 +400,6 @@ export function ContactInfoWizard({
           </div>
         </div>
       </div>
-
-      <CheckoutAddressCheck address={postalAddress} onApproved={setApprovedAddress} disabled={savingStep !== null}
-        onUseSuggestion={({ address }) => {
-          setValue(previous => ({ ...previous, address1: address.addressLines[0] || '', address2: address.addressLines.slice(1).join(', '), city: address.locality || '', state: address.administrativeArea || '', zipCode: address.postalCode || '' }));
-          return { ...address, regionCode: 'US' };
-        }} />
 
       {/* Consents — always unchecked, never bundled */}
       <div className="space-y-3">

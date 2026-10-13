@@ -12,7 +12,7 @@ let factory: ReturnType<typeof vi.fn>;
 let close: ReturnType<typeof vi.fn>;
 const target = { kind: 'sale', id: 'sale-id' } as const;
 beforeEach(() => {
-  mocks.invoke.mockReset().mockImplementation(async (name: string) => ({ data: name === 'validate-checkout-address' ? { decision: 'accept' } : { card_fields_eligible: true, merchant_id: 'SELLER' }, error: null }));
+  mocks.invoke.mockReset().mockImplementation(async (name: string) => ({ data: { card_fields_eligible: true, merchant_id: 'SELLER' }, error: null }));
   close = vi.fn();
   const field = () => ({ render: vi.fn(async (selector: string) => {
     const frame = document.createElement('iframe');
@@ -36,8 +36,7 @@ async function billing() {
   for (const [label, value] of [['Street address', '123 Main St'], ['City', 'Tucson'], ['State / region', 'AZ'], ['ZIP / postal code', '85714']]) {
     fireEvent.change(screen.getByLabelText(label), { target: { value } });
   }
-  fireEvent.click(screen.getByRole('button', { name: 'Check address' }));
-  await screen.findByText('Address checked with Google.');
+  expect(screen.queryByRole('button', { name: 'Check address' })).not.toBeInTheDocument();
 }
 function submit() { fireEvent.click(screen.getByRole('button', { name: 'Continue to payment review' })); }
 
@@ -74,7 +73,7 @@ describe('real hosted card checkout', () => {
     expect(await options.createOrder()).toBe('CARD_ORDER'); expect(create).toHaveBeenCalledTimes(1);
     act(() => options.onApprove({ orderID: 'CARD_ORDER' }));
     expect(approve).toHaveBeenCalledWith('CARD_ORDER');
-    expect(mocks.invoke.mock.calls.every(([name]) => ['paypal-checkout-intent', 'validate-checkout-address'].includes(name))).toBe(true);
+    expect(mocks.invoke.mock.calls.every(([name]) => name === 'paypal-checkout-intent')).toBe(true);
   });
   it('keeps entries after SDK rejection and does not invent a bank decline', async () => {
     const { approve, container } = await setup(); await billing();

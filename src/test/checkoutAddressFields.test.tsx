@@ -9,25 +9,17 @@ vi.mock('@/hooks/use-toast', () => ({ useToast: () => ({ toast: mocks.toast }) }
 vi.mock('@/components/listing-detail/AddressAutocomplete', () => ({ AddressAutocomplete: ({ id, value, onChange }: any) => <input id={id} value={value} onChange={event => onChange(event.target.value)} /> }));
 import { ContactInfoWizard } from '@/components/booking/ContactInfoWizard';
 import PurchaseStepDelivery from '@/components/purchase-wizard/PurchaseStepDelivery';
-beforeEach(() => { localStorage.clear(); mocks.invoke.mockReset().mockResolvedValue({ data: { decision: 'accept' } }); });
+beforeEach(() => { localStorage.clear(); mocks.invoke.mockReset().mockResolvedValue({ data: null }); });
 afterEach(cleanup);
-it('requires a checked contact address before saving the rental details, including after edits', async () => {
+it('saves rental contact details without a separate Google address check', async () => {
   const complete = vi.fn();
   render(<MemoryRouter><ContactInfoWizard onComplete={complete} initialData={{ firstName: 'Test', lastName: 'Renter', phoneNumber: '6025550123', address1: '123 Main St', address2: 'Suite 4', city: 'Phoenix', state: 'AZ', zipCode: '85001' }} /></MemoryRouter>);
+  expect(screen.queryByRole('button', { name: 'Check address' })).not.toBeInTheDocument();
   fireEvent.click(screen.getByTestId('booking-insurance-ack'));
   fireEvent.click(screen.getByTestId('booking-terms-agree'));
   fireEvent.click(screen.getByTestId('contact-save-continue'));
-  expect(complete).not.toHaveBeenCalled();
-  expect(await screen.findByRole('alert')).toHaveTextContent('Check your address');
-  fireEvent.click(screen.getByRole('button', { name: 'Check address' }));
-  await screen.findByText('Address checked with Google.');
-  fireEvent.change(screen.getByLabelText(/^ZIP/), { target: { value: '85002' } });
-  fireEvent.click(screen.getByTestId('contact-save-continue'));
-  expect(complete).not.toHaveBeenCalled();
-  fireEvent.click(screen.getByRole('button', { name: 'Check address' }));
-  await screen.findByText('Address checked with Google.');
-  fireEvent.click(screen.getByTestId('contact-save-continue'));
-  await waitFor(() => expect(complete).toHaveBeenCalledWith(expect.objectContaining({ zipCode: '85002', address2: 'Suite 4' })));
+  await waitFor(() => expect(complete).toHaveBeenCalledWith(expect.objectContaining({ zipCode: '85001', address2: 'Suite 4' })));
+  expect(mocks.invoke).not.toHaveBeenCalledWith('validate-checkout-address', expect.anything());
 });
 function Delivery({ method }: { method: 'delivery' | 'vendibook_freight' | 'pickup' }) {
   const [address, setAddress] = useState('123 Main St, Phoenix, AZ 85001');
@@ -41,14 +33,10 @@ function Delivery({ method }: { method: 'delivery' | 'vendibook_freight' | 'pick
     setPreferredWindow={vi.fn()} onSiteContact="Test Renter" setOnSiteContact={vi.fn()} />
     <button disabled={!ready}>Next checkout step</button></>;
 }
-it.each(['delivery', 'vendibook_freight'] as const)('requires address checking for sale %s and invalidates after edits', async method => {
+it.each(['delivery', 'vendibook_freight'] as const)('lets sale %s continue with an entered address and no Google check box', method => {
   render(<MemoryRouter><Delivery method={method} /></MemoryRouter>);
-  expect(screen.getByRole('button', { name: 'Next checkout step' })).toBeDisabled();
-  fireEvent.click(screen.getByRole('button', { name: 'Check address' }));
-  await waitFor(() => expect(screen.getByRole('button', { name: 'Next checkout step' })).toBeEnabled());
-  fireEvent.change(screen.getByLabelText('Delivery address *'), { target: { value: '456 Main St, Phoenix, AZ 85001' } });
-  expect(screen.getByRole('button', { name: 'Next checkout step' })).toBeDisabled();
-  expect(screen.queryByText('$500.00')).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Check address' })).not.toBeInTheDocument();
+  expect(screen.getByRole('button', { name: 'Next checkout step' })).toBeEnabled();
 });
 it('does not require a delivery address for pickup', () => {
   render(<MemoryRouter><Delivery method="pickup" /></MemoryRouter>);

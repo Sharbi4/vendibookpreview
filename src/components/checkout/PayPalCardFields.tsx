@@ -4,7 +4,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { loadPayPalSdk } from '@/lib/paypalClient';
 import { parseEdgeError } from '@/lib/edgeErrors';
 import type { PayPalCheckoutTarget } from './PayPalPaymentPanel';
-import CheckoutAddressCheck, { addressText } from './CheckoutAddressCheck';
 import { AddressAutocomplete } from '@/components/listing-detail/AddressAutocomplete';
 
 type BillingAddress = {
@@ -43,8 +42,6 @@ export default function PayPalCardFields({ target, createOrder, onApprove, merch
   const [billing, setBilling] = useState<BillingAddress>({
     addressLine1: '', addressLine2: '', adminArea1: '', adminArea2: '', postalCode: '', countryCode: 'US',
   });
-  const [approvedAddress, setApprovedAddress] = useState('');
-  const postalAddress = { addressLines: [billing.addressLine1, billing.addressLine2], locality: billing.adminArea2, administrativeArea: billing.adminArea1, postalCode: billing.postalCode, regionCode: billing.countryCode };
 
   useEffect(() => {
     let cancelled = false;
@@ -145,10 +142,6 @@ export default function PayPalCardFields({ target, createOrder, onApprove, merch
       setError('Complete your billing street address, city, state or region, postal code and country.');
       return;
     }
-    if (approvedAddress !== addressText(postalAddress)) {
-      setError('Check your billing address with Google before continuing.');
-      return;
-    }
     submitting.current = true;
     setBusy(true);
     try {
@@ -211,11 +204,6 @@ export default function PayPalCardFields({ target, createOrder, onApprove, merch
             {countries.map(country => <option key={country.code} value={country.code}>{country.name}</option>)}
           </select>
         </label>
-        <CheckoutAddressCheck address={postalAddress} onApproved={setApprovedAddress} disabled={busy}
-          onUseSuggestion={({ address }) => {
-            setBilling({ addressLine1: address.addressLines[0] || '', addressLine2: address.addressLines.slice(1).join(', '), adminArea2: address.locality || '', adminArea1: address.administrativeArea || '', postalCode: address.postalCode || '', countryCode: address.regionCode || billing.countryCode });
-            return { ...address, regionCode: address.regionCode || billing.countryCode };
-          }} />
         <button type="button" onClick={() => void submit()} disabled={busy} className="flex w-full items-center justify-center gap-2 rounded-xl bg-cta-primary px-4 py-3.5 text-sm font-bold text-white shadow-cta-primary disabled:opacity-60">
           {busy ? <Loader2 aria-label="Checking card" className="h-4 w-4 animate-spin" /> : 'Continue to payment review'}
         </button>
