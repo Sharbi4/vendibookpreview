@@ -3,9 +3,11 @@
 .workspace-menu-trigger svg { width: 20px; height: 20px; flex: none; }
 @media (min-width: 768px) { .v2-topbar .workspace-menu-trigger { display: none; } }
 .workspace-menu-trigger:active { background: #f4e3d5; }
-.workspace-mobile-menu { z-index: 60; background: #faf7f2; color: #26221e; border-color: #d6cec5; overflow-y: auto; padding-bottom: max(28px, env(safe-area-inset-bottom)); }
+.workspace-mobile-menu { z-index: 60; background-color: #faf7f2 !important; color: #26221e; border-color: #d6cec5; overflow-y: auto; padding-bottom: max(28px, env(safe-area-inset-bottom)); }
 .workspace-menu-link { display: flex; align-items: center; gap: 12px; min-height: 46px; padding: 10px 12px; border-radius: 12px; color: #443c35; font-size: 14px; font-weight: 600; }
 .workspace-menu-link svg { width: 20px; height: 20px; flex: none; }
 .workspace-menu-link:hover, .workspace-menu-link.is-active { background: #f4e3d5; color: #732c08; }
 .workspace-menu-link:focus-visible, .workspace-menu-trigger:focus-visible { outline: 2px solid #bf4a13; outline-offset: 2px; }
+/* Close button sits on the light sheet, so it needs dark ink to stay visible. */
+.workspace-mobile-menu > [data-slot="sheet-close"], .workspace-mobile-menu button[class*="absolute right-4"] { color: #443c35; }
 @media (max-width: 767px) { .v2-topbar .v2-search { display: none; } .v2-topbar > a { margin-right: auto; } }
