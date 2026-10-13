@@ -40,7 +40,7 @@ export default function InvoiceDetail() {
       </article>
       {i.status==='issued'&&i.buyer_id===user.id&&<section className="rounded-3xl border border-orange-200 bg-orange-50/60 p-6 print:hidden">
         <h2 className="text-lg font-semibold">Pay Invoice</h2>
-        <p className="mt-2 text-sm text-muted-foreground">Pay {invoiceMoney(i.total_cents)} by {new Date(i.due_at).toLocaleDateString()}. Vendibook holds your payment and releases it to the seller only after you confirm the handoff, both of you sign the purchase agreement and the walkthrough video is saved.</p>
+        <p className="mt-2 text-sm text-muted-foreground">Pay {invoiceMoney(i.total_cents)} by {new Date(i.due_at).toLocaleDateString()}. Payment protection: the seller is paid only after you confirm the handoff, both of you sign the purchase agreement and the walkthrough video is saved.</p>
         {i.external_invoice_url
           ?<a href={i.external_invoice_url} target="_blank" rel="noopener noreferrer" className="mt-4 inline-flex items-center gap-2 rounded-full bg-orange-500 px-6 py-3 font-semibold text-white shadow-[0_0_24px_rgba(249,115,22,0.45)] transition hover:bg-orange-600"><CreditCard className="h-4 w-4"/>Pay Invoice<ExternalLink className="h-4 w-4"/></a>
           :<p className="mt-4 text-sm font-medium">Your payment link was sent to {i.buyer_snapshot.email}. Use the link in that email to pay.</p>}
@@ -48,8 +48,8 @@ export default function InvoiceDetail() {
         {i.admin_note&&<p className="mt-2 whitespace-pre-wrap text-sm">{i.admin_note}</p>}
       </section>}
       {i.status==='issued'&&i.seller_id===user.id&&<section className="rounded-2xl border p-5 print:hidden"><h2 className="font-semibold">Payment pending</h2><p className="mt-2 text-sm text-muted-foreground">The buyer has this invoice. Your equipment stays reserved until it is paid or the invoice is canceled.</p></section>}
-      {i.paid_at&&<section className="rounded-2xl border p-5"><h2 className="font-semibold">{i.released_at?'Payment released to seller':'Payment received · held until handoff'}</h2>
-        <p className="mt-2 text-sm">Paid {new Date(i.paid_at).toLocaleString()}.{i.released_at?` Released ${new Date(i.released_at).toLocaleDateString()}.`:' Funds are released to the seller after the buyer confirms the handoff, both parties sign and the walkthrough video is saved.'}</p>
+      {i.paid_at&&<section className="rounded-2xl border p-5"><h2 className="font-semibold">{i.released_at?'Payment released to seller':'Payment received · payout pending handoff'}</h2>
+        <p className="mt-2 text-sm">Paid {new Date(i.paid_at).toLocaleString()}.{i.released_at?` Released ${new Date(i.released_at).toLocaleDateString()}.`:' The seller is paid after the buyer confirms the handoff, both parties sign and the walkthrough video is saved.'}</p>
         <Link className="mt-3 inline-block text-sm text-orange-700 underline" to={`/order-tracking/${i.sale_id}`}>View order and handoff steps</Link></section>}
     </>}
   </div></WorkspaceShell>;
