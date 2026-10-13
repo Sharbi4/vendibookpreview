@@ -41,7 +41,7 @@ const SALE_ROW_LIMIT = 16;
 const SALE_SEARCH_HREF = '/search?mode=sale';
 const GUARANTEE_ID = 'vendibook-guarantee';
 
-const FINANCING_HEADLINE = 'Easy financing — approval decisions typically in 2–48 hours*';
+const FINANCING_HEADLINE = 'Easy financing — approval decisions typically in 24–48 hours*';
 const FINANCING_FOOTNOTE =
   '*Typical decision time for complete applications; not guaranteed. Financing is offered by Equinox Funding and/or its funding providers and is subject to their approval and terms. Vendibook is not a lender.';
 
