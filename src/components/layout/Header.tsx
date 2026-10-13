@@ -25,6 +25,7 @@ import { toast } from 'sonner';
 import MobileMenu from './MobileMenu';
 import AppDropdownMenu from './AppDropdownMenu';
 import LanguageSwitcher from './LanguageSwitcher';
+import FacebookLink from '@/components/social/FacebookLink';
 import { useTranslation } from 'react-i18next';
 import AirbnbMenuItem from '@/components/ui/AirbnbMenuItem';
 
@@ -485,6 +486,7 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
               <AppDropdownMenu variant="dark" />
             </>
           )}
+          <FacebookLink size={32} className="ml-1" />
           {/* Language Switcher - Far Right */}
           <LanguageSwitcher />
         </div>
@@ -493,6 +495,7 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
         <div className={`flex lg:hidden items-center gap-1 shrink-0 ${isMobileSearchOpen ? 'hidden' : 'flex'}`}> 
           {user && <ConciergeInbox userId={user.id} />}
           {user && <NotificationCenter />}
+          <FacebookLink size={30} className="mr-1" />
           <AppDropdownMenu variant="dark" />
           <div className="hidden sm:block">
             <LanguageSwitcher />

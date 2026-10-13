@@ -1,6 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
 import { ChevronDown, Facebook, Instagram, Twitter, Linkedin } from 'lucide-react';
+import { VENDIBOOK_FACEBOOK_URL } from '@/components/social/FacebookLink';
 import vendibookFavicon from '@/assets/vendibook-favicon.png';
 import {
   PayPalMonogram,
@@ -111,7 +112,7 @@ const footerSections: FooterSection[] = [
 ];
 
 const socialLinks = [
-  { icon: Facebook, href: 'https://www.facebook.com/people/Vendibook/61575463393177/', label: 'Facebook' },
+  { icon: Facebook, href: VENDIBOOK_FACEBOOK_URL, label: 'Facebook' },
   { icon: Instagram, href: 'https://instagram.com/vendibook', label: 'Instagram' },
   { icon: Twitter, href: 'https://twitter.com/vendibook', label: 'Twitter' },
   { icon: Linkedin, href: 'https://linkedin.com/company/vendibook', label: 'LinkedIn' },
