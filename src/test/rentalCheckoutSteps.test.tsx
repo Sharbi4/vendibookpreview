@@ -17,6 +17,7 @@ vi.mock('@/hooks/useLegalDocument', () => ({ useLegalDocument: () => ({ data: { 
 vi.mock('@/hooks/useCheckoutFunnel', () => ({ useCheckoutFunnel: () => ({ markCompleted: vi.fn() }) }));
 vi.mock('@/hooks/useTermsGate', () => ({ useTermsGate: () => ({ reset: vi.fn(), preparing: false }) }));
 vi.mock('@/lib/edge/invokeFunction', () => ({ invokeEdge: vi.fn().mockResolvedValue({ data: { tax_cents: 0 }, error: null }) }));
+vi.mock('@/components/tax/TaxExemptButton', () => ({ default: () => null }));
 vi.mock('@/lib/rentalCheckoutAnalytics', () => ({ trackRentalCheckout: vi.fn() }));
 vi.mock('@/components/booking', () => ({
   SlotSelector: () => null, TowingHandoffPanel: () => null,

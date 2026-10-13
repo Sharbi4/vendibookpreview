@@ -49,13 +49,19 @@ export function useTaxExemptions() {
  * buyer's checkouts in that state as soon as it is saved (owner decision
  * 2026-10-13); Vendibook reviews it afterwards and can revoke it.
  */
-export default function TaxExemptButton({ state, onChange, className = '' }: { state?: string | null; onChange?: () => void; className?: string }) {
+type ButtonProps = { state?: string | null; onChange?: () => void; className?: string };
+
+export default function TaxExemptButton(props: ButtonProps) {
   const { user } = useAuth();
+  // Signed-out visitors see nothing, and no certificate lookup runs for them.
+  return user ? <SignedInTaxExemptButton {...props} /> : null;
+}
+
+function SignedInTaxExemptButton({ state, onChange, className = '' }: ButtonProps) {
   const [open, setOpen] = useState(false);
   const exemptions = useTaxExemptions();
   const current = normalizeUsState(state ?? null);
   const active = current ? exemptions.data?.find((e) => e.state === current) : undefined;
-  if (!user) return null;
   return (
     <>
       <button type="button" onClick={() => setOpen(true)} className={`inline-flex items-center gap-1.5 text-xs font-semibold text-orange-700 underline underline-offset-2 ${className}`}>
