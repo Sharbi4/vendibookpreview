@@ -1,0 +1,1 @@
+ALTER POLICY "bs assets read" ON storage.objects TO authenticated USING (bucket_id='build-studio-assets' AND (public.is_admin((select auth.uid())) OR CASE WHEN split_part(name,'/',1) ~ '^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$' THEN public.bs_is_member(split_part(name,'/',1)::uuid,'viewer') ELSE false END));
