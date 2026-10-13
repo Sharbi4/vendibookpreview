@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { parseEdgeError } from '@/lib/edgeErrors';
+import TaxExemptButton from '@/components/tax/TaxExemptButton';
 let sdkPromise: Promise<any> | undefined;
 let sdkEnvironment: string | undefined;
 async function loadSdk(environment: string) {
@@ -32,6 +33,8 @@ export default function SquareBillingCheckout({slug,listingId,consentId,interval
   const [needsAddress,setNeedsAddress]=useState(false);
   const [addr,setAddr]=useState({city:'',state:'',zip:''});
   const [submittedAddr,setSubmittedAddr]=useState<null|{city:string;state:string;zip:string}>(null);
+  // Bumped after a tax-exemption certificate is saved so the quote re-prices.
+  const [taxRefresh,setTaxRefresh]=useState(0);
   const container=useRef<HTMLDivElement>(null);
   const card=useRef<any>(null);
   const lock=useRef(false);
@@ -50,7 +53,7 @@ export default function SquareBillingCheckout({slug,listingId,consentId,interval
       await instance.attach(container.current);card.current=instance;setReady(true);
     })().catch(e=>{if(!canceled)setError(e.message);});
     return ()=>{canceled=true;card.current=null;void instance?.destroy();};
-  },[slug,listingId,consentId,interval,submittedAddr]);
+  },[slug,listingId,consentId,interval,submittedAddr,taxRefresh]);
   const saveAddress=(e:React.FormEvent)=>{
     e.preventDefault();
     const state=addr.state.trim().toUpperCase();const zip=addr.zip.trim();
@@ -78,7 +81,7 @@ export default function SquareBillingCheckout({slug,listingId,consentId,interval
   return <section className="sale-light mx-auto my-8 w-full max-w-lg rounded-3xl border border-border bg-[#fffdf9] p-6 shadow-sm sm:p-8">
     <p className="text-xs uppercase tracking-widest text-muted-foreground">Vendibook · Secure billing</p>
     <h1 className="mt-2 text-2xl font-semibold">{quote?.name||'Checkout'}</h1>
-    {quote && <div className="my-5 space-y-2 border-y py-4 text-sm"><p className="flex justify-between"><span>Subtotal</span><span>{money(quote.amount_cents)}</span></p><p className="flex justify-between"><span>Sales tax</span><span>{money(quote.tax_cents)}</span></p><p className="flex justify-between text-lg font-semibold"><span>Total{quote.recurring?' per billing cycle':''}</span><span>{money(quote.amount_cents+quote.tax_cents)}</span></p>{quote.recurring && <p className="text-xs text-muted-foreground">Renews {quote.billing_interval}. Cancel from Account → Membership &amp; billing.</p>}</div>}
+    {quote && <div className="my-5 space-y-2 border-y py-4 text-sm"><p className="flex justify-between"><span>Subtotal</span><span>{money(quote.amount_cents)}</span></p><p className="flex justify-between"><span>{quote.tax_label || 'Sales tax'}</span><span>{money(quote.tax_cents)}</span></p>{!status&&<TaxExemptButton state={quote.tax_state} onChange={()=>setTaxRefresh(n=>n+1)}/>}<p className="flex justify-between text-lg font-semibold"><span>Total{quote.recurring?' per billing cycle':''}</span><span>{money(quote.amount_cents+quote.tax_cents)}</span></p>{quote.recurring && <p className="text-xs text-muted-foreground">Renews {quote.billing_interval}. Cancel from Account → Membership &amp; billing.</p>}</div>}
     {needsAddress&&!quote&&<form onSubmit={saveAddress} className="my-5 space-y-3">
       <p className="text-sm text-muted-foreground">Your billing address (used for sales tax). We'll save it for next time.</p>
       <input aria-label="City" placeholder="City" autoComplete="billing address-level2" className="w-full rounded-xl border border-border bg-background px-3 py-2 text-base" value={addr.city} onChange={e=>setAddr({...addr,city:e.target.value})}/>

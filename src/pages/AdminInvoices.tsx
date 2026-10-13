@@ -7,6 +7,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { authPath } from '@/lib/auth/returnTo';
 import { SALE_SELLER_FEE_PERCENT } from '@/lib/commissions';
+import { normalizeUsState, parseStateZipFromAddress, taxRateFor } from '../../supabase/functions/_shared/tax';
 import { commerceAction, commerceDb, invoiceMoney } from '@/hooks/useCommerceRecords';
 import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
@@ -82,6 +83,9 @@ export default function AdminInvoices() {
               : <p className="text-sm text-muted-foreground">Waiting on buyer confirmation, both signatures and the walkthrough video. You'll get an email when it's ready.</p>}
           </InvoiceCard>)}
       </Section>
+      <Section title="Tax exemption certificates" hint="Certificates apply as soon as buyers upload them. Check each one and revoke any that are invalid.">
+        <ExemptionReview />
+      </Section>
       <Section title="Recent" hint="Released, cancelled or expired invoices.">
         {done.length === 0 ? <Empty text="Nothing yet." /> : done.map((i) => <InvoiceCard key={i.id} invoice={i} focused={false} />)}
       </Section>
@@ -112,6 +116,13 @@ function InvoiceForm({ request, focused, onDone }: { request: Row; focused: bool
   const [note, setNote] = useState('');
   const [busy, setBusy] = useState(false);
   useFocus(focused, 'request-' + request.id);
+  const suggestion = useTaxSuggestion(request, equipment + toCents(delivery));
+  const [taxTouched, setTaxTouched] = useState(false);
+  useEffect(() => {
+    if (!suggestion || taxTouched) return;
+    setTax(dollars(suggestion.taxCents));
+    setJurisdiction(suggestion.jurisdiction);
+  }, [suggestion, taxTouched]);
   const total = equipment + toCents(delivery) + toCents(freight) + toCents(tax);
   const payout = equipment - toCents(fee);
   const submit = async () => {
@@ -134,13 +145,14 @@ function InvoiceForm({ request, focused, onDone }: { request: Row; focused: bool
       <Field label="Equipment (accepted price)"><Input value={dollars(equipment)} disabled /></Field>
       <Field label="Delivery"><Input inputMode="decimal" value={delivery} onChange={(e) => setDelivery(e.target.value)} /></Field>
       <Field label={terms.freight_payer === 'seller' ? 'Shipping (seller pays: 0)' : 'Shipping'}><Input inputMode="decimal" value={freight} onChange={(e) => setFreight(e.target.value)} /></Field>
-      <Field label="Sales tax"><Input inputMode="decimal" value={tax} onChange={(e) => setTax(e.target.value)} /></Field>
-      <Field label="Tax jurisdiction"><Input placeholder="e.g. AZ / Pima County" value={jurisdiction} onChange={(e) => setJurisdiction(e.target.value)} /></Field>
+      <Field label="Sales tax"><Input inputMode="decimal" value={tax} onChange={(e) => { setTaxTouched(true); setTax(e.target.value); }} /></Field>
+      <Field label="Tax jurisdiction"><Input placeholder="e.g. AZ / Pima County" value={jurisdiction} onChange={(e) => { setTaxTouched(true); setJurisdiction(e.target.value); }} /></Field>
       <Field label={`Seller fee (${SALE_SELLER_FEE_PERCENT}% default)`}><Input inputMode="decimal" value={fee} onChange={(e) => setFee(e.target.value)} /></Field>
       <Field label="Payment link (https)"><Input placeholder="https://…" value={url} onChange={(e) => setUrl(e.target.value)} /></Field>
       <Field label="Invoice number / reference"><Input value={reference} onChange={(e) => setReference(e.target.value)} /></Field>
       <Field label="Due in (days)"><Input inputMode="numeric" value={dueDays} onChange={(e) => setDueDays(e.target.value)} /></Field>
     </div>
+    {suggestion && <p className="rounded-xl bg-stone-50 p-3 text-xs leading-5 text-muted-foreground">{suggestion.explanation}</p>}
     <Field label="Note to buyer and seller (optional, visible to both)"><Input value={note} onChange={(e) => setNote(e.target.value)} /></Field>
     <div className="flex flex-wrap items-center justify-between gap-3 border-t pt-4 text-sm">
       <p>Buyer total <strong>{invoiceMoney(total)}</strong> · Seller payout (equipment − fee) <strong>{invoiceMoney(payout)}</strong></p>
@@ -148,6 +160,76 @@ function InvoiceForm({ request, focused, onDone }: { request: Row; focused: bool
         <Button disabled={busy || payout < 0} onClick={submit}>{busy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}Record invoice sent</Button></div>
     </div>
   </article>;
+}
+
+/** Suggested sales tax for a manual invoice: the same rates and exemption rules
+ * the checkouts use (equipment + delivery are taxable; shipping is not). The
+ * admin can still edit both fields before recording the invoice. */
+function useTaxSuggestion(request: Row, taxableCents: number) {
+  const terms = request.accepted_terms ?? {};
+  const delivers = ['delivery', 'vendibook_freight'].includes(String(terms.fulfillment_type));
+  const listing = useQuery({
+    queryKey: ['admin-invoice-listing', request.listing_id],
+    queryFn: async () => {
+      const { data } = await supabase.from('listings').select('state, address').eq('id', request.listing_id).maybeSingle();
+      return data;
+    },
+  });
+  const state = normalizeUsState((delivers ? parseStateZipFromAddress(terms.delivery_address).state : null) ?? listing.data?.state ?? null);
+  const exemption = useQuery({
+    queryKey: ['admin-invoice-exemption', request.buyer_id, state],
+    enabled: !!state,
+    queryFn: async () => {
+      const { data } = await commerceDb.from('tax_exemptions').select('id, certificate_number, entity_name, exemption_type')
+        .eq('user_id', request.buyer_id).eq('state', state).eq('status', 'active').maybeSingle();
+      return data as Row | null;
+    },
+  });
+  if (listing.isLoading || exemption.isLoading) return null;
+  if (!state) return { taxCents: 0, jurisdiction: '', explanation: 'No destination state found for this purchase. Enter the tax by hand.' };
+  if (exemption.data) {
+    return { taxCents: 0, jurisdiction: `${state} (exempt)`,
+      explanation: `The buyer has an active ${exemption.data.exemption_type} exemption for ${state} (${exemption.data.entity_name}, certificate ${exemption.data.certificate_number}), so tax is $0. Review the certificate in Admin before invoicing.` };
+  }
+  const { ratePct } = taxRateFor(state, 'sale');
+  return { taxCents: Math.round(taxableCents * ratePct / 100), jurisdiction: state,
+    explanation: `Suggested tax: ${ratePct}% of equipment + delivery (${state} state + average local rate, ${delivers ? 'delivery address' : 'listing location'}). Edit if the exact city rate differs.` };
+}
+
+/** Unreviewed certificates first; admins open the file, then mark reviewed or revoke. */
+function ExemptionReview() {
+  const queryClient = useQueryClient();
+  const list = useQuery({
+    queryKey: ['admin-tax-exemptions'],
+    queryFn: async () => {
+      const { data, error } = await commerceDb.from('tax_exemptions').select('*').eq('status', 'active')
+        .order('reviewed_at', { ascending: true, nullsFirst: true }).order('created_at', { ascending: false }).limit(100);
+      if (error) throw error;
+      return (data ?? []) as Row[];
+    },
+  });
+  const act = async (id: string, patch: Row, done: string) => {
+    const { error } = await commerceDb.from('tax_exemptions').update(patch).eq('id', id);
+    if (error) return toast.error(error.message);
+    toast.success(done);
+    await queryClient.invalidateQueries({ queryKey: ['admin-tax-exemptions'] });
+  };
+  const open = async (path: string) => {
+    const { data, error } = await supabase.storage.from('tax-exemption-certificates').createSignedUrl(path, 300);
+    if (error || !data) return toast.error('The certificate file could not be opened.');
+    window.open(data.signedUrl, '_blank', 'noopener');
+  };
+  if (list.isLoading) return <Loader2 className="animate-spin" />;
+  if (!list.data?.length) return <Empty text="No active exemption certificates." />;
+  return <>{list.data.map((e) => <article key={e.id} className="flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-white p-4 text-sm">
+    <div><p className="font-semibold">{e.state} · {e.entity_name} <Badge variant={e.reviewed_at ? 'secondary' : 'destructive'}>{e.reviewed_at ? 'Reviewed' : 'Needs review'}</Badge></p>
+      <p className="text-xs text-muted-foreground">{e.exemption_type} · certificate {e.certificate_number} · buyer {e.user_id} · uploaded {new Date(e.created_at).toLocaleDateString()}</p></div>
+    <div className="flex gap-2">
+      <Button variant="outline" size="sm" onClick={() => open(e.document_path)}>View file</Button>
+      {!e.reviewed_at && <Button size="sm" onClick={() => act(e.id, { reviewed_at: new Date().toISOString() }, 'Marked reviewed')}>Mark reviewed</Button>}
+      <Button variant="ghost" size="sm" onClick={() => { const reason = window.prompt('Why is this certificate being revoked? (shown in admin only)'); if (reason?.trim()) void act(e.id, { status: 'revoked', revoke_reason: reason.trim() }, 'Certificate revoked. Tax applies to this buyer again.'); }}>Revoke</Button>
+    </div>
+  </article>)}</>;
 }
 
 function InvoiceCard({ invoice: i, focused, children }: { invoice: Row; focused: boolean; children?: React.ReactNode }) {

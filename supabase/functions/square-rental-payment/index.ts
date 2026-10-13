@@ -24,6 +24,7 @@ import { getListingPurchaseState, LISTING_UNAVAILABLE_MESSAGE } from "../_shared
 import { resolveProStatus } from "../_shared/proEligibility.ts";
 import { applyTaxToQuote, quoteBookingRequest, type QuoteResult } from "../_shared/paypalAccounting.ts";
 import { parseStateZipFromAddress, quoteSalesTax } from "../_shared/tax.ts";
+import { findActiveExemption } from "../_shared/taxExemption.ts";
 import { CaptureRejectedError, finalizeCapture } from "../_shared/paypalFinalize.ts";
 import { safeLog } from "../_shared/paypal.ts";
 import {
@@ -61,10 +62,13 @@ async function rentalQuote(admin: Admin, booking: any, partnerCode = "", userId 
   const hostPro = locked ? { isPro: !!booking.pro_fee_applied } : { isPro: (await resolveProStatus(admin, booking.host_id)).isPro };
   const quote: QuoteResult = quoteBookingRequest(booking, booking.listing?.title ?? "Listing", hostPro);
   const loc = parseStateZipFromAddress(booking.listing?.address);
+  const state = booking.listing?.state ?? null;
   const tax = await quoteSalesTax({
     amountCents: quote.taxableBaseCents,
-    destination: { state: booking.listing?.state ?? null, zip: loc.zip ?? null, city: booking.listing?.city ?? null },
+    destination: { state, zip: loc.zip ?? null, city: booking.listing?.city ?? null },
     kind: "rental",
+    // The renter's own certificate for the state the rental happens in.
+    exemption: await findActiveExemption(admin, booking.shopper_id, state),
   });
   applyTaxToQuote(quote, tax);
   let partner: PartnerResolution | null = null;
@@ -274,6 +278,7 @@ Deno.serve(async (req) => {
     }
     await admin.from("booking_requests").update({
       tax_amount: tax.taxCents / 100, tax_rate_pct: tax.ratePct, tax_source: tax.source, tax_jurisdiction: tax.state,
+      tax_exemption_id: tax.exemptionId ?? null,
     }).eq("id", booking.id).neq("payment_status", "paid");
 
     // One payment record per checkout attempt. A retry of the same attempt

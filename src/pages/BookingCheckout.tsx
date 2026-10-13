@@ -73,6 +73,7 @@ import TransactionCheckoutShell from '@/components/transaction/checkout/Transact
 import CheckoutSection from '@/components/transaction/checkout/CheckoutSection';
 import ListingCheckoutSummary from '@/components/transaction/checkout/ListingCheckoutSummary';
 import MoneyBreakdown, { type MoneyLine } from '@/components/transaction/checkout/MoneyBreakdown';
+import TaxExemptButton from '@/components/tax/TaxExemptButton';
 import RentalPaymentPanel from '@/components/booking/RentalPaymentPanel';
 import { clearRentalDraft, loadRentalDraft, newRequestKey, rentalDraftKey, saveRentalDraft } from '@/lib/rentalCheckoutDraft';
 import { trackRentalCheckout } from '@/lib/rentalCheckoutAnalytics';
@@ -378,7 +379,9 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   // authoritative amount is re-locked at order creation in
   // `square-rental-payment`; this is only so the renter sees the real total
   // before paying.
-  const [taxEstimate, setTaxEstimate] = useState<{ tax_cents: number; rate_pct: number; label: string } | null>(null);
+  const [taxEstimate, setTaxEstimate] = useState<{ tax_cents: number; rate_pct: number; label: string; exempt?: boolean } | null>(null);
+  // Bumped after the renter saves or withdraws a tax-exemption certificate.
+  const [taxRefresh, setTaxRefresh] = useState(0);
   // Quote lifecycle, so the summary can show an explicit tax row
   // ("calculating…" / "calculated at payment") instead of silently omitting
   // tax while the estimate is pending or unavailable.
@@ -391,7 +394,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
       // Times out after 8s and refreshes an expired session once, so the
       // summary never sits on "Calculating…" and signed-in renters get the
       // same estimate as guests.
-      invokeEdge<{ tax_cents: number; rate_pct: number; label: string }>('tax-quote', {
+      invokeEdge<{ tax_cents: number; rate_pct: number; label: string; exempt?: boolean }>('tax-quote', {
           body: {
             kind: 'rental',
             listing_id: listing.id,
@@ -417,7 +420,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
         });
     }, 350);
     return () => { clearTimeout(t); controller.abort(); };
-  }, [listing?.id, fees.customerTotal]);
+  }, [listing?.id, fees.customerTotal, taxRefresh]);
 
   const taxAmount = (taxEstimate?.tax_cents ?? 0) / 100;
   // The refundable security deposit is charged today alongside the rental and
@@ -433,7 +436,9 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
   // Always-visible tax row for the payment summary: real amount when
   // quoted, an explicit placeholder while calculating or when the estimate
   // is unavailable (the server still adds tax authoritatively at payment).
-  const taxSummaryLine: OrderSummaryLine | null = taxAmount > 0
+  const taxSummaryLine: OrderSummaryLine | null = taxEstimate?.exempt
+    ? { label: taxEstimate.label, amount: 0, valueLabel: formatCurrency(0) }
+    : taxAmount > 0
     ? { label: taxEstimate?.label || 'Estimated sales tax', amount: taxAmount }
     : taxState === 'loading'
       ? { label: 'Estimated sales tax', amount: 0, muted: true, valueLabel: 'Calculating…' }
@@ -1164,6 +1169,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
         total={formatCurrency(totalChargedToday)}
         totalLabel={instantConfirm ? "Total due at payment" : "Total after host approval"}
       />
+      <TaxExemptButton state={listing.state} onChange={() => setTaxRefresh((n) => n + 1)} className="mt-2" />
       {rentalStory}
     </ListingCheckoutSummary>
   );
@@ -1571,6 +1577,7 @@ const BookingCheckout = ({ embedded = false }: BookingCheckoutProps = {}) => {
                 total={formatCurrency(totalChargedToday)}
                 totalLabel={instantConfirm ? "Total due at payment" : "Total after host approval"}
               />
+              <TaxExemptButton state={listing.state} onChange={() => setTaxRefresh((n) => n + 1)} />
 
               {paymentTarget && instantConfirm ? (
                 <>

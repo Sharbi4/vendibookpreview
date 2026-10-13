@@ -46,6 +46,7 @@ import {
   type TaxDestination,
   type TaxKind,
 } from "../_shared/tax.ts";
+import { findActiveExemption } from "../_shared/taxExemption.ts";
 import { sellerMultipartyReady } from "../_shared/paypalMultiparty.ts";
 import {
   buildOrderDetail,
@@ -328,8 +329,9 @@ serve(async (req) => {
       const discount = promoActive ? (product.price_cents - product.promo_price_cents) : 0;
       quote = quoteMonetizationProduct(product, amountCents, discount);
       quote.buyerId = user.id;
-      taxKind = "product";
-      // Vendibook-owned products are taxed at the buyer's location.
+      // Vendibook-owned products (boosts, Pro, add-ons) are digital and taxed
+      // at the buyer's location, only where that state taxes online services.
+      taxKind = "digital";
       taxDestination = await buyerTaxLocation();
 
       const { data: purchase } = await admin
@@ -530,6 +532,8 @@ serve(async (req) => {
         amountCents: quote.taxableBaseCents,
         destination: taxDestination,
         kind: taxKind,
+        // The paying buyer's certificate for the state the purchase is taxed in.
+        exemption: await findActiveExemption(admin, user.id, taxDestination.state),
       });
       applyTaxToQuote(quote, tax);
 
@@ -547,12 +551,12 @@ serve(async (req) => {
       }
       if (bookingRequestId) {
         await admin.from("booking_requests")
-          .update({ ...taxSnapshot, tax_amount: tax.taxCents / 100 })
+          .update({ ...taxSnapshot, tax_amount: tax.taxCents / 100, tax_exemption_id: tax.exemptionId ?? null })
           .eq("id", bookingRequestId);
       }
       if (monetizationPurchaseId) {
         await admin.from("monetization_purchases")
-          .update({ ...taxSnapshot, tax_cents: tax.taxCents })
+          .update({ ...taxSnapshot, tax_cents: tax.taxCents, tax_exemption_id: tax.exemptionId ?? null })
           .eq("id", monetizationPurchaseId);
       }
     }

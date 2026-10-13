@@ -46,6 +46,7 @@ import TransactionCheckoutShell from '@/components/transaction/checkout/Transact
 import CheckoutSection from '@/components/transaction/checkout/CheckoutSection';
 import ListingCheckoutSummary from '@/components/transaction/checkout/ListingCheckoutSummary';
 import MoneyBreakdown, { type MoneyLine } from '@/components/transaction/checkout/MoneyBreakdown';
+import TaxExemptButton from '@/components/tax/TaxExemptButton';
 import PayPalEmbeddedPayment from '@/components/transaction/checkout/PayPalEmbeddedPayment';
 import OrderReviewStage from '@/components/checkout/OrderReviewStage';
 import TransactionAgreementStep from '@/components/checkout/TransactionAgreementStep';
@@ -1025,6 +1026,7 @@ const SaleCheckout = ({ requestOnly = true }: { requestOnly?: boolean }) => {
       <p>Send your purchase request to the seller for approval. Sellers have up to 14 days to approve or decline.</p>
       <p>After approval, your invoice link will be available in your dashboard and sent by email. Review the itemized invoice and authorize payment of the total shown there.</p>
       <p>Submitting a request does not reserve the equipment. Applicable tax and final delivery charges are confirmed on the invoice.</p>
+      <p>Buying for resale, or tax exempt? Upload your certificate now and your invoice will not include sales tax for that state. <TaxExemptButton state={listing.state} /></p>
       <p>No payment is collected with this request.</p>
     </div>
   ) : (

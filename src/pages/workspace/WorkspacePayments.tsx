@@ -6,6 +6,7 @@ import SellerPayoutBalance from '@/components/workspace/SellerPayoutBalance';
 import SellerEarningsTable from '@/components/workspace/SellerEarningsTable';
 import SalesPaymentSetupPaused from '@/components/payments/SalesPaymentSetupPaused';
 import PaymentsDisputesEntry from '@/components/workspace/PaymentsDisputesEntry';
+import { TaxExemptionManager } from '@/components/tax/TaxExemptButton';
 
 const PayoutsPanel = lazy(() => import('@/components/dashboard/tabs/PayoutsPanel'));
 const TransactionsDisputesTab = lazy(
@@ -62,6 +63,21 @@ export default function WorkspacePayments() {
             <Suspense fallback={<Fallback />}>
               <TransactionsDisputesTab />
             </Suspense>
+          </div>
+        </section>
+
+        <section className="v2-panel" aria-label="Sales tax exemption">
+          <div className="v2-panel-head">
+            <div>
+              <p className="v2-eyebrow">Sales tax</p>
+              <h2>Tax exemption certificates</h2>
+            </div>
+          </div>
+          <div className="space-y-3 p-5">
+            <p className="text-sm text-muted-foreground">
+              Buying for resale or tax exempt? Add your state certificate. It applies to your purchases, rentals and Vendibook subscriptions in that state right away.
+            </p>
+            <TaxExemptionManager />
           </div>
         </section>
 

@@ -8,6 +8,7 @@ import {
   type TaxDestination,
   type TaxKind,
 } from "../_shared/tax.ts";
+import { findActiveExemption } from "../_shared/taxExemption.ts";
 
 const RENTER_FEE_PERCENT = FEE_CONFIG.rentalRenterFeePct;
 
@@ -37,6 +38,13 @@ serve(async (req) => {
 
     let amountCents = 0;
     let destination: TaxDestination = {};
+    // Signed-in buyers get their own location (products) and exemption applied.
+    const authHeader = req.headers.get("Authorization");
+    let userId: string | null = null;
+    if (authHeader) {
+      const { data: userData } = await admin.auth.getUser(authHeader.replace("Bearer ", ""));
+      userId = userData?.user?.id ?? null;
+    }
 
     if (kind === "sale") {
       const listingId = body?.listing_id ? String(body.listing_id) : null;
@@ -108,23 +116,17 @@ serve(async (req) => {
 
       // Buyer location from their profile when signed in; otherwise no
       // destination → estimate shows $0 and tax is resolved at payment time.
-      const authHeader = req.headers.get("Authorization");
-      if (authHeader) {
-        const { data: userData } = await admin.auth.getUser(
-          authHeader.replace("Bearer ", ""),
-        );
-        if (userData?.user) {
-          const { data: profile } = await admin
-            .from("profiles")
-            .select("state, zip_code, city")
-            .eq("id", userData.user.id)
-            .maybeSingle();
-          destination = {
-            state: profile?.state ?? null,
-            zip: profile?.zip_code ?? null,
-            city: profile?.city ?? null,
-          };
-        }
+      if (userId) {
+        const { data: profile } = await admin
+          .from("profiles")
+          .select("state, zip_code, city")
+          .eq("id", userId)
+          .maybeSingle();
+        destination = {
+          state: profile?.state ?? null,
+          zip: profile?.zip_code ?? null,
+          city: profile?.city ?? null,
+        };
       }
     } else {
       return jsonError(400, "invalid_kind", "Unsupported quote type.");
@@ -134,7 +136,14 @@ serve(async (req) => {
       return jsonError(400, "invalid_amount", "There's no taxable amount.");
     }
 
-    const tax = await quoteSalesTax({ amountCents, destination, kind });
+    // Vendibook products (boosts, Pro, add-ons) are digital: taxed only where
+    // the state taxes online services, matching square-billing.
+    const tax = await quoteSalesTax({
+      amountCents,
+      destination,
+      kind: kind === "product" ? "digital" : kind,
+      exemption: await findActiveExemption(admin, userId, destination.state),
+    });
 
     return jsonResponse(200, {
       tax_cents: tax.taxCents,
@@ -143,6 +152,7 @@ serve(async (req) => {
       source: tax.source,
       label: tax.label,
       taxable_amount_cents: tax.taxableAmountCents,
+      exempt: tax.source === "exempt",
     });
   } catch (err) {
     return unknownErrorResponse(err);
