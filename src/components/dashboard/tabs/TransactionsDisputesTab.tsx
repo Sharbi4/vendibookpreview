@@ -117,13 +117,18 @@ const TransactionsDisputesTab = () => {
         {FILTERS.map((f) => (
           <button
             key={f.id}
+            type="button"
+            aria-pressed={filter === f.id}
             onClick={() => setFilter(f.id)}
             className={
               'text-xs font-medium px-3 py-1.5 rounded-full border transition ' +
               (filter === f.id
-                ? 'bg-foreground text-background border-foreground'
+                ? 'text-white'
                 : 'bg-transparent text-muted-foreground border-border hover:text-foreground hover:border-foreground/40')
             }
+            // Fixed ink colors: theme tokens (bg-foreground/text-background) flip in the
+            // dashboard shell and left the selected label invisible.
+            style={filter === f.id ? { backgroundColor: 'hsl(var(--v2-ink, 28 10% 12%))', borderColor: 'hsl(var(--v2-ink, 28 10% 12%))' } : undefined}
           >
             {f.label}
           </button>
