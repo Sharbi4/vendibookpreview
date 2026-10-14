@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
+import { useMemo, type ReactNode } from 'react';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
-import { Image as ImageIcon } from 'lucide-react';
+import { ArrowRight, ChevronDown, Crown, Image as ImageIcon } from 'lucide-react';
 import WorkspaceShell from '@/components/workspace/WorkspaceShell';
 import { Button } from '@/components/ui/button';
 import {
@@ -43,6 +43,7 @@ import { ACTIVE_PRODUCT_SLUGS } from '@/lib/monetization/catalogPricing';
 import { summarizePayables, proceedsSince } from '@/lib/payouts/payableTotals';
 import { legacyDashboardRedirect } from '@/lib/workspace/legacyDashboardRedirect';
 import { isListingFeatured } from '@/lib/featured';
+import { productCheckoutPath } from '@/lib/payments/hostedCheckout';
 import { formatWalkthroughTime, walkthroughDisplayStatus } from '@/lib/videoWalkthroughs';
 import type { Tables } from '@/integrations/supabase/types';
 
@@ -63,6 +64,67 @@ const listingPrice = (l: Listing) => {
   const daily = dollars(l.price_daily);
   return daily ? `${daily}/day` : 'Rate not set';
 };
+
+
+/** Compact "To do" list for the side column: small rows, never the page's centrepiece. */
+function TodoCard({ items, loading, footer }: { items: ActionItem[]; loading: boolean; footer?: ReactNode }) {
+  const sorted = [...items].sort((a, b) => Number(!!b.urgent) - Number(!!a.urgent));
+  const shown = sorted.slice(0, 5);
+  const list = loading ? (
+    <ul className="divide-y divide-[#F1ECE5]" aria-busy="true">
+      {[0, 1, 2].map((i) => <li key={i} className="px-4 py-3"><span className={ws.skeleton + ' block h-3.5 w-40'} /></li>)}
+    </ul>
+  ) : shown.length ? (
+    <ul className="divide-y divide-[#F1ECE5]">
+      {shown.map((item) => (
+        <li key={item.id}>
+          <Link to={item.to} className="group flex items-start gap-2.5 px-4 py-3 transition-colors hover:bg-[#FCFAF7]">
+            <span aria-hidden="true" className={'mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full ' + (item.urgent ? 'bg-[#FF5124]' : 'bg-[#D9D2C7]')} />
+            <span className="min-w-0 flex-1">
+              <span className="block text-[13px] font-semibold leading-5 text-[#1C1B1A]">{item.title}</span>
+              {item.detail && <span className="block truncate text-[12px] leading-5 text-[#8A847B]">{item.detail}</span>}
+            </span>
+            <ArrowRight aria-hidden="true" className="mt-1 h-3.5 w-3.5 shrink-0 text-[#B5AEA4] transition-transform group-hover:translate-x-0.5 group-hover:text-[#1C1B1A]" />
+          </Link>
+        </li>
+      ))}
+    </ul>
+  ) : (
+    <p className="px-4 py-4 text-[13px] leading-5 text-[#5E5953]">You’re all caught up.</p>
+  );
+  const count = loading ? null : items.length;
+  const head = (
+    <span className="flex items-center gap-2">
+      <span className="text-[13px] font-semibold text-[#1C1B1A]">To do</span>
+      {!!count && <span className="rounded-full bg-[#FF5124]/10 px-2 py-0.5 text-[11.5px] font-semibold tabular-nums text-[#B83A12]">{count}</span>}
+    </span>
+  );
+  const more = (
+    <div className="flex items-center justify-between gap-3 border-t border-[#F1ECE5] px-4 py-2.5">
+      {sorted.length > shown.length ? <span className="text-[12px] text-[#8A847B]">+{sorted.length - shown.length} more</span> : <span />}
+      <Link to="/dashboard/activity" className={ws.actionLink + ' !text-[12.5px]'}>All activity<ArrowRight aria-hidden="true" className="h-3 w-3" /></Link>
+    </div>
+  );
+  return (
+    <>
+      {/* Phones: one tappable row that expands. */}
+      <details className={ws.surface + ' group lg:hidden'}>
+        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-3.5 [&::-webkit-details-marker]:hidden">
+          {loading ? head : <span className="flex items-center gap-2">{head}<span className="text-[12.5px] text-[#8A847B]">{count ? `${count} thing${count === 1 ? '' : 's'} need you` : 'All caught up'}</span></span>}
+          <ChevronDown aria-hidden="true" className="h-4 w-4 text-[#8A847B] transition-transform group-open:rotate-180" />
+        </summary>
+        <div className="border-t border-[#F1ECE5]">{list}{more}{footer && <div className="px-4 pb-3">{footer}</div>}</div>
+      </details>
+      {/* Desktop: a small card in the side column. */}
+      <section className={ws.surface + ' hidden overflow-hidden lg:block'} aria-label="To do">
+        <div className="px-4 pb-1 pt-3.5">{head}</div>
+        {list}
+        {more}
+        {footer && <div className="px-4 pb-3">{footer}</div>}
+      </section>
+    </>
+  );
+}
 
 export default function WorkspaceHome() {
   const [routeParams] = useSearchParams();
@@ -302,158 +364,195 @@ export default function WorkspaceHome() {
             }
           />
 
-          {/* 1. What needs a decision */}
-          <Panel
-            title="Needs your attention"
-            description={attentionLoading ? 'Checking your listings, offers and payments…' : attention.length > 1 ? `${plural(attention.length, 'item')}, most urgent first` : undefined}
-            action={{ label: 'All activity', to: '/dashboard/activity' }}
-            flush
-            footer={failed.length ? (
-              <p role="alert" className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-[#5E5953]">
-                <span>Couldn’t check {failed.join(', ')} just now.</span>
-                <button type="button" onClick={retryAll} className={ws.link}>Try again</button>
-              </p>
-            ) : undefined}
-          >
-            <ActionList
-              items={attention}
-              loading={attentionLoading}
-              max={5}
-              moreHref="/dashboard/activity"
-              empty={<p className="px-5 py-5 text-[14px] text-[#5E5953] sm:px-6">You’re all caught up. New offers, requests and payouts will show up here.</p>}
-            />
-          </Panel>
-
-          {/* 2. Money (sellers) */}
-          {showSeller && (
-            <section aria-labelledby="home-money">
-              <SectionHeader id="home-money" title="Money" description="From your recorded payouts. Vendibook reviews and sends each payout." action={{ label: 'Payouts & payments', to: '/dashboard/payments' }} />
-              <StatGrid label="Money">
-                <StatTile label="Ready to request" format="cents" value={metric(totals.available, moneyState)} sub={totals.available > 0 ? 'Request it in Payouts' : 'Nothing waiting'} />
-                <StatTile label="Upcoming" format="cents" value={metric(totals.upcoming, moneyState)} sub={totals.nextExpectedAt ? `Next expected ${formatDay(totals.nextExpectedAt)}` : 'From paid orders and bookings'} />
-                <StatTile label="Proceeds this month" format="cents" value={metric(month.cents, moneyState)} sub={`${plural(month.count, 'order')} since ${formatDay(month.since.toISOString())}`} />
-                <StatTile label="Paid out to date" format="cents" value={metric(totals.paid, moneyState)} sub={totals.lastPaidAt ? `Last payout ${formatDay(totals.lastPaidAt)}` : 'No payouts yet'} />
-              </StatGrid>
-            </section>
-          )}
-
-          {/* 3. Listing performance (sellers) */}
-          {showSeller && (
-            <Panel
-              title="Listing performance"
-              description={`Views in the last ${SIGNAL_WINDOW_DAYS} days${activeListings.length > SIGNAL_LISTING_CAP ? ` · your ${SIGNAL_LISTING_CAP} newest listings` : ''}. Saves are all time.`}
-              action={{ label: 'All listings', to: '/dashboard/listings' }}
-              flush
-            >
-              <StatGrid label="Listing totals" variant="flat" className="border-b border-[#ECE6DD]">
-                <StatTile size="sm" label="Live listings" value={metric(live.length, { loading: hostListings.isLoading, error: hostListings.isError })} sub={drafts.length || paused.length ? [drafts.length && plural(drafts.length, 'draft'), paused.length && `${paused.length} paused`].filter(Boolean).join(' · ') : undefined} />
-                <StatTile size="sm" label={`Views · ${SIGNAL_WINDOW_DAYS} days`} value={hostListings.isLoading ? undefined : sum('views30')} />
-                <StatTile size="sm" label="Saves" value={hostListings.isLoading ? undefined : sum('saves')} />
-                <StatTile size="sm" label="Buyer conversations" value={hostListings.isLoading ? undefined : sum('conversations')} />
-              </StatGrid>
-              <SimpleTable
-                caption="Your listings by views"
-                columns={perfColumns}
-                rows={perfRows}
-                rowKey={(l) => l.id}
-                loading={hostListings.isLoading}
-                empty={
-                  hostListings.isError
-                    ? <EmptyState compact className="px-5 py-5 sm:px-6" title="Your listings couldn’t be loaded." body="Nothing has changed on them." action={{ label: 'Open listings', to: '/dashboard/listings' }} />
-                    : <EmptyState compact className="px-5 py-5 sm:px-6" title="No listings yet." body="Listing is free. Add photos, a price and where it’s located." action={{ label: 'Create a listing', to: '/dashboard/listings/new' }} />
-                }
+          <div className="grid gap-8 lg:grid-cols-[300px_minmax(0,1fr)] lg:items-start lg:gap-10">
+            {/* Side column: compact to-do + plan */}
+            <aside className="flex flex-col gap-6 lg:sticky lg:top-24">
+              <TodoCard
+                items={attention}
+                loading={attentionLoading}
+                footer={failed.length ? (
+                  <p role="alert" className="text-[12px] leading-5 text-[#5E5953]">
+                    Couldn’t check {failed.join(', ')}.{' '}
+                    <button type="button" onClick={retryAll} className={ws.link + ' !text-[12px]'}>Try again</button>
+                  </p>
+                ) : undefined}
               />
-            </Panel>
-          )}
 
-          {/* 4. Getting started (brand-new account) */}
-          {sellerKnown && !isSeller && !isBuyer && (
-            <section className={ws.surface + ' grid overflow-hidden md:grid-cols-2'} aria-label="Get started">
-              <div className="p-6 sm:p-8">
-                <p className={ws.eyebrow}>Sell or rent out</p>
-                <h2 className="mt-2.5 text-[20px] font-semibold tracking-[-0.02em]">List a truck, trailer or kitchen</h2>
-                <p className={ws.body + ' mt-2 max-w-sm'}>Listing is free. Buyers and renters message you through Vendibook, and offers and bookings show up here.</p>
-                <Button asChild variant="cta" className={ws.cta + ' mt-6'}>
-                  <Link to="/dashboard/listings/new">Create a listing</Link>
-                </Button>
-              </div>
-              <div className="border-t border-[#ECE6DD] p-6 sm:p-8 md:border-l md:border-t-0">
-                <p className={ws.eyebrow}>Buy or rent</p>
-                <h2 className="mt-2.5 text-[20px] font-semibold tracking-[-0.02em]">Find equipment near you</h2>
-                <p className={ws.body + ' mt-2 max-w-sm'}>Save listings to compare, message sellers and make offers. Your purchases and requests are tracked here.</p>
-                <Link to="/search" className={ws.secondary + ' mt-6'}>Browse marketplace</Link>
-              </div>
-            </section>
-          )}
-
-          {/* 5. Buying */}
-          {sellerKnown && isBuyer && (
-            <section aria-labelledby="home-buying">
-              <SectionHeader id="home-buying" title="Buying" action={{ label: 'Saved listings', to: '/dashboard/saved' }} />
-              <StatGrid label="Buying">
-                <StatTile to="/dashboard/saved" label="Saved listings" value={metric(favorites.favorites.length, { loading: favorites.isLoading, error: favorites.isError })} />
-                <StatTile to="/dashboard/offers" label="Open offers" value={metric(buyingOpen, { loading: buyerOffers.isLoading, error: buyerOffers.isError })} sub={buyerOffers.counteredOffers?.length ? `${buyerOffers.counteredOffers.length} countered` : undefined} />
-                <StatTile to="/dashboard/activity?filter=rentals" label="Rental requests" value={metric(shopperBookings.bookings.filter((b) => b.status === 'pending').length, { loading: shopperBookings.isLoading, error: shopperBookings.isError })} sub="Awaiting the host" />
-                <StatTile to="/dashboard/transactions?filter=Purchases" label="Purchases" value={metric(buyerTx.length, { loading: tx.isLoading, error: tx.isError })} sub="Payments recorded" />
-              </StatGrid>
-            </section>
-          )}
-
-          {/* 6. Recent activity + plan */}
-          {(recent.length > 0 || showSeller) && (
-            <div className={showSeller ? 'grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] lg:gap-8' : ''}>
-              <Panel title="Recent activity" action={{ label: 'View all', to: '/dashboard/activity' }} flush>
-                <SimpleTable
-                  caption="Recent activity"
-                  columns={recentColumns}
-                  rows={recent}
-                  rowKey={(r) => r.id}
-                  loading={tx.isLoading && !recent.length}
-                  empty={<EmptyState compact className="px-5 py-5 sm:px-6" title="No activity yet." body="Payments, bookings and walkthroughs appear here as they happen." />}
-                />
-              </Panel>
-
-              {showSeller && (isPro ? (
-                <Panel
-                  className="lg:self-start"
-                  title="Vendibook Pro"
-                  action={<StatusPill tone={plan.isPastDue ? 'warn' : 'ok'}>{plan.isPastDue ? 'Past due' : plan.cancelAtPeriodEnd ? 'Ending' : 'Active'}</StatusPill>}
-                  footer={<Link to="/dashboard/buyermatch/membership" className={ws.actionLink}>Manage membership</Link>}
-                >
-                  {(plan.currentPeriodEnd || plan.planLabel !== 'Vendibook Pro') && (
-                    <p className="mb-3 text-[14px] font-semibold text-[#1C1B1A]">
-                      {[plan.planLabel !== 'Vendibook Pro' && plan.planLabel, plan.currentPeriodEnd && `${plan.cancelAtPeriodEnd ? 'Access ends' : 'Renews'} ${formatDay(plan.currentPeriodEnd)}`].filter(Boolean).join(' · ')}
-                    </p>
-                  )}
-                  <p className={ws.body}>BuyerMatch has our team look for buyers for your sale listings and logs every step.</p>
-                  <Link to="/dashboard/buyermatch" className={ws.secondary + ' mt-5'}>Open BuyerMatch</Link>
-                </Panel>
-              ) : plan.isLoading ? null : (
-                <Panel className="lg:self-start" title="Vendibook Pro" action={<span className="text-[13px] font-semibold tabular-nums text-[#5E5953]">{proPrice.labelWithCadence}</span>}>
-                  <ul className="space-y-2.5 text-[14px] leading-6 text-[#1C1B1A]">
-                    <li>BuyerMatch: our team looks for buyers for your sale listings</li>
-                    <li className="border-t border-[#F1ECE5] pt-2.5">A Featured Boost credit every month</li>
-                    <li className="border-t border-[#F1ECE5] pt-2.5">Priority support</li>
-                  </ul>
-                  <Button asChild variant="cta" className={ws.cta + ' mt-6 w-full sm:w-auto'}>
+              {showSeller && !plan.isLoading && (isPro ? (
+                <section className={ws.surface + ' p-4'} aria-label="Vendibook Pro">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[13px] font-semibold">Vendibook Pro</span>
+                    <StatusPill tone={plan.isPastDue ? 'warn' : 'ok'}>{plan.isPastDue ? 'Past due' : plan.cancelAtPeriodEnd ? 'Ending' : 'Active'}</StatusPill>
+                  </div>
+                  {plan.currentPeriodEnd && <p className="mt-1 text-[12px] text-[#8A847B]">{plan.cancelAtPeriodEnd ? 'Access ends' : 'Renews'} {formatDay(plan.currentPeriodEnd)}</p>}
+                  <p className="mt-2.5 text-[12.5px] leading-5 text-[#5E5953]">BuyerMatch is looking for buyers for your sale listings.</p>
+                  <div className="mt-3.5 flex flex-wrap gap-x-4 gap-y-2">
+                    <Link to="/dashboard/buyermatch" className={ws.link + ' !text-[12.5px]'}>Open BuyerMatch</Link>
+                    <Link to="/dashboard/buyermatch/membership" className={ws.actionLink + ' !text-[12.5px]'}>Manage</Link>
+                  </div>
+                </section>
+              ) : (
+                <section className="rounded-2xl bg-[#1C1B1A] p-4 text-white" aria-label="Vendibook Pro">
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="text-[13px] font-semibold">Vendibook Pro</span>
+                    <span className="text-[12.5px] font-semibold tabular-nums text-white/70">{proPrice.labelWithCadence}</span>
+                  </div>
+                  <p className="mt-2 text-[12.5px] leading-5 text-white/75">BuyerMatch looks for buyers for your sale listings, plus a Featured Boost credit every month.</p>
+                  <Button asChild variant="cta" className={ws.cta + ' mt-3.5 !h-9 w-full text-[13px]'}>
                     <Link to="/pricing">See Vendibook Pro</Link>
                   </Button>
-                  <p className={ws.note + ' mt-3'}>No buyer, offer or sale is guaranteed.</p>
-                </Panel>
+                  <p className="mt-2 text-[11px] leading-4 text-white/50">No buyer, offer or sale is guaranteed.</p>
+                </section>
               ))}
-            </div>
-          )}
+            </aside>
 
-          {/* Buyers who don't sell yet: one quiet prompt, not a second dashboard. */}
-          {sellerKnown && !isSeller && isBuyer && (
-            <section className={ws.surface + ' flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8'} aria-label="Start selling">
-              <div className="max-w-xl">
-                <h2 className="text-[17px] font-semibold tracking-[-0.01em]">Have a truck, trailer or kitchen to sell or rent out?</h2>
-                <p className={ws.body + ' mt-1.5'}>Listing is free. Offers, bookings and payouts will show up on this page.</p>
-              </div>
-              <Link to="/dashboard/listings/new" className={ws.secondary + ' self-start sm:self-center'}>Create a listing</Link>
-            </section>
-          )}
+            {/* Main column */}
+            <div className={ws.stack + ' min-w-0'}>
+              {/* Your listings: small cards; the full view lives on Listings */}
+              {showSeller && (
+                <section aria-labelledby="home-listings">
+                  <SectionHeader
+                    id="home-listings"
+                    title="Your listings"
+                    description={hostListings.isLoading ? undefined : `${plural(live.length, 'live listing')}${drafts.length ? ` · ${plural(drafts.length, 'draft')}` : ''}${paused.length ? ` · ${paused.length} paused` : ''} · views in the last ${SIGNAL_WINDOW_DAYS} days`}
+                    action={{ label: 'Manage listings', to: '/dashboard/listings' }}
+                  />
+                  {hostListings.isLoading ? (
+                    <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                      {[0, 1, 2].map((i) => <div key={i} className={ws.skeleton + ' h-[230px] rounded-2xl'} />)}
+                    </div>
+                  ) : perfRows.length ? (
+                    <ul className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+                      {perfRows.slice(0, 3).map((l) => {
+                        const featured = isListingFeatured(l as never);
+                        const st = listingStatusPill(l.status);
+                        const sig = signals.data?.[l.id];
+                        return (
+                          <li key={l.id} className={ws.surface + ' flex flex-col overflow-hidden'}>
+                            <Link to="/dashboard/listings" className="group flex items-start sm:block">
+                              <span className="relative block aspect-square w-24 shrink-0 overflow-hidden bg-[#F3EEE7] max-sm:m-3 max-sm:rounded-xl sm:aspect-[4/3] sm:w-auto">
+                                {l.cover_image_url
+                                  ? <img src={l.cover_image_url} alt="" loading="lazy" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]" />
+                                  : <span className="grid h-full place-items-center"><ImageIcon aria-hidden="true" className="h-5 w-5 text-[#8A847B]" /></span>}
+                                <span className="absolute left-2.5 top-2.5 hidden gap-1.5 sm:flex">
+                                  <StatusPill tone={st.tone}>{st.label}</StatusPill>
+                                  {featured && <span className="inline-flex items-center gap-1 rounded-full bg-[#1C1B1A]/85 px-2 py-0.5 text-[11px] font-semibold text-white"><Crown aria-hidden="true" className="h-3 w-3 text-[#FFB020]" />Featured</span>}
+                                </span>
+                              </span>
+                              <span className="block min-w-0 flex-1 py-3 pr-3 sm:px-4 sm:pb-0">
+                                <span className="mb-1 flex gap-1.5 sm:hidden">
+                                  <StatusPill tone={st.tone}>{st.label}</StatusPill>
+                                  {featured && <StatusPill tone="accent">Featured</StatusPill>}
+                                </span>
+                                <span className="block truncate text-[14px] font-semibold group-hover:underline">{l.title?.trim() || 'Untitled listing'}</span>
+                                <span className="mt-0.5 block text-[13px] text-[#5E5953]">{listingPrice(l)}</span>
+                                <span className="mt-1.5 block text-[12px] tabular-nums text-[#8A847B]">
+                                  {signals.isLoading ? 'Loading views…' : `${formatCount(sig?.views30 ?? null)} views · ${formatCount(sig?.saves ?? null)} saves`}
+                                  {sig?.offersWaiting ? ` · ${sig.offersWaiting} offer${sig.offersWaiting === 1 ? '' : 's'} waiting` : ''}
+                                </span>
+                              </span>
+                            </Link>
+                            <div className="mt-auto flex items-center justify-between gap-3 border-t border-[#F1ECE4] px-4 py-2.5 sm:border-t-0 sm:pb-4 sm:pt-3">
+                              {featured ? (
+                                <span className="text-[12px] text-[#8A847B]">Featured until {formatDay((l as { featured_expires_at?: string | null }).featured_expires_at ?? null)}</span>
+                              ) : l.status === 'published' ? (
+                                <>
+                                  <span className="whitespace-nowrap text-[12px] text-[#8A847B]">Not featured</span>
+                                  <Link
+                                    to={productCheckoutPath(ACTIVE_PRODUCT_SLUGS.featuredBoost, l.id, { success: '/dashboard/listings', cancel: '/dashboard' })}
+                                    className="inline-flex h-8 items-center gap-1.5 rounded-full border border-[#E2DBD0] px-3 text-[12.5px] font-semibold text-[#1C1B1A] transition-colors hover:border-[#1C1B1A]"
+                                  >
+                                    <Crown aria-hidden="true" className="h-3.5 w-3.5 text-[#E8A317]" />Boost
+                                  </Link>
+                                </>
+                              ) : (
+                                <Link to={`/dashboard/listings/${l.id}/edit`} className={ws.actionLink + ' !text-[12.5px]'}>{l.status === 'draft' ? 'Finish draft' : 'Edit listing'}<ArrowRight aria-hidden="true" className="h-3 w-3" /></Link>
+                              )}
+                            </div>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  ) : hostListings.isError ? (
+                    <EmptyState compact title="Your listings couldn’t be loaded." body="Nothing has changed on them." action={{ label: 'Open listings', to: '/dashboard/listings' }} />
+                  ) : (
+                    <EmptyState compact title="No listings yet." body="Listing is free. Add photos, a price and where it’s located." action={{ label: 'Create a listing', to: '/dashboard/listings/new' }} />
+                  )}
+                </section>
+              )}
+
+              {/* Money (sellers) */}
+              {showSeller && (
+                <section aria-labelledby="home-money">
+                  <SectionHeader id="home-money" title="Money" description="From your recorded payouts. Vendibook reviews and sends each payout." action={{ label: 'Payouts & payments', to: '/dashboard/payments' }} />
+                  <StatGrid label="Money" className="lg:grid-cols-2 2xl:grid-cols-4">
+                    <StatTile label="Ready to request" format="cents" value={metric(totals.available, moneyState)} sub={totals.available > 0 ? 'Request it in Payouts' : 'Nothing waiting'} />
+                    <StatTile label="Upcoming" format="cents" value={metric(totals.upcoming, moneyState)} sub={totals.nextExpectedAt ? `Next expected ${formatDay(totals.nextExpectedAt)}` : 'From paid orders and bookings'} />
+                    <StatTile label="Proceeds this month" format="cents" value={metric(month.cents, moneyState)} sub={`${plural(month.count, 'order')} since ${formatDay(month.since.toISOString())}`} />
+                    <StatTile label="Paid out to date" format="cents" value={metric(totals.paid, moneyState)} sub={totals.lastPaidAt ? `Last payout ${formatDay(totals.lastPaidAt)}` : 'No payouts yet'} />
+                  </StatGrid>
+                </section>
+              )}
+
+              {/* Getting started (brand-new account) */}
+              {sellerKnown && !isSeller && !isBuyer && (
+                <section className={ws.surface + ' grid overflow-hidden md:grid-cols-2'} aria-label="Get started">
+                  <div className="p-6 sm:p-8">
+                    <p className={ws.eyebrow}>Sell or rent out</p>
+                    <h2 className="mt-2.5 text-[20px] font-semibold tracking-[-0.02em]">List a truck, trailer or kitchen</h2>
+                    <p className={ws.body + ' mt-2 max-w-sm'}>Listing is free. Buyers and renters message you through Vendibook, and offers and bookings show up here.</p>
+                    <Button asChild variant="cta" className={ws.cta + ' mt-6'}>
+                      <Link to="/dashboard/listings/new">Create a listing</Link>
+                    </Button>
+                  </div>
+                  <div className="border-t border-[#ECE6DD] p-6 sm:p-8 md:border-l md:border-t-0">
+                    <p className={ws.eyebrow}>Buy or rent</p>
+                    <h2 className="mt-2.5 text-[20px] font-semibold tracking-[-0.02em]">Find equipment near you</h2>
+                    <p className={ws.body + ' mt-2 max-w-sm'}>Save listings to compare, message sellers and make offers. Your purchases and requests are tracked here.</p>
+                    <Link to="/search" className={ws.secondary + ' mt-6'}>Browse marketplace</Link>
+                  </div>
+                </section>
+              )}
+
+              {/* Buying */}
+              {sellerKnown && isBuyer && (
+                <section aria-labelledby="home-buying">
+                  <SectionHeader id="home-buying" title="Buying" action={{ label: 'Saved listings', to: '/dashboard/saved' }} />
+                  <StatGrid label="Buying">
+                    <StatTile to="/dashboard/saved" label="Saved listings" value={metric(favorites.favorites.length, { loading: favorites.isLoading, error: favorites.isError })} />
+                    <StatTile to="/dashboard/offers" label="Open offers" value={metric(buyingOpen, { loading: buyerOffers.isLoading, error: buyerOffers.isError })} sub={buyerOffers.counteredOffers?.length ? `${buyerOffers.counteredOffers.length} countered` : undefined} />
+                    <StatTile to="/dashboard/activity?filter=rentals" label="Rental requests" value={metric(shopperBookings.bookings.filter((b) => b.status === 'pending').length, { loading: shopperBookings.isLoading, error: shopperBookings.isError })} sub="Awaiting the host" />
+                    <StatTile to="/dashboard/transactions?filter=Purchases" label="Purchases" value={metric(buyerTx.length, { loading: tx.isLoading, error: tx.isError })} sub="Payments recorded" />
+                  </StatGrid>
+                </section>
+              )}
+
+              {/* Recent activity */}
+              {(recent.length > 0 || showSeller) && (
+                <Panel title="Recent activity" action={{ label: 'View all', to: '/dashboard/activity' }} flush>
+                  <SimpleTable
+                    caption="Recent activity"
+                    columns={recentColumns}
+                    rows={recent}
+                    rowKey={(r) => r.id}
+                    loading={tx.isLoading && !recent.length}
+                    empty={<EmptyState compact className="px-5 py-5 sm:px-6" title="No activity yet." body="Payments, bookings and walkthroughs appear here as they happen." />}
+                  />
+                </Panel>
+              )}
+
+              {/* Buyers who don't sell yet: one quiet prompt, not a second dashboard. */}
+              {sellerKnown && !isSeller && isBuyer && (
+                <section className={ws.surface + ' flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8'} aria-label="Start selling">
+                  <div className="max-w-xl">
+                    <h2 className="text-[17px] font-semibold tracking-[-0.01em]">Have a truck, trailer or kitchen to sell or rent out?</h2>
+                    <p className={ws.body + ' mt-1.5'}>Listing is free. Offers, bookings and payouts will show up on this page.</p>
+                  </div>
+                  <Link to="/dashboard/listings/new" className={ws.secondary + ' self-start sm:self-center'}>Create a listing</Link>
+                </section>
+              )}
+            </div>
+          </div>
 
           {/* 7. Shortcuts */}
           <nav aria-label="Shortcuts" className="flex flex-wrap gap-x-6 gap-y-3 border-t border-[#ECE6DD] pt-6">

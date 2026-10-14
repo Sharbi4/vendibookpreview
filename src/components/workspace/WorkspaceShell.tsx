@@ -39,7 +39,8 @@ import { cn } from '@/lib/utils';
 
 type NavIcon = typeof Home;
 type Badge = 'messages' | 'notifications';
-interface WorkspaceNavItem { label: string; to: string; icon: NavIcon; badge?: Badge }
+/** `pro` marks a feature included with Vendibook Pro; it gets a small Pro tag. */
+interface WorkspaceNavItem { label: string; to: string; icon: NavIcon; badge?: Badge; pro?: boolean }
 interface WorkspaceNavSection { label: string; items: WorkspaceNavItem[] }
 
 /** One workspace, grouped by job. No buyer/seller persona switch. */
@@ -58,7 +59,7 @@ const WORKSPACE_NAV: WorkspaceNavSection[] = [
     items: [
       { label: 'Listings', to: '/dashboard/listings', icon: List },
       { label: 'Offers', to: '/dashboard/offers', icon: Tag },
-      { label: 'BuyerMatch', to: '/dashboard/buyermatch', icon: Target },
+      { label: 'BuyerMatch', to: '/dashboard/buyermatch', icon: Target, pro: true },
     ],
   },
   {
@@ -82,7 +83,7 @@ const WORKSPACE_NAV: WorkspaceNavSection[] = [
 ];
 
 const TOOLS: WorkspaceNavItem[] = [
-  { label: 'PricePilot', to: '/tools/pricepilot', icon: Gauge },
+  { label: 'PricePilot', to: '/tools/pricepilot', icon: Gauge, pro: true },
   { label: 'PermitPath', to: '/tools/permitpath', icon: FileCheck2 },
 ];
 
@@ -154,14 +155,14 @@ function ProCard({ onNavigate, tone }: { onNavigate?: () => void; tone: 'dark' |
   const pro = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.vendibookPro);
   if (isLoading || tier !== 'free') return null;
   return (
-    <div className={cn('rounded-xl p-3.5', tone === 'dark' ? 'bg-white/[0.04] ring-1 ring-inset ring-white/[0.08]' : 'bg-white ring-1 ring-inset ring-[#ECE6DD]')}>
-      <p className={cn('text-[13px] font-semibold', tone === 'dark' ? 'text-white' : 'text-[#1C1B1A]')}>
-        Vendibook Pro <span className={cn('font-medium tabular-nums', tone === 'dark' ? 'text-white/50' : 'text-[#8A847B]')}>· {pro.labelWithCadence}</span>
+    <div className={cn('rounded-xl p-3', tone === 'dark' ? 'bg-white/[0.04] ring-1 ring-inset ring-white/[0.08]' : 'bg-white ring-1 ring-inset ring-[#ECE6DD]')}>
+      <p className={cn('flex items-baseline justify-between gap-2 text-[13px] font-semibold', tone === 'dark' ? 'text-white' : 'text-[#1C1B1A]')}>
+        Vendibook Pro <span className={cn('text-[12px] font-medium tabular-nums', tone === 'dark' ? 'text-white/50' : 'text-[#8A847B]')}>{pro.labelWithCadence}</span>
       </p>
-      <p className={cn('mt-1 text-[12px] leading-[18px]', tone === 'dark' ? 'text-white/55' : 'text-[#5E5953]')}>
-        BuyerMatch for sale listings, a monthly Featured Boost credit and priority support.
+      <p className={cn('mt-0.5 text-[12px] leading-[17px]', tone === 'dark' ? 'text-white/55' : 'text-[#5E5953]')}>
+        BuyerMatch, PricePilot and a monthly Boost credit.
       </p>
-      <Button asChild variant="cta" size="sm" className="mt-3 !h-8 w-full !rounded-lg text-[12.5px] !font-semibold !shadow-none">
+      <Button asChild variant="cta" size="sm" className="mt-2.5 !h-8 w-full !rounded-lg text-[12.5px] !font-semibold !shadow-none">
         <Link to="/pricing" onClick={onNavigate}>See Vendibook Pro</Link>
       </Button>
     </div>
@@ -183,6 +184,7 @@ function SidebarLink({ item, count, onNavigate, variant }: { item: WorkspaceNavI
     >
       <Icon aria-hidden="true" />
       <span className="truncate">{item.label}</span>
+      {item.pro && <span className={cn('ws-pro-tag', variant === 'sheet' && 'is-light')}>Pro</span>}
       {count !== undefined && <CountBadge n={count} label={item.label.toLowerCase()} tone={variant === 'sidebar' ? 'dark' : 'light'} />}
     </NavLink>
   );
@@ -242,14 +244,14 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
         <Link to="/" className="ws-side-logo" aria-label="Vendibook homepage">
           <img src={logo} alt="Vendibook" className="v2-logo" />
         </Link>
+        {/* Pro sits up top, under the logo. Home carries its own plan panel, so it's skipped there. */}
+        {location.pathname !== '/dashboard' && (
+          <div className="mb-4 empty:hidden">
+            <ProCard tone="dark" />
+          </div>
+        )}
         <nav className="ws-side-nav" aria-label="Workspace navigation">
           <NavSections counts={counts} variant="sidebar" />
-          {/* Home carries its own plan panel; don't repeat the upsell there. */}
-          {location.pathname !== '/dashboard' && (
-            <div className="mt-5 px-1.5">
-              <ProCard tone="dark" />
-            </div>
-          )}
         </nav>
         <div className="ws-side-account">
           <Link to="/dashboard/profile" className="flex min-w-0 flex-1 items-center gap-3 rounded-lg p-1.5 transition-colors hover:bg-white/[0.05]">
@@ -282,15 +284,15 @@ export default function WorkspaceShell({ children }: { children: ReactNode }) {
                 <span className="truncate">{name}</span>
                 <PlanBadge tone="light" />
               </SheetDescription>
+              <div className="mt-5 empty:hidden">
+                <ProCard tone="light" onNavigate={() => setMenuOpen(false)} />
+              </div>
               <nav aria-label="Dashboard menu" className="mt-5 grid gap-0.5">
                 <NavSections counts={counts} variant="sheet" onNavigate={() => setMenuOpen(false)} />
                 <div className="ws-side-section">
                   <p className="ws-sheet-heading">Marketplace</p>
                   <Link to="/list" onClick={() => setMenuOpen(false)} className="workspace-menu-link"><Plus aria-hidden="true" /><span>List an asset</span></Link>
                   <Link to="/search" onClick={() => setMenuOpen(false)} className="workspace-menu-link"><Compass aria-hidden="true" /><span>Browse marketplace</span></Link>
-                </div>
-                <div className="mt-4">
-                  <ProCard tone="light" onNavigate={() => setMenuOpen(false)} />
                 </div>
               </nav>
             </SheetContent>
