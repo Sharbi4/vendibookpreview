@@ -380,6 +380,19 @@ serve(async (req) => {
     if (isTest) {
       const testEmail = String(body.testEmail ?? "").trim().toLowerCase();
       if (!isMailableAddress(testEmail)) return json({ error: "Valid testEmail required" }, 400);
+      // Test sends may only go to staff: the calling admin, a vendibook.com
+      // mailbox, or another admin account's email.
+      if (callerId && !testEmail.endsWith("@vendibook.com")) {
+        const { data: adminRoles } = await admin.from("user_roles").select("user_id").eq("role", "admin");
+        const adminIds = (adminRoles ?? []).map((r: { user_id: string }) => r.user_id);
+        const { data: adminProfiles } = adminIds.length
+          ? await admin.from("profiles").select("email").in("id", adminIds)
+          : { data: [] as { email: string | null }[] };
+        const staff = new Set((adminProfiles ?? []).map((p: { email: string | null }) => String(p.email ?? "").toLowerCase()));
+        const { data: me } = await admin.auth.admin.getUserById(callerId);
+        if (me?.user?.email) staff.add(me.user.email.toLowerCase());
+        if (!staff.has(testEmail)) return json({ error: "Test emails can only go to staff addresses." }, 403);
+      }
       const want = body.variant as ConciergeVariant | undefined;
       const sample = want ? recipients.find((r) => r.data.variant === want) : recipients[0];
       if (!sample) return json({ error: "No eligible recipients to sample" }, 404);
