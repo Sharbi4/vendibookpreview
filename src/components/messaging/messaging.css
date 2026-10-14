@@ -23,3 +23,17 @@ textarea.message-composer:disabled { background: #f0ece6 !important; }
 .message-report { background: #fffdfa; color: #25221e; }
 .message-report p, .message-report label { color: #51483f; }
 .message-report select { background: #fffdfa; color: #25221e; border: 1px solid #a79c90; padding: 10px; border-radius: 8px; }
+
+/* The dashboard (/dashboard/messages) sits on light v2 paper, but the shared
+   conversation list and search use dark-theme tokens (near-white text).
+   Scope dark ink here so every line stays readable on the light panel. */
+.messaging-scope { color: #25221e; color-scheme: light; }
+.messaging-scope .text-foreground { color: #25221e !important; }
+.messaging-scope .text-muted-foreground { color: #625a52 !important; }
+.messaging-scope .text-primary { color: #b84720 !important; }
+.messaging-scope .bg-card { background-color: #fffdfa !important; }
+.messaging-scope .bg-muted { background-color: #ede8e1 !important; }
+.messaging-scope .border-border { border-color: #ECE6DD !important; }
+.messaging-scope .divide-border > :not([hidden]) ~ :not([hidden]) { border-color: #ECE6DD !important; }
+.messaging-scope .hover\:bg-muted\/50:hover { background-color: #f3ede5 !important; }
+.messaging-scope .bg-primary\/5 { background-color: rgba(184, 71, 32, 0.06) !important; }
