@@ -7,6 +7,7 @@ import WorkspaceShell from '@/components/workspace/WorkspaceShell';
 import ConversationList from '@/components/messaging/ConversationList';
 import ConversationThread from '@/components/messaging/ConversationThread';
 import MessageSearch from '@/components/messaging/MessageSearch';
+import '@/components/messaging/messaging.css';
 
 export default function WorkspaceMessages() {
   const { conversationId } = useParams<{ conversationId?: string }>();
@@ -32,7 +33,7 @@ export default function WorkspaceMessages() {
           <p>Conversations with buyers, renters, hosts and sellers.</p>
         </header>
 
-        {!conversationId && <MessageSearch />}
+        {!conversationId && <div className="messaging-scope"><MessageSearch /></div>}
         {bookingId && <Link to={`/dashboard/bookings/${encodeURIComponent(bookingId)}`} className="v2-btn-quiet">Return to booking details</Link>}
         {!conversationId && listingId && <section className="v2-panel p-5">
           {listing.isLoading ? <p role="status">Loading the host…</p> : listing.data ? <>
@@ -49,7 +50,7 @@ export default function WorkspaceMessages() {
           </Link>
         )}
 
-        <section className="v2-panel overflow-hidden p-0">
+        <section className="v2-panel messaging-scope overflow-hidden p-0">
           <div className="hidden md:grid md:grid-cols-[320px_1fr] min-h-[560px]">
             <div className="border-r border-[hsl(var(--v2-line))] overflow-y-auto max-h-[calc(100vh-260px)]">
               <ConversationList />
