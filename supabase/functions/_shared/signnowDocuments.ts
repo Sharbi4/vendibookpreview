@@ -27,6 +27,7 @@ import {
   prefillFields,
   isSignNowConfigured,
   registerDocumentWebhook,
+  deleteDocument,
 } from './signnow.ts';
 import { resolveTemplate, currentTemplateVersion } from './signnowTemplates.ts';
 import type { AssetVariant } from './signnowTemplateSpecs.ts';
@@ -219,16 +220,25 @@ export async function createPackageDocument(input: CreateDocumentInput): Promise
     generated_at: new Date().toISOString(),
   }, required);
 
-  const invites = await createEmbeddedInvite(
-    signnowDocId,
-    input.signers.map((s) => ({
-      email: s.profile.email,
-      role_name: s.signnowRole,
-      order: s.order,
-      first_name: s.profile.first_name ?? undefined,
-      last_name: s.profile.last_name ?? undefined,
-    })),
-  );
+  let invites;
+  try {
+    invites = await createEmbeddedInvite(
+      signnowDocId,
+      input.signers.map((s) => ({
+        email: s.profile.email,
+        role_name: s.signnowRole,
+        order: s.order,
+        first_name: s.profile.first_name ?? undefined,
+        last_name: s.profile.last_name ?? undefined,
+      })),
+    );
+  } catch (e) {
+    // Nothing references this SignNow copy yet; remove it so a failed send
+    // (and every sweep retry) does not leave an orphan document behind.
+    await deleteDocument(signnowDocId).catch((err) =>
+      console.warn('[signnow] could not delete unsent document', signnowDocId, (err as Error).message));
+    throw e;
+  }
   await safeRegisterWebhook(signnowDocId);
 
   const signerRecords: SignerRecord[] = input.signers.map((s) => ({

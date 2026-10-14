@@ -20,6 +20,8 @@
  *   SIGNNOW_TEMPLATE_BILL_OF_SALE
  */
 
+import { buildEmbeddedInvites, type SignNowDocumentRole } from './signnowInviteRoles.ts';
+
 interface CachedToken {
   access_token: string;
   expires_at: number; // ms epoch
@@ -230,29 +232,26 @@ export async function createEmbeddedInvite(
   signers: EmbeddedInviteSigner[],
   nameFormula?: string,
 ): Promise<CreatedInvite[]> {
+  // SignNow needs each invite's role as `role` / `role_id` from the copied
+  // document (not `role_name`), so read the document's roles first.
+  const doc = await getDocument(documentId);
+  const roles: SignNowDocumentRole[] = Array.isArray(doc?.roles) ? doc.roles : [];
+  const invites = buildEmbeddedInvites(signers, roles);
+  const roleNameById = new Map(invites.map((i) => [i.role_id, i.role]));
+
   const res = await apiFetch(`/v2/documents/${documentId}/embedded-invites`, {
     method: 'POST',
-    json: {
-      invites: signers.map((s) => ({
-        email: s.email,
-        role_name: s.role_name,
-        order: s.order,
-        auth_method: s.auth_method ?? 'none',
-        first_name: s.first_name,
-        last_name: s.last_name,
-      })),
-      name_formula: nameFormula,
-    },
+    json: { invites, name_formula: nameFormula },
   });
   const json = await res.json();
-  // Response returns { data: [{ id, email, role_name, order, ... }] }
+  // Response returns { data: [{ id, email, role_id, order, status, ... }] }
   const rows: any[] = Array.isArray(json?.data) ? json.data : (json?.id ? [json] : []);
   let created: CreatedInvite[] = rows
     .filter((r) => r?.id)
     .map((r) => ({
       id: String(r.id),
       email: String(r.email ?? ''),
-      role_name: r.role_name ? String(r.role_name) : undefined,
+      role_name: r.role_id ? roleNameById.get(String(r.role_id)) : (r.role ? String(r.role) : undefined),
       order: r.order != null ? Number(r.order) : undefined,
     }));
 
@@ -315,6 +314,11 @@ export async function createEmbeddedSigningLink(
 export async function getDocument(documentId: string): Promise<any> {
   const res = await apiFetch(`/document/${documentId}`, { method: 'GET' });
   return await res.json();
+}
+
+/** Best-effort delete of a document we created but could not send. */
+export async function deleteDocument(documentId: string): Promise<void> {
+  await apiFetch(`/document/${documentId}`, { method: 'DELETE' });
 }
 
 /** Download the completed PDF as bytes. */
