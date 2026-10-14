@@ -1,62 +1,241 @@
-/* Buyer-first homepage: inventory chips, Vendibook Guarantee, seller strip,
-   closing CTA. Uses the .v2-home tokens (--v2h-*); orange stays on actions. */
+/* Buyer-first homepage (IronPlanet-style rhythm, Vendibook brand).
+   Charcoal, warm white and one orange accent. Photos carry the sections;
+   no icon bubbles. Uses the .v2-home tokens (--v2h-*). */
 
-/* ── Just listed + shop-by-type chips ── */
-.hb-inventory { display: grid; gap: 14px; }
-.hb-chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.hb-chips a {
-  border: 1px solid hsl(var(--v2h-line)); border-radius: 999px; background: hsl(var(--v2h-surface));
-  padding: 6px 12px; color: hsl(var(--v2h-ink)); font-size: 13px; font-weight: 600;
-  transition: border-color .15s ease, background-color .15s ease;
+.hb-home {
+  --hb-orange: 13 100% 57%;
+  --hb-night: 24 14% 8%;
+  --hb-tint: 36 30% 93%;
 }
-.hb-chips a:hover { border-color: hsl(var(--v2h-ink) / .45); background: hsl(40 28% 96%); }
+.hb-wrap { margin: 0 auto; width: 100%; max-width: 1240px; padding: 0 16px; }
+@media (min-width: 900px) { .hb-wrap { padding: 0 32px; } }
 
-/* ── Vendibook Guarantee ── */
-.hb-guarantee {
-  scroll-margin-top: 88px; display: grid; gap: 20px;
-  border: 1px solid hsl(var(--v2h-line)); border-radius: 18px; background: hsl(var(--v2h-surface));
-  padding: 24px 18px; box-shadow: 0 1px 2px hsl(28 12% 20% / .05), 0 24px 52px -40px hsl(28 12% 20% / .5);
-}
-.hb-guarantee-eyebrow { display: inline-flex; align-items: center; gap: 6px; }
-.hb-guarantee-eyebrow svg { width: 15px; height: 15px; color: hsl(var(--v2h-ink)); }
-.hb-guarantee h2 {
-  margin-top: 8px; max-width: 22ch; color: hsl(var(--v2h-ink));
-  font-size: clamp(1.45rem, 2.6vw, 2.15rem); font-weight: 700; line-height: 1.12;
-}
-.hb-guarantee-lede { margin-top: 10px; max-width: 58ch; color: hsl(var(--v2h-stone)); font-size: 15px; line-height: 1.55; }
-.hb-guarantee-more { margin-top: 14px; }
-.hb-steps { margin: 0; padding: 0; list-style: none; display: grid; gap: 10px; }
-.hb-steps li {
-  display: grid; grid-template-columns: 32px 1fr; gap: 12px; align-items: start;
-  border: 1px solid hsl(var(--v2h-line)); border-radius: 12px; background: hsl(var(--v2h-paper));
-  padding: 12px 14px;
-}
-.hb-step-num {
-  display: inline-flex; width: 28px; height: 28px; align-items: center; justify-content: center;
-  border-radius: 999px; background: hsl(240 6% 10%); color: hsl(40 30% 97%); font-size: 13px; font-weight: 700;
-}
-.hb-steps h3 { color: hsl(var(--v2h-ink)); font-size: 15px; font-weight: 680; }
-.hb-steps p { margin-top: 2px; color: hsl(var(--v2h-stone)); font-size: 13.5px; line-height: 1.45; }
-.hb-guarantee-fine { color: hsl(var(--v2h-stone)); font-size: 12px; line-height: 1.5; }
-.hb-guarantee-fine a { color: hsl(var(--v2h-ink)); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
+.hb-section { padding: 56px 0; }
+.hb-section-tight { padding: 24px 0 56px; }
+.hb-section-tint { background: hsl(var(--hb-tint)); }
+.hb-section-featured + .hb-section-tint { padding-top: 40px; }
+.hb-section-featured { padding-bottom: 32px; background: hsl(var(--hb-tint)); }
 @media (min-width: 900px) {
-  .hb-guarantee { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); gap: 24px 40px; padding: 32px; }
+  .hb-section { padding: 88px 0; }
+  .hb-section-tight { padding: 32px 0 88px; }
+}
+
+.hb-head { margin-bottom: 24px; }
+.hb-head h2,
+.hb-home .v2-home-row-head h2 {
+  color: hsl(var(--v2h-ink)); font-size: clamp(1.6rem, 3.2vw, 2.5rem);
+  font-weight: 800; line-height: 1.08; letter-spacing: -.02em;
+}
+@media (min-width: 900px) { .hb-head { margin-bottom: 36px; } }
+
+.hb-eyebrow {
+  color: hsl(var(--hb-orange)); font-size: 12px; font-weight: 700;
+  letter-spacing: .16em; text-transform: uppercase;
+}
+
+/* ── Guarantee + partner strip ── */
+.hb-partners {
+  border-bottom: 1px solid hsl(var(--v2h-line));
+  background: hsl(var(--v2h-surface));
+}
+.hb-partners-inner { display: grid; gap: 20px; padding-top: 22px; padding-bottom: 22px; }
+.hb-partners-guarantee {
+  display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px;
+  color: hsl(var(--v2h-ink));
+}
+.hb-seal { display: inline-flex; width: 44px; height: 44px; color: hsl(var(--hb-orange)); }
+.hb-seal svg { width: 100%; height: 100%; filter: drop-shadow(0 6px 14px hsl(var(--hb-orange) / .35)); }
+.hb-partners-guarantee strong { display: block; font-size: 16px; font-weight: 800; letter-spacing: -.01em; }
+.hb-partners-guarantee small { display: block; margin-top: 2px; color: hsl(var(--v2h-stone)); font-size: 13.5px; line-height: 1.45; }
+.hb-partners-arrow { width: 18px; height: 18px; color: hsl(var(--v2h-ink)); transition: transform .15s ease; }
+.hb-partners-guarantee:hover .hb-partners-arrow { transform: translateX(3px); }
+
+.hb-partners-label {
+  color: hsl(var(--v2h-stone)); font-size: 11px; font-weight: 700;
+  letter-spacing: .14em; text-transform: uppercase;
+}
+.hb-partners-logos ul {
+  margin: 12px 0 0; padding: 0; list-style: none;
+  display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px 12px;
+}
+.hb-partners-logos li { display: flex; flex-direction: column; align-items: flex-start; gap: 6px; min-width: 0; }
+.hb-partner-mark { display: flex; height: 26px; align-items: center; color: hsl(var(--v2h-ink)); }
+.hb-partner-role { color: hsl(var(--v2h-stone)); font-size: 11.5px; font-weight: 600; }
+/* One monochrome treatment so mismatched brand files read as a set. */
+.hb-logo { width: auto; max-width: 112px; object-fit: contain; filter: brightness(0); opacity: .82; }
+.hb-logo-paypal { height: 20px; }
+.hb-logo-equinox { height: 24px; }
+.hb-logo-plaid { height: 20px; }
+.hb-logo-flip { height: 36px; max-width: 84px; filter: grayscale(1) contrast(1.15); opacity: .9; }
+.hb-square-mark {
+  display: inline-flex; align-items: center; gap: 6px; opacity: .82;
+  font-size: 19px; font-weight: 700; letter-spacing: -.02em;
+}
+.hb-square-mark svg { width: 20px; height: 20px; }
+
+@media (min-width: 1024px) {
+  .hb-partners-inner {
+    grid-template-columns: minmax(0, 360px) minmax(0, 1fr); align-items: center; gap: 48px;
+    padding-top: 26px; padding-bottom: 26px;
+  }
+  .hb-partners-guarantee { border-right: 1px solid hsl(var(--v2h-line)); padding-right: 40px; }
+  .hb-partners-logos ul { display: flex; justify-content: space-between; gap: 28px; }
+  .hb-partners-logos li { align-items: center; }
+}
+
+/* ── Photo cards ── */
+.hb-cards { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.hb-card {
+  position: relative; display: block; overflow: hidden; aspect-ratio: 4 / 5;
+  border-radius: 18px; background: hsl(var(--hb-night)); color: #fff;
+  box-shadow: 0 24px 48px -36px hsl(var(--hb-night) / .8);
+}
+.hb-card img {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  transition: transform .5s cubic-bezier(.22, 1, .36, 1);
+}
+.hb-card::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(180deg, transparent 38%, hsl(var(--hb-night) / .88) 100%);
+}
+.hb-card:hover img { transform: scale(1.04); }
+.hb-card-text { position: absolute; z-index: 1; left: 0; right: 0; bottom: 0; padding: 14px; }
+.hb-card-text strong {
+  display: flex; align-items: center; justify-content: space-between; gap: 8px;
+  font-size: 18px; font-weight: 800; letter-spacing: -.01em;
+}
+.hb-card-text strong svg { width: 20px; height: 20px; flex: none; opacity: .9; }
+.hb-card-text small { display: block; margin-top: 4px; color: hsl(0 0% 100% / .8); font-size: 12.5px; line-height: 1.4; }
+.hb-card:focus-visible { outline: 3px solid hsl(var(--hb-orange)); outline-offset: 3px; }
+@media (min-width: 900px) {
+  .hb-cards { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 20px; }
+  .hb-card-text { padding: 22px; }
+  .hb-card-text strong { font-size: 22px; }
+  .hb-card-text small { font-size: 14px; }
+}
+
+/* ── Register band (signed out) ── */
+.hb-register { background: hsl(var(--hb-night)); color: #fff; }
+.hb-register-inner {
+  display: flex; flex-direction: column; align-items: flex-start; gap: 16px;
+  padding-top: 28px; padding-bottom: 28px;
+}
+.hb-register h2 { max-width: 38ch; font-size: clamp(1.1rem, 2vw, 1.45rem); font-weight: 700; line-height: 1.3; }
+.hb-register-btn {
+  display: inline-flex; min-height: 48px; align-items: center; justify-content: center;
+  border: 1.5px solid #fff; border-radius: 999px; padding: 0 26px;
+  font-size: 15px; font-weight: 700; white-space: nowrap;
+  transition: background-color .15s ease, color .15s ease;
+}
+.hb-register-btn:hover { background: #fff; color: hsl(var(--hb-night)); }
+@media (min-width: 768px) {
+  .hb-register-inner { flex-direction: row; align-items: center; justify-content: center; gap: 32px; }
+}
+
+/* ── Vendibook Guarantee (dark) ── */
+.hb-guarantee {
+  scroll-margin-top: 88px; padding: 64px 0;
+  background:
+    radial-gradient(60% 80% at 0% 0%, hsl(var(--hb-orange) / .16), transparent 60%),
+    hsl(var(--hb-night));
+  color: #fff;
+}
+.hb-guarantee-grid { display: grid; gap: 36px; }
+.hb-guarantee h2 {
+  margin-top: 14px; max-width: 16ch;
+  font-size: clamp(1.9rem, 4vw, 3.1rem); font-weight: 800; line-height: 1.04; letter-spacing: -.025em;
+}
+.hb-guarantee-lede { margin-top: 18px; max-width: 54ch; color: hsl(0 0% 100% / .74); font-size: 16px; line-height: 1.6; }
+.hb-guarantee-link {
+  display: inline-flex; align-items: center; gap: 8px; margin-top: 24px;
+  border-bottom: 1.5px solid hsl(var(--hb-orange)); padding-bottom: 3px;
+  font-size: 15px; font-weight: 700;
+}
+.hb-guarantee-link svg { width: 16px; height: 16px; transition: transform .15s ease; }
+.hb-guarantee-link:hover svg { transform: translateX(3px); }
+.hb-steps { margin: 0; padding: 0; list-style: none; display: grid; }
+.hb-steps li {
+  display: grid; grid-template-columns: 56px 1fr; gap: 12px; align-items: baseline;
+  border-top: 1px solid hsl(0 0% 100% / .14); padding: 20px 0;
+}
+.hb-steps li:last-child { border-bottom: 1px solid hsl(0 0% 100% / .14); }
+.hb-step-num { color: hsl(var(--hb-orange)); font-size: 15px; font-weight: 800; letter-spacing: .04em; font-variant-numeric: tabular-nums; }
+.hb-steps h3 { font-size: 18px; font-weight: 750; letter-spacing: -.01em; }
+.hb-steps p { margin-top: 4px; color: hsl(0 0% 100% / .66); font-size: 14.5px; line-height: 1.55; }
+.hb-guarantee-fine { color: hsl(0 0% 100% / .5); font-size: 12px; line-height: 1.55; }
+.hb-guarantee-fine a { color: hsl(0 0% 100% / .8); text-decoration: underline; text-underline-offset: 2px; }
+.hb-guarantee-main { display: grid; gap: 32px; min-width: 0; }
+
+/* Buying-flow video: vertical Short in a rounded phone-style frame. */
+.hb-video { margin: 0; justify-self: center; width: 100%; max-width: 340px; }
+.hb-video-frame {
+  position: relative; isolation: isolate; overflow: hidden; aspect-ratio: 9 / 16;
+  border-radius: 28px; background: #000;
+  /* Own compositing layer keeps the iframe clipped to the rounded corners in Safari. */
+  transform: translateZ(0);
+  box-shadow: 0 0 0 1px hsl(0 0% 100% / .14), 0 40px 80px -40px hsl(var(--hb-orange) / .5);
+}
+.hb-video-poster, .hb-video-frame iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+.hb-video-poster { object-fit: cover; }
+.hb-video-frame iframe { z-index: 1; }
+.hb-video figcaption { margin-top: 14px; color: hsl(0 0% 100% / .62); font-size: 13.5px; line-height: 1.45; text-align: center; }
+
+@media (min-width: 960px) {
+  .hb-guarantee { padding: 104px 0; }
+  .hb-guarantee-grid { grid-template-columns: minmax(0, 1fr) 340px; gap: 40px 96px; align-items: center; }
   .hb-guarantee-fine { grid-column: 1 / -1; }
 }
 
-/* ── Compact seller strip ── */
-.hb-seller {
-  display: flex; flex-direction: column; align-items: flex-start; gap: 14px;
-  border: 1px solid hsl(var(--v2h-line)); border-radius: 14px; background: hsl(var(--v2h-surface));
-  padding: 18px 20px;
+/* ── Category tiles ── */
+.hb-tiles { margin: 0; padding: 0; list-style: none; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.hb-tile {
+  position: relative; display: block; overflow: hidden; aspect-ratio: 4 / 3;
+  border-radius: 14px; background: hsl(var(--hb-night)); color: #fff;
 }
-.hb-seller h2 { color: hsl(var(--v2h-ink)); font-size: 17px; font-weight: 700; line-height: 1.3; }
-.hb-seller p { margin-top: 4px; color: hsl(var(--v2h-stone)); font-size: 14px; line-height: 1.5; }
-.hb-seller p a { color: hsl(var(--v2h-ink)); font-weight: 600; text-decoration: underline; text-underline-offset: 2px; }
-@media (min-width: 640px) {
-  .hb-seller { flex-direction: row; align-items: center; justify-content: space-between; gap: 24px; }
-  .hb-seller .v2-home-btn { flex: none; }
+.hb-tile img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; transition: transform .5s cubic-bezier(.22, 1, .36, 1); }
+.hb-tile::after { content: ''; position: absolute; inset: 0; background: linear-gradient(180deg, transparent 45%, hsl(var(--hb-night) / .82) 100%); }
+.hb-tile:hover img { transform: scale(1.05); }
+.hb-tile-label { position: absolute; z-index: 1; left: 12px; right: 12px; bottom: 10px; font-size: 13.5px; font-weight: 750; line-height: 1.25; }
+.hb-tile:focus-visible { outline: 3px solid hsl(var(--hb-orange)); outline-offset: 3px; }
+@media (min-width: 900px) {
+  .hb-tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; }
+  .hb-tile-label { left: 18px; bottom: 14px; font-size: 16px; }
 }
 
-/* ── Closing CTA ── */
-.v2-home-final.hb-final > div:last-child { flex-wrap: wrap; gap: 10px; }
+/* ── Financing band ── */
+.hb-finance {
+  position: relative; isolation: isolate; overflow: hidden;
+  border-radius: 24px; background: hsl(var(--hb-night)); color: #fff;
+  box-shadow: 0 40px 80px -56px hsl(var(--hb-night) / .9);
+}
+.hb-finance-photo {
+  position: absolute; inset: 0; z-index: -1; width: 100%; height: 100%;
+  object-fit: cover; object-position: 78% 60%; opacity: .55;
+}
+.hb-finance-copy { max-width: 560px; padding: 32px 22px; }
+.hb-finance-partner {
+  display: inline-flex; align-items: center; gap: 10px;
+  color: hsl(0 0% 100% / .6); font-size: 11.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase;
+}
+.hb-finance-logo { height: 22px; width: auto; filter: brightness(0) invert(1); }
+.hb-finance h2 { margin-top: 16px; font-size: clamp(1.6rem, 3.4vw, 2.6rem); font-weight: 800; line-height: 1.08; letter-spacing: -.02em; }
+.hb-finance p { margin-top: 14px; color: hsl(0 0% 100% / .74); font-size: 16px; line-height: 1.55; }
+.hb-finance-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 20px; margin-top: 24px; }
+.hb-finance-link { color: #fff; font-size: 14.5px; font-weight: 650; text-decoration: underline; text-decoration-color: hsl(0 0% 100% / .4); text-underline-offset: 3px; }
+.hb-finance-link:hover { text-decoration-color: #fff; }
+.hb-finance-note { display: block; margin-top: 20px; color: hsl(0 0% 100% / .5); font-size: 12px; line-height: 1.5; }
+@media (min-width: 900px) {
+  .hb-finance { min-height: 420px; display: flex; align-items: center; }
+  .hb-finance-photo { opacity: 1; }
+  .hb-finance-copy { padding: 56px; }
+}
+
+/* ── Sell band ── */
+.hb-sellband { position: relative; isolation: isolate; overflow: hidden; background: hsl(var(--hb-night)); color: #fff; text-align: center; }
+.hb-sellband-photo { position: absolute; inset: 0; z-index: -2; width: 100%; height: 100%; object-fit: cover; }
+.hb-sellband-shade { position: absolute; inset: 0; z-index: -1; background: hsl(var(--hb-night) / .66); }
+.hb-sellband-inner { display: flex; flex-direction: column; align-items: center; padding-top: 72px; padding-bottom: 72px; }
+.hb-sellband h2 { max-width: 20ch; font-size: clamp(1.8rem, 4vw, 3rem); font-weight: 800; line-height: 1.06; letter-spacing: -.02em; }
+.hb-sellband p { margin: 14px 0 26px; max-width: 48ch; color: hsl(0 0% 100% / .8); font-size: 16px; line-height: 1.55; }
+.hb-sellband p a { color: #fff; font-weight: 650; text-decoration: underline; text-underline-offset: 3px; }
+@media (min-width: 900px) { .hb-sellband-inner { padding-top: 112px; padding-bottom: 112px; } }

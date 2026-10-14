@@ -1,8 +1,9 @@
 import { buildHomepageSpotlight } from '@/lib/listings/homepageSpotlight';
 import { excludeTestListings } from '@/lib/excludeTestListings';
 import { Link } from 'react-router-dom';
+import { useMemo } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, ShieldCheck } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { filterPubliclyVisible } from '@/lib/listings/publicVisibility';
 import { isListingFeatured, sortFeaturedFirstFair, sortNewFirstThenFeatured } from '@/lib/featured';
 import Header from '@/components/layout/Header';
@@ -10,6 +11,15 @@ import Footer from '@/components/layout/Footer';
 import NewsletterPopup from '@/components/newsletter/NewsletterPopup';
 import HeroPremium from '@/components/home/hero/HeroPremium';
 import V2ListingRow from '@/components/home/v2/V2ListingRow';
+import {
+  HomeCategoryTiles,
+  HomeFeaturedCards,
+  HomeGuaranteeVideo,
+  HomePartnerStrip,
+  HomeRegisterBand,
+  HomeSellBand,
+} from '@/components/home/HomeBuyerSections';
+import { Button } from '@/components/ui/button';
 import { usePageTracking } from '@/hooks/usePageTracking';
 import { usePublicFeatureFlag } from '@/hooks/usePublicFeatureFlag';
 import { useFinancingHandoff } from '@/hooks/useFinancingHandoff';
@@ -19,8 +29,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { EquinoxFundingLogo } from '@/components/brand/ProviderLogos';
 import { EQUINOX_FLAG_KEY } from '@/lib/financing/disclosure';
+import { FINANCING_FOOTNOTE, FINANCING_HEADLINE } from '@/lib/financing/copy';
 import { trackFinancingCtaClick } from '@/lib/analytics';
-import { trackLeadEvent } from '@/lib/leadTracking';
+import financingPhoto from '@/assets/hero-financing-bg.jpg';
 import './home-buyer.css';
 
 /*
@@ -38,25 +49,13 @@ import './home-buyer.css';
 
 const ROW_LIMIT = 8;
 const SALE_ROW_LIMIT = 16;
-const SALE_SEARCH_HREF = '/search?mode=sale';
 const GUARANTEE_ID = 'vendibook-guarantee';
-
-const FINANCING_HEADLINE = 'Easy financing — approval decisions typically in 24–48 hours*';
-const FINANCING_FOOTNOTE =
-  '*Typical decision time for complete applications; not guaranteed. Financing is offered by Equinox Funding and/or its funding providers and is subject to their approval and terms. Vendibook is not a lender.';
 
 const GUARANTEE_STEPS = [
   { title: 'Request to buy', body: 'Send a request or make an offer. Once the seller approves, the equipment is reserved for you.' },
   { title: 'Pay your Vendibook invoice', body: 'Vendibook sends it by email and to your dashboard. Paying it does not pay the seller yet.' },
   { title: 'Confirm, sign, record', body: 'You confirm the handoff, you and the seller sign the purchase agreement, and the walkthrough video is saved.' },
   { title: 'Then the seller is paid', body: 'Vendibook releases the seller’s payout only after all three are complete.' },
-];
-
-const SHOP_CHIPS = [
-  { label: 'Food trucks', href: '/food-trucks-for-sale' },
-  { label: 'Food trailers', href: '/food-trailers-for-sale' },
-  { label: 'Coffee trucks & trailers', href: '/coffee-trucks-trailers-for-sale' },
-  { label: 'Ice cream trucks & trailers', href: '/ice-cream-trucks-trailers-for-sale' },
 ];
 
 type ListingCategory = 'food_truck' | 'food_trailer' | 'ghost_kitchen' | 'vendor_lot' | 'vendor_space';
@@ -125,8 +124,19 @@ const Index = () => {
   );
   const saleHasFeatured = saleListings.some((listing) => isListingFeatured(listing));
 
+  // Featured row: every active boost, reshuffled on each page view so each
+  // featured listing takes turns in the first spots.
+  const featuredRow = useMemo(() => {
+    const rows = [...((featuredQuery.data ?? []) as never[])];
+    for (let i = rows.length - 1; i > 0; i -= 1) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [rows[i], rows[j]] = [rows[j], rows[i]];
+    }
+    return rows;
+  }, [featuredQuery.data]);
+
   return (
-    <div className="min-h-screen flex flex-col v2-home">
+    <div className="min-h-screen flex flex-col v2-home hb-home">
       <SEO
         title="Buy & Rent Food Trucks and Food Trailers | Vendibook"
         description="Buy, rent, and sell food trucks, food trailers, commercial kitchens, and vendor spaces nationwide on Vendibook, with PayPal checkout and financing options where available."
@@ -137,118 +147,131 @@ const Index = () => {
 
       <main className="flex-1">
         <HeroPremium showGoogleSignIn={false} showRotator={false} guaranteeHref={`#${GUARANTEE_ID}`} />
+        <HomePartnerStrip guaranteeHref={`#${GUARANTEE_ID}`} financingLive={financingLive} />
 
-        <div className="v2-home-stack">
-          <div className="hb-inventory">
+        <HomeFeaturedCards />
+
+        {!user && <HomeRegisterBand />}
+
+        {(featuredQuery.isLoading || featuredRow.length > 0) && (
+          <section className="hb-section hb-section-featured" aria-label="Featured listings">
+            <div className="hb-wrap">
+              <V2ListingRow
+                title="Featured listings"
+                subtitle="Food trucks, trailers and kitchens our sellers are featuring right now."
+                listings={featuredRow}
+                isLoading={featuredQuery.isLoading}
+                viewAllHref="/search"
+                viewAllLabel="Browse all listings"
+              />
+            </div>
+          </section>
+        )}
+
+        <section className="hb-section hb-section-tint" aria-label="Just listed for sale">
+          <div className="hb-wrap">
             <V2ListingRow
               title="Just listed for sale"
               subtitle={saleHasFeatured
                 ? 'Featured listings first, then the newest food trucks and trailers for sale.'
-                : 'The newest food trucks and trailers for sale, newest first.'}
+                : 'The newest food trucks and trailers for sale.'}
               listings={saleListings}
               isLoading={saleQuery.isLoading || featuredQuery.isLoading}
               viewAllHref="/search?mode=sale&category=food_truck%2Cfood_trailer"
               viewAllLabel="Browse all for sale"
               priority
             />
-            <nav aria-label="Shop by type" className="hb-chips">
-              {SHOP_CHIPS.map((chip) => (
-                <Link key={chip.href} to={chip.href}>{chip.label}</Link>
-              ))}
-            </nav>
           </div>
+        </section>
 
-          <section className="v2-home-financing" aria-labelledby="home-financing-title">
-            <div className="v2-home-financing-copy">
-              <span className="v2-home-financing-eyebrow">
-                Equipment financing with <EquinoxFundingLogo className="v2-home-financing-logo" />
-              </span>
-              <h2 id="home-financing-title">{FINANCING_HEADLINE}</h2>
-              <p>Apply online with Equinox Funding, Vendibook’s financing partner, and know your options before you make an offer.</p>
-            </div>
-            <div className="v2-home-financing-actions">
-              {financingLive ? (
-                <>
-                  <button type="button" className="v2-home-btn" onClick={() => startFinancingApply('home_banner')}>
-                    Check financing<ArrowRight aria-hidden="true" />
-                  </button>
-                  <Link to="/financing#calculator" className="v2-home-financing-cta">Estimate a monthly payment</Link>
-                </>
-              ) : (
-                <Link to="/financing" className="v2-home-btn" onClick={() => trackFinancingCtaClick('home_banner')}>
-                  Check financing<ArrowRight aria-hidden="true" />
-                </Link>
-              )}
-            </div>
-            <small className="v2-home-financing-note">{FINANCING_FOOTNOTE}</small>
-            {financingLive ? financingLeadDialog : null}
-          </section>
-
-          <section id={GUARANTEE_ID} className="hb-guarantee" aria-labelledby="hb-guarantee-title">
+        <section id={GUARANTEE_ID} className="hb-guarantee" aria-labelledby="hb-guarantee-title">
+          <div className="hb-wrap hb-guarantee-grid">
+            <div className="hb-guarantee-main">
             <div className="hb-guarantee-intro">
-              <p className="v2-home-eyebrow hb-guarantee-eyebrow"><ShieldCheck aria-hidden="true" />The Vendibook Guarantee</p>
-              <h2 id="hb-guarantee-title">Buy with payment protection built in.</h2>
+              <p className="hb-eyebrow">The Vendibook Guarantee</p>
+              <h2 id="hb-guarantee-title">The seller is paid only after you confirm the handoff.</h2>
               <p className="hb-guarantee-lede">
-                When you buy through a Vendibook invoice, the seller is paid only after you confirm the handoff, both of
-                you sign the purchase agreement and the walkthrough video is saved. Members verify their phone and
-                identity before they can message, make an offer or buy, and messages are risk-scanned.
+                Buy through a Vendibook invoice and the seller’s payout waits until you confirm the handoff, both of you
+                sign the purchase agreement and the walkthrough video is saved. Everyone who messages, offers or buys has
+                verified their phone and identity, and every message is scanned for scams.
               </p>
-              <Link to="/how-purchasing-works" className="v2-home-link hb-guarantee-more">
-                How the Vendibook Guarantee works<ArrowRight aria-hidden="true" />
+              <Link to="/how-purchasing-works" className="hb-guarantee-link" data-cta-location="home_guarantee">
+                How buying works<ArrowRight aria-hidden="true" />
               </Link>
             </div>
-            <ol className="hb-steps">
+            <ol className="hb-steps" aria-label="How the Vendibook Guarantee works">
               {GUARANTEE_STEPS.map((step, i) => (
                 <li key={step.title}>
-                  <span className="hb-step-num" aria-hidden="true">{i + 1}</span>
+                  <span className="hb-step-num" aria-hidden="true">{String(i + 1).padStart(2, '0')}</span>
                   <div><h3>{step.title}</h3><p>{step.body}</p></div>
                 </li>
               ))}
             </ol>
+            </div>
+            <HomeGuaranteeVideo />
             <p className="hb-guarantee-fine">
               A platform payment-protection policy for purchases paid through a Vendibook invoice. Not insurance, an
               inspection or a warranty of condition; Vendibook does not inspect or verify equipment.{' '}
               <Link to="/legal/payments-terms">Payment terms</Link>
             </p>
-          </section>
+          </div>
+        </section>
 
-          <V2ListingRow
-            title="Available to rent"
-            subtitle="Food trucks, trailers, kitchens, and spaces ready for your next move."
-            listings={rentListings}
-            isLoading={rentQuery.isLoading}
-            viewAllHref="/search?mode=rent"
-            viewAllLabel="Browse rentals"
-          />
+        <HomeCategoryTiles />
 
-          <section className="hb-seller" id="start-selling" aria-labelledby="hb-seller-title">
-            <div>
-              <h2 id="hb-seller-title">Selling a truck, trailer or kitchen?</h2>
-              <p>Free to list. Vendibook’s fee is taken only when a sale or booking completes. <Link to="/pricing">See pricing</Link></p>
+        <section className="hb-section hb-section-tight" aria-labelledby="home-financing-title">
+          <div className="hb-wrap">
+            <div className="hb-finance">
+              <div className="hb-finance-copy">
+                <span className="hb-finance-partner">
+                  Financing partner <EquinoxFundingLogo className="hb-finance-logo" />
+                </span>
+                <h2 id="home-financing-title">{FINANCING_HEADLINE}</h2>
+                <p>Apply online with Equinox Funding and know your budget before you make an offer. Startups are considered.</p>
+                <div className="hb-finance-actions">
+                  {financingLive ? (
+                    <>
+                      <Button
+                        type="button"
+                        variant="cta"
+                        className="h-12 w-full rounded-full px-7 text-base sm:w-auto"
+                        data-cta-location="home_financing_band"
+                        onClick={() => startFinancingApply('home_banner')}
+                      >
+                        Check financing<ArrowRight aria-hidden="true" />
+                      </Button>
+                      <Link to="/financing#calculator" className="hb-finance-link">Estimate a monthly payment</Link>
+                    </>
+                  ) : (
+                    <Button asChild variant="cta" className="h-12 w-full rounded-full px-7 text-base sm:w-auto">
+                      <Link to="/financing" data-cta-location="home_financing_band" onClick={() => trackFinancingCtaClick('home_banner')}>
+                        Check financing<ArrowRight aria-hidden="true" />
+                      </Link>
+                    </Button>
+                  )}
+                </div>
+                <small className="hb-finance-note">{FINANCING_FOOTNOTE}</small>
+              </div>
+              <img className="hb-finance-photo" src={financingPhoto} alt="" width={1920} height={1080} loading="lazy" decoding="async" />
+              {financingLive ? financingLeadDialog : null}
             </div>
-            <Link
-              to={sellerStartHref}
-              className="v2-home-btn is-quiet"
-              onClick={() => trackLeadEvent('homepage_host_list_click', { source: 'home_seller_strip', destination: sellerStartHref })}
-            >
-              List your equipment free<ArrowRight aria-hidden="true" />
-            </Link>
-          </section>
+          </div>
+        </section>
 
-          <section className="v2-home-final hb-final">
-            <div><p className="v2-home-eyebrow">Ready when you are</p><h2>Find your next truck or trailer.</h2></div>
-            <div>
-              <Link
-                to={SALE_SEARCH_HREF}
-                className="v2-home-btn"
-                onClick={() => trackLeadEvent('homepage_final_cta_click', { source: 'home_final', destination: SALE_SEARCH_HREF })}
-              >
-                Browse equipment for sale<ArrowRight aria-hidden="true" />
-              </Link>
-              <Link to="/financing" className="v2-home-btn is-quiet">Check financing</Link>
-            </div>
-          </section>
-        </div>
+        <section className="hb-section hb-section-tint" aria-label="Available to rent">
+          <div className="hb-wrap">
+            <V2ListingRow
+              title="Available to rent"
+              subtitle="Trucks, trailers, kitchens and vendor spaces by the day, week or month."
+              listings={rentListings}
+              isLoading={rentQuery.isLoading}
+              viewAllHref="/search?mode=rent"
+              viewAllLabel="Browse rentals"
+            />
+          </div>
+        </section>
+
+        <HomeSellBand sellerStartHref={sellerStartHref} />
       </main>
 
       <Footer />
