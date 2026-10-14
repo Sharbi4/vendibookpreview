@@ -73,7 +73,7 @@ Deno.serve(async (req) => {
       email_subject,
     } = (await req.json()) as NotificationRequest;
 
-    console.log("Creating notification:", { user_id, type, title });
+    console.log("Creating notification:", { type });
 
     if (!user_id || !type || !title || !message) {
       return new Response(
@@ -148,7 +148,7 @@ Deno.serve(async (req) => {
             });
           if (emailError) throw emailError;
           emailQueued = true;
-          console.log("Email enqueued via Lovable Emails:", profile.email);
+          console.log("Notification email enqueued");
         }
       } catch (emailError: any) {
         console.error("Failed to enqueue email notification:", emailError);

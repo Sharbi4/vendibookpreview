@@ -2,6 +2,7 @@
 // template, routed through the Lovable Emails queue (no direct Resend usage).
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
+import { isBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -18,6 +19,8 @@ Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
+  // Backend-only: recipients and reset links must never come from public callers.
+  if (!(await isBackendCaller(req))) return forbiddenResponse(corsHeaders);
 
   try {
     const { email, resetLink, userName } = (await req.json()) as PasswordResetEmailRequest;

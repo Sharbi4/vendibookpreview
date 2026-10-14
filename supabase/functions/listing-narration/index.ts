@@ -126,6 +126,8 @@ serve(async (req) => {
       .from("listings")
       .select("id,title,description,category,mode,city,state,price_daily,price_weekly,price_sale")
       .eq("id", listing_id)
+      .eq("status", "published")
+      .is("deleted_at", null)
       .maybeSingle();
 
     if (error || !listing) {

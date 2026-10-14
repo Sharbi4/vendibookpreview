@@ -4,6 +4,7 @@ import { assertRentalCheckoutReady } from "../_shared/rentalCheckoutReady.ts";
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
+import { maskContactDetails } from "../_shared/contactPatterns.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -53,7 +54,7 @@ serve(async (req) => {
       { auth: { persistSession: false } }
     );
 
-    const { booking_id, event_type, host_response, reason }: NotificationRequest = await req.json();
+    const { booking_id, event_type, host_response: requestedHostResponse, reason }: NotificationRequest = await req.json();
     logStep("Request received", { booking_id, event_type });
     if (!booking_id || !event_type) throw new Error("Missing booking_id or event_type");
 
@@ -73,6 +74,11 @@ serve(async (req) => {
         (event_type === "submitted" && (booking.is_instant_book || booking.status !== "pending"))) {
       return new Response(JSON.stringify({ error: "Booking state does not match event" }), { status: 409, headers: corsHeaders });
     }
+    // Host text reaching the shopper: prefer the saved response, cap length and
+    // strip contact details/links so emails cannot carry off-platform lures.
+    const host_response = maskContactDetails(
+      String(booking.host_response || requestedHostResponse || "").replace(/<[^>]*>/g, "").slice(0, 1000),
+    ).trim() || undefined;
     if (event_type === "submitted" && !service) {
       await assertRentalCheckoutReady(supabase, booking, req.headers.get("Authorization") ?? "");
     }
