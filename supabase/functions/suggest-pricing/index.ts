@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 import { resolveHostTier, tierAtLeast, tierRequiredBody } from "../_shared/resolveHostTier.ts";
+import { getCaller } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -34,6 +35,13 @@ serve(async (req) => {
     // Anonymous users pass through so the marketing preview works, but any
     // signed-in user below Growth gets a clean entitlement error.
     const authHeader = req.headers.get("Authorization");
+    // Sign-in required: anonymous requests never reach the paid AI call.
+    const signedIn = authHeader ? await getCaller(req) : null;
+    if (!signedIn) {
+      return new Response(JSON.stringify({ error: "Please sign in to get AI price suggestions." }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
     if (authHeader) {
       try {
         const authClient = createClient(
