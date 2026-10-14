@@ -127,6 +127,13 @@
       "when": 1791849863436,
       "tag": "0017_buyermatch_campaign_realtime",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1791964721026,
+      "tag": "0018_restrict_commerce_rollout_read",
+      "breakpoints": true
     }
   ]
 }
