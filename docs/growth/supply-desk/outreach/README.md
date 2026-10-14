@@ -20,11 +20,12 @@
 Pass these in `excludeUserIds` on **every** `send-seller-concierge` and `send-rent-while-you-sell` broadcast and test sample:
 
 ```json
-"excludeUserIds": ["f2865e60-125e-4921-b7c5-898ba1675045"]
+"excludeUserIds": ["f2865e60-125e-4921-b7c5-898ba1675045", "6636472b-46ed-41ae-93ae-24d8853e0f93"]
 ```
 
 | Host | Why | Since |
 |---|---|---|
 | `f2865e60…` (Atlanta shipping container kitchen, listing `f4d5e5ae`) | Owner decision: do not email this seller | 2026-10-07 |
+| `6636472b…` (Anna TX snow cone trailer, listing `80199c47`) | Owner decision: do not email this seller, no re-staging | 2026-10-14 |
 
 The owner is deciding whether to make this permanent through `suppressed_emails`, which is a DB write and goes through the Growth lead only. Also never contact `b50b38af…`: a bounced duplicate signup.
