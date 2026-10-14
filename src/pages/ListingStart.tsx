@@ -6,12 +6,14 @@ import {
   Camera,
   Check,
   Clock,
+  Crown,
   Layers,
   Lock,
   MessageSquare,
   Rocket,
   ShieldCheck,
   Tag,
+  Users,
   type LucideIcon,
 } from 'lucide-react';
 import Header from '@/components/layout/Header';
@@ -19,14 +21,17 @@ import SEO from '@/components/SEO';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 import { trackEvent } from '@/lib/analytics';
+import { useCatalogPrice } from '@/hooks/useCatalogPrices';
+import { ACTIVE_PRODUCT_SLUGS } from '@/lib/monetization/catalogPricing';
 import {
   LISTING_ROUTES,
   authReturnTo,
   quickStartWith,
 } from '@/lib/listings/routes';
-import heroPhoto from '@/assets/how-selling-hero.jpg';
-import salePhoto from '@/assets/how-buying-hero.jpg';
-import rentPhoto from '@/assets/how-renting-hero.jpg';
+// Real equipment photos (not AI renders).
+import heroPhoto from '@/assets/food-truck-grilled-cheese.jpg';
+import salePhoto from '@/assets/supply-food-truck.jpg';
+import rentPhoto from '@/assets/food-truck-coffee.jpg';
 import './listing-start.css';
 
 type ListingMode = 'sale' | 'rent';
@@ -75,6 +80,94 @@ const CHOICES: {
     cta: 'Start a rental listing',
   },
 ];
+
+/** Optional seller upgrades. Prices come from the live catalog (what PayPal charges). */
+function SellerUpgrades() {
+  const navigate = useNavigate();
+  const pro = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.vendibookPro);
+  const boost = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.featuredBoost);
+  const boostDays = boost.durationDays ?? 30;
+  const open = (to: string, upgrade: string) => {
+    trackEvent({ category: 'Supply', action: 'listing_gateway_upgrade_clicked', label: upgrade });
+    navigate(to);
+  };
+  return (
+    <section className="mt-16 sm:mt-24" aria-labelledby="lst-upgrades-heading">
+      <div className="text-center">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+          Optional upgrades
+        </p>
+        <h2 id="lst-upgrades-heading" className="lst-heading mt-2 text-2xl font-bold text-foreground sm:text-3xl">
+          Get in front of more buyers
+        </h2>
+        <p className="mx-auto mt-2 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
+          Listing stays free. Add these when you want more reach.
+        </p>
+      </div>
+
+      <div className="mt-8 grid gap-4 sm:gap-6 lg:grid-cols-[minmax(0,1.25fr)_minmax(0,1fr)]">
+        <article className="lst-pro relative overflow-hidden rounded-3xl p-6 text-white sm:p-8">
+          <div className="flex items-center justify-between gap-3">
+            <span className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-white/70">
+              <Users className="h-4 w-4 text-primary" aria-hidden="true" />
+              Vendibook Pro
+            </span>
+            <span className="text-lg font-bold">{pro.loading ? '' : pro.labelWithCadence}</span>
+          </div>
+          <h3 className="lst-heading mt-4 text-2xl font-bold leading-tight">
+            BuyerMatch included: our team looks for your buyer
+          </h3>
+          <p className="mt-2 text-sm leading-relaxed text-white/70">
+            We search for people posting that they want a truck, trailer or cart like yours, contact them only with
+            permission, and send replies to your Vendibook messages.
+          </p>
+          <ul className="mt-5 grid gap-2.5 text-sm sm:grid-cols-2">
+            {[
+              'BuyerMatch buyer search',
+              '1 Featured Boost credit each billing period',
+              'Priority visibility',
+              'PricePilot and PermitPath Plus',
+            ].map((item) => (
+              <li key={item} className="flex items-start gap-2 text-white/90">
+                <Check className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden="true" />
+                {item}
+              </li>
+            ))}
+          </ul>
+          <div className="mt-6 flex flex-wrap items-center gap-x-5 gap-y-3">
+            <Button type="button" variant="cta" className="h-12 rounded-full px-7" onClick={() => open('/pricing#membership', 'pro')}>
+              See Vendibook Pro
+              <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
+            </Button>
+            <span className="text-xs text-white/55">Cancel anytime. No buyer, offer or sale is guaranteed.</span>
+          </div>
+        </article>
+
+        <article className="lst-card flex flex-col rounded-3xl p-6 sm:p-8">
+          <div className="flex items-center justify-between gap-3">
+            <span className="inline-flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-muted-foreground">
+              <Crown className="h-4 w-4 text-amber-500" aria-hidden="true" />
+              Featured Boost
+            </span>
+            <span className="text-lg font-bold text-foreground">{boost.loading ? '' : boost.label}</span>
+          </div>
+          <h3 className="lst-heading mt-4 text-2xl font-bold leading-tight text-foreground">
+            Featured for {boostDays} days
+          </h3>
+          <p className="mt-2 flex-1 text-sm leading-relaxed text-muted-foreground">
+            Your listing gets the Featured badge and a spot in the homepage Featured listings row. Add it when you
+            publish, or anytime from your dashboard. Pro members get one boost credit each
+            billing period.
+          </p>
+          <Button type="button" variant="outline" className="mt-6 h-12 w-full rounded-full sm:w-auto" onClick={() => open('/pricing#upgrades', 'featured_boost')}>
+            About Featured Boost
+            <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
+          </Button>
+        </article>
+      </div>
+    </section>
+  );
+}
 
 const STEPS: { icon: LucideIcon; title: string; body: string }[] = [
   {
@@ -311,6 +404,8 @@ function ListingGateway() {
               ))}
             </ol>
           </section>
+
+          <SellerUpgrades />
 
           {/* Trust */}
           <section className="lst-trust mt-14 flex flex-col gap-4 rounded-3xl p-6 sm:mt-20 sm:flex-row sm:items-center sm:gap-6 sm:p-8">

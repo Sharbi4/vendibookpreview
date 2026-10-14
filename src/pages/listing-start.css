@@ -73,3 +73,11 @@
   .lst-choice:hover,
   .lst-choice:hover .lst-card-photo { transform: none; }
 }
+
+/* Vendibook Pro upgrade card: charcoal with a soft orange glow. */
+.lst-pro {
+  background:
+    radial-gradient(80% 90% at 100% 0%, hsl(13 100% 57% / .22), transparent 60%),
+    hsl(24 14% 9%);
+  box-shadow: 0 30px 60px -40px hsl(24 14% 9% / .9);
+}
