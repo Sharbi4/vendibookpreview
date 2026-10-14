@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
+import { getCaller } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -58,8 +59,12 @@ serve(async (req) => {
         });
     }
 
+    // Confirmation emails and automatic calls only for signed-in members;
+    // signed-out requests are handled by support from the alert above.
+    const caller = await getCaller(req);
+
     // Confirm to requester if email provided
-    if (data.email) {
+    if (data.email && caller) {
       await invokeTransactionalEmail({
           templateName: "support-reply",
           recipientEmail: data.email,
@@ -73,7 +78,7 @@ serve(async (req) => {
     }
 
     // Outbound Vapi call if phone provided
-    if (data.phone) {
+    if (data.phone && caller) {
       admin.functions.invoke("vapi-outbound-call", {
         body: { name: data.name, phone: data.phone },
       }).catch((e) => console.error("vapi-outbound-call failed", e));
