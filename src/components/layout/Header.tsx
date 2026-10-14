@@ -93,6 +93,28 @@ interface HeaderProps {
   hideSearch?: boolean;
 }
 
+const HEADER_CATEGORY_LINKS = [
+  {
+    label: 'For sale',
+    links: [
+      { to: '/food-trucks-for-sale', label: 'Food trucks' },
+      { to: '/food-trailers-for-sale', label: 'Food trailers' },
+      { to: '/coffee-trucks-trailers-for-sale', label: 'Coffee trucks & trailers' },
+      { to: '/ice-cream-trucks-trailers-for-sale', label: 'Ice cream trucks & trailers' },
+      { to: '/bbq-trucks-trailers-for-sale', label: 'BBQ trucks & trailers' },
+    ],
+  },
+  {
+    label: 'For rent',
+    links: [
+      { to: '/food-trucks-for-rent', label: 'Food trucks' },
+      { to: '/food-trailers-for-rent', label: 'Food trailers' },
+      { to: '/shared-kitchens', label: 'Shared & commissary kitchens' },
+      { to: '/vendor-spaces', label: 'Vendor spaces' },
+    ],
+  },
+] as const;
+
 const Header = ({ hideSearch = false }: HeaderProps) => {
   const { t } = useTranslation();
   
@@ -294,12 +316,14 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
         willChange: 'transform',
       }}
     >
-      <div className="container max-w-7xl mx-auto pl-3 pr-2 sm:px-4 flex h-[72px] items-center justify-between gap-2 sm:gap-3">
+      {/* Desktop (lg+): IronPlanet-style two rows. Logo spans both rows; the
+          search sits on top and the main menu runs underneath it. */}
+      <div className="container max-w-7xl mx-auto pl-3 pr-2 sm:px-4 flex h-[72px] items-center justify-between gap-2 sm:gap-3 lg:grid lg:h-auto lg:grid-cols-[auto_minmax(0,1fr)_auto] lg:gap-x-6 xl:gap-x-10 lg:gap-y-1 lg:py-3">
         {/* Brand — compact bird mark on mobile, full wordmark lockup from md up */}
         <Link 
           to="/" 
           aria-label="Vendibook home"
-          className={`group flex items-center shrink-0 transition-opacity duration-200 ${isMobileSearchOpen ? 'opacity-0 pointer-events-none absolute' : 'opacity-100'} md:opacity-100 md:pointer-events-auto md:relative`}
+          className={`group flex items-center shrink-0 transition-opacity duration-200 ${isMobileSearchOpen ? 'opacity-0 pointer-events-none absolute' : 'opacity-100'} md:opacity-100 md:pointer-events-auto md:relative lg:col-start-1 lg:row-span-2 lg:row-start-1`}
         >
           <div className="flex items-center justify-center h-11 w-11 shrink-0 sm:h-12 sm:w-12 md:hidden">
             <img 
@@ -313,7 +337,7 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
             alt="Vendibook"
             width={1000}
             height={293}
-            className="hidden h-9 w-auto object-contain transition-transform duration-300 group-hover:scale-[1.02] md:block lg:h-10"
+            className="hidden h-9 w-auto object-contain transition-transform duration-300 group-hover:scale-[1.02] md:block lg:h-12"
           />
         </Link>
 
@@ -426,10 +450,10 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
 
         {/* Centered Search - Desktop */}
         {!hideSearch && (
-          <div className="hidden md:flex flex-1 justify-center max-w-xl mx-4 xl:mx-8">
+          <div className="hidden md:flex flex-1 justify-center max-w-xl mx-4 xl:mx-8 lg:col-start-2 lg:row-start-1 lg:max-w-none lg:mx-0">
             <button
               onClick={() => navigate('/search')}
-              className="group flex h-[48px] w-full min-w-0 items-center gap-3 rounded-full px-5 text-[15px] font-medium text-white/70 transition-all duration-300 hover:-translate-y-px"
+              className="group flex h-[48px] lg:h-[44px] w-full min-w-0 items-center gap-3 rounded-full px-5 text-[15px] font-medium text-white/70 transition-all duration-300 hover:-translate-y-px"
               style={{
                 background: 'rgba(255,255,255,0.045)',
                 border: '1px solid rgba(255,255,255,0.10)',
@@ -438,30 +462,51 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
               }}
             >
               <Search className="h-[18px] w-[18px] text-primary transition-transform duration-200 group-hover:scale-105" />
-              <span className="min-w-0 truncate whitespace-nowrap text-white/80 transition-colors group-hover:text-white/85">Search trucks, trailers or a city</span>
-              <span className="ml-auto hidden shrink-0 rounded-full border border-white/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.14em] text-white/75 transition-colors group-hover:text-white/60 2xl:inline">Search</span>
+              <span className="min-w-0 truncate whitespace-nowrap text-white/80 transition-colors group-hover:text-white/85">Search food trucks, trailers, kitchens or a city</span>
+              <span className="ml-auto hidden shrink-0 rounded-full bg-primary px-4 py-1.5 text-[13px] font-semibold text-white lg:inline">Search</span>
             </button>
           </div>
         )}
 
-        {/* Desktop navigation: text links, then a divider, then account actions */}
-        <nav className="hidden lg:flex items-center gap-1 xl:gap-2 shrink-0" aria-label="Main">
+        {/* Desktop menu row, directly under the search (IronPlanet layout) */}
+        <nav className="hidden lg:col-start-2 lg:row-start-2 lg:flex items-center gap-1 -ml-3" aria-label="Main">
+          <DropdownMenu>
+            <DropdownMenuTrigger className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full px-3 py-1.5 text-[14px] font-medium text-white/80 outline-none transition-colors hover:bg-white/[0.06] hover:text-white focus-visible:ring-2 focus-visible:ring-primary data-[state=open]:text-white">
+              Browse by category
+              <ChevronDown className="h-4 w-4 text-white/50" aria-hidden="true" />
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="start" sideOffset={8} className="w-64">
+              {HEADER_CATEGORY_LINKS.map((group, gi) => (
+                <div key={group.label}>
+                  {gi > 0 && <DropdownMenuSeparator />}
+                  <p className="px-2 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{group.label}</p>
+                  {group.links.map((link) => (
+                    <DropdownMenuItem key={link.to} onSelect={() => navigate(link.to)} className="cursor-pointer">
+                      {link.label}
+                    </DropdownMenuItem>
+                  ))}
+                </div>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
           {[
+            { to: '/search?mode=sale', label: 'For sale' },
+            { to: '/search?mode=rent', label: 'For rent' },
             { to: '/how-it-works', label: 'How it works' },
-            { to: '/financing', label: 'Financing', wide: true },
-            ...(!user ? [{ to: '/become-a-host', label: 'List your equipment' }] : []),
+            { to: '/financing', label: 'Financing' },
+            { to: '/list', label: 'Sell your equipment', wide: true },
           ].map((item) => (
             <Link
               key={item.to}
               to={item.to}
-              className={`${item.wide ? 'hidden xl:inline-flex' : 'inline-flex'} items-center rounded-full px-3 py-2 text-sm font-medium text-white/75 transition-colors hover:bg-white/[0.06] hover:text-white`}
+              className={`${'wide' in item ? 'hidden xl:inline-flex' : 'inline-flex'} shrink-0 items-center whitespace-nowrap rounded-full px-2.5 xl:px-3 py-1.5 text-[14px] font-medium text-white/80 transition-colors hover:bg-white/[0.06] hover:text-white`}
             >
               {item.label}
             </Link>
           ))}
         </nav>
 
-        <div className="hidden lg:flex items-center gap-2.5 ml-3 pl-4 border-l border-white/10 shrink-0">
+        <div className="hidden lg:flex lg:col-start-3 lg:row-span-2 lg:row-start-1 items-center gap-2.5 shrink-0">
           {user && (
             <Button 
               variant="dark-shine"
@@ -502,6 +547,7 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
           </div>
         </div>
       </div>
+      <div className="hidden h-[3px] bg-primary lg:block" aria-hidden="true" />
     </header>
   </>
   );

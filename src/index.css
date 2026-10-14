@@ -315,6 +315,8 @@
      so a scrolled-to card's top (or an eyebrow label) is never hidden behind
      the 72px sticky header. */
   :root { --sticky-header-h: 88px; }
+  /* Desktop header has a second row (menu under the search). */
+  @media (min-width: 1024px) { :root { --sticky-header-h: 128px; } }
   html { scroll-padding-top: var(--sticky-header-h); }
   [id] { scroll-margin-top: var(--sticky-header-h); }
 }
