@@ -204,9 +204,8 @@ export const DeliveryAvailabilityPanel = ({
                     </span>
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">
-                    {perMile
-                      ? `${rateLabel} × ~${result.estimate.minMiles}–${result.estimate.maxMiles} driving miles (about ${result.estimate.roadMiles} mi by road).`
-                      : `${rateLabel} — flat rate set by the seller.`}
+                    {/* Quote only: never show the rate × miles math (owner rule 2026-10-14). */}
+                    {perMile ? 'Delivery estimate for your ZIP.' : 'Flat delivery charge set by the seller.'}
                   </p>
                   <p className="text-xs text-muted-foreground mt-1">
                     Based on ZIP-center distance, so the final amount is confirmed at checkout once you enter your full address.

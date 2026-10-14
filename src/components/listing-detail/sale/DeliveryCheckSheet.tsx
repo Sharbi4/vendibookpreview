@@ -295,8 +295,8 @@ export const DeliveryCheckSheet = ({
                       ? `Within the seller’s ${radius}-mile radius of ${originLabel}. ${
                           rateLabel
                             ? perMile
-                              ? `${rateLabel} × ~${sellerEstimate?.minMiles}–${sellerEstimate?.maxMiles} driving miles.`
-                              : `${rateLabel} — flat rate set by the seller.`
+                              ? 'Delivery estimate for your address.'
+                              : 'Flat delivery charge set by the seller.'
                             : 'The seller delivers at no extra charge.'
                         } Confirmed at checkout.`
                       : `${rateLabel || 'No extra charge'} — confirmed at checkout.`

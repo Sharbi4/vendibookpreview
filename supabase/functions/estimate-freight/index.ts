@@ -32,14 +32,10 @@ interface FreightEstimateResponse {
   success: boolean;
   estimate?: {
     distance_miles: number;
-    base_cost: number;
-    fuel_surcharge: number;
-    handling_fee: number;
     subtotal: number;
     tax_rate: number;
     tax_amount: number;
     total_cost: number;
-    rate_per_mile: number;
     estimated_transit_days: { min: number; max: number };
   };
   disclaimer?: string;
@@ -122,7 +118,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     // Calculate freight cost
     const costs = freightQuote(distanceMiles);
-    logStep("Calculated costs", costs);
+    logStep("Calculated costs", { total_cost: costs.total_cost });
 
     // Estimate transit time
     const transitDays = estimateTransitDays(distanceMiles);
@@ -130,15 +126,20 @@ const handler = async (req: Request): Promise<Response> => {
 
     const response: FreightEstimateResponse = {
       success: true,
+      // Buyers get the quote only: never the per-mile rate or the
+      // base/fuel/handling breakdown (owner rule 2026-10-14).
       estimate: {
         distance_miles: Math.round(distanceMiles),
-        ...costs,
+        subtotal: costs.subtotal,
+        tax_rate: costs.tax_rate,
+        tax_amount: costs.tax_amount,
+        total_cost: costs.total_cost,
         estimated_transit_days: transitDays,
       },
-      disclaimer: "Freight rate: $4.50/mile. Final pricing confirmed within 2 business days after payment.",
+      disclaimer: "Final freight pricing is confirmed within 2 business days after payment.",
     };
 
-    logStep("Returning estimate", response);
+    logStep("Returning estimate", { total_cost: costs.total_cost });
 
     return new Response(
       JSON.stringify(response),

@@ -1,8 +1,4 @@
-import { FREIGHT_RATES, freightSubtotal } from '../../../supabase/functions/_shared/freightRates';
-
 export interface FreightDisplayEstimate {
-  distance_miles: number;
-  rate_per_mile: number;
   estimated_transit_days: { min: number; max: number };
 }
 
@@ -25,7 +21,11 @@ export function isSellerCoveredFreightOrder(
   return String(fulfillmentType ?? '').includes('freight') && listing?.freight_payer === 'seller';
 }
 
-/** Buyer-facing copy only. The full estimate remains available for internal accounting. */
+/**
+ * Buyer-facing copy only. Owner rule (2026-10-14): buyers see the freight
+ * quote, never how it is calculated — no per-mile rate, fuel, handling,
+ * mileage math or worked examples. The breakdown stays server-side.
+ */
 export function freightBuyerDisplay(estimate: FreightDisplayEstimate, sellerPaid: boolean) {
   const transit = `Estimated transit ${estimate.estimated_transit_days.min}–${estimate.estimated_transit_days.max} business days.`;
 
@@ -38,16 +38,14 @@ export function freightBuyerDisplay(estimate: FreightDisplayEstimate, sellerPaid
 
   return {
     charge: null,
-    detail: `${estimate.distance_miles.toLocaleString()} mi at $${estimate.rate_per_mile.toFixed(2)}/mile, including fuel and handling. ${transit}`,
+    detail: `Door-to-door freight to your address. ${transit}`,
   };
 }
-const usd0 = (n: number) => `$${Math.round(n).toLocaleString('en-US')}`;
-
 /**
- * Before-ZIP estimate for buyer-paid freight, so a buyer sees the likely cost
- * up front. Never use this for seller-covered freight: that shows only
- * "Free shipping" and never exposes the rate.
+ * Before-ZIP line for buyer-paid freight. Never shows a rate or sample prices:
+ * the buyer gets an exact quote for their ZIP. Seller-covered freight shows
+ * only "Free shipping".
  */
 export function buyerFreightRangeLabel(): string {
-  return `$${FREIGHT_RATES.ratePerMile.toFixed(2)}/mile plus fuel and handling · about ${usd0(freightSubtotal(250))} for 250 mi, ${usd0(freightSubtotal(1000))} for 1,000 mi, before tax`;
+  return 'Enter your ZIP for an exact freight quote';
 }

@@ -3,16 +3,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
 export interface FreightEstimate {
-  base_cost: number;
-  fuel_surcharge: number;
-  handling_fee: number;
   subtotal: number;
   tax_rate: number;
   tax_amount: number;
   total_cost: number;
   distance_miles: number;
   estimated_transit_days: { min: number; max: number };
-  rate_per_mile: number;
 }
 
 export interface FreightEstimateParams {
