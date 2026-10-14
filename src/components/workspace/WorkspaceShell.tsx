@@ -171,16 +171,19 @@ function ProCard({ onNavigate, tone }: { onNavigate?: () => void; tone: 'dark' |
 
 function SidebarLink({ item, count, onNavigate, variant }: { item: WorkspaceNavItem; count?: number; onNavigate?: () => void; variant: 'sidebar' | 'sheet' }) {
   const Icon = item.icon;
+  const { pathname } = useLocation();
   return (
     <NavLink
       to={item.to}
       end={item.to === '/dashboard'}
       onClick={onNavigate}
-      className={({ isActive }) =>
-        variant === 'sidebar'
-          ? cn('ws-side-link', isActive && 'is-active')
-          : cn('workspace-menu-link', isActive && 'is-active')
-      }
+      className={({ isActive }) => {
+        // Your profile lives under Settings in the menu.
+        const active = isActive || (item.to === '/dashboard/account' && pathname.startsWith('/dashboard/profile'));
+        return variant === 'sidebar'
+          ? cn('ws-side-link', active && 'is-active')
+          : cn('workspace-menu-link', active && 'is-active');
+      }}
     >
       <Icon aria-hidden="true" />
       <span className="truncate">{item.label}</span>
