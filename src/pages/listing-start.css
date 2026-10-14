@@ -1,0 +1,75 @@
+/* `/list` entry page. Class names are prefixed `lst-` so nothing leaks into the wizard. */
+.lst-heading {
+  font-family: 'Poppins', 'Manrope', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  letter-spacing: -0.025em;
+}
+
+/* Photo hero: charcoal shade so white copy and the two CTAs always read. */
+.lst-hero { background: hsl(24 12% 10%); }
+.lst-hero-shade {
+  background:
+    linear-gradient(180deg, rgba(20, 16, 12, 0.55) 0%, rgba(20, 16, 12, 0.78) 100%);
+}
+@media (min-width: 1024px) {
+  .lst-hero-shade {
+    background:
+      linear-gradient(90deg, rgba(20, 16, 12, 0.9) 0%, rgba(20, 16, 12, 0.72) 48%, rgba(20, 16, 12, 0.5) 100%);
+  }
+}
+.lst-hero-btn { padding-left: 1.5rem; padding-right: 1.5rem; }
+.lst-hero .lst-hero-btn-light {
+  background: #ffffff;
+  color: hsl(24 12% 12%);
+  border-color: transparent;
+  box-shadow: 0 18px 40px -18px rgba(0, 0, 0, 0.55);
+}
+.lst-hero .lst-hero-btn-light:hover { background: hsl(36 30% 96%); color: hsl(24 12% 12%); }
+
+.lst-card {
+  background: #ffffff;
+  border: 1px solid rgba(24, 20, 16, 0.08);
+  box-shadow: 0 1px 2px rgba(24, 20, 16, 0.04), 0 18px 40px -30px rgba(24, 20, 16, 0.35);
+}
+
+.lst-choice { transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease; }
+.lst-choice:hover,
+.lst-choice:focus-within {
+  border-color: rgba(255, 81, 36, 0.35);
+  box-shadow: 0 1px 2px rgba(24, 20, 16, 0.04), 0 26px 50px -30px rgba(255, 75, 31, 0.38);
+}
+.lst-card-photo { transition: transform 0.5s ease; }
+@media (hover: hover) {
+  .lst-choice:hover { transform: translateY(-2px); }
+  .lst-choice:hover .lst-card-photo { transform: scale(1.03); }
+}
+
+.lst-icon {
+  background: linear-gradient(135deg, hsl(14 100% 96%), hsl(28 100% 94%));
+  box-shadow: inset 0 0 0 1px hsl(14 90% 88%);
+  color: hsl(14 85% 45%);
+}
+
+.lst-step-num {
+  background: hsl(24 12% 12%);
+  color: hsl(40 30% 97%);
+}
+
+.lst-trust {
+  background:
+    radial-gradient(120% 140% at 0% 0%, rgba(255, 90, 31, 0.22), transparent 55%),
+    hsl(24 12% 12%);
+  box-shadow: 0 24px 50px -32px rgba(24, 20, 16, 0.6);
+}
+
+.lst-trust-icon {
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.14);
+  color: #ff7a22;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .lst-choice,
+  .lst-card-photo { transition: none; }
+  .lst-choice:hover,
+  .lst-choice:hover .lst-card-photo { transform: none; }
+}

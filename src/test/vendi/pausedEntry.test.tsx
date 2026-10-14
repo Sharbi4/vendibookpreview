@@ -10,6 +10,7 @@ it.each([
  ['/list-with-vendi?mode=sale', '/list/start?mode=sale'],
  ['/list-with-vendi?listing=draft-123', '/create-listing/draft-123'],
  ['/list?mode=rent', '/list/start?mode=rent'],
+ ['/list?listing=draft-9', '/create-listing/draft-9'],
 ])('redirects %s to the wizard without losing context', (from,to)=>{
  render(<MemoryRouter initialEntries={[from]}><Routes><Route path="/list-with-vendi" element={<ListWithVendi/>}/><Route path="/list" element={<ListingStart/>}/><Route path="*" element={<Destination/>}/></Routes></MemoryRouter>);
  expect(screen.getByTestId('destination').textContent).toBe(to);

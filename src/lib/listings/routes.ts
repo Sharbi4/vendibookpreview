@@ -2,7 +2,8 @@
  * Canonical listing route map.
  *
  * The self-service flow is:
- *   /list            opening choice page (List with Vendi vs manual wizard)
+ *   /list            entry page: choose "Sell it" or "Rent it out" (links that
+ *                    already carry mode/category/draft skip straight past it)
  *   /list/start      QuickStart wizard entry — creates the draft
  *   /create-listing/:listingId   PublishWizard (draft continuation)
  *   /list/finish/:listingId      one-screen finish & publish for older drafts
@@ -13,7 +14,8 @@
  * seller landing pages can drop a host straight into the right path without
  * asking a question the visitor already answered.
  *
- * Legacy entries are redirects, never parallel wizards.
+ * Legacy entries are redirects, never parallel wizards. The retired Vendi
+ * chat/voice builders (/list-with-vendi, /list/vendi, /list/ai) only redirect.
  */
 export const LISTING_ROUTES = {
   /** Opening choice page — the front door for new listings. */

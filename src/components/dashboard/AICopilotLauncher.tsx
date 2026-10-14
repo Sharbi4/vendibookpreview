@@ -6,9 +6,9 @@ import { Badge } from '@/components/ui/badge';
 import { trackLeadEvent } from '@/lib/leadTracking';
 
 /**
- * Prominent entry-point card for Spark-powered host tools.
- * Surfaces the conversational AI Listing Creator + Vendi voice/text chat
- * so hosts can find AI assistance without hunting through nav.
+ * Prominent entry-point card for host tools: starts a new listing in the
+ * standard /list flow and opens Vendi text chat for questions. (The AI chat
+ * listing creator at /list/ai is retired and only redirects to /list.)
  */
 export const AICopilotLauncher = () => {
   const openVendiChat = () => {
@@ -29,8 +29,8 @@ export const AICopilotLauncher = () => {
               <Badge variant="outline" className="text-[10px] uppercase tracking-wide">AI</Badge>
             </div>
             <p className="text-sm text-muted-foreground">
-              Draft listings, sharpen descriptions, price competitively, and get
-              answers about your bookings — all in one place.
+              Start a new listing, or get answers about your listings and
+              bookings from Vendi.
             </p>
           </div>
         </div>
@@ -47,10 +47,10 @@ export const AICopilotLauncher = () => {
               })
             }
           >
-            <Link to="/list/ai">
+            <Link to="/list">
               <span className="flex items-center gap-2">
                 <PenLine className="h-4 w-4" />
-                Draft my listing with Spark
+                Create a listing
               </span>
               <ArrowRight className="h-4 w-4" />
             </Link>

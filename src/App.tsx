@@ -104,7 +104,6 @@ const ListingFinish = lazy(() => import("./pages/ListingFinish"));
 
 
 const ListPage = lazy(() => import("./pages/List"));
-const AIListingCreator = lazy(() => import("./pages/AIListingCreator"));
 const ListWithVendi = lazy(() => import("./pages/ListWithVendi"));
 const ListingDetail = lazy(() => import("./pages/ListingDetail"));
 const Account = lazy(() => import("./pages/Account"));
@@ -568,7 +567,7 @@ const AnimatedRoutes = () => {
           {/* Redirect old /ai-tools route to /tools */}
           <Route path="/ai-tools" element={<Navigate to="/tools" replace />} />
           
-          {/* Supply flow: /list is quick start, then /create-listing/:id for publish wizard */}
+          {/* Supply flow: /list entry page, /list/start quick start, then /create-listing/:id for publish wizard */}
           <Route path="/list" element={<PageTransition><ListingStart /></PageTransition>} />
           <Route path="/list/start" element={<PageTransition><ListStart /></PageTransition>} />
           {/* Listing Concierge retired (owner request 2026-10-13): old links go to the free self-serve flow. */}
@@ -577,7 +576,8 @@ const AnimatedRoutes = () => {
           <Route path="/list/concierge/:orderId" element={<Navigate to="/list" replace />} />
 
 
-          <Route path="/list/ai" element={<PageTransition><AIListingCreator /></PageTransition>} />
+          {/* AI chat listing creator retired: /list keeps ?listing= draft links working. */}
+          <Route path="/list/ai" element={<PreserveQueryRedirect to="/list" />} />
           <Route path="/list-with-vendi" element={<PageTransition><ListWithVendi /></PageTransition>} />
           <Route path="/list/vendi" element={<PageTransition><ListWithVendi /></PageTransition>} />
           <Route path="/create-listing/:listingId" element={<PageTransition><EditListing /></PageTransition>} />

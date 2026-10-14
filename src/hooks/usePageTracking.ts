@@ -21,7 +21,6 @@ const ROUTE_TITLES: Record<string, string> = {
   '/dashboard/reporting': 'Host Reporting',
   '/dashboard/analytics': 'Host Analytics',
   '/list': 'List Your Asset',
-  '/list/ai': 'AI Listing Creator',
   '/account': 'My Account',
   '/favorites': 'Favorites',
   '/privacy': 'Privacy Policy',
