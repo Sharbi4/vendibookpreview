@@ -1,5 +1,5 @@
 /** Vendibook's Facebook page. One source for the header and footer. */
-export const VENDIBOOK_FACEBOOK_URL = 'https://facebook.com/p/Vendibook-61575463393177/';
+export const VENDIBOOK_FACEBOOK_URL = 'https://www.facebook.com/profile.php?id=61575463393177';
 
 /** Facebook's "f" mark on its brand-blue rounded square, linking to the Vendibook page. */
 export default function FacebookLink({ size = 32, className = '' }: { size?: number; className?: string }) {

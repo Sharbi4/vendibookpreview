@@ -186,7 +186,7 @@ export const generateOrganizationSchema = () => ({
   },
   sameAs: [
     'https://twitter.com/vendibook',
-    'https://facebook.com/vendibook',
+    'https://www.facebook.com/profile.php?id=61575463393177',
     'https://instagram.com/vendibook',
   ],
 });
