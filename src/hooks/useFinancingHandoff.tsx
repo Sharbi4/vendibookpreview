@@ -13,6 +13,24 @@ import {
   type FinancingLeadValues,
 } from '@/components/financing/FinancingLeadDialog';
 
+/**
+ * Open the Equinox tab synchronously inside the click so popup blockers allow
+ * it. `noopener` in the features string makes window.open return null, which
+ * left an empty tab and navigated this page away; cut the opener link by hand
+ * instead so the new tab still cannot reach Vendibook.
+ */
+const openBlankTab = (): Window | null => {
+  const win = window.open('', '_blank');
+  if (win) {
+    try {
+      win.opener = null;
+    } catch {
+      /* some browsers make opener read-only; the tab still works */
+    }
+  }
+  return win;
+};
+
 interface Pending {
   source: FinancingSource;
   listingId?: string;
@@ -65,8 +83,9 @@ export function useFinancingHandoff() {
         return;
       }
     }
-    if (win) win.location.href = url;
-    else window.location.href = url;
+    if (win && !win.closed) win.location.href = url;
+    // Popup blocked: keep the applicant moving in this tab.
+    else window.location.assign(url);
   }, []);
 
   /** Call directly from the click handler so the popup is not blocked. */
@@ -76,7 +95,7 @@ export function useFinancingHandoff() {
       trackFinancingApplyClick(source, listingId);
 
       if (user?.email) {
-        const win = window.open('', '_blank', 'noopener,noreferrer');
+        const win = openBlankTab();
         const name =
           (user.user_metadata as any)?.full_name ?? (user.user_metadata as any)?.name ?? '';
         void saveLead({ name, email: user.email }, ctx, 'signed_in');
@@ -94,7 +113,7 @@ export function useFinancingHandoff() {
     async (values: FinancingLeadValues | null) => {
       const ctx = pending.current;
       if (!ctx) return;
-      const win = window.open('', '_blank', 'noopener,noreferrer');
+      const win = openBlankTab();
       setSubmitting(true);
       try {
         if (values?.email) await saveLead(values, ctx, 'form');
