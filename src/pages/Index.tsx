@@ -60,7 +60,12 @@ const GUARANTEE_STEPS = [
 
 type ListingCategory = 'food_truck' | 'food_trailer' | 'ghost_kitchen' | 'vendor_lot' | 'vendor_space';
 
-const fetchListings = async (mode: 'sale' | 'rent', categories?: readonly ListingCategory[], limit = ROW_LIMIT) => {
+const fetchListings = async (
+  mode: 'sale' | 'rent',
+  categories?: readonly ListingCategory[],
+  limit = ROW_LIMIT,
+  newestOnly = false,
+) => {
   let query = supabase
     .from('listings')
     .select('*')
@@ -77,7 +82,9 @@ const fetchListings = async (mode: 'sale' | 'rent', categories?: readonly Listin
     .limit(limit);
 
   if (error) throw error;
-  return sortNewFirstThenFeatured(filterPubliclyVisible(data ?? []) as never) as never[];
+  const visible = filterPubliclyVisible(data ?? []) as never;
+  // "Just listed" is strictly newest first; featured boosts have their own row.
+  return (newestOnly ? visible : sortNewFirstThenFeatured(visible)) as never[];
 };
 
 const fetchFeaturedListings = async () => {
@@ -101,7 +108,7 @@ const Index = () => {
 
   const saleQuery = useQuery({
     queryKey: ['home-v2-sale'],
-    queryFn: () => fetchListings('sale', ['food_truck', 'food_trailer'], SALE_ROW_LIMIT),
+    queryFn: () => fetchListings('sale', undefined, SALE_ROW_LIMIT, true),
     staleTime: 60000,
   });
 
@@ -116,13 +123,10 @@ const Index = () => {
   // Active featured boosts keep their homepage placement: they lead the
   // matching row (sale or rent), followed by the newest listings.
   const featured = (featuredQuery.data ?? []) as Array<{ mode?: string | null }>;
-  const saleListings = buildHomepageSpotlight(
-    featured.filter((l) => l.mode === 'sale') as never[], (saleQuery.data ?? []) as never[], SALE_ROW_LIMIT,
-  );
+  const saleListings = (saleQuery.data ?? []) as never[];
   const rentListings = buildHomepageSpotlight(
     featured.filter((l) => l.mode === 'rent') as never[], (rentQuery.data ?? []) as never[], ROW_LIMIT + 4,
   );
-  const saleHasFeatured = saleListings.some((listing) => isListingFeatured(listing));
 
   // Featured row: every active boost, reshuffled on each page view so each
   // featured listing takes turns in the first spots.
@@ -172,12 +176,11 @@ const Index = () => {
           <div className="hb-wrap">
             <V2ListingRow
               title="Just listed for sale"
-              subtitle={saleHasFeatured
-                ? 'Featured listings first, then the newest food trucks and trailers for sale.'
-                : 'The newest food trucks and trailers for sale.'}
+              subtitle="The newest food trucks, trailers and equipment for sale, newest first."
               listings={saleListings}
-              isLoading={saleQuery.isLoading || featuredQuery.isLoading}
-              viewAllHref="/search?mode=sale&category=food_truck%2Cfood_trailer"
+              isLoading={saleQuery.isLoading}
+              rows={2}
+              viewAllHref="/search?mode=sale"
               viewAllLabel="Browse all for sale"
               priority
             />

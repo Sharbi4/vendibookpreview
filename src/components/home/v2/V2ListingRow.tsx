@@ -14,6 +14,8 @@ interface Props {
   isLoading?: boolean;
   priority?: boolean;
   featured?: boolean;
+  /** Two rows under one header; cards read left to right, top row first. */
+  rows?: 1 | 2;
 }
 
 export default function V2ListingRow({
@@ -25,9 +27,20 @@ export default function V2ListingRow({
   isLoading = false,
   priority = false,
   featured = false,
+  rows = 1,
 }: Props) {
   const railRef = useRef<HTMLDivElement>(null);
   if (!isLoading && listings.length === 0) return null;
+
+  // The rail fills column by column, so interleave the halves to keep the
+  // newest listings across the top row and the rest on the row below.
+  const ordered = rows === 2
+    ? (() => {
+        const top = listings.slice(0, Math.ceil(listings.length / 2));
+        const bottom = listings.slice(top.length);
+        return top.flatMap((l, i) => (bottom[i] ? [l, bottom[i]] : [l]));
+      })()
+    : listings;
 
   const move = (direction: -1 | 1) => {
     railRef.current?.scrollBy({ left: railRef.current.clientWidth * 0.82 * direction, behavior: 'smooth' });
@@ -49,12 +62,12 @@ export default function V2ListingRow({
         </div>
       </header>
 
-      <div className="v2-home-rail" ref={railRef}>
+      <div className={`v2-home-rail${rows === 2 ? ' is-two-rows' : ''}`} ref={railRef}>
         {isLoading
-          ? Array.from({ length: 4 }).map((_, i) => (
+          ? Array.from({ length: rows === 2 ? 8 : 4 }).map((_, i) => (
               <Skeleton key={i} className="h-[268px] rounded-[16px]" />
             ))
-          : listings.map((listing, i) => (
+          : ordered.map((listing, i) => (
               <V2ListingCard key={listing.id} listing={listing} priority={priority && i < 2} />
             ))}
       </div>

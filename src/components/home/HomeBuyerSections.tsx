@@ -48,14 +48,15 @@ function SquareWordmark() {
 
 export function HomePartnerStrip({ guaranteeHref, financingLive }: { guaranteeHref: string; financingLive: boolean }) {
   const partners = [
-    { key: 'paypal', role: 'Checkout', mark: <PayPalWordmark surface="dark" className="hb-logo hb-logo-paypal" /> },
-    { key: 'square', role: 'Card payments', mark: <SquareWordmark /> },
+    { key: 'paypal', href: '/payments', role: 'Checkout', mark: <PayPalWordmark surface="dark" className="hb-logo hb-logo-paypal" /> },
+    { key: 'square', href: '/payments', role: 'Card payments', mark: <SquareWordmark /> },
     ...(financingLive
-      ? [{ key: 'equinox', role: 'Financing', mark: <EquinoxFundingLogo className="hb-logo hb-logo-equinox" /> }]
+      ? [{ key: 'equinox', href: '/financing', role: 'Financing', mark: <EquinoxFundingLogo className="hb-logo hb-logo-equinox" /> }]
       : []),
-    { key: 'plaid', role: 'ID verification', mark: <PlaidLogo surface="light" className="hb-logo hb-logo-plaid" /> },
+    { key: 'plaid', href: '/identity-verification', role: 'ID verification', mark: <PlaidLogo surface="light" className="hb-logo hb-logo-plaid" /> },
     {
       key: 'flip',
+      href: '/insurance',
       role: 'Vendor insurance',
       mark: <img src={FLIP_INSURANCE.logoUrl} alt="FLIP" width={300} height={138} loading="lazy" className="hb-logo hb-logo-flip" />,
     },
@@ -82,8 +83,15 @@ export function HomePartnerStrip({ guaranteeHref, financingLive }: { guaranteeHr
           <ul>
             {partners.map((p) => (
               <li key={p.key}>
-                <span className="hb-partner-mark">{p.mark}</span>
-                <span className="hb-partner-role">{p.role}</span>
+                <Link
+                  to={p.href}
+                  className="hb-partner-link"
+                  data-cta-location={`home_partner_${p.key}`}
+                  onClick={() => trackLeadEvent('homepage_premium_discovery_click', { source: 'home_partner_strip', card: p.key, destination: p.href })}
+                >
+                  <span className="hb-partner-mark">{p.mark}</span>
+                  <span className="hb-partner-role">{p.role}</span>
+                </Link>
               </li>
             ))}
           </ul>
