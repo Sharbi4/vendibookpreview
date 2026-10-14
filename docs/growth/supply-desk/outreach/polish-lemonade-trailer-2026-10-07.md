@@ -4,6 +4,10 @@
 
 **⏳ Earliest send: 2026-10-12 07:10 UTC.** This listing is on the free 14-day feature, which runs until 2026-10-19. The host was sent the `complimentary-featured-boost` email on 2026-10-05 at 07:09 UTC. `send-seller-concierge` skips anyone who got that email in the last 7 days, so a send before Oct 12 07:09 reaches 0 recipients.
 
+**Re-requested by the 2026-10-14 18:22 pulse.** The seller edited the listing at 18:21 and `condition` is still NULL. This staged ask still covers it; no duplicate was made.
+
+**⚠️ Send by 2026-10-19.** The trailer ask says "it's featured right now", and the free feature ends 2026-10-19. If sending later, use this ask text instead: "Set the condition: New, Like new, Good, Fair or Needs work. Buyers who filter by condition can't see your listing until it's set."
+
 **Checked read-only:**
 - **Listing** `a3ead971-38c7-4c0c-8f3f-2b02185c7c2f`: for sale in Charlotte, NC at $5,900, 6 photos. Edited at 23:01. `condition` is NULL.
 - **Host** `bf4754c8…`:
