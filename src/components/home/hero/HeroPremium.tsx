@@ -70,8 +70,8 @@ const HeroPremium = ({ showGoogleSignIn = true, showRotator = true, guaranteeHre
             Buy, sell &amp; rent food trucks and trailers
           </motion.h1>
           <motion.p {...rise(0.12)} className="hp-hero-lede">
-            Check out through Vendibook and the {guaranteeLink} means the seller is paid only after you confirm the
-            handoff. Financing available through{' '}
+            Secure checkout and a protected handoff on every purchase with the {guaranteeLink}. Financing available
+            through{' '}
             <Link
               to="/financing"
               data-cta-location="home_hero_financing"

@@ -74,7 +74,7 @@ export function HomePartnerStrip({ guaranteeHref, financingLive }: { guaranteeHr
           </span>
           <span>
             <strong>The Vendibook Guarantee</strong>
-            <small>Pay through Vendibook and the seller is paid only after you confirm the handoff.</small>
+            <small>Secure checkout and a protected, recorded handoff on every purchase.</small>
           </span>
           <ArrowRight className="hb-partners-arrow" aria-hidden="true" />
         </a>

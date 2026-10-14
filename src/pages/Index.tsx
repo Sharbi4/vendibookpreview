@@ -53,9 +53,9 @@ const GUARANTEE_ID = 'vendibook-guarantee';
 
 const GUARANTEE_STEPS = [
   { title: 'Request to buy', body: 'Send a request or make an offer. Once the seller approves, the equipment is reserved for you.' },
-  { title: 'Pay your Vendibook invoice', body: 'Vendibook sends it by email and to your dashboard. Paying it does not pay the seller yet.' },
-  { title: 'Confirm, sign, record', body: 'You confirm the handoff, you and the seller sign the purchase agreement, and the walkthrough video is saved.' },
-  { title: 'Then the seller is paid', body: 'Vendibook releases the seller’s payout only after all three are complete.' },
+  { title: 'Pay securely', body: 'Pay your Vendibook invoice online. It arrives by email and in your dashboard.' },
+  { title: 'Protected handoff', body: 'Meet the seller, confirm you have the equipment, sign the purchase agreement together and save the walkthrough video.' },
+  { title: 'Deal closed, on record', body: 'With the handoff confirmed, signed and recorded, the sale is complete and the seller’s payout is released.' },
 ];
 
 type ListingCategory = 'food_truck' | 'food_trailer' | 'ghost_kitchen' | 'vendor_lot' | 'vendor_space';
@@ -192,11 +192,11 @@ const Index = () => {
             <div className="hb-guarantee-main">
             <div className="hb-guarantee-intro">
               <p className="hb-eyebrow">The Vendibook Guarantee</p>
-              <h2 id="hb-guarantee-title">The seller is paid only after you confirm the handoff.</h2>
+              <h2 id="hb-guarantee-title">A secure handoff on every purchase.</h2>
               <p className="hb-guarantee-lede">
-                Buy through a Vendibook invoice and the seller’s payout waits until you confirm the handoff, both of you
-                sign the purchase agreement and the walkthrough video is saved. Everyone who messages, offers or buys has
-                verified their phone and identity, and every message is scanned for scams.
+                Pay through Vendibook checkout, then complete the handoff together: you confirm you have the equipment,
+                you and the seller sign the purchase agreement, and the walkthrough video is saved to your records.
+                Every member who messages, offers or buys is phone and ID verified, and messages are scanned for scams.
               </p>
               <Link to="/how-purchasing-works" className="hb-guarantee-link" data-cta-location="home_guarantee">
                 How buying works<ArrowRight aria-hidden="true" />
