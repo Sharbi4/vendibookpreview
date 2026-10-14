@@ -2,6 +2,7 @@ import { useEffect } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import type { BuyerMatchData } from '@/lib/monetization/buyerMatchIntelligence';
 const db = supabase as any;
 export async function buyerMatchAction(action: string, payload: Record<string, unknown> = {}) {
   const { data, error } = await db.rpc('buyermatch_action', { _action: action, _payload: payload });
@@ -18,7 +19,7 @@ export function useBuyerMatch() {
       .subscribe();
     return () => { void supabase.removeChannel(channel); };
   }, [user?.id, client]);
-  return useQuery({
+  return useQuery<BuyerMatchData>({
     queryKey: ['buyermatch', user?.id], enabled: !!user, refetchInterval: 60000,
     queryFn: async () => {
       if (!user) throw new Error('Sign in required');

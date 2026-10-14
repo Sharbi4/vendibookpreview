@@ -1,82 +1,220 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ArrowUpRight, Search, Loader2, CheckCircle2, Clock3, Link2, MessageSquare, Activity, ShieldCheck, Copy } from 'lucide-react';
+import { ArrowUpRight, Copy, Loader2 } from 'lucide-react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import WorkspaceShell from '@/components/workspace/WorkspaceShell';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import BuyerMatchPreview from '@/components/monetization/BuyerMatchPreview';
 import BuyerMatchInsights from '@/components/monetization/BuyerMatchInsights';
+import BuyerMatchListings from '@/components/monetization/BuyerMatchListings';
 import BuyerMatchRecommendations from '@/components/monetization/BuyerMatchRecommendations';
+import { bm, place, shortDate, usd } from '@/components/monetization/buyerMatchUi';
 import { buyerMatchAction, useBuyerMatch } from '@/hooks/useBuyerMatch';
-import { campaignMetrics, listingRecommendations, CAMPAIGN_STATUS, EVENT_LABELS, type CampaignEvent } from '@/lib/monetization/buyerMatchIntelligence';
+import {
+  listingRecommendations, CAMPAIGN_STATUS, EVENT_LABELS,
+  type BuyerMatchCampaign, type BuyerMatchLink, type BuyerMatchListing, type BuyerMatchReport, type CampaignEvent,
+} from '@/lib/monetization/buyerMatchIntelligence';
 
-const date = (s: string) => new Date(s).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
-const money = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(n);
+type Act = (name: string, payload: Record<string, unknown>) => void;
+interface Engagement { visits?: number; unique_sessions?: number; daily?: { day: string; visits: number }[] }
+
 export default function WorkspaceBuyerMatch() {
   const query = useBuyerMatch(); const client = useQueryClient(); const [params, setParams] = useSearchParams();
   const [listing, setListing] = useState(''); const [geography, setGeography] = useState(''); const [criteria, setCriteria] = useState('');
   const action = useMutation({ mutationFn: ({ name, payload }: { name: string; payload: Record<string, unknown> }) => buyerMatchAction(name, payload), onSuccess: () => client.invalidateQueries({ queryKey: ['buyermatch'] }) });
-  const act = (name: string, payload: Record<string, unknown>) => action.mutate({ name, payload });
+  const act: Act = (name, payload) => action.mutate({ name, payload });
   const data = query.data; const campaigns = data?.campaigns ?? [];
-  const selected = campaigns.find((c: any) => c.id === params.get('campaign')) ?? campaigns[0];
-  const selectedListing = data?.listings.find((l: any) => l.id === listing);
+  const entitled = !!data?.config.entitled;
+  const selected = campaigns.find(c => c.id === params.get('campaign')) ?? campaigns[0];
+  const eligible = (data?.listings ?? []).filter(l => !campaigns.some(c => c.listing_id === l.id));
+  const selectedListing = data?.listings.find(l => l.id === listing);
   const [activate, setActivate] = useState(params.get('activate') === '1');
-  return <WorkspaceShell><div className="buyermatch-theme mx-auto max-w-6xl space-y-7 rounded-lg p-4 pb-12 sm:p-8">
-    <header className="border-b border-border pb-7">
-      <p className="text-xs font-semibold uppercase text-primary">Vendibook Pro · Seller intelligence</p>
-      <div className="mt-4 flex flex-wrap items-start justify-between gap-4"><div><h1 className="font-display text-3xl font-semibold sm:text-4xl">BuyerMatch AI</h1><p className="mt-2 text-muted-foreground">Your buyer discovery command center</p></div>
-        <div className="flex flex-wrap gap-2"><Button asChild variant="outline"><Link to="/dashboard/buyermatch/membership">Manage membership</Link></Button>{data?.config.entitled && <Button onClick={() => setActivate(!activate)}>Activate a listing</Button>}</div></div>
+  const showForm = entitled && (activate || !campaigns.length) && !!data?.listings.length;
+  const start = (id: string) => {
+    setListing(id); setActivate(true);
+    requestAnimationFrame(() => document.getElementById('activation')?.scrollIntoView({ behavior: 'smooth', block: 'start' }));
+  };
+
+  return <WorkspaceShell><div className={bm.page}>
+    <header className="pb-10">
+      <div className="max-w-3xl">
+        <p className={bm.eyebrow}>BuyerMatch · Vendibook Pro</p>
+        <h1 className={bm.h1 + ' mt-4'}>Find the buyer for the truck you&rsquo;re selling.</h1>
+        <p className={bm.lead + ' mt-5'}>Our team looks for people shopping for a truck, trailer or cart like yours, contacts them only with documented permission, and logs every step here. Replies come to your Vendibook messages.</p>
+      </div>
+      <div className="mt-7 flex flex-wrap gap-3">
+        <Link to="/dashboard/buyermatch/membership" className={bm.quiet}>Manage membership</Link>
+        {entitled && !!eligible.length && <button type="button" className={bm.primary} onClick={() => setActivate(!activate)}>Start a buyer search</button>}
+      </div>
     </header>
-    {query.isLoading ? <p role="status" className="flex gap-2"><Loader2 className="h-5 w-5 animate-spin"/>Loading campaign activity…</p> : query.error ?
-      <section role="alert" className="border border-border bg-card p-6"><p>BuyerMatch could not be loaded. Your existing membership is unchanged.</p><Button className="mt-3" onClick={() => query.refetch()}>Retry</Button></section> : data && <>
-      {action.error && <p role="alert" className="text-sm text-destructive">{action.error.message}</p>}
-      {!data.config.entitled && <><BuyerMatchPreview/><p className="text-sm text-muted-foreground">Historical reports and your messages remain available. New campaigns require current Pro access.</p></>}
-      {data.config.entitled && <section className="flex items-start gap-3 border-b border-border pb-6"><ShieldCheck className="mt-1 h-5 w-5 shrink-0 text-primary"/><div><h2 className="font-semibold">{!data.config.fulfillment_enabled ? 'Pending service activation.' : 'Reviewed outreach. Transparent results.'}</h2><p className="mt-1 text-sm leading-6 text-muted-foreground">{!data.config.fulfillment_enabled ? 'Campaign submissions are open for team review. Research and outreach will begin only after an approved operator activates your campaign.' : 'Membership does not initiate outreach. Every campaign follows team approval and documented authorization.'}</p></div></section>}
-      {data.config.entitled && (activate || !campaigns.length) && <section id="activation" className="border-b border-border pb-7">
-        <div className="flex items-center gap-3"><span className="grid h-8 w-8 place-items-center rounded-full bg-accent text-primary"><Search className="h-4 w-4"/></span><h2 className="text-xl font-semibold">Choose your next campaign</h2></div>
-        <p className="mt-3 text-sm text-muted-foreground">Up to {data.config.max_campaigns} open campaigns. Submission does not reserve your listing or send outreach.</p>
-        <form className="mt-5 grid gap-4 sm:grid-cols-2" onSubmit={e => { e.preventDefault(); act('submit', { listing_id: listing, geography, buyer_criteria: criteria }); }}>
-          <label className="text-sm font-medium">Sale listing<select required value={listing} onChange={e => setListing(e.target.value)} className="mt-2 block w-full rounded-lg border border-input bg-card p-3"><option value="">Select your listing</option>{data.listings.filter((l: any) => !campaigns.some((c: any) => c.listing_id === l.id)).map((l: any) => <option key={l.id} value={l.id}>{l.title}</option>)}</select></label>
-          <label className="text-sm font-medium">Geographic preferences (optional)<Input className="mt-2 bg-card" maxLength={500} value={geography} onChange={e => setGeography(e.target.value)} placeholder="Southwest, or nationwide"/></label>
-          {selectedListing && <div className="flex min-w-0 gap-4 border-y border-border py-4 sm:col-span-2">{selectedListing.cover_image_url && <img src={selectedListing.cover_image_url} alt="Selected equipment" className="h-24 w-28 rounded-lg object-cover"/>}<div className="min-w-0"><h3 className="font-semibold">{selectedListing.title}</h3><p className="mt-1 text-sm">{money(Number(selectedListing.price_sale))} · {[selectedListing.city, selectedListing.state].filter(Boolean).join(', ')}</p><p className="mt-2 line-clamp-2 text-sm text-muted-foreground">{selectedListing.description}</p><Button asChild size="sm" variant="link" className="px-0"><Link to={'/listing/' + selectedListing.id}>Review photos and equipment<ArrowUpRight className="ml-1 h-3 w-3"/></Link></Button></div></div>}
-          <label className="text-sm font-medium sm:col-span-2">Buyer criteria (optional)<Textarea className="mt-2 bg-card" maxLength={2000} value={criteria} onChange={e => setCriteria(e.target.value)} placeholder="Buyer budget, equipment requirements and intended use"/></label>
-          <Button type="submit" disabled={!listing || action.isPending || !data.config.submissions_enabled} className="w-fit">{action.isPending ? 'Submitting…' : 'Submit for activation'}</Button>
-        </form>
-        {!data.listings.length && <p className="mt-4 text-sm">Publish an eligible sale listing to begin. <Link className="text-primary underline" to="/dashboard/listings">Manage listings</Link></p>}
+
+    {query.isLoading ? <p role="status" className={bm.body + ' flex items-center gap-2'}><Loader2 className="h-4 w-4 animate-spin"/>Loading your listings and searches…</p> : query.error ?
+      <section role="alert" className={bm.card + ' p-6 sm:p-8'}><p className="text-[16px] font-semibold">BuyerMatch could not be loaded.</p><p className={bm.body + ' mt-1'}>Your membership and listings are unchanged.</p><button type="button" className={bm.quiet + ' mt-5'} onClick={() => query.refetch()}>Retry</button></section> : data && <div className="space-y-14">
+      {action.error && <p role="alert" className="text-[14px] text-[#B42318]">{action.error.message}</p>}
+
+      {!entitled && <>
+        <BuyerMatchPreview listing={data.listings.find(l => l.cover_image_url) ?? data.listings[0]}/>
+        {(!!campaigns.length || !!data.reports.length) && <p className={bm.body}>Your past reports and buyer messages stay available here. Starting a new search needs current Pro access.</p>}
+      </>}
+
+      {entitled && !data.config.fulfillment_enabled && <section className="border-l-2 border-[#FF5124] pl-5">
+        <h2 className="text-[16px] font-semibold">Searches haven&rsquo;t started yet.</h2>
+        <p className={bm.body + ' mt-1 max-w-2xl'}>You can send listings for review now. Research and outreach begin only after our team approves a listing and confirms the search is running. Nothing is sent to buyers before then.</p>
       </section>}
-      {!!campaigns.length && <div className="grid gap-5 lg:grid-cols-[230px_minmax(0,1fr)]"><aside><h2 className="mb-3 text-sm font-semibold">Your campaigns</h2><div className="space-y-2">{campaigns.length > 1 && <Button variant="outline" onClick={() => setParams({ campaign: 'all' })} className={'h-auto w-full justify-start p-4 ' + (params.get('campaign') === 'all' ? 'border-primary bg-accent' : 'bg-card')}>All listings (combined)</Button>}{campaigns.map((c: any) => <Button key={c.id} variant="outline" onClick={() => setParams({ campaign: c.id })} className={'h-auto w-full items-start justify-start whitespace-normal p-4 text-left ' + (selected?.id === c.id ? 'border-primary bg-accent' : 'bg-card')}><span><span className="block font-medium">{c.listing_snapshot.title}</span><span className="mt-2 block text-xs text-muted-foreground">{CAMPAIGN_STATUS[c.status] ?? c.status}</span></span></Button>)}</div></aside>
-        {params.get('campaign') === 'all' && campaigns.length > 1 ? <section className="min-w-0 space-y-4"><h2 className="text-2xl font-semibold">All listings</h2><p className="text-sm text-muted-foreground">Combined verified activity across {campaigns.length} campaigns.</p><BuyerMatchInsights events={data.events ?? []}/></section> : selected && <CampaignDashboard key={selected.id} campaign={selected} events={(data.events ?? []).filter((e: CampaignEvent) => e.campaign_id === selected.id)} links={(data.links ?? []).filter((k: any) => k.campaign_id === selected.id)} reports={data.reports.filter((r: any) => r.campaign_id === selected.id)} entitled={data.config.entitled} busy={action.isPending} act={act}/>}</div>}
-      {data.config.entitled && !campaigns.length && <div className="py-4"><Clock3 className="mb-3 h-5 w-5 text-primary"/><h2 className="font-semibold">No campaigns yet.</h2><p className="mt-2 text-sm text-muted-foreground">Nothing has been researched or sent on your behalf. Your listing review and next steps will appear here after submission.</p></div>}
-    </>}
+      {entitled && !data.config.submissions_enabled && <p className={bm.body}>New buyer searches are paused right now. Existing searches and reports are unchanged.</p>}
+
+      {showForm && <section id="activation" aria-labelledby="bm-start" className={bm.card + ' scroll-mt-24 p-6 sm:p-10'}>
+        <h2 id="bm-start" className={bm.h2}>Start a buyer search</h2>
+        <p className={bm.body + ' mt-2 max-w-2xl'}>Up to {data.config.max_campaigns} open searches. Sending a listing for review doesn&rsquo;t reserve it or contact anyone.</p>
+        {!eligible.length ? <p className={bm.body + ' mt-6'}>Every published sale listing already has a search.</p> :
+        <form className="mt-8 grid gap-6 lg:grid-cols-2" onSubmit={e => { e.preventDefault(); act('submit', { listing_id: listing, geography, buyer_criteria: criteria }); }}>
+          <div className="space-y-6">
+            <label className="block text-[14px] font-semibold">Sale listing<select required value={listing} onChange={e => setListing(e.target.value)} className={bm.field}><option value="">Choose a listing</option>{eligible.map(l => <option key={l.id} value={l.id}>{l.title}</option>)}</select></label>
+            <label className="block text-[14px] font-semibold">Where should we look? <span className="font-normal text-[#8A847B]">Optional</span><input className={bm.field} maxLength={500} value={geography} onChange={e => setGeography(e.target.value)} placeholder="Arizona and Southern California, or nationwide"/></label>
+            <label className="block text-[14px] font-semibold">Who is the right buyer? <span className="font-normal text-[#8A847B]">Optional</span><textarea className={bm.field + ' min-h-[112px]'} maxLength={2000} value={criteria} onChange={e => setCriteria(e.target.value)} placeholder="First-time owner with about $40k, needs a commissary-ready trailer with a hood system"/></label>
+            <button type="submit" disabled={!listing || action.isPending || !data.config.submissions_enabled} className={bm.primary}>{action.isPending ? 'Sending…' : 'Send for review'}</button>
+          </div>
+          {selectedListing ? <ListingCard listing={selectedListing}/> : <div className="hidden rounded-[16px] border border-dashed border-[#E2DBD0] lg:grid lg:place-items-center"><p className={bm.note}>Choose a listing to see what our team will review.</p></div>}
+        </form>}
+      </section>}
+
+      {!!campaigns.length && <section aria-labelledby="bm-searches">
+        <h2 id="bm-searches" className={bm.h2}>Your buyer searches</h2>
+        <div className="-mx-4 mt-6 flex snap-x gap-3 overflow-x-auto px-4 pb-2 sm:mx-0 sm:px-0" role="tablist" aria-label="Choose a search">
+          {campaigns.length > 1 && <button type="button" role="tab" aria-selected={params.get('campaign') === 'all'} onClick={() => setParams({ campaign: 'all' })} className={'shrink-0 snap-start rounded-full px-4 py-2 text-[14px] font-semibold ' + (params.get('campaign') === 'all' ? 'bg-[#1C1B1A] text-white' : 'bg-white text-[#1C1B1A] shadow-[0_1px_2px_rgba(28,27,26,0.06)]')}>All listings</button>}
+          {campaigns.map(c => {
+            const on = params.get('campaign') !== 'all' && selected?.id === c.id;
+            return <button key={c.id} type="button" role="tab" aria-selected={on} onClick={() => setParams({ campaign: c.id })} className={'flex shrink-0 snap-start items-center gap-3 rounded-full py-1.5 pl-1.5 pr-4 text-left ' + (on ? 'bg-[#1C1B1A] text-white' : 'bg-white text-[#1C1B1A] shadow-[0_1px_2px_rgba(28,27,26,0.06)]')}>
+              {c.listing_snapshot.cover_image_url ? <img src={c.listing_snapshot.cover_image_url} alt="" className="h-9 w-9 rounded-full object-cover"/> : <span className="h-9 w-9 rounded-full bg-[#F3EEE7]"/>}
+              <span className="max-w-[220px]"><span className="block truncate text-[14px] font-semibold">{c.listing_snapshot.title}</span><span className={'block text-[12px] ' + (on ? 'text-white/65' : 'text-[#8A847B]')}>{CAMPAIGN_STATUS[c.status] ?? c.status}</span></span>
+            </button>;
+          })}
+        </div>
+        <div className="mt-8">
+          {params.get('campaign') === 'all' && campaigns.length > 1
+            ? <section className="space-y-6"><p className={bm.body}>Verified activity across {campaigns.length} searches.</p><BuyerMatchInsights events={data.events ?? []}/></section>
+            : selected && <CampaignDashboard key={selected.id} campaign={selected} live={data.listings.find(l => l.id === selected.listing_id)} events={(data.events ?? []).filter(e => e.campaign_id === selected.id)} links={(data.links ?? []).filter(k => k.campaign_id === selected.id)} reports={data.reports.filter(r => r.campaign_id === selected.id)} entitled={entitled} busy={action.isPending} act={act}/>}
+        </div>
+      </section>}
+
+      {entitled && !campaigns.length && !data.listings.length && <p className={bm.body}>No searches yet. Nothing has been researched or sent for you.</p>}
+
+      <BuyerMatchListings listings={data.listings} campaigns={campaigns} entitled={entitled && data.config.submissions_enabled} onStart={start}/>
+    </div>}
   </div></WorkspaceShell>;
 }
-function CampaignDashboard({ campaign: c, events, links, reports, entitled, busy, act }: any) {
-  const metrics = campaignMetrics(events); const notes = listingRecommendations(c.listing_snapshot);
-  const engagement = useQuery({ queryKey: ['buyermatch-engagement', c.id], queryFn: () => buyerMatchAction('engagement', { campaign_id: c.id }), refetchInterval: 60000 });
-  const [copied, setCopied] = useState('');
-  const next = c.status === 'pending_activation' ? 'Awaiting team review. No research or outreach has started.' : c.status === 'approved' ? 'Approved. An operator must confirm the workflow has started before activity appears.' : c.status === 'researching' ? 'Research is active. Only observed and verified actions appear below.' : c.status === 'paused' ? 'Participation is paused. Existing reports remain available.' : 'Campaign closed. Your historical activity remains available.';
-  return <article className="min-w-0 space-y-6">
-    <header><div className="flex flex-wrap items-center justify-between gap-3"><span className="inline-flex items-center gap-2 rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-foreground"><Clock3 className="h-3 w-3"/>{CAMPAIGN_STATUS[c.status]}</span><Button asChild size="sm" variant="ghost"><Link to={'/listing/' + c.listing_id}>View listing<ArrowUpRight className="ml-1 h-4 w-4"/></Link></Button></div><h2 className="mt-4 text-2xl font-semibold">{c.listing_snapshot.title}</h2><p className="mt-1 text-sm text-muted-foreground">{money(Number(c.listing_snapshot.price_sale ?? 0))} · Submitted {date(c.created_at)}</p><p className="mt-4 text-sm leading-6">{next}</p></header>
-    <BuyerMatchInsights events={events} sessions={engagement.data?.unique_sessions}/>
-    <p className="text-xs leading-5 text-muted-foreground">Campaign totals since submission. Link visits are unverified, consented browser sessions—not confirmed buyers. Listing views are available in <Link className="text-primary underline" to="/dashboard/analytics">listing analytics</Link>, separate from campaign attribution.</p>
-    <div className="grid gap-6 xl:grid-cols-2"><section><h3 className="text-base font-semibold">Recent campaign activity</h3><ol className="mt-4 space-y-4 border-l border-border pl-4"><li><p className="text-xs text-muted-foreground">{date(c.created_at)}</p><p className="mt-1 text-sm font-medium">Listing submitted for review</p></li>{events.map((e: CampaignEvent) => <li key={e.id}><p className="text-xs text-muted-foreground">{date(e.occurred_at)} · {e.source} · {e.verification_status}</p><p className="mt-1 text-sm font-medium">{EVENT_LABELS[e.event_type]}</p>{e.outcome && <p className="mt-1 text-sm text-muted-foreground">{e.outcome}</p>}{e.next_step && <p className="mt-1 text-xs text-primary">Next: {e.next_step}</p>}</li>)}</ol>{!events.length && <p className="mt-4 text-sm text-muted-foreground">No verified research or outreach activity yet.</p>}</section>
-    <section><h3 className="text-base font-semibold">Listing readiness</h3><p className="mt-2 text-xs text-muted-foreground">Suggestions based on your saved listing, not buyer feedback.</p><ul className="mt-4 space-y-3">{(notes.length ? notes : ['Your listing includes photos, a description, equipment details and an asking price. Team review is still required.']).map(n => <li key={n} className="flex gap-2 text-sm leading-6"><CheckCircle2 className="mt-1 h-4 w-4 shrink-0 text-primary"/>{n}</li>)}</ul><Button asChild variant="outline" size="sm" className="mt-4"><Link to={'/dashboard/listings/' + c.listing_id + '/edit'}>Improve listing</Link></Button></section></div>
-    <section className="border-t border-border pt-5"><h3 className="font-semibold">Link engagement</h3>{engagement.error ? <p role="alert" className="mt-3 text-sm">Engagement is unavailable. Campaign activity is unaffected.</p> : <><p className="mt-2 text-sm text-muted-foreground">{engagement.data?.visits ?? 0} recorded link/session days · {engagement.data?.unique_sessions ?? 0} unique browser sessions</p>{!!engagement.data?.daily?.length && <ul className="mt-3 space-y-2">{engagement.data.daily.slice(-14).map((d: any) => <li key={d.day} className="flex justify-between border-b border-border py-2 text-sm"><span>{d.day}</span><span>{d.visits} visits</span></li>)}</ul>}</>}
-      {!links.length ? <p className="mt-3 text-sm text-muted-foreground">Personalized links appear after staff verifies outreach approval.</p> : links.map((k: any) => <div key={k.id} className="mt-3 flex items-center gap-2 rounded-lg border border-border bg-card p-3"><div className="min-w-0 flex-1"><p className="text-xs font-medium">{k.source} · {date(k.created_at)}</p><p className="mt-1 break-all text-xs text-muted-foreground">{window.location.origin}/listing/{k.listing_id}?ref=bm_{k.token}</p></div><Button aria-label="Copy tracking link" size="icon" variant="ghost" onClick={async () => { try { await navigator.clipboard.writeText(`${window.location.origin}/listing/${k.listing_id}?ref=bm_${k.token}`); setCopied(k.id); } catch { setCopied('failed'); } }}><Copy className="h-4 w-4"/></Button></div>)}{copied && <p role="status" className="mt-2 text-xs">{copied === 'failed' ? 'Could not copy. Select the link to copy it manually.' : 'Link copied.'}</p>}</section>
-    <section className="border-t border-border pt-5"><h3 className="font-semibold">Buyer feedback</h3>{!events.some((e: CampaignEvent) => e.feedback) ? <p className="mt-2 text-sm text-muted-foreground">No recorded buyer feedback yet.</p> : ['interested','needs_financing','price_concern','not_interested'].map(f => <p key={f} className="mt-2 flex justify-between text-sm"><span>{f.replace(/_/g,' ')}</span><span>{events.filter((e: CampaignEvent) => e.feedback === f && e.verification_status === 'verified').length}</span></p>)}</section>
-    {!!reports.length && <section className="border-t border-border pt-5"><h3 className="font-semibold">Historical approved reports</h3>{reports.map((r: any) => <div key={r.id} className="mt-3"><p className="text-xs text-muted-foreground">{date(r.published_at)}</p><p className="mt-1 text-sm">{r.summary}</p></div>)}</section>}
-    <div className="flex flex-wrap gap-2 border-t border-border pt-5"><Button asChild variant="outline"><Link to="/dashboard/messages">View buyer conversations</Link></Button>{!['completed','rejected'].includes(c.status) && <Button disabled={busy || (c.status === 'paused' && !entitled)} variant="outline" onClick={() => act(c.status === 'paused' ? 'resume' : 'pause', { campaign_id: c.id })}>{c.status === 'paused' ? 'Resubmit for review' : 'Pause campaign'}</Button>}</div>
-    {entitled && <BuyerMatchRecommendations campaignId={c.id}/>}
-  </article>;
+
+function ListingCard({ listing: l }: { listing: BuyerMatchListing }) {
+  const photos = Array.isArray(l.image_urls) ? l.image_urls.length : 0;
+  return <div className="overflow-hidden rounded-[16px] bg-[#F6F2EC]">
+    {l.cover_image_url && <img src={l.cover_image_url} alt={l.title} className="aspect-[16/10] w-full object-cover"/>}
+    <div className="p-5">
+      <h3 className="text-[17px] font-semibold">{l.title}</h3>
+      <p className={bm.body + ' mt-1'}>{[usd(l.price_sale) ?? 'No asking price', place(l), `${photos} photo${photos === 1 ? '' : 's'}`].filter(Boolean).join(' · ')}</p>
+      {l.description && <p className={bm.body + ' mt-3 line-clamp-2'}>{l.description}</p>}
+      <Link to={'/listing/' + l.id} className={bm.link + ' mt-4 inline-flex items-center gap-1'}>Check photos and details<ArrowUpRight className="h-3.5 w-3.5"/></Link>
+    </div>
+  </div>;
 }
-function Operations({ config, campaign: c, events, busy, act }: any) {
-  const [workflow, setWorkflow] = useState(config.workflow_reference ?? ''); const [enabled, setEnabled] = useState(config.fulfillment_enabled); const [started, setStarted] = useState(false);
-  const [raw, setRaw] = useState(''); const [reviewed, setReviewed] = useState(false); const [error, setError] = useState(''); const [reason, setReason] = useState('');
-  return <section className="border-t border-border pt-6"><details><summary className="cursor-pointer font-semibold">BuyerMatch operations · Admin only</summary><p className="mt-3 text-sm text-muted-foreground">Muse is not connected automatically. Staff can verify structured events from an authorized workflow.</p><div className="mt-4 space-y-3"><label className="block text-sm">Approved workflow reference<Input className="mt-2 bg-card" value={workflow} onChange={e => setWorkflow(e.target.value)}/></label><label className="flex gap-2 text-sm"><input type="checkbox" checked={enabled} onChange={e => setEnabled(e.target.checked)}/>Approved fulfillment workflow is operational</label><Button disabled={busy || (enabled && !workflow.trim())} onClick={() => act('settings', { workflow_reference: workflow, fulfillment_enabled: enabled, submissions_enabled: config.submissions_enabled, max_campaigns: config.max_campaigns })}>Save controls</Button></div>
-    {c && <div className="mt-6 space-y-3"><p className="font-medium">Selected: {c.listing_snapshot.title}</p><div className="flex flex-wrap gap-2"><Button disabled={busy || c.status !== 'pending_activation'} onClick={() => act('approve', { campaign_id: c.id })}>Approve campaign</Button><Button disabled={busy || c.status !== 'approved' || !config.fulfillment_enabled || !started} onClick={() => act('activate', { campaign_id: c.id, research_started: started })}>Confirm research started</Button><Button variant="outline" disabled={busy || c.status !== 'researching'} onClick={() => act('complete', { campaign_id: c.id })}>Complete campaign</Button></div><label className="flex gap-2 text-sm"><input type="checkbox" checked={started} onChange={e => setStarted(e.target.checked)}/>I have actually started the approved workflow.</label><label className="block text-sm">Rejection explanation<Input className="mt-2 bg-card" value={reason} onChange={e => setReason(e.target.value)}/></label><Button variant="outline" disabled={busy || !reason.trim() || c.status !== 'pending_activation'} onClick={() => act('reject', { campaign_id: c.id, reason })}>Reject campaign</Button>
-      <label className="block text-sm">Structured event JSON<Textarea className="mt-2 bg-card" rows={6} value={raw} onChange={e => setRaw(e.target.value)} placeholder="Paste an evidence-backed event from the approved workflow"/></label><label className="flex gap-2 text-sm"><input type="checkbox" checked={reviewed} onChange={e => setReviewed(e.target.checked)}/>I verified the evidence, authorization and seller-safe text.</label><Button disabled={busy || !raw || !reviewed || c.status !== 'researching'} onClick={() => { try { const event = JSON.parse(raw); if (!event || Array.isArray(event) || typeof event !== 'object') throw Error('Expected one event object'); act('event', { ...event, campaign_id: c.id, listing_id: c.listing_id, review_confirmed: true }); setError(''); } catch(e) { setError((e as Error).message); } }}>Record verified event</Button>{error && <p role="alert" className="text-sm text-destructive">{error}</p>}
-      {events.filter((e: CampaignEvent) => e.event_type === 'outreach_approved' && e.verification_status === 'verified').map((e: CampaignEvent) => <Button key={e.id} variant="outline" disabled={busy} onClick={() => act('link', { campaign_id: c.id, approval_event_id: e.id })}>Create approved link · {e.source}</Button>)}
-    </div>}</details></section>;
+
+const STATUS_LINE: Record<string, string> = {
+  pending_activation: 'Waiting for team review. No research or outreach has started.',
+  approved: 'Approved. Results appear once an operator confirms the search is running.',
+  researching: 'Searching now. Only verified steps are counted below.',
+  paused: 'Paused. Your reports and buyer messages stay available.',
+  rejected: 'Not accepted for a search. Your listing is unchanged.',
+  completed: 'Search closed. Your history stays here.',
+};
+
+function Stages({ c }: { c: BuyerMatchCampaign }) {
+  const reviewed = ['approved', 'researching', 'completed'].includes(c.status) || !!c.activated_at;
+  const searched = c.status === 'researching' || c.status === 'completed' || !!c.activated_at;
+  const steps: [string, boolean, boolean][] = [
+    ['Submitted', true, false],
+    ['Team review', reviewed, c.status === 'pending_activation'],
+    ['Searching', searched, c.status === 'approved' || c.status === 'researching'],
+    ['Closed', c.status === 'completed', false],
+  ];
+  return <ol className="mt-6 grid grid-cols-4 gap-2" aria-label="Search progress">
+    {steps.map(([label, done, current]) => <li key={label}>
+      <span className={'block h-1 rounded-full ' + (current ? 'bg-[#FF5124]' : done ? 'bg-[#1C1B1A]' : 'bg-[#E9E3DA]')}/>
+      <span className={'mt-2 block text-[12px] ' + (current ? 'font-semibold text-[#FF5124]' : done ? 'text-[#1C1B1A]' : 'text-[#A8A198]')}>{label}</span>
+    </li>)}
+  </ol>;
+}
+
+function CampaignDashboard({ campaign: c, live, events, links, reports, entitled, busy, act }: {
+  campaign: BuyerMatchCampaign; live?: BuyerMatchListing; events: CampaignEvent[]; links: BuyerMatchLink[]; reports: BuyerMatchReport[];
+  entitled: boolean; busy: boolean; act: Act;
+}) {
+  // Prefer the live listing (what buyers see today); fall back to the snapshot taken at submission.
+  const listing: BuyerMatchListing = { ...c.listing_snapshot, ...(live ?? {}), id: c.listing_id };
+  const notes = listingRecommendations(listing as unknown as Record<string, unknown>);
+  const engagement = useQuery<Engagement>({ queryKey: ['buyermatch-engagement', c.id], queryFn: () => buyerMatchAction('engagement', { campaign_id: c.id }), refetchInterval: 60000 });
+  const [copied, setCopied] = useState('');
+  const feedback = events.filter(e => e.feedback && e.verification_status === 'verified');
+  const daily = engagement.data?.daily?.slice(-14) ?? [];
+  const peak = Math.max(1, ...daily.map(d => d.visits));
+  const linkUrl = (k: BuyerMatchLink) => `${window.location.origin}/listing/${k.listing_id}?ref=bm_${k.token}`;
+
+  return <article className="space-y-14">
+    <section className={bm.card + ' grid overflow-hidden md:grid-cols-[minmax(0,1fr)_minmax(0,1.15fr)]'}>
+      <div className="relative min-h-[220px] bg-[#F3EEE7]">{listing.cover_image_url ? <img src={listing.cover_image_url} alt={listing.title} className="absolute inset-0 h-full w-full object-cover"/> : <span className="absolute inset-0 grid place-items-center text-[13px] text-[#8A847B]">No cover photo yet</span>}</div>
+      <div className="p-6 sm:p-9">
+        <div className="flex flex-wrap items-center justify-between gap-3"><span className={bm.chip}><span aria-hidden className="h-1.5 w-1.5 rounded-full bg-[#FF5124]"/>{CAMPAIGN_STATUS[c.status] ?? c.status}</span><Link to={'/listing/' + c.listing_id} className={bm.link + ' inline-flex items-center gap-1'}>View listing<ArrowUpRight className="h-3.5 w-3.5"/></Link></div>
+        <h3 className="mt-5 font-display text-[26px] leading-tight sm:text-[30px]">{listing.title}</h3>
+        <p className={bm.body + ' mt-1'}>{[usd(listing.price_sale), place(listing), 'sent ' + shortDate(c.created_at)].filter(Boolean).join(' · ')}</p>
+        <p className="mt-5 text-[15px] leading-7">{STATUS_LINE[c.status] ?? 'Your history stays here.'}</p>
+        <Stages c={c}/>
+        {(c.geography || c.buyer_criteria) && <dl className="mt-6 space-y-2 border-t border-[#ECE6DD] pt-5 text-[14px]">
+          {c.geography && <div className="flex gap-3"><dt className="w-24 shrink-0 text-[#8A847B]">Looking in</dt><dd>{c.geography}</dd></div>}
+          {c.buyer_criteria && <div className="flex gap-3"><dt className="w-24 shrink-0 text-[#8A847B]">Right buyer</dt><dd className="min-w-0">{c.buyer_criteria}</dd></div>}
+        </dl>}
+      </div>
+    </section>
+
+    <BuyerMatchInsights events={events} sessions={engagement.data?.unique_sessions}/>
+
+    <div className="grid gap-12 lg:grid-cols-2">
+      <section>
+        <h3 className={bm.h3}>Activity</h3>
+        <ol className="mt-5 space-y-5 border-l border-[#E2DBD0] pl-5">
+          {events.map(e => <li key={e.id} className="relative"><span aria-hidden className="absolute -left-[25px] top-1.5 h-2 w-2 rounded-full bg-[#FF5124]"/><p className={bm.note}>{shortDate(e.occurred_at)} · {e.source}{e.verification_status !== 'verified' ? ' · not yet verified' : ''}</p><p className="mt-0.5 text-[14px] font-semibold">{EVENT_LABELS[e.event_type] ?? e.event_type}</p>{e.outcome && <p className={bm.body}>{e.outcome}</p>}{e.next_step && <p className="mt-1 text-[13px] text-[#1C1B1A]"><span className="font-semibold text-[#FF5124]">Next:</span> {e.next_step}</p>}</li>)}
+          <li className="relative"><span aria-hidden className="absolute -left-[25px] top-1.5 h-2 w-2 rounded-full bg-[#1C1B1A]"/><p className={bm.note}>{shortDate(c.created_at)}</p><p className="mt-0.5 text-[14px] font-semibold">Listing sent for review</p></li>
+        </ol>
+        {!events.length && <p className={bm.body + ' mt-4'}>No research or outreach logged yet.</p>}
+      </section>
+      <section>
+        <h3 className={bm.h3}>Before buyers see it</h3>
+        <p className={bm.note + ' mt-1'}>Checked against your listing as it is now, not buyer feedback.</p>
+        {notes.length ? <ul className="mt-5 space-y-3">{notes.map(n => <li key={n} className="grid grid-cols-[14px_minmax(0,1fr)] gap-2 text-[14px] leading-6"><span aria-hidden className="mt-[11px] h-px w-3 bg-[#FF5124]"/>{n}</li>)}</ul>
+          : <p className={bm.body + ' mt-5'}>Photos, description, included equipment and asking price are all filled in.</p>}
+        <Link to={'/dashboard/listings/' + c.listing_id + '/edit'} className={bm.quiet + ' mt-6'}>Edit listing</Link>
+      </section>
+    </div>
+
+    <section className="border-t border-[#ECE6DD] pt-8">
+      <h3 className={bm.h3}>Tracked links</h3>
+      <p className={bm.note + ' mt-1'}>Links our team shares with approved buyers. Visits are counted per consented browser session, not per confirmed buyer.</p>
+      {engagement.error ? <p role="alert" className={bm.body + ' mt-3'}>Link visits are unavailable right now. Search activity is unaffected.</p> : <>
+        <div className="mt-5 flex flex-wrap gap-x-12 gap-y-4">
+          <div><p className={bm.numSm}>{engagement.data?.unique_sessions ?? '—'}</p><p className={bm.label}>Browser sessions</p></div>
+          <div><p className={bm.numSm}>{engagement.data?.visits ?? '—'}</p><p className={bm.label}>Visit days</p></div>
+        </div>
+        {!!daily.length && <div className="mt-6 flex h-14 max-w-md items-end gap-1" aria-label="Visits per day, last 14 days">{daily.map(d => <div key={d.day} title={`${d.day}: ${d.visits} visits`} className="flex-1 rounded-t-sm bg-[#D9D1C5]" style={{ height: `${Math.max(6, (d.visits / peak) * 100)}%` }}/>)}</div>}
+      </>}
+      {!links.length ? <p className={bm.body + ' mt-5'}>Links appear after outreach for this listing is approved.</p> : <ul className="mt-5 space-y-2">{links.map(k => <li key={k.id} className="flex items-center gap-3 rounded-xl bg-white px-4 py-3 shadow-[0_1px_2px_rgba(28,27,26,0.05)]"><div className="min-w-0 flex-1"><p className="text-[13px] font-semibold">{k.source} · {shortDate(k.created_at)}</p><p className="mt-0.5 break-all text-[12px] text-[#8A847B]">{linkUrl(k)}</p></div><button type="button" aria-label="Copy tracking link" className="grid h-9 w-9 place-items-center rounded-full hover:bg-[#F3EEE7]" onClick={async () => { try { await navigator.clipboard.writeText(linkUrl(k)); setCopied(k.id); } catch { setCopied('failed'); } }}><Copy className="h-4 w-4"/></button></li>)}</ul>}
+      {copied && <p role="status" className={bm.note + ' mt-2'}>{copied === 'failed' ? 'Could not copy. Select the link to copy it manually.' : 'Link copied.'}</p>}
+    </section>
+
+    {!!feedback.length && <section className="border-t border-[#ECE6DD] pt-8"><h3 className={bm.h3}>What buyers told us</h3><dl className="mt-5 grid grid-cols-2 gap-6 sm:grid-cols-4">{([['interested', 'Interested'], ['needs_financing', 'Needs financing'], ['price_concern', 'Price concern'], ['not_interested', 'Not interested']] as const).map(([f, label]) => <div key={f} className="flex flex-col-reverse"><dt className={bm.label}>{label}</dt><dd className={bm.numSm}>{feedback.filter(e => e.feedback === f).length}</dd></div>)}</dl></section>}
+
+    {!!reports.length && <section className="border-t border-[#ECE6DD] pt-8"><h3 className={bm.h3}>Reviewed reports</h3>{reports.map(r => <div key={r.id} className="mt-4"><p className={bm.note}>{shortDate(r.published_at)}</p><p className="mt-1 text-[15px] leading-7">{r.summary}</p></div>)}</section>}
+
+    {entitled && <BuyerMatchRecommendations campaignId={c.id}/>}
+
+    <div className="flex flex-wrap gap-3 border-t border-[#ECE6DD] pt-8">
+      <Link to="/dashboard/messages" className={bm.primary}>Open buyer conversations</Link>
+      {!['completed', 'rejected'].includes(c.status) && <button type="button" className={bm.quiet} disabled={busy || (c.status === 'paused' && !entitled)} onClick={() => act(c.status === 'paused' ? 'resume' : 'pause', { campaign_id: c.id })}>{c.status === 'paused' ? 'Send for review again' : 'Pause search'}</button>}
+    </div>
+  </article>;
 }

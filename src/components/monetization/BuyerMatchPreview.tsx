@@ -1,22 +1,40 @@
 import { Link } from 'react-router-dom';
-import { LockKeyhole, ArrowUpRight, Activity, Search, MessageSquare, Link2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { useCatalogPrice } from '@/hooks/useCatalogPrices';
+import { ACTIVE_PRODUCT_SLUGS } from '@/lib/monetization/catalogPricing';
+import type { BuyerMatchListing } from '@/lib/monetization/buyerMatchIntelligence';
+import { bm, place, usd } from './buyerMatchUi';
 
-export default function BuyerMatchPreview() {
-  return <section aria-label="BuyerMatch example preview" className="relative overflow-hidden rounded-lg border border-border bg-card">
-    <div className="flex items-center justify-between border-b border-border px-6 py-4"><p className="font-medium">Your campaign intelligence</p><span className="text-xs text-muted-foreground">Example preview</span></div>
-    <div className="pointer-events-none select-none blur-[4px] opacity-60 p-6" aria-hidden="true">
-      <p className="text-lg font-semibold">2023 Food Trailer · $38,500</p><p className="text-sm text-muted-foreground">Example campaign · Last 30 days</p>
-      <div className="my-7 grid grid-cols-2 gap-5 sm:grid-cols-4">{[[Search,'1,248','Listing views'],[Link2,'86','Tracked link visits'],[Activity,'34','Outreach attempts'],[MessageSquare,'5','Buyer responses']].map(([Icon,n,label])=>{const I=Icon as typeof Search;return <div key={String(label)}><I className="mb-3 h-4 w-4 text-primary"/><p className="text-3xl font-semibold">{String(n)}</p><p className="mt-1 text-xs text-muted-foreground">{String(label)}</p></div>;})}</div>
-      <div className="grid gap-8 sm:grid-cols-2"><div><h3>Buyer engagement</h3><div className="mt-4 flex h-32 items-end gap-3">{[25,42,28,64,45,78,90].map((h,i)=><div key={i} className={`flex-1 rounded-t bg-primary/25 ${h>70?'h-28':h>40?'h-20':'h-12'}`}/>)}</div></div><div><h3>Recent campaign activity</h3>{['Outreach sent · Texas','Tracked listing viewed','Buyer requested more details'].map(s=><p key={s} className="border-b border-border py-4 text-sm">{s}</p>)}</div></div>
+const HOW = [
+  ['You pick a sale listing', 'Tell us where to look and who the right buyer is: a region, a budget, a first truck or a second unit.'],
+  ['Our team searches', 'We look for public posts from people shopping for a truck, trailer or cart like yours and log each one we find.'],
+  ['Outreach with permission', 'Nobody is messaged until outreach is approved and documented. Replies go to your Vendibook messages.'],
+] as const;
+
+/** Shown when the seller has no current Pro access. No sample numbers: it uses the seller's own listing. */
+export default function BuyerMatchPreview({ listing }: { listing?: BuyerMatchListing }) {
+  const pro = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.vendibookPro);
+  const price = `${usd(pro.cents / 100)}${pro.billingType === 'recurring' ? '/mo' : ''}`;
+  return <section aria-label="BuyerMatch with Vendibook Pro" className={bm.card + ' grid overflow-hidden lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]'}>
+    <div className="relative min-h-[240px] bg-[#1C1B1A] sm:min-h-[320px]">
+      {listing?.cover_image_url && <img src={listing.cover_image_url} alt={listing.title} className="absolute inset-0 h-full w-full object-cover opacity-90"/>}
+      <div className="absolute inset-0 bg-gradient-to-t from-[#1C1B1A]/85 via-[#1C1B1A]/20 to-transparent"/>
+      <div className="absolute inset-x-0 bottom-0 p-6 text-white sm:p-8">
+        {listing
+          ? <><p className="text-[12px] font-semibold uppercase tracking-[0.16em] text-white/70">Your listing</p><p className="mt-2 font-display text-[26px] leading-tight sm:text-[32px]">{listing.title}</p><p className="mt-1 text-[14px] text-white/75">{[usd(listing.price_sale), place(listing)].filter(Boolean).join(' · ')}</p></>
+          : <p className="font-display text-[26px] leading-tight sm:text-[32px]">Publish a sale listing and BuyerMatch can start looking for its buyer.</p>}
+      </div>
     </div>
-    <div className="absolute inset-x-4 top-24 z-10 mx-auto max-w-md rounded-lg border border-border bg-card p-6 text-center shadow-sm sm:top-28">
-      <LockKeyhole className="mx-auto h-6 w-6 text-primary"/><h2 className="mt-4 text-2xl font-semibold">Unlock BuyerMatch AI</h2>
-      <p className="mt-3 text-sm leading-6 text-muted-foreground">See how Vendibook helps discover potential buyers, tracks approved outreach, and measures interest in your equipment.</p>
-      <Button asChild className="mt-5 w-full shadow-[0_0_24px_hsl(var(--primary)/0.45)]"><Link to="/dashboard/buyermatch/membership">Unlock BuyerMatch AI — $79/month<ArrowUpRight className="ml-2 h-4 w-4"/></Link></Button>
-      <p className="mt-2 text-xs text-muted-foreground">Included with Vendibook Pro.</p>
-      <Button asChild variant="ghost" className="mt-2 w-full"><Link to="/dashboard/buyermatch/membership#benefits">Explore membership benefits</Link></Button>
-      <p className="mt-3 text-xs text-muted-foreground">Interactive preview only — no payment required here.</p>
+    <div className="p-6 sm:p-10">
+      <p className={bm.eyebrow}>Included with Vendibook Pro</p>
+      <h2 className={bm.h2 + ' mt-3'}>{listing ? 'Have our team look for the buyer.' : 'Have our team look for your buyer.'}</h2>
+      <ol className="mt-7 space-y-6">
+        {HOW.map(([t, b], i) => <li key={t} className="grid grid-cols-[28px_minmax(0,1fr)] gap-3"><span className="font-display text-[18px] leading-6 text-[#FF5124]">{i + 1}</span><div><p className="text-[15px] font-semibold">{t}</p><p className={bm.body + ' mt-1'}>{b}</p></div></li>)}
+      </ol>
+      <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
+        <Link to="/dashboard/buyermatch/membership" className={bm.primary}>Get Vendibook Pro · {price}</Link>
+        <Link to="/dashboard/buyermatch/membership#benefits" className={bm.link + ' whitespace-nowrap sm:ml-3'}>What&rsquo;s included</Link>
+      </div>
+      <p className={bm.note + ' mt-4'}>No buyer, offer or sale is guaranteed. Any sale is between you and the buyer.</p>
     </div>
   </section>;
 }
