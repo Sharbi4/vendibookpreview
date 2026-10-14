@@ -1,4 +1,3 @@
-import SalesPaymentSetupPaused from '@/components/payments/SalesPaymentSetupPaused';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeft, ArrowRight, CheckCircle2, AlertTriangle, Circle, Loader2 } from 'lucide-react';
@@ -12,6 +11,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useMyPayPalConnection } from '@/hooks/useMyPayPalConnection';
 import { useSellerPaymentReadiness } from '@/hooks/useSellerPaymentReadiness';
 import SellerBusinessAccountHelp from '@/components/payments/SellerBusinessAccountHelp';
+import { PageHeader, Panel, StatusPill, ws } from '@/components/workspace/ui';
+import { LightScope } from '@/components/workspace/money/LightScope';
 
 type SetupListing = {
   id: string;
@@ -23,6 +24,20 @@ type SetupListing = {
 };
 
 type StepState = 'done' | 'blocked' | 'pending';
+
+/**
+ * Restyles the shared Square connect card (SellerSquareConnect, a v2 panel) to
+ * match workspace Panels: one white surface, a full-width hairline under the
+ * header and the same 20/24px insets. Presentation only.
+ */
+const SQUARE_CARD = [
+  '[&_.v2-panel]:overflow-hidden [&_.v2-panel]:rounded-2xl [&_.v2-panel]:border-0 [&_.v2-panel]:bg-white [&_.v2-panel]:p-0',
+  '[&_.v2-panel]:shadow-[0_0_0_1px_rgba(28,27,26,0.05),0_1px_2px_rgba(28,27,26,0.04),0_12px_32px_-22px_rgba(28,27,26,0.22)]',
+  '[&_.v2-panel-head]:m-0 [&_.v2-panel-head]:flex-wrap [&_.v2-panel-head]:gap-3 [&_.v2-panel-head]:border-[#ECE6DD] [&_.v2-panel-head]:px-5 [&_.v2-panel-head]:py-4 sm:[&_.v2-panel-head]:px-6',
+  '[&_.v2-panel-head_h2]:mt-1 [&_.v2-panel-head_h2]:text-[15px] [&_.v2-panel-head_h2]:font-semibold [&_.v2-panel-head_h2]:text-[#1C1B1A]',
+  '[&_.v2-panel>div:last-child]:px-5 [&_.v2-panel>div:last-child]:pb-6 [&_.v2-panel>div:last-child]:pt-5 sm:[&_.v2-panel>div:last-child]:px-6',
+  '[&_.v2-panel>div:last-child>p:first-child]:max-w-3xl [&_.v2-panel>div:last-child>p:first-child]:leading-6',
+].join(' ');
 
 const marker = (state: StepState) =>
   state === 'done' ? <CheckCircle2 /> : state === 'blocked' ? <AlertTriangle /> : <Circle />;
@@ -40,20 +55,45 @@ const marker = (state: StepState) =>
 export default function WorkspacePaymentSetup() {
   return (
     <WorkspaceShell>
-      <div className="v2-page-stack">
-        <header className="v2-page-heading">
-          <Link to="/dashboard/payments" className="v2-btn-quiet inline-flex w-fit">
-            <ArrowLeft className="h-4 w-4" /> Back to Payments
-          </Link>
-          <p className="v2-eyebrow">Payment setup</p>
-          <h1>Payment setup</h1>
-          <p>Manage your rental payment connection and review existing transactions.</p>
-        </header>
-        <SalesPaymentSetupPaused />
-        <Link to="/dashboard/payments" className="v2-btn-quiet w-fit">
-          View transactions and payouts <ArrowRight className="h-4 w-4" />
-        </Link>
-        <SellerSquareConnect />
+      <div className={ws.page}>
+        <div className={ws.stack}>
+          <PageHeader
+            eyebrow="Money"
+            title="Payment setup"
+            description="Connect Square so renters pay you by card. Your existing transactions, receipts and payout statuses stay in Payouts & payments."
+            actions={
+              <Link to="/dashboard/payments" className={ws.secondary}>
+                <ArrowLeft className="h-4 w-4" aria-hidden="true" /> Payouts & payments
+              </Link>
+            }
+          />
+
+          <LightScope className={SQUARE_CARD}>
+            <SellerSquareConnect />
+          </LightScope>
+
+          <div className="grid items-start gap-6 lg:grid-cols-2 lg:gap-8">
+            <Panel title="Equipment sales" action={<StatusPill tone="muted">Paused</StatusPill>}>
+              <p className={ws.body}>
+                Online payment for equipment sales is temporarily unavailable, so no PayPal connection is needed right now.
+                Approved purchases are still tracked under Invoices.
+              </p>
+              <Link to="/dashboard/invoices" className={ws.link + ' mt-4 inline-block'}>View invoices</Link>
+            </Panel>
+            <Panel title="Where payouts go">
+              <p className={ws.body}>
+                When checkout collects through Vendibook, your proceeds are recorded under Payouts & payments and our
+                team reviews and sends each payout to your payout destination.
+              </p>
+              <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2">
+                <Link to="/dashboard/account/payouts" className={ws.link}>Payout details</Link>
+                <Link to="/dashboard/payments" className={ws.actionLink}>
+                  View payouts <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
+                </Link>
+              </div>
+            </Panel>
+          </div>
+        </div>
       </div>
     </WorkspaceShell>
   );

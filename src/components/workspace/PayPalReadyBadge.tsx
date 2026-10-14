@@ -1,88 +1,56 @@
-import { CheckCircle2, AlertTriangle, Loader2, Link2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useMyPayPalConnection } from '@/hooks/useMyPayPalConnection';
+import { StatusPill, type StatusTone } from '@/components/workspace/ui';
+import { cn } from '@/lib/utils';
 
 /**
  * Compact "PayPal Ready" status indicator for sellers.
  * Shows connected/ready vs not connected at a glance, driven by real
- * seller_paypal_accounts state. Hidden entirely for pure buyers.
+ * seller_paypal_accounts state. States that need a step link to Payment setup.
  */
 export function PayPalReadyBadge({
   tone = 'light',
   showDetails = false,
 }: {
-  /** 'dark' for the charcoal PayPal module, 'light' for ivory surfaces */
+  /** 'dark' for charcoal surfaces, 'light' for white and ivory surfaces */
   tone?: 'light' | 'dark';
   showDetails?: boolean;
 }) {
   const { connection, status, isReady, isLoading, isRefreshing, lastRefreshError } = useMyPayPalConnection();
+  // On charcoal the tinted pills keep their own background, so text stays readable;
+  // the ring just separates the pill from the surface.
+  const onDark = tone === 'dark' ? 'ring-1 ring-inset ring-white/15' : undefined;
+
+  const linked = (pillTone: StatusTone, label: string) => (
+    <Link
+      to="/dashboard/payments/setup"
+      className="rounded-full focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1C1B1A]"
+    >
+      <StatusPill tone={pillTone} className={cn('hover:brightness-95', onDark)}>{label}</StatusPill>
+    </Link>
+  );
 
   if (isLoading || (isRefreshing && !connection)) {
-    return (
-      <span className={`v2-paypal-badge is-loading ${tone === 'dark' ? 'on-dark' : ''}`}>
-        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-        Checking PayPal…
-      </span>
-    );
+    return <StatusPill tone="muted" className={onDark}>Checking PayPal…</StatusPill>;
   }
 
   if (isReady) {
     return (
-      <span className={`v2-paypal-badge is-ready ${tone === 'dark' ? 'on-dark' : ''}`}>
-        <CheckCircle2 className="h-3.5 w-3.5" />
-        PayPal Ready
+      <span className="inline-flex flex-wrap items-center gap-2">
+        <StatusPill tone="ok" className={onDark}>PayPal Ready</StatusPill>
         {showDetails && connection?.paypal_email ? (
-          <span className="v2-paypal-badge-detail">{connection.paypal_email}</span>
+          <span className={cn('text-[12.5px]', tone === 'dark' ? 'text-white/70' : 'text-[#8A847B]')}>{connection.paypal_email}</span>
         ) : null}
       </span>
     );
   }
 
-  if (lastRefreshError) {
-    return (
-      <Link
-        to="/dashboard/payments/setup"
-        className={`v2-paypal-badge is-warn ${tone === 'dark' ? 'on-dark' : ''}`}
-      >
-        <AlertTriangle className="h-3.5 w-3.5" />
-        PayPal check failed — retry
-      </Link>
-    );
-  }
-
+  if (lastRefreshError) return linked('warn', 'PayPal check failed, retry');
   if (status === 'action_required' || status === 'revoked') {
-    return (
-      <Link
-        to="/dashboard/payments/setup"
-        className={`v2-paypal-badge is-warn ${tone === 'dark' ? 'on-dark' : ''}`}
-      >
-        <AlertTriangle className="h-3.5 w-3.5" />
-        {status === 'revoked' ? 'PayPal access revoked' : 'PayPal action required'}
-      </Link>
-    );
+    return linked('alert', status === 'revoked' ? 'PayPal access revoked' : 'PayPal action required');
   }
-
-  if (status === 'link_sent' || status === 'onboarding') {
-    return (
-      <Link
-        to="/dashboard/payments/setup"
-        className={`v2-paypal-badge is-pending ${tone === 'dark' ? 'on-dark' : ''}`}
-      >
-        <Loader2 className="h-3.5 w-3.5" />
-        PayPal setup in progress
-      </Link>
-    );
-  }
-
-  return (
-    <Link
-      to="/dashboard/payments/setup"
-      className={`v2-paypal-badge is-off ${tone === 'dark' ? 'on-dark' : ''}`}
-    >
-      <Link2 className="h-3.5 w-3.5" />
-      PayPal not connected
-    </Link>
-  );
+  if (status === 'link_sent' || status === 'onboarding') return linked('warn', 'PayPal setup in progress');
+  return linked('muted', 'PayPal not connected');
 }
 
 export default PayPalReadyBadge;

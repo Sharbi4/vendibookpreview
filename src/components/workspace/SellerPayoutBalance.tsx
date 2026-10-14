@@ -1,16 +1,27 @@
-import { useSellerPayables } from '@/hooks/useSellerPayables';
-import { useMemo } from 'react';
+import { useSellerPayables, type SellerPayable } from '@/hooks/useSellerPayables';
+import { useMemo, type ReactNode } from 'react';
 import { Link } from 'react-router-dom';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
-import SellerBusinessAccountHelp from '@/components/payments/SellerBusinessAccountHelp';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { usePayoutPreference } from '@/hooks/usePayoutPreference';
 import { useMyPayPalConnection } from '@/hooks/useMyPayPalConnection';
-import { PAYOUT_METHOD_LABEL } from '@/lib/payouts/methods';
 import { summarizePayables } from '@/lib/payouts/payableTotals';
+import {
+  EmptyState,
+  Panel,
+  SimpleTable,
+  StatGrid,
+  StatTile,
+  StatusPill,
+  formatDay,
+  metric,
+  ws,
+  type SimpleColumn,
+} from '@/components/workspace/ui';
+import { money, payablePill, rowBtn } from '@/components/workspace/money/moneyUi';
+import { usePayableNotes } from '@/components/workspace/money/usePayableNotes';
 
 /**
  * Seller payout balance + manual payout request.
@@ -23,56 +34,23 @@ import { summarizePayables } from '@/lib/payouts/payableTotals';
 
 const REQUESTABLE = new Set(['pending_release', 'eligible_for_review']);
 
-const BLOCKED_LABEL: Record<string, string> = {
-  payout_on_hold: 'On hold',
-  disputed: 'Disputed',
-  reversed: 'Reversed',
-  payout_failed: 'Failed — support notified',
-  partially_refunded: 'Partially refunded',
-  fully_refunded: 'Refunded',
-  cancelled: 'Cancelled',
+/** States with no reliable timing: no expected date is shown for them. */
+const NO_DATE = new Set(['payout_on_hold', 'disputed', 'reversed', 'payout_failed', 'partially_refunded', 'fully_refunded', 'cancelled']);
+
+/** Paid payouts listed under the open ones, newest first. */
+const RECENT_PAID = 5;
+
+const typeLabel = (t: string | null) => {
+  const s = (t ?? 'transaction').replace(/_/g, ' ');
+  return s.charAt(0).toUpperCase() + s.slice(1);
 };
 
-const STATUS_LABEL: Record<string, string> = {
-  awaiting_payment_confirmation: 'Awaiting payment confirmation',
-  pending_release: 'Pending release',
-  eligible_for_review: 'Ready to request',
-  payout_approved: 'Approved',
-  payout_processing: 'Processing',
-  payout_completed: 'Paid',
-  ...BLOCKED_LABEL,
-};
-
-interface Payable {
-  id: string;
-  status: string;
-  transaction_type: string | null;
-  net_payout_cents: number | null;
-  payout_eligible_at: string | null;
-  release_due_at: string | null;
-  payout_completed_at: string | null;
-  created_at: string;
-}
-
-const money = (cents: number | null | undefined) =>
-  `$${(((cents ?? 0) as number) / 100).toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-
-const shortDate = (raw?: string | null) => {
-  if (!raw) return null;
-  const d = new Date(raw);
-  return Number.isNaN(d.getTime())
-    ? null
-    : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
-};
-
-export default function SellerPayoutBalance() {
+export default function SellerPayoutBalance({ aside }: { /** Rendered under the payouts table (payout method). */ aside?: ReactNode } = {}) {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const { preference } = usePayoutPreference();
+  const { preference, isLoading: preferenceLoading } = usePayoutPreference();
   const { isReady: paypalReady } = useMyPayPalConnection();
+  const notes = usePayableNotes();
 
   const { data: payables = [], isLoading, isError, refetch } = useSellerPayables();
 
@@ -115,110 +93,183 @@ export default function SellerPayoutBalance() {
 
   const canRequest = Boolean(preference) || paypalReady;
 
-  const open = payables.filter((p) => p.status !== 'payout_completed');
+  const rows = useMemo(() => {
+    const open = payables.filter((p) => p.status !== 'payout_completed');
+    const paid = payables
+      .filter((p) => p.status === 'payout_completed')
+      .sort((a, b) => Date.parse(b.payout_completed_at ?? b.created_at) - Date.parse(a.payout_completed_at ?? a.created_at))
+      .slice(0, RECENT_PAID);
+    return [...open, ...paid];
+  }, [payables]);
+  const paidCount = payables.filter((p) => p.status === 'payout_completed').length;
 
-  if (isError) return <div role="alert" className="p-5">Payout records could not be loaded. <button className="v2-btn-quiet" onClick={() => refetch()}>Retry</button></div>;
+  if (isError) {
+    return (
+      <div role="alert" className={ws.surface + ' flex flex-wrap items-center justify-between gap-4 px-5 py-5 sm:px-6'}>
+        <p className="text-[14px] text-[#1C1B1A]">Payout records could not be loaded. Nothing has changed on them.</p>
+        <button type="button" className={ws.secondary} onClick={() => refetch()}>Retry</button>
+      </div>
+    );
+  }
+
+  const state = { loading: isLoading, error: false };
+  const hasPayables = isLoading || payables.length > 0;
+
+  const actionFor = (p: SellerPayable) => {
+    if (requestedIds.has(p.id)) return <StatusPill tone="muted" dot={false}>Requested</StatusPill>;
+    const requestable = REQUESTABLE.has(p.status) && (p.net_payout_cents ?? 0) > 0;
+    if (!requestable) return null;
+    return (
+      <button
+        type="button"
+        className={rowBtn.ink}
+        disabled={!canRequest || requestPayout.isPending}
+        title={!canRequest ? 'Add payout details first' : undefined}
+        onClick={() => requestPayout.mutate(p.id)}
+      >
+        {requestPayout.isPending && requestPayout.variables === p.id ? 'Requesting…' : 'Request payout'}
+      </button>
+    );
+  };
+
+  const columns: SimpleColumn<SellerPayable>[] = [
+    {
+      key: 'payout',
+      header: 'Payout',
+      cell: (p) => {
+        const label = typeLabel(p.transaction_type);
+        return (
+          <span className="block min-w-0">
+            {p.payment_record_id ? (
+              <Link to={`/dashboard/transactions/${p.payment_record_id}`} className="block truncate font-semibold hover:underline">{label}</Link>
+            ) : (
+              <span className="block truncate font-semibold">{label}</span>
+            )}
+            <span className="block truncate text-[12.5px] text-[#8A847B]">Recorded {formatDay(p.created_at) ?? '—'}</span>
+            <span className="mt-1.5 block sm:hidden"><StatusPill tone={payablePill(p.status).tone}>{payablePill(p.status).label}</StatusPill></span>
+          </span>
+        );
+      },
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      hideBelow: 'sm',
+      cell: (p) => {
+        const note = notes.data?.get(p.id);
+        const autoPaid = note?.payout_provider === 'paypal' && p.status === 'payout_completed';
+        const pill = payablePill(p.status);
+        return (
+          <span className="flex flex-col items-start gap-1">
+            <StatusPill tone={pill.tone}>{autoPaid ? 'Paid to your PayPal' : pill.label}</StatusPill>
+            {note?.hold_reason && p.status !== 'payout_completed' && (
+              <span className="max-w-[16rem] text-[12px] leading-4 text-[#8A847B]">{note.hold_reason}</span>
+            )}
+          </span>
+        );
+      },
+    },
+    {
+      key: 'date',
+      header: 'Expected',
+      hideBelow: 'sm',
+      className: 'whitespace-nowrap text-[#5E5953]',
+      cell: (p) => {
+        if (p.status === 'payout_completed') return <>Paid {formatDay(p.payout_completed_at) ?? ''}</>;
+        if (NO_DATE.has(p.status)) return <span className="text-[#B5AEA4]">No date yet</span>;
+        return formatDay(p.payout_eligible_at || p.release_due_at) ?? <span className="text-[#B5AEA4]">—</span>;
+      },
+    },
+    {
+      key: 'amount',
+      header: 'Amount',
+      align: 'right',
+      className: 'font-semibold',
+      cell: (p) => {
+        const action = actionFor(p);
+        return (
+          <>
+            {money(p.net_payout_cents)}
+            {action && <span className="mt-2 flex justify-end sm:hidden">{action}</span>}
+          </>
+        );
+      },
+    },
+    {
+      key: 'action',
+      header: 'Action',
+      srOnlyHeader: true,
+      align: 'right',
+      hideBelow: 'sm',
+      className: 'w-[1%] whitespace-nowrap',
+      cell: (p) => actionFor(p),
+    },
+  ];
+
+  const table = (
+    <Panel
+      title="Payouts"
+      description="Every payout is reviewed and sent manually, so dates are expected, not guaranteed."
+      flush
+      footer={
+        !preferenceLoading && !canRequest && totals.available > 0 ? (
+          <p className="text-[13px] text-[#5E5953]">
+            Add where you want to be paid before requesting a payout.{' '}
+            <Link to="/dashboard/account/payouts" className={ws.link}>Add payout details</Link>
+          </p>
+        ) : paidCount > RECENT_PAID ? (
+          <p className="text-[13px] text-[#8A847B]">Showing your {RECENT_PAID} most recent paid payouts of {paidCount}.</p>
+        ) : undefined
+      }
+    >
+      <SimpleTable
+        caption="Your payouts"
+        columns={columns}
+        rows={rows}
+        rowKey={(p) => p.id}
+        loading={isLoading}
+        empty={
+          <EmptyState
+            compact
+            className="px-5 py-5 sm:px-6"
+            title="No payouts yet."
+            body="When a buyer or renter pays for one of your listings, your proceeds show up here with their expected payout date."
+            action={{ label: 'Create a listing', to: '/dashboard/listings/new' }}
+            secondary={{ label: 'Your transactions', to: '/dashboard/transactions' }}
+          />
+        }
+      />
+    </Panel>
+  );
 
   return (
-    <div>
-      <div className="v2-panel-head">
-        <div>
-          <h2>Your payouts</h2>
-          <p>
-            Proceeds from paid orders and bookings. Vendibook reviews and sends every payout
-            manually, so amounts and dates are shown as expected, not guaranteed.
-          </p>
-        </div>
-      </div>
-
-      <div className="v2-payout-tiles">
-        <article>
-          <small>Ready to request</small>
-          <strong>{money(totals.available)}</strong>
-        </article>
-        <article>
-          <small>Requested / in review</small>
-          <strong>{money(totals.inReview)}</strong>
-        </article>
-        <article>
-          <small>Upcoming</small>
-          <strong>{money(totals.upcoming)}</strong>
-        </article>
-        <article>
-          <small>Paid to date</small>
-          <strong>{money(totals.paid)}</strong>
-        </article>
-      </div>
-
-      <div className="v2-payout-note">
-        {preference ? (
-          <p>
-            Payouts go to your {PAYOUT_METHOD_LABEL[preference.method]} destination
-            {preference.masked_destination ? ` (${preference.masked_destination})` : ''}.{' '}
-            <Link to="/dashboard/account/payouts">Update payout details</Link>
-          </p>
-        ) : (
-          <p>
-            Add where you want to be paid before requesting a payout.{' '}
-            <Link to="/dashboard/account/payouts">Add payout details</Link>
-          </p>
-        )}
-        {!paypalReady ? (
-          <div>
-            <p>
-              Connect your PayPal Business account to accept online payments.{' '}
-              <Link to="/dashboard/payments/setup">Open payment setup</Link>
-            </p>
-
-          </div>
-        ) : null}
-      </div>
-
-      {isLoading ? (
-        <div className="v2-payout-empty">
-          <Loader2 className="h-4 w-4 animate-spin" /> Loading your payouts…
-        </div>
-      ) : open.length === 0 ? (
-        <div className="v2-payout-empty">
-          Once a buyer pays, your proceeds appear here while we review the payout.
-        </div>
-      ) : (
-        <ul className="v2-payout-list">
-          {open.map((p) => {
-            const requested = requestedIds.has(p.id);
-            const requestable = REQUESTABLE.has(p.status) && (p.net_payout_cents ?? 0) > 0;
-            const expected = BLOCKED_LABEL[p.status]
-              ? null
-              : shortDate(p.payout_eligible_at || p.release_due_at);
-            return (
-              <li key={p.id}>
-                <span>
-                  <strong>{money(p.net_payout_cents)}</strong>
-                  <small>
-                    {(p.transaction_type ?? 'transaction').replace(/_/g, ' ')} ·{' '}
-                    {STATUS_LABEL[p.status] ?? p.status}
-                    {expected ? ` · expected ${expected}` : ''}
-                  </small>
-                </span>
-                {requested ? (
-                  <span className="v2-status">Payout requested</span>
-                ) : requestable ? (
-                  <button
-                    type="button"
-                    className="v2-btn v2-btn-sm"
-                    disabled={!canRequest || requestPayout.isPending}
-                    onClick={() => requestPayout.mutate(p.id)}
-                  >
-                    {requestPayout.isPending ? 'Requesting…' : 'Request payout'}
-                  </button>
-                ) : (
-                  <span className="v2-status">{STATUS_LABEL[p.status] ?? p.status}</span>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+    <div className="flex flex-col gap-6 sm:gap-8">
+      {hasPayables && (
+        <StatGrid label="Payout balance">
+          <StatTile
+            label="Ready to request"
+            format="cents"
+            value={metric(totals.available, state)}
+            attention={totals.available > 0}
+            sub={totals.available > 0 ? 'Request it below' : 'Nothing waiting'}
+          />
+          <StatTile label="In review" format="cents" value={metric(totals.inReview, state)} sub="Approved or processing" />
+          <StatTile
+            label="Upcoming"
+            format="cents"
+            value={metric(totals.upcoming, state)}
+            sub={totals.nextExpectedAt ? `Next expected ${formatDay(totals.nextExpectedAt)}` : 'From paid orders and bookings'}
+          />
+          <StatTile
+            label="Paid out to date"
+            format="cents"
+            value={metric(totals.paid, state)}
+            sub={totals.lastPaidAt ? `Last payout ${formatDay(totals.lastPaidAt)}` : 'No payouts yet'}
+          />
+        </StatGrid>
       )}
+      {table}
+      {aside}
     </div>
   );
 }

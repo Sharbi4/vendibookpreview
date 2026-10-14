@@ -1,7 +1,10 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useSellerPayables, type SellerPayable as PayableRow } from '@/hooks/useSellerPayables';
-import { ChevronLeft, ChevronRight, CalendarDays } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Panel, StatusPill, ws } from '@/components/workspace/ui';
+import { cn } from '@/lib/utils';
+import { payablePill } from '@/components/workspace/money/moneyUi';
 
 /**
  * Monthly payout calendar.
@@ -106,143 +109,124 @@ export default function PayoutCalendar() {
 
   const dated = Object.entries(monthRows.byDay).sort(([a], [b]) => a.localeCompare(b));
 
-  return (
-    <div className="space-y-5 v2-embedded-section p-4 sm:p-5">
-      <div className="v2-panel-head">
-        <div>
-          <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
-            <CalendarDays className="h-4 w-4" /> Payout calendar
-          </h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            Your recorded seller proceeds, using the same records as Your payouts. Every payout is reviewed and sent
-            manually by our team, so dates are expected rather than guaranteed.
-          </p>
-        </div>
-      </div>
+  const navBtn =
+    'grid h-9 w-9 place-items-center rounded-full border border-[#E2DBD0] bg-white text-[#1C1B1A] transition-colors hover:border-[#1C1B1A] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1C1B1A]';
 
-      <div className="flex items-center justify-between gap-3">
-        <button
-          type="button"
-          aria-label="Previous month"
-          className="v2-btn-quiet"
-          onClick={() => shiftMonth(-1)}
-        >
+  return (
+    <Panel
+      title="Payout calendar"
+      description="Expected settlement dates for your recorded proceeds. Payouts are reviewed and sent manually, so dates are expected, not guaranteed."
+      flush
+    >
+      <div className="flex items-center justify-between gap-3 px-5 py-4 sm:px-6">
+        <button type="button" aria-label="Previous month" className={navBtn} onClick={() => shiftMonth(-1)}>
           <ChevronLeft className="h-4 w-4" />
         </button>
-        <div className="text-center">
-          <div className="text-sm font-semibold text-foreground">{monthLabel}</div>
-          <div className="text-xs text-muted-foreground" aria-live="polite">
-            {isLoading ? 'Loading payout totals…' : isError ? 'Totals unavailable' : `${money(monthRows.expected)} expected · ${money(monthRows.sent)} sent this month`}
+        <div className="min-w-0 text-center">
+          <div className="text-[15px] font-semibold tracking-[-0.01em] text-[#1C1B1A]">{monthLabel}</div>
+          <div className="mt-0.5 text-[12.5px] tabular-nums text-[#8A847B]" aria-live="polite">
+            {isLoading ? 'Loading payout totals…' : isError ? 'Totals unavailable' : `${money(monthRows.expected)} expected · ${money(monthRows.sent)} sent`}
           </div>
         </div>
-        <button
-          type="button"
-          aria-label="Next month"
-          className="v2-btn-quiet"
-          onClick={() => shiftMonth(1)}
-        >
+        <button type="button" aria-label="Next month" className={navBtn} onClick={() => shiftMonth(1)}>
           <ChevronRight className="h-4 w-4" />
         </button>
       </div>
 
-      {isError ? <div role="alert" className="p-4">Payout records could not be loaded. <button className="v2-btn-quiet" onClick={() => refetch()}>Retry</button></div> : isLoading ? (
-        <div className="v2-skeleton h-56 w-full" />
+      {isError ? (
+        <div role="alert" className="flex flex-wrap items-center justify-between gap-4 border-t border-[#ECE6DD] px-5 py-5 sm:px-6">
+          <p className="text-[14px] text-[#1C1B1A]">Payout records could not be loaded.</p>
+          <button type="button" className={ws.secondary} onClick={() => refetch()}>Retry</button>
+        </div>
+      ) : isLoading ? (
+        <div className="px-5 pb-5 sm:px-6"><div className={cn(ws.skeleton, 'h-56 w-full')} /></div>
       ) : (
         <>
-          <div className="grid grid-cols-7 gap-1 text-center text-[11px] uppercase tracking-wide text-muted-foreground">
-            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
-              <div key={d} className="py-1">
-                {d}
-              </div>
-            ))}
-          </div>
-          <div className="grid grid-cols-7 gap-1">
-            {grid.map((d) => {
-              const key = dayKey(d);
-              const inMonth = d.getMonth() === cursor.getMonth();
-              const items = monthRows.byDay[key] ?? [];
-              const sum = items.reduce((acc, i) => acc + (i.row.net_payout_cents ?? 0), 0);
-              return (
-                <div
-                  key={key}
-                  className={[
-                    'min-h-[62px] rounded-md border p-1.5 text-left',
-                    inMonth ? 'border-border bg-card' : 'border-transparent bg-muted/30',
-                    key === todayKey ? 'ring-1 ring-primary/50' : '',
-                  ].join(' ')}
-                >
-                  <div
-                    className={`text-[11px] ${inMonth ? 'text-foreground' : 'text-muted-foreground'}`}
-                  >
-                    {d.getDate()}
-                  </div>
-                  {items.length > 0 && (
-                    <div className="mt-1 rounded bg-primary/10 px-1 py-0.5 text-[11px] font-semibold text-foreground hidden sm:block">
-                      {money(sum)}
-                      {items.length > 1 && (
-                        <span className="ml-1 font-normal text-muted-foreground">
-                          ×{items.length}
-                        </span>
-                      )}
-                    </div>
-                  )}
-                  {items.length > 0 && <span className="sm:hidden block mt-2 h-2 w-2 rounded-full bg-primary" aria-label={`${items.length} payouts; details below`} />}
+          <div className="px-3 pb-4 sm:px-6">
+            <div className="grid grid-cols-7 text-center text-[11px] font-semibold uppercase tracking-[0.1em] text-[#8A847B]">
+              {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d) => (
+                <div key={d} className="py-2">
+                  <span className="sm:hidden">{d.charAt(0)}</span>
+                  <span className="hidden sm:inline">{d}</span>
                 </div>
-              );
-            })}
+              ))}
+            </div>
+            <div className="grid grid-cols-7 gap-px overflow-hidden rounded-xl bg-[#ECE6DD] ring-1 ring-[#ECE6DD]">
+              {grid.map((d) => {
+                const key = dayKey(d);
+                const inMonth = d.getMonth() === cursor.getMonth();
+                const items = monthRows.byDay[key] ?? [];
+                const sum = items.reduce((acc, i) => acc + (i.row.net_payout_cents ?? 0), 0);
+                const isToday = key === todayKey;
+                return (
+                  <div
+                    key={key}
+                    className={cn('min-h-[52px] p-1.5 text-left sm:min-h-[68px] sm:p-2', inMonth ? 'bg-white' : 'bg-[#FAF8F5]')}
+                  >
+                    <div
+                      className={cn(
+                        'grid h-6 w-6 place-items-center rounded-full text-[12px] tabular-nums',
+                        isToday ? 'bg-[#1C1B1A] font-semibold text-white' : inMonth ? 'text-[#1C1B1A]' : 'text-[#B5AEA4]',
+                      )}
+                    >
+                      {d.getDate()}
+                    </div>
+                    {items.length > 0 && (
+                      <div className="mt-1 hidden truncate rounded-md bg-[#FFEEE7] px-1.5 py-0.5 text-[11.5px] font-semibold tabular-nums text-[#B93A12] sm:block">
+                        {money(sum)}
+                        {items.length > 1 && <span className="ml-1 font-normal text-[#B93A12]/70">×{items.length}</span>}
+                      </div>
+                    )}
+                    {items.length > 0 && (
+                      <span className="mt-1.5 block h-1.5 w-1.5 rounded-full bg-[#FF5124] sm:hidden" aria-label={`${items.length} payouts; details below`} />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
 
-          <div className="space-y-2">
+          <div className="border-t border-[#ECE6DD]">
             {dated.length === 0 ? (
-              <p className="text-sm text-muted-foreground">
-                No settlements expected in {monthLabel}.
-              </p>
+              <p className="px-5 py-4 text-[13.5px] text-[#5E5953] sm:px-6">No settlements expected in {monthLabel}.</p>
             ) : (
-              dated.map(([key, items]) =>
-                items.map(({ row, date }) => (
-                  <div
-                    key={row.id}
-                    className="flex items-center justify-between gap-3 rounded-md border border-border bg-card px-3 py-2"
-                  >
-                    <div className="min-w-0">
-                      <div className="text-sm font-medium text-foreground">
-                        {date.toLocaleDateString(undefined, {
-                          weekday: 'short',
-                          month: 'short',
-                          day: 'numeric',
-                        })}
-                      </div>
-                      <div className="text-xs text-muted-foreground">
-                        {row.transaction_type === 'rental' ? 'Rental booking' : 'Sale'} ·{' '}
-                        {STATUS_LABEL[row.status] ?? row.status}
-                      </div>
-                    </div>
-                    <div className="text-sm font-semibold text-foreground">
-                      {money(row.net_payout_cents)}
-                      {row.payment_record_id && <Link className="block underline text-xs" to={`/dashboard/transactions/${row.payment_record_id}`}>View order</Link>}
-                    </div>
-                  </div>
-                )),
-              )
+              <ul className="divide-y divide-[#F1ECE5]">
+                {dated.map(([, items]) =>
+                  items.map(({ row, date }) => {
+                    const pill = payablePill(row.status);
+                    return (
+                      <li key={row.id} className="flex items-center justify-between gap-4 px-5 py-3.5 sm:px-6">
+                        <div className="min-w-0">
+                          <div className="text-[14px] font-semibold text-[#1C1B1A]">
+                            {date.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+                          </div>
+                          <div className="mt-1 flex flex-wrap items-center gap-2 text-[12.5px] text-[#8A847B]">
+                            <span>{row.transaction_type === 'rental' ? 'Rental booking' : 'Sale'}</span>
+                            <StatusPill tone={pill.tone}>{STATUS_LABEL[row.status] ?? pill.label}</StatusPill>
+                          </div>
+                        </div>
+                        <div className="shrink-0 text-right">
+                          <div className="text-[14px] font-semibold tabular-nums text-[#1C1B1A]">{money(row.net_payout_cents)}</div>
+                          {row.payment_record_id && (
+                            <Link className={cn(ws.actionLink, 'mt-0.5')} to={`/dashboard/transactions/${row.payment_record_id}`}>View order</Link>
+                          )}
+                        </div>
+                      </li>
+                    );
+                  }),
+                )}
+              </ul>
             )}
           </div>
 
           {undated.length > 0 && (
-            <div className="rounded-md border border-border bg-muted/30 p-3">
-              <p className="text-xs font-semibold text-foreground">No date yet</p>
-              <ul className="mt-2 space-y-1">
+            <div className="border-t border-[#ECE6DD] bg-[#FCFAF7] px-5 py-4 sm:px-6">
+              <p className={ws.eyebrow}>No date yet</p>
+              <ul className="mt-2.5 space-y-2">
                 {undated.map((row) => (
-                  <li
-                    key={row.id}
-                    className="flex items-center justify-between gap-3 text-xs text-muted-foreground"
-                  >
-                    <span>
-
-                      {STATUS_LABEL[row.status] ?? row.status}
-                    </span>
-                    <span className="font-medium text-foreground">
-                      {money(row.net_payout_cents)}
-                    </span>
+                  <li key={row.id} className="flex items-center justify-between gap-3 text-[13px]">
+                    <span className="text-[#5E5953]">{STATUS_LABEL[row.status] ?? row.status}</span>
+                    <span className="font-semibold tabular-nums text-[#1C1B1A]">{money(row.net_payout_cents)}</span>
                   </li>
                 ))}
               </ul>
@@ -250,6 +234,6 @@ export default function PayoutCalendar() {
           )}
         </>
       )}
-    </div>
+    </Panel>
   );
 }

@@ -2,10 +2,23 @@ import { useSellerPayables } from '@/hooks/useSellerPayables';
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { Loader2 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import SellerRefundDialog from '@/components/workspace/SellerRefundDialog';
+import {
+  EmptyState,
+  Panel,
+  SimpleTable,
+  StatGrid,
+  StatTile,
+  StatusPill,
+  formatDay,
+  ws,
+  type SimpleColumn,
+  type StatusTone,
+} from '@/components/workspace/ui';
+import { LightScope } from '@/components/workspace/money/LightScope';
+import { money } from '@/components/workspace/money/moneyUi';
 
 /**
  * Per-order seller earnings.
@@ -45,7 +58,7 @@ const PAYMENT_LABEL: Record<string, string> = {
   created: 'Awaiting payment',
   approved: 'Approved by buyer',
   pending: 'Pending with PayPal',
-  authorized: 'Funds held',
+  authorized: 'Authorized',
   completed: 'Paid',
   partially_captured: 'Partly charged',
   deposit_paid_balance_due: 'Deposit paid',
@@ -55,26 +68,26 @@ const PAYMENT_LABEL: Record<string, string> = {
   partially_refunded: 'Partly refunded',
   refunded: 'Refunded',
   reversed: 'Reversed',
-  authorization_voided: 'Hold released',
-  authorization_expired: 'Hold expired',
+  authorization_voided: 'Authorization voided',
+  authorization_expired: 'Authorization expired',
 };
 
-const PAYMENT_TONE: Record<string, string> = {
-  completed: 'is-ok',
-  authorized: 'is-ok',
-  partially_captured: 'is-ok',
-  deposit_paid_balance_due: 'is-ok',
-  pending: 'is-warn',
-  approved: 'is-warn',
-  created: 'is-warn',
-  declined: 'is-alert',
-  failed: 'is-alert',
-  cancelled: 'is-alert',
-  reversed: 'is-alert',
-  refunded: 'is-alert',
-  partially_refunded: 'is-warn',
-  authorization_voided: 'is-warn',
-  authorization_expired: 'is-warn',
+const PAYMENT_TONE: Record<string, StatusTone> = {
+  completed: 'ok',
+  authorized: 'ok',
+  partially_captured: 'ok',
+  deposit_paid_balance_due: 'ok',
+  pending: 'warn',
+  approved: 'warn',
+  created: 'warn',
+  declined: 'alert',
+  failed: 'alert',
+  cancelled: 'alert',
+  reversed: 'alert',
+  refunded: 'muted',
+  partially_refunded: 'warn',
+  authorization_voided: 'warn',
+  authorization_expired: 'warn',
 };
 
 const PAYOUT_LABEL: Record<string, string> = {
@@ -93,18 +106,9 @@ const PAYOUT_LABEL: Record<string, string> = {
   cancelled: 'Payout: cancelled',
 };
 
-const money = (cents: number | null | undefined) =>
-  `$${(((cents ?? 0) as number) / 100).toLocaleString(undefined, {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
-
-const shortDate = (raw?: string | null) => {
-  if (!raw) return null;
-  const d = new Date(raw);
-  return Number.isNaN(d.getTime())
-    ? null
-    : d.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+const typeLabel = (t: string | null) => {
+  const s = (t ?? 'order').replace(/_/g, ' ');
+  return s.charAt(0).toUpperCase() + s.slice(1);
 };
 
 export default function SellerEarningsTable() {
@@ -145,123 +149,142 @@ export default function SellerEarningsTable() {
     let fees = 0;
     let refunded = 0;
     let net = 0;
+    let feesKnown = false;
     for (const r of rows) {
       gross += r.gross_amount_cents ?? 0;
+      if (typeof r.platform_fee_cents === 'number') feesKnown = true;
       fees += r.platform_fee_cents ?? 0;
       refunded += r.refunded_cents ?? 0;
       net += r.seller_proceeds_cents ?? 0;
     }
-    return { gross, fees, refunded, net };
+    // No row records a fee: show "—" rather than a fake $0.
+    return { gross, fees: feesKnown || rows.length === 0 ? fees : null, refunded, net };
   }, [rows]);
 
-  if (isError) return <div role="alert" className="p-5">Order payments could not be loaded. <button className="v2-btn-quiet" onClick={() => refetch()}>Retry</button></div>;
+  if (isError) {
+    return (
+      <div role="alert" className={ws.surface + ' flex flex-wrap items-center justify-between gap-4 px-5 py-5 sm:px-6'}>
+        <p className="text-[14px] text-[#1C1B1A]">Order payments could not be loaded. Nothing has changed on them.</p>
+        <button type="button" className={ws.secondary} onClick={() => refetch()}>Retry</button>
+      </div>
+    );
+  }
+
+  const columns: SimpleColumn<EarningRow>[] = [
+    {
+      key: 'order',
+      header: 'Order',
+      cell: (r) => (
+        <span className="block min-w-0">
+          <Link to={`/orders/${r.id}`} className="block max-w-[52vw] truncate font-semibold hover:underline sm:max-w-[17rem]">
+            {r.listings?.title || `${typeLabel(r.transaction_type)} order`}
+          </Link>
+          <span className="block truncate text-[12.5px] text-[#8A847B]">
+            {[typeLabel(r.transaction_type), formatDay(r.captured_at || r.created_at), r.reference].filter(Boolean).join(' · ')}
+          </span>
+          <span className="mt-1.5 block sm:hidden">
+            <StatusPill tone={PAYMENT_TONE[r.payment_status ?? 'created'] ?? 'neutral'}>
+              {PAYMENT_LABEL[r.payment_status ?? 'created'] ?? (r.payment_status ?? 'created').replace(/_/g, ' ')}
+            </StatusPill>
+          </span>
+        </span>
+      ),
+    },
+    {
+      key: 'status',
+      header: 'Status',
+      hideBelow: 'sm',
+      cell: (r) => {
+        const status = r.payment_status ?? 'created';
+        const payable = payableByRecord.get(r.id);
+        return (
+          <span className="flex flex-col items-start gap-1">
+            <StatusPill tone={PAYMENT_TONE[status] ?? 'neutral'}>{PAYMENT_LABEL[status] ?? status.replace(/_/g, ' ')}</StatusPill>
+            {payablesError ? (
+              <span className="text-[12px] text-[#8A847B]">Payout status unavailable</span>
+            ) : payable ? (
+              <span className="text-[12px] text-[#8A847B]">{PAYOUT_LABEL[payable.status] ?? payable.status.replace(/_/g, ' ')}</span>
+            ) : null}
+            {r.dispute_status ? <StatusPill tone="alert">Dispute: {r.dispute_status.replace(/_/g, ' ')}</StatusPill> : null}
+          </span>
+        );
+      },
+    },
+    { key: 'gross', header: 'Buyer paid', align: 'right', hideBelow: 'md', className: 'text-[#5E5953]', cell: (r) => money(r.gross_amount_cents) },
+    {
+      key: 'fee',
+      header: 'Vendibook fee',
+      align: 'right',
+      hideBelow: 'lg',
+      className: 'text-[#5E5953]',
+      cell: (r) => (
+        <>
+          {typeof r.platform_fee_cents === 'number' ? `−${money(r.platform_fee_cents)}` : money(null)}
+          {(r.refunded_cents ?? 0) > 0 && <span className="block text-[12px] text-[#8A847B]">Refunded −{money(r.refunded_cents)}</span>}
+        </>
+      ),
+    },
+    {
+      key: 'net',
+      header: 'Your proceeds',
+      align: 'right',
+      className: 'font-semibold',
+      cell: (r) => money(r.seller_proceeds_cents ?? payableByRecord.get(r.id)?.net_payout_cents ?? 0),
+    },
+    {
+      key: 'refund',
+      header: 'Refund',
+      srOnlyHeader: true,
+      align: 'right',
+      className: 'w-[1%] whitespace-nowrap',
+      cell: (r) =>
+        ['completed', 'partially_refunded', 'partially_captured'].includes(r.payment_status ?? '') ? (
+          <LightScope className="inline-block [&_button]:h-8 [&_button]:rounded-full [&_button]:border [&_button]:border-[#E2DBD0] [&_button]:bg-white [&_button]:px-3.5 [&_button]:text-[12.5px] [&_button]:font-semibold [&_button]:text-[#1C1B1A] hover:[&_button]:border-[#1C1B1A]">
+            <SellerRefundDialog
+              paymentRecordId={r.id}
+              reference={r.reference}
+              refundableCents={(r.gross_amount_cents ?? 0) - (r.refunded_cents ?? 0)}
+              onRefunded={() => refetch()}
+            />
+          </LightScope>
+        ) : null,
+    },
+  ];
 
   return (
-    <div>
-      <div className="v2-panel-head">
-        <div>
-          <h2>Earnings by order</h2>
-          <p>
-            Your latest 100 payment records, excluding abandoned and cancelled checkout attempts. Amounts include pending payments and holds; check each payment status. Payouts are shown separately above.
-          </p>
-        </div>
-      </div>
-
-      <div className="v2-payout-tiles">
-        <article>
-          <small>Recorded payment amounts</small>
-          <strong>{money(totals.gross)}</strong>
-        </article>
-        <article>
-          <small>Vendibook fees</small>
-          <strong>{money(totals.fees)}</strong>
-        </article>
-        <article>
-          <small>Refunded</small>
-          <strong>{money(totals.refunded)}</strong>
-        </article>
-        <article>
-          <small>Recorded seller proceeds</small>
-          <strong>{money(totals.net)}</strong>
-        </article>
-      </div>
-
-      {isLoading ? (
-        <div className="v2-payout-empty">
-          <Loader2 className="h-4 w-4 animate-spin" /> Loading your orders…
-        </div>
-      ) : rows.length === 0 ? (
-        <div className="v2-payout-empty">
-          No eligible payment records yet. Unpaid marketplace orders are listed in Transactions.
-        </div>
-      ) : (
-        <ul className="v2-earnings-list">
-          {rows.map((r) => {
-            const status = r.payment_status ?? 'created';
-            const payable = payableByRecord.get(r.id);
-            const date = shortDate(r.captured_at || r.created_at);
-            return (
-              <li key={r.id}>
-                <div className="v2-earnings-main">
-                  <Link to={`/orders/${r.id}`} className="v2-earnings-title">
-                    {r.listings?.title || 'Listing'}
-                  </Link>
-                  <small>
-                    {r.reference ? `${r.reference} · ` : ''}
-                    {(r.transaction_type ?? 'order').replace(/_/g, ' ')}
-                    {date ? ` · ${date}` : ''}
-                  </small>
-                  <div className="v2-earnings-chips">
-                    <span className={`v2-earnings-chip ${PAYMENT_TONE[status] ?? ''}`}>
-                      {PAYMENT_LABEL[status] ?? status.replace(/_/g, ' ')}
-                    </span>
-                    {payablesError ? <span className="v2-earnings-chip">Payout status unavailable</span> : payable ? (
-                      <span className="v2-earnings-chip">
-                        {PAYOUT_LABEL[payable.status] ?? payable.status.replace(/_/g, ' ')}
-                      </span>
-                    ) : null}
-                    {r.dispute_status ? (
-                      <span className="v2-earnings-chip is-alert">
-                        Dispute: {r.dispute_status.replace(/_/g, ' ')}
-                      </span>
-                    ) : null}
-                  </div>
-                </div>
-                <dl className="v2-earnings-figures">
-                  <div>
-                    <dt>Buyer paid</dt>
-                    <dd>{money(r.gross_amount_cents)}</dd>
-                  </div>
-                  <div>
-                    <dt>Vendibook fee</dt>
-                    <dd>−{money(r.platform_fee_cents)}</dd>
-                  </div>
-                  {(r.refunded_cents ?? 0) > 0 ? (
-                    <div>
-                      <dt>Refunded</dt>
-                      <dd>−{money(r.refunded_cents)}</dd>
-                    </div>
-                  ) : null}
-                  <div className="v2-earnings-net">
-                    <dt>Your proceeds</dt>
-                    <dd>{money(r.seller_proceeds_cents ?? payable?.net_payout_cents ?? 0)}</dd>
-                  </div>
-                </dl>
-                {['completed', 'partially_refunded', 'partially_captured'].includes(status) ? (
-                  <div className="v2-earnings-actions">
-                    <SellerRefundDialog
-                      paymentRecordId={r.id}
-                      reference={r.reference}
-                      refundableCents={(r.gross_amount_cents ?? 0) - (r.refunded_cents ?? 0)}
-                      onRefunded={() => refetch()}
-                    />
-                  </div>
-                ) : null}
-              </li>
-            );
-          })}
-        </ul>
-      )}
-    </div>
+    <Panel
+      title="Earnings by order"
+      description="Your latest 100 payment records, without abandoned checkouts. Amounts include pending and authorized payments, so check each status."
+      flush
+      footer={
+        <p className="text-[13px] text-[#5E5953]">
+          Unpaid orders and rental bookings are in{' '}
+          <Link to="/dashboard/transactions" className={ws.link}>Transactions</Link>
+        </p>
+      }
+    >
+      <StatGrid label="Earnings totals" variant="flat" className="border-b border-[#ECE6DD]">
+        <StatTile size="sm" label="Buyers paid" format="cents" value={isLoading ? undefined : totals.gross} />
+        <StatTile size="sm" label="Vendibook fees" format="cents" value={isLoading ? undefined : totals.fees} />
+        <StatTile size="sm" label="Refunded" format="cents" value={isLoading ? undefined : totals.refunded} />
+        <StatTile size="sm" label="Your proceeds" format="cents" value={isLoading ? undefined : totals.net} />
+      </StatGrid>
+      <SimpleTable
+        caption="Earnings by order"
+        columns={columns}
+        rows={rows}
+        rowKey={(r) => r.id}
+        loading={isLoading}
+        empty={
+          <EmptyState
+            compact
+            className="px-5 py-5 sm:px-6"
+            title="No paid orders yet."
+            body="Once a buyer or renter pays, each order shows what they paid, the Vendibook fee and your proceeds."
+            action={{ label: 'View transactions', to: '/dashboard/transactions' }}
+          />
+        }
+      />
+    </Panel>
   );
 }

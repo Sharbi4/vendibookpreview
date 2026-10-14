@@ -1,18 +1,19 @@
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
-import { ShieldAlert } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { CASE_STATUS_LABEL, issueLabel } from '@/lib/disputes';
+import { Panel, StatusPill, ws } from '@/components/workspace/ui';
 
 /**
  * Money-center entry to disputes: open cases first, then the two ways in
  * (report a problem on an order, or browse every case). Every dispute is a
- * Vendibook case that freezes the seller payment until an admin decides.
+ * Vendibook case; payouts on that order pause until an admin decides.
  */
 export default function PaymentsDisputesEntry() {
   const { user } = useAuth();
-  const { data: cases = [] } = useQuery({
+  const { data: cases = [], isLoading, isError, refetch } = useQuery({
     queryKey: ['payments-open-cases', user?.id],
     enabled: !!user,
     staleTime: 30_000,
@@ -30,39 +31,41 @@ export default function PaymentsDisputesEntry() {
   });
 
   return (
-    <div className="p-5 sm:p-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div className="flex items-start gap-3">
-          <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0" aria-hidden="true" />
-          <div>
-            <h2 className="text-lg font-semibold">Disputes</h2>
-            <p className="mt-1 max-w-xl text-sm text-muted-foreground">
-              Something wrong with an order? Open a case from the order. The seller payment is paused while
-              Vendibook reviews it, both sides can add statements and photos, and we decide on a refund or release.
-            </p>
-          </div>
+    <Panel
+      title="Disputes"
+      description="Something wrong with an order? Open a case from the order. Payouts on that order pause while Vendibook reviews the case, and both sides can add statements and photos."
+      action={{ label: 'All cases', to: '/dashboard/cases' }}
+      flush
+      footer={
+        <Link className={ws.actionLink} to="/dashboard/transactions">
+          Report a problem with an order <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
+        </Link>
+      }
+    >
+      {isLoading ? (
+        <div className="px-5 py-4 sm:px-6"><span className={ws.skeleton + ' block h-4 w-48'} /></div>
+      ) : isError ? (
+        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 px-5 py-4 sm:px-6">
+          <p className="text-[14px] text-[#1C1B1A]">Your cases could not be loaded.</p>
+          <button type="button" className={ws.actionLink} onClick={() => refetch()}>Retry</button>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <Link className="v2-btn-outline" to="/dashboard/transactions">Report a problem with an order</Link>
-          <Link className="v2-btn-quiet" to="/dashboard/cases">Order dispute cases</Link>
-        </div>
-      </div>
-
-      {cases.length > 0 && (
-        <ul className="mt-5 space-y-2" aria-label="Open cases">
+      ) : cases.length > 0 ? (
+        <ul className="divide-y divide-[#F1ECE5]" aria-label="Open cases">
           {cases.map((c) => (
             <li key={c.id}>
               <Link
-                className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-border px-4 py-3 text-sm hover:bg-muted/40"
+                className="flex flex-wrap items-center justify-between gap-2 px-5 py-3.5 text-[14px] transition-colors hover:bg-[#FCFAF7] sm:px-6"
                 to={c.payment_record_id ? `/dashboard/transactions/${c.payment_record_id}/case/${c.id}` : `/cases/${c.id}`}
               >
-                <span className="font-medium">{c.case_number} · {issueLabel(c.issue_type)}</span>
-                <span className="text-muted-foreground">{CASE_STATUS_LABEL[c.status] || c.status}</span>
+                <span className="font-semibold text-[#1C1B1A]">{c.case_number} · {issueLabel(c.issue_type)}</span>
+                <StatusPill tone="warn">{CASE_STATUS_LABEL[c.status] || c.status}</StatusPill>
               </Link>
             </li>
           ))}
         </ul>
+      ) : (
+        <p className="px-5 py-4 text-[14px] text-[#5E5953] sm:px-6">No open cases.</p>
       )}
-    </div>
+    </Panel>
   );
 }
