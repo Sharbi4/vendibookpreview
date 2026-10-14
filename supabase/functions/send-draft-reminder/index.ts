@@ -8,6 +8,7 @@ import {
   isDueForNudge,
   isInternalEmail,
   isQaTitle,
+  publishedSinceDraft,
 } from '../_shared/draftReminderPolicy.ts'
 import { isAdminOrBackendCaller, forbiddenResponse } from "../_shared/callerGuard.ts";
 
@@ -75,10 +76,27 @@ serve(async (req) => {
       .eq('role', 'admin');
     const adminIds = new Set((adminRows ?? []).map((r) => r.user_id));
 
+    // Latest publish per host: a host who published after their newest draft
+    // already finished a listing, so leftover drafts don't get nudged.
+    const { data: publishedRows, error: publishedError } = await supabaseClient
+      .from('listings')
+      .select('host_id, published_at')
+      .in('host_id', hostIds)
+      .not('published_at', 'is', null)
+      .is('deleted_at', null);
+    if (publishedError) throw new Error(`Failed to fetch published listings: ${publishedError.message}`);
+    const latestPublished = new Map<string, string>();
+    for (const r of publishedRows ?? []) {
+      if (!r.host_id || !r.published_at) continue;
+      const prev = latestPublished.get(r.host_id);
+      if (!prev || r.published_at > prev) latestPublished.set(r.host_id, r.published_at);
+    }
+
     const hosts = (allHosts ?? []).filter((h) => {
       if (adminIds.has(h.id) || isInternalEmail(h.email)) return false;
       const newest = draftListings.find((l) => l.host_id === h.id);
-      return !!newest && isDueForNudge(newest.created_at, h.draft_nudge_sent_at, now);
+      return !!newest && !publishedSinceDraft(newest.created_at, latestPublished.get(h.id)) &&
+        isDueForNudge(newest.created_at, h.draft_nudge_sent_at, now);
     });
     logStep("Eligible hosts", { drafts: draftListings.length, hosts: hosts.length });
 

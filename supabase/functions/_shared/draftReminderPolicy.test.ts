@@ -1,5 +1,5 @@
 import { assertEquals } from 'https://deno.land/std@0.224.0/assert/mod.ts';
-import { draftFinishPath, isDueForNudge, isInternalEmail, isQaTitle } from './draftReminderPolicy.ts';
+import { draftFinishPath, isDueForNudge, isInternalEmail, isQaTitle, publishedSinceDraft } from './draftReminderPolicy.ts';
 
 const DAY = 24 * 60 * 60 * 1000;
 const now = Date.parse('2026-10-05T12:00:00Z');
@@ -32,4 +32,12 @@ Deno.test('skips internal accounts and QA drafts', () => {
 Deno.test('routes drafts with photos to the one-screen finish page', () => {
   assertEquals(draftFinishPath('abc', 3), '/list/finish/abc');
   assertEquals(draftFinishPath('abc', 0), '/create-listing/abc');
+});
+
+Deno.test('skips hosts who published after their newest draft', () => {
+  assertEquals(publishedSinceDraft(ago(13), ago(1)), true);
+  assertEquals(publishedSinceDraft(ago(13), ago(13)), true);
+  assertEquals(publishedSinceDraft(ago(3), ago(10)), false);
+  assertEquals(publishedSinceDraft(ago(3), null), false);
+  assertEquals(publishedSinceDraft(ago(3), 'not-a-date'), false);
 });

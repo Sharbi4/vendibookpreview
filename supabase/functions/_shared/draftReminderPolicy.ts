@@ -7,7 +7,9 @@
  *   newest draft < 7 days old  → at least 2 days between nudges
  *   7–30 days                  → at least 7 days
  *   30–60 days                 → at least 14 days
- * Internal/test accounts, admins and QA drafts are never nudged.
+ * Internal/test accounts, admins and QA drafts are never nudged, and neither
+ * is a host who has published a listing since their newest draft was created
+ * (leftover drafts after they finished one another way).
  */
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -41,6 +43,17 @@ export function isDueForNudge(
   if (!(age >= DRAFT_MIN_AGE_MS && age <= DRAFT_MAX_AGE_MS)) return false;
   if (!lastNudgedAt) return true;
   return now - new Date(lastNudgedAt).getTime() >= minGapMs(age);
+}
+
+/** True when the host published a listing after creating their newest draft. */
+export function publishedSinceDraft(
+  newestDraftCreatedAt: string,
+  latestPublishedAt: string | null | undefined,
+): boolean {
+  if (!latestPublishedAt) return false;
+  const published = Date.parse(latestPublishedAt);
+  const created = Date.parse(newestDraftCreatedAt);
+  return Number.isFinite(published) && Number.isFinite(created) && published >= created;
 }
 
 /** Drafts with their photos in can use the one-screen finish page. */
