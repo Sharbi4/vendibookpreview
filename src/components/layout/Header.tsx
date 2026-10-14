@@ -93,6 +93,14 @@ interface HeaderProps {
   hideSearch?: boolean;
 }
 
+const HEADER_MENU_LINKS = [
+  { to: '/search?mode=sale', label: 'For sale' },
+  { to: '/search?mode=rent', label: 'For rent' },
+  { to: '/how-it-works', label: 'How it works' },
+  { to: '/financing', label: 'Financing' },
+  { to: '/list', label: 'Sell your equipment', wide: true },
+] as const;
+
 const HEADER_CATEGORY_LINKS = [
   {
     label: 'For sale',
@@ -489,13 +497,7 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
               ))}
             </DropdownMenuContent>
           </DropdownMenu>
-          {[
-            { to: '/search?mode=sale', label: 'For sale' },
-            { to: '/search?mode=rent', label: 'For rent' },
-            { to: '/how-it-works', label: 'How it works' },
-            { to: '/financing', label: 'Financing' },
-            { to: '/list', label: 'Sell your equipment', wide: true },
-          ].map((item) => (
+          {HEADER_MENU_LINKS.map((item) => (
             <Link
               key={item.to}
               to={item.to}
@@ -547,7 +549,40 @@ const Header = ({ hideSearch = false }: HeaderProps) => {
           </div>
         </div>
       </div>
-      <div className="hidden h-[3px] bg-primary lg:block" aria-hidden="true" />
+      {/* Phones and tablets: the same menu as a swipeable row under the search */}
+      <nav className="lg:hidden border-t border-white/[0.06]" aria-label="Main">
+        <div className="flex items-center gap-1.5 overflow-x-auto px-3 py-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <DropdownMenu>
+              <DropdownMenuTrigger className="inline-flex shrink-0 items-center gap-1 whitespace-nowrap rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[13px] font-medium text-white/80 outline-none transition-colors hover:bg-white/[0.06] hover:text-white focus-visible:ring-2 focus-visible:ring-primary data-[state=open]:text-white">
+                Browse by category
+                <ChevronDown className="h-4 w-4 text-white/50" aria-hidden="true" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="start" sideOffset={8} className="w-64">
+                {HEADER_CATEGORY_LINKS.map((group, gi) => (
+                  <div key={group.label}>
+                    {gi > 0 && <DropdownMenuSeparator />}
+                    <p className="px-2 pb-1 pt-2 text-[11px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">{group.label}</p>
+                    {group.links.map((link) => (
+                      <DropdownMenuItem key={link.to} onSelect={() => navigate(link.to)} className="cursor-pointer">
+                        {link.label}
+                      </DropdownMenuItem>
+                    ))}
+                  </div>
+                ))}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          {HEADER_MENU_LINKS.map((item) => (
+            <Link
+              key={item.to}
+              to={item.to}
+              className="inline-flex shrink-0 items-center whitespace-nowrap rounded-full border border-white/10 bg-white/[0.04] px-3 py-1.5 text-[13px] font-medium text-white/80 transition-colors hover:bg-white/[0.08] hover:text-white"
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
+      </nav>
+      <div className="h-[3px] bg-primary" aria-hidden="true" />
     </header>
   </>
   );
