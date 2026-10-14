@@ -11,3 +11,29 @@
 /* Close button sits on the light sheet, so it needs dark ink to stay visible. */
 .workspace-mobile-menu > [data-slot="sheet-close"], .workspace-mobile-menu button[class*="absolute right-4"] { color: #443c35; }
 @media (max-width: 767px) { .v2-topbar .v2-search { display: none; } .v2-topbar > a { margin-right: auto; } }
+
+/* ── Workspace sidebar (grouped navigation) ─────────────────────────────── */
+.v2-workspace { --v2-shell: 30 4% 11%; } /* brand charcoal #1C1B1A */
+.ws-sidebar { padding: 22px 12px 14px; gap: 0; }
+.ws-side-logo { display: block; padding: 4px 10px 22px; }
+.ws-side-nav { display: flex; flex: 1; min-height: 0; flex-direction: column; overflow-y: auto; margin: 0 -4px; padding: 0 4px 12px; scrollbar-width: thin; scrollbar-color: hsl(0 0% 100% / .14) transparent; }
+.ws-side-section + .ws-side-section { margin-top: 14px; }
+.ws-side-heading { padding: 0 10px 6px; color: hsl(36 8% 62%); font-size: 10.5px; font-weight: 650; letter-spacing: .14em; text-transform: uppercase; }
+.ws-side-link { position: relative; display: flex; min-height: 34px; align-items: center; gap: 10px; border-radius: 8px; padding: 0 10px; color: hsl(36 10% 78%); font-size: 13.5px; font-weight: 550; transition: background-color .15s ease, color .15s ease; }
+.ws-side-link svg { width: 16px; height: 16px; flex: none; color: hsl(36 8% 60%); transition: color .15s ease; }
+.ws-side-link:hover { background: hsl(0 0% 100% / .05); color: hsl(40 25% 97%); }
+.ws-side-link:hover svg { color: hsl(40 20% 90%); }
+.ws-side-link.is-active { background: hsl(0 0% 100% / .09); color: #fff; font-weight: 650; }
+.ws-side-link.is-active svg { color: #fff; }
+.ws-side-link.is-active::before { content: ''; position: absolute; left: -4px; top: 8px; bottom: 8px; width: 3px; border-radius: 0 3px 3px 0; background: #FF5124; }
+.ws-side-link:focus-visible { outline: 2px solid #FF8A66; outline-offset: 1px; }
+.ws-side-account { margin: 8px -4px 0; border-top: 1px solid hsl(0 0% 100% / .08); padding: 10px 4px 0; display: flex; }
+.ws-sheet-heading { padding: 0 12px 4px; color: #6F6961; font-size: 10.5px; font-weight: 700; letter-spacing: .14em; text-transform: uppercase; }
+.workspace-mobile-menu .ws-side-section + .ws-side-section { margin-top: 16px; }
+.workspace-mobile-menu .workspace-menu-link { min-height: 44px; padding: 8px 12px; color: #1C1B1A; }
+.workspace-mobile-menu .workspace-menu-link svg { width: 18px; height: 18px; color: #6F6961; }
+.workspace-mobile-menu .workspace-menu-link.is-active { background: #F3EEE7; color: #1C1B1A; box-shadow: inset 3px 0 0 #FF5124; }
+.workspace-mobile-menu .workspace-menu-link.is-active svg { color: #1C1B1A; }
+.workspace-mobile-menu .workspace-menu-link:hover { background: #F3EEE7; color: #1C1B1A; }
+/* Unread dots use the brand accent. */
+.v2-workspace .v2-alert-dot, .v2-workspace .v2-mobile-alert-dot { background: #FF5124; }

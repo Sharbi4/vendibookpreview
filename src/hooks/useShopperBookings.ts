@@ -16,6 +16,8 @@ export const useShopperBookings = () => {
   const { toast } = useToast();
   const [bookings, setBookings] = useState<ShopperBooking[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  /** True when the last read failed, so callers can show "—" instead of an empty list. */
+  const [isError, setIsError] = useState(false);
 
   const fetchBookings = useCallback(async () => {
     if (!user) return;
@@ -33,7 +35,9 @@ export const useShopperBookings = () => {
 
       if (error) throw error;
       setBookings(data || []);
+      setIsError(false);
     } catch (error) {
+      setIsError(true);
       console.error('Error fetching shopper bookings:', error);
       toast({
         title: 'Error',
@@ -145,6 +149,7 @@ export const useShopperBookings = () => {
   return {
     bookings,
     isLoading,
+    isError,
     stats,
     cancelBooking,
     refetch: fetchBookings,

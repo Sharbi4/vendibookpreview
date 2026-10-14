@@ -10,6 +10,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { usePayoutPreference } from '@/hooks/usePayoutPreference';
 import { useMyPayPalConnection } from '@/hooks/useMyPayPalConnection';
 import { PAYOUT_METHOD_LABEL } from '@/lib/payouts/methods';
+import { summarizePayables } from '@/lib/payouts/payableTotals';
 
 /**
  * Seller payout balance + manual payout request.
@@ -21,8 +22,6 @@ import { PAYOUT_METHOD_LABEL } from '@/lib/payouts/methods';
  */
 
 const REQUESTABLE = new Set(['pending_release', 'eligible_for_review']);
-
-const IN_REVIEW = new Set(['payout_approved', 'payout_processing']);
 
 const BLOCKED_LABEL: Record<string, string> = {
   payout_on_hold: 'On hold',
@@ -91,21 +90,7 @@ export default function SellerPayoutBalance() {
     },
   });
 
-  const totals = useMemo(() => {
-    let available = 0;
-    let inReview = 0;
-    let upcoming = 0;
-    let paid = 0;
-    for (const p of payables) {
-      const net = p.net_payout_cents ?? 0;
-      if (p.status === 'payout_completed') paid += net;
-      else if (IN_REVIEW.has(p.status)) inReview += net;
-      else if (p.status === 'eligible_for_review') available += net;
-      else if (p.status === 'pending_release' || p.status === 'awaiting_payment_confirmation')
-        upcoming += net;
-    }
-    return { available, inReview, upcoming, paid };
-  }, [payables]);
+  const totals = useMemo(() => summarizePayables(payables), [payables]);
 
   const requestPayout = useMutation({
     mutationFn: async (payableId: string) => {

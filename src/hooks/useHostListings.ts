@@ -17,6 +17,8 @@ export const useHostListings = () => {
 
   const [listings, setListings] = useState<Listing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  /** True when the last read failed, so callers can show "—" instead of an empty list. */
+  const [isError, setIsError] = useState(false);
 
   const fetchListings = async () => {
     if (!user) return;
@@ -32,7 +34,9 @@ export const useHostListings = () => {
 
       if (error) throw error;
       setListings(data || []);
+      setIsError(false);
     } catch (error) {
+      setIsError(true);
       console.error('Error fetching listings:', error);
       toast({
         title: 'Error',
@@ -209,6 +213,7 @@ export const useHostListings = () => {
   return {
     listings,
     isLoading,
+    isError,
     stats,
     refetch: fetchListings,
     pauseListing: (id: string) => updateListingStatus(id, 'paused'),

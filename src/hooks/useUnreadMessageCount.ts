@@ -58,10 +58,10 @@ export const useUnreadMessageCount = () => {
           table: 'conversation_messages',
         },
         (payload) => {
-          const newMsg = payload.new as any;
-          if (newMsg.sender_id !== user.id) {
-            setCount(prev => prev + 1);
-          }
+          const newMsg = payload.new as { sender_id?: string };
+          // Re-count under RLS instead of incrementing: the event stream is not
+          // scoped to this user's conversations, so +1 could count other people's mail.
+          if (newMsg.sender_id !== user.id) void fetchCount();
         }
       )
       .on(
@@ -72,20 +72,23 @@ export const useUnreadMessageCount = () => {
           table: 'conversation_messages',
         },
         (payload) => {
-          const updated = payload.new as any;
-          const old = payload.old as any;
-          // If read_at was null and is now set, decrement
-          if (!old.read_at && updated.read_at && updated.sender_id !== user.id) {
-            setCount(prev => Math.max(0, prev - 1));
-          }
+          const updated = payload.new as { sender_id?: string };
+          // A message was marked read (or edited): re-count so the unread dot
+          // clears exactly when the real count reaches 0.
+          if (updated.sender_id !== user.id) void fetchCount();
         }
       )
       .subscribe();
 
+    // Messages read in another tab or on another device.
+    const onFocus = () => { void fetchCount(); };
+    window.addEventListener('focus', onFocus);
+
     return () => {
+      window.removeEventListener('focus', onFocus);
       supabase.removeChannel(channel);
     };
-  }, [user]);
+  }, [user, fetchCount]);
 
   return { count, refetch: fetchCount };
 };

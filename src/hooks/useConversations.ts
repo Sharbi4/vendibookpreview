@@ -37,6 +37,8 @@ export const useConversations = () => {
   const { toast } = useToast();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  /** True when the last read failed, so callers can show "—" instead of an empty inbox. */
+  const [isError, setIsError] = useState(false);
 
   const fetchConversations = useCallback(async () => {
     if (!user) {
@@ -99,7 +101,9 @@ export const useConversations = () => {
       );
 
       setConversations(enrichedConversations);
+      setIsError(false);
     } catch (error) {
+      setIsError(true);
       console.error('Error fetching conversations:', error);
       toast({
         title: 'Error',
@@ -165,6 +169,7 @@ export const useConversations = () => {
   return {
     conversations,
     isLoading,
+    isError,
     refetch: fetchConversations,
     getOrCreateConversation,
   };

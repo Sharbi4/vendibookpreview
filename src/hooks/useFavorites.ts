@@ -8,7 +8,7 @@ export const useFavorites = () => {
   const queryClient = useQueryClient();
 
   // Fetch user's favorites
-  const { data: favorites = [], isLoading } = useQuery({
+  const { data: favorites = [], isLoading, isError } = useQuery({
     queryKey: ['favorites', user?.id],
     queryFn: async () => {
       if (!user) return [];
@@ -74,6 +74,7 @@ export const useFavorites = () => {
   return {
     favorites,
     isLoading,
+    isError,
     toggleFavorite,
     isFavorite,
     isToggling: addFavorite.isPending || removeFavorite.isPending,

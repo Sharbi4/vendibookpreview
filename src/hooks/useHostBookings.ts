@@ -25,6 +25,8 @@ export const useHostBookings = () => {
   const { toast } = useToast();
   const [bookings, setBookings] = useState<BookingWithListing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  /** True when the last read failed, so callers can show "—" instead of an empty list. */
+  const [isError, setIsError] = useState(false);
 
   const fetchBookings = async () => {
     if (!user) return;
@@ -68,7 +70,9 @@ export const useHostBookings = () => {
       );
 
       setBookings(enrichedBookings);
+      setIsError(false);
     } catch (error) {
+      setIsError(true);
       console.error('Error fetching bookings:', error);
       toast({
         title: 'Error',
@@ -336,6 +340,7 @@ export const useHostBookings = () => {
   return {
     bookings,
     isLoading,
+    isError,
     stats,
     refetch: fetchBookings,
     approveBooking: (id: string, response?: string) => respondToBooking(id, 'approved', response),

@@ -1,465 +1,473 @@
-import { useCommerceRecords, invoiceMoney } from '@/hooks/useCommerceRecords';
-import ListingManageMenu from '@/components/workspace/ListingManageMenu';
-import DashboardNextSteps from '@/components/workspace/DashboardNextSteps';
-import FeaturedPromotionBanner from '@/components/workspace/FeaturedPromotionBanner';
-import FeaturedBadge from '@/components/listing/FeaturedBadge';
-import { canBoostListing } from '@/lib/listings/publicVisibility';
-import { isListingFeatured } from '@/lib/featured';
 import { useMemo } from 'react';
-import { Rocket } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
-import {
-  AlertTriangle,
-  ArrowRight,
-  Bell,
-  CalendarDays,
-  CreditCard,
-  DollarSign,
-  FileText,
-  Image as ImageIcon,
-  Inbox,
-  List,
-  MessageCircle,
-  Receipt,
-  Search,
-  ShieldCheck,
-  Video,
-} from 'lucide-react';
+import { Image as ImageIcon } from 'lucide-react';
 import WorkspaceShell from '@/components/workspace/WorkspaceShell';
+import { Button } from '@/components/ui/button';
+import {
+  ActionList,
+  EmptyState,
+  PageHeader,
+  Panel,
+  SectionHeader,
+  SimpleTable,
+  StatGrid,
+  StatTile,
+  StatusPill,
+  formatCents,
+  formatCount,
+  formatDay,
+  listingStatusPill,
+  metric,
+  ws,
+  type ActionItem,
+  type SimpleColumn,
+} from '@/components/workspace/ui';
 import { useAuth } from '@/contexts/AuthContext';
 import { useHostListings } from '@/hooks/useHostListings';
 import { useHostOffers } from '@/hooks/useHostOffers';
-import { legacyDashboardRedirect } from '@/lib/workspace/legacyDashboardRedirect';
+import { useBuyerOffers } from '@/hooks/useBuyerOffers';
 import { useShopperBookings } from '@/hooks/useShopperBookings';
 import { useHostBookings } from '@/hooks/useHostBookings';
-import { useUserTransactions } from '@/hooks/useUserTransactions';
+import { useUserTransactions, OPEN_DISPUTE_STATUSES } from '@/hooks/useUserTransactions';
 import { useConversations } from '@/hooks/useConversations';
 import { useMyPayPalConnection } from '@/hooks/useMyPayPalConnection';
-import { useNotifications } from '@/hooks/useNotifications';
 import { useFavorites } from '@/hooks/useFavorites';
 import { useHandoffTasks } from '@/hooks/useHandoffTasks';
 import { useVideoWalkthroughs } from '@/hooks/useVideoWalkthroughs';
+import { useCommerceRecords, invoiceMoney } from '@/hooks/useCommerceRecords';
+import { useSellerPayables } from '@/hooks/useSellerPayables';
+import { useBuyerMatchSignals, SIGNAL_WINDOW_DAYS } from '@/hooks/useBuyerMatchSignals';
+import { useHostEntitlements } from '@/hooks/useHostEntitlements';
+import { useCatalogPrice } from '@/hooks/useCatalogPrices';
+import { ACTIVE_PRODUCT_SLUGS } from '@/lib/monetization/catalogPricing';
+import { summarizePayables, proceedsSince } from '@/lib/payouts/payableTotals';
+import { legacyDashboardRedirect } from '@/lib/workspace/legacyDashboardRedirect';
+import { isListingFeatured } from '@/lib/featured';
 import { formatWalkthroughTime, walkthroughDisplayStatus } from '@/lib/videoWalkthroughs';
+import type { Tables } from '@/integrations/supabase/types';
 
-const money = (cents: number | null | undefined) =>
-  cents == null
-    ? null
-    : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(cents / 100);
+type Listing = Tables<'listings'>;
 
-const price = (listing: { mode?: string | null; price_sale?: number | null; price_daily?: number | null }) => {
-  const fmt = (value?: number | null) =>
-    value == null
-      ? null
-      : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', maximumFractionDigits: 0 }).format(value);
-  if (listing.mode === 'sale') return fmt(listing.price_sale) ?? 'Price not set';
-  const daily = fmt(listing.price_daily);
-  return daily ? `${daily}/day` : 'Rate not set';
+/** Listings whose signals we read; matches the cap inside fetchListingSignals. */
+const SIGNAL_LISTING_CAP = 24;
+const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
+const dollars = (n?: number | null) => (typeof n === 'number' && Number.isFinite(n) ? formatCents(Math.round(n * 100)) : null);
+
+const greeting = (now = new Date()) => {
+  const h = now.getHours();
+  return h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening';
 };
 
-type Task = {
-  id: string;
-  label: string;
-  hint: string;
-  to: string;
-  icon: typeof AlertTriangle;
-  tone?: 'warn' | 'neutral';
+const listingPrice = (l: Listing) => {
+  if (l.mode === 'sale') return dollars(l.price_sale) ?? 'Price not set';
+  const daily = dollars(l.price_daily);
+  return daily ? `${daily}/day` : 'Rate not set';
 };
 
 export default function WorkspaceHome() {
   const [routeParams] = useSearchParams();
   const { user, profile } = useAuth();
-  const { listings, isLoading: listingsLoading, pauseListing, unpauseListing, archiveListing, deleteListing } = useHostListings();
-  const { bookings: buyerBookings, isLoading: buyerLoading } = useShopperBookings();
-  const { bookings: sellerBookings, isLoading: sellerLoading } = useHostBookings();
-  const { transactions, isLoading: transactionsLoading, isError: transactionsError, refresh: refreshTransactions } = useUserTransactions(user?.id);
-  const { conversations, isLoading: conversationsLoading } = useConversations();
-  const { isReady: paypalReady } = useMyPayPalConnection();
-  const { unreadCount: notificationUnread } = useNotifications(user?.id);
-  const { favorites } = useFavorites();
+
+  const hostListings = useHostListings();
+  const hostBookings = useHostBookings();
+  const shopperBookings = useShopperBookings();
+  const tx = useUserTransactions(user?.id);
+  const inbox = useConversations();
+  const favorites = useFavorites();
+  const hostOffers = useHostOffers();
+  const buyerOffers = useBuyerOffers();
+  const commerce = useCommerceRecords();
+  const payablesQ = useSellerPayables();
+  const handoff = useHandoffTasks();
   const { walkthroughs, isLoading: walkthroughsLoading } = useVideoWalkthroughs();
-  const { data: handoffTasks } = useHandoffTasks();
-  const { pendingOffers } = useHostOffers();
-  const { data: commerce } = useCommerceRecords();
+  const paypal = useMyPayPalConnection();
+  const plan = useHostEntitlements();
+  const proPrice = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.vendibookPro);
 
-  const name = profile?.full_name?.trim() || 'there';
-  const firstName = name.split(' ')[0];
+  const listings = hostListings.listings;
+  const activeListings = useMemo(() => listings.filter((l) => l.status !== 'archived'), [listings]);
+  const live = activeListings.filter((l) => l.status === 'published');
+  const drafts = activeListings.filter((l) => l.status === 'draft');
+  const paused = activeListings.filter((l) => l.status === 'paused');
+  const signalIds = useMemo(() => activeListings.slice(0, SIGNAL_LISTING_CAP).map((l) => l.id), [activeListings]);
+  const signals = useBuyerMatchSignals(signalIds);
 
-  const drafts = listings.filter((l) => l.status === 'draft');
-  const live = listings.filter((l) => l.status === 'published');
-  const pendingSellerBookings = sellerBookings.filter((b) => b.status === 'pending');
-  const pendingBuyerBookings = buyerBookings.filter((b) => b.status === 'pending');
-  const disputes = transactions.filter((t) => t.dispute_status && t.dispute_status !== 'none');
-  const unread = conversations.reduce((sum, c) => sum + (c.unread_count ?? 0), 0);
-  const upcomingWalkthroughs = walkthroughs.filter((w) => ['scheduled','rescheduled'].includes(w.status) && +new Date(w.ends_at) > Date.now()).sort((a,b) => +new Date(a.starts_at) - +new Date(b.starts_at));
+  const payables = useMemo(() => payablesQ.data ?? [], [payablesQ.data]);
+  const totals = useMemo(() => summarizePayables(payables), [payables]);
+  const month = useMemo(() => proceedsSince(payables), [payables]);
 
-  const isSeller = listings.length > 0 || sellerBookings.length > 0;
-  const isBuyer = buyerBookings.length > 0 || transactions.some((t) => t.role === 'buyer');
+  const sellerTx = tx.transactions.filter((t) => t.role === 'seller');
+  const buyerTx = tx.transactions.filter((t) => t.role === 'buyer');
+  const isSeller = listings.length > 0 || hostBookings.bookings.length > 0 || payables.length > 0 || sellerTx.length > 0 || hostOffers.offers.length > 0;
+  const isBuyer = buyerTx.length > 0 || shopperBookings.bookings.length > 0 || buyerOffers.offers.length > 0 || favorites.favorites.length > 0;
+  const sellerKnown = !hostListings.isLoading;
 
-  const tasks = useMemo(() => {
-    const items: Task[] = [];
-    const unpaid = (commerce?.invoices ?? []).filter((i:any) => i.buyer_id === user?.id && i.status === 'issued' && new Date(i.due_at).getTime() > Date.now()).sort((a:any,b:any) => Date.parse(a.due_at)-Date.parse(b.due_at));
-    if (unpaid[0]) items.push({ id:'urgent-invoice',label:'Review your purchase invoice',hint:`${unpaid[0].invoice_number} · ${invoiceMoney(unpaid[0].total_cents)} · due ${new Date(unpaid[0].due_at).toLocaleDateString()}`,to:`/invoices/${unpaid[0].id}`,icon:Receipt,tone:'warn' });
-    const sellerRequests=(commerce?.requests??[]).filter((r:any)=>r.seller_id===user?.id && ['requested','under_review','revision_pending'].includes(r.status) && new Date(r.expires_at).getTime()>Date.now());
-    if(sellerRequests.length)items.push({id:'purchase-requests',label:`${sellerRequests.length} purchase request(s) to review`,hint:'Review the equipment and agreed terms.',to:'/dashboard/invoices?view=selling',icon:FileText,tone:'warn'});
+  const firstName = profile?.full_name?.trim().split(/\s+/)[0];
+  const unread = inbox.conversations.reduce((sum, c) => sum + (c.unread_count ?? 0), 0);
 
-    (handoffTasks ?? []).forEach((t) =>
-      items.push({ id: t.id, label: t.label, hint: t.hint, to: t.to, icon: ShieldCheck, tone: t.tone }),
-    );
-    upcomingWalkthroughs.forEach((w) => items.push({ id:`walkthrough-${w.id}`, label:`Video walkthrough ${formatWalkthroughTime(w.starts_at)}`, hint:w.listing?.title || 'Scheduled walkthrough', to:`/walkthrough/${w.id}`, icon:Video }));
-    walkthroughs.filter(w => walkthroughDisplayStatus(w) === 'needs follow-up').forEach(w => items.push({ id: `followup-${w.id}`, label: 'Walkthrough needs follow-up', hint: w.listing?.title || 'Review the meeting record or reschedule.', to: `/walkthrough/${w.id}`, icon: Video, tone: 'warn' }));
-    if (pendingOffers.length)
-      items.push({
-        id: 'offers',
-        label: `${pendingOffers.length} offer${pendingOffers.length === 1 ? '' : 's'} waiting on you`,
-        hint: 'Accept, counter, or decline. Offers expire after 48 hours.',
-        to: '/dashboard/offers',
-        icon: DollarSign,
-        tone: 'warn',
-      });
-    if (pendingSellerBookings.length)
-      items.push({
-        id: 'booking-requests',
-        label: `${pendingSellerBookings.length} booking request${pendingSellerBookings.length === 1 ? '' : 's'} waiting on you`,
-        hint: 'Approve, decline, or message the renter.',
-        to: '/dashboard/activity?filter=requests',
-        icon: CalendarDays,
-      });
-    if (drafts.length)
-      items.push({
-        id: 'drafts',
-        label: `${drafts.length} listing draft${drafts.length === 1 ? '' : 's'}`,
-        hint: 'Pick up where you left off.',
-        to: '/dashboard/listings?status=draft',
-        icon: FileText,
-      });
+  const attention = useMemo(() => {
+    const items: ActionItem[] = [];
+    const now = Date.now();
+
+    const disputes = tx.transactions.filter((t) => t.dispute_status && OPEN_DISPUTE_STATUSES.includes(t.dispute_status));
     if (disputes.length)
-      items.push({
-        id: 'disputes',
-        label: `${disputes.length} payment${disputes.length === 1 ? '' : 's'} under dispute`,
-        hint: 'Respond with your evidence.',
-        to: '/dashboard/payments',
-        icon: AlertTriangle,
-        tone: 'warn',
-      });
-    if (pendingBuyerBookings.length)
-      items.push({
-        id: 'buyer-pending',
-        label: `${pendingBuyerBookings.length} request${pendingBuyerBookings.length === 1 ? '' : 's'} awaiting a host reply`,
-        hint: 'Message the host if you need it sooner.',
-        to: '/dashboard/activity?filter=rentals',
-        icon: CalendarDays,
-      });
-    if (unread)
-      items.push({
-        id: 'messages',
-        label: `${unread} unread message${unread === 1 ? '' : 's'}`,
-        hint: 'Fast replies convert more buyers and renters.',
-        to: '/dashboard/inbox',
-        icon: MessageCircle,
-      });
-    if (!profile?.full_name || !profile?.avatar_url)
-      items.push({
-        id: 'profile',
-        label: 'Add your profile details',
-        hint: 'Add a name and photo so people know who they’re working with.',
-        to: '/dashboard/account',
-        icon: FileText,
-      });
-    return items.sort((a,b) => Number(b.tone === 'warn') - Number(a.tone === 'warn'));
-  }, [commerce, user?.id, 
-    handoffTasks,
-    pendingOffers.length,
-    pendingSellerBookings.length,
-    drafts.length,
-    isSeller,
-    paypalReady,
-    disputes.length,
-    pendingBuyerBookings.length,
-    unread,
-    profile?.full_name,
-    profile?.avatar_url,
-    walkthroughs,
-  ]);
+      items.push({ id: 'disputes', urgent: true, title: `${plural(disputes.length, 'payment')} under dispute`, detail: 'Add your side and any evidence.', to: '/dashboard/activity?filter=disputes', cta: 'Respond' });
 
-  const recentActivity = useMemo(
+    const waiting = hostOffers.pendingOffers;
+    if (waiting.length) {
+      const top = Math.max(...waiting.map((o) => Number(o.offer_amount) || 0));
+      items.push({ id: 'offers', urgent: true, title: `${plural(waiting.length, 'offer')} waiting on you`, detail: `Highest ${dollars(top)} · offers expire 48 hours after they're sent`, to: '/dashboard/offers', cta: 'Review' });
+    }
+
+    const countered = buyerOffers.counteredOffers ?? [];
+    if (countered.length)
+      items.push({ id: 'countered', urgent: true, title: countered.length === 1 ? 'A seller countered your offer' : `${countered.length} sellers countered your offers`, detail: countered[0]?.listing?.title ?? 'Accept or decline before it expires.', to: '/dashboard/offers', cta: 'Respond' });
+
+    const invoices = (commerce.data?.invoices ?? []) as Array<{ id: string; buyer_id: string; status: string; due_at: string; invoice_number: string; total_cents: number }>;
+    const unpaid = invoices
+      .filter((i) => i.buyer_id === user?.id && i.status === 'issued' && Date.parse(i.due_at) > now)
+      .sort((a, b) => Date.parse(a.due_at) - Date.parse(b.due_at));
+    if (unpaid[0])
+      items.push({ id: 'invoice', urgent: true, title: 'Review your purchase invoice', detail: `${unpaid[0].invoice_number} · due ${formatDay(unpaid[0].due_at)}`, meta: invoiceMoney(unpaid[0].total_cents), to: `/invoices/${unpaid[0].id}`, cta: 'Review' });
+
+    const requests = ((commerce.data?.requests ?? []) as Array<{ seller_id: string; status: string; expires_at: string }>)
+      .filter((r) => r.seller_id === user?.id && ['requested', 'under_review', 'revision_pending'].includes(r.status) && Date.parse(r.expires_at) > now);
+    if (requests.length)
+      items.push({ id: 'purchase-requests', urgent: true, title: `${plural(requests.length, 'purchase request')} to review`, detail: 'Check the equipment and the agreed terms.', to: '/dashboard/invoices?view=selling', cta: 'Review' });
+
+    const pendingHost = hostBookings.bookings.filter((b) => b.status === 'pending');
+    if (pendingHost.length)
+      items.push({ id: 'booking-requests', urgent: true, title: `${plural(pendingHost.length, 'booking request')} waiting on you`, detail: 'Approve, decline or message the renter.', to: '/dashboard/activity?filter=requests', cta: 'Review' });
+
+    (handoff.data ?? []).forEach((t) => items.push({ id: `handoff-${t.id}`, urgent: t.tone === 'warn', title: t.label, detail: t.hint, to: t.to, cta: 'Open' }));
+
+    if (totals.available > 0)
+      items.push({ id: 'payout', title: 'Payout ready to request', detail: 'Vendibook reviews and sends each payout.', meta: formatCents(totals.available), to: '/dashboard/payments', cta: 'Request' });
+
+    if (!paypal.isLoading && !paypal.lastRefreshError && !paypal.isReady && live.some((l) => l.mode === 'sale'))
+      items.push({ id: 'paypal', title: 'Connect PayPal to accept online sale payments', detail: 'Buyers can’t pay online for your sale listings until it’s connected.', to: '/dashboard/payments/setup', cta: 'Connect' });
+
+    walkthroughs
+      .filter((w) => ['scheduled', 'rescheduled'].includes(w.status) && Date.parse(w.ends_at) > now)
+      .sort((a, b) => Date.parse(a.starts_at) - Date.parse(b.starts_at))
+      .forEach((w) => items.push({ id: `walkthrough-${w.id}`, title: `Video walkthrough ${formatWalkthroughTime(w.starts_at)}`, detail: w.listing?.title || 'Scheduled walkthrough', to: `/walkthrough/${w.id}`, cta: 'Open' }));
+    walkthroughs
+      .filter((w) => walkthroughDisplayStatus(w) === 'needs follow-up')
+      .forEach((w) => items.push({ id: `followup-${w.id}`, title: 'Walkthrough needs follow-up', detail: w.listing?.title || 'Review the meeting record or reschedule.', to: `/walkthrough/${w.id}`, cta: 'Follow up' }));
+
+    if (unread)
+      items.push({ id: 'messages', title: `${plural(unread, 'unread message')}`, detail: 'Quick replies help close deals.', to: '/dashboard/messages', cta: 'Reply' });
+
+    if (drafts.length)
+      items.push({ id: 'drafts', title: `${plural(drafts.length, 'listing draft')} to finish`, detail: drafts[0]?.title?.trim() || 'Pick up where you left off.', to: '/dashboard/listings?status=draft', cta: 'Finish' });
+
+    const pendingMine = shopperBookings.bookings.filter((b) => b.status === 'pending');
+    if (pendingMine.length)
+      items.push({ id: 'my-requests', title: `${plural(pendingMine.length, 'rental request')} awaiting the host`, detail: 'Message the host if you need an answer sooner.', to: '/dashboard/activity?filter=rentals', cta: 'View' });
+
+    if (!profile?.full_name || !profile?.avatar_url)
+      items.push({ id: 'profile', title: 'Add your name and photo', detail: 'People reply faster when they know who they’re dealing with.', to: '/dashboard/account', cta: 'Update' });
+
+    return items;
+  }, [tx.transactions, hostOffers.pendingOffers, buyerOffers.counteredOffers, commerce.data, user?.id, hostBookings.bookings, handoff.data, totals.available, paypal.isLoading, paypal.lastRefreshError, paypal.isReady, live, walkthroughs, unread, drafts, shopperBookings.bookings, profile?.full_name, profile?.avatar_url]);
+
+  const attentionLoading = hostListings.isLoading || tx.isLoading || hostOffers.isLoading || hostBookings.isLoading || inbox.isLoading || walkthroughsLoading;
+  const failed = [
+    tx.isError && 'payments',
+    (hostOffers.isError || buyerOffers.isError) && 'offers',
+    (hostBookings.isError || shopperBookings.isError) && 'bookings',
+    commerce.isError && 'invoices',
+    inbox.isError && 'messages',
+    hostListings.isError && 'listings',
+  ].filter(Boolean) as string[];
+  const retryAll = () => {
+    void tx.refresh(); void hostOffers.refetch(); void buyerOffers.refetch(); void hostBookings.refetch();
+    void shopperBookings.refetch(); void commerce.refetch(); void inbox.refetch(); void hostListings.refetch();
+  };
+
+  const recent = useMemo(
     () =>
       [
-        ...transactions.map((t) => ({
-          id: `t-${t.id}`,
-          href: `/dashboard/transactions/${t.id}`,
-          title: t.listing?.title || 'Vendibook payment',
-          detail: `${t.role === 'buyer' ? 'Purchase' : 'Sale'} · ${t.payment_status || 'recorded'}`,
-          date: t.captured_at || t.created_at,
-          amount: money(t.gross_amount_cents),
-          icon: Receipt,
+        ...tx.transactions.map((t) => ({
+          id: `t-${t.id}`, to: `/dashboard/transactions/${t.id}`, title: t.listing?.title || 'Vendibook payment',
+          kind: t.booking_request_id || /rent/i.test(t.transaction_type ?? '') ? (t.role === 'buyer' ? 'Rental payment' : 'Rental earnings') : t.role === 'buyer' ? 'Purchase' : 'Sale', status: (t.payment_status || 'recorded').replace(/_/g, ' '),
+          date: t.captured_at || t.created_at, amount: formatCents(t.gross_amount_cents, { cents: true }),
         })),
-        ...buyerBookings.map((b) => ({
-          id: `bb-${b.id}`,
-          href: `/dashboard/bookings/${b.id}`,
-          title: b.listing?.title || 'Rental request',
-          detail: `You requested · ${b.status}`,
-          date: b.created_at,
-          amount: null,
-          icon: CalendarDays,
+        ...shopperBookings.bookings.map((b) => ({
+          id: `sb-${b.id}`, to: `/dashboard/bookings/${b.id}`, title: b.listing?.title || 'Rental request',
+          kind: 'Rental request', status: b.status, date: b.created_at, amount: null as string | null,
         })),
-        ...sellerBookings.map((b) => ({
-          id: `sb-${b.id}`,
-          href: `/dashboard/bookings/${b.id}`,
-          title: b.listing?.title || 'Booking request',
-          detail: `Incoming request · ${b.status}`,
-          date: b.created_at,
-          amount: null,
-          icon: CalendarDays,
+        ...hostBookings.bookings.map((b) => ({
+          id: `hb-${b.id}`, to: `/dashboard/bookings/${b.id}`, title: b.listing?.title || 'Booking request',
+          kind: 'Booking', status: b.status, date: b.created_at, amount: null as string | null,
         })),
-        ...walkthroughs.map((w) => ({ id:`vw-${w.id}`, href:`/walkthrough/${w.id}`, title:w.listing?.title||'Video walkthrough', detail:`Video walkthrough · ${walkthroughDisplayStatus(w)}`, date:w.created_at, amount:null, icon:Video })),
+        ...walkthroughs.map((w) => ({
+          id: `w-${w.id}`, to: `/walkthrough/${w.id}`, title: w.listing?.title || 'Video walkthrough',
+          kind: 'Walkthrough', status: walkthroughDisplayStatus(w), date: w.created_at, amount: null as string | null,
+        })),
       ]
-        .sort((a, b) => +new Date(b.date) - +new Date(a.date))
-        .slice(0, 3),
-    [transactions, buyerBookings, sellerBookings, walkthroughs],
+        .sort((a, b) => Date.parse(b.date) - Date.parse(a.date))
+        .slice(0, 5),
+    [tx.transactions, shopperBookings.bookings, hostBookings.bookings, walkthroughs],
   );
+  type RecentRow = (typeof recent)[number];
 
-  const sellerEarnings = transactions.filter((t) => t.role === 'seller');
-  const buyerPayments = transactions.filter((t) => t.role === 'buyer');
+  // Listing performance: most-viewed first, live before everything else.
+  const perfRows = useMemo(() => {
+    const s = signals.data ?? {};
+    return [...activeListings]
+      .sort((a, b) =>
+        Number(b.status === 'published') - Number(a.status === 'published') ||
+        (s[b.id]?.views30 ?? -1) - (s[a.id]?.views30 ?? -1))
+      .slice(0, 5);
+  }, [activeListings, signals.data]);
+
+  const sum = (key: 'views30' | 'saves' | 'conversations') => {
+    if (signals.isLoading || !signalIds.length) return signalIds.length ? undefined : 0;
+    if (signals.isError || !signals.data) return null;
+    let total = 0;
+    for (const id of signalIds) {
+      const v = signals.data[id]?.[key];
+      if (typeof v !== 'number') return null;
+      total += v;
+    }
+    return total;
+  };
+  const signalCell = (id: string, key: 'views30' | 'saves' | 'offersWaiting') =>
+    signals.isLoading ? <span className={ws.skeleton + ' ml-auto block h-4 w-8'} /> : formatCount(signals.data?.[id]?.[key] ?? null);
+
+  const perfColumns: SimpleColumn<Listing>[] = [
+    {
+      key: 'listing', header: 'Listing',
+      cell: (l) => (
+        <Link to={l.status === 'published' ? `/listing/${l.id}` : `/dashboard/listings/${l.id}/edit`} className="group flex min-w-0 items-center gap-3">
+          <span className="grid h-10 w-14 shrink-0 place-items-center overflow-hidden rounded-md bg-[#F3EEE7]">
+            {l.cover_image_url ? <img src={l.cover_image_url} alt="" loading="lazy" className="h-full w-full object-cover" /> : <ImageIcon aria-hidden="true" className="h-4 w-4 text-[#8A847B]" />}
+          </span>
+          <span className="min-w-0">
+            <span className="block max-w-[40vw] truncate font-semibold group-hover:underline sm:max-w-[18rem]">{l.title?.trim() || 'Untitled listing'}</span>
+            <span className="block truncate text-[12.5px] text-[#8A847B]">{l.mode === 'sale' ? 'For sale' : 'For rent'} · {listingPrice(l)}</span>
+          </span>
+        </Link>
+      ),
+    },
+    {
+      key: 'status', header: 'Status', hideBelow: 'sm',
+      cell: (l) => {
+        const s = listingStatusPill(l.status);
+        return <span className="flex flex-wrap gap-1.5"><StatusPill tone={s.tone}>{s.label}</StatusPill>{isListingFeatured(l as never) && <StatusPill tone="accent" dot={false}>Featured</StatusPill>}</span>;
+      },
+    },
+    { key: 'views', header: `Views · ${SIGNAL_WINDOW_DAYS}d`, align: 'right', cell: (l) => signalCell(l.id, 'views30') },
+    { key: 'saves', header: 'Saves', align: 'right', hideBelow: 'sm', cell: (l) => signalCell(l.id, 'saves') },
+    { key: 'offers', header: 'Offers waiting', align: 'right', hideBelow: 'md', cell: (l) => signalCell(l.id, 'offersWaiting') },
+  ];
+
+  const recentColumns: SimpleColumn<RecentRow>[] = [
+    {
+      key: 'item', header: 'Item',
+      cell: (r) => (
+        <Link to={r.to} className="block min-w-0 hover:underline">
+          <span className="block max-w-[55vw] truncate font-semibold sm:max-w-[16rem]">{r.title}</span>
+          <span className="block truncate text-[12.5px] text-[#8A847B] first-letter:uppercase">{r.kind} · {r.status}</span>
+        </Link>
+      ),
+    },
+    { key: 'date', header: 'Date', hideBelow: 'sm', className: 'whitespace-nowrap text-[#5E5953]', cell: (r) => formatDay(r.date) },
+    { key: 'amount', header: 'Amount', align: 'right', cell: (r) => r.amount ?? <span className="text-[#B5AEA4]">—</span> },
+  ];
 
   // Older links and emails used /dashboard?view=…&tab=… and offer emails use
-  // /dashboard?offer=<id>. Map them onto workspace pages (the old
-  // /dashboard/classic hand-off redirected straight back here in a loop).
+  // /dashboard?offer=<id>. Map them onto workspace pages.
   const legacyTarget = legacyDashboardRedirect(routeParams);
-  if (legacyTarget) {
-    return <Navigate to={legacyTarget} replace />;
-  }
+  if (legacyTarget) return <Navigate to={legacyTarget} replace />;
 
-  const leadListing = live[0] || listings[0] || null;
+  const showSeller = !sellerKnown || isSeller;
+  const isPro = !plan.isLoading && plan.tier !== 'free';
+  const moneyState = { loading: payablesQ.isLoading, error: payablesQ.isError };
+  const buyingOpen = buyerOffers.pendingOffers.length + (buyerOffers.counteredOffers?.length ?? 0);
+  const today = new Date().toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
 
   return (
     <WorkspaceShell>
-      <div className="v2-page-stack">
-        <header className="v2-page-heading v2-greeting flex-wrap">
-          <div>
-            <p className="v2-eyebrow">Overview</p>
-            <h1>Welcome back, {firstName}.</h1>
-            <p>Your listings, conversations, and next steps.</p>
-            <div className="mt-4 flex flex-wrap items-center gap-2.5">
-              <Link to="/dashboard/listings/new" className="v2-btn">
-                <List />
-                Create a listing
-              </Link>
-              <Link to="/search" className="v2-btn-outline">
-                <Search />
-                Explore listings
-              </Link>
-            </div>
-          </div>
-        </header>
+      <div className={ws.page}>
+        <div className={ws.stack}>
+          <PageHeader
+            eyebrow={today}
+            title={firstName ? `${greeting()}, ${firstName}.` : `${greeting()}.`}
+            description={
+              !sellerKnown ? 'Loading your workspace…'
+                : isSeller ? 'Where your listings, deals and payouts stand today.'
+                : 'Buy, rent or sell food trucks, trailers and kitchens, all from one workspace.'
+            }
+          />
 
-        {!listingsLoading && live.length > 0 && <FeaturedPromotionBanner listings={listings} />}
+          {/* 1. What needs a decision */}
+          <Panel
+            title="Needs your attention"
+            description={attentionLoading ? 'Checking your listings, offers and payments…' : attention.length > 1 ? `${plural(attention.length, 'item')}, most urgent first` : undefined}
+            action={{ label: 'All activity', to: '/dashboard/activity' }}
+            flush
+            footer={failed.length ? (
+              <p role="alert" className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[13px] text-[#5E5953]">
+                <span>Couldn’t check {failed.join(', ')} just now.</span>
+                <button type="button" onClick={retryAll} className={ws.link}>Try again</button>
+              </p>
+            ) : undefined}
+          >
+            <ActionList
+              items={attention}
+              loading={attentionLoading}
+              max={5}
+              moreHref="/dashboard/activity"
+              empty={<p className="px-5 py-5 text-[14px] text-[#5E5953] sm:px-6">You’re all caught up. New offers, requests and payouts will show up here.</p>}
+            />
+          </Panel>
 
-        <DashboardNextSteps unavailable={transactionsError} tasks={tasks} loading={listingsLoading || transactionsLoading || buyerLoading || sellerLoading || walkthroughsLoading || conversationsLoading} />
+          {/* 2. Money (sellers) */}
+          {showSeller && (
+            <section aria-labelledby="home-money">
+              <SectionHeader id="home-money" title="Money" description="From your recorded payouts. Vendibook reviews and sends each payout." action={{ label: 'Payouts & payments', to: '/dashboard/payments' }} />
+              <StatGrid label="Money">
+                <StatTile label="Ready to request" format="cents" value={metric(totals.available, moneyState)} sub={totals.available > 0 ? 'Request it in Payouts' : 'Nothing waiting'} />
+                <StatTile label="Upcoming" format="cents" value={metric(totals.upcoming, moneyState)} sub={totals.nextExpectedAt ? `Next expected ${formatDay(totals.nextExpectedAt)}` : 'From paid orders and bookings'} />
+                <StatTile label="Proceeds this month" format="cents" value={metric(month.cents, moneyState)} sub={`${plural(month.count, 'order')} since ${formatDay(month.since.toISOString())}`} />
+                <StatTile label="Paid out to date" format="cents" value={metric(totals.paid, moneyState)} sub={totals.lastPaidAt ? `Last payout ${formatDay(totals.lastPaidAt)}` : 'No payouts yet'} />
+              </StatGrid>
+            </section>
+          )}
 
-        {listingsLoading && !listings.length && (
-          <section className="v2-panel">
-            <div className="v2-panel-head">
-              <div className="v2-skeleton h-5 w-40" />
-            </div>
-            <div className="space-y-3 p-5">
-              <div className="v2-skeleton h-44 w-full" />
-              <div className="v2-skeleton h-16 w-full" />
-            </div>
-          </section>
-        )}
+          {/* 3. Listing performance (sellers) */}
+          {showSeller && (
+            <Panel
+              title="Listing performance"
+              description={`Views in the last ${SIGNAL_WINDOW_DAYS} days${activeListings.length > SIGNAL_LISTING_CAP ? ` · your ${SIGNAL_LISTING_CAP} newest listings` : ''}. Saves are all time.`}
+              action={{ label: 'All listings', to: '/dashboard/listings' }}
+              flush
+            >
+              <StatGrid label="Listing totals" variant="flat" className="border-b border-[#ECE6DD]">
+                <StatTile size="sm" label="Live listings" value={metric(live.length, { loading: hostListings.isLoading, error: hostListings.isError })} sub={drafts.length || paused.length ? [drafts.length && plural(drafts.length, 'draft'), paused.length && `${paused.length} paused`].filter(Boolean).join(' · ') : undefined} />
+                <StatTile size="sm" label={`Views · ${SIGNAL_WINDOW_DAYS} days`} value={hostListings.isLoading ? undefined : sum('views30')} />
+                <StatTile size="sm" label="Saves" value={hostListings.isLoading ? undefined : sum('saves')} />
+                <StatTile size="sm" label="Buyer conversations" value={hostListings.isLoading ? undefined : sum('conversations')} />
+              </StatGrid>
+              <SimpleTable
+                caption="Your listings by views"
+                columns={perfColumns}
+                rows={perfRows}
+                rowKey={(l) => l.id}
+                loading={hostListings.isLoading}
+                empty={
+                  hostListings.isError
+                    ? <EmptyState compact className="px-5 py-5 sm:px-6" title="Your listings couldn’t be loaded." body="Nothing has changed on them." action={{ label: 'Open listings', to: '/dashboard/listings' }} />
+                    : <EmptyState compact className="px-5 py-5 sm:px-6" title="No listings yet." body="Listing is free. Add photos, a price and where it’s located." action={{ label: 'Create a listing', to: '/dashboard/listings/new' }} />
+                }
+              />
+            </Panel>
+          )}
 
-        {leadListing && (
-          <section className="v2-panel">
-            <div className="v2-panel-head">
-              <div>
-                <h2>My listings</h2>
-                <p>
-                  {live.length} live · {drafts.length} draft{drafts.length === 1 ? '' : 's'}
-                </p>
+          {/* 4. Getting started (brand-new account) */}
+          {sellerKnown && !isSeller && !isBuyer && (
+            <section className={ws.surface + ' grid overflow-hidden md:grid-cols-2'} aria-label="Get started">
+              <div className="p-6 sm:p-8">
+                <p className={ws.eyebrow}>Sell or rent out</p>
+                <h2 className="mt-2.5 text-[20px] font-semibold tracking-[-0.02em]">List a truck, trailer or kitchen</h2>
+                <p className={ws.body + ' mt-2 max-w-sm'}>Listing is free. Buyers and renters message you through Vendibook, and offers and bookings show up here.</p>
+                <Button asChild variant="cta" className={ws.cta + ' mt-6'}>
+                  <Link to="/dashboard/listings/new">Create a listing</Link>
+                </Button>
               </div>
-              <Link to="/dashboard/listings" className="v2-btn-quiet">
-                View all
-              </Link>
-            </div>
-
-            <div className="sale-light grid gap-4 p-5 sm:grid-cols-2 lg:grid-cols-3">
-              {listings.slice(0, 6).map((listing) => {
-                const featured = isListingFeatured(listing as never);
-                const boostable = canBoostListing(listing as never) && !featured;
-                return (
-                  <article key={listing.id} className="flex flex-col overflow-hidden rounded-2xl border border-border bg-background text-foreground shadow-sm">
-                    <Link to={listing.status === 'draft' ? `/dashboard/listings/${listing.id}/edit` : `/listing/${listing.id}`} className="relative block aspect-[4/3] bg-muted">
-                      {listing.cover_image_url ? (
-                        <img src={listing.cover_image_url} alt={listing.title || 'Listing photo'} loading="lazy" className="h-full w-full object-cover" />
-                      ) : (
-                        <span className="flex h-full items-center justify-center text-muted-foreground"><ImageIcon aria-label="No listing image yet" /></span>
-                      )}
-                      <span className={`v2-status absolute left-3 top-3 ${listing.status === 'published' ? 'is-ok' : ''}`}>
-                        {listing.status === 'published' ? 'Live' : listing.status}
-                      </span>
-                    </Link>
-                    <div className="flex flex-1 flex-col gap-1.5 p-4">
-                      <div className="flex items-start justify-between gap-2">
-                        <h3 className="line-clamp-2 text-sm font-semibold">{listing.title?.trim() || 'Untitled listing'}</h3>
-                        <ListingManageMenu listing={listing} onPause={pauseListing} onResume={unpauseListing} onArchive={archiveListing} onDelete={deleteListing} />
-                      </div>
-                      <small className="text-muted-foreground">
-                        {[listing.city, listing.state].filter(Boolean).join(', ') || 'Location not set'}
-                        {listing.mode ? ` · ${listing.mode === 'sale' ? 'For sale' : 'For rent'}` : ''}
-                      </small>
-                      <strong className="v2-price">{price(listing)}</strong>
-                      {listing.status === 'published' && typeof listing.view_count === 'number' && (
-                        <small className="text-muted-foreground">{listing.view_count} views</small>
-                      )}
-                      {featured && <FeaturedBadge listing={listing} compact showDaysLeft />}
-                      <div className="mt-auto flex flex-col gap-2 pt-3">
-                        {boostable && (
-                          <Button asChild variant="cta" className="w-full">
-                            <Link to={`/dashboard/listings?boost=${listing.id}`}><Rocket />Boost listing</Link>
-                          </Button>
-                        )}
-                        <Link className="v2-btn-outline v2-btn-sm justify-center" to={`/edit-listing/${listing.id}`}>Edit</Link>
-                      </div>
-                    </div>
-                  </article>
-                );
-              })}
-            </div>
-          </section>
-        )}
-
-        {!listingsLoading && listings.length === 0 && !isBuyer && (
-          <section className="v2-panel v2-empty">
-            <h2>Start where it makes sense for you</h2>
-            <p>Browse the marketplace, or list a truck, trailer, kitchen, or vendor space.</p>
-            <div className="flex flex-wrap justify-center gap-2.5">
-              <Link to="/search" className="v2-btn">
-                Browse listings
-              </Link>
-              <Link to="/dashboard/listings/new" className="v2-btn-outline">
-                List an asset
-              </Link>
-            </div>
-          </section>
-        )}
-
-        <div className="v2-two-column">
-          <section className="v2-panel">
-            <div className="v2-panel-head">
-              <div>
-                <h2>Recent activity</h2>
-                <p>Your latest marketplace updates.</p>
+              <div className="border-t border-[#ECE6DD] p-6 sm:p-8 md:border-l md:border-t-0">
+                <p className={ws.eyebrow}>Buy or rent</p>
+                <h2 className="mt-2.5 text-[20px] font-semibold tracking-[-0.02em]">Find equipment near you</h2>
+                <p className={ws.body + ' mt-2 max-w-sm'}>Save listings to compare, message sellers and make offers. Your purchases and requests are tracked here.</p>
+                <Link to="/search" className={ws.secondary + ' mt-6'}>Browse marketplace</Link>
               </div>
-              <Link to="/dashboard/activity" className="v2-btn-quiet">
-                View all
-              </Link>
-            </div>
-            {recentActivity.length ? (
-              recentActivity.map((item) => (
-                <Link className="v2-activity-row" to={item.href} key={item.id}>
-                  <span className="v2-activity-icon">
-                    <item.icon />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <strong className="truncate">{item.title}</strong>
-                    <small>
-                      {item.detail} · {new Date(item.date).toLocaleDateString()}
-                    </small>
-                  </span>
-                  {item.amount && <strong>{item.amount}</strong>}
-                </Link>
-              ))
-            ) : (
-              <div className="v2-empty">
-                <p>Your activity will appear here.</p>
-                <Link to="/search" className="v2-btn-quiet">
-                  Find something to buy or rent
-                </Link>
-              </div>
-            )}
-          </section>
+            </section>
+          )}
 
-          <section className="v2-panel">
-            <div className="v2-panel-head">
-              <div>
-                <h2>Transactions</h2>
-                <p>Track purchases, sales, and payment status.</p>
-              </div>
-              <Link to="/dashboard/transactions" className="v2-btn-quiet">
-                Open transactions
-              </Link>
-            </div>
-            <div className="v2-snapshot">
-              <div>
-                <strong>{transactionsLoading || transactionsError ? "—" : sellerEarnings.length}</strong>
-                <span>Seller payment records</span>{transactionsError && <div role="alert"><p>Payment records unavailable.</p><button className="v2-btn-quiet" onClick={() => void refreshTransactions()}>Retry payments</button></div>}
-              </div>
-              <div>
-                <strong>{transactionsLoading || transactionsError ? "—" : buyerPayments.length}</strong>
-                <span>Buyer payment records</span>
-              </div>
-            </div>
-          </section>
-        </div>
+          {/* 5. Buying */}
+          {sellerKnown && isBuyer && (
+            <section aria-labelledby="home-buying">
+              <SectionHeader id="home-buying" title="Buying" action={{ label: 'Saved listings', to: '/dashboard/saved' }} />
+              <StatGrid label="Buying">
+                <StatTile to="/dashboard/saved" label="Saved listings" value={metric(favorites.favorites.length, { loading: favorites.isLoading, error: favorites.isError })} />
+                <StatTile to="/dashboard/offers" label="Open offers" value={metric(buyingOpen, { loading: buyerOffers.isLoading, error: buyerOffers.isError })} sub={buyerOffers.counteredOffers?.length ? `${buyerOffers.counteredOffers.length} countered` : undefined} />
+                <StatTile to="/dashboard/activity?filter=rentals" label="Rental requests" value={metric(shopperBookings.bookings.filter((b) => b.status === 'pending').length, { loading: shopperBookings.isLoading, error: shopperBookings.isError })} sub="Awaiting the host" />
+                <StatTile to="/dashboard/transactions?filter=Purchases" label="Purchases" value={metric(buyerTx.length, { loading: tx.isLoading, error: tx.isError })} sub="Payments recorded" />
+              </StatGrid>
+            </section>
+          )}
 
-        <section className="v2-panel">
-          <div className="v2-panel-head">
-            <div>
-              <h2>Inbox</h2>
-              <p>{unread ? `${unread} unread` : 'Your latest conversations.'}</p>
-            </div>
-            <Link to="/dashboard/messages" className="v2-btn-quiet">
-              Open messages
-            </Link>
-          </div>
-          {conversations.length ? (
-            conversations.slice(0, 2).map((conversation) => {
-              const other =
-                conversation.host_id === user?.id ? conversation.shopper : conversation.host;
-              return (
-                <Link
-                  className="v2-activity-row"
-                  to={`/dashboard/messages/${conversation.id}`}
-                  key={conversation.id}
+          {/* 6. Recent activity + plan */}
+          {(recent.length > 0 || showSeller) && (
+            <div className={showSeller ? 'grid gap-6 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)] lg:gap-8' : ''}>
+              <Panel title="Recent activity" action={{ label: 'View all', to: '/dashboard/activity' }} flush>
+                <SimpleTable
+                  caption="Recent activity"
+                  columns={recentColumns}
+                  rows={recent}
+                  rowKey={(r) => r.id}
+                  loading={tx.isLoading && !recent.length}
+                  empty={<EmptyState compact className="px-5 py-5 sm:px-6" title="No activity yet." body="Payments, bookings and walkthroughs appear here as they happen." />}
+                />
+              </Panel>
+
+              {showSeller && (isPro ? (
+                <Panel
+                  className="lg:self-start"
+                  title="Vendibook Pro"
+                  action={<StatusPill tone={plan.isPastDue ? 'warn' : 'ok'}>{plan.isPastDue ? 'Past due' : plan.cancelAtPeriodEnd ? 'Ending' : 'Active'}</StatusPill>}
+                  footer={<Link to="/dashboard/buyermatch/membership" className={ws.actionLink}>Manage membership</Link>}
                 >
-                  <span className="v2-activity-icon">
-                    <Inbox />
-                  </span>
-                  <span className="min-w-0 flex-1">
-                    <strong className="truncate">
-                      {other?.full_name || conversation.listing?.title || 'Conversation'}
-                    </strong>
-                    <small className="truncate">
-                      {conversation.last_message?.message || 'No messages yet'}
-                    </small>
-                  </span>
-                  {(conversation.unread_count ?? 0) > 0 && (
-                    <span className="v2-status">{conversation.unread_count} new</span>
+                  {(plan.currentPeriodEnd || plan.planLabel !== 'Vendibook Pro') && (
+                    <p className="mb-3 text-[14px] font-semibold text-[#1C1B1A]">
+                      {[plan.planLabel !== 'Vendibook Pro' && plan.planLabel, plan.currentPeriodEnd && `${plan.cancelAtPeriodEnd ? 'Access ends' : 'Renews'} ${formatDay(plan.currentPeriodEnd)}`].filter(Boolean).join(' · ')}
+                    </p>
                   )}
-                </Link>
-              );
-            })
-          ) : (
-            <div className="v2-empty">
-              <p>No conversations yet.</p>
-              <Link to="/search" className="v2-btn-quiet">
-                Message a host or seller
-              </Link>
+                  <p className={ws.body}>BuyerMatch has our team look for buyers for your sale listings and logs every step.</p>
+                  <Link to="/dashboard/buyermatch" className={ws.secondary + ' mt-5'}>Open BuyerMatch</Link>
+                </Panel>
+              ) : plan.isLoading ? null : (
+                <Panel className="lg:self-start" title="Vendibook Pro" action={<span className="text-[13px] font-semibold tabular-nums text-[#5E5953]">{proPrice.labelWithCadence}</span>}>
+                  <ul className="space-y-2.5 text-[14px] leading-6 text-[#1C1B1A]">
+                    <li>BuyerMatch: our team looks for buyers for your sale listings</li>
+                    <li className="border-t border-[#F1ECE5] pt-2.5">A Featured Boost credit every month</li>
+                    <li className="border-t border-[#F1ECE5] pt-2.5">Priority support</li>
+                  </ul>
+                  <Button asChild variant="cta" className={ws.cta + ' mt-6 w-full sm:w-auto'}>
+                    <Link to="/pricing">See Vendibook Pro</Link>
+                  </Button>
+                  <p className={ws.note + ' mt-3'}>No buyer, offer or sale is guaranteed.</p>
+                </Panel>
+              ))}
             </div>
           )}
-        </section>
 
-        <nav aria-label="Account shortcuts" className="grid gap-3 sm:grid-cols-2">
-          <Link to="/dashboard/notifications" className="v2-panel flex items-center gap-3 p-4 hover:border-orange-200">
-            <Bell className="h-5 w-5 shrink-0 text-muted-foreground" />
-            <span className="min-w-0 flex-1"><strong className="block text-sm">Updates</strong><small className="text-muted-foreground">{notificationUnread ? `${notificationUnread} unread` : 'You’re all caught up'}</small></span><ArrowRight className="h-4 w-4" />
-          </Link>
-          <Link to="/dashboard/saved" className="v2-panel flex items-center gap-3 p-4 hover:border-orange-200">
-            <Search className="h-5 w-5 shrink-0 text-muted-foreground" />
-            <span className="min-w-0 flex-1"><strong className="block text-sm">Your shortlist</strong><small className="text-muted-foreground">{favorites.length ? `${favorites.length} saved listings to compare` : 'Save listings as you browse'}</small></span><ArrowRight className="h-4 w-4" />
-          </Link>
-        </nav>
+          {/* Buyers who don't sell yet: one quiet prompt, not a second dashboard. */}
+          {sellerKnown && !isSeller && isBuyer && (
+            <section className={ws.surface + ' flex flex-col gap-5 p-6 sm:flex-row sm:items-center sm:justify-between sm:p-8'} aria-label="Start selling">
+              <div className="max-w-xl">
+                <h2 className="text-[17px] font-semibold tracking-[-0.01em]">Have a truck, trailer or kitchen to sell or rent out?</h2>
+                <p className={ws.body + ' mt-1.5'}>Listing is free. Offers, bookings and payouts will show up on this page.</p>
+              </div>
+              <Link to="/dashboard/listings/new" className={ws.secondary + ' self-start sm:self-center'}>Create a listing</Link>
+            </section>
+          )}
+
+          {/* 7. Shortcuts */}
+          <nav aria-label="Shortcuts" className="flex flex-wrap gap-x-6 gap-y-3 border-t border-[#ECE6DD] pt-6">
+            {[
+              ['Create a listing', '/dashboard/listings/new'],
+              ...(isSeller ? [['Payout details', '/dashboard/account/payouts']] : []),
+              ['Invoices', '/dashboard/invoices'],
+              ['Notification settings', '/dashboard/notifications/settings'],
+              ['Browse marketplace', '/search'],
+            ].map(([label, to]) => (
+              <Link key={to} to={to} className={ws.actionLink}>{label}</Link>
+            ))}
+          </nav>
+        </div>
       </div>
     </WorkspaceShell>
   );
