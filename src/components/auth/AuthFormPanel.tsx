@@ -9,7 +9,6 @@ import { Truck, Store, Eye, EyeOff, Loader2, Mail, ArrowLeft, CheckCircle2, Shie
 import { supabase } from '@/integrations/supabase/client';
 import { triggerOrchestrator } from '@/lib/orchestrator';
 import { z } from 'zod';
-import vendibookLogo from '@/assets/vendibook-logo.png';
 import { TERMS_OF_SERVICE_VERSION, PRIVACY_POLICY_VERSION } from '@/lib/legal/versions';
 import { recordLegalAcceptance } from '@/lib/legal/recordAcceptance';
 import { trackSignupCompleted, trackLoginAttempt, trackLoginSuccess, trackLoginError, trackSignupAttempt, trackSignupError, trackPasswordResetRequest } from '@/lib/analytics';
@@ -75,9 +74,16 @@ type RoleType = 'host' | 'shopper';
 interface AuthFormPanelProps {
   mode: AuthMode;
   setMode: (mode: AuthMode) => void;
+  /** /auth shows the logo in its desktop brand panel, so the form drops its own at lg+. */
+  hideLogoOnDesktop?: boolean;
 }
 
-export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
+// Shared field styling: white surface, visible hairline, orange focus halo.
+const FIELD_CLASS =
+  'h-12 rounded-xl border border-foreground/15 bg-card px-4 text-base shadow-[0_1px_2px_rgba(28,20,16,0.04)] transition-[border-color,box-shadow] placeholder:text-muted-foreground/70 hover:border-foreground/30 focus-visible:border-primary focus-visible:border focus-visible:ring-4 focus-visible:ring-primary/15';
+const LABEL_CLASS = 'text-sm font-medium text-foreground';
+
+export const AuthFormPanel = ({ mode, setMode, hideLogoOnDesktop = false }: AuthFormPanelProps) => {
   const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -445,7 +451,9 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
                 payload: { role: selectedRole, first_name: trimmedFirstName },
               });
             }
-          } catch {}
+          } catch {
+            /* best-effort: fall through to the verify-email path below */
+          }
 
           if (hasSession) {
             toast({
@@ -524,27 +532,67 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.35 }}
-        className="space-y-6"
+        className="space-y-5 sm:space-y-6"
       >
         {/* Brand + back link */}
-        <div className="flex items-center justify-between">
-          <button type="button" onClick={() => navigate('/')} aria-label="Vendibook home">
-            <img src={vendibookLogo} alt="Vendibook" className="h-9 w-auto" />
+        <div className="flex items-center justify-between gap-3">
+          <button
+            type="button"
+            onClick={() => navigate('/')}
+            aria-label="Vendibook home"
+            className={`rounded-lg ${hideLogoOnDesktop ? 'lg:invisible' : ''}`}
+          >
+            <img
+              src="/brand/vendibook-logo-email.png"
+              alt="Vendibook"
+              className="h-8 w-auto sm:h-9"
+              width={121}
+              height={36}
+            />
           </button>
           <button
             type="button"
             onClick={() => navigate('/')}
-            className="inline-flex items-center gap-1.5 rounded-xl px-2 py-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+            className="inline-flex items-center gap-1.5 rounded-full border border-transparent px-3 py-1.5 text-sm font-medium text-muted-foreground transition-colors hover:border-border hover:bg-card hover:text-foreground"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to home
           </button>
         </div>
 
-        <div className="rounded-3xl border border-border bg-card p-6 shadow-sm sm:p-8">
+        <div className="rounded-[1.75rem] border border-border/80 bg-card p-5 shadow-[0_1px_2px_rgba(28,20,16,0.04),0_24px_60px_-30px_rgba(28,20,16,0.28)] sm:p-8">
+          {/* Sign in / Create account switch — same handler as the footer link. */}
+          {(mode === 'signin' || mode === 'signup') && (
+            <div
+              role="tablist"
+              aria-label="Choose sign in or create account"
+              className="mb-6 grid grid-cols-2 gap-1 rounded-2xl bg-muted p-1"
+            >
+              {(['signin', 'signup'] as const).map((m) => {
+                const active = mode === m;
+                return (
+                  <button
+                    key={m}
+                    type="button"
+                    role="tab"
+                    aria-selected={active}
+                    onClick={() => { if (!active) { setMode(m); setErrors({}); } }}
+                    className={`h-10 rounded-xl text-sm font-semibold transition-all ${
+                      active
+                        ? 'bg-card text-foreground shadow-[0_1px_3px_rgba(28,20,16,0.12)]'
+                        : 'text-muted-foreground hover:text-foreground'
+                    }`}
+                  >
+                    {m === 'signin' ? 'Sign in' : 'Create account'}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
           {/* Header — one H1 per state */}
           <div className="mb-6">
-            <h1 className="text-[1.75rem] font-semibold leading-tight tracking-tight text-foreground sm:text-3xl">
+            <h1 className="text-[1.65rem] font-bold leading-tight tracking-[-0.02em] text-foreground sm:text-[1.9rem]">
               {headline}
             </h1>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{supportingCopy}</p>
@@ -553,7 +601,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
 
           {mode === 'verify' ? (
             <div className="space-y-6">
-              <div className="flex flex-col items-center text-center p-6 rounded-2xl bg-primary/5 border border-primary/10">
+              <div className="flex flex-col items-center rounded-2xl border border-primary/15 bg-primary/[0.06] p-6 text-center">
                 <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
                   <Mail className="h-8 w-8 text-primary" />
                 </div>
@@ -563,14 +611,14 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
               </div>
               
               <div className="space-y-2">
-                <Label htmlFor="email">Email we sent the link to</Label>
+                <Label htmlFor="email" className={LABEL_CLASS}>Email we sent the link to</Label>
                 <Input
                   id="email"
                   type="email"
                   placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className={errors.email ? 'border-destructive' : ''}
+                  className={`${FIELD_CLASS} ${errors.email ? 'border-destructive' : ''}`}
                 />
                 {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
                 <p className="text-xs text-muted-foreground">
@@ -581,7 +629,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
               <Button 
                 type="button"
                 variant="cta"
-                className="w-full rounded-xl h-12"
+                className="h-12 w-full text-base"
                 disabled={resendingEmail}
                 onClick={handleResendVerification}
               >
@@ -608,7 +656,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
                   <Button
                     type="button"
                     variant="outline"
-                    className="relative h-12 w-full rounded-2xl border border-border bg-card text-foreground hover:bg-muted hover:border-border"
+                    className="relative h-12 w-full rounded-xl border border-foreground/15 bg-card text-[0.95rem] font-semibold text-foreground shadow-[0_1px_2px_rgba(28,20,16,0.05)] hover:border-foreground/30 hover:bg-muted/60"
                     onClick={handleGoogleSignIn}
                     disabled={isGoogleLoading || isSubmitting}
                   >
@@ -632,8 +680,8 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
 
                   <div className="relative">
                     <Separator />
-                    <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 bg-card px-3 text-xs text-muted-foreground">
-                      or continue with email
+                    <span className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 whitespace-nowrap bg-card px-3 text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground/80">
+                      or use email
                     </span>
                   </div>
                 </>
@@ -642,7 +690,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
               {mode === 'signup' && (
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-2">
-                    <Label htmlFor="firstName" className="text-sm font-medium text-foreground">
+                    <Label htmlFor="firstName" className={LABEL_CLASS}>
                       Legal first name
                     </Label>
                     <Input
@@ -651,14 +699,14 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
                       autoComplete="given-name"
                       value={firstName}
                       onChange={(e) => setFirstName(e.target.value)}
-                      className={`h-12 rounded-2xl text-base ${errors.firstName ? 'border-destructive' : ''}`}
+                      className={`${FIELD_CLASS} ${errors.firstName ? 'border-destructive' : ''}`}
                       aria-invalid={!!errors.firstName}
                       required
                     />
                     {errors.firstName && <p className="text-sm text-destructive">{errors.firstName}</p>}
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="lastName" className="text-sm font-medium text-foreground">
+                    <Label htmlFor="lastName" className={LABEL_CLASS}>
                       Legal last name
                     </Label>
                     <Input
@@ -667,7 +715,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
                       autoComplete="family-name"
                       value={lastName}
                       onChange={(e) => setLastName(e.target.value)}
-                      className={`h-12 rounded-2xl text-base ${errors.lastName ? 'border-destructive' : ''}`}
+                      className={`${FIELD_CLASS} ${errors.lastName ? 'border-destructive' : ''}`}
                       aria-invalid={!!errors.lastName}
                       required
                     />
@@ -677,7 +725,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-sm font-medium text-foreground">
+                <Label htmlFor="email" className={LABEL_CLASS}>
                   Email
                 </Label>
                 <Input
@@ -688,7 +736,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
                   placeholder="you@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className={`h-12 rounded-2xl text-base ${errors.email ? 'border-destructive' : ''}`}
+                  className={`${FIELD_CLASS} ${errors.email ? 'border-destructive' : ''}`}
                   aria-invalid={!!errors.email}
                 />
                 {errors.email && <p className="text-sm text-destructive">{errors.email}</p>}
@@ -697,14 +745,14 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
               {mode !== 'forgot' && (
                 <div className="space-y-2">
                   <div className="flex items-center justify-between gap-3">
-                    <Label htmlFor="password" className="text-sm font-medium text-foreground">
+                    <Label htmlFor="password" className={LABEL_CLASS}>
                       Password
                     </Label>
                     {mode === 'signin' && (
                       <button
                         type="button"
                         onClick={() => { setMode('forgot'); setErrors({}); }}
-                        className="rounded-lg py-1 text-sm text-muted-foreground underline underline-offset-4 transition-colors hover:text-foreground"
+                        className="rounded-lg py-1 text-sm font-medium text-primary transition-colors hover:underline hover:underline-offset-4"
                       >
                         Forgot password?
                       </button>
@@ -718,7 +766,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
                       placeholder="••••••••"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      className={`h-12 rounded-2xl pr-11 text-base ${errors.password ? 'border-destructive' : ''}`}
+                      className={`${FIELD_CLASS} pr-11 ${errors.password ? 'border-destructive' : ''}`}
                       aria-invalid={!!errors.password}
                     />
                     <button
@@ -761,7 +809,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
                   {/* Signal only — never a locked role. Every account can buy,
                       sell, rent and host without changing this later. */}
                   <div>
-                    <Label className="text-sm font-medium text-foreground">
+                    <Label className={LABEL_CLASS}>
                       What brings you here?
                     </Label>
                     <p className="mt-1 text-xs text-muted-foreground">
@@ -773,10 +821,10 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
                       type="button"
                       aria-pressed={selectedRole === 'shopper'}
                       onClick={() => setSelectedRole('shopper')}
-                      className={`rounded-2xl border p-4 text-center transition-all ${
+                      className={`rounded-xl border p-3.5 text-center transition-all ${
                         selectedRole === 'shopper'
-                          ? 'border-primary bg-primary/5'
-                          : 'border-border bg-card hover:border-foreground/20'
+                          ? 'border-primary bg-primary/[0.06] ring-4 ring-primary/10'
+                          : 'border-foreground/15 bg-card hover:border-foreground/30'
                       }`}
                     >
                       <Store className={`mx-auto mb-2 h-5 w-5 ${selectedRole === 'shopper' ? 'text-primary' : 'text-muted-foreground'}`} />
@@ -786,10 +834,10 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
                       type="button"
                       aria-pressed={selectedRole === 'host'}
                       onClick={() => setSelectedRole('host')}
-                      className={`rounded-2xl border p-4 text-center transition-all ${
+                      className={`rounded-xl border p-3.5 text-center transition-all ${
                         selectedRole === 'host'
-                          ? 'border-primary bg-primary/5'
-                          : 'border-border bg-card hover:border-foreground/20'
+                          ? 'border-primary bg-primary/[0.06] ring-4 ring-primary/10'
+                          : 'border-foreground/15 bg-card hover:border-foreground/30'
                       }`}
                     >
                       <Truck className={`mx-auto mb-2 h-5 w-5 ${selectedRole === 'host' ? 'text-primary' : 'text-muted-foreground'}`} />
@@ -800,7 +848,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
               )}
 
               {mode === 'signup' && (
-                <div className="space-y-3 rounded-2xl border border-border bg-muted/40 p-4">
+                <div className="space-y-3 rounded-xl border border-border bg-muted/50 p-3.5 sm:p-4">
                   <label className="flex cursor-pointer items-start gap-3">
                     <Checkbox
                       checked={agreedToTerms}
@@ -874,7 +922,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
               <Button
                 type="submit"
                 variant="cta"
-                className="h-12 w-full"
+                className="h-[3.25rem] w-full text-base"
                 disabled={isSubmitting}
               >
                 {isSubmitting && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
@@ -947,7 +995,7 @@ export const AuthFormPanel = ({ mode, setMode }: AuthFormPanelProps) => {
 
         {/* Single, factual reassurance line — no stats, logos, or upsells. */}
         {(mode === 'signin' || mode === 'signup') && (
-          <p className="px-2 text-center text-sm leading-relaxed text-muted-foreground">
+          <p className={`px-2 text-center text-sm leading-relaxed text-muted-foreground ${hideLogoOnDesktop ? 'lg:hidden' : ''}`}>
             One account for buying, selling, renting, hosting, and managing your Vendibook activity.
           </p>
         )}

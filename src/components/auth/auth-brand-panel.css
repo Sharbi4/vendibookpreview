@@ -1,0 +1,48 @@
+/* Desktop brand panel for /auth — food-truck photo under a charcoal
+   overlay with a warm orange edge. The photo is only requested at lg+,
+   since the panel is display:none below that. */
+
+/* Full-height column behind the sticky panel, so a long signup form never
+   reveals a gap below it. */
+.auth-brand-panel__base {
+  background: #140f0d;
+}
+
+.auth-brand-panel {
+  background-color: #140f0d;
+  color: #fff;
+}
+
+@media (min-width: 1024px) {
+  .auth-brand-panel__photo {
+    background-image: url('../../assets/auth-panel-food-truck.jpg');
+    background-size: cover;
+    background-position: 40% 50%;
+  }
+}
+
+.auth-brand-panel__overlay {
+  background:
+    linear-gradient(0deg, rgba(14, 10, 8, 0.97) 0%, rgba(14, 10, 8, 0.86) 40%, rgba(14, 10, 8, 0.5) 74%, rgba(14, 10, 8, 0.72) 100%),
+    linear-gradient(90deg, rgba(14, 10, 8, 0.5) 0%, rgba(14, 10, 8, 0) 70%);
+}
+
+/* Thin orange rule down the seam between panel and form. */
+.auth-brand-panel__edge {
+  background: linear-gradient(180deg, #ff4b1f 0%, #ff7a22 100%);
+}
+
+.auth-brand-panel__logo-tile {
+  background: #fff;
+  box-shadow: 0 16px 36px -16px rgba(0, 0, 0, 0.65);
+}
+
+.auth-brand-panel__icon {
+  background: #ff5124;
+  color: #fff;
+  box-shadow: 0 8px 20px -8px rgba(255, 81, 36, 0.7);
+}
+
+.auth-brand-panel__divider {
+  background: rgba(255, 255, 255, 0.14);
+}

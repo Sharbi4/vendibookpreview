@@ -6,6 +6,7 @@ import { usePageTracking } from '@/hooks/usePageTracking';
 import { Loader2 } from 'lucide-react';
 import SEO from '@/components/SEO';
 import { AuthFormPanel } from '@/components/auth/AuthFormPanel';
+import { AuthBrandPanel } from '@/components/auth/AuthBrandPanel';
 
 import { supabase } from '@/integrations/supabase/client';
 
@@ -108,9 +109,14 @@ const Auth = () => {
         canonical="/auth"
         noindex
       />
-      {/* Calm centered auth shell — modest brand presence, no marketing hero. */}
-      <div className="mx-auto flex w-full max-w-[27rem] flex-col px-5 py-10 sm:px-6 sm:py-14">
-        <AuthFormPanel mode={mode} setMode={setMode} />
+      {/* Split shell: brand panel on desktop, form-only on mobile. */}
+      <div className="lg:grid lg:min-h-screen lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
+        <AuthBrandPanel mode={mode} />
+        <main className="flex min-w-0 justify-center px-4 py-6 sm:px-6 sm:py-12 lg:items-center lg:px-10 lg:py-12">
+          <div className="w-full max-w-[28rem]">
+            <AuthFormPanel mode={mode} setMode={setMode} hideLogoOnDesktop />
+          </div>
+        </main>
       </div>
     </div>
   );
