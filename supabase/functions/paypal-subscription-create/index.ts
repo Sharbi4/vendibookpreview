@@ -148,7 +148,7 @@ serve(async (req) => {
     // Only send PayPal back to Vendibook's own sites, and only to same-site paths.
     const ALLOWED_ORIGINS = new Set(["https://vendibook.com", "https://www.vendibook.com", "https://vendibook.lovable.app"]);
     const rawOrigin = req.headers.get("origin") ?? "";
-    const origin = ALLOWED_ORIGINS.has(rawOrigin) || /^https:\/\/[a-z0-9-]+\.lovable\.app$/.test(rawOrigin)
+    const origin = ALLOWED_ORIGINS.has(rawOrigin) || /^https:\/\/([a-z0-9-]+--)?f4d8586e-de66-4307-b052-b071b734f592\.(lovable\.app|lovableproject\.com)$/.test(rawOrigin)
       ? rawOrigin
       : "https://vendibook.com";
     const safePath = (p: unknown, fallback: string) =>
