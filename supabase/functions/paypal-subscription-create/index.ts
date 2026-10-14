@@ -145,9 +145,16 @@ serve(async (req) => {
       (typeof (product.metadata as Record<string, unknown> | null)?.grants_tier === "string"
         ? String((product.metadata as Record<string, unknown>).grants_tier)
         : product.slug);
-    const origin = req.headers.get("origin") ?? "https://vendibook.com";
-    const returnUrl = `${origin}${body.return_path ?? "/account/subscription?subscribed=1"}`;
-    const cancelUrl = `${origin}${body.cancel_path ?? "/pricing?cancelled=1"}`;
+    // Only send PayPal back to Vendibook's own sites, and only to same-site paths.
+    const ALLOWED_ORIGINS = new Set(["https://vendibook.com", "https://www.vendibook.com", "https://vendibook.lovable.app"]);
+    const rawOrigin = req.headers.get("origin") ?? "";
+    const origin = ALLOWED_ORIGINS.has(rawOrigin) || /^https:\/\/[a-z0-9-]+\.lovable\.app$/.test(rawOrigin)
+      ? rawOrigin
+      : "https://vendibook.com";
+    const safePath = (p: unknown, fallback: string) =>
+      typeof p === "string" && /^\/(?![\/\\])[A-Za-z0-9\-._~\/?=&%]*$/.test(p) && p.length <= 200 ? p : fallback;
+    const returnUrl = `${origin}${safePath(body.return_path, "/account/subscription?subscribed=1")}`;
+    const cancelUrl = `${origin}${safePath(body.cancel_path, "/pricing?cancelled=1")}`;
 
     const { data: profile } = await admin.from("profiles")
       .select("full_name").eq("id", user.id).maybeSingle();
