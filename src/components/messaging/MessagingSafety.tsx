@@ -5,7 +5,12 @@ import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/compone
 import { messagingRpc, messageSendError } from '@/lib/messageSafety';
 import './messaging.css';
 
-export default function MessagingSafety({ kind, thread }: { kind: 'conversation' | 'booking'; thread: string }) {
+/**
+ * Safety notice with Report / Block for a message thread.
+ * `compact` (opt-in, used by the dashboard inbox) shows the key line and the
+ * two actions in one short strip; the default layout is unchanged.
+ */
+export default function MessagingSafety({ kind, thread, compact = false }: { kind: 'conversation' | 'booking'; thread: string; compact?: boolean }) {
   const [blocked, setBlocked] = useState(false);
   const [staff, setStaff] = useState(false);
   const [ready, setReady] = useState(false);
@@ -42,9 +47,11 @@ export default function MessagingSafety({ kind, thread }: { kind: 'conversation'
     } catch (error) { setNotice(messageSendError(error)); }
     finally { setBusy(false); }
   }
-  return <aside className="message-safety" aria-label="Conversation safety">
+  return <aside className={compact ? 'message-safety is-compact' : 'message-safety'} aria-label="Conversation safety">
     {staff && <strong className="message-staff"><ShieldCheck size={16} /> Verified Vendibook staff</strong>}
-    <p><strong>Keep your account safe.</strong> Vendibook staff never ask for passwords, verification codes, or card details in chat. Open payment and account settings directly from your dashboard. Report suspicious messages—we investigate and remove impersonators.</p>
+    {compact
+      ? <p><strong>Keep your account safe.</strong> Vendibook staff never ask for passwords, codes or card details in chat. Report anything suspicious.</p>
+      : <p><strong>Keep your account safe.</strong> Vendibook staff never ask for passwords, verification codes, or card details in chat. Open payment and account settings directly from your dashboard. Report suspicious messages—we investigate and remove impersonators.</p>}
     <div className="flex flex-wrap gap-2 mt-2">
       <Button type="button" variant="outline" size="sm" disabled={!ready || busy} onClick={() => { setNotice(''); setOpen(true); }}><Flag size={14} className="mr-1" />Report</Button>
       <Button type="button" variant="outline" size="sm" disabled={!ready || busy} onClick={toggleBlock}><Ban size={14} className="mr-1" />{blocked ? 'Unblock member' : 'Block member'}</Button>

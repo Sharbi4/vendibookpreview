@@ -32,7 +32,7 @@ export default function UnavailableConversation({ conversationId }: { conversati
     },
   });
   const copy = removalCopy(notice.data);
-  return <section role="status" className="flex flex-col items-center justify-center gap-4 rounded-2xl bg-[#faf7f2] px-6 py-14 text-center text-[#29241f]">
+  return <section role="status" className="message-unavailable flex flex-col items-center justify-center gap-4 rounded-2xl bg-[#faf7f2] px-6 py-14 text-center text-[#29241f]">
     <ShieldAlert className="h-9 w-9 text-[#a94719]" aria-hidden="true" />
     {notice.isLoading && user ? <p>Checking message status…</p> : <>
       <h3 className="text-xl font-semibold">{copy.title}</h3>

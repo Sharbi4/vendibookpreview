@@ -38,6 +38,8 @@ import MeetupRequestButton from './MeetupRequestButton';
 
 interface ConversationThreadProps {
   conversationId: string;
+  /** Short one-strip safety notice (dashboard inbox). Defaults to the full notice. */
+  compactSafety?: boolean;
 }
 
 const formatFileSize = (bytes: number): string => {
@@ -199,7 +201,7 @@ const ALLOWED_TYPES = [
   'text/plain',
 ];
 
-const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
+const ConversationThread = ({ conversationId, compactSafety = false }: ConversationThreadProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const {
@@ -401,7 +403,7 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
         </div>
       </div>
 
-      <MessagingSafety kind="conversation" thread={conversationId} />
+      <MessagingSafety kind="conversation" thread={conversationId} compact={compactSafety} />
 
       {/* Messages */}
       <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6" ref={scrollRef}>

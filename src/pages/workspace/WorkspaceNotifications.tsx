@@ -205,7 +205,7 @@ export default function WorkspaceNotifications() {
                                 </span>
                               </span>
                               {target.kind !== 'none' && (
-                                <ChevronRight aria-hidden="true" className="mt-0.5 h-4 w-4 shrink-0 text-[#B5AEA4] transition-colors group-hover:text-[#1C1B1A]" />
+                                <ChevronRight aria-hidden="true" className="mt-0.5 hidden h-4 w-4 shrink-0 text-[#1C1B1A] opacity-0 transition-opacity group-hover:opacity-100 sm:block" />
                               )}
                             </button>
                             <div className="shrink-0 py-3 pr-3 sm:pr-4">

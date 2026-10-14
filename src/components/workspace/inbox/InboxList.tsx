@@ -194,10 +194,23 @@ export function InboxList({ conversations, isLoading, isError, onRetry, activeId
                     )}
                   >
                     {active && <span aria-hidden="true" className="absolute inset-y-2 left-0 w-[3px] rounded-r-full bg-[#1C1B1A]" />}
-                    <Avatar className="mt-0.5 h-10 w-10 shrink-0">
-                      <AvatarImage src={other?.avatar_url || undefined} alt="" />
-                      <AvatarFallback className="bg-[#EFE9E1] text-[13px] font-semibold text-[#5E5953]">{name.charAt(0).toUpperCase()}</AvatarFallback>
-                    </Avatar>
+                    {/* Listing photo with the member's avatar tucked in the corner; avatar alone when there's no photo. */}
+                    <span className="relative mt-0.5 h-11 w-11 shrink-0">
+                      {c.listing?.cover_image_url ? (
+                        <>
+                          <img src={c.listing.cover_image_url} alt="" loading="lazy" className="h-11 w-11 rounded-[12px] object-cover ring-1 ring-black/5" />
+                          <Avatar className="absolute -bottom-1 -right-1 h-6 w-6 ring-2 ring-white">
+                            <AvatarImage src={other?.avatar_url || undefined} alt="" />
+                            <AvatarFallback className="bg-[#EFE9E1] text-[10px] font-semibold text-[#5E5953]">{name.charAt(0).toUpperCase()}</AvatarFallback>
+                          </Avatar>
+                        </>
+                      ) : (
+                        <Avatar className="h-11 w-11">
+                          <AvatarImage src={other?.avatar_url || undefined} alt="" />
+                          <AvatarFallback className="bg-[#EFE9E1] text-[13px] font-semibold text-[#5E5953]">{name.charAt(0).toUpperCase()}</AvatarFallback>
+                        </Avatar>
+                      )}
+                    </span>
                     <span className="min-w-0 flex-1">
                       <span className="flex items-baseline justify-between gap-3">
                         <span className={cn('truncate text-[14px] leading-5 text-[#1C1B1A]', unread > 0 ? 'font-bold' : 'font-medium')}>{name}</span>
@@ -205,7 +218,10 @@ export function InboxList({ conversations, isLoading, isError, onRetry, activeId
                           {inboxStamp(at)}
                         </span>
                       </span>
-                      {c.listing?.title && <span className="block truncate text-[12.5px] leading-5 text-[#8A847B]">{c.listing.title}</span>}
+                      <span className="block truncate text-[12.5px] leading-5 text-[#8A847B]">
+                        <span className="font-medium text-[#6F6961]">{userId === c.host_id ? 'Your listing' : 'Their listing'}</span>
+                        {c.listing?.title && <> · {c.listing.title}</>}
+                      </span>
                       <span className="mt-0.5 flex items-center gap-2">
                         <span className={cn('min-w-0 flex-1 truncate text-[13px] leading-5', unread > 0 ? 'font-semibold text-[#1C1B1A]' : 'text-[#5E5953]')}>{preview}</span>
                         {unread > 0 && (

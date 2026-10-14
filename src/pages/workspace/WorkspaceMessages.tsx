@@ -14,8 +14,6 @@ import { cn } from '@/lib/utils';
 import '@/components/workspace/inbox/inbox.css';
 import '@/components/messaging/messaging.css';
 
-const plural = (n: number, one: string, many = `${one}s`) => `${n} ${n === 1 ? one : many}`;
-
 export default function WorkspaceMessages() {
   const { conversationId } = useParams<{ conversationId?: string }>();
   const [params] = useSearchParams();
@@ -74,13 +72,15 @@ export default function WorkspaceMessages() {
   const description = inbox.isLoading
     ? 'Conversations with buyers, renters, hosts and sellers.'
     : unreadThreads > 0
-      ? `${plural(unreadThreads, 'conversation')} waiting on a reply.`
+      ? unreadThreads === inbox.conversations.length
+        ? `${unreadThreads === 1 ? 'Your conversation has' : `All ${unreadThreads} conversations have`} unread messages.`
+        : `${unreadThreads} of your ${inbox.conversations.length} conversations ${unreadThreads === 1 ? 'has' : 'have'} unread messages.`
       : inbox.conversations.length > 0
         ? 'You’re all caught up. Conversations with buyers, renters, hosts and sellers.'
         : 'Conversations with buyers, renters, hosts and sellers.';
 
   const threadPane = conversationId ? (
-    <ConversationThread conversationId={conversationId} />
+    <ConversationThread conversationId={conversationId} compactSafety />
   ) : (
     <div className="flex h-full flex-col items-center justify-center px-8 py-16 text-center">
       <p className="text-[17px] font-semibold tracking-[-0.01em] text-[#1C1B1A]">
@@ -91,6 +91,14 @@ export default function WorkspaceMessages() {
           ? 'Pick a conversation on the left to read the thread and reply.'
           : 'Messages about your listings, offers and bookings will open here.'}
       </p>
+      <div className="mt-6 flex flex-wrap items-center justify-center gap-x-6 gap-y-2 border-t border-[#ECE6DD] pt-5">
+        <Link to="/dashboard/offers" className={ws.actionLink}>
+          Review offers <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
+        </Link>
+        <Link to="/dashboard/notifications/settings" className={ws.actionLink}>
+          Message alerts <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" />
+        </Link>
+      </div>
     </div>
   );
 

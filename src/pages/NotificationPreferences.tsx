@@ -1,6 +1,7 @@
 import { Capacitor } from '@capacitor/core';
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
@@ -133,6 +134,7 @@ const TestPushButton = ({ userId }: { userId: string }) => {
 
 const NotificationPreferences = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const { user, isLoading: authLoading } = useAuth();
   const { preferences, isLoading, updatePreferences, isUpdating } = useNotificationPreferences(user?.id);
   const [soundEnabled, setSoundEnabled] = useState(() => getStoredSoundPreference());
@@ -178,7 +180,7 @@ const NotificationPreferences = () => {
     );
   }
 
-  if (!user || !preferences) {
+  if (!user) {
     return null;
   }
 
@@ -202,7 +204,7 @@ const NotificationPreferences = () => {
     { label: 'Sales', description: 'Updates about your sale transactions.', key: 'sale' },
     { label: 'Disputes', description: 'When a dispute is raised or resolved.', key: 'dispute' },
   ];
-  const prefs = preferences as unknown as Record<string, boolean>;
+  const prefs = (preferences ?? {}) as unknown as Record<string, boolean>;
 
   return (
     <WorkspaceShell>
@@ -220,31 +222,47 @@ const NotificationPreferences = () => {
             }
           />
 
-          <Panel
-            title="What you hear about"
-            description={isUpdating ? 'Saving…' : 'Changes save as you go.'}
-            flush
-          >
-            <div className="hidden items-center border-b border-[#ECE6DD] px-6 py-2.5 sm:flex">
-              <span className="flex-1" />
-              <span className={cn(ws.eyebrow, 'w-20 text-center')}>Email</span>
-              <span className={cn(ws.eyebrow, 'w-20 text-center')}>In-app</span>
-            </div>
-            <ul className="divide-y divide-[#F1ECE5]">
-              {rows.map((r) => (
-                <PreferenceRow
-                  key={r.key}
-                  label={r.label}
-                  description={r.description}
-                  emailChecked={!!prefs[`${r.key}_email`]}
-                  inappChecked={!!prefs[`${r.key}_inapp`]}
-                  onEmailChange={(checked) => handlePreferenceChange(`${r.key}_email`, checked)}
-                  onInappChange={(checked) => handlePreferenceChange(`${r.key}_inapp`, checked)}
-                  disabled={isUpdating}
-                />
-              ))}
-            </ul>
-          </Panel>
+          {preferences ? (
+            <Panel
+              title="What you hear about"
+              description={isUpdating ? 'Saving…' : 'Changes save as you go.'}
+              flush
+            >
+              <div className="hidden items-center border-b border-[#ECE6DD] px-6 py-2.5 sm:flex">
+                <span className="flex-1" />
+                <span className={cn(ws.eyebrow, 'w-20 text-center')}>Email</span>
+                <span className={cn(ws.eyebrow, 'w-20 text-center')}>In-app</span>
+              </div>
+              <ul className="divide-y divide-[#F1ECE5]">
+                {rows.map((r) => (
+                  <PreferenceRow
+                    key={r.key}
+                    label={r.label}
+                    description={r.description}
+                    emailChecked={!!prefs[`${r.key}_email`]}
+                    inappChecked={!!prefs[`${r.key}_inapp`]}
+                    onEmailChange={(checked) => handlePreferenceChange(`${r.key}_email`, checked)}
+                    onInappChange={(checked) => handlePreferenceChange(`${r.key}_inapp`, checked)}
+                    disabled={isUpdating}
+                  />
+                ))}
+              </ul>
+            </Panel>
+          ) : (
+            <Panel title="What you hear about">
+              <div role="alert">
+                <p className="text-[14px] font-semibold text-[#1C1B1A]">Your email and in-app settings didn’t load.</p>
+                <p className="mt-1 text-[13px] leading-5 text-[#6F6961]">Nothing has changed. Check your connection and try again.</p>
+                <button
+                  type="button"
+                  className={cn(ws.secondary, 'mt-4')}
+                  onClick={() => void queryClient.invalidateQueries({ queryKey: ['notification-preferences', user.id] })}
+                >
+                  Try again
+                </button>
+              </div>
+            </Panel>
+          )}
 
           <Panel title="On this device" description="Sound and push alerts for this browser or phone." flush>
             <div className="divide-y divide-[#F1ECE5]">
