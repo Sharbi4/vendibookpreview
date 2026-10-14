@@ -137,29 +137,29 @@ const MessageBubble = ({
   const hasTextContent = message.message && message.message !== 'Sent an attachment';
   
   return (
-    <div className={cn('flex gap-2 mb-4 group', isOwn ? 'flex-row-reverse' : 'flex-row')}>
+    <div className={cn('group mb-3 flex gap-2', isOwn ? 'flex-row-reverse' : 'flex-row')}>
       {!isOwn && (
-        <Avatar className="h-8 w-8 flex-shrink-0">
+        <Avatar className="mt-0.5 h-8 w-8 flex-shrink-0">
           <AvatarImage src={senderAvatar || undefined} alt={senderName} />
-          <AvatarFallback className="text-xs">
+          <AvatarFallback className="bg-[#EFE9E1] text-xs font-semibold text-[#5E5953]">
             {senderName.charAt(0).toUpperCase()}
           </AvatarFallback>
         </Avatar>
       )}
       
-      <div className={cn('max-w-[75%]', isOwn && 'text-right')}>
+      <div className={cn('max-w-[80%] sm:max-w-[72%]', isOwn && 'text-right')}>
         <div className="relative">
           <div className={cn('flex items-center gap-1', isOwn ? 'flex-row-reverse' : 'flex-row')}>
             <div
               className={cn(
-                'message-bubble px-4 py-2 rounded-2xl inline-block text-left',
+                'message-bubble inline-block rounded-[18px] px-3.5 py-2.5 text-left',
                 isOwn 
                   ? 'is-own rounded-br-sm' 
                   : 'rounded-bl-sm'
               )}
             >
               {hasTextContent && (
-                <p className="text-sm whitespace-pre-wrap break-words">{message.message}</p>
+                <p className="whitespace-pre-wrap break-words text-[14px] leading-[1.45]">{message.message}</p>
               )}
               <AttachmentPreview message={message} isOwn={isOwn} />
             </div>
@@ -177,8 +177,8 @@ const MessageBubble = ({
             onToggleReaction={onToggleReaction}
           />
         </div>
-        <div className={cn('flex items-center gap-2 mt-1 px-1', isOwn ? 'justify-end' : 'justify-start')}>
-          <p className="text-xs text-muted-foreground">
+        <div className={cn('mt-1 flex items-center gap-2 px-1', isOwn ? 'justify-end' : 'justify-start')}>
+          <p className="text-[11.5px] tabular-nums text-muted-foreground" title={format(new Date(message.created_at), 'MMM d, yyyy h:mm a')}>
             {format(new Date(message.created_at), 'h:mm a')}
           </p>
           <ReadReceipt message={message} isOwn={isOwn} isLastOwnMessage={isLastOwnMessage} />
@@ -348,8 +348,8 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center h-full">
-        <Loader2 className="h-6 w-6 animate-spin text-primary" />
+      <div className="message-thread flex h-full items-center justify-center" role="status" aria-label="Loading conversation">
+        <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
       </div>
     );
   }
@@ -357,51 +357,63 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
   const otherPartyName = getCounterpartyName(otherParty, 'Vendibook member');
 
   return (
-    <div className="message-thread flex flex-col h-full">
+    <div className="message-thread flex h-full min-h-0 flex-col">
       {/* Header */}
-      <div className="flex items-center gap-3 p-4 border-b border-border bg-background">
-        <Button variant="ghost" size="icon" asChild className="md:hidden">
-          <Link to="/dashboard/messages">
+      <div className="flex items-center gap-3 border-b border-[#ECE6DD] bg-background px-3 py-3 sm:px-5">
+        <Button variant="ghost" size="icon" asChild className="-ml-1 h-10 w-10 shrink-0 rounded-full md:hidden">
+          <Link to="/dashboard/messages" aria-label="Back to all conversations">
             <ArrowLeft className="h-5 w-5" />
           </Link>
         </Button>
 
-        <Avatar className="h-10 w-10">
+        <Avatar className="h-10 w-10 shrink-0">
           <AvatarImage src={otherParty?.avatar_url || undefined} alt={otherPartyName} />
-          <AvatarFallback>{otherPartyName.charAt(0).toUpperCase()}</AvatarFallback>
+          <AvatarFallback className="bg-[#EFE9E1] text-[13px] font-semibold text-[#5E5953]">{otherPartyName.charAt(0).toUpperCase()}</AvatarFallback>
         </Avatar>
 
-        <div className="flex-1 min-w-0">
-          <h2 className="font-semibold text-foreground truncate">{otherPartyName}</h2>
+        <div className="min-w-0 flex-1">
+          <h2 className="truncate text-[15px] font-semibold leading-5 text-foreground">{otherPartyName}</h2>
           {conversation?.listing && (
-            <p className="text-xs text-primary truncate">{conversation.listing.title}</p>
+            conversation.listing_id ? (
+              <Link
+                to={`/listing/${conversation.listing_id}`}
+                className="block truncate text-[12.5px] leading-5 text-muted-foreground underline-offset-4 hover:text-foreground hover:underline"
+              >
+                {conversation.listing.title}
+              </Link>
+            ) : (
+              <p className="truncate text-[12.5px] leading-5 text-muted-foreground">{conversation.listing.title}</p>
+            )
           )}
         </div>
-        {!isHost && (
-          <MeetupRequestButton
-            compact
-            disabled={isSending}
-            onSubmit={async (text) => {
-              const result = await sendMessage(text);
-              return result;
-            }}
-          />
-        )}
-        <WalkthroughCta listingId={conversation?.listing_id} conversationId={conversationId} compact />
+        <div className="flex shrink-0 items-center gap-2">
+          {!isHost && (
+            <MeetupRequestButton
+              compact
+              disabled={isSending}
+              onSubmit={async (text) => {
+                const result = await sendMessage(text);
+                return result;
+              }}
+            />
+          )}
+          <WalkthroughCta listingId={conversation?.listing_id} conversationId={conversationId} compact />
+        </div>
       </div>
 
       <MessagingSafety kind="conversation" thread={conversationId} />
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4" ref={scrollRef}>
+      <div className="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6" ref={scrollRef}>
         {messages.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center py-8">
-            <p className="text-muted-foreground">
-              Start your conversation with {otherPartyName}
+          <div className="flex h-full flex-col items-center justify-center py-8 text-center">
+            <p className="text-[14px] font-semibold text-foreground">No messages yet</p>
+            <p className="mt-1 text-[13px] text-muted-foreground">
+              Start your conversation with {otherPartyName}.
             </p>
           </div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-1">
             {messages.map((message, index) => {
               const isOwn = message.sender_id === user?.id;
               const currentDate = format(new Date(message.created_at), 'MMM d, yyyy');
@@ -413,10 +425,12 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
               return (
                 <div key={message.id}>
                   {showDateDivider && (
-                    <div className="flex items-center justify-center my-4">
-                      <span className="text-xs text-muted-foreground bg-muted px-3 py-1 rounded-full">
-                        {currentDate}
+                    <div className="my-5 flex items-center gap-3" role="separator" aria-label={currentDate}>
+                      <span className="h-px flex-1 bg-[#ECE6DD]" aria-hidden="true" />
+                      <span className="text-[11.5px] font-semibold tracking-[0.02em] text-muted-foreground">
+                        {format(new Date(message.created_at), 'EEE, MMM d')}
                       </span>
+                      <span className="h-px flex-1 bg-[#ECE6DD]" aria-hidden="true" />
                     </div>
                   )}
                   <MessageBubble
@@ -440,7 +454,7 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
 
       {/* PII Warning */}
       {(piiError || sendError) && (
-        <Alert variant="destructive" className="mx-4 mb-2">
+        <Alert variant="destructive" className="mx-4 mb-2 w-auto sm:mx-6">
           <AlertTriangle className="h-4 w-4" />
           <AlertDescription className="text-sm">{piiError || sendError}</AlertDescription>
         </Alert>
@@ -457,21 +471,21 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
 
       {/* Attachment Preview */}
       {attachment && (
-        <div className="mx-4 mb-2 p-2 bg-muted rounded-lg border border-border">
-          <div className="flex items-center gap-2">
+        <div className="mx-4 mb-2 rounded-xl border border-[#ECE6DD] bg-muted p-2 sm:mx-6">
+          <div className="flex items-center gap-3">
             {attachment.preview ? (
               <img 
                 src={attachment.preview} 
                 alt="Preview" 
-                className="h-12 w-12 object-cover rounded"
+                className="h-12 w-12 object-cover rounded-lg"
               />
             ) : (
-              <div className="h-12 w-12 bg-primary/10 rounded flex items-center justify-center">
-                <FileText className="h-6 w-6 text-primary" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-background">
+                <FileText className="h-6 w-6 text-muted-foreground" />
               </div>
             )}
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{attachment.file.name}</p>
+              <p className="text-sm font-medium text-foreground truncate">{attachment.file.name}</p>
               <p className="text-xs text-muted-foreground">
                 {formatFileSize(attachment.file.size)}
               </p>
@@ -479,8 +493,9 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 flex-shrink-0"
+              className="h-9 w-9 flex-shrink-0 rounded-full"
               onClick={removeAttachment}
+              aria-label="Remove attachment"
             >
               <X className="h-4 w-4" />
             </Button>
@@ -489,8 +504,8 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
       )}
 
       {/* Input */}
-      <div className="p-4 border-t border-border bg-background">
-        <div className="flex gap-2">
+      <div className="border-t border-[#ECE6DD] bg-background px-3 py-3 sm:px-5">
+        <div className="flex items-end gap-2">
           <input
             ref={fileInputRef}
             type="file"
@@ -502,9 +517,11 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
           <Button
             variant="ghost"
             size="icon"
-            className="flex-shrink-0 h-11 w-11"
+            className="h-11 w-11 flex-shrink-0 rounded-full text-muted-foreground hover:text-foreground"
             onClick={() => fileInputRef.current?.click()}
             disabled={isSending}
+            aria-label="Attach a photo or file"
+            title="Attach a photo or file (10 MB max)"
           >
             <Paperclip className="h-5 w-5" />
           </Button>
@@ -514,7 +531,8 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
             value={inputValue}
             onChange={handleInputChange}
             onKeyDown={handleKeyDown}
-            placeholder="Type a message..."
+            placeholder={`Message ${otherPartyName}…`}
+            aria-label={`Message ${otherPartyName}`}
             className="message-composer min-h-[44px] max-h-32 resize-none"
             rows={1}
           />
@@ -522,7 +540,8 @@ const ConversationThread = ({ conversationId }: ConversationThreadProps) => {
             onClick={handleSend}
             disabled={(!inputValue.trim() && !attachment) || isSending || !!piiError}
             size="icon"
-            className="flex-shrink-0 h-11 w-11"
+            className="message-send h-11 w-11 flex-shrink-0 !rounded-full"
+            aria-label="Send message"
           >
             {isSending ? (
               <Loader2 className="h-4 w-4 animate-spin" />

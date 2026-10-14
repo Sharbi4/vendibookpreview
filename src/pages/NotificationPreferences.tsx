@@ -1,15 +1,14 @@
 import { Capacitor } from '@capacitor/core';
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotificationPreferences } from '@/hooks/useNotificationPreferences';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
 import WorkspaceShell from '@/components/workspace/WorkspaceShell';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Switch } from '@/components/ui/switch';
-import { Separator } from '@/components/ui/separator';
-import { Button } from '@/components/ui/button';
-import { ArrowLeft, Bell, Mail, Loader2, Smartphone, Send, Volume2, VolumeX } from 'lucide-react';
+import { PageHeader, Panel, ws } from '@/components/workspace/ui';
+import { cn } from '@/lib/utils';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { 
@@ -29,6 +28,9 @@ interface PreferenceRowProps {
   disabled?: boolean;
 }
 
+/** Ink-on-sand switch so state reads clearly on white. */
+const switchCls = 'data-[state=checked]:bg-[#1C1B1A] data-[state=unchecked]:bg-[#D9D1C5] focus-visible:ring-[#1C1B1A] [&>span]:bg-white [&>span]:shadow-[0_1px_2px_rgba(28,27,26,0.25)]';
+
 const PreferenceRow = ({
   label,
   description,
@@ -38,31 +40,44 @@ const PreferenceRow = ({
   onInappChange,
   disabled,
 }: PreferenceRowProps) => (
-  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 py-4">
-    <div className="flex-1">
-      <p className="font-medium text-foreground">{label}</p>
-      <p className="text-sm text-muted-foreground">{description}</p>
+  <li className="flex flex-col gap-3 px-5 py-4 sm:flex-row sm:items-center sm:gap-6 sm:px-6">
+    <div className="min-w-0 flex-1">
+      <p className="text-[14px] font-semibold leading-5 text-[#1C1B1A]">{label}</p>
+      <p className="mt-0.5 text-[13px] leading-5 text-[#6F6961]">{description}</p>
     </div>
-    <div className="flex items-center gap-6">
-      <div className="flex items-center gap-2">
-        <Mail className="h-4 w-4 text-muted-foreground" />
+    <div className="flex items-center gap-6 sm:gap-0">
+      <label className="flex items-center gap-2.5 sm:w-20 sm:justify-center">
+        <span className="text-[12.5px] font-medium text-[#5E5953] sm:sr-only">Email</span>
         <Switch
           checked={emailChecked}
           onCheckedChange={onEmailChange}
           disabled={disabled}
+          className={switchCls}
           aria-label={`${label} email notifications`}
         />
-      </div>
-      <div className="flex items-center gap-2">
-        <Bell className="h-4 w-4 text-muted-foreground" />
+      </label>
+      <label className="flex items-center gap-2.5 sm:w-20 sm:justify-center">
+        <span className="text-[12.5px] font-medium text-[#5E5953] sm:sr-only">In-app</span>
         <Switch
           checked={inappChecked}
           onCheckedChange={onInappChange}
           disabled={disabled}
+          className={switchCls}
           aria-label={`${label} in-app notifications`}
         />
-      </div>
+      </label>
     </div>
+  </li>
+);
+
+/** One setting with a switch, for the device section. */
+const DeviceRow = ({ title, body, children }: { title: string; body: string; children: React.ReactNode }) => (
+  <div className="flex items-center gap-4 px-5 py-4 sm:px-6">
+    <div className="min-w-0 flex-1">
+      <p className="text-[14px] font-semibold leading-5 text-[#1C1B1A]">{title}</p>
+      <p className="mt-0.5 text-[13px] leading-5 text-[#6F6961]">{body}</p>
+    </div>
+    <div className="shrink-0">{children}</div>
   </div>
 );
 
@@ -104,20 +119,15 @@ const TestPushButton = ({ userId }: { userId: string }) => {
   };
 
   return (
-    <Button
-      variant="outline"
-      size="sm"
+    <button
+      type="button"
       onClick={sendTestNotification}
       disabled={isSending}
-      className="w-full sm:w-auto"
+      className={cn(ws.secondary, 'h-9 disabled:opacity-60')}
     >
-      {isSending ? (
-        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-      ) : (
-        <Send className="h-4 w-4 mr-2" />
-      )}
-      Send Test Notification
-    </Button>
+      {isSending && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+      Send a test notification
+    </button>
   );
 };
 
@@ -154,8 +164,15 @@ const NotificationPreferences = () => {
   if (authLoading || isLoading) {
     return (
       <WorkspaceShell>
-        <div className="flex items-center justify-center py-20">
-          <Loader2 className="h-8 w-8 animate-spin" />
+        <div className={ws.page}>
+          <div className="flex flex-col gap-8" aria-busy="true">
+            <div className="space-y-3">
+              <span className={cn(ws.skeleton, 'block h-3 w-24')} />
+              <span className={cn(ws.skeleton, 'block h-8 w-72 max-w-full')} />
+            </div>
+            <div className={cn(ws.surface, 'h-80')} />
+            <span className="sr-only" role="status">Loading your notification settings</span>
+          </div>
         </div>
       </WorkspaceShell>
     );
@@ -177,180 +194,105 @@ const NotificationPreferences = () => {
     }
   };
 
+  const rows: Array<{ label: string; description: string; key: string }> = [
+    { label: 'Booking requests', description: 'When someone requests to book your listing.', key: 'booking_request' },
+    { label: 'Booking responses', description: 'When a host approves or declines your booking.', key: 'booking_response' },
+    { label: 'Messages', description: 'When you receive a new message.', key: 'message' },
+    { label: 'Documents', description: 'Updates about document uploads and reviews.', key: 'document' },
+    { label: 'Sales', description: 'Updates about your sale transactions.', key: 'sale' },
+    { label: 'Disputes', description: 'When a dispute is raised or resolved.', key: 'dispute' },
+  ];
+  const prefs = preferences as unknown as Record<string, boolean>;
+
   return (
     <WorkspaceShell>
-      <div className="v2-page-stack v2-embedded-section">
-        <Button
-          variant="ghost"
-          onClick={() => navigate('/dashboard/notifications')}
-          className="self-start -ml-2"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Notifications
-        </Button>
+      <div className={ws.page}>
+        <div className="flex max-w-3xl flex-col gap-8 sm:gap-10">
+          <PageHeader
+            eyebrow="Notifications"
+            title="Notification settings"
+            description={`Choose what reaches you and where. Email goes to ${user.email ?? 'your account email'}.`}
+            actions={
+              <Link to="/dashboard/notifications" className={ws.secondary}>
+                <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+                Notifications
+              </Link>
+            }
+          />
 
-        <div className="max-w-2xl space-y-6">
-          <div>
-            <h1 className="text-2xl font-semibold mb-2">Notification preferences</h1>
-            <p className="text-muted-foreground">
-              Choose how you want to receive notifications. Email notifications are sent to your registered email address.
-            </p>
-          </div>
+          <Panel
+            title="What you hear about"
+            description={isUpdating ? 'Saving…' : 'Changes save as you go.'}
+            flush
+          >
+            <div className="hidden items-center border-b border-[#ECE6DD] px-6 py-2.5 sm:flex">
+              <span className="flex-1" />
+              <span className={cn(ws.eyebrow, 'w-20 text-center')}>Email</span>
+              <span className={cn(ws.eyebrow, 'w-20 text-center')}>In-app</span>
+            </div>
+            <ul className="divide-y divide-[#F1ECE5]">
+              {rows.map((r) => (
+                <PreferenceRow
+                  key={r.key}
+                  label={r.label}
+                  description={r.description}
+                  emailChecked={!!prefs[`${r.key}_email`]}
+                  inappChecked={!!prefs[`${r.key}_inapp`]}
+                  onEmailChange={(checked) => handlePreferenceChange(`${r.key}_email`, checked)}
+                  onInappChange={(checked) => handlePreferenceChange(`${r.key}_inapp`, checked)}
+                  disabled={isUpdating}
+                />
+              ))}
+            </ul>
+          </Panel>
 
-          {/* Sound Preferences Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                {soundEnabled ? <Volume2 className="h-5 w-5" /> : <VolumeX className="h-5 w-5" />}
-                Notification Sound
-              </CardTitle>
-              <CardDescription>
-                Play a sound when new notifications arrive
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium text-foreground">
-                    {soundEnabled ? 'Sound is enabled' : 'Sound is disabled'}
-                  </p>
-                  <p className="text-sm text-muted-foreground">
-                    {soundEnabled 
-                      ? 'You will hear a chime when new notifications arrive'
-                      : 'Notifications will be silent'
-                    }
-                  </p>
-                </div>
+          <Panel title="On this device" description="Sound and push alerts for this browser or phone." flush>
+            <div className="divide-y divide-[#F1ECE5]">
+              <DeviceRow
+                title="Notification sound"
+                body={soundEnabled ? 'A short chime plays when something new arrives.' : 'New notifications arrive silently.'}
+              >
                 <Switch
                   checked={soundEnabled}
                   onCheckedChange={handleSoundToggle}
+                  className={switchCls}
                   aria-label="Notification sound"
                 />
-              </div>
-            </CardContent>
-          </Card>
-
-          {isPushSupported && (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Smartphone className="h-5 w-5" />
-                  Push Notifications
-                </CardTitle>
-                <CardDescription>
-                  Receive notifications even when your browser is minimized or closed
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <p className="font-medium text-foreground">
-                      {isPushSubscribed ? 'Push notifications are enabled' : 'Enable push notifications'}
-                    </p>
-                    <p className="text-sm text-muted-foreground">
-                      {pushPermission === 'denied' 
-                        ? 'Notifications are blocked. Please enable them in your browser settings.'
-                        : isPushSubscribed 
-                          ? 'You will receive notifications on this device'
-                          : 'Get real-time alerts on your device'
-                      }
-                    </p>
-                  </div>
+              </DeviceRow>
+              {isPushSupported && (
+                <DeviceRow
+                  title="Push notifications"
+                  body={
+                    pushPermission === 'denied'
+                      ? 'Blocked by your browser. Allow notifications for Vendibook in your browser settings, then come back.'
+                      : isPushSubscribed
+                        ? 'On for this device, even when Vendibook isn’t open.'
+                        : 'Get alerts on this device even when Vendibook isn’t open.'
+                  }
+                >
                   <Switch
                     checked={isPushSubscribed}
                     onCheckedChange={handlePushToggle}
                     disabled={isPushLoading || pushPermission === 'denied'}
+                    className={switchCls}
                     aria-label="Push notifications"
                   />
+                </DeviceRow>
+              )}
+              {isPushSupported && isPushSubscribed && (
+                <div className="px-5 py-4 sm:px-6">
+                  <TestPushButton userId={user.id} />
                 </div>
-                {isPushSubscribed && <TestPushButton userId={user.id} />}
-              </CardContent>
-            </Card>
-          )}
+              )}
+            </div>
+          </Panel>
 
-          {/* Email & In-app Preferences Card */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <div className="flex items-center gap-4 ml-auto text-sm font-normal text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <Mail className="h-4 w-4" />
-                    <span>Email</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Bell className="h-4 w-4" />
-                    <span>In-app</span>
-                  </div>
-                </div>
-              </CardTitle>
-              <CardDescription>
-                Toggle notifications on or off for each category
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-0">
-              <PreferenceRow
-                label="Booking Requests"
-                description="When someone requests to book your listing"
-                emailChecked={preferences.booking_request_email}
-                inappChecked={preferences.booking_request_inapp}
-                onEmailChange={(checked) => handlePreferenceChange('booking_request_email', checked)}
-                onInappChange={(checked) => handlePreferenceChange('booking_request_inapp', checked)}
-                disabled={isUpdating}
-              />
-              <Separator />
-              <PreferenceRow
-                label="Booking Responses"
-                description="When a host approves or declines your booking"
-                emailChecked={preferences.booking_response_email}
-                inappChecked={preferences.booking_response_inapp}
-                onEmailChange={(checked) => handlePreferenceChange('booking_response_email', checked)}
-                onInappChange={(checked) => handlePreferenceChange('booking_response_inapp', checked)}
-                disabled={isUpdating}
-              />
-              <Separator />
-              <PreferenceRow
-                label="Messages"
-                description="When you receive a new message"
-                emailChecked={preferences.message_email}
-                inappChecked={preferences.message_inapp}
-                onEmailChange={(checked) => handlePreferenceChange('message_email', checked)}
-                onInappChange={(checked) => handlePreferenceChange('message_inapp', checked)}
-                disabled={isUpdating}
-              />
-              <Separator />
-              <PreferenceRow
-                label="Documents"
-                description="Updates about document uploads and reviews"
-                emailChecked={preferences.document_email}
-                inappChecked={preferences.document_inapp}
-                onEmailChange={(checked) => handlePreferenceChange('document_email', checked)}
-                onInappChange={(checked) => handlePreferenceChange('document_inapp', checked)}
-                disabled={isUpdating}
-              />
-              <Separator />
-              <PreferenceRow
-                label="Sales"
-                description="Updates about your sale transactions"
-                emailChecked={preferences.sale_email}
-                inappChecked={preferences.sale_inapp}
-                onEmailChange={(checked) => handlePreferenceChange('sale_email', checked)}
-                onInappChange={(checked) => handlePreferenceChange('sale_inapp', checked)}
-                disabled={isUpdating}
-              />
-              <Separator />
-              <PreferenceRow
-                label="Disputes"
-                description="When a dispute is raised or resolved"
-                emailChecked={preferences.dispute_email}
-                inappChecked={preferences.dispute_inapp}
-                onEmailChange={(checked) => handlePreferenceChange('dispute_email', checked)}
-                onInappChange={(checked) => handlePreferenceChange('dispute_inapp', checked)}
-                disabled={isUpdating}
-              />
-            </CardContent>
-          </Card>
-
-          <SmsNotificationSection />
+          <Panel title="Text messages" description="Transactional texts only: account, bookings, payments and support.">
+            {/* v2-embedded-section maps the shared form tokens onto the light workspace palette. */}
+            <div className="v2-embedded-section [&_[data-testid=sms-notification-section]>div:first-child:has(>:only-child)]:hidden [&_[data-testid=sms-notification-section]>div:first-child>div:first-child]:hidden [&_label.rounded-lg]:border-[#ECE6DD] [&_label.rounded-lg]:bg-[#FCFAF7] [&_label.rounded-lg_span]:text-[#5E5953] [&_button[role=checkbox]]:border-[#8A847B] [&_button[role=checkbox]]:bg-white [&_button[role=checkbox]]:!min-h-0 [&_[data-testid=sms-notification-section]>div:first-child:has(>:only-child)+*]:!mt-0 [&_[data-testid=sms-notification-section]]:rounded-none [&_[data-testid=sms-notification-section]]:border-0 [&_[data-testid=sms-notification-section]]:bg-transparent [&_[data-testid=sms-notification-section]]:p-0">
+              <SmsNotificationSection />
+            </div>
+          </Panel>
         </div>
       </div>
     </WorkspaceShell>
