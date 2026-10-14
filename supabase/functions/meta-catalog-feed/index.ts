@@ -17,7 +17,12 @@ function rentalPrice(l: any): { amount: number; period: string } | null {
   return null;
 }
 
-const csv = (v: string) => (/[",\r\n]/.test(v) ? `"${v.replace(/"/g, '""')}"` : v);
+// Neutralise spreadsheet formulas (=, +, -, @, tab, CR) before CSV quoting.
+const neutralise = (v: string) => (/^[=+\-@\t\r]/.test(v) ? `'${v}` : v);
+const csv = (raw: string) => {
+  const v = neutralise(raw);
+  return /[",\r\n']/.test(v) ? `"${v.replace(/"/g, '""')}"` : v;
+};
 const clean = (s: unknown) => String(s ?? '').replace(/[\r\n\t]+/g, ' ').replace(/\s{2,}/g, ' ').trim();
 
 Deno.serve(async (req) => {
