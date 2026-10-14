@@ -41,12 +41,12 @@ export function FinancingCalculator() {
     }
   };
   return (
-    <section id="calculator" aria-labelledby="calculator-heading" data-cta-location="calculator" className="scroll-mt-24 border-b border-border bg-card/40 py-12 md:py-16">
+    <section id="calculator" aria-labelledby="calculator-heading" data-cta-location="calculator" className="scroll-mt-24 border-y border-border bg-card/40 py-16 md:py-24">
       <div className="container max-w-6xl mx-auto px-4">
-        <div className="max-w-2xl mb-8">
-          <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.16em] text-emerald-700"><Calculator className="h-4 w-4" aria-hidden /> Plan your next move</p>
-          <h2 id="calculator-heading" className="mt-3 text-2xl md:text-3xl font-bold tracking-tight">Food truck financing calculator</h2>
-          <p className="mt-3 text-muted-foreground leading-relaxed">Start with an equipment budget. Explore how your down payment, rate, and term affect a monthly payment for a food truck or trailer.</p>
+        <div className="max-w-2xl mb-12">
+          <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.18em] text-primary"><Calculator className="h-4 w-4" aria-hidden /> Plan your next move</p>
+          <h2 id="calculator-heading" className="mt-3 text-[1.75rem] leading-tight md:text-4xl font-bold tracking-tight">Food truck financing calculator</h2>
+          <p className="mt-4 text-base md:text-lg text-muted-foreground leading-relaxed">Start with an equipment budget. Explore how your down payment, rate, and term affect a monthly payment for a food truck or trailer.</p>
         </div>
         <div className="grid gap-6 lg:grid-cols-2">
           <form className="rounded-3xl border border-border bg-background p-5 sm:p-8" onSubmit={event => { event.preventDefault(); start(); complete(); }}>
