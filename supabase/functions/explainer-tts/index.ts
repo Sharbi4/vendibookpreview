@@ -8,6 +8,7 @@
 //   -> { audio_url: string, cached: boolean, duration_hint_seconds?: number }
 
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.0";
+import { isAdminOrBackendCaller } from "../_shared/callerGuard.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -72,6 +73,9 @@ async function synthesize(text: string, voice: string): Promise<Uint8Array> {
   return new Uint8Array(await r.arrayBuffer());
 }
 
+const KNOWN_EXPLAINERS = new Set(["buying", "renting", "selling", "hosting"]);
+const MAX_PUBLIC_VERSIONS = 3;
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (req.method !== "POST") {
@@ -85,9 +89,10 @@ Deno.serve(async (req) => {
     const body = await req.json().catch(() => ({}));
     const explainerId = String(body.explainer_id ?? "").trim();
     const script = String(body.script ?? "").trim();
-    const voice = String(body.voice ?? DEFAULT_VOICE);
+    // Only the homepage explainers, always in the house voice.
+    const voice = DEFAULT_VOICE;
 
-    if (!explainerId || !/^[a-z0-9_-]{2,64}$/i.test(explainerId)) {
+    if (!KNOWN_EXPLAINERS.has(explainerId)) {
       return new Response(JSON.stringify({ error: "explainer_id required (alphanumeric)" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -111,6 +116,15 @@ Deno.serve(async (req) => {
     let cached = !!existing.data?.some((f) => f.name === `${hash}.mp3`);
 
     if (!cached) {
+      // Public visitors can create at most a few versions per explainer (one per
+      // script revision); admins/backend can always regenerate.
+      const versions = (await supabase.storage.from("explainer-audio").list(explainerId, { limit: 100 })).data ?? [];
+      if (versions.length >= MAX_PUBLIC_VERSIONS && !(await isAdminOrBackendCaller(req))) {
+        return new Response(JSON.stringify({ error: "Narration is not available right now." }), {
+          status: 404,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
       const audio = await synthesize(script, voice);
       const up = await supabase.storage
         .from("explainer-audio")
