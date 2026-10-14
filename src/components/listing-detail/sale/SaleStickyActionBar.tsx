@@ -63,48 +63,46 @@ export const SaleStickyActionBar = ({
   return (
     <>
       <div
-        /* Sits above the global mobile bottom nav (md:hidden) so neither is clipped. */
-        className="fixed bottom-[68px] md:bottom-0 left-0 right-0 z-40 lg:hidden safe-pb"
+        /* The global mobile nav is hidden on listing pages, so this bar owns the bottom edge. */
+        className="fixed bottom-0 left-0 right-0 z-40 lg:hidden safe-pb"
         style={{
-          background: 'linear-gradient(180deg, rgba(18,22,28,0.78) 0%, rgba(12,15,19,0.92) 100%)',
-          backdropFilter: 'blur(22px) saturate(140%)',
-          WebkitBackdropFilter: 'blur(22px) saturate(140%)',
+          background: 'rgba(14,17,21,0.94)',
+          backdropFilter: 'blur(16px) saturate(140%)',
+          WebkitBackdropFilter: 'blur(16px) saturate(140%)',
           borderTop: '1px solid rgba(255,255,255,0.10)',
-          boxShadow: '0 -18px 50px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.06)',
+          boxShadow: '0 -6px 20px rgba(0,0,0,0.22)',
         }}
       >
         <SaleAvailabilityNote listingId={listingId} />
-        <div className="px-3 py-3 grid grid-cols-[auto_1fr_1fr] gap-2.5 items-center">
+        {/* Compact on purpose: 44px touch targets, one row, never wider than the screen. */}
+        <div className="grid grid-cols-[44px_minmax(0,1fr)_minmax(0,1.35fr)] items-center gap-2 px-3 py-2">
           <Button
             variant="outline"
-            size="lg"
+            size="icon"
             onClick={() => setShowAsk(true)}
             aria-label="Ask the seller a question"
-            className="h-14 px-3.5 text-base font-bold gap-1.5 rounded-2xl border-0 bg-cta-glass hover:bg-white/10 text-white"
+            className="h-11 w-11 rounded-xl border-0 bg-cta-glass text-white hover:bg-white/10"
           >
-            <MessageSquare className="h-4 w-4" />
-            Ask
+            <MessageSquare className="h-[18px] w-[18px]" />
           </Button>
           <Button
             variant="outline"
-            size="lg"
             onClick={handleOffer}
             disabled={!saleActions.canOffer || (!isAvailable || !priceSale)}
-            className="h-14 text-base font-bold gap-2 rounded-2xl border-0 bg-cta-glass hover:bg-white/10 text-white"
+            className="h-11 min-w-0 gap-1.5 rounded-xl border-0 bg-cta-glass px-2 text-[14px] font-semibold text-white hover:bg-white/10"
           >
-            <Tag className="h-4 w-4" />
-            Make Offer
+            <Tag className="h-4 w-4 shrink-0" />
+            <span className="truncate">Make offer</span>
           </Button>
           <Button
-            size="lg"
             onClick={handleBuy}
             disabled={!saleActions.canRequest || (!isAvailable)}
             data-testid="sale-sticky-buy-now"
             variant="cta"
-            className="h-14 text-base gap-2"
+            className="h-11 min-w-0 gap-1.5 rounded-xl px-2 text-[14px] font-semibold"
           >
-            <ShoppingCart className="h-5 w-5" />
-            Request to Buy
+            <ShoppingCart className="h-4 w-4 shrink-0" />
+            <span className="truncate">Request to buy</span>
           </Button>
         </div>
       </div>

@@ -27,6 +27,8 @@ const HIDDEN_PATTERNS = [
   /^\/verification-complete/,
   /^\/messages\/[^/]+$/, // hide on individual conversation thread
   /^\/admin/,
+  // Listing pages carry their own action bar (like Airbnb); two stacked bars hid the page.
+  /^\/listing\/[^/]+\/?$/,
 ];
 
 const MobileBottomNav = () => {
