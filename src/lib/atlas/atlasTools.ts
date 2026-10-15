@@ -5,6 +5,28 @@ import { excludeTestListings } from '@/lib/excludeTestListings';
 import { estimateDelivery, formatUsd, normalizeDeliveryFeeType } from '@/lib/fulfillment/delivery';
 import { FEE_CONFIG } from '../../../supabase/functions/_shared/feeConfig';
 import { pageAction, scanPage } from './atlasPage';
+import { GUIDE_FAQ, type GuideFaq } from './atlasGuideFaq';
+
+const FAQ_STOP = new Set(['a', 'an', 'the', 'i', 'my', 'me', 'do', 'does', 'is', 'are', 'can', 'to', 'of', 'for', 'and', 'or', 'on', 'in', 'it', 'what', 'how', 'if', 'you', 'your', 'with', 'be', 'get', 'will', 'there', 'this']);
+const faqWords = (s: string) => s.toLowerCase().replace(/[^a-z0-9%$ ]+/g, ' ').split(/\s+/).filter((w) => w.length > 1 && !FAQ_STOP.has(w));
+
+/** Best matches from the owner's master-guide FAQ bank for a free-text question. */
+export function searchGuideFaq(question: string, limit = 3): GuideFaq[] {
+  const words = faqWords(question);
+  if (!words.length) return [];
+  const stem = (w: string) => w.replace(/(ing|es|s)$/, '');
+  const qStems = words.map(stem);
+  return GUIDE_FAQ.map((e) => {
+    const qw = faqWords(e.question).map(stem);
+    const aw = new Set(faqWords(e.answer).map(stem));
+    const score = qStems.reduce((n, w) => n + (qw.includes(w) ? 3 : 0) + (aw.has(w) ? 1 : 0), 0);
+    return { e, score };
+  })
+    .filter((r) => r.score >= 3)
+    .sort((a, b) => b.score - a.score)
+    .slice(0, limit)
+    .map((r) => r.e);
+}
 
 /**
  * Paid products Atlas may mention, with the benefit wording he may use.
@@ -502,6 +524,19 @@ export function createAtlasTools(deps: AtlasToolDeps) {
       });
     },
 
+    get_faq: async (p: Row = {}) => {
+      const question = String(p.question ?? '').trim().slice(0, 200);
+      if (!question) return 'Ask a specific question, e.g. "how do payouts work" or "can I pay cash".';
+      const hits = searchGuideFaq(question);
+      if (!hits.length) {
+        return 'Nothing in the Vendibook policy guide matches. Say you are not sure, do not guess policy, and offer talk_to_person or support@vendibook.com.';
+      }
+      return JSON.stringify({
+        source: 'Vendibook support policy (official). Answer in your own words, briefly, keeping every qualifier; quote numbers exactly.',
+        answers: hits.map((h) => ({ question: h.question, answer: h.answer })),
+      });
+    },
+
     get_pricing: async () => {
       const { data } = await (supabase.from('monetization_products') as LooseQuery)
         .select('slug, name, price_cents, is_active')
@@ -514,8 +549,10 @@ export function createAtlasTools(deps: AtlasToolDeps) {
       }));
       return JSON.stringify({
         listing: 'Free to list. No listing fee.',
-        equipment_sales: `Sellers pay a ${FEE_CONFIG.saleSellerFeePct}% commission when the sale completes. Buyers pay no Vendibook fee — just the price plus any delivery and sales tax.`,
-        rentals: `Renters pay a ${FEE_CONFIG.rentalRenterFeePct}% service fee on the rental subtotal; hosts pay a ${FEE_CONFIG.rentalHostFeePct}% commission.`,
+        equipment_sales: `Sellers pay a ${FEE_CONFIG.saleSellerFeePct}% commission on the agreed equipment amount for new online sales; the same rate for Free and Pro sellers. Buyers pay no Vendibook platform fee; the invoice may separately show tax, freight or other agreed amounts. Older committed orders keep their agreed terms.`,
+        pay_in_person: 'Not available: Vendibook no longer supports pay-in-person or cash sales.',
+        rentals: `Renters pay a ${FEE_CONFIG.rentalRenterFeePct}% service fee and hosts pay a ${FEE_CONFIG.rentalHostFeePct}% commission. Active Vendibook Pro hosts pay ${FEE_CONFIG.proSellerFeePct}% instead, with savings capped at $${FEE_CONFIG.proMaxSavingsCents / 100} per completed transaction. The checkout shows the exact math.`,
+        free_plan: 'The Free plan allows two active listings (some founding members have more); drafts are free.',
         optional_upgrades: products,
         note: 'Upgrades are optional and never required to list or sell.',
       });

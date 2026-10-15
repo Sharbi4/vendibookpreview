@@ -178,7 +178,7 @@ describe('Atlas pricing', () => {
     );
     const out = JSON.parse(await createAtlasTools(deps()).get_pricing());
     expect(out.equipment_sales).toMatch(/8\.7% commission/);
-    expect(out.equipment_sales).toMatch(/Buyers pay no Vendibook fee/);
+    expect(out.equipment_sales).toMatch(/Buyers pay no Vendibook platform fee/);
     expect(out.rentals).toMatch(/12\.9% service fee/);
     expect(out.optional_upgrades).toEqual(expect.arrayContaining([expect.objectContaining({ name: 'Vendibook Pro', price: '$79/month' })]));
     const { ATLAS_PRODUCTS } = await import('@/lib/atlas/atlasTools');
@@ -326,5 +326,36 @@ describe('Atlas sending a seller message for the buyer', () => {
     send.mockRejectedValueOnce(new Error('Please verify your phone number to message sellers'));
     await tools.draft_seller_message({ listing_id: ID, message: 'Hi' });
     expect(await tools.send_seller_message({ listing_id: ID, buyer_approved: true })).toMatch(/verify their phone and ID/);
+  });
+});
+
+describe('Atlas policy knowledge (owner master guide v5.0)', () => {
+  it('answers policy questions from the guide FAQ bank', async () => {
+    const tools = createAtlasTools(deps());
+    const escrow = JSON.parse(await tools.get_faq({ question: 'Does Vendibook hold my money in escrow?' }));
+    expect(escrow.answers[0].question).toBe('Does Vendibook hold payments in escrow?');
+    const fee = JSON.parse(await tools.get_faq({ question: "what's the fee for selling online" }));
+    expect(fee.answers[0].answer).toMatch(/8\.7%/);
+    const rental = JSON.parse(await tools.get_faq({ question: 'rental fees' }));
+    expect(rental.answers.map((a: { answer: string }) => a.answer).join(' ')).toMatch(/12\.9%/);
+  });
+
+  it('applies the owner override: no pay in person or cash', async () => {
+    const out = JSON.parse(await createAtlasTools(deps()).get_faq({ question: 'Can I pay cash in person?' }));
+    expect(out.answers[0].answer).toMatch(/no longer supports pay-in-person or cash/);
+    const { GUIDE_FAQ } = await import('@/lib/atlas/atlasGuideFaq');
+    expect(GUIDE_FAQ.some((e) => /\$0 .*commission|in person.*free/i.test(e.answer))).toBe(false);
+    expect(GUIDE_FAQ).toHaveLength(60);
+  });
+
+  it('says it does not know instead of guessing', async () => {
+    expect(await createAtlasTools(deps()).get_faq({ question: 'zebra quantum pickles' })).toMatch(/do not guess/);
+  });
+
+  it('pricing has no pay-in-person option and keeps the Pro rental host rate', async () => {
+    const out = JSON.parse(await createAtlasTools(deps()).get_pricing());
+    expect(out.pay_in_person).toMatch(/no longer supports/);
+    expect(out.equipment_sales).toMatch(/8\.7%/);
+    expect(out.rentals).toMatch(/10\.9%/);
   });
 });

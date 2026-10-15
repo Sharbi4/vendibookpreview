@@ -22,7 +22,7 @@ planned phase 2.
 5. **Tools → Add tool → Client tool**, once per entry in `atlas-client-tools.json`
    (`search_listings`, `show_listing`, `get_delivery_quote`,
    `start_request_to_buy`, `draft_offer`, `draft_seller_message`,
-   `send_seller_message`, `estimate_earnings`, `get_pricing`, `open_page`,
+   `send_seller_message`, `estimate_earnings`, `get_faq`, `get_pricing`, `open_page`,
    `look_at_page`, `page_action`, `talk_to_person`). Easiest: Admin → Reports →
    **Sync Atlas to ElevenLabs** does all of this. Copy the name,
    description and parameters exactly; tick **Wait for response**.
@@ -79,7 +79,18 @@ login, email or phone fields — those are marked `buyer_only`, and he
 highlights them for the buyer to tap (`src/lib/atlas/atlasPage.ts`, tested in
 `src/test/atlas/atlasPage.test.ts`).
 
-## 5. Guardrails (enforced in the prompt and the tools)
+## 5. Policy knowledge
+
+Atlas's business and policy knowledge comes from the owner's **Vendibook AI
+Support Agent Master Guide v5.0** (`docs/support/vendibook-ai-support-master-guide-v5.*`).
+Its customer FAQ bank (Section 17) is generated into
+`src/lib/atlas/atlasGuideFaq.ts` by `scripts/gen-atlas-guide-faq.py`, which also
+applies owner overrides that win over the guide (2026-10-15: pay in person /
+cash sales are retired). Atlas answers policy questions with `get_faq`. When
+the guide changes, re-extract the text (`pdftotext -layout`), rerun the script,
+then press Sync Atlas in admin.
+
+## 6. Guardrails (enforced in the prompt and the tools)
 
 - Quotes delivery totals only — never per-mile rates, fuel, handling or math
   (owner rule 2026-10-14; the tool output never contains them).
