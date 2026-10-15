@@ -23,7 +23,7 @@ planned phase 2.
    (`search_listings`, `show_listing`, `get_delivery_quote`,
    `start_request_to_buy`, `draft_offer`, `draft_seller_message`,
    `send_seller_message`, `estimate_earnings`, `get_faq`, `get_pricing`, `open_page`,
-   `look_at_page`, `page_action`, `talk_to_person`). Easiest: Admin → Reports →
+   `look_at_page`, `page_action`, `request_follow_up`, `talk_to_person`). Easiest: Admin → Reports →
    **Sync Atlas to ElevenLabs** does all of this. Copy the name,
    description and parameters exactly; tick **Wait for response**.
 6. **Do not attach the `vendibook` MCP server.** Its tools are seller-side
@@ -103,6 +103,15 @@ then press Sync Atlas in admin.
   15 minutes), through normal messaging, so risk scanning and the phone/ID
   gate apply. Offers, requests to buy, payments and sign-in are always
   tapped by the buyer.
+- Speak with a person (owner decision 2026-10-15): `request_follow_up` sets up
+  a team follow-up due within 2 business hours (Mon–Fri 8 AM–8 PM ET;
+  `supabase/functions/_shared/followUpWindow.ts`). The `atlas-follow-up`
+  function opens a high-priority Admin → Support ticket, notifies every admin
+  in the app and emails support@vendibook.com through Resend (Lovable email
+  as fallback). Rate limited per IP and per contact.
+- Listing creation: Atlas fills the listing editor with the seller (text,
+  dropdowns, condition and equipment choices), but photo uploads, agreement
+  checkboxes, the phone number, sign-in and Publish are always the seller's.
 - Earnings are simple math on the buyer's own numbers, always "before rent,
   fuel, labor, permits and taxes — not a prediction or promise". Local
   popularity is shared as general ideas, never local statistics.

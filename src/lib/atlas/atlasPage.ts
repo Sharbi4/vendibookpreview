@@ -34,7 +34,7 @@ export const ATLAS_PAGE_EVENT = 'atlas:page-action';
 const SPOTLIGHT_CLASS = 'atlas-spotlight';
 const SPOTLIGHT_MS = 4500;
 const MAX_SECTIONS = 24;
-const MAX_CONTROLS = 50;
+const MAX_CONTROLS = 90;
 /** Embedded map widgets (zoom, keyboard shortcuts) are noise to Atlas. */
 const SKIP_WIDGETS = '.gm-style, .leaflet-container, .mapboxgl-map';
 
@@ -52,7 +52,14 @@ const SENSITIVE_FIELD =
 
 const SECTION_SELECTOR = 'h1, h2, h3, [data-atlas-section]';
 const CONTROL_SELECTOR =
-  'a[href], button, input, select, textarea, [role="button"], [role="tab"], [role="link"], [role="switch"], [aria-expanded]';
+  'a[href], button, input, select, textarea, [role="button"], [role="tab"], [role="link"], [role="switch"], [role="radio"], [role="checkbox"], [role="combobox"], [role="option"], [role="menuitem"], [role="menuitemradio"], [aria-expanded]';
+
+/**
+ * Agreements, attestations and consents are the member's own: "I own this…",
+ * "I agree…", "I consent…", "I have disclosed…". Atlas points at them; the
+ * member ticks them.
+ */
+const ATTESTATION = /^\s*I\s+(own|agree|consent|have|confirm|certify|understand|accept|acknowledge|authori[sz]e|am)\b|\b(agree|consent|attest|certify|acknowledge|accurate|truthful|true and correct)\b/i;
 
 const clean = (s: string | null | undefined, max = 70) => {
   const t = (s ?? '').replace(/\s+/g, ' ').trim();
@@ -81,15 +88,41 @@ function labelledByText(el: HTMLElement): string {
     .join(' ');
 }
 
+const labelsText = (h: HTMLElement) =>
+  Array.from((h as HTMLInputElement).labels ?? [])
+    .map((l) => l.textContent)
+    .join(' ')
+    .replace(/\*?\s*\(required\)|\*/g, ' ');
+
+/** "Condition" for a radio in the Condition group: the group's label or the label just before it. */
+function groupLabel(el: Element): string {
+  const group = el.closest('[role="radiogroup"], [role="group"], fieldset');
+  if (!group) return '';
+  const g = group as HTMLElement;
+  const named = g.getAttribute('aria-label') || labelledByText(g) || g.querySelector(':scope > legend')?.textContent;
+  if (named) return clean(named, 40);
+  const prev = g.previousElementSibling;
+  if (prev && /^(LABEL|LEGEND|H[2-6]|P)$/.test(prev.tagName)) return clean(prev.textContent?.replace(/\*?\s*\(required\)|\*/g, ' '), 40);
+  return '';
+}
+
 export function labelOf(el: Element): string {
   const h = el as HTMLElement;
   const explicit = h.getAttribute('data-atlas-label') || h.getAttribute('aria-label') || labelledByText(h);
   if (explicit) return clean(explicit);
   if (h instanceof HTMLInputElement || h instanceof HTMLTextAreaElement || h instanceof HTMLSelectElement) {
-    const fromLabel = Array.from(h.labels ?? [])
-      .map((l) => l.textContent)
-      .join(' ');
-    return clean(fromLabel || h.getAttribute('placeholder') || h.name || h.title);
+    return clean(labelsText(h) || h.getAttribute('placeholder') || h.name || h.title);
+  }
+  const role = h.getAttribute('role');
+  // Radix radios, checkboxes, switches and select triggers are <button>s named by a <label for>.
+  if (role === 'radio' || role === 'checkbox' || role === 'switch' || role === 'combobox') {
+    const own = role === 'combobox' ? '' : (h.innerText || h.textContent || '').trim();
+    const name = clean(own || labelsText(h) || h.title);
+    if (role === 'radio') {
+      const group = groupLabel(h);
+      return group && name && !name.toLowerCase().startsWith(group.toLowerCase()) ? clean(`${group}: ${name}`) : name;
+    }
+    if (name) return name;
   }
   return clean(h.innerText || h.textContent || h.title);
 }
@@ -97,7 +130,7 @@ export function labelOf(el: Element): string {
 function kindOf(el: Element): AtlasPageItem['kind'] {
   const role = el.getAttribute('role');
   if (role === 'tab') return 'tab';
-  if (el.matches('input[type="checkbox"], input[type="radio"], [role="switch"]')) return 'toggle';
+  if (el.matches('input[type="checkbox"], input[type="radio"], [role="switch"], [role="radio"], [role="checkbox"], [role="menuitemradio"]')) return 'toggle';
   if (el instanceof HTMLSelectElement || role === 'combobox') return 'select';
   if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) return 'field';
   if (el instanceof HTMLAnchorElement || role === 'link') return 'link';
@@ -129,6 +162,11 @@ export function isBuyerOnly(el: Element): boolean {
     if (/\/(checkout|pay|invoice)/i.test(href)) return true;
   }
   const words = [labelOf(el), el.getAttribute('title') ?? ''].join(' ');
+  // Listing settings (amenities, "Accept offers", condition) are Atlas's to set when asked;
+  // agreements and marketing or contact opt-ins stay the member's.
+  if (el.matches('input[type="checkbox"], input[type="radio"], [role="checkbox"], [role="switch"], [role="radio"]')) {
+    return ATTESTATION.test(words) || /\b(subscribe|newsletter|marketing|terms|privacy|policy|sms|text messages)\b/i.test(words);
+  }
   return BUYER_ONLY.test(words);
 }
 
@@ -231,7 +269,13 @@ export function scanPage(): AtlasPageMap {
       item.value = clean(el.value, 40);
     }
     if (el.getAttribute('aria-expanded')) item.label = `${label} (${el.getAttribute('aria-expanded') === 'true' ? 'open' : 'closed'})`;
-    if (el.getAttribute('aria-selected') === 'true' || el.getAttribute('aria-pressed') === 'true') item.label = `${item.label} (selected)`;
+    if (el.getAttribute('aria-selected') === 'true' || el.getAttribute('aria-pressed') === 'true' || el.getAttribute('aria-checked') === 'true' || (el as HTMLInputElement).checked === true) {
+      item.label = `${item.label} (selected)`;
+    }
+    if (el.getAttribute('role') === 'combobox' && !(el instanceof HTMLInputElement)) {
+      const shown = clean(el.textContent, 40);
+      if (shown && !el.hasAttribute('data-placeholder')) item.value = shown;
+    }
     if (inViewport(el)) item.in_view = true;
     controls.push(item);
   }
@@ -413,12 +457,16 @@ export function pageAction(p: Record<string, unknown> = {}): string {
     }
 
     case 'fill': {
-      const value = typeof p.value === 'string' ? p.value.slice(0, 120) : String(p.value ?? '').slice(0, 120);
+      const max = el instanceof HTMLTextAreaElement ? 3000 : 200;
+      const value = typeof p.value === 'string' ? p.value.slice(0, max) : String(p.value ?? '').slice(0, max);
       if (!value) return 'Nothing to type. Give a value.';
       if (el instanceof HTMLSelectElement) {
         const picked = setSelectValue(el, value);
         spotlight(el);
         return picked ? `Set "${label}" to ${picked}.` : `"${label}" has no option like "${value}".`;
+      }
+      if (el.getAttribute('role') === 'combobox' && !(el instanceof HTMLInputElement)) {
+        return `"${label}" is a dropdown. Use page_action fill again — it opens the list and picks "${value}".`;
       }
       if (!(el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement)) return `"${label}" is not a field Atlas can type into.`;
       if (isBuyerOnly(el)) {
@@ -437,10 +485,50 @@ export function pageAction(p: Record<string, unknown> = {}): string {
           form.requestSubmit?.();
         }
       }
-      return `Typed "${value}" into "${label}".`;
+      return `Typed "${value.length > 80 ? `${value.slice(0, 77)}…` : value}" into "${label}".`;
     }
 
     default:
       return 'Unknown action. Use scroll, highlight, read, click or fill.';
   }
+}
+
+const nextFrame = () => new Promise<void>((r) => setTimeout(r, 60));
+
+/**
+ * Pick an option in a custom dropdown (a Radix/shadcn Select: a role="combobox"
+ * button that opens a role="listbox" of role="option"s). Opens it, picks the
+ * closest option by text, and reports what it now shows.
+ */
+export async function pickOption(p: Record<string, unknown> = {}): Promise<string> {
+  if (isPrivateContext()) return PRIVATE_REPLY;
+  const el = find(p.target);
+  if (!el || !el.isConnected) return 'That part of the page is not there anymore. Call look_at_page and try again with a fresh ref.';
+  const label = labelOf(el) || 'that';
+  const want = String(p.value ?? '').trim().toLowerCase();
+  if (!want) return 'Nothing to pick. Give a value.';
+  if (isDisabled(el)) return `"${label}" is greyed out right now.`;
+  scrollToEl(el);
+  if (el.getAttribute('aria-expanded') !== 'true') el.click();
+  let options: HTMLElement[] = [];
+  for (let i = 0; i < 15 && !options.length; i++) {
+    await nextFrame();
+    const listId = el.getAttribute('aria-controls');
+    const list = (listId && document.getElementById(listId)) || document.querySelector('[role="listbox"]');
+    options = Array.from((list ?? document).querySelectorAll<HTMLElement>('[role="option"]')).filter((o) => o.getAttribute('aria-disabled') !== 'true');
+  }
+  if (!options.length) return `"${label}" did not open a list. Call look_at_page to see what is there.`;
+  const text = (o: HTMLElement) => clean(o.textContent, 60).toLowerCase();
+  const option = options.find((o) => text(o) === want) ?? options.find((o) => text(o).startsWith(want)) ?? options.find((o) => text(o).includes(want));
+  if (!option) {
+    const choices = options.slice(0, 12).map((o) => clean(o.textContent, 30)).join(', ');
+    document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    (document.activeElement as HTMLElement | null)?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+    return `"${label}" has no option like "${p.value}". Choices include: ${choices}.`;
+  }
+  option.scrollIntoView?.({ block: 'nearest' });
+  option.click();
+  await nextFrame();
+  spotlight(el);
+  return `Set "${label}" to ${clean(option.textContent, 40)}.`;
 }

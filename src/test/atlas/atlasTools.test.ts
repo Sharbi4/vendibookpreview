@@ -380,3 +380,34 @@ describe('Atlas policy knowledge (owner master guide v5.3)', () => {
     expect(out.rentals).toMatch(/10\.9%/);
   });
 });
+
+describe('Atlas follow-up with a person (owner 2026-10-15)', () => {
+  it('needs a name and a way to reach a guest before calling the server', async () => {
+    const tools = createAtlasTools(deps());
+    expect(await tools.request_follow_up({ topic: 'x', summary: 'y' })).toMatch(/name first/);
+    expect(await tools.request_follow_up({ name: 'Ana', topic: 'x', summary: 'y' })).toMatch(/phone number or email/);
+    expect(invoke).not.toHaveBeenCalled();
+  });
+
+  it('sets up the follow-up and reads back the time and reference', async () => {
+    invoke.mockResolvedValueOnce({ data: { reference_code: 'VB-AB12CD34', follow_up_by: 'Thursday 12:00 PM ET', team_open_now: true }, error: null });
+    const out = JSON.parse(
+      await createAtlasTools({ ...deps(), currentListingId: () => ID }).request_follow_up({
+        name: 'Ana', phone: '(520) 555-0100', topic: 'financing', summary: 'Wants financing on the trailer.',
+      }),
+    );
+    expect(invoke).toHaveBeenCalledWith('atlas-follow-up', { body: expect.objectContaining({ name: 'Ana', listing_id: ID }) });
+    expect(out.say).toMatch(/by Thursday 12:00 PM ET.*VB-AB12CD34/);
+  });
+
+  it('signed-in members can skip phone and email', async () => {
+    invoke.mockResolvedValueOnce({ data: { reference_code: 'VB-1', follow_up_by: 'Monday 10:00 AM ET', team_open_now: false }, error: null });
+    const out = JSON.parse(await createAtlasTools({ ...deps(), currentUserId: () => 'u1' }).request_follow_up({ name: 'Ana', topic: 't', summary: 's' }));
+    expect(out.say).toMatch(/offline right now/);
+  });
+
+  it('is registered for ElevenLabs and in the prompt', () => {
+    expect(ATLAS_TOOL_DEFINITIONS.map((t) => t.name)).toContain('request_follow_up');
+    expect(ATLAS_SYSTEM_PROMPT).toMatch(/within 2 hours.*8 AM to 8 PM Eastern/);
+  });
+});

@@ -4,7 +4,7 @@ import { applyDiscoveryListingFilter, applyPublicListingFilter } from '@/lib/lis
 import { excludeTestListings } from '@/lib/excludeTestListings';
 import { estimateDelivery, formatUsd, normalizeDeliveryFeeType } from '@/lib/fulfillment/delivery';
 import { FEE_CONFIG } from '../../../supabase/functions/_shared/feeConfig';
-import { pageAction, scanPage } from './atlasPage';
+import { pageAction, pickOption, scanPage } from './atlasPage';
 import { GUIDE_FAQ, type GuideFaq } from './atlasGuideFaq';
 
 const FAQ_STOP = new Set(['a', 'an', 'the', 'i', 'my', 'me', 'do', 'does', 'is', 'are', 'can', 'to', 'of', 'for', 'and', 'or', 'on', 'in', 'it', 'what', 'how', 'if', 'you', 'your', 'with', 'be', 'get', 'will', 'there', 'this']);
@@ -584,7 +584,50 @@ export function createAtlasTools(deps: AtlasToolDeps) {
 
     look_at_page: async () => JSON.stringify(scanPage()),
 
-    page_action: async (p: Row = {}) => pageAction(p),
+    page_action: async (p: Row = {}) => {
+      const target = typeof p.target === 'string' ? p.target : '';
+      const el = p.action === 'fill' && /^c\d{1,3}$/.test(target) ? document.querySelector(`[data-atlas-ref="${target}"]`) : null;
+      // Custom dropdowns open and pick asynchronously.
+      if (el && el.getAttribute('role') === 'combobox' && !(el instanceof HTMLInputElement)) return pickOption(p);
+      return pageAction(p);
+    },
+
+    request_follow_up: async (p: Row = {}) => {
+      const str = (v: unknown, max: number) => (typeof v === 'string' ? v.trim().slice(0, max) : '');
+      const name = str(p.name, 80);
+      const phone = str(p.phone, 30);
+      const email = str(p.email, 120);
+      if (!name) return 'Ask for their name first, then call request_follow_up again.';
+      if (!phone && !email && !deps.currentUserId?.()) {
+        return 'Ask for the best phone number or email for the team to reach them, then call request_follow_up again.';
+      }
+      const { data, error } = await invokeEdge<{ reference_code: string; follow_up_by: string; team_open_now: boolean }>(
+        'atlas-follow-up',
+        {
+          body: {
+            name,
+            phone,
+            email,
+            topic: str(p.topic, 120),
+            summary: str(p.summary, 1500),
+            preferred_contact: p.preferred_contact,
+            listing_id: deps.currentListingId(),
+            page_url: typeof window !== 'undefined' ? window.location.pathname : '',
+          },
+        },
+      );
+      if (error || !data) {
+        return error && /already on the way/i.test(error)
+          ? 'A follow-up is already set up for them. Tell them the team will reach out at the time they were given.'
+          : `${error ?? 'The follow-up could not be set up.'} Apologize, and offer support@vendibook.com or the contact page (open_page "contact").`;
+      }
+      return JSON.stringify({
+        reference: data.reference_code,
+        follow_up_by: data.follow_up_by,
+        team_open_now: data.team_open_now,
+        say: `Tell them a Vendibook teammate will reach out by ${data.follow_up_by}, and give the reference ${data.reference_code}.${data.team_open_now ? '' : ' The team is offline right now (Monday to Friday, 8 AM to 8 PM Eastern), so that is the next business window.'}`,
+      });
+    },
 
     talk_to_person: async () => {
       if (deps.openLiveChat?.()) {
