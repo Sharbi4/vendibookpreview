@@ -1,23 +1,48 @@
 /**
- * Vendibook FAQ content — canonical source for /faq.
+ * Vendibook FAQ content — canonical source for /faq (and its FAQPage JSON-LD).
+ *
+ * Source of truth: the owner's "Vendibook AI Support Agent Master Guide v5.0"
+ * (2026-10-14, docs/support/vendibook-ai-support-master-guide-v5.txt),
+ * Section 17 customer FAQ bank, plus later owner overrides. Every Section 17
+ * topic has an entry here whose answer keeps the guide's meaning and
+ * qualifiers.
  *
  * Rules enforced here:
- *  - Every fee, tier price, and window matches the live config.
- *    Commission: 12.9% (src/lib/commissions.ts); Vendibook Pro rental host
- *      side 10.9%, savings capped at $500 per completed transaction
- *      (src/lib/fees/proFee.ts).
- *    Plans: Free / Vendibook Pro $79/mo (monetization_products.vendibook_pro).
- *      Retired Starter / Growth / Operator / Weekly Pass tiers must never appear.
- *    Payout: Vendibook reviews and issues payouts after the transaction
- *      completes. Never describe general payouts as automatic, instant, or
- *      24-hour. The only 24-hour claim allowed is for a successfully completed
- *      FINANCED purchase (released within 24h after delivery + confirmation).
- *    Support: (725) 755-9598 · support@vendibook.com · Mon–Fri 9a–5p AZ.
- *  - Never imply Vendibook holds funds — say "payment protection" or "funds are held".
- *  - Payments run on PayPal. No Stripe / Affirm / Klarna / Afterpay language.
- *  - Identity verification is optional; never imply everyone is verified.
- *  - Anything not shipped is marked "coming soon".
- *  - Answers link to real routes; long legalese defers to policy pages.
+ *  - Fees match FEE_CONFIG (supabase/functions/_shared/feeConfig.ts):
+ *      new eligible online equipment sales: 8.7% seller commission, $0 buyer
+ *        platform fee, for Free and Pro sellers alike (Pro does NOT lower the
+ *        sale commission); older committed orders keep their snapshotted terms;
+ *      rentals: 12.9% host commission + 12.9% renter service fee; active Pro
+ *        hosts pay 10.9% on the rental host side, savings capped at $500 per
+ *        completed transaction;
+ *      Build Studio: planned 6.5% manufacturer fee under separate terms.
+ *  - Pay in person / cash sales are RETIRED (owner override 2026-10-15). Never
+ *    describe in-person settlement or a $0 in-person commission.
+ *  - Plans: Free (two active listings unless grandfathered; drafts free) and
+ *    Vendibook Pro (monetization_products.vendibook_pro). Retired Starter /
+ *    Growth / Operator / Weekly Pass tiers and the retired Listing Concierge
+ *    must never appear. Catalog prices use {{price:slug}} tokens.
+ *  - Payment rails: equipment sales / invoices use the PayPal-supported
+ *    checkout or invoice flow; rentals use Square card checkout (never PayPal
+ *    for rentals). No Stripe / Affirm / Klarna / Afterpay language.
+ *  - Vendibook is not an escrow service, bank, lender or insurer. Never say
+ *    funds are held, and never promise a refund / auto-complete window
+ *    ("7 days") or a deposit-return date.
+ *  - Payouts (owner override 2026-10-15, wins over the guide): every
+ *    payout / get-paid answer, sales and rentals, says "We pay out within 24
+ *    hours after the rental or sale is complete and confirmed — signatures
+ *    and the other handoff steps done."
+ *  - Mission (owner 2026-10-15): Vendibook is here to support the food truck
+ *    community — helping operators buy, sell and rent equipment and grow.
+ *  - Invoice-first checkout is described as "where enabled"; Request to buy
+ *    does not mean accepted, invoiced or paid. Video does not replace an
+ *    in-person inspection. Financing is third-party (Vendibook is not the
+ *    lender).
+ *  - The paid Identity Verified badge is optional and never required to
+ *    publish; contact / purchase actions may need separate phone or ID checks.
+ *  - Support: (725) 755-9598 · support@vendibook.com · Mon–Fri 9 a.m.–5 p.m.
+ *    Arizona time.
+ *  - Anything not shipped is marked "coming soon"; answers link to real routes.
  */
 
 import { PRICING_FAQ } from "./pricingFaq";
@@ -49,21 +74,28 @@ export interface FaqCategory {
 // -------- Reusable action shortcuts --------
 const A = {
   createListing: { label: "Create a listing", href: "/list", requiresAuth: true },
+  myListings: { label: "My listings", href: "/dashboard/listings", requiresAuth: true },
   viewTransactions: { label: "View transactions", href: "/dashboard/activity", requiresAuth: true },
   dashboard: { label: "Open dashboard", href: "/dashboard", requiresAuth: true },
   verify: { label: "Verify identity", href: "/verify-identity", requiresAuth: true },
   notifPrefs: { label: "Notification preferences", href: "/notification-preferences", requiresAuth: true },
   contactSupport: { label: "Contact support", href: "/contact" },
+  helpCenter: { label: "Help Center", href: "/help" },
   browseRentals: { label: "Browse rentals", href: "/search?mode=rent" },
   browseSales: { label: "Browse for sale", href: "/search?mode=sale" },
   permitPath: { label: "Open PermitPath", href: "/tools/permitpath" },
   messages: { label: "Open messages", href: "/dashboard/messages", requiresAuth: true },
   account: { label: "Account settings", href: "/dashboard/account", requiresAuth: true },
+  paymentSetup: { label: "Payment setup", href: "/dashboard/payments/setup", requiresAuth: true },
   pricing: { label: "See plans", href: "/pricing" },
   subscription: { label: "Manage subscription", href: "/account/subscription", requiresAuth: true },
+  buyerMatch: { label: "Open BuyerMatch", href: "/dashboard/buyermatch", requiresAuth: true },
   tools: { label: "Open Premium Tools", href: "/dashboard/tools", requiresAuth: true },
   referrals: { label: "Refer & earn", href: "/refer", requiresAuth: true },
   purchases: { label: "My purchases", href: "/purchases", requiresAuth: true },
+  financing: { label: "Explore financing", href: "/financing" },
+  buildStudio: { label: "Open Build Studio", href: "/build-studio" },
+  atlas: { label: "Try Atlas", href: "/atlas" },
   refundPolicy: { label: "Refund policy", href: "/legal/refund-policy" },
   subTerms: { label: "Subscription terms", href: "/legal/subscription-terms" },
   terms: { label: "Terms of service", href: "/legal/terms" },
@@ -73,14 +105,14 @@ const PRICING_CATEGORY: FaqCategory = {
   id: "pricing-fees",
   title: "Pricing, fees & financing",
   blurb:
-    "Free to list. New online equipment sales carry an 8.7% seller commission for Standard and Pro sellers. Eligible pay-in-person equipment sales remain free. Rental fees are separate.",
+    "Free to list. New eligible online equipment sales carry an 8.7% seller commission for Free and Pro sellers, with no buyer platform fee. Rentals have separate host and renter fees.",
   // Namespaced: several pricing FAQ ids (e.g. "payout-timing") also exist as
   // full entries in the selling category. Prefixing keeps entry ids unique.
   entries: PRICING_FAQ.map((e) => ({
     id: `pricing-${e.id}`,
     question: e.question,
     answer: e.answer,
-    keywords: ["fees", "pricing", "commission", "cost", "paypal", "financing"],
+    keywords: ["fees", "pricing", "commission", "cost", "paypal", "square", "financing"],
     actions: e.cta ? [{ label: e.cta.label, href: e.cta.href }] : undefined,
   })),
 };
@@ -91,13 +123,13 @@ export const faqCategories: FaqCategory[] = [
   {
     id: "getting-started",
     title: "Getting started",
-    blurb: "What Vendibook is, how accounts work, and what identity verification unlocks.",
+    blurb: "Vendibook is here to support the food truck community. Learn what Vendibook is, how accounts work, verification checks, and how to reach support.",
     entries: [
       {
         id: "what-is-vendibook",
         question: "What is Vendibook?",
         answer:
-          "Vendibook is the verified marketplace for mobile food and beverage businesses. Buy or sell food trucks and trailers, rent trucks, kitchens, commissaries and vendor spaces, and run the entire deal — messaging, payments, e-signed agreements, deposits, payouts — in one place.",
+          "Vendibook is a marketplace for finding, buying, selling and renting mobile-food equipment and spaces, including food trucks, food trailers, carts, commercial kitchens and vendor lots. We're here to support the food truck community — helping operators buy, sell and rent equipment and grow their businesses.",
         keywords: ["about", "marketplace", "platform"],
         actions: [A.browseRentals, A.browseSales],
       },
@@ -112,36 +144,38 @@ export const faqCategories: FaqCategory[] = [
         id: "buyer-vs-seller-modes",
         question: "Do I need separate accounts to buy and to sell or host?",
         answer:
-          "No. Every account can browse, book, sell, and host. Your dashboard shows Buying and Hosting workspaces side by side — use the persona switch in the sidebar to jump between them. You never need a second account.",
+          "No. A single account can act in multiple roles — browse, book, buy, sell, and host. Your dashboard shows Buying and Hosting workspaces side by side; use the persona switch in the sidebar to jump between them.",
         actions: [A.dashboard],
       },
       {
         id: "identity-verification",
-        question: "What is identity verification and who needs it?",
+        question: "Do I have to verify my identity before publishing?",
         answer:
-          "Identity verification is an optional paid add-on ($19.99, one time) powered by Plaid. It is never required to buy, sell, rent, publish a listing, or get paid. What it does is put the Identity Verified badge on your profile and listings — sellers who carry it typically get more replies and faster offers because buyers know a real person is behind the truck.",
-        keywords: ["kyc", "identity", "verification", "badge", "verified"],
+          "No. The optional paid Identity Verified badge is not required to publish a listing. Specific contact, purchase or payment actions — such as starting a conversation, making an offer or requesting a purchase — may require other identity or phone checks.",
+        keywords: ["kyc", "identity", "verification", "badge", "verified", "phone"],
         actions: [A.verify],
       },
       {
         id: "verification-fails",
         question: "My identity check failed — what now?",
         answer:
-          "You'll see the exact reason on the verification page and can retry with a clearer document. Nothing on your account is blocked in the meantime — verification is optional, so you can keep listing, selling, and getting paid. If a retry still fails, email support@vendibook.com and we'll review manually.",
+          "You'll see the reason on the verification page and can retry with a clearer document. Publishing listings and replying to buyers about your own listings aren't blocked by a failed check, but actions that require a phone or identity check (like starting new contact or a purchase) stay unavailable until it passes. If a retry still fails, email support@vendibook.com — never send ID images, passwords or one-time codes in chat.",
         actions: [A.verify, A.contactSupport],
       },
       {
         id: "coverage",
         question: "Where is Vendibook available?",
         answer:
-          "Anywhere in the United States. Listing density, freight, and inspection partners vary by market — the search page shows what's live near you today.",
+          "Anywhere in the United States. Listing density, pickup, delivery and freight options vary by market and by listing — the search page shows what's live near you today.",
       },
       {
         id: "contact-support",
         question: "How do I contact support?",
         answer:
-          "Call (725) 755-9598, email support@vendibook.com, or open the Contact page. Live support is Monday–Friday, 9am–5pm Arizona time (Arizona doesn't observe DST). Off-hours messages get a reply the next business day.",
+          "Use the Help Center or contact support@vendibook.com. You can also call (725) 755-9598, Monday–Friday, 9:00 a.m.–5:00 p.m. Arizona time. For an order, listing or subscription issue, include its ID or link, the exact error text and the time it happened.",
+        keywords: ["help", "phone", "email", "hours"],
         actions: [
+          A.helpCenter,
           A.contactSupport,
           { label: "Call support", href: "tel:+17257559598" },
           { label: "Email support", href: "mailto:support@vendibook.com" },
@@ -154,88 +188,203 @@ export const faqCategories: FaqCategory[] = [
   {
     id: "buying",
     title: "Buying",
-    blurb: "Making offers, paying, financing, delivery, and what to do if something's wrong.",
+    blurb: "Offers, Request to buy, invoices, payment, delivery, receipt and what to do if something's wrong.",
     entries: [
       {
         id: "how-buying-works",
-        question: "How does buying work start to finish?",
+        question: "How do I buy a food truck or trailer?",
         answer:
-          "Browse listings, message the seller with any questions, and either buy at the asking price or make an offer. When the seller accepts, you either pay in person (if the seller offers it) or check out online through PayPal — card, bank, or PayPal balance. Funds are held rather than sent straight to the seller until you confirm you received exactly what was listed. If you never confirm, we auto-complete 7 days after delivery. Vendibook then reviews and issues the seller's payout. You get a bill of sale, e-signed by both sides, in your dashboard.",
+          "Find a listing, review the equipment and seller disclosures, then message the seller or start an available purchase request. Where invoice-first checkout is enabled, the seller approves terms before an itemized invoice is issued. Follow the payment, agreement and handoff steps shown in your transaction.",
+        keywords: ["buy", "purchase", "how it works"],
         actions: [A.browseSales],
       },
       {
         id: "make-offer",
-        question: "How do I make an offer?",
+        question: "Can I make an offer?",
         answer:
-          "On any for-sale listing, click Make an offer, enter your amount, and add an optional note. Sellers can accept, decline, or counter. Offers expire after 48 hours if the seller doesn't respond.",
+          "Eligible listings allow offers. Sellers can accept, decline or counter. The final accepted terms must be confirmed in the official order before payment.",
+        keywords: ["offer", "negotiate", "counter"],
+      },
+      {
+        id: "request-to-buy",
+        question: "What is Request to buy?",
+        answer:
+          "It sends a request for the seller to review. Submitting the request does not by itself mean the seller has accepted, an invoice exists, or a payment has been made.",
+        keywords: ["request to buy", "purchase request"],
+      },
+      {
+        id: "why-invoice",
+        question: "Why is there an invoice after seller approval?",
+        answer:
+          "An itemized invoice makes the agreed equipment price and any separately disclosed tax or shipping clear before you authorize payment. Invoice availability and payment options depend on the transaction flow enabled for your purchase.",
+        keywords: ["invoice", "approval"],
+      },
+      {
+        id: "invoice-reserved",
+        question: "Does an invoice mean the equipment is reserved?",
+        answer:
+          "Not necessarily. A reservation or commitment only applies once Vendibook has recorded the required status for your purchase. Check the listing and invoice status in your transaction.",
+        keywords: ["invoice", "reserved", "hold"],
+      },
+      {
+        id: "invoice-contents",
+        question: "What information should be on my invoice?",
+        answer:
+          "At minimum, review the seller and equipment, the agreed equipment amount, delivery or freight, any applicable tax, the final total, the payment deadline and the agreed terms. Ask for a correction before paying if anything is inaccurate.",
+        keywords: ["invoice", "tax", "freight", "total"],
+      },
+      {
+        id: "pro-forma-invoice",
+        question: "What is a pro forma invoice?",
+        answer:
+          "A pro forma is a purchase summary often used for financing applications. It is not a payable invoice and is not proof of an approved sale or a paid transaction.",
+        keywords: ["pro forma", "financing", "invoice"],
+        actions: [A.financing],
+      },
+      {
+        id: "invoice-expired",
+        question: "What happens if an invoice expires or changes?",
+        answer:
+          "Don't pay an outdated or unrelated link. Request a reviewed replacement or updated terms through Vendibook.",
+        keywords: ["invoice", "expired", "changed"],
+        actions: [A.contactSupport],
       },
       {
         id: "message-seller",
         question: "How do I message the seller?",
         answer:
-          "Open the listing and click Message. All conversations stay in Vendibook so we have a record if there's ever a dispute. Photos, PDFs, and DOCX up to 10MB attach directly.",
+          "Open the listing and click Message. Keep conversations in Vendibook so there's a record if anything goes wrong. Photos, PDFs, and DOCX up to 10MB attach directly. Starting a new conversation may require a verified phone and identity check.",
         actions: [A.messages],
       },
       {
         id: "payment-methods",
-        question: "What payment methods do you accept?",
+        question: "Can I pay with a card?",
         answer:
-          "Vendibook checkout runs on PayPal Business: pay with your PayPal balance, a linked bank account, or any major debit/credit card through PayPal — no PayPal account required to use a card. Buyer financing through our financing partner is available on eligible for-sale listings, and Pay in Person is available when the seller has enabled it. Vendibook never sees or stores your card number.",
+          "Eligible equipment sales use Vendibook's PayPal-powered checkout or invoice flow; rentals use Square card checkout. The payment options available to you are shown on the actual payment screen. Vendibook never asks for your full card number in chat or messages.",
+        keywords: ["card", "payment methods", "paypal", "square"],
       },
       {
-        id: "financing",
-        question: "Can I finance a food truck or trailer instead of paying cash?",
+        id: "pay-in-person-cash",
+        question: "Can I pay in person or with cash?",
         answer:
-          "Yes. Buyer financing is available on eligible published for-sale listings through the third-party financing partner Vendibook surfaces — currently Equinox Funding. You apply directly from the listing and can download a Pro Forma Invoice (with the VIN/serial) to submit with the application. The seller does not manage your application or make the lending decision. Vendibook is not a lender: we do not approve applicants, set rates or terms, or guarantee funding or timing. See /financing for the current provider details.",
-        keywords: ["financing", "monthly", "loan", "equinox", "equipment financing"],
-        actions: [{ label: "Explore financing", href: "/financing" }],
+          "No. Vendibook no longer supports pay-in-person or cash sales. Purchases go through Vendibook's checkout or invoice so the transaction is documented; off-platform payments don't receive Vendibook checkout protections.",
+        keywords: ["cash", "in person", "pay in person", "offline"],
       },
       {
         id: "payment-protection",
-        question: "How does payment protection work?",
+        question: "Does Vendibook hold payments in escrow?",
         answer:
-          "When you pay through Vendibook, your money is held by our payment processor, PayPal — not sent to the seller yet. The seller only gets paid after you confirm you received exactly what was listed. If you never confirm, we auto-complete 7 days after delivery. Vendibook reviews the transaction and then issues the seller's payout, so raise any issue before you confirm receipt.",
-        keywords: ["payment protection", "protection", "hold", "safe"],
+          "No. Vendibook is not an escrow service. Payments are processed by the approved provider for your transaction — PayPal-powered checkout for equipment sales, Square card checkout for rentals. We pay out within 24 hours after the rental or sale is complete and confirmed — signatures and the other handoff steps done.",
+        keywords: ["escrow", "payment protection", "hold", "safe"],
+      },
+      {
+        id: "charged-no-order",
+        question: "What happens if my card was charged but no order exists?",
+        answer:
+          "Don't try paying again. Contact support immediately with your payment reference so the transaction can be reconciled.",
+        keywords: ["charged", "double charge", "missing order", "payment failed"],
+        actions: [A.contactSupport],
+      },
+      {
+        id: "financing",
+        question: "Can I finance a food truck or trailer?",
+        answer:
+          "Eligible equipment listings may offer third-party financing referrals — currently led by Equinox Funding. Vendibook is not the lender and does not decide approval, rates, payments or funding dates. You can download a pro forma purchase summary from an eligible listing to submit with your application; it is not a payable invoice.",
+        keywords: ["financing", "monthly", "loan", "equinox", "equipment financing"],
+        actions: [A.financing],
+      },
+      {
+        id: "buy-out-of-state",
+        question: "Can I buy from a seller in another state?",
+        answer:
+          "Yes, depending on the listing's pickup, seller delivery or eligible freight arrangements. Confirm availability, cost and timing for your destination before paying.",
+        keywords: ["out of state", "another state", "long distance"],
+      },
+      {
+        id: "video-walkthrough",
+        question: "Can I request a video walkthrough?",
+        answer:
+          "Ask the seller for an available live video walkthrough to view the equipment and discuss condition or missing details. A video walkthrough does not replace an in-person inspection.",
+        keywords: ["video", "walkthrough", "inspection"],
+        actions: [A.messages],
       },
       {
         id: "delivery-options",
-        question: "How does delivery, pickup, or freight work?",
+        question: "Does Vendibook offer nationwide freight?",
         answer:
-          "It depends on what the seller offers. Common options are local pickup by you, seller-arranged delivery when the seller offers it, freight you arrange yourself, or Vendibook-coordinated freight where it is available. Where the delivery checker is enabled on a listing, it returns an estimate for your address before you commit — not every listing has nationwide delivery or a guaranteed quote. The buyer is generally responsible for delivery cost.",
+          "Some eligible listings offer Vendibook Freight or another shipping option, and others are pickup or seller delivery only. Nationwide delivery is not guaranteed for every listing or route — check the specific listing and the quote for your destination before you commit.",
+        keywords: ["freight", "shipping", "delivery", "nationwide"],
       },
       {
-        id: "confirm-delivery",
-        question: "When and how do I confirm delivery?",
+        id: "track-shipment",
+        question: "Can I track a shipped food trailer?",
         answer:
-          "After the truck arrives and you've done a full walkaround with the title and keys in hand, open the transaction and tap Confirm receipt. This completes the sale and starts Vendibook's payout review. Don't confirm until documents and any promised extras are physically with you — confirmation cannot be reversed once the payout is released.",
+          "Eligible deliveries may show shipping milestones and GPS updates when a seller or driver has opted into current location sharing. An older location update is shown as the last recorded position, not as live tracking.",
+        keywords: ["track", "tracking", "gps", "shipment"],
         actions: [A.viewTransactions],
       },
       {
-        id: "something-wrong",
-        question: "What if something is wrong when it arrives?",
+        id: "pickup-yourself",
+        question: "Can I pick the equipment up myself?",
         answer:
-          "Don't confirm receipt. Open the transaction and click Request refund or Report an issue. Upload photos, the bill of sale, and any messages. Our team mediates within 1 business day. If we can't resolve it with the seller directly, we open a formal dispute and can refund from the funds we're holding.",
+          "Where offered, you can coordinate pickup with the seller. Confirm the location, date, transport capacity, loading, title, keys and included accessories beforehand.",
+        keywords: ["pickup", "pick up", "tow"],
+      },
+      {
+        id: "confirm-delivery",
+        question: "When should I confirm receipt?",
+        answer:
+          "Only after you have physically received and inspected the equipment, reviewed the title/ownership documents and checked the agreed included items. If something is wrong, report it before confirming.",
+        keywords: ["confirm receipt", "delivery", "inspection"],
+        actions: [A.viewTransactions],
+      },
+      {
+        id: "bills-of-sale",
+        question: "Do I need to sign an agreement?",
+        answer:
+          "Your specific purchase or rental may require a digital agreement and consents, sent for e-signature in your transaction where enabled. Review and sign your actual document, and don't assume an unsigned document is complete.",
+        keywords: ["agreement", "bill of sale", "e-sign", "contract"],
+        actions: [A.viewTransactions],
+      },
+      {
+        id: "never-arrives",
+        question: "What if the truck never arrives?",
+        answer:
+          "Don't confirm receipt. Open your transaction, report the problem, keep the seller communications and shipping evidence, and contact Vendibook support immediately.",
+        keywords: ["not delivered", "never arrived", "missing"],
+        actions: [A.viewTransactions, A.contactSupport],
+      },
+      {
+        id: "something-wrong",
+        question: "What if the equipment is materially different from the listing?",
+        answer:
+          "Document the differences with photos or video and use the transaction's Report an issue or refund request option. A review is required; refunds are not automatic.",
+        keywords: ["not as described", "different", "problem", "issue"],
         actions: [A.viewTransactions, A.contactSupport],
       },
       {
         id: "refund-window",
-        question: "How long do I have to request a refund?",
+        question: "Can I request a refund on a food truck purchase?",
         answer:
-          "Up to 7 days after delivery, at which point the sale auto-completes. Once you confirm receipt, the payout moves into release, so open any dispute before confirming. The listing's cancellation policy governs pre-delivery cancellations — you'll see the exact refund amount before you confirm any cancellation.",
+          "Yes, you can request a review where the applicable order terms and law allow. The result depends on the transaction facts, buyer and seller obligations, payment-processor status and the approved policy. There is no universal automatic return window.",
+        keywords: ["refund", "return", "cancel purchase"],
         actions: [A.refundPolicy],
       },
       {
-        id: "bills-of-sale",
-        question: "Do I get a bill of sale?",
+        id: "refund-timing",
+        question: "How long do refunds take?",
         answer:
-          "Yes. Every completed sale generates a bill of sale, e-signed by both buyer and seller inside Vendibook. E-signature is included free — no DocuSign account or upsell. Download the signed PDF from your transaction page anytime.",
-        actions: [A.viewTransactions],
+          "Refund approval and the time for money to return to your payment method vary with the payment processor, payment method, any dispute and the order status. Support can share your verified refund status and the provider's stated estimate.",
+        keywords: ["refund", "how long", "timing"],
+        actions: [A.contactSupport],
       },
       {
         id: "off-platform-warning",
-        question: "Can I pay the seller outside Vendibook?",
+        question: "What if a seller pressures me to pay outside Vendibook?",
         answer:
-          "You can, but you lose every protection: no payment hold, no dispute mediation, no refund coverage, no bill of sale, no verified-user backstop. Sellers who push you to pay by wire, crypto, gift card, or Zelle are almost always fraud. Report them and don't send money.",
+          "Don't send additional money under pressure. Keep communications documented in Vendibook and report suspicious activity. Off-platform payments don't receive Vendibook checkout protections — and requests for wire, crypto, gift cards or Zelle are common scam signs.",
+        keywords: ["off platform", "wire", "zelle", "scam", "pressure"],
+        actions: [A.contactSupport],
       },
     ],
   },
@@ -244,50 +393,61 @@ export const faqCategories: FaqCategory[] = [
   {
     id: "renting",
     title: "Renting",
-    blurb: "Booking trucks, kitchens, and vendor spaces — agreements, deposits, cancellations.",
+    blurb: "Booking trucks, kitchens, and vendor spaces — Square checkout, agreements, deposits, cancellations.",
     entries: [
       {
         id: "how-renting-works",
         question: "How does renting work?",
         answer:
-          "Pick your dates on the listing calendar (or slot for hourly listings), submit a booking request, and pay when the host approves. Instant Book listings skip approval — payment confirms immediately. You'll e-sign the rental agreement, upload any required documents (license, insurance, permits), confirm pickup in the app, and confirm return at the end.",
+          "Choose your dates (or a time slot on hourly listings) and submit a booking request, or use Instant Book where the host offers it. Rental checkout runs on Square: you review the booking, complete the details and agreements, then pay by card. The quote shows the rental subtotal, the renter service fee and any disclosed deposit, tax or delivery. You may also need to upload documents the host requires (such as license or insurance).",
         actions: [A.browseRentals],
       },
       {
         id: "request-vs-instant",
         question: "What's the difference between request-to-book and Instant Book?",
         answer:
-          "Request-to-book: you submit dates, the host reviews and approves (or declines) within 24 hours, then you're charged. Instant Book: you're charged immediately — no host approval needed. Hosts choose per listing.",
+          "Request-to-book: you submit dates and the host approves before final payment. Instant Book: you can book and pay right away, as long as the listing's availability and booking conditions are met. Hosts choose per listing.",
+      },
+      {
+        id: "rental-payment-square",
+        question: "How do I pay for a rental?",
+        answer:
+          "Rentals are paid by card through Square checkout — not PayPal. A booking counts as paid only once Square confirms the payment; if a payment fails, don't submit a second one until you've checked the booking status.",
+        keywords: ["square", "rental payment", "card"],
+        actions: [A.viewTransactions],
       },
       {
         id: "rental-agreements",
         question: "Do I sign a rental agreement?",
         answer:
-          "Yes. Every rental generates an agreement covering dates, price, deposit, mileage/hour limits, insurance requirements, and the host's own terms. Both parties e-sign inside Vendibook — free, legally binding, no third-party account needed.",
+          "Where enabled, each rental includes an agreement you e-sign covering dates and times, price, deposit, condition, cleaning, insurance or documentation, included equipment, access and return terms. Review the actual document before you sign.",
       },
       {
         id: "deposits",
-        question: "How do deposits work?",
+        question: "Will I get my rental deposit back?",
         answer:
-          "The deposit is a real charge (not just a hold) collected alongside your rental payment. It's refunded to your card within 5–10 business days after you return the asset and the host closes out with no deductions. Hosts can only deduct with an itemized claim + evidence, filed within 48 hours of return. You get 48 hours to accept or dispute the claim — we mediate if you disagree.",
+          "A refundable security deposit is handled according to your rental agreement and the verified return and condition record. Damage or other documented charges may apply, so there's no guaranteed refund amount or date. Deposits are paid by card through Square, and any refund goes back to that card on Square's timeline.",
+        keywords: ["deposit", "security deposit", "refund"],
       },
       {
         id: "cancellation-policies",
-        question: "What are cancellation policies?",
+        question: "What are rental cancellation rules?",
         answer:
-          "Each listing displays its policy (Flexible / Moderate / Strict) before you book. You see the exact refund amount for your specific dates before confirming any cancellation. If the host cancels, you're refunded in full automatically — including all fees.",
+          "Each rental is governed by the cancellation terms shown on the listing and your signed rental agreement. Review the policy before paying by card through Square, and check the booking's actual cancellation and refund calculation before you confirm a cancellation.",
+        keywords: ["cancel", "cancellation", "rental refund"],
+        actions: [A.refundPolicy],
       },
       {
         id: "extend-rental",
         question: "Can I extend a rental?",
         answer:
-          "Yes. Open the transaction and Request extension. The host approves the new end date and additional charges are billed to your original payment method.",
+          "Open the booking and request an extension. If the host approves the new end date, the additional charges are shown before you pay by card through Square.",
       },
       {
         id: "damage-return",
         question: "What if the asset is damaged or returned late?",
         answer:
-          "Document with photos and timestamps at pickup and return. Hosts have 48 hours after return to file a claim with evidence. You have 48 hours to accept or dispute. If disputed, our team reviews photos, messages, and the signed agreement, then decides — funds only come out of the deposit with our approval.",
+          "Take time-stamped photos at pickup and return. Damage claims, late returns and deposit deductions follow the listing's policy and your signed rental agreement, and a claim must be documented and reviewed — a request from either side is not automatic approval.",
       },
     ],
   },
@@ -296,67 +456,128 @@ export const faqCategories: FaqCategory[] = [
   {
     id: "selling",
     title: "Selling",
-    blurb: "Publishing for free, listing limits, offers, fees, payouts, and bills of sale.",
+    blurb: "Publishing for free, listing limits, photos, fees, seller payment setup, payouts and refunds.",
     entries: [
       {
         id: "list-for-free",
         question: "Is it free to list on Vendibook?",
         answer:
-          "Yes. Creating an account and publishing a standard listing are free, subject to the active-listing limit on your plan. Identity verification is not required to publish. You only pay when a sale or booking completes on-platform (8.7% on new online equipment sales; rentals retain their host and renter rates) or when you buy an optional upgrade like Featured Boost.",
+          "Creating and publishing a basic listing is free, subject to the listing limit on your account. Paid promotion and Pro membership are optional.",
         actions: [A.createListing],
       },
       {
         id: "listing-limits",
-        question: "How many listings can I have?",
+        question: "How many listings can I publish for free?",
         answer:
-          "Free: 2 active listings. Vendibook Pro ({{price:vendibook_pro}}): unlimited. Founding-member accounts keep unlimited listings on the Free plan as thanks for early support.",
+          "The standard Free account supports two active listings. Founding-member accounts may have grandfathered unlimited listings. Drafts do not count. Vendibook Pro ({{price:vendibook_pro}}) includes unlimited eligible active listings.",
         actions: [A.pricing],
         keywords: ["limit", "cap", "how many", "founding"],
+      },
+      {
+        id: "listing-drafts",
+        question: "Can I save a listing as a draft?",
+        answer:
+          "Yes. Drafts save without a payment. Complete the missing required fields before publishing.",
+        keywords: ["draft", "save"],
+        actions: [A.myListings],
+      },
+      {
+        id: "listing-photos",
+        question: "What pictures should I upload?",
+        answer:
+          "Include at least three clear photos — ten or more is better. We recommend all sides of the unit, the kitchen, major equipment, service windows, tires/hitch and any known defects. A video can help but is optional.",
+        keywords: ["photos", "pictures", "images", "video"],
+        actions: [A.createListing],
       },
       {
         id: "good-listing",
         question: "What makes a great listing?",
         answer:
-          "Ten or more sharp daylight photos including the interior, equipment, and exterior from all angles. A clear title that includes year/make/model. A description that covers equipment, condition, service history, and what's included. Accurate specs (year, mileage, dimensions, generator hours, permits). Firm pricing. Fast replies to messages. Not sure what to charge? PricePilot benchmarks your price against real comparable listings.",
+          "Clear photos of every side, the serving window, cooking line, refrigeration, hood/fire suppression, sinks, generator, tires/hitch and any defects. A descriptive title, plus a description that covers dimensions, kitchen equipment, condition, title/lien status, what's included and excluded, and pickup or delivery terms. Fast replies to messages. Not sure what to charge? PricePilot suggests a price from comparable listings — a suggestion, not a certified appraisal or a promise of sale.",
         actions: [{ label: "Try PricePilot", href: "/tools/pricepilot" }],
+      },
+      {
+        id: "listing-not-in-search",
+        question: "Why is my listing not showing up in search?",
+        answer:
+          "Check the listing's published and moderation status, your category and location filters, and allow for indexing delay. If the listing is public but still missing, contact support with the listing link.",
+        keywords: ["search", "not showing", "missing listing", "visibility"],
+        actions: [A.myListings, A.contactSupport],
+      },
+      {
+        id: "sale-and-rent",
+        question: "Can I list a truck for sale and rent?",
+        answer:
+          "Some assets can have linked sale and rental listings where supported. Manage availability carefully — a linked rental may be paused when the same asset is sold.",
+        keywords: ["rent while you sell", "sale and rent", "linked listing"],
+        actions: [A.myListings],
       },
       {
         id: "offers-negotiation",
         question: "How do offers and counteroffers work?",
         answer:
-          "Buyers can send an offer with an optional message. You can Accept, Decline, or Counter. Counteroffers are single-use — the buyer has 48 hours to accept, decline, or send a new offer. Accepting creates the transaction immediately.",
+          "Buyers can send an offer or a Request to buy on eligible listings. You can accept, decline or counter. Accepted terms must be confirmed in the official order — where invoice-first checkout is enabled, your approval leads to an itemized invoice for the buyer to review and pay. A declined offer does not create a sale.",
       },
       {
         id: "seller-fees",
         question: "What are the seller fees?",
         answer:
-          "8.7% platform commission on new eligible online equipment sales for Standard and Pro sellers. Buyers pay $0 in platform fees. Pay-in-Person equipment sales are 100% free (no commission, no fee) since we're not processing payment. Rentals: 12.9% host commission + 12.9% renter service fee. Active Vendibook Pro members pay 10.9% on the rental host side, with savings capped at $500 per completed transaction.",
+          "For new eligible online equipment sales, the Vendibook seller fee is 8.7% of the agreed equipment amount, for Free and Pro sellers alike, and buyers pay no Vendibook platform fee. Confirm the exact fee in your transaction quote; older committed orders keep their agreed terms. Rentals are priced separately: a 12.9% host commission plus a 12.9% renter service fee, with active Vendibook Pro hosts paying 10.9% on the host side (savings capped at $500 per completed transaction).",
+        keywords: ["fee", "commission", "8.7%", "sale fee"],
         actions: [A.pricing],
+      },
+      {
+        id: "paypal-to-publish",
+        question: "Do I have to connect PayPal to publish a listing?",
+        answer:
+          "No. Publishing and seller payment setup are separate. A specific online transaction path may require an approved connected seller account.",
+        keywords: ["paypal", "connect", "publish"],
+        actions: [A.paymentSetup],
+      },
+      {
+        id: "paypal-connection-incomplete",
+        question: "What if PayPal says my seller connection is incomplete?",
+        answer:
+          "Return to your payment setup page and review the status or required action. If you see an error, send support the exact error text and timestamp — never your password or PayPal credentials.",
+        keywords: ["paypal", "action required", "seller connection", "onboarding"],
+        actions: [A.paymentSetup, A.contactSupport],
       },
       {
         id: "payout-timing",
         question: "When do I get paid?",
         answer:
-          "Vendibook reviews and issues your payout after the transaction completes — for a sale that means after delivery or handoff is confirmed (or 7 days after delivery if the buyer never confirms), and for a rental after the booking has started and completed as agreed. Payouts are not automatic or instant. Payouts are sent to the destination you have on file: PayPal, Venmo, Cash App, or bank transfer. One exception: on a successfully completed financed purchase, seller payment is released within 24 hours after successful delivery and confirmation.",
+          "We pay out within 24 hours after the rental or sale is complete and confirmed — signatures and the other handoff steps done. That applies to sales and rentals alike. Your transaction shows which steps are still open and its payout status, and support can check it with you.",
+        keywords: ["payout", "get paid", "when"],
+        actions: [A.viewTransactions],
       },
       {
         id: "payout-setup",
-        question: "How do I get paid — how do I connect my bank?",
+        question: "How do I set up how I get paid?",
         answer:
-          "After you publish, save your payout details from your dashboard or Account → Payments & payouts. Choose PayPal, Venmo, Cash App, or bank transfer. Payout details are never required to publish — only to get paid. Vendibook reviews and releases seller payouts manually.",
-        actions: [A.account],
+          "Payment setup is never required to publish — only to get paid on an online transaction. From Payment setup, sellers can connect PayPal for eligible online sales and rental hosts can connect Square. Where Vendibook records a payable for you instead, it is paid to the payout details saved under Account → Payments & payouts. We pay out within 24 hours after the rental or sale is complete and confirmed — signatures and the other handoff steps done.",
+        actions: [A.paymentSetup, A.account],
+      },
+      {
+        id: "partial-refund",
+        question: "Can a seller issue a partial refund?",
+        answer:
+          "Some eligible PayPal sale orders support approved partial refunds. Any refund must be confirmed by the payment provider and reflected in the transaction records.",
+        keywords: ["partial refund", "refund", "seller"],
+        actions: [A.viewTransactions],
       },
       {
         id: "bills-of-sale-seller",
         question: "Do I need to provide a bill of sale?",
         answer:
-          "Vendibook generates the bill of sale automatically for every completed sale, pre-filled with the price, both parties' info, and asset details. You just e-sign in the app. Upload the vehicle title and any registration documents to the transaction page after payment — they're shared privately with the buyer.",
+          "Where enabled, Vendibook prepares the sale agreement and bill of sale for e-signature by both parties. Upload the title and any registration documents to the transaction when asked, and check that every required signature is complete before treating the paperwork as finished.",
       },
       {
         id: "handoff",
-        question: "How does the handoff work?",
+        question: "What is digital handoff signoff?",
         answer:
-          "For pickup: coordinate a meet time in messages, hand over keys and title, and both parties tap Confirm handoff. For freight (yours or Vendibook-facilitated): schedule the carrier after payment clears, upload the shipping BOL to the transaction, and confirm dispatch. In every case, the buyer confirms receipt in the app when it arrives — that's what starts your payout clock.",
+          "Buyer and seller each record the relevant handoff or receipt confirmation in the transaction, creating a clearer documented record of delivery or pickup. For pickup, agree the time, place, loading/towing, keys and title in messages; for shipped equipment, the transaction shows delivery milestones. The buyer confirms receipt only after inspecting the equipment; your seller confirmation is separate.",
+        keywords: ["handoff", "signoff", "pickup", "confirmation"],
+        actions: [A.viewTransactions],
       },
     ],
   },
@@ -365,33 +586,42 @@ export const faqCategories: FaqCategory[] = [
   {
     id: "hosting",
     title: "Hosting kitchens & spaces",
-    blurb: "Listing a commercial kitchen, commissary, or vendor spot for rental.",
+    blurb: "Listing a commercial kitchen, commissary, vendor spot or truck for rent.",
     entries: [
       {
         id: "list-kitchen",
         question: "How do I list a commercial kitchen or vendor space?",
         answer:
-          "From your dashboard, tap Create listing and pick Commercial kitchen, Commissary, or Vendor space. The wizard collects hourly and daily rates, equipment, permit compatibility, availability, and photos. Publishing is free — you only pay commission on completed bookings.",
+          "From your dashboard, tap Create listing and pick Commercial kitchen, Commissary, or Vendor space. The wizard collects rates, equipment, permit compatibility, availability, and photos. Publishing is free — you only pay the host commission on completed bookings.",
         actions: [A.createListing],
       },
       {
         id: "kitchen-availability",
         question: "How do I set availability?",
         answer:
-          "Kitchens use hourly slots with recurring weekly rules (e.g. every Tuesday 6a–12p) plus one-off blocked dates. Vendor spaces support hourly, daily, weekly, and monthly rentals. Every listing type has a calendar you manage from the dashboard.",
+          "Kitchens use hourly slots with recurring weekly rules (e.g. every Tuesday 6a–12p) plus one-off blocked dates. Vendor spaces support hourly, daily, weekly, and monthly rentals. Every listing type has a calendar you manage from the dashboard — keep it current to avoid conflicts.",
       },
       {
         id: "approve-bookings",
         question: "How do I approve booking requests?",
         answer:
-          "Requests appear as in-app + email notifications and on your Hosting dashboard. Approve or decline within 24 hours. Turn on Instant Book to skip approval — a good move once your listing has reviews.",
+          "Requests appear as in-app and email notifications and on your Hosting dashboard. Approve or decline promptly — the renter pays after you approve. Turn on Instant Book to let eligible renters book without waiting for approval.",
         actions: [A.dashboard],
+      },
+      {
+        id: "host-square",
+        question: "How do renters pay me, and do I need Square?",
+        answer:
+          "Rental card payments run on Square, never PayPal. You can connect your own Square account in Payment setup where available, so connected payments reach your Square account. If you haven't connected one, Vendibook collects the card payment through Square and records a host payable. We pay out within 24 hours after the rental or sale is complete and confirmed — signatures and the other handoff steps done. If the Square connection fails or loops, note the exact screen and time and contact support.",
+        keywords: ["square", "host payout", "connect square"],
+        actions: [A.paymentSetup],
       },
       {
         id: "host-fees",
         question: "What does hosting cost?",
         answer:
-          "Publishing is free. When a booking pays, Vendibook takes 12.9% commission from your payout and adds a separate 12.9% service fee to the renter's total. Vendibook Pro members pay a reduced 10.9% commission on their side (up to $500 saved per transaction) — see the pricing page.",
+          "Standard rentals have a 12.9% host commission and a separate 12.9% renter service fee. Active Vendibook Pro hosts pay a reduced 10.9% host commission, with savings capped at $500 per completed transaction; the renter fee stays 12.9%. Checkout displays the actual calculation and any other applicable charges.",
+        keywords: ["rental fee", "host fee", "renter fee", "commission"],
         actions: [A.pricing],
       },
       {
@@ -408,70 +638,127 @@ export const faqCategories: FaqCategory[] = [
   {
     id: "memberships-billing",
     title: "Memberships & billing",
-    blurb: "Free, Vendibook Pro, billing, renewals, and cancellations.",
+    blurb: "Free, Vendibook Pro, BuyerMatch AI, renewals, cancellations and refunds.",
     entries: [
       {
         id: "tiers-overview",
         question: "What plans are available?",
         answer:
-          "Two: Free (2 active listings, core buying, selling and renting) and Vendibook Pro at {{price:vendibook_pro}} (unlimited listings, the Premium Tools bundle including PricePilot and PermitPath Plus, BuyerMatch AI with reviewed outreach reports (activation and campaign limits apply), advanced seller analytics, one Featured Boost credit each paid billing period, and a reduced 10.9% rental host fee capped at $500 saved per completed transaction). PermitPath Plus is also available on its own for {{price:permit_path_plus_monthly}}. See the full comparison on the pricing page.",
+          "Two: Free (two active listings unless grandfathered, drafts free, core buying, selling and renting) and Vendibook Pro at {{price:vendibook_pro}} (unlimited eligible active listings, one Featured Boost credit each billing period, Premium Tools and analytics including PricePilot, PermitPath Plus, priority visibility and support, eligible BuyerMatch AI buyer-discovery support, and a reduced 10.9% rental host fee capped at $500 saved per completed transaction). PermitPath Plus is also available on its own for {{price:permit_path_plus_monthly}}. See the full comparison on the pricing page.",
+        actions: [A.pricing],
+      },
+      {
+        id: "pro-cost",
+        question: "What does Vendibook Pro cost?",
+        answer:
+          "Vendibook Pro is {{price:vendibook_pro}} as a recurring membership. Confirm your renewal details and consent on the subscription screen.",
+        keywords: ["pro", "price", "cost", "membership"],
         actions: [A.pricing],
       },
       {
         id: "pro-benefits",
-        question: "What exactly do I get with Vendibook Pro?",
+        question: "What does Pro include?",
         answer:
-          "Vendibook Pro is {{price:vendibook_pro}}, billed monthly in advance, cancel anytime. It includes: BuyerMatch AI buyer discovery and reviewed activity reports for eligible sale listings (activation and capacity apply, no guaranteed leads or sales); existing rental fee benefits; one Featured Boost credit each paid billing period (unused credits do not roll over, and an activated boost finishes its 30-day run even if Pro later ends); unlimited active listings; the Premium Tools bundle and advanced seller analytics; and PermitPath Plus included. Cancelling stops the next renewal and your benefits stay active through the period you already paid for — there is no prorated refund simply for cancelling early.",
+          "Pro includes unlimited eligible active listings, a monthly Featured Boost credit, Premium Tools, applicable analytics, PermitPath Plus, priority visibility and support, and eligible BuyerMatch AI buyer-discovery support. An active Pro rental host also receives the reduced 10.9% rental host fee (savings capped at $500 per completed transaction). Campaign timing and results vary; buyers or sales are not guaranteed.",
         keywords: ["pro", "membership", "benefits", "BuyerMatch", "boost credit"],
         actions: [A.pricing, A.subscription],
+      },
+      {
+        id: "buyermatch-what",
+        question: "What is BuyerMatch AI?",
+        answer:
+          "BuyerMatch AI helps research relevant buyer demand and, where activated, supports reviewed outreach for eligible sale listings based on equipment type, budget, location and documented purchase interest.",
+        keywords: ["buyermatch", "buyer match", "leads", "outreach"],
+        actions: [A.buyerMatch],
+      },
+      {
+        id: "buyermatch-guarantee",
+        question: "Does BuyerMatch guarantee I will get a buyer?",
+        answer:
+          "No. BuyerMatch does not guarantee matches, replies, leads, sales or time to sell. Activity depends on listing eligibility, campaign activation, capacity and actual demand.",
+        keywords: ["buyermatch", "guarantee", "leads"],
+      },
+      {
+        id: "buyermatch-dashboard",
+        question: "What does the BuyerMatch dashboard show?",
+        answer:
+          "Where available, it shows campaign activation state, genuine research, verified outreach attempts, replies, qualified conversations and attributed listing activity. It never shows invented leads or messages.",
+        keywords: ["buyermatch", "dashboard", "report"],
+        actions: [A.buyerMatch],
+      },
+      {
+        id: "buyermatch-awaiting-activation",
+        question: "Why does my BuyerMatch dashboard say Awaiting Activation?",
+        answer:
+          "Your Pro membership may be active before an individual campaign starts. Awaiting Activation means no campaign activity has run yet. Contact support if the status seems inconsistent with your membership.",
+        keywords: ["buyermatch", "awaiting activation", "pending"],
+        actions: [A.buyerMatch, A.contactSupport],
+      },
+      {
+        id: "buyermatch-channels",
+        question: "Which platforms does BuyerMatch use?",
+        answer:
+          "Supported channels can include approved public research, outreach and referral sources. A channel only counts as used when actual authorized activity is recorded; private third-party messages are not automatically accessible.",
+        keywords: ["buyermatch", "channels", "platforms", "sources"],
+      },
+      {
+        id: "included-boost-credit",
+        question: "Can I use my included Featured Boost immediately?",
+        answer:
+          "An active Pro member can redeem one included Featured Boost credit per billing period on an eligible published listing. Credits do not roll over, transfer or convert to cash.",
+        keywords: ["boost credit", "featured boost", "pro"],
+        actions: [A.myListings],
       },
       {
         id: "upgrade-downgrade",
         question: "How do I upgrade or downgrade my plan?",
         answer:
-          "Open Account → Membership. Starting Vendibook Pro takes effect immediately; cancelling takes effect at the end of your current billing period so you don't lose anything you've paid for.",
+          "Open Account → Subscription. Vendibook Pro is active once the billing provider confirms your payment — not just from a button click. Cancelling stops future renewals, and access continues through the period you already paid for.",
         actions: [A.subscription],
       },
       {
         id: "cancel-subscription",
-        question: "How do I cancel my subscription?",
+        question: "Can I cancel Pro anytime?",
         answer:
-          "Cancel anytime online from Account → Membership — no phone call, no email required. Cancellation is scheduled for the end of your current billing period; you keep full access until that date, then drop to Free. Auto-renewal stops immediately.",
+          "You can cancel through Account → Subscription. Generally, future renewal stops and access continues through the paid period, subject to your billing provider and plan terms.",
+        keywords: ["cancel", "pro", "subscription"],
         actions: [A.subscription, A.subTerms],
       },
       {
         id: "auto-renew",
         question: "Do subscriptions auto-renew?",
         answer:
-          "Yes. Vendibook Pro and PermitPath Plus are billed monthly in advance and renew each month at the price you signed up at. We email a receipt with every renewal. Cancel anytime online — cancellation stops the next renewal and your benefits stay active through the period you already paid for. There is no prorated refund simply for cancelling early.",
+          "Yes. Vendibook Pro and PermitPath Plus are recurring monthly memberships that renew until you cancel, and checkout asks for your explicit renewal consent. Cancelling stops the next renewal; it doesn't refund the current period.",
         actions: [A.subTerms],
       },
       {
         id: "refund-policy",
-        question: "What's the refund policy on subscriptions?",
+        question: "Can I get a refund of my Pro subscription?",
         answer:
-          "Monthly subscription fees are non-refundable, but you can cancel anytime to stop future charges and you keep access through the period you already paid for. We refund one-time upgrade purchases (Featured Boost, Pro Listing, tools) if the feature never delivered — email support with your receipt.",
+          "Subscription charges are generally nonrefundable unless an approved exception applies. Cancelling a membership does not automatically refund the current paid period. One-time add-ons such as Featured Boost follow the refund terms shown for that product at purchase.",
+        keywords: ["refund", "subscription", "pro"],
         actions: [A.refundPolicy, A.contactSupport],
       },
       {
         id: "receipts-invoices",
         question: "Where do I get receipts and invoices?",
         answer:
-          "Every payment sends a receipt email. Subscription charges also appear in your PayPal account activity, and every Vendibook receipt is stored under Account → Payments & payouts.",
+          "Every payment sends a receipt email, and your Vendibook receipts are stored under Account → Payments & payouts. Membership charges also appear with the billing provider you subscribed through (for example, PayPal).",
         actions: [A.account],
       },
       {
         id: "payment-method-update",
-        question: "How do I update my card?",
+        question: "How do I update the card for my membership?",
         answer:
-          "Payment methods for Vendibook memberships are managed inside your PayPal account. Vendibook never sees or stores your card details.",
-        actions: [A.account],
+          "It depends on the billing provider for your membership. PayPal memberships are updated in your PayPal account (Automatic Payments). Check Account → Subscription to see how yours is billed. Vendibook never asks for your full card number in chat.",
+        actions: [A.subscription],
       },
       {
         id: "sub-payment-failed",
         question: "My subscription payment failed — what happens?",
         answer:
-          "PayPal retries a failed subscription payment automatically for up to a week. You'll get an email with a link to fix the payment method. During retry, you keep full access. If every retry fails, access pauses and you drop to Free — nothing on your account is deleted; upgrade again anytime to restore everything.",
+          "Your billing provider may retry the payment, and you'll get an email asking you to update your payment method. If the payment isn't completed, Pro access ends and you drop to Free — nothing on your account is deleted, and you can subscribe again anytime. Contact support if you were charged but don't see Pro access.",
+        actions: [A.subscription, A.contactSupport],
       },
     ],
   },
@@ -479,14 +766,14 @@ export const faqCategories: FaqCategory[] = [
   // ── 7. Tools & add-ons ─────────────────────────────────────────
   {
     id: "tools-addons",
-    title: "Tools & add-ons",
-    blurb: "PermitPath, Premium Tools, Featured Boost, and one-time services.",
+    title: "Tools, add-ons & services",
+    blurb: "PermitPath, Premium Tools, Featured Boost, Build Studio, Atlas and one-time services.",
     entries: [
       {
         id: "permit-path",
         question: "What is PermitPath?",
         answer:
-          "PermitPath is our guided compliance tool. Enter your location and business type and it generates a roadmap of the health, business, and vending permits you need — requirements, the agencies involved, official links, estimated costs and timelines, and a basic checklist. Generating and viewing a roadmap is free for every account. Founding members keep full Plus access free as thanks for early support.",
+          "PermitPath is our guided compliance tool. Enter your location and business type and it generates a roadmap of the health, business, and vending permits you need — requirements, the agencies involved, official links, estimated costs and timelines, and a basic checklist. Generating and viewing a basic roadmap is free for every account. Founding members keep full Plus access free as thanks for early support.",
         actions: [A.permitPath],
       },
       {
@@ -500,42 +787,66 @@ export const faqCategories: FaqCategory[] = [
         id: "pricepilot",
         question: "What is PricePilot?",
         answer:
-          "PricePilot analyzes comparable listings in your market and recommends a competitive sale or rental price. Included with Vendibook Pro.",
+          "PricePilot analyzes comparable listings in your market and suggests a competitive sale or rental price. Its suggestions are not certified appraisals or promises of sale. Included with Vendibook Pro.",
         actions: [{ label: "See PricePilot", href: "/plans/tools/pricepilot" }],
       },
       {
         id: "featured-boost",
         question: "What is Featured Boost?",
         answer:
-          "Featured Boost pins your listing to the top of relevant search and category pages for 30 days, adds a Featured badge, and shows on the home page's featured strip. Featured slots rotate so no one listing dominates every page load. It's a one-time purchase and does not auto-renew. Vendibook Pro includes one Featured Boost credit each paid billing period; unused credits don't roll over, and a boost you've already activated finishes its 30-day run even if Pro later ends.",
+          "Featured Boost ({{price:boost-featured-30}}, 30 days) gives one eligible listing a Featured badge and priority placement for 30 days. Featured slots rotate so no one listing dominates every page load. It's a one-time purchase that does not auto-renew, and it's nonrefundable once active. Vendibook Pro includes one Featured Boost credit each billing period; unused credits don't roll over.",
         actions: [{ label: "Buy Featured Boost", href: "/pricing?product=featured-boost", requiresAuth: true }],
       },
       {
         id: "pro-listing-upgrade",
         question: "What is the Pro Listing upgrade?",
         answer:
-          "Pro Listing is a one-time listing-level upgrade ({{price:pro_listing_30}}, 30 days) that gives a single listing premium presentation and priority placement treatment on Vendibook for the duration of the run. It is bought per listing and does not auto-renew. It is separate from a Vendibook Pro membership.",
+          "Pro Listing is a one-time listing-level upgrade ({{price:pro_listing_30}}, 30 days) that gives a single listing enhanced presentation and visibility for the duration of the run. It is bought per listing and does not auto-renew. It is separate from a Vendibook Pro membership.",
         actions: [A.pricing],
       },
       {
         id: "listing-rewrite",
-        question: "What is the Listing Rewrite service?",
+        question: "What is AI Listing Rewrite?",
         answer:
-          "Listing Rewrite ({{price:listing_rewrite}}, one time) improves the title, description, and spec copy on a listing you have already published. It is a copy improvement only — pricing, photos, and availability stay yours to manage.",
+          "AI Listing Rewrite ({{price:listing_rewrite}} per listing, one time) improves the title, description, and spec copy on a listing. It is a copy improvement only — pricing, photos, and availability stay yours to manage.",
         actions: [A.tools],
       },
       {
         id: "addon-differences",
         question: "What's the difference between Featured Boost, Pro Listing, and Vendibook Pro?",
         answer:
-          "Featured Boost buys visibility for one listing for 30 days. Pro Listing is a premium upgrade applied to one listing for 30 days. Vendibook Pro is an account-level monthly membership: unlimited listings, BuyerMatch AI for eligible sale listings (activation required), existing rental fee benefits, premium tools, PermitPath Plus, and a Featured Boost credit each paid billing period.",
+          "Featured Boost buys featured visibility for one listing for 30 days. Pro Listing is an enhanced-presentation upgrade for one listing for 30 days. Vendibook Pro is an account-level monthly membership: unlimited eligible listings, eligible BuyerMatch AI support (activation required), Premium Tools, PermitPath Plus, a Featured Boost credit each billing period, and the reduced 10.9% rental host fee. Pro does not change the 8.7% equipment-sale commission.",
         actions: [A.pricing],
+      },
+      {
+        id: "build-studio",
+        question: "What is Build Studio?",
+        answer:
+          "Build Studio is Vendibook's developing guided custom truck and trailer configuration and manufacturer-matching program. You configure a concept and request a quote; manufacturer approval and the final quotation determine what can actually be built.",
+        keywords: ["build studio", "custom build", "manufacturer", "custom truck"],
+        actions: [A.buildStudio],
+      },
+      {
+        id: "build-studio-fee",
+        question: "How much does Build Studio cost manufacturers?",
+        answer:
+          "The planned fee for qualifying Build Studio manufacturer transactions is 6.5% under separate commercial terms. A buyer's final quote and any review deposit must be disclosed before acceptance.",
+        keywords: ["build studio", "manufacturer fee", "6.5%"],
+        actions: [A.buildStudio],
+      },
+      {
+        id: "atlas-assistant",
+        question: "Can I use Atlas to find equipment?",
+        answer:
+          "Where enabled, Atlas is Vendibook's voice-led shopping assistant. It can help research real listings and navigate pages, but you must personally approve offers, purchase requests, payments and signatures. Atlas can message a seller for you while you're signed in only after you approve the exact message.",
+        keywords: ["atlas", "voice", "assistant", "ai"],
+        actions: [A.atlas],
       },
       {
         id: "notarization",
         question: "Do you offer notarization?",
         answer:
-          "Coming soon. In-app remote online notarization for bills of sale and title transfers is on the roadmap. State availability will vary at launch. In the meantime, our e-signature covers what's legally required in most states for private-party truck sales.",
+          "Coming soon. In-app remote online notarization for bills of sale and title transfers is on the roadmap. State availability will vary at launch. Until then, check your state's title-transfer requirements.",
         comingSoon: true,
       },
       {
@@ -552,52 +863,55 @@ export const faqCategories: FaqCategory[] = [
   {
     id: "trust-safety",
     title: "Trust & safety",
-    blurb: "How we protect your money, verify users, and handle disputes.",
+    blurb: "Identity badges, scams, reporting, disputes, and what documentation does and doesn't prove.",
     entries: [
       {
-        id: "how-protection-works",
-        question: "How does payment protection actually work?",
+        id: "verified-badges",
+        question: "What is the Identity Verified badge?",
         answer:
-          "When you pay on Vendibook, your money is held by our payment processor (PayPal) — not sent to the seller. The seller only gets paid after you confirm you got exactly what was listed, and Vendibook reviews the transaction before issuing the payout. Raise any issue before you confirm receipt. Pay-in-person deals happen directly between the two parties and are not covered by this hold.",
+          "It is an optional identity-check badge, currently listed at $19.99 subject to active product terms. It does not guarantee the equipment's condition, title or seller honesty. Not every member has it, so its absence doesn't mean someone is unsafe.",
+        keywords: ["verified", "badge", "identity", "plaid"],
+        actions: [A.verify],
       },
       {
-        id: "verified-badges",
-        question: "What does the verified badge mean?",
+        id: "handoff-guarantee",
+        question: "Does a video or signed handoff guarantee the equipment is problem-free?",
         answer:
-          "It means that person paid for the optional Plaid identity check and it passed, so their legal identity is confirmed. Most Vendibook members are not verified — it's a voluntary paid add-on, so its absence doesn't mean someone is unsafe, and its presence isn't a guarantee of behavior. Either way, keep messages and payment on-platform.",
+          "No. They help document what was shown and acknowledged, but they don't guarantee mechanical condition or remove all legal rights and responsibilities. Inspect the equipment and title yourself.",
+        keywords: ["guarantee", "video", "handoff", "condition"],
       },
       {
         id: "avoid-scams",
         question: "How do I avoid scams?",
         answer:
-          "Never move payment or messaging off Vendibook. Never send wire, crypto, gift cards, or Zelle. Be suspicious of prices way below market, urgency to send money before viewing, or brand-new accounts with no reviews. Every real transaction on Vendibook can be completed inside the app — if someone insists you go outside it, they're almost certainly a scammer.",
+          "Keep messaging and payment in Vendibook. Never send wire, crypto, gift cards, or Zelle, and never share passwords, one-time codes or full card or bank numbers. Be suspicious of prices far below market, pressure to send money before viewing, or brand-new accounts with no history. If someone insists you go outside Vendibook, stop and report them.",
       },
       {
         id: "report",
         question: "How do I report a listing or user?",
         answer:
-          "On any listing or profile, tap the menu (⋯) → Report. In a conversation, tap the menu → Report or Block. Reports go to our moderation team and we review within 1 business day. You can also email support@vendibook.com with the URL and screenshots.",
+          "On any listing or profile, tap the menu (⋯) → Report. In a conversation, tap the menu → Report or Block. Reports go to our moderation team. You can also email support@vendibook.com with the URL and screenshots.",
         actions: [{ label: "Email support", href: "mailto:support@vendibook.com" }],
       },
       {
         id: "disputes",
         question: "How does the dispute process work?",
         answer:
-          "Step 1: Try to resolve directly via in-app messages — most issues clear here. Step 2: If that stalls, open Request refund or Report an issue on the transaction page. Vendibook reviews within 1 business day, contacts both parties for evidence, and issues a decision: full refund, partial refund, or release to seller. Step 3: If either party disagrees with the decision, escalate to support for admin review. Because we hold funds throughout, we can actually enforce the outcome.",
-        actions: [A.viewTransactions],
+          "First, try to resolve it directly in Vendibook messages. If that stalls, use Report an issue or the refund request option on the transaction and upload photos, documents and messages. Vendibook reviews the transaction facts, the signed terms and the payment-provider status; outcomes are not automatic, and any refund must be confirmed by the payment provider. Don't confirm receipt while an issue is open.",
+        actions: [A.viewTransactions, A.contactSupport],
       },
       {
         id: "fee-transparency",
         question: "What are Vendibook's fees, exactly?",
         answer:
-          "New online equipment sales: 8.7% commission from Standard and Pro sellers, $0 from the buyer. Rentals: 12.9% commission from the host + 12.9% service fee on the renter. Pay-in-Person equipment sales: 100% free (no commission, no fee). Active Vendibook Pro members pay 10.9% on the rental host side, capped at $500 saved per completed transaction. Subscriptions and one-time upgrades are separate — see the pricing page.",
+          "New eligible online equipment sales: 8.7% seller commission for Free and Pro sellers, $0 buyer platform fee. Rentals: 12.9% host commission + 12.9% renter service fee; active Vendibook Pro hosts pay 10.9% on the host side, capped at $500 saved per completed transaction. Build Studio: a planned 6.5% manufacturer fee under separate terms. Subscriptions and one-time upgrades are separate — see the pricing page. Your transaction screen shows the actual charges.",
         actions: [A.pricing],
       },
       {
         id: "insurance",
         question: "Do you provide insurance?",
         answer:
-          "Vendibook is not an insurance provider. For rentals, hosts can require renters to show proof of insurance (commercial auto, general liability), and renters can require hosts to disclose coverage on the asset. Always confirm insurance requirements in the listing before booking. We're evaluating partner-provided policies for the future.",
+          "Vendibook is not an insurance provider. For rentals, hosts can require renters to show proof of insurance (commercial auto, general liability), and renters can ask hosts to disclose coverage on the asset. Always confirm insurance requirements in the listing and rental agreement before booking.",
       },
     ],
   },
@@ -606,7 +920,7 @@ export const faqCategories: FaqCategory[] = [
   {
     id: "account",
     title: "Account",
-    blurb: "Updating your info, privacy, bank details, cards, notifications, and closing your account.",
+    blurb: "Updating your info, privacy, payout details, notifications, and closing your account.",
     entries: [
       {
         id: "update-info",
@@ -626,21 +940,21 @@ export const faqCategories: FaqCategory[] = [
         id: "public-profile",
         question: "What is my public storefront?",
         answer:
-          "Every user has a public profile at /u/your-handle showing your verified badge, active listings, reviews, and the fields you've made public. Share the link; it's your storefront across the internet.",
+          "Every user has a public profile at /u/your-handle showing any badges you've earned, active listings, reviews, and the fields you've made public. Share the link; it's your storefront across the internet.",
       },
       {
         id: "update-bank",
-        question: "How do I update my bank / payout account?",
+        question: "How do I update my payout account?",
         answer:
-          "Account → Payments & payouts → Update payout details lets you change your payout destination (PayPal, Venmo, Cash App, or bank transfer) and see your payout history. Bank details are stored encrypted and are only used to send your payout.",
-        actions: [A.account],
+          "Account → Payments & payouts lets you update the payout details Vendibook uses when it pays a recorded seller or host payable, and see your payout history. PayPal and Square connections are managed from Payment setup. Bank details are stored encrypted and only used to send your payout.",
+        actions: [A.account, A.paymentSetup],
       },
       {
         id: "update-card",
         question: "How do I update my card on file?",
         answer:
-          "Account → Payments & payouts shows your Vendibook receipts. Saved payment methods and card updates are managed in your PayPal account.",
-        actions: [A.account],
+          "Vendibook doesn't store your card for purchases — you enter it at checkout (PayPal-powered for equipment sales, Square for rentals). Membership billing is updated with your billing provider; see Account → Subscription.",
+        actions: [A.subscription],
       },
       {
         id: "notification-prefs",
@@ -653,7 +967,7 @@ export const faqCategories: FaqCategory[] = [
         id: "delete-account",
         question: "How do I delete my account?",
         answer:
-          "Email support@vendibook.com from the address on file. We confirm any open transactions and close the account within 5 business days. Listings are unpublished, personal data is anonymized where legally possible, and transaction records are retained for tax/legal compliance. Open bookings, sales, and payouts must be completed or cancelled first.",
+          "Email support@vendibook.com from the address on file. Open bookings, sales, and payouts must be completed or cancelled first. Listings are unpublished, personal data is anonymized where legally possible, and transaction records are retained for tax and legal compliance.",
         actions: [{ label: "Email support", href: "mailto:support@vendibook.com" }],
       },
     ],
@@ -663,7 +977,7 @@ export const faqCategories: FaqCategory[] = [
   {
     id: "referrals",
     title: "Refer & earn",
-    blurb: "How our referral program pays you for growing the community.",
+    blurb: "How our referral program rewards you for growing the community.",
     entries: [
       {
         id: "how-refer",
@@ -676,7 +990,7 @@ export const faqCategories: FaqCategory[] = [
         id: "referral-payout",
         question: "When do referral rewards pay out?",
         answer:
-          "Rewards clear after the referred user's first transaction fully completes (buyer confirmation + payout window). Once cleared, rewards drop into your account balance or issue as an ACH payout depending on amount. Full terms and current reward amounts are on the referrals page.",
+          "Rewards clear after the referred user's first transaction fully completes. Full terms and current reward amounts are on the referrals page.",
         actions: [A.referrals],
       },
       {
@@ -694,7 +1008,7 @@ export const faqCategories: FaqCategory[] = [
  * The renderer swaps them for the live catalog price so Help/FAQ copy can
  * never drift from what checkout actually charges.
  */
-export const PRICE_TOKEN_PATTERN = /\{\{price:([a-z0-9_\-]+)\}\}/g;
+export const PRICE_TOKEN_PATTERN = /\{\{price:([a-z0-9_-]+)\}\}/g;
 
 /** Replace every `{{price:slug}}` token using a slug → label lookup. */
 export const resolvePriceTokens = (

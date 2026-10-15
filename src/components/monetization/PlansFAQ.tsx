@@ -1,19 +1,30 @@
 import { useState } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useCatalogPrice } from '@/hooks/useCatalogPrices';
+import { ACTIVE_PRODUCT_SLUGS } from '@/lib/monetization/catalogPricing';
 
-const FAQ = [
-  { q: 'Does BuyerMatch guarantee a buyer?', a: 'No. BuyerMatch supports relevant buyer discovery and authorized outreach for eligible sale listings. Submit a campaign from your Pro dashboard. It stays pending until an operator starts the approved workflow. Campaign limits apply; reports show actual reviewed activity, not guaranteed leads or sales.' },
+// Copy follows the owner's AI Support Agent Master Guide v5.0 (2026-10-14):
+// Pro's fee benefit is rental-only (10.9% host, $500 cap); it never lowers the 8.7%
+// equipment-sale commission. Pay in person / cash sales are retired.
+
+const buildFaq = (proPrice: string) => [
+  { q: 'What does Vendibook Pro cost?', a: `Vendibook Pro is ${proPrice} per month as a recurring membership. Confirm your renewal details and consent on the subscription screen before you subscribe.` },
+  { q: 'What does Pro include?', a: 'Unlimited eligible active listings, one Featured Boost credit each billing period (credits don\'t roll over or convert to cash), Premium Tools and applicable analytics, PermitPath Plus, priority visibility and support, and eligible BuyerMatch AI buyer-discovery support. Active Pro rental hosts also get a reduced 10.9% host fee.' },
+  { q: 'Does Pro lower my fees?', a: 'Only on rentals. Active Pro hosts pay a 10.9% rental host commission instead of 12.9%, with savings capped at $500 per completed transaction; the renter service fee stays 12.9%. Pro does not reduce the 8.7% online equipment-sale commission, which is the same for Free and Pro sellers.' },
+  { q: 'How do the fees work?', a: 'New eligible online equipment sales carry an 8.7% seller commission and no Vendibook buyer platform fee. Rentals are paid by card through Square, with a 12.9% host commission and a separate 12.9% renter service fee. Your final transaction screen shows the actual charges.' },
+  { q: 'Does BuyerMatch guarantee a buyer?', a: 'No. BuyerMatch helps research relevant buyer demand and, where activated, supports reviewed outreach for eligible sale listings. Your membership can be active before a campaign starts — the dashboard shows Awaiting Activation until then. Reports show actual recorded activity only; matches, replies, leads and sales are not guaranteed.' },
+  { q: 'Is basic listing still free?', a: 'Yes. Creating and publishing a basic listing is free on the Free plan, which supports two active listings (founding-member accounts may have more). Drafts are free and don\'t count toward the limit.' },
   { q: 'What happens when Pro ends?', a: 'New BuyerMatch activity stops when Pro access ends. Historical reports and existing customer conversations remain available. Previously activated boosts complete their purchased duration.' },
-  { q: 'Can I cancel anytime?', a: 'Yes. Cancel online from Account → Subscription in one click. Your plan stays active through the end of the current paid period — no early-termination fees, no phone calls.' },
-  { q: 'What happens to my listings if I downgrade?', a: 'Your listings stay live. If a downgrade would exceed your new plan\'s active-listing count, the newest ones are auto-paused and you can choose which to keep active. Nothing is deleted.' },
-  { q: 'Is basic listing still free?', a: 'Yes. Free hosts and sellers keep every core tool: unlimited photos on your first listing, booking calendar basics, messaging, and payment protection at checkout.' },
-  { q: 'How do the fees work?', a: 'We charge a 12.9% host commission and a 12.9% renter fee on rentals, and an 8.7% seller commission on new online equipment sales for Standard and Pro sellers. Equipment purchases follow the request and invoice process; cash checkout is no longer offered. Active Vendibook Pro members pay a reduced 10.9% rental host commission, with savings capped at $500 per completed transaction.' },
-  { q: 'Do you offer refunds?', a: 'Subscription charges are non-refundable, but you can cancel anytime and access continues through the paid period. One-time boosts follow the refund policy shown at purchase.' },
+  { q: 'What happens to my listings if I downgrade?', a: 'Your listings stay live up to the Free plan\'s active-listing limit. If you have more, the extras are paused and you can choose which to keep active. Nothing is deleted.' },
+  { q: 'Can I cancel anytime?', a: 'Yes. Cancel through Account → Subscription. Future renewals stop and access generally continues through the period you already paid for, subject to your billing provider and plan terms.' },
+  { q: 'Do you offer refunds?', a: 'Subscription charges are generally nonrefundable unless an approved exception applies, and cancelling doesn\'t automatically refund the current paid period. One-time add-ons like Featured Boost follow the refund terms shown at purchase.' },
 ];
 
 export function PlansFAQ() {
   const [open, setOpen] = useState<number | null>(0);
+  const proPrice = useCatalogPrice(ACTIVE_PRODUCT_SLUGS.vendibookPro);
+  const FAQ = buildFaq(proPrice.label);
   return (
     <div className="space-y-2">
       <h3 className="text-2xl md:text-3xl font-bold tracking-tight text-foreground leading-tight mb-8">Questions people ask before subscribing</h3>

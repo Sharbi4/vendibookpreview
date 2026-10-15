@@ -4,18 +4,26 @@
  * One source of truth for every "what does this cost?" surface:
  *   /faq, /help, /how-it-works, /how-it-works-seller, /how-it-works-host.
  *
- * Numbers must match src/lib/commissions.ts and src/lib/fees/proFee.ts:
- *   Sales  — 8.7% seller commission, $0 buyer fee.
- *   Rentals— 12.9% host commission + 12.9% renter service fee.
- *   Pay in Person (cash) SALES — 100% free, no commission, no fee.
- *   Rentals paid in person still owe host commission.
- *   Vendibook Pro — 10.9% on the eligible rental host side, savings capped
- *   at $500 per completed transaction.
+ * Copy follows the owner's AI Support Agent Master Guide v5.0 (2026-10-14,
+ * docs/support/vendibook-ai-support-master-guide-v5.txt) and numbers must
+ * match FEE_CONFIG (supabase/functions/_shared/feeConfig.ts):
+ *   New eligible online equipment sales — 8.7% seller commission, $0 buyer
+ *     platform fee, for Free and Pro sellers alike (Pro does not lower it).
+ *     Older committed orders keep their snapshotted terms.
+ *   Rentals — 12.9% host commission + 12.9% renter service fee; active
+ *     Vendibook Pro hosts pay 10.9% on the host side, savings capped at $500
+ *     per completed transaction.
+ *   Pay in person / cash sales are retired (owner override 2026-10-15) —
+ *     never describe in-person settlement or a $0 in-person commission.
  *
- * Payout language rule: do NOT describe general online payouts as instant,
- * automatic, or 24-hour. Vendibook reviews and issues the payout after the
- * transaction completes. The 24-hour promise applies ONLY to successfully
- * completed financed purchases (see `financing-payout`).
+ * Payment rails: equipment sales use the PayPal-supported checkout / invoice
+ * flow; rentals use Square card checkout (never PayPal).
+ *
+ * Payout language rule (owner override 2026-10-15, wins over the guide):
+ * every payout answer, sales and rentals, says "We pay out within 24 hours
+ * after the rental or sale is complete and confirmed — signatures and the
+ * other handoff steps done." Vendibook is not an escrow service — never say
+ * funds are held.
  */
 
 export type PricingAudience = 'seller' | 'host' | 'buyer' | 'renter' | 'all';
@@ -31,40 +39,33 @@ export interface PricingFaqEntry {
 export const PRICING_FAQ: PricingFaqEntry[] = [
   {
     id: 'cost-to-list',
-    question: 'Does it cost anything to list on Vendibook?',
+    question: 'Does it cost money to publish a listing?',
     answer:
-      'No. Creating your account, building a standard listing, and publishing it are free, subject to the active-listing limit on your plan. There is no listing fee and no card required to go live. Identity verification is optional and is not required to publish.',
+      'Creating and publishing a basic listing is free, subject to the listing limit on your account: the standard Free account supports two active listings (founding-member accounts may have grandfathered unlimited listings), and drafts do not count. Paid promotion and Pro membership are optional, and the optional Identity Verified badge is not required to publish.',
     audiences: ['seller', 'host', 'all'],
     cta: { label: 'Create a free listing', href: '/list' },
   },
   {
     id: 'seller-commission',
-    question: 'What does it cost to sell if the sale runs through Vendibook?',
+    question: 'What is the fee for selling online?',
     answer:
-      "An 8.7% platform commission applies to new eligible online equipment sales for both Standard and Pro sellers. The commission base is the agreed equipment price, excluding sales tax and separately priced transport. Payment-provider charges are recorded separately. Buyers pay no Vendibook platform fee; eligible pay-in-person equipment sales remain free. Previously agreed transactions keep their fee snapshot.",
+      'For new eligible online equipment sales, the Vendibook seller fee is 8.7% of the agreed equipment amount — the same for Free and Pro sellers. Separately priced shipping and tax are not part of the commission base, and buyers pay no Vendibook platform fee. For example, on a $20,000 sale the 8.7% fee is $1,740, before any shipping obligations, refunds or other separately disclosed costs. Confirm the exact fee in your transaction quote; older committed orders keep their agreed terms.',
     audiences: ['seller', 'all'],
     cta: { label: 'See the full fee breakdown', href: '/pricing' },
   },
   {
-    id: 'pay-in-person-free',
-    question: 'What if the buyer pays me in person?',
-    answer:
-      'Then the equipment sale is 100% free. Pay-in-Person sales carry no Vendibook commission and no buyer fee — we are not processing the money, so we do not take a cut. You still get the listing, the messaging, and the paperwork. Rentals settled in person still owe the standard host commission, because the booking, calendar, and agreement run on Vendibook.',
-    audiences: ['seller', 'buyer', 'all'],
-  },
-  {
     id: 'buyer-fees',
-    question: 'What do buyers pay in fees?',
+    question: 'Does a buyer pay a Vendibook platform fee for an equipment purchase?',
     answer:
-      'Nothing. $0 platform fee on purchases. You pay the agreed price, plus delivery or freight if you choose it. When you pay through Vendibook checkout, funds are held by PayPal and are not released to the seller until the sale is completed and confirmed.',
+      'No, the buyer platform fee for equipment sales is $0. Your invoice or checkout may separately show tax, freight or other expressly agreed amounts.',
     audiences: ['buyer', 'all'],
     cta: { label: 'Browse trucks & trailers', href: '/search?mode=sale' },
   },
   {
     id: 'rental-fees',
-    question: 'How do rental fees work?',
+    question: 'What are the rental fees?',
     answer:
-      'Rentals are dual-sided: the host pays 12.9% commission out of the payout, and the renter pays a 12.9% service fee on top of the booking subtotal. Both numbers are shown before anything is confirmed. The Vendibook Pro discount (10.9%) applies to the host side only — the renter service fee stays 12.9%.',
+      'Rentals are paid by card through Square. Standard rentals have a 12.9% host commission and a separate 12.9% renter service fee. Active Vendibook Pro hosts pay a reduced 10.9% host commission (savings capped at $500 per completed transaction); the renter service fee stays 12.9%. Checkout displays the actual calculation and any other applicable charges.',
     audiences: ['host', 'renter', 'all'],
     cta: { label: 'See rental pricing', href: '/pricing' },
   },
@@ -72,14 +73,22 @@ export const PRICING_FAQ: PricingFaqEntry[] = [
     id: 'host-earnings',
     question: 'What will I actually take home as a host?',
     answer:
-      'Your booking subtotal minus 12.9% (or 10.9% with active Vendibook Pro). A $1,000 kitchen booking nets a free-plan host $871, and the renter is charged $1,129 — both sides see the math before the booking is accepted. Vendibook reviews and issues host payouts after the booking is completed, to the payout destination you have on file.',
+      'Your rental subtotal minus the host commission. On a $1,000 rental subtotal, the standard host fee is $129 and the renter pays a separate $129 service fee, before any separately disclosed tax, security deposit, delivery or adjustments. An active Pro host pays $109 instead, subject to the $500 savings cap. Renters pay by card through Square. We pay out within 24 hours after the rental or sale is complete and confirmed — signatures and the other handoff steps done.',
     audiences: ['host', 'all'],
+  },
+  {
+    id: 'pro-sale-commission',
+    question: 'Does Pro reduce my equipment-sale commission?',
+    answer:
+      'No. The 8.7% online equipment-sale commission applies equally to Free and Pro sellers. Active Pro hosts may receive a reduced 10.9% rental-side host commission, subject to the $500-per-transaction savings cap.',
+    audiences: ['seller', 'host', 'all'],
+    cta: { label: 'Compare plans', href: '/pricing' },
   },
   {
     id: 'paypal-payments',
     question: 'How do payments actually move — who processes them?',
     answer:
-      'Vendibook checkout runs on PayPal Business. Buyers and renters can pay with a PayPal balance, a linked bank account, or a debit/credit card through PayPal — no PayPal account needed to use a card. Funds are held after payment rather than handed straight to the seller. Vendibook records the seller proceeds and issues the payout to the method you saved (PayPal, Venmo, Cash App, or bank transfer). We never see or store your card number.',
+      'It depends on the transaction. Eligible equipment sales use Vendibook\'s PayPal-powered checkout or invoice flow. Rentals are paid by card through Square checkout, never PayPal. Vendibook is not an escrow service. We pay out within 24 hours after the rental or sale is complete and confirmed — signatures and the other handoff steps done. Available payment options are shown on the actual payment screen, and Vendibook never sees or stores your full card number.',
     audiences: ['seller', 'host', 'buyer', 'renter', 'all'],
     cta: { label: 'How payments work', href: '/payments' },
   },
@@ -87,30 +96,22 @@ export const PRICING_FAQ: PricingFaqEntry[] = [
     id: 'payout-timing',
     question: 'When does the seller or host actually get paid?',
     answer:
-      'Vendibook reviews and issues the payout after the transaction is complete — for a sale that means after delivery or handoff is confirmed, and for a rental after the booking has started and completed as agreed. Payouts are not automatic or instant. One exception: on a successfully completed financed purchase, seller payment is released within 24 hours after successful delivery and confirmation.',
+      'We pay out within 24 hours after the rental or sale is complete and confirmed — signatures and the other handoff steps done. This applies to equipment sales (paid through Vendibook\'s PayPal-powered checkout or invoice) and rentals (paid by card through Square). Your transaction shows which steps are still open and its payout status.',
     audiences: ['seller', 'host', 'all'],
   },
   {
     id: 'equinox-financing',
-    question: 'Can buyers finance a truck instead of paying cash?',
+    question: 'Does Vendibook offer financing?',
     answer:
-      'Yes. Buyer financing is available on eligible published for-sale listings through the third-party financing partner surfaced by Vendibook — currently Equinox Funding. The buyer applies directly with the partner; the seller does not manage the application or make the lending decision. Vendibook is not a lender, does not approve applicants, and does not set rates, terms, or guarantee funding. Buyers can download a Pro Forma Invoice from the listing to submit with an application.',
+      'Eligible equipment listings may offer third-party financing referrals — currently led by Equinox Funding. The buyer applies directly with the lender; the seller does not manage the application. Vendibook is not the lender and does not decide approval, rates, payments or funding dates. Buyers can download a pro forma purchase summary from the listing for an application — it is not a payable invoice or proof of a sale.',
     audiences: ['seller', 'buyer', 'all'],
     cta: { label: 'See current financing options', href: '/financing' },
   },
   {
-    id: 'financing-payout',
-    question: 'How fast does a seller get paid on a financed purchase?',
-    answer:
-      'On a successfully completed financed Vendibook purchase, seller payment is released within 24 hours after successful delivery and confirmation. This applies to financed purchases specifically — other online transactions follow the standard review-and-release schedule.',
-    audiences: ['seller', 'all'],
-    cta: { label: 'Financing details', href: '/financing' },
-  },
-  {
     id: 'subscriptions-optional',
-    question: 'Do I need a paid plan to sell or host?',
+    question: 'Do I need Pro to sell or rent?',
     answer:
-      'No. The free plan covers listing, messaging, checkout, and payouts. Vendibook Pro and one-time upgrades such as Featured Boost add reach, tooling, and BuyerMatch AI buyer outreach — they change how fast you sell, not whether you can.',
+      'No. You can publish standard listings without Pro. Vendibook Pro adds tools, visibility, a monthly Featured Boost credit, eligible BuyerMatch AI buyer-discovery support and the reduced rental host fee. BuyerMatch does not guarantee buyers or sales.',
     audiences: ['seller', 'host', 'all'],
     cta: { label: 'Compare plans', href: '/pricing' },
   },
@@ -118,7 +119,7 @@ export const PRICING_FAQ: PricingFaqEntry[] = [
     id: 'identity-optional',
     question: 'Is identity verification required?',
     answer:
-      'No. The Identity Verified badge is an optional paid add-on powered by Plaid. It is never required to buy, sell, rent, publish, get paid, or use pay-in-person. Not every buyer or seller on Vendibook is verified — the badge only tells you that the person completed the check.',
+      'Not to publish. The Identity Verified badge is an optional paid add-on, and it does not guarantee equipment condition, title or seller honesty. Specific contact, purchase or payment actions may require separate phone or identity checks.',
     audiences: ['seller', 'host', 'buyer', 'renter', 'all'],
     cta: { label: 'About verification', href: '/identity-verification' },
   },

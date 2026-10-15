@@ -77,11 +77,30 @@ describe("faq search", () => {
     }
   });
 
-  it("critical facts match the code: 12.9% commission and cash sale free", () => {
+  it("critical facts match FEE_CONFIG: 8.7% online sale, 12.9% rentals, Pro rental-only", () => {
     const feeEntry = findFaqEntry("seller-fees");
+    expect(feeEntry?.answer).toMatch(/8\.7%/);
     expect(feeEntry?.answer).toMatch(/12\.9%/);
+    expect(findFaqEntry("pricing-pro-sale-commission")?.answer).toMatch(/^No\./);
     const buying = findFaqEntry("payment-methods");
-    expect(buying?.answer).toBeDefined();
+    expect(buying?.answer).toMatch(/Square/);
+  });
+
+  it("follows the master guide: no escrow holds, blanket windows, retired products or pay in person", () => {
+    expect(findFaqEntry("pay-in-person-cash")?.answer).toMatch(/^No\./);
+    // Owner payout override (2026-10-15) applies to sales and rentals.
+    const payout = /We pay out within 24 hours after the rental or sale is complete and confirmed/;
+    expect(findFaqEntry("payout-timing")?.answer).toMatch(payout);
+    expect(findFaqEntry("pricing-payout-timing")?.answer).toMatch(payout);
+    expect(findFaqEntry("rental-payment-square")?.answer).toMatch(/Square/);
+    expect(findFaqEntry("what-is-vendibook")?.answer).toMatch(/food truck community/);
+    for (const entry of allFaqEntries) {
+      const text = `${entry.question} ${entry.answer}`;
+      expect(text, entry.id).not.toMatch(/funds are held|held by (our payment processor|PayPal)/i);
+      expect(text, entry.id).not.toMatch(/7 days after delivery|5–10 business days|financed purchase/i);
+      expect(text, entry.id).not.toMatch(/stripe|concierge|starter|growth plan|operator plan/i);
+      expect(text, entry.id).not.toMatch(/pay-in-person (equipment )?sales? (are|is|remain)|100% free/i);
+    }
   });
 
   it("plan prices are rendered from live catalog tokens, never hardcoded", () => {
