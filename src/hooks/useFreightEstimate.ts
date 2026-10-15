@@ -7,7 +7,6 @@ export interface FreightEstimate {
   tax_rate: number;
   tax_amount: number;
   total_cost: number;
-  distance_miles: number;
   estimated_transit_days: { min: number; max: number };
 }
 

@@ -4855,7 +4855,7 @@ export const PublishWizard: React.FC = () => {
                                   step="0.01"
                                   value={deliveryFee}
                                   onChange={(e) => setDeliveryFee(e.target.value)}
-                                  placeholder={deliveryFeeType === 'per_mile' ? '4.50' : '0.00'}
+                                  placeholder="0.00"
                                   className={deliveryFeeType === 'per_mile' ? 'pl-7 pr-16' : 'pl-7'}
                                 />
                                 {deliveryFeeType === 'per_mile' && (

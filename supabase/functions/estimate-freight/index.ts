@@ -31,7 +31,6 @@ interface FreightEstimateRequest {
 interface FreightEstimateResponse {
   success: boolean;
   estimate?: {
-    distance_miles: number;
     subtotal: number;
     tax_rate: number;
     tax_amount: number;
@@ -126,10 +125,10 @@ const handler = async (req: Request): Promise<Response> => {
 
     const response: FreightEstimateResponse = {
       success: true,
-      // Buyers get the quote only: never the per-mile rate or the
-      // base/fuel/handling breakdown (owner rule 2026-10-14).
+      // Buyers get the quote only: never the per-mile rate, the distance it
+      // is multiplied by, or the base/fuel/handling breakdown (owner rule
+      // 2026-10-14/15: rates are visible only to admins and support).
       estimate: {
-        distance_miles: Math.round(distanceMiles),
         subtotal: costs.subtotal,
         tax_rate: costs.tax_rate,
         tax_amount: costs.tax_amount,

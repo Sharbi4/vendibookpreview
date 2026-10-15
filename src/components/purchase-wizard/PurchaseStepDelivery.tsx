@@ -21,7 +21,7 @@ interface PurchaseStepDeliveryProps {
   setDeliveryAddress: (value: string) => void;
   setDeliveryCoords: (coords: [number, number] | null) => void;
   deliveryFee: number;
-  /** e.g. "$4.50/mile" or "$150 per delivery" — how the seller prices delivery */
+  /** Flat delivery charge label, e.g. "$150 per delivery". Per-mile rates are never shown to buyers. */
   deliveryRateText?: string | null;
   deliveryFeeType?: 'flat' | 'per_mile';
   deliveryRadiusMiles: number | null;
@@ -333,8 +333,8 @@ const PurchaseStepDelivery = ({
   const pickupPriceNode = <span className="text-emerald-500">FREE</span>;
   const deliveryPriceNode = deliveryFee
     ? <span className="text-foreground">+{formatCurrency(deliveryFee)}</span>
-    : deliveryFeeType === 'per_mile' && deliveryRateText
-      ? <span className="text-xs font-normal text-muted-foreground">{deliveryRateText}</span>
+    : deliveryFeeType === 'per_mile'
+      ? <span className="text-xs font-normal text-muted-foreground">Quoted for your address</span>
       : <span className="text-emerald-500">FREE</span>;
   const freightPriceNode = isFreightSellerPaid
     ? <span className="text-emerald-500">FREE</span>
@@ -407,13 +407,12 @@ const PurchaseStepDelivery = ({
                 }}
                 placeholder="Start typing your delivery address"
               />
-              {deliveryRateText && (
-                <p className="text-xs text-muted-foreground mt-2">
-                  {deliveryFeeType === 'per_mile'
-                    ? `The seller charges ${deliveryRateText}. Your delivery charge is calculated from the distance to this address.`
-                    : `The seller charges a flat ${deliveryRateText}.`}
-                </p>
-              )}
+              {/* Quote only: never show the per-mile rate or how it's calculated (owner rule). */}
+              {deliveryFeeType === 'per_mile' ? (
+                <p className="text-xs text-muted-foreground mt-2">Your delivery quote updates for this address.</p>
+              ) : deliveryRateText ? (
+                <p className="text-xs text-muted-foreground mt-2">{`The seller charges a flat ${deliveryRateText}.`}</p>
+              ) : null}
             </div>
 
             {deliveryDistanceInfo.distance !== null && (
