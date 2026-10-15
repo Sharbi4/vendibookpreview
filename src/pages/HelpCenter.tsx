@@ -156,7 +156,7 @@ const browseTopics: { title: string; icon: typeof BookOpen; articles: TopicLink[
     articles: [
       { label: 'How buyer financing works', to: '/help/buyer-financing' },
       { label: 'Current financing options', to: '/financing' },
-      { label: 'Financed purchase payouts', to: '/faq?cat=pricing-fees#financing-payout' },
+      { label: 'When sellers get paid', to: '/faq?cat=pricing-fees#pricing-payout-timing' },
     ],
   },
   {

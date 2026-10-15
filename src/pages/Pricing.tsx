@@ -572,7 +572,7 @@ const Pricing = () => {
               </div>
               <dl className="grid divide-y divide-border sm:grid-cols-3 sm:divide-x sm:divide-y-0">
                 {[
-                  { who: 'Equipment sellers', rate: '8.7%', note: 'New online sales, for Standard and Pro. Equipment price only; excludes tax and separately priced transport.' },
+                  { who: 'Equipment sellers', rate: '8.7%', note: 'New online sales, on Free and Pro. Equipment price only; excludes tax and separately priced transport.' },
                   { who: 'Rental hosts', rate: '12.9%', note: '10.9% with Pro, savings capped at $500 per completed rental.' },
                   { who: 'Renters', rate: '12.9%', note: 'Service fee shown at checkout before you pay.' },
                   { who: 'Buyers', rate: '$0', note: 'No Vendibook fee on purchases.' },
