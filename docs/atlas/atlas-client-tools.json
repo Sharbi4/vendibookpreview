@@ -2,7 +2,7 @@
   {
     "type": "client",
     "name": "search_listings",
-    "description": "Search live Vendibook listings and show the matches on screen. Returns up to 6 listings with id, title, price, location, condition and a short description.",
+    "description": "Search live Vendibook listings and show the matches on screen. Returns up to 6 numbered results (id, title, price, location, condition, whether it ships nationwide, short description), how many are in their state, and a note on what to say when none are nearby.",
     "expects_response": true,
     "response_timeout_secs": 20,
     "parameters": {
@@ -42,6 +42,10 @@
         "state": {
           "type": "string",
           "description": "Two-letter US state code to prefer, e.g. \"TX\". Optional."
+        },
+        "ships_nationwide": {
+          "type": "boolean",
+          "description": "Only for-sale listings that ship anywhere in the US with Vendibook Freight. Use when nothing suitable is near them."
         }
       },
       "required": []

@@ -50,7 +50,7 @@ describe('Atlas tools', () => {
     const out = await createAtlasTools(d).search_listings({ keywords: 'ice cream', mode: 'sale', max_price: 50000 });
     expect(d.showResults).toHaveBeenCalledWith([expect.objectContaining({ id: ID, priceText: '$39,000' })]);
     const parsed = JSON.parse(out);
-    expect(parsed[0].about.length).toBeLessThanOrEqual(221);
+    expect(parsed.results[0].about.length).toBeLessThanOrEqual(221);
   });
 
   it('show_listing opens the page; unavailable listings never navigate', async () => {
@@ -250,6 +250,21 @@ describe('Atlas listing references (voice-safe ids)', () => {
   it('numbers search results for the agent', async () => {
     rows.push({ id: A, title: 'X', mode: 'sale', price_sale: 1 });
     const out = JSON.parse(await createAtlasTools(deps()).search_listings({}));
-    expect(out[0].result).toBe(1);
+    expect(out.results[0].result).toBe(1);
+  });
+
+  it('flags listings that ship and tells Atlas what to say when nothing is in their state', async () => {
+    rows.push(
+      { id: A, title: 'Ships', mode: 'sale', price_sale: 30000, state: 'FL', vendibook_freight_enabled: true, freight_payer: 'buyer' },
+      { id: B, title: 'Local only', mode: 'sale', price_sale: 25000, state: 'GA', vendibook_freight_enabled: false },
+    );
+    const out = JSON.parse(await createAtlasTools(deps()).search_listings({ state: 'TX' }));
+    expect(out.in_your_state).toBe(0);
+    expect(out.results.map((r: { ships_nationwide: boolean }) => r.ships_nationwide)).toEqual([true, false]);
+    expect(out.note).toMatch(/ships_nationwide true/);
+  });
+
+  it('suggests a ships-nationwide search when nothing matches', async () => {
+    expect(await createAtlasTools(deps()).search_listings({ state: 'TX' })).toMatch(/ships_nationwide true/);
   });
 });

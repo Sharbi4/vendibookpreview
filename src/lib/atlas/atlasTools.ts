@@ -242,7 +242,9 @@ export function createAtlasTools(deps: AtlasToolDeps) {
     search_listings: async (p: Row = {}) => {
       let q: LooseQuery = supabase.from('listings').select(CARD_COLUMNS);
       q = excludeTestListings(applyDiscoveryListingFilter(q));
-      if (p.mode === 'sale' || p.mode === 'rent') q = q.eq('mode', p.mode);
+      const shipsOnly = p.ships_nationwide === true || p.ships_nationwide === 'true';
+      if (shipsOnly) q = q.eq('mode', 'sale').eq('vendibook_freight_enabled', true);
+      else if (p.mode === 'sale' || p.mode === 'rent') q = q.eq('mode', p.mode);
       if (typeof p.category === 'string' && /^[a-z_]+$/.test(p.category)) q = q.eq('category', p.category);
       const priceCol = p.mode === 'rent' ? 'price_daily' : 'price_sale';
       const max = parseNum(p.max_price);
@@ -272,9 +274,20 @@ export function createAtlasTools(deps: AtlasToolDeps) {
       rows = rows.slice(0, 6);
       if (rows.length) recent = rows.map((l) => ({ id: String(l.id), title: l.title }));
       deps.showResults(rows.map(toCard));
-      if (!rows.length) return 'No listings match. Say so honestly and offer to widen the search (higher budget, other states, rent instead of buy).';
-      return JSON.stringify(
-        rows.map((l, i) => ({
+      if (!rows.length) {
+        return shipsOnly
+          ? 'No listings that ship nationwide match. Say so honestly and offer to widen the search (higher budget, other types) or to ask a seller about delivery.'
+          : 'No listings match. Say so honestly, then offer to check listings that ship nationwide (search_listings with ships_nationwide true) and to widen the search (higher budget, other states, rent instead of buy).';
+      }
+      const shipsOf = (l: Row) => l.mode === 'sale' && Boolean(l.vendibook_freight_enabled);
+      const nearYou = state ? rows.filter((l) => String(l.state).toUpperCase() === state).length : undefined;
+      let note: string | undefined;
+      if (state && nearYou === 0) {
+        note = rows.some(shipsOf)
+          ? `None of these are in ${state}. Say so, then point out the ones with ships_nationwide true: they can be shipped to the buyer with Vendibook Freight. Offer a delivery quote with their ZIP (get_delivery_quote).`
+          : `None of these are in ${state}, and none of them ship nationwide. Say "let me check what can ship to you" and call search_listings again with ships_nationwide true.`;
+      }
+      const results = rows.map((l, i) => ({
           result: i + 1,
           id: l.id,
           title: l.title,
@@ -283,10 +296,11 @@ export function createAtlasTools(deps: AtlasToolDeps) {
           type: l.category,
           condition: l.condition ?? 'not stated',
           year: l.year_built ?? undefined,
-          shipping: l.mode === 'sale' && l.vendibook_freight_enabled ? (l.freight_payer === 'seller' ? 'free shipping' : 'ships nationwide') : undefined,
+          ships_nationwide: shipsOf(l),
+          shipping: shipsOf(l) ? (l.freight_payer === 'seller' ? 'free shipping (seller covers Vendibook Freight)' : 'ships nationwide with Vendibook Freight (quote by ZIP)') : undefined,
           about: excerpt(l.description, 220),
-        })),
-      );
+        }));
+      return JSON.stringify({ results, ...(state ? { in_your_state: nearYou } : {}), ...(note ? { note } : {}) });
     },
 
     show_listing: async (p: Row = {}) => {
