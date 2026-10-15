@@ -6,13 +6,18 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const AGENT_ID = "agent_0101kdmd2dn7exys7w22pnscqasf";
+/** The only agents this endpoint may touch. Default: Vendi Voice (seller listing interview). */
+const AGENTS: Record<string, string> = {
+  vendi: "agent_0101kdmd2dn7exys7w22pnscqasf",
+  // Atlas, the public sales agent (src/lib/atlas/atlasConfig.ts is the source of its prompt + tools).
+  atlas: "agent_1501m4rhvkz9fsbs5ce89zvk2k7b",
+};
 const API = "https://api.elevenlabs.io/v1";
 
 /**
- * Admin-only maintenance endpoint that reads and updates the Vendi Voice
- * ElevenLabs agent (system prompt + client tool registry) so the voice agent
- * can lead a seller through the full List with Vendi listing interview.
+ * Admin-only maintenance endpoint that reads and updates Vendibook's
+ * ElevenLabs agents (system prompt + client tool registry): Vendi Voice
+ * (body.agent "vendi", the default) and Atlas (body.agent "atlas").
  *
  * The ElevenLabs API key never leaves the server and is never returned.
  */
@@ -53,6 +58,9 @@ serve(async (req) => {
 
     const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
     const action = String(body?.action ?? "get");
+    const target = String(body?.agent ?? "vendi");
+    const AGENT_ID = Object.hasOwn(AGENTS, target) ? AGENTS[target] : undefined;
+    if (!AGENT_ID) return json({ error: "unknown_agent" }, 400);
 
     const el = async (path: string, init?: RequestInit) => {
       const res = await fetch(`${API}${path}`, {
@@ -109,17 +117,33 @@ serve(async (req) => {
       const firstMessage = String(body?.first_message ?? "");
       const toolDefs = Array.isArray(body?.tools) ? body.tools : [];
       if (!prompt) return json({ error: "prompt_required" }, 400);
+      // Atlas only ever gets browser-side client tools (no webhooks or server calls).
+      if (
+        target === "atlas" &&
+        toolDefs.some((d: { type?: string; name?: string }) => d?.type !== "client" || !/^[a-z_]{1,40}$/.test(String(d?.name ?? "")))
+      ) {
+        return json({ error: "atlas_client_tools_only" }, 400);
+      }
 
       // 1. Upsert every client tool by name.
       const existing = await el(`/convai/tools`);
       if (!existing.ok) return json({ step: "list_tools", ...existing }, existing.status);
       const rows = (existing.body as { tools?: Array<Record<string, unknown>> })?.tools ?? [];
+      // Tools are shared across the ElevenLabs workspace. For Atlas, only reuse
+      // tools already attached to Atlas so Vendi Voice's tools are never changed.
+      let allowedIds: Set<string> | null = null;
+      if (target !== "vendi") {
+        const agentNow = await el(`/convai/agents/${AGENT_ID}`);
+        if (!agentNow.ok) return json({ step: "get_agent", ...agentNow }, agentNow.status);
+        const ids = (agentNow.body as Record<string, any>)?.conversation_config?.agent?.prompt?.tool_ids;
+        allowedIds = new Set(Array.isArray(ids) ? ids : []);
+      }
       const byName = new Map<string, string>();
       for (const row of rows) {
         const cfg = row?.tool_config as { name?: string } | undefined;
         const name = cfg?.name ?? (row?.name as string | undefined);
         const id = row?.id as string | undefined;
-        if (name && id) byName.set(name, id);
+        if (name && id && (!allowedIds || allowedIds.has(id))) byName.set(name, id);
       }
 
       const toolIds: string[] = [];

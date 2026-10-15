@@ -29,6 +29,7 @@ import DailyReportExport from '@/components/admin/DailyReportExport';
 import ZendeskBulkSync from '@/components/admin/ZendeskBulkSync';
 import ZendeskContactSync from '@/components/admin/ZendeskContactSync';
 import MarketResearchCard from '@/components/admin/MarketResearchCard';
+import AtlasSyncCard from '@/components/admin/AtlasSyncCard';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -688,6 +689,7 @@ const AdminDashboard = () => {
           {/* Reports Tab */}
           <TabsContent value="reports" className="space-y-4">
             <DailyReportExport />
+            <AtlasSyncCard />
           </TabsContent>
 
           {/* Market Research Tab */}
