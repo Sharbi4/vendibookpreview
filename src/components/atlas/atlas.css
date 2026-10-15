@@ -197,3 +197,38 @@
   .atlas-call.is-peek .atlas-caption { -webkit-line-clamp: 1; }
   .atlas-call.is-peek { gap: 8px; }
 }
+
+/* ── /atlas page: dark, techy, same site font ── */
+.atlas-page-grid {
+  position: absolute; inset: 0; pointer-events: none;
+  background-image: linear-gradient(rgba(255,255,255,.045) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.045) 1px, transparent 1px);
+  background-size: 48px 48px;
+  -webkit-mask-image: radial-gradient(ellipse at 50% 0%, #000 0%, rgba(0,0,0,.6) 35%, transparent 75%);
+  mask-image: radial-gradient(ellipse at 50% 0%, #000 0%, rgba(0,0,0,.6) 35%, transparent 75%);
+}
+.atlas-page-glow {
+  position: absolute; left: 50%; top: -220px; width: 900px; height: 620px; transform: translateX(-50%); pointer-events: none;
+  background: radial-gradient(closest-side, rgba(255,81,36,.32), rgba(255,81,36,.08) 55%, transparent);
+  filter: blur(10px);
+}
+.atlas-page-orb { position: relative; display: grid; place-items: center; width: 128px; height: 128px; }
+.atlas-page-orb::before, .atlas-page-orb::after {
+  content: ''; position: absolute; inset: -18px; border-radius: 999px; border: 1px solid rgba(255,138,102,.35);
+  animation: atlas-page-ring 3.2s ease-out infinite;
+}
+.atlas-page-orb::after { animation-delay: 1.6s; }
+@keyframes atlas-page-ring { from { transform: scale(.85); opacity: .9; } to { transform: scale(1.45); opacity: 0; } }
+.atlas-page-gradient {
+  background: linear-gradient(90deg, #FF5124, #FFB25B 55%, #FF7A45);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+.atlas-page-card {
+  position: relative; border-radius: 28px; background: linear-gradient(180deg, #1A1816, #121110);
+  border: 1px solid rgba(255,255,255,.1); box-shadow: 0 1px 0 rgba(255,255,255,.06) inset, 0 24px 60px rgba(0,0,0,.35);
+  transition: border-color .2s ease, transform .2s ease;
+}
+article.atlas-page-card:hover { border-color: rgba(255,81,36,.45); transform: translateY(-2px); }
+@media (prefers-reduced-motion: reduce) {
+  .atlas-page-orb::before, .atlas-page-orb::after { animation: none; opacity: .4; }
+  article.atlas-page-card:hover { transform: none; }
+}

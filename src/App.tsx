@@ -5,7 +5,7 @@ import WorkspaceInvoices from './pages/workspace/WorkspaceInvoices';
 import InvoiceDetail from './pages/InvoiceDetail';
 import { NativePushLifecycle } from '@/hooks/useNativePushNotifications';
 import { useNativeNavigation } from '@/hooks/useNativeNavigation';
-import React, { Suspense, lazy, useEffect } from "react";
+import React, { Suspense, lazy, useEffect, useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -120,6 +120,7 @@ const Search = lazy(() => import("./pages/Search"));
 const HowItWorks = lazy(() => import("./pages/HowItWorks"));
 const HowPurchasingWorks = lazy(() => import("./pages/HowPurchasingWorks"));
 const VendibookFreight = lazy(() => import("./pages/VendibookFreight"));
+const AtlasAgentPage = lazy(() => import("./pages/AtlasAgentPage"));
 const ShipYourFoodTruck = lazy(() => import("./pages/ShipYourFoodTruck"));
 const Contact = lazy(() => import("./pages/Contact"));
 const IdentityVerification = lazy(() => import("./pages/IdentityVerification"));
@@ -460,6 +461,8 @@ const AnimatedRoutes = () => {
           <Route path="/how-purchasing-works" element={<PageTransition><HowPurchasingWorks /></PageTransition>} />
           <Route path="/guides/meetup-inspection" element={<PageTransition><MeetupInspectionGuide /></PageTransition>} />
           <Route path="/vendibook-freight" element={<PageTransition><VendibookFreight /></PageTransition>} />
+          <Route path="/atlas" element={<PageTransition><AtlasAgentPage /></PageTransition>} />
+          <Route path="/agent" element={<Navigate to="/atlas" replace />} />
           <Route path="/ship-your-food-truck" element={<PageTransition><ShipYourFoodTruck /></PageTransition>} />
           <Route path="/how-it-works-host" element={<PageTransition><HowItWorksHost /></PageTransition>} />
           <Route path="/how-it-works-seller" element={<PageTransition><HowItWorksSeller /></PageTransition>} />
@@ -781,7 +784,16 @@ const useGlobalErrorHandler = () => {
 const FloatingConciergeButton = lazy(() => import("@/components/FloatingConciergeButton"));
 
 const AppContent = () => {
-  const isBuildStudio = useLocation().pathname.startsWith('/build-studio');
+  const { pathname } = useLocation();
+  const isBuildStudio = pathname.startsWith('/build-studio');
+  // Opening the Atlas page turns Atlas on for the rest of the visit, so a call
+  // started there keeps going while he moves the visitor between pages.
+  const [atlasVisited, setAtlasVisited] = useState(false);
+  const onAtlasPage = pathname === '/atlas' || pathname.startsWith('/atlas/');
+  useEffect(() => {
+    if (onAtlasPage) setAtlasVisited(true);
+  }, [onAtlasPage]);
+  const showAtlas = atlasOn || onAtlasPage || atlasVisited;
   useGlobalErrorHandler();
   useOfflineQueueSync();
   useListingsLiveSync();
@@ -805,13 +817,13 @@ const AppContent = () => {
       <AnimatedRoutes />
       {!isBuildStudio && <MobileBottomNav />}
       <Suspense fallback={null}>
-        {!isBuildStudio && atlasOn && <AtlasAgent />}
+        {!isBuildStudio && showAtlas && <AtlasAgent />}
       </Suspense>
       <Suspense fallback={null}>
       </Suspense>
       <Suspense fallback={null}>
         {/* Atlas owns the corner and hands off to live chat itself. */}
-        {!isBuildStudio && !atlasOn && <FloatingConciergeButton />}
+        {!isBuildStudio && !showAtlas && <FloatingConciergeButton />}
       </Suspense>
     </>
   );

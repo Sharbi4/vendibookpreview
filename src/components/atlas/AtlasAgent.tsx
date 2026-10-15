@@ -15,7 +15,7 @@ import MessageHostForm from '@/components/messaging/MessageHostForm';
 import { sendBuyerMessage } from '@/lib/atlas/atlasMessaging';
 import { trackHostContacted } from '@/lib/analytics';
 import { toast } from '@/hooks/use-toast';
-import { isAtlasEnabled } from '@/lib/atlas/atlasFlag';
+import { ATLAS_START_EVENT, ATLAS_TOPIC_BRIEFINGS, type AtlasTopic } from '@/lib/atlas/atlasFlag';
 import {
   ATLAS_RESUME_WINDOW_MS,
   buildResumeBriefing,
@@ -42,15 +42,11 @@ type Mode = 'voice' | 'text';
  * listings Atlas pulls up while he moves the buyer between pages. "Type
  * instead" is there for accessibility (and when the mic is blocked). A buyer
  * who leaves can pick the call back up within 30 minutes or start over.
- * ElevenLabs Conversational AI. Hidden unless the Atlas flag is on.
+ * ElevenLabs Conversational AI. App.tsx mounts it only when the Atlas flag is
+ * on or the visitor opened the /atlas page. Page buttons start a call with
+ * startAtlas() (src/lib/atlas/atlasFlag.ts).
  */
 export default function AtlasAgent() {
-  const [enabled] = useState(isAtlasEnabled);
-  if (!enabled) return null;
-  return <AtlasCall />;
-}
-
-function AtlasCall() {
   const navigate = useNavigate();
   const location = useLocation();
   const [phase, setPhase] = useState<Phase>('idle');
@@ -102,6 +98,7 @@ function AtlasCall() {
   userRef.current = user;
   const ringRef = useRef<HTMLSpanElement>(null);
   const resumeRef = useRef<AtlasMemory | null>(null);
+  const topicRef = useRef<AtlasTopic | null>(null);
   const pathRef = useRef(location.pathname);
   pathRef.current = location.pathname;
 
@@ -188,6 +185,9 @@ function AtlasCall() {
       const resume = resumeRef.current;
       resumeRef.current = null;
       if (resume) window.setTimeout(() => conversation.sendContextualUpdate(buildResumeBriefing(resume)), 50);
+      const topic = topicRef.current;
+      topicRef.current = null;
+      if (topic) window.setTimeout(() => conversation.sendContextualUpdate(ATLAS_TOPIC_BRIEFINGS[topic]), 80);
     },
     onMessage: ({ source, message }) => {
       if (message?.trim()) addTurn({ from: source === 'ai' ? 'atlas' : 'you', text: message.trim() });
@@ -268,6 +268,26 @@ function AtlasCall() {
     },
     [conversation, live, phase],
   );
+
+  // Page buttons (e.g. /atlas "Help me list mine") start a call on a topic.
+  const callRef = useRef(call);
+  callRef.current = call;
+  const liveRef = useRef(live);
+  liveRef.current = live;
+  useEffect(() => {
+    const onStart = (e: Event) => {
+      const { mode: m, topic } = (e as CustomEvent<{ mode: Mode; topic?: AtlasTopic }>).detail ?? {};
+      if (liveRef.current) {
+        if (topic) conversation.sendContextualUpdate(ATLAS_TOPIC_BRIEFINGS[topic]);
+        return;
+      }
+      topicRef.current = topic ?? null;
+      void callRef.current({ mode: m === 'text' ? 'text' : 'voice', resume: false });
+    };
+    window.addEventListener(ATLAS_START_EVENT, onStart);
+    return () => window.removeEventListener(ATLAS_START_EVENT, onStart);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const hangUp = () => {
     void conversation.endSession();
@@ -350,6 +370,8 @@ function AtlasCall() {
   const lastYou = turns[turns.length - 1]?.from === 'you' ? turns[turns.length - 1] : null;
 
   if (phase === 'idle') {
+    // The /atlas page has its own big call buttons; skip the corner widget there.
+    if (location.pathname === '/atlas') return drafts;
     if (minimized && !saved) {
       return (
         <>{drafts}
