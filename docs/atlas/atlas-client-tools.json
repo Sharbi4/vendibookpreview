@@ -269,7 +269,7 @@
       "properties": {
         "page": {
           "type": "string",
-          "description": "Which page. \"sell\" starts a new listing, \"my_listings\" is the seller's own listings, \"permits\" opens the PermitPath planner, \"pricing\" shows fees and upgrades.",
+          "description": "Which page. \"sell\" starts a new listing, \"my_listings\" is the seller's own listings, \"permits\" opens the PermitPath planner, \"pricing\" shows fees and upgrades, \"insurance\" is the FLIP insurance partner page, \"account\" is Dashboard → Account (where Close account is).",
           "enum": [
             "home",
             "search",
@@ -281,7 +281,9 @@
             "contact",
             "permits",
             "pricing",
-            "my_listings"
+            "my_listings",
+            "insurance",
+            "account"
           ]
         },
         "search_text": {

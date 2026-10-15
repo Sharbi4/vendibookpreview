@@ -329,7 +329,7 @@ describe('Atlas sending a seller message for the buyer', () => {
   });
 });
 
-describe('Atlas policy knowledge (owner master guide v5.0)', () => {
+describe('Atlas policy knowledge (owner master guide v5.3)', () => {
   it('answers policy questions from the guide FAQ bank', async () => {
     const tools = createAtlasTools(deps());
     const escrow = JSON.parse(await tools.get_faq({ question: 'Does Vendibook hold my money in escrow?' }));
@@ -340,12 +340,33 @@ describe('Atlas policy knowledge (owner master guide v5.0)', () => {
     expect(rental.answers.map((a: { answer: string }) => a.answer).join(' ')).toMatch(/12\.9%/);
   });
 
-  it('applies the owner override: no pay in person or cash', async () => {
-    const out = JSON.parse(await createAtlasTools(deps()).get_faq({ question: 'Can I pay cash in person?' }));
-    expect(out.answers[0].answer).toMatch(/no longer supports pay-in-person or cash/);
+  it('has no pay in person or cash option', async () => {
+    const out = JSON.parse(await createAtlasTools(deps()).get_faq({ question: 'Can I pay the seller in person?' }));
+    expect(out.answers[0].answer).toMatch(/^No\. Vendibook does not offer Pay in Person/);
     const { GUIDE_FAQ } = await import('@/lib/atlas/atlasGuideFaq');
     expect(GUIDE_FAQ.some((e) => /\$0 .*commission|in person.*free/i.test(e.answer))).toBe(false);
-    expect(GUIDE_FAQ).toHaveLength(60);
+    expect(GUIDE_FAQ).toHaveLength(87);
+  });
+
+  it('knows account closure, FLIP insurance and financing from v5.3', async () => {
+    const tools = createAtlasTools(deps());
+    const close = JSON.parse(await tools.get_faq({ question: 'How do I close my account?' }));
+    expect(close.answers[0].answer).toMatch(/Dashboard → Account/);
+    const flip = JSON.parse(await tools.get_faq({ question: 'Is insurance included with my rental?' }));
+    expect(flip.answers.map((a: { answer: string }) => a.answer).join(' ')).toMatch(/not automatically included/);
+    const lender = JSON.parse(await tools.get_faq({ question: 'Do I pay the seller directly after my lender approves?' }));
+    expect(lender.answers[0].answer).toMatch(/^No direct buyer-to-seller settlement/);
+  });
+
+  it('applies owner overrides: 24-hour payouts after confirmed completion, rentals via Square, mission', async () => {
+    const tools = createAtlasTools(deps());
+    const paid = JSON.parse(await tools.get_faq({ question: 'When do I get paid?' }));
+    expect(paid.answers[0].answer).toMatch(/within 24 hours after the sale or rental is complete and confirmed/);
+    const card = JSON.parse(await tools.get_faq({ question: 'Can I pay with a card for a rental?' }));
+    expect(card.answers.map((a: { answer: string }) => a.answer).join(' ')).toMatch(/Square/);
+    const about = JSON.parse(await tools.get_faq({ question: 'What is Vendibook?' }));
+    expect(about.answers[0].answer).toMatch(/support the food truck community/);
+    expect(ATLAS_SYSTEM_PROMPT).toMatch(/here to support the food truck community/);
   });
 
   it('says it does not know instead of guessing', async () => {

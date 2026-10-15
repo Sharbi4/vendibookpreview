@@ -571,6 +571,8 @@ export function createAtlasTools(deps: AtlasToolDeps) {
         permits: '/tools/permitpath',
         pricing: '/pricing',
         my_listings: '/dashboard/listings',
+        insurance: '/insurance',
+        account: '/dashboard/account',
       };
       const page = String(p.page ?? '');
       const base = routes[page];
