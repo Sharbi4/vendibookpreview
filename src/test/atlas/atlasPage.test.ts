@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { isBuyerOnly, pageAction, pageOutline, readSection, scanPage } from '@/lib/atlas/atlasPage';
 
 const html = `
@@ -142,5 +142,42 @@ describe('pageAction', () => {
   it('treats external and checkout links as buyer_only', () => {
     expect(isBuyerOnly(document.querySelector('a[href="https://example.com/x"]')!)).toBe(true);
     expect(isBuyerOnly(document.querySelector('a[href="/search"]')!)).toBe(false);
+  });
+});
+
+describe('private pages', () => {
+  const go = (path: string) => window.history.pushState({}, '', path);
+  afterEach(() => go('/'));
+
+  it.each(['/dashboard/messages', '/messages/abc', '/dashboard/account', '/checkout/abc', '/admin/invoices', '/dashboard/payments', '/build-studio/my-builds', '/auth'])(
+    'exposes nothing and does nothing on %s',
+    (path) => {
+      const ref = sectionRef('Equipment');
+      const zipRef = byLabel('ZIP code')!.ref;
+      go(path);
+      const map = scanPage();
+      expect(map.sections).toEqual([]);
+      expect(map.controls).toEqual([]);
+      expect(JSON.stringify(map)).not.toContain('Taco');
+      expect(pageOutline()).not.toContain('Taco');
+      expect(readSection(document.querySelector('h2') as HTMLElement)).toBe('');
+      expect(pageAction({ action: 'read', target: ref })).toMatch(/private/);
+      expect(pageAction({ action: 'fill', target: zipRef, value: '85701' })).toMatch(/private/);
+      expect((document.getElementById('zip') as HTMLInputElement).value).toBe('');
+    },
+  );
+
+  it('blocks a dialog with password or card fields and anything marked private', () => {
+    document.body.insertAdjacentHTML('beforeend', '<div role="dialog"><h2>Pay</h2><input autocomplete="cc-number" /></div>');
+    expect(scanPage().sections).toEqual([]);
+    document.body.innerHTML = html + '<div data-atlas-private>secret</div>';
+    expect(scanPage().controls).toEqual([]);
+  });
+
+  it('keeps public listing and search pages working', () => {
+    for (const path of ['/listing/abc', '/search?q=taco', '/food-trucks-for-sale/texas', '/hosting-guide']) {
+      go(path);
+      expect(scanPage().sections.length).toBeGreaterThan(0);
+    }
   });
 });

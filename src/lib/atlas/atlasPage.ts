@@ -145,6 +145,25 @@ function clearRefs(root: ParentNode) {
   root.querySelectorAll(`[${REF_ATTR}]`).forEach((el) => el.removeAttribute(REF_ATTR));
 }
 
+/**
+ * Private pages Atlas must never read or operate on (messages, account/identity,
+ * checkout/payment, admin, authenticated transactional pages). Fail closed:
+ * on a match Atlas sees nothing and can do nothing but scroll.
+ */
+const PRIVATE_PATH =
+  /^\/(?:(?:dashboard|messages|account|profile|settings|notifications?|notification-preferences|favorites|saved|payments?|checkout|pay|invoices?|orders?|transactions?|bookings?|host|seller|buyer|admin|partner|welcome|auth|verify|identity|billing|payouts?|offers?|purchase|build-studio\/my-builds)(?:[/?#]|$)|my-|square|paypal)/i;
+const PRIVATE_MARKER = '[data-atlas-private]';
+const PRIVATE_DIALOG_FIELD = 'input[type="password"], input[autocomplete^="cc-"], input[autocomplete="one-time-code"]';
+
+export function isPrivateContext(): boolean {
+  if (PRIVATE_PATH.test(window.location.pathname || '/')) return true;
+  if (document.querySelector(PRIVATE_MARKER)) return true;
+  const root = scopeRoot();
+  return root !== document && Boolean((root as Element).querySelector(PRIVATE_DIALOG_FIELD));
+}
+
+const PRIVATE_REPLY = 'This page is private to the buyer (account, messages, payment or admin). I can not look at or use it; ask the buyer to handle it themselves.';
+
 /** The topmost open dialog, if any: Atlas works inside it while it's open. */
 function scopeRoot(): ParentNode {
   const dialogs = Array.from(document.querySelectorAll('[role="dialog"], [role="alertdialog"], dialog[open]')).filter(
@@ -166,6 +185,9 @@ export interface AtlasPageMap {
 /** Scan the page and tag what Atlas can refer to (refs are valid until the next scan). */
 export function scanPage(): AtlasPageMap {
   clearRefs(document);
+  if (isPrivateContext()) {
+    return { page: 'private', title: '', scrolled_percent: 0, sections: [], controls: [], note: PRIVATE_REPLY };
+  }
   const root = scopeRoot();
   const sections: AtlasPageItem[] = [];
   const controls: AtlasPageItem[] = [];
@@ -229,6 +251,7 @@ export function scanPage(): AtlasPageMap {
 
 /** Short outline (headings only) for a contextual update after navigation. */
 export function pageOutline(maxSections = 12): string {
+  if (isPrivateContext()) return 'This page is private; Atlas can not see it.';
   const map = scanPage();
   const heads = map.sections.slice(0, maxSections).map((s) => s.label);
   return heads.length ? `Sections on this page: ${heads.join(' · ')}.` : 'This page has no section headings.';
@@ -263,6 +286,7 @@ export function spotlight(el: HTMLElement) {
 
 /** Text under a heading, up to the next heading of the same or higher level. */
 export function readSection(el: HTMLElement, max = 700): string {
+  if (isPrivateContext() || el.closest(PRIVATE_MARKER)) return '';
   const level = /^H([1-6])$/.exec(el.tagName)?.[1];
   if (!level) return clean(el.innerText || el.textContent, max);
   const stop = (n: Element) => {
@@ -344,6 +368,7 @@ export function pageAction(p: Record<string, unknown> = {}): string {
     return `Scrolled ${target}.`;
   }
 
+  if (isPrivateContext()) return PRIVATE_REPLY;
   const el = find(target);
   if (!el || !el.isConnected) return 'That part of the page is not there anymore. Call look_at_page and try again with a fresh ref.';
   window.dispatchEvent(new CustomEvent(ATLAS_PAGE_EVENT, { detail: { action } }));
