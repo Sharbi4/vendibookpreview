@@ -151,7 +151,7 @@ function clearRefs(root: ParentNode) {
  * on a match Atlas sees nothing and can do nothing but scroll.
  */
 const PRIVATE_PATH =
-  /^\/(dashboard|messages|account|profile|settings|notifications?|notification-preferences|favorites|saved|payments?|checkout|pay|invoices?|orders?|transactions?|bookings?|my-|host|seller|buyer|admin|partner|welcome|auth|verify|identity|subscribe\/|billing|payouts?|square|paypal|offers?|purchase|sale-|rental-|build-studio\/my-builds)/i;
+  /^\/(?:(?:dashboard|messages|account|profile|settings|notifications?|notification-preferences|favorites|saved|payments?|checkout|pay|invoices?|orders?|transactions?|bookings?|host|seller|buyer|admin|partner|welcome|auth|verify|identity|billing|payouts?|offers?|purchase|build-studio\/my-builds)(?:[/?#]|$)|my-|square|paypal)/i;
 const PRIVATE_MARKER = '[data-atlas-private]';
 const SENSITIVE_FIELD = 'input[type="password"], input[autocomplete^="cc-"], input[autocomplete="one-time-code"]';
 
