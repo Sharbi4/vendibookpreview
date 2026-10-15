@@ -38,6 +38,10 @@ import LegalNamePrompt from "@/components/auth/LegalNamePrompt";
 import TawkIdentity from "@/components/support/TawkIdentity";
 
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
+import { isAtlasEnabled } from "@/lib/atlas/atlasFlag";
+// Loaded only when the Atlas flag is on, so other visitors never download the voice SDK.
+const AtlasAgent = lazy(() => import("@/components/atlas/AtlasAgent"));
+const atlasOn = isAtlasEnabled();
 import OfflineBanner from "@/components/system/OfflineBanner";
 import { useOfflineQueueSync } from "@/hooks/useOfflineQueue";
 import { ReferralCapture } from "@/components/referrals/ReferralCapture";
@@ -801,9 +805,13 @@ const AppContent = () => {
       <AnimatedRoutes />
       {!isBuildStudio && <MobileBottomNav />}
       <Suspense fallback={null}>
+        {!isBuildStudio && atlasOn && <AtlasAgent />}
       </Suspense>
       <Suspense fallback={null}>
-        {!isBuildStudio && <FloatingConciergeButton />}
+      </Suspense>
+      <Suspense fallback={null}>
+        {/* Atlas owns the corner and hands off to live chat itself. */}
+        {!isBuildStudio && !atlasOn && <FloatingConciergeButton />}
       </Suspense>
     </>
   );

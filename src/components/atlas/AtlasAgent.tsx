@@ -1,0 +1,471 @@
+import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useConversation } from '@elevenlabs/react';
+import { ArrowUp, Keyboard, Loader2, Mic, MicOff, PhoneOff, RotateCcw, X } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { invokeEdge } from '@/lib/edge/invokeFunction';
+import { ATLAS_NAME } from '@/lib/atlas/atlasConfig';
+import { ATLAS_PAGE_EVENT, pageOutline } from '@/lib/atlas/atlasPage';
+import { createAtlasTools, type AtlasListingCard, type AtlasOfferDraft, type AtlasSellerDraft } from '@/lib/atlas/atlasTools';
+import { useAuth } from '@/contexts/AuthContext';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { MakeOfferModal } from '@/components/offers/MakeOfferModal';
+import { AuthGateOfferModal } from '@/components/offers/AuthGateOfferModal';
+import MessageHostForm from '@/components/messaging/MessageHostForm';
+import { isAtlasEnabled } from '@/lib/atlas/atlasFlag';
+import {
+  ATLAS_RESUME_WINDOW_MS,
+  buildResumeBriefing,
+  clearAtlasMemory,
+  loadAtlasMemory,
+  saveAtlasMemory,
+  type AtlasMemory,
+  type AtlasTurn,
+} from '@/lib/atlas/atlasMemory';
+import './atlas.css';
+
+// Public agent id (not a secret; ElevenLabs embeds expose it). Override with VITE_ATLAS_AGENT_ID;
+// set it to "" to use short-lived tokens from atlas-agent-token instead.
+const AGENT_ID = ((import.meta.env.VITE_ATLAS_AGENT_ID as string | undefined) ?? 'agent_1501m4rhvkz9fsbs5ce89zvk2k7b').trim();
+/** Set once "First message" overrides are allowed on the ElevenLabs agent. */
+const CAN_OVERRIDE_FIRST_MESSAGE = import.meta.env.VITE_ATLAS_ALLOW_OVERRIDES === 'true';
+
+type Phase = 'idle' | 'connecting' | 'live' | 'error';
+type Mode = 'voice' | 'text';
+
+/**
+ * Atlas, the Vendibook sales agent. A voice call first: "Talk to Atlas" starts
+ * the call, and a small call card shows who's talking, live captions and any
+ * listings Atlas pulls up while he moves the buyer between pages. "Type
+ * instead" is there for accessibility (and when the mic is blocked). A buyer
+ * who leaves can pick the call back up within 30 minutes or start over.
+ * ElevenLabs Conversational AI. Hidden unless the Atlas flag is on.
+ */
+export default function AtlasAgent() {
+  const [enabled] = useState(isAtlasEnabled);
+  if (!enabled) return null;
+  return <AtlasCall />;
+}
+
+function AtlasCall() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [phase, setPhase] = useState<Phase>('idle');
+  const [mode, setMode] = useState<Mode>('voice');
+  const [error, setError] = useState<{ text: string; offerTyping: boolean } | null>(null);
+  // After Atlas points at something, the card shrinks for a few seconds so it doesn't cover it (phones).
+  const [peek, setPeek] = useState(false);
+  useEffect(() => {
+    let t = 0;
+    const onAction = () => {
+      setPeek(true);
+      window.clearTimeout(t);
+      t = window.setTimeout(() => setPeek(false), 7000);
+    };
+    window.addEventListener(ATLAS_PAGE_EVENT, onAction);
+    return () => {
+      window.removeEventListener(ATLAS_PAGE_EVENT, onAction);
+      window.clearTimeout(t);
+    };
+  }, []);
+  const [muted, setMuted] = useState(false);
+  const [typing, setTyping] = useState(false);
+  const [draft, setDraft] = useState('');
+  const [turns, setTurns] = useState<AtlasTurn[]>([]);
+  const [cards, setCards] = useState<AtlasListingCard[]>([]);
+  const [saved, setSaved] = useState<AtlasMemory | null>(() => loadAtlasMemory());
+  const { user } = useAuth();
+  const [messageDraft, setMessageDraft] = useState<AtlasSellerDraft | null>(null);
+  const [offerDraft, setOfferDraft] = useState<AtlasOfferDraft | null>(null);
+  const [offerAuthGate, setOfferAuthGate] = useState(false);
+  const userRef = useRef(user);
+  userRef.current = user;
+  const ringRef = useRef<HTMLSpanElement>(null);
+  const resumeRef = useRef<AtlasMemory | null>(null);
+  const pathRef = useRef(location.pathname);
+  pathRef.current = location.pathname;
+
+  // Re-check the 30-minute window while the page stays open.
+  useEffect(() => {
+    if (!saved) return;
+    const left = saved.updatedAt + ATLAS_RESUME_WINDOW_MS - Date.now();
+    const t = window.setTimeout(() => setSaved(loadAtlasMemory()), Math.max(0, left) + 1000);
+    return () => window.clearTimeout(t);
+  }, [saved]);
+
+  const remember = useCallback((nextTurns: AtlasTurn[], nextCards: AtlasListingCard[]) => {
+    saveAtlasMemory({ turns: nextTurns, cards: nextCards, lastPath: pathRef.current });
+  }, []);
+
+  const addTurn = useCallback((turn: AtlasTurn) => {
+    setTurns((prev) => {
+      const next = [...prev, turn];
+      setCards((c) => { remember(next, c); return c; });
+      return next;
+    });
+  }, [remember]);
+
+  const tools = useMemo(
+    () =>
+      createAtlasTools({
+        navigate: (to) => navigate(to),
+        showResults: (next) => {
+          setCards(next);
+          setTurns((t) => { remember(t, next); return t; });
+        },
+        currentListingId: () => pathRef.current.match(/^\/listing\/([^/]+)/)?.[1] ?? null,
+        openMessage: (d) => setMessageDraft(d),
+        openOffer: (d) => {
+          setOfferDraft(d);
+          if (!userRef.current) setOfferAuthGate(true);
+        },
+        openLiveChat: () => {
+          const tawk = (window as unknown as { Tawk_API?: { showWidget?: () => void; maximize?: () => void } }).Tawk_API;
+          if (!tawk?.maximize) return false;
+          try {
+            tawk.showWidget?.();
+            tawk.maximize();
+            return true;
+          } catch {
+            return false;
+          }
+        },
+      }),
+    [navigate, remember],
+  );
+
+  // Every tool resolves to a string so Atlas always gets an answer.
+  const clientTools = useMemo(() => {
+    const wrapped: Record<string, (p: Record<string, unknown>) => Promise<string>> = {};
+    for (const [name, fn] of Object.entries(tools)) {
+      wrapped[name] = async (params) => {
+        try {
+          return await (fn as (p: Record<string, unknown>) => Promise<string>)(params ?? {});
+        } catch {
+          return 'That did not work just now. Apologize briefly and offer to try again or connect them with a person.';
+        }
+      };
+    }
+    return wrapped;
+  }, [tools]);
+
+  const conversation = useConversation({
+    clientTools,
+    micMuted: muted,
+    onConnect: () => {
+      setPhase('live');
+      const resume = resumeRef.current;
+      resumeRef.current = null;
+      if (resume) window.setTimeout(() => conversation.sendContextualUpdate(buildResumeBriefing(resume)), 50);
+    },
+    onMessage: ({ source, message }) => {
+      if (message?.trim()) addTurn({ from: source === 'ai' ? 'atlas' : 'you', text: message.trim() });
+    },
+    onError: () => {
+      setError({ text: 'The call dropped. You can call Atlas again and pick up where you left off.', offerTyping: false });
+      setPhase('error');
+    },
+    onDisconnect: () => setPhase((p) => (p === 'error' ? p : 'idle')),
+  });
+
+  const live = phase === 'live' && conversation.status === 'connected';
+
+  // Keep Atlas aware of the page the buyer is looking at.
+  useEffect(() => {
+    if (!live) return;
+    // Give the new page a moment to render, then tell Atlas what's on it.
+    const t = window.setTimeout(() => {
+      conversation.sendContextualUpdate(
+        `The buyer is now viewing ${location.pathname}${location.search}. ${pageOutline()} Use look_at_page before pointing at anything.`,
+      );
+    }, 900);
+    return () => window.clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname, location.search, live]);
+
+  // Audio-reactive ring around Atlas's avatar (voice calls only).
+  useEffect(() => {
+    if (!live || mode !== 'voice') return;
+    let frame = 0;
+    const tick = () => {
+      const level = conversation.isSpeaking ? conversation.getOutputVolume() : muted ? 0 : conversation.getInputVolume();
+      ringRef.current?.style.setProperty('--atlas-level', String(Math.min(1, level * 2.2)));
+      frame = requestAnimationFrame(tick);
+    };
+    frame = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(frame);
+  }, [live, mode, muted, conversation]);
+
+  const call = useCallback(
+    async (opts: { mode: Mode; resume: boolean }) => {
+      if (phase === 'connecting' || live) return;
+      const memory = opts.resume ? loadAtlasMemory() : null;
+      if (!opts.resume) clearAtlasMemory();
+      setSaved(null);
+      setError(null);
+      setMuted(false);
+      setTyping(opts.mode === 'text');
+      setMode(opts.mode);
+      setTurns(memory?.turns ?? []);
+      setCards(memory?.cards ?? []);
+      resumeRef.current = memory;
+      setPhase('connecting');
+      const textOnly = opts.mode === 'text';
+      const overrides = memory && CAN_OVERRIDE_FIRST_MESSAGE
+        ? { agent: { firstMessage: 'Welcome back! Picking up right where we left off.' } }
+        : undefined;
+      try {
+        if (!textOnly) await navigator.mediaDevices.getUserMedia({ audio: true });
+        if (AGENT_ID) {
+          await conversation.startSession({ agentId: AGENT_ID, connectionType: textOnly ? 'websocket' : 'webrtc', textOnly, overrides });
+        } else {
+          const { data, error: edgeError } = await invokeEdge<{ token?: string }>('atlas-agent-token', { body: {} }, { retries: 1, timeoutMs: 15000 });
+          if (edgeError || !data?.token) throw new Error('unavailable');
+          await conversation.startSession({ conversationToken: data.token, connectionType: 'webrtc', textOnly, overrides });
+        }
+      } catch (e) {
+        resumeRef.current = null;
+        if (memory) setSaved(memory);
+        const denied = e instanceof DOMException && (e.name === 'NotAllowedError' || e.name === 'NotFoundError');
+        setError(
+          denied
+            ? { text: 'Atlas couldn’t use your microphone. You can allow it in your browser, or type to Atlas instead.', offerTyping: true }
+            : { text: 'Atlas can’t take the call right now. Please try again in a moment.', offerTyping: false },
+        );
+        setPhase('error');
+      }
+    },
+    [conversation, live, phase],
+  );
+
+  const hangUp = () => {
+    void conversation.endSession();
+    setSaved(loadAtlasMemory());
+    setPhase('idle');
+  };
+
+  const startOver = () => {
+    clearAtlasMemory();
+    setSaved(null);
+    setTurns([]);
+    setCards([]);
+  };
+
+  const send = (e: FormEvent) => {
+    e.preventDefault();
+    const text = draft.trim();
+    if (!text || !live) return;
+    setDraft('');
+    addTurn({ from: 'you', text });
+    conversation.sendUserMessage(text);
+  };
+
+  // Development-only hook so the call card can be previewed and screenshotted
+  // without a live call. Never present in production builds.
+  useEffect(() => {
+    if (!import.meta.env.DEV) return;
+    (window as unknown as Record<string, unknown>).__atlasDemo = {
+      live: (m: Mode = 'voice') => { setMode(m); setTyping(m === 'text'); setPhase('live'); },
+      say: (text: string) => addTurn({ from: 'atlas', text }),
+      you: (text: string) => addTurn({ from: 'you', text }),
+      typeMode: (on: boolean) => setTyping(on),
+      idle: () => { setPhase('idle'); setSaved(loadAtlasMemory()); },
+      tool: (name: string, params: Record<string, unknown>) => clientTools[name]?.(params),
+    };
+  }, [clientTools, addTurn]);
+
+  // Drafts Atlas opens for the buyer to review and send themselves.
+  const drafts = (
+    <>
+      <Dialog open={Boolean(messageDraft)} onOpenChange={(o) => { if (!o) setMessageDraft(null); }}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Message the seller</DialogTitle>
+          </DialogHeader>
+          {messageDraft && (
+            <MessageHostForm
+              key={`${messageDraft.listingId}:${messageDraft.message}`}
+              listingId={messageDraft.listingId}
+              hostId={messageDraft.hostId}
+              listingTitle={messageDraft.title}
+              initialMessage={messageDraft.message}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+      <AuthGateOfferModal
+        open={offerAuthGate}
+        onOpenChange={(o) => { setOfferAuthGate(o); if (!o && !userRef.current) setOfferDraft(null); }}
+        onAuthSuccess={() => setOfferAuthGate(false)}
+      />
+      {offerDraft && (
+        <MakeOfferModal
+          open={!offerAuthGate && Boolean(user)}
+          onOpenChange={(o) => { if (!o) setOfferDraft(null); }}
+          listingId={offerDraft.listingId}
+          sellerId={offerDraft.hostId}
+          listingTitle={offerDraft.title}
+          askingPrice={offerDraft.askingPrice}
+          initialAmount={offerDraft.amount}
+          initialMessage={offerDraft.message}
+        />
+      )}
+    </>
+  );
+
+  const onListing = /^\/listing\//.test(location.pathname);
+  const talking = live && mode === 'voice' && conversation.isSpeaking;
+  const lastAtlas = [...turns].reverse().find((t) => t.from === 'atlas');
+  const lastYou = turns[turns.length - 1]?.from === 'you' ? turns[turns.length - 1] : null;
+
+  if (phase === 'idle') {
+    if (saved) {
+      return (
+        <>{drafts}
+        <section data-atlas-ui className={cn('atlas-resume', onListing && 'is-raised')} aria-label={`Pick up your call with ${ATLAS_NAME}`}>
+          <span className="atlas-avatar" style={{ width: 36, height: 36 }} aria-hidden="true">A</span>
+          <div className="min-w-0 flex-1">
+            <p className="atlas-resume-title">Pick up your call with {ATLAS_NAME}?</p>
+            <p className="atlas-resume-sub">He remembers where you left off.</p>
+          </div>
+          <div className="atlas-resume-actions">
+            <button type="button" className="atlas-btn is-call" onClick={() => void call({ mode: 'voice', resume: true })}>
+              <Mic className="h-4 w-4" aria-hidden="true" /> Pick up
+            </button>
+            <button type="button" className="atlas-link" onClick={startOver}>Start over</button>
+          </div>
+        </section>
+        </>
+      );
+    }
+    return (
+      <>{drafts}
+      <button
+        data-atlas-ui
+        type="button"
+        className={cn('atlas-launcher', onListing && 'is-raised')}
+        onClick={() => void call({ mode: 'voice', resume: false })}
+        aria-label={`Talk to ${ATLAS_NAME}, the Vendibook sales agent. Starts a voice call.`}
+      >
+        <span className="atlas-avatar" style={{ width: 30, height: 30 }} aria-hidden="true">A</span>
+        <span className="atlas-launcher-text">Talk to {ATLAS_NAME}</span>
+        <Mic className="h-4 w-4 opacity-80" aria-hidden="true" />
+      </button>
+      </>
+    );
+  }
+
+  const status =
+    phase === 'connecting' ? (mode === 'voice' ? 'Calling Atlas…' : 'Connecting…')
+      : phase === 'error' ? 'Call ended'
+      : mode === 'text' ? 'Typing with Atlas'
+      : muted ? 'You’re muted'
+      : talking ? 'Atlas is talking'
+      : 'Listening…';
+
+  return (
+    <>{drafts}
+    <section data-atlas-ui className={cn('atlas-call', onListing && 'is-raised', peek && 'is-peek', (messageDraft || offerDraft || offerAuthGate) && 'is-behind')} onPointerDown={() => setPeek(false)} onFocus={() => setPeek(false)} role="dialog" aria-label={`Call with ${ATLAS_NAME}`}>
+      <div className="atlas-call-top">
+        <span ref={ringRef} className={cn('atlas-ring', phase === 'live' && mode === 'voice' && 'is-on', talking && 'is-talking')}>
+          <span className="atlas-avatar" style={{ width: 52, height: 52, fontSize: 21 }} aria-hidden="true">A</span>
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="atlas-name">{ATLAS_NAME} <span className="atlas-role">· Vendibook sales</span></p>
+          <p className="atlas-status" aria-live="polite">
+            {phase === 'connecting' && <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />}
+            {phase === 'live' && <span className={cn('atlas-dot is-on', talking && 'is-talking')} aria-hidden="true" />}
+            {status}
+          </p>
+        </div>
+        {phase === 'error' && (
+          <button type="button" className="atlas-x" onClick={() => setPhase('idle')} aria-label="Close">
+            <X className="h-4 w-4" />
+          </button>
+        )}
+      </div>
+
+      {phase === 'error' && error ? (
+        <p role="alert" className="atlas-error">{error.text}</p>
+      ) : (
+        <div className="atlas-captions" aria-live="polite">
+          {lastAtlas && <p className="atlas-caption"><span className="sr-only">{ATLAS_NAME} said: </span>{lastAtlas.text}</p>}
+          {lastYou && <p className="atlas-caption is-you"><span className="sr-only">You said: </span>{lastYou.text}</p>}
+        </div>
+      )}
+
+      {cards.length > 0 && phase !== 'error' && (
+        <div className="atlas-strip" aria-label="Listings Atlas found">
+          {cards.map((c) => (
+            <Link key={c.id} to={`/listing/${c.id}`} className="atlas-tile">
+              <span className="atlas-tile-photo">{c.photo ? <img src={c.photo} alt="" loading="lazy" /> : null}</span>
+              <span className="atlas-tile-title">{c.title}</span>
+              <span className="atlas-tile-meta">{c.priceText}</span>
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {typing && phase === 'live' && (
+        <form className="atlas-input" onSubmit={send}>
+          <input
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            placeholder="Type to Atlas…"
+            aria-label={`Type a message to ${ATLAS_NAME}`}
+            maxLength={500}
+            autoFocus
+          />
+          <button type="submit" aria-label="Send" disabled={!draft.trim()}>
+            <ArrowUp className="h-4 w-4" />
+          </button>
+        </form>
+      )}
+
+      <div className="atlas-controls">
+        {phase === 'error' ? (
+          error?.offerTyping ? (
+            <button type="button" className="atlas-btn is-call" onClick={() => void call({ mode: 'text', resume: Boolean(loadAtlasMemory()) })}>
+              <Keyboard className="h-4 w-4" aria-hidden="true" /> Type to Atlas
+            </button>
+          ) : (
+            <button type="button" className="atlas-btn is-call" onClick={() => void call({ mode: 'voice', resume: Boolean(loadAtlasMemory()) })}>
+              <RotateCcw className="h-4 w-4" aria-hidden="true" /> Call again
+            </button>
+          )
+        ) : (
+          <>
+            {mode === 'voice' && (
+              <button
+                type="button"
+                className={cn('atlas-btn', muted && 'is-active')}
+                onClick={() => setMuted((m) => !m)}
+                disabled={phase !== 'live'}
+                aria-pressed={muted}
+              >
+                {muted ? <MicOff className="h-4 w-4" aria-hidden="true" /> : <Mic className="h-4 w-4" aria-hidden="true" />}
+                {muted ? 'Unmute' : 'Mute'}
+              </button>
+            )}
+            {mode === 'voice' && (
+              <button
+                type="button"
+                className={cn('atlas-btn', typing && 'is-active')}
+                onClick={() => setTyping((t) => !t)}
+                disabled={phase !== 'live'}
+                aria-pressed={typing}
+              >
+                <Keyboard className="h-4 w-4" aria-hidden="true" /> Type
+              </button>
+            )}
+            <button type="button" className="atlas-btn is-end" onClick={hangUp}>
+              <PhoneOff className="h-4 w-4" aria-hidden="true" /> End
+            </button>
+          </>
+        )}
+      </div>
+      <p className="atlas-fine">Atlas is an AI sales assistant. Calls may be recorded to improve service.</p>
+    </section>
+    </>
+  );
+}

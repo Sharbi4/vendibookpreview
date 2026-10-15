@@ -404,3 +404,6 @@ verify_jwt = false
 # Invoice workflow authenticates the bearer with auth.getUser before every action.
 [functions.commerce-invoices]
 verify_jwt = false
+
+[functions.atlas-agent-token]
+verify_jwt = false

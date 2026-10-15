@@ -21,6 +21,9 @@ interface MakeOfferModalProps {
   listingTitle: string;
   askingPrice: number;
   onOfferSent?: () => void;
+  /** Prefill (e.g. drafted by Atlas); the buyer still reviews and sends. */
+  initialAmount?: number;
+  initialMessage?: string;
 }
 
 export const MakeOfferModal = ({
@@ -31,6 +34,8 @@ export const MakeOfferModal = ({
   listingTitle,
   askingPrice,
   onOfferSent,
+  initialAmount,
+  initialMessage,
 }: MakeOfferModalProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -43,6 +48,11 @@ export const MakeOfferModal = ({
 
   const submitting = useRef(false);
   useEffect(() => { if (!open) { setStep('amount'); setAcknowledged(false); } }, [open]);
+  useEffect(() => {
+    if (!open) return;
+    if (initialAmount && initialAmount > 0) setOfferAmount(String(Math.round(initialAmount)));
+    if (initialMessage) setMessage(initialMessage);
+  }, [open, initialAmount, initialMessage]);
 
   // Check if user is the owner of this listing
   const isOwner = user?.id === sellerId;

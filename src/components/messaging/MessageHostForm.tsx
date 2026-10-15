@@ -19,6 +19,8 @@ interface MessageHostFormProps {
   hostId: string;
   listingTitle?: string;
   className?: string;
+  /** Prefilled draft (e.g. written by Atlas); the buyer still reviews and sends. */
+  initialMessage?: string;
 }
 
 const MessageHostForm = ({
@@ -26,6 +28,7 @@ const MessageHostForm = ({
   hostId,
   listingTitle,
   className = '',
+  initialMessage,
 }: MessageHostFormProps) => {
   const defaultMessage = listingTitle
     ? `Hi! I’m interested in "${listingTitle}". Could you share a video walkthrough here on Vendibook?`
@@ -35,7 +38,7 @@ const MessageHostForm = ({
   const navigate = useNavigate();
   const { toast } = useToast();
   const { getOrCreateConversation } = useConversations();
-  const [message, setMessage] = useState(defaultMessage);
+  const [message, setMessage] = useState(initialMessage?.trim() || defaultMessage);
   const messageId = useId();
   const sending = useRef(false);
   const [isLoading, setIsLoading] = useState(false);

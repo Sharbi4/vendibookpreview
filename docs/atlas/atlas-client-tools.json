@@ -1,0 +1,318 @@
+[
+  {
+    "type": "client",
+    "name": "search_listings",
+    "description": "Search live Vendibook listings and show the matches on screen. Returns up to 6 listings with id, title, price, location, condition and a short description.",
+    "expects_response": true,
+    "response_timeout_secs": 20,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "keywords": {
+          "type": "string",
+          "description": "Words to match in the title or description, e.g. \"taco\", \"pizza oven\", \"coffee\". Optional."
+        },
+        "category": {
+          "type": "string",
+          "description": "Listing type.",
+          "enum": [
+            "food_truck",
+            "food_trailer",
+            "ghost_kitchen",
+            "vendor_space",
+            "vendor_lot"
+          ]
+        },
+        "mode": {
+          "type": "string",
+          "description": "Buy or rent.",
+          "enum": [
+            "sale",
+            "rent"
+          ]
+        },
+        "max_price": {
+          "type": "number",
+          "description": "Highest sale price (or daily rate for rentals) in US dollars. Optional."
+        },
+        "min_price": {
+          "type": "number",
+          "description": "Lowest price in US dollars. Optional."
+        },
+        "state": {
+          "type": "string",
+          "description": "Two-letter US state code to prefer, e.g. \"TX\". Optional."
+        }
+      },
+      "required": []
+    }
+  },
+  {
+    "type": "client",
+    "name": "show_listing",
+    "description": "Open a listing page on the buyer's screen and return its details (equipment, condition, delivery options, whether offers are accepted).",
+    "expects_response": true,
+    "response_timeout_secs": 20,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "listing_id": {
+          "type": "string",
+          "description": "The listing id from search_listings."
+        }
+      },
+      "required": [
+        "listing_id"
+      ]
+    }
+  },
+  {
+    "type": "client",
+    "name": "get_delivery_quote",
+    "description": "Get the delivery options and quote totals for a listing to the buyer's ZIP code. Returns totals only.",
+    "expects_response": true,
+    "response_timeout_secs": 20,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "listing_id": {
+          "type": "string",
+          "description": "The listing id."
+        },
+        "zip": {
+          "type": "string",
+          "description": "The buyer's 5-digit US ZIP code."
+        }
+      },
+      "required": [
+        "listing_id",
+        "zip"
+      ]
+    }
+  },
+  {
+    "type": "client",
+    "name": "start_request_to_buy",
+    "description": "Take the buyer to the Request to buy page for a sale listing (or the booking section for a rental). The buyer reviews and sends it themselves.",
+    "expects_response": true,
+    "response_timeout_secs": 20,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "listing_id": {
+          "type": "string",
+          "description": "The listing id."
+        }
+      },
+      "required": [
+        "listing_id"
+      ]
+    }
+  },
+  {
+    "type": "client",
+    "name": "draft_offer",
+    "description": "Open the Make offer form for a sale listing, prefilled with the amount (and an optional note). The buyer reviews and sends it.",
+    "expects_response": true,
+    "response_timeout_secs": 20,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "listing_id": {
+          "type": "string",
+          "description": "The listing id."
+        },
+        "amount": {
+          "type": "number",
+          "description": "Offer amount in US dollars, below the asking price."
+        },
+        "note": {
+          "type": "string",
+          "description": "Optional short, polite note to the seller."
+        }
+      },
+      "required": [
+        "listing_id",
+        "amount"
+      ]
+    }
+  },
+  {
+    "type": "client",
+    "name": "draft_seller_message",
+    "description": "Open a message to the seller prefilled with a draft (e.g. asking about price flexibility, delivery or a video walkthrough). The buyer edits and sends it.",
+    "expects_response": true,
+    "response_timeout_secs": 20,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "listing_id": {
+          "type": "string",
+          "description": "The listing id."
+        },
+        "message": {
+          "type": "string",
+          "description": "The draft message, written in the buyer's voice, friendly and short."
+        }
+      },
+      "required": [
+        "listing_id",
+        "message"
+      ]
+    }
+  },
+  {
+    "type": "client",
+    "name": "estimate_earnings",
+    "description": "Simple sales math from the buyer's own numbers. Returns monthly sales and sales after food cost, before all other expenses. Not a prediction.",
+    "expects_response": true,
+    "response_timeout_secs": 20,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "avg_ticket": {
+          "type": "number",
+          "description": "Average sale per customer in US dollars."
+        },
+        "customers_per_day": {
+          "type": "number",
+          "description": "Customers served per day."
+        },
+        "days_per_week": {
+          "type": "number",
+          "description": "Days open per week."
+        },
+        "food_cost_percent": {
+          "type": "number",
+          "description": "Food and packaging cost as a percent of sales, e.g. 30."
+        },
+        "equipment_price": {
+          "type": "number",
+          "description": "Optional price of the truck or trailer, to compare against."
+        }
+      },
+      "required": [
+        "avg_ticket",
+        "customers_per_day",
+        "days_per_week",
+        "food_cost_percent"
+      ]
+    }
+  },
+  {
+    "type": "client",
+    "name": "get_pricing",
+    "description": "Current Vendibook fees (listing, sale commission, rental fees) and optional seller upgrades with live prices. Call before quoting any fee or price.",
+    "expects_response": true,
+    "response_timeout_secs": 20,
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": []
+    }
+  },
+  {
+    "type": "client",
+    "name": "open_page",
+    "description": "Open a Vendibook page on the buyer's screen.",
+    "expects_response": true,
+    "response_timeout_secs": 20,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "page": {
+          "type": "string",
+          "description": "Which page. \"sell\" starts a new listing, \"my_listings\" is the seller's own listings, \"permits\" opens the PermitPath planner, \"pricing\" shows fees and upgrades.",
+          "enum": [
+            "home",
+            "search",
+            "financing",
+            "how_it_works",
+            "freight",
+            "payments",
+            "sell",
+            "contact",
+            "permits",
+            "pricing",
+            "my_listings"
+          ]
+        },
+        "search_text": {
+          "type": "string",
+          "description": "Optional search text when page is \"search\"."
+        }
+      },
+      "required": [
+        "page"
+      ]
+    }
+  },
+  {
+    "type": "client",
+    "name": "look_at_page",
+    "description": "See what is on the buyer's screen right now: the page, its sections (headings) and the buttons, links, tabs and fields on it, each with a ref. Controls marked buyer_only (send, pay, submit, sign in, accept, buy, save) are for the buyer to press. Call this before page_action, and again after the page changes.",
+    "expects_response": true,
+    "response_timeout_secs": 20,
+    "parameters": {
+      "type": "object",
+      "properties": {},
+      "required": []
+    }
+  },
+  {
+    "type": "client",
+    "name": "page_action",
+    "description": "Act on the buyer's screen like a person pointing at it: scroll to a section, highlight something, read a section's text, press a safe button or tab (photos, tabs, show more, filters, open a section), or type into a search, ZIP or filter field. Never presses buyer_only controls or types into payment, login or contact fields — those get highlighted for the buyer instead.",
+    "expects_response": true,
+    "response_timeout_secs": 20,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "action": {
+          "type": "string",
+          "description": "What to do.",
+          "enum": [
+            "scroll",
+            "highlight",
+            "read",
+            "click",
+            "fill"
+          ]
+        },
+        "target": {
+          "type": "string",
+          "description": "A ref from look_at_page (like \"s3\" or \"c12\"). For scroll it can also be \"up\", \"down\", \"top\" or \"bottom\"."
+        },
+        "value": {
+          "type": "string",
+          "description": "For fill: the text to type (e.g. a ZIP code or search words) or the option to pick."
+        },
+        "press_enter": {
+          "type": "boolean",
+          "description": "For fill on a search or ZIP field: also run the search."
+        }
+      },
+      "required": [
+        "action",
+        "target"
+      ]
+    }
+  },
+  {
+    "type": "client",
+    "name": "talk_to_person",
+    "description": "Hand the buyer to a real person on the Vendibook team: opens live chat on their screen (or the contact page if chat is offline).",
+    "expects_response": true,
+    "response_timeout_secs": 20,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "reason": {
+          "type": "string",
+          "description": "Short summary of what they need help with."
+        }
+      },
+      "required": []
+    }
+  }
+]
