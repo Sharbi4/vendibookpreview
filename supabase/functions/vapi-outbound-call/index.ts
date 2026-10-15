@@ -1,5 +1,6 @@
 import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
 import { checkRateLimit, clientIp } from '../_shared/rateLimit.ts';
+import { getCaller, isBackendCaller } from '../_shared/callerGuard.ts';
 
 const VAPI_PRIVATE_KEY = Deno.env.get('VAPI_PRIVATE_KEY');
 const VAPI_PHONE_NUMBER_ID = Deno.env.get('VAPI_PHONE_NUMBER_ID');
@@ -16,6 +17,14 @@ Deno.serve(async (req) => {
         JSON.stringify({ error: 'Vapi outbound calling is not configured.' }),
         { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
+    }
+
+    // Members only (owner decision 2026-10-15): signed-in users, or other
+    // backend functions that already gated their own callers.
+    if (!(await isBackendCaller(req)) && !(await getCaller(req))) {
+      return new Response(JSON.stringify({ error: 'Please sign in to request a call.' }), {
+        status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
     }
 
     const body = await req.json().catch(() => ({}));
@@ -70,7 +79,7 @@ Deno.serve(async (req) => {
     if (!res.ok) {
       console.error('Vapi outbound call error:', res.status, data);
       return new Response(
-        JSON.stringify({ error: data?.message || 'Could not place the call.', details: data }),
+        JSON.stringify({ error: 'Could not place the call.' }),
         { status: res.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
