@@ -153,13 +153,13 @@ function clearRefs(root: ParentNode) {
 const PRIVATE_PATH =
   /^\/(?:(?:dashboard|messages|account|profile|settings|notifications?|notification-preferences|favorites|saved|payments?|checkout|pay|invoices?|orders?|transactions?|bookings?|host|seller|buyer|admin|partner|welcome|auth|verify|identity|billing|payouts?|offers?|purchase|build-studio\/my-builds)(?:[/?#]|$)|my-|square|paypal)/i;
 const PRIVATE_MARKER = '[data-atlas-private]';
-const SENSITIVE_FIELD = 'input[type="password"], input[autocomplete^="cc-"], input[autocomplete="one-time-code"]';
+const PRIVATE_DIALOG_FIELD = 'input[type="password"], input[autocomplete^="cc-"], input[autocomplete="one-time-code"]';
 
 export function isPrivateContext(): boolean {
   if (PRIVATE_PATH.test(window.location.pathname || '/')) return true;
   if (document.querySelector(PRIVATE_MARKER)) return true;
   const root = scopeRoot();
-  return root !== document && Boolean((root as Element).querySelector(SENSITIVE_FIELD));
+  return root !== document && Boolean((root as Element).querySelector(PRIVATE_DIALOG_FIELD));
 }
 
 const PRIVATE_REPLY = 'This page is private to the buyer (account, messages, payment or admin). I can not look at or use it; ask the buyer to handle it themselves.';
