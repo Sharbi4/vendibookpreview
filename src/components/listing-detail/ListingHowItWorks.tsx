@@ -25,7 +25,6 @@ import {
   ClipboardCheck,
   CreditCard,
   FileText,
-  HandCoins,
   HelpCircle,
   MessageCircle,
   Package,
@@ -59,7 +58,6 @@ type ListingLike = {
 
 export type WalkthroughVariant =
   | 'sale_card'
-  | 'sale_pay_in_person'
   | 'rent_instant'
   | 'rent_request'
   | 'sale_and_rent';
@@ -141,8 +139,8 @@ export function resolveWalkthrough(listing: ListingLike): WalkthroughConfig {
 
   // Dual-mode: build a wrapper config with both branches available.
   if (isDual) {
-    const acceptsPayPal = listing.accept_paypal_checkout !== false;
-    const saleBranch = acceptsPayPal ? buildSaleCard(fulfillment, sellerCoversFreight) : buildSalePayInPerson(fulfillment);
+    // Pay in person is retired (2026-10-15): every sale is paid through Vendibook.
+    const saleBranch = buildSaleCard(fulfillment, sellerCoversFreight);
     const rentBranch = listing.instant_book
       ? buildRentInstant(fulfillment)
       : buildRentRequest(fulfillment);
@@ -152,8 +150,7 @@ export function resolveWalkthrough(listing: ListingLike): WalkthroughConfig {
 
   // Sale variants
   if (isSale) {
-    const acceptsPayPal = listing.accept_paypal_checkout !== false; // default to PayPal if flag absent
-    return acceptsPayPal ? buildSaleCard(fulfillment, sellerCoversFreight) : buildSalePayInPerson(fulfillment);
+    return buildSaleCard(fulfillment, sellerCoversFreight);
   }
 
   // Rental variants (default when mode is missing or unusual)
@@ -345,59 +342,6 @@ function buildSaleCard(fulfillment: FulfillmentContext, sellerCoversFreight = fa
       'Report suspicious behavior to Vendibook',
     ],
     finalCtaLabel: 'Continue to purchase',
-    finalCtaTargetId: 'booking-widget',
-  };
-}
-
-function buildSalePayInPerson(fulfillment: FulfillmentContext): WalkthroughConfig {
-  const inline: WalkthroughStep[] = [
-    { icon: MessageCircle, title: 'Review and contact the seller', description: '' },
-    { icon: ClipboardCheck, title: 'Create your Vendibook purchase', description: '' },
-    { icon: HandCoins, title: 'Pay the seller directly', description: '' },
-    { icon: CheckCircle2, title: 'Confirm payment and item receipt', description: '' },
-  ];
-  const full: WalkthroughStep[] = [
-    {
-      icon: MessageCircle,
-      title: 'Contact the seller',
-      description:
-        'Introduce yourself and lock in a meeting time and place. Vendibook Messages keeps the conversation on-record.',
-    },
-    {
-      icon: ClipboardCheck,
-      title: 'Create your Vendibook purchase',
-      description:
-        'Start the purchase from the listing page so both you and the seller have a shared record of the transaction.',
-    },
-    {
-      icon: HandCoins,
-      title: 'Meet, inspect, and pay directly',
-      description:
-        'You pay the seller in person — cash, check, or whatever you both agree on. Vendibook does not process the payment and does not take a fee on Pay-in-Person sales.',
-    },
-    {
-      icon: CheckCircle2,
-      title: 'Confirm payment and item receipt',
-      description:
-        'Both sides confirm the sale in the app so the listing closes and reviews unlock. Meet in a safe public spot and verify the item before handing over money.',
-    },
-  ];
-  return {
-    variant: 'sale_pay_in_person',
-    fulfillment,
-    heading: 'Paying the Seller in Person',
-    subhead: 'Vendibook tracks the transaction, but payment is completed directly with the seller.',
-    cta: 'See How Pay in Person Works',
-    modalTitle: 'How Pay-in-Person purchases work',
-    inlineSteps: inline,
-    fullSteps: full,
-    trustPoints: [
-      'Meet in a safe, public spot — bring someone with you',
-      'Inspect the item thoroughly before paying',
-      'Confirm ownership and title before money changes hands',
-      'Keep the conversation in Vendibook Messages',
-    ],
-    finalCtaLabel: 'Contact the seller',
     finalCtaTargetId: 'booking-widget',
   };
 }
@@ -708,9 +652,7 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
   const openEvent: EventName =
     config.variant === 'sale_card'
       ? 'purchase_steps_opened'
-      : config.variant === 'sale_pay_in_person'
-        ? 'pay_in_person_steps_opened'
-        : config.variant === 'sale_and_rent'
+      : config.variant === 'sale_and_rent'
           ? 'guidance_prompt_viewed'
           : 'rental_steps_opened';
 
@@ -734,11 +676,7 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
     const target = rootConfig.branches![branch];
     trackWalkthrough('dual_mode_branch_selected', target.variant, listing.id);
     trackWalkthrough(
-      branch === 'sale'
-        ? target.variant === 'sale_pay_in_person'
-          ? 'pay_in_person_steps_opened'
-          : 'purchase_steps_opened'
-        : 'rental_steps_opened',
+      branch === 'sale' ? 'purchase_steps_opened' : 'rental_steps_opened',
       target.variant,
       listing.id,
     );

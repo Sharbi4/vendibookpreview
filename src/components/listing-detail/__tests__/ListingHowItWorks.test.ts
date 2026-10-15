@@ -10,15 +10,14 @@ describe('resolveWalkthrough', () => {
     expect(c.finalCtaLabel).toMatch(/purchase/i);
   });
 
-  it('sale + no card → sale_pay_in_person variant', () => {
+  it('a legacy cash-only listing still gets the Vendibook checkout walkthrough (pay in person retired)', () => {
     const c = resolveWalkthrough({
-      id: '2', mode: 'sale', accept_paypal_checkout: false, category: 'food_truck',
+      id: '2', mode: 'sale', accept_paypal_checkout: false, accept_cash_payment: true, category: 'food_truck',
     });
-    expect(c.variant).toBe('sale_pay_in_person');
-    // Payment method must be different — no Stripe language
-    const combined = c.fullSteps.map(s => s.description).join(' ');
+    expect(c.variant).toBe('sale_card');
+    const combined = [c.heading, c.subhead, ...c.fullSteps.map(s => s.description)].join(' ');
     expect(combined).not.toMatch(/stripe/i);
-    expect(combined).toMatch(/in person|directly/i);
+    expect(combined).not.toMatch(/in person|pay the seller directly|cash/i);
   });
 
   it('rent + instant_book → rent_instant', () => {
@@ -126,12 +125,12 @@ describe('resolveWalkthrough', () => {
     expect(c.variant).toBe('sale_card');
   });
 
-  it('dual mode with pay-in-person seller uses sale_pay_in_person branch', () => {
+  it('dual mode with a legacy cash-only seller uses the checkout branch', () => {
     const c = resolveWalkthrough({
       id: '14', mode: 'both', category: 'food_truck',
       accept_paypal_checkout: false, price_sale: 30000, price_daily: 250,
     });
     expect(c.variant).toBe('sale_and_rent');
-    expect(c.branches!.sale.variant).toBe('sale_pay_in_person');
+    expect(c.branches!.sale.variant).toBe('sale_card');
   });
 });

@@ -417,15 +417,8 @@ export function buildListingHighlights(listing: HighlightsListing): ListingHighl
 
   // 2. Payment posture (spec §7, §10)
   if (isSale) {
-    if (listing.accept_cash_payment && !listing.accept_paypal_checkout) {
-      bullets.push('Pay in Person — Vendibook records the transaction but does not hold funds');
-    } else if (listing.accept_cash_payment && listing.accept_paypal_checkout) {
-      bullets.push('Pay online via PayPal or in person');
-    } else if (listing.accept_paypal_checkout) {
-      bullets.push('Payment is completed securely via PayPal at checkout');
-    } else {
-      bullets.push('Payment is completed securely at checkout');
-    }
+    // Pay in person is retired (2026-10-15): every purchase is paid through Vendibook.
+    bullets.push('Paid through Vendibook: PayPal-powered checkout or itemized invoice');
   }
 
   // 3. Deposit (rentals only, only if configured — spec §12)

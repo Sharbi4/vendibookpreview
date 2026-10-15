@@ -301,11 +301,9 @@ const SaleCheckout = ({ requestOnly = true }: { requestOnly?: boolean }) => {
         setFulfillmentSelected('pickup');
       }
 
-      if (listing.accept_paypal_checkout) {
-        setPaymentMethod('card');
-      } else if (listing.accept_cash_payment && !requestOnly) {
-        setPaymentMethod('cash');
-      }
+      // Pay in person is retired (owner, 2026-10-15): every purchase is paid through
+      // Vendibook, whatever an older listing's accept_cash_payment flag says.
+      setPaymentMethod('card');
     }
   }, [listing]);
 
@@ -636,7 +634,7 @@ const SaleCheckout = ({ requestOnly = true }: { requestOnly?: boolean }) => {
     if (!requestOnly && paypalPurchaseBlocked && paymentMethod !== 'cash') {
       toast({
         title: 'Seller setup incomplete',
-        description: "This seller hasn't finished payment setup yet. Message them or choose pay-in-person if available.",
+        description: "This seller hasn't finished payment setup yet. Send a Request to buy or message them, and Vendibook will follow up.",
         variant: 'destructive',
       });
       return null;
