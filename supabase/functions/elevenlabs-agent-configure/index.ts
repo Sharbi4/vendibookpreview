@@ -164,8 +164,11 @@ serve(async (req) => {
       // 2. Patch the agent prompt, keeping any MCP servers already attached.
       const current = await el(`/convai/agents/${AGENT_ID}`);
       if (!current.ok) return json({ step: "get_agent", ...current }, current.status);
-      const currentPrompt =
+      // ElevenLabs returns inline `tools` with the agent; sending them back with
+      // `tool_ids` is rejected, so strip them and use tool_ids only.
+      const { tools: _inlineTools, ...currentPrompt } =
         ((current.body as Record<string, any>)?.conversation_config?.agent?.prompt ?? {}) as Record<string, unknown>;
+
 
       const patch = {
         conversation_config: {
