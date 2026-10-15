@@ -17,7 +17,7 @@ function query() {
 vi.mock('@/integrations/supabase/client', () => ({ supabase: { from: () => query() } }));
 vi.mock('@/lib/edge/invokeFunction', () => ({ invokeEdge: (...a: unknown[]) => invoke(...a) }));
 
-import { createAtlasTools, listingPriceText, safeKeywords, toCard } from '@/lib/atlas/atlasTools';
+import { createAtlasTools, listingPriceText, resolveListingRef, safeKeywords, toCard } from '@/lib/atlas/atlasTools';
 import { ATLAS_SYSTEM_PROMPT, ATLAS_TOOL_DEFINITIONS } from '@/lib/atlas/atlasConfig';
 
 const ID = '2b8a5106-53e8-4999-96a1-7fc4890ff6b7';
@@ -55,7 +55,7 @@ describe('Atlas tools', () => {
 
   it('show_listing opens the page; unavailable listings never navigate', async () => {
     const d = deps();
-    expect(await createAtlasTools(d).show_listing({ listing_id: ID })).toMatch(/not available/);
+    expect(await createAtlasTools(d).show_listing({ listing_id: ID })).toMatch(/no longer available/);
     expect(d.navigate).not.toHaveBeenCalled();
     single.data = { id: ID, title: 'T', mode: 'sale', price_sale: 1 };
     await createAtlasTools(d).show_listing({ listing_id: ID });
@@ -183,5 +183,73 @@ describe('Atlas pricing', () => {
     expect(out.optional_upgrades).toEqual(expect.arrayContaining([expect.objectContaining({ name: 'Vendibook Pro', price: '$79/month' })]));
     const { ATLAS_PRODUCTS } = await import('@/lib/atlas/atlasTools');
     expect(Object.keys(ATLAS_PRODUCTS)).not.toContain('listing_concierge');
+  });
+});
+
+describe('Atlas listing references (voice-safe ids)', () => {
+  const A = '2b8a5106-53e8-4999-96a1-7fc4890ff6b7';
+  const B = 'f4fbb682-17db-4a3d-b081-e2631ae063ff';
+  const C = 'a7594e1f-fbe2-4e5a-abad-b5fe2069c00b';
+  const recent = [
+    { id: A, title: 'Fully Custom Ice Cream Trailer' },
+    { id: B, title: '2020 The Food Trailer' },
+    { id: C, title: 'Food Trailer for sale in Austin, TX' },
+  ];
+
+  it('takes exact ids, result numbers and ordinals', () => {
+    expect(resolveListingRef(B, recent, null)).toBe(B);
+    expect(resolveListingRef('1', recent, null)).toBe(A);
+    expect(resolveListingRef('#3', recent, null)).toBe(C);
+    expect(resolveListingRef('second one', recent, null)).toBe(B);
+    expect(resolveListingRef('last', recent, null)).toBe(C);
+    expect(resolveListingRef('7', recent, null)).toBeNull();
+    expect(resolveListingRef('constructor', recent, null)).toBeNull();
+  });
+
+  it('uses the listing on screen for "this"/"current" or a missing id', () => {
+    expect(resolveListingRef('current', recent, C)).toBe(C);
+    expect(resolveListingRef('this one', recent, C)).toBe(C);
+    expect(resolveListingRef(undefined, recent, B)).toBe(B);
+  });
+
+  it('recovers ids the voice model garbled or truncated', () => {
+    expect(resolveListingRef('f4fbb682-17db-4a3d-b081-e2631ae063f', recent, null)).toBe(B); // dropped a char
+    expect(resolveListingRef('f4fbb682-17db-4a3d-b018-e2631ae063ff', recent, null)).toBe(B); // swapped chars
+    expect(resolveListingRef('a7594e1f', recent, null)).toBe(C); // first 8 only
+    expect(resolveListingRef('2b8a5106 53e8 4999 96a1 7fc4890ff6b7', recent, null)).toBe(A); // spoken with spaces
+  });
+
+  it('matches a unique title, and gives up rather than guess', () => {
+    expect(resolveListingRef('ice cream trailer', recent, null)).toBe(A);
+    expect(resolveListingRef('food trailer', recent, null)).toBeNull(); // 3 titles match
+    expect(resolveListingRef('pizza truck', recent, null)).toBeNull();
+  });
+
+  it('opens result 1 after a search, and never calls a mistyped id "unavailable"', async () => {
+    rows.push({ id: A, title: 'Fully Custom Ice Cream Trailer', mode: 'sale', price_sale: 39000 }, { id: B, title: '2020 The Food Trailer', mode: 'sale', price_sale: 25000 });
+    const d = deps();
+    const tools = createAtlasTools(d);
+    await tools.search_listings({ mode: 'sale' });
+    single.data = { id: A, title: 'Fully Custom Ice Cream Trailer', mode: 'sale', price_sale: 39000 };
+    await tools.show_listing({ listing_id: '1' });
+    expect(d.navigate).toHaveBeenLastCalledWith(`/listing/${A}`);
+
+    d.navigate.mockClear();
+    const out = await tools.show_listing({ listing_id: 'zzz-not-an-id' });
+    expect(out).toMatch(/Not sure which listing/);
+    expect(out).not.toMatch(/no longer available/);
+    expect(d.navigate).not.toHaveBeenCalled();
+  });
+
+  it('says "taken down" only when the listing really is not public', async () => {
+    single.data = null;
+    const out = await createAtlasTools(deps()).show_listing({ listing_id: A });
+    expect(out).toMatch(/taken down/);
+  });
+
+  it('numbers search results for the agent', async () => {
+    rows.push({ id: A, title: 'X', mode: 'sale', price_sale: 1 });
+    const out = JSON.parse(await createAtlasTools(deps()).search_listings({}));
+    expect(out[0].result).toBe(1);
   });
 });

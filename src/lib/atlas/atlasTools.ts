@@ -136,6 +136,70 @@ async function fetchPublicListing(id: string): Promise<Row | null> {
   return (data as Row | null) ?? null;
 }
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+const ORDINALS: Record<string, number> = { first: 1, second: 2, third: 3, fourth: 4, fifth: 5, sixth: 6, last: -1 };
+
+/** Edit distance, capped: voice models drop or swap a few characters of long ids. */
+function editDistance(a: string, b: string, cap = 6): number {
+  if (Math.abs(a.length - b.length) > cap) return cap + 1;
+  let prev = Array.from({ length: b.length + 1 }, (_, j) => j);
+  for (let i = 1; i <= a.length; i++) {
+    const cur = [i];
+    let best = i;
+    for (let j = 1; j <= b.length; j++) {
+      cur[j] = Math.min(prev[j] + 1, cur[j - 1] + 1, prev[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      best = Math.min(best, cur[j]);
+    }
+    if (best > cap) return cap + 1;
+    prev = cur;
+  }
+  return prev[b.length];
+}
+
+export type ListingRef = { id: string; title?: unknown };
+
+/**
+ * Which listing the agent means. Accepts the exact id, a result number or
+ * ordinal ("1", "#2", "first", "last"), "this"/"current" (the listing on
+ * screen), an id with a few wrong characters, or a title from the last
+ * results. Returns null when nothing matches.
+ */
+export function resolveListingRef(raw: unknown, recent: ListingRef[], currentId: string | null): string | null {
+  const text = String(raw ?? '').trim().toLowerCase();
+  if (UUID.test(text)) {
+    if (recent.some((r) => r.id === text) || !recent.length) return text;
+  }
+  if (!text || /^(this|current|this one|that one|it)$/.test(text)) return currentId;
+  const num = text.match(/^(?:#|no\.?\s*|number\s*|result\s*)?(\d{1,2})$/);
+  const ordKey = text.replace(/\s*(one|listing|result)$/, '').trim();
+  const ord = Object.prototype.hasOwnProperty.call(ORDINALS, ordKey) ? ORDINALS[ordKey] : undefined;
+  const index = num ? Number(num[1]) : ord;
+  if (index) {
+    const hit = index === -1 ? recent[recent.length - 1] : recent[index - 1];
+    if (hit) return hit.id;
+  }
+  const hex = text.replace(/[^0-9a-f]/g, '');
+  if (hex.length >= 8) {
+    const byPrefix = recent.filter((r) => r.id.replace(/-/g, '').startsWith(hex.slice(0, 8)));
+    if (byPrefix.length === 1) return byPrefix[0].id;
+    const close = recent
+      .map((r) => ({ id: r.id, d: editDistance(hex, r.id.replace(/-/g, '')) }))
+      .filter((r) => r.d <= 4)
+      .sort((a, b) => a.d - b.d);
+    if (close.length && (close.length === 1 || close[0].d < close[1].d)) return close[0].id;
+  }
+  if (UUID.test(text)) return text;
+  const words = text.split(/[^a-z0-9]+/).filter((w) => w.length > 2);
+  if (words.length) {
+    const byTitle = recent.filter((r) => {
+      const title = String(r.title ?? '').toLowerCase();
+      return words.every((w) => title.includes(w));
+    });
+    if (byTitle.length === 1) return byTitle[0].id;
+  }
+  return null;
+}
+
 /** Mirrors DeliveryCheckSheet: fulfillment_type defaults to pickup. */
 const fulfillmentOf = (l: Row) => {
   const ft = String(l.fulfillment_type || 'pickup');
@@ -156,6 +220,24 @@ const fulfillmentSummary = (l: Row) => {
 };
 
 export function createAtlasTools(deps: AtlasToolDeps) {
+  // Listings Atlas has shown in this call, newest search first, so "the first
+  // one" or a slightly garbled id still lands on the right listing.
+  let recent: ListingRef[] = [];
+
+  /** The listing the agent means, or a sentence explaining why not. */
+  const listingFor = async (p: Row): Promise<{ l: Row; why?: never } | { l?: never; why: string }> => {
+    const id = resolveListingRef(p.listing_id, recent, deps.currentListingId());
+    if (!id) {
+      return {
+        why: 'Not sure which listing that is. Use the id from search_listings, the result number (1 = first result), or "current" for the listing on their screen. Do not tell the buyer it is unavailable.',
+      };
+    }
+    const l = await fetchPublicListing(id);
+    if (!l) return { why: 'That listing was taken down and is no longer available. Say so briefly and offer similar ones.' };
+    if (!recent.some((r) => r.id === l.id)) recent = [...recent, { id: String(l.id), title: l.title }];
+    return { l };
+  };
+
   return {
     search_listings: async (p: Row = {}) => {
       let q: LooseQuery = supabase.from('listings').select(CARD_COLUMNS);
@@ -188,10 +270,12 @@ export function createAtlasTools(deps: AtlasToolDeps) {
       const state = typeof p.state === 'string' ? p.state.trim().toUpperCase() : '';
       if (state) rows = [...rows].sort((a, b) => Number(String(b.state).toUpperCase() === state) - Number(String(a.state).toUpperCase() === state));
       rows = rows.slice(0, 6);
+      if (rows.length) recent = rows.map((l) => ({ id: String(l.id), title: l.title }));
       deps.showResults(rows.map(toCard));
       if (!rows.length) return 'No listings match. Say so honestly and offer to widen the search (higher budget, other states, rent instead of buy).';
       return JSON.stringify(
-        rows.map((l) => ({
+        rows.map((l, i) => ({
+          result: i + 1,
           id: l.id,
           title: l.title,
           price: listingPriceText(l),
@@ -206,8 +290,8 @@ export function createAtlasTools(deps: AtlasToolDeps) {
     },
 
     show_listing: async (p: Row = {}) => {
-      const l = await fetchPublicListing(String(p.listing_id ?? ''));
-      if (!l) return 'That listing is not available anymore. Offer to find similar ones.';
+      const { l, why } = await listingFor(p);
+      if (!l) return why;
       deps.navigate(`/listing/${l.id}`);
       return JSON.stringify({
         opened: true,
@@ -242,8 +326,8 @@ export function createAtlasTools(deps: AtlasToolDeps) {
     get_delivery_quote: async (p: Row = {}) => {
       const zip = String(p.zip ?? '').replace(/\D/g, '').slice(0, 5);
       if (zip.length !== 5) return 'Ask for a 5-digit ZIP code.';
-      const l = await fetchPublicListing(String(p.listing_id ?? ''));
-      if (!l) return 'That listing is not available anymore.';
+      const { l, why } = await listingFor(p);
+      if (!l) return why;
       const geo = await invokeEdge<{ results?: Row[] }>('geocode-location', { body: { query: zip, limit: 1 } }, { retries: 1 });
       const hit = geo.data?.results?.[0];
       const [lng, lat] = Array.isArray(hit?.center) ? hit!.center : [];
@@ -295,8 +379,8 @@ export function createAtlasTools(deps: AtlasToolDeps) {
     },
 
     start_request_to_buy: async (p: Row = {}) => {
-      const l = await fetchPublicListing(String(p.listing_id ?? ''));
-      if (!l) return 'That listing is not available anymore.';
+      const { l, why } = await listingFor(p);
+      if (!l) return why;
       if (l.mode === 'rent') {
         deps.navigate(`/listing/${l.id}`);
         return 'Opened the listing. Rentals are booked by picking dates on the page, then the host approves.';
@@ -306,8 +390,8 @@ export function createAtlasTools(deps: AtlasToolDeps) {
     },
 
     draft_seller_message: async (p: Row = {}) => {
-      const l = await fetchPublicListing(String(p.listing_id ?? ''));
-      if (!l) return 'That listing is not available anymore.';
+      const { l, why } = await listingFor(p);
+      if (!l) return why;
       const message = String(p.message ?? '').trim().slice(0, 1000);
       if (!message) return 'Write the message first, then call this again.';
       if (!deps.openMessage) return 'Messaging is not available here. Offer to open the listing so they can tap Ask.';
@@ -317,8 +401,8 @@ export function createAtlasTools(deps: AtlasToolDeps) {
     },
 
     draft_offer: async (p: Row = {}) => {
-      const l = await fetchPublicListing(String(p.listing_id ?? ''));
-      if (!l) return 'That listing is not available anymore.';
+      const { l, why } = await listingFor(p);
+      if (!l) return why;
       if (l.mode !== 'sale') return 'Offers are only for listings that are for sale. For rentals, suggest asking the host about their rate.';
       if (!l.accepts_offers) return 'This seller is not taking offers on this listing. Offer to draft a message asking if the price is flexible instead.';
       const asking = Number(l.price_sale);

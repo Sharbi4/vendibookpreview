@@ -130,14 +130,14 @@ export const ATLAS_TOOL_DEFINITIONS: AtlasToolDefinition[] = [
   tool(
     'show_listing',
     'Open a listing page on the buyer\'s screen and return its details (equipment, condition, delivery options, whether offers are accepted).',
-    { listing_id: { type: 'string', description: 'The listing id from search_listings.' } },
+    { listing_id: { type: 'string', description: 'The listing id from search_listings, or its result number (1 = first result), or "current" for the listing on their screen.' } },
     ['listing_id'],
   ),
   tool(
     'get_delivery_quote',
     'Get the delivery options and quote totals for a listing to the buyer\'s ZIP code. Returns totals only.',
     {
-      listing_id: { type: 'string', description: 'The listing id.' },
+      listing_id: { type: 'string', description: 'The listing id from search_listings, or its result number (1 = first result), or "current" for the listing on their screen.' },
       zip: { type: 'string', description: 'The buyer\'s 5-digit US ZIP code.' },
     },
     ['listing_id', 'zip'],
@@ -145,14 +145,14 @@ export const ATLAS_TOOL_DEFINITIONS: AtlasToolDefinition[] = [
   tool(
     'start_request_to_buy',
     'Take the buyer to the Request to buy page for a sale listing (or the booking section for a rental). The buyer reviews and sends it themselves.',
-    { listing_id: { type: 'string', description: 'The listing id.' } },
+    { listing_id: { type: 'string', description: 'The listing id from search_listings, or its result number (1 = first result), or "current" for the listing on their screen.' } },
     ['listing_id'],
   ),
   tool(
     'draft_offer',
     'Open the Make offer form for a sale listing, prefilled with the amount (and an optional note). The buyer reviews and sends it.',
     {
-      listing_id: { type: 'string', description: 'The listing id.' },
+      listing_id: { type: 'string', description: 'The listing id from search_listings, or its result number (1 = first result), or "current" for the listing on their screen.' },
       amount: { type: 'number', description: 'Offer amount in US dollars, below the asking price.' },
       note: { type: 'string', description: 'Optional short, polite note to the seller.' },
     },
@@ -162,7 +162,7 @@ export const ATLAS_TOOL_DEFINITIONS: AtlasToolDefinition[] = [
     'draft_seller_message',
     'Open a message to the seller prefilled with a draft (e.g. asking about price flexibility, delivery or a video walkthrough). The buyer edits and sends it.',
     {
-      listing_id: { type: 'string', description: 'The listing id.' },
+      listing_id: { type: 'string', description: 'The listing id from search_listings, or its result number (1 = first result), or "current" for the listing on their screen.' },
       message: { type: 'string', description: 'The draft message, written in the buyer\'s voice, friendly and short.' },
     },
     ['listing_id', 'message'],
