@@ -65,7 +65,7 @@ export function InboxList({ conversations, isLoading, isError, onRetry, activeId
     <div className="flex h-full min-h-0 flex-col">
       <div className="space-y-3 border-b border-[#ECE6DD] px-4 pb-3 pt-4">
         <form role="search" onSubmit={submit} className="relative">
-          <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8A847B]" />
+          <Search aria-hidden="true" className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#6F6961]" />
           <label htmlFor="inbox-search" className="sr-only">Search conversations</label>
           <input
             id="inbox-search"
@@ -73,7 +73,7 @@ export function InboxList({ conversations, isLoading, isError, onRetry, activeId
             value={query}
             onChange={(e) => { setQuery(e.target.value); if (!e.target.value) textSearch.reset(); }}
             placeholder="Search names, listings, messages"
-            className="h-10 w-full rounded-full border border-[#E2DBD0] bg-[#FCFAF7] pl-9 pr-9 text-[13.5px] text-[#1C1B1A] placeholder:text-[#8A847B] focus:border-[#1C1B1A] focus:bg-white focus:outline-none [&::-webkit-search-cancel-button]:hidden"
+            className="h-10 w-full rounded-full border border-[#E2DBD0] bg-[#FCFAF7] pl-9 pr-9 text-[13.5px] text-[#1C1B1A] placeholder:text-[#6F6961] focus:border-[#1C1B1A] focus:bg-white focus:outline-none [&::-webkit-search-cancel-button]:hidden"
           />
           {query && (
             <button type="button" onClick={clear} aria-label="Clear search" className="absolute right-2 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-[#5E5953] hover:bg-[#F3EEE7] hover:text-[#1C1B1A]">
@@ -128,7 +128,7 @@ export function InboxList({ conversations, isLoading, isError, onRetry, activeId
                     <Link to={`/dashboard/messages/${r.conversation_id}`} className="block px-4 py-3 transition-colors hover:bg-[#FCFAF7]">
                       <span className="flex items-baseline justify-between gap-3">
                         <span className="truncate text-[13.5px] font-semibold text-[#1C1B1A]">{nameFor(r.conversation_id)}</span>
-                        <span className="shrink-0 text-[12px] tabular-nums text-[#8A847B]" title={fullStamp(r.created_at)}>{inboxStamp(r.created_at)}</span>
+                        <span className="shrink-0 text-[12px] tabular-nums text-[#6F6961]" title={fullStamp(r.created_at)}>{inboxStamp(r.created_at)}</span>
                       </span>
                       <span className="mt-0.5 line-clamp-2 text-[13px] leading-5 text-[#5E5953]">{r.message}</span>
                     </Link>
@@ -214,11 +214,11 @@ export function InboxList({ conversations, isLoading, isError, onRetry, activeId
                     <span className="min-w-0 flex-1">
                       <span className="flex items-baseline justify-between gap-3">
                         <span className={cn('truncate text-[14px] leading-5 text-[#1C1B1A]', unread > 0 ? 'font-bold' : 'font-medium')}>{name}</span>
-                        <span className={cn('shrink-0 text-[12px] tabular-nums', unread > 0 ? 'font-semibold text-[#1C1B1A]' : 'text-[#8A847B]')} title={fullStamp(at)}>
+                        <span className={cn('shrink-0 text-[12px] tabular-nums', unread > 0 ? 'font-semibold text-[#1C1B1A]' : 'text-[#6F6961]')} title={fullStamp(at)}>
                           {inboxStamp(at)}
                         </span>
                       </span>
-                      <span className="block truncate text-[12.5px] leading-5 text-[#8A847B]">
+                      <span className="block truncate text-[12.5px] leading-5 text-[#6F6961]">
                         <span className="font-medium text-[#6F6961]">{userId === c.host_id ? 'Your listing' : 'Their listing'}</span>
                         {c.listing?.title && <> · {c.listing.title}</>}
                       </span>

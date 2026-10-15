@@ -6,6 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import MessageHostButton from '@/components/messaging/MessageHostButton';
 import WorkspaceShell from '@/components/workspace/WorkspaceShell';
 import ConversationThread from '@/components/messaging/ConversationThread';
+import SavedToMessage from '@/components/workspace/inbox/SavedToMessage';
 import { EmptyState, PageHeader, ws } from '@/components/workspace/ui';
 import { InboxList } from '@/components/workspace/inbox/InboxList';
 import { useAuth } from '@/contexts/AuthContext';
@@ -80,7 +81,7 @@ export default function WorkspaceMessages() {
         : 'Conversations with buyers, renters, hosts and sellers.';
 
   const threadPane = conversationId ? (
-    <ConversationThread conversationId={conversationId} compactSafety />
+    <ConversationThread conversationId={conversationId} compactSafety listingCard />
   ) : (
     <div className="flex h-full flex-col items-center justify-center px-8 py-16 text-center">
       <p className="text-[17px] font-semibold tracking-[-0.01em] text-[#1C1B1A]">
@@ -157,6 +158,7 @@ export default function WorkspaceMessages() {
           )}
 
           {inboxEmpty ? (
+            <>
             <section aria-label="Conversations" className={ws.surface}>
               <EmptyState
                 title="No conversations yet"
@@ -165,6 +167,8 @@ export default function WorkspaceMessages() {
                 secondary={{ label: 'List an asset', to: '/list' }}
               />
             </section>
+            <SavedToMessage />
+            </>
           ) : (
           <section
             aria-label="Conversations"

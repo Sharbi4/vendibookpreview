@@ -1,3 +1,4 @@
+import ThreadListingCard from '@/components/workspace/inbox/ThreadListingCard';
 import UnavailableConversation from './UnavailableConversation';
 import MessagingSafety from './MessagingSafety';
 import { useState, useEffect, useRef } from 'react';
@@ -40,6 +41,8 @@ interface ConversationThreadProps {
   conversationId: string;
   /** Short one-strip safety notice (dashboard inbox). Defaults to the full notice. */
   compactSafety?: boolean;
+  /** Pin the listing (photo, price, next steps) under the header. Dashboard inbox only. */
+  listingCard?: boolean;
 }
 
 const formatFileSize = (bytes: number): string => {
@@ -201,7 +204,7 @@ const ALLOWED_TYPES = [
   'text/plain',
 ];
 
-const ConversationThread = ({ conversationId, compactSafety = false }: ConversationThreadProps) => {
+const ConversationThread = ({ conversationId, compactSafety = false, listingCard = false }: ConversationThreadProps) => {
   const { user } = useAuth();
   const { toast } = useToast();
   const {
@@ -402,6 +405,10 @@ const ConversationThread = ({ conversationId, compactSafety = false }: Conversat
           <WalkthroughCta listingId={conversation?.listing_id} conversationId={conversationId} compact />
         </div>
       </div>
+
+      {listingCard && conversation?.listing_id && (
+        <ThreadListingCard listingId={conversation.listing_id} isHost={isHost} />
+      )}
 
       <MessagingSafety kind="conversation" thread={conversationId} compact={compactSafety} />
 
