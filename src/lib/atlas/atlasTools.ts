@@ -1,7 +1,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import { invokeEdge } from '@/lib/edge/invokeFunction';
 import { applyDiscoveryListingFilter, applyPublicListingFilter } from '@/lib/listings/publicVisibility';
-import { excludeTestListings } from '@/lib/excludeTestListings';
+import { excludeTestListings, isExcludedTestListingTitle } from '@/lib/excludeTestListings';
 import { estimateDelivery, formatUsd, normalizeDeliveryFeeType } from '@/lib/fulfillment/delivery';
 import { FEE_CONFIG } from '../../../supabase/functions/_shared/feeConfig';
 import { pageAction, pickOption, scanPage } from './atlasPage';
@@ -92,7 +92,7 @@ export interface AtlasOfferDraft extends AtlasSellerDraft {
 }
 
 const CARD_COLUMNS =
-  'id, title, mode, category, price_sale, price_daily, city, state, condition, cover_image_url, image_urls, description, year_built, featured_enabled, vendibook_freight_enabled, freight_payer, accepts_offers';
+  'id, title, mode, category, price_sale, price_daily, city, state, condition, cover_image_url, image_urls, description, year_built, featured_enabled, vendibook_freight_enabled, freight_payer, accepts_offers, available_to';
 
 const DETAIL_COLUMNS =
   `${CARD_COLUMNS}, host_id, make, model, length_inches, included_items, highlights, amenities, fulfillment_type, delivery_radius_miles, delivery_fee, delivery_fee_type, latitude, longitude, postal_code, weight_lbs, width_inches, height_inches, hitch_ball_size, coupler_type, trailer_plug_type, tow_vehicle_requirement, fuel_type, renter_provides_tow_vehicle, no_known_problems, known_problems, status, published_at, deleted_at, moderation_status, unlisted`;
@@ -161,11 +161,34 @@ const parseNum = (v: unknown) => {
   return Number.isFinite(n) && n > 0 ? n : null;
 };
 
+/**
+ * Atlas only ever offers listings a buyer can act on today: on top of the public
+ * filter (published, not deleted/archived/paused, moderation clear), never a test
+ * listing and never a rental whose availability window has already ended.
+ */
+export function isStillOffered(l: Row, today = new Date().toISOString().slice(0, 10)): boolean {
+  if (isExcludedTestListingTitle(typeof l.title === 'string' ? l.title : null)) return false;
+  if (l.mode === 'rent' && typeof l.available_to === 'string' && l.available_to.slice(0, 10) < today) return false;
+  return true;
+}
+
 async function fetchPublicListing(id: string): Promise<Row | null> {
   if (!/^[0-9a-f-]{36}$/i.test(id)) return null;
   const query: LooseQuery = supabase.from('listings').select(DETAIL_COLUMNS).eq('id', id);
   const { data } = await applyPublicListingFilter(query as LooseQuery).maybeSingle();
-  return (data as Row | null) ?? null;
+  const l = (data as Row | null) ?? null;
+  return l && isStillOffered(l) ? l : null;
+}
+
+/** Of these ids, the ones still live in discovery (used to re-check listings remembered from an earlier call). */
+export async function liveListingIds(ids: string[]): Promise<Set<string>> {
+  const clean = ids.filter((id) => UUID.test(id)).slice(0, 12);
+  if (!clean.length) return new Set();
+  let q: LooseQuery = supabase.from('listings').select('id, title, mode, available_to').in('id', clean);
+  q = excludeTestListings(applyDiscoveryListingFilter(q));
+  const { data, error } = await q;
+  if (error) return new Set();
+  return new Set(((data ?? []) as Row[]).filter((l) => isStillOffered(l)).map((l) => String(l.id)));
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -295,7 +318,7 @@ export function createAtlasTools(deps: AtlasToolDeps) {
         .order('published_at', { ascending: false })
         .limit(24);
       if (error) return 'Search is unavailable right now. Apologize and offer to try again or talk to a person.';
-      let rows = (data ?? []) as Row[];
+      let rows = ((data ?? []) as Row[]).filter((l) => isStillOffered(l));
       if (words.length) {
         // ilike also hits substrings ("ice" in "service"); keep whole-word matches, best first.
         rows = rows

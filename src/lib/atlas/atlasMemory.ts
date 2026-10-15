@@ -65,10 +65,13 @@ export function clearAtlasMemory(): void {
 }
 
 /** Briefing sent to Atlas when a buyer picks a call back up. */
-export function buildResumeBriefing(m: AtlasMemory): string {
+export function buildResumeBriefing(m: AtlasMemory, goneTitles: string[] = []): string {
   const transcript = m.turns.map((t) => `${t.from === 'atlas' ? 'Atlas' : 'Buyer'}: ${t.text}`).join('\n');
   const shown = m.cards.length
     ? `\nListings you showed them: ${m.cards.map((c) => `${c.title} (${c.priceText}, ${c.location}, id ${c.id})`).join('; ')}.`
     : '';
-  return `The buyer is picking up an earlier call with you from a few minutes ago. Do not reintroduce yourself or restart; greet them back briefly ("Welcome back") and continue from where you left off. They are now on ${m.lastPath}.${shown}\nEarlier conversation:\n${transcript}`;
+  const gone = goneTitles.length
+    ? `\nNo longer available since then (sold, archived or taken down): ${goneTitles.join('; ')}. Never offer or open these; if the buyer asks, say it's no longer available and offer similar ones.`
+    : '';
+  return `The buyer is picking up an earlier call with you from a few minutes ago. Do not reintroduce yourself or restart; greet them back briefly ("Welcome back") and continue from where you left off. They are now on ${m.lastPath}.${shown}${gone}\nEarlier conversation:\n${transcript}`;
 }

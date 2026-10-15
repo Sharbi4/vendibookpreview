@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 import { invokeEdge } from '@/lib/edge/invokeFunction';
 import { ATLAS_NAME } from '@/lib/atlas/atlasConfig';
 import { ATLAS_PAGE_EVENT, pageOutline } from '@/lib/atlas/atlasPage';
-import { createAtlasTools, type AtlasListingCard, type AtlasOfferDraft, type AtlasSellerDraft } from '@/lib/atlas/atlasTools';
+import { createAtlasTools, liveListingIds, type AtlasListingCard, type AtlasOfferDraft, type AtlasSellerDraft } from '@/lib/atlas/atlasTools';
 import { useAuth } from '@/contexts/AuthContext';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { MakeOfferModal } from '@/components/offers/MakeOfferModal';
@@ -98,6 +98,7 @@ export default function AtlasAgent() {
   userRef.current = user;
   const ringRef = useRef<HTMLSpanElement>(null);
   const resumeRef = useRef<AtlasMemory | null>(null);
+  const goneRef = useRef<string[]>([]);
   const topicRef = useRef<AtlasTopic | null>(null);
   const pathRef = useRef(location.pathname);
   pathRef.current = location.pathname;
@@ -184,7 +185,7 @@ export default function AtlasAgent() {
       setPhase('live');
       const resume = resumeRef.current;
       resumeRef.current = null;
-      if (resume) window.setTimeout(() => conversation.sendContextualUpdate(buildResumeBriefing(resume)), 50);
+      if (resume) window.setTimeout(() => conversation.sendContextualUpdate(buildResumeBriefing(resume, goneRef.current)), 50);
       const topic = topicRef.current;
       topicRef.current = null;
       if (topic) window.setTimeout(() => conversation.sendContextualUpdate(ATLAS_TOPIC_BRIEFINGS[topic]), 80);
@@ -230,7 +231,16 @@ export default function AtlasAgent() {
   const call = useCallback(
     async (opts: { mode: Mode; resume: boolean }) => {
       if (phase === 'connecting' || live) return;
-      const memory = opts.resume ? loadAtlasMemory() : null;
+      const remembered = opts.resume ? loadAtlasMemory() : null;
+      // Re-check listings from the earlier call: one may have sold or been archived since.
+      let memory = remembered;
+      let goneTitles: string[] = [];
+      if (remembered?.cards.length) {
+        const live = await liveListingIds(remembered.cards.map((c) => c.id));
+        goneTitles = remembered.cards.filter((c) => !live.has(c.id)).map((c) => c.title);
+        memory = { ...remembered, cards: remembered.cards.filter((c) => live.has(c.id)) };
+      }
+      goneRef.current = goneTitles;
       if (!opts.resume) clearAtlasMemory();
       setSaved(null);
       setError(null);

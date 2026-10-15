@@ -17,7 +17,8 @@ function query() {
 vi.mock('@/integrations/supabase/client', () => ({ supabase: { from: () => query() } }));
 vi.mock('@/lib/edge/invokeFunction', () => ({ invokeEdge: (...a: unknown[]) => invoke(...a) }));
 
-import { createAtlasTools, listingPriceText, resolveListingRef, safeKeywords, toCard } from '@/lib/atlas/atlasTools';
+import { createAtlasTools, isStillOffered, listingPriceText, liveListingIds, resolveListingRef, safeKeywords, toCard } from '@/lib/atlas/atlasTools';
+import { buildResumeBriefing } from '@/lib/atlas/atlasMemory';
 import { ATLAS_SYSTEM_PROMPT, ATLAS_TOOL_DEFINITIONS } from '@/lib/atlas/atlasConfig';
 
 const ID = '2b8a5106-53e8-4999-96a1-7fc4890ff6b7';
@@ -409,5 +410,40 @@ describe('Atlas follow-up with a person (owner 2026-10-15)', () => {
   it('is registered for ElevenLabs and in the prompt', () => {
     expect(ATLAS_TOOL_DEFINITIONS.map((t) => t.name)).toContain('request_follow_up');
     expect(ATLAS_SYSTEM_PROMPT).toMatch(/within 2 hours.*8 AM to 8 PM Eastern/);
+  });
+});
+
+describe('Atlas never offers an old, archived or test listing (owner 2026-10-15)', () => {
+  const ID2 = '9b8a5106-53e8-4999-96a1-7fc4890ff6b7';
+  it('skips rentals whose availability has ended and test listings', () => {
+    expect(isStillOffered({ mode: 'rent', title: 'Taco trailer', available_to: '2026-10-01' }, '2026-10-15')).toBe(false);
+    expect(isStillOffered({ mode: 'rent', title: 'Taco trailer', available_to: '2026-12-01' }, '2026-10-15')).toBe(true);
+    expect(isStillOffered({ mode: 'sale', title: 'Sandbox PayPal certification listing' })).toBe(false);
+    expect(isStillOffered({ mode: 'sale', title: '2020 Food Concession Trailer' })).toBe(true);
+  });
+
+  it('search drops ended rentals before showing results', async () => {
+    rows.push(
+      { id: ID, title: 'Old rental', mode: 'rent', price_daily: 100, available_to: '2020-01-01' },
+      { id: ID2, title: 'Live rental', mode: 'rent', price_daily: 120 },
+    );
+    const d = deps();
+    const out = JSON.parse(await createAtlasTools(d).search_listings({ mode: 'rent' }));
+    expect(out.results.map((r: { id: string }) => r.id)).toEqual([ID2]);
+  });
+
+  it('opening an archived or ended listing says it is no longer available', async () => {
+    single.data = null; // archived/paused/deleted listings fail the public filter
+    expect(await createAtlasTools(deps()).show_listing({ listing_id: ID })).toMatch(/no longer available/);
+    single.data = { id: ID, title: 'Ended rental', mode: 'rent', price_daily: 1, available_to: '2020-01-01' };
+    expect(await createAtlasTools(deps()).show_listing({ listing_id: ID })).toMatch(/no longer available/);
+  });
+
+  it('re-checks remembered listings and tells Atlas which are gone', async () => {
+    rows.push({ id: ID2, title: 'Live one', mode: 'sale' });
+    const live = await liveListingIds([ID, ID2]);
+    expect([...live]).toEqual([ID2]);
+    const briefing = buildResumeBriefing({ turns: [], cards: [], lastPath: '/search', updatedAt: 0 } as never, ['Old BBQ trailer']);
+    expect(briefing).toMatch(/No longer available.*Old BBQ trailer.*Never offer or open/);
   });
 });
