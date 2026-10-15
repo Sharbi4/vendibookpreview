@@ -39,12 +39,17 @@ const MAX_CONTROLS = 90;
 const SKIP_WIDGETS = '.gm-style, .leaflet-container, .mapboxgl-map';
 
 /**
- * Words on controls only the buyer may press. Matched on the visible label,
- * aria-label and title. Errs wide: a refused click costs one sentence, a
- * wrong click could send an offer or a payment.
+ * Controls only the buyer may press, judged by what the control DOES: its label
+ * starts with a committing verb ("Send", "Pay", "Buy now", "Save", "Publish"), or
+ * a short label names a committing step ("Proceed to checkout"). Words deeper in
+ * a long label ("…secure checkout…" on a link card, "What happens after I submit?")
+ * don't count: links and FAQ toggles only show more of the site.
  */
-const BUYER_ONLY =
-  /\b(send|pay|payment|submit|sign ?in|log ?in|sign ?up|register|create account|accept|decline|reject|confirm|place order|purchase|check ?out|buy|request to (buy|book)|book( now)?|reserve|delete|remove|cancel|report|block|subscribe|upgrade|start (my )?(trial|subscription)|save|verify|log ?out|sign ?out|publish|withdraw|counter|approve|agree|apply|donate)\b/i;
+const BUYER_ONLY_START =
+  /^\s*(send|pay|submit|sign ?in|log ?in|sign ?up|register|create (an )?account|accept|decline|reject|confirm|place (my )?order|purchase|check ?out|buy|request to (buy|book)|book|reserve|delete|remove|cancel|report|block|subscribe|upgrade|start (my )?(free )?(trial|subscription)|save|verify|log ?out|sign ?out|publish|withdraw|counter|approve|agree|apply|donate|proceed to|complete (purchase|payment|booking|order)|go to checkout|make (a )?payment|continue to (payment|checkout)|unlist|archive|transfer|refund|ask the (seller|host)|send (an? )?(inquiry|request)|contact (the )?(seller|host) now)\b/i;
+const BUYER_ONLY_ANY =
+  /\b(check ?out|pay now|place order|complete purchase|send offer|send message|submit|sign in|log in|sign up|publish|buy now|book now)\b/i;
+const SHORT_LABEL_WORDS = 6;
 
 /** Fields Atlas must never type into (card, bank, identity, login). */
 const SENSITIVE_FIELD =
@@ -146,6 +151,13 @@ function fieldIsSensitive(el: HTMLInputElement | HTMLTextAreaElement): boolean {
 /** True when Atlas must leave this control to the buyer. */
 export function isBuyerOnly(el: Element): boolean {
   if (el.closest('[data-atlas-no-click]')) return true;
+  const label = labelOf(el);
+  const words = [label, el.getAttribute('title') ?? ''].join(' ');
+  // Listing settings (amenities, "Accept offers", condition, filters) are Atlas's to set when asked;
+  // agreements and marketing or contact opt-ins stay the member's.
+  if (el.matches('input[type="checkbox"], input[type="radio"], [role="checkbox"], [role="switch"], [role="radio"]')) {
+    return ATTESTATION.test(words) || /\b(subscribe|newsletter|marketing|terms|privacy|policy|sms|text messages)\b/i.test(words);
+  }
   if (el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
     if (el instanceof HTMLInputElement && (el.type === 'submit' || el.type === 'password' || el.type === 'file')) return true;
     return fieldIsSensitive(el);
@@ -159,15 +171,14 @@ export function isBuyerOnly(el: Element): boolean {
     } catch {
       return true;
     }
-    if (/\/(checkout|pay|invoice)/i.test(href)) return true;
+    if (/\/(checkout|pay|invoice|auth|login|signup|sign-in|sign-up|logout)(?:[/?#]|$)/i.test(href)) return true;
+    // An internal link only opens another page.
+    return BUYER_ONLY_START.test(label);
   }
-  const words = [labelOf(el), el.getAttribute('title') ?? ''].join(' ');
-  // Listing settings (amenities, "Accept offers", condition) are Atlas's to set when asked;
-  // agreements and marketing or contact opt-ins stay the member's.
-  if (el.matches('input[type="checkbox"], input[type="radio"], [role="checkbox"], [role="switch"], [role="radio"]')) {
-    return ATTESTATION.test(words) || /\b(subscribe|newsletter|marketing|terms|privacy|policy|sms|text messages)\b/i.test(words);
-  }
-  return BUYER_ONLY.test(words);
+  // "Show more", FAQ questions and menus only reveal more of the page.
+  if (el.hasAttribute('aria-expanded')) return BUYER_ONLY_START.test(label);
+  if (BUYER_ONLY_START.test(words)) return true;
+  return label.split(/\s+/).length <= SHORT_LABEL_WORDS && BUYER_ONLY_ANY.test(label);
 }
 
 const isDisabled = (el: Element) =>

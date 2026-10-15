@@ -90,3 +90,31 @@ describe('Atlas fills in the listing editor', () => {
     expect((document.getElementById('desc') as HTMLTextAreaElement).value).toBe(text);
   });
 });
+
+describe('Atlas judges buttons by what they do, not words deep in the label', () => {
+  it('lets Atlas open FAQs, calculators, filters and internal links', () => {
+    document.body.innerHTML = `
+      <main>
+        <button type="button" aria-expanded="false">What happens after I submit?</button>
+        <button type="button" aria-expanded="false">Can I cancel anytime?</button>
+        <button type="button">Calculate payment</button>
+        <a href="/legal/payments-terms">Payment terms</a>
+        <a href="/how-purchasing-works">The Vendibook Guarantee Secure checkout and a protected, recorded handoff on every purchase</a>
+        <label><input type="radio" name="cat" value="food_truck" />Food Truck</label>
+        <button type="button" aria-pressed="false">Instant Book</button>
+        <button type="button">Pay now</button>
+        <button type="button">Proceed to checkout</button>
+        <button type="button">Publish listing</button>
+        <a href="/auth?redirect=/list">Get started</a>
+        <button type="button">Ask the Seller</button>
+      </main>`;
+    const map = scanPage().controls;
+    const only = (l: string) => map.find((c) => c.label.startsWith(l))?.buyer_only === true;
+    for (const l of ['What happens after I submit?', 'Can I cancel anytime?', 'Calculate payment', 'Payment terms', 'The Vendibook Guarantee', 'Food Truck', 'Instant Book']) {
+      expect(only(l), l).toBe(false);
+    }
+    for (const l of ['Pay now', 'Proceed to checkout', 'Publish listing', 'Get started', 'Ask the Seller']) {
+      expect(only(l), l).toBe(true);
+    }
+  });
+});

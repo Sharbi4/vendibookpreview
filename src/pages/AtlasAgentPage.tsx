@@ -78,9 +78,9 @@ const COACH: { icon: Icon; title: string; body: string }[] = [
 ];
 
 const FAQ: { q: string; a: string }[] = [
-  { q: 'Is Atlas a person?', a: 'Atlas is Vendibook’s AI agent. Want a real person? Ask him and he’ll connect you with the Vendibook team.' },
+  { q: 'Is Atlas a person?', a: 'Atlas is Vendibook’s AI agent. Want a real person? Ask him: he’ll set up a follow-up from the Vendibook team within 2 hours (Monday to Friday, 8 AM to 8 PM Eastern) and give you a reference number.' },
   { q: 'Does it cost anything?', a: 'No. Talking with Atlas is free.' },
-  { q: 'What will he do on my screen?', a: 'He opens listings and pages, scrolls to and highlights things, and can fill in a search or ZIP code. He never presses pay, buy, sign in, submit or send offer for you.' },
+  { q: 'What will he do on my screen?', a: 'He opens listings and pages, scrolls to and highlights things, fills in searches and ZIP codes, and can fill in your listing with you as you answer his questions. He never presses pay, buy, sign in, publish or send offer for you, and never ticks agreements or uploads photos.' },
   { q: 'Can he contact a seller for me?', a: 'Yes, if you’re signed in. He shows you the message first and only sends it after you say yes. Sellers reply in your Vendibook inbox.' },
   { q: 'Can I type instead of talk?', a: 'Yes. Press the chat button to talk to Atlas by typing.' },
   { q: 'Are calls recorded?', a: 'Calls may be recorded to improve the service.' },
@@ -126,11 +126,6 @@ export default function AtlasAgentPage() {
                 <MessageCircle className="h-5 w-5" aria-hidden="true" /> Chat by typing
               </button>
             </div>
-            <ul className="mt-6 flex flex-wrap items-center justify-center gap-2 text-[12.5px] text-white/60">
-              {['Real-time voice', 'Works on your screen', 'Free', 'Never pays or signs in for you'].map((t) => (
-                <li key={t} className="rounded-full border border-white/10 bg-white/[0.04] px-3 py-1">{t}</li>
-              ))}
-            </ul>
           </div>
         </section>
 
