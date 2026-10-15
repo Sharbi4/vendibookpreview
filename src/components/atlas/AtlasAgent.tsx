@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useConversation } from '@elevenlabs/react';
-import { ArrowUp, Keyboard, Loader2, Mic, MicOff, PhoneOff, RotateCcw, X } from 'lucide-react';
+import { ArrowUp, Keyboard, Loader2, MessageCircle, Mic, MicOff, Minus, Phone, PhoneOff, RotateCcw, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { invokeEdge } from '@/lib/edge/invokeFunction';
 import { ATLAS_NAME } from '@/lib/atlas/atlasConfig';
@@ -56,6 +56,23 @@ function AtlasCall() {
   const [phase, setPhase] = useState<Phase>('idle');
   const [mode, setMode] = useState<Mode>('voice');
   const [error, setError] = useState<{ text: string; offerTyping: boolean } | null>(null);
+  // Collapsed to just the orb (remembered per browser).
+  const [minimized, setMinimizedState] = useState(() => {
+    try {
+      return localStorage.getItem('vb_atlas_min') === '1';
+    } catch {
+      return false;
+    }
+  });
+  const setMinimized = (v: boolean) => {
+    setMinimizedState(v);
+    try {
+      if (v) localStorage.setItem('vb_atlas_min', '1');
+      else localStorage.removeItem('vb_atlas_min');
+    } catch {
+      /* private mode: just don't remember */
+    }
+  };
   // After Atlas points at something, the card shrinks for a few seconds so it doesn't cover it (phones).
   const [peek, setPeek] = useState(false);
   useEffect(() => {
@@ -333,38 +350,60 @@ function AtlasCall() {
   const lastYou = turns[turns.length - 1]?.from === 'you' ? turns[turns.length - 1] : null;
 
   if (phase === 'idle') {
-    if (saved) {
+    if (minimized && !saved) {
       return (
         <>{drafts}
-        <section data-atlas-ui className={cn('atlas-resume', onListing && 'is-raised')} aria-label={`Pick up your call with ${ATLAS_NAME}`}>
-          <span className="atlas-avatar" style={{ width: 36, height: 36 }} aria-hidden="true">A</span>
-          <div className="min-w-0 flex-1">
-            <p className="atlas-resume-title">Pick up your call with {ATLAS_NAME}?</p>
-            <p className="atlas-resume-sub">He remembers where you left off.</p>
-          </div>
-          <div className="atlas-resume-actions">
-            <button type="button" className="atlas-btn is-call" onClick={() => void call({ mode: 'voice', resume: true })}>
-              <Mic className="h-4 w-4" aria-hidden="true" /> Pick up
-            </button>
-            <button type="button" className="atlas-link" onClick={startOver}>Start over</button>
-          </div>
-        </section>
+        <button
+          data-atlas-ui
+          type="button"
+          className={cn('atlas-orb-btn', onListing && 'is-raised')}
+          onClick={() => setMinimized(false)}
+          aria-label={`Speak to our agent ${ATLAS_NAME}`}
+        >
+          <AtlasOrb size={52} />
+        </button>
         </>
       );
     }
     return (
       <>{drafts}
-      <button
-        data-atlas-ui
-        type="button"
-        className={cn('atlas-launcher', onListing && 'is-raised')}
-        onClick={() => void call({ mode: 'voice', resume: false })}
-        aria-label={`Talk to ${ATLAS_NAME}, the Vendibook sales agent. Starts a voice call.`}
-      >
-        <span className="atlas-avatar" style={{ width: 30, height: 30 }} aria-hidden="true">A</span>
-        <span className="atlas-launcher-text">Talk to {ATLAS_NAME}</span>
-        <Mic className="h-4 w-4 opacity-80" aria-hidden="true" />
-      </button>
+      <section data-atlas-ui className={cn('atlas-widget', onListing && 'is-raised')} aria-label={`Speak to our agent ${ATLAS_NAME}`}>
+        <div className="atlas-widget-head">
+          <AtlasOrb size={42} />
+          <div className="min-w-0 flex-1">
+            <p className="atlas-widget-title">{saved ? 'Pick up where you left off?' : `Speak to our agent ${ATLAS_NAME}`}</p>
+            <p className="atlas-widget-sub">{saved ? `${ATLAS_NAME} remembers your call.` : 'Find, compare and negotiate by voice.'}</p>
+          </div>
+          {!saved && (
+            <button type="button" className="atlas-widget-min" onClick={() => setMinimized(true)} aria-label={`Minimize ${ATLAS_NAME}`}>
+              <Minus className="h-4 w-4" aria-hidden="true" />
+            </button>
+          )}
+        </div>
+        {saved ? (
+          <div className="atlas-widget-actions">
+            <button type="button" className="atlas-pill" onClick={() => void call({ mode: 'voice', resume: true })}>
+              <Phone className="h-4 w-4" aria-hidden="true" /> Pick up
+            </button>
+            <button type="button" className="atlas-pill is-ghost" onClick={startOver}>Start over</button>
+          </div>
+        ) : (
+          <div className="atlas-widget-actions">
+            <button type="button" className="atlas-pill" onClick={() => void call({ mode: 'voice', resume: false })}>
+              <Phone className="h-4 w-4" aria-hidden="true" /> Start a call
+            </button>
+            <button
+              type="button"
+              className="atlas-round"
+              onClick={() => void call({ mode: 'text', resume: false })}
+              aria-label={`Chat with ${ATLAS_NAME} by typing instead`}
+              title="Chat by typing"
+            >
+              <MessageCircle className="h-5 w-5" aria-hidden="true" />
+            </button>
+          </div>
+        )}
+      </section>
       </>
     );
   }
@@ -382,7 +421,7 @@ function AtlasCall() {
     <section data-atlas-ui className={cn('atlas-call', onListing && 'is-raised', peek && 'is-peek', (messageDraft || offerDraft || offerAuthGate) && 'is-behind')} onPointerDown={() => setPeek(false)} onFocus={() => setPeek(false)} role="dialog" aria-label={`Call with ${ATLAS_NAME}`}>
       <div className="atlas-call-top">
         <span ref={ringRef} className={cn('atlas-ring', phase === 'live' && mode === 'voice' && 'is-on', talking && 'is-talking')}>
-          <span className="atlas-avatar" style={{ width: 52, height: 52, fontSize: 21 }} aria-hidden="true">A</span>
+          <AtlasOrb size={52} active={talking} />
         </span>
         <div className="min-w-0 flex-1">
           <p className="atlas-name">{ATLAS_NAME} <span className="atlas-role">· Vendibook sales</span></p>
@@ -482,4 +521,9 @@ function AtlasCall() {
     </section>
     </>
   );
+}
+
+/** Animated flame-colored orb: Atlas's face on the widget and call card. */
+function AtlasOrb({ size, active = false }: { size: number; active?: boolean }) {
+  return <span className={cn('atlas-orb', active && 'is-active')} style={{ width: size, height: size }} aria-hidden="true" />;
 }

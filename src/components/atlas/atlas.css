@@ -1,34 +1,70 @@
-/* Atlas — Vendibook sales agent. A voice call card: charcoal + orange, compact. */
-.atlas-launcher {
-  position: fixed; right: 16px; bottom: calc(84px + env(safe-area-inset-bottom)); z-index: 45;
-  display: inline-flex; align-items: center; gap: 8px; height: 48px; padding: 0 16px 0 9px;
-  border-radius: 999px; background: #1C1B1A; color: #fff; font-size: 14.5px; font-weight: 650;
-  box-shadow: 0 10px 28px rgba(0,0,0,.28); border: 1px solid rgba(255,255,255,.08);
-  transition: transform .15s ease;
-}
-.atlas-launcher:hover { transform: translateY(-1px); }
-.atlas-launcher:focus-visible, .atlas-btn:focus-visible, .atlas-link:focus-visible, .atlas-tile:focus-visible { outline: 2px solid #FF8A66; outline-offset: 2px; }
+/* Atlas — Vendibook sales agent. Widget (white card + flame orb) and a dark glass call card. */
+.atlas-btn:focus-visible, .atlas-tile:focus-visible, .atlas-pill:focus-visible, .atlas-round:focus-visible,
+.atlas-widget-min:focus-visible, .atlas-orb-btn:focus-visible { outline: 2px solid #FF8A66; outline-offset: 2px; }
 
-/* Placement: above the mobile bottom nav; on listing pages above the 60px action bar. */
-.atlas-launcher.is-raised, .atlas-resume.is-raised { bottom: calc(76px + env(safe-area-inset-bottom)); }
-
-.atlas-avatar {
-  display: inline-grid; place-items: center; flex: none; border-radius: 999px;
-  background: linear-gradient(135deg, #FF5124, #FF8A3D); color: #fff; font-weight: 800; font-size: 15px;
-  box-shadow: inset 0 0 0 2px rgba(255,255,255,.18);
+/* ── Widget (idle): ElevenLabs-style card ── */
+.atlas-widget {
+  position: fixed; z-index: 45; right: 12px; bottom: calc(84px + env(safe-area-inset-bottom));
+  width: min(340px, calc(100vw - 24px)); display: grid; gap: 12px; padding: 14px;
+  background: #fff; color: #1C1B1A; border: 1px solid #ECE6DD; border-radius: 28px;
+  box-shadow: 0 1px 2px rgba(28,27,26,.06), 0 18px 48px rgba(28,27,26,.18);
+  animation: atlas-rise .35s cubic-bezier(.2,.8,.2,1);
 }
-
-/* Returning visitor: pick up the call or start over. */
-.atlas-resume {
-  position: fixed; z-index: 45; right: 16px; left: 16px; bottom: calc(84px + env(safe-area-inset-bottom));
-  display: flex; align-items: center; gap: 12px; padding: 12px 12px 12px 14px; border-radius: 18px;
-  background: #1C1B1A; color: #fff; box-shadow: 0 14px 34px rgba(0,0,0,.3);
+.atlas-widget.is-raised, .atlas-orb-btn.is-raised { bottom: calc(76px + env(safe-area-inset-bottom)); }
+.atlas-widget-head { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.atlas-widget-title { font-size: 15.5px; font-weight: 650; letter-spacing: -.01em; line-height: 1.25; }
+.atlas-widget-sub { margin-top: 1px; font-size: 12.5px; color: #6F6961; }
+.atlas-widget-min {
+  display: grid; place-items: center; width: 30px; height: 30px; flex: none; border-radius: 999px;
+  color: #6F6961; transition: background .15s, color .15s;
 }
-.atlas-resume-title { font-size: 14.5px; font-weight: 650; line-height: 1.25; }
-.atlas-resume-sub { font-size: 12.5px; color: rgba(255,255,255,.62); }
-.atlas-resume-actions { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.atlas-link { font-size: 12.5px; color: rgba(255,255,255,.75); text-decoration: underline; text-underline-offset: 3px; padding: 2px 4px; }
-.atlas-link:hover { color: #fff; }
+.atlas-widget-min:hover { background: #F3EEE7; color: #1C1B1A; }
+.atlas-widget-actions { display: flex; align-items: center; gap: 10px; }
+.atlas-pill {
+  flex: 1; display: inline-flex; align-items: center; justify-content: center; gap: 8px; height: 48px;
+  padding: 0 18px; border-radius: 999px; background: #1C1B1A; color: #fff; font-size: 15px; font-weight: 600;
+  transition: transform .15s ease, background .15s ease; box-shadow: 0 6px 16px rgba(28,27,26,.18);
+}
+.atlas-pill:hover { background: #000; transform: translateY(-1px); }
+.atlas-pill.is-ghost { flex: none; background: #fff; color: #1C1B1A; border: 1px solid #E2DBD0; box-shadow: none; }
+.atlas-pill.is-ghost:hover { border-color: #1C1B1A; background: #fff; }
+.atlas-round {
+  display: grid; place-items: center; width: 48px; height: 48px; flex: none; border-radius: 999px;
+  background: #fff; color: #1C1B1A; border: 1px solid #E2DBD0; transition: border-color .15s, transform .15s;
+}
+.atlas-round:hover { border-color: #1C1B1A; transform: translateY(-1px); }
+
+/* Minimized: just the orb. */
+.atlas-orb-btn {
+  position: fixed; z-index: 45; right: 14px; bottom: calc(84px + env(safe-area-inset-bottom));
+  display: grid; place-items: center; padding: 4px; border-radius: 999px; background: #fff;
+  border: 1px solid #ECE6DD; box-shadow: 0 12px 30px rgba(28,27,26,.22); transition: transform .15s ease;
+}
+.atlas-orb-btn:hover { transform: scale(1.05); }
+
+/* The orb: slowly swirling flame gradient with a soft glass highlight. */
+.atlas-orb {
+  position: relative; display: inline-block; flex: none; border-radius: 999px; overflow: hidden; isolation: isolate;
+  background: conic-gradient(from 0deg, #FF5124, #FFB25B, #E8461D, #FF7A45, #7A1E0E, #FF5124);
+  animation: atlas-orb-spin 9s linear infinite;
+  box-shadow: inset 0 0 0 1px rgba(255,255,255,.35), 0 4px 14px rgba(255,81,36,.35);
+}
+.atlas-orb::before {
+  content: ''; position: absolute; inset: 12%; border-radius: inherit;
+  background: conic-gradient(from 180deg, rgba(255,214,150,.9), rgba(255,81,36,.1), rgba(255,138,61,.85), rgba(122,30,14,.3), rgba(255,214,150,.9));
+  filter: blur(3px); animation: atlas-orb-spin 6s linear infinite reverse;
+}
+.atlas-orb::after {
+  content: ''; position: absolute; inset: 0; border-radius: inherit;
+  background: radial-gradient(circle at 32% 28%, rgba(255,255,255,.75), rgba(255,255,255,0) 42%);
+}
+.atlas-orb.is-active { animation-duration: 2.4s; }
+.atlas-orb.is-active::before { animation-duration: 1.6s; }
+@keyframes atlas-orb-spin { to { transform: rotate(360deg); } }
+@keyframes atlas-rise { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) {
+  .atlas-orb, .atlas-orb::before, .atlas-widget { animation: none; }
+}
 
 /* The call card. */
 .atlas-call {
@@ -39,8 +75,8 @@
 }
 .atlas-call.is-raised { bottom: calc(72px + env(safe-area-inset-bottom)); }
 @media (min-width: 1024px) {
-  .atlas-launcher, .atlas-launcher.is-raised { bottom: 24px; right: 24px; }
-  .atlas-resume, .atlas-resume.is-raised { left: auto; right: 24px; bottom: 24px; width: 380px; }
+  .atlas-widget, .atlas-widget.is-raised { right: 24px; bottom: 24px; }
+  .atlas-orb-btn, .atlas-orb-btn.is-raised { right: 24px; bottom: 24px; }
   .atlas-call, .atlas-call.is-raised { left: auto; right: 24px; bottom: 24px; width: 380px; }
 }
 
@@ -97,21 +133,20 @@
 .atlas-btn.is-end:hover { background: #CC2E23; }
 .atlas-btn.is-call { background: #FF5124; }
 .atlas-btn.is-call:hover { background: #E8461D; }
-.atlas-resume .atlas-btn { flex: none; height: 38px; padding: 0 14px; }
 .atlas-fine { font-size: 11px; color: rgba(255,255,255,.45); text-align: center; }
 
 /* A form Atlas opened (offer, message, sign-in) sits on top; the call card drops behind its overlay. */
 .atlas-call.is-behind { z-index: 40; }
 @media (max-width: 1023px) {
   .atlas-call { gap: 10px; padding: 12px 12px 8px; }
-  .atlas-call .atlas-ring .atlas-avatar { width: 44px !important; height: 44px !important; font-size: 18px !important; }
+  .atlas-call .atlas-ring .atlas-orb { width: 44px !important; height: 44px !important; }
   .atlas-caption { -webkit-line-clamp: 3; font-size: 14.5px; }
   .atlas-tile { flex-basis: 118px; }
   .atlas-tile-photo { height: 62px; }
 }
 
 /* ── Glass treatment (owner request 2026-10-14): frosted, translucent, light borders. ── */
-.atlas-launcher, .atlas-resume, .atlas-call {
+.atlas-call {
   background: linear-gradient(160deg, rgba(36,34,32,.62), rgba(18,17,16,.52));
   -webkit-backdrop-filter: blur(22px) saturate(170%);
   backdrop-filter: blur(22px) saturate(170%);
@@ -119,7 +154,7 @@
   box-shadow: 0 18px 48px rgba(0,0,0,.28), inset 0 1px 0 rgba(255,255,255,.14);
 }
 /* Readable over bright photos: soft text shadow on the glass. */
-.atlas-call, .atlas-resume, .atlas-launcher { text-shadow: 0 1px 2px rgba(0,0,0,.35); }
+.atlas-call { text-shadow: 0 1px 2px rgba(0,0,0,.35); }
 .atlas-tile { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.16); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px); }
 .atlas-btn { background: rgba(255,255,255,.12); border: 1px solid rgba(255,255,255,.14); }
 .atlas-btn:hover:not(:disabled) { background: rgba(255,255,255,.2); }
@@ -130,10 +165,10 @@
 .atlas-error { background: rgba(255,81,36,.16); border: 1px solid rgba(255,138,102,.25); }
 /* No blur support (older browsers): fall back to a solid card so text stays readable. */
 @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
-  .atlas-launcher, .atlas-resume, .atlas-call { background: rgba(28,27,26,.96); }
+  .atlas-call { background: rgba(28,27,26,.96); }
 }
 /* Glass tuned for light pages: deeper tint + stronger blur so page text never shows through captions. */
-.atlas-launcher, .atlas-resume, .atlas-call {
+.atlas-call {
   background: linear-gradient(160deg, rgba(30,28,27,.80), rgba(16,15,14,.74));
   -webkit-backdrop-filter: blur(30px) saturate(180%);
   backdrop-filter: blur(30px) saturate(180%);
