@@ -389,6 +389,25 @@ export default function AtlasAgent() {
     }
     return (
       <>{drafts}
+      {/* Phones and tablets: one small pill instead of the full card. */}
+      <div data-atlas-ui className={cn('atlas-chip-wrap', onListing && 'is-raised')}>
+        <button
+          type="button"
+          className="atlas-chip"
+          onClick={() => void call({ mode: 'voice', resume: Boolean(saved) })}
+        >
+          <AtlasOrb size={30} />
+          <span className="atlas-chip-text">
+            {saved ? `Pick up your call with ${ATLAS_NAME}` : <>Speak to our sales assistant <b>{ATLAS_NAME}</b></>}
+          </span>
+          <Phone className="atlas-chip-icon" aria-hidden="true" />
+        </button>
+        {!saved && (
+          <button type="button" className="atlas-chip-x" onClick={() => setMinimized(true)} aria-label={`Minimize ${ATLAS_NAME}`}>
+            <Minus className="h-3.5 w-3.5" aria-hidden="true" />
+          </button>
+        )}
+      </div>
       <section data-atlas-ui className={cn('atlas-widget', onListing && 'is-raised')} aria-label={`Speak to our agent ${ATLAS_NAME}`}>
         <div className="atlas-widget-head">
           <AtlasOrb size={42} />

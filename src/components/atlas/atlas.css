@@ -34,6 +34,34 @@
 }
 .atlas-round:hover { border-color: #1C1B1A; transform: translateY(-1px); }
 
+/* Phones/tablets: a compact pill (the full card is desktop only). */
+.atlas-chip-wrap {
+  position: fixed; z-index: 45; right: 12px; bottom: calc(84px + env(safe-area-inset-bottom));
+  display: flex; align-items: center; gap: 6px; max-width: calc(100vw - 24px);
+  animation: atlas-rise .35s cubic-bezier(.2,.8,.2,1);
+}
+.atlas-chip-wrap.is-raised { bottom: calc(76px + env(safe-area-inset-bottom)); }
+.atlas-chip {
+  display: inline-flex; align-items: center; gap: 8px; min-width: 0; height: 44px; padding: 0 14px 0 6px;
+  border-radius: 999px; background: #fff; color: #1C1B1A; border: 1px solid #ECE6DD;
+  box-shadow: 0 1px 2px rgba(28,27,26,.06), 0 12px 30px rgba(28,27,26,.18);
+  font-size: 13.5px; font-weight: 550; line-height: 1.15; text-align: left;
+}
+.atlas-chip-text { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.atlas-chip-text b { font-weight: 700; color: #E8461D; }
+.atlas-chip-icon { width: 16px; height: 16px; flex: none; color: #FF5124; }
+.atlas-chip-x {
+  display: grid; place-items: center; width: 28px; height: 28px; flex: none; border-radius: 999px;
+  background: #fff; color: #6F6961; border: 1px solid #ECE6DD; box-shadow: 0 6px 16px rgba(28,27,26,.14);
+}
+.atlas-chip:focus-visible, .atlas-chip-x:focus-visible { outline: 2px solid #FF8A66; outline-offset: 2px; }
+@media (max-width: 1023px) {
+  .atlas-widget { display: none; }
+  .atlas-orb-btn .atlas-orb { width: 40px !important; height: 40px !important; }
+}
+@media (min-width: 1024px) { .atlas-chip-wrap { display: none; } }
+@media (prefers-reduced-motion: reduce) { .atlas-chip-wrap { animation: none; } }
+
 /* Minimized: just the orb. */
 .atlas-orb-btn {
   position: fixed; z-index: 45; right: 14px; bottom: calc(84px + env(safe-area-inset-bottom));

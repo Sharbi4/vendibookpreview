@@ -10,6 +10,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import NewsletterPopup from '@/components/newsletter/NewsletterPopup';
 import HeroPremium from '@/components/home/hero/HeroPremium';
+import HomeAtlasBand from '@/components/home/HomeAtlasBand';
 import V2ListingRow from '@/components/home/v2/V2ListingRow';
 import {
   HomeCategoryTiles,
@@ -186,6 +187,8 @@ const Index = () => {
             />
           </div>
         </section>
+
+        <HomeAtlasBand />
 
         <section id={GUARANTEE_ID} className="hb-guarantee" aria-labelledby="hb-guarantee-title">
           <div className="hb-wrap hb-guarantee-grid">
