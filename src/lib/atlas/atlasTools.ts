@@ -45,7 +45,17 @@ export interface AtlasToolDeps {
   openMessage?: (d: AtlasSellerDraft) => void;
   /** Opens Make offer prefilled; the buyer reviews and sends. */
   openOffer?: (d: AtlasOfferDraft) => void;
+  /** Signed-in buyer's user id, or null for guests. */
+  currentUserId?: () => string | null;
+  /**
+   * Sends a draft the buyer approved out loud, through normal Vendibook
+   * messaging (risk scan + phone/ID gate apply). Resolves to the conversation id.
+   */
+  sendSellerMessage?: (d: AtlasSellerDraft) => Promise<string>;
 }
+
+/** How long a draft shown on screen stays sendable by voice approval. */
+export const ATLAS_DRAFT_TTL_MS = 15 * 60 * 1000;
 
 export interface AtlasSellerDraft {
   listingId: string;
@@ -223,6 +233,9 @@ export function createAtlasTools(deps: AtlasToolDeps) {
   // Listings Atlas has shown in this call, newest search first, so "the first
   // one" or a slightly garbled id still lands on the right listing.
   let recent: ListingRef[] = [];
+  // The last draft shown on screen per listing. send_seller_message only ever
+  // sends this exact text, so the agent can't change it after the buyer said yes.
+  const shownDrafts = new Map<string, AtlasSellerDraft & { shownAt: number }>();
 
   /** The listing the agent means, or a sentence explaining why not. */
   const listingFor = async (p: Row): Promise<{ l: Row; why?: never } | { l?: never; why: string }> => {
@@ -410,8 +423,40 @@ export function createAtlasTools(deps: AtlasToolDeps) {
       if (!message) return 'Write the message first, then call this again.';
       if (!deps.openMessage) return 'Messaging is not available here. Offer to open the listing so they can tap Ask.';
       if (deps.currentListingId() !== l.id) deps.navigate(`/listing/${l.id}`);
-      deps.openMessage({ listingId: String(l.id), hostId: String(l.host_id), title: String(l.title ?? ''), message });
-      return 'Opened a message to the seller with your draft on their screen. They can edit it and tap Send — you did not send it. Sellers reply through Vendibook messages.';
+      const draft = { listingId: String(l.id), hostId: String(l.host_id), title: String(l.title ?? ''), message };
+      deps.openMessage(draft);
+      shownDrafts.set(draft.listingId, { ...draft, shownAt: Date.now() });
+      return deps.currentUserId?.()
+        ? 'The draft is on their screen; nothing is sent yet. Read the key line back and ask "Want me to send that for you?" Only after a clear yes, call send_seller_message. If they want changes, call draft_seller_message again with the new text. They can also edit it and tap Send themselves.'
+        : 'The draft is on their screen; nothing is sent yet. They are not signed in, so you cannot send it for them: they can tap Send to ask as a guest, or sign in and then you can send it.';
+    },
+
+    send_seller_message: async (p: Row = {}) => {
+      if (p.buyer_approved !== true && p.buyer_approved !== 'true') {
+        return 'Not sent. Ask the buyer "Want me to send that for you?" and only call this after they clearly say yes.';
+      }
+      const { l, why } = await listingFor(p);
+      if (!l) return why;
+      const draft = shownDrafts.get(String(l.id));
+      if (!draft || Date.now() - draft.shownAt > ATLAS_DRAFT_TTL_MS) {
+        return 'Not sent: there is no current draft on their screen for this listing. Call draft_seller_message first, let them see it, and ask before sending.';
+      }
+      const buyerId = deps.currentUserId?.() ?? null;
+      if (!buyerId || !deps.sendSellerMessage) {
+        return 'Not sent: they need to be signed in for you to send it. The message is still on their screen; they can sign in, or tap Send to ask as a guest.';
+      }
+      if (buyerId === draft.hostId) return 'Not sent: this is their own listing.';
+      try {
+        await deps.sendSellerMessage(draft);
+        shownDrafts.delete(draft.listingId);
+        return 'Sent to the seller through Vendibook messages, exactly as shown. Tell them it went out, that the seller replies in their Vendibook inbox (with an email or text alert), and keep helping.';
+      } catch (e) {
+        const msg = String((e as { message?: string })?.message ?? '');
+        if (/verif|phone|identity|\bid\b/i.test(msg)) {
+          return 'Not sent: Vendibook needs them to verify their phone and ID before contacting sellers. The message is still on their screen; tapping Send there walks them through it. Do not ask for any numbers yourself.';
+        }
+        return 'Not sent: messaging failed just now. The message is still on their screen; they can tap Send, or you can try again in a moment.';
+      }
     },
 
     draft_offer: async (p: Row = {}) => {

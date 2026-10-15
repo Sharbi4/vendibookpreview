@@ -12,6 +12,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { MakeOfferModal } from '@/components/offers/MakeOfferModal';
 import { AuthGateOfferModal } from '@/components/offers/AuthGateOfferModal';
 import MessageHostForm from '@/components/messaging/MessageHostForm';
+import { sendBuyerMessage } from '@/lib/atlas/atlasMessaging';
+import { trackHostContacted } from '@/lib/analytics';
+import { toast } from '@/hooks/use-toast';
 import { isAtlasEnabled } from '@/lib/atlas/atlasFlag';
 import {
   ATLAS_RESUME_WINDOW_MS,
@@ -115,6 +118,17 @@ function AtlasCall() {
         },
         currentListingId: () => pathRef.current.match(/^\/listing\/([^/]+)/)?.[1] ?? null,
         openMessage: (d) => setMessageDraft(d),
+        currentUserId: () => userRef.current?.id ?? null,
+        // Sends only after the buyer said yes to the draft on screen (enforced in atlasTools).
+        sendSellerMessage: async (d) => {
+          const buyerId = userRef.current?.id;
+          if (!buyerId) throw new Error('not signed in');
+          const conversationId = await sendBuyerMessage({ buyerId, listingId: d.listingId, hostId: d.hostId, body: d.message });
+          trackHostContacted(d.listingId);
+          setMessageDraft(null);
+          toast({ title: `${ATLAS_NAME} sent your message`, description: 'The seller replies in your Vendibook inbox.' });
+          return conversationId;
+        },
         openOffer: (d) => {
           setOfferDraft(d);
           if (!userRef.current) setOfferAuthGate(true);

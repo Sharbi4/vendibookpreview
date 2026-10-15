@@ -22,8 +22,9 @@ planned phase 2.
 5. **Tools → Add tool → Client tool**, once per entry in `atlas-client-tools.json`
    (`search_listings`, `show_listing`, `get_delivery_quote`,
    `start_request_to_buy`, `draft_offer`, `draft_seller_message`,
-   `estimate_earnings`, `get_pricing`, `open_page`, `look_at_page`,
-   `page_action`, `talk_to_person`). Copy the name,
+   `send_seller_message`, `estimate_earnings`, `get_pricing`, `open_page`,
+   `look_at_page`, `page_action`, `talk_to_person`). Easiest: Admin → Reports →
+   **Sync Atlas to ElevenLabs** does all of this. Copy the name,
    description and parameters exactly; tick **Wait for response**.
 6. **Do not attach the `vendibook` MCP server.** Its tools are seller-side
    (publish listing, upgrades) and need a signed-in user.
@@ -38,7 +39,10 @@ planned phase 2.
    returning buyer hear "Welcome back…" instead of the intro when they pick
    up a call (then set `VITE_ATLAS_ALLOW_OVERRIDES=true`). Without it, Atlas
    still gets the earlier conversation, he just greets first.
-9. **Data**: keep transcripts on (they're how we tune Atlas). The panel tells
+9. **Tools → System tools**: turn on **Skip turn**, so when a buyer says
+   "hold on" or "give me a minute" Atlas waits silently instead of asking if
+   they're still there.
+10. **Data**: keep transcripts on (they're how we tune Atlas). The panel tells
    visitors conversations may be recorded.
 
 ## 2. Turning Atlas on
@@ -82,9 +86,12 @@ highlights them for the buyer to tap (`src/lib/atlas/atlasPage.ts`, tested in
 - Never says Vendibook holds/escrows money or is a bank, lender, insurer,
   broker, agent or party to the sale; no inspection promises; no invented
   stats; Square and PayPal only.
-- Never submits anything for the buyer or contacts a seller itself: offers
-  and messages open prefilled and the buyer taps Send. Phone + ID
-  verification still applies.
+- Messages to sellers (owner decision 2026-10-15): Atlas may send one for a
+  **signed-in** buyer only after showing the exact draft on screen and the
+  buyer saying yes; `send_seller_message` sends only that shown text (within
+  15 minutes), through normal messaging, so risk scanning and the phone/ID
+  gate apply. Offers, requests to buy, payments and sign-in are always
+  tapped by the buyer.
 - Earnings are simple math on the buyer's own numbers, always "before rent,
   fuel, labor, permits and taxes — not a prediction or promise". Local
   popularity is shared as general ideas, never local statistics.

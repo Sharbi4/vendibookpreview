@@ -138,7 +138,7 @@ describe('Atlas negotiation and earnings', () => {
     single.data = { id: ID, host_id: 'h1', title: 'T', mode: 'sale' };
     const out = await createAtlasTools({ ...deps(), openMessage }).draft_seller_message({ listing_id: ID, message: 'Is the price flexible?' });
     expect(openMessage).toHaveBeenCalledWith(expect.objectContaining({ message: 'Is the price flexible?' }));
-    expect(out).toMatch(/you did not send it/);
+    expect(out).toMatch(/nothing is sent yet/);
   });
 
   it('earnings math uses only the buyer\'s numbers and says it is not a promise', async () => {
@@ -266,5 +266,65 @@ describe('Atlas listing references (voice-safe ids)', () => {
 
   it('suggests a ships-nationwide search when nothing matches', async () => {
     expect(await createAtlasTools(deps()).search_listings({ state: 'TX' })).toMatch(/ships_nationwide true/);
+  });
+});
+
+describe('Atlas sending a seller message for the buyer', () => {
+  const listing = { id: ID, host_id: 'host-1', title: 'Ice Cream Trailer', mode: 'sale', price_sale: 39000 };
+  const setup = (userId: string | null = 'buyer-1') => {
+    const send = vi.fn().mockResolvedValue('conv-1');
+    const d = { ...deps(), openMessage: vi.fn(), currentUserId: () => userId, sendSellerMessage: send };
+    single.data = listing;
+    return { d, send, tools: createAtlasTools(d) };
+  };
+
+  it('never sends without the buyer saying yes, or without a draft on screen', async () => {
+    const { tools, send } = setup();
+    expect(await tools.send_seller_message({ listing_id: ID, buyer_approved: false })).toMatch(/Not sent. Ask the buyer/);
+    expect(await tools.send_seller_message({ listing_id: ID, buyer_approved: true })).toMatch(/no current draft/);
+    expect(send).not.toHaveBeenCalled();
+  });
+
+  it('sends exactly the draft that was shown, once approved', async () => {
+    const { tools, send, d } = setup();
+    const shown = await tools.draft_seller_message({ listing_id: ID, message: 'Hi! Would you take $35,000? I can pick it up this week.' });
+    expect(shown).toMatch(/Want me to send that for you/);
+    expect(d.openMessage).toHaveBeenCalled();
+    const out = await tools.send_seller_message({ listing_id: ID, buyer_approved: true, message: 'something else entirely' });
+    expect(out).toMatch(/Sent to the seller/);
+    expect(send).toHaveBeenCalledWith(expect.objectContaining({ listingId: ID, hostId: 'host-1', message: 'Hi! Would you take $35,000? I can pick it up this week.' }));
+    // The draft is used up: a second "yes" can't resend it.
+    expect(await tools.send_seller_message({ listing_id: ID, buyer_approved: true })).toMatch(/no current draft/);
+    expect(send).toHaveBeenCalledTimes(1);
+  });
+
+  it('only signed-in buyers, never their own listing', async () => {
+    const guest = setup(null);
+    expect(await guest.tools.draft_seller_message({ listing_id: ID, message: 'Hi' })).toMatch(/not signed in/);
+    expect(await guest.tools.send_seller_message({ listing_id: ID, buyer_approved: true })).toMatch(/need to be signed in/);
+    expect(guest.send).not.toHaveBeenCalled();
+
+    const owner = setup('host-1');
+    await owner.tools.draft_seller_message({ listing_id: ID, message: 'Hi' });
+    expect(await owner.tools.send_seller_message({ listing_id: ID, buyer_approved: true })).toMatch(/own listing/);
+    expect(owner.send).not.toHaveBeenCalled();
+  });
+
+  it('drafts expire after 15 minutes', async () => {
+    const { tools, send } = setup();
+    const now = Date.now();
+    const spy = vi.spyOn(Date, 'now').mockReturnValue(now);
+    await tools.draft_seller_message({ listing_id: ID, message: 'Hi' });
+    spy.mockReturnValue(now + 16 * 60 * 1000);
+    expect(await tools.send_seller_message({ listing_id: ID, buyer_approved: true })).toMatch(/no current draft/);
+    expect(send).not.toHaveBeenCalled();
+    spy.mockRestore();
+  });
+
+  it('explains the phone/ID check when Vendibook blocks the send', async () => {
+    const { tools, send } = setup();
+    send.mockRejectedValueOnce(new Error('Please verify your phone number to message sellers'));
+    await tools.draft_seller_message({ listing_id: ID, message: 'Hi' });
+    expect(await tools.send_seller_message({ listing_id: ID, buyer_approved: true })).toMatch(/verify their phone and ID/);
   });
 });

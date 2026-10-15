@@ -167,6 +167,30 @@
   },
   {
     "type": "client",
+    "name": "send_seller_message",
+    "description": "Send the message currently shown on the buyer's screen (from draft_seller_message) to the seller through Vendibook messages. Only for signed-in buyers, and only after the buyer clearly said yes to sending that exact draft.",
+    "expects_response": true,
+    "response_timeout_secs": 20,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "listing_id": {
+          "type": "string",
+          "description": "The listing the draft is for (id, result number, or \"current\")."
+        },
+        "buyer_approved": {
+          "type": "boolean",
+          "description": "True only if the buyer just clearly said yes to sending this draft."
+        }
+      },
+      "required": [
+        "listing_id",
+        "buyer_approved"
+      ]
+    }
+  },
+  {
+    "type": "client",
     "name": "estimate_earnings",
     "description": "Simple sales math from the buyer's own numbers. Returns monthly sales and sales after food cost, before all other expenses. Not a prediction.",
     "expects_response": true,
