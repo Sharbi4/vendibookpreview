@@ -26,6 +26,8 @@ verify_jwt = false
     verify_jwt = false
   [functions.auth-email-hook]
     verify_jwt = false
+  [functions.atlas-follow-up]
+    verify_jwt = false
   [functions.cancel-booking]
     verify_jwt = false
   [functions.check-promo-eligibility]
