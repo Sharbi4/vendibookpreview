@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
     if (!res.ok) {
       console.error('Vapi outbound call error:', res.status, data);
       return new Response(
-        JSON.stringify({ error: data?.message || 'Could not place the call.', details: data }),
+        JSON.stringify({ error: 'Could not place the call.' }),
         { status: res.status, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
