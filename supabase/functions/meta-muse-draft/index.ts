@@ -22,7 +22,7 @@ Deno.serve(async req=>{
   const {data:lead,error:leadError}=await db.from('meta_muse_leads').select('*').eq('id',parsed.data.lead_id).single();
   if(leadError||!lead) return reply(404,{error:'Lead unavailable'});
   const {data:inventory,error:invError}=await db.rpc('meta_muse_inventory'); if(invError) return reply(503,{error:'Live inventory unavailable; no draft generated'});
-  const candidates=matchMuseLead(lead as MuseLead,inventory as MuseListing[]);
+  const candidates=matchMuseLead(lead as MuseLead,inventory as MuseListing[],{},Number.MAX_SAFE_INTEGER);
   const availability:Record<string,boolean|undefined>={};
   if(lead.intent==='rent' && lead.start_date && lead.end_date) {
    const span=Date.parse(lead.end_date)-Date.parse(lead.start_date);

@@ -32,7 +32,7 @@ export function matchMuseLead(lead: MuseLead, rows: MuseListing[], availability:
  }).sort((a,b)=>b.score-a.score).slice(0,limit);
 }
 export function templateDraft(lead: MuseLead, matches: MuseMatch[]) {
- if(lead.intent==='sell') return 'Hello! We are Vendibook’s marketplace team. Would you like to share details about equipment you voluntarily offered for sale or rental? We can review whether it fits our marketplace. No listing, sale or outcome is guaranteed.';
+ if(lead.intent==='sell') return 'Hello! We are Vendibook’s marketplace team. Would you like to share details about equipment you are authorized to discuss for sale or rental? We can review whether it fits our marketplace. No listing, sale or outcome is guaranteed.';
  return `Hello! We are Vendibook’s marketplace team. Based on your request, these current listings may be worth reviewing. Availability, delivery and final totals require confirmation.\n\n${matches.map(m=>`${m.listing.title}\nhttps://vendibook.com/listing/${m.listing.id}`).join('\n\n')}`;
 }
 // The model selects approved phrases only: it cannot invent claims, numbers or links.
