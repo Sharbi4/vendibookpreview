@@ -1,5 +1,7 @@
 # Roadmap
 
+- [open] Meta Muse admin lead matching, consent/provenance, draft approval and no-send workflow; validate and document rotation/Page setup blockers.
+
 - [done] BuyerMatch seller intelligence: repaired missing services, locked/live dashboards, membership center, approved activation and attributable events.
 - [open] BuyerMatch automated Muse transport and paid-member activation/Astra verification — requires approved Muse workflow and current member-owned campaign; frontend unpublished.
 - [done] Make all Build Studio uploads private to manufacturer teams/admins as requested; no further Build Studio redesign work.
