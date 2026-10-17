@@ -1,6 +1,7 @@
 // Executes the actual migration in isolated PostgreSQL/WASM: no production fixtures.
 import { PGlite } from '@electric-sql/pglite';
 import { readFileSync } from 'node:fs';
+import { Blob as NodeBlob } from 'node:buffer';
 import { beforeAll,afterAll,describe,it,expect } from 'vitest';
 let db:PGlite;
 const admin='924e1f23-b87d-4b7f-8ff9-30228d196180', nonadmin='f99253cf-6fb3-4f55-a08e-3cbf63228373';
@@ -10,7 +11,7 @@ async function asUser(id:string){await db.query("select set_config('test.uid',$1
 async function lead(extra:Record<string,unknown>={}){return rpc('create_lead',{name:'Isolated fixture',intent:'buy',source_kind:'manual_authorized',provenance:'Isolated test authorization',contact:'test@example.invalid',contact_allowed:true,consent_evidence:'Isolated permission',...extra});}
 async function draft(l:any){return rpc('create_draft',{lead_id:l.id,lead_revision:l.revision,body:'Review this option\nhttps://vendibook.com/listing/'+listing,listing_ids:[listing],generator:'template'});}
 beforeAll(async()=>{
- db=new PGlite();
+ db=new PGlite({fsBundle:new NodeBlob([readFileSync('node_modules/@electric-sql/pglite/dist/pglite.data')]) as unknown as Blob});
  await db.exec(`create role anon;create role authenticated;create role service_role;create schema auth;
  create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('test.uid',true),'')::uuid$$;
  create function public.has_role(uuid,text) returns boolean language sql stable as $$select $1='${admin}'::uuid and $2='admin'$$;
