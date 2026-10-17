@@ -63,3 +63,14 @@ Revision evidence during implementation: base `931ff9753`; implementation checkp
 9. No automatic import of existing private leads, BuyerMatch campaign activation, outreach logging, Page ingestion or email transport. This is authorized manual intake, review and draft preparation only. Lead/draft reads currently rely on API result limits; paginate before exceeding the default 1,000-row result cap.
 
 Frontend was **not published**. No Facebook automation/scraping, outreach, changes to auth/payment settings, or fake production leads.
+
+## Direct Codex follow-up (2026-10-17)
+
+Owner clarified that coding and Git pushes must be performed locally, with Lovable used only to submit edge functions. The initial Lovable run had already committed the feature before cancellation took effect. Further changes below were authored and tested directly in an isolated checkout of `fix/paypal-webhook-config` (the owner's primary checkout has unrelated unfinished edits).
+
+- Matching now requires both city and state when both are supplied. A same-named city in another state, or another city in the same state, is not a local match; freight-enabled sales remain explicitly qualified remote candidates.
+- Muse phrase validation rejects duplicates and cross-intent phrases. Server composition always includes the availability/final-total qualifier for buyers/renters or no-guaranteed-outcome qualifier for sellers.
+- Closed leads cannot generate new drafts or consume model requests. Incoming JSON is limited to 4 KiB, malformed JSON returns 400, and model output is capped at 2,048 tokens.
+- Local tests: 17 matching/model tests, 7 actual edge-handler tests with mocked provider/auth, 2 dashboard tests, 12 actual SQL tests in isolated PostgreSQL/WASM, 8 existing lead-matching tests and 17 visibility tests: **63 passing**. The provider contract test asserts the Meta Responses URL, model, high reasoning and absence of contact/consent data. It is not a live API credential test.
+- Local environment limitations: the repository's existing package-lock is out of sync and email peers conflict; validation installed dependencies without modifying the lockfile. The standard SWC test setup is blocked by Windows native-cache permissions, so the DOM tests ran with an uncommitted equivalent esbuild JSX configuration. Baseline full-project TypeScript errors existed before this follow-up; do not describe the project as typecheck-clean.
+- No new database migration in this follow-up. Initial migrations 0019/0020 remain as recorded above. Live admin end-to-end and real Muse inference still require the owner's authorized admin session and rotated secret. The approval SQL accepts broader same-state location matches than the stricter candidate matcher; approval is human review only and sending remains unavailable.

@@ -1,8 +1,19 @@
 import { describe,it,expect } from 'vitest';
-import { matchMuseLead,templateDraft,validateMuseOutput,museState,sendingEnabled,requireMuseAdmin,draftAfterEdit,type MuseListing,type MuseLead } from '../../../supabase/functions/_shared/metaMuse';
+import { composeMuseDraft,matchMuseLead,templateDraft,validateMuseOutput,museState,sendingEnabled,requireMuseAdmin,draftAfterEdit,type MuseListing,type MuseLead } from '../../../supabase/functions/_shared/metaMuse';
 const lead:MuseLead={id:'lead',revision:1,intent:'buy',category:'food_trailer',city:'Phoenix, AZ',budget_max:30000};
 const listing:MuseListing={id:'7b41c2aa-1774-4b99-8318-6fc94df0d705',title:'Trailer',mode:'sale',category:'food_trailer',city:'Phoenix',state:'AZ',price_sale:25000,price_daily:200,price_weekly:null,price_monthly:null,vendibook_freight_enabled:false};
 describe('Meta Muse lead safety',()=>{
+ it('requires both requested city and state for a local match',()=>{
+  expect(matchMuseLead({...lead,city:'Portland, ME'},[{...listing,city:'Portland',state:'OR'}])).toEqual([]);
+  expect(matchMuseLead(lead,[{...listing,city:'Tucson',state:'AZ'}])).toEqual([]);
+  expect(matchMuseLead({...lead,city:'AZ'},[listing])).toHaveLength(1);
+ });
+ it('retains mandatory qualifiers and refuses cross-intent phrases',()=>{
+  expect(composeMuseDraft(lead,matchMuseLead(lead,[listing]),[0,1])).toContain('Availability, delivery and final totals require confirmation.');
+  expect(composeMuseDraft({...lead,intent:'sell'},[],[0,4])).toContain('No listing, sale or outcome is guaranteed.');
+  expect(()=>composeMuseDraft(lead,[],[4])).toThrow('intent');
+  expect(()=>validateMuseOutput({phrase_ids:[0,0]})).toThrow();
+ });
  it('explains transaction, category, location and budget score',()=>{expect(matchMuseLead(lead,[listing])[0]).toMatchObject({score:100,reasons:['Transaction matches','Category matches','Same city','Within equipment / daily rental budget']});});
  it('excludes wrong transaction/category/budget/location',()=>{expect(matchMuseLead(lead,[{...listing,mode:'rent'},{...listing,category:'food_truck'},{...listing,price_sale:31000},{...listing,state:'FL',city:'Miami'}])).toEqual([]);});
  it('allows remote sale only with freight and warns quote needed',()=>{expect(matchMuseLead(lead,[{...listing,state:'FL',city:'Miami',vendibook_freight_enabled:true}])[0].reasons).toContain('Freight enabled; destination quote required');});

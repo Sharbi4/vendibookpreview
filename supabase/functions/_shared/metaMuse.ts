@@ -12,8 +12,11 @@ export function matchMuseLead(lead: MuseLead, rows: MuseListing[], availability:
   if (listing.mode !== filter.mode || (filter.categories && !filter.categories.includes(listing.category))) return [];
   const reasons = ['Transaction matches']; const warnings: string[] = []; let score=25;
   if (lead.category) { score+=25; reasons.push('Category matches'); } else warnings.push('Category missing');
-  const sameCity=!!loc.city && norm(loc.city)===norm(listing.city); const sameState=!!loc.state && loc.state===listing.state?.toUpperCase();
-  if (sameCity || sameState) {score+=sameCity?25:15; reasons.push(sameCity?'Same city':'Same state');}
+  const sameState=!!loc.state && loc.state===listing.state?.toUpperCase();
+  const sameCity=!!loc.city && norm(loc.city)===norm(listing.city) && (!loc.state || sameState);
+  // A city+state request must match both; Portland, ME is not Portland, OR.
+  const localMatch=loc.city ? sameCity : sameState;
+  if (localMatch) {score+=sameCity?25:15; reasons.push(sameCity?'Same city':'Same state');}
   else if (loc.city || loc.state) { if (listing.mode!=='sale' || !listing.vendibook_freight_enabled) return []; score+=5; reasons.push('Freight enabled; destination quote required'); }
   else warnings.push('Location missing; distance not assessed');
   const price = Number(listing.mode==='sale'?listing.price_sale:listing.price_daily);
@@ -40,8 +43,16 @@ export const MUSE_PHRASES = ['Hello! We are Vendibook’s marketplace team.', 'T
 export function validateMuseOutput(raw: unknown): number[] {
  if(!raw || typeof raw!=='object' || !('phrase_ids' in raw) || Object.keys(raw).length!==1) throw new Error('Invalid Muse output');
  const ids=(raw as {phrase_ids:unknown}).phrase_ids;
- if(!Array.isArray(ids) || ids.length<1 || ids.length>6 || ids.some(i=>!Number.isInteger(i)||i<0||i>=MUSE_PHRASES.length)) throw new Error('Invalid Muse output');
+ if(!Array.isArray(ids) || ids.length<1 || ids.length>6 || new Set(ids).size!==ids.length || ids.some(i=>!Number.isInteger(i)||i<0||i>=MUSE_PHRASES.length)) throw new Error('Invalid Muse output');
  return ids as number[];
+}
+/** Mandatory qualification stays even if the model omits it; intents never mix. */
+export function composeMuseDraft(lead: MuseLead, matches: MuseMatch[], phraseIds: number[]) {
+ const permitted = lead.intent === 'sell' ? [0,1,4,5] : [0,1,2,3];
+ if (phraseIds.some(id => !permitted.includes(id))) throw new Error('Phrase does not match lead intent');
+ const required = lead.intent === 'sell' ? 5 : 3;
+ const ids = phraseIds.includes(required) ? phraseIds : [...phraseIds, required];
+ return ids.map(id=>MUSE_PHRASES[id]).join(' ') + (matches.length ? '\n\n'+matches.map(m=>`${m.listing.title}\nhttps://vendibook.com/listing/${m.listing.id}`).join('\n\n') : '');
 }
 export function museState(key?: string) { return key?'configured_unverified':'unavailable_missing_secret'; }
 export const sendingEnabled = false;
