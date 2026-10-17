@@ -8,6 +8,7 @@ import {
   Headphones,
   DollarSign,
   BadgeCheck,
+  ClipboardCheck,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +17,7 @@ const SECTIONS = [
   { to: "/admin/listings", label: "Listings", icon: FileText },
   { to: "/admin/users", label: "Users", icon: Users },
   { to: "/admin/messages", label: "Messages", icon: MessagesSquare },
+  { to: "/admin/meta-muse", label: "Lead review", icon: ClipboardCheck },
   { to: "/admin/freight", label: "Freight", icon: Truck },
   { to: "/admin/support", label: "Support", icon: Headphones },
   { to: "/admin/finance", label: "Finance", icon: DollarSign },
