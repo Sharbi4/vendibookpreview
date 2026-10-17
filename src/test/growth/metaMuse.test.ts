@@ -1,0 +1,21 @@
+import { describe,it,expect } from 'vitest';
+import { matchMuseLead,templateDraft,validateMuseOutput,museState,sendingEnabled,requireMuseAdmin,draftAfterEdit,type MuseListing,type MuseLead } from '../../../supabase/functions/_shared/metaMuse';
+const lead:MuseLead={id:'lead',revision:1,intent:'buy',category:'food_trailer',city:'Phoenix, AZ',budget_max:30000};
+const listing:MuseListing={id:'7b41c2aa-1774-4b99-8318-6fc94df0d705',title:'Trailer',mode:'sale',category:'food_trailer',city:'Phoenix',state:'AZ',price_sale:25000,price_daily:200,price_weekly:null,price_monthly:null,vendibook_freight_enabled:false};
+describe('Meta Muse lead safety',()=>{
+ it('explains transaction, category, location and budget score',()=>{expect(matchMuseLead(lead,[listing])[0]).toMatchObject({score:100,reasons:['Transaction matches','Category matches','Same city','Within equipment / daily rental budget']});});
+ it('excludes wrong transaction/category/budget/location',()=>{expect(matchMuseLead(lead,[{...listing,mode:'rent'},{...listing,category:'food_truck'},{...listing,price_sale:31000},{...listing,state:'FL',city:'Miami'}])).toEqual([]);});
+ it('allows remote sale only with freight and warns quote needed',()=>{expect(matchMuseLead(lead,[{...listing,state:'FL',city:'Miami',vendibook_freight_enabled:true}])[0].reasons).toContain('Freight enabled; destination quote required');});
+ it('does not treat seller acquisition as an inventory buyer',()=>{expect(matchMuseLead({...lead,intent:'sell'},[listing])).toEqual([]);});
+ it('warns on missing location, budget and category',()=>{expect(matchMuseLead({...lead,city:null,budget_max:null,category:null},[listing])[0].warnings).toEqual(['Category missing','Location missing; distance not assessed','Budget missing']);});
+ it('rental conflicts and minimum days exclude results',()=>{const rental={...listing,mode:'rent',rental_min_days:3};const request={...lead,intent:'rent' as const,start_date:'2026-11-14',end_date:'2026-11-14'};expect(matchMuseLead(request,[rental])).toEqual([]);expect(matchMuseLead({...request,end_date:'2026-11-17'},[rental],{[rental.id]:false})).toEqual([]);});
+ it('rental unknown availability is explicit, never reserved',()=>{expect(matchMuseLead({...lead,intent:'rent',start_date:'2026-11-14',end_date:'2026-11-17'},[{...listing,mode:'rent'}])[0].warnings).toContain('Availability check unavailable; approval blocked');});
+ it('rejects malformed or excessive rental dates',()=>{expect(matchMuseLead({...lead,intent:'rent',start_date:'invalid',end_date:'2026-11-17'},[{...listing,mode:'rent'}])).toEqual([]);});
+ it('constructs only supplied canonical listing links',()=>{const body=templateDraft(lead,matchMuseLead(lead,[listing]));expect(body).toContain('https://vendibook.com/listing/7b41c2aa-1774-4b99-8318-6fc94df0d705');expect(body).not.toContain('guaranteed sale');});
+ it('missing credential never silently switches providers',()=>{expect(museState()).toBe('unavailable_missing_secret');});
+ it('configured is not evidence of connection',()=>{expect(museState('non-secret-test-marker')).toBe('configured_unverified');});
+ it('no send capability',()=>{expect(sendingEnabled).toBe(false);});
+ it('rejects non-admin and unsigned callers',()=>{expect(()=>requireMuseAdmin(null,true)).toThrow();expect(()=>requireMuseAdmin({id:'test'},false)).toThrow();expect(()=>requireMuseAdmin({id:'test'},true)).not.toThrow();});
+ it('invalidates approval on draft edit',()=>{expect(draftAfterEdit({revision:4,status:'approved',approved_by:'admin',approved_at:'date'})).toMatchObject({revision:5,status:'draft',approved_by:null,approved_at:null});});
+ it('rejects model claims, URLs and out-of-range phrases',()=>{for(const value of [{body:'Guaranteed sale https://fake.example'}, {phrase_ids:[99]},{phrase_ids:['1']},{phrase_ids:[]}])expect(()=>validateMuseOutput(value)).toThrow();expect(validateMuseOutput({phrase_ids:[0,3]})).toEqual([0,3]);});
+});

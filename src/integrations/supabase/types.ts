@@ -6272,6 +6272,197 @@ export type Database = {
         }
         Relationships: []
       }
+      meta_muse_audit: {
+        Row: {
+          action: string
+          actor_id: string
+          created_at: string
+          draft_id: string | null
+          id: string
+          lead_id: string
+          revision: number | null
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          created_at?: string
+          draft_id?: string | null
+          id?: string
+          lead_id: string
+          revision?: number | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          created_at?: string
+          draft_id?: string | null
+          id?: string
+          lead_id?: string
+          revision?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_muse_audit_draft_id_fkey"
+            columns: ["draft_id"]
+            isOneToOne: false
+            referencedRelation: "meta_muse_drafts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meta_muse_audit_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "meta_muse_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_muse_drafts: {
+        Row: {
+          approved_at: string | null
+          approved_by: string | null
+          body: string
+          created_at: string
+          generator: string
+          id: string
+          lead_id: string
+          lead_revision: number
+          listing_ids: string[]
+          revision: number
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          approved_at?: string | null
+          approved_by?: string | null
+          body: string
+          created_at?: string
+          generator: string
+          id?: string
+          lead_id: string
+          lead_revision: number
+          listing_ids?: string[]
+          revision?: number
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          approved_at?: string | null
+          approved_by?: string | null
+          body?: string
+          created_at?: string
+          generator?: string
+          id?: string
+          lead_id?: string
+          lead_revision?: number
+          listing_ids?: string[]
+          revision?: number
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meta_muse_drafts_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "meta_muse_leads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meta_muse_leads: {
+        Row: {
+          budget_max: number | null
+          category: string | null
+          city: string | null
+          consent_evidence: string
+          contact: string
+          contact_allowed: boolean
+          contact_channel: string
+          created_at: string
+          created_by: string
+          do_not_contact: boolean
+          end_date: string | null
+          id: string
+          intent: string
+          name: string
+          next_follow_up: string | null
+          notes: string
+          provenance: string
+          revision: number
+          source_kind: string
+          stage: string
+          start_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          budget_max?: number | null
+          category?: string | null
+          city?: string | null
+          consent_evidence?: string
+          contact?: string
+          contact_allowed?: boolean
+          contact_channel?: string
+          created_at?: string
+          created_by: string
+          do_not_contact?: boolean
+          end_date?: string | null
+          id?: string
+          intent: string
+          name: string
+          next_follow_up?: string | null
+          notes?: string
+          provenance: string
+          revision?: number
+          source_kind: string
+          stage?: string
+          start_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          budget_max?: number | null
+          category?: string | null
+          city?: string | null
+          consent_evidence?: string
+          contact?: string
+          contact_allowed?: boolean
+          contact_channel?: string
+          created_at?: string
+          created_by?: string
+          do_not_contact?: boolean
+          end_date?: string | null
+          id?: string
+          intent?: string
+          name?: string
+          next_follow_up?: string | null
+          notes?: string
+          provenance?: string
+          revision?: number
+          source_kind?: string
+          stage?: string
+          start_date?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      meta_muse_rate_events: {
+        Row: {
+          actor_id: string
+          created_at: string
+          id: string
+        }
+        Insert: {
+          actor_id: string
+          created_at?: string
+          id?: string
+        }
+        Update: {
+          actor_id?: string
+          created_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
       monetization_product_plans: {
         Row: {
           billing_interval: string
@@ -15234,6 +15425,13 @@ export type Database = {
         Args: { kind: string; thread: string }
         Returns: Json
       }
+      meta_muse_action: {
+        Args: { _action: string; _payload?: Json }
+        Returns: Json
+      }
+      meta_muse_inventory: { Args: never; Returns: Json }
+      meta_muse_listing_eligible: { Args: { _id: string }; Returns: boolean }
+      meta_muse_take_rate: { Args: never; Returns: boolean }
       offer_terms_current: {
         Args: never
         Returns: {

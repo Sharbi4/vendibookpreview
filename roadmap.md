@@ -1,5 +1,8 @@
 # Roadmap
 
+- [done] Meta Muse admin lead matching, provenance/consent, draft approval and no-send workflow; 58 focused tests pass, migrations applied and drafting endpoint deployed.
+- [open] Meta Muse inference and live admin workflow verification — blocked by rotated META_MODEL_API_KEY and authorized admin session; Facebook Page setup/sending is a separate unconnected phase.
+
 - [done] BuyerMatch seller intelligence: repaired missing services, locked/live dashboards, membership center, approved activation and attributable events.
 - [open] BuyerMatch automated Muse transport and paid-member activation/Astra verification — requires approved Muse workflow and current member-owned campaign; frontend unpublished.
 - [done] Make all Build Studio uploads private to manufacturer teams/admins as requested; no further Build Studio redesign work.

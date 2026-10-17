@@ -135,6 +135,7 @@ const Messages = lazy(() => import("./pages/Messages"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
 const AdminMetrics = lazy(() => import("./pages/AdminMetrics"));
 const AdminListings = lazy(() => import("./pages/AdminListings"));
+const AdminMetaMuse = lazy(() => import("./pages/AdminMetaMuse"));
 const AdminRisk = lazy(() => import("./pages/AdminRisk"));
 const AdminFinance = lazy(() => import("./pages/AdminFinance"));
 const AdminInvoices = lazy(() => import("./pages/AdminInvoices"));
@@ -489,6 +490,7 @@ const AnimatedRoutes = () => {
           <Route path="/admin" element={<PageTransition><AdminDashboard /></PageTransition>} />
           <Route path="/admin/metrics" element={<PageTransition><AdminMetrics /></PageTransition>} />
           <Route path="/admin/listings" element={<PageTransition><AdminListings /></PageTransition>} />
+          <Route path="/admin/meta-muse" element={<PageTransition><AdminMetaMuse /></PageTransition>} />
           <Route path="/admin/risk" element={<PageTransition><AdminRisk /></PageTransition>} />
           <Route path="/admin/finance" element={<PageTransition><AdminFinance /></PageTransition>} />
           <Route path="/admin/invoices" element={<PageTransition><AdminInvoices /></PageTransition>} />
