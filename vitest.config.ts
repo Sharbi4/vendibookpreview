@@ -9,6 +9,8 @@ export default defineConfig({
     globals: true,
     setupFiles: ['./src/test/setup.ts'],
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
+    // Isolated PostgreSQL suite runs with vitest.meta-muse.config.ts (Node, no DOM setup).
+    exclude: ['src/test/growth/metaMuseDatabase.test.ts', '**/node_modules/**'],
   },
   resolve: {
     alias: {

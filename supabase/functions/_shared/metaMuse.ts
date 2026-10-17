@@ -5,7 +5,7 @@ export interface MuseLead {
 }
 export interface MuseListing extends MatchableListing { rental_min_days?: number|null; available_from?: string|null; available_to?: string|null }
 export interface MuseMatch { listing: MuseListing; score: number; reasons: string[]; warnings: string[]; availability: 'available'|'unknown' }
-export function matchMuseLead(lead: MuseLead, rows: MuseListing[], availability: Record<string, boolean|undefined> = {}): MuseMatch[] {
+export function matchMuseLead(lead: MuseLead, rows: MuseListing[], availability: Record<string, boolean|undefined> = {}, limit = 5): MuseMatch[] {
  const filter = leadListingFilter(lead); if (!filter) return [];
  const loc = parseLocationInput(lead.city); const norm = (s?: string|null) => (s??'').trim().toLowerCase();
  return rows.flatMap(listing => {
@@ -29,7 +29,7 @@ export function matchMuseLead(lead: MuseLead, rows: MuseListing[], availability:
    }
   } else score+=10;
   return [{listing, score, reasons, warnings, availability: availability[listing.id]===true?'available' as const:'unknown' as const}];
- }).sort((a,b)=>b.score-a.score).slice(0,5);
+ }).sort((a,b)=>b.score-a.score).slice(0,limit);
 }
 export function templateDraft(lead: MuseLead, matches: MuseMatch[]) {
  if(lead.intent==='sell') return 'Hello! We are Vendibook’s marketplace team. Would you like to share details about equipment you voluntarily offered for sale or rental? We can review whether it fits our marketplace. No listing, sale or outcome is guaranteed.';
@@ -38,7 +38,7 @@ export function templateDraft(lead: MuseLead, matches: MuseMatch[]) {
 // The model selects approved phrases only: it cannot invent claims, numbers or links.
 export const MUSE_PHRASES = ['Hello! We are Vendibook’s marketplace team.', 'Thank you for sharing your request.', 'These current listings may be worth reviewing.', 'Availability, delivery and final totals require confirmation.', 'Would you like to share more details about your equipment?', 'No listing, sale or outcome is guaranteed.'] as const;
 export function validateMuseOutput(raw: unknown): number[] {
- if(!raw || typeof raw!=='object' || !('phrase_ids' in raw)) throw new Error('Invalid Muse output');
+ if(!raw || typeof raw!=='object' || !('phrase_ids' in raw) || Object.keys(raw).length!==1) throw new Error('Invalid Muse output');
  const ids=(raw as {phrase_ids:unknown}).phrase_ids;
  if(!Array.isArray(ids) || ids.length<1 || ids.length>6 || ids.some(i=>!Number.isInteger(i)||i<0||i>=MUSE_PHRASES.length)) throw new Error('Invalid Muse output');
  return ids as number[];
