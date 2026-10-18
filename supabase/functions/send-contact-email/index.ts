@@ -27,22 +27,51 @@ serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
-    if (!body.email || !body.name || !body.message) {
+    const clip = (v: unknown, n: number) => (typeof v === "string" ? v.trim().slice(0, n) : "");
+    const name = clip(body.name, 200);
+    const email = clip(body.email, 320);
+    const phone = clip(body.phone, 40);
+    const subject = clip(body.subject, 300);
+    const message = clip(body.message, 5000);
+    const pageUrl = clip((body as any).page_url, 500) || req.headers.get("referer")?.slice(0, 500) || null;
+    if (!email || !name || !message || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return new Response(JSON.stringify({ error: "Missing required fields" }), {
         status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
     const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const firstName = name.split(/\s+/)[0];
+
+    // Store every submission so it can be traced in Admin → Support
+    let reference = "";
+    const { data: ticket, error: ticketError } = await admin.from("support_tickets").insert({
+      source: "email",
+      feature_area: "other",
+      category: "contact_form",
+      title: subject || "Contact form message",
+      description: message,
+      customer_name: name,
+      customer_email: email,
+      reply_email: email,
+      callback_phone_display: phone || null,
+      page_url: pageUrl,
+      browser_info: req.headers.get("user-agent")?.slice(0, 300) ?? null,
+    }).select("id, reference_code").single();
+    if (ticketError) console.error("contact ticket insert failed", ticketError.message);
+    else reference = ticket.reference_code;
 
     // Confirmation to the user
     await invokeTransactionalEmail({
         templateName: "support-reply",
-        recipientEmail: body.email,
-        idempotencyKey: `contact-confirm-${body.email}-${Date.now()}`,
+        recipientEmail: email,
+        idempotencyKey: `contact-confirm-${ticket?.id ?? `${email}-${Date.now()}`}`,
         templateData: {
-          name: body.name,
-          subject: body.subject || "Your message to Vendibook",
-          message: "Thanks for reaching out. Our team will get back to you shortly.",
+          firstName,
+          subject: subject || "Your message to Vendibook",
+          ticketNumber: reference || undefined,
+          bodyParagraphs: [
+            "Thanks for reaching out. We received your message and our team will get back to you shortly.",
+          ],
         },
       });
 
@@ -51,11 +80,20 @@ serve(async (req) => {
       await invokeTransactionalEmail({
           templateName: "support-reply",
           recipientEmail: adminTo,
-          idempotencyKey: `contact-internal-${body.email}-${adminTo}-${Date.now()}`,
+          idempotencyKey: `contact-internal-${ticket?.id ?? `${email}-${Date.now()}`}-${adminTo}`,
           templateData: {
-            name: "Vendibook Support",
-            subject: `New contact form: ${body.subject || "(no subject)"}`,
-            message: `From: ${body.name} <${body.email}>${body.phone ? ` (${body.phone})` : ""}\n\n${body.message}`,
+            firstName: "Vendibook Support",
+            subject: `New contact form: ${subject || "(no subject)"}`,
+            ticketNumber: reference || undefined,
+            signedBy: "Vendibook contact form",
+            signedTitle: "Automatic notice",
+            bodyParagraphs: [
+              `From: ${name} <${email}>${phone ? ` · ${phone}` : ""}`,
+              `Subject: ${subject || "(no subject)"}`,
+              ...(pageUrl ? [`Page: ${pageUrl}`] : []),
+              "Message:",
+              ...message.split(/\n{2,}/).map((p) => p.trim()).filter(Boolean),
+            ],
           },
         });
     }
