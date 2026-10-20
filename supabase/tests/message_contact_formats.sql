@@ -13,6 +13,10 @@ begin
     ('2 0 2 5 5 5 0 1 2 3', true),
     ('２０２５５５０１２３', true),
     (U&'buyer\200B@example.com', true),
+    ('Please call Randy Reed Trucking 5zero7-435-5939', true),
+    ('five oh seven four three five five nine three nine', true),
+    ('5o7-435-5939', true),
+    ('Someone wants one trailer for $20,000 and deposit $2,000', false),
     ('Hi! Could you share a video walkthrough here on Vendibook?', false),
     ('It is 20 feet long and 8 feet wide.', false),
     ('The trailer is $20,000 and the deposit is $2,000.', false)
