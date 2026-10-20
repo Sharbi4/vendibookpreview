@@ -190,10 +190,12 @@ Deno.serve(async (req) => {
 
     // Structured location handling for a place typed into the keyword box.
     // Only unambiguous shapes (ZIP, "City, ST", state name/abbr) count — a bare
-    // single word like "Phoenix" or "kitchen" keeps normal text search.
-    const queryPlace = location_text ? { kind: null } as ReturnType<typeof parseLocationInput> : parseLocationInput(cleanedQuery);
+    // single word like "Phoenix" or "kitchen" keeps normal text search. This
+    // holds even when the location box is filled too: "Kentucky" typed in both
+    // boxes must not also require the word "Kentucky" in the listing text.
+    const queryPlace = parseLocationInput(cleanedQuery);
     const queryIsStructuredPlace =
-      !location_text && (queryPlace.kind === 'zip' || queryPlace.kind === 'state' || queryPlace.kind === 'city_state');
+      queryPlace.kind === 'zip' || queryPlace.kind === 'state' || queryPlace.kind === 'city_state';
 
     // Apply text search (ILIKE on title, description, address, city).
     // Skipped for location-scoped searches so metro suburbs inside the radius
