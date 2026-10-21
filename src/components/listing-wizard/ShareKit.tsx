@@ -647,7 +647,7 @@ const generateStoryImageBlob = (
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      className="space-y-6 mx-auto"
+      className="sale-light space-y-6 mx-auto rounded-3xl"
     >
       {/* LISTING PREVIEW CARD — verified before copy/post */}
       <motion.div

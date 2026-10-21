@@ -210,13 +210,13 @@ export const PublishSuccessModal: React.FC<PublishSuccessModalProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md max-h-[90dvh] overflow-y-auto">
+      <DialogContent className="sale-light rounded-[28px] border-[#e6dfd5] p-6 sm:p-8 sm:max-w-md max-h-[90dvh] overflow-y-auto">
         <DialogHeader>
           <div className="flex flex-col items-center text-center mb-2">
             <div className="w-16 h-16 rounded-full bg-green-500/10 flex items-center justify-center mb-4">
               <Check className="w-8 h-8 text-green-500" />
             </div>
-            <DialogTitle className="text-xl">You're live 🎉</DialogTitle>
+            <DialogTitle className="text-xl">Your listing is live.</DialogTitle>
             <p className="text-sm text-muted-foreground mt-1">
               Your listing is published and visible on the marketplace.
             </p>

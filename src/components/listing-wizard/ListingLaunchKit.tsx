@@ -22,10 +22,10 @@ export function ListingLaunchKit(props: Props) {
   const [instagramOpen, setInstagramOpen] = useState(false);
   const [promotionOpen, setPromotionOpen] = useState(false);
   return (
-    <section className="overflow-hidden rounded-3xl border border-border bg-card shadow-sm" aria-label="Listing launch kit">
-      <div className="p-6 sm:p-8">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Your next move</p>
-        <h2 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">Put your listing in the right hands.</h2>
+    <section className="sale-light overflow-hidden rounded-[28px] border border-[#e6dfd5] shadow-[0_18px_60px_-35px_rgba(43,31,20,0.22)]" style={{ background: "#fffdf9" }} aria-label="Listing launch kit">
+      <div className="p-6 sm:p-10">
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">01 / Share your listing</p>
+        <h2 className="mt-4 max-w-lg text-[28px] font-semibold leading-[1.15] tracking-[-0.035em] sm:text-[36px]">Put your listing in the right hands.</h2>
         <p className="mt-3 max-w-lg text-sm leading-6 text-muted-foreground">Start with the people who already know your business. Your photos, listing link, and ready-to-use caption are all here.</p>
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
           <Button disabled={props.blocked} onClick={props.onFacebook} className="h-12 gap-2 rounded-xl"><Facebook /> Share on Facebook</Button>
@@ -50,37 +50,37 @@ export function ListingLaunchKit(props: Props) {
           </div>
         )}
       </div>
-      <div className="border-t bg-muted/25 p-6 sm:p-8">
+      <div className="m-3 rounded-[22px] bg-[#242321] p-6 text-[#fffaf3] sm:m-4 sm:p-8">
         <div className="flex items-start gap-4">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border bg-background text-primary"><Video className="h-5 w-5" /></div>
+          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-[#ff8159]"><Video className="h-5 w-5" /></div>
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-muted-foreground">Turn interest into a conversation</p>
-            <h3 className="mt-2 text-xl font-semibold tracking-tight">Show your listing live.</h3>
-            <p className="mt-2 text-sm leading-6 text-muted-foreground">Let buyers and renters book a video walkthrough. Show the layout, answer questions, and help them plan their next step before they travel.</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#c8c1b8]">02 / Invite a closer look</p>
+            <h3 className="mt-3 text-[26px] font-semibold leading-tight tracking-[-0.025em]">Show your listing live.</h3>
+            <p className="mt-2 text-sm leading-6 text-[#c8c1b8]">Let buyers and renters book a video walkthrough. Show the layout, answer questions, and help them plan their next step before they travel.</p>
             <Button asChild className="mt-5 h-auto min-h-11 whitespace-normal text-left"><a href="/dashboard/account/scheduling">Set up live walkthroughs <ArrowRight /></a></Button>
-            <p className="mt-3 text-xs leading-5 text-muted-foreground">Choose your available hours and save. Already enabled? Review your schedule here.</p>
+            <p className="mt-3 text-xs leading-5 text-[#c8c1b8]">Choose your available hours and save. Already enabled? Review your schedule here.</p>
           </div>
         </div>
       </div>
-      <div className="flex flex-wrap items-center justify-between gap-4 border-t p-6 sm:px-8">
+      <div className="flex flex-wrap items-center justify-between gap-4 p-6 sm:px-10 sm:pb-8">
         <div><p className="text-sm font-semibold">Want to take your listing further?</p><p className="mt-1 text-xs text-muted-foreground">Explore optional Featured and Vendibook Pro options.</p></div>
         <Button variant="ghost" onClick={() => setPromotionOpen(true)} className="gap-2">Explore upgrades <ArrowUpRight /></Button>
       </div>
       <Dialog open={promotionOpen} onOpenChange={setPromotionOpen}>
-        <DialogContent className="max-h-[90dvh] overflow-y-auto rounded-3xl p-6 sm:max-w-2xl sm:p-8">
+        <DialogContent className="sale-light max-h-[90dvh] overflow-y-auto rounded-[28px] border-[#e6dfd5] p-6 shadow-2xl sm:max-w-2xl sm:p-9">
           <DialogHeader className="text-left">
             <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Optional upgrades</p>
             <DialogTitle className="text-2xl font-semibold tracking-tight sm:text-3xl">Choose your next step.</DialogTitle>
             <DialogDescription className="pt-2 leading-6">Your listing is already live. Sharing and setting up walkthroughs do not require an upgrade.</DialogDescription>
           </DialogHeader>
           <div className="my-3 grid gap-4 sm:grid-cols-2">
-            <div className="flex flex-col rounded-2xl border p-5">
+            <div className="flex flex-col rounded-[20px] border border-[#e4ddd3] bg-white p-6">
               <Megaphone className="mb-5 h-6 w-6 text-primary" />
               <h3 className="text-lg font-semibold">Feature this listing</h3>
               <p className="mb-6 mt-2 flex-1 text-sm leading-6 text-muted-foreground">Explore paid featured placement for this listing. Review the duration, current price, and tax before purchasing.</p>
               <Button asChild><a href={productCheckoutPath(ACTIVE_PRODUCT_SLUGS.featuredBoost, props.listingId)}>Review Featured <ArrowRight /></a></Button>
             </div>
-            <div className="flex flex-col rounded-2xl border bg-muted/30 p-5">
+            <div className="flex flex-col rounded-[20px] border border-[#e4ddd3] bg-[#f0ebe4] p-6">
               <span className="mb-5 text-xs font-semibold uppercase tracking-[0.2em] text-primary">Vendibook Pro</span>
               <h3 className="text-lg font-semibold">Explore your Pro membership</h3>
               <p className="mb-6 mt-2 flex-1 text-sm leading-6 text-muted-foreground">Explore Pro tools and plan details for your business. Review what is included and the subscription terms before joining.</p>

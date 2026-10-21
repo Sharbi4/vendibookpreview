@@ -217,8 +217,8 @@ const ListingPublished: React.FC = () => {
   if (!listing || !listingId) return null;
 
   return (
-    <div className="min-h-screen bg-background">
-      <div className="border-b bg-card">
+    <div className="sale-light min-h-screen bg-background">
+      <div className="border-b border-[#e6dfd5] bg-[#fffdf9]">
         <div className="container mx-auto flex max-w-3xl items-center justify-between px-4 py-4">
           <button
             onClick={() => navigate('/dashboard')}
@@ -227,6 +227,7 @@ const ListingPublished: React.FC = () => {
             <ArrowLeft className="h-4 w-4" />
             Dashboard
           </button>
+          <img src="/brand/vendibook-logo-email-white.png" alt="Vendibook" className="h-8 w-auto mix-blend-multiply" />
           {isPublished && (
             <span className="rounded-full bg-emerald-500/15 px-2.5 py-1 text-xs text-emerald-500">
               Live
