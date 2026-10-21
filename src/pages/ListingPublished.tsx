@@ -118,6 +118,7 @@ const ListingPublished: React.FC = () => {
           category: data.category as ListingCategory,
           mode: data.mode as ListingMode,
           address: data.address,
+          city: data.city,
           priceDaily: data.price_daily,
           priceWeekly: data.price_weekly,
           priceSale: data.price_sale,
@@ -329,10 +330,9 @@ const ListingPublished: React.FC = () => {
               className="h-10 w-auto rounded-lg"
             />
           </div>
-          <h1 className="text-3xl font-semibold text-foreground">Your listing is live</h1>
+          <h1 className="text-3xl font-semibold tracking-tight text-foreground">{isPublished ? "Your listing is live. Make your next move." : "Your listing is not live yet"}</h1>
           <p className="text-muted-foreground">
-            Buyers can now discover and contact you about your listing. Add more equipment and
-            operating details to help the right buyers understand exactly what you're offering.
+            {isPublished ? 'Share it with your network, invite people to see it live, and give your next buyer or renter a clear way to reach you.' : 'Finish publishing before sharing your listing with buyers and renters.'}
           </p>
           <div className="flex flex-wrap gap-2 pt-1">
             <Button onClick={() => navigate(`/listing/${listingId}`)}>
@@ -356,7 +356,7 @@ const ListingPublished: React.FC = () => {
           </button>
         </header>
 
-        {showShare && <ShareKit listing={listing} onClose={() => setShowShare(false)} />}
+        {isPublished && showShare && <ShareKit listing={listing} onClose={() => setShowShare(false)} />}
 
         {/* Optional trust upsell — secondary to the core success actions. */}
         <VerifiedSellerCTA variant="success" />

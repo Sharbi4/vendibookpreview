@@ -388,9 +388,10 @@ export const PublishSuccessModal: React.FC<PublishSuccessModalProps> = ({
             </Button>
           </div>
         ) : (
-          /* Action Buttons — View listing primary, dashboard secondary */
+          /* Launch kit is available immediately after a successful publish. */
           <div className="flex flex-col gap-2 mt-2">
-            <Button onClick={onViewListing} className="w-full">
+            <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 mb-2"><p className="font-semibold">Your listing is ready to share.</p><p className="mt-1 mb-4 text-sm leading-6 text-muted-foreground">Post to Facebook, prepare an Instagram Story, or invite buyers and renters to a live walkthrough.</p><Button onClick={handleShareKit} className="w-full gap-2"><Share2 className="h-4 w-4" /> Open my share kit</Button></div>
+            <Button onClick={onViewListing} variant="outline" className="w-full">
               <ExternalLink className="w-4 h-4 mr-2" />
               View listing
             </Button>
@@ -401,23 +402,7 @@ export const PublishSuccessModal: React.FC<PublishSuccessModalProps> = ({
             >
               Go to dashboard
             </Button>
-            <div className="flex gap-2">
-              <Button
-                variant="ghost"
-                onClick={() => setShowShareOptions(true)}
-                className="flex-1 text-muted-foreground"
-              >
-                <Share2 className="w-4 h-4 mr-2" />
-                Share
-              </Button>
-              <Button
-                variant="ghost"
-                onClick={handleShareKit}
-                className="flex-1 text-muted-foreground"
-              >
-                Share Kit
-              </Button>
-            </div>
+
           </div>
         )}
       </DialogContent>

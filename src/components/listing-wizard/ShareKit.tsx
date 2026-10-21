@@ -32,6 +32,7 @@ import {
 import { useShareKit as useShareKitHook, type ShareChannel } from '@/hooks/useShareKit';
 import { useSharePreflight } from '@/hooks/useSharePreflight';
 import SharePreviewCard from '@/components/share/SharePreviewCard';
+import { ListingLaunchKit } from './ListingLaunchKit';
 
 export interface ShareKitListing {
   id: string;
@@ -40,6 +41,7 @@ export interface ShareKitListing {
   category: ListingCategory;
   mode: ListingMode;
   address: string | null;
+  city?: string | null;
   priceDaily: number | null;
   priceWeekly: number | null;
   priceSale: number | null;
@@ -138,14 +140,15 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
   const [captionVariant, setCaptionVariant] = useState(0);
   const [shareWithImageBusy, setShareWithImageBusy] = useState(false);
 
-  const baseUrl = `${window.location.origin}/listing/${listing.id}`;
+  const baseUrl = `https://vendibook.com/share/listing/${listing.id}`;
   // UTM-tagged links per channel for analytics attribution
   const withUtm = useCallback((src: string, medium = 'social') =>
     `${baseUrl}?utm_source=${src}&utm_medium=${medium}&utm_campaign=host_share`, [baseUrl]);
   const listingUrl = baseUrl;
   const prettyUrl = listingUrl.replace(/^https?:\/\//, '');
   const categoryLabel = CATEGORY_LABELS[listing.category] || listing.category;
-  const city = listing.address?.split(',')[0]?.trim() || '';
+  // Street addresses are not city names; only use separately supplied public locality.
+  const city = listing.city || '';
 
   const price = listing.mode === 'sale'
     ? listing.priceSale
@@ -161,8 +164,8 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
       ? `🚚 For sale${city ? ` in ${city}` : ''}: ${listing.title}${priceText ? ` — ${priceText}` : ''}.\n\nDM me or grab full details here 👇`
       : `📅 Now booking on Vendibook${city ? ` in ${city}` : ''}: ${listing.title}${priceText ? ` — ${priceText}` : ''}.\n\nReserve your spot 👇`,
     listing.mode === 'sale'
-      ? `Just listed: ${listing.title}${city ? ` (${city})` : ''}. ${priceText ? `Asking ${priceText}. ` : ''}Serious buyers only — link below.`
-      : `Open dates available 🗓️ ${listing.title}${city ? ` · ${city}` : ''}.${priceText ? ` From ${priceText}.` : ''} Book direct, no fees:`,
+      ? `Just listed: ${listing.title}${city ? ` (${city})` : ''}. ${priceText ? `Asking ${priceText}. ` : ''}Explore photos and details at the link below.`
+      : `Open dates available 🗓️ ${listing.title}${city ? ` · ${city}` : ''}.${priceText ? ` From ${priceText}.` : ''} View availability and rental details:`,
     listing.mode === 'sale'
       ? `🔥 ${categoryLabel} alert${city ? ` — ${city}` : ''}!\n${listing.title}${priceText ? `\n${priceText}` : ''}\nTap link to see full specs & photos.`
       : `Looking for a ${categoryLabel.toLowerCase()}${city ? ` in ${city}` : ''}? I just opened bookings for ${listing.title}.${priceText ? ` ${priceText}.` : ''} Lock your date here:`];
@@ -261,6 +264,7 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
 
   // Share with image attached via Web Share API Level 2 (mobile Safari/Chrome)
   const handleShareWithImage = async () => {
+    if (shareBlocked) return;
     setShareWithImageBusy(true);
     try {
       const blob = await generateShareImageBlob(listing, city, priceText);
@@ -298,6 +302,7 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
   };
 
   const handleDownloadStory = async () => {
+    if (shareBlocked) return;
     try {
       const blob = await generateStoryImageBlob(listing, city, priceText);
       const url = URL.createObjectURL(blob);
@@ -344,12 +349,12 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
 
     // Instagram & TikTok have no web share — copy caption + open app
     if (platform === 'instagram' || platform === 'tiktok') {
-      navigator.clipboard.writeText(`${currentCaption}\n\n${url}\n\n${tagsString}`).catch(() => {});
+      navigator.clipboard.writeText(`${currentCaption}\n\n${url}\n\n${tagsString}`).then(() => toast({ title: 'Caption copied' })).catch(() => toast({ title: 'Could not copy caption', description: 'Copy the caption manually from the share kit.', variant: 'destructive' }));
       const target = platform === 'instagram'
         ? 'https://www.instagram.com/'
         : 'https://www.tiktok.com/upload';
       toast({
-        title: 'Caption copied!',
+        title: 'Continue in your social app',
         description: `Opening ${platform === 'instagram' ? 'Instagram' : 'TikTok'} — paste it on your post.`});
       window.open(target, '_blank', 'noopener,noreferrer');
       return;
@@ -594,50 +599,6 @@ const generateStoryImageBlob = (
     toast({ title: '"Now Booking" image downloaded' });
   };
 
-  const handleDownloadFirstBooking = () => {
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    canvas.width = 1080;
-    canvas.height = 1080;
-    ctx.fillStyle = '#1A1A1A';
-    ctx.fillRect(0, 0, 1080, 1080);
-    ctx.fillStyle = '#FF5124';
-    ctx.fillRect(0, 0, 1080, 8);
-    ctx.font = '80px system-ui, -apple-system, sans-serif';
-    ctx.textAlign = 'center';
-    ctx.fillText('🎉', 540, 240);
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 56px system-ui, -apple-system, sans-serif';
-    ctx.fillText('FIRST BOOKING', 540, 370);
-    ctx.fillStyle = '#FF5124';
-    ctx.fillText('SECURED', 540, 440);
-    ctx.strokeStyle = '#FF5124';
-    ctx.lineWidth = 3;
-    ctx.beginPath();
-    ctx.moveTo(340, 475);
-    ctx.lineTo(740, 475);
-    ctx.stroke();
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 38px system-ui, -apple-system, sans-serif';
-    const titleLines = wrapText(ctx, listing.title, 900, 2);
-    titleLines.forEach((line, i) => ctx.fillText(line, 540, 570 + i * 50));
-    ctx.fillStyle = '#FF5124';
-    ctx.font = '26px system-ui, -apple-system, sans-serif';
-    ctx.fillText('vendibook.com', 540, 780);
-    ctx.fillStyle = '#FF5124';
-    ctx.fillRect(0, 1020, 1080, 60);
-    ctx.fillStyle = '#FFFFFF';
-    ctx.font = 'bold 22px system-ui, -apple-system, sans-serif';
-    ctx.fillText('VENDIBOOK', 540, 1056);
-    const link = document.createElement('a');
-    link.download = `vendibook-first-booking-${listing.id}.png`;
-    link.href = canvas.toDataURL('image/png');
-    link.click();
-    trackShareImageDownloaded();
-    toast({ title: '"First Booking Secured" image downloaded' });
-  };
-
   const handleDownloadQr = () => {
     if (!qrCodeDataUrl) return;
     const canvas = document.createElement('canvas');
@@ -686,29 +647,8 @@ const generateStoryImageBlob = (
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-      className="space-y-6 max-w-xl mx-auto"
+      className="space-y-6 mx-auto"
     >
-      {/* HERO */}
-      <div className="text-center pt-2">
-        <motion.div
-          initial={{ scale: 0.6, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          transition={{ delay: 0.1, type: 'spring', stiffness: 220, damping: 18 }}
-          className="relative w-20 h-20 mx-auto mb-5"
-        >
-          <div className="absolute inset-0 rounded-full bg-emerald-500/15 blur-xl" />
-          <div className="relative w-20 h-20 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/30">
-            <Check className="w-10 h-10 text-white" strokeWidth={3} />
-          </div>
-        </motion.div>
-        <h1 className="text-[28px] md:text-[32px] font-semibold tracking-tight mb-2 leading-tight">
-          You're live. Now let's get you booked.
-        </h1>
-        <p className="text-muted-foreground text-base max-w-md mx-auto">
-          Hosts who share within the first 24 hours get up to <span className="font-medium text-foreground">3× more requests</span>.
-        </p>
-      </div>
-
       {/* LISTING PREVIEW CARD — verified before copy/post */}
       <motion.div
         initial={{ opacity: 0, y: 8 }}
@@ -728,6 +668,15 @@ const generateStoryImageBlob = (
         />
       </motion.div>
 
+      <ListingLaunchKit
+        listingId={listing.id} caption={currentCaption} blocked={shareBlocked}
+        linkCopied={linkCopied} captionCopied={captionCopied}
+        onFacebook={() => openShare('facebook')} onCopyLink={handleCopyLink}
+        onCopyCaption={handleCopyCaption} onDownloadStory={handleDownloadStory}
+      />
+      <details className="rounded-2xl border bg-card p-5">
+        <summary className="cursor-pointer text-sm font-semibold">More sharing tools · captions, graphics & QR codes</summary>
+        <div className="mt-6 space-y-6">
       {/* SHARE LINK + PRIMARY ACTIONS */}
       <div className="rounded-2xl border bg-card p-5 space-y-4">
         <div>
@@ -874,7 +823,7 @@ const generateStoryImageBlob = (
           <h2 className="text-sm font-semibold uppercase tracking-wide">Branded graphics</h2>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {/* Now Booking — 1080×1080 */}
           <button
             onClick={handleDownloadNowBooking}
@@ -928,28 +877,7 @@ const generateStoryImageBlob = (
             </div>
           </button>
 
-          {/* First Booking */}
-          <button
-            onClick={handleDownloadFirstBooking}
-            className="group text-left rounded-2xl border bg-card overflow-hidden transition-all hover:shadow-md hover:-translate-y-0.5"
-          >
-            <div className="aspect-square bg-foreground flex flex-col items-center justify-center relative overflow-hidden">
-              <div className="absolute top-0 inset-x-0 h-1 bg-primary" />
-              <div className="text-2xl mb-1">🎉</div>
-              <div className="text-white font-bold text-[11px]">FIRST BOOKING</div>
-              <div className="text-primary font-bold text-[11px]">SECURED</div>
-              <div className="absolute bottom-0 inset-x-0 h-4 bg-primary flex items-center justify-center">
-                <span className="text-white text-[7px] font-bold tracking-widest">VENDIBOOK</span>
-              </div>
-            </div>
-            <div className="p-3 flex items-center justify-between">
-              <div>
-                <div className="font-semibold text-sm">First Booking</div>
-                <div className="text-xs text-muted-foreground">Celebrate your first sale</div>
-              </div>
-              <Download className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors" />
-            </div>
-          </button>
+
         </div>
       </div>
 
@@ -1015,15 +943,8 @@ const generateStoryImageBlob = (
         </Button>
       </div>
 
-      {/* PSYCHOLOGY NUDGE */}
-      <div className="rounded-2xl p-4 flex items-center gap-3 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent border border-primary/20">
-        <div className="w-9 h-9 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
-          <TrendingUp className="w-4.5 h-4.5 text-primary" />
         </div>
-        <p className="text-xs text-foreground/80 leading-relaxed">
-          <span className="font-semibold text-foreground">Tip:</span> Post to your Stories today — listings shared in the first 24 hours convert <span className="font-semibold">3× faster</span>.
-        </p>
-      </div>
+      </details>
 
       {onClose && (
         <div className="text-center pt-2 pb-2">
@@ -1033,8 +954,7 @@ const generateStoryImageBlob = (
             className="text-muted-foreground"
           >
             <MessageCircle className="w-4 h-4 mr-2" />
-            Go to dashboard
-          </Button>
+            Close share kit</Button>
         </div>
       )}
     </motion.div>
