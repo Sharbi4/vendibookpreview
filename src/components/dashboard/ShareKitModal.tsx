@@ -78,7 +78,7 @@ const ShareKitModal = ({ open, onOpenChange, listing }: ShareKitModalProps) => {
   const preflight = useSharePreflight({
     listingId: listing.id,
     title: listing.title,
-    imageUrl: listing.cover_image_url,
+    imageUrl: listing.cover_image_url || listing.image_urls?.[0],
     shareUrl,
     enabled: open,
   });
@@ -234,7 +234,9 @@ const ShareKitModal = ({ open, onOpenChange, listing }: ShareKitModalProps) => {
               <SharePreviewCard
                 tone="dark"
                 title={listing.title}
-                imageUrl={listing.cover_image_url}
+                imageUrl={listing.cover_image_url || listing.image_urls?.[0]}
+                imageUrls={listing.image_urls || []}
+                previewUrl={`${SITE_URL}/listing/${listing.id}`}
                 shareUrl={shareUrl}
                 subtitle={[cityState, priceText].filter(Boolean).join(' · ')}
                 checks={preflight.checks}

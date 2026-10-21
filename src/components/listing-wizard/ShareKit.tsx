@@ -38,6 +38,7 @@ export interface ShareKitListing {
   id: string;
   title: string;
   coverImageUrl: string | null;
+  imageUrls?: string[];
   category: ListingCategory;
   mode: ListingMode;
   address: string | null;
@@ -658,6 +659,8 @@ const generateStoryImageBlob = (
         <SharePreviewCard
           title={listing.title}
           imageUrl={listing.coverImageUrl}
+          imageUrls={listing.imageUrls}
+          previewUrl={`https://vendibook.com/listing/${listing.id}`}
           shareUrl={listingUrl}
           subtitle={[categoryLabel, city, priceText].filter(Boolean).join(' · ')}
           checks={preflight.checks}

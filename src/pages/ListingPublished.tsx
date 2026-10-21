@@ -114,7 +114,8 @@ const ListingPublished: React.FC = () => {
         setListing({
           id: data.id,
           title: data.title,
-          coverImageUrl: data.cover_image_url,
+          coverImageUrl: data.cover_image_url || data.image_urls?.[0] || null,
+          imageUrls: data.image_urls || [],
           category: data.category as ListingCategory,
           mode: data.mode as ListingMode,
           address: data.address,

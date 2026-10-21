@@ -1,9 +1,11 @@
-import { AlertTriangle, CheckCircle2, ImageOff, Loader2, RefreshCw, ShieldCheck, XCircle } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ExternalLink, ImageOff, Loader2, RefreshCw, ShieldCheck, XCircle } from "lucide-react";
 import type { ShareCheck } from "@/lib/share/sharePreflight";
 
 interface SharePreviewCardProps {
   title: string;
   imageUrl?: string | null;
+  imageUrls?: string[];
+  previewUrl?: string;
   shareUrl: string;
   subtitle?: string;
   checks: ShareCheck[];
@@ -35,6 +37,8 @@ const statusIcon = (status: ShareCheck["status"]) => {
 export const SharePreviewCard = ({
   title,
   imageUrl,
+  imageUrls = [],
+  previewUrl,
   shareUrl,
   subtitle,
   checks,
@@ -47,6 +51,8 @@ export const SharePreviewCard = ({
   const dark = tone === "dark";
   const imageCheck = checks.find((c) => c.id === "image");
   const imageBroken = imageCheck?.status === "fail" || imageCheck?.status === "warn";
+  const photos = [...new Set([imageUrl, ...imageUrls].filter((url): url is string => Boolean(url)))];
+  const destination = previewUrl || shareUrl;
 
   return (
     <div
@@ -58,18 +64,18 @@ export const SharePreviewCard = ({
     >
       {/* What the post will look like */}
       <div className="flex gap-3 p-3">
-        <div
+        <a href={destination} target="_blank" rel="noopener noreferrer" aria-label={`Preview ${title}`}
           className={`h-20 w-20 shrink-0 overflow-hidden rounded-xl ${dark ? "bg-white/5 ring-1 ring-white/10" : "bg-muted ring-1 ring-border"} flex items-center justify-center`}
         >
-          {imageUrl && !imageBroken ? (
-            <img src={imageUrl} alt={title} className="h-full w-full object-cover" loading="lazy" />
+          {photos[0] && !imageBroken ? (
+            <img src={photos[0]} alt={title} className="h-full w-full object-cover" loading="lazy" />
           ) : (
             <ImageOff className={`h-6 w-6 ${dark ? "text-white/30" : "text-muted-foreground"}`} />
           )}
-        </div>
+        </a>
         <div className="min-w-0 flex-1 py-0.5">
           <p className={`text-[11px] uppercase tracking-wide ${dark ? "text-white/40" : "text-muted-foreground"}`}>
-            Preview of what people will see
+            Your listing preview
           </p>
           <h3 className={`mt-0.5 line-clamp-2 text-[15px] font-semibold ${dark ? "text-white" : ""}`}>
             {title || "Untitled listing"}
@@ -80,8 +86,22 @@ export const SharePreviewCard = ({
           <p className={`mt-1 truncate font-mono text-[11px] ${dark ? "text-white/40" : "text-muted-foreground"}`}>
             {shareUrl.replace(/^https?:\/\//, "")}
           </p>
+          <a href={destination} target="_blank" rel="noopener noreferrer" className={`mt-3 inline-flex items-center gap-2 text-sm font-semibold underline-offset-4 hover:underline ${dark ? "text-white" : "text-foreground"}`}>
+            Preview listing <ExternalLink className="h-3.5 w-3.5" />
+          </a>
         </div>
       </div>
+
+      {photos.length > 1 && (
+        <div className="grid grid-cols-4 gap-2 px-3 pb-3" aria-label="Listing photos">
+          {photos.slice(0, 4).map((photo, index) => (
+            <a key={photo} href={destination} target="_blank" rel="noopener noreferrer" className="relative aspect-square overflow-hidden rounded-lg bg-muted" aria-label={`View ${title}, photo ${index + 1}`}>
+              <img src={photo} alt={`${title} — photo ${index + 1}`} className="h-full w-full object-cover" loading="lazy" />
+              {index === 3 && photos.length > 4 && <span className="absolute inset-0 flex items-center justify-center bg-black/50 text-sm font-semibold text-white">+{photos.length - 4} photos</span>}
+            </a>
+          ))}
+        </div>
+      )}
 
       {/* Verification results */}
       <div className={`space-y-2 border-t px-3 py-3 ${dark ? "border-white/10" : ""}`}>

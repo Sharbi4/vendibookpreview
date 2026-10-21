@@ -396,7 +396,8 @@ const Rentals = () => {
                                     setShareKitListing({
                                       id: listing.id,
                                       title: listing.title || '',
-                                      coverImageUrl: listing.cover_image_url,
+                                      coverImageUrl: listing.cover_image_url || listing.image_urls?.[0] || null,
+                                      imageUrls: listing.image_urls || [],
                                       category: listing.category as ShareKitListing['category'],
                                       mode: 'rent',
                                       address: listing.address,
