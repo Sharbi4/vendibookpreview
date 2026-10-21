@@ -18,31 +18,35 @@ export function buildWalkthroughCampaignHtml(d: WalkthroughCampaignData): string
     ['Show it live', 'Open the walkthrough at the scheduled time on a phone or computer. Show the layout, equipment and condition, answer questions, and help them decide whether it fits their business.'],
   ];
   const bodyRows = `
-<tr><td style="padding:26px 28px 22px;">
-  <p style="${small}font-weight:700;letter-spacing:2px;color:${MK.orangeOnWhite};text-transform:uppercase;margin-bottom:12px;">Live video walkthroughs</p>
-  <h1 style="font-family:${FONT};font-size:36px;line-height:1.15;letter-spacing:-1px;color:${MK.text};margin:0 0 18px;">Activate live walkthroughs on your listing.</h1>
+<tr><td style="padding:32px 32px 28px;">
+  <p style="${small}border-top:1px solid ${MK.border};padding-top:20px;font-weight:600;letter-spacing:1.8px;color:${MK.orangeOnWhite};text-transform:uppercase;margin-bottom:22px;">Listing tools &nbsp; / &nbsp; Live walkthroughs</p>
+  <h1 style="font-family:${FONT};font-size:34px;font-weight:600;line-height:1.22;letter-spacing:-0.8px;color:${MK.text};margin:0 0 22px;">Activate live walkthroughs<br/>on your listing.</h1>
   <p style="${p}">${d.firstName ? `Hi ${esc(d.firstName)}, ` : ''}Enable live video walkthroughs so buyers and renters can schedule a time to view your listing with you. Show the space, answer questions, and help them decide if it fits their business.</p>
   ${mkButton('Activate live walkthroughs', WALKTHROUGH_SETUP)}
 </td></tr>
-<tr><td><a href="${esc(WALKTHROUGH_SETUP)}"><img src="${WALKTHROUGH_HERO}" alt="Activate walkthroughs: a host shows a food truck kitchen to a buyer on a phone video call" width="600" height="400" border="0" style="display:block;width:100%;max-width:600px;height:auto;border:0;" /></a></td></tr>
-<tr><td style="padding:7px 28px 0;"><p style="${small}">Illustrative video call.</p></td></tr>
-<tr><td style="padding:26px 28px 12px;">
-  <h2 style="font-family:${FONT};font-size:24px;line-height:1.3;color:${MK.text};margin:0 0 14px;">Your listing. Your available hours.</h2>
+<tr><td style="padding:0 20px;"><a href="${esc(WALKTHROUGH_SETUP)}"><img src="${WALKTHROUGH_HERO}" alt="Activate walkthroughs: a host shows a food truck kitchen to a buyer on a phone video call" width="560" border="0" style="display:block;width:100%;max-width:560px;height:auto;border:0;border-radius:12px;" /></a></td></tr>
+<tr><td style="padding:10px 32px 4px;"><p style="${small}">A closer look before the visit. &nbsp;·&nbsp; Illustrative video call.</p></td></tr>
+<tr><td style="padding:32px 32px 12px;">
+  <p style="${small}font-weight:600;letter-spacing:1.8px;text-transform:uppercase;color:${MK.orangeOnWhite};margin-bottom:10px;">Getting started</p>
+  <h2 style="font-family:${FONT};font-size:25px;font-weight:600;line-height:1.3;letter-spacing:-0.4px;color:${MK.text};margin:0 0 18px;">Your listing. Your schedule.</h2>
   <p style="${p}">For sale or for rent, give people a way to meet you and see what you’re offering before they travel. You control your available times, meeting length, advance notice and blocked dates.</p>
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${steps.map(([title, body], i) => `<tr><td width="36" valign="top" style="padding:12px 12px 18px 0;font-family:${FONT};font-size:20px;font-weight:700;color:${MK.orangeOnWhite};">0${i + 1}</td><td style="padding:12px 0 18px;border-bottom:1px solid ${MK.border};"><h3 style="font-family:${FONT};font-size:17px;line-height:1.4;color:${MK.text};margin:0 0 6px;">${title}</h3><p style="${p}margin:0;">${body}</p></td></tr>`).join('')}</table>
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${steps.map(([title, body], i) => `<tr><td width="38" valign="top" style="padding:22px 14px 22px 0;border-top:1px solid ${MK.border};font-family:${FONT};font-size:13px;line-height:26px;font-weight:600;color:${MK.orangeOnWhite};">0${i + 1}</td><td style="padding:22px 0;border-top:1px solid ${MK.border};"><h3 style="font-family:${FONT};font-size:17px;font-weight:600;line-height:1.5;color:${MK.text};margin:0 0 7px;">${title}</h3><p style="${p}font-size:14px;margin:0;">${body}</p></td></tr>`).join('')}</table>
 </td></tr>
-<tr><td style="padding:12px 28px 28px;">
-  ${mkButton('Set my walkthrough hours', WALKTHROUGH_SETUP)}
+<tr><td style="padding:12px 32px 32px;">
+  ${mkButton('Set my walkthrough hours', WALKTHROUGH_SETUP, { ghost: true })}
   <p style="${small}margin-top:18px;">Walkthroughs are recorded, with consent requested before joining. A video walkthrough helps people learn about a listing; it does not replace an in-person inspection or the separate purchase or rental agreement.</p>
 </td></tr>
-<tr><td bgcolor="${MK.surfaceMuted}" style="background-color:${MK.surfaceMuted};padding:28px;">
-  <p style="${small}font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:10px;">Also on Vendibook</p>
-  <h2 style="font-family:${FONT};font-size:23px;line-height:1.3;color:${MK.text};margin:0 0 12px;">See the buying journey.</h2>
-  <p style="${p}">Selling? Watch our short overview of what happens after a purchase, from invoice to handoff.</p>
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td align="center"><a href="${WALKTHROUGH_SHORT}"><img src="https://i.ytimg.com/vi/CuMMcINEezs/oardefault.jpg" alt="Watch the Vendibook YouTube Short about the buying journey" width="225" height="400" border="0" style="display:block;width:225px;max-width:100%;height:auto;border:0;border-radius:14px;" /></a></td></tr></table>
-  <p style="text-align:center;${p}margin:18px 0 0;"><a href="${WALKTHROUGH_SHORT}" style="color:${MK.orangeOnWhite};font-weight:700;text-decoration:underline;">▶ Watch the Short on YouTube</a></p>
-</td></tr>
-<tr><td style="padding:26px 28px;"><p style="${p}margin:0;">Questions about getting set up? Reply to this email. We’re happy to help.<br/><br/><strong>The Vendibook team</strong></p></td></tr>`;
+<tr><td style="padding:0 20px 28px;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="${MK.surfaceMuted}" style="background:${MK.surfaceMuted};border:1px solid ${MK.border};border-radius:12px;"><tr>
+    <td width="100" valign="top" style="padding:24px 0 24px 20px;"><a href="${WALKTHROUGH_SHORT}"><img src="https://i.ytimg.com/vi/CuMMcINEezs/oardefault.jpg" alt="Watch the Vendibook buying journey Short" width="80" border="0" style="display:block;width:80px;height:auto;border:0;border-radius:8px;" /></a></td>
+    <td valign="middle" style="padding:24px 20px 24px 16px;">
+      <p style="${small}font-size:10px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;">The buying journey</p>
+      <h2 style="font-family:${FONT};font-size:19px;font-weight:600;line-height:1.35;color:${MK.text};margin:0 0 10px;">From purchase to handoff.</h2>
+      <p style="${p}font-size:13px;margin-bottom:12px;">Selling? See what happens after a purchase in our short overview.</p>
+      <a href="${WALKTHROUGH_SHORT}" style="font-family:${FONT};font-size:13px;line-height:1.6;color:${MK.orangeOnWhite};font-weight:600;text-decoration:underline;">Watch on YouTube &#8599;</a>
+    </td>
+  </tr></table>
+</td></tr><tr><td style="padding:26px 28px;"><p style="${p}margin:0;">Questions about getting set up? Reply to this email. We’re happy to help.<br/><br/><strong>The Vendibook team</strong></p></td></tr>`;
   return marketingShell({ title: WALKTHROUGH_SUBJECT, preheader: WALKTHROUGH_PREHEADER, bodyRows, unsubscribeUrl: d.unsubscribeUrl, footerNote: 'You’re receiving this product update because you have an active listing on Vendibook.' });
 }
 

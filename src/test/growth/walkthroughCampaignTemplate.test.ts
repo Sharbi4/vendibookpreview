@@ -7,7 +7,7 @@ describe('walkthrough activation marketing email', () => {
     const html = buildWalkthroughCampaignHtml(data);
     const text = buildWalkthroughCampaignText(data);
     expect(WALKTHROUGH_SETUP).toContain('/dashboard/account/scheduling?');
-    expect(html).toContain('Activate video walkthroughs');
+    expect(html).toContain('Activate live walkthroughs');
     expect(html).toContain(WALKTHROUGH_SHORT);
     expect(text).toContain(WALKTHROUGH_SHORT);
     expect(text).toContain(WALKTHROUGH_SETUP);
