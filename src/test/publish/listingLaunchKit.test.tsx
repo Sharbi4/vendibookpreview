@@ -17,11 +17,13 @@ describe('listing launch kit', () => {
  it('opens optional upgrades only on request and keeps checkout tied to the listing', () => {
   render(<ListingLaunchKit {...props} />);
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
-  fireEvent.click(screen.getByRole('button', {name:'Explore upgrades'}));
+  fireEvent.click(screen.getByRole('button', {name:/Explore Featured/}));
   expect(screen.getByRole('dialog')).toBeInTheDocument();
-  expect(screen.getByRole('link', {name:'Review Featured'})).toHaveAttribute('href','/checkout/product/boost-featured-30?listing_id=listing-123');
-  expect(screen.getByRole('link', {name:'Explore Vendibook Pro'})).toHaveAttribute('href','/dashboard/buyermatch/membership');
+  expect(screen.getByRole('link', {name:'Review Featured pricing'})).toHaveAttribute('href','/checkout/product/boost-featured-30?listing_id=listing-123');
+
   fireEvent.click(screen.getByRole('button', {name:'Continue with my listing'}));
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', {name:/Explore Pro/}));
+  expect(screen.getByRole('link', {name:'View Pro membership'})).toHaveAttribute('href','/dashboard/buyermatch/membership');
  });
 });

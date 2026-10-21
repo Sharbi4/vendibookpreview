@@ -1,9 +1,7 @@
 import { useState } from 'react';
+import { ListingUpgradeOptions } from './ListingUpgradeOptions';
 import { ArrowUpRight, Check, Copy, Download, Facebook, Instagram, Video, ArrowRight, Megaphone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { productCheckoutPath } from '@/lib/payments/hostedCheckout';
-import { ACTIVE_PRODUCT_SLUGS } from '@/lib/monetization/catalogPricing';
 
 interface Props {
   listingId: string;
@@ -20,7 +18,6 @@ interface Props {
 /** Focused launch actions; publishing and purchases remain explicit user actions. */
 export function ListingLaunchKit(props: Props) {
   const [instagramOpen, setInstagramOpen] = useState(false);
-  const [promotionOpen, setPromotionOpen] = useState(false);
   return (
     <section className="sale-light overflow-hidden rounded-[28px] border border-[#e6dfd5] shadow-[0_18px_60px_-35px_rgba(43,31,20,0.22)]" style={{ background: "#fffdf9" }} aria-label="Listing launch kit">
       <div className="p-6 sm:p-10">
@@ -62,34 +59,8 @@ export function ListingLaunchKit(props: Props) {
           </div>
         </div>
       </div>
-      <div className="flex flex-wrap items-center justify-between gap-4 p-6 sm:px-10 sm:pb-8">
-        <div><p className="text-sm font-semibold">Want to take your listing further?</p><p className="mt-1 text-xs text-muted-foreground">Explore optional Featured and Vendibook Pro options.</p></div>
-        <Button variant="ghost" onClick={() => setPromotionOpen(true)} className="gap-2">Explore upgrades <ArrowUpRight /></Button>
-      </div>
-      <Dialog open={promotionOpen} onOpenChange={setPromotionOpen}>
-        <DialogContent className="sale-light max-h-[90dvh] overflow-y-auto rounded-[28px] border-[#e6dfd5] p-6 shadow-2xl sm:max-w-2xl sm:p-9">
-          <DialogHeader className="text-left">
-            <p className="mb-2 text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Optional upgrades</p>
-            <DialogTitle className="text-2xl font-semibold tracking-tight sm:text-3xl">Choose your next step.</DialogTitle>
-            <DialogDescription className="pt-2 leading-6">Your listing is already live. Sharing and setting up walkthroughs do not require an upgrade.</DialogDescription>
-          </DialogHeader>
-          <div className="my-3 grid gap-4 sm:grid-cols-2">
-            <div className="flex flex-col rounded-[20px] border border-[#e4ddd3] bg-white p-6">
-              <Megaphone className="mb-5 h-6 w-6 text-primary" />
-              <h3 className="text-lg font-semibold">Feature this listing</h3>
-              <p className="mb-6 mt-2 flex-1 text-sm leading-6 text-muted-foreground">Explore paid featured placement for this listing. Review the duration, current price, and tax before purchasing.</p>
-              <Button asChild><a href={productCheckoutPath(ACTIVE_PRODUCT_SLUGS.featuredBoost, props.listingId)}>Review Featured <ArrowRight /></a></Button>
-            </div>
-            <div className="flex flex-col rounded-[20px] border border-[#e4ddd3] bg-[#f0ebe4] p-6">
-              <span className="mb-5 text-xs font-semibold uppercase tracking-[0.2em] text-primary">Vendibook Pro</span>
-              <h3 className="text-lg font-semibold">Explore your Pro membership</h3>
-              <p className="mb-6 mt-2 flex-1 text-sm leading-6 text-muted-foreground">Explore Pro tools and plan details for your business. Review what is included and the subscription terms before joining.</p>
-              <Button variant="outline" asChild><a href="/dashboard/buyermatch/membership">Explore Vendibook Pro <ArrowRight /></a></Button>
-            </div>
-          </div>
-          <Button variant="ghost" onClick={() => setPromotionOpen(false)}>Continue with my listing</Button>
-        </DialogContent>
-      </Dialog>
+      <ListingUpgradeOptions listingId={props.listingId} />
+
     </section>
   );
 }
