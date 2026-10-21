@@ -21,7 +21,8 @@ export interface AuditEntry {
     | "product"
     | "plan"
     | "webhook"
-    | "dispute";
+    | "dispute"
+    | "monetization_purchase";
   entityId?: string | null;
   provider?: string | null;
   reference?: string | null;
