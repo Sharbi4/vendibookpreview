@@ -21,7 +21,7 @@ export function ListingLaunchKit(props: Props) {
   return (
     <section className="sale-light overflow-hidden rounded-[28px] border border-[#e6dfd5] shadow-[0_18px_60px_-35px_rgba(43,31,20,0.22)]" style={{ background: "#fffdf9" }} aria-label="Listing launch kit">
       <div className="p-6 sm:p-10">
-        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">01 / Share your listing</p>
+        <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-primary">Share your listing</p>
         <h2 className="mt-4 max-w-lg text-[28px] font-semibold leading-[1.15] tracking-[-0.035em] sm:text-[36px]">Put your listing in the right hands.</h2>
         <p className="mt-3 max-w-lg text-sm leading-6 text-muted-foreground">Start with the people who already know your business. Your photos, listing link, and ready-to-use caption are all here.</p>
         <div className="mt-6 grid gap-3 sm:grid-cols-3">
@@ -51,7 +51,7 @@ export function ListingLaunchKit(props: Props) {
         <div className="flex items-start gap-4">
           <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-[#ff8159]"><Video className="h-5 w-5" /></div>
           <div className="min-w-0 flex-1">
-            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#c8c1b8]">02 / Invite a closer look</p>
+            <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#c8c1b8]">Invite a closer look</p>
             <h3 className="mt-3 text-[26px] font-semibold leading-tight tracking-[-0.025em]">Show your listing live.</h3>
             <p className="mt-2 text-sm leading-6 text-[#c8c1b8]">Let buyers and renters book a video walkthrough. Show the layout, answer questions, and help them plan their next step before they travel.</p>
             <Button asChild className="mt-5 h-auto min-h-11 whitespace-normal text-left"><a href="/dashboard/account/scheduling">Set up live walkthroughs <ArrowRight /></a></Button>
