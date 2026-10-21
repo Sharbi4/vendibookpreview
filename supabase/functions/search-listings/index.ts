@@ -18,6 +18,7 @@ import {
   inferCategoryFromQuery,
   normalizeQuery,
 } from '../_shared/categoryIntent.ts';
+import { geocodeAddress } from '../_shared/geo.ts';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -76,8 +77,8 @@ Deno.serve(async (req) => {
       query,
       mode,
       category,
-      latitude,
-      longitude,
+      latitude: requestLatitude,
+      longitude: requestLongitude,
       radius_miles = 100,
       start_date,
       end_date,
@@ -97,6 +98,9 @@ Deno.serve(async (req) => {
       page_size = 20,
       sort_by = 'featured',
     } = body;
+    // Mutable: a coordinate-less city/ZIP is geocoded below.
+    let latitude = requestLatitude;
+    let longitude = requestLongitude;
 
     // ---- Keyword intent ------------------------------------------------------
     // Category intent comes from the shared canonical mapping so the edge
@@ -119,7 +123,7 @@ Deno.serve(async (req) => {
     const locationScoped =
       !!location_scoped && latitude !== undefined && longitude !== undefined;
 
-    const hasCoords = latitude !== undefined && longitude !== undefined
+    let hasCoords = latitude !== undefined && longitude !== undefined
       && Number.isFinite(latitude) && Number.isFinite(longitude);
 
     // Structured location parsed from either the explicit location text or,
@@ -145,6 +149,19 @@ Deno.serve(async (req) => {
     const hasStructuredLocation = !!(parsedLocation.city || parsedLocation.state || parsedLocation.zip);
     // State-only searches ("Arizona", "AZ") are a structured filter, not a radius search.
     const stateOnlySearch = parsedLocation.kind === 'state';
+
+    // A city or ZIP with no coordinates (typed text, city-guide links, saved
+    // searches) could only match the literal city name, so a rental 12 miles
+    // away in Lexington, SC was invisible to "Columbia, SC". Geocode it once so
+    // it becomes the same radius search as an autocomplete pick.
+    if (!hasCoords && hasStructuredLocation && !stateOnlySearch && parsedLocation.label) {
+      const point = await geocodeAddress(parsedLocation.label);
+      if (point) {
+        latitude = point.lat;
+        longitude = point.lng;
+        hasCoords = true;
+      }
+    }
 
     const requestedRadius = Math.max(1, Math.min(radius_miles, MAX_RADIUS_MILES));
 
