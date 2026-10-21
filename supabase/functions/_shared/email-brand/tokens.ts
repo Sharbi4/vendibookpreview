@@ -28,9 +28,9 @@ export const PRIVACY_URL = `${SITE_URL}/legal/privacy`
 /**
  * Physical mailing address — MARKETING FOOTERS ONLY (CAN-SPAM).
  * Source of truth mirrors `_shared/marketing-templates/constants.ts`.
- * NOTE: no ZIP code is configured; see the Phase 2 report.
+ * Owner-provided street address; ZIP verified against City of Tucson records.
  */
-export const MAILING_ADDRESS = 'Vendibook · 1 S Church St, Tucson, AZ'
+export const MAILING_ADDRESS = 'Vendibook · 1 S Church Ave, Tucson, AZ 85701'
 
 // ---- Canonical logo --------------------------------------------------
 // Hosted on the email-assets storage bucket (CDN-cached, ~170KB).

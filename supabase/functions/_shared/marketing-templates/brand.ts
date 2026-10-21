@@ -57,10 +57,10 @@ export const FONT = FONT_STACK;
  * REQUIRED CONFIG: `MARKETING_MAILING_ADDRESS`
  * Full postal address incl. ZIP, e.g.
  *   "Vendibook · 1 S Church St, Suite 000, Tucson, AZ 85701"
- * Set it in Project Settings → Secrets. Until it is set we fall back to
- * the known street address (no ZIP configured — do not invent one).
+ * Set it in Project Settings → Secrets to override the owner-provided address.
+ * Default address confirmed by the owner; ZIP verified against City of Tucson records.
  */
-export const MAILING_ADDRESS_FALLBACK = "Vendibook · 1 S Church St, Tucson, AZ";
+export const MAILING_ADDRESS_FALLBACK = "Vendibook · 1 S Church Ave, Tucson, AZ 85701";
 export function mailingAddress(): string {
   const configured = (globalThis as any).Deno?.env?.get?.("MARKETING_MAILING_ADDRESS");
   return (configured && String(configured).trim()) || MAILING_ADDRESS_FALLBACK;
