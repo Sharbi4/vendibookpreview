@@ -1,7 +1,7 @@
 import { MK, FONT, esc, mkButton, marketingShell, SITE_URL, mailingAddress } from './brand.ts';
 
 export const WALKTHROUGH_CAMPAIGN_ID = '2026-10-activate-video-walkthroughs';
-export const WALKTHROUGH_SUBJECT = 'Let them see your listing. Live.';
+export const WALKTHROUGH_SUBJECT = 'Activate live walkthroughs on your listing.';
 export const WALKTHROUGH_PREHEADER = 'Turn on video walkthroughs and let buyers and renters book a time with you.';
 export const WALKTHROUGH_HERO = `${SITE_URL}/images/email/walkthrough-phone-2026-10.png`;
 export const WALKTHROUGH_SHORT = 'https://www.youtube.com/shorts/CuMMcINEezs';
@@ -19,10 +19,10 @@ export function buildWalkthroughCampaignHtml(d: WalkthroughCampaignData): string
   ];
   const bodyRows = `
 <tr><td style="padding:26px 28px 22px;">
-  <p style="${small}font-weight:700;letter-spacing:2px;color:${MK.orangeOnWhite};text-transform:uppercase;margin-bottom:12px;">A closer look. A real conversation.</p>
-  <h1 style="font-family:${FONT};font-size:36px;line-height:1.15;letter-spacing:-1px;color:${MK.text};margin:0 0 18px;">Let them see your listing.<br/>Live.</h1>
-  <p style="${p}">${d.firstName ? `Hi ${esc(d.firstName)}, ` : ''}Your photos start the conversation. A live walkthrough lets someone see the details, ask questions, and picture their business in your space.</p>
-  ${mkButton('Activate video walkthroughs', WALKTHROUGH_SETUP)}
+  <p style="${small}font-weight:700;letter-spacing:2px;color:${MK.orangeOnWhite};text-transform:uppercase;margin-bottom:12px;">Live video walkthroughs</p>
+  <h1 style="font-family:${FONT};font-size:36px;line-height:1.15;letter-spacing:-1px;color:${MK.text};margin:0 0 18px;">Activate live walkthroughs on your listing.</h1>
+  <p style="${p}">${d.firstName ? `Hi ${esc(d.firstName)}, ` : ''}Enable live video walkthroughs so buyers and renters can schedule a time to view your listing with you. Show the space, answer questions, and help them decide if it fits their business.</p>
+  ${mkButton('Activate live walkthroughs', WALKTHROUGH_SETUP)}
 </td></tr>
 <tr><td><a href="${esc(WALKTHROUGH_SETUP)}"><img src="${WALKTHROUGH_HERO}" alt="Activate walkthroughs: a host shows a food truck kitchen to a buyer on a phone video call" width="600" height="400" border="0" style="display:block;width:100%;max-width:600px;height:auto;border:0;" /></a></td></tr>
 <tr><td style="padding:7px 28px 0;"><p style="${small}">Illustrative video call.</p></td></tr>
@@ -47,7 +47,7 @@ export function buildWalkthroughCampaignHtml(d: WalkthroughCampaignData): string
 }
 
 export function buildWalkthroughCampaignText(d: WalkthroughCampaignData): string {
-  return `${d.firstName ? `Hi ${d.firstName},\n\n` : ''}Let them see your listing. Live.
+  return `${d.firstName ? `Hi ${d.firstName},\n\n` : ''}Activate live walkthroughs on your listing.
 
 Turn on video walkthroughs and let buyers and renters book a time with you. Show your layout, equipment and condition, answer questions, and help people decide whether it fits their business before they travel.
 
@@ -55,7 +55,7 @@ Turn on video walkthroughs and let buyers and renters book a time with you. Show
 2. People book an available time from your published listings. You receive the booking by email and in your dashboard, including Messages → Walkthrough requests.
 3. Open the walkthrough at the scheduled time on your phone or computer and show it live.
 
-Activate video walkthroughs: ${WALKTHROUGH_SETUP}
+Activate live walkthroughs: ${WALKTHROUGH_SETUP}
 
 You control your available hours, meeting length, advance notice and blocked dates. Walkthroughs are recorded, with consent requested before joining. They do not replace an in-person inspection or a separate purchase or rental agreement.
 
