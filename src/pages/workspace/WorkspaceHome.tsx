@@ -1,4 +1,5 @@
 import { useMemo, type ReactNode } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Link, Navigate, useSearchParams } from 'react-router-dom';
 import { ArrowRight, ChevronDown, Crown, Image as ImageIcon } from 'lucide-react';
 import WorkspaceShell from '@/components/workspace/WorkspaceShell';
@@ -45,6 +46,7 @@ import { legacyDashboardRedirect } from '@/lib/workspace/legacyDashboardRedirect
 import { isListingFeatured } from '@/lib/featured';
 import { productCheckoutPath } from '@/lib/payments/hostedCheckout';
 import { formatWalkthroughTime, walkthroughDisplayStatus } from '@/lib/videoWalkthroughs';
+import { supabase } from '@/integrations/supabase/client';
 import type { Tables } from '@/integrations/supabase/types';
 
 type Listing = Tables<'listings'>;
@@ -149,6 +151,19 @@ export default function WorkspaceHome() {
   const listings = hostListings.listings;
   const activeListings = useMemo(() => listings.filter((l) => l.status !== 'archived'), [listings]);
   const live = activeListings.filter((l) => l.status === 'published');
+  const walkthroughSetup = useQuery({
+    queryKey: ['seller-walkthrough-setup', user?.id],
+    enabled: Boolean(user && live.length),
+    queryFn: async () => {
+      const [settings, hours] = await Promise.all([
+        supabase.from('seller_video_settings').select('enabled').eq('user_id', user!.id).maybeSingle(),
+        supabase.from('seller_video_availability').select('id').eq('seller_id', user!.id).eq('active', true).limit(1),
+      ]);
+      if (settings.error) throw settings.error;
+      if (hours.error) throw hours.error;
+      return { ready: settings.data?.enabled === true && Boolean(hours.data?.length) };
+    },
+  });
   const drafts = activeListings.filter((l) => l.status === 'draft');
   const paused = activeListings.filter((l) => l.status === 'paused');
   const signalIds = useMemo(() => activeListings.slice(0, SIGNAL_LISTING_CAP).map((l) => l.id), [activeListings]);
@@ -209,6 +224,9 @@ export default function WorkspaceHome() {
     if (!paypal.isLoading && !paypal.lastRefreshError && !paypal.isReady && live.some((l) => l.mode === 'sale'))
       items.push({ id: 'paypal', title: 'Connect PayPal to accept online sale payments', detail: 'Buyers can’t pay online for your sale listings until it’s connected.', to: '/dashboard/payments/setup', cta: 'Connect' });
 
+    if (live.length && walkthroughSetup.data && !walkthroughSetup.data.ready)
+      items.push({ id: 'walkthrough-setup', title: 'Turn on video walkthroughs', detail: 'Set available hours so buyers can book directly with you.', to: '/dashboard/account/scheduling', cta: 'Set hours' });
+
     walkthroughs
       .filter((w) => ['scheduled', 'rescheduled'].includes(w.status) && Date.parse(w.ends_at) > now)
       .sort((a, b) => Date.parse(a.starts_at) - Date.parse(b.starts_at))
@@ -231,7 +249,7 @@ export default function WorkspaceHome() {
       items.push({ id: 'profile', title: 'Add your name and photo', detail: 'People reply faster when they know who they’re dealing with.', to: '/dashboard/account', cta: 'Update' });
 
     return items;
-  }, [tx.transactions, hostOffers.pendingOffers, buyerOffers.counteredOffers, commerce.data, user?.id, hostBookings.bookings, handoff.data, totals.available, paypal.isLoading, paypal.lastRefreshError, paypal.isReady, live, walkthroughs, unread, drafts, shopperBookings.bookings, profile?.full_name, profile?.avatar_url]);
+  }, [tx.transactions, hostOffers.pendingOffers, buyerOffers.counteredOffers, commerce.data, user?.id, hostBookings.bookings, handoff.data, totals.available, paypal.isLoading, paypal.lastRefreshError, paypal.isReady, live, walkthroughSetup.data, walkthroughs, unread, drafts, shopperBookings.bookings, profile?.full_name, profile?.avatar_url]);
 
   const attentionLoading = hostListings.isLoading || tx.isLoading || hostOffers.isLoading || hostBookings.isLoading || inbox.isLoading || walkthroughsLoading;
   const failed = [
@@ -241,10 +259,12 @@ export default function WorkspaceHome() {
     commerce.isError && 'invoices',
     inbox.isError && 'messages',
     hostListings.isError && 'listings',
+    walkthroughSetup.isError && 'walkthrough settings',
   ].filter(Boolean) as string[];
   const retryAll = () => {
     void tx.refresh(); void hostOffers.refetch(); void buyerOffers.refetch(); void hostBookings.refetch();
     void shopperBookings.refetch(); void commerce.refetch(); void inbox.refetch(); void hostListings.refetch();
+    void walkthroughSetup.refetch();
   };
 
   const recent = useMemo(
@@ -408,6 +428,15 @@ export default function WorkspaceHome() {
 
             {/* Main column */}
             <div className={ws.stack + ' min-w-0'}>
+              {live.length > 0 && walkthroughSetup.data && !walkthroughSetup.data.ready && (
+                <section className={ws.surface + ' flex flex-wrap items-center justify-between gap-4 p-5 sm:p-6'} aria-label="Enable walkthrough bookings">
+                  <div>
+                    <h2 className="text-[16px] font-semibold">Let buyers book a video walkthrough</h2>
+                    <p className="mt-1 text-[13px] text-[#5E5953]">Turn on walkthroughs and add your available hours. Buyers can then schedule directly from your live listings.</p>
+                  </div>
+                  <Link to="/dashboard/account/scheduling" className={ws.actionLink}>Set walkthrough hours <ArrowRight aria-hidden="true" className="h-4 w-4" /></Link>
+                </section>
+              )}
               {/* Your listings: small cards; the full view lives on Listings */}
               {showSeller && (
                 <section aria-labelledby="home-listings">

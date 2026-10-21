@@ -1,5 +1,6 @@
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.57.2';
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts';
+import { notifyUser } from '../_shared/notify.ts';
 
 const cors = {
   'Access-Control-Allow-Origin': '*',
@@ -45,11 +46,10 @@ Deno.serve(async (req) => {
 
     // In-app notification goes to the other participant — the actor already knows.
     const otherId = user.id === w.buyer_id ? w.seller_id : w.buyer_id;
-    const { data: n } = await admin
-      .from('notifications')
-      .insert({ user_id: otherId, type: `walkthrough_${action}`, title, message, link })
-      .select()
-      .single();
+    await notifyUser(admin, {
+      userId: otherId, type: `walkthrough_${action}`, title, message, link,
+      dedupeKey: `walkthrough-${w.id}-${action}-${w.updated_at}`,
+    });
 
     // Both sides receive the meeting email so each has the link, time and listing.
     const { data: people } = await admin
@@ -63,8 +63,11 @@ Deno.serve(async (req) => {
     const sendTo = async (role: 'buyer' | 'seller') => {
       const me = role === 'buyer' ? buyer : seller;
       const them = role === 'buyer' ? seller : buyer;
-      if (!me?.email) return;
-      await invokeTransactionalEmail({
+      if (!me?.email) {
+        if (role === 'seller') throw new Error('Seller email unavailable');
+        return;
+      }
+      const { error } = await invokeTransactionalEmail({
         templateName: 'video-walkthrough-scheduled',
         recipientEmail: me.email,
         idempotencyKey: `walkthrough-${w.id}-${action}-${role}-${w.updated_at}`,
@@ -86,11 +89,16 @@ Deno.serve(async (req) => {
         },
         metadata: { walkthrough_id: w.id, action, role, site: SITE },
       });
+      if (error) throw error;
     };
 
-    await Promise.allSettled([sendTo('buyer'), sendTo('seller')]);
+    const deliveries = await Promise.allSettled([sendTo('buyer'), sendTo('seller')]);
+    if (deliveries.some(result => result.status === 'rejected')) {
+      console.error('[video-walkthrough-notify] delivery failed', { walkthroughId: w.id, action });
+      return new Response(JSON.stringify({ error: 'email_delivery_failed' }), { status: 502, headers: cors });
+    }
 
-    return new Response(JSON.stringify({ success: true, notification_id: n?.id }), { headers: cors });
+    return new Response(JSON.stringify({ success: true }), { headers: cors });
   } catch (e) {
     console.error('[video-walkthrough-notify]', e instanceof Error ? e.message : 'failed');
     return new Response(JSON.stringify({ error: 'notification_failed' }), { status: 500, headers: cors });

@@ -31,7 +31,16 @@ export default function WalkthroughSettings() {
       .finally(() => { if (!cancelled) setLoading(false); });
     return () => { cancelled = true; };
   }, [user?.id, retry]);
-  const save = async () => { if(!user) return; setSaving(true); try {
+  const save = async () => { if(!user) return;
+    if (settings.enabled && !windows.some(w => w.active && w.start_local_time < w.end_local_time)) {
+      toast.error('Add at least one available day and time before turning on walkthroughs.');
+      return;
+    }
+    if (windows.some(w => w.active && w.start_local_time >= w.end_local_time)) {
+      toast.error('Each walkthrough window must end after it starts.');
+      return;
+    }
+    setSaving(true); try {
     const { error } = await (supabase.from('seller_video_settings') as any).upsert({ user_id:user.id,...settings }); if(error) throw error;
     await (supabase.from('seller_video_availability') as any).delete().eq('seller_id',user.id);
     if(windows.length) { const { error:e }=await (supabase.from('seller_video_availability') as any).insert(windows.map(({weekday,start_local_time,end_local_time,active})=>({seller_id:user.id,weekday,start_local_time,end_local_time,active}))); if(e) throw e; }
@@ -42,7 +51,7 @@ export default function WalkthroughSettings() {
   if (loading) return <p role="status">Loading saved availability…</p>;
   if (loadError) return <p role="alert">Saved availability could not be loaded. <button onClick={() => setRetry(n => n + 1)}>Retry</button></p>;
   return <div className="walkthrough-settings">
-    <div className="walkthrough-setting-lead"><Video/><div><h2>Video walkthroughs</h2><p>Meet serious buyers live inside Vendibook.</p></div><label className="walkthrough-switch"><input type="checkbox" aria-label="Enable video walkthroughs" checked={settings.enabled} onChange={e=>setSettings(s=>({...s,enabled:e.target.checked}))}/><span/></label></div>
+    <div className="walkthrough-setting-lead"><Video/><div><h2>Video walkthroughs</h2><p>Meet serious buyers live inside Vendibook. Once enabled with available hours, buyers can book from your published listings; you’ll receive the booking in your dashboard and by email.</p></div><label className="walkthrough-switch"><input type="checkbox" aria-label="Enable video walkthroughs" checked={settings.enabled} onChange={e=>setSettings(s=>({...s,enabled:e.target.checked}))}/><span/></label></div>
     <div className="walkthrough-setting-grid">
       <label>Timezone<select value={settings.timezone} onChange={e=>setSettings(s=>({...s,timezone:e.target.value}))}><option value={settings.timezone}>{settings.timezone}</option><option value="America/Phoenix">America/Phoenix</option><option value="America/Los_Angeles">America/Los_Angeles</option><option value="America/Denver">America/Denver</option><option value="America/Chicago">America/Chicago</option><option value="America/New_York">America/New_York</option></select></label>
       <label>Duration<select value={settings.default_duration_minutes} onChange={e=>setSettings(s=>({...s,default_duration_minutes:Number(e.target.value)}))}>{[15,20,30].map(v=><option key={v} value={v}>{v} minutes</option>)}</select></label>

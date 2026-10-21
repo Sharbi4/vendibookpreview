@@ -39,58 +39,18 @@ const renderForm = () =>
 
 afterEach(() => {
   cleanup();
+  sessionStorage.clear();
   mocks.user = null;
   vi.clearAllMocks();
 });
 
-describe('MessageHostForm guest inquiry', () => {
-  it('lets a logged-out buyer ask a question without being sent to sign in', async () => {
-    mocks.insert.mockResolvedValue({ error: null });
-    mocks.invoke.mockResolvedValue({ data: { success: true }, error: null });
+describe('MessageHostForm seller routing', () => {
+  it('preserves a guest walkthrough draft for direct messaging after sign-in', () => {
     renderForm();
-
-    const ask = screen.getByRole('button', { name: /ask the seller/i });
-    expect(ask).toBeDisabled();
-
-    fireEvent.change(screen.getByPlaceholderText(/your email/i), { target: { value: 'buyer@example.org' } });
-    fireEvent.change(screen.getByPlaceholderText(/^name$/i), { target: { value: 'Pat Buyer' } });
-    fireEvent.click(ask);
-
-    await waitFor(() => expect(screen.getByText(/question sent/i)).toBeInTheDocument());
-
-    expect(mocks.insert).toHaveBeenCalledTimes(1);
-    const row = mocks.insert.mock.calls[0][0];
-    expect(row).toMatchObject({
-      listing_id: 'listing-1',
-      host_id: 'host-1',
-      email: 'buyer@example.org',
-      name: 'Pat Buyer',
-      phone: null,
-      source: 'guest_inquiry',
-    });
-    expect(row.message).toContain('Coffee Trailer');
-    expect(row.id).toMatch(/^[0-9a-f-]{36}$/);
-    expect(mocks.invoke).toHaveBeenCalledWith('notify-listing-lead', { body: { lead_id: row.id } });
-    expect(mocks.trackHostContacted).toHaveBeenCalledWith('listing-1');
-    expect(mocks.navigate).not.toHaveBeenCalled();
-  });
-
-  it('does not save a lead without a valid email', async () => {
-    renderForm();
-    fireEvent.change(screen.getByPlaceholderText(/your email/i), { target: { value: 'not-an-email' } });
-    fireEvent.click(screen.getByRole('button', { name: /ask the seller/i }));
-
-    await waitFor(() => expect(mocks.toast).toHaveBeenCalled());
-    expect(mocks.insert).not.toHaveBeenCalled();
-  });
-
-  it('silently drops submissions that fill the hidden honeypot field', async () => {
-    const { container } = renderForm();
-    fireEvent.change(screen.getByPlaceholderText(/your email/i), { target: { value: 'bot@example.org' } });
-    fireEvent.change(container.querySelector('input[name="website"]') as HTMLInputElement, { target: { value: 'spam.example' } });
-    fireEvent.click(screen.getByRole('button', { name: /ask the seller/i }));
-
-    await waitFor(() => expect(screen.getByText(/question sent/i)).toBeInTheDocument());
+    fireEvent.change(screen.getByRole('textbox', { name: 'Your message' }), { target: { value: 'Could we see the generator live?' } });
+    fireEvent.click(screen.getByRole('button', { name: /sign in to message the seller/i }));
+    expect(mocks.navigate).toHaveBeenCalledWith('/auth?redirect=%2Flisting%2Flisting-1');
+    expect(JSON.parse(sessionStorage.getItem('listingMessageDraft') || '{}')).toMatchObject({ listingId: 'listing-1', hostId: 'host-1', message: 'Could we see the generator live?' });
     expect(mocks.insert).not.toHaveBeenCalled();
     expect(mocks.invoke).not.toHaveBeenCalled();
   });
@@ -100,6 +60,18 @@ describe('MessageHostForm guest inquiry', () => {
     renderForm();
     expect(screen.queryByPlaceholderText(/your email/i)).not.toBeInTheDocument();
     expect(screen.getByRole('button', { name: /send message/i })).toBeEnabled();
+  });
+  it('restores the request after sign-in and clears it only after a successful send', async () => {
+    sessionStorage.setItem('listingMessageDraft', JSON.stringify({ listingId: 'listing-1', hostId: 'host-1', message: 'Please show the generator.' }));
+    mocks.user = { id: 'buyer-1' };
+    mocks.getOrCreateConversation.mockResolvedValue('thread-1');
+    mocks.sendMessage.mockResolvedValue({ id: 'message-1' });
+    renderForm();
+    expect(screen.getByRole('textbox', { name: 'Your message' })).toHaveValue('Please show the generator.');
+    fireEvent.click(screen.getByRole('button', { name: 'Send Message' }));
+    await waitFor(() => expect(mocks.navigate).toHaveBeenCalledWith('/messages/thread-1'));
+    expect(mocks.sendMessage).toHaveBeenCalledWith('conversation', 'thread-1', 'Please show the generator.');
+    expect(sessionStorage.getItem('listingMessageDraft')).toBeNull();
   });
 });
 
