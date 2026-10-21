@@ -188,6 +188,19 @@ const Index = () => {
           </div>
         </section>
 
+        <section className="hb-section hb-section-tint" aria-label="Available to rent">
+          <div className="hb-wrap">
+            <V2ListingRow
+              title="Available to rent"
+              subtitle="Trucks, trailers, kitchens and vendor spaces by the day, week or month."
+              listings={rentListings}
+              isLoading={rentQuery.isLoading}
+              viewAllHref="/search?mode=rent"
+              viewAllLabel="Browse rentals"
+            />
+          </div>
+        </section>
+
         <HomeAtlasBand />
 
         <section id={GUARANTEE_ID} className="hb-guarantee" aria-labelledby="hb-guarantee-title">
@@ -261,19 +274,6 @@ const Index = () => {
               <img className="hb-finance-photo" src={financingPhoto} alt="" width={1920} height={1080} loading="lazy" decoding="async" />
               {financingLive ? financingLeadDialog : null}
             </div>
-          </div>
-        </section>
-
-        <section className="hb-section hb-section-tint" aria-label="Available to rent">
-          <div className="hb-wrap">
-            <V2ListingRow
-              title="Available to rent"
-              subtitle="Trucks, trailers, kitchens and vendor spaces by the day, week or month."
-              listings={rentListings}
-              isLoading={rentQuery.isLoading}
-              viewAllHref="/search?mode=rent"
-              viewAllLabel="Browse rentals"
-            />
           </div>
         </section>
 
