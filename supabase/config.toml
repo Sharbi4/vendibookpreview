@@ -384,6 +384,10 @@ verify_jwt = false
 [functions.daily-webhook-bootstrap]
 verify_jwt = false
 
+# Administrator or internal caller checked inside the handler.
+[functions.send-walkthrough-activation]
+verify_jwt = false
+
 [functions.signup-phone-verification]
 verify_jwt = false
 
