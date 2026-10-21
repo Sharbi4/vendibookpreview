@@ -6,6 +6,12 @@ import { productCheckoutPath } from '@/lib/payments/hostedCheckout';
 import { ACTIVE_PRODUCT_SLUGS } from '@/lib/monetization/catalogPricing';
 import { BUYERMATCH_DISCLOSURE } from '@/lib/monetization/buyerMatch';
 
+function UpgradeMark({ pro = false }: { pro?: boolean }) {
+  return <span aria-hidden="true" className={`upgrade-dimensional-icon ${pro ? 'upgrade-dimensional-icon-pro' : ''}`}>
+    {pro ? <span className="rounded-md border border-[#9f8b70]/40 bg-[#332b23] px-2 py-1 text-[13px] font-bold tracking-[0.12em] text-[#fff3dc] shadow-md">PRO</span> : <span className="flex w-9 flex-col gap-1 rounded-md border border-[#d8ad8f] bg-white p-1.5 shadow-sm"><span className="h-3 rounded-sm bg-[#ff612e] shadow-[0_2px_5px_rgba(255,81,36,.25)]"/><span className="h-1 rounded bg-[#d8c8b8]"/><span className="h-1 w-2/3 rounded bg-[#e6ddd3]"/></span>}
+  </span>;
+}
+
 export function ListingUpgradeOptions({ listingId }: { listingId: string }) {
   const [selected, setSelected] = useState<'featured' | 'pro' | null>(null);
   const isPro = selected === 'pro';
@@ -26,12 +32,12 @@ export function ListingUpgradeOptions({ listingId }: { listingId: string }) {
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <button onClick={() => setSelected('featured')} className="group flex flex-col rounded-[20px] border border-[#e2dacf] bg-white p-6 text-left transition hover:-translate-y-0.5 hover:border-[#bdab97] hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
-          <div className="mb-6 flex w-full items-center justify-between"><span className="upgrade-dimensional-icon"><Megaphone className="h-5 w-5"/></span><span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Listing visibility</span></div>
+          <div className="mb-6 flex w-full items-center justify-between"><UpgradeMark/><span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Listing visibility</span></div>
           <h4 className="text-lg font-semibold tracking-tight">Feature this listing</h4><p className="mt-2 flex-1 text-sm leading-6 text-muted-foreground">Give your listing a more prominent place in search.</p>
           <span className="mt-6 flex items-center gap-2 text-sm font-semibold">Explore Featured <ArrowUpRight className="h-4 w-4 transition group-hover:translate-x-0.5"/></span>
         </button>
         <button onClick={() => setSelected('pro')} className="group flex flex-col rounded-[20px] border border-[#d8c9b9] bg-[#f0e9df] p-6 text-left transition hover:-translate-y-0.5 hover:border-[#bdab97] hover:shadow-lg focus-visible:outline focus-visible:outline-2 focus-visible:outline-primary">
-          <div className="mb-6 flex w-full items-center justify-between"><span className="upgrade-dimensional-icon upgrade-dimensional-icon-pro"><Layers3 className="h-5 w-5"/></span><span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Membership</span></div>
+          <div className="mb-6 flex w-full items-center justify-between"><UpgradeMark pro/><span className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground">Membership</span></div>
           <h4 className="text-lg font-semibold tracking-tight">Vendibook Pro</h4><p className="mt-2 flex-1 text-sm leading-6 text-muted-foreground">Bring visibility, planning, and seller tools into one membership.</p>
           <span className="mt-6 flex items-center gap-2 text-sm font-semibold">Explore Pro <ArrowUpRight className="h-4 w-4 transition group-hover:translate-x-0.5"/></span>
         </button>
@@ -42,7 +48,7 @@ export function ListingUpgradeOptions({ listingId }: { listingId: string }) {
       <DialogContent style={{ backgroundImage: "none", backgroundColor: "rgba(255, 251, 245, 0.9)", backdropFilter: "blur(28px) saturate(140%)", WebkitBackdropFilter: "blur(28px) saturate(140%)", boxShadow: "0 32px 100px -24px rgba(35,27,19,.45), inset 0 1px 0 rgba(255,255,255,.95)" }} className="sale-light max-h-[90dvh] overflow-y-auto rounded-[28px] border-[#e2dacf] p-0 shadow-2xl sm:max-w-xl">
         <div className="p-6 pb-5 sm:p-9 sm:pb-6">
           <DialogHeader className="text-left">
-            <div aria-hidden="true" className={`upgrade-dimensional-icon mb-6 ${isPro ? "upgrade-dimensional-icon-pro" : ""}`}>{isPro ? <Layers3 className="h-7 w-7"/> : <Megaphone className="h-7 w-7"/>}</div>
+            <div className="mb-6"><UpgradeMark pro={isPro}/></div>
             <span className="mb-4 w-fit rounded-full border border-[#d9cbbc] bg-white/60 px-3 py-1 text-[10px] font-semibold uppercase tracking-[0.16em]">{isPro ? 'Vendibook Pro · Membership' : 'Featured · Listing upgrade'}</span>
             <DialogTitle className="text-[30px] font-semibold leading-[1.12] tracking-[-0.035em] sm:text-[36px]">{isPro ? 'More tools for your next move.' : 'Put this listing in the spotlight.'}</DialogTitle>
             <DialogDescription className="pt-3 text-sm leading-6">{isPro ? 'A membership for building your business on Vendibook, with tools to plan, promote, and manage your next opportunity.' : 'Add featured placement to the listing you just published. Your photos, pricing, and contact options stay together in one place.'}</DialogDescription>
