@@ -51,6 +51,7 @@ import {
   PaginationPrevious,
 } from '@/components/ui/pagination';
 import { supabase } from '@/integrations/supabase/client';
+import { parseLocationInput } from '../../supabase/functions/_shared/locationSearch';
 import { filterPubliclyVisible } from '@/lib/listings/publicVisibility';
 import { useQuery } from '@tanstack/react-query';
 import { Listing, CATEGORY_LABELS, ListingCategory, ListingMode, AMENITIES_BY_CATEGORY } from '@/types/listing';
@@ -202,6 +203,44 @@ const Search = () => {
     };
 
     geocodeQuery();
+    // Only run on mount
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Deep links can carry a city as plain text with no coordinates
+  // (`/search?category=food_truck&location=atlanta` from city guides). Without
+  // coordinates the backend can only match the literal city name, so nearby
+  // suburbs (Riverdale, Hiram) returned zero results. Geocode the location
+  // once so it becomes a radius search. States stay a statewide filter.
+  useEffect(() => {
+    const initialLocation = searchParams.get('location')?.replace(/-/g, ' ').trim();
+    if (!initialLocation || initialQuery || initialLat || initialLng) return;
+    if (parseLocationInput(initialLocation).kind === 'state') return;
+
+    const geocodeLocation = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke('geocode-location', {
+          body: { query: initialLocation, limit: 1 },
+        });
+        if (!error && data?.results?.length > 0) {
+          const result = data.results[0];
+          const coords: [number, number] = result.center; // [lng, lat]
+          setLocationCoords(coords);
+          setLocationText(result.text);
+          setDebouncedLocationText(result.text);
+          const params = new URLSearchParams(searchParams);
+          params.set('lat', coords[1].toString());
+          params.set('lng', coords[0].toString());
+          params.set('radius', searchRadius.toString());
+          params.set('location', result.text);
+          setSearchParams(params, { replace: true });
+        }
+      } catch (err) {
+        console.error('Location geocode failed:', err);
+      }
+    };
+
+    geocodeLocation();
     // Only run on mount
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
