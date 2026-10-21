@@ -11,6 +11,7 @@ import { EmptyState, PageHeader, ws } from '@/components/workspace/ui';
 import { InboxList } from '@/components/workspace/inbox/InboxList';
 import { useAuth } from '@/contexts/AuthContext';
 import { useConversations, type Conversation } from '@/hooks/useConversations';
+import { formatWalkthroughTime, walkthroughDisplayStatus } from '@/lib/videoWalkthroughs';
 import { cn } from '@/lib/utils';
 import '@/components/workspace/inbox/inbox.css';
 import '@/components/messaging/messaging.css';
@@ -67,6 +68,21 @@ export default function WorkspaceMessages() {
     },
   });
 
+  const walkthroughRequests = useQuery({
+    queryKey: ['seller-inbox-walkthroughs', user?.id],
+    enabled: !!user,
+    queryFn: async () => {
+      const { data, error } = await (supabase.from('video_walkthroughs') as any)
+        .select('id,starts_at,ends_at,status,listing:listings(title)')
+        .eq('seller_id', user!.id)
+        .in('status', ['scheduled', 'rescheduled'])
+        .order('starts_at', { ascending: false })
+        .limit(20);
+      if (error) throw error;
+      return (data || []) as Array<{ id: string; starts_at: string; ends_at: string; status: string; listing?: { title: string } | null }>;
+    },
+  });
+
   // Nothing to list and no thread requested: one clear empty state instead of two empty panes.
   const inboxEmpty = !inbox.isLoading && !inbox.isError && inbox.conversations.length === 0 && !conversationId;
 
@@ -113,6 +129,27 @@ export default function WorkspaceMessages() {
             description={description}
             className={cn(conversationId && 'max-md:hidden')}
           />
+
+          {(walkthroughRequests.isError || !!walkthroughRequests.data?.length) && (
+            <section aria-label="Walkthrough requests" className={cn(ws.surface, 'px-5 py-5 sm:px-6')}>
+              <h2 className="text-[16px] font-semibold">Walkthrough requests</h2>
+              {walkthroughRequests.isError ? (
+                <p role="alert" className="mt-2 text-[13px] text-[#5E5953]">Walkthrough requests could not be loaded. <button type="button" className={ws.link} onClick={() => void walkthroughRequests.refetch()}>Retry</button></p>
+              ) : (
+                <ul className="mt-3 divide-y divide-[#ECE6DD]">
+                  {walkthroughRequests.data!.map((request) => (
+                    <li key={request.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                      <div className="min-w-0">
+                        <p className="text-[13.5px] font-semibold">{request.listing?.title || 'Your listing'}</p>
+                        <p className="text-[12.5px] text-[#5E5953]">{formatWalkthroughTime(request.starts_at)} · {walkthroughDisplayStatus(request)}</p>
+                      </div>
+                      <Link to={`/walkthrough/${request.id}`} className={ws.actionLink}>View request <ArrowRight aria-hidden="true" className="h-3.5 w-3.5" /></Link>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </section>
+          )}
 
           {!conversationId && listingId && (
             <section aria-label="Contact the host" className={cn(ws.surface, 'px-5 py-5 sm:px-6')}>
