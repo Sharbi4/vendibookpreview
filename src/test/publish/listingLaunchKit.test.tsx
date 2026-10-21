@@ -19,7 +19,7 @@ describe('listing launch kit', () => {
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', {name:/Explore Featured/}));
   expect(screen.getByRole('dialog')).toBeInTheDocument();
-  expect(screen.getByRole('link', {name:'Review Featured pricing'})).toHaveAttribute('href','/checkout/product/boost-featured-30?listing_id=listing-123');
+  expect(screen.getByRole('link', {name:'Make your listing featured · $49'})).toHaveAttribute('href','/checkout/product/boost-featured-30?listing_id=listing-123');
 
   fireEvent.click(screen.getByRole('button', {name:'Continue with my listing'}));
   expect(screen.queryByRole('dialog')).not.toBeInTheDocument();

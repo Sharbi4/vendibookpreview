@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { ArrowRight, ArrowUpRight, Check, Layers3, Megaphone } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { productCheckoutPath } from '@/lib/payments/hostedCheckout';
@@ -21,7 +21,7 @@ export function ListingUpgradeOptions({ listingId }: { listingId: string }) {
     ['Activity you can follow', 'Review verified outreach activity and continue conversations in your Vendibook messages.'],
   ] : [
     ['Placement beyond the standard listing', 'Feature this listing in search and category pages.'],
-    ['One listing. A defined promotion.', 'Review the current placement duration and price before purchasing.'],
+    ['One listing. A defined promotion.', '30 days of featured placement for $49, paid once.'],
     ['Keep your listing working for you', 'Visitors can explore your photos, contact you, and use the options enabled on your listing.'],
   ];
   return <>
@@ -59,8 +59,8 @@ export function ListingUpgradeOptions({ listingId }: { listingId: string }) {
           <p className="mt-4 text-[11px] leading-5 text-muted-foreground">{isPro ? BUYERMATCH_DISCLOSURE : 'Featured placement does not guarantee views, inquiries, bookings, or a sale.'}</p>
         </div>
         <div className="border-t border-[#e2dacf] bg-white/60 p-6 sm:px-9">
-          <p className="mb-4 text-xs leading-5 text-muted-foreground">{isPro ? 'Review current pricing, included benefits, and renewal terms before joining.' : 'Review the current price, duration, and applicable tax before purchasing.'}</p>
-          <Button asChild className="h-12 w-full gap-2"><a href={isPro ? '/dashboard/buyermatch/membership' : productCheckoutPath(ACTIVE_PRODUCT_SLUGS.featuredBoost, listingId)}>{isPro ? 'View Pro membership' : 'Review Featured pricing'}<ArrowRight/></a></Button>
+          <p className="mb-4 text-xs leading-5 text-muted-foreground">{isPro ? 'Review current pricing, included benefits, and renewal terms before joining.' : 'One-time purchase · 30 days of featured placement. Applicable tax shown at checkout.'}</p>
+          <Button asChild className="min-h-12 h-auto w-full gap-2 whitespace-normal py-3 text-center"><a href={isPro ? '/dashboard/buyermatch/membership' : productCheckoutPath(ACTIVE_PRODUCT_SLUGS.featuredBoost, listingId)}>{isPro ? 'View Pro membership' : 'Make your listing featured · $49'}<ArrowRight/></a></Button>
           <Button variant="ghost" onClick={() => setSelected(null)} className="mt-2 w-full">Continue with my listing</Button>
         </div>
       </DialogContent>
