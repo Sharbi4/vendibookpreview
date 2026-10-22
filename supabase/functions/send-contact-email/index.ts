@@ -119,7 +119,7 @@ serve(async (req) => {
     });
   } catch (e: any) {
     console.error("send-contact-email error", e);
-    return new Response(JSON.stringify({ error: e.message }), {
+    return new Response(JSON.stringify({ error: "Unable to submit your message. Please try again." }), {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
     });
   }
