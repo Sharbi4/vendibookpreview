@@ -266,6 +266,8 @@ const AdminSpotlights = lazy(() => import("./pages/AdminSpotlights"));
 const CommunitySpotlight = lazy(() => import("./pages/CommunitySpotlight"));
 const FinancingEnable = lazy(() => import("./pages/FinancingEnable"));
 const Subscribe = lazy(() => import("./pages/Subscribe"));
+const UpdateConfirmation = lazy(() => import("./pages/UpdateConfirmation"));
+const MarketplaceUpdatesTerms = lazy(() => import("./pages/legal/MarketplaceUpdatesTerms"));
 const EmailFeedbackThanks = lazy(() => import("./pages/EmailFeedbackThanks"));
 const CategoryCityPage = lazy(() => import("./pages/CategoryCityPage"));
 const CategoryIndex = lazy(() => import("./pages/CategoryIndex"));
@@ -617,6 +619,8 @@ const AnimatedRoutes = () => {
           <Route path="/wanted" element={<PageTransition><Wanted /></PageTransition>} />
           <Route path="/faq" element={<PageTransition><FAQ /></PageTransition>} />
           <Route path="/signage-request" element={<PageTransition><SignageRequest /></PageTransition>} />
+          <Route path="/updates/confirm" element={<PageTransition><UpdateConfirmation /></PageTransition>} />
+          <Route path="/legal/marketplace-updates" element={<PageTransition><MarketplaceUpdatesTerms /></PageTransition>} />
           <Route path="/unsubscribe" element={<PageTransition><Unsubscribe /></PageTransition>} />
           <Route path="/email-unsubscribe" element={<Navigate to="/unsubscribe" replace />} />
           <Route path="/feedback" element={<PageTransition><Feedback /></PageTransition>} />

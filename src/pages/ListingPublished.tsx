@@ -1,3 +1,4 @@
+import PublishedTextAlerts from '@/components/newsletter/PublishedTextAlerts';
 import React, { useEffect, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
@@ -360,6 +361,8 @@ const ListingPublished: React.FC = () => {
         </header>
 
         {isPublished && showShare && <ShareKit listing={listing} onClose={() => setShowShare(false)} />}
+
+        {isPublished && <PublishedTextAlerts />}
 
         {/* Optional trust upsell — secondary to the core success actions. */}
         <VerifiedSellerCTA variant="success" />

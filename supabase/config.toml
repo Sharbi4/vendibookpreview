@@ -413,3 +413,7 @@ verify_jwt = false
 
 [functions.atlas-agent-token]
 verify_jwt = false
+
+# Public email opt-in, token-based confirmation and verified phone enrollment.
+[functions.marketplace-updates]
+verify_jwt = false

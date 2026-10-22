@@ -14,7 +14,7 @@
  * Never sends an SMS itself — dispatch is the send-guard's job.
  */
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors';
+const corsHeaders = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version', 'Access-Control-Allow-Methods': 'POST, OPTIONS' };
 import { normalizeNanpToE164, SMS_POLICY_VERSION } from '../_shared/smsConsent.ts';
 
 const ALLOWED_SOURCES = new Set([
@@ -128,15 +128,26 @@ Deno.serve(async (req) => {
     }
   }
 
-  // Signed-in users get an active opt-in immediately. Unauthenticated users
+  // Only users with ownership of this exact number get an active opt-in. Other users
   // land in pending_verification — no recurring SMS until a verification
   // code round-trip is completed.
   const now = new Date().toISOString();
-  const transactionalStatus = userId ? 'opted_in' : 'pending_verification';
+  // A signed-in session alone is not proof of ownership of the submitted number.
+  let verifiedPhone = false;
+  if (userId) {
+    const { data: verification, error: verificationError } = await admin
+      .from('signup_phone_verifications').select('phone_e164')
+      .eq('user_id', userId).eq('phone_e164', phoneE164).maybeSingle();
+    if (verificationError) return new Response(JSON.stringify({ error: 'verification_unavailable' }), {
+      status: 503, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+    verifiedPhone = !!verification;
+  }
+  const transactionalStatus = verifiedPhone ? 'opted_in' : 'pending_verification';
 
   // If the number was previously suppressed, DO NOT silently reactivate it.
   // We still record this new affirmative consent event (audit trail), and we
-  // release the suppression only for signed-in users where identity is proven.
+  // release suppression only after ownership of the exact number is proven.
   // Anonymous re-enrollment lands pending_verification, so recurring SMS
   // still can't flow until the verification round-trip runs.
   const { data: activeSuppression } = await admin
@@ -166,7 +177,8 @@ Deno.serve(async (req) => {
       .update({
         user_id: userId ?? existing.user_id,
         transactional_status: transactionalStatus,
-        opted_in_at: userId ? now : null,
+        opted_in_at: verifiedPhone ? now : null,
+        phone_verified_at: verifiedPhone ? now : null,
         opted_out_at: null,
         consent_source: source,
         consent_version: SMS_POLICY_VERSION,
@@ -184,7 +196,8 @@ Deno.serve(async (req) => {
       user_id: userId,
       phone_e164: phoneE164,
       transactional_status: transactionalStatus,
-      opted_in_at: userId ? now : null,
+      opted_in_at: verifiedPhone ? now : null,
+        phone_verified_at: verifiedPhone ? now : null,
       consent_source: source,
       consent_version: SMS_POLICY_VERSION,
     });
@@ -209,7 +222,7 @@ Deno.serve(async (req) => {
   const isReOptIn = Boolean(activeSuppression);
   const eventType = isReOptIn
     ? 're_opt_in'
-    : (userId ? 'opt_in' : 'verification_requested');
+    : (verifiedPhone ? 'opt_in' : 'verification_requested');
 
   const { data: consentEvent, error: eventErr } = await admin
     .from('sms_consent_events')
@@ -241,10 +254,10 @@ Deno.serve(async (req) => {
     });
   }
 
-  // Release suppression only when we have proven identity (signed in).
+  // Release suppression only when we have proven ownership of this number.
   // Anonymous re-opt-in stays suppressed until a separate verification step
   // — matches the "do not silently reactivate" requirement.
-  if (isReOptIn && userId && activeSuppression) {
+  if (isReOptIn && verifiedPhone && activeSuppression) {
     await admin
       .from('sms_suppressions')
       .update({
@@ -258,9 +271,9 @@ Deno.serve(async (req) => {
     JSON.stringify({
       ok: true,
       status: transactionalStatus,
-      requires_verification: !userId,
+      requires_verification: !verifiedPhone,
       was_suppressed: isReOptIn,
-      still_suppressed: isReOptIn && !userId,
+      still_suppressed: isReOptIn && !verifiedPhone,
     }),
     { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
   );

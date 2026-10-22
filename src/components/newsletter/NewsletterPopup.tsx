@@ -1,193 +1,33 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useLocation } from 'react-router-dom';
-import { X, Mail, Loader2, CheckCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { supabase } from '@/integrations/supabase/client';
-import { useToast } from '@/hooks/use-toast';
-
-const NewsletterPopup = () => {
-  const location = useLocation();
-  const [isOpen, setIsOpen] = useState(false);
-  const [email, setEmail] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSuccess, setIsSuccess] = useState(false);
-  const { toast } = useToast();
-
+import { X, ArrowRight } from 'lucide-react';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { UpdateSignupForm } from './UpdateSignupForm';
+export default function NewsletterPopup() {
+  const { pathname } = useLocation();
+  const [teaser, setTeaser] = useState(false);
+  const [open, setOpen] = useState(false);
   useEffect(() => {
-    // Do not interrupt first-time visitors on the homepage —
-    // the homepage uses the Tell Vendibook lead form as its primary soft-conversion.
-    if (location.pathname === '/') return;
-
-    const hasSeenPopup = localStorage.getItem('newsletter_popup_dismissed');
-    const hasSubscribed = localStorage.getItem('newsletter_subscribed');
-    if (hasSeenPopup || hasSubscribed) return;
-
-    const handleScroll = () => {
-      const scrollPercent =
-        (window.scrollY / (document.documentElement.scrollHeight - window.innerHeight)) * 100;
-      if (scrollPercent >= 30) {
-        setIsOpen(true);
-        window.removeEventListener('scroll', handleScroll);
-      }
-    };
-
-    window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
-  }, [location.pathname]);
-
-  const handleClose = () => {
-    setIsOpen(false);
-    localStorage.setItem('newsletter_popup_dismissed', 'true');
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    const trimmedEmail = email.trim().toLowerCase();
-    
-    // Comprehensive email validation
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!trimmedEmail || !emailRegex.test(trimmedEmail)) {
-      toast({
-        title: 'Invalid email',
-        description: 'Please enter a valid email address.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    // Length validation
-    if (trimmedEmail.length > 255) {
-      toast({
-        title: 'Email too long',
-        description: 'Email address must be less than 255 characters.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setIsSubmitting(true);
-
+    if (pathname !== '/') return;
     try {
-      const { error } = await supabase
-        .from('newsletter_subscribers')
-        .insert({ email: trimmedEmail, source: 'popup' });
-
-      if (error) {
-        if (error.code === '23505') {
-          toast({
-            title: 'Already subscribed',
-            description: 'This email is already on our newsletter list!',
-          });
-        } else {
-          throw error;
-        }
-      } else {
-        setIsSuccess(true);
-        localStorage.setItem('newsletter_subscribed', 'true');
-        
-        // Send admin notification (fire and forget)
-        supabase.functions.invoke('send-admin-notification', {
-          body: { type: 'newsletter_signup', data: { email, source: 'popup' } }
-        }).catch(err => console.error('Admin notification error:', err));
-
-        setTimeout(() => {
-          setIsOpen(false);
-        }, 2000);
-      }
-    } catch (error) {
-      console.error('Newsletter signup error:', error);
-      toast({
-        title: 'Something went wrong',
-        description: 'Please try again later.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  if (!isOpen) return null;
-
-  return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-2 sm:p-4 bg-black/50 animate-fade-in">
-      <div className="relative w-full max-w-md bg-background rounded-xl sm:rounded-2xl shadow-2xl overflow-hidden animate-scale-in">
-        {/* Close button */}
-        <button
-          onClick={handleClose}
-          className="absolute top-3 right-3 sm:top-4 sm:right-4 p-1 rounded-full hover:bg-muted transition-colors"
-          aria-label="Close popup"
-        >
-          <X className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground" />
-        </button>
-
-        {/* Content */}
-        <div className="p-5 sm:p-8">
-          {isSuccess ? (
-            <div className="text-center py-2 sm:py-4">
-              <div className="inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-primary/10 text-primary mb-3 sm:mb-4">
-                <CheckCircle className="h-6 w-6 sm:h-8 sm:w-8" />
-              </div>
-              <h3 className="text-lg sm:text-xl font-bold text-foreground mb-1 sm:mb-2">You're subscribed!</h3>
-              <p className="text-sm sm:text-base text-muted-foreground">
-                Thanks for joining. We'll keep you updated on the latest listings and deals.
-              </p>
-            </div>
-          ) : (
-            <>
-              <div className="text-center mb-4 sm:mb-6">
-                <div className="inline-flex items-center justify-center w-11 h-11 sm:w-14 sm:h-14 rounded-full bg-primary/10 text-primary mb-3 sm:mb-4">
-                  <Mail className="h-5 w-5 sm:h-7 sm:w-7" />
-                </div>
-                <h3 className="text-xl sm:text-2xl font-bold text-foreground mb-1 sm:mb-2">
-                  Stay in the loop
-                </h3>
-                <p className="text-sm sm:text-base text-muted-foreground">
-                  Get exclusive deals, new listings, and mobile food business tips delivered to your inbox.
-                </p>
-              </div>
-
-              <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
-                <Input
-                  type="email"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  className="h-10 sm:h-12 text-sm sm:text-base"
-                  disabled={isSubmitting}
-                  maxLength={255}
-                />
-                <Button
-                  type="submit"
-                  variant="gradient"
-                  className="w-full h-10 sm:h-12 text-sm sm:text-base"
-                  disabled={isSubmitting}
-                >
-                  {isSubmitting ? (
-                    <>
-                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                      Subscribing...
-                    </>
-                  ) : (
-                    'Subscribe'
-                  )}
-                </Button>
-              </form>
-
-              <p className="text-[10px] sm:text-xs text-muted-foreground text-center mt-3 sm:mt-4">
-                No spam, unsubscribe anytime. By subscribing you agree to our{' '}
-                <a href="/privacy" className="underline hover:text-foreground">
-                  Privacy Policy
-                </a>
-                .
-              </p>
-            </>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-};
-
-export default NewsletterPopup;
+      if (localStorage.getItem('newsletter_subscribed')) return;
+      if (Date.now()-Number(localStorage.getItem('vb.updates.dismissed') || 0)<30*86400000) return;
+    } catch { /* Storage may be unavailable. */ }
+    const started = Date.now();
+    const reveal = () => {
+      const total = document.documentElement.scrollHeight-window.innerHeight;
+      if (Date.now()-started<12000 || (total>0 && window.scrollY/total<.3)) return;
+      if (document.querySelector('[role="dialog"]') || /INPUT|TEXTAREA|SELECT/.test(document.activeElement?.tagName || '')) return;
+      setTeaser(true); window.removeEventListener('scroll', reveal); clearInterval(timer);
+    };
+    const timer = window.setInterval(reveal, 3000);
+    window.addEventListener('scroll', reveal, { passive:true });
+    return () => { clearInterval(timer); window.removeEventListener('scroll',reveal); };
+  }, [pathname]);
+  const dismiss = () => { setTeaser(false); try { localStorage.setItem('vb.updates.dismissed',String(Date.now())); } catch { /* optional */ } };
+  if (pathname !== '/') return null;
+  return <>
+    {teaser && !open && <aside className="vu-teaser" aria-label="Personalized Vendibook updates"><button className="vu-teaser-close" aria-label="Dismiss updates invitation" onClick={dismiss}><X size={16}/></button><p className="vu-eyebrow">The Vendibook Edit</p><h2>Your next move starts here.</h2><p>Listings near you, mobile food news, and rules worth knowing. Curated around your interests.</p><button className="vu-primary" onClick={()=>{setOpen(true);dismiss();}}>Personalize my updates <ArrowRight size={16}/></button></aside>}
+    <Dialog open={open} onOpenChange={setOpen}><DialogContent className="vu-dialog"><DialogTitle className="sr-only">Personalize your Vendibook updates</DialogTitle><DialogDescription className="sr-only">Choose your role, location, interests, and optional text updates.</DialogDescription><UpdateSignupForm/></DialogContent></Dialog>
+  </>;
+}
