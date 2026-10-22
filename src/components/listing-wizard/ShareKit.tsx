@@ -33,6 +33,8 @@ import { useShareKit as useShareKitHook, type ShareChannel } from '@/hooks/useSh
 import { useSharePreflight } from '@/hooks/useSharePreflight';
 import SharePreviewCard from '@/components/share/SharePreviewCard';
 import { ListingLaunchKit } from './ListingLaunchKit';
+import SocialPostComposer from '@/components/share/SocialPostComposer';
+import type { SocialPlatform } from '@/lib/share/socialPostCaption';
 
 export interface ShareKitListing {
   id: string;
@@ -47,6 +49,7 @@ export interface ShareKitListing {
   priceWeekly: number | null;
   priceSale: number | null;
   highlights?: string[];
+  amenities?: string[];
   availableFrom?: string | null;
   availableTo?: string | null;
 }
@@ -140,6 +143,7 @@ export const ShareKit: React.FC<ShareKitProps> = ({ listing, onClose }) => {
   const [websiteSnippetCopied, setWebsiteSnippetCopied] = useState(false);
   const [captionVariant, setCaptionVariant] = useState(0);
   const [shareWithImageBusy, setShareWithImageBusy] = useState(false);
+  const [composer, setComposer] = useState<SocialPlatform | null>(null);
 
   const baseUrl = `https://vendibook.com/share/listing/${listing.id}`;
   // UTM-tagged links per channel for analytics attribution
@@ -674,8 +678,28 @@ const generateStoryImageBlob = (
       <ListingLaunchKit
         listingId={listing.id} caption={currentCaption} blocked={shareBlocked}
         linkCopied={linkCopied} captionCopied={captionCopied}
-        onFacebook={() => openShare('facebook')} onCopyLink={handleCopyLink}
+        onFacebook={() => setComposer('facebook')} onCopyLink={handleCopyLink}
         onCopyCaption={handleCopyCaption} onDownloadStory={handleDownloadStory}
+        onComposeInstagram={() => setComposer('instagram')}
+      />
+      <SocialPostComposer
+        platform={composer}
+        facts={{ title: listing.title, mode: listing.mode, categoryLabel, city, priceText, amenities: listing.amenities, shareUrl: listingUrl }}
+        photos={[listing.coverImageUrl || '', ...(listing.imageUrls || [])]}
+        blocked={shareBlocked}
+        onClose={() => setComposer(null)}
+        onOpenFacebook={() => openShare('facebook')}
+        onDownloadImage={handleDownloadStory}
+        onNativeShare={async (text) => {
+          try {
+            const blob = await generateStoryImageBlob(listing, city, priceText);
+            const file = new File([blob], `vendibook-story-${listing.id}.png`, { type: 'image/png' });
+            const data: ShareData = navigator.canShare?.({ files: [file] }) ? { text, files: [file] } : { text, url: listingUrl };
+            await navigator.share(data);
+            logShare('native' as ShareChannel, { share_url: listingUrl, caption: text, content_type: 'instagram_post' });
+          } catch { /* cancelled */ }
+        }}
+        onCopied={(p, text) => logShare('copy' as ShareChannel, { share_url: listingUrl, caption: text, content_type: `${p}_post_caption` })}
       />
       <details className="rounded-2xl border bg-card p-5">
         <summary className="cursor-pointer text-sm font-semibold">More sharing tools · captions, graphics & QR codes</summary>

@@ -124,6 +124,7 @@ const ListingPublished: React.FC = () => {
           priceWeekly: data.price_weekly,
           priceSale: data.price_sale,
           highlights: data.highlights || [],
+          amenities: data.amenities || [],
           availableFrom: data.available_from,
           availableTo: data.available_to,
         });
