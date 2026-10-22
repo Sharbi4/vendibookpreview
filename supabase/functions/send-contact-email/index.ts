@@ -57,8 +57,14 @@ serve(async (req) => {
       page_url: pageUrl,
       browser_info: req.headers.get("user-agent")?.slice(0, 300) ?? null,
     }).select("id, reference_code").single();
-    if (ticketError) console.error("contact ticket insert failed", ticketError.message);
-    else reference = ticket.reference_code;
+    if (ticketError || !ticket) {
+      // Fail closed: without a persisted ticket we must not acknowledge or notify.
+      console.error("contact ticket insert failed", ticketError?.message ?? "no row returned");
+      return new Response(JSON.stringify({ error: "Unable to submit your message. Please try again." }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
+    }
+    reference = ticket.reference_code;
 
     // Confirmation to the user
     await invokeTransactionalEmail({
