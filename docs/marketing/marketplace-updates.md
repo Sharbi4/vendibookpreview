@@ -41,3 +41,11 @@ Published-page alerts reuse the current transactional program. Marketing texts a
 - Apply `20261022120000_marketplace_update_preferences.sql` through Vendibook's Lovable project only.
 - Deploy `marketplace-updates` and `sms-record-consent` with the existing Resend and Lovable/Twilio secrets. Publish the frontend entry points and new routes.
 - Preview artifacts explicitly disable backend submission. Do not use customer contact details for automated smoke tests.
+
+## Compact mobile signup (October 22, 2026)
+- Uses the canonical Vendibook wordmark, white/charcoal panels, 16px inputs and at least 44px navigation/close controls. The dialog scrolls within the available screen height and respects the bottom safe area.
+- Role, interests, email and optional SMS are separate short screens. Email-only submission explicitly discards any phone number/marketing consent entered in the optional screen.
+- SMS disclosure is always visible on the text screen, before a number is entered, with an unchecked consent box and links to the program terms and Privacy Policy. Terms are also discoverable through the Legal Center and account SMS terms.
+- Development-only `/?previewUpdates=1` opens the real homepage component immediately with signup delivery disabled. Production builds ignore this preview switch.
+- Nine focused signup tests pass, including email-only opt-out, phone-change consent reset, server failure handling and visible terms. Browser checked at 320px and 390px widths, including the complete email-only preview flow.
+- Consent safeguards follow the [Twilio Messaging Policy](https://www.twilio.com/en-us/legal/messaging-policy) and [Twilio opt-in guidance](https://www.twilio.com/docs/api/errors/30830). A UI change does not certify legal compliance or activate marketing delivery; the launch requirements above remain applicable.

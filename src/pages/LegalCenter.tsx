@@ -38,6 +38,7 @@ const FURTHER_POLICIES = [
   { href: '/legal/refund-cancellation-policy', title: 'Refund & Cancellation Policy', summary: 'When platform fees and payments are refundable.' },
   { href: '/legal/featured-listing-terms', title: 'Featured Listing Terms', summary: 'Placement, duration, and refund rules for boosts.' },
   { href: '/legal/sms', title: 'SMS Terms', summary: 'Consent, keywords, frequency, and how to stop messages.' },
+  { href: '/legal/marketplace-updates', title: 'Marketplace Updates & Marketing SMS', summary: 'Optional email and marketing text subscriptions, consent, frequency, and opt-out.' },
   { href: '/insurance', title: 'Insurance information', summary: 'What Vendibook does and does not underwrite.' },
 ];
 

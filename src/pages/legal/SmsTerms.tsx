@@ -32,6 +32,10 @@ const SmsTerms: React.FC = () => {
             coordination, and customer support. Vendibook does not send promotional or
             marketing text messages under this program.
           </p>
+          <p>
+            Optional marketplace marketing updates require separate consent and are covered by the{' '}
+            <a href="/legal/marketplace-updates" className="underline">Marketplace Updates & Marketing SMS Terms</a>.
+          </p>
         </Section>
 
         <Section title="Consent">
