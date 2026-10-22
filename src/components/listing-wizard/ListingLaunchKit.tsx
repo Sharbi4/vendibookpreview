@@ -13,6 +13,8 @@ interface Props {
   onCopyLink: () => void;
   onCopyCaption: () => void;
   onDownloadStory: () => void;
+  /** Optional: opens the editable Instagram post composer. */
+  onComposeInstagram?: () => void;
 }
 
 /** Focused launch actions; publishing and purchases remain explicit user actions. */
@@ -40,6 +42,7 @@ export function ListingLaunchKit(props: Props) {
             </ol>
             <p className="mt-4 whitespace-pre-line rounded-xl border bg-background p-4 text-sm leading-6">{props.caption}</p>
             <div className="mt-4 flex flex-wrap gap-2">
+              {props.onComposeInstagram && <Button disabled={props.blocked} onClick={props.onComposeInstagram} className="gap-2"><Instagram /> Write Instagram post</Button>}
               <Button variant="outline" disabled={props.blocked} onClick={props.onDownloadStory} className="gap-2"><Download /> Save Story image</Button>
               <Button variant="outline" disabled={props.blocked} onClick={props.onCopyCaption} className="gap-2"><Copy />{props.captionCopied ? 'Caption copied' : 'Copy caption'}</Button>
               <Button variant="ghost" asChild><a href="https://www.instagram.com/" target="_blank" rel="noopener noreferrer">Open Instagram <ArrowUpRight /></a></Button>
