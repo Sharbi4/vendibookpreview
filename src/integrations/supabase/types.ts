@@ -6162,6 +6162,158 @@ export type Database = {
           },
         ]
       }
+      marketplace_update_preferences: {
+        Row: {
+          confirmed_at: string
+          email: string
+          email_status: string
+          name: string
+          phone_e164: string | null
+          request_id: string
+          role: string
+          sms_status: string
+          sms_verified_at: string | null
+          topics: string[]
+          updated_at: string
+          user_id: string | null
+          zip: string
+        }
+        Insert: {
+          confirmed_at?: string
+          email: string
+          email_status?: string
+          name: string
+          phone_e164?: string | null
+          request_id: string
+          role: string
+          sms_status?: string
+          sms_verified_at?: string | null
+          topics: string[]
+          updated_at?: string
+          user_id?: string | null
+          zip: string
+        }
+        Update: {
+          confirmed_at?: string
+          email?: string
+          email_status?: string
+          name?: string
+          phone_e164?: string | null
+          request_id?: string
+          role?: string
+          sms_status?: string
+          sms_verified_at?: string | null
+          topics?: string[]
+          updated_at?: string
+          user_id?: string | null
+          zip?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_update_preferences_request_id_fkey"
+            columns: ["request_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_update_requests"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketplace_update_rate_limits: {
+        Row: {
+          bucket: string
+          hits: number
+          resets_at: string
+        }
+        Insert: {
+          bucket: string
+          hits: number
+          resets_at: string
+        }
+        Update: {
+          bucket?: string
+          hits?: number
+          resets_at?: string
+        }
+        Relationships: []
+      }
+      marketplace_update_requests: {
+        Row: {
+          code_attempts: number
+          code_delivered: boolean
+          code_expires_at: string | null
+          code_hash: string | null
+          code_sent_at: string | null
+          confirmed_at: string | null
+          consent_version: string
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          ip_hash: string
+          name: string
+          phone_e164: string | null
+          role: string
+          sms_consent: boolean
+          sms_disclosure: string | null
+          source: string
+          token_hash: string
+          topics: string[]
+          user_agent: string | null
+          user_id: string | null
+          zip: string
+        }
+        Insert: {
+          code_attempts?: number
+          code_delivered?: boolean
+          code_expires_at?: string | null
+          code_hash?: string | null
+          code_sent_at?: string | null
+          confirmed_at?: string | null
+          consent_version: string
+          created_at?: string
+          email: string
+          expires_at?: string
+          id?: string
+          ip_hash: string
+          name?: string
+          phone_e164?: string | null
+          role: string
+          sms_consent?: boolean
+          sms_disclosure?: string | null
+          source: string
+          token_hash: string
+          topics: string[]
+          user_agent?: string | null
+          user_id?: string | null
+          zip: string
+        }
+        Update: {
+          code_attempts?: number
+          code_delivered?: boolean
+          code_expires_at?: string | null
+          code_hash?: string | null
+          code_sent_at?: string | null
+          confirmed_at?: string | null
+          consent_version?: string
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          ip_hash?: string
+          name?: string
+          phone_e164?: string | null
+          role?: string
+          sms_consent?: boolean
+          sms_disclosure?: string | null
+          source?: string
+          token_hash?: string
+          topics?: string[]
+          user_agent?: string | null
+          user_id?: string | null
+          zip?: string
+        }
+        Relationships: []
+      }
       message_reactions: {
         Row: {
           created_at: string
@@ -14986,6 +15138,7 @@ export type Database = {
         }
         Returns: string
       }
+      confirm_marketplace_updates: { Args: { p_hash: string }; Returns: Json }
       count_purchase_referrals_this_month: {
         Args: { p_referrer_id: string }
         Returns: number
@@ -15377,6 +15530,18 @@ export type Database = {
           owner_id: string
         }[]
       }
+      marketplace_updates_audience: {
+        Args: { p_role: string; p_topic: string; p_zips?: string[] }
+        Returns: {
+          email: string
+          name: string
+          phone_e164: string
+          role: string
+          sms_status: string
+          topics: string[]
+          zip: string
+        }[]
+      }
       merge_permit_item: {
         Args: {
           p_field_ts: Json
@@ -15617,6 +15782,10 @@ export type Database = {
       reserve_signup_phone_code: {
         Args: { actor: string; hashed_code: string; phone: string }
         Returns: string
+      }
+      reserve_update_action: {
+        Args: { p_bucket: string; p_limit: number; p_seconds: number }
+        Returns: boolean
       }
       respond_to_offer: {
         Args: {
@@ -15923,6 +16092,10 @@ export type Database = {
         Returns: undefined
       }
       verify_signup_phone_code: { Args: { code: string }; Returns: Json }
+      verify_update_phone: {
+        Args: { p_code_hash: string; p_hash: string }
+        Returns: boolean
+      }
     }
     Enums: {
       app_role: "host" | "shopper" | "admin"
