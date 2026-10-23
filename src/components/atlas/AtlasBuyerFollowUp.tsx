@@ -27,7 +27,7 @@ export default function AtlasBuyerFollowUp({ draft, cards, onClose, onSaved }: {
         topic: draft.topic, summary: draft.summary,
         shortlist: cards.slice(0, 6).map(c => ({ id: c.id, title: c.title })),
         listing_id: cards[0]?.id, page_url: window.location.pathname,
-      } });
+      } }, { retries: 0 });
       if (problem || !data?.reference_code) { setError(problem || 'Could not save your request. Please try again.'); return; }
       setDone({ reference: data.reference_code, due: data.follow_up_by }); onSaved(data.reference_code);
     } catch { setError('Could not save your request. Please try again.'); }

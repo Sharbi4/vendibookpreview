@@ -142,6 +142,7 @@ export default function AtlasAgent() {
         currentUserId: () => userRef.current?.id ?? null,
         showMenuConcept: setMenuConcept,
         openBuyerFollowUp: (draft) => {
+          if (draft.declined) { followUpOffered.current = true; setFollowUpDraft(null); return false; }
           if (followUpOffered.current) return false;
           followUpOffered.current = true;
           setFollowUpDraft(draft);

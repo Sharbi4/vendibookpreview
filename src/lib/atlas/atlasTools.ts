@@ -72,7 +72,7 @@ export interface AtlasToolDeps {
   openOffer?: (d: AtlasOfferDraft) => void;
   /** Signed-in buyer's user id, or null for guests. */
   currentUserId?: () => string | null;
-  openBuyerFollowUp?: (draft: { topic: string; summary: string }) => boolean;
+  openBuyerFollowUp?: (draft: { topic: string; summary: string; declined?: boolean }) => boolean;
   showMenuConcept?: (concept: AtlasMenuConcept) => void;
   /**
    * Sends a draft the buyer approved out loud, through normal Vendibook
@@ -319,6 +319,10 @@ export function createAtlasTools(deps: AtlasToolDeps) {
 
     offer_buyer_follow_up: async (p: Row = {}) => {
       if (!deps.openBuyerFollowUp) return 'Follow-up form unavailable. Offer the contact page; do not claim a request was saved.';
+      if (p.declined === true) {
+        deps.openBuyerFollowUp({ topic: '', summary: '', declined: true });
+        return 'Buyer declined follow-up. No form opened or contact saved. Suppress the end-of-call prompt and continue helping without asking again.';
+      }
       const opened = deps.openBuyerFollowUp({ topic: String(p.topic || 'Buying shortlist').slice(0, 120), summary: String(p.summary || 'Buyer would like help continuing their search.').slice(0, 1500) });
       if (!opened) return 'This optional follow-up was already offered in this session. Do not repeat it; continue helping the buyer.';
       return 'Opened an optional email follow-up form. The buyer enters their name/email and consents themselves. Nothing is saved or sent until they submit. Do not say an email or booking has been sent. Respect dismissal and keep helping.';

@@ -52,6 +52,8 @@ describe('Atlas tools', () => {
     expect(await tools.offer_buyer_follow_up({ topic: 'Offer help', summary: 'Buyer is considering a local trailer.' })).toContain('Nothing is saved');
     expect(open).toHaveBeenCalledOnce();
     expect(invoke).not.toHaveBeenCalled();
+    expect(await tools.offer_buyer_follow_up({ declined: true })).toContain('Suppress the end-of-call prompt');
+    expect(open).toHaveBeenLastCalledWith({ topic: '', summary: '', declined: true });
     open.mockReturnValue(false);
     expect(await tools.offer_buyer_follow_up({})).toContain('Do not repeat');
   });

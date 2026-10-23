@@ -275,6 +275,10 @@
     "parameters": {
       "type": "object",
       "properties": {
+        "declined": {
+          "type": "boolean",
+          "description": "Set true when the buyer declines follow-up; records only a session preference, opens no form and suppresses the closing prompt."
+        },
         "topic": {
           "type": "string",
           "description": "Short topic, such as shortlist or offer help."
