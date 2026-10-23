@@ -102,7 +102,7 @@ export const OPERATOR_CHAPTERS: Record<string, Chapter> = {
 
 export function getOperatorGuidance(topic: unknown, now = new Date()) {
   const key = typeof topic === 'string' ? topic : '';
-  const chapter = Object.hasOwn(OPERATOR_CHAPTERS, key) ? OPERATOR_CHAPTERS[key] : undefined;
+  const chapter = Object.prototype.hasOwnProperty.call(OPERATOR_CHAPTERS, key) ? OPERATOR_CHAPTERS[key] : undefined;
   if (!chapter) return { status: 'unknown_topic', topics: Object.keys(OPERATOR_CHAPTERS), instruction: 'Choose the relevant topic; do not fabricate guidance.' };
   const ageDays = Math.floor((now.getTime() - Date.parse(`${OPERATOR_REVIEWED_ON}T00:00:00Z`)) / 86400000);
   return {
