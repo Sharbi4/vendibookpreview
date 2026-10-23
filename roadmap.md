@@ -1,5 +1,7 @@
 # Roadmap
 
+- [open] Activate Allison customer success from cafec115f: inspect/create separate female agent, configure server ID, preserve Atlas integrations, attach customer-success scheduling only, deploy token/config functions, test and check Contact desktop/mobile; publish only after verified activation.
+
 - [done] Buyer city rollout: source 045f70ab2 synced locally; exact inventory migration applied; six anonymous RPCs, real photos, mobile/dialog checks, isolated PostgreSQL and 16 focused tests passed; automatic build OK.
 - [open] Publish buyer city frontend — blocked by 12 persisted preexisting critical findings and incomplete deep analysis; existing HEIC cover remains unsupported in Chromium on two city results. Details: docs/buyer-city-pages.md.
 
