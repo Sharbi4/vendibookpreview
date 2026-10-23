@@ -28,6 +28,7 @@ import { Compass, Store, Hammer, Handshake } from 'lucide-react';
 import { BUYER_MARKETS, buyerMarketPath } from '@/lib/listings/buyerMarkets';
 import { BuyerCitySupport } from '@/components/seo/BuyerCitySupport';
 import { PostPurchasePreview } from '@/components/home/PostPurchasePreview';
+import { listingCardImageUrl } from '@/lib/listings/cardImage';
 
 export type CategoryKey = 'food_truck' | 'food_trailer' | 'ghost_kitchen' | 'vendor_space';
 export type ModeFilter = 'rent' | 'sale' | 'any';
@@ -434,7 +435,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
           <div className="aspect-[4/3] bg-muted overflow-hidden">
             {l.cover_image_url ? (
               <img
-                src={l.cover_image_url}
+                src={listingCardImageUrl(l.cover_image_url)}
                 alt={`${l.title}${cityState ? ` in ${cityState}` : ''} on Vendibook`}
                 loading={l.id === primary[0]?.id ? "eager" : "lazy"}
                 fetchPriority={l.id === primary[0]?.id ? "high" : "auto"}
