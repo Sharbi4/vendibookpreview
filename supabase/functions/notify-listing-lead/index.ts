@@ -20,7 +20,7 @@
 //   can't be used to mail-bomb someone else's address.
 import { getCronSecret } from '../_shared/callerGuard.ts'
 import { createClient } from 'npm:@supabase/supabase-js@2'
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
+const corsHeaders = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
 import { invokeTransactionalEmail } from '../_shared/invokeTransactionalEmail.ts'
 import { notifyUser } from '../_shared/notify.ts'
 import { hasContactDetails, maskContactDetails } from '../_shared/contactPatterns.ts'

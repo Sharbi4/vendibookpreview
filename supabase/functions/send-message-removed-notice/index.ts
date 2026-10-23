@@ -2,7 +2,7 @@
 // for containing personal contact information. Recipient is resolved
 // server-side from the offer; copy is fixed. POST { "offer_id": "<uuid>" }
 import { createClient } from 'npm:@supabase/supabase-js@2'
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
+const corsHeaders = { 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type' };
 import { sendTransactionalEmailInternal } from '../_shared/invokeTransactionalEmail.ts'
 
 const json = (status: number, body: unknown) =>
