@@ -23,6 +23,12 @@ describe('category intent mapping', () => {
     }
   });
 
+  it('does not pick a category for a prefix shared by trucks and trailers', () => {
+    for (const q of ['food', 'Food', 'foo', 'food tr', 'food for rent']) {
+      expect(inferCategoryFromQuery(q), q).toBeNull();
+    }
+  });
+
   it('leaves non-category keywords alone', () => {
     for (const q of ['burger', 'Houston, TX', '85719', 'workhorse', '']) {
       expect(inferCategoryFromQuery(q), q).toBeNull();
