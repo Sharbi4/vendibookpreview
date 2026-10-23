@@ -162,6 +162,13 @@
       "when": 1792708637803,
       "tag": "0022_marketplace_update_preferences",
       "breakpoints": true
+    },
+    {
+      "idx": 23,
+      "version": "7",
+      "when": 1792731014780,
+      "tag": "0023_operations_console",
+      "breakpoints": true
     }
   ]
 }
