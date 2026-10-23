@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowRight, ArrowUpRight } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Pause, Play } from 'lucide-react';
+import { RealCategoryPhoto, useHomeCategoryPhotos } from './RealCategoryPhoto';
+import type { HomePhotoGroup } from '@/lib/listings/homeCategoryPhotos';
 import { Button } from '@/components/ui/button';
 import { EquinoxFundingLogo, PayPalWordmark, PlaidLogo } from '@/components/brand/ProviderLogos';
 import { FLIP_INSURANCE } from '@/lib/flipInsurance';
@@ -9,14 +11,6 @@ import cardSaleImg from '@/assets/home/owners-food-truck.jpg';
 import cardRentImg from '@/assets/food-truck-coffee.jpg';
 import cardKitchenImg from '@/assets/home/trust-kitchen.jpg';
 import cardFinancingImg from '@/assets/trailer-black.jpg';
-import tileFoodTrucksImg from '@/assets/home/hb-tile-food-trucks.jpg';
-import tileFoodTrailersImg from '@/assets/home/trust-handoff.jpg';
-import tileCoffeeImg from '@/assets/trailer-cafecito.jpg';
-import tileIceCreamImg from '@/assets/home/hb-tile-ice-cream.jpg';
-import tileTrucksRentImg from '@/assets/food-truck-popcorn.jpg';
-import tileTrailersRentImg from '@/assets/trailer-cream-party.jpg';
-import tileKitchensImg from '@/assets/concierge-kitchen.jpg';
-import tileVendorSpacesImg from '@/assets/home/trust-vendor-lot.jpg';
 import sellBandImg from '@/assets/home/hb-sell-band.jpg';
 
 /*
@@ -166,11 +160,14 @@ const FEATURED_CARDS = [
 ] as const;
 
 export function HomeFeaturedCards() {
+  const { data: photos = [] } = useHomeCategoryPhotos();
+  const [rotating, setRotating] = useState(true);
   return (
     <section className="hb-section" aria-labelledby="hb-featured-title">
       <div className="hb-wrap">
         <header className="hb-head">
           <h2 id="hb-featured-title">Buy it, rent it, or finance it</h2>
+          <Button variant="ghost" size="icon" onClick={() => setRotating(!rotating)} aria-label={rotating ? 'Pause listing photos' : 'Play listing photos'} title={rotating ? 'Pause listing photos' : 'Play listing photos'}>{rotating ? <Pause /> : <Play />}</Button>
         </header>
         <ul className="hb-cards">
           {FEATURED_CARDS.map((card) => (
@@ -181,7 +178,7 @@ export function HomeFeaturedCards() {
                 data-cta-location={`home_featured_${card.key}`}
                 onClick={() => trackLeadEvent('homepage_premium_discovery_click', { source: 'home_featured_cards', card: card.key, destination: card.href })}
               >
-                <img src={card.img} alt="" width={800} height={1000} loading="lazy" decoding="async" />
+                {card.key === 'financing' ? <img src={card.img} alt="" width={800} height={1000} loading="lazy" decoding="async" /> : <RealCategoryPhoto rows={photos} group={card.key} rotating={rotating} />}
                 <span className="hb-card-text">
                   <strong>{card.title}<ArrowUpRight aria-hidden="true" /></strong>
                   <small>{card.sub}</small>
@@ -218,22 +215,25 @@ export function HomeRegisterBand() {
 /* ── Category tiles ── */
 
 const CATEGORY_TILES = [
-  { label: 'Food trucks for sale', href: '/food-trucks-for-sale', img: tileFoodTrucksImg },
-  { label: 'Food trailers for sale', href: '/food-trailers-for-sale', img: tileFoodTrailersImg },
-  { label: 'Coffee trucks & trailers', href: '/coffee-trucks-trailers-for-sale', img: tileCoffeeImg },
-  { label: 'Ice cream trucks & trailers', href: '/ice-cream-trucks-trailers-for-sale', img: tileIceCreamImg },
-  { label: 'Food trucks for rent', href: '/food-trucks-for-rent', img: tileTrucksRentImg },
-  { label: 'Food trailers for rent', href: '/food-trailers-for-rent', img: tileTrailersRentImg },
-  { label: 'Shared kitchens', href: '/shared-kitchens', img: tileKitchensImg },
-  { label: 'Vendor spaces', href: '/vendor-spaces', img: tileVendorSpacesImg },
-] as const;
+  { label: 'Food trucks for sale', href: '/food-trucks-for-sale', group: 'truck-sale' },
+  { label: 'Food trailers for sale', href: '/food-trailers-for-sale', group: 'trailer-sale' },
+  { label: 'Coffee trucks & trailers', href: '/coffee-trucks-trailers-for-sale', group: 'coffee' },
+  { label: 'Ice cream trucks & trailers', href: '/ice-cream-trucks-trailers-for-sale', group: 'ice-cream' },
+  { label: 'Food trucks for rent', href: '/food-trucks-for-rent', group: 'truck-rent' },
+  { label: 'Food trailers for rent', href: '/food-trailers-for-rent', group: 'trailer-rent' },
+  { label: 'Shared kitchens', href: '/shared-kitchens', group: 'kitchens' },
+  { label: 'Vendor spaces', href: '/vendor-spaces', group: 'spaces' },
+] satisfies { label: string; href: string; group: HomePhotoGroup }[];
 
 export function HomeCategoryTiles() {
+  const { data: photos = [] } = useHomeCategoryPhotos();
+  const [rotating, setRotating] = useState(true);
   return (
     <section className="hb-section" aria-labelledby="hb-tiles-title">
       <div className="hb-wrap">
         <header className="hb-head">
           <h2 id="hb-tiles-title">Shop by type</h2>
+          <Button variant="ghost" size="icon" onClick={() => setRotating(!rotating)} aria-label={rotating ? 'Pause category photos' : 'Play category photos'} title={rotating ? 'Pause category photos' : 'Play category photos'}>{rotating ? <Pause /> : <Play />}</Button>
         </header>
         <ul className="hb-tiles">
           {CATEGORY_TILES.map((tile) => (
@@ -244,7 +244,7 @@ export function HomeCategoryTiles() {
                 data-cta-location="home_category_tiles"
                 onClick={() => trackLeadEvent('homepage_premium_discovery_click', { source: 'home_category_tiles', destination: tile.href })}
               >
-                <img src={tile.img} alt="" width={640} height={480} loading="lazy" decoding="async" />
+                <RealCategoryPhoto rows={photos} group={tile.group} rotating={rotating} />
                 <span className="hb-tile-label">{tile.label}</span>
               </Link>
             </li>
