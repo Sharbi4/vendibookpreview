@@ -833,6 +833,7 @@ export type { AnalyticsEvent };
 
 // ========== Equipment financing (Equinox) ==========
 export type FinancingSource =
+  | 'buyer_city'
   | 'home_banner'
   | 'financing_page_hero'
   | 'financing_page_mid'

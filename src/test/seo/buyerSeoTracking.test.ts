@@ -27,6 +27,9 @@ describe('buyer SEO tracking', () => {
 
   it('only buyer pages are tracked', () => {
     expect(isBuyerSeoPage('/food-trucks-for-sale')).toBe(true);
+    expect(isBuyerSeoPage('/food-trucks-for-sale/north-florida')).toBe(true);
+    expect(isBuyerSeoPage('/food-trucks-for-sale/houston-tx')).toBe(true);
+    expect(isBuyerSeoPage('/food-trucks-for-sale/houston-tx/private')).toBe(false);
     expect(isBuyerSeoPage('/food-trucks-for-rent')).toBe(false);
   });
 

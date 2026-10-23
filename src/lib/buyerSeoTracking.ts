@@ -27,7 +27,7 @@ export const BUYER_SEO_PAGES = [
 ] as const;
 
 export const isBuyerSeoPage = (path: string): boolean =>
-  (BUYER_SEO_PAGES as readonly string[]).includes(path);
+  (BUYER_SEO_PAGES as readonly string[]).includes(path) || /^\/food-(trucks|trailers)-for-sale\/[a-z-]+$/.test(path);
 
 export type BuyerSeoDestination =
   | 'listing_detail'

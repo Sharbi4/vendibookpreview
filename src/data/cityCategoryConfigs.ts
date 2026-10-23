@@ -199,6 +199,7 @@ const CITY_SALE_SPECS: CitySaleSpec[] = [
   { citySlug: 'charlotte-nc',    cityName: 'Charlotte',    stateCode: 'NC', stateName: 'North Carolina',category: 'food_truck' },
   { citySlug: 'portland-or',     cityName: 'Portland',     stateCode: 'OR', stateName: 'Oregon',        category: 'food_truck' },
   { citySlug: 'los-angeles-ca',  cityName: 'Los Angeles',  stateCode: 'CA', stateName: 'California',    category: 'food_truck' },
+  { citySlug: 'north-florida', cityName: 'North Florida', stateCode: 'FL', stateName: 'Florida', category: 'food_truck' },
   // Trailer-specific city pages
   { citySlug: 'tucson-az',       cityName: 'Tucson',       stateCode: 'AZ', stateName: 'Arizona',       category: 'food_trailer' },
   { citySlug: 'phoenix-az',      cityName: 'Phoenix',      stateCode: 'AZ', stateName: 'Arizona',       category: 'food_trailer' },
@@ -245,19 +246,20 @@ CITY_CATEGORY_CONFIGS.push(
     const path = `/${citySaleSlug(s.category)}/${s.citySlug}`;
     return {
       path,
+      buyerMarket: s.citySlug,
       category: s.category,
       mode: 'sale',
       city: { name: s.cityName, stateCode: s.stateCode },
       h1: `${pluralTitle} for Sale in ${s.cityName}, ${s.stateCode}`,
       title: `${pluralTitle} for Sale in ${s.cityName}, ${s.stateCode} | Vendibook`,
       description: `Browse ${plural} for sale in ${s.cityName}, ${s.stateCode}. Compare local listings with photos, equipment specs, and pricing. Vendibook also surfaces nearby ${s.stateName} options when local inventory is limited.`,
-      intro: `Browse ${plural} for sale in ${s.cityName}, ${s.stateName}. If local inventory is limited, Vendibook also shows relevant ${pluralTitle.toLowerCase()} across ${s.stateName} and nationwide so buyers can compare more options. Each listing is owner-managed with photos, equipment specs, and direct messaging.`,
+      intro: `Find the right ${s.category === 'food_trailer' ? 'food trailer' : 'food truck'} for your next chapter in ${s.cityName}. Compare up to 10 current listings with real photos and asking prices, talk directly with sellers, and get help with financing and delivery. Nearby listings come first; wider options appear as needed.`,
       faqs: citySaleFaqs(s.cityName, s.stateName, s.category),
       related: [
         { href: `/${citySaleSlug(s.category)}`, label: `All ${pluralTitle.toLowerCase()} for sale` },
         { href: `/${citySaleSlug(s.category)}/${slugify(s.stateName)}`, label: `${pluralTitle} for sale in ${s.stateName}` },
         { href: s.category === 'food_trailer' ? '/sell-food-trailer' : '/sell-my-food-truck', label: `Sell your ${s.category === 'food_trailer' ? 'food trailer' : 'food truck'}` },
-        { href: `/${citySaleSlug(s.category === 'food_trailer' ? 'food_truck' : 'food_trailer')}/${s.citySlug}`, label: `${s.category === 'food_trailer' ? 'Food trucks' : 'Food trailers'} for sale in ${s.cityName}` },
+        { href: `/${citySaleSlug(s.category === 'food_trailer' ? 'food_truck' : 'food_trailer')}${CITY_SALE_SPECS.some(other => other.citySlug === s.citySlug && other.category !== s.category) ? `/${s.citySlug}` : ''}`, label: `${s.category === 'food_trailer' ? 'Food trucks' : 'Food trailers'} for sale${CITY_SALE_SPECS.some(other => other.citySlug === s.citySlug && other.category !== s.category) ? ` in ${s.cityName}` : ' nationwide'}` },
       ],
     };
   })
@@ -307,6 +309,7 @@ const STATE_SALE_SPECS: StateSaleSpec[] = [
     metros: [
       { slug: 'miami-fl', name: 'Miami' },
       { slug: 'tampa-fl', name: 'Tampa' },
+      { slug: 'north-florida', name: 'North Florida' },
     ],
   },
   // ---- Tier 1 trailers (KD 1–5 cluster; real inventory exists in each state) ----

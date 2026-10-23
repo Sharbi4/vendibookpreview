@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { Loader2, MapPin, ArrowRight, Tag, Info } from 'lucide-react';
@@ -25,6 +25,9 @@ import ExpandSearchModule, { LowInventoryInlineLine, LOW_INVENTORY_THRESHOLD, NE
 import TransactionConfidenceSection from '@/components/seo/TransactionConfidenceSection';
 import { useBuyerSeoTracking } from '@/hooks/useBuyerSeoTracking';
 import { Compass, Store, Hammer, Handshake } from 'lucide-react';
+import { BUYER_MARKETS, buyerMarketPath } from '@/lib/listings/buyerMarkets';
+import { BuyerCitySupport } from '@/components/seo/BuyerCitySupport';
+import { PostPurchasePreview } from '@/components/home/PostPurchasePreview';
 
 export type CategoryKey = 'food_truck' | 'food_trailer' | 'ghost_kitchen' | 'vendor_space';
 export type ModeFilter = 'rent' | 'sale' | 'any';
@@ -91,6 +94,8 @@ export interface CategoryIndexConfig {
   answerBlock?: CategoryIndexAnswerBlock;
   /** Label for the primary inventory heading noun (e.g. "used food trucks"). */
   inventoryNoun?: string;
+  /** Ten dynamically ranked public listings and the buyer journey. */
+  buyerMarket?: string;
 }
 
 interface ListingRow {
@@ -109,6 +114,8 @@ interface ListingRow {
   state: string | null;
   address: string | null;
   condition?: string | null;
+  distance_miles?: number | null;
+  is_local?: boolean;
 }
 
 const MIN_TIER = 6;
@@ -184,6 +191,16 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
   // skip empty-state messaging, and offer a retry instead.
   const [loadError, setLoadError] = useState(false);
   const [reloadKey, setReloadKey] = useState(0);
+  const [marketLocalCount, setMarketLocalCount] = useState(0);
+  const market = config.buyerMarket ? BUYER_MARKETS[config.buyerMarket] : undefined;
+  const previousPath = useRef('');
+  useEffect(() => {
+    if (!market) return;
+    const refresh = () => { if (document.visibilityState === 'visible') setReloadKey(k => k + 1); };
+    const timer = window.setInterval(refresh, 60000);
+    window.addEventListener('focus', refresh);
+    return () => { window.clearInterval(timer); window.removeEventListener('focus', refresh); };
+  }, [config.buyerMarket]);
 
   const categories = config.categories ?? [config.category];
   const multiCategory = categories.length > 1;
@@ -204,11 +221,29 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      setLoading(true);
+      const changedPage = previousPath.current !== config.path;
+      previousPath.current = config.path;
+      setLoading(!market || changedPage);
       setLoadError(false);
-      setPrimary([]);
+      if (!market || changedPage) setPrimary([]);
       setStateFallback([]);
       setNationwideFallback([]);
+
+      if (market && config.city) {
+        try {
+          const { data, error } = await (supabase as any).rpc('buyer_city_inventory', {
+            p_lat: market.latitude, p_lng: market.longitude, p_city: config.city.name,
+            p_state: config.city.stateCode, p_state_name: STATE_NAME_BY_CODE[config.city.stateCode] ?? config.city.stateCode,
+            p_category: config.category, p_local_cities: market.cities ?? [],
+          });
+          if (cancelled) return;
+          if (error || !Array.isArray(data?.listings)) throw new Error('Inventory unavailable');
+          setPrimary(data.listings);
+          setMarketLocalCount(Number(data.local_count) || 0);
+        } catch { if (!cancelled) setLoadError(true); }
+        finally { if (!cancelled) setLoading(false); }
+        return;
+      }
 
       // Tier 1: city OR state OR specialty/subcategory OR all
       const specialtyFilter = config.specialty ? specialtyOrFilter(config.specialty) : undefined;
@@ -260,12 +295,13 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
       setLoading(false);
     })();
     return () => { cancelled = true; };
-  }, [config.category, config.mode, config.city?.name, config.state?.code, config.specialty, config.subcategories?.join(','), config.conditions?.join(','), categories.join(','), reloadKey]);
+  }, [config.category, config.mode, config.city?.name, config.state?.code, config.specialty, config.subcategories?.join(','), config.conditions?.join(','), categories.join(','), config.buyerMarket, reloadKey]);
 
   const canonical = config.path;
   const totalListings = primary.length + stateFallback.length + nationwideFallback.length;
 
-  const cityLinks = Object.values(CITY_DATA).slice(0, 12);
+  const priorityCities = ['houston', 'tucson', 'los-angeles', 'miami', 'atlanta'];
+  const cityLinks = [...Object.values(CITY_DATA).filter(c => priorityCities.includes(c.slug)), ...Object.values(CITY_DATA).filter(c => !priorityCities.includes(c.slug))].slice(0, 12);
   const dbCategorySlug =
     config.category === 'food_truck' ? 'food-trucks'
       : config.category === 'food_trailer' ? 'food-trailers'
@@ -344,12 +380,12 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
   // page useful for a visitor but do not make a specialty/state/city page
   // worth indexing on its own. This applies to every hub, including specialty
   // hubs and the coffee/ice-cream vehicle landing pages.
-  const noindex = !loading && !loadError && (primary.length === 0 || totalListings === 0);
+  const noindex = !loading && !loadError && (primary.length === 0 || totalListings === 0 || (!!market && marketLocalCount === 0));
 
   // Low-inventory freight funnel. Triggered by the page's OWN on-topic
   // inventory (primary tier) — geographic fallback rows are not local supply.
   const localCount = primary.length;
-  const isLowInventory = !loading && !loadError && localCount < LOW_INVENTORY_THRESHOLD;
+  const isLowInventory = !market && !loading && !loadError && localCount < LOW_INVENTORY_THRESHOLD;
 
   // Live inventory signals shown above the fold. Real numbers only — when a
   // page has no on-topic inventory the whole block is withheld rather than
@@ -430,6 +466,10 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
                 </span>
               )}
             </div>
+            {market && <p className="text-xs text-muted-foreground">
+              {l.distance_miles != null ? `About ${l.distance_miles.toLocaleString()} miles from ${market.distanceLabel ?? config.city?.name}` : 'Distance not available'}
+              {!l.is_local && ' · Wider search'}
+            </p>}
             {l.description && (
               <p className="text-sm text-muted-foreground line-clamp-2">
                 {l.description}
@@ -502,7 +542,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
         ctaHref: config.category === 'food_trailer' ? '/sell-food-trailer' : '/sell-my-food-truck',
       });
 
-  const primaryHeading = config.city
+  const primaryHeading = market ? `${primary.length} listings to explore near ${config.city?.name}` : config.city
     ? `${catPluralLower.charAt(0).toUpperCase() + catPluralLower.slice(1)}${intentLabel ? ` ${intentLabel}` : ''} in ${cityLabel}`
     : config.state
       ? `${catPluralLower.charAt(0).toUpperCase() + catPluralLower.slice(1)}${intentLabel ? ` ${intentLabel}` : ''} in ${config.state.name}`
@@ -517,7 +557,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
         image={config.ogImage}
         noindex={noindex}
       />
-      <JsonLd schema={[breadcrumbSchema, faqSchema, ...(totalListings > 0 ? [itemListSchema] : [])]} />
+      <JsonLd schema={[breadcrumbSchema, faqSchema, ...(!loading && !loadError && totalListings > 0 ? [itemListSchema] : [])]} />
       <Header />
 
       <main className="flex-1" onClickCapture={onTrackedClick}>
@@ -561,7 +601,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
                 </Link>
               </Button>
               <Button asChild variant="cta-outline" size="cta" className="w-full sm:w-auto">
-                <Link to={sellerCta.ctaHref} data-cta-id="hero_sell">{sellerCta.ctaLabel}</Link>
+                <Link to={market ? "/financing" : sellerCta.ctaHref} data-cta-id={market ? "hero_financing" : "hero_sell"}>{market ? "Explore financing" : sellerCta.ctaLabel}</Link>
               </Button>
             </div>
             {config.answerBlock && (
@@ -580,13 +620,15 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
             )}
           </header>
 
-          {!loading && inventoryStats && (
+          {market && <div className="flex flex-wrap gap-x-6 gap-y-3 text-sm font-medium"><a href="#buyer-help" className="underline underline-offset-4">Financing & sales help</a><a href="#purchase-preview-title" className="underline underline-offset-4">See what happens after you buy</a><Link to="/how-to-buy-a-food-truck" className="underline underline-offset-4">Buying guide</Link></div>}
+
+          {!loading && !loadError && inventoryStats && (
             <section
               aria-label="Current inventory"
               className="grid grid-cols-2 gap-3 sm:grid-cols-4 rounded-2xl border border-border bg-card p-4 md:p-5"
             >
               <div>
-                <p className="text-xs uppercase tracking-wide text-muted-foreground">Listings available</p>
+                <p className="text-xs uppercase tracking-wide text-muted-foreground">{market ? "Listings shown" : "Listings available"}</p>
                 <p className="text-xl md:text-2xl font-semibold text-foreground">{inventoryStats.count}</p>
               </div>
               {inventoryStats.priceRange && (
@@ -605,7 +647,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
               )}
               <div>
                 <p className="text-xs uppercase tracking-wide text-muted-foreground">Updated</p>
-                <p className="text-xl md:text-2xl font-semibold text-foreground">Daily</p>
+                <p className="text-xl md:text-2xl font-semibold text-foreground">{market ? "Every minute" : "Daily"}</p>
               </div>
             </section>
           )}
@@ -659,14 +701,14 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
 
           ) : (
             <div className="space-y-10" data-cta-location="inventory">
-              {localCount > 0 && localCount <= NEAR_EMPTY_THRESHOLD && (
+              {!market && localCount > 0 && localCount <= NEAR_EMPTY_THRESHOLD && (
                 <LowInventoryInlineLine
                   pageSlug={canonical}
                   resultCount={localCount}
                   nationwide={nationwide}
                 />
               )}
-              {renderTier(primaryHeading, primary)}
+              {renderTier(primaryHeading, primary, market ? `Up to 10 current listings. Local matches and listings within 100 miles appear first, then wider options by distance. Distances are approximate straight-line miles from ${market.distanceLabel ?? config.city?.name}, not driving routes. Listings without coordinates appear last within their group.` : undefined)}
               {stateFallback.length > 0 && renderTier(
                 `More ${catPluralLower}${intentLabel ? ` ${intentLabel}` : ''} across ${stateLabel ?? 'nearby states'}`,
                 stateFallback,
@@ -688,6 +730,9 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
               )}
             </div>
           )}
+
+          {market && config.city && <BuyerCitySupport city={config.city.name} path={config.path} category={config.category} />}
+          {market && <PostPurchasePreview />}
 
           {config.answerBlock && (
             <section
@@ -817,7 +862,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
               {cityLinks.map((c) => {
                 const cityState = getCityStateSlug(c);
                 const href = config.mode === 'sale'
-                  ? `/buy/${dbCategorySlug}/${cityState}`
+                  ? buyerMarketPath(config.category, cityState) ?? `/buy/${dbCategorySlug}/${cityState}`
                   : `/rent/${dbCategorySlug}/${cityState}`;
                 return (
                   <li key={c.slug}>
@@ -830,6 +875,7 @@ const CategoryIndex = ({ config }: { config: CategoryIndexConfig }) => {
                   </li>
                 );
               })}
+              {config.mode === 'sale' && config.category === 'food_truck' && <li><Link to="/food-trucks-for-sale/north-florida" className="block text-sm text-muted-foreground hover:text-primary">Browse food trucks in North Florida</Link></li>}
             </ul>
           </section>
           )}
