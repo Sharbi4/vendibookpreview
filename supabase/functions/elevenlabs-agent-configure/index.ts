@@ -201,7 +201,7 @@ serve(async (req) => {
       const unmanagedInline = Array.isArray(_inlineTools) ? _inlineTools.filter((t: any) => t?.type !== 'client'
         && !existingIds.includes(t?.id) && !attachedNames.has(String(t?.name ?? ''))
         && !(t?.type === 'system' && builtInNames.has(String(t?.name ?? '')))) : [];
-      if (target === 'atlas' && unmanagedInline.length) return json({ agent_updated: false, error: 'Existing inline integration tools need preservation review before syncing.',
+      if ((target === 'atlas' || target === 'allison') && unmanagedInline.length) return json({ agent_updated: false, error: 'Existing inline integration tools need preservation review before syncing.',
         unmanaged_inline: unmanagedInline.map((t: any) => ({ name: t?.name, type: t?.type })), tools: toolResults }, 409);
 
       const patch = {
