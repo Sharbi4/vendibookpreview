@@ -4,7 +4,7 @@ import { detectSpecialty } from '@/lib/listings/specialty';
 
 export type CategoryPhotoListing = VisibilityShape & {
   id: string; title: string; mode: string; category: string;
-  cover_image_url: string | null; images?: string[] | null;
+  cover_image_url: string | null; image_urls?: string[] | null;
   subcategory?: string | null; description?: string | null;
 };
 export type CategoryPhoto = { url: string; title: string };
@@ -28,7 +28,7 @@ export function categoryPhotos(rows: CategoryPhotoListing[], group: HomePhotoGro
       case 'coffee': return vehicle && row.mode === 'sale' && detectSpecialty(row) === 'coffee';
       case 'ice-cream': return vehicle && row.mode === 'sale' && detectSpecialty(row) === 'ice_cream';
     }
-  }).flatMap((row) => [row.cover_image_url, ...(row.images ?? [])].flatMap((url) => {
+  }).flatMap((row) => [row.cover_image_url, ...(row.image_urls ?? [])].flatMap((url) => {
     if (!url || seen.has(url) || !/^https?:\/\//.test(url)) return [];
     seen.add(url);
     return [{ url, title: row.title }];

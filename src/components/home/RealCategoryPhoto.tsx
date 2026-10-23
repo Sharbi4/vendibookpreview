@@ -11,7 +11,7 @@ export function useHomeCategoryPhotos() {
     staleTime: 60_000,
     queryFn: async () => {
       const { data, error } = await excludeTestListings(applyDiscoveryListingFilter(
-        supabase.from('listings').select('id,title,mode,category,cover_image_url,images,subcategory,description,status,published_at,deleted_at,moderation_status,unlisted'),
+        supabase.from('listings').select('id,title,mode,category,cover_image_url,image_urls,subcategory,description,status,published_at,deleted_at,moderation_status,unlisted'),
       )).order('published_at', { ascending: false }).limit(500);
       if (error) throw error;
       return data as CategoryPhotoListing[];
