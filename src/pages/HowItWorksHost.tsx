@@ -1,3 +1,4 @@
+import { BrandIcon } from '@/components/brand/BrandIcon';
 import FlipInsuranceSection from '@/components/booking/FlipInsuranceSection';
 import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
@@ -405,7 +406,7 @@ const HowItWorksHost = () => {
                   transition={{ duration: 0.4, delay: reduce ? 0 : i * 0.07, ease }}
                 >
                   <span className="w-11 h-11 rounded-2xl bg-card border border-border flex items-center justify-center shadow-sm mb-5">
-                    <b.icon className="w-5 h-5 text-foreground/70" />
+                    <BrandIcon icon={b.icon} size={36}/>
                   </span>
                   <h3 className="text-lg font-semibold text-foreground mb-2">{b.title}</h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">{b.body}</p>
@@ -530,7 +531,7 @@ const HowItWorksHost = () => {
                     className="group flex items-center gap-4 h-full rounded-3xl border border-border bg-card p-5 sm:p-6 hover:shadow-md hover:border-foreground/25 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   >
                     <span className="w-11 h-11 rounded-2xl bg-background border border-border flex items-center justify-center shrink-0 shadow-sm">
-                      <t.icon className="w-5 h-5 text-foreground/70" />
+                      <BrandIcon icon={t.icon} size={36}/>
                     </span>
                     <span className="flex-1">
                       <span className="block text-base font-semibold text-foreground">{t.name}</span>

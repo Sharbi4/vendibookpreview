@@ -1,3 +1,4 @@
+import { PostPurchasePreview } from '@/components/home/PostPurchasePreview';
 import { buildHomepageSpotlight } from '@/lib/listings/homepageSpotlight';
 import { excludeTestListings } from '@/lib/excludeTestListings';
 import { Link } from 'react-router-dom';
@@ -278,8 +279,8 @@ const Index = () => {
         </section>
 
         <HomeSellBand sellerStartHref={sellerStartHref} />
+        <PostPurchasePreview/>
       </main>
-
       <Footer />
       <NewsletterPopup />
     </div>

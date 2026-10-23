@@ -1,3 +1,4 @@
+import { BrandIcon } from '@/components/brand/BrandIcon';
 /**
  * ListingHowItWorks
  * -----------------
@@ -914,9 +915,7 @@ const ListingHowItWorks = ({ listing, isOwner, className }: Props) => {
               const Icon = step.icon;
               return (
                 <li key={i} className="flex items-start gap-3">
-                  <div className="shrink-0 w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
-                    <Icon className="h-5 w-5" aria-hidden="true" />
-                  </div>
+                  <BrandIcon icon={Icon} size={36}/>
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <Badge variant="secondary" className="rounded-full">

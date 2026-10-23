@@ -1,3 +1,4 @@
+import { BrandIcon } from '@/components/brand/BrandIcon';
 import { Link } from 'react-router-dom';
 import { motion, useReducedMotion } from 'framer-motion';
 import {
@@ -422,7 +423,7 @@ const HowItWorksSeller = () => {
                   className="group flex flex-col h-full rounded-3xl border border-border bg-card p-7 sm:p-8 hover:shadow-md hover:border-foreground/25 transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                 >
                   <span className="w-12 h-12 rounded-2xl bg-primary/10 flex items-center justify-center mb-5">
-                    <SAY_YES_FEATURED.icon className="w-5 h-5 text-primary" />
+                    <BrandIcon icon={SAY_YES_FEATURED.icon} size={36}/>
                   </span>
                   <p className="text-[11px] font-semibold uppercase tracking-[0.14em] text-primary mb-1.5">
                     {SAY_YES_FEATURED.kicker}
@@ -450,7 +451,7 @@ const HowItWorksSeller = () => {
                     className="flex items-center gap-4 flex-1 rounded-3xl border border-border bg-card p-5 sm:p-6"
                   >
                     <span className="w-11 h-11 rounded-2xl bg-background border border-border flex items-center justify-center shrink-0 shadow-sm">
-                      <r.icon className="w-5 h-5 text-foreground/70" />
+                      <BrandIcon icon={r.icon} size={36}/>
                     </span>
                     <span>
                       <span className="block text-base font-semibold text-foreground">

@@ -1,3 +1,4 @@
+import { BrandIcon } from '@/components/brand/BrandIcon';
 import { useState } from 'react';
 import { ListingUpgradeOptions } from './ListingUpgradeOptions';
 import { ArrowUpRight, Check, Copy, Download, Facebook, Instagram, Video, ArrowRight, Megaphone } from 'lucide-react';
@@ -52,7 +53,7 @@ export function ListingLaunchKit(props: Props) {
       </div>
       <div className="m-3 rounded-[22px] bg-[#242321] p-6 text-[#fffaf3] sm:m-4 sm:p-8">
         <div className="flex items-start gap-4">
-          <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-white/15 bg-white/5 text-[#ff8159]"><Video className="h-5 w-5" /></div>
+          <BrandIcon icon={Video} size={44}/>
           <div className="min-w-0 flex-1">
             <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[#c8c1b8]">Invite a closer look</p>
             <h3 className="mt-3 text-[26px] font-semibold leading-tight tracking-[-0.025em]">Show your listing live.</h3>

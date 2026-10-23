@@ -1,3 +1,5 @@
+import { PostPurchasePreview } from '@/components/home/PostPurchasePreview';
+import { BrandIcon } from '@/components/brand/BrandIcon';
 import FlipInsuranceSection from '@/components/booking/FlipInsuranceSection';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -211,7 +213,7 @@ function FulfillmentJourney() {
               { icon: Video, title: 'Walk through the condition', body: option.handoff },
               { icon: FileSignature, title: 'Sign and confirm', body: 'Complete the applicable digital documents and handoff confirmations. Find your receipt, signed paperwork, and transaction updates in your account.' },
             ].map((step, index) => <li key={step.title} className="flex gap-4">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl bg-[#f5eee6] text-primary"><step.icon className="h-5 w-5" /></span>
+              <BrandIcon icon={step.icon} size={40}/>
               <div><h4 className="font-semibold"><span className="text-xs text-muted-foreground mr-2">0{index + 1}</span>{step.title}</h4><p className="mt-1 text-sm leading-relaxed text-muted-foreground">{step.body}</p></div>
             </li>)}
           </ol>
@@ -564,7 +566,7 @@ const HowItWorks = () => {
                     className="group flex flex-col h-full rounded-[24px] border border-border bg-card p-6 shadow-[0_1px_2px_rgba(24,20,16,0.04)] hover:shadow-[0_16px_40px_-20px_rgba(24,20,16,0.3)] hover:border-foreground/25 hover:-translate-y-0.5 transition-all duration-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                   >
                     <span className="w-11 h-11 rounded-2xl bg-primary/10 flex items-center justify-center mb-4">
-                      <t.icon className="w-5 h-5 text-primary" />
+                      <BrandIcon icon={t.icon} size={36}/>
                     </span>
                     <span className="block text-base font-semibold text-foreground mb-1.5">
                       {t.name}
@@ -701,6 +703,7 @@ const HowItWorks = () => {
         </section>
       </main>
 
+      <PostPurchasePreview/>
       <Footer />
     </div>
   );

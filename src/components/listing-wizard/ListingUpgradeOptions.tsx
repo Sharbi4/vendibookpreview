@@ -1,5 +1,6 @@
+import { BrandIcon } from '@/components/brand/BrandIcon';
 import { useState } from 'react';
-import { ArrowRight, ArrowUpRight, Check } from 'lucide-react';
+import { ArrowRight, ArrowUpRight, Check, Star } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { productCheckoutPath } from '@/lib/payments/hostedCheckout';
@@ -7,9 +8,7 @@ import { ACTIVE_PRODUCT_SLUGS } from '@/lib/monetization/catalogPricing';
 import { BUYERMATCH_DISCLOSURE } from '@/lib/monetization/buyerMatch';
 
 function UpgradeMark({ pro = false }: { pro?: boolean }) {
-  return <span aria-hidden="true" className={`upgrade-dimensional-icon ${pro ? 'upgrade-dimensional-icon-pro' : ''}`}>
-    {pro ? <span className="rounded-md border border-[#9f8b70]/40 bg-[#332b23] px-2 py-1 text-[13px] font-bold tracking-[0.12em] text-[#fff3dc] shadow-md">PRO</span> : <span className="flex w-9 flex-col gap-1 rounded-md border border-[#d8ad8f] bg-white p-1.5 shadow-sm"><span className="h-3 rounded-sm bg-[#ff612e] shadow-[0_2px_5px_rgba(255,81,36,.25)]"/><span className="h-1 rounded bg-[#d8c8b8]"/><span className="h-1 w-2/3 rounded bg-[#e6ddd3]"/></span>}
-  </span>;
+  return pro ? <BrandIcon size={58} tone="steel"><span>PRO</span></BrandIcon> : <BrandIcon icon={Star} size={58}/>;
 }
 
 export function ListingUpgradeOptions({ listingId }: { listingId: string }) {
