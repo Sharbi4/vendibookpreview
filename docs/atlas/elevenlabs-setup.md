@@ -47,11 +47,16 @@ planned phase 2.
 
 ## 2. Turning Atlas on
 
-Atlas is off for everyone by default.
+Atlas is enabled by default following the owner's launch instruction on October 22, 2026.
+The compact Ask Atlas launcher replaces the Tawk support bubble across the app.
+Set `VITE_ATLAS_ENABLED=false` only for an intentional emergency disable.
+Old `?atlas=` and browser preview flags no longer control the public launch.
 
-- One browser: open any page with `?atlas=1` (`?atlas=0` turns it off).
-- Everyone: build with `VITE_ATLAS_ENABLED=true` (owner decision).
-- Agent id for local/public mode: `VITE_ATLAS_AGENT_ID` in `.env.local`.
+Production voice uses a short-lived WebRTC token; typing uses a signed WebSocket URL,
+both from the rate-limited `atlas-agent-token` function. `ELEVENLABS_API_KEY` stays server-side.
+`ATLAS_AGENT_ID` optionally overrides the established Atlas agent ID. An explicit
+`VITE_ATLAS_AGENT_ID` enables direct public-agent mode only in a local development build.
+No conversation starts until a visitor chooses voice or typing.
 
 ## 3. Picking the call back up
 

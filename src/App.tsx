@@ -35,11 +35,10 @@ import { Loader2 } from "lucide-react";
 import GoogleOneTap from "@/components/auth/GoogleOneTap";
 import PhoneVerificationPrompt from "@/components/comms/PhoneVerificationPrompt";
 import LegalNamePrompt from "@/components/auth/LegalNamePrompt";
-import TawkIdentity from "@/components/support/TawkIdentity";
 
 import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import { isAtlasEnabled } from "@/lib/atlas/atlasFlag";
-// Loaded only when the Atlas flag is on, so other visitors never download the voice SDK.
+// Atlas replaces the legacy support bubble; the voice SDK remains lazy loaded.
 const AtlasAgent = lazy(() => import("@/components/atlas/AtlasAgent"));
 const atlasOn = isAtlasEnabled();
 import OfflineBanner from "@/components/system/OfflineBanner";
@@ -790,8 +789,6 @@ const useGlobalErrorHandler = () => {
   }, []);
 };
 
-const FloatingConciergeButton = lazy(() => import("@/components/FloatingConciergeButton"));
-
 const AppContent = () => {
   const { pathname } = useLocation();
   const isBuildStudio = pathname.startsWith('/build-studio');
@@ -820,19 +817,12 @@ const AppContent = () => {
       <CookieConsent />
 
       {!isBuildStudio && <GoogleOneTap />}
-      <TawkIdentity />
       
       
       <AnimatedRoutes />
       {!isBuildStudio && <MobileBottomNav />}
       <Suspense fallback={null}>
         {!isBuildStudio && showAtlas && <AtlasAgent />}
-      </Suspense>
-      <Suspense fallback={null}>
-      </Suspense>
-      <Suspense fallback={null}>
-        {/* Atlas owns the corner and hands off to live chat itself. */}
-        {!isBuildStudio && !showAtlas && <FloatingConciergeButton />}
       </Suspense>
     </>
   );

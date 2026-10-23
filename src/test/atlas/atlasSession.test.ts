@@ -1,0 +1,46 @@
+// @vitest-environment node
+import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { readFileSync } from 'node:fs';
+import ts from 'typescript';
+
+let handler: (req: Request) => Promise<Response>;
+const rateLimit = vi.fn();
+const provider = vi.fn();
+const source = readFileSync('supabase/functions/atlas-agent-token/index.ts','utf8').replace(/^import .*;\r?\n/gm,'');
+const compiled = ts.transpileModule(source, {compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
+new Function('serve','checkRateLimit','clientIp','Deno','fetch',compiled)(
+  (fn:typeof handler)=>{handler=fn;},rateLimit,()=> 'test-ip',
+  {env:{get:(key:string)=>key==='ELEVENLABS_API_KEY'?'private-provider-key':undefined}},provider,
+);
+const request=(mode:string)=>new Request('https://vendibook.com/atlas-agent-token',{method:'POST',body:JSON.stringify({mode})});
+describe('Atlas session handoff',()=>{
+  beforeEach(()=>{vi.clearAllMocks();rateLimit.mockResolvedValue(true);});
+  it('issues text WebSocket handoff without exposing the provider key',async()=>{
+    provider.mockResolvedValue(new Response(JSON.stringify({signed_url:'wss://api.elevenlabs.io/v1/convai/conversation?token=temporary'})));
+    const result=await handler(request('text'));
+    expect(result.status).toBe(200);
+    expect(await result.json()).toEqual({signedUrl:'wss://api.elevenlabs.io/v1/convai/conversation?token=temporary'});
+    expect(provider.mock.calls[0][0]).toContain('get-signed-url?agent_id=agent_1501m4rhvkz9fsbs5ce89zvk2k7b');
+    expect(result.headers.get('Cache-Control')).toBe('no-store');
+    expect(rateLimit).toHaveBeenCalledWith('atlas_agent_ip_min','test-ip',6,1);
+    expect(rateLimit).toHaveBeenCalledWith('atlas_agent_ip_day','test-ip',40,1440);
+  });
+  it('issues a voice WebRTC token separately',async()=>{
+    provider.mockResolvedValue(new Response(JSON.stringify({token:'temporary-voice-token'})));
+    expect(await (await handler(request('voice'))).json()).toEqual({token:'temporary-voice-token'});
+    expect(provider.mock.calls[0][0]).toContain('/conversation/token?');
+  });
+  it('rejects rate-limited requests before contacting the provider',async()=>{
+    rateLimit.mockResolvedValue(false);
+    expect((await handler(request('text'))).status).toBe(429);
+    expect(provider).not.toHaveBeenCalled();
+  });
+  it('rejects unsupported signed URL hosts',async()=>{
+    provider.mockResolvedValue(new Response(JSON.stringify({signed_url:'wss://untrusted.example/conversation'})));
+    expect((await handler(request('text'))).status).toBe(503);
+  });
+  it('does not permit GET to create conversations',async()=>{
+    expect((await handler(new Request('https://vendibook.com/atlas-agent-token'))).status).toBe(405);
+    expect(provider).not.toHaveBeenCalled();
+  });
+});

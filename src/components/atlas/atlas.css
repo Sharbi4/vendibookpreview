@@ -69,6 +69,11 @@
   border: 1px solid #ECE6DD; box-shadow: 0 12px 30px rgba(28,27,26,.22); transition: transform .15s ease;
 }
 .atlas-orb-btn:hover { transform: scale(1.05); }
+.atlas-orb-btn { display: flex; gap: 10px; padding: 5px 16px 5px 5px; text-align: left; }
+.atlas-launcher-label { color: #25313b; font-size: 14px; font-weight: 700; line-height: 1.3; }
+.atlas-launcher-label small { display: block; color: #6f7780; font-size: 10px; font-weight: 500; }
+.atlas-chip-chat { width: 40px; height: 40px; color: #e8461d; }
+.atlas-orb-btn:focus-visible { outline: 2px solid #ff5124; outline-offset: 3px; }
 
 /* The orb: slowly swirling flame gradient with a soft glass highlight. */
 .atlas-orb {

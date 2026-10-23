@@ -127,58 +127,7 @@
 
   <!-- Analytics scripts are loaded dynamically based on cookie consent -->
 
-    <!-- Prevent third-party chat widgets (Tawk.to) from hijacking the browser tab title
-         with "(N) New Message" style alerts. We revert any title that matches the
-         tab-notification pattern back to the last legitimate title set by the app. -->
-    <script type="text/javascript">
-      (function(){
-        try {
-          var lastRealTitle = document.title;
-          // Matches "(1) ...", "(12) ...", or any title containing "new message"
-          var hijackPattern = /^\(\d+\)\s|new message/i;
-          var apply = function(){
-            var titleEl = document.querySelector('title');
-            if (!titleEl) return;
-            var revert = function(){
-              var t = document.title;
-              if (hijackPattern.test(t)) {
-                if (document.title !== lastRealTitle) {
-                  document.title = lastRealTitle;
-                }
-              } else {
-                lastRealTitle = t;
-              }
-            };
-            new MutationObserver(revert).observe(titleEl, { childList: true, subtree: true, characterData: true });
-            // Also guard against blur/focus-driven flashes
-            window.addEventListener('focus', revert);
-          };
-          if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', apply);
-          } else {
-            apply();
-          }
-        } catch (e) { /* no-op */ }
-      })();
-    </script>
-
-    <!-- Start of Tawk.to Script -->
-    <script type="text/javascript">
-      var Tawk_API = Tawk_API || {}, Tawk_LoadStart = new Date();
-      // Keep the native widget hidden so our custom FloatingConciergeButton is the only visible trigger.
-      Tawk_API.onLoad = function(){
-        try { Tawk_API.hideWidget && Tawk_API.hideWidget(); } catch(e) {}
-      };
-      (function(){
-        var s1 = document.createElement("script"), s0 = document.getElementsByTagName("script")[0];
-        s1.async = true;
-        s1.src = 'https://embed.tawk.to/68300d3b16f3f4bfe08eec8f/1irtr7cil';
-        s1.charset = 'UTF-8';
-        s1.setAttribute('crossorigin', '*');
-        s0.parentNode.insertBefore(s1, s0);
-      })();
-    </script>
-    <!-- End of Tawk.to Script -->
+    <!-- Atlas is mounted by the app; no third-party floating chat widget. -->
 </head>
 
   <body>

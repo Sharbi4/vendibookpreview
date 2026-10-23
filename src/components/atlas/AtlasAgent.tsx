@@ -27,9 +27,9 @@ import {
 } from '@/lib/atlas/atlasMemory';
 import './atlas.css';
 
-// Public agent id (not a secret; ElevenLabs embeds expose it). Override with VITE_ATLAS_AGENT_ID;
-// set it to "" to use short-lived tokens from atlas-agent-token instead.
-const AGENT_ID = ((import.meta.env.VITE_ATLAS_AGENT_ID as string | undefined) ?? 'agent_1501m4rhvkz9fsbs5ce89zvk2k7b').trim();
+// Production always uses the rate-limited server handoff. Direct public agent
+// mode is available only with an explicit local-development override.
+const AGENT_ID = import.meta.env.DEV ? ((import.meta.env.VITE_ATLAS_AGENT_ID as string | undefined) ?? '').trim() : '';
 /** Set once "First message" overrides are allowed on the ElevenLabs agent. */
 const CAN_OVERRIDE_FIRST_MESSAGE = import.meta.env.VITE_ATLAS_ALLOW_OVERRIDES === 'true';
 
@@ -52,19 +52,18 @@ export default function AtlasAgent() {
   const [phase, setPhase] = useState<Phase>('idle');
   const [mode, setMode] = useState<Mode>('voice');
   const [error, setError] = useState<{ text: string; offerTyping: boolean } | null>(null);
-  // Collapsed to just the orb (remembered per browser).
+  // Compact named launcher by default, with the visitor's expansion remembered.
   const [minimized, setMinimizedState] = useState(() => {
     try {
-      return localStorage.getItem('vb_atlas_min') === '1';
+      return localStorage.getItem('vb_atlas_min') !== '0';
     } catch {
-      return false;
+      return true;
     }
   });
   const setMinimized = (v: boolean) => {
     setMinimizedState(v);
     try {
-      if (v) localStorage.setItem('vb_atlas_min', '1');
-      else localStorage.removeItem('vb_atlas_min');
+      localStorage.setItem('vb_atlas_min', v ? '1' : '0');
     } catch {
       /* private mode: just don't remember */
     }
@@ -147,17 +146,6 @@ export default function AtlasAgent() {
         openOffer: (d) => {
           setOfferDraft(d);
           if (!userRef.current) setOfferAuthGate(true);
-        },
-        openLiveChat: () => {
-          const tawk = (window as unknown as { Tawk_API?: { showWidget?: () => void; maximize?: () => void } }).Tawk_API;
-          if (!tawk?.maximize) return false;
-          try {
-            tawk.showWidget?.();
-            tawk.maximize();
-            return true;
-          } catch {
-            return false;
-          }
         },
       }),
     [navigate, remember],
@@ -256,13 +244,15 @@ export default function AtlasAgent() {
         ? { agent: { firstMessage: 'Welcome back! Picking up right where we left off.' } }
         : undefined;
       try {
-        if (!textOnly) await navigator.mediaDevices.getUserMedia({ audio: true });
+        // The SDK owns microphone permission and cleanup for voice sessions.
         if (AGENT_ID) {
           await conversation.startSession({ agentId: AGENT_ID, connectionType: textOnly ? 'websocket' : 'webrtc', textOnly, overrides });
         } else {
-          const { data, error: edgeError } = await invokeEdge<{ token?: string }>('atlas-agent-token', { body: {} }, { retries: 1, timeoutMs: 15000 });
-          if (edgeError || !data?.token) throw new Error('unavailable');
-          await conversation.startSession({ conversationToken: data.token, connectionType: 'webrtc', textOnly, overrides });
+          const { data, error: edgeError } = await invokeEdge<{ token?: string; signedUrl?: string }>('atlas-agent-token', { body: { mode: opts.mode } }, { retries: 1, timeoutMs: 15000 });
+          if (edgeError) throw new Error('unavailable');
+          if (textOnly && data?.signedUrl) await conversation.startSession({ signedUrl: data.signedUrl, connectionType: 'websocket', textOnly: true, overrides });
+          else if (!textOnly && data?.token) await conversation.startSession({ conversationToken: data.token, connectionType: 'webrtc', overrides });
+          else throw new Error('unavailable');
         }
       } catch (e) {
         resumeRef.current = null;
@@ -390,9 +380,10 @@ export default function AtlasAgent() {
           type="button"
           className={cn('atlas-orb-btn', onListing && 'is-raised')}
           onClick={() => setMinimized(false)}
-          aria-label={`Speak to our agent ${ATLAS_NAME}`}
+          aria-label={`Open ${ATLAS_NAME}, Vendibook AI sales assistant`}
+          aria-expanded={false}
         >
-          <AtlasOrb size={52} />
+          <AtlasOrb size={42} /><span className="atlas-launcher-label">Ask {ATLAS_NAME}<small>AI sales assistant</small></span>
         </button>
         </>
       );
@@ -412,6 +403,7 @@ export default function AtlasAgent() {
           </span>
           <Phone className="atlas-chip-icon" aria-hidden="true" />
         </button>
+        <button type="button" className="atlas-chip-x atlas-chip-chat" onClick={() => void call({ mode: 'text', resume: Boolean(saved) })} aria-label={`Chat with ${ATLAS_NAME} by typing instead`}><MessageCircle className="h-4 w-4" aria-hidden="true" /></button>
         {!saved && (
           <button type="button" className="atlas-chip-x" onClick={() => setMinimized(true)} aria-label={`Minimize ${ATLAS_NAME}`}>
             <Minus className="h-3.5 w-3.5" aria-hidden="true" />
@@ -422,7 +414,7 @@ export default function AtlasAgent() {
         <div className="atlas-widget-head">
           <AtlasOrb size={42} />
           <div className="min-w-0 flex-1">
-            <p className="atlas-widget-title">{saved ? 'Pick up where you left off?' : `Speak to our agent ${ATLAS_NAME}`}</p>
+            <p className="atlas-widget-title">{saved ? 'Pick up where you left off?' : `${ATLAS_NAME} · AI sales assistant`}</p>
             <p className="atlas-widget-sub">{saved ? `${ATLAS_NAME} remembers your call.` : 'Find, compare and negotiate by voice.'}</p>
           </div>
           {!saved && (
