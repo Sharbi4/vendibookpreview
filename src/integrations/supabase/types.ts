@@ -14946,6 +14946,18 @@ export type Database = {
         Args: { p_zip: string }
         Returns: Record<string, unknown>
       }
+      buyer_city_inventory: {
+        Args: {
+          p_category: string
+          p_city: string
+          p_lat: number
+          p_lng: number
+          p_local_cities?: string[]
+          p_state: string
+          p_state_name: string
+        }
+        Returns: Json
+      }
       buyermatch_action: {
         Args: { _action: string; _payload?: Json }
         Returns: Json

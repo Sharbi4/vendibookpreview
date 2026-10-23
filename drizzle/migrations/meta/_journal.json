@@ -169,6 +169,13 @@
       "when": 1792731014780,
       "tag": "0023_operations_console",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1792732211762,
+      "tag": "0024_buyer_city_inventory",
+      "breakpoints": true
     }
   ]
 }
