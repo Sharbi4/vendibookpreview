@@ -1,4 +1,7 @@
-import { corsHeaders } from 'npm:@supabase/supabase-js@2/cors'
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+};
 import { paypalApiBase, paypalRequest, paypalEnvironment, getPayPalAccessTokenForEnv } from '../_shared/paypal.ts'
 
 // Admin diagnostic: confirms a PayPal webhook ID exists in the environment
