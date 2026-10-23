@@ -3414,25 +3414,37 @@ export type Database = {
       }
       feedback_email_sent: {
         Row: {
+          attempts: number
           context_id: string
           context_type: string
+          dispatch_status: string
           id: string
+          last_error: string | null
           recipient_email: string
           sent_at: string
+          updated_at: string
         }
         Insert: {
+          attempts?: number
           context_id: string
           context_type: string
+          dispatch_status?: string
           id?: string
+          last_error?: string | null
           recipient_email: string
           sent_at?: string
+          updated_at?: string
         }
         Update: {
+          attempts?: number
           context_id?: string
           context_type?: string
+          dispatch_status?: string
           id?: string
+          last_error?: string | null
           recipient_email?: string
           sent_at?: string
+          updated_at?: string
         }
         Relationships: []
       }
@@ -7363,6 +7375,73 @@ export type Database = {
             columns: ["listing_id"]
             isOneToOne: false
             referencedRelation: "public_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      operations_actions: {
+        Row: {
+          action: string
+          actor_id: string
+          created_at: string
+          id: string
+          result: Json | null
+          status: string
+          target_id: string | null
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          created_at?: string
+          id: string
+          result?: Json | null
+          status?: string
+          target_id?: string | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          created_at?: string
+          id?: string
+          result?: Json | null
+          status?: string
+          target_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operations_actions_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      operations_settings: {
+        Row: {
+          enabled: boolean
+          id: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          enabled?: boolean
+          id: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          enabled?: boolean
+          id?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "operations_settings_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -12027,6 +12106,7 @@ export type Database = {
           consent_basis: Json
           created_at: string
           delivery_status: string | null
+          dispatch_key: string | null
           failure_reason: string | null
           id: string
           message_category: string
@@ -12044,6 +12124,7 @@ export type Database = {
           consent_basis: Json
           created_at?: string
           delivery_status?: string | null
+          dispatch_key?: string | null
           failure_reason?: string | null
           id?: string
           message_category: string
@@ -12061,6 +12142,7 @@ export type Database = {
           consent_basis?: Json
           created_at?: string
           delivery_status?: string | null
+          dispatch_key?: string | null
           failure_reason?: string | null
           id?: string
           message_category?: string
@@ -14768,6 +14850,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      admin_operations_snapshot: { Args: { p_days?: number }; Returns: Json }
       admin_update_referral_config: {
         Args: {
           p_hold_days: number
@@ -14984,6 +15067,7 @@ export type Database = {
         Args: { p_event: string; p_offer: string; p_token: string }
         Returns: boolean
       }
+      claim_post_publish_feedback: { Args: { p_limit?: number }; Returns: Json }
       claim_rental_capture: { Args: { p_record: string }; Returns: undefined }
       claim_seller_verification_retry: {
         Args: { _user_id: string }
@@ -15604,6 +15688,7 @@ export type Database = {
           version: string
         }[]
       }
+      operations_us_state: { Args: { value: string }; Returns: string }
       partner_code_active_uses: {
         Args: {
           p_code_id: string
