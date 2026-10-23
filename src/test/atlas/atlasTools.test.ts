@@ -54,6 +54,19 @@ describe('Atlas helpers', () => {
 });
 
 describe('Atlas tools', () => {
+  it('pauses page actions and navigation until explicitly resumed', async () => {
+    const d = deps();
+    const tools = createAtlasTools(d);
+    await tools.set_navigation({ paused: true });
+    expect(await tools.page_action({ action: 'scroll', target: 'down' })).toContain('paused');
+    await expect(tools.open_page({ page: 'financing' })).rejects.toThrow('atlas_navigation_paused');
+    single.data = { id: ID, title: 'Truck', status: 'published', mode: 'sale' };
+    await expect(tools.show_listing({ listing_id: ID })).rejects.toThrow('atlas_navigation_paused');
+    expect(d.navigate).not.toHaveBeenCalled();
+    await tools.set_navigation({ paused: false });
+    expect(await tools.open_page({ page: 'financing' })).toContain('Opened');
+    expect(d.navigate).toHaveBeenCalledWith('/financing');
+  });
   it('opens the buyer-owned follow-up form without sending a message', async () => {
     const open = vi.fn().mockReturnValue(true);
     const tools = createAtlasTools({ ...deps(), openBuyerFollowUp: open });

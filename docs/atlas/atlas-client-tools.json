@@ -327,6 +327,25 @@
   },
   {
     "type": "client",
+    "name": "set_navigation",
+    "description": "Pause Atlas navigation, scrolling and page edits immediately when the user says stop or stay here. Resume only at the user’s explicit request. Conversation can continue.",
+    "expects_response": true,
+    "response_timeout_secs": 20,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "paused": {
+          "type": "boolean",
+          "description": "True to stop page control; false only when explicitly asked to resume."
+        }
+      },
+      "required": [
+        "paused"
+      ]
+    }
+  },
+  {
+    "type": "client",
     "name": "get_permit_requirements",
     "description": "Look up curated government-source mobile food requirements before answering permit, health, commissary, fire or zoning questions. Returns jurisdiction scope, source links, review date and coverage gaps. Not a live agency approval.",
     "expects_response": true,

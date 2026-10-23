@@ -5,6 +5,7 @@ import { ArrowUp, Keyboard, Loader2, MessageCircle, Mic, MicOff, Minus, Phone, P
 import { cn } from '@/lib/utils';
 import { invokeEdge } from '@/lib/edge/invokeFunction';
 import { ATLAS_NAME } from '@/lib/atlas/atlasConfig';
+import { asksToPauseNavigation } from '@/lib/atlas/atlasNavigation';
 import { ATLAS_PAGE_EVENT, pageOutline } from '@/lib/atlas/atlasPage';
 import { createAtlasTools, liveListingIds, type AtlasListingCard, type AtlasOfferDraft, type AtlasSellerDraft } from '@/lib/atlas/atlasTools';
 import { useAuth } from '@/contexts/AuthContext';
@@ -73,6 +74,7 @@ export default function AtlasAgent() {
   };
   // After Atlas points at something, the card shrinks for a few seconds so it doesn't cover it (phones).
   const [peek, setPeek] = useState(false);
+  const [navigationPaused, setNavigationPaused] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [followUpDraft, setFollowUpDraft] = useState<AtlasFollowUpDraft | null>(null);
   const [menuConcept, setMenuConcept] = useState<AtlasMenuConcept | null>(null);
@@ -132,6 +134,7 @@ export default function AtlasAgent() {
   const tools = useMemo(
     () =>
       createAtlasTools({
+        onNavigationChange: setNavigationPaused,
         navigate: (to) => navigate(to),
         showResults: (next) => {
           setCards(next);
@@ -173,7 +176,8 @@ export default function AtlasAgent() {
       wrapped[name] = async (params) => {
         try {
           return await (fn as (p: Record<string, unknown>) => Promise<string>)(params ?? {});
-        } catch {
+        } catch (error) {
+          if (error instanceof Error && error.message === 'atlas_navigation_paused') return 'Page control is paused by the user. Nothing was opened. Continue answering without moving the page; resume only when asked.';
           return 'That did not work just now. Apologize briefly and offer to try again or connect them with a person.';
         }
       };
@@ -194,6 +198,7 @@ export default function AtlasAgent() {
       if (topic) window.setTimeout(() => conversation.sendContextualUpdate(ATLAS_TOPIC_BRIEFINGS[topic]), 80);
     },
     onMessage: ({ source, message }) => {
+      if (source !== 'ai' && message && asksToPauseNavigation(message)) void tools.set_navigation({ paused: true });
       if (message?.trim()) addTurn({ from: source === 'ai' ? 'atlas' : 'you', text: message.trim() });
     },
     onError: () => {
@@ -321,6 +326,7 @@ export default function AtlasAgent() {
     e.preventDefault();
     const text = draft.trim();
     if (!text || !live) return;
+    if (asksToPauseNavigation(text)) void tools.set_navigation({ paused: true });
     setDraft('');
     addTurn({ from: 'you', text });
     conversation.sendUserMessage(text);
@@ -537,6 +543,10 @@ export default function AtlasAgent() {
       )}
 
       <div className="atlas-controls">
+        {phase === 'live' && <button type="button" className="atlas-btn" aria-pressed={navigationPaused} onClick={() => {
+          void tools.set_navigation({ paused: !navigationPaused });
+          conversation.sendContextualUpdate(navigationPaused ? 'The user explicitly resumed page control.' : 'The user paused page control. Do not navigate or modify the page until they ask to resume. Keep answering.');
+        }}>{navigationPaused ? 'Resume pages' : 'Pause pages'}</button>}
         {phase === 'error' ? (
           error?.offerTyping ? (
             <button type="button" className="atlas-btn is-call" onClick={() => void call({ mode: 'text', resume: Boolean(loadAtlasMemory()) })}>

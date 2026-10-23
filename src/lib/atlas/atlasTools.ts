@@ -62,6 +62,7 @@ export interface AtlasListingCard {
 }
 
 export interface AtlasToolDeps {
+  onNavigationChange?: (paused: boolean) => void;
   navigate: (to: string) => void;
   showResults: (cards: AtlasListingCard[]) => void;
   currentListingId: () => string | null;
@@ -281,6 +282,11 @@ const fulfillmentSummary = (l: Row) => {
 };
 
 export function createAtlasTools(deps: AtlasToolDeps) {
+  let navigationPaused = false;
+  const navigate = (to: string) => {
+    if (navigationPaused) throw new Error('atlas_navigation_paused');
+    deps.navigate(to);
+  };
   // Listings Atlas has shown in this call, newest search first, so "the first
   // one" or a slightly garbled id still lands on the right listing.
   let recent: ListingRef[] = [];
@@ -303,6 +309,12 @@ export function createAtlasTools(deps: AtlasToolDeps) {
   };
 
   return {
+    set_navigation: async (p: Row = {}) => {
+      if (typeof p.paused !== 'boolean') return 'Specify paused true to stop page control or false only when the user asks to resume.';
+      navigationPaused = p.paused;
+      deps.onNavigationChange?.(navigationPaused);
+      return navigationPaused ? 'Page control paused. Keep talking; do not navigate, scroll, highlight, click or fill until the user asks to resume.' : 'Page control resumed at the user’s request.';
+    },
     get_permit_requirements: async (p: Row = {}) => JSON.stringify(getPermitRequirements(p)),
     get_operator_guidance: async (p: Row = {}) => JSON.stringify(getOperatorGuidance(p.topic)),
 
@@ -399,7 +411,7 @@ export function createAtlasTools(deps: AtlasToolDeps) {
     show_listing: async (p: Row = {}) => {
       const { l, why } = await listingFor(p);
       if (!l) return why;
-      deps.navigate(`/listing/${l.id}`);
+      navigate(`/listing/${l.id}`);
       return JSON.stringify({
         opened: true,
         title: l.title,
@@ -489,10 +501,10 @@ export function createAtlasTools(deps: AtlasToolDeps) {
       const { l, why } = await listingFor(p);
       if (!l) return why;
       if (l.mode === 'rent') {
-        deps.navigate(`/listing/${l.id}`);
+        navigate(`/listing/${l.id}`);
         return 'Opened the listing. Rentals are booked by picking dates on the page, then the host approves.';
       }
-      deps.navigate(`/checkout/${l.id}`);
+      navigate(`/checkout/${l.id}`);
       return 'Opened the Request to buy page. They review the order and tap to send it; the seller approves, then Vendibook sends the invoice. They may be asked to verify phone and ID first.';
     },
 
@@ -502,7 +514,7 @@ export function createAtlasTools(deps: AtlasToolDeps) {
       const message = String(p.message ?? '').trim().slice(0, 1000);
       if (!message) return 'Write the message first, then call this again.';
       if (!deps.openMessage) return 'Messaging is not available here. Offer to open the listing so they can tap Ask.';
-      if (deps.currentListingId() !== l.id) deps.navigate(`/listing/${l.id}`);
+      if (deps.currentListingId() !== l.id) navigate(`/listing/${l.id}`);
       const draft = { listingId: String(l.id), hostId: String(l.host_id), title: String(l.title ?? ''), message };
       deps.openMessage(draft);
       shownDrafts.set(draft.listingId, { ...draft, shownAt: Date.now() });
@@ -549,7 +561,7 @@ export function createAtlasTools(deps: AtlasToolDeps) {
       if (!Number.isFinite(amount) || amount <= 0) return 'Ask the buyer what amount they want to offer.';
       if (asking && amount >= asking) return `That is at or above the asking price of ${money(asking)}. They can simply request to buy.`;
       if (!deps.openOffer) return 'Offers are not available here. Suggest tapping Make offer on the listing.';
-      if (deps.currentListingId() !== l.id) deps.navigate(`/listing/${l.id}`);
+      if (deps.currentListingId() !== l.id) navigate(`/listing/${l.id}`);
       deps.openOffer({
         listingId: String(l.id),
         hostId: String(l.host_id),
@@ -637,13 +649,14 @@ export function createAtlasTools(deps: AtlasToolDeps) {
       const base = routes[page];
       if (!base) return 'That page is not available.';
       const text = typeof p.search_text === 'string' ? p.search_text.trim().slice(0, 80) : '';
-      deps.navigate(page === 'search' && text ? `${base}?q=${encodeURIComponent(text)}` : base);
+      navigate(page === 'search' && text ? `${base}?q=${encodeURIComponent(text)}` : base);
       return `Opened the ${page.replace(/_/g, ' ')} page.`;
     },
 
     look_at_page: async () => JSON.stringify(scanPage()),
 
     page_action: async (p: Row = {}) => {
+      if (navigationPaused) return 'Page control is paused. Continue answering without moving or changing the page; resume only at the user’s request.';
       const target = typeof p.target === 'string' ? p.target : '';
       const el = p.action === 'fill' && /^c\d{1,3}$/.test(target) ? document.querySelector(`[data-atlas-ref="${target}"]`) : null;
       // Custom dropdowns open and pick asynchronously.
@@ -692,7 +705,7 @@ export function createAtlasTools(deps: AtlasToolDeps) {
       if (deps.openLiveChat?.()) {
         return 'Opened the live chat with the Vendibook team on their screen. Tell them a teammate will pick up there.';
       }
-      deps.navigate('/contact');
+      navigate('/contact');
       return deps.currentListingId()
         ? 'Opened the contact page for the Vendibook team. They can also message the seller from the listing page.'
         : 'Opened the contact page for the Vendibook team.';
