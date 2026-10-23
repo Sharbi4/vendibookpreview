@@ -249,6 +249,38 @@
   },
   {
     "type": "client",
+    "name": "get_permit_requirements",
+    "description": "Look up curated government-source mobile food requirements before answering permit, health, commissary, fire or zoning questions. Returns jurisdiction scope, source links, review date and coverage gaps. Not a live agency approval.",
+    "expects_response": true,
+    "response_timeout_secs": 20,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "city": {
+          "type": "string",
+          "description": "Actual operating city, not the listing location or a broad region."
+        },
+        "state": {
+          "type": "string",
+          "description": "Operating US state, full name or two-letter code."
+        },
+        "county": {
+          "type": "string",
+          "description": "Operating county, if known; city boundaries and base county matter."
+        },
+        "operation": {
+          "type": "string",
+          "description": "Known preparation method, menu, truck/cart, fuel and private site/public space/event; do not invent missing facts."
+        }
+      },
+      "required": [
+        "city",
+        "state"
+      ]
+    }
+  },
+  {
+    "type": "client",
     "name": "get_faq",
     "description": "Look up Vendibook's official support policy (owner master guide) for policy questions: fees, payouts, refunds, deposits, cancellations, disputes, invoices, offers, Pro, BuyerMatch, verification, shipping, financing, accounts and support.",
     "expects_response": true,
@@ -289,7 +321,7 @@
       "properties": {
         "page": {
           "type": "string",
-          "description": "Which page. \"sell\" starts a new listing, \"my_listings\" is the seller's own listings, \"permits\" opens the PermitPath planner, \"pricing\" shows fees and upgrades, \"insurance\" is the FLIP insurance partner page, \"account\" is Dashboard → Account (where Close account is).",
+          "description": "Which page. \"sell\" starts a new listing, \"my_listings\" is the seller's own listings, \"permits\" opens the PermitPath planner, \"permit_sources\" opens the government-source library, \"pricing\" shows fees and upgrades, \"insurance\" is the FLIP insurance partner page, \"account\" is Dashboard → Account (where Close account is).",
           "enum": [
             "home",
             "search",
@@ -300,6 +332,7 @@
             "sell",
             "contact",
             "permits",
+            "permit_sources",
             "pricing",
             "my_listings",
             "insurance",

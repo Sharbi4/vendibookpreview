@@ -17,6 +17,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import SEO from '@/components/SEO';
 import { startAtlas, type AtlasTopic } from '@/lib/atlas/atlasFlag';
+import { PERMIT_MARKETS, PERMIT_REVIEWED_ON } from '@/lib/atlas/atlasPermitKnowledge';
 import '@/components/atlas/atlas.css';
 
 type Icon = ComponentType<{ className?: string; 'aria-hidden'?: boolean | 'true' | 'false' }>;
@@ -125,6 +126,29 @@ export default function AtlasAgentPage() {
               <button type="button" className={`${glass} h-14 w-full px-7 text-[16px] sm:w-auto`} onClick={() => startAtlas({ mode: 'text' })}>
                 <MessageCircle className="h-5 w-5" aria-hidden="true" /> Chat by typing
               </button>
+            </div>
+          </div>
+        </section>
+
+        <section id="permit-sources" className="relative scroll-mt-24 px-4 py-8" aria-labelledby="permit-sources-heading">
+          <div className="mx-auto max-w-4xl rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-8">
+            <p className={eyebrow}>Government source library</p>
+            <h2 id="permit-sources-heading" className="mt-2 text-2xl font-semibold">Plan for your operating location</h2>
+            <p className="mt-3 text-sm leading-relaxed text-white/65">Reviewed {PERMIT_REVIEWED_ON}. Start with your actual city, county, menu and cooking method. These notes identify agency pathways and coverage gaps; your local authority determines approval. Buying a truck does not approve it for your operation.</p>
+            <div className="mt-5 divide-y divide-white/10">
+              {Object.entries(PERMIT_MARKETS).map(([city, market]) => (
+                <details key={city} className="py-3">
+                  <summary className="cursor-pointer py-1 font-medium capitalize">{city}, {market.state}</summary>
+                  <ul className="mt-3 space-y-4 text-sm text-white/70">
+                    {market.sources.map((source) => <li key={source.url}>
+                      <a className="font-medium text-[#FFAA8E] underline underline-offset-4" href={source.url} target="_blank" rel="noopener noreferrer">{source.authority} ↗</a>
+                      <p className="mt-1">{source.scope}</p>
+                      <ul className="mt-2 list-disc space-y-1 pl-5">{source.guidance.map((line) => <li key={line}>{line}</li>)}</ul>
+                    </li>)}
+                  </ul>
+                  <p className="mt-4 text-sm text-white/55">Still to confirm: {market.gaps.join(' ')}</p>
+                </details>
+              ))}
             </div>
           </div>
         </section>

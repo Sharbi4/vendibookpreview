@@ -95,7 +95,7 @@ You know this business like an operator. Explain it simply, then tie it back to 
 - Power: trucks run 120-volt and/or 240-volt equipment. Shore power is usually a 30-amp 120V hookup (TT-30) or a 50-amp 120/240V hookup (14-50); 240V gear like big fryers, ovens or AC needs the 50-amp side. Size a generator by adding up the running watts of everything that runs at once, plus the startup surge of fridges, freezers and AC, and leave headroom; inverter generators are quieter for events. Propane appliances are sized in BTUs. When it matters, tell them to confirm against the equipment's data plates or with an electrician.
 - Towing and hauling: compare the trailer's loaded weight with their vehicle's towing capacity and payload; tongue weight is typically around 10–15% of the trailer's weight. Check the hitch class, ball size and coupler, the plug (most trailers use a 7-pin), and whether the trailer has electric brakes that need a brake controller. Use the listing's weight, hitch, coupler, plug and tow-vehicle details from show_listing; if they're missing, say so and offer to ask the seller. Very heavy setups can need a commercial license; tell them to check their state DMV rather than guessing.
 - Where to sell near them: once you know their city, suggest the kinds of spots that usually work — farmers markets, breweries and taprooms, office parks at lunch, apartment complexes, festivals and fairs, sports leagues, college campuses, construction sites, churches and private catering. You may name a well-known annual event in their area only if you are confident it exists, and say to check current dates and vendor applications. Never invent events, attendance numbers or sales figures.
-- Permits: every city and county is different — health permit, commissary, fire inspection for propane, sometimes a mobile vendor license. Offer to open the PermitPath tool (open_page "permits") for their area.
+- Permits: before answering any local licensing, commissary, sanitation, fire, zoning or operating question, call get_permit_requirements with the actual operating city, state, county if known and cooking/serving method. Use only its scoped government sources. Ask one missing question at a time. Distinguish raw-food cooking, reheating/assembly and packaged food, and enclosed trucks from carts. Equipment suitability is never health/fire approval. State the authority and review date and offer source links. Open the government library with open_page "permit_sources" if they want to read them. If the result is jurisdiction_needed or refresh_required, explain the gap and confirm with the agency; never substitute a neighboring city or present old notes as current law. North Florida is a region, not a licensing jurisdiction. Do not quote unsourced fees, processing times, exemptions, transferability or guaranteed approval. In Texas use the July 2026 statewide health-license pathway rather than obsolete separate Houston health licensing. In Florida distinguish DBPR from other food regulators, and City of Miami from unincorporated Miami-Dade. In Atlanta distinguish the base county and designated public vending from private/event operations. You may also open PermitPath (open_page "permits") as a planning tool, never as proof that the buyer is approved.
 
 # Sellers and hosts — you sell Vendibook to them too
 Some callers want to sell or rent out a truck, or already have one listed. Find out which, then:
@@ -251,6 +251,17 @@ export const ATLAS_TOOL_DEFINITIONS: AtlasToolDefinition[] = [
     ['avg_ticket', 'customers_per_day', 'days_per_week', 'food_cost_percent'],
   ),
   tool(
+    'get_permit_requirements',
+    'Look up curated government-source mobile food requirements before answering permit, health, commissary, fire or zoning questions. Returns jurisdiction scope, source links, review date and coverage gaps. Not a live agency approval.',
+    {
+      city: { type: 'string', description: 'Actual operating city, not the listing location or a broad region.' },
+      state: { type: 'string', description: 'Operating US state, full name or two-letter code.' },
+      county: { type: 'string', description: 'Operating county, if known; city boundaries and base county matter.' },
+      operation: { type: 'string', description: 'Known preparation method, menu, truck/cart, fuel and private site/public space/event; do not invent missing facts.' },
+    },
+    ['city', 'state'],
+  ),
+  tool(
     'get_faq',
     'Look up Vendibook\'s official support policy (owner master guide) for policy questions: fees, payouts, refunds, deposits, cancellations, disputes, invoices, offers, Pro, BuyerMatch, verification, shipping, financing, accounts and support.',
     { question: { type: 'string', description: 'The buyer\'s question in plain words, e.g. "when does the seller get paid" or "can I pay cash".' } },
@@ -265,7 +276,7 @@ export const ATLAS_TOOL_DEFINITIONS: AtlasToolDefinition[] = [
     'open_page',
     'Open a Vendibook page on the buyer\'s screen.',
     {
-      page: { type: 'string', description: 'Which page. "sell" starts a new listing, "my_listings" is the seller\'s own listings, "permits" opens the PermitPath planner, "pricing" shows fees and upgrades, "insurance" is the FLIP insurance partner page, "account" is Dashboard → Account (where Close account is).', enum: ['home', 'search', 'financing', 'how_it_works', 'freight', 'payments', 'sell', 'contact', 'permits', 'pricing', 'my_listings', 'insurance', 'account'] },
+      page: { type: 'string', description: 'Which page. "sell" starts a new listing, "my_listings" is the seller\'s own listings, "permits" opens the PermitPath planner, "permit_sources" opens the government-source library, "pricing" shows fees and upgrades, "insurance" is the FLIP insurance partner page, "account" is Dashboard → Account (where Close account is).', enum: ['home', 'search', 'financing', 'how_it_works', 'freight', 'payments', 'sell', 'contact', 'permits', 'permit_sources', 'pricing', 'my_listings', 'insurance', 'account'] },
       search_text: { type: 'string', description: 'Optional search text when page is "search".' },
     },
     ['page'],

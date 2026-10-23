@@ -7,6 +7,7 @@ import { FEE_CONFIG } from '../../../supabase/functions/_shared/feeConfig';
 import { pageAction, pickOption, scanPage } from './atlasPage';
 import { GUIDE_FAQ, type GuideFaq } from './atlasGuideFaq';
 import { cookingIntent, matchCookingEquipment, normalizeAtlasState, STATE_NAMES } from './atlasEquipment';
+import { getPermitRequirements } from './atlasPermitKnowledge';
 
 const FAQ_STOP = new Set(['a', 'an', 'the', 'i', 'my', 'me', 'do', 'does', 'is', 'are', 'can', 'to', 'of', 'for', 'and', 'or', 'on', 'in', 'it', 'what', 'how', 'if', 'you', 'your', 'with', 'be', 'get', 'will', 'there', 'this']);
 const faqWords = (s: string) => s.toLowerCase().replace(/[^a-z0-9%$ ]+/g, ' ').split(/\s+/).filter((w) => w.length > 1 && !FAQ_STOP.has(w));
@@ -298,6 +299,8 @@ export function createAtlasTools(deps: AtlasToolDeps) {
   };
 
   return {
+    get_permit_requirements: async (p: Row = {}) => JSON.stringify(getPermitRequirements(p)),
+
     search_listings: async (p: Row = {}) => {
       const state = normalizeAtlasState(p.state);
       const city = String(p.city ?? '').trim().slice(0,80).toLowerCase();
@@ -594,6 +597,7 @@ export function createAtlasTools(deps: AtlasToolDeps) {
         sell: '/list',
         contact: '/contact',
         permits: '/tools/permitpath',
+        permit_sources: '/atlas#permit-sources',
         pricing: '/pricing',
         my_listings: '/dashboard/listings',
         insurance: '/insurance',
