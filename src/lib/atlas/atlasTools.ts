@@ -8,6 +8,7 @@ import { pageAction, pickOption, scanPage } from './atlasPage';
 import { GUIDE_FAQ, type GuideFaq } from './atlasGuideFaq';
 import { cookingIntent, matchCookingEquipment, normalizeAtlasState, STATE_NAMES } from './atlasEquipment';
 import { getPermitRequirements } from './atlasPermitKnowledge';
+import { getOperatorGuidance } from './atlasOperatorKnowledge';
 import { menuIdeasForListing, type AtlasMenuConcept } from './atlasMenu';
 
 const FAQ_STOP = new Set(['a', 'an', 'the', 'i', 'my', 'me', 'do', 'does', 'is', 'are', 'can', 'to', 'of', 'for', 'and', 'or', 'on', 'in', 'it', 'what', 'how', 'if', 'you', 'your', 'with', 'be', 'get', 'will', 'there', 'this']);
@@ -303,6 +304,7 @@ export function createAtlasTools(deps: AtlasToolDeps) {
 
   return {
     get_permit_requirements: async (p: Row = {}) => JSON.stringify(getPermitRequirements(p)),
+    get_operator_guidance: async (p: Row = {}) => JSON.stringify(getOperatorGuidance(p.topic)),
 
     show_menu_concept: async (p: Row = {}) => {
       const result = await listingFor(p);

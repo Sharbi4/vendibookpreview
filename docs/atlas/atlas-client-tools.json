@@ -296,6 +296,37 @@
   },
   {
     "type": "client",
+    "name": "get_operator_guidance",
+    "description": "Retrieve dated researched food-business guidance and source links for operating success, delivery-only kitchens, utilities and rental launch. Not live platform approval or engineering advice. Preserve scope and freshness limits.",
+    "expects_response": true,
+    "response_timeout_secs": 20,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "topic": {
+          "type": "string",
+          "description": "Choose the topic closest to the question; use local permit tool separately for jurisdiction requirements.",
+          "enum": [
+            "delivery_kitchen",
+            "electrical",
+            "fire_and_fuel",
+            "permits_and_water",
+            "menu_and_service",
+            "economics",
+            "demand_and_channels",
+            "rental_launch",
+            "vehicle_and_towing",
+            "operating_routine"
+          ]
+        }
+      },
+      "required": [
+        "topic"
+      ]
+    }
+  },
+  {
+    "type": "client",
     "name": "get_permit_requirements",
     "description": "Look up curated government-source mobile food requirements before answering permit, health, commissary, fire or zoning questions. Returns jurisdiction scope, source links, review date and coverage gaps. Not a live agency approval.",
     "expects_response": true,

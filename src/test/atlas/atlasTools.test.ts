@@ -32,6 +32,14 @@ beforeEach(() => {
 });
 
 describe('Atlas helpers', () => {
+  it('serves operator research through the registered client tool without external writes', async () => {
+    expect(ATLAS_TOOL_DEFINITIONS.some(t => t.name === 'get_operator_guidance')).toBe(true);
+    const result = JSON.parse(await createAtlasTools(deps()).get_operator_guidance({ topic: 'delivery_kitchen' }));
+    expect(result.topic).toBe('delivery_kitchen');
+    expect(result.sources.some((s: { authority: string }) => s.authority === 'DoorDash')).toBe(true);
+    expect(invoke).not.toHaveBeenCalled();
+    expect(JSON.parse(await createAtlasTools(deps()).get_operator_guidance({ topic: 'invented' })).status).toBe('unknown_topic');
+  });
   it('keeps search keywords safe for PostgREST filters', () => {
     expect(safeKeywords('Tacos, pizza-oven; DROP')).toEqual(['tacos', 'pizza', 'oven', 'drop']);
     expect(safeKeywords('a,b')).toEqual([]);
