@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { checkAtlasLimits, trustedClientIp } from "./limits.ts";
+import { configuredAllisonAgentId } from '../_shared/allisonAgent.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -29,7 +30,7 @@ serve(async (req) => {
   if (agent !== 'atlas' && agent !== 'allison') return json({ error: 'unknown_agent' }, 400);
 
   const key = Deno.env.get("ELEVENLABS_API_KEY");
-  const agentId = agent === 'allison' ? Deno.env.get('ALLISON_AGENT_ID') : (Deno.env.get("ATLAS_AGENT_ID") || "agent_1501m4rhvkz9fsbs5ce89zvk2k7b");
+  const agentId = agent === 'allison' ? configuredAllisonAgentId(Deno.env.get('ALLISON_AGENT_ID')) : (Deno.env.get("ATLAS_AGENT_ID") || "agent_1501m4rhvkz9fsbs5ce89zvk2k7b");
   if (!key || !agentId) return json({ error: "atlas_unavailable" }, 503);
 
   const ip = trustedClientIp(req);

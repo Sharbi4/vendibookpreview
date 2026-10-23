@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.57.2";
+import { configuredAllisonAgentId, mergeAllisonGuidance } from '../_shared/allisonAgent.ts';
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -59,7 +60,7 @@ serve(async (req) => {
     const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
     const action = String(body?.action ?? "get");
     const target = String(body?.agent ?? "vendi");
-    const AGENT_ID = target === 'allison' ? Deno.env.get('ALLISON_AGENT_ID') : (Object.hasOwn(AGENTS, target) ? AGENTS[target] : undefined);
+    const AGENT_ID = target === 'allison' ? configuredAllisonAgentId(Deno.env.get('ALLISON_AGENT_ID')) : (Object.hasOwn(AGENTS, target) ? AGENTS[target] : undefined);
     if (!AGENT_ID) return json({ error: "unknown_agent" }, 400);
 
     const el = async (path: string, init?: RequestInit) => {
@@ -139,7 +140,7 @@ serve(async (req) => {
       if (!prompt) return json({ error: "prompt_required" }, 400);
       // This sync only manages browser tools; existing provider integrations remain attached.
       if (
-        target === "atlas" &&
+        (target === "atlas" || target === "allison") &&
         toolDefs.some((d: { type?: string; name?: string }) => d?.type !== "client" || !/^[a-z_]{1,40}$/.test(String(d?.name ?? "")))
       ) {
         return json({ error: "atlas_client_tools_only" }, 400);
@@ -210,7 +211,7 @@ serve(async (req) => {
             ...(firstMessage ? { first_message: firstMessage } : {}),
             prompt: {
               ...currentPrompt,
-              prompt,
+              prompt: target === 'allison' ? mergeAllisonGuidance(String(currentPrompt.prompt ?? ''), prompt) : prompt,
               tool_ids: mergedIds,
             },
           },

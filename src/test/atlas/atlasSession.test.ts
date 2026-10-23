@@ -2,6 +2,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { readFileSync } from 'node:fs';
 import ts from 'typescript';
+import { configuredAllisonAgentId } from '../../../supabase/functions/_shared/allisonAgent';
 
 let handler: (req: Request) => Promise<Response>;
 const rateLimit = vi.fn();
@@ -9,9 +10,9 @@ const provider = vi.fn();
 const source = readFileSync('supabase/functions/atlas-agent-token/index.ts','utf8').replace(/^import .*;\r?\n/gm,'');
 const compiled = ts.transpileModule(source, {compilerOptions:{target:ts.ScriptTarget.ES2022}}).outputText;
 const clientIp = vi.fn();
-new Function('serve','checkAtlasLimits','trustedClientIp','createClient','Deno','fetch',compiled)(
+new Function('serve','checkAtlasLimits','trustedClientIp','createClient','Deno','fetch','configuredAllisonAgentId',compiled)(
   (fn:typeof handler)=>{handler=fn;},rateLimit,clientIp,()=>({}),
-  {env:{get:(key:string)=>key==='ELEVENLABS_API_KEY'?'private-provider-key':undefined}},provider,
+  {env:{get:(key:string)=>key==='ELEVENLABS_API_KEY'?'private-provider-key':undefined}},provider,configuredAllisonAgentId,
 );
 const request=(mode:string)=>new Request('https://vendibook.com/atlas-agent-token',{method:'POST',body:JSON.stringify({mode})});
 describe('Atlas session handoff',()=>{
