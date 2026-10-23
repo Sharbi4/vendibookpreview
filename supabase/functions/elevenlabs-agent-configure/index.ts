@@ -192,7 +192,10 @@ serve(async (req) => {
       const { tools: _inlineTools, ...currentPrompt } =
         ((current.body as Record<string, any>)?.conversation_config?.agent?.prompt ?? {}) as Record<string, unknown>;
       const existingIds = Array.isArray(currentPrompt.tool_ids) ? currentPrompt.tool_ids.filter((id): id is string => typeof id === 'string') : [];
-      const mergedIds = [...new Set([...existingIds, ...toolIds])];
+      // Allison was cloned from Atlas: detach inherited sales clients only, never delete registry tools.
+      const retainedIds = target === 'allison' ? existingIds.filter(id =>
+        rows.some(r => r.id === id && (r.tool_config as any)?.type !== 'client')) : existingIds;
+      const mergedIds = [...new Set([...retainedIds, ...toolIds])];
       // Do not silently discard an inline integration that has no registry ID.
       // ElevenLabs echoes attached registry tools inline (often without `id`), and
       // system tools live in `built_in_tools`; both are kept, so match them by name.
