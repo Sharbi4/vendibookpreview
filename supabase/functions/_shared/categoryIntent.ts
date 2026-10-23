@@ -78,10 +78,17 @@ export const matchesAlias = (queryLower: string, alias: string): boolean => {
 export const inferCategoryFromQuery = (query: string | undefined | null): CanonicalCategory | null => {
   const queryLower = normalizeQuery(query);
   if (!queryLower) return null;
+  // A verbatim alias is unambiguous intent; the most specific one wins.
   for (const [alias, cat] of CATEGORY_ALIASES) {
-    if (matchesAlias(queryLower, alias)) return cat;
+    if (queryLower.includes(alias)) return cat;
   }
-  return null;
+  // A typed prefix only counts when every alias it could complete agrees:
+  // "food truc" is a food truck, but a bare "food" fits trucks and trailers
+  // alike and must stay a keyword search instead of hiding every trailer.
+  const prefixCategories = new Set(
+    CATEGORY_ALIASES.filter(([alias]) => matchesAlias(queryLower, alias)).map(([, cat]) => cat),
+  );
+  return prefixCategories.size === 1 ? [...prefixCategories][0] : null;
 };
 
 /**
