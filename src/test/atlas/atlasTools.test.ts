@@ -54,6 +54,14 @@ describe('Atlas helpers', () => {
 });
 
 describe('Atlas tools', () => {
+  it('hands off only a bounded issue summary and reports unavailable support honestly', async () => {
+    expect(await createAtlasTools(deps()).transfer_to_support({})).toContain('unavailable');
+    const transferToSupport = vi.fn().mockResolvedValue(undefined);
+    const tools = createAtlasTools({ ...deps(), transferToSupport });
+    expect(await tools.transfer_to_support({ summary: 'x'.repeat(1200) })).toContain('Starting a connection');
+    expect(transferToSupport).toHaveBeenCalledWith('x'.repeat(1000));
+    expect(invoke).not.toHaveBeenCalled();
+  });
   it('pauses page actions and navigation until explicitly resumed', async () => {
     const d = deps();
     const tools = createAtlasTools(d);

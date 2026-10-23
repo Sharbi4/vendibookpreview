@@ -59,7 +59,7 @@ serve(async (req) => {
     const body = req.method === "POST" ? await req.json().catch(() => ({})) : {};
     const action = String(body?.action ?? "get");
     const target = String(body?.agent ?? "vendi");
-    const AGENT_ID = Object.hasOwn(AGENTS, target) ? AGENTS[target] : undefined;
+    const AGENT_ID = target === 'allison' ? Deno.env.get('ALLISON_AGENT_ID') : (Object.hasOwn(AGENTS, target) ? AGENTS[target] : undefined);
     if (!AGENT_ID) return json({ error: "unknown_agent" }, 400);
 
     const el = async (path: string, init?: RequestInit) => {

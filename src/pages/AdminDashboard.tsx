@@ -690,6 +690,7 @@ const AdminDashboard = () => {
           <TabsContent value="reports" className="space-y-4">
             <DailyReportExport />
             <AtlasSyncCard />
+            <AtlasSyncCard agent="allison" />
           </TabsContent>
 
           {/* Market Research Tab */}

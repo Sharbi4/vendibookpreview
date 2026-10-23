@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 import { invokeEdge } from '@/lib/edge/invokeFunction';
 import { ATLAS_NAME } from '@/lib/atlas/atlasConfig';
 import { asksToPauseNavigation } from '@/lib/atlas/atlasNavigation';
+import { ALLISON_START_EVENT } from '@/lib/atlas/allisonConfig';
 import { ATLAS_PAGE_EVENT, pageOutline } from '@/lib/atlas/atlasPage';
 import { createAtlasTools, liveListingIds, type AtlasListingCard, type AtlasOfferDraft, type AtlasSellerDraft } from '@/lib/atlas/atlasTools';
 import { useAuth } from '@/contexts/AuthContext';
@@ -75,6 +76,7 @@ export default function AtlasAgent() {
   // After Atlas points at something, the card shrinks for a few seconds so it doesn't cover it (phones).
   const [peek, setPeek] = useState(false);
   const [navigationPaused, setNavigationPaused] = useState(false);
+  const supportTransfer = useRef<(summary: string) => Promise<void>>(async () => {});
   const [expanded, setExpanded] = useState(false);
   const [followUpDraft, setFollowUpDraft] = useState<AtlasFollowUpDraft | null>(null);
   const [menuConcept, setMenuConcept] = useState<AtlasMenuConcept | null>(null);
@@ -135,6 +137,7 @@ export default function AtlasAgent() {
     () =>
       createAtlasTools({
         onNavigationChange: setNavigationPaused,
+        transferToSupport: summary => supportTransfer.current(summary),
         navigate: (to) => navigate(to),
         showResults: (next) => {
           setCards(next);
@@ -239,6 +242,7 @@ export default function AtlasAgent() {
   const call = useCallback(
     async (opts: { mode: Mode; resume: boolean }) => {
       if (phase === 'connecting' || live) return;
+      window.dispatchEvent(new Event('atlas:active'));
       const remembered = opts.resume ? loadAtlasMemory() : null;
       // Re-check listings from the earlier call: one may have sold or been archived since.
       let memory = remembered;
@@ -314,6 +318,18 @@ export default function AtlasAgent() {
     setSaved(loadAtlasMemory());
     setPhase('idle');
   };
+
+  supportTransfer.current = async summary => {
+    await conversation.endSession();
+    setPhase('idle');
+    navigate('/contact');
+    window.dispatchEvent(new CustomEvent(ALLISON_START_EVENT, { detail: { mode, summary } }));
+  };
+  useEffect(() => {
+    const stopForSupport = () => { void conversation.endSession(); setPhase('idle'); };
+    window.addEventListener(ALLISON_START_EVENT, stopForSupport);
+    return () => window.removeEventListener(ALLISON_START_EVENT, stopForSupport);
+  }, [conversation]);
 
   const startOver = () => {
     clearAtlasMemory();

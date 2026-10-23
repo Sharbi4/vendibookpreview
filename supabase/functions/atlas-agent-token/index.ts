@@ -24,8 +24,12 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
   if (req.method !== "POST") return json({ error: "method_not_allowed" }, 405);
 
+  const body = await req.json().catch(() => ({}));
+  const agent = body.agent ?? 'atlas';
+  if (agent !== 'atlas' && agent !== 'allison') return json({ error: 'unknown_agent' }, 400);
+
   const key = Deno.env.get("ELEVENLABS_API_KEY");
-  const agentId = Deno.env.get("ATLAS_AGENT_ID") || "agent_1501m4rhvkz9fsbs5ce89zvk2k7b";
+  const agentId = agent === 'allison' ? Deno.env.get('ALLISON_AGENT_ID') : (Deno.env.get("ATLAS_AGENT_ID") || "agent_1501m4rhvkz9fsbs5ce89zvk2k7b");
   if (!key || !agentId) return json({ error: "atlas_unavailable" }, 503);
 
   const ip = trustedClientIp(req);
@@ -46,7 +50,6 @@ serve(async (req) => {
   if (limit === "limited") return json({ error: "rate_limited", message: "Too many conversations. Try again shortly." }, 429);
 
   try {
-    const body = await req.json().catch(() => ({}));
     const textOnly = body.mode === 'text';
     const res = await fetch(
       `https://api.elevenlabs.io/v1/convai/conversation/${textOnly ? 'get-signed-url' : 'token'}?agent_id=${encodeURIComponent(agentId)}`,

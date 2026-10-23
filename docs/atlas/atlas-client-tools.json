@@ -327,6 +327,25 @@
   },
   {
     "type": "client",
+    "name": "transfer_to_support",
+    "description": "Start a separate conversation with Allison, Vendibook AI customer support, after the user agrees. Not a transfer to a live person. Human requests can go directly to request_follow_up or connected Calendly.",
+    "expects_response": true,
+    "response_timeout_secs": 20,
+    "parameters": {
+      "type": "object",
+      "properties": {
+        "summary": {
+          "type": "string",
+          "description": "Brief non-sensitive issue and steps already tried; omit passwords, payment information and private documents."
+        }
+      },
+      "required": [
+        "summary"
+      ]
+    }
+  },
+  {
+    "type": "client",
     "name": "set_navigation",
     "description": "Pause Atlas navigation, scrolling and page edits immediately when the user says stop or stay here. Resume only at the user’s explicit request. Conversation can continue.",
     "expects_response": true,

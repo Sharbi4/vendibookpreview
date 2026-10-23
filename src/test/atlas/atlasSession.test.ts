@@ -15,6 +15,16 @@ new Function('serve','checkAtlasLimits','trustedClientIp','createClient','Deno',
 );
 const request=(mode:string)=>new Request('https://vendibook.com/atlas-agent-token',{method:'POST',body:JSON.stringify({mode})});
 describe('Atlas session handoff',()=>{
+  it('does not fall back to Atlas when Allison is not configured', async () => {
+    const response = await handler(new Request('https://vendibook.com/atlas-agent-token', { method: 'POST', body: JSON.stringify({agent:'allison', mode:'text'}) }));
+    expect(response.status).toBe(503);
+    expect(provider).not.toHaveBeenCalled();
+  });
+  it('rejects arbitrary provider agent selection', async () => {
+    const response = await handler(new Request('https://vendibook.com/atlas-agent-token', { method: 'POST', body: JSON.stringify({agent:'someone-else'}) }));
+    expect(response.status).toBe(400);
+    expect(provider).not.toHaveBeenCalled();
+  });
   beforeEach(()=>{vi.clearAllMocks();rateLimit.mockResolvedValue('allowed');clientIp.mockReturnValue('test-ip');});
   it('issues text WebSocket handoff without exposing the provider key',async()=>{
     provider.mockResolvedValue(new Response(JSON.stringify({signed_url:'wss://api.elevenlabs.io/v1/convai/conversation?token=temporary'})));

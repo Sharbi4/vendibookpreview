@@ -40,6 +40,7 @@ import MobileBottomNav from "@/components/layout/MobileBottomNav";
 import { isAtlasEnabled } from "@/lib/atlas/atlasFlag";
 // Atlas replaces the legacy support bubble; the voice SDK remains lazy loaded.
 const AtlasAgent = lazy(() => import("@/components/atlas/AtlasAgent"));
+const AllisonAgent = lazy(() => import("@/components/support/AllisonAgent"));
 const atlasOn = isAtlasEnabled();
 import OfflineBanner from "@/components/system/OfflineBanner";
 import { useOfflineQueueSync } from "@/hooks/useOfflineQueue";
@@ -817,6 +818,7 @@ const AppContent = () => {
       {!isBuildStudio && <MobileBottomNav />}
       <Suspense fallback={null}>
         {!isBuildStudio && showAtlas && <AtlasAgent />}
+        {!isBuildStudio && <AllisonAgent />}
       </Suspense>
     </>
   );

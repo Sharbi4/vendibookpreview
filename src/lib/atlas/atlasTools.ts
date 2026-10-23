@@ -62,6 +62,7 @@ export interface AtlasListingCard {
 }
 
 export interface AtlasToolDeps {
+  transferToSupport?: (summary: string) => Promise<void>;
   onNavigationChange?: (paused: boolean) => void;
   navigate: (to: string) => void;
   showResults: (cards: AtlasListingCard[]) => void;
@@ -309,6 +310,11 @@ export function createAtlasTools(deps: AtlasToolDeps) {
   };
 
   return {
+    transfer_to_support: async (p: Row = {}) => {
+      if (!deps.transferToSupport) return 'Allison transfer is unavailable. Offer a human follow-up or the Contact page.';
+      await deps.transferToSupport(typeof p.summary === 'string' ? p.summary.slice(0, 1000) : 'The user requested customer support.');
+      return 'Starting a connection to Allison, the AI support assistant. Do not claim a live human joined or that connection succeeded before the UI confirms it.';
+    },
     set_navigation: async (p: Row = {}) => {
       if (typeof p.paused !== 'boolean') return 'Specify paused true to stop page control or false only when the user asks to resume.';
       navigationPaused = p.paused;

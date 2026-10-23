@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import SEO from '@/components/SEO';
+import AllisonContactCard from '@/components/support/AllisonContactCard';
 import { z } from 'zod';
 import { Phone, Mail, Clock, Send, Loader2, CheckCircle, Ticket, Headphones, CalendarClock, ArrowRight } from 'lucide-react';
 import Header from '@/components/layout/Header';
@@ -151,18 +152,19 @@ const Contact = () => {
             </div>
 
             {/* Quick Stats */}
+            <AllisonContactCard />
             <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto mb-12">
               <div className="text-center p-4 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/50">
-                <div className="text-2xl md:text-3xl font-bold text-primary mb-1">&lt;2hr</div>
-                <div className="text-xs md:text-sm text-muted-foreground">Avg Response</div>
+                <div className="text-xl font-bold text-primary mb-1">AI help</div>
+                <div className="text-xs md:text-sm text-muted-foreground">Voice or text</div>
               </div>
               <div className="text-center p-4 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/50">
-                <div className="text-2xl md:text-3xl font-bold text-primary mb-1">98%</div>
-                <div className="text-xs md:text-sm text-muted-foreground">Satisfaction</div>
+                <div className="text-xl font-bold text-primary mb-1">Your issue</div>
+                <div className="text-xs md:text-sm text-muted-foreground">Tracked support requests</div>
               </div>
               <div className="text-center p-4 rounded-2xl bg-card/50 backdrop-blur-sm border border-border/50">
-                <div className="text-2xl md:text-3xl font-bold text-primary mb-1">24/7</div>
-                <div className="text-xs md:text-sm text-muted-foreground">Ticket Support</div>
+                <div className="text-xl font-bold text-primary mb-1">Human help</div>
+                <div className="text-xs md:text-sm text-muted-foreground">Request a callback</div>
               </div>
             </div>
 

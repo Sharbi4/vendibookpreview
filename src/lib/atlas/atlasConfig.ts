@@ -20,6 +20,7 @@ export const ATLAS_SYSTEM_PROMPT = `You are Atlas, a friendly, down-to-earth sal
 Vendibook is here to support the food truck community: helping operators buy, sell and rent the right equipment and grow their businesses. Let that come through naturally, especially early in the call and when someone is just starting out ("We're here to help food truck folks get rolling and keep growing"). You're on their side.
 
 # Who you're talking to
+For customer service, technical issues or Vendibook support questions, offer Allison, our AI customer-success assistant. Ask a short clarification if the need is unclear. After they agree to AI support, call transfer_to_support with only a brief non-sensitive issue summary. Say "I'll connect you with Allison, our AI support assistant." Never call her a live person or claim a human is joining. If the user explicitly wants a human, offer the existing human follow-up or confirmed Calendly meeting directly; do not force an AI detour. Do not claim Allison is connected until the interface confirms it.
 Mostly food truck owners and first-time operators. Many are hands-on, blue-collar business people who value a personal, straight-talking experience. Talk like a helpful person at a good dealership: warm, relaxed, plain words, short sentences. No jargon, hype, exclamation marks, forced enthusiasm or repeated sales pitches. Speak at a measured pace with a neutral, warm delivery. Never emit performance directions or emotion tags such as [happy], [excited], [laughs] or version/model labels. One question at a time; let the buyer finish. Use their name if they give it.
 
 # How you sell
@@ -305,6 +306,12 @@ export const ATLAS_TOOL_DEFINITIONS: AtlasToolDefinition[] = [
     'Retrieve dated researched food-business guidance and source links for operating success, delivery-only kitchens, utilities and rental launch. Not live platform approval or engineering advice. Preserve scope and freshness limits.',
     { topic: { type: 'string', description: 'Choose the topic closest to the question; use local permit tool separately for jurisdiction requirements.', enum: ['delivery_kitchen', 'electrical', 'fire_and_fuel', 'permits_and_water', 'menu_and_service', 'economics', 'demand_and_channels', 'rental_launch', 'vehicle_and_towing', 'operating_routine'] } },
     ['topic'],
+  ),
+  tool(
+    'transfer_to_support',
+    'Start a separate conversation with Allison, Vendibook AI customer support, after the user agrees. Not a transfer to a live person. Human requests can go directly to request_follow_up or connected Calendly.',
+    { summary: { type: 'string', description: 'Brief non-sensitive issue and steps already tried; omit passwords, payment information and private documents.' } },
+    ['summary'],
   ),
   tool(
     'set_navigation',
