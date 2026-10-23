@@ -6,6 +6,7 @@ import { estimateDelivery, formatUsd, normalizeDeliveryFeeType } from '@/lib/ful
 import { FEE_CONFIG } from '../../../supabase/functions/_shared/feeConfig';
 import { pageAction, pickOption, scanPage } from './atlasPage';
 import { GUIDE_FAQ, type GuideFaq } from './atlasGuideFaq';
+import { cookingIntent, matchCookingEquipment, normalizeAtlasState, STATE_NAMES } from './atlasEquipment';
 
 const FAQ_STOP = new Set(['a', 'an', 'the', 'i', 'my', 'me', 'do', 'does', 'is', 'are', 'can', 'to', 'of', 'for', 'and', 'or', 'on', 'in', 'it', 'what', 'how', 'if', 'you', 'your', 'with', 'be', 'get', 'will', 'there', 'this']);
 const faqWords = (s: string) => s.toLowerCase().replace(/[^a-z0-9%$ ]+/g, ' ').split(/\s+/).filter((w) => w.length > 1 && !FAQ_STOP.has(w));
@@ -92,10 +93,10 @@ export interface AtlasOfferDraft extends AtlasSellerDraft {
 }
 
 const CARD_COLUMNS =
-  'id, title, mode, category, price_sale, price_daily, city, state, condition, cover_image_url, image_urls, description, year_built, featured_enabled, vendibook_freight_enabled, freight_payer, accepts_offers, available_to';
+  'id, title, mode, category, price_sale, price_daily, city, state, condition, cover_image_url, image_urls, description, year_built, featured_enabled, vendibook_freight_enabled, freight_payer, accepts_offers, available_to, amenities, highlights, included_items';
 
 const DETAIL_COLUMNS =
-  `${CARD_COLUMNS}, host_id, make, model, length_inches, included_items, highlights, amenities, fulfillment_type, delivery_radius_miles, delivery_fee, delivery_fee_type, latitude, longitude, postal_code, weight_lbs, width_inches, height_inches, hitch_ball_size, coupler_type, trailer_plug_type, tow_vehicle_requirement, fuel_type, renter_provides_tow_vehicle, no_known_problems, known_problems, status, published_at, deleted_at, moderation_status, unlisted`;
+  `${CARD_COLUMNS}, host_id, make, model, length_inches, fulfillment_type, delivery_radius_miles, delivery_fee, delivery_fee_type, latitude, longitude, postal_code, weight_lbs, width_inches, height_inches, hitch_ball_size, coupler_type, trailer_plug_type, tow_vehicle_requirement, fuel_type, renter_provides_tow_vehicle, no_known_problems, known_problems, status, published_at, deleted_at, moderation_status, unlisted`;
 
 // Untyped rows: the dynamic column lists defeat the generated Supabase types.
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -141,7 +142,7 @@ export function safeKeywords(raw: unknown): string[] {
 /** Whole-word relevance: the full phrase counts most, title beats description. */
 export function keywordScore(l: Row, words: string[], phrase: string): number {
   const title = String(l.title ?? '').toLowerCase();
-  const body = String(l.description ?? '').toLowerCase();
+  const body = [l.description, l.included_items, ...(Array.isArray(l.amenities) ? l.amenities : []), ...(Array.isArray(l.highlights) ? l.highlights : [])].filter(Boolean).join(' ').toLowerCase();
   const p = phrase.toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim();
   let score = 0;
   if (p.includes(' ')) {
@@ -298,67 +299,68 @@ export function createAtlasTools(deps: AtlasToolDeps) {
 
   return {
     search_listings: async (p: Row = {}) => {
-      let q: LooseQuery = supabase.from('listings').select(CARD_COLUMNS);
-      q = excludeTestListings(applyDiscoveryListingFilter(q));
+      const state = normalizeAtlasState(p.state);
+      const city = String(p.city ?? '').trim().slice(0,80).toLowerCase();
       const shipsOnly = p.ships_nationwide === true || p.ships_nationwide === 'true';
-      if (shipsOnly) q = q.eq('mode', 'sale').eq('vendibook_freight_enabled', true);
-      else if (p.mode === 'sale' || p.mode === 'rent') q = q.eq('mode', p.mode);
-      if (typeof p.category === 'string' && /^[a-z_]+$/.test(p.category)) q = q.eq('category', p.category);
-      const priceCol = p.mode === 'rent' ? 'price_daily' : 'price_sale';
-      const max = parseNum(p.max_price);
-      const min = parseNum(p.min_price);
-      if (max) q = q.lte(priceCol, max);
-      if (min) q = q.gte(priceCol, min);
-      const words = safeKeywords(p.keywords);
-      if (words.length) {
-        q = q.or(words.flatMap((w) => [`title.ilike.%${w}%`, `description.ilike.%${w}%`]).join(','));
+      const nationwide = p.search_scope === 'nationwide' || shipsOnly;
+      if (!state && !nationwide) return JSON.stringify({results:[],search_status:'location_needed',note:'Ask for their city and state or ZIP before recommending inventory. Do not jump to nationwide shipping.'});
+      const intent = cookingIntent(p.food_concept || p.keywords);
+      const required = String(p.required_equipment ?? '').split(',').map(v=>v.trim().toLowerCase()).filter(Boolean).slice(0,8);
+      const words = intent ? [] : safeKeywords(p.keywords);
+      const found = new Map<string,Row>();
+      let incomplete = false;
+      for (let page=0; page<10; page++) {
+        let q: LooseQuery = excludeTestListings(applyDiscoveryListingFilter(supabase.from('listings').select(CARD_COLUMNS)));
+        if (shipsOnly) q=q.eq('mode','sale').eq('vendibook_freight_enabled',true);
+        else if (p.mode==='sale' || p.mode==='rent') q=q.eq('mode',p.mode);
+        if (['food_truck','food_trailer','ghost_kitchen','vendor_space','vendor_lot'].includes(p.category)) q=q.eq('category',p.category);
+        if (!nationwide) q=q.or(`state.ilike.${state},state.ilike.${STATE_NAMES[state]}`);
+        const priceCol=p.mode==='rent'?'price_daily':'price_sale';
+        const max=parseNum(p.max_price),min=parseNum(p.min_price);
+        if(max) q=q.lte(priceCol,max);
+        if(min) q=q.gte(priceCol,min);
+        q=q.order('published_at',{ascending:false}).order('id',{ascending:true});
+        const {data,error}=await (typeof q.range==='function'?q.range(page*200,page*200+199):q.limit(200));
+        if(error) return JSON.stringify({results:[],search_status:'unavailable',note:'Inventory could not be checked. This is not evidence of no suitable local trucks. Offer retry; do not use nationwide fallback to mask the failure.'});
+        const batch=(data??[]) as Row[];
+        for(const l of batch) if(isStillOffered(l) && (nationwide || normalizeAtlasState(l.state)===state)) found.set(String(l.id),l);
+        if(batch.length<200) break;
+        if(page===9) incomplete=true;
       }
-      const { data, error } = await q
-        .order('featured_enabled', { ascending: false })
-        .order('published_at', { ascending: false })
-        .limit(24);
-      if (error) return 'Search is unavailable right now. Apologize and offer to try again or talk to a person.';
-      let rows = ((data ?? []) as Row[]).filter((l) => isStillOffered(l));
-      if (words.length) {
-        // ilike also hits substrings ("ice" in "service"); keep whole-word matches, best first.
-        rows = rows
-          .map((l) => ({ l, score: keywordScore(l, words, String(p.keywords ?? '')) }))
-          .filter((r) => r.score > 0)
-          .sort((a, b) => b.score - a.score)
-          .map((r) => r.l);
-      }
-      const state = typeof p.state === 'string' ? p.state.trim().toUpperCase() : '';
-      if (state) rows = [...rows].sort((a, b) => Number(String(b.state).toUpperCase() === state) - Number(String(a.state).toUpperCase() === state));
-      rows = rows.slice(0, 6);
-      if (rows.length) recent = rows.map((l) => ({ id: String(l.id), title: l.title }));
-      deps.showResults(rows.map(toCard));
-      if (!rows.length) {
-        return shipsOnly
-          ? 'No listings that ship nationwide match. Say so honestly and offer to widen the search (higher budget, other types) or to ask a seller about delivery.'
-          : 'No listings match. Say so honestly, then offer to check listings that ship nationwide (search_listings with ships_nationwide true) and to widen the search (higher budget, other states, rent instead of buy).';
-      }
-      const shipsOf = (l: Row) => l.mode === 'sale' && Boolean(l.vendibook_freight_enabled);
-      const nearYou = state ? rows.filter((l) => String(l.state).toUpperCase() === state).length : undefined;
-      let note: string | undefined;
-      if (state && nearYou === 0) {
-        note = rows.some(shipsOf)
-          ? `None of these are in ${state}. Say so, then point out the ones with ships_nationwide true: they can be shipped to the buyer with Vendibook Freight. Offer a delivery quote with their ZIP (get_delivery_quote).`
-          : `None of these are in ${state}, and none of them ship nationwide. Say "let me check what can ship to you" and call search_listings again with ships_nationwide true.`;
-      }
-      const results = rows.map((l, i) => ({
-          result: i + 1,
-          id: l.id,
-          title: l.title,
-          price: listingPriceText(l),
-          location: [l.city, l.state].filter(Boolean).join(', '),
-          type: l.category,
-          condition: l.condition ?? 'not stated',
-          year: l.year_built ?? undefined,
-          ships_nationwide: shipsOf(l),
-          shipping: shipsOf(l) ? (l.freight_payer === 'seller' ? 'free shipping (seller covers Vendibook Freight)' : 'ships nationwide with Vendibook Freight (quote by ZIP)') : undefined,
-          about: excerpt(l.description, 220),
-        }));
-      return JSON.stringify({ results, ...(state ? { in_your_state: nearYou } : {}), ...(note ? { note } : {}) });
+      const candidates=[...found.values()].map(l=>{
+        const equipment=intent?matchCookingEquipment(l,intent):null;
+        const additional=required.map(term=>({term,confirmed:matchCookingEquipment(l,{name:'requested equipment',cooking:[term],optional:[],question:''}).cooking.length>0}));
+        const relevance=words.length?keywordScore(l,words,String(p.keywords??'')):0;
+        const cityMatch=!!city && String(l.city??'').trim().toLowerCase()===city;
+        return {l,equipment,additional,relevance,cityMatch,fit:(!intent || !!equipment?.cooking.length) && additional.every(r=>r.confirmed)};
+      }).filter(r=>!words.length || r.relevance>0);
+      candidates.sort((a,b)=>Number(normalizeAtlasState(b.l.state)===state)-Number(normalizeAtlasState(a.l.state)===state)
+        || Number(b.fit)-Number(a.fit) || Number(b.cityMatch)-Number(a.cityMatch) || b.relevance-a.relevance);
+      const selected=candidates.slice(0,6);
+      if(selected.length) recent=selected.map(r=>({id:String(r.l.id),title:r.l.title}));
+      deps.showResults(selected.map(r=>toCard(r.l)));
+      const confirmed=candidates.filter(r=>r.fit).length;
+      return JSON.stringify({
+        search_scope:nationwide?'nationwide_with_buyer_permission':'requested_state',
+        requested_location:[p.city,state].filter(Boolean).join(', '),
+        search_complete:!incomplete,candidate_count:candidates.length,
+        in_your_state:selected.filter(r=>normalizeAtlasState(r.l.state)===state).length,
+        ...(intent?{cooking_plan:intent.name,clarifying_question:intent.question,equipment_confirmed_count:confirmed}:{}),
+        note: incomplete?'The candidate scan reached its safety limit. Do not claim this is all inventory or that no suitable local option exists.'
+          : selected.length===0?'No confirmed match in this search. Clarify menu, equipment and travel radius, retry a broader local category or ask about undocumented equipment. Only expand nationwide after the buyer agrees.'
+          : intent && confirmed===0?'These are local candidates with cooking equipment unconfirmed. Do not describe them as ready for this menu. Ask the cooking-method question, inspect full details or offer to confirm with sellers. Do not immediately pitch nationwide shipping.'
+          : 'Describe only listed equipment as potential menu fit. Ask one useful follow-up; confirm condition, capacity, utilities, ventilation, sinks, refrigeration and local approval separately. Stay local unless the buyer asks to widen. Do not pitch freight during the first local search.',
+        results:selected.map(({l,equipment,additional,fit},i)=>({
+          result:i+1,id:l.id,title:l.title,price:listingPriceText(l),location:[l.city,l.state].filter(Boolean).join(', '),type:l.category,
+          condition:l.condition??'not stated',year:l.year_built??undefined,
+          ...(equipment?{fit_status:fit?'potential_equipment_match':'equipment_unconfirmed',listed_cooking_equipment:equipment.cooking,listed_optional_equipment:equipment.optional}:{}),
+          ...(required.length?{required_equipment_check:additional}:{}),
+          equipment:Array.isArray(l.amenities)?l.amenities.slice(0,20):[],
+          ships_nationwide:l.mode==='sale'&&Boolean(l.vendibook_freight_enabled),
+          shipping:l.mode==='sale'&&l.vendibook_freight_enabled?(l.freight_payer==='seller'?'free shipping':'Vendibook Freight available; quote only if requested'):undefined,
+          about:excerpt(l.description,220),
+        })),
+      });
     },
 
     show_listing: async (p: Row = {}) => {

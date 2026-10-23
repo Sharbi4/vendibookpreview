@@ -2,7 +2,7 @@
   {
     "type": "client",
     "name": "search_listings",
-    "description": "Search live Vendibook listings and show the matches on screen. Returns up to 6 numbered results (id, title, price, location, condition, whether it ships nationwide, short description), how many are in their state, and a note on what to say when none are nearby.",
+    "description": "Search local public inventory by cooking equipment and return up to six candidates with explicit equipment evidence and unknowns. Requires a state unless the buyer has agreed to a nationwide search. Never treats a cuisine-title miss or incomplete query as no local supply.",
     "expects_response": true,
     "response_timeout_secs": 20,
     "parameters": {
@@ -10,7 +10,27 @@
       "properties": {
         "keywords": {
           "type": "string",
-          "description": "Words to match in the title or description, e.g. \"taco\", \"pizza oven\", \"coffee\". Optional."
+          "description": "Specific search words when not using a cooking concept. Equipment terms are preferred over cuisine names."
+        },
+        "food_concept": {
+          "type": "string",
+          "description": "What they plan to cook, e.g. tacos, burgers, fried food, pizza, coffee or barbecue. Maps menu intent to actual listed equipment; missing details remain unconfirmed."
+        },
+        "required_equipment": {
+          "type": "string",
+          "description": "Additional equipment the buyer says is mandatory, comma separated, e.g. fryer, refrigerator. Do not invent must-haves."
+        },
+        "city": {
+          "type": "string",
+          "description": "Buyer city, used to prefer same-city candidates within their state. Ask about travel before calling another city nearby."
+        },
+        "search_scope": {
+          "type": "string",
+          "enum": [
+            "local",
+            "nationwide"
+          ],
+          "description": "Defaults to local. Use nationwide only after the buyer agrees or originally requests national inventory."
         },
         "category": {
           "type": "string",
@@ -41,11 +61,11 @@
         },
         "state": {
           "type": "string",
-          "description": "Two-letter US state code to prefer, e.g. \"TX\". Optional."
+          "description": "US state code or full name for the local search, e.g. TX or Texas. Required for local inventory."
         },
         "ships_nationwide": {
           "type": "boolean",
-          "description": "Only for-sale listings that ship anywhere in the US with Vendibook Freight. Use when nothing suitable is near them."
+          "description": "Only for-sale listings that ship anywhere in the US with Vendibook Freight. Use only after the buyer agrees to widen to nationwide shipping."
         }
       },
       "required": []

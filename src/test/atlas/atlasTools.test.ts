@@ -8,8 +8,9 @@ const invoke = vi.fn();
 function query() {
   const q: Record<string, unknown> = {};
   for (const m of ['select', 'eq', 'is', 'not', 'or', 'lte', 'gte', 'order', 'in']) q[m] = () => q;
-  q.then = (res: (v: unknown) => unknown) => res({ data: rows, error: null });
-  q.limit = () => Promise.resolve({ data: rows, error: null });
+  q.then = (res: (v: unknown) => unknown) => res({ data: rows.map(l => ({state:'TX', ...l})), error: null });
+  q.limit = (limit:number) => Promise.resolve({ data: rows.slice(0,limit).map(l => ({state:'TX', ...l})), error: null });
+  q.range = (from:number,to:number) => Promise.resolve({ data: rows.slice(from,to+1).map(l => ({state:'TX', ...l})), error: null });
   q.maybeSingle = () => Promise.resolve({ data: single.data, error: null });
   return q;
 }
@@ -48,7 +49,7 @@ describe('Atlas tools', () => {
   it('search shows result cards and returns compact listings', async () => {
     rows.push({ id: ID, title: 'Ice Cream Trailer', mode: 'sale', price_sale: 39000, city: 'North Port', state: 'FL', description: 'x'.repeat(400) });
     const d = deps();
-    const out = await createAtlasTools(d).search_listings({ keywords: 'ice cream', mode: 'sale', max_price: 50000 });
+    const out = await createAtlasTools(d).search_listings({state:'FL', keywords: 'ice cream', mode: 'sale', max_price: 50000 });
     expect(d.showResults).toHaveBeenCalledWith([expect.objectContaining({ id: ID, priceText: '$39,000' })]);
     const parsed = JSON.parse(out);
     expect(parsed.results[0].about.length).toBeLessThanOrEqual(221);
@@ -110,6 +111,25 @@ describe('Atlas config', () => {
 });
 
 describe('Atlas search relevance', () => {
+  it('checks beyond 24 national rows for a local generic kitchen with taco equipment', async()=>{
+    for(let i=0;i<30;i++) rows.push({id:`other-${i}`,state:'CA',title:'Taco truck',description:'griddle',mode:'sale'});
+    rows.push({id:ID,state:'Arizona',city:'Tucson',title:'Mobile kitchen',amenities:['flat_top_griddle'],mode:'sale'});
+    const result=JSON.parse(await createAtlasTools(deps()).search_listings({state:'AZ',city:'Tucson',food_concept:'tacos',mode:'sale'}));
+    expect(result.results).toHaveLength(1);
+    expect(result.results[0]).toMatchObject({id:ID,fit_status:'potential_equipment_match'});
+    expect(result.results[0].listed_cooking_equipment).toContain('griddle');
+    expect(result.search_scope).toBe('requested_state');
+  });
+  it('keeps undocumented local kitchens as unconfirmed instead of pitching freight',async()=>{
+    rows.push({id:ID,state:'AZ',title:'Mobile kitchen',mode:'sale'});
+    const result=JSON.parse(await createAtlasTools(deps()).search_listings({state:'AZ',food_concept:'tacos'}));
+    expect(result.results[0].fit_status).toBe('equipment_unconfirmed');
+    expect(result.note).toMatch(/Do not immediately pitch nationwide shipping/);
+  });
+  it('does not invent a buyer location or start a national search when it is missing',async()=>{
+    const result=JSON.parse(await createAtlasTools(deps()).search_listings({food_concept:'tacos'}));
+    expect(result.search_status).toBe('location_needed');expect(result.results).toEqual([]);
+  });
   it('ranks the full phrase first and drops substring-only hits', async () => {
     const { keywordScore } = await import('@/lib/atlas/atlasTools');
     const words = ['ice', 'cream'];
@@ -230,7 +250,7 @@ describe('Atlas listing references (voice-safe ids)', () => {
     rows.push({ id: A, title: 'Fully Custom Ice Cream Trailer', mode: 'sale', price_sale: 39000 }, { id: B, title: '2020 The Food Trailer', mode: 'sale', price_sale: 25000 });
     const d = deps();
     const tools = createAtlasTools(d);
-    await tools.search_listings({ mode: 'sale' });
+    await tools.search_listings({state:'TX',  mode: 'sale' });
     single.data = { id: A, title: 'Fully Custom Ice Cream Trailer', mode: 'sale', price_sale: 39000 };
     await tools.show_listing({ listing_id: '1' });
     expect(d.navigate).toHaveBeenLastCalledWith(`/listing/${A}`);
@@ -250,23 +270,23 @@ describe('Atlas listing references (voice-safe ids)', () => {
 
   it('numbers search results for the agent', async () => {
     rows.push({ id: A, title: 'X', mode: 'sale', price_sale: 1 });
-    const out = JSON.parse(await createAtlasTools(deps()).search_listings({}));
+    const out = JSON.parse(await createAtlasTools(deps()).search_listings({state:'TX', }));
     expect(out.results[0].result).toBe(1);
   });
 
-  it('flags listings that ship and tells Atlas what to say when nothing is in their state', async () => {
+  it('keeps out-of-state shipping inventory out of an unexpanded local search', async () => {
     rows.push(
       { id: A, title: 'Ships', mode: 'sale', price_sale: 30000, state: 'FL', vendibook_freight_enabled: true, freight_payer: 'buyer' },
       { id: B, title: 'Local only', mode: 'sale', price_sale: 25000, state: 'GA', vendibook_freight_enabled: false },
     );
     const out = JSON.parse(await createAtlasTools(deps()).search_listings({ state: 'TX' }));
     expect(out.in_your_state).toBe(0);
-    expect(out.results.map((r: { ships_nationwide: boolean }) => r.ships_nationwide)).toEqual([true, false]);
-    expect(out.note).toMatch(/ships_nationwide true/);
+    expect(out.results).toEqual([]);
+    expect(out.note).toMatch(/Only expand nationwide after the buyer agrees/);
   });
 
-  it('suggests a ships-nationwide search when nothing matches', async () => {
-    expect(await createAtlasTools(deps()).search_listings({ state: 'TX' })).toMatch(/ships_nationwide true/);
+  it('asks for clarification before expanding an empty local search', async () => {
+    expect(await createAtlasTools(deps()).search_listings({ state: 'TX' })).toMatch(/Only expand nationwide after the buyer agrees/);
   });
 });
 
@@ -428,7 +448,7 @@ describe('Atlas never offers an old, archived or test listing (owner 2026-10-15)
       { id: ID2, title: 'Live rental', mode: 'rent', price_daily: 120 },
     );
     const d = deps();
-    const out = JSON.parse(await createAtlasTools(d).search_listings({ mode: 'rent' }));
+    const out = JSON.parse(await createAtlasTools(d).search_listings({state:'TX',  mode: 'rent' }));
     expect(out.results.map((r: { id: string }) => r.id)).toEqual([ID2]);
   });
 

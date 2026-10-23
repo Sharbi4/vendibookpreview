@@ -1,0 +1,11 @@
+import {readFileSync,writeFileSync} from 'node:fs';
+import ts from 'typescript';
+const file='src/lib/atlas/atlasConfig.ts';
+const compiled=ts.transpileModule(readFileSync(file,'utf8'),{compilerOptions:{target:ts.ScriptTarget.ES2022,module:ts.ModuleKind.CommonJS}}).outputText;
+const output={exports:{}};
+new Function('exports','module',compiled)(output.exports,output);
+const config=output.exports;
+writeFileSync('docs/atlas/atlas-system-prompt.txt',config.ATLAS_SYSTEM_PROMPT+'\n');
+writeFileSync('docs/atlas/atlas-first-message.txt',config.ATLAS_FIRST_MESSAGE+'\n');
+writeFileSync('docs/atlas/atlas-client-tools.json',JSON.stringify(config.ATLAS_TOOL_DEFINITIONS,null,2)+'\n');
+console.log(`Exported Atlas prompt and ${config.ATLAS_TOOL_DEFINITIONS.length} client tool definitions.`);
