@@ -396,10 +396,11 @@ export default function AtlasAgent() {
           type="button"
           className="atlas-chip"
           onClick={() => void call({ mode: 'voice', resume: Boolean(saved) })}
+          aria-label={saved ? `Resume your call with ${ATLAS_NAME}` : `Speak to ${ATLAS_NAME}, AI sales assistant`}
         >
           <AtlasOrb size={30} />
           <span className="atlas-chip-text">
-            {saved ? `Pick up your call with ${ATLAS_NAME}` : <>Speak to our sales assistant <b>{ATLAS_NAME}</b></>}
+            {saved ? `Resume ${ATLAS_NAME}` : <><b>{ATLAS_NAME}</b> · AI sales assistant</>}
           </span>
           <Phone className="atlas-chip-icon" aria-hidden="true" />
         </button>
