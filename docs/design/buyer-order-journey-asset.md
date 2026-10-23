@@ -1,0 +1,19 @@
+# Buyer order journey website asset
+
+- Asset: `public/images/operations/buyer-order-journey.png`
+- Generated with the built-in image generation tool, October 22, 2026 (America/Phoenix).
+- Illustrative product interface, not evidence of a real customer shipment. Retain the small illustrative-order label.
+- UI uses the asset on the homepage and How It Works. Live account tracking uses actual fulfillment-session data separately.
+- Alt text: Illustrative Vendibook order showing food-truck delivery, arrival estimate, payment and handoff milestones.
+
+## Final generation prompt
+
+Use case: ui-mockup / ads-marketing.
+Create a finished, exceptionally polished raster website marketing graphic demonstrating Vendibook's BUYER order tracking experience. Wide landscape 3:2 composition, high-resolution crisp typography. This is a realistic illustrative account interface, not an admin dashboard. Output the graphic itself, no photographed laptop, no perspective skew, no external browser chrome.
+Input 1 is a reference for the existing product design and layout; redesign its header and complete the map/lower panels. Input 2 is the actual Vendibook logo; preserve this flame-pin plus vendibook wordmark faithfully and place it unobtrusively at top left without a white rectangle. Input 3 is the food truck illustration to reuse as the large hero vehicle, preserving its white body, orange stripe, charcoal skirt, stainless serving hatch.
+Style: premium enterprise product launch visual, white/off-white and very pale cool grey, charcoal text, burnt-orange accents, small desaturated blue estimate card, muted green active status, subtle borders and soft realistic shadows. Generous precise spacing, legible modern sans serif. No purple, oatmeal/beige, decorative emojis, numbered badges or busy gradients.
+Composition: one beautifully framed account dashboard with softly rounded corners filling almost the whole canvas. Slim header: logo left, right "My purchases" and "Order VB-20418". Under header, small eyebrow "YOUR PURCHASE, STEP BY STEP", headline "Know what happens next." and subtitle "From payment to handoff, follow your food truck's journey."
+Upper hero area: left small white order card headed "2022 mobile kitchen", "Delivery to Tucson, AZ", green "On the road" pill. Do NOT include a driver name, avatar, sample driver, customer personal details, or fake testimonial. Center/right large food truck hero shown fully uncropped, on light grey background. At far right a compact pale-blue ETA card "Estimated arrival" / "22 min" and below "11.3 mi remaining". Small "Estimate may change".
+Lower area: left roughly 60% width a refined map card "Delivery route" with a green-dot "Location sharing active" label. Draw an elegant illustrative light-grey street map with pale green areas and an orange route with bends, a tiny food-truck position marker and a destination pin, "Tucson" map label. No Google logo or Google attribution because this is an illustrated map, not a Google map screenshot. No fabricated street addresses. Right roughly 40% width white card titled "Your order progress". A clear vertical timeline with small check icons for completed, orange current dot, grey future dots: "Payment confirmed" completed, "Delivery arranged" completed, "On the road" active, "Walkthrough & signatures" future, "Confirm receipt" future. Small bottom line "Review your truck and complete the handoff."
+Bottom of graphic, discreet but readable grey caption: "Illustrative order · Live location requires driver sharing". No giant disclaimers. No admin controls, preview tabs, mobile toggle, explore states, sample driver text, sample destination text, test data banners, or purchase protection guarantees. Keep language exactly as specified, no invented stats, no security certification badges. Overall should make the after-purchase experience understandable, transparent and tangible.
+
