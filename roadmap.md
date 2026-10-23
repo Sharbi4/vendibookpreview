@@ -1,5 +1,7 @@
 # Roadmap
 
+- [open] Correct Allison to owner-created agent_8301m5nh7dq6e1x9wgqk2yx7k4pd; preserve provider settings/guidance/integrations and old duplicate, update existing server secret without deletion, hide voice transcripts, verify Contact/handoff, deploy and publish only after checks; requested fix/paypal-webhook-config commit depends on managed branch access.
+
 - [done] Allison provider setup from cafec115f: separate Sarah female agent created, server ID saved (unused retired TaxJar secret removed for capacity), seven tools/prompt read back; Atlas prompt and 21 tools synced with voice/auth/existing tools preserved; token/config functions deployed; 122 Atlas tests + 2 Allison confirmation/stop tests and automatic build passed; Contact desktop/mobile, real text connection, pause and unavailable fallback checked.
 - [open] Complete Allison activation and publish — requires verified existing customer-success Calendly event/connection access; no appropriate event type or availability verified, so no calendar tools attached and frontend not published. Real voice audition and natural spoken Atlas handoff remain unverified; browser handoff used the development tool hook with a real Allison text connection. Admin maintenance rejected the owner session with 403; use an existing admin session for future UI sync, without changing roles.
 
