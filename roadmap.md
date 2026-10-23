@@ -1,5 +1,7 @@
 # Roadmap
 
+- [done] Replace homepage category and sale/rental/kitchen tile imagery with matching real listing photos and optional rotation.
+
 - [done] Meta Muse admin lead matching, provenance/consent, draft approval and no-send workflow; 58 focused tests pass, migrations applied and drafting endpoint deployed.
 - [open] Meta Muse inference and live admin workflow verification — blocked by rotated META_MODEL_API_KEY and authorized admin session; Facebook Page setup/sending is a separate unconnected phase.
 
