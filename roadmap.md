@@ -1,5 +1,8 @@
 # Roadmap
 
+- [done] Buyer city rollout: source 045f70ab2 synced locally; exact inventory migration applied; six anonymous RPCs, real photos, mobile/dialog checks, isolated PostgreSQL and 16 focused tests passed; automatic build OK.
+- [open] Publish buyer city frontend — blocked by 12 persisted preexisting critical findings and incomplete deep analysis; existing HEIC cover remains unsupported in Chromium on two city results. Details: docs/buyer-city-pages.md.
+
 - [done] Operations console rollout schema and five services deployed; 23 focused tests, applied SQL checks and automatic build pass; unsigned and host access denied; city/SEO pages untouched.
 - [open] Operations admin snapshot/participant delivery and public-landmark route verification — needs authorized admin/participant session; available owner session has host role only.
 - [open] Publish operations frontend — held by 12 preexisting critical security findings and incomplete deep scan; SMS delivery reports also await TWILIO_AUTH_TOKEN; GA4 owner setup.
